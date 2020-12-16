@@ -20,7 +20,6 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using SkylineBatch.Properties;
@@ -282,7 +281,7 @@ namespace SkylineBatch
         private void btnImport_Click(object sender, EventArgs e)
         {
             var dialog = new OpenFileDialog();
-            dialog.Filter = Resources.XML_file_extension;
+            dialog.Filter = Resources.ConfigManager_XML_file_extension;
             if (dialog.ShowDialog(this) != DialogResult.OK) return;
 
             var filePath = dialog.FileName;

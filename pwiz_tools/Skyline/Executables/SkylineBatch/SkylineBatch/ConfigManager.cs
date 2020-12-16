@@ -112,8 +112,8 @@ namespace SkylineBatch
             }
             if (invalidConfigNames.Length > 0)
             {
-                DisplayError(Resources.Save_configuration_error,
-                    Resources.Could_not_save_configurations + Environment.NewLine + invalidConfigNames);
+                DisplayError(Resources.ConfigManager_Save_configuration_error,
+                    Resources.ConfigManager_Could_not_save_configurations + Environment.NewLine + invalidConfigNames);
             }
             Settings.Default.ConfigList = updatedConfigs;
             Settings.Default.Save();
@@ -260,13 +260,13 @@ namespace SkylineBatch
 
                 if (configRunner.IsBusy())
                 {
-                    DisplayWarning(Resources.Cannot_Delete, string.Format(
+                    DisplayWarning(Resources.ConfigManager_Cannot_Delete, string.Format(
                         @"Configuration ""{0}"" is running. Please stop the configuration and try again. ",
                         configRunner.GetConfigName()));
                     return;
                 }
 
-                var doDelete = DisplayQuestion(Resources.Confirm_Delete, 
+                var doDelete = DisplayQuestion(Resources.ConfigManager_Confirm_Delete, 
                     string.Format(@"Are you sure you want to delete configuration ""{0}""?",
                         configRunner.GetConfigName()));
 
@@ -294,8 +294,8 @@ namespace SkylineBatch
             if (exists != expectedValue)
             {
                 var message = expectedValue
-                        ? string.Format(Resources.Operation_fail_config_nonexistant, typeOperation.ToString(), config.Name)
-                        : string.Format(Resources.Operation_fail_config_exists, typeOperation.ToString(), config.Name);
+                        ? string.Format(Resources.ConfigManager_Operation_fail_config_nonexistant, typeOperation.ToString(), config.Name)
+                        : string.Format(Resources.ConfigManager_Operation_fail_config_exists, typeOperation.ToString(), config.Name);
                 throw new ArgumentException(message);
             }
 
@@ -319,7 +319,7 @@ namespace SkylineBatch
         {
             if (ConfigsRunning())
             {
-                DisplayError(Resources.Run_error_title, Resources.Cannot_run_busy_configurations);
+                DisplayError(Resources.ConfigManager_Run_error_title, Resources.ConfigManager_Cannot_run_busy_configurations);
                 return;
             }
             UpdateIsRunning(true);
@@ -578,14 +578,14 @@ namespace SkylineBatch
             }
             catch (Exception)
             {
-                DisplayError(Resources.Import_configs_error_title, string.Format(Resources.No_configs_imported, filePath));
+                DisplayError(Resources.ConfigManager_Import_configs_error_title, string.Format(Resources.ConfigManager_No_configs_imported, filePath));
                 return;
             }
 
             if (readConfigs.Count == 0 && validationErrors.Count == 0)
             {
-                DisplayWarning(Resources.Import_configs_error_title,
-                    string.Format(Resources.No_configs_imported, filePath));
+                DisplayWarning(Resources.ConfigManager_Import_configs_error_title,
+                    string.Format(Resources.ConfigManager_No_configs_imported, filePath));
                 return;
             }
 
@@ -604,11 +604,11 @@ namespace SkylineBatch
                 AddConfiguration(config);
                 numAdded++;
             }
-            var message = new StringBuilder(Resources.Number_configs_imported);
+            var message = new StringBuilder(Resources.ConfigManager_Number_configs_imported);
             message.Append(numAdded).Append(Environment.NewLine);
             if (duplicateConfigs.Count > 0)
             {
-                message.Append(Resources.Number_configs_duplicates)
+                message.Append(Resources.ConfigManager_Number_configs_duplicates)
                     .Append(Environment.NewLine);
                 foreach (var name in duplicateConfigs)
                 {
@@ -617,14 +617,14 @@ namespace SkylineBatch
             }
             if (validationErrors.Count > 0)
             {
-                message.Append(Resources.Number_configs_not_valid)
+                message.Append(Resources.ConfigManager_Number_configs_not_valid)
                     .Append(Environment.NewLine);
                 foreach (var error in validationErrors)
                 {
                     message.Append(error).Append(Environment.NewLine);
                 }
             }
-            DisplayInfo(Resources.Import_configurations, message.ToString());
+            DisplayInfo(Resources.ConfigManager_Import_configurations, message.ToString());
         }
 
 

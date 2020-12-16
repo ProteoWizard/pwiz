@@ -25,24 +25,12 @@ namespace SkylineBatch.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        public string SkylineCommandPath {
+        public string SkylineLocalCommandPath {
             get {
-                return ((string)(this["SkylineCommandPath"]));
+                return ((string)(this["SkylineLocalCommandPath"]));
             }
             set {
-                this["SkylineCommandPath"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string SkylineType {
-            get {
-                return ((string)(this["SkylineType"]));
-            }
-            set {
-                this["SkylineType"] = value;
+                this["SkylineLocalCommandPath"] = value;
             }
         }
         
@@ -60,37 +48,49 @@ namespace SkylineBatch.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool AdminInstallation {
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string SkylineDailyRunnerPath {
             get {
-                return ((bool)(this["AdminInstallation"]));
+                return ((string)(this["SkylineDailyRunnerPath"]));
             }
             set {
-                this["AdminInstallation"] = value;
+                this["SkylineDailyRunnerPath"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool SkylineClickOnceInstalled {
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string SkylineRunnerPath {
             get {
-                return ((bool)(this["SkylineClickOnceInstalled"]));
+                return ((string)(this["SkylineRunnerPath"]));
             }
             set {
-                this["SkylineClickOnceInstalled"] = value;
+                this["SkylineRunnerPath"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool SkylineDailyClickOnceInstalled {
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string SkylineAdminCmdPath {
             get {
-                return ((bool)(this["SkylineDailyClickOnceInstalled"]));
+                return ((string)(this["SkylineAdminCmdPath"]));
             }
             set {
-                this["SkylineDailyClickOnceInstalled"] = value;
+                this["SkylineAdminCmdPath"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string SkylineDailyAdminCmdPath {
+            get {
+                return ((string)(this["SkylineDailyAdminCmdPath"]));
+            }
+            set {
+                this["SkylineDailyAdminCmdPath"] = value;
             }
         }
     }

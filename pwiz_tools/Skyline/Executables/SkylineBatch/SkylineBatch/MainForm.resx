@@ -139,7 +139,7 @@
     <value>22</value>
   </data>
   <data name="btnDeleteLogs.Text" xml:space="preserve">
-    <value>&amp;Delete Logs</value>
+    <value>&amp;Delete Logs...</value>
   </data>
   <data name="btnDeleteLogs.ToolTip" xml:space="preserve">
     <value>Import saved configurations...</value>

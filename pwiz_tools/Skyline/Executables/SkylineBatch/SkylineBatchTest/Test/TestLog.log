@@ -1,0 +1,8 @@
+[12/16/2020 1:58:44 PM]    Microsoft Windows [Version 10.0.18363.1256]
+[12/16/2020 1:58:44 PM]    (c) 2019 Microsoft Corporation. All rights reserved.
+[12/16/2020 1:58:44 PM]    
+[12/16/2020 1:58:44 PM]    C:\proj\ProteoWizard\pwiz\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\bin\Debug>"C:\Program Files\R\R-4.0.3\bin\Rscript.exe" "C:\proj\ProteoWizard\pwiz\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\Test\testScript.r" "C:\proj\ProteoWizard\pwiz\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\Test\analysis" 2>&1
+[12/16/2020 1:58:44 PM]    [1] "C:\\proj\\ProteoWizard\\pwiz\\pwiz_tools\\Skyline\\Executables\\SkylineBatch\\SkylineBatchTest\\Test\\analysis"
+[12/16/2020 1:58:44 PM]    [1] TRUE
+[12/16/2020 1:58:44 PM]    
+[12/16/2020 1:58:44 PM]    C:\proj\ProteoWizard\pwiz\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\bin\Debug>

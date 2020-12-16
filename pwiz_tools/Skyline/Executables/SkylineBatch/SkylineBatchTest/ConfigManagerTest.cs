@@ -83,7 +83,7 @@ namespace SkylineBatchTest
         public void TestAddInsertConfig()
         {
             TestUtils.ClearSavedConfigurations();
-            TestUtils.InitializeRVersions();
+            TestUtils.InitializeInstallations();
             var testConfigManager = new ConfigManager(new SkylineBatchLogger(TestUtils.GetTestFilePath("TestLog.log")));
             Assert.IsTrue(!testConfigManager.HasConfigs());
             var addedConfig = TestUtils.GetTestConfig("one");
@@ -112,7 +112,7 @@ namespace SkylineBatchTest
         public void TestRemoveConfig()
         {
             TestUtils.ClearSavedConfigurations();
-            TestUtils.InitializeRVersions();
+            TestUtils.InitializeInstallations();
             var configManager = TestUtils.GetTestConfigManager();
             configManager.SelectConfig(0);
             configManager.RemoveSelected();
@@ -136,7 +136,7 @@ namespace SkylineBatchTest
         public void TestMoveConfig()
         {
             TestUtils.ClearSavedConfigurations();
-            TestUtils.InitializeRVersions();
+            TestUtils.InitializeInstallations();
             var configManager = TestUtils.GetTestConfigManager();
             configManager.SelectConfig(0);
             configManager.MoveSelectedConfig(false);
@@ -153,7 +153,7 @@ namespace SkylineBatchTest
         public void TestReplaceConfig()
         {
             TestUtils.ClearSavedConfigurations();
-            TestUtils.InitializeRVersions();
+            TestUtils.InitializeInstallations();
             var configManager = TestUtils.GetTestConfigManager();
             configManager.SelectConfig(0);
             configManager.ReplaceSelectedConfig(TestUtils.GetTestConfig("oneReplaced"));
@@ -170,7 +170,6 @@ namespace SkylineBatchTest
             {
                 Assert.AreEqual(e.Message, "Failed operation \"Replace\": Configuration \"oneReplaced\" already exists.");
             }
-            Assert.IsTrue(configManager.ConfigListEquals(expectedOneReplaced));
             Assert.IsTrue(configManager.ConfigListEquals(expectedOneReplaced));
         }
 

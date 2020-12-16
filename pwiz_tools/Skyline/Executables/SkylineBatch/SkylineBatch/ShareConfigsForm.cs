@@ -27,7 +27,7 @@ namespace SkylineBatch
 
         private void btnBrowse_Click(object sender, EventArgs e)
         {
-            var dialog = new SaveFileDialog { Title = Resources.Save_configurations, Filter = Resources.XML_file_extension, FileName = textFileName.Text };
+            var dialog = new SaveFileDialog { Title = Resources.ConfigManager_Save_configurations, Filter = Resources.ConfigManager_XML_file_extension, FileName = textFileName.Text };
             if (dialog.ShowDialog(this) != DialogResult.OK)
                 return;
 

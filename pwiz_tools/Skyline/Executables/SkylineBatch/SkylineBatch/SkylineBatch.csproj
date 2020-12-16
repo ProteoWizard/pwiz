@@ -85,9 +85,6 @@
       <DependentUpon>AlertDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="FindSkylineForm.resx">
-      <DependentUpon>FindSkylineForm.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="LogForm.resx">
       <DependentUpon>LogForm.cs</DependentUpon>
     </EmbeddedResource>
@@ -118,12 +115,7 @@
       <DependentUpon>AlertDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="ConfigManager.cs" />
-    <Compile Include="FindSkylineForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="FindSkylineForm.Designer.cs">
-      <DependentUpon>FindSkylineForm.cs</DependentUpon>
-    </Compile>
+    <Compile Include="SkylineSettings.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -166,7 +158,7 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="SkylineBatchLogger.cs" />
-    <Compile Include="SkylineSettings.cs" />
+    <Compile Include="Installations.cs" />
     <Compile Include="LogForm.cs">
       <SubType>Form</SubType>
     </Compile>

@@ -59,8 +59,8 @@ namespace SkylineBatch
         private void btnAddRScript_Click(object sender, EventArgs e)
         {
             var openDialog = new OpenFileDialog();
-            openDialog.Filter = Resources.R_file_extension;
-            openDialog.Title = Resources.Open_R_Script;
+            openDialog.Filter = Resources.ReportsAddForm_R_file_extension;
+            openDialog.Title = Resources.ReportsAddForm_Open_R_Script;
             openDialog.Multiselect = true;
             openDialog.ShowDialog();
             foreach (var fileName in openDialog.FileNames)
@@ -82,8 +82,8 @@ namespace SkylineBatch
         private void btnReportPath_Click(object sender, EventArgs e)
         {
             OpenFileDialog openDialog = new OpenFileDialog();
-            openDialog.Filter = Resources.Skyr_file_extension;
-            openDialog.Title = Resources.Open_Report;
+            openDialog.Filter = Resources.ReportsAddForm_Skyr_file_extension;
+            openDialog.Title = Resources.ReportsAddForm_Open_Report;
             openDialog.ShowDialog();
             textReportPath.Text = openDialog.FileName;
         }
@@ -126,11 +126,6 @@ namespace SkylineBatch
                 return;
             }
 
-            //var lastSelected = dataGridScripts.SelectedCells[0];
-            //dataGridScripts.se
-            //dataGridScripts.SelectedCells.Insert(0, lastSelected);
-
-
             btnRemove.Enabled = dataGridScripts.SelectedCells[0].ColumnIndex == 0;
         }
 
@@ -166,8 +161,8 @@ namespace SkylineBatch
                
             var selectedCell = dataGridScripts.SelectedCells[0];
             var openDialog = new OpenFileDialog();
-            openDialog.Filter = Resources.R_file_extension;
-            openDialog.Title = Resources.Open_R_Script;
+            openDialog.Filter = Resources.ReportsAddForm_R_file_extension;
+            openDialog.Title = Resources.ReportsAddForm_Open_R_Script;
             openDialog.Multiselect = false;
             openDialog.InitialDirectory = Path.GetDirectoryName((string)selectedCell.Value);
             openDialog.ShowDialog();

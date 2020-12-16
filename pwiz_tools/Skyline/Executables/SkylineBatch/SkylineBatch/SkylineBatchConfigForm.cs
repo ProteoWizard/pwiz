@@ -42,6 +42,7 @@ namespace SkylineBatch
         private readonly ConfigAction _action;
         private readonly DateTime _initialCreated;
         private readonly List<ReportInfo> _newReportList;
+        private readonly bool _canEditSkylineSettings;
 
         public SkylineBatchConfigForm(IMainUiControl mainControl, SkylineBatchConfig config, ConfigAction action, bool isBusy)
         {
@@ -53,7 +54,9 @@ namespace SkylineBatch
 
             _mainControl = mainControl;
             _isBusy = isBusy;
+            _canEditSkylineSettings = !Installations.HasLocalSkylineCmd;
 
+            InitSkylineTab();
             InitInputFieldsFromConfig(config);
             
             lblConfigRunning.Hide();
@@ -69,6 +72,23 @@ namespace SkylineBatch
             }
 
             ActiveControl = textConfigName;
+        }
+
+        private void InitSkylineTab()
+        {
+            if (!_canEditSkylineSettings)
+            {
+                tabsConfig.TabPages[2].Hide();
+                return;
+            }
+            radioButtonSkyline.Enabled = Installations.HasSkyline;
+            radioButtonSkylineDaily.Enabled = Installations.HasSkylineDaily;
+            if (!string.IsNullOrEmpty(Settings.Default.SkylineLocalCommandPath))
+                textSkylineInstallationPath.Text = Path.GetDirectoryName(Settings.Default.SkylineLocalCommandPath);
+
+            radioButtonSpecifySkylinePath.Checked = true;
+            radioButtonSkylineDaily.Checked = radioButtonSkylineDaily.Enabled;
+            radioButtonSkyline.Checked = radioButtonSkyline.Enabled;
         }
 
         private void InitInputFieldsFromConfig(SkylineBatchConfig config)
@@ -97,6 +117,17 @@ namespace SkylineBatch
             textDataPath.Text = mainSettings.DataFolderPath;
 
             textConfigName.TextChanged += textConfigName_TextChanged;
+
+            if (!_canEditSkylineSettings) return;
+            
+            radioButtonSkyline.Checked = config.UsesSkyline;
+            radioButtonSkylineDaily.Checked = config.UsesSkylineDaily;
+            radioButtonSpecifySkylinePath.Checked = config.UsesCustomSkylinePath;
+            if (config.UsesCustomSkylinePath)
+            {
+                textSkylineInstallationPath.Text = Path.GetDirectoryName(config.SkylineSettings.CmdPath);
+            }
+
         }
 
         public void DisableUserInputs(Control parentControl = null)
@@ -144,8 +175,8 @@ namespace SkylineBatch
         private void btnSkylineFilePath_Click(object sender, EventArgs e)
         {
             OpenFileDialog openDialog = new OpenFileDialog();
-            openDialog.Filter = Resources.Sky_file_extension;
-            openDialog.Title = Resources.Open_skyline_file;
+            openDialog.Filter = Resources.SkylineBatchConfigForm_btnSkylineFilePath_Click_SKY___sky;
+            openDialog.Title = Resources.SkylineBatchConfigForm_btnSkylineFilePath_Click_Open_Skyline_File;
             openDialog.ShowDialog();
             textSkylinePath.Text = openDialog.FileName;
         }
@@ -248,8 +279,49 @@ namespace SkylineBatch
         #endregion
 
 
+
+        #region Skyline Settings
+
+        private SkylineSettings GetSkylineSettingsFromUi()
+        {
+            if (!_canEditSkylineSettings)
+                return new SkylineSettings(SkylineType.Local);
+
+            var skylineType = SkylineType.Custom;
+            if (radioButtonSkyline.Checked)
+                skylineType = SkylineType.Skyline;
+            if (radioButtonSkylineDaily.Checked)
+                skylineType = SkylineType.SkylineDaily;
+            return new SkylineSettings(skylineType, textSkylineInstallationPath.Text);
+        }
+
+        private void btnBrowse_Click(object sender, EventArgs e)
+        {
+            using (var folderBrowserDlg = new FolderBrowserDialog())
+            {
+                folderBrowserDlg.Description =
+                    string.Format(Resources.FindSkylineForm_btnBrowse_Click_Select_the__0__installation_directory,
+                        Installations.Skyline);
+                folderBrowserDlg.ShowNewFolderButton = false;
+                folderBrowserDlg.SelectedPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+                if (folderBrowserDlg.ShowDialog() == DialogResult.OK)
+                {
+                    textSkylineInstallationPath.Text = folderBrowserDlg.SelectedPath;
+                }
+            }
+        }
+
+        private void radioButtonSpecifySkylinePath_CheckChanged(object sender, EventArgs e)
+        {
+            textSkylineInstallationPath.Enabled = radioButtonSpecifySkylinePath.Checked;
+            btnBrowse.Enabled = radioButtonSpecifySkylinePath.Checked;
+        }
+
+        #endregion
+
+
         #region Save config
-        
+
         private void btnSaveConfig_Click(object sender, EventArgs e)
         {
             Save();
@@ -260,8 +332,9 @@ namespace SkylineBatch
             var name = textConfigName.Text;
             var mainSettings = GetMainSettingsFromUi();
             var reportSettings = new ReportSettings(_newReportList);
+            var skylineSettings = GetSkylineSettingsFromUi();
             var created = _action == ConfigAction.Edit ? _initialCreated : DateTime.Now;
-            return new SkylineBatchConfig(name, created, DateTime.Now, mainSettings, reportSettings);
+            return new SkylineBatchConfig(name, created, DateTime.Now, mainSettings, reportSettings, skylineSettings);
         }
 
         private void Save()
@@ -291,6 +364,11 @@ namespace SkylineBatch
         }
 
         #endregion
+
+
+
+
+        
 
     }
 }

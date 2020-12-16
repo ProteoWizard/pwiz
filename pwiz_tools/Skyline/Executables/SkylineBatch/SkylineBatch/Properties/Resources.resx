@@ -117,10 +117,10 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="Start_running_config_log_message" xml:space="preserve">
+  <data name="ConfigRunner_Start_running_config_log_message" xml:space="preserve">
     <value>------------------------------ Starting Configuration: {0} -------------------------------</value>
   </data>
-  <data name="Operation_fail_config_exists" xml:space="preserve">
+  <data name="ConfigManager_Operation_fail_config_exists" xml:space="preserve">
     <value>Failed operation "{0}": Configuration "{1}" already exists.</value>
   </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
@@ -130,109 +130,97 @@
   <data name="downarrow" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\downarrow.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="Run_error_title" xml:space="preserve">
+  <data name="ConfigManager_Run_error_title" xml:space="preserve">
     <value>Run Error</value>
   </data>
-  <data name="Template_file_does_not_exist" xml:space="preserve">
+  <data name="MainSettings_Template_file_does_not_exist" xml:space="preserve">
     <value>Skyline file {0} does not exist.</value>
   </data>
-  <data name="Import_configs_error_title" xml:space="preserve">
+  <data name="ConfigManager_Import_configs_error_title" xml:space="preserve">
     <value>Import Configurations Error</value>
   </data>
-  <data name="Cannot_run_busy_configurations" xml:space="preserve">
+  <data name="ConfigManager_Cannot_run_busy_configurations" xml:space="preserve">
     <value>Cannot run configurations while they are still running.</value>
   </data>
   <data name="Delete" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Delete.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="Configuration_error_message" xml:space="preserve">
+  <data name="ConfigManager_Configuration_error_message" xml:space="preserve">
     <value>\"{0}\" Error: {1}</value>
   </data>
   <data name="Comment" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Comment.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="Data_folder_does_not_exist" xml:space="preserve">
+  <data name="MainSettings_Data_folder_does_not_exist" xml:space="preserve">
     <value>Data folder {0} does not exist.</value>
   </data>
-  <data name="Specify_path_to" xml:space="preserve">
+  <data name="MainSettings_Specify_path_to" xml:space="preserve">
     <value>Please specify path to: {0}.</value>
   </data>
-  <data name="No_configs_imported" xml:space="preserve">
+  <data name="ConfigManager_No_configs_imported" xml:space="preserve">
     <value>Could not import configurations from file {0}</value>
   </data>
-  <data name="Process_terminated" xml:space="preserve">
+  <data name="ConfigRunner_Process_terminated" xml:space="preserve">
     <value>Process terminated: exiting.</value>
   </data>
-  <data name="Operation_fail_config_nonexistant" xml:space="preserve">
+  <data name="ConfigManager_Operation_fail_config_nonexistant" xml:space="preserve">
     <value>Failed operation "{0}": Configuration "{1}" does not exist.</value>
   </data>
-  <data name="Analysis_folder_does_not_exist" xml:space="preserve">
-    <value>Analysis folder directory {0} does not exist.</value>
-  </data>
-  <data name="Terminated_running_config_log_message" xml:space="preserve">
+  <data name="ConfigRunner_Terminated_running_config_log_message" xml:space="preserve">
     <value>------------------------------ {0}: {1} -------------------------------</value>
   </data>
-  <data name="Number_configs_imported" xml:space="preserve">
+  <data name="ConfigManager_Number_configs_imported" xml:space="preserve">
     <value>Number of configurations imported: </value>
   </data>
-  <data name="Could_not_save_configurations" xml:space="preserve">
+  <data name="ConfigManager_Could_not_save_configurations" xml:space="preserve">
     <value>Cound not save the following configurations:</value>
   </data>
-  <data name="Save_configuration_error" xml:space="preserve">
+  <data name="ConfigManager_Save_configuration_error" xml:space="preserve">
     <value>Save Configuration Error</value>
   </data>
-  <data name="Number_configs_duplicates" xml:space="preserve">
+  <data name="ConfigManager_Number_configs_duplicates" xml:space="preserve">
     <value>The following configurations already exist and were not imported:</value>
   </data>
-  <data name="Number_configs_not_valid" xml:space="preserve">
+  <data name="ConfigManager_Number_configs_not_valid" xml:space="preserve">
     <value>The following configurations could not be validated and were not imported:</value>
   </data>
   <data name="add" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\add.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="Cannot_Delete" xml:space="preserve">
+  <data name="ConfigManager_Cannot_Delete" xml:space="preserve">
     <value>Cannot Delete</value>
   </data>
-  <data name="Confirm_Delete" xml:space="preserve">
+  <data name="ConfigManager_Confirm_Delete" xml:space="preserve">
     <value>Confirm Delete</value>
   </data>
-  <data name="Import_configurations" xml:space="preserve">
+  <data name="ConfigManager_Import_configurations" xml:space="preserve">
     <value>Import Configurations</value>
   </data>
-  <data name="Open_Report" xml:space="preserve">
+  <data name="ReportsAddForm_Open_Report" xml:space="preserve">
     <value>Open Report</value>
   </data>
-  <data name="Open_R_Script" xml:space="preserve">
+  <data name="ReportsAddForm_Open_R_Script" xml:space="preserve">
     <value>Open R Script</value>
   </data>
-  <data name="Open_skyline_file" xml:space="preserve">
+  <data name="SkylineBatchConfigForm_btnSkylineFilePath_Click_Open_Skyline_File" xml:space="preserve">
     <value>Open Skyline File</value>
   </data>
-  <data name="Pneumonic_on_first_letter" xml:space="preserve">
-    <value>&amp;{0}</value>
-  </data>
-  <data name="R_file_extension" xml:space="preserve">
+  <data name="ReportsAddForm_R_file_extension" xml:space="preserve">
     <value>R|*.r</value>
   </data>
-  <data name="Save_configurations" xml:space="preserve">
+  <data name="ConfigManager_Save_configurations" xml:space="preserve">
     <value>Save configurations...</value>
   </data>
-  <data name="Select_the_skyline_installation_directory" xml:space="preserve">
-    <value>Select the skyline installation directory.</value>
-  </data>
-  <data name="SkylineBatch_encountered_an_unexpected_error" xml:space="preserve">
+  <data name="Program_SkylineBatch_encountered_an_unexpected_error" xml:space="preserve">
     <value>SkylineBatch encountered an unexpected error. </value>
   </data>
-  <data name="Skyr_file_extension" xml:space="preserve">
+  <data name="ReportsAddForm_Skyr_file_extension" xml:space="preserve">
     <value>SKYR|*.skyr</value>
   </data>
-  <data name="Sky_file_extension" xml:space="preserve">
+  <data name="SkylineBatchConfigForm_btnSkylineFilePath_Click_SKY___sky" xml:space="preserve">
     <value>SKY|*.sky</value>
   </data>
-  <data name="Unable_To_Find_Skyline" xml:space="preserve">
-    <value>Unable To Find Skyline</value>
-  </data>
-  <data name="XML_file_extension" xml:space="preserve">
+  <data name="ConfigManager_XML_file_extension" xml:space="preserve">
     <value>XML Files(*.xml)|*.xml</value>
   </data>
   <data name="AlertDlg_GetDefaultButtonText_Abort" xml:space="preserve">
@@ -258,5 +246,29 @@
   </data>
   <data name="AlertDlg_TruncateMessage_Message_truncated__Press_Ctrl_C_to_copy_entire_message_to_the_clipboard_" xml:space="preserve">
     <value>Message truncated. Press Ctrl+C to copy entire message to the clipboard.</value>
+  </data>
+  <data name="FindSkylineForm_btnBrowse_Click_Select_the__0__installation_directory" xml:space="preserve">
+    <value>Select the {0} installation directory:</value>
+  </data>
+  <data name="FindSkylineForm_btnOk_Click_Cannot_Update__0__Settings" xml:space="preserve">
+    <value>Cannot Update {0} Settings</value>
+  </data>
+  <data name="MainSettings_Analysis_folder_directory__0__does_not_exist" xml:space="preserve">
+    <value>Analysis folder directory {0} does not exist.</value>
+  </data>
+  <data name="Program_InitSkylineSettings__0__requires_Skyline_to_run_" xml:space="preserve">
+    <value>{0} requires Skyline to run.</value>
+  </data>
+  <data name="Program_Please_install_R_to_use_SkylineBatch" xml:space="preserve">
+    <value>Please install R to use SkylineBatch</value>
+  </data>
+  <data name="Program_SkylineBatch_requires_at_least_one_installation_of_R" xml:space="preserve">
+    <value>SkylineBatch requires at least one version of R with rScript.exe to be installed on the computer.</value>
+  </data>
+  <data name="Program_Unable_To_Find_R" xml:space="preserve">
+    <value>Unable To Find R</value>
+  </data>
+  <data name="Program_InitSkylineSettings__0__Error" xml:space="preserve">
+    <value>{0} Error</value>
   </data>
 </root>

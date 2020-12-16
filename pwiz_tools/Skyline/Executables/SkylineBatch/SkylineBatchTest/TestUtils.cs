@@ -134,7 +134,7 @@ namespace SkylineBatchTest
 
         public static SkylineBatchConfig GetTestConfig(string name = "name")
         {
-            return new SkylineBatchConfig(name, DateTime.MinValue, DateTime.MinValue, GetTestMainSettings(), GetTestReportSettings());
+            return new SkylineBatchConfig(name, DateTime.MinValue, DateTime.MinValue, GetTestMainSettings(), GetTestReportSettings(), new SkylineSettings(SkylineType.Skyline));
         }
 
         public static ConfigRunner GetTestConfigRunner(string configName = "name")
@@ -166,9 +166,10 @@ namespace SkylineBatchTest
             return testConfigManager;
         }
 
-        public static void InitializeRVersions()
+        public static void InitializeInstallations()
         {
-            Assert.IsTrue(SkylineSettings.FindRDirectory());
+            Assert.IsTrue(Installations.FindRDirectory());
+            Assert.IsTrue(Installations.FindSkyline());
         }
 
             public static void ClearSavedConfigurations()

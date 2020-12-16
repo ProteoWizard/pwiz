@@ -57,12 +57,19 @@
             this.columnName = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.columnPath = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.columnScripts = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.tabSkyline = new System.Windows.Forms.TabPage();
+            this.radioButtonSkylineDaily = new System.Windows.Forms.RadioButton();
+            this.btnBrowse = new System.Windows.Forms.Button();
+            this.radioButtonSkyline = new System.Windows.Forms.RadioButton();
+            this.radioButtonSpecifySkylinePath = new System.Windows.Forms.RadioButton();
+            this.textSkylineInstallationPath = new System.Windows.Forms.TextBox();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.btnCancelConfig = new System.Windows.Forms.Button();
             this.btnSaveConfig = new System.Windows.Forms.Button();
             this.lblConfigRunning = new System.Windows.Forms.Label();
             this.btnOkConfig = new System.Windows.Forms.Button();
             this.imageListToolbarIcons = new System.Windows.Forms.ImageList(this.components);
+            this.groupBox2 = new System.Windows.Forms.GroupBox();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -73,7 +80,9 @@
             this.tabReports.SuspendLayout();
             this.toolBar.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.gridReportSettings)).BeginInit();
+            this.tabSkyline.SuspendLayout();
             this.groupBox1.SuspendLayout();
+            this.groupBox2.SuspendLayout();
             this.SuspendLayout();
             // 
             // textAnalysisPath
@@ -126,6 +135,7 @@
             // 
             this.tabsConfig.Controls.Add(this.tabSettings);
             this.tabsConfig.Controls.Add(this.tabReports);
+            this.tabsConfig.Controls.Add(this.tabSkyline);
             resources.ApplyResources(this.tabsConfig, "tabsConfig");
             this.tabsConfig.Name = "tabsConfig";
             this.tabsConfig.SelectedIndex = 0;
@@ -204,11 +214,11 @@
             // 
             // tabReports
             // 
+            this.tabReports.BackColor = System.Drawing.Color.WhiteSmoke;
             this.tabReports.Controls.Add(this.toolBar);
             this.tabReports.Controls.Add(this.gridReportSettings);
             resources.ApplyResources(this.tabReports, "tabReports");
             this.tabReports.Name = "tabReports";
-            this.tabReports.UseVisualStyleBackColor = true;
             // 
             // toolBar
             // 
@@ -277,6 +287,47 @@
             resources.ApplyResources(this.columnScripts, "columnScripts");
             this.columnScripts.Name = "columnScripts";
             // 
+            // tabSkyline
+            // 
+            this.tabSkyline.BackColor = System.Drawing.Color.WhiteSmoke;
+            this.tabSkyline.Controls.Add(this.groupBox2);
+            resources.ApplyResources(this.tabSkyline, "tabSkyline");
+            this.tabSkyline.Name = "tabSkyline";
+            // 
+            // radioButtonSkylineDaily
+            // 
+            resources.ApplyResources(this.radioButtonSkylineDaily, "radioButtonSkylineDaily");
+            this.radioButtonSkylineDaily.Name = "radioButtonSkylineDaily";
+            this.radioButtonSkylineDaily.TabStop = true;
+            this.radioButtonSkylineDaily.UseVisualStyleBackColor = true;
+            // 
+            // btnBrowse
+            // 
+            resources.ApplyResources(this.btnBrowse, "btnBrowse");
+            this.btnBrowse.Name = "btnBrowse";
+            this.btnBrowse.UseVisualStyleBackColor = true;
+            this.btnBrowse.Click += new System.EventHandler(this.btnBrowse_Click);
+            // 
+            // radioButtonSkyline
+            // 
+            resources.ApplyResources(this.radioButtonSkyline, "radioButtonSkyline");
+            this.radioButtonSkyline.Name = "radioButtonSkyline";
+            this.radioButtonSkyline.TabStop = true;
+            this.radioButtonSkyline.UseVisualStyleBackColor = true;
+            // 
+            // radioButtonSpecifySkylinePath
+            // 
+            resources.ApplyResources(this.radioButtonSpecifySkylinePath, "radioButtonSpecifySkylinePath");
+            this.radioButtonSpecifySkylinePath.Name = "radioButtonSpecifySkylinePath";
+            this.radioButtonSpecifySkylinePath.TabStop = true;
+            this.radioButtonSpecifySkylinePath.UseVisualStyleBackColor = true;
+            this.radioButtonSpecifySkylinePath.CheckedChanged += new System.EventHandler(this.radioButtonSpecifySkylinePath_CheckChanged);
+            // 
+            // textSkylineInstallationPath
+            // 
+            resources.ApplyResources(this.textSkylineInstallationPath, "textSkylineInstallationPath");
+            this.textSkylineInstallationPath.Name = "textSkylineInstallationPath";
+            // 
             // groupBox1
             // 
             this.groupBox1.BackColor = System.Drawing.SystemColors.ControlLight;
@@ -322,6 +373,17 @@
             this.imageListToolbarIcons.Images.SetKeyName(0, "AddedIcon.ico");
             this.imageListToolbarIcons.Images.SetKeyName(1, "DeletedIcon.ico");
             // 
+            // groupBox2
+            // 
+            resources.ApplyResources(this.groupBox2, "groupBox2");
+            this.groupBox2.Controls.Add(this.textSkylineInstallationPath);
+            this.groupBox2.Controls.Add(this.radioButtonSkylineDaily);
+            this.groupBox2.Controls.Add(this.radioButtonSpecifySkylinePath);
+            this.groupBox2.Controls.Add(this.btnBrowse);
+            this.groupBox2.Controls.Add(this.radioButtonSkyline);
+            this.groupBox2.Name = "groupBox2";
+            this.groupBox2.TabStop = false;
+            // 
             // SkylineBatchConfigForm
             // 
             this.AcceptButton = this.btnSaveConfig;
@@ -347,8 +409,11 @@
             this.toolBar.ResumeLayout(false);
             this.toolBar.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.gridReportSettings)).EndInit();
+            this.tabSkyline.ResumeLayout(false);
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
+            this.groupBox2.ResumeLayout(false);
+            this.groupBox2.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -388,5 +453,12 @@
         private System.Windows.Forms.ToolStripButton btnDeleteReport;
         private System.Windows.Forms.ToolStripButton btnEditReport;
         private System.Windows.Forms.Button btnOkConfig;
+        private System.Windows.Forms.TabPage tabSkyline;
+        private System.Windows.Forms.RadioButton radioButtonSkylineDaily;
+        private System.Windows.Forms.Button btnBrowse;
+        private System.Windows.Forms.RadioButton radioButtonSkyline;
+        private System.Windows.Forms.RadioButton radioButtonSpecifySkylinePath;
+        private System.Windows.Forms.TextBox textSkylineInstallationPath;
+        private System.Windows.Forms.GroupBox groupBox2;
     }
 }

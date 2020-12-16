@@ -53,8 +53,8 @@ namespace SkylineBatch
             {
                 try
                 {
-                    Log.Error(Resources.SkylineBatch_encountered_an_unexpected_error, (Exception)e.ExceptionObject);
-                    MessageBox.Show(Resources.SkylineBatch_encountered_an_unexpected_error +
+                    Log.Error(Resources.Program_SkylineBatch_encountered_an_unexpected_error, (Exception)e.ExceptionObject);
+                    MessageBox.Show(Resources.Program_SkylineBatch_encountered_an_unexpected_error +
                                     @"Error details may be found in the SkylineBatchProgram.log file in this directory : "
                                     + Path.GetDirectoryName(Application.ExecutablePath)
                     );
@@ -109,37 +109,27 @@ namespace SkylineBatch
 
         private static bool InitSkylineSettings()
         {
-            Settings.Default.SkylineDailyClickOnceInstalled = false;
-            var currentInstallations = SkylineSettings.ClickOnceInstallExists();
-            if (SkylineSettings.FindLocalSkylineCmd() || (SkylineSettings.IsInitialized() && SkylineSettings.SavedInstallationsEquals(currentInstallations)))
+            if (Installations.FindSkyline())
                 return true;
             
-            var skylineForm = new FindSkylineForm(currentInstallations.Item1, currentInstallations.Item2);
-            Application.Run(skylineForm);
+            MessageBox.Show(string.Format(Resources.Program_InitSkylineSettings__0__requires_Skyline_to_run_, AppName()), string.Format(Resources.Program_InitSkylineSettings__0__Error), MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return false;
 
-            if (skylineForm.DialogResult != DialogResult.OK)
-            {
-                MessageBox.Show($@"{AppName()} requires Skyline to run.", $@"{AppName()} Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return false;
-            }
-
-            SkylineSettings.UpdateSavedInstallations(currentInstallations);
-            return true;
         }
 
         private static bool InitRSettings()
         {
-            if (SkylineSettings.FindRDirectory())
+            if (Installations.FindRDirectory())
             {
                 return true;
             }
 
             var message = new StringBuilder();
             message.AppendLine(
-                    $"SkylineBatch requires at least one version of R with rScript.exe to be installed on the computer.")
+                    Resources.Program_SkylineBatch_requires_at_least_one_installation_of_R)
                 .AppendLine(
-                    $"Please install R to use SkylineBatch");
-            MessageBox.Show(message.ToString(), @"Unable To Find R",
+                    Resources.Program_Please_install_R_to_use_SkylineBatch);
+            MessageBox.Show(message.ToString(), Resources.Program_Unable_To_Find_R,
                 MessageBoxButtons.OK, MessageBoxIcon.Error);
             return false;
         }

@@ -87,7 +87,7 @@ namespace SkylineBatch
 
         public async Task Run(int startStep)
         {
-            LogToUi(string.Format(Resources.Start_running_config_log_message, Config.Name));
+            LogToUi(string.Format(Resources.ConfigRunner_Start_running_config_log_message, Config.Name));
             try
             {
                 Config.Validate();
@@ -96,13 +96,13 @@ namespace SkylineBatch
             {
                 LogToUi("Error: " + e.Message);
                 ChangeStatus(RunnerStatus.Error);
-                LogToUi(string.Format(Resources.Terminated_running_config_log_message, Config.Name, GetStatus()));
+                LogToUi(string.Format(Resources.ConfigRunner_Terminated_running_config_log_message, Config.Name, GetStatus()));
                 return;
             }
 
             var commands = new List<string>();
 
-            var skylineRunner = SkylineSettings.GetSkylineCmdLineExePath;
+            var skylineRunner = Config.SkylineSettings.CmdPath;
             var templateFullName = Config.MainSettings.TemplateFilePath;
             var newSkylineFileName = Config.MainSettings.GetNewTemplatePath();
             var dataDir = Config.MainSettings.DataFolderPath;
@@ -149,7 +149,7 @@ namespace SkylineBatch
                 commands[0] += " --version";
             await ExecuteCommandLine(commands);
 
-            LogToUi(string.Format(Resources.Terminated_running_config_log_message, Config.Name, GetStatus()));
+            LogToUi(string.Format(Resources.ConfigRunner_Terminated_running_config_log_message, Config.Name, GetStatus()));
         }
 
         public async Task ExecuteCommandLine(List<string> commands)
@@ -196,7 +196,7 @@ namespace SkylineBatch
             // end cmd and skylinerunner processes if runner has been stopped before completion
             if (!cmd.HasExited)
             {
-                LogToUi(Resources.Process_terminated);
+                LogToUi(Resources.ConfigRunner_Process_terminated);
                 await KillProcessChildren((UInt32)cmd.Id);
                 if (!cmd.HasExited) cmd.Kill();
                 if (!IsError())

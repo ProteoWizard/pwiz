@@ -34,7 +34,7 @@ namespace SkylineBatchTest
         [TestMethod]
         public async Task TestExecuteCommandLine()
         {
-           TestUtils.InitializeRVersions();
+           TestUtils.InitializeInstallations();
            var testRunner = new ConfigRunner(TestUtils.GetTestConfig(), new SkylineBatchLogger(TestUtils.GetTestFilePath("testLog.log")));
            Assert.IsTrue(testRunner.IsStopped());
             var singleCommand = new List<string>
@@ -52,7 +52,7 @@ namespace SkylineBatchTest
         [TestMethod]
         public async Task TestRunFromStepFour()
         {
-            TestUtils.InitializeRVersions();
+            TestUtils.InitializeInstallations();
             var testRunner = TestUtils.GetTestConfigRunner();
             Assert.IsTrue(testRunner.IsStopped());
             await testRunner.Run(4);
