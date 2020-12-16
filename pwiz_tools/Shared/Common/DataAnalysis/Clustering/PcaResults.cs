@@ -28,6 +28,7 @@ namespace pwiz.Common.DataAnalysis.Clustering
         }
 
         public ImmutableList<TLabel> ItemLabels { get; }
+        public ImmutableList<double> ComponentVariances { get; }
         public int ComponentCount { get; }
         public ImmutableList<ImmutableList<double>> ItemComponents { get; }
     }

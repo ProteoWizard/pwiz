@@ -34,8 +34,18 @@ namespace pwiz.Common.DataBinding.Clustering
             foreach (var rowItem in RowItems)
             {
                 var rawValues = series.PropertyDescriptors.Select(pd => pd.GetValue(rowItem)).ToList();
-                rows.Add(clusterValueTransform.TransformRow(rawValues).Select(value=>value??clusterValueTransform.ValueForNull).ToList());
-
+                var valuesToAdd = clusterValueTransform.TransformRow(rawValues)
+                    .Select(value => value ?? clusterValueTransform.ValueForNull).ToList();
+#if DEBUG
+                foreach (var value in valuesToAdd)
+                {
+                    if (double.IsNaN(value) || double.IsInfinity(value))
+                    {
+                        Debug.WriteLine("{0} is not a valid double",  value);
+                    }
+                }
+#endif
+                rows.Add(valuesToAdd);
             }
             var columnDatas = new List<ImmutableList<double>>();
             for (int i =0; i  < series.PropertyIndexes.Count; i++)
