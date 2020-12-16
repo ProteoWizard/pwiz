@@ -91,6 +91,19 @@ namespace pwiz.Common.DataAnalysis.Clustering
                 {
                     throw new ArgumentException(@"All data columns must have the same number of rows", nameof(dataColumns));
                 }
+
+                for (int iColumn = 0; iColumn < DataColumns.Count; iColumn++)
+                {
+                    var col = DataColumns[iColumn];
+                    for (int iRow = 0; iRow < col.Count; iRow++)
+                    {
+                        var value = col[iRow];
+                        if (double.IsNaN(value) || double.IsInfinity(value))
+                        {
+                            throw new ArgumentException(string.Format(@"{0} found at row {1} column {2}", value, iRow, iColumn), nameof(dataColumns));
+                        }
+                    }
+                }
             }
 
             public ClusterRole.Transform Transform { get; private set; }

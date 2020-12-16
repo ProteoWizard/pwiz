@@ -343,7 +343,13 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 FoldChangeResults = foldChangeResults;
             }
 
+            [OneToMany(ItemDisplayName = "FoldChange",IndexDisplayName = "GroupIdentifier")]
             public IDictionary<GroupIdentifier, FoldChangeResult> FoldChangeResults { get; private set; }
+        }
+
+        public class FoldChangeResultsWithGroupIdentifier
+        {
+
         }
 
         public class ReplicateRow

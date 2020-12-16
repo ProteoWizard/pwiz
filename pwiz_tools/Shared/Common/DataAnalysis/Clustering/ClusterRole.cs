@@ -97,7 +97,13 @@ namespace pwiz.Common.DataAnalysis.Clustering
                     return null;
                 }
 
-                return _transformFunc(value.Value);
+                var transformedValue = _transformFunc(value.Value);
+                if (IsValidDouble(transformedValue))
+                {
+                    return transformedValue;
+                }
+
+                return null;
             }
 
             public override IEnumerable<double?> TransformRow(IEnumerable<object> values)
@@ -166,7 +172,7 @@ namespace pwiz.Common.DataAnalysis.Clustering
                 }
 
                 var mean = validValues.Mean();
-                return doubleValuesList.Select(val => val.HasValue ? (double?)(val.Value - mean) / stdDev : null);
+                return doubleValuesList.Select(val => val.HasValue && IsValidDouble(val.Value) ? (double?)(val.Value - mean) / stdDev : null);
             }
 
             public override bool CanHandleDataType(Type type)

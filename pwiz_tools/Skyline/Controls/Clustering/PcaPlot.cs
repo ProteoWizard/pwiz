@@ -7,6 +7,7 @@ using pwiz.Common.Collections;
 using pwiz.Common.DataAnalysis.Clustering;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Clustering;
+using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Util.Extensions;
 using ZedGraph;
 
@@ -20,12 +21,14 @@ namespace pwiz.Skyline.Controls.Clustering
         public PcaPlot()
         {
             InitializeComponent();
+            Localizer = SkylineDataSchema.GetLocalizedSchemaLocalizer();
         }
 
         public Clusterer Clusterer { get; private set; }
 
         public ReportColorScheme ColorScheme { get; private set; }
 
+        public DataSchemaLocalizer Localizer { get; }
 
         public void SetData(Clusterer clusterer, ReportColorScheme colorScheme)
         {
@@ -75,7 +78,7 @@ namespace pwiz.Skyline.Controls.Clustering
             if (Clusterer.RowHeaderLevels.Any())
             {
                 newDatasetOptions.Add(Tuple.Create(
-                    TextUtil.SpaceSeparate(Clusterer.RowHeaderLevels.Select(pd => pd.ColumnCaption.ToString())),
+                    TextUtil.SpaceSeparate(Clusterer.RowHeaderLevels.Select(pd => pd.ColumnCaption.GetCaption(Localizer))),
                     (PivotedProperties.SeriesGroup)null));
             }
 
@@ -90,7 +93,7 @@ namespace pwiz.Skyline.Controls.Clustering
                 var columnHeaders = Clusterer.Properties.GetColumnHeaders(seriesGroup).ToList();
                 if (columnHeaders.Any())
                 {
-                    caption = TextUtil.SpaceSeparate(columnHeaders.Select(c => c.SeriesCaption.ToString()));
+                    caption = TextUtil.SpaceSeparate(columnHeaders.Select(c => c.SeriesCaption.GetCaption(Localizer)));
                 }
                 else
                 {
@@ -98,7 +101,7 @@ namespace pwiz.Skyline.Controls.Clustering
                         Clusterer.Properties.GetColumnRole(series) is ClusterRole.Transform).ToList();
                     if (values.Any())
                     {
-                        caption = TextUtil.SpaceSeparate(values.Select(v => v.SeriesCaption.ToString()));
+                        caption = TextUtil.SpaceSeparate(values.Select(v => v.SeriesCaption.GetCaption(Localizer)));
                     }
                     else
                     {
@@ -162,7 +165,7 @@ namespace pwiz.Skyline.Controls.Clustering
                 {
                     graphTitle += " Across " +
                                   TextUtil.SpaceSeparate(
-                                      clusteredProperties.RowHeaders.Select(pd => pd.ColumnCaption.ToString()));
+                                      clusteredProperties.RowHeaders.Select(pd => pd.ColumnCaption.GetCaption(Localizer)));
                 }
 
             }
