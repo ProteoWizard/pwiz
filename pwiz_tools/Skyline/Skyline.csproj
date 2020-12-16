@@ -331,6 +331,15 @@
     <Compile Include="Alerts\UpgradeLicenseDlg.designer.cs">
       <DependentUpon>UpgradeLicenseDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="AlgLib\alglibinternal.cs" />
+    <Compile Include="AlgLib\alglibmisc.cs" />
+    <Compile Include="AlgLib\ap.cs" />
+    <Compile Include="AlgLib\dataanalysis.cs" />
+    <Compile Include="AlgLib\linalg.cs" />
+    <Compile Include="AlgLib\optimization.cs" />
+    <Compile Include="AlgLib\solvers.cs" />
+    <Compile Include="AlgLib\specialfunctions.cs" />
+    <Compile Include="AlgLib\statistics.cs" />
     <Compile Include="CommandArgUsage.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -342,14 +351,6 @@
     <Compile Include="Controls\AuditLog\AuditLogExtraInfoForm.Designer.cs">
       <DependentUpon>AuditLogExtraInfoForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Controls\Clustering\ClusteredHeatMapItem.cs" />
-    <Compile Include="Controls\Clustering\HierarchicalClusterGraph.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Controls\Clustering\HierarchicalClusterGraph.Designer.cs">
-      <DependentUpon>HierarchicalClusterGraph.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Controls\Clustering\ClusterGraphResults.cs" />
     <Compile Include="Controls\Graphs\ExportMethodScheduleGraph.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -2077,9 +2078,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\AuditLog\AuditLogForm.resx">
       <DependentUpon>AuditLogForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Controls\Clustering\HierarchicalClusterGraph.resx">
-      <DependentUpon>HierarchicalClusterGraph.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Databinding\ChooseFormatDlg.ja.resx">
       <DependentUpon>ChooseFormatDlg.cs</DependentUpon>
