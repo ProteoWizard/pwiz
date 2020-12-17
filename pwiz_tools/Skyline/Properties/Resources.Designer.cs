@@ -14437,6 +14437,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to X-Axis Labels.
+        /// </summary>
+        public static string HierarchicalClusterGraph_zedGraphControl1_ContextMenuBuilder_X_Axis_Labels {
+            get {
+                return ResourceManager.GetString("HierarchicalClusterGraph_zedGraphControl1_ContextMenuBuilder_X_Axis_Labels", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Y-Axis Labels.
+        /// </summary>
+        public static string HierarchicalClusterGraph_zedGraphControl1_ContextMenuBuilder_Y_Axis_Labels {
+            get {
+                return ResourceManager.GetString("HierarchicalClusterGraph_zedGraphControl1_ContextMenuBuilder_Y_Axis_Labels", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Only showing {0}/{1} peptides.
         /// </summary>
         public static string HistogramHelper_CreateAndShowFindResults_Only_showing__0___1__peptides {
@@ -20707,6 +20725,33 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("PathChooserDlg_OkDialog_You_must_select_an_empty_directory_for_the_tutorial_files" +
                         "_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to  Across .
+        /// </summary>
+        public static string PcaPlot_UpdateGraph__Across_ {
+            get {
+                return ResourceManager.GetString("PcaPlot_UpdateGraph__Across_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to PCA on rows.
+        /// </summary>
+        public static string PcaPlot_UpdateGraph_PCA_on_rows {
+            get {
+                return ResourceManager.GetString("PcaPlot_UpdateGraph_PCA_on_rows", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Principal Component {0}.
+        /// </summary>
+        public static string PcaPlot_UpdateGraph_Principal_Component__0_ {
+            get {
+                return ResourceManager.GetString("PcaPlot_UpdateGraph_Principal_Component__0_", resourceCulture);
             }
         }
         

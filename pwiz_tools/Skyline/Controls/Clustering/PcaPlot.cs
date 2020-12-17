@@ -8,6 +8,7 @@ using pwiz.Common.DataAnalysis.Clustering;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Clustering;
 using pwiz.Skyline.Model.Databinding;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
 using ZedGraph;
 
@@ -151,7 +152,7 @@ namespace pwiz.Skyline.Controls.Clustering
                                                  clusteredProperties.GetColumnRole(series) is ClusterRole.Transform))
                                          .Sum(series => series.PropertyIndexes.Count);
                 pointLists = GetRowPointPairLists(xAxisIndex, yAxisIndex);
-                graphTitle = "PCA on rows";
+                graphTitle = Resources.PcaPlot_UpdateGraph_PCA_on_rows;
             }
             else
             {
@@ -160,10 +161,10 @@ namespace pwiz.Skyline.Controls.Clustering
                 numberOfDimensions = Clusterer.RowItems.Count * valueSeriesList.Count;
                 pointLists = GetColumnPointPairLists(seriesGroup, xAxisIndex, yAxisIndex);
                 graphTitle = TextUtil.SpaceSeparate(
-                    valueSeriesList.Select(series => series.SeriesCaption.GetCaption(DataSchemaLocalizer.INVARIANT)));
+                    valueSeriesList.Select(series => series.SeriesCaption.GetCaption(Localizer)));
                 if (clusteredProperties.RowHeaders.Any())
                 {
-                    graphTitle += " Across " +
+                    graphTitle += Resources.PcaPlot_UpdateGraph__Across_ +
                                   TextUtil.SpaceSeparate(
                                       clusteredProperties.RowHeaders.Select(pd => pd.ColumnCaption.GetCaption(Localizer)));
                 }
@@ -204,8 +205,8 @@ namespace pwiz.Skyline.Controls.Clustering
             }
 
             zedGraphControl1.GraphPane.Title.Text = graphTitle;
-            zedGraphControl1.GraphPane.XAxis.Title.Text = "Principle Component " + (xAxisIndex + 1);
-            zedGraphControl1.GraphPane.YAxis.Title.Text = "Principle Component " + (yAxisIndex + 1);
+            zedGraphControl1.GraphPane.XAxis.Title.Text = string.Format(Resources.PcaPlot_UpdateGraph_Principal_Component__0_, xAxisIndex + 1);
+            zedGraphControl1.GraphPane.YAxis.Title.Text = string.Format(Resources.PcaPlot_UpdateGraph_Principal_Component__0_, yAxisIndex + 1);
             zedGraphControl1.GraphPane.Legend.IsVisible = zedGraphControl1.GraphPane.CurveList.Count < 16;
             zedGraphControl1.GraphPane.AxisChange();
             zedGraphControl1.Invalidate();

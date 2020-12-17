@@ -11159,4 +11159,19 @@ Invalid peptide sequence at position 18
   <data name="RTScheduleGraphPane_UpdateGraph_Concurrent_Accumulations" xml:space="preserve">
     <value>Concurrent Accumulations</value>
   </data>
+  <data name="PcaPlot_UpdateGraph_Principal_Component__0_" xml:space="preserve">
+    <value>Principal Component {0}</value>
+  </data>
+  <data name="PcaPlot_UpdateGraph_PCA_on_rows" xml:space="preserve">
+    <value>PCA on rows</value>
+  </data>
+  <data name="PcaPlot_UpdateGraph__Across_" xml:space="preserve">
+    <value> Across </value>
+  </data>
+  <data name="HierarchicalClusterGraph_zedGraphControl1_ContextMenuBuilder_X_Axis_Labels" xml:space="preserve">
+    <value>X-Axis Labels</value>
+  </data>
+  <data name="HierarchicalClusterGraph_zedGraphControl1_ContextMenuBuilder_Y_Axis_Labels" xml:space="preserve">
+    <value>Y-Axis Labels</value>
+  </data>
 </root>

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.Controls.Clustering;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using ZedGraph;
@@ -82,7 +83,7 @@ namespace pwiz.Skyline.Controls.Clustering
                     Tag = point.Color
                 });
             }
-            zedGraphControl1.GraphPane.CurveList.Add(new ClusteredHeatMapItem("Points", points));
+            zedGraphControl1.GraphPane.CurveList.Add(new ClusteredHeatMapItem(string.Empty, points));
 
             zedGraphControl1.GraphPane.YAxis.Type = AxisType.Text;
             zedGraphControl1.GraphPane.YAxis.Scale.TextLabels = dataSet.RowHeaders.Select(header=>header.Caption).Reverse().ToArray();
@@ -108,10 +109,8 @@ namespace pwiz.Skyline.Controls.Clustering
                 var colors = new List<ImmutableList<Color>>();
                 for (int i = 0; i < group.Headers.Count; i++)
                 {
-                    double x1 = (double)zedGraphControl1.GraphPane
-                        .GeneralTransform(xStart + i, 0.0, CoordType.AxisXYScale).X;
-                    double x2 = zedGraphControl1.GraphPane
-                        .GeneralTransform(xStart + i + 1, 0.0, CoordType.AxisXYScale).X;
+                    double x1 = zedGraphControl1.GraphPane.GeneralTransform(xStart + i, 0.0, CoordType.AxisXYScale).X;
+                    double x2 = zedGraphControl1.GraphPane.GeneralTransform(xStart + i + 1, 0.0, CoordType.AxisXYScale).X;
                     locations.Add(new KeyValuePair<double, double>(x1, x2));
                     colors.Add(group.Headers[i].Colors);
                 }
@@ -148,7 +147,7 @@ namespace pwiz.Skyline.Controls.Clustering
             _rowDendrogramScale.Update(GetUpdatedRowDendrograms());
         }
 
-        private void zedGraphControl1_ZoomEvent(ZedGraphControl sender, ZoomState oldState, ZoomState newState, System.Drawing.PointF mousePosition)
+        private void zedGraphControl1_ZoomEvent(ZedGraphControl sender, ZoomState oldState, ZoomState newState, PointF mousePosition)
         {
             UpdateDendrograms();
         }
@@ -201,11 +200,11 @@ namespace pwiz.Skyline.Controls.Clustering
         private void zedGraphControl1_ContextMenuBuilder(ZedGraphControl sender, ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
         {
             ZedGraphHelper.BuildContextMenu(sender, menuStrip, true);
-            menuStrip.Items.Add(new ToolStripMenuItem("X-Axis Labels", null, ShowXAxisLabelsOnClick)
+            menuStrip.Items.Add(new ToolStripMenuItem(Resources.HierarchicalClusterGraph_zedGraphControl1_ContextMenuBuilder_X_Axis_Labels, null, ShowXAxisLabelsOnClick)
             {
                 Checked = ShowXAxisLabels
             });
-            menuStrip.Items.Add(new ToolStripMenuItem("Y-Axis Labels", null, ShowYAxisLabelsOnClick)
+            menuStrip.Items.Add(new ToolStripMenuItem(Resources.HierarchicalClusterGraph_zedGraphControl1_ContextMenuBuilder_Y_Axis_Labels, null, ShowYAxisLabelsOnClick)
             {
                 Checked = ShowYAxisLabels
             });
