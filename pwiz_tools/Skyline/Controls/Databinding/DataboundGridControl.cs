@@ -56,9 +56,9 @@ namespace pwiz.Skyline.Controls.Databinding
             InitializeComponent();
             _dataGridViewPasteHandler = DataGridViewPasteHandler.Attach(DataGridView);
             NavBar.ClusterSplitButton.Visible = true;
-            NavBar.ClusterSplitButton.DropDownItems.Add(new ToolStripMenuItem("Show Heat Map", null,
+            NavBar.ClusterSplitButton.DropDownItems.Add(new ToolStripMenuItem(Resources.DataboundGridControl_DataboundGridControl_Show_Heat_Map, null,
                 heatMapContextMenuItem_Click));
-            NavBar.ClusterSplitButton.DropDownItems.Add(new ToolStripMenuItem("Show PCA Plot", null,
+            NavBar.ClusterSplitButton.DropDownItems.Add(new ToolStripMenuItem(Resources.DataboundGridControl_DataboundGridControl_Show_PCA_Plot, null,
                 pCAToolStripMenuItem_Click));
         }
 
@@ -754,14 +754,14 @@ namespace pwiz.Skyline.Controls.Databinding
             }
             catch (Exception exception)
             {
-                MessageDlg.ShowWithException(FormUtil.FindTopLevelOwner(this), "An error occured while performing clustering.", exception);
+                MessageDlg.ShowWithException(FormUtil.FindTopLevelOwner(this), Resources.DataboundGridControl_GetClusteredResults_An_error_occured_while_performing_clustering_, exception);
                 return null;
             }
 
             if (resultsTuple == null)
             {
                 MessageDlg.Show(FormUtil.FindTopLevelOwner(this),
-                    "Unable to choose a set of columns to use for hierarchical clustering.");
+                    Resources.DataboundGridControl_GetClusteredResults_Unable_to_choose_a_set_of_columns_to_use_for_hierarchical_clustering_);
                 return null;
 
             }

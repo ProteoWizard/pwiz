@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.SkylineTestUtil;
+// ReSharper disable RedundantExplicitArraySize
 
 namespace pwiz.SkylineTest
 {

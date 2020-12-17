@@ -35,15 +35,10 @@ namespace pwiz.Common.DataBinding
 
         public RowItem SetRowKey(PivotKey rowKey)
         {
-            return new RowItem(this){RowKey = rowKey};
+            return ChangeProp(ImClone(this), im => im.RowKey = rowKey);
         }
 
         public object Value { get; private set; }
-
-        public RowItem SetValue(object value)
-        {
-            return new RowItem(this) {Value = value};
-        }
 
         public IEnumerable<PivotKey> PivotKeys
         {

@@ -11174,4 +11174,16 @@ Invalid peptide sequence at position 18
   <data name="HierarchicalClusterGraph_zedGraphControl1_ContextMenuBuilder_Y_Axis_Labels" xml:space="preserve">
     <value>Y-Axis Labels</value>
   </data>
+  <data name="DataboundGridControl_DataboundGridControl_Show_Heat_Map" xml:space="preserve">
+    <value>Show Heat Map</value>
+  </data>
+  <data name="DataboundGridControl_DataboundGridControl_Show_PCA_Plot" xml:space="preserve">
+    <value>Show PCA Plot</value>
+  </data>
+  <data name="DataboundGridControl_GetClusteredResults_An_error_occured_while_performing_clustering_" xml:space="preserve">
+    <value>An error occured while performing clustering.</value>
+  </data>
+  <data name="DataboundGridControl_GetClusteredResults_Unable_to_choose_a_set_of_columns_to_use_for_hierarchical_clustering_" xml:space="preserve">
+    <value>Unable to choose a set of columns to use for hierarchical clustering.</value>
+  </data>
 </root>
