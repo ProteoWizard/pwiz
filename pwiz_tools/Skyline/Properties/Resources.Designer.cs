@@ -1660,33 +1660,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Medians.
-        /// </summary>
-        public static string AreaCVToolbar_UpdateUI_Medians {
-            get {
-                return ResourceManager.GetString("AreaCVToolbar_UpdateUI_Medians", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to None.
-        /// </summary>
-        public static string AreaCVToolbar_UpdateUI_None {
-            get {
-                return ResourceManager.GetString("AreaCVToolbar_UpdateUI_None", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Total ion current.
-        /// </summary>
-        public static string AreaCVToolbar_UpdateUI_Total_ion_current {
-            get {
-                return ResourceManager.GetString("AreaCVToolbar_UpdateUI_Total_ion_current", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Invalid CV cutoff entered.
         /// </summary>
         public static string AreaCvToolbarProperties_btnOk_Click_Invalid_CV_cutoff_entered {
@@ -1819,15 +1792,6 @@ namespace pwiz.Skyline.Properties {
         public static string AreaReplicateGraphPane_UpdateGraph_Peak_Area_Ratio_To__0_ {
             get {
                 return ResourceManager.GetString("AreaReplicateGraphPane_UpdateGraph_Peak_Area_Ratio_To__0_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Peak Area Ratio To Global Standards.
-        /// </summary>
-        public static string AreaReplicateGraphPane_UpdateGraph_Peak_Area_Ratio_To_Global_Standards {
-            get {
-                return ResourceManager.GetString("AreaReplicateGraphPane_UpdateGraph_Peak_Area_Ratio_To_Global_Standards", resourceCulture);
             }
         }
         
@@ -2510,6 +2474,15 @@ namespace pwiz.Skyline.Properties {
         public static string BrukerTimsTofMethodExporter_ExportMethod_Getting_scheduling___ {
             get {
                 return ResourceManager.GetString("BrukerTimsTofMethodExporter_ExportMethod_Getting_scheduling___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Scheduling failure (no targets?).
+        /// </summary>
+        public static string BrukerTimsTofMethodExporter_ExportMethod_Scheduling_failure__no_targets__ {
+            get {
+                return ResourceManager.GetString("BrukerTimsTofMethodExporter_ExportMethod_Scheduling_failure__no_targets__", resourceCulture);
             }
         }
         
@@ -8129,15 +8102,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to fragmentIons value not found in ComboBox items.
-        /// </summary>
-        public static string DdaSearch_SearchSettingsControl_Fragmentions_not_found_in_combobox {
-            get {
-                return ResourceManager.GetString("DdaSearch_SearchSettingsControl_Fragmentions_not_found_in_combobox", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to MS1 Tolerance incorrect.
         /// </summary>
         public static string DdaSearch_SearchSettingsControl_MS1_Tolerance_incorrect {
@@ -8437,6 +8401,69 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &quot;Data retrieved successfully.&quot;.
+        /// </summary>
+        public static string DetectionPlotData_DataRetrieved_Label {
+            get {
+                return ResourceManager.GetString("DetectionPlotData_DataRetrieved_Label", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid Q-Value. Cannot be 0 or 1..
+        /// </summary>
+        public static string DetectionPlotData_InvalidQValue_Label {
+            get {
+                return ResourceManager.GetString("DetectionPlotData_InvalidQValue_Label", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No data loaded..
+        /// </summary>
+        public static string DetectionPlotData_NoDataLoaded_Label {
+            get {
+                return ResourceManager.GetString("DetectionPlotData_NoDataLoaded_Label", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Document has no Q-Values. Train your mProphet model..
+        /// </summary>
+        public static string DetectionPlotData_NoQValuesInDocument_Label {
+            get {
+                return ResourceManager.GetString("DetectionPlotData_NoQValuesInDocument_Label", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Document has no peptides or chromatograms..
+        /// </summary>
+        public static string DetectionPlotData_NoResults_Label {
+            get {
+                return ResourceManager.GetString("DetectionPlotData_NoResults_Label", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use properties dialog or modify the document to update the plot..
+        /// </summary>
+        public static string DetectionPlotData_UsePropertiesDialog_Label {
+            get {
+                return ResourceManager.GetString("DetectionPlotData_UsePropertiesDialog_Label", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &quot;Waiting for the document to load.&quot;.
+        /// </summary>
+        public static string DetectionPlotData_WaitingForDocumentLoad_Label {
+            get {
+                return ResourceManager.GetString("DetectionPlotData_WaitingForDocumentLoad_Label", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to all runs.
         /// </summary>
         public static string DetectionPlotPane_AllRunsLine_Name {
@@ -8572,7 +8599,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Detections.
+        ///   Looks up a localized string similar to Detections ({0}).
         /// </summary>
         public static string DetectionPlotPane_YAxis_Name {
             get {
@@ -9566,16 +9593,6 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("EditIonMobilityLibraryDlg_OkDialog_An_ion_mobility_library_with_the_name__0__alre" +
                         "ady_exists__Do_you_want_to_overwrite_it_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to An ion mobility predictor with the name {0} already exists..
-        /// </summary>
-        public static string EditIonMobilityLibraryDlg_OkDialog_An_ion_mobility_predictor_with_the_name__0__already_exists_ {
-            get {
-                return ResourceManager.GetString("EditIonMobilityLibraryDlg_OkDialog_An_ion_mobility_predictor_with_the_name__0__al" +
-                        "ready_exists_", resourceCulture);
             }
         }
         
@@ -11926,13 +11943,13 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to All targets must have an ion mobility value. These can be set explicitly or contained in an ion mobility predictor or spectral library. The following ion mobility values are missing:.
+        ///   Looks up a localized string similar to All targets must have an ion mobility value. These can be set explicitly or contained in an ion mobility library or spectral library. The following ion mobility values are missing:.
         /// </summary>
-        public static string ExportMethodDlg_OkDialog_All_targets_must_have_an_ion_mobility_value__These_can_be_set_explicitly_or_contained_in_an_ion_mobility_predictor_or_spectral_library__The_following_ion_mobility_values_are_missing_ {
+        public static string ExportMethodDlg_OkDialog_All_targets_must_have_an_ion_mobility_value__These_can_be_set_explicitly_or_contained_in_an_ion_mobility_library_or_spectral_library__The_following_ion_mobility_values_are_missing_ {
             get {
                 return ResourceManager.GetString("ExportMethodDlg_OkDialog_All_targets_must_have_an_ion_mobility_value__These_can_b" +
-                        "e_set_explicitly_or_contained_in_an_ion_mobility_predictor_or_spectral_library__" +
-                        "The_following_ion_mobility_values_are_missing_", resourceCulture);
+                        "e_set_explicitly_or_contained_in_an_ion_mobility_library_or_spectral_library__Th" +
+                        "e_following_ion_mobility_values_are_missing_", resourceCulture);
             }
         }
         
@@ -12424,6 +12441,60 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("ExportMethodDlg_VerifySchedulingAllowed_You_must_export_a__0__transition_list_and" +
                         "_manually_import_it_into_a_method_file_using_vendor_software_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Concurrent frames.
+        /// </summary>
+        public static string ExportMethodScheduleGraph_ExportMethodScheduleGraph_Concurrent_frames {
+            get {
+                return ResourceManager.GetString("ExportMethodScheduleGraph_ExportMethodScheduleGraph_Concurrent_frames", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Max sampling times.
+        /// </summary>
+        public static string ExportMethodScheduleGraph_ExportMethodScheduleGraph_Max_sampling_times {
+            get {
+                return ResourceManager.GetString("ExportMethodScheduleGraph_ExportMethodScheduleGraph_Max_sampling_times", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Mean sampling times.
+        /// </summary>
+        public static string ExportMethodScheduleGraph_ExportMethodScheduleGraph_Mean_sampling_times {
+            get {
+                return ResourceManager.GetString("ExportMethodScheduleGraph_ExportMethodScheduleGraph_Mean_sampling_times", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Redundancy of targets.
+        /// </summary>
+        public static string ExportMethodScheduleGraph_ExportMethodScheduleGraph_Redundancy_of_targets {
+            get {
+                return ResourceManager.GetString("ExportMethodScheduleGraph_ExportMethodScheduleGraph_Redundancy_of_targets", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Target table.
+        /// </summary>
+        public static string ExportMethodScheduleGraph_ExportMethodScheduleGraph_Target_table {
+            get {
+                return ResourceManager.GetString("ExportMethodScheduleGraph_ExportMethodScheduleGraph_Target_table", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Targets per frame.
+        /// </summary>
+        public static string ExportMethodScheduleGraph_ExportMethodScheduleGraph_Targets_per_frame {
+            get {
+                return ResourceManager.GetString("ExportMethodScheduleGraph_ExportMethodScheduleGraph_Targets_per_frame", resourceCulture);
             }
         }
         
@@ -18002,6 +18073,78 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to 1/K0 lower limit.
+        /// </summary>
+        public static string Metrics_Col1K0LowerLimit__1_K0_lower_limit {
+            get {
+                return ResourceManager.GetString("Metrics_Col1K0LowerLimit__1_K0_lower_limit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to 1/K0 upper limit.
+        /// </summary>
+        public static string Metrics_Col1K0UpperLimit__1_K0_upper_limit {
+            get {
+                return ResourceManager.GetString("Metrics_Col1K0UpperLimit__1_K0_upper_limit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Max sampling time (seconds).
+        /// </summary>
+        public static string Metrics_ColMaxSamplingTime_Max_sampling_time__seconds_ {
+            get {
+                return ResourceManager.GetString("Metrics_ColMaxSamplingTime_Max_sampling_time__seconds_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Mean sampling time (seconds).
+        /// </summary>
+        public static string Metrics_ColMeanSamplingTime_Mean_sampling_time__seconds_ {
+            get {
+                return ResourceManager.GetString("Metrics_ColMeanSamplingTime_Mean_sampling_time__seconds_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to m/z.
+        /// </summary>
+        public static string Metrics_ColMz_m_z {
+            get {
+                return ResourceManager.GetString("Metrics_ColMz_m_z", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to RT begin.
+        /// </summary>
+        public static string Metrics_ColRtBegin_RT_begin {
+            get {
+                return ResourceManager.GetString("Metrics_ColRtBegin_RT_begin", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to RT end.
+        /// </summary>
+        public static string Metrics_ColRtEnd_RT_end {
+            get {
+                return ResourceManager.GetString("Metrics_ColRtEnd_RT_end", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Target.
+        /// </summary>
+        public static string Metrics_ColTarget_Target {
+            get {
+                return ResourceManager.GetString("Metrics_ColTarget_Target", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Adding spectra to MIDAS library.
         /// </summary>
         public static string MidasLibrary_AddSpectra_Adding_spectra_to_MIDAS_library {
@@ -23026,33 +23169,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Global standards.
-        /// </summary>
-        public static string RefineDlg_NormalizationMethod_Global_standards {
-            get {
-                return ResourceManager.GetString("RefineDlg_NormalizationMethod_Global_standards", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Medians.
-        /// </summary>
-        public static string RefineDlg_NormalizationMethod_Medians {
-            get {
-                return ResourceManager.GetString("RefineDlg_NormalizationMethod_Medians", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to None.
-        /// </summary>
-        public static string RefineDlg_NormalizationMethod_None {
-            get {
-                return ResourceManager.GetString("RefineDlg_NormalizationMethod_None", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Total ion current.
         /// </summary>
         public static string RefineDlg_NormalizationMethod_Total_ion_current {
@@ -24890,6 +25006,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Concurrent frames.
+        /// </summary>
+        public static string RTScheduleGraphPane_UpdateGraph_Concurrent_frames {
+            get {
+                return ResourceManager.GetString("RTScheduleGraphPane_UpdateGraph_Concurrent_frames", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Concurrent Precursors.
         /// </summary>
         public static string RTScheduleGraphPane_UpdateGraph_Concurrent_Precursors {
@@ -24904,6 +25029,51 @@ namespace pwiz.Skyline.Properties {
         public static string RTScheduleGraphPane_UpdateGraph_Concurrent_Transitions {
             get {
                 return ResourceManager.GetString("RTScheduleGraphPane_UpdateGraph_Concurrent_Transitions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Max sampling times (seconds).
+        /// </summary>
+        public static string RTScheduleGraphPane_UpdateGraph_Max_sampling_times {
+            get {
+                return ResourceManager.GetString("RTScheduleGraphPane_UpdateGraph_Max_sampling_times", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Mean sampling times (seconds).
+        /// </summary>
+        public static string RTScheduleGraphPane_UpdateGraph_Mean_sampling_times {
+            get {
+                return ResourceManager.GetString("RTScheduleGraphPane_UpdateGraph_Mean_sampling_times", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Redundancy of targets.
+        /// </summary>
+        public static string RTScheduleGraphPane_UpdateGraph_Redundancy_of_targets {
+            get {
+                return ResourceManager.GetString("RTScheduleGraphPane_UpdateGraph_Redundancy_of_targets", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Rank of target.
+        /// </summary>
+        public static string RTScheduleGraphPane_UpdateGraph_Target {
+            get {
+                return ResourceManager.GetString("RTScheduleGraphPane_UpdateGraph_Target", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Targets per frame.
+        /// </summary>
+        public static string RTScheduleGraphPane_UpdateGraph_Targets_per_frame {
+            get {
+                return ResourceManager.GetString("RTScheduleGraphPane_UpdateGraph_Targets_per_frame", resourceCulture);
             }
         }
         

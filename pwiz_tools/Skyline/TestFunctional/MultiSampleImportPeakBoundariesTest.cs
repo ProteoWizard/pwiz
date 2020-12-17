@@ -19,6 +19,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.FileUI;
@@ -44,6 +45,7 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         protected override void DoTest()
         {
             RunUI(()=>SkylineWindow.OpenFile(TestFilesDir.GetTestPath("SimpleWiffTest.sky")));
@@ -67,6 +69,7 @@ namespace pwiz.SkylineTestFunctional
             var importResultsSamplesDlg = WaitForOpenForm<ImportResultsSamplesDlg>();
             OkDialog(importResultsSamplesDlg, importResultsSamplesDlg.OkDialog);
             WaitForDocumentLoaded();
+            Assert.AreEqual(1, SkylineWindow.Document.Settings.MeasuredResults.Chromatograms.Count);
 
             // Import the first two samples from "secondfile.wiff" into a replicate named "ReplicateTwo"
             importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
@@ -88,6 +91,8 @@ namespace pwiz.SkylineTestFunctional
             });
             OkDialog(importResultsSamplesDlg, importResultsSamplesDlg.OkDialog);
             WaitForDocumentLoaded();
+            WaitForCondition(() => 2 == SkylineWindow.Document.Settings.MeasuredResults.Chromatograms.Count);
+            Assert.AreEqual(2, SkylineWindow.Document.Settings.MeasuredResults.Chromatograms.Count);
 
             // Import the second and third samples from "secondfile.wiff" into a replicate named "ReplicateThree"
             importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
@@ -109,6 +114,8 @@ namespace pwiz.SkylineTestFunctional
             });
             OkDialog(importResultsSamplesDlg, importResultsSamplesDlg.OkDialog);
             WaitForDocumentLoaded();
+            WaitForCondition(() => 3 == SkylineWindow.Document.Settings.MeasuredResults.Chromatograms.Count);
+            Assert.AreEqual(3, SkylineWindow.Document.Settings.MeasuredResults.Chromatograms.Count);
 
             var peakBoundariesFile = TestFilesDir.GetTestPath("PeakBoundaries.tsv");
             using (var fileWriter = new StreamWriter(peakBoundariesFile))

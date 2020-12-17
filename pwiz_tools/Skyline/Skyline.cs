@@ -65,6 +65,7 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Lists;
 using pwiz.Skyline.FileUI.PeptideSearch;
+using pwiz.Skyline.Menus;
 using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding;
@@ -137,7 +138,7 @@ namespace pwiz.Skyline
         public SkylineWindow(string[] args = null)
         {
             InitializeComponent();
-            
+            InitializeMenus();
             _undoManager = new UndoManager(this);
             var undoRedoButtons = new UndoRedoButtons(_undoManager,
                 undoMenuItem, undoToolBarButton,
@@ -1105,6 +1106,7 @@ namespace pwiz.Skyline
 
             _timerGraphs.Dispose();
             _timerProgress.Dispose();
+            RefineMenu.Dispose();
 
             DatabaseResources.ReleaseAll(); // Let go of protDB SessionFactories
 
@@ -1119,7 +1121,7 @@ namespace pwiz.Skyline
             // ReSharper restore LocalizableElement
 
             DetectionPlotData.ReleaseDataCache();
-
+            
             base.OnClosed(e);
         }
 
@@ -2606,29 +2608,7 @@ namespace pwiz.Skyline
 
         public void ShowRefineDlg()
         {
-            using (var refineDlg = new RefineDlg(this))
-            {
-                if (refineDlg.ShowDialog(this) == DialogResult.OK)
-                {
-                    ModifyDocument(Resources.SkylineWindow_ShowRefineDlg_Refine,
-                        doc =>
-                        {
-                            using (var longWaitDlg = new LongWaitDlg(this))
-                            {
-                                longWaitDlg.Message = Resources.SkylineWindow_ShowRefineDlg_Refining_document;
-                                longWaitDlg.PerformWork(refineDlg, 1000, progressMonitor =>
-                                {
-                                    var srmSettingsChangeMonitor =
-                                        new SrmSettingsChangeMonitor(progressMonitor, Resources.SkylineWindow_ShowRefineDlg_Refining_document, this, doc);
-
-                                        doc = refineDlg.RefinementSettings.Refine(doc, srmSettingsChangeMonitor);
-                                    });
-                            }
-
-                            return doc;
-                        }, refineDlg.FormSettings.EntryCreator.Create);
-                }
-            }
+            RefineMenu.ShowRefineDlg();
         }
 
         public static int CountNodeDiff(SrmDocumentPair docPair)
@@ -2651,175 +2631,29 @@ namespace pwiz.Skyline
             return count;
         }
 
-        private AuditLogEntry CreateRemoveNodesEntry(SrmDocumentPair docPair, MessageType singular, MessageType plural)
-        {
-            var count = CountNodeDiff(docPair);
-            return AuditLogEntry.CreateSimpleEntry(count == 1 ? singular : plural, docPair.NewDocumentType, count);
-        }
-
-        private void removeEmptyProteinsMenuItem_Click(object sender, EventArgs e)
-        {
-            var refinementSettings = new RefinementSettings { MinPeptidesPerProtein = 1 };
-            ModifyDocument(Resources.SkylineWindow_removeEmptyProteinsMenuItem_Click_Remove_empty_proteins,
-                refinementSettings.Refine, docPair => CreateRemoveNodesEntry(docPair, MessageType.removed_empty_protein, MessageType.removed_empty_proteins));
-        }
-
-        private void removeEmptyPeptidesMenuItem_Click(object sender, EventArgs e)
-        {
-            var refinementSettings = new RefinementSettings { MinPrecursorsPerPeptide = 1 };
-            ModifyDocument(Resources.SkylineWindow_removeEmptyPeptidesMenuItem_Click_Remove_empty_peptides,
-                refinementSettings.Refine, docPair => CreateRemoveNodesEntry(docPair, MessageType.removed_empty_peptide, MessageType.removed_empty_peptides));
-        }
-
-        private void removeDuplicatePeptidesMenuItem_Click(object sender, EventArgs e)
-        {
-            var refinementSettings = new RefinementSettings { RemoveDuplicatePeptides = true };
-            ModifyDocument(Resources.SkylineWindow_removeDuplicatePeptidesMenuItem_Click_Remove_duplicate_peptides,
-                refinementSettings.Refine, docPair => CreateRemoveNodesEntry(docPair, MessageType.removed_duplicate_peptide, MessageType.removed_duplicate_peptides));
-        }
-
-        private void removeRepeatedPeptidesMenuItem_Click(object sender, EventArgs e)
-        {
-            var refinementSettings = new RefinementSettings { RemoveRepeatedPeptides = true };
-            ModifyDocument(Resources.SkylineWindow_removeRepeatedPeptidesMenuItem_Click_Remove_repeated_peptides,
-                refinementSettings.Refine, docPair => CreateRemoveNodesEntry(docPair, MessageType.removed_repeated_peptide, MessageType.removed_repeated_peptides));
-        }
-
-        private void renameProteinsToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowRenameProteinsDlg();
-        }
-
         public void ShowRenameProteinsDlg()
         {
-            using (RenameProteinsDlg dlg = new RenameProteinsDlg(DocumentUI))
-            {
-                if (dlg.ShowDialog(this) == DialogResult.OK)
-                {
-                    ModifyDocument(Resources.SkylineWindow_ShowRenameProteinsDlg_Rename_proteins,
-                        doc => RenameProtein(doc, dlg), dlg.FormSettings.EntryCreator.Create);
-                }
-            }
-        }
-
-        private SrmDocument RenameProtein(SrmDocument doc, RenameProteinsDlg dlg)
-        {
-            foreach (var name in dlg.DictNameToName.Keys)
-            {
-                PeptideGroupDocNode node = Document.MoleculeGroups.FirstOrDefault(peptideGroup => Equals(name, peptideGroup.Name));
-                if (node != null)
-                {
-                    var renameProtein = new RenameProteinsDlg.RenameProteins { CurrentName = name, NewName = dlg.DictNameToName[name] };
-                    if (renameProtein.CurrentName != renameProtein.NewName)
-                    {
-                        doc = (SrmDocument)doc.ReplaceChild(node.ChangeName(renameProtein.NewName));
-                    }
-                }
-                    
-            }
-            return doc;
-        }
-
-        private void acceptPeptidesMenuItem_Click(object sender, EventArgs e)
-        {
-            AcceptPeptides();
+            RefineMenu.ShowRenameProteinsDlg();
         }
 
         public void AcceptPeptides()
         {
-            using (var dlg = new RefineListDlg(DocumentUI))
-            {
-                if (dlg.ShowDialog(this) == DialogResult.OK)
-                {
-                    var refinementSettings = new RefinementSettings
-                    {
-                        AcceptedPeptides = dlg.AcceptedPeptides,
-                        AcceptModified = dlg.MatchModified
-                    };
-                    if (dlg.RemoveEmptyProteins)
-                        refinementSettings.MinPeptidesPerProtein = 1;
-
-                    ModifyDocument(Resources.SkylineWindow_acceptPeptidesMenuItem_Click_Accept_peptides, refinementSettings.Refine, dlg.FormSettings.EntryCreator.Create);
-                }
-            }
-        }
-
-        private void acceptProteinsMenuItem_Click(object sender, EventArgs e)
-        {
-            AcceptProteins();
+            RefineMenu.AcceptPeptides();
         }
 
         public void AcceptProteins()
         {
-            using (var dlg = new RefineProteinListDlg(DocumentUI))
-            {
-                if (dlg.ShowDialog(this) == DialogResult.OK)
-                {
-                    var refinementSettings = new RefinementSettings
-                    {
-                        AcceptedProteins = dlg.AcceptedProteins,
-                        AcceptProteinType = dlg.ProteinSpecType
-                    };
-                    ModifyDocument(Resources.SkylineWindow_acceptPeptidesMenuItem_Click_Accept_peptides, refinementSettings.Refine, dlg.FormSettings.EntryCreator.Create);
-                }
-            }
-        }
-
-        private void removeMissingResultsMenuItem_Click(object sender, EventArgs e)
-        {
-            RemoveMissingResults();
+            RefineMenu.AcceptProteins();
         }
 
         public void RemoveMissingResults()
         {
-            var refinementSettings = new RefinementSettings { RemoveMissingResults = true };
-            ModifyDocument(Resources.SkylineWindow_RemoveMissingResults_Remove_missing_results, refinementSettings.Refine,
-                docPair => AuditLogEntry.CreateSimpleEntry(MessageType.removed_missing_results, docPair.NewDocumentType));
-        }
-
-        private void generateDecoysMenuItem_Click(object sender, EventArgs e)
-        {
-            if (DocumentUI.PeptideCount == 0)
-            {
-                MessageDlg.Show(this, Resources.SkylineWindow_generateDecoysMenuItem_Click_The_document_must_contain_peptides_to_generate_decoys_);
-                return;
-            }
-            if (DocumentUI.PeptideGroups.Any(nodePeptideGroup => nodePeptideGroup.IsDecoy))
-            {
-                var message = TextUtil.LineSeparate(Resources.SkylineWindow_generateDecoysMenuItem_Click_This_operation_will_replace_the_existing_decoys,
-                                                    Resources.SkylineWindow_generateDecoysMenuItem_Click_Are_you_sure_you_want_to_continue);
-                // Warn about removing existing decoys
-                var result = MessageBox.Show(this, message, Program.Name, MessageBoxButtons.OKCancel);
-                if (result == DialogResult.Cancel)
-                    return;
-            }
-
-            ShowGenerateDecoysDlg();
+            RefineMenu.RemoveMissingResults();
         }
 
         public bool ShowGenerateDecoysDlg(IWin32Window owner = null)
         {
-            using (var decoysDlg = new GenerateDecoysDlg(DocumentUI))
-            {
-                if (decoysDlg.ShowDialog(owner ?? this) == DialogResult.OK)
-                {
-                    var refinementSettings = new RefinementSettings { NumberOfDecoys = decoysDlg.NumDecoys, DecoysMethod = decoysDlg.DecoysMethod };
-                    ModifyDocument(Resources.SkylineWindow_ShowGenerateDecoysDlg_Generate_Decoys, refinementSettings.GenerateDecoys,
-                        docPair =>
-                        {
-                            var plural = refinementSettings.NumberOfDecoys > 1;
-                            return AuditLogEntry.CreateSingleMessageEntry(new MessageInfo(
-                                plural ? MessageType.added_peptide_decoys : MessageType.added_peptide_decoy,
-                                DocumentUI.DocumentType,
-                                refinementSettings.NumberOfDecoys, refinementSettings.DecoysMethod));
-                        });
-
-                    var nodePepGroup = DocumentUI.PeptideGroups.First(nodePeptideGroup => nodePeptideGroup.IsDecoy);
-                    SelectedPath = DocumentUI.GetPathTo((int)SrmDocument.Level.MoleculeGroups, DocumentUI.FindNodeIndex(nodePepGroup.Id));
-                    return true;
-                }
-            }
-            return false;
+            return RefineMenu.ShowGenerateDecoysDlg(owner);
         }
 
         #endregion // Edit menu
@@ -3159,55 +2993,6 @@ namespace pwiz.Skyline
                 (Settings.Default.ShowPeptidesDisplayMode == ProteinMetadataManager.ProteinDisplayMode.ByPreferredName.ToString());
             showTargetsByGeneToolStripMenuItem.Checked =
                 (Settings.Default.ShowPeptidesDisplayMode == ProteinMetadataManager.ProteinDisplayMode.ByGene.ToString());
-        }
-
-        private void PerformSort(string title, Comparison<PeptideGroupDocNode> comparison, MessageType type)
-        {
-            ModifyDocument(title, doc =>
-            {
-                var listIrt = new List<PeptideGroupDocNode>();
-                var listProteins = new List<PeptideGroupDocNode>(doc.Children.Count);
-                var listDecoy = new List<PeptideGroupDocNode>();
-                foreach (var nodePepGroup in doc.MoleculeGroups)
-                {
-                    if (nodePepGroup.IsDecoy)
-                    {
-                        listDecoy.Add(nodePepGroup);
-                    }
-                    else if (nodePepGroup.PeptideCount > 0 && nodePepGroup.Peptides.All(nodePep => nodePep.GlobalStandardType == StandardType.IRT))
-                    {
-                        listIrt.Add(nodePepGroup);
-                    }
-                    else
-                    {
-                        listProteins.Add(nodePepGroup);
-                    }
-                }
-                listIrt.Sort(comparison);
-                listProteins.Sort(comparison);
-                listDecoy.Sort(comparison);
-                return (SrmDocument)doc.ChangeChildrenChecked(listIrt.Concat(listProteins).Concat(listDecoy).ToArray());
-            }, docPair => AuditLogEntry.CreateSingleMessageEntry(new MessageInfo(type, docPair.NewDocumentType)));
-        }
-
-        public void sortProteinsByNameToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            PerformSort(Resources.SkylineWindow_sortProteinsMenuItem_Click_Sort_proteins_by_name, PeptideGroupDocNode.CompareNames, MessageType.sort_protein_name);
-        }
-
-        public void sortProteinsByAccessionToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            PerformSort(Resources.SkylineWindow_sortProteinsByAccessionToolStripMenuItem_Click_Sort_proteins_by_accession, PeptideGroupDocNode.CompareAccessions, MessageType.sort_protein_accession);
-        }
-
-        public void sortProteinsByPreferredNameToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            PerformSort(Resources.SkylineWindow_sortProteinsByPreferredNameToolStripMenuItem_Click_Sort_proteins_by_preferred_name, PeptideGroupDocNode.ComparePreferredNames, MessageType.sort_protein_preferred_name);
-        }
-
-        public void sortProteinsByGeneToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            PerformSort(Resources.SkylineWindow_sortProteinsByGeneToolStripMenuItem_Click_Sort_proteins_by_gene, PeptideGroupDocNode.CompareGenes, MessageType.sort_protein_gene);
         }
 
         private void addMoleculeContextMenuItem_Click(object sender, EventArgs e)
@@ -4633,21 +4418,21 @@ namespace pwiz.Skyline
             var standardTypes = DocumentUI.Settings.PeptideSettings.Modifications.RatioInternalStandardTypes;
             for (int i = 0; i < standardTypes.Count; i++)
             {
-                SelectRatioHandler.Create(this, menu, standardTypes[i].Title, i);
+                SelectRatioHandler.Create(this, menu, standardTypes[i].Title, NormalizeOption.FromIsotopeLabelType(standardTypes[i]));
             }
             if (DocumentUI.Settings.HasGlobalStandardArea)
             {
                 SelectRatioHandler.Create(this, menu, ratiosToGlobalStandardsMenuItem.Text,
-                    ChromInfo.RATIO_INDEX_GLOBAL_STANDARDS);
+                    NormalizeOption.FromNormalizationMethod(NormalizationMethod.GLOBAL_STANDARDS));
             }
         }
 
         private class SelectRatioHandler
         {
             protected readonly SkylineWindow _skyline;
-            private readonly int _ratioIndex;
+            private readonly NormalizeOption _ratioIndex;
 
-            public SelectRatioHandler(SkylineWindow skyline, int ratioIndex)
+            public SelectRatioHandler(SkylineWindow skyline, NormalizeOption ratioIndex)
             {
                 _skyline = skyline;
                 _ratioIndex = ratioIndex;
@@ -4665,22 +4450,22 @@ namespace pwiz.Skyline
 
             protected virtual void OnMenuItemClick()
             {
-                _skyline.SequenceTree.RatioIndex = _ratioIndex;
-                _skyline._listGraphPeakArea.ForEach(g => g.RatioIndex = _ratioIndex);
+                _skyline.SequenceTree.NormalizeOption = _ratioIndex;
+                _skyline._listGraphPeakArea.ForEach(g => g.NormalizeOption = _ratioIndex);
             }
 
-            public static void Create(SkylineWindow skylineWindow, ToolStripMenuItem menu, string text, int i)
+            public static void Create(SkylineWindow skylineWindow, ToolStripMenuItem menu, string text, NormalizeOption i)
             {
                 var handler = new SelectRatioHandler(skylineWindow, i);
                 var item = new ToolStripMenuItem(text, null, handler.ToolStripMenuItemClick)
-                { Checked = (skylineWindow.SequenceTree.RatioIndex == i) };
+                { Checked = (skylineWindow.SequenceTree.NormalizeOption == i) };
                 menu.DropDownItems.Add(item);
             }
         }
 
-        public void SetRatioIndex(int index)
+        public void SetRatioIndex(NormalizeOption ratioIndex)
         {
-            new SelectRatioHandler(this, index).Select();
+            new SelectRatioHandler(this, ratioIndex).Select();
         }
 
         private void sequenceTree_PickedChildrenEvent(object sender, PickedChildrenEventArgs e)
@@ -5539,17 +5324,9 @@ namespace pwiz.Skyline
             return Equals(pasteMenuItem.ShortcutKeys, keys);
         }
         
-        private void associateFASTAMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowAssociateProteinsDlg();
-        }
-
         public void ShowAssociateProteinsDlg()
         {
-            using (var associateFasta = new AssociateProteinsDlg(this))
-            {
-                associateFasta.ShowDialog(this);
-            }
+            RefineMenu.ShowAssociateProteinsDlg();
         }
 
         private void listsMenuItem_DropDownOpening(object sender, EventArgs e)
@@ -5878,16 +5655,21 @@ namespace pwiz.Skyline
             UpdateGraphPanes();
         }
 
-        private void permuteIsotopeModificationsMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowPermuteIsotopeModificationsDlg();
-        }
-
         public void ShowPermuteIsotopeModificationsDlg()
         {
-            using (var dlg = new PermuteIsotopeModificationsDlg(this))
+            RefineMenu.ShowPermuteIsotopeModificationsDlg();
+        }
+
+        public RefineMenu RefineMenu { get; private set; }
+
+        private void InitializeMenus()
+        {
+            RefineMenu = new RefineMenu(this);
+            refineToolStripMenuItem.DropDownItems.Clear();
+            refineToolStripMenuItem.DropDownItems.AddRange(RefineMenu.DropDownItems.ToArray());
+            foreach (var entry in RefineMenu.ModeUiHandler.GetHandledComponents())
             {
-                dlg.ShowDialog(this);
+                modeUIHandler.AddHandledComponent(entry.Key, entry.Value);
             }
         }
     }

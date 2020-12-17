@@ -206,12 +206,12 @@ namespace pwiz.Skyline.Controls.Graphs
             ProgressBar?.UpdateProgress(progress);
         }
 
-        public void UpdateStatusHandler(DetectionPlotData.DetectionDataCache.CacheStatus status)
+        public void UpdateStatusHandler(DetectionPlotData.DetectionDataCache.CacheStatus status, string message)
         {
             if (GraphSummary.GraphControl.IsHandleCreated)
                 GraphSummary.GraphControl.Invoke((Action) (() =>
                 {
-                    AddLabels();
+                    AddLabels(status, message);
                     if (status == DetectionPlotData.DetectionDataCache.CacheStatus.processing)
                         ProgressBar = new PaneProgressBar(this);
                     else
@@ -222,6 +222,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                     GraphSummary.GraphControl.Invalidate();
                     GraphSummary.GraphControl.Update();
+                    GraphSummary.Toolbar.UpdateUI();
                 }));
         }
 
@@ -305,8 +306,15 @@ namespace pwiz.Skyline.Controls.Graphs
 
         protected virtual void AddLabels()
         {
+            AddLabels(DetectionPlotData.GetDataCache().Status, "");
+        }
+
+        protected virtual void AddLabels(DetectionPlotData.DetectionDataCache.CacheStatus status, string message)
+        {
             if (!_detectionData.IsValid)
-                switch (DetectionPlotData.GetDataCache().Status)
+            {
+                GraphObjList.Clear();
+                switch (status)
                 {
                     case DetectionPlotData.DetectionDataCache.CacheStatus.processing:
                         Title.Text = Resources.DetectionPlotPane_WaitingForData_Label;
@@ -321,11 +329,32 @@ namespace pwiz.Skyline.Controls.Graphs
                         Title.Text = Resources.DetectionPlotPane_EmptyPlotError_Label;
                         break;
                 }
+                var scaleFactor = CalcScaleFactor();
+                SizeF titleSize;
+                using (var g = GraphSummary.CreateGraphics())
+                {
+                    titleSize = Title.FontSpec.BoundingBox(g, Title.Text, scaleFactor);
+                }
+                var subtitleLocation = new PointF(
+                    (Rect.Left + Rect.Right) / (2 * Rect.Width),
+                    (Rect.Top + Margin.Top * (1 + scaleFactor) + 2*titleSize.Height) / Rect.Height);
+
+                var subtitle = new TextObj(message, subtitleLocation.X, subtitleLocation.Y,
+                    CoordType.PaneFraction, AlignH.Center, AlignV.Center)
+                {
+                    IsClippedToChartRect = true,
+                    ZOrder = ZOrder.E_BehindCurves,
+                    FontSpec = GraphSummary.CreateFontSpec(Color.Black),
+                };
+                subtitle.FontSpec.Size = Title.FontSpec.Size * 0.75f;
+                GraphObjList.Add(subtitle);
+            }
             else
             {
                 Title.Text = string.Empty;
-                YAxis.Title.Text += @" (" + String.Format(CultureInfo.CurrentCulture, Settings.YScaleFactor.Label, Settings.TargetType.Label) + @")";
-
+                YAxis.Title.Text = string.Format(CultureInfo.CurrentCulture, 
+                    Resources.DetectionPlotPane_YAxis_Name, 
+                    string.Format(CultureInfo.CurrentCulture, Settings.YScaleFactor.Label, Settings.TargetType.Label) );
             }
         }
 

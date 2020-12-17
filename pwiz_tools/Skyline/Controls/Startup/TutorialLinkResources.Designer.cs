@@ -421,7 +421,7 @@ namespace pwiz.Skyline.Controls.Startup {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/Skyline%20Small%20Molecule%20Targets.pdf.
+        ///   Looks up a localized string similar to https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/SmallMolecule-20_1.pdf.
         /// </summary>
         internal static string SmallMolecule_pdf {
             get {
@@ -439,7 +439,7 @@ namespace pwiz.Skyline.Controls.Startup {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/Skyline%20Small%20Molecule%20Method%20Dev%20and%20CE%20Opt.pdf.
+        ///   Looks up a localized string similar to https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/SmallMoleculeMethodDevCEOpt-20_1.pdf.
         /// </summary>
         internal static string SmallMoleculeMethodDevCEOpt_pdf {
             get {
@@ -457,7 +457,7 @@ namespace pwiz.Skyline.Controls.Startup {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/Skyline%20Small%20Molecule%20Quantification.pdf.
+        ///   Looks up a localized string similar to https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/SmallMoleculeQuant-20_1.pdf.
         /// </summary>
         internal static string SmallMoleculeQuantification_pdf {
             get {
@@ -471,6 +471,24 @@ namespace pwiz.Skyline.Controls.Startup {
         internal static string SmallMoleculeQuantification_zip {
             get {
                 return ResourceManager.GetString("SmallMoleculeQuantification_zip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/SmallMoleculeIMSLibraries.pdf.
+        /// </summary>
+        internal static string SmallMolLibraries_pdf {
+            get {
+                return ResourceManager.GetString("SmallMolLibraries_pdf", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to https://skyline.ms/tutorials/SmallMoleculeLibraries.zip.
+        /// </summary>
+        internal static string SmallMolLibraries_zip {
+            get {
+                return ResourceManager.GetString("SmallMolLibraries_zip", resourceCulture);
             }
         }
         

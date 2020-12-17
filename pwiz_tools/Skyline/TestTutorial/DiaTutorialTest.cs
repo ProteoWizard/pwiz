@@ -57,14 +57,14 @@ namespace pwiz.SkylineTestTutorial
         /// to regenerate checkpoint files for non-full-import mode,
         /// when something changes in the test.
         /// </summary>
-        private bool IsFullImportMode { get { return IsPauseForCoverShot || IsPauseForScreenShots; } }
+        private bool IsFullImportMode { get { return IsCoverShotMode || IsPauseForScreenShots; } }
 
         [TestMethod]
         public void TestDiaTutorial()
         {
             // Set true to look at tutorial screenshots.
 //            IsPauseForScreenShots = true;
-//            IsPauseForCoverShot = true;
+//            IsCoverShotMode = true;
             CoverShotName = "DIA";
 
             LinkPdf = "https://skyline.gs.washington.edu/tutorials/DIA-2_6.pdf";
@@ -389,7 +389,7 @@ namespace pwiz.SkylineTestTutorial
 
             PauseForScreenShot<GraphChromatogram>("Chromatogram graph metafile - split between two precursors", 35);
 
-            if (IsPauseForCoverShot)
+            if (IsCoverShotMode)
             {
                 RunUI(() =>
                 {
@@ -428,7 +428,7 @@ namespace pwiz.SkylineTestTutorial
                     isolationSchemeGraph.Left = SkylineWindow.Left;
                     isolationSchemeGraph.Width = 480;
                 });
-                PauseForCoverShot();
+                TakeCoverShot();
                 OkDialog(isolationSchemeGraph, isolationSchemeGraph.CloseButton);
                 OkDialog(isolationSchemeForm, isolationSchemeForm.OkDialog);
                 OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);

@@ -1264,6 +1264,12 @@ namespace pwiz.Skyline.SettingsUI.Irt
             set { textCalculatorName.Text = value; }
         }
 
+        public string CalcPath
+        {
+            get { return textDatabase.Text; }
+            set { textDatabase.Text = value; }
+        }
+
         public void DoPasteStandard()
         {
             _gridViewStandardDriver.OnPaste();
@@ -1305,14 +1311,6 @@ namespace pwiz.Skyline.SettingsUI.Irt
         {
             var selected = _driverStandards.SelectedItem;
             var lastIdx = _driverStandards.SelectedIndexLast;
-
-            if (ReferenceEquals(selected, IrtStandard.AUTO))
-            {
-                comboStandards.SelectedIndexChanged -= comboStandards_SelectedIndexChanged;
-                comboStandards.SelectedIndex = lastIdx;
-                comboStandards.SelectedIndexChanged += comboStandards_SelectedIndexChanged;
-                return;
-            }
 
             if (comboStandards.SelectedItem.ToString().Equals(Resources.SettingsListComboDriver_Edit_current) &&
                 IrtStandard.ALL.Any(standard => standard.Name.Equals(comboStandards.Items[lastIdx])))
@@ -1390,20 +1388,24 @@ namespace pwiz.Skyline.SettingsUI.Irt
             var selectedItem = _driverStandards.SelectedItem;
             if (selectedItem != null)
             {
-                var selectedName = selectedItem.Name;
-                if (!BuiltinStandardSelected)
+                if (BuiltinStandardSelected)
+                {
+                    // A built-in standard is selected and standards have changed
+                    var newIdx = CurrentStandardIndex;
+                    if (newIdx == -1)
+                        newIdx = _driverStandards.List.IndexOf(standard => ReferenceEquals(standard, IrtStandard.EMPTY));
+                    if (newIdx != comboStandards.SelectedIndex)
+                    {
+                        comboStandards.SelectedIndexChanged -= comboStandards_SelectedIndexChanged;
+                        comboStandards.SelectedIndex = newIdx;
+                        _driverStandards.SelectedIndexChangedEvent(sender, null);
+                        comboStandards.SelectedIndexChanged += comboStandards_SelectedIndexChanged;
+                    }
+                }
+                else
                 {
                     // Update standard
                     _driverStandards.List[comboStandards.SelectedIndex] = _driverStandards.SelectedItem.ChangePeptides(StandardPeptides);
-                }
-                else if (selectedName.Equals(IrtStandard.EMPTY.Name))
-                {
-                    // Set ComboBox from None to the matching standard, if any
-                    var current = CurrentStandardIndex;
-                    if (current != -1)
-                    {
-                        comboStandards.SelectedIndex = current;
-                    }
                 }
             }
 

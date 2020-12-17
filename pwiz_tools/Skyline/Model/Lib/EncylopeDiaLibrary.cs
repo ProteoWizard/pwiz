@@ -585,7 +585,7 @@ namespace pwiz.Skyline.Model.Lib
                     return true;
                 })
                 .Select(kvp =>
-                    new SpectrumInfoLibrary(this, labelType, _sourceFiles[kvp.Key], kvp.Value.ApexTime, null,
+                    new SpectrumInfoLibrary(this, labelType, _sourceFiles[kvp.Key], kvp.Value.ApexTime, null, null,
                         kvp.Key == entry.BestFileId, new ElibSpectrumKey(iEntry, kvp.Key))
                     {
                         SpectrumHeaderInfo = CreateSpectrumHeaderInfo(entry)

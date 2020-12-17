@@ -314,6 +314,12 @@ namespace pwiz.Skyline.SettingsUI
             set { FullScanSettingsControl.PrecursorResMz = value; }
         }
 
+        public bool UseSelectiveExtraction
+        {
+            get { return FullScanSettingsControl.UseSelectiveExtraction; }
+            set { FullScanSettingsControl.UseSelectiveExtraction = value; }
+        }
+
         protected override void OnShown(EventArgs e)
         {
             if (TabControlSel != null)

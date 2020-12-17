@@ -54,8 +54,8 @@ namespace pwiz.SkylineTestTutorial
         {
             // Set true to look at tutorial screenshots.
 //            IsPauseForScreenShots = true;
-//            IsPauseForCoverShot = true;
-//            IsPauseForCoverShot = true;
+//            IsCoverShotMode = true;
+//            IsCoverShotMode = true;
             CoverShotName = "SmallMoleculeMethodDevCEOpt";
 
             ForceMzml = true; // Prefer mzML as being the more efficient download
@@ -468,7 +468,7 @@ namespace pwiz.SkylineTestTutorial
                 SelectNode(SrmDocument.Level.Molecules, 6);
                 PauseForScreenShot<SkylineWindow>("Pentose-P", 35);
 
-                if (IsPauseForCoverShot)
+                if (IsCoverShotMode)
                 {
                     RunUI(() =>
                     {
@@ -479,7 +479,7 @@ namespace pwiz.SkylineTestTutorial
                     });
 
                     RestoreCoverViewOnScreen();
-                    PauseForCoverShot();
+                    TakeCoverShot();
                     return;
                 }
 

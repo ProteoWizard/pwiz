@@ -24,6 +24,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
+using System.Threading.Tasks;
 using MSAmanda.Core;
 using MSAmanda.Utils;
 using MSAmanda.InOutput;
@@ -62,7 +63,7 @@ namespace pwiz.Skyline.Model.DdaSearch
         private const string MAX_LOADED_PROTEINS_AT_ONCE = "MaxLoadedProteinsAtOnce";
         private const string MAX_LOADED_SPECTRA_AT_ONCE = "MaxLoadedSpectraAtOnce";
 
-        private readonly TemporaryDirectory _baseDir = new TemporaryDirectory();
+        private readonly TemporaryDirectory _baseDir = new TemporaryDirectory(tempPrefix: @"~SK_MSAmanda/");
 
         public MSAmandaSearchWrapper()
         {
@@ -103,6 +104,7 @@ namespace pwiz.Skyline.Model.DdaSearch
         {
             helper.Dispose();
             mzID.Dispose();
+            amandaInputParser?.Dispose();
             _baseDir.Dispose();
             //AvailableSettings = new SettingsFile(null, Settings, mzID);
         }
@@ -219,6 +221,22 @@ namespace pwiz.Skyline.Model.DdaSearch
                         tokenSource.Token.ThrowIfCancellationRequested();
                         try
                         {
+                            string outputFilepath = GetSearchResultFilepath(rawFileName);
+                            if (File.Exists(outputFilepath))
+                            {
+                                // CONSIDER: read the file description to see what settings were used to generate the file;
+                                // if the same settings were used, we can re-use the file, else regenerate
+                                /*string lastLine = File.ReadLines(outputFilepath).Last();
+                                if (lastLine == @"</MzIdentML>")
+                                {
+                                    helper.WriteMessage($"Re-using existing mzIdentML file for {rawFileName.GetSampleOrFileName()}", true);
+                                    CurrentFile++;
+                                    continue;
+                                }
+                                else*/
+                                FileEx.SafeDelete(outputFilepath);
+                            }
+
                             InitializeEngine(tokenSource, rawFileName.GetSampleLocator());
                             amandaInputParser = new MSAmandaSpectrumParser(rawFileName.GetSampleLocator(), Settings.ConsideredCharges, true);
                             SearchEngine.SetInputParser(amandaInputParser);
@@ -227,12 +245,22 @@ namespace pwiz.Skyline.Model.DdaSearch
                         }
                         finally
                         {
-                            SearchEngine.Dispose();
+                            SearchEngine?.Dispose();
                             amandaInputParser?.Dispose();
                             amandaInputParser = null;
                         }
                     }
                 }
+            }
+            catch (AggregateException e)
+            {
+                if (e.InnerException is TaskCanceledException)
+                {
+                    helper.WriteMessage(Resources.DdaSearch_Search_is_canceled, true);
+                }
+                else
+                    Program.ReportException(e);
+                success = false;
             }
             catch (OperationCanceledException)
             {
@@ -289,10 +317,11 @@ namespace pwiz.Skyline.Model.DdaSearch
         private List<Modification> GenerateNewModificationsForEveryAA(StaticMod mod)
         {
             List<Modification> mods = new List<Modification>();
-            foreach (var a in mod.AAs) {
-                mods.Add(GenerateNewModification(mod, a));
-       
-            }
+            if (mod.AAs != null)
+                foreach (var a in mod.AAs)
+                    mods.Add(GenerateNewModification(mod, a));
+            else
+                mods.Add(GenerateNewModification(mod, ' '));
             return mods;
         }
 

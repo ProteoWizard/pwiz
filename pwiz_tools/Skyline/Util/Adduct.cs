@@ -1126,6 +1126,7 @@ namespace pwiz.Skyline.Util
         };
 
         // All the adducts from http://fiehnlab.ucdavis.edu/staff/kind/Metabolomics/MS-Adduct-Calculator
+        // And a few more from XCMS public
         public static readonly string[] DEFACTO_STANDARD_ADDUCTS =
         {
             "[M+3H]",       
@@ -1167,7 +1168,9 @@ namespace pwiz.Skyline.Util
             "[M+Cl]",       
             "[M+K-2H]",     
             "[M+FA-H]",     
+            "[M+HCOO]", // Formate (synonym for deprotonated FA)  
             "[M+Hac-H]",    
+            "[M+CH3COO]", // Synonym for deprotonated Hac
             "[M+Br]",       
             "[M+TFA-H]",    
             "[2M-H]",       
