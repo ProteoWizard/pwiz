@@ -2,7 +2,6 @@
 using System.Drawing;
 using System.Linq;
 using System.Threading;
-using NHibernate.Hql.Ast.ANTLR.Tree;
 using pwiz.Common.Collections;
 using pwiz.Common.Colors;
 using pwiz.Common.DataAnalysis.Clustering;

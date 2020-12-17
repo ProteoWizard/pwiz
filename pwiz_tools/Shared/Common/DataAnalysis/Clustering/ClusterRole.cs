@@ -2,18 +2,19 @@
 using System.Collections.Generic;
 using System.Linq;
 using MathNet.Numerics.Statistics;
+using pwiz.Common.Properties;
 
 namespace pwiz.Common.DataAnalysis.Clustering
 {
     public class ClusterRole
     {
-        public static readonly ClusterRole IGNORED = new ClusterRole("ignored", ()=>"Ignored");
-        public static readonly ClusterRole ROWHEADER = new ClusterRole("rowheader", ()=>"Row Header");
-        public static readonly ClusterRole COLUMNHEADER = new ClusterRole("columnheader", ()=>"Column Header");
-        public static readonly Transform RAW = new SimpleTransform(@"raw", ()=>"Raw Value", value=>value, 0);
+        public static readonly ClusterRole IGNORED = new ClusterRole(@"ignored", ()=>Resources.ClusterRole_IGNORED_Ignored);
+        public static readonly ClusterRole ROWHEADER = new ClusterRole(@"rowheader", ()=>Resources.ClusterRole_ROWHEADER_Row_Header);
+        public static readonly ClusterRole COLUMNHEADER = new ClusterRole(@"columnheader", ()=>Resources.ClusterRole_COLUMNHEADER_Column_Header);
+        public static readonly Transform RAW = new SimpleTransform(@"raw", ()=>Resources.ClusterRole_RAW_Raw_Value, value=>value, 0);
         public static readonly Transform BOOLEAN = new BooleanTransform();
         public static readonly Transform ZSCORE = new ZScore();
-        public static readonly Transform LOGARITHM = new SimpleTransform(@"log10", ()=>"Log10", Math.Log, 0);
+        public static readonly Transform LOGARITHM = new SimpleTransform(@"log10", ()=>Resources.ClusterRole_LOGARITHM_Log10, Math.Log, 0);
         private Func<string> _getLabelFunc;
 
         public static IEnumerable<ClusterRole> All
@@ -114,7 +115,7 @@ namespace pwiz.Common.DataAnalysis.Clustering
 
         private class BooleanTransform : Transform
         {
-            public BooleanTransform() : base("boolean", () => "Boolean", 0)
+            public BooleanTransform() : base(@"boolean", () => Resources.BooleanTransform_BooleanTransform_Boolean, 0)
             {
 
             }
@@ -152,7 +153,7 @@ namespace pwiz.Common.DataAnalysis.Clustering
 
         private class ZScore : Transform
         {
-            public ZScore() : base("zscore", () => "Z-Score", 0)
+            public ZScore() : base(@"zscore", () => Resources.ZScore_ZScore_Z_Score, 0)
             {
 
             }

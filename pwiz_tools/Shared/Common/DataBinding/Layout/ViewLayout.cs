@@ -21,7 +21,6 @@ using System.Collections.Generic;
 using System.Xml;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding.Clustering;
-using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.DataBinding.Layout

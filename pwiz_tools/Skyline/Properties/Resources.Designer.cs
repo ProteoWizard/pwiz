@@ -7880,6 +7880,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Show Heat Map.
+        /// </summary>
+        public static string DataboundGridControl_DataboundGridControl_Show_Heat_Map {
+            get {
+                return ResourceManager.GetString("DataboundGridControl_DataboundGridControl_Show_Heat_Map", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Show PCA Plot.
+        /// </summary>
+        public static string DataboundGridControl_DataboundGridControl_Show_PCA_Plot {
+            get {
+                return ResourceManager.GetString("DataboundGridControl_DataboundGridControl_Show_PCA_Plot", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to An error occured while displaying the data rows:.
         /// </summary>
         public static string DataboundGridControl_DisplayError_An_error_occured_while_displaying_the_data_rows_ {
@@ -7923,6 +7941,26 @@ namespace pwiz.Skyline.Properties {
         public static string DataboundGridControl_FillDown_Fill_Down {
             get {
                 return ResourceManager.GetString("DataboundGridControl_FillDown_Fill_Down", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An error occured while performing clustering..
+        /// </summary>
+        public static string DataboundGridControl_GetClusteredResults_An_error_occured_while_performing_clustering_ {
+            get {
+                return ResourceManager.GetString("DataboundGridControl_GetClusteredResults_An_error_occured_while_performing_cluste" +
+                        "ring_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to choose a set of columns to use for hierarchical clustering..
+        /// </summary>
+        public static string DataboundGridControl_GetClusteredResults_Unable_to_choose_a_set_of_columns_to_use_for_hierarchical_clustering_ {
+            get {
+                return ResourceManager.GetString("DataboundGridControl_GetClusteredResults_Unable_to_choose_a_set_of_columns_to_use" +
+                        "_for_hierarchical_clustering_", resourceCulture);
             }
         }
         

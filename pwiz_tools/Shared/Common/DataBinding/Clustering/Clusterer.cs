@@ -41,7 +41,7 @@ namespace pwiz.Common.DataBinding.Clustering
                 {
                     if (double.IsNaN(value) || double.IsInfinity(value))
                     {
-                        Debug.WriteLine("{0} is not a valid double",  value);
+                        Debug.WriteLine(@"{0} is not a valid double",  value);
                     }
                 }
 #endif

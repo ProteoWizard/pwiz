@@ -125,12 +125,6 @@ namespace pwiz.Common.DataBinding.Controls
             }
         }
 
-        private void columnsDataGridView_DataError(object sender, DataGridViewDataErrorEventArgs e)
-        {
-            System.Diagnostics.Debug.WriteLine("Error line {0} column {1}: {2}", e.RowIndex, e.ColumnIndex,
-                e.Exception);
-        }
-
         private void columnsDataGridView_EditingControlShowing(object sender, DataGridViewEditingControlShowingEventArgs e)
         {
             var comboBoxControl = e.Control as ComboBox;

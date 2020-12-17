@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Windows.Forms.VisualStyles;
+﻿using System.Collections.Generic;
 using pwiz.Common.Collections;
-using pwiz.Common.DataBinding.Clustering;
 using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.DataBinding

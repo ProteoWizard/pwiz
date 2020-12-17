@@ -76,7 +76,6 @@
             this.columnsDataGridView.Size = new System.Drawing.Size(458, 211);
             this.columnsDataGridView.TabIndex = 5;
             this.columnsDataGridView.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.columnsDataGridView_CellEndEdit);
-            this.columnsDataGridView.DataError += new System.Windows.Forms.DataGridViewDataErrorEventHandler(this.columnsDataGridView_DataError);
             this.columnsDataGridView.EditingControlShowing += new System.Windows.Forms.DataGridViewEditingControlShowingEventHandler(this.columnsDataGridView_EditingControlShowing);
             // 
             // colColumn

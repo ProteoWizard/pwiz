@@ -19,10 +19,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Windows.Forms;
-using System.Xml.Serialization;
 using pwiz.Common.DataAnalysis.Clustering;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Clustering;
@@ -149,7 +147,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 ClusterRole.COLUMNHEADER));
             roles.Add(Tuple.Create(ppRunAbundances.Property(nameof(FoldChangeBindingSource.ReplicateRow.Abundance)),
                 (ClusterRole) ClusterRole.ZSCORE));
-            var viewLayout = new ViewLayout("clustered").ChangeClusterSpec(new ClusteringSpec(roles.Select(role =>
+            var viewLayout = new ViewLayout(@"clustered").ChangeClusterSpec(new ClusteringSpec(roles.Select(role =>
                 new ClusteringSpec.ValueSpec(new ClusteringSpec.ColumnRef(role.Item1), role.Item2))));
             var viewLayoutList = new ViewLayoutList(FoldChangeBindingSource.CLUSTERED_VIEW_NAME)
                 .ChangeLayouts(new[] {viewLayout})
