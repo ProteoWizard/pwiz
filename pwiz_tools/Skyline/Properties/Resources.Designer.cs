@@ -9606,16 +9606,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to An ion mobility predictor with the name {0} already exists..
-        /// </summary>
-        public static string EditIonMobilityLibraryDlg_OkDialog_An_ion_mobility_predictor_with_the_name__0__already_exists_ {
-            get {
-                return ResourceManager.GetString("EditIonMobilityLibraryDlg_OkDialog_An_ion_mobility_predictor_with_the_name__0__al" +
-                        "ready_exists_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Click the Create button to create a new library or the Open button to open an existing library file..
         /// </summary>
         public static string EditIonMobilityLibraryDlg_OkDialog_Click_the_Create_button_to_create_a_new_library_or_the_Open_button_to_open_an_existing_library_file_ {
@@ -11962,13 +11952,13 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to All targets must have an ion mobility value. These can be set explicitly or contained in an ion mobility predictor or spectral library. The following ion mobility values are missing:.
+        ///   Looks up a localized string similar to All targets must have an ion mobility value. These can be set explicitly or contained in an ion mobility library or spectral library. The following ion mobility values are missing:.
         /// </summary>
-        public static string ExportMethodDlg_OkDialog_All_targets_must_have_an_ion_mobility_value__These_can_be_set_explicitly_or_contained_in_an_ion_mobility_predictor_or_spectral_library__The_following_ion_mobility_values_are_missing_ {
+        public static string ExportMethodDlg_OkDialog_All_targets_must_have_an_ion_mobility_value__These_can_be_set_explicitly_or_contained_in_an_ion_mobility_library_or_spectral_library__The_following_ion_mobility_values_are_missing_ {
             get {
                 return ResourceManager.GetString("ExportMethodDlg_OkDialog_All_targets_must_have_an_ion_mobility_value__These_can_b" +
-                        "e_set_explicitly_or_contained_in_an_ion_mobility_predictor_or_spectral_library__" +
-                        "The_following_ion_mobility_values_are_missing_", resourceCulture);
+                        "e_set_explicitly_or_contained_in_an_ion_mobility_library_or_spectral_library__Th" +
+                        "e_following_ion_mobility_values_are_missing_", resourceCulture);
             }
         }
         

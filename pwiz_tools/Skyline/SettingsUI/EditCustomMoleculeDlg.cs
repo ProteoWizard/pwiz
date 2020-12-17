@@ -631,7 +631,12 @@ namespace pwiz.Skyline.SettingsUI
         public double? PrecursorCollisionEnergy
         {
             get { return NullForEmpty(textBoxPrecursorCollisionEnergy.Text); }
-            set { textBoxPrecursorCollisionEnergy.Text = EmptyForNullOrNonPositive(value); }
+            set
+            {
+                textBoxPrecursorCollisionEnergy.Text = value.HasValue && !value.Value.Equals(0)
+                    ? value.Value.ToString(LocalizationHelper.CurrentCulture)
+                    : string.Empty;
+            }
         }
 
         public double? CollisionalCrossSectionSqA
