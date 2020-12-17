@@ -20,12 +20,14 @@ namespace pwiz.Common.DataBinding.Clustering
             Values = ImmutableList.ValueOfOrEmpty(values);
         }
 
+        [Track]
         public ImmutableList<ValueSpec> Values { get; private set; }
 
         public ClusteringSpec ChangeValues(IEnumerable<ValueSpec> values)
         {
             return ChangeProp(ImClone(this), im => im.Values = ImmutableList.ValueOf(values));
         }
+        [Track]
         public string DistanceMetric { get; private set; }
 
         public ClusteringSpec ChangeDistanceMetric(string distanceMetric)
@@ -204,6 +206,11 @@ namespace pwiz.Common.DataBinding.Clustering
                     return ((PropertyPath != null ? PropertyPath.GetHashCode() : 0) * 397) ^ (ColumnId != null ? ColumnId.GetHashCode() : 0);
                 }
             }
+
+            public override string ToString()
+            {
+                return (ColumnId ?? (object) PropertyPath ?? string.Empty).ToString();
+            }
         }
 
         public class ValueSpec : Immutable
@@ -218,6 +225,7 @@ namespace pwiz.Common.DataBinding.Clustering
                 Transform = transform;
             }
 
+            [Track]
             public ColumnRef ColumnRef { get; private set; }
 
             public string Transform { get; private set; }

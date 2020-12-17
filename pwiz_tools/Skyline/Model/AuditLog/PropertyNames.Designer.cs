@@ -349,38 +349,20 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Chebyshev.
+        ///   Looks up a localized string similar to Distance Metric.
         /// </summary>
-        public static string ClusterMetricType_chebyshev {
+        public static string ClusteringSpec_DistanceMetric {
             get {
-                return ResourceManager.GetString("ClusterMetricType_chebyshev", resourceCulture);
+                return ResourceManager.GetString("ClusteringSpec_DistanceMetric", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Euclidean.
+        ///   Looks up a localized string similar to Values.
         /// </summary>
-        public static string ClusterMetricType_euclidean {
+        public static string ClusteringSpec_Values {
             get {
-                return ResourceManager.GetString("ClusterMetricType_euclidean", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to City block.
-        /// </summary>
-        public static string ClusterMetricType_manhattan {
-            get {
-                return ResourceManager.GetString("ClusterMetricType_manhattan", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Pearson.
-        /// </summary>
-        public static string ClusterMetricType_pearson {
-            get {
-                return ResourceManager.GetString("ClusterMetricType_pearson", resourceCulture);
+                return ResourceManager.GetString("ClusteringSpec_Values", resourceCulture);
             }
         }
         
@@ -4399,11 +4381,29 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Column reference.
+        /// </summary>
+        public static string ValueSpec_ColumnRef {
+            get {
+                return ResourceManager.GetString("ValueSpec_ColumnRef", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Layouts.
         /// </summary>
         public static string View_Layouts {
             get {
                 return ResourceManager.GetString("View_Layouts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Clustering specification.
+        /// </summary>
+        public static string ViewLayout_ClusterSpec {
+            get {
+                return ResourceManager.GetString("ViewLayout_ClusterSpec", resourceCulture);
             }
         }
         

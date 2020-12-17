@@ -48,6 +48,7 @@ namespace pwiz.Common.DataBinding.Layout
             return ChangeProp(ImClone(this), im => im.RowTransforms = ImmutableList.ValueOf(rowTransforms));
         }
 
+        [Track]
         public ClusteringSpec ClusterSpec { get; private set; }
 
         public ViewLayout ChangeClusterSpec(ClusteringSpec clusterSpec)
