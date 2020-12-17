@@ -133,7 +133,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
         private ViewLayoutList GetClusteredLayout()
         {
             var ppRunAbundances = PropertyPath.Root
-                .Property(nameof(FoldChangeBindingSource.FoldChangeDetailRow.RunAbundances)).DictionaryValues();
+                .Property(nameof(FoldChangeBindingSource.FoldChangeDetailRow.ReplicateAbundances)).DictionaryValues();
             var roles = new List<Tuple<PropertyPath, ClusterRole>>();
             roles.Add(Tuple.Create(PropertyPath.Root.Property(nameof(FoldChangeBindingSource.FoldChangeDetailRow.Protein)),
                 ClusterRole.ROWHEADER));

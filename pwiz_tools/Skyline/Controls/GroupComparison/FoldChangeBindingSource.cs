@@ -145,7 +145,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             {
                 var foldChangeResults = grouping.ToDictionary(row => row.Group, row => row.FoldChangeResult);
                 var runAbundances = new Dictionary<Replicate, ReplicateRow>();
-                foreach (var abundance in grouping.SelectMany(row => row.RunAbundances))
+                foreach (var abundance in grouping.SelectMany(row => row.ReplicateAbundances))
                 {
                     runAbundances[abundance.Key] = abundance.Value;
                 }
@@ -253,7 +253,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
         {
             var clusteredViewSpec = defaultViewSpec.SetName(CLUSTERED_VIEW_NAME).SetRowType(typeof(FoldChangeDetailRow));
 
-            PropertyPath ppRunAbundance = PropertyPath.Root.Property(nameof(FoldChangeDetailRow.RunAbundances)).DictionaryValues();
+            PropertyPath ppRunAbundance = PropertyPath.Root.Property(nameof(FoldChangeDetailRow.ReplicateAbundances)).DictionaryValues();
             PropertyPath ppFoldChange = PropertyPath.Root.Property(nameof(FoldChangeDetailRow.FoldChangeResults))
                 .DictionaryValues();
             var columnsToAdd = new List<PropertyPath>();
@@ -306,7 +306,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 Peptide = peptide;
                 IsotopeLabelType = labelType;
                 MsLevel = msLevel;
-                RunAbundances = replicateResults;
+                ReplicateAbundances = replicateResults;
             }
 
             public Protein Protein { get; private set; }
@@ -314,8 +314,8 @@ namespace pwiz.Skyline.Controls.GroupComparison
             public IsotopeLabelType IsotopeLabelType { get; private set; }
             public int? MsLevel { get; private set; }
 
-            [OneToMany(ItemDisplayName = "ReplicateResult", IndexDisplayName = "Replicate")]
-            public IDictionary<Replicate, ReplicateRow> RunAbundances { get; private set; }
+            [OneToMany(IndexDisplayName = "Replicate")]
+            public IDictionary<Replicate, ReplicateRow> ReplicateAbundances { get; private set; }
 
             public abstract IEnumerable<FoldChangeRow> GetFoldChangeRows();
         }
@@ -356,10 +356,11 @@ namespace pwiz.Skyline.Controls.GroupComparison
             public override IEnumerable<FoldChangeRow> GetFoldChangeRows()
             {
                 return FoldChangeResults.Select(kvp => 
-                    new FoldChangeRow(Protein, Peptide, IsotopeLabelType, MsLevel, kvp.Key, 0, kvp.Value, RunAbundances));
+                    new FoldChangeRow(Protein, Peptide, IsotopeLabelType, MsLevel, kvp.Key, 0, kvp.Value, ReplicateAbundances));
             }
         }
 
+        [InvariantDisplayName("ReplicateAbundance")]
         public class ReplicateRow
         {
             public ReplicateRow(Replicate replicate, GroupIdentifier groupIdentifier, String identity, double? abundance)

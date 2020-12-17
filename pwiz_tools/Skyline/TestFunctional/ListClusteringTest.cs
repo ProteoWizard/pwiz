@@ -16,13 +16,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataAnalysis.Clustering;
 using pwiz.Common.DataBinding.Controls;
+using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Skyline.Controls.Lists;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
@@ -52,6 +57,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(()=>SkylineWindow.ShowList(listName));
             var listGrid = FindOpenForm<ListGridForm>();
             WaitForCondition(() => listGrid.IsComplete);
+            // Add some values to the "Name" and "X" columns
             SetClipboardText(TextUtil.LineSeparate("A\t-4", "B\t2", "C\t0", "D\t3", "E\t-3"));
             RunUI(()=>
             {
@@ -61,12 +67,18 @@ namespace pwiz.SkylineTestFunctional
             });
             WaitForCondition(() => listGrid.IsComplete);
             Assert.AreEqual("ABCDE", GetNameValues(listGrid.DataGridView));
+
+            // Press the "Cluster" button and see that the order changes
             RunUI(()=>listGrid.DataboundGridControl.NavBar.ClusterSplitButton.PerformButtonClick());
             WaitForCondition(() => listGrid.IsComplete);
             Assert.AreEqual("AECBD", GetNameValues(listGrid.DataGridView));
+
+            // Press the "Cluster" button again and the order goes back to the original
             RunUI(() => listGrid.DataboundGridControl.NavBar.ClusterSplitButton.PerformButtonClick());
             WaitForCondition(() => listGrid.IsComplete);
             Assert.AreEqual("ABCDE", GetNameValues(listGrid.DataGridView));
+
+            // Add some numbers to the "Y" column
             SetClipboardText(TextUtil.LineSeparate("1","1","0","3","3"));
             RunUI(() =>
             {
@@ -74,9 +86,12 @@ namespace pwiz.SkylineTestFunctional
                 listGrid.DataGridView.SendPaste();
                 listGrid.DataGridView.CurrentCell = listGrid.DataGridView.Rows[0].Cells[0];
             });
+            // Press the Cluster button
             RunUI(() => listGrid.DataboundGridControl.NavBar.ClusterSplitButton.PerformButtonClick());
             WaitForCondition(() => listGrid.IsComplete);
             Assert.AreEqual("BDCAE", GetNameValues(listGrid.DataGridView));
+
+            // set to city block distance metric, which will change the clustering of the items
             var clusteringEditor = ShowDialog<ClusteringEditor>(listGrid.NavBar.ShowClusteringEditor);
             RunUI(()=>
             {
@@ -85,8 +100,32 @@ namespace pwiz.SkylineTestFunctional
             });
             OkDialog(clusteringEditor, ()=>clusteringEditor.DialogResult = DialogResult.OK);
             WaitForCondition(() => listGrid.IsComplete);
-            // set to city block
             Assert.AreEqual("AEDBC", GetNameValues(listGrid.DataGridView));
+
+            const string reportName = "ListClusteringReport";
+            RunDlg<ViewEditor>(listGrid.NavBar.CustomizeView, viewEditor =>
+            {
+                viewEditor.ViewName = reportName;
+                viewEditor.OkDialog();
+            });
+
+            WaitForCondition(() => listGrid.IsComplete);
+            Assert.AreEqual("AEDBC", GetNameValues(listGrid.DataGridView));
+            RunDlg<NameLayoutForm>(listGrid.NavBar.RememberCurrentLayout, nameLayoutForm =>
+            {
+                nameLayoutForm.LayoutName = "MyLayout";
+                nameLayoutForm.OkDialog();
+            });
+            
+            RunDlg<DocumentSettingsDlg>(SkylineWindow.ShowDocumentSettingsDialog, documentSettingsDlg =>
+            {
+                documentSettingsDlg.SelectTab(DocumentSettingsDlg.TABS.reports);
+                documentSettingsDlg.ChooseViewsControl.CheckedViews =
+                    new[] {PersistedViews.MainGroup.Id.ViewName(reportName)};
+                documentSettingsDlg.OkDialog();
+            });
+            RunUI(()=>SkylineWindow.SaveDocument(Path.Combine(TestContext.TestDir, "ListClusteringTest.sky")));
+            AssertEx.Serializable(SkylineWindow.Document);
             OkDialog(listGrid, listGrid.Close);
         }
 

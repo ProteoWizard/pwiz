@@ -176,7 +176,7 @@ namespace pwiz.Common.DataBinding.Layout
                 {
                     rowTransforms.Add(RowFilter.ReadXml(reader));
                 }
-                else if (reader.IsStartElement())
+                else if (reader.IsStartElement("cluster"))
                 {
                     clusterSpec = ClusteringSpec.ReadXml(reader);
                 }

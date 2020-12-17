@@ -1580,4 +1580,16 @@
   <data name="QuantificationSettings_SimpleRatios">
     <value>Simple ratios</value>
   </data>
+  <data name="ClusterMetricType_chebyshev" xml:space="preserve">
+    <value>Chebyshev</value>
+  </data>
+  <data name="ClusterMetricType_manhattan" xml:space="preserve">
+    <value>City block</value>
+  </data>
+  <data name="ClusterMetricType_pearson" xml:space="preserve">
+    <value>Pearson</value>
+  </data>
+  <data name="ClusterMetricType_euclidean" xml:space="preserve">
+    <value>Euclidean</value>
+  </data>
 </root>
