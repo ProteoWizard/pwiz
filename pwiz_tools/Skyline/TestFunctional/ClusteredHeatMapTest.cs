@@ -76,6 +76,7 @@ namespace pwiz.SkylineTestFunctional
             });
             RunUI(()=>SkylineWindow.ShowGroupComparisonWindow(PER_PROTEIN_NAME));
             FoldChangeGrid grid = FindOpenForm<FoldChangeGrid>();
+            WaitForCondition(() => grid.DataboundGridControl.IsComplete);
             RunUI(()=>grid.DataboundGridControl.ChooseView("Clustered"));
             WaitForCondition(() => grid.DataboundGridControl.IsComplete && 0 != grid.DataboundGridControl.RowCount);
             var heatMap = ShowDialog<HierarchicalClusterGraph>(()=>grid.DataboundGridControl.ShowHeatMap());
