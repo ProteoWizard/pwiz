@@ -266,9 +266,9 @@ namespace pwiz.Skyline.Controls.GroupComparison
             columnsToAdd.Add(ppFoldChange.Property(nameof(FoldChangeResult.AdjustedPValue)));
             if (!string.IsNullOrEmpty(GroupComparisonModel.GroupComparisonDef.IdentityAnnotation))
             {
-                columnsToAdd.Add(ppRunAbundance.Property(nameof(ReplicateRow.ReplicateIdentity)));
+                columnsToAdd.Add(ppRunAbundance.Property(nameof(ReplicateRow.ReplicateSampleIdentity)));
             }
-            columnsToAdd.Add(ppRunAbundance.Property(nameof(ReplicateRow.GroupIdentifier)));
+            columnsToAdd.Add(ppRunAbundance.Property(nameof(ReplicateRow.ReplicateGroup)));
             columnsToAdd.Add(ppRunAbundance.Property(nameof(ReplicateRow.Abundance)));
             clusteredViewSpec = clusteredViewSpec.SetColumns(clusteredViewSpec.Columns
                 .Where(col => !columnPrefixesToRemove.Any(prefix=>col.PropertyPath.StartsWith(prefix)))
@@ -313,8 +313,11 @@ namespace pwiz.Skyline.Controls.GroupComparison
             public Model.Databinding.Entities.Peptide Peptide { get; private set; }
             public IsotopeLabelType IsotopeLabelType { get; private set; }
             public int? MsLevel { get; private set; }
+
+            [OneToMany(ItemDisplayName = "ReplicateResult", IndexDisplayName = "Replicate")]
             public IDictionary<Replicate, ReplicateRow> RunAbundances { get; private set; }
 
+            public abstract IEnumerable<FoldChangeRow> GetFoldChangeRows();
         }
 
         public class FoldChangeRow : AbstractFoldChangeRow
@@ -331,6 +334,10 @@ namespace pwiz.Skyline.Controls.GroupComparison
             public GroupIdentifier Group { get; private set; }
             public int ReplicateCount { get; private set; }
             public FoldChangeResult FoldChangeResult { get; private set; }
+            public override IEnumerable<FoldChangeRow> GetFoldChangeRows()
+            {
+                yield return this;
+            }
         }
 
         public class FoldChangeDetailRow : AbstractFoldChangeRow
@@ -345,11 +352,12 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
             [OneToMany(ItemDisplayName = "FoldChange",IndexDisplayName = "GroupIdentifier")]
             public IDictionary<GroupIdentifier, FoldChangeResult> FoldChangeResults { get; private set; }
-        }
 
-        public class FoldChangeResultsWithGroupIdentifier
-        {
-
+            public override IEnumerable<FoldChangeRow> GetFoldChangeRows()
+            {
+                return FoldChangeResults.Select(kvp => 
+                    new FoldChangeRow(Protein, Peptide, IsotopeLabelType, MsLevel, kvp.Key, 0, kvp.Value, RunAbundances));
+            }
         }
 
         public class ReplicateRow
@@ -357,15 +365,15 @@ namespace pwiz.Skyline.Controls.GroupComparison
             public ReplicateRow(Replicate replicate, GroupIdentifier groupIdentifier, String identity, double? abundance)
             {
                 Replicate = replicate;
-                GroupIdentifier = groupIdentifier;
-                ReplicateIdentity = identity;
+                ReplicateGroup = groupIdentifier;
+                ReplicateSampleIdentity = identity;
                 Abundance = abundance;
             }
             public Replicate Replicate { get; private set; }
             [Format(Formats.CalibrationCurve)]
             public double? Abundance { get; private set; }
-            public String ReplicateIdentity { get; private set; }
-            public GroupIdentifier GroupIdentifier { get; private set; }
+            public string ReplicateSampleIdentity { get; private set; }
+            public GroupIdentifier ReplicateGroup { get; private set; }
         }
     }
 }

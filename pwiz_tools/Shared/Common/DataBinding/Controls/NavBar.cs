@@ -662,6 +662,11 @@ namespace pwiz.Common.DataBinding.Controls
 
         private void advancedToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            ShowClusteringEditor();
+        }
+
+        public void ShowClusteringEditor()
+        {
             var reportResults = BindingListSource?.ReportResults;
             var dataSchema = BindingListSource?.ViewInfo.DataSchema;
             if (reportResults == null || dataSchema == null)

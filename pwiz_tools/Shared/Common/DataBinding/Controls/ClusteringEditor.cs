@@ -197,5 +197,17 @@ namespace pwiz.Common.DataBinding.Controls
                 clusteringSpec.ChangeDistanceMetric((comboDistanceMetric.SelectedItem as ClusterMetricType)?.Name);
             return clusteringSpec;
         }
+
+        public ClusterMetricType DistanceMetric
+        {
+            get
+            {
+                return comboDistanceMetric.SelectedItem as ClusterMetricType;
+            }
+            set
+            {
+                comboDistanceMetric.SelectedItem = value;
+            }
+        }
     }
 }

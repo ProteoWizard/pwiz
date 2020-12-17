@@ -196,8 +196,8 @@ namespace pwiz.Common.Controls.Clustering
                     }
                 }
 
-                var x2AxisHeight = pane.X2Axis.CalcSpace(graphics, pane, scaleFactor, out float fixedSpaceX2);
-                var y2AxisWidth = pane.Y2Axis.CalcSpace(graphics, pane, scaleFactor, out float fixedSpaceY2);
+                var x2AxisHeight = pane.X2Axis.CalcSpace(graphics, pane, scaleFactor, out float _);
+                var y2AxisWidth = pane.Y2Axis.CalcSpace(graphics, pane, scaleFactor, out float _);
 
                 if (_dendrogramLocation == DockStyle.Top)
                 {
@@ -296,10 +296,6 @@ namespace pwiz.Common.Controls.Clustering
         /// </param>
         protected DendrogramScale(SerializationInfo info, StreamingContext context) : base(info, context)
         {
-            // The schema value is just a file version parameter.  You can use it to make future versions
-            // backwards compatible as new member variables are added to classes
-            int sch = info.GetInt32("schema2");
-
         }
         /// <summary>
         /// Populates a <see cref="SerializationInfo"/> instance with the data needed to serialize the target object

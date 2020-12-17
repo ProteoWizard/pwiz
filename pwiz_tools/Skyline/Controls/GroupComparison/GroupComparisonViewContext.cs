@@ -140,10 +140,10 @@ namespace pwiz.Skyline.Controls.GroupComparison
             roles.Add(Tuple.Create(PropertyPath.Root.Property(nameof(FoldChangeBindingSource.FoldChangeDetailRow.Peptide)),
                 ClusterRole.ROWHEADER));
             roles.Add(Tuple.Create(
-                ppRunAbundances.Property(nameof(FoldChangeBindingSource.ReplicateRow.ReplicateIdentity)),
+                ppRunAbundances.Property(nameof(FoldChangeBindingSource.ReplicateRow.ReplicateSampleIdentity)),
                 ClusterRole.COLUMNHEADER));
             roles.Add(Tuple.Create(
-                ppRunAbundances.Property(nameof(FoldChangeBindingSource.ReplicateRow.GroupIdentifier)),
+                ppRunAbundances.Property(nameof(FoldChangeBindingSource.ReplicateRow.ReplicateGroup)),
                 ClusterRole.COLUMNHEADER));
             roles.Add(Tuple.Create(ppRunAbundances.Property(nameof(FoldChangeBindingSource.ReplicateRow.Abundance)),
                 (ClusterRole) ClusterRole.ZSCORE));
