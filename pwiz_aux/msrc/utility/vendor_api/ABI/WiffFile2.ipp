@@ -47,13 +47,24 @@ class WiffFile2Impl : public WiffFile
     WiffFile2Impl(const std::string& wiffpath);
     ~WiffFile2Impl()
     {
-        DataReader()->CloseFile(((IList<ISample^>^) allSamples)[0]->Sources[0]);
+        auto dataReader = DataReader();
+        if (dataReader != nullptr)
+            dataReader->CloseFile(((IList<ISample^>^) allSamples)[0]->Sources[0]);
         System::GC::Collect();
     }
 
     ISampleDataApi^ DataReader() const
     {
         static gcroot<ISampleDataApi^> dataReader = (gcnew DataApiFactory())->CreateSampleDataApi();
+        try
+        {
+            if (!dataReader)
+                return nullptr;
+        }
+        catch (System::InvalidOperationException^)
+        {
+            return nullptr;
+        }
         return dataReader;
     }
 
@@ -679,8 +690,8 @@ void Spectrum2Impl::getIsolationInfo(double& centerMz, double& lowerLimit, doubl
         if (isolationWindow == nullptr)
             return;
         centerMz = isolationWindow->IsolationWindowTarget;
-        lowerLimit = centerMz - isolationWindow->LowerOffset;
-        upperLimit = centerMz + isolationWindow->UpperOffset;
+        lowerLimit = isolationWindow->LowerOffset;
+        upperLimit = isolationWindow->UpperOffset;
 
         auto collisionEnergyRamp = precursor->CollisionEnergy;
         if (collisionEnergyRamp == nullptr)
