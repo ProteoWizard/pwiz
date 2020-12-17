@@ -121,7 +121,7 @@ namespace pwiz.Common.DataBinding.Controls
             navBarButtonViews.Enabled = navBarButtonExport.Enabled = ViewContext != null && BindingListView != null && BindingListView.ViewInfo != null;
             navBarButtonActions.Visible = ViewContext != null && ViewContext.HasRowActions;
             navBarButtonClusterGrid.Checked = BindingListSource?.ClusteringSpec != null;
-            if (BindingListView != null)
+            if (BindingListSource != null && BindingListView != null)
             {
                 var queryResults = BindingListView.QueryResults;
                 tbxFind.Enabled = true;
@@ -629,7 +629,23 @@ namespace pwiz.Common.DataBinding.Controls
             }
             else
             {
+                if (!BindingListSource.IsComplete && !(BindingListSource.ReportResults is ClusteredReportResults))
+                {
+                    return;
+                }
                 BindingListSource.ClusteringSpec = null;
+            }
+        }
+
+        private void navBarButtonClusterGrid_Click(object sender, EventArgs e)
+        {
+            if (navBarButtonClusterGrid.Checked)
+            {
+                BindingListSource.ClusteringSpec = null;
+            }
+            else
+            {
+                BindingListSource.ClusteringSpec = ClusteringSpec.DEFAULT;
             }
         }
 

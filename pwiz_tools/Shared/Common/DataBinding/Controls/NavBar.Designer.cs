@@ -228,7 +228,7 @@
             // 
             this.navBarButtonClusterGrid.Name = "navBarButtonClusterGrid";
             resources.ApplyResources(this.navBarButtonClusterGrid, "navBarButtonClusterGrid");
-            this.navBarButtonClusterGrid.Click += new System.EventHandler(this.navBarButtonCluster_ButtonClick);
+            this.navBarButtonClusterGrid.Click += new System.EventHandler(this.navBarButtonClusterGrid_Click);
             // 
             // advancedToolStripMenuItem
             // 
