@@ -175,7 +175,6 @@
     <Compile Include="ZedGraph\TextObj.cs" />
     <Compile Include="ZedGraph\TextScale.cs" />
     <Compile Include="ZedGraph\Types.cs" />
-    <Compile Include="ZedGraph\UserDefinedScale.cs" />
     <Compile Include="ZedGraph\ValueHandler.cs" />
     <Compile Include="ZedGraph\X2Axis.cs" />
     <Compile Include="ZedGraph\XAxis.cs" />

@@ -232,7 +232,7 @@
     <value>zedGraphControl1</value>
   </data>
   <data name="&gt;&gt;zedGraphControl1.Type" xml:space="preserve">
-    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.7655.31493, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
+    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.7650.15608, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
   </data>
   <data name="&gt;&gt;zedGraphControl1.Parent" xml:space="preserve">
     <value>$this</value>
@@ -304,7 +304,7 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>PcaPlot</value>
+    <value>Principal Component Analysis Plot</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>PcaPlot</value>

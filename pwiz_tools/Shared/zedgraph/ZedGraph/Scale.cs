@@ -817,7 +817,7 @@ namespace ZedGraph
 				case AxisType.LinearAsOrdinal:
 					return new LinearAsOrdinalScale( oldScale, _ownerAxis );
                 case AxisType.UserDefined:
-                    return new UserDefinedScale(oldScale, _ownerAxis);
+                    throw new Exception("UserDefined scales cannot be created by this method.");
                 default:
 					throw new Exception( "Implementation Error: Invalid AxisType" );
 			}

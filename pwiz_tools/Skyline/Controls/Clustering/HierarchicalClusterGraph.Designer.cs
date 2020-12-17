@@ -55,7 +55,6 @@
             this.BackColor = System.Drawing.SystemColors.ButtonHighlight;
             this.Controls.Add(this.zedGraphControl1);
             this.Name = "HierarchicalClusterGraph";
-            this.ShowIcon = false;
             ((System.ComponentModel.ISupportInitialize)(this.ModeUIExtender)).EndInit();
             this.ResumeLayout(false);
 
