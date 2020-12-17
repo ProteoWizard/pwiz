@@ -224,8 +224,8 @@ namespace pwiz.Common.Controls.Clustering
                     graphics.FillRectangle(new SolidBrush(Color.White), cornerRectangle);
 
                     var bottomRectangle = new RectangleF(
-                        -x2AxisHeight, 0,
-                        x2AxisHeight,
+                        -xAxisHeight, 0,
+                        xAxisHeight,
                         y2AxisWidth);
                     graphics.FillRectangle(new SolidBrush(Color.White), bottomRectangle);
                 }
