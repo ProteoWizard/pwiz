@@ -109,8 +109,8 @@ namespace pwiz.Skyline.Controls.Clustering
                 var colors = new List<ImmutableList<Color>>();
                 for (int i = 0; i < group.Headers.Count; i++)
                 {
-                    double x1 = zedGraphControl1.GraphPane.GeneralTransform(xStart + i, 0.0, CoordType.AxisXYScale).X;
-                    double x2 = zedGraphControl1.GraphPane.GeneralTransform(xStart + i + 1, 0.0, CoordType.AxisXYScale).X;
+                    double x1 = xStart + i;
+                    double x2 = xStart + i + 1;
                     locations.Add(new KeyValuePair<double, double>(x1, x2));
                     colors.Add(group.Headers[i].Colors);
                 }
@@ -128,10 +128,8 @@ namespace pwiz.Skyline.Controls.Clustering
             var colors = new List<ImmutableList<Color>>();
             for (int rowIndex = 0; rowIndex < rowCount; rowIndex++)
             {
-                var y1 = zedGraphControl1.GraphPane.GeneralTransform(0.0, rowCount + .5 - rowIndex,
-                    CoordType.AxisXYScale).Y;
-                var y2 = zedGraphControl1.GraphPane.GeneralTransform(0.0, rowCount - .5 - rowIndex,
-                    CoordType.AxisXYScale).Y;
+                var y1 = rowCount + .5 - rowIndex;
+                var y2 = rowCount - .5 - rowIndex;
                 rowLocations.Add(new KeyValuePair<double, double>(y1, y2));
                 colors.Add(GraphResults.RowHeaders[rowIndex].Colors);
             }
@@ -147,26 +145,10 @@ namespace pwiz.Skyline.Controls.Clustering
             _rowDendrogramScale.Update(GetUpdatedRowDendrograms());
         }
 
-        private void zedGraphControl1_ZoomEvent(ZedGraphControl sender, ZoomState oldState, ZoomState newState, PointF mousePosition)
-        {
-            UpdateDendrograms();
-        }
-
-        public class HeaderInfo
-        {
-            public string Caption { get; private set; }
-            public ImmutableList<Color> Colors { get; private set; }
-        }
-
-        private void splitContainerVertical_SplitterMoved(object sender, SplitterEventArgs e)
-        {
-            UpdateDendrograms();
-        }
-
         private void zedGraphControl1_Resize(object sender, EventArgs e)
         {
             zedGraphControl1.GraphPane.Draw(zedGraphControl1.CreateGraphics());
-            UpdateDendrograms();
+            //UpdateDendrograms();
         }
 
         public bool ShowXAxisLabels

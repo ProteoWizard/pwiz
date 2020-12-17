@@ -1,50 +1,40 @@
-﻿//============================================================================
-//ZedGraph Class Library - A Flexible Line Graph/Bar Graph Library in C#
-//Copyright © 2005  John Champion
-//
-//This library is free software; you can redistribute it and/or
-//modify it under the terms of the GNU Lesser General Public
-//License as published by the Free Software Foundation; either
-//version 2.1 of the License, or (at your option) any later version.
-//
-//This library is distributed in the hope that it will be useful,
-//but WITHOUT ANY WARRANTY; without even the implied warranty of
-//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-//Lesser General Public License for more details.
-//
-//You should have received a copy of the GNU Lesser General Public
-//License along with this library; if not, write to the Free Software
-//Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-//=============================================================================
-
+﻿/*
+ * Original author: Ali Marsh <alimarsh .at. uw.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ * Copyright 2020 University of Washington - Seattle, WA
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 using System;
-using System.CodeDom;
-using System.Collections;
 using System.Collections.Generic;
-using System.Text;
 using System.Drawing;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
 using System.Linq;
 using System.Windows.Forms;
 using ZedGraph;
+// ReSharper disable RedundantCaseLabel
 
 namespace pwiz.Common.Controls.Clustering
 {
     /// <summary>
-    /// The Dendrogram class inherits from the <see cref="Scale" /> class, and implements
-    /// the features specific to <see cref="AxisType.Dendrogram" />.
+    /// The Dendrogram class inherits from the <see cref="Scale" /> class, and draws
+    /// a dendrogram
     /// </summary>
-    /// <remarks>
-    /// Dendrogram is the normal, default cartesian axis.
-    /// </remarks>
-    /// 
-    /// <author> John Champion  </author>
-    /// <version> $Revision: 1.10 $ $Date: 2007-04-16 00:03:02 $ </version>
     [Serializable]
-    public class DendrogramScale : Scale, ISerializable //, ICloneable
+    public class DendrogramScale : Scale
     {
-        private List<DendrogramFormat> formats;
+        private List<DendrogramFormat> _formats;
         private bool _rectilinearLines = true;
         private DockStyle _dendrogramLocation = DockStyle.Top;
         private float Height = 50;
@@ -52,11 +42,6 @@ namespace pwiz.Common.Controls.Clustering
 
         #region constructors
 
-        /// <summary>
-        /// Default constructor that defines the owner <see cref="Axis" />
-        /// (containing object) for this new object.
-        /// </summary>
-        /// <param name="owner">The owner, or containing object, of this instance</param>
         public DendrogramScale(Axis owner, DockStyle location)
             : base(owner)
         {
@@ -91,7 +76,7 @@ namespace pwiz.Common.Controls.Clustering
 
         /// <summary>
         /// Return the <see cref="AxisType" /> for this <see cref="Scale" />, which is
-        /// <see cref="AxisType.Dendrogram" />.
+        /// <see cref="AxisType.UserDefined" />.
         /// </summary>
         public override AxisType Type
         {
@@ -108,9 +93,16 @@ namespace pwiz.Common.Controls.Clustering
             return new SizeF(Width, 100);
         }
 
+        /// <summary>
+        /// Sets the data for the dendrograms that are to be displayed.
+        /// The LeafLocations of the DendrogramFormat objects should be in chart coordinates.
+        /// They will be scaled to screen coordinates using the corresponding axis on the other side
+        /// of the GraphPane.
+        /// </summary>
+        /// <param name="formats"></param>
         public void Update(List<DendrogramFormat> formats)
         {
-            this.formats = formats;
+            this._formats = formats;
         }
 
         private PointF CoordinatesToPoint(double location, double yFraction, GraphPane pane, float xAxisHeight, float yAxisWidth)
@@ -131,24 +123,31 @@ namespace pwiz.Common.Controls.Clustering
 
         public override void Draw(Graphics graphics, GraphPane pane, float scaleFactor, float shiftPos)
         {
-            if (formats == null)
+            if (_formats == null)
                 return;
-            var yAxisWidth = pane.YAxis.CalcSpace(graphics, pane, scaleFactor, out float fixedSpaceY);
-            var xAxisHeight = pane.XAxis.CalcSpace(graphics, pane, scaleFactor, out float fixedSpaceX);
+            // Scale the coordinates of the DendrogramFormat using the Axis on the other side of the GraphPane
+            Scale transformScale;
+
             if (_dendrogramLocation == DockStyle.Right)
             {
+                transformScale = pane.YAxis.Scale;
                 Height = pane.CalcChartRect(graphics).Height;
                 Width = 100;
             }
             else
             {
+                transformScale = pane.XAxis.Scale;
                 Width = pane.CalcChartRect(graphics).Width;
                 Height = 100;
             }
-            foreach (var format in formats)
-            {
 
-                var locations = format.LeafLocations.Select(kvp => (kvp.Key + kvp.Value) / 2).ToList();
+            var yAxisWidth = pane.YAxis.CalcSpace(graphics, pane, scaleFactor, out float _);
+            var xAxisHeight = pane.XAxis.CalcSpace(graphics, pane, scaleFactor, out float _);
+            foreach (var format in _formats)
+            {
+                var leafLocations = format.LeafLocations.Select(kvp => new KeyValuePair<double, double>(
+                    transformScale.Transform(kvp.Key), transformScale.Transform(kvp.Value))).ToList();
+                var locations = leafLocations.Select(kvp => (kvp.Key + kvp.Value) / 2).ToList();
                 var lines = format.Data.GetLines(locations, _rectilinearLines).ToList();
                 var pen = new Pen(Color.Black, 1);
                 var maxHeight = lines.Max(line => line.Item4);
@@ -179,8 +178,8 @@ namespace pwiz.Common.Controls.Clustering
                         for (int iLeaf = 0; iLeaf < format.Colors.Count; iLeaf++)
                         {
                             var color = format.Colors[iLeaf][colorLevel];
-                            var left = format.LeafLocations[iLeaf].Key;
-                            var right = format.LeafLocations[iLeaf].Value;
+                            var left = leafLocations[iLeaf].Key;
+                            var right = leafLocations[iLeaf].Value;
 
                             var bottom = colorLevel * colorFraction / format.ColorLevelCount;
                             var top = (colorLevel + 1) * colorFraction / format.ColorLevelCount;
