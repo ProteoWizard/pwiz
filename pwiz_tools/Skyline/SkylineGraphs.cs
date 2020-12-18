@@ -1052,37 +1052,7 @@ namespace pwiz.Skyline
 
         private void editToolStripMenuItem_DropDownOpening(object sender, EventArgs e)
         {
-            CanApplyOrRemovePeak(null, null, out var canApply, out var canRemove);
-            if (!canApply && !canRemove)
-            {
-                integrationToolStripMenuItem.Enabled = false;
-            }
-            else
-            {
-                applyPeakAllToolStripMenuItem.Enabled = applyPeakSubsequentToolStripMenuItem.Enabled = canApply;
-                applyPeakGroupToolStripMenuItem.Text = Resources.SkylineWindow_editToolStripMenuItem_DropDownOpening_Apply_Peak_to_Group;
-                groupApplyToByToolStripMenuItem.DropDownItems.Clear();
-                applyPeakGroupToolStripMenuItem.Enabled = groupApplyToByToolStripMenuItem.Enabled = false;
-                if (ReplicateValue.GetGroupableReplicateValues(DocumentUI).Any())
-                {
-                    groupApplyToByToolStripMenuItem.Enabled = true;
-                    var selectedAnnotation = GetGroupApplyToDescription();
-                    if (selectedAnnotation != null)
-                    {
-                        applyPeakGroupToolStripMenuItem.Text = Resources.SkylineWindow_BuildChromatogramMenu_Apply_Peak_to_ + selectedAnnotation;
-                        applyPeakGroupToolStripMenuItem.Enabled = true;
-                    }
-                    var i = 0;
-                    AddGroupByMenuItems(null, groupApplyToByToolStripMenuItem, replicateValue=> Settings.Default.GroupApplyToBy = replicateValue?.ToPersistedString(), false, Settings.Default.GroupApplyToBy, ref i);
-                    groupApplyToByGraphMenuItem.Visible = true;
-                }
-                else
-                {
-                    groupApplyToByGraphMenuItem.Visible = false;
-                }
-                removePeakToolStripMenuItem.Enabled = canRemove;
-                integrationToolStripMenuItem.Enabled = true;
-            }
+            EditMenu.EditToolStripMenuItemDropDownOpening();
         }
 
         private void AddApplyRemovePeak(ToolStrip menuStrip, ToolStripItemCollection removePeakItems, IsotopeLabelType labelType, int separator, ref int iInsert)

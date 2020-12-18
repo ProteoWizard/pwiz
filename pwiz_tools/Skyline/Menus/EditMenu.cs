@@ -1,21 +1,33 @@
-﻿using System;
+﻿/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2020 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Drawing;
-using System.Data;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Serialization;
-using DigitalRune.Windows.Docking;
-using pwiz.Common.SystemUtil;
+using pwiz.Common.Collections;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
-using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
@@ -38,7 +50,21 @@ namespace pwiz.Skyline.Menus
         public EditMenu(SkylineWindow skylineWindow) : base(skylineWindow)
         {
             InitializeComponent();
+            DropDownItems = ImmutableList.ValueOf(editToolStripMenuItem.DropDownItems.Cast<ToolStripItem>());
         }
+
+        public IEnumerable<ToolStripItem> DropDownItems { get; }
+
+        public ToolStripMenuItem UndoMenuItem => undoMenuItem;
+
+        public ToolStripMenuItem RedoMenuItem => redoMenuItem;
+
+        public ToolStripMenuItem CutMenuItem => cutMenuItem;
+        public ToolStripMenuItem CopyMenuItem => copyMenuItem;
+        public ToolStripMenuItem PasteMenuItem => pasteMenuItem;
+        public ToolStripItem DeleteMenuItem => deleteMenuItem;
+
+        public ToolStripMenuItem SelectAllMenuItem => selectAllMenuItem;
 
         private void cutMenuItem_Click(object sender, EventArgs e) { SkylineWindow.Cut(); }
         public void Cut()
@@ -714,11 +740,11 @@ namespace pwiz.Skyline.Menus
                     }
                     var i = 0;
                     SkylineWindow.AddGroupByMenuItems(null, groupApplyToByToolStripMenuItem, replicateValue => Settings.Default.GroupApplyToBy = replicateValue?.ToPersistedString(), false, Settings.Default.GroupApplyToBy, ref i);
-                    SkylineWindow.groupApplyToByGraphMenuItem.Visible = true;
+                    SkylineWindow.GroupApplyToByGraphMenuItem.Visible = true;
                 }
                 else
                 {
-                    SkylineWindow.groupApplyToByGraphMenuItem.Visible = false;
+                    SkylineWindow.GroupApplyToByGraphMenuItem.Visible = false;
                 }
                 removePeakToolStripMenuItem.Enabled = canRemove;
                 integrationToolStripMenuItem.Enabled = true;
@@ -1485,6 +1511,15 @@ namespace pwiz.Skyline.Menus
             SkylineWindow.ManageResults();
         }
 
-
+        public void SequenceTreeAfterSelect()
+        {
+            SrmTreeNode nodeTree = SequenceTree.SelectedNode as SrmTreeNode;
+            var enabled = nodeTree != null;
+            editNoteToolStripMenuItem.Enabled = enabled;
+            manageUniquePeptidesMenuItem.Enabled = UniquePeptidesDlg.PeptideSelection(SequenceTree).Any(); // Only works for peptide molecules, and only if selected
+            var nodePepTree = SequenceTree.GetNodeOfType<PeptideTreeNode>();
+            modifyPeptideMenuItem.Enabled = nodePepTree != null;
+            setStandardTypeMenuItem.Enabled = SkylineWindow.HasSelectedTargetPeptides();
+        }
     }
 }

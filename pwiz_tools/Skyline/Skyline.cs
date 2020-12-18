@@ -26,12 +26,9 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
-using System.Xml;
-using System.Xml.Serialization;
 using DigitalRune.Windows.Docking;
 using JetBrains.Annotations;
 using log4net;
@@ -80,7 +77,6 @@ using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
-using DataFormats = System.Windows.Forms.DataFormats;
 using Peptide = pwiz.Skyline.Model.Peptide;
 using Timer = System.Windows.Forms.Timer;
 using Transition = pwiz.Skyline.Model.Transition;
@@ -131,6 +127,7 @@ namespace pwiz.Skyline
         private readonly Timer _timerGraphs;
         private readonly List<BackgroundLoader> _backgroundLoaders;
         private readonly object _documentChangeLock = new object();
+        private readonly List<SkylineControl> _skylineMenuControls = new List<SkylineControl>();
 
         /// <summary>
         /// Constructor for the main window of the Skyline program.
@@ -141,8 +138,8 @@ namespace pwiz.Skyline
             InitializeMenus();
             _undoManager = new UndoManager(this);
             var undoRedoButtons = new UndoRedoButtons(_undoManager,
-                undoMenuItem, undoToolBarButton,
-                redoMenuItem, redoToolBarButton,
+                EditMenu.UndoMenuItem, undoToolBarButton,
+                EditMenu.RedoMenuItem, redoToolBarButton,
                 RunUIAction);
             undoRedoButtons.AttachEventHandlers();
 
@@ -523,12 +520,12 @@ namespace pwiz.Skyline
 
         public bool CopyMenuItemEnabled()
         {
-            return copyMenuItem.Enabled;
+            return EditMenu.CopyMenuItem.Enabled;
         }
 
         public bool PasteMenuItemEnabled()
         {
-            return pasteMenuItem.Enabled;
+            return EditMenu.PasteMenuItem.Enabled;
         }
 
         /// <summary>
@@ -1106,7 +1103,10 @@ namespace pwiz.Skyline
 
             _timerGraphs.Dispose();
             _timerProgress.Dispose();
-            RefineMenu.Dispose();
+            foreach (var menuControl in _skylineMenuControls)
+            {
+                menuControl.Dispose();
+            }
 
             DatabaseResources.ReleaseAll(); // Let go of protDB SessionFactories
 
@@ -1182,13 +1182,8 @@ namespace pwiz.Skyline
 
             // Update edit menus
             UpdateClipboardMenuItems();
-            SrmTreeNode nodeTree = SequenceTree.SelectedNode as SrmTreeNode;
-            var enabled = nodeTree != null;
-            editNoteToolStripMenuItem.Enabled = enabled;
-            manageUniquePeptidesMenuItem.Enabled = UniquePeptidesDlg.PeptideSelection(SequenceTree).Any(); // Only works for peptide molecules, and only if selected
+            EditMenu.SequenceTreeAfterSelect();
             var nodePepTree = SequenceTree.GetNodeOfType<PeptideTreeNode>();
-            modifyPeptideMenuItem.Enabled = nodePepTree != null;
-            setStandardTypeMenuItem.Enabled = HasSelectedTargetPeptides();
 
             // Update active replicate, if using best replicate
             if (nodePepTree != null && SequenceTree.ShowReplicate == ReplicateDisplay.best)
@@ -1308,11 +1303,11 @@ namespace pwiz.Skyline
             {
                 // If some other control wants to handle these commands, then we disable
                 // the menu items so the keystrokes don't get eaten up by TranslateMessage
-                cutToolBarButton.Enabled = cutMenuItem.Enabled = false;
-                copyToolBarButton.Enabled = copyMenuItem.Enabled = false;
-                pasteToolBarButton.Enabled = pasteMenuItem.Enabled = false;
-                deleteMenuItem.Enabled = false;
-                selectAllMenuItem.Enabled = false;
+                cutToolBarButton.Enabled = EditMenu.CutMenuItem.Enabled = false;
+                copyToolBarButton.Enabled = EditMenu.CopyMenuItem.Enabled = false;
+                pasteToolBarButton.Enabled = EditMenu.PasteMenuItem.Enabled = false;
+                EditMenu.DeleteMenuItem.Enabled = false;
+                EditMenu.SelectAllMenuItem.Enabled = false;
                 // If it is a grid, then disable next and previous replicate keys in favor of ctrl-Up and ctrl-Down
                 // working in the grid
                 if (_activeClipboardControl is DataboundGridControl)
@@ -1322,11 +1317,11 @@ namespace pwiz.Skyline
 
             // Allow deletion, copy/paste for any selection that contains a tree node.
             bool enabled = SequenceTree != null && SequenceTree.SelectedNodes.Any(n => n is SrmTreeNode);
-            cutToolBarButton.Enabled = cutMenuItem.Enabled = enabled;
-            copyToolBarButton.Enabled = copyMenuItem.Enabled = enabled;
-            pasteToolBarButton.Enabled = pasteMenuItem.Enabled = true;
-            deleteMenuItem.Enabled = enabled;
-            selectAllMenuItem.Enabled = true;
+            cutToolBarButton.Enabled = EditMenu.CutMenuItem.Enabled = enabled;
+            copyToolBarButton.Enabled = EditMenu.CopyMenuItem.Enabled = enabled;
+            pasteToolBarButton.Enabled = EditMenu.PasteMenuItem.Enabled = true;
+            EditMenu.DeleteMenuItem.Enabled = enabled;
+            EditMenu.SelectAllMenuItem.Enabled = true;
             // Always enable these, as they are harmless if enabled with no results and otherwise unmanaged.
             nextReplicateMenuItem.Enabled = previousReplicateMenuItem.Enabled = true;
         }
@@ -1699,7 +1694,7 @@ namespace pwiz.Skyline
             return dict;
         }
 
-        private bool HasSelectedTargetPeptides()
+        public bool HasSelectedTargetPeptides()
         {
             return SequenceTree.SelectedDocNodes.Any(nodeSel =>
                 {
@@ -4471,11 +4466,6 @@ namespace pwiz.Skyline
 
         #endregion
 
-        public bool IsPasteKeys(Keys keys)
-        {
-            return Equals(pasteMenuItem.ShortcutKeys, keys);
-        }
-        
         public void ShowAssociateProteinsDlg()
         {
             RefineMenu.ShowAssociateProteinsDlg();
@@ -4818,15 +4808,22 @@ namespace pwiz.Skyline
 
         private void InitializeMenus()
         {
-            RefineMenu = new RefineMenu(this);
-            EditMenu = new EditMenu(this);
+            _skylineMenuControls.Add(RefineMenu = new RefineMenu(this));
+            _skylineMenuControls.Add(EditMenu = new EditMenu(this));
             refineToolStripMenuItem.DropDownItems.Clear();
             refineToolStripMenuItem.DropDownItems.AddRange(RefineMenu.DropDownItems.ToArray());
-            foreach (var entry in RefineMenu.ModeUiHandler.GetHandledComponents())
+            editToolStripMenuItem.DropDownItems.Clear();
+            editToolStripMenuItem.DropDownItems.AddRange(EditMenu.DropDownItems.ToArray());
+            foreach (var menuControl in _skylineMenuControls)
             {
-                modeUIHandler.AddHandledComponent(entry.Key, entry.Value);
+                foreach (var entry in menuControl.ModeUiHandler.GetHandledComponents())
+                {
+                    modeUIHandler.AddHandledComponent(entry.Key, entry.Value);
+                }
             }
         }
+
+        public ToolStripMenuItem GroupApplyToByGraphMenuItem => groupApplyToByGraphMenuItem;
     }
 }
 
