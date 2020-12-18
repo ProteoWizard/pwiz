@@ -35,25 +35,25 @@ namespace SetupDeployProject
     {
         static int Main(string[] args)
         {
-            if (args.Length != 5)
+            if (args.Length != 6)
             {
-                Console.Error.WriteLine("Usage: SetupDeployProject <Skyline path> <pwiz build path> <version string> <address-model> <target-name>");
+                Console.Error.WriteLine("Usage: SetupDeployProject <Skyline path> <Skyline build path> <pwiz build path> <version string> <address-model> <target-name>");
                 return 1;
             }
 
             try
             {
                 string skylinePath = Path.GetFullPath(args[0]);
-                string pwizBuildPath = args[1];
-                string version = args[2];
-                string addressModel = args[3];
-                string targetName = args[4];
+                string skylineBuildPath = args[1];
+                string pwizBuildPath = args[2];
+                string version = args[3];
+                string addressModel = args[4];
+                string targetName = args[5];
                 string platform = addressModel == "64" ? "x64" : "x86";
                 string installerSuffix = addressModel == "64" ? "-x86_64" : "-x86";
 
                 string templateDirectory = Path.Combine(skylinePath, "Executables/Installer");
                 string templatePath = Path.Combine(templateDirectory, "Product-template.wxs");
-                string skylineBuildPath = Path.Combine(skylinePath, "bin", platform, "Release");
                 string installerOutputDirectory = Path.Combine(skylinePath, "bin", platform);
 
                 string filelistPath = Path.Combine(templateDirectory, "FileList64-template.txt");
