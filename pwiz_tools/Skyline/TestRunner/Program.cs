@@ -526,9 +526,10 @@ namespace TestRunner
             }
 
             // Get list of languages
-            var languages = buildMode 
+            var requestedLanguages = buildMode 
                 ? new[] {"en"} 
                 : commandLineArgs.ArgAsString("language").Split(',');
+            var inUseLanguages = requestedLanguages;
 
             if (showFormNames)
                 runTests.Skyline.Set("ShowFormNames", true);
@@ -536,7 +537,7 @@ namespace TestRunner
                 runTests.Skyline.Set("ShowMatchingPages", true);
 
             var executingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            var qualityLanguages = new FindLanguages(executingDirectory, "en", "fr").Enumerate().ToArray();
+            var qualityLanguages = new FindLanguages(executingDirectory, "en", "fr", "tr").Enumerate().ToArray();
             var removeList = new List<TestInfo>();
 
             // Pass 0: Test an interesting collection of edge cases:
@@ -707,7 +708,7 @@ namespace TestRunner
             }
 
             if (qualityMode)
-                languages = qualityLanguages;
+                inUseLanguages = qualityLanguages;
 
             // Run all test passes.
             int pass = 1;
@@ -731,9 +732,20 @@ namespace TestRunner
                 runTests.Log("# Pass 2+: Run tests in each selected language.\r\n");
             }
 
+            // As fr and tr exercise pretty much the same things (numeric formats, specifically),
+            // and as pass1 already gives fr a thorough check, switch to testing just tr in pass 2+
+            if (asNightly && pass >= 2 && 
+                inUseLanguages.Any(l => l.StartsWith("fr")) && 
+                inUseLanguages.Any(l => l.StartsWith("tr")))
+            {
+                var listLanguages = inUseLanguages.ToList();
+                listLanguages.Remove(listLanguages.First(l => l.StartsWith("fr")));
+                inUseLanguages = listLanguages.ToArray();
+            }
+
             int perfPass = pass; // For nightly tests, we'll run perf tests just once per language, and only in one language (dynamically chosen for coverage) if english and french (along with any others) are both enabled
             bool needsPerfTestPass2Warning = asNightly && testList.Any(t => t.IsPerfTest); // No perf tests, no warning
-            var perfTestsOneLanguageOnly = asNightly && perftests && languages.Any(l => l.StartsWith("en")) && languages.Any(l => l.StartsWith("fr"));
+            var perfTestsOneLanguageOnly = asNightly && perftests && requestedLanguages.Any(l => l.StartsWith("en")) && requestedLanguages.Any(l => l.StartsWith("fr"));
 
             for (; pass < passEnd; pass++)
             {
@@ -747,8 +759,8 @@ namespace TestRunner
                     var test = testPass[testNumber];
 
                     // Perf Tests are generally too lengthy to run multiple times (but non-english format check is useful, so rotate through on a per-day basis)
-                    var perfTestLanguage = languages[DateTime.Now.DayOfYear % languages.Length];
-                    var languagesThisTest = (test.IsPerfTest && perfTestsOneLanguageOnly) ? new[] { perfTestLanguage } : languages;
+                    var perfTestLanguage = qualityLanguages[DateTime.Now.DayOfYear % qualityLanguages.Length];
+                    var languagesThisTest = (test.IsPerfTest && perfTestsOneLanguageOnly) ? new[] { perfTestLanguage } : inUseLanguages;
                     if (perfTestsOneLanguageOnly && needsPerfTestPass2Warning)
                     {
                         // NB the phrase "# Perf tests" in a log is a key for SkylineNightly to post to a different URL - so don't mess with this.
@@ -778,7 +790,7 @@ namespace TestRunner
                             if (!runTests.Run(test, pass, testNumber, dmpDir, false))
                             {
                                 removeList.Add(test);
-                                i = languages.Length - 1;   // Don't run other languages.
+                                i = inUseLanguages.Length - 1;   // Don't run other languages.
                                 break;
                             }
                             if ( maxSecondsPerTest > 0)
