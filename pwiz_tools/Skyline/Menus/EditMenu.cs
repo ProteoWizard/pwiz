@@ -153,7 +153,7 @@ namespace pwiz.Skyline.Menus
             }
             catch (ExternalException)
             {
-                MessageDlg.Show(this, ClipboardHelper.GetCopyErrorMessage());
+                MessageDlg.Show(SkylineWindow, ClipboardHelper.GetCopyErrorMessage());
             }
         }
         private void deleteMenuItem_Click(object sender, EventArgs e) { EditDelete(); }
@@ -282,7 +282,7 @@ namespace pwiz.Skyline.Menus
             }
             catch (ExternalException)
             {
-                MessageDlg.Show(this, ClipboardHelper.GetPasteErrorMessage());
+                MessageDlg.Show(SkylineWindow, ClipboardHelper.GetPasteErrorMessage());
                 return;
             }
 
@@ -318,7 +318,7 @@ namespace pwiz.Skyline.Menus
                 }
                 catch (Exception)
                 {
-                    MessageDlg.Show(this, Resources.SkylineWindow_Paste_Failed_reading_Skyline_document_from_the_clipboard_);
+                    MessageDlg.Show(SkylineWindow, Resources.SkylineWindow_Paste_Failed_reading_Skyline_document_from_the_clipboard_);
                     return;
                 }
 
@@ -336,7 +336,7 @@ namespace pwiz.Skyline.Menus
                 }
                 catch (Exception)
                 {
-                    MessageDlg.Show(this, ClipboardHelper.GetPasteErrorMessage());
+                    MessageDlg.Show(SkylineWindow, ClipboardHelper.GetPasteErrorMessage());
                     return;
                 }
                 try
@@ -345,7 +345,7 @@ namespace pwiz.Skyline.Menus
                 }
                 catch (Exception x)
                 {
-                    MessageDlg.ShowException(this, x);
+                    MessageDlg.ShowException(SkylineWindow, x);
                 }
             }
         }
@@ -462,7 +462,7 @@ namespace pwiz.Skyline.Menus
                 {
                     if (!AminoAcid.IsExAA(c) && !char.IsWhiteSpace(c) && c != '*' && c != '.')
                     {
-                        MessageDlg.Show(this, string.Format(Resources.SkylineWindow_Unexpected_character__0__found_on_line__1__, c, lineLengths.Count + 1));
+                        MessageDlg.Show(SkylineWindow, string.Format(Resources.SkylineWindow_Unexpected_character__0__found_on_line__1__, c, lineLengths.Count + 1));
                         return;
                     }
                     if (c == '\n')
@@ -494,7 +494,7 @@ namespace pwiz.Skyline.Menus
                     {
                         using (PasteTypeDlg dlg = new PasteTypeDlg())
                         {
-                            if (dlg.ShowDialog(this) == DialogResult.Cancel)
+                            if (dlg.ShowDialog(SkylineWindow) == DialogResult.Cancel)
                                 return;
                             peptideList = dlg.PeptideList;
                         }
@@ -509,7 +509,7 @@ namespace pwiz.Skyline.Menus
                 }
                 else if (text.Contains(@"."))
                 {
-                    MessageBox.Show(this, Resources.SkylineWindow_Paste_Unexpected_character_period_found);
+                    MessageBox.Show(SkylineWindow, Resources.SkylineWindow_Paste_Unexpected_character_period_found);
                     return;
                 }
 
@@ -547,7 +547,7 @@ namespace pwiz.Skyline.Menus
                     continue;
                 if (pepSeqClean.Contains(@"."))
                 {
-                    MessageBox.Show(this, string.Format(Resources.SkylineWindow_Unexpected_character__0__found_on_line__1__, @".", i + 1));
+                    MessageBox.Show(SkylineWindow, string.Format(Resources.SkylineWindow_Unexpected_character__0__found_on_line__1__, @".", i + 1));
                     return null;
                 }
 
@@ -570,7 +570,7 @@ namespace pwiz.Skyline.Menus
             {
                 using (var dlg = new PasteFilteredPeptidesDlg { Peptides = listFilterPeptides })
                 {
-                    switch (dlg.ShowDialog(this))
+                    switch (dlg.ShowDialog(SkylineWindow))
                     {
                         case DialogResult.Cancel:
                             return null;
@@ -652,7 +652,7 @@ namespace pwiz.Skyline.Menus
             {
                 FindOptions = FindOptions.ReadFromSettings(Settings.Default)
             };
-            dlg.Show(this);
+            dlg.Show(SkylineWindow);
         }
 
         public void FindNext(bool reverse)
@@ -684,7 +684,7 @@ namespace pwiz.Skyline.Menus
             })
             {
                 dlg.Init(selectedSrmTreeNode.Document, selPaths);
-                if (dlg.ShowDialog(this) == DialogResult.OK)
+                if (dlg.ShowDialog(SkylineWindow) == DialogResult.OK)
                 {
                     bool clearAll = dlg.ClearAll;
                     var resultAnnotations = dlg.GetChangedAnnotations();
@@ -802,12 +802,12 @@ namespace pwiz.Skyline.Menus
                     {
                         groupByValue = groupBy.GetValue(new AnnotationCalculator(Document), chromatogramSet);
                     }
-                    longWait.PerformWork(this, 800, monitor =>
+                    longWait.PerformWork(SkylineWindow, 800, monitor =>
                         doc = PeakMatcher.ApplyPeak(Document, nodePepTree, ref nodeTranGroup, resultsIndex, resultsFile, subsequent, groupBy, groupByValue, monitor));
                 }
                 catch (Exception x)
                 {
-                    MessageDlg.ShowWithException(this, TextUtil.LineSeparate(Resources.SkylineWindow_ApplyPeak_Failed_to_apply_peak_, x.Message), x);
+                    MessageDlg.ShowWithException(SkylineWindow, TextUtil.LineSeparate(Resources.SkylineWindow_ApplyPeak_Failed_to_apply_peak_, x.Message), x);
                 }
 
                 if (!longWait.IsCanceled && doc != null && !ReferenceEquals(doc, Document))
@@ -1030,7 +1030,7 @@ namespace pwiz.Skyline.Menus
                 PasteFormat = PasteFormat.fasta
             })
             {
-                if (pasteDlg.ShowDialog(this) == DialogResult.OK)
+                if (pasteDlg.ShowDialog(SkylineWindow) == DialogResult.OK)
                     SelectedPath = pasteDlg.SelectedPath;
             }
         }
@@ -1048,7 +1048,7 @@ namespace pwiz.Skyline.Menus
                 PasteFormat = PasteFormat.peptide_list
             })
             {
-                if (pasteDlg.ShowDialog(this) == DialogResult.OK)
+                if (pasteDlg.ShowDialog(SkylineWindow) == DialogResult.OK)
                     SelectedPath = pasteDlg.SelectedPath;
             }
         }
@@ -1066,7 +1066,7 @@ namespace pwiz.Skyline.Menus
                 PasteFormat = PasteFormat.protein_list
             })
             {
-                if (pasteDlg.ShowDialog(this) == DialogResult.OK)
+                if (pasteDlg.ShowDialog(SkylineWindow) == DialogResult.OK)
                     SelectedPath = pasteDlg.SelectedPath;
             }
         }
@@ -1084,7 +1084,7 @@ namespace pwiz.Skyline.Menus
                 PasteFormat = PasteFormat.transition_list
             })
             {
-                if (pasteDlg.ShowDialog(this) == DialogResult.OK)
+                if (pasteDlg.ShowDialog(SkylineWindow) == DialogResult.OK)
                     SelectedPath = pasteDlg.SelectedPath;
             }
         }
@@ -1096,7 +1096,7 @@ namespace pwiz.Skyline.Menus
         {
             if (Document.MoleculeCount > SequenceTree.MAX_PEPTIDE_EXPANSION)
             {
-                MessageDlg.Show(this, Resources.SkylineWindow_ExpandProteins_The_number_of_targets_exceeds_the_limit_for_this_operation_);
+                MessageDlg.Show(SkylineWindow, Resources.SkylineWindow_ExpandProteins_The_number_of_targets_exceeds_the_limit_for_this_operation_);
                 return;
             }
             BulkUpdateTreeNodes<TreeNode>(() =>
@@ -1112,7 +1112,7 @@ namespace pwiz.Skyline.Menus
         {
             if (Document.MoleculeCount > SequenceTree.MAX_PEPTIDE_EXPANSION)
             {
-                MessageDlg.Show(this, Resources.SkylineWindow_ExpandProteins_The_number_of_targets_exceeds_the_limit_for_this_operation_);
+                MessageDlg.Show(SkylineWindow, Resources.SkylineWindow_ExpandProteins_The_number_of_targets_exceeds_the_limit_for_this_operation_);
                 return;
             }
             BulkUpdateTreeNodes<TreeNode>(() =>
@@ -1133,7 +1133,7 @@ namespace pwiz.Skyline.Menus
         {
             if (Document.MoleculeTransitionCount > SequenceTree.MAX_TRANSITION_EXPANSTION)
             {
-                MessageDlg.Show(this, Resources.SkylineWindow_ExpandProteins_The_number_of_targets_exceeds_the_limit_for_this_operation_);
+                MessageDlg.Show(SkylineWindow, Resources.SkylineWindow_ExpandProteins_The_number_of_targets_exceeds_the_limit_for_this_operation_);
                 return;
             }
             BulkUpdateTreeNodes<TreeNode>(() =>
@@ -1314,7 +1314,7 @@ namespace pwiz.Skyline.Menus
             {
                 dlg.SetResult(nodeTransGroup.CustomMolecule,
                     nodeTransGroup.PrecursorAdduct); // Set initial value change check
-                if (dlg.ShowDialog(this) == DialogResult.OK)
+                if (dlg.ShowDialog(SkylineWindow) == DialogResult.OK)
                 {
                     Assume.IsTrue(Equals(dlg.ResultCustomMolecule,
                         nodeTransGroup.Peptide.CustomMolecule)); // Not expecting any change to neutral molecule
@@ -1370,7 +1370,7 @@ namespace pwiz.Skyline.Menus
                             nodePep.ExplicitRetentionTime ?? ExplicitRetentionTimeInfo.EMPTY))
                     {
                         dlg.SetResult(nodePep.Peptide.CustomMolecule, Adduct.EMPTY);
-                        if (dlg.ShowDialog(this) == DialogResult.OK)
+                        if (dlg.ShowDialog(SkylineWindow) == DialogResult.OK)
                         {
                             ModifyDocument(
                                 string.Format(Resources.SkylineWindow_ModifyPeptide_Modify__0__, nodePepTree.Text),
@@ -1403,8 +1403,8 @@ namespace pwiz.Skyline.Menus
                 {
                     using (var dlg = new EditPepModsDlg(DocumentUI.Settings, nodePep, true))
                     {
-                        dlg.Height = Math.Min(dlg.Height, Screen.FromControl(this).WorkingArea.Height);
-                        if (dlg.ShowDialog(this) == DialogResult.OK)
+                        dlg.Height = Math.Min(dlg.Height, Screen.FromControl(SkylineWindow).WorkingArea.Height);
+                        if (dlg.ShowDialog(SkylineWindow) == DialogResult.OK)
                         {
                             var listStaticMods = Settings.Default.StaticModList;
                             var listHeavyMods = Settings.Default.HeavyModList;
@@ -1449,7 +1449,7 @@ namespace pwiz.Skyline.Menus
                     null, null))
                 {
                     dlg.SetResult(nodeTran.Transition.CustomIon, nodeTran.Transition.Adduct);
-                    if (dlg.ShowDialog(this) == DialogResult.OK)
+                    if (dlg.ShowDialog(SkylineWindow) == DialogResult.OK)
                     {
                         ModifyDocument(string.Format(Resources.SkylineWindow_ModifyTransition_Modify_product_ion__0_,
                                 nodeTranTree.Text),
@@ -1501,7 +1501,7 @@ namespace pwiz.Skyline.Menus
         {
             if (DocumentUI.Settings.PeptideSettings.BackgroundProteome.IsNone)
             {
-                MessageDlg.Show(this,
+                MessageDlg.Show(SkylineWindow,
                     TextUtil.LineSeparate(Resources.SkylineWindow_ShowUniquePeptidesDlg_Inspecting_peptide_uniqueness_requires_a_background_proteome,
                         Resources.SkylineWindow_ShowUniquePeptidesDlg_Choose_a_background_proteome_in_the_Digestions_tab_of_the_Peptide_Settings));
                 return;
@@ -1513,7 +1513,8 @@ namespace pwiz.Skyline.Menus
             {
                 return;  // No selection
             }
-            if (!ViewLibraryDlg.EnsureDigested(this, DocumentUI.Settings.PeptideSettings.BackgroundProteome, null))
+            if (!ViewLibraryDlg.EnsureDigested(SkylineWindow, DocumentUI.Settings.PeptideSettings.BackgroundProteome, null))
+            if (!ViewLibraryDlg.EnsureDigested(SkylineWindow, DocumentUI.Settings.PeptideSettings.BackgroundProteome, null))
             {
                 return;
             }
@@ -1522,7 +1523,7 @@ namespace pwiz.Skyline.Menus
                 PeptideGroupTreeNodes = peptideGroupTreeNodes
             })
             {
-                uniquePeptidesDlg.ShowDialog(this);
+                uniquePeptidesDlg.ShowDialog(SkylineWindow);
             }
         }
         private void manageResultsMenuItem_Click(object sender, EventArgs e)
