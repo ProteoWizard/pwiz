@@ -56,7 +56,7 @@ namespace SkylineBatch
                     Log.Error(Resources.Program_SkylineBatch_encountered_an_unexpected_error, (Exception)e.ExceptionObject);
                     MessageBox.Show(Resources.Program_SkylineBatch_encountered_an_unexpected_error +
                                     @"Error details may be found in the SkylineBatchProgram.log file in this directory : "
-                                    + Path.GetDirectoryName(Application.ExecutablePath) + Environment.NewLine + ((Exception)e.ExceptionObject).Message
+                                    + Path.GetDirectoryName(Application.ExecutablePath) + Environment.NewLine + Environment.NewLine + ((Exception)e.ExceptionObject).Message
                     );
                 }
                 finally
@@ -113,7 +113,7 @@ namespace SkylineBatch
             if (Installations.FindSkyline())
                 return true;
             
-            MessageBox.Show(string.Format(Resources.Program_InitSkylineSettings__0__requires_Skyline_to_run_, AppName()), string.Format(Resources.Program_InitSkylineSettings__0__Error), MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageBox.Show(string.Format(Resources.Program_InitSkylineSettings__0__requires_Skyline_to_run_, AppName()), string.Format(Resources.Program_InitSkylineSettings__0__Error, AppName()), MessageBoxButtons.OK, MessageBoxIcon.Error);
             return false;
 
         }

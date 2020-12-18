@@ -417,7 +417,7 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} requires Skyline to run..
+        ///   Looks up a localized string similar to {0} requires Skyline to run. Could not find a web-based or administrative installation of Skyline or Skyline-daily..
         /// </summary>
         internal static string Program_InitSkylineSettings__0__requires_Skyline_to_run_ {
             get {
