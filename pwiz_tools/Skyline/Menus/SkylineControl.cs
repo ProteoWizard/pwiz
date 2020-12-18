@@ -20,7 +20,6 @@ using System;
 using System.ComponentModel;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls;
-using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Results;
