@@ -233,6 +233,7 @@
     <EmbeddedResource Include="ThermoDIA.ChorusRequest.xml" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="DdaTutorialViews.zip" />
     <None Include="DiaSwathQEViews.zip" />
     <None Include="DiaSwathTTOFViews.zip" />
     <None Include="DriftTimePredictorExtra.zip" />
