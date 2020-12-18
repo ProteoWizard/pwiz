@@ -342,13 +342,15 @@ namespace pwiz.Skyline.Model.AuditLog
             // We can't ignore non-existent hashes, otherwise people could just delete the hash elements
             // and get Skyline to successfully load the audit log
 
-            // recalculate the actual hash for the current document format
-            var getHashes = new Func<AuditLogEntry, KeyValuePair<AuditLogHash, AuditLogEntry>>(e =>new KeyValuePair<AuditLogHash, AuditLogEntry>(e.Hash, e));
-            if (!DocumentFormat.CURRENT.Equals(result.FormatVersion))
-                getHashes = new Func<AuditLogEntry, KeyValuePair<AuditLogHash, AuditLogEntry>>(
-                    e => new KeyValuePair<AuditLogHash, AuditLogEntry>(new AuditLogHash(e, e.Hash.SkylHash, docFormat), e));
+            // recalculate the hashes for the current document format
+            var hashes = result.AuditLogEntries.Enumerate().Select(e =>
+            {
+                if (DocumentFormat.CURRENT.Equals(docFormat))
+                    return new {Key = e.Hash, Value = e};
+                else
+                    return new {Key = new AuditLogHash(e, e.Hash.SkylHash, docFormat), Value = e};
+            }).ToList();
 
-            var hashes = result.AuditLogEntries.Enumerate().Select(getHashes);
             // Identify any entry with mismatching hash
             var modifiedEntries = hashes.Where(pair => !pair.Key.SkylAndActualHashesEqual()).Select(p => p.Value).ToArray();
             // Calculate the root hash for the doc format specified in the audit log file
