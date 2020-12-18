@@ -26,7 +26,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
@@ -1215,57 +1214,13 @@ namespace pwiz.Skyline
         private void cutMenuItem_Click(object sender, EventArgs e) { Cut(); }
         public void Cut()
         {
-            if (StatementCompletionAction(textBox => textBox.Cut()))
-                return;
-
-            Copy();
-            EditDelete();
-        }
-
-        private static int CompareNodeBounds(TreeNode x, TreeNode y)
-        {
-            return Comparer<int>.Default.Compare(x.Bounds.Top, y.Bounds.Top);
-        }
-
-        private int GetLineBreakCount(TreeNodeMS curNode, TreeNodeMS prevNode)
-        {
-            int count = 0;
-            if (prevNode != null)
-                count++;
-            if (curNode == null || prevNode == null)
-                return count;
-            TreeNodeMS nodeParent = curNode;
-            while (nodeParent != null)
-            {
-                if (nodeParent == prevNode)
-                    return count;
-                nodeParent = (TreeNodeMS)nodeParent.Parent;
-            }
-            TreeNodeMS nodeVisible = curNode;
-            while (nodeVisible != prevNode)
-            {
-                if (!SequenceTree.SelectedNodes.Contains(nodeVisible) && nodeVisible.Level < curNode.Level)
-                    return count + 1;
-                nodeVisible = (TreeNodeMS)nodeVisible.PrevVisibleNode;
-                if (nodeVisible == null)
-                    return count;
-            }
-            return count;
+            EditMenu.Cut();
         }
 
         private void copyMenuItem_Click(object sender, EventArgs e) { Copy(); }
         public void Copy()
         {
             EditMenu.Copy();
-        }
-
-        private static void AppendClipboardText(StringBuilder sb, string text, string lineSep, string indent, int levels, int lineBreaks)
-        {
-            for (int i = 0; i < lineBreaks; i++)
-                sb.Append(lineSep);
-            for (int i = 0; i < levels; i++)
-                sb.Append(indent);
-            sb.Append(text);
         }
 
         private void pasteMenuItem_Click(object sender, EventArgs e) { Paste(); }
@@ -1343,12 +1298,10 @@ namespace pwiz.Skyline
             return entry;
         }
 
-        private void selectAllMenuItem_Click(object sender, EventArgs e) { SelectAll(); }
         public void SelectAll()
         {
             EditMenu.SelectAll();
         }
-
         
         private void editNoteMenuItem_Click(object sender, EventArgs e) { EditNote(); }
         public void EditNote()
@@ -1356,54 +1309,34 @@ namespace pwiz.Skyline
             EditMenu.EditNote();
         }
 
-        private void expandProteinsMenuItem_Click(object sender, EventArgs e) { ExpandProteins(); }
         public void ExpandProteins()
         {
             EditMenu.ExpandProteins();
         }
 
-        private void expandPeptidesMenuItem_Click(object sender, EventArgs e) { ExpandPeptides(); }
         public void ExpandPeptides()
         {
             EditMenu.ExpandPeptides();
         }
 
-        private void expandPrecursorsMenuItem_Click(object sender, EventArgs e) { ExpandPrecursors(); }
         public void ExpandPrecursors()
         {
             EditMenu.ExpandPrecursors();
         }
 
-        private void collapseProteinsMenuItem_Click(object sender, EventArgs e) { CollapseProteins(); }
         public void CollapseProteins()
         {
             EditMenu.CollapseProteins();
         }
 
-        private void collapsePeptidesMenuItem_Click(object sender, EventArgs e) { CollapsePeptides(); }
         public void CollapsePeptides()
         {
             EditMenu.CollapsePeptides();
         }
 
-        private void collapsePrecursorsMenuItem_Click(object sender, EventArgs e) { CollapsePrecursors(); }
         public void CollapsePrecursors()
         {
             EditMenu.CollapsePrecursors();
-        }
-
-        private void findMenuItem_Click(object sender, EventArgs e)
-        {
-            var index = OwnedForms.IndexOf(form => form is FindNodeDlg);
-            if (index != -1)
-                OwnedForms[index].Activate();
-            else
-                ShowFindNodeDlg();
-        }
-
-        private void findNextMenuItem_Click(object sender, EventArgs e)
-        {
-            FindNext(false);
         }
 
         public void ShowFindNodeDlg()
@@ -1723,19 +1656,9 @@ namespace pwiz.Skyline
             EditMenu.ShowPasteFastaDlg();
         }
 
-        private void insertPeptidesToolStripMenuItem_Click(object sender, EventArgs e)
+        public void ShowPastePeptidesDlg()
         {
-            ShowPastePeptidesDlg();
-        }
-
-       public void ShowPastePeptidesDlg()
-       {
-           EditMenu.ShowPastePeptidesDlg();
-       }
-
-        private void insertProteinsToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowPasteProteinsDlg();
+            EditMenu.ShowPastePeptidesDlg();
         }
 
         public void ShowPasteProteinsDlg()
@@ -1743,11 +1666,6 @@ namespace pwiz.Skyline
             EditMenu.ShowPasteProteinsDlg();
         }
 
-        private void insertTransitionListMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowPasteTransitionListDlg();
-        }
-       
         public void ShowPasteTransitionListDlg()
         {
             EditMenu.ShowPasteTransitionListDlg();
@@ -4822,8 +4740,6 @@ namespace pwiz.Skyline
                 }
             }
         }
-
-        public ToolStripMenuItem GroupApplyToByGraphMenuItem => groupApplyToByGraphMenuItem;
     }
 }
 

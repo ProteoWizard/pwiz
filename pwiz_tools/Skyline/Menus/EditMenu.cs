@@ -59,14 +59,14 @@ namespace pwiz.Skyline.Menus
 
         public ToolStripMenuItem RedoMenuItem => redoMenuItem;
 
+        #region Clipboard Operations
         public ToolStripMenuItem CutMenuItem => cutMenuItem;
         public ToolStripMenuItem CopyMenuItem => copyMenuItem;
         public ToolStripMenuItem PasteMenuItem => pasteMenuItem;
         public ToolStripItem DeleteMenuItem => deleteMenuItem;
-
         public ToolStripMenuItem SelectAllMenuItem => selectAllMenuItem;
 
-        private void cutMenuItem_Click(object sender, EventArgs e) { SkylineWindow.Cut(); }
+        private void cutMenuItem_Click(object sender, EventArgs e) { Cut(); }
         public void Cut()
         {
             if (SkylineWindow.StatementCompletionAction(textBox => textBox.Cut()))
@@ -77,12 +77,7 @@ namespace pwiz.Skyline.Menus
         }
         private bool StatementCompletionAction(Action<TextBox> act)
         {
-            var completionEditBox = SkylineWindow.SequenceTree.StatementCompletionEditBox;
-            if (completionEditBox == null)
-                return false;
-
-            act(completionEditBox.TextBox);
-            return true;
+            return SkylineWindow.StatementCompletionAction(act);
         }
         private void copyMenuItem_Click(object sender, EventArgs e) { Copy(); }
 
@@ -389,7 +384,7 @@ namespace pwiz.Skyline.Menus
                         {
                             throw new InvalidDataException(
                                 string.Format(Resources.SkylineWindow_Unexpected_character__0__found_on_line__1__, c,
-                                              i + 1));
+                                    i + 1));
                         }
                     }
                 }
@@ -401,12 +396,14 @@ namespace pwiz.Skyline.Menus
                 SkylineWindow.InsertSmallMoleculeTransitionList(text, Resources.SkylineWindow_Paste_Paste_transition_list);
             }
             // If the text contains numbers, see if it can be imported as a mass list.
-            // It is definitly not a sequence, if it has numbers.  Whereas, sequences do
+            // It is definitely not a sequence, if it has numbers.  Whereas, sequences do
             // allow internal white space including tabs.
-            else if (MassListImporter.IsColumnar(Transition.StripChargeIndicators(text, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE),
-                     out formatProvider, out separator, out columnTypes))
+            else if (MassListImporter.IsColumnar(
+                Transition.StripChargeIndicators(text, TransitionGroup.MIN_PRECURSOR_CHARGE,
+                    TransitionGroup.MAX_PRECURSOR_CHARGE),
+                out formatProvider, out separator, out columnTypes))
             {
-                // If no numeric type is found, try the second line.  Ther first may be
+                // If no numeric type is found, try the second line.  The first may be
                 // a header row.
                 if (!MassListImporter.HasNumericColumn(columnTypes))
                 {
@@ -419,17 +416,20 @@ namespace pwiz.Skyline.Menus
                 }
 
                 if (MassListImporter.HasNumericColumn(columnTypes))
-                    SkylineWindow.ImportMassList(new MassListInputs(text, formatProvider, separator), Resources.SkylineWindow_Paste_Paste_transition_list, false);
+                    SkylineWindow.ImportMassList(new MassListInputs(text, formatProvider, separator),
+                        Resources.SkylineWindow_Paste_Paste_transition_list, false);
                 // Handle unusual corner case where data is found to be columnar and contains numbers, 
                 // but first line is missing
                 else if (columnTypes.Length == 0)
                 {
-                    throw new InvalidDataException(Resources.CopyPasteTest_DoTest_Could_not_read_the_pasted_transition_list___Transition_list_must_be_in_separated_columns_and_cannot_contain_blank_lines_);
+                    throw new InvalidDataException(Resources
+                        .CopyPasteTest_DoTest_Could_not_read_the_pasted_transition_list___Transition_list_must_be_in_separated_columns_and_cannot_contain_blank_lines_);
                 }
-                else if (columnTypes.Length <= 3 && columnTypes[columnTypes.Length - 1] != typeof(FastaSequence)) // Name, Description, Sequence
+                else if (columnTypes.Length <= 3 && columnTypes[columnTypes.Length - 1] != typeof(FastaSequence)
+                ) // Name, Description, Sequence
                 {
                     var message = TextUtil.LineSeparate(Resources.SkylineWindow_Paste_Protein_sequence_not_found,
-                                                        Resources.SkylineWindow_Paste_The_protein_sequence_must_be_the_last_value_in_each_line);
+                        Resources.SkylineWindow_Paste_The_protein_sequence_must_be_the_last_value_in_each_line);
                     throw new InvalidDataException(message);
                 }
                 else
@@ -443,9 +443,12 @@ namespace pwiz.Skyline.Menus
                     {
                         throw new InvalidDataException(x.Message, x);
                     }
+
                     SkylineWindow.ImportFasta(new StringReader(textFasta), Helpers.CountLinesInString(textFasta),
-                        false, Resources.SkylineWindow_Paste_Paste_proteins, new SkylineWindow.ImportFastaInfo(false, textFasta));
+                        false, Resources.SkylineWindow_Paste_Paste_proteins,
+                        new SkylineWindow.ImportFastaInfo(false, textFasta));
                 }
+
                 return;
             }
             // Otherwise, look for a list of peptides, or a bare sequence
@@ -483,8 +486,8 @@ namespace pwiz.Skyline.Menus
                     Statistics stats = new Statistics(lineLengths);
                     // All lines smaller than the peptide filter
                     if (stats.Max() <= filter.MaxPeptideLength ||
-                            // 3 out of 4 are peptide length
-                            (lineLengths.Count > 3 && stats.Percentile(0.75) <= filter.MaxPeptideLength))
+                        // 3 out of 4 are peptide length
+                        (lineLengths.Count > 3 && stats.Percentile(0.75) <= filter.MaxPeptideLength))
                         peptideList = true;
                     // Probably a FASTA sequence, but ask if average line length is less than 40
                     else if (stats.Mean() < 40)
@@ -626,6 +629,9 @@ namespace pwiz.Skyline.Menus
             SequenceTree.UseKeysOverride = usingKeysOverride;
         }
 
+        #endregion
+
+        #region Find
         private void findMenuItem_Click(object sender, EventArgs e)
         {
             var index = SkylineWindow.OwnedForms.IndexOf(form => form is FindNodeDlg);
@@ -658,6 +664,7 @@ namespace pwiz.Skyline.Menus
         {
             return findPredicate.FindAll(longWaitBroker, Document);
         }
+        #endregion
         private void editNoteMenuItem_Click(object sender, EventArgs e) { EditNote(); }
         public void EditNote()
         {
@@ -671,8 +678,9 @@ namespace pwiz.Skyline.Menus
             using (EditNoteDlg dlg = new EditNoteDlg
             {
                 Text = selPaths.Count > 1
-                            ? Resources.SkylineWindow_EditNote_Edit_Note
-                            : TextUtil.SpaceSeparate(Resources.SkylineWindow_EditNote_Edit_Note, selectedSrmTreeNode.Heading, SequenceTree.SelectedNode.Text)
+                    ? Resources.SkylineWindow_EditNote_Edit_Note
+                    : TextUtil.SpaceSeparate(Resources.SkylineWindow_EditNote_Edit_Note, selectedSrmTreeNode.Heading,
+                        SequenceTree.SelectedNode.Text)
             })
             {
                 dlg.Init(selectedSrmTreeNode.Document, selPaths);
@@ -686,7 +694,9 @@ namespace pwiz.Skyline.Menus
                         Settings.Default.AnnotationColor = dlg.ColorIndex;
 
                     var count = selPaths.Count;
-                    var changedTargets = count == 1 ? SelectedNode.Text : string.Format(AuditLogStrings.SkylineWindow_EditNote__0__targets, count);
+                    var changedTargets = count == 1
+                        ? SelectedNode.Text
+                        : string.Format(AuditLogStrings.SkylineWindow_EditNote__0__targets, count);
 
                     ModifyDocument(Resources.SkylineWindow_EditNote_Edit_Note, doc =>
                     {
@@ -696,20 +706,19 @@ namespace pwiz.Skyline.Menus
                                 continue;
                             var nodeInDoc = doc.FindNode(nodePath);
                             var newAnnotations = clearAll
-                                                     ? Annotations.EMPTY
-                                                     : nodeInDoc.Annotations.
-                                                           MergeNewAnnotations(
-                                                               resultText,
-                                                               resultColorIndex,
-                                                               resultAnnotations);
+                                ? Annotations.EMPTY
+                                : nodeInDoc.Annotations.MergeNewAnnotations(
+                                    resultText,
+                                    resultColorIndex,
+                                    resultAnnotations);
                             if (Equals(newAnnotations, nodeInDoc.Annotations))
                                 continue;
 
-                            doc = (SrmDocument)doc.ReplaceChild(nodePath.Parent,
-                                                                 nodeInDoc.
-                                                                     ChangeAnnotations(
-                                                                         newAnnotations));
+                            doc = (SrmDocument) doc.ReplaceChild(nodePath.Parent,
+                                nodeInDoc.ChangeAnnotations(
+                                    newAnnotations));
                         }
+
                         return doc;
                     }, docPair => AuditLogEntry.DiffDocNodes(MessageType.edited_note, docPair, changedTargets));
                 }
@@ -732,14 +741,14 @@ namespace pwiz.Skyline.Menus
                 if (ReplicateValue.GetGroupableReplicateValues(DocumentUI).Any())
                 {
                     groupApplyToByToolStripMenuItem.Enabled = true;
-                    var selectedAnnotation = SkylineWindow.GetGroupApplyToDescription();
+                    var selectedAnnotation = GetGroupApplyToDescription();
                     if (selectedAnnotation != null)
                     {
                         applyPeakGroupToolStripMenuItem.Text = Resources.SkylineWindow_BuildChromatogramMenu_Apply_Peak_to_ + selectedAnnotation;
                         applyPeakGroupToolStripMenuItem.Enabled = true;
                     }
                     var i = 0;
-                    SkylineWindow.AddGroupByMenuItems(null, groupApplyToByToolStripMenuItem, replicateValue => Settings.Default.GroupApplyToBy = replicateValue?.ToPersistedString(), false, Settings.Default.GroupApplyToBy, ref i);
+                    AddGroupByMenuItems(null, groupApplyToByToolStripMenuItem, replicateValue => Settings.Default.GroupApplyToBy = replicateValue?.ToPersistedString(), false, Settings.Default.GroupApplyToBy, ref i);
                     SkylineWindow.GroupApplyToByGraphMenuItem.Visible = true;
                 }
                 else
@@ -752,7 +761,7 @@ namespace pwiz.Skyline.Menus
 
         }
 
-
+        #region Peaks
         private void applyPeakAllMenuItem_Click(object sender, EventArgs e)
         {
             ApplyPeak(false, false);
@@ -841,9 +850,9 @@ namespace pwiz.Skyline.Menus
             }
             else if (nodePepTree != null && nodePepTree.Nodes.OfType<object>().Any())
             {
-                nodeGroups.AddRange(from TransitionGroupDocNode tranGroup in nodePepTree.DocNode.Children
-                                    select
-                                    new Tuple<TransitionGroupDocNode, IdentityPath>(tranGroup, new IdentityPath(nodePepTree.Path, tranGroup.Id)));
+                nodeGroups.AddRange(
+                    from TransitionGroupDocNode tranGroup in nodePepTree.DocNode.Children
+                    select Tuple.Create(tranGroup, new IdentityPath(nodePepTree.Path, tranGroup.Id)));
             }
             else
             {
@@ -868,15 +877,19 @@ namespace pwiz.Skyline.Menus
             else
             {
                 // ReSharper disable once PossibleNullReferenceException
-                ModifyDocument(string.Format(Resources.SkylineWindow_removePeakContextMenuItem_Click_Remove_all_peaks_from__0_, nodePepTree.DocNode.ModifiedSequenceDisplay),
+                ModifyDocument(
+                    string.Format(Resources.SkylineWindow_removePeakContextMenuItem_Click_Remove_all_peaks_from__0_,
+                        nodePepTree.DocNode.ModifiedSequenceDisplay),
                     document => nodeGroups.Aggregate(Document,
-                            (doc, nodeGroup) => RemovePeakInternal(doc, SelectedResultsIndex, chromFileInfoId, nodeGroup.Item2, nodeGroup.Item1, nodeTran)),
+                        (doc, nodeGroup) => RemovePeakInternal(doc, SelectedResultsIndex, chromFileInfoId,
+                            nodeGroup.Item2, nodeGroup.Item1, nodeTran)),
                     docPair =>
                     {
-                        var peptideGroup = ((PeptideGroupTreeNode)nodePepTree.SrmParent).DocNode;
+                        var peptideGroup = ((PeptideGroupTreeNode) nodePepTree.SrmParent).DocNode;
                         var name = PropertyName.ROOT.SubProperty(peptideGroup.AuditLogText)
                             .SubProperty(nodePepTree.DocNode.AuditLogText);
-                        return AuditLogEntry.CreateSimpleEntry(MessageType.removed_all_peaks_from, docPair.OldDocumentType, name,
+                        return AuditLogEntry.CreateSimpleEntry(MessageType.removed_all_peaks_from,
+                            docPair.OldDocumentType, name,
                             docPair.OldDoc.MeasuredResults.Chromatograms[SelectedResultsIndex].Name);
                     });
             }
@@ -914,12 +927,12 @@ namespace pwiz.Skyline.Menus
 
             if (nodeTran == null)
             {
-                chromInfo = GetTransitionGroupChromInfo(nodeGroup, resultsIndex, chromFileInfoId);
+                chromInfo = nodeGroup.GetChromInfo(resultsIndex, chromFileInfoId);
                 transition = null;
             }
             else
             {
-                chromInfo = GetTransitionChromInfo(nodeTran, resultsIndex, chromFileInfoId);
+                chromInfo = nodeTran.GetChromInfo(resultsIndex, chromFileInfoId);
                 transition = nodeTran.Transition;
             }
             if (chromInfo == null)
@@ -930,15 +943,6 @@ namespace pwiz.Skyline.Menus
             return name == null
                 ? document
                 : document.ChangePeak(groupPath, name, filePath, transition, 0, 0, UserSet.TRUE, PeakIdentification.FALSE, false);
-        }
-        private static TransitionGroupChromInfo GetTransitionGroupChromInfo(TransitionGroupDocNode nodeGroup, int iResults, ChromFileInfoId chromFileInfoId)
-        {
-            return nodeGroup.GetChromInfo(iResults, chromFileInfoId);
-        }
-
-        private static TransitionChromInfo GetTransitionChromInfo(TransitionDocNode nodeTran, int iResults, ChromFileInfoId chromFileInfoId)
-        {
-            return nodeTran.GetChromInfo(iResults, chromFileInfoId);
         }
         public void CanApplyOrRemovePeak(ToolStripItemCollection removePeakItems, IsotopeLabelType labelType, out bool canApply, out bool canRemove)
         {
@@ -1006,9 +1010,12 @@ namespace pwiz.Skyline.Menus
 
         private static bool HasPeak(int iResults, ChromFileInfoId chromFileInfoId, TransitionDocNode nodeTran)
         {
-            var chromInfo = GetTransitionChromInfo(nodeTran, iResults, chromFileInfoId);
+            var chromInfo = nodeTran.GetChromInfo(iResults, chromFileInfoId);
             return (chromInfo != null && !chromInfo.IsEmpty);
         }
+        #endregion
+
+        #region Insert
 
         private void insertFASTAToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -1081,6 +1088,9 @@ namespace pwiz.Skyline.Menus
                     SelectedPath = pasteDlg.SelectedPath;
             }
         }
+        #endregion
+
+        #region Expand/Collapse
         private void expandProteinsMenuItem_Click(object sender, EventArgs e) { ExpandProteins(); }
         public void ExpandProteins()
         {
@@ -1133,7 +1143,7 @@ namespace pwiz.Skyline.Menus
             });
             Settings.Default.SequenceTreeExpandPrecursors =
                 Settings.Default.SequenceTreeExpandPeptides =
-                Settings.Default.SequenceTreeExpandProteins = true;
+                    Settings.Default.SequenceTreeExpandProteins = true;
         }
 
         private void collapseProteinsMenuItem_Click(object sender, EventArgs e) { CollapseProteins(); }
@@ -1146,7 +1156,7 @@ namespace pwiz.Skyline.Menus
             });
             Settings.Default.SequenceTreeExpandProteins =
                 Settings.Default.SequenceTreeExpandPeptides =
-                Settings.Default.SequenceTreeExpandPrecursors = false;
+                    Settings.Default.SequenceTreeExpandPrecursors = false;
         }
 
         private void collapsePeptidesMenuItem_Click(object sender, EventArgs e) { CollapsePeptides(); }
@@ -1155,8 +1165,8 @@ namespace pwiz.Skyline.Menus
             BulkUpdateTreeNodes<PeptideTreeNode>(() =>
             {
                 foreach (PeptideGroupTreeNode node in SequenceTree.GetSequenceNodes())
-                    foreach (PeptideTreeNode child in node.Nodes.OfType<PeptideTreeNode>())
-                        child.CollapseAndClear();
+                foreach (PeptideTreeNode child in node.Nodes.OfType<PeptideTreeNode>())
+                    child.CollapseAndClear();
             });
             Settings.Default.SequenceTreeExpandPeptides =
                 Settings.Default.SequenceTreeExpandPrecursors = false;
@@ -1168,9 +1178,9 @@ namespace pwiz.Skyline.Menus
             BulkUpdateTreeNodes<PeptideTreeNode>(() =>
             {
                 foreach (PeptideGroupTreeNode node in SequenceTree.GetSequenceNodes())
-                    foreach (PeptideTreeNode child in node.Nodes.OfType<PeptideTreeNode>())
-                        foreach (TransitionGroupTreeNode grandChild in child.Nodes.OfType<TransitionGroupTreeNode>())
-                            grandChild.CollapseAndClear();
+                foreach (PeptideTreeNode child in node.Nodes.OfType<PeptideTreeNode>())
+                foreach (TransitionGroupTreeNode grandChild in child.Nodes.OfType<TransitionGroupTreeNode>())
+                    grandChild.CollapseAndClear();
             });
             Settings.Default.SequenceTreeExpandPrecursors = false;
         }
@@ -1179,7 +1189,7 @@ namespace pwiz.Skyline.Menus
             where TNode : TreeNode
         {
             TreeNode nodeTop = SequenceTree.GetNodeOfType<TNode>(SequenceTree.TopNode) ??
-                SequenceTree.TopNode;
+                               SequenceTree.TopNode;
 
             using (SequenceTree.BeginLargeUpdate())
             {
@@ -1188,6 +1198,9 @@ namespace pwiz.Skyline.Menus
             if (nodeTop != null)
                 SequenceTree.TopNode = nodeTop;
         }
+        #endregion
+
+        #region Set Standard Type
         private void setStandardTypeMenuItem_DropDownOpening(object sender, EventArgs e)
         {
             UpdateStandardTypeMenu();
@@ -1251,12 +1264,9 @@ namespace pwiz.Skyline.Menus
         {
             SkylineWindow.SetStandardType(StandardType.SURROGATE_STANDARD);
         }
+        #endregion
 
-        private void irtStandardContextMenuItem_Click(object sender, EventArgs e)
-        {
-            MessageDlg.Show(this, TextUtil.LineSeparate(Resources.SkylineWindow_irtStandardContextMenuItem_Click_The_standard_peptides_for_an_iRT_calculator_can_only_be_set_in_the_iRT_calculator_editor_,
-                Resources.SkylineWindow_irtStandardContextMenuItem_Click_In_the_Peptide_Settings___Prediction_tab__click_the_calculator_button_to_edit_the_current_iRT_calculator_));
-        }
+        #region Modify Peptide/Molecule
         private void modifyPeptideMenuItem_Click(object sender, EventArgs e)
         {
             var nodeTranGroupTree = SequenceTree.GetNodeOfType<TransitionGroupTreeNode>();
@@ -1288,24 +1298,26 @@ namespace pwiz.Skyline.Menus
 
             var existingPrecursors = nodeTransitionGroupTree.PepNode.TransitionGroups.Select(child => child.TransitionGroup).Where(c => c.IsCustomIon).ToArray();
             using (var dlg = new EditCustomMoleculeDlg(SkylineWindow,
-                    EditCustomMoleculeDlg.UsageMode.precursor,
-                    Resources.SkylineWindow_ModifySmallMoleculeTransitionGroup_Modify_Custom_Ion_Precursor,
-                    nodeTransGroup.TransitionGroup, // Self
-                    existingPrecursors, // Self and siblings
-                    TransitionGroup.MIN_PRECURSOR_CHARGE,
-                    TransitionGroup.MAX_PRECURSOR_CHARGE,
-                    Document.Settings,
-                    nodeTransGroup.TransitionGroup.CustomMolecule,
-                    nodeTransGroup.TransitionGroup.PrecursorAdduct,
-                    nodeTransGroup.ExplicitValues,
-                    null,
-                    null,
-                    nodeTransGroup.TransitionGroup.LabelType))
+                EditCustomMoleculeDlg.UsageMode.precursor,
+                Resources.SkylineWindow_ModifySmallMoleculeTransitionGroup_Modify_Custom_Ion_Precursor,
+                nodeTransGroup.TransitionGroup, // Self
+                existingPrecursors, // Self and siblings
+                TransitionGroup.MIN_PRECURSOR_CHARGE,
+                TransitionGroup.MAX_PRECURSOR_CHARGE,
+                Document.Settings,
+                nodeTransGroup.TransitionGroup.CustomMolecule,
+                nodeTransGroup.TransitionGroup.PrecursorAdduct,
+                nodeTransGroup.ExplicitValues,
+                null,
+                null,
+                nodeTransGroup.TransitionGroup.LabelType))
             {
-                dlg.SetResult(nodeTransGroup.CustomMolecule, nodeTransGroup.PrecursorAdduct); // Set initial value change check
+                dlg.SetResult(nodeTransGroup.CustomMolecule,
+                    nodeTransGroup.PrecursorAdduct); // Set initial value change check
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
-                    Assume.IsTrue(Equals(dlg.ResultCustomMolecule, nodeTransGroup.Peptide.CustomMolecule)); // Not expecting any change to neutral molecule
+                    Assume.IsTrue(Equals(dlg.ResultCustomMolecule,
+                        nodeTransGroup.Peptide.CustomMolecule)); // Not expecting any change to neutral molecule
                     var newTransGroup = new TransitionGroup(nodeTransGroup.Peptide, dlg.Adduct, dlg.IsotopeLabelType);
                     ModifyDocument(string.Format(Resources.SkylineWindow_ModifyPeptide_Modify__0__,
                             nodeTransitionGroupTree.Text),
@@ -1315,9 +1327,11 @@ namespace pwiz.Skyline.Menus
                             {
                                 // ID Changes impact all children, because IDs have back pointers to their parents.
                                 // User altered some identity item so we have to insert a copy of the tree from here down, and delete  
-                                var newNode = nodeTransGroup.UpdateSmallMoleculeTransitionGroup(nodeTransGroup.Peptide, newTransGroup, Document.Settings);
-                                var newdoc = (SrmDocument)doc.Insert(nodeTransitionGroupTree.Path, newNode);
-                                return (SrmDocument)newdoc.RemoveChild(nodeTransitionGroupTree.Path.Parent, nodeTransGroup);
+                                var newNode = nodeTransGroup.UpdateSmallMoleculeTransitionGroup(nodeTransGroup.Peptide,
+                                    newTransGroup, Document.Settings);
+                                var newdoc = (SrmDocument) doc.Insert(nodeTransitionGroupTree.Path, newNode);
+                                return (SrmDocument) newdoc.RemoveChild(nodeTransitionGroupTree.Path.Parent,
+                                    nodeTransGroup);
                             }
                             else
                             {
@@ -1330,9 +1344,11 @@ namespace pwiz.Skyline.Menus
                                 if (Equals(newNode, nodeTransGroup))
                                     return doc;
 
-                                return (SrmDocument)doc.ReplaceChild(nodeTransitionGroupTree.Path.Parent, newNode);
+                                return (SrmDocument) doc.ReplaceChild(nodeTransitionGroupTree.Path.Parent, newNode);
                             }
-                        }, docPair => AuditLogEntry.DiffDocNodes(MessageType.modified, docPair, AuditLogEntry.GetNodeName(docPair.OldDoc, nodeTransGroup)));
+                        },
+                        docPair => AuditLogEntry.DiffDocNodes(MessageType.modified, docPair,
+                            AuditLogEntry.GetNodeName(docPair.OldDoc, nodeTransGroup)));
                 }
             }
         }
@@ -1399,8 +1415,9 @@ namespace pwiz.Skyline.Menus
                                         dlg.ExplicitMods,
                                         dlg.IsCreateCopy,
                                         listStaticMods,
-                                        listHeavyMods), docPair => AuditLogEntry.DiffDocNodes(MessageType.modified, docPair,
-                                                            AuditLogEntry.GetNodeName(docPair.OldDoc, nodePep)));
+                                        listHeavyMods), docPair => AuditLogEntry.DiffDocNodes(MessageType.modified,
+                                    docPair,
+                                    AuditLogEntry.GetNodeName(docPair.OldDoc, nodePep)));
                         }
                     }
                 }
@@ -1415,8 +1432,8 @@ namespace pwiz.Skyline.Menus
                 var nodeGroupTree = SequenceTree.GetNodeOfType<TransitionGroupTreeNode>();
                 // Existing transitions to avoid duplication
                 var existingMolecules = nodeGroupTree.DocNode.Transitions
-                        .Select(nodeT => nodeT.Transition)
-                        .Where(t => t.IsNonReporterCustomIon()).ToArray();
+                    .Select(nodeT => nodeT.Transition)
+                    .Where(t => t.IsNonReporterCustomIon()).ToArray();
 
                 using (var dlg = new EditCustomMoleculeDlg(SkylineWindow,
                     EditCustomMoleculeDlg.UsageMode.fragment,
@@ -1440,7 +1457,7 @@ namespace pwiz.Skyline.Menus
                             {
                                 Assume.IsTrue(ReferenceEquals(nodeGroupTree.DocNode.TransitionGroup, nodeTran.Transition.Group));
                                 var mass = dlg.ResultCustomMolecule.GetMass(
-                                        doc.Settings.TransitionSettings.Prediction.FragmentMassType);
+                                    doc.Settings.TransitionSettings.Prediction.FragmentMassType);
                                 var transition = new Transition(nodeTran.Transition.Group, dlg.Adduct, null,
                                     dlg.ResultCustomMolecule);
                                 var noTransitionChange = transition.Equals(nodeTran.Transition);
@@ -1473,6 +1490,8 @@ namespace pwiz.Skyline.Menus
                 }
             }
         }
+        #endregion
+
         private void manageUniquePeptidesMenuItem_Click(object sender, EventArgs e)
         {
             ShowUniquePeptidesDlg();
@@ -1521,5 +1540,58 @@ namespace pwiz.Skyline.Menus
             modifyPeptideMenuItem.Enabled = nodePepTree != null;
             setStandardTypeMenuItem.Enabled = SkylineWindow.HasSelectedTargetPeptides();
         }
+
+        public string GetGroupApplyToDescription()
+        {
+            var document = Document;
+            var groupBy = ReplicateValue.FromPersistedString(document.Settings, Settings.Default.GroupApplyToBy);
+            if (groupBy == null)
+            {
+                return null;
+            }
+
+            object value = null;
+            if (document.Settings.HasResults)
+            {
+                int replicateIndex = SelectedResultsIndex;
+                if (replicateIndex >= 0 && replicateIndex < document.Settings.MeasuredResults.Chromatograms.Count)
+                {
+                    var chromatogramSet = document.Settings.MeasuredResults.Chromatograms[replicateIndex];
+                    value = groupBy.GetValue(new AnnotationCalculator(document), chromatogramSet);
+                }
+            }
+
+            return groupBy.Title + ':' + value;
+        }
+        public void AddGroupByMenuItems(ToolStrip menuStrip, ToolStripDropDownItem item, Action<ReplicateValue> clickHandler, bool includeAll, string checkedValue, ref int iInsert)
+        {
+            var replicateValues = ReplicateValue.GetGroupableReplicateValues(Document).ToArray();
+            if (!replicateValues.Any())
+            {
+                return;
+            }
+
+            item.DropDownItems.Clear();
+
+            if (includeAll)
+            {
+                item.DropDownItems.Add(new ToolStripMenuItem(Resources.SkylineWindow_AddGroupByMenuItems_All_Replicates,
+                        null, (sender, args) => clickHandler(null))
+                    { Checked = string.IsNullOrEmpty(checkedValue) });
+            }
+
+            foreach (var g in replicateValues)
+            {
+                var subItem = new ToolStripMenuItem(g.Title, null, (sender, args) => clickHandler(g))
+                {
+                    Checked = checkedValue == g.ToPersistedString(),
+                };
+
+                item.DropDownItems.Add(subItem);
+            }
+
+            menuStrip?.Items.Insert(iInsert++, item);
+        }
+
     }
 }

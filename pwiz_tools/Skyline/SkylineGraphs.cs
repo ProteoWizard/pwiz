@@ -1054,6 +1054,7 @@ namespace pwiz.Skyline
         {
             EditMenu.EditToolStripMenuItemDropDownOpening();
         }
+        public ToolStripMenuItem GroupApplyToByGraphMenuItem => groupApplyToByGraphMenuItem;
 
         private void AddApplyRemovePeak(ToolStrip menuStrip, ToolStripItemCollection removePeakItems, IsotopeLabelType labelType, int separator, ref int iInsert)
         {
@@ -1070,7 +1071,7 @@ namespace pwiz.Skyline
                     var groupable = ReplicateValue.GetGroupableReplicateValues(document).ToArray();
                     if (groupable.Any())
                     {
-                        var groupBy = GetGroupApplyToDescription();
+                        var groupBy = EditMenu.GetGroupApplyToDescription();
                         if (groupBy != null)
                         {
                             applyPeakGroupGraphMenuItem.Text =
@@ -1078,7 +1079,7 @@ namespace pwiz.Skyline
                             menuStrip.Items.Insert(iInsert++, applyPeakGroupGraphMenuItem);
                         }
 
-                        AddGroupByMenuItems(menuStrip, groupApplyToByGraphMenuItem, SetGroupApplyToBy, false, Settings.Default.GroupApplyToBy, ref iInsert);
+                        EditMenu.AddGroupByMenuItems(menuStrip, groupApplyToByGraphMenuItem, SetGroupApplyToBy, false, Settings.Default.GroupApplyToBy, ref iInsert);
                         groupApplyToByGraphMenuItem.Visible = true;
                     }
                     else
@@ -1113,28 +1114,6 @@ namespace pwiz.Skyline
             return graphChrom.GetChromFileInfoId();
         }
 
-        public string GetGroupApplyToDescription()
-        {
-            var document = Document;
-            var groupBy = ReplicateValue.FromPersistedString(document.Settings, Settings.Default.GroupApplyToBy);
-            if (groupBy == null)
-            {
-                return null;
-            }
-
-            object value = null;
-            if (document.Settings.HasResults)
-            {
-                int replicateIndex = SelectedResultsIndex;
-                if (replicateIndex >= 0 && replicateIndex < document.Settings.MeasuredResults.Chromatograms.Count)
-                {
-                    var chromatogramSet = document.Settings.MeasuredResults.Chromatograms[replicateIndex];
-                    value = groupBy.GetValue(new AnnotationCalculator(document), chromatogramSet);
-                }
-            }
-
-            return groupBy.Title + ':' + value;
-        }
         private void ranksMenuItem_Click(object sender, EventArgs e)
         {
             Settings.Default.ShowRanks = !Settings.Default.ShowRanks;
@@ -4250,7 +4229,7 @@ namespace pwiz.Skyline
             var isHistogram = graphType == GraphTypeSummary.histogram || graphType == GraphTypeSummary.histogram2d;
 
             if (isHistogram)
-                AddGroupByMenuItems(menuStrip, groupReplicatesByContextMenuItem, SetAreaCVGroup, true, AreaGraphController.GroupByGroup, ref iInsert);
+                EditMenu.AddGroupByMenuItems(menuStrip, groupReplicatesByContextMenuItem, SetAreaCVGroup, true, AreaGraphController.GroupByGroup, ref iInsert);
             else
                 AddTransitionContextMenu(menuStrip, iInsert++);
 
@@ -4619,35 +4598,6 @@ namespace pwiz.Skyline
             // We pass in a GraphSummary here because sometimes dockPanel.ActiveContent is not the graph the user is zooming in on
             GraphSummary[] graphSummaries = new List<GraphSummary>(_listGraphMassError.Concat(_listGraphPeakArea.Concat(_listGraphRetentionTime))).ToArray();
             SynchronizeSummaryZooming(graphSummaries.FirstOrDefault(gs => gs != null && ReferenceEquals(gs.GraphControl, sender)), newState);
-        }
-
-        public void AddGroupByMenuItems(ToolStrip menuStrip, ToolStripDropDownItem item, Action<ReplicateValue> clickHandler, bool includeAll, string checkedValue, ref int iInsert)
-        {
-            var replicateValues = ReplicateValue.GetGroupableReplicateValues(Document).ToArray();
-            if (!replicateValues.Any())
-            {
-                return;
-            }
-
-            item.DropDownItems.Clear();
-
-            if (includeAll)
-            {
-                item.DropDownItems.Add(new ToolStripMenuItem(Resources.SkylineWindow_AddGroupByMenuItems_All_Replicates,
-                    null, (sender, args)=>clickHandler(null)) {Checked = string.IsNullOrEmpty(checkedValue)});
-            }
-
-            foreach (var g in replicateValues)
-            {
-                var subItem = new ToolStripMenuItem(g.Title, null, (sender, args)=>clickHandler(g))
-                {
-                    Checked = checkedValue == g.ToPersistedString(),
-                };
-
-                item.DropDownItems.Add(subItem);
-            }
-
-            menuStrip?.Items.Insert(iInsert++, item);
         }
 
         public void SetGroupApplyToBy(ReplicateValue replicateValue)
