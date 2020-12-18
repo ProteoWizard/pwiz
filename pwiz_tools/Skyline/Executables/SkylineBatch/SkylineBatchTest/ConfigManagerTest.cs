@@ -185,6 +185,7 @@ namespace SkylineBatchTest
         public void TestImportExport()
         {
             TestUtils.ClearSavedConfigurations();
+            TestUtils.InitializeInstallations();
             var configsXmlPath = TestUtils.GetTestFilePath("configs.xml");
             var configManager = TestUtils.GetTestConfigManager();
             configManager.ExportConfigs(configsXmlPath, new [] {0,1,2});
@@ -214,7 +215,7 @@ namespace SkylineBatchTest
         public void TestCloseReopenConfigs()
         {
             TestUtils.ClearSavedConfigurations();
-            TestUtils.ClearSavedConfigurations();
+            TestUtils.InitializeInstallations();
             var configManager = TestUtils.GetTestConfigManager();
             configManager.AddConfiguration(TestUtils.GetTestConfig("four"));
             var testingConfigs = TestUtils.ConfigListFromNames(new List<string> { "one", "two", "three", "four" });

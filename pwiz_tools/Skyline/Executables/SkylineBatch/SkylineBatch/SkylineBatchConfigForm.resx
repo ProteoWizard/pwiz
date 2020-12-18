@@ -288,510 +288,6 @@
   <data name="splitContainer1.Orientation" type="System.Windows.Forms.Orientation, System.Windows.Forms">
     <value>Horizontal</value>
   </data>
-  <data name="&gt;&gt;textConfigName.Name" xml:space="preserve">
-    <value>textConfigName</value>
-  </data>
-  <data name="&gt;&gt;textConfigName.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textConfigName.Parent" xml:space="preserve">
-    <value>tabSettings</value>
-  </data>
-  <data name="&gt;&gt;textConfigName.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;labelConfigName.Name" xml:space="preserve">
-    <value>labelConfigName</value>
-  </data>
-  <data name="&gt;&gt;labelConfigName.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelConfigName.Parent" xml:space="preserve">
-    <value>tabSettings</value>
-  </data>
-  <data name="&gt;&gt;labelConfigName.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;groupBoxMain.Name" xml:space="preserve">
-    <value>groupBoxMain</value>
-  </data>
-  <data name="&gt;&gt;groupBoxMain.Type" xml:space="preserve">
-    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;groupBoxMain.Parent" xml:space="preserve">
-    <value>tabSettings</value>
-  </data>
-  <data name="&gt;&gt;groupBoxMain.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="tabSettings.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 22</value>
-  </data>
-  <data name="tabSettings.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 3, 3, 3</value>
-  </data>
-  <data name="tabSettings.Size" type="System.Drawing.Size, System.Drawing">
-    <value>445, 349</value>
-  </data>
-  <data name="tabSettings.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="tabSettings.Text" xml:space="preserve">
-    <value>Settings</value>
-  </data>
-  <data name="&gt;&gt;tabSettings.Name" xml:space="preserve">
-    <value>tabSettings</value>
-  </data>
-  <data name="&gt;&gt;tabSettings.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;tabSettings.Parent" xml:space="preserve">
-    <value>tabsConfig</value>
-  </data>
-  <data name="&gt;&gt;tabSettings.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <metadata name="toolBar.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>288, 17</value>
-  </metadata>
-  <data name="&gt;&gt;toolBar.Name" xml:space="preserve">
-    <value>toolBar</value>
-  </data>
-  <data name="&gt;&gt;toolBar.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;toolBar.Parent" xml:space="preserve">
-    <value>tabReports</value>
-  </data>
-  <data name="&gt;&gt;toolBar.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;gridReportSettings.Name" xml:space="preserve">
-    <value>gridReportSettings</value>
-  </data>
-  <data name="&gt;&gt;gridReportSettings.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridView, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;gridReportSettings.Parent" xml:space="preserve">
-    <value>tabReports</value>
-  </data>
-  <data name="&gt;&gt;gridReportSettings.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="tabReports.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 22</value>
-  </data>
-  <data name="tabReports.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
-  </data>
-  <data name="tabReports.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
-  </data>
-  <data name="tabReports.Size" type="System.Drawing.Size, System.Drawing">
-    <value>445, 349</value>
-  </data>
-  <data name="tabReports.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
-  <data name="tabReports.Text" xml:space="preserve">
-    <value>Reports</value>
-  </data>
-  <data name="&gt;&gt;tabReports.Name" xml:space="preserve">
-    <value>tabReports</value>
-  </data>
-  <data name="&gt;&gt;tabReports.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;tabReports.Parent" xml:space="preserve">
-    <value>tabsConfig</value>
-  </data>
-  <data name="&gt;&gt;tabReports.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="groupBox2.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Left, Right</value>
-  </data>
-  <data name="textSkylineInstallationPath.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Left, Right</value>
-  </data>
-  <data name="textSkylineInstallationPath.Enabled" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
-  <data name="textSkylineInstallationPath.Location" type="System.Drawing.Point, System.Drawing">
-    <value>27, 87</value>
-  </data>
-  <data name="textSkylineInstallationPath.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
-  </data>
-  <data name="textSkylineInstallationPath.Size" type="System.Drawing.Size, System.Drawing">
-    <value>367, 20</value>
-  </data>
-  <data name="textSkylineInstallationPath.TabIndex" type="System.Int32, mscorlib">
-    <value>19</value>
-  </data>
-  <data name="textSkylineInstallationPath.Text" xml:space="preserve">
-    <value>C:\Program Files\Skyline</value>
-  </data>
-  <data name="&gt;&gt;textSkylineInstallationPath.Name" xml:space="preserve">
-    <value>textSkylineInstallationPath</value>
-  </data>
-  <data name="&gt;&gt;textSkylineInstallationPath.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textSkylineInstallationPath.Parent" xml:space="preserve">
-    <value>groupBox2</value>
-  </data>
-  <data name="&gt;&gt;textSkylineInstallationPath.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="radioButtonSkylineDaily.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="radioButtonSkylineDaily.CheckAlign" type="System.Drawing.ContentAlignment, System.Drawing">
-    <value>TopLeft</value>
-  </data>
-  <data name="radioButtonSkylineDaily.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="radioButtonSkylineDaily.Location" type="System.Drawing.Point, System.Drawing">
-    <value>10, 45</value>
-  </data>
-  <data name="radioButtonSkylineDaily.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
-  </data>
-  <data name="radioButtonSkylineDaily.Size" type="System.Drawing.Size, System.Drawing">
-    <value>212, 17</value>
-  </data>
-  <data name="radioButtonSkylineDaily.TabIndex" type="System.Int32, mscorlib">
-    <value>23</value>
-  </data>
-  <data name="radioButtonSkylineDaily.Text" xml:space="preserve">
-    <value>Use &amp;web-based Skyline-daily installation</value>
-  </data>
-  <data name="&gt;&gt;radioButtonSkylineDaily.Name" xml:space="preserve">
-    <value>radioButtonSkylineDaily</value>
-  </data>
-  <data name="&gt;&gt;radioButtonSkylineDaily.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;radioButtonSkylineDaily.Parent" xml:space="preserve">
-    <value>groupBox2</value>
-  </data>
-  <data name="&gt;&gt;radioButtonSkylineDaily.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="radioButtonSpecifySkylinePath.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="radioButtonSpecifySkylinePath.CheckAlign" type="System.Drawing.ContentAlignment, System.Drawing">
-    <value>BottomLeft</value>
-  </data>
-  <data name="radioButtonSpecifySkylinePath.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="radioButtonSpecifySkylinePath.Location" type="System.Drawing.Point, System.Drawing">
-    <value>10, 66</value>
-  </data>
-  <data name="radioButtonSpecifySkylinePath.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
-  </data>
-  <data name="radioButtonSpecifySkylinePath.Size" type="System.Drawing.Size, System.Drawing">
-    <value>192, 17</value>
-  </data>
-  <data name="radioButtonSpecifySkylinePath.TabIndex" type="System.Int32, mscorlib">
-    <value>21</value>
-  </data>
-  <data name="radioButtonSpecifySkylinePath.Text" xml:space="preserve">
-    <value>Sp&amp;ecify Skyline installation directory</value>
-  </data>
-  <data name="&gt;&gt;radioButtonSpecifySkylinePath.Name" xml:space="preserve">
-    <value>radioButtonSpecifySkylinePath</value>
-  </data>
-  <data name="&gt;&gt;radioButtonSpecifySkylinePath.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;radioButtonSpecifySkylinePath.Parent" xml:space="preserve">
-    <value>groupBox2</value>
-  </data>
-  <data name="&gt;&gt;radioButtonSpecifySkylinePath.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="btnBrowse.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Right</value>
-  </data>
-  <data name="btnBrowse.Enabled" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
-  <data name="btnBrowse.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="btnBrowse.Location" type="System.Drawing.Point, System.Drawing">
-    <value>398, 85</value>
-  </data>
-  <data name="btnBrowse.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
-  </data>
-  <data name="btnBrowse.Size" type="System.Drawing.Size, System.Drawing">
-    <value>34, 23</value>
-  </data>
-  <data name="btnBrowse.TabIndex" type="System.Int32, mscorlib">
-    <value>22</value>
-  </data>
-  <data name="btnBrowse.Text" xml:space="preserve">
-    <value>...</value>
-  </data>
-  <data name="&gt;&gt;btnBrowse.Name" xml:space="preserve">
-    <value>btnBrowse</value>
-  </data>
-  <data name="&gt;&gt;btnBrowse.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnBrowse.Parent" xml:space="preserve">
-    <value>groupBox2</value>
-  </data>
-  <data name="&gt;&gt;btnBrowse.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="radioButtonSkyline.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="radioButtonSkyline.CheckAlign" type="System.Drawing.ContentAlignment, System.Drawing">
-    <value>TopLeft</value>
-  </data>
-  <data name="radioButtonSkyline.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="radioButtonSkyline.Location" type="System.Drawing.Point, System.Drawing">
-    <value>10, 24</value>
-  </data>
-  <data name="radioButtonSkyline.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
-  </data>
-  <data name="radioButtonSkyline.Size" type="System.Drawing.Size, System.Drawing">
-    <value>188, 17</value>
-  </data>
-  <data name="radioButtonSkyline.TabIndex" type="System.Int32, mscorlib">
-    <value>20</value>
-  </data>
-  <data name="radioButtonSkyline.Text" xml:space="preserve">
-    <value>&amp;Use web-based Skyline installation</value>
-  </data>
-  <data name="&gt;&gt;radioButtonSkyline.Name" xml:space="preserve">
-    <value>radioButtonSkyline</value>
-  </data>
-  <data name="&gt;&gt;radioButtonSkyline.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;radioButtonSkyline.Parent" xml:space="preserve">
-    <value>groupBox2</value>
-  </data>
-  <data name="&gt;&gt;radioButtonSkyline.ZOrder" xml:space="preserve">
-    <value>4</value>
-  </data>
-  <data name="groupBox2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>8, 19</value>
-  </data>
-  <data name="groupBox2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>437, 133</value>
-  </data>
-  <data name="groupBox2.TabIndex" type="System.Int32, mscorlib">
-    <value>24</value>
-  </data>
-  <data name="groupBox2.Text" xml:space="preserve">
-    <value>Skyline Settings</value>
-  </data>
-  <data name="&gt;&gt;groupBox2.Name" xml:space="preserve">
-    <value>groupBox2</value>
-  </data>
-  <data name="&gt;&gt;groupBox2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;groupBox2.Parent" xml:space="preserve">
-    <value>tabSkyline</value>
-  </data>
-  <data name="&gt;&gt;groupBox2.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="tabSkyline.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 22</value>
-  </data>
-  <data name="tabSkyline.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 3, 3, 3</value>
-  </data>
-  <data name="tabSkyline.Size" type="System.Drawing.Size, System.Drawing">
-    <value>445, 349</value>
-  </data>
-  <data name="tabSkyline.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="tabSkyline.Text" xml:space="preserve">
-    <value>Skyline</value>
-  </data>
-  <data name="&gt;&gt;tabSkyline.Name" xml:space="preserve">
-    <value>tabSkyline</value>
-  </data>
-  <data name="&gt;&gt;tabSkyline.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;tabSkyline.Parent" xml:space="preserve">
-    <value>tabsConfig</value>
-  </data>
-  <data name="&gt;&gt;tabSkyline.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="tabsConfig.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Fill</value>
-  </data>
-  <data name="tabsConfig.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 0</value>
-  </data>
-  <data name="tabsConfig.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
-  </data>
-  <data name="tabsConfig.Size" type="System.Drawing.Size, System.Drawing">
-    <value>453, 375</value>
-  </data>
-  <data name="tabsConfig.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;tabsConfig.Name" xml:space="preserve">
-    <value>tabsConfig</value>
-  </data>
-  <data name="&gt;&gt;tabsConfig.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabControl, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;tabsConfig.Parent" xml:space="preserve">
-    <value>splitContainer1.Panel1</value>
-  </data>
-  <data name="&gt;&gt;tabsConfig.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;splitContainer1.Panel1.Name" xml:space="preserve">
-    <value>splitContainer1.Panel1</value>
-  </data>
-  <data name="&gt;&gt;splitContainer1.Panel1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;splitContainer1.Panel1.Parent" xml:space="preserve">
-    <value>splitContainer1</value>
-  </data>
-  <data name="&gt;&gt;splitContainer1.Panel1.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;btnCancelConfig.Name" xml:space="preserve">
-    <value>btnCancelConfig</value>
-  </data>
-  <data name="&gt;&gt;btnCancelConfig.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnCancelConfig.Parent" xml:space="preserve">
-    <value>groupBox1</value>
-  </data>
-  <data name="&gt;&gt;btnCancelConfig.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;btnSaveConfig.Name" xml:space="preserve">
-    <value>btnSaveConfig</value>
-  </data>
-  <data name="&gt;&gt;btnSaveConfig.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnSaveConfig.Parent" xml:space="preserve">
-    <value>groupBox1</value>
-  </data>
-  <data name="&gt;&gt;btnSaveConfig.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;lblConfigRunning.Name" xml:space="preserve">
-    <value>lblConfigRunning</value>
-  </data>
-  <data name="&gt;&gt;lblConfigRunning.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;lblConfigRunning.Parent" xml:space="preserve">
-    <value>groupBox1</value>
-  </data>
-  <data name="&gt;&gt;lblConfigRunning.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="&gt;&gt;btnOkConfig.Name" xml:space="preserve">
-    <value>btnOkConfig</value>
-  </data>
-  <data name="&gt;&gt;btnOkConfig.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnOkConfig.Parent" xml:space="preserve">
-    <value>groupBox1</value>
-  </data>
-  <data name="&gt;&gt;btnOkConfig.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="groupBox1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Fill</value>
-  </data>
-  <data name="groupBox1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 0</value>
-  </data>
-  <data name="groupBox1.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
-  </data>
-  <data name="groupBox1.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
-  </data>
-  <data name="groupBox1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>453, 80</value>
-  </data>
-  <data name="groupBox1.TabIndex" type="System.Int32, mscorlib">
-    <value>100</value>
-  </data>
-  <data name="&gt;&gt;groupBox1.Name" xml:space="preserve">
-    <value>groupBox1</value>
-  </data>
-  <data name="&gt;&gt;groupBox1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;groupBox1.Parent" xml:space="preserve">
-    <value>splitContainer1.Panel2</value>
-  </data>
-  <data name="&gt;&gt;groupBox1.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;splitContainer1.Panel2.Name" xml:space="preserve">
-    <value>splitContainer1.Panel2</value>
-  </data>
-  <data name="&gt;&gt;splitContainer1.Panel2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;splitContainer1.Panel2.Parent" xml:space="preserve">
-    <value>splitContainer1</value>
-  </data>
-  <data name="&gt;&gt;splitContainer1.Panel2.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="splitContainer1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>453, 458</value>
-  </data>
-  <data name="splitContainer1.SplitterDistance" type="System.Int32, mscorlib">
-    <value>375</value>
-  </data>
-  <data name="splitContainer1.SplitterWidth" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="splitContainer1.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;splitContainer1.Name" xml:space="preserve">
-    <value>splitContainer1</value>
-  </data>
-  <data name="&gt;&gt;splitContainer1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.SplitContainer, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;splitContainer1.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;splitContainer1.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
   <data name="textConfigName.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
@@ -854,105 +350,6 @@
   </data>
   <data name="groupBoxMain.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
-  </data>
-  <data name="&gt;&gt;label3.Name" xml:space="preserve">
-    <value>label3</value>
-  </data>
-  <data name="&gt;&gt;label3.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label3.Parent" xml:space="preserve">
-    <value>groupBoxMain</value>
-  </data>
-  <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="&gt;&gt;btnDataPath.Name" xml:space="preserve">
-    <value>btnDataPath</value>
-  </data>
-  <data name="&gt;&gt;btnDataPath.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnDataPath.Parent" xml:space="preserve">
-    <value>groupBoxMain</value>
-  </data>
-  <data name="&gt;&gt;btnDataPath.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="&gt;&gt;label1.Name" xml:space="preserve">
-    <value>label1</value>
-  </data>
-  <data name="&gt;&gt;label1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
-    <value>groupBoxMain</value>
-  </data>
-  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
-    <value>5</value>
-  </data>
-  <data name="&gt;&gt;btnSkylineFilePath.Name" xml:space="preserve">
-    <value>btnSkylineFilePath</value>
-  </data>
-  <data name="&gt;&gt;btnSkylineFilePath.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnSkylineFilePath.Parent" xml:space="preserve">
-    <value>groupBoxMain</value>
-  </data>
-  <data name="&gt;&gt;btnSkylineFilePath.ZOrder" xml:space="preserve">
-    <value>6</value>
-  </data>
-  <data name="&gt;&gt;label2.Name" xml:space="preserve">
-    <value>label2</value>
-  </data>
-  <data name="&gt;&gt;label2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label2.Parent" xml:space="preserve">
-    <value>groupBoxMain</value>
-  </data>
-  <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
-    <value>8</value>
-  </data>
-  <data name="&gt;&gt;btnAnalysisPath.Name" xml:space="preserve">
-    <value>btnAnalysisPath</value>
-  </data>
-  <data name="&gt;&gt;btnAnalysisPath.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnAnalysisPath.Parent" xml:space="preserve">
-    <value>groupBoxMain</value>
-  </data>
-  <data name="&gt;&gt;btnAnalysisPath.ZOrder" xml:space="preserve">
-    <value>9</value>
-  </data>
-  <data name="groupBoxMain.Location" type="System.Drawing.Point, System.Drawing">
-    <value>7, 46</value>
-  </data>
-  <data name="groupBoxMain.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
-  </data>
-  <data name="groupBoxMain.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
-  </data>
-  <data name="groupBoxMain.Size" type="System.Drawing.Size, System.Drawing">
-    <value>445, 349</value>
-  </data>
-  <data name="groupBoxMain.TabIndex" type="System.Int32, mscorlib">
-    <value>53</value>
-  </data>
-  <data name="&gt;&gt;groupBoxMain.Name" xml:space="preserve">
-    <value>groupBoxMain</value>
-  </data>
-  <data name="&gt;&gt;groupBoxMain.Type" xml:space="preserve">
-    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;groupBoxMain.Parent" xml:space="preserve">
-    <value>tabSettings</value>
-  </data>
-  <data name="&gt;&gt;groupBoxMain.ZOrder" xml:space="preserve">
-    <value>2</value>
   </data>
   <data name="label3.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1143,6 +540,60 @@
   <data name="&gt;&gt;btnAnalysisPath.ZOrder" xml:space="preserve">
     <value>9</value>
   </data>
+  <data name="groupBoxMain.Location" type="System.Drawing.Point, System.Drawing">
+    <value>7, 46</value>
+  </data>
+  <data name="groupBoxMain.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="groupBoxMain.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="groupBoxMain.Size" type="System.Drawing.Size, System.Drawing">
+    <value>445, 349</value>
+  </data>
+  <data name="groupBoxMain.TabIndex" type="System.Int32, mscorlib">
+    <value>53</value>
+  </data>
+  <data name="&gt;&gt;groupBoxMain.Name" xml:space="preserve">
+    <value>groupBoxMain</value>
+  </data>
+  <data name="&gt;&gt;groupBoxMain.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;groupBoxMain.Parent" xml:space="preserve">
+    <value>tabSettings</value>
+  </data>
+  <data name="&gt;&gt;groupBoxMain.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="tabSettings.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="tabSettings.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="tabSettings.Size" type="System.Drawing.Size, System.Drawing">
+    <value>445, 349</value>
+  </data>
+  <data name="tabSettings.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="tabSettings.Text" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="&gt;&gt;tabSettings.Name" xml:space="preserve">
+    <value>tabSettings</value>
+  </data>
+  <data name="&gt;&gt;tabSettings.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabSettings.Parent" xml:space="preserve">
+    <value>tabsConfig</value>
+  </data>
+  <data name="&gt;&gt;tabSettings.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
   <metadata name="toolBar.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>288, 17</value>
   </metadata>
@@ -1151,30 +602,6 @@
   </data>
   <data name="toolBar.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>None</value>
-  </data>
-  <data name="toolBar.Location" type="System.Drawing.Point, System.Drawing">
-    <value>421, 5</value>
-  </data>
-  <data name="toolBar.Size" type="System.Drawing.Size, System.Drawing">
-    <value>24, 71</value>
-  </data>
-  <data name="toolBar.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="toolBar.Text" xml:space="preserve">
-    <value>toolStrip1</value>
-  </data>
-  <data name="&gt;&gt;toolBar.Name" xml:space="preserve">
-    <value>toolBar</value>
-  </data>
-  <data name="&gt;&gt;toolBar.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;toolBar.Parent" xml:space="preserve">
-    <value>tabReports</value>
-  </data>
-  <data name="&gt;&gt;toolBar.ZOrder" xml:space="preserve">
-    <value>0</value>
   </data>
   <data name="btnAddReport.ImageScaling" type="System.Windows.Forms.ToolStripItemImageScaling, System.Windows.Forms">
     <value>None</value>
@@ -1227,17 +654,50 @@
   <data name="btnEditReport.ToolTipText" xml:space="preserve">
     <value>Edit</value>
   </data>
+  <data name="toolBar.Location" type="System.Drawing.Point, System.Drawing">
+    <value>421, 5</value>
+  </data>
+  <data name="toolBar.Size" type="System.Drawing.Size, System.Drawing">
+    <value>24, 71</value>
+  </data>
+  <data name="toolBar.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="toolBar.Text" xml:space="preserve">
+    <value>toolStrip1</value>
+  </data>
+  <data name="&gt;&gt;toolBar.Name" xml:space="preserve">
+    <value>toolBar</value>
+  </data>
+  <data name="&gt;&gt;toolBar.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;toolBar.Parent" xml:space="preserve">
+    <value>tabReports</value>
+  </data>
+  <data name="&gt;&gt;toolBar.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="gridReportSettings.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
+  </data>
   <metadata name="columnName.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
+  <data name="columnName.HeaderText" xml:space="preserve">
+    <value>Name</value>
+  </data>
   <metadata name="columnPath.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
+  <data name="columnPath.HeaderText" xml:space="preserve">
+    <value>Path</value>
+  </data>
   <metadata name="columnScripts.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
-  <data name="gridReportSettings.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Bottom, Left, Right</value>
+  <data name="columnScripts.HeaderText" xml:space="preserve">
+    <value>Scripts</value>
   </data>
   <data name="gridReportSettings.Location" type="System.Drawing.Point, System.Drawing">
     <value>2, 5</value>
@@ -1263,23 +723,305 @@
   <data name="&gt;&gt;gridReportSettings.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
-  <metadata name="columnName.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <data name="columnName.HeaderText" xml:space="preserve">
-    <value>Name</value>
+  <data name="tabReports.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
   </data>
-  <metadata name="columnPath.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <data name="columnPath.HeaderText" xml:space="preserve">
-    <value>Path</value>
+  <data name="tabReports.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
   </data>
-  <metadata name="columnScripts.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+  <data name="tabReports.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="tabReports.Size" type="System.Drawing.Size, System.Drawing">
+    <value>445, 349</value>
+  </data>
+  <data name="tabReports.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="tabReports.Text" xml:space="preserve">
+    <value>Reports</value>
+  </data>
+  <data name="&gt;&gt;tabReports.Name" xml:space="preserve">
+    <value>tabReports</value>
+  </data>
+  <data name="&gt;&gt;tabReports.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabReports.Parent" xml:space="preserve">
+    <value>tabsConfig</value>
+  </data>
+  <data name="&gt;&gt;tabReports.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="groupBox2.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
+  <data name="textSkylineInstallationPath.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
+  <data name="textSkylineInstallationPath.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="textSkylineInstallationPath.Location" type="System.Drawing.Point, System.Drawing">
+    <value>27, 87</value>
+  </data>
+  <data name="textSkylineInstallationPath.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="textSkylineInstallationPath.Size" type="System.Drawing.Size, System.Drawing">
+    <value>367, 20</value>
+  </data>
+  <data name="textSkylineInstallationPath.TabIndex" type="System.Int32, mscorlib">
+    <value>19</value>
+  </data>
+  <data name="textSkylineInstallationPath.Text" xml:space="preserve">
+    <value>C:\Program Files\Skyline</value>
+  </data>
+  <data name="&gt;&gt;textSkylineInstallationPath.Name" xml:space="preserve">
+    <value>textSkylineInstallationPath</value>
+  </data>
+  <data name="&gt;&gt;textSkylineInstallationPath.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textSkylineInstallationPath.Parent" xml:space="preserve">
+    <value>groupBox2</value>
+  </data>
+  <data name="&gt;&gt;textSkylineInstallationPath.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="radioButtonSkylineDaily.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
-  </metadata>
-  <data name="columnScripts.HeaderText" xml:space="preserve">
-    <value>Scripts</value>
+  </data>
+  <data name="radioButtonSkylineDaily.CheckAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>TopLeft</value>
+  </data>
+  <data name="radioButtonSkylineDaily.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="radioButtonSkylineDaily.Location" type="System.Drawing.Point, System.Drawing">
+    <value>10, 45</value>
+  </data>
+  <data name="radioButtonSkylineDaily.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="radioButtonSkylineDaily.Size" type="System.Drawing.Size, System.Drawing">
+    <value>105, 17</value>
+  </data>
+  <data name="radioButtonSkylineDaily.TabIndex" type="System.Int32, mscorlib">
+    <value>23</value>
+  </data>
+  <data name="radioButtonSkylineDaily.Text" xml:space="preserve">
+    <value>Use Skyline-&amp;daily</value>
+  </data>
+  <data name="&gt;&gt;radioButtonSkylineDaily.Name" xml:space="preserve">
+    <value>radioButtonSkylineDaily</value>
+  </data>
+  <data name="&gt;&gt;radioButtonSkylineDaily.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;radioButtonSkylineDaily.Parent" xml:space="preserve">
+    <value>groupBox2</value>
+  </data>
+  <data name="&gt;&gt;radioButtonSkylineDaily.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="radioButtonSpecifySkylinePath.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="radioButtonSpecifySkylinePath.CheckAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>BottomLeft</value>
+  </data>
+  <data name="radioButtonSpecifySkylinePath.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="radioButtonSpecifySkylinePath.Location" type="System.Drawing.Point, System.Drawing">
+    <value>10, 66</value>
+  </data>
+  <data name="radioButtonSpecifySkylinePath.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="radioButtonSpecifySkylinePath.Size" type="System.Drawing.Size, System.Drawing">
+    <value>192, 17</value>
+  </data>
+  <data name="radioButtonSpecifySkylinePath.TabIndex" type="System.Int32, mscorlib">
+    <value>21</value>
+  </data>
+  <data name="radioButtonSpecifySkylinePath.Text" xml:space="preserve">
+    <value>&amp;Specify Skyline installation directory</value>
+  </data>
+  <data name="&gt;&gt;radioButtonSpecifySkylinePath.Name" xml:space="preserve">
+    <value>radioButtonSpecifySkylinePath</value>
+  </data>
+  <data name="&gt;&gt;radioButtonSpecifySkylinePath.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;radioButtonSpecifySkylinePath.Parent" xml:space="preserve">
+    <value>groupBox2</value>
+  </data>
+  <data name="&gt;&gt;radioButtonSpecifySkylinePath.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="btnBrowse.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="btnBrowse.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="btnBrowse.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="btnBrowse.Location" type="System.Drawing.Point, System.Drawing">
+    <value>398, 85</value>
+  </data>
+  <data name="btnBrowse.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="btnBrowse.Size" type="System.Drawing.Size, System.Drawing">
+    <value>34, 23</value>
+  </data>
+  <data name="btnBrowse.TabIndex" type="System.Int32, mscorlib">
+    <value>22</value>
+  </data>
+  <data name="btnBrowse.Text" xml:space="preserve">
+    <value>...</value>
+  </data>
+  <data name="&gt;&gt;btnBrowse.Name" xml:space="preserve">
+    <value>btnBrowse</value>
+  </data>
+  <data name="&gt;&gt;btnBrowse.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnBrowse.Parent" xml:space="preserve">
+    <value>groupBox2</value>
+  </data>
+  <data name="&gt;&gt;btnBrowse.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="radioButtonSkyline.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="radioButtonSkyline.CheckAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>TopLeft</value>
+  </data>
+  <data name="radioButtonSkyline.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="radioButtonSkyline.Location" type="System.Drawing.Point, System.Drawing">
+    <value>10, 24</value>
+  </data>
+  <data name="radioButtonSkyline.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="radioButtonSkyline.Size" type="System.Drawing.Size, System.Drawing">
+    <value>81, 17</value>
+  </data>
+  <data name="radioButtonSkyline.TabIndex" type="System.Int32, mscorlib">
+    <value>20</value>
+  </data>
+  <data name="radioButtonSkyline.Text" xml:space="preserve">
+    <value>&amp;Use Skyline</value>
+  </data>
+  <data name="&gt;&gt;radioButtonSkyline.Name" xml:space="preserve">
+    <value>radioButtonSkyline</value>
+  </data>
+  <data name="&gt;&gt;radioButtonSkyline.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;radioButtonSkyline.Parent" xml:space="preserve">
+    <value>groupBox2</value>
+  </data>
+  <data name="&gt;&gt;radioButtonSkyline.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="groupBox2.Location" type="System.Drawing.Point, System.Drawing">
+    <value>8, 19</value>
+  </data>
+  <data name="groupBox2.Size" type="System.Drawing.Size, System.Drawing">
+    <value>437, 133</value>
+  </data>
+  <data name="groupBox2.TabIndex" type="System.Int32, mscorlib">
+    <value>24</value>
+  </data>
+  <data name="groupBox2.Text" xml:space="preserve">
+    <value>Skyline Settings</value>
+  </data>
+  <data name="&gt;&gt;groupBox2.Name" xml:space="preserve">
+    <value>groupBox2</value>
+  </data>
+  <data name="&gt;&gt;groupBox2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;groupBox2.Parent" xml:space="preserve">
+    <value>tabSkyline</value>
+  </data>
+  <data name="&gt;&gt;groupBox2.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="tabSkyline.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="tabSkyline.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="tabSkyline.Size" type="System.Drawing.Size, System.Drawing">
+    <value>445, 349</value>
+  </data>
+  <data name="tabSkyline.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="tabSkyline.Text" xml:space="preserve">
+    <value>Skyline</value>
+  </data>
+  <data name="&gt;&gt;tabSkyline.Name" xml:space="preserve">
+    <value>tabSkyline</value>
+  </data>
+  <data name="&gt;&gt;tabSkyline.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabSkyline.Parent" xml:space="preserve">
+    <value>tabsConfig</value>
+  </data>
+  <data name="&gt;&gt;tabSkyline.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="tabsConfig.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="tabsConfig.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 0</value>
+  </data>
+  <data name="tabsConfig.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="tabsConfig.Size" type="System.Drawing.Size, System.Drawing">
+    <value>453, 375</value>
+  </data>
+  <data name="tabsConfig.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;tabsConfig.Name" xml:space="preserve">
+    <value>tabsConfig</value>
+  </data>
+  <data name="&gt;&gt;tabsConfig.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabControl, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabsConfig.Parent" xml:space="preserve">
+    <value>splitContainer1.Panel1</value>
+  </data>
+  <data name="&gt;&gt;tabsConfig.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;splitContainer1.Panel1.Name" xml:space="preserve">
+    <value>splitContainer1.Panel1</value>
+  </data>
+  <data name="&gt;&gt;splitContainer1.Panel1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;splitContainer1.Panel1.Parent" xml:space="preserve">
+    <value>splitContainer1</value>
+  </data>
+  <data name="&gt;&gt;splitContainer1.Panel1.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
   <data name="btnCancelConfig.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
@@ -1411,6 +1153,72 @@
   <data name="&gt;&gt;btnOkConfig.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
+  <data name="groupBox1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="groupBox1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 0</value>
+  </data>
+  <data name="groupBox1.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="groupBox1.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="groupBox1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>453, 80</value>
+  </data>
+  <data name="groupBox1.TabIndex" type="System.Int32, mscorlib">
+    <value>100</value>
+  </data>
+  <data name="&gt;&gt;groupBox1.Name" xml:space="preserve">
+    <value>groupBox1</value>
+  </data>
+  <data name="&gt;&gt;groupBox1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;groupBox1.Parent" xml:space="preserve">
+    <value>splitContainer1.Panel2</value>
+  </data>
+  <data name="&gt;&gt;groupBox1.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;splitContainer1.Panel2.Name" xml:space="preserve">
+    <value>splitContainer1.Panel2</value>
+  </data>
+  <data name="&gt;&gt;splitContainer1.Panel2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;splitContainer1.Panel2.Parent" xml:space="preserve">
+    <value>splitContainer1</value>
+  </data>
+  <data name="&gt;&gt;splitContainer1.Panel2.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="splitContainer1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>453, 458</value>
+  </data>
+  <data name="splitContainer1.SplitterDistance" type="System.Int32, mscorlib">
+    <value>375</value>
+  </data>
+  <data name="splitContainer1.SplitterWidth" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="splitContainer1.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;splitContainer1.Name" xml:space="preserve">
+    <value>splitContainer1</value>
+  </data>
+  <data name="&gt;&gt;splitContainer1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.SplitContainer, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;splitContainer1.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;splitContainer1.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
   <metadata name="imageListToolbarIcons.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>114, 17</value>
   </metadata>
@@ -1419,7 +1227,7 @@
         AAEAAAD/////AQAAAAAAAAAMAgAAAFdTeXN0ZW0uV2luZG93cy5Gb3JtcywgVmVyc2lvbj00LjAuMC4w
         LCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODkFAQAAACZTeXN0
         ZW0uV2luZG93cy5Gb3Jtcy5JbWFnZUxpc3RTdHJlYW1lcgEAAAAERGF0YQcCAgAAAAkDAAAADwMAAACw
-        CgAAAk1TRnQBSQFMAgEBAgEAAbgBAAG4AQABHgEAAR4BAAT/AQkBAAj/AUIBTQE2AQQGAAE2AQQCAAEo
+        CgAAAk1TRnQBSQFMAgEBAgEAAcABAAHAAQABHgEAAR4BAAT/AQkBAAj/AUIBTQE2AQQGAAE2AQQCAAEo
         AwABeAMAAR4DAAEBAQABCAUAARABDhgAAYACAAGAAwACgAEAAYADAAGAAQABgAEAAoACAAPAAQABwAHc
         AcABAAHwAcoBpgEAATMFAAEzAQABMwEAATMBAAIzAgADFgEAAxwBAAMiAQADKQEAA1UBAANNAQADQgEA
         AzkBAAGAAXwB/wEAAlAB/wEAAZMBAAHWAQAB/wHsAcwBAAHGAdYB7wEAAdYC5wEAAZABqQGtAgAB/wEz
