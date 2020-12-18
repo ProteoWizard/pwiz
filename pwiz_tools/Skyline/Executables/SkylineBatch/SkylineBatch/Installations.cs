@@ -118,7 +118,14 @@ namespace SkylineBatch
         {
             if (string.IsNullOrWhiteSpace(Settings.Default.RDir))
             {
-                var rKey = Registry.LocalMachine.OpenSubKey(RegistryLocationR) ?? Registry.CurrentUser.OpenSubKey(RegistryLocationR);
+                RegistryKey rKey = null;
+                try
+                {
+                    rKey = Registry.LocalMachine.OpenSubKey(RegistryLocationR);
+                }
+                catch (Exception)
+                {
+                }
                 if (rKey == null)
                     return false;
                 var latestRPath = rKey.GetValue(@"InstallPath") as string;
