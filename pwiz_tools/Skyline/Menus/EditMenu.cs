@@ -714,11 +714,11 @@ namespace pwiz.Skyline.Menus
                     }
                     var i = 0;
                     SkylineWindow.AddGroupByMenuItems(null, groupApplyToByToolStripMenuItem, replicateValue => Settings.Default.GroupApplyToBy = replicateValue?.ToPersistedString(), false, Settings.Default.GroupApplyToBy, ref i);
-                    SkylineWindow.ChromatogramContextMenu.groupApplyToByGraphMenuItem.Visible = true;
+                    SkylineWindow.groupApplyToByGraphMenuItem.Visible = true;
                 }
                 else
                 {
-                    SkylineWindow.ChromatogramContextMenu.groupApplyToByGraphMenuItem.Visible = false;
+                    SkylineWindow.groupApplyToByGraphMenuItem.Visible = false;
                 }
                 removePeakToolStripMenuItem.Enabled = canRemove;
                 integrationToolStripMenuItem.Enabled = true;
@@ -1472,7 +1472,7 @@ namespace pwiz.Skyline.Menus
             {
                 return;
             }
-            using (UniquePeptidesDlg uniquePeptidesDlg = new UniquePeptidesDlg(this)
+            using (UniquePeptidesDlg uniquePeptidesDlg = new UniquePeptidesDlg(SkylineWindow)
             {
                 PeptideGroupTreeNodes = peptideGroupTreeNodes
             })
@@ -1480,6 +1480,11 @@ namespace pwiz.Skyline.Menus
                 uniquePeptidesDlg.ShowDialog(this);
             }
         }
+        private void manageResultsMenuItem_Click(object sender, EventArgs e)
+        {
+            SkylineWindow.ManageResults();
+        }
+
 
     }
 }

@@ -4816,13 +4816,10 @@ namespace pwiz.Skyline
 
         public EditMenu EditMenu { get; private set; }
 
-        public ChromatogramContextMenu ChromatogramContextMenu { get; private set; }
-
         private void InitializeMenus()
         {
             RefineMenu = new RefineMenu(this);
             EditMenu = new EditMenu(this);
-            ChromatogramContextMenu = new ChromatogramContextMenu(this);
             refineToolStripMenuItem.DropDownItems.Clear();
             refineToolStripMenuItem.DropDownItems.AddRange(RefineMenu.DropDownItems.ToArray());
             foreach (var entry in RefineMenu.ModeUiHandler.GetHandledComponents())

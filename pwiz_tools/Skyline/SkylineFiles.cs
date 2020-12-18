@@ -2874,7 +2874,7 @@ namespace pwiz.Skyline
             }
         }
 
-        private void ReimportChromatograms(SrmDocument document, IEnumerable<ChromatogramSet> chromatogramSets)
+        public void ReimportChromatograms(SrmDocument document, IEnumerable<ChromatogramSet> chromatogramSets)
         {
             var setReimport = new HashSet<ChromatogramSet>(chromatogramSets);
             if (setReimport.Count == 0)

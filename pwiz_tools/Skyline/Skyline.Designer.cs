@@ -4810,7 +4810,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem mirrorMenuItem;
         private System.Windows.Forms.ToolStripMenuItem viewModificationsMenuItem;
         private System.Windows.Forms.ToolStripMenuItem applyPeakGroupGraphMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem groupApplyToByGraphMenuItem;
+        public System.Windows.Forms.ToolStripMenuItem groupApplyToByGraphMenuItem;
         private System.Windows.Forms.ToolStripMenuItem applyPeakGroupToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem groupApplyToByToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem logRegressionContextMenuItem;
