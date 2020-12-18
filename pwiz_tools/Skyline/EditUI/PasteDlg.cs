@@ -2076,19 +2076,32 @@ namespace pwiz.Skyline.EditUI
                 TbxError.Visible = false;
                 return;
             }
-            TbxError.BackColor = Color.Red;
-            TbxError.ForeColor = Color.White;
-            TbxError.Text = pasteError.Message;
-            TbxError.Visible = true;
-            if (HelpTip != null)
-            {
-                // In case message is long, make it possible to see in a tip
-                HelpTip.SetToolTip(TbxError, pasteError.Message);
-            }
+
+            ShowFastaError(pasteError.Message);
 
             TbxFasta.SelectionStart = Math.Max(0, TbxFasta.GetFirstCharIndexFromLine(pasteError.Line) + pasteError.Column);
             TbxFasta.SelectionLength = Math.Min(pasteError.Length, TbxFasta.Text.Length - TbxFasta.SelectionStart);
             TbxFasta.Focus();
+        }
+
+        public void ShowFastaError(string errorMsg)
+        {
+            PanelError.Visible = true;
+            if (string.IsNullOrEmpty(errorMsg))
+            {
+                TbxError.Text = string.Empty;
+                TbxError.Visible = false;
+                return;
+            }
+            TbxError.BackColor = Color.Red;
+            TbxError.ForeColor = Color.White;
+            TbxError.Text = errorMsg;
+            TbxError.Visible = true;
+            if (HelpTip != null)
+            {
+                // In case message is long, make it possible to see in a tip
+                HelpTip.SetToolTip(TbxError, errorMsg);
+            }
         }
 
         public void ClearFastaError()
