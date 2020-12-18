@@ -1123,57 +1123,9 @@ namespace pwiz.Skyline
             }
         }
 
-        private void CanApplyOrRemovePeak(ToolStripItemCollection removePeakItems, IsotopeLabelType labelType, out bool canApply, out bool canRemove)
+        public void CanApplyOrRemovePeak(ToolStripItemCollection removePeakItems, IsotopeLabelType labelType, out bool canApply, out bool canRemove)
         {
-            canApply = canRemove = false;
-
-            if (!DocumentUI.Settings.HasResults)
-                return;
-
-            var selectedTreeNode = SelectedNode as SrmTreeNode;
-            var displayType = GraphChromatogram.GetDisplayType(DocumentUI, selectedTreeNode);
-            if (displayType == DisplayTypeChrom.base_peak || displayType == DisplayTypeChrom.tic || displayType == DisplayTypeChrom.qc)
-                return;
-            var chromFileInfoId = GetSelectedChromFileId();
-
-            var node = selectedTreeNode as TransitionTreeNode;
-            if (node != null && GraphChromatogram.IsSingleTransitionDisplay)
-            {
-                if (HasPeak(SelectedResultsIndex, chromFileInfoId, node.DocNode))
-                {
-                    if (removePeakItems != null)
-                        removePeakItems.Add(new ToolStripMenuItem());
-                    canApply = canRemove = true;
-                }
-            }
-            else if (selectedTreeNode is TransitionTreeNode && displayType == DisplayTypeChrom.all ||
-                     selectedTreeNode is TransitionGroupTreeNode ||
-                     selectedTreeNode is PeptideTreeNode treeNode && treeNode.DocNode.Children.Any())
-            {
-                canApply = true;
-
-                var nodeGroupTree = SequenceTree.GetNodeOfType<TransitionGroupTreeNode>();
-                var hasPeak = nodeGroupTree != null
-                    ? HasPeak(SelectedResultsIndex, chromFileInfoId, nodeGroupTree.DocNode)
-                    : SequenceTree.GetNodeOfType<PeptideTreeNode>().DocNode.TransitionGroups.Any(tranGroup => HasPeak(SelectedResultsIndex, chromFileInfoId, tranGroup));
-
-                if (hasPeak)
-                {
-                    removePeakItems?.Clear();
-                    canRemove = true;
-
-                    // Remove [IsotopeLabelType]
-                    if (removePeakItems != null && labelType != null)
-                    {
-                        // only if multiple isotope label types
-                        if (selectedTreeNode is PeptideTreeNode peptideTreeNode &&
-                            peptideTreeNode.DocNode.TransitionGroups.Select(nodeTranGroup => nodeTranGroup.TransitionGroup.LabelType).Distinct().Count() > 1)
-                        {
-                            removePeakItems.Add(new ToolStripMenuItem { Tag = labelType });
-                        }
-                    }
-                }
-            }
+            EditMenu.CanApplyOrRemovePeak(removePeakItems, labelType, out canApply, out canRemove);
         }
 
         public ChromFileInfoId GetSelectedChromFileId()
@@ -1856,24 +1808,6 @@ namespace pwiz.Skyline
             }
         }
 
-// ReSharper disable SuggestBaseTypeForParameter
-        private static bool HasPeak(int iResult, ChromFileInfoId chromFileInfoId, TransitionGroupDocNode nodeGroup)
-// ReSharper restore SuggestBaseTypeForParameter
-        {
-            foreach (TransitionDocNode nodeTran in nodeGroup.Children)
-            {
-                if (HasPeak(iResult, chromFileInfoId, nodeTran))
-                    return true;
-            }
-            return false;
-        }
-
-        private static bool HasPeak(int iResults, ChromFileInfoId chromFileInfoId, TransitionDocNode nodeTran)
-        {
-            var chromInfo = GetTransitionChromInfo(nodeTran, iResults, chromFileInfoId);
-            return (chromInfo != null && !chromInfo.IsEmpty);
-        }
-
         private void legendChromContextMenuItem_Click(object sender, EventArgs e)
         {
             ShowChromatogramLegends(legendChromContextMenuItem.Checked);
@@ -2291,83 +2225,12 @@ namespace pwiz.Skyline
 
         public void RemovePeak(bool removePeakByContextMenu = false)
         {
-            var chromFileInfoId = GetSelectedChromFileId();
-            CanApplyOrRemovePeak(null, null, out _, out var canRemove);
-            if (!canRemove)
-                return;
-
-            var nodeGroupTree = SequenceTree.GetNodeOfType<TransitionGroupTreeNode>();
-            var nodeGroups = new List<Tuple<TransitionGroupDocNode, IdentityPath>>();
-            var nodePepTree = SelectedNode as PeptideTreeNode;
-            if (nodeGroupTree != null)
-            {
-                nodeGroups.Add(new Tuple<TransitionGroupDocNode, IdentityPath>(nodeGroupTree.DocNode, nodeGroupTree.Path));
-            }
-            else if (nodePepTree != null && nodePepTree.Nodes.OfType<object>().Any())
-            {
-                nodeGroups.AddRange(from TransitionGroupDocNode tranGroup in nodePepTree.DocNode.Children
-                    select
-                    new Tuple<TransitionGroupDocNode, IdentityPath>(tranGroup, new IdentityPath(nodePepTree.Path, tranGroup.Id)));
-            }
-            else
-            {
-                return;
-            }
-
-            TransitionDocNode nodeTran = null;
-            if (removePeakByContextMenu)
-            {
-                var nodeTranTree = SelectedNode as TransitionTreeNode;
-                if (nodeTranTree != null)
-                {
-                    nodeTran = nodeTranTree.DocNode;
-                }
-            }
-
-            if (nodeGroups.Count == 1)
-            {
-                var nodeGroup = nodeGroups.First();
-                RemovePeak(nodeGroup.Item2, nodeGroup.Item1, nodeTran);
-            }
-            else
-            {
-                // ReSharper disable once PossibleNullReferenceException
-                ModifyDocument(string.Format(Resources.SkylineWindow_removePeakContextMenuItem_Click_Remove_all_peaks_from__0_, nodePepTree.DocNode.ModifiedSequenceDisplay),
-                    document => nodeGroups.Aggregate(Document,
-                            (doc, nodeGroup) => RemovePeakInternal(doc, SelectedResultsIndex, chromFileInfoId, nodeGroup.Item2, nodeGroup.Item1, nodeTran)),
-                    docPair =>
-                    {
-                        var peptideGroup = ((PeptideGroupTreeNode) nodePepTree.SrmParent).DocNode;
-                        var name = PropertyName.ROOT.SubProperty(peptideGroup.AuditLogText)
-                            .SubProperty(nodePepTree.DocNode.AuditLogText);
-                        return AuditLogEntry.CreateSimpleEntry(MessageType.removed_all_peaks_from, docPair.OldDocumentType, name,
-                            docPair.OldDoc.MeasuredResults.Chromatograms[SelectedResultsIndex].Name);
-                    });
-            }
+            EditMenu.RemovePeak(removePeakByContextMenu);
         }
 
         public void RemovePeak(IdentityPath groupPath, TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran)
         {
-            string message = nodeTran == null
-                ? string.Format(Resources.SkylineWindow_RemovePeak_Remove_all_peaks_from__0__, ChromGraphItem.GetTitle(nodeGroup))
-                : string.Format(Resources.SkylineWindow_RemovePeak_Remove_peak_from__0__, ChromGraphItem.GetTitle(nodeTran));
-            var chromFileInfoId = GetSelectedChromFileId();
-            ModifyDocument(message, doc => RemovePeakInternal(doc, SelectedResultsIndex, chromFileInfoId, groupPath, nodeGroup, nodeTran),
-                docPair =>
-                {
-                    var msg = nodeTran == null ? MessageType.removed_all_peaks_from : MessageType.removed_peak_from;
-
-                    var peptide = (PeptideDocNode) docPair.OldDoc.FindNode(groupPath.Parent);
-                    var peptideGroup = (PeptideGroupDocNode) docPair.OldDoc.FindNode(groupPath.Parent.Parent);
-
-                    var name = PropertyName.ROOT.SubProperty(peptideGroup.AuditLogText)
-                        .SubProperty(peptide.AuditLogText).SubProperty(nodeGroup.AuditLogText);
-                    if (nodeTran != null)
-                        name = name.SubProperty(nodeTran.AuditLogText);
-
-                    return AuditLogEntry.CreateSimpleEntry(msg, docPair.OldDocumentType, name,
-                        docPair.OldDoc.MeasuredResults.Chromatograms[SelectedResultsIndex].Name);
-                });
+            EditMenu.RemovePeak(groupPath, nodeGroup, nodeTran);
         }
 
         private SrmDocument RemovePeakInternal(SrmDocument document, int resultsIndex, ChromFileInfoId chromFileInfoId, IdentityPath groupPath,
@@ -2725,7 +2588,7 @@ namespace pwiz.Skyline
             }
         }
 
-        private string GetGraphChromStrings(int iResult, ChromFileInfoId fileId, out MsDataFileUri filePath)
+        public string GetGraphChromStrings(int iResult, ChromFileInfoId fileId, out MsDataFileUri filePath)
         {
             filePath = null;
             if (iResult != -1)
@@ -4788,7 +4651,7 @@ namespace pwiz.Skyline
             SynchronizeSummaryZooming(graphSummaries.FirstOrDefault(gs => gs != null && ReferenceEquals(gs.GraphControl, sender)), newState);
         }
 
-        private void AddGroupByMenuItems(ToolStrip menuStrip, ToolStripDropDownItem item, Action<ReplicateValue> clickHandler, bool includeAll, string checkedValue, ref int iInsert)
+        public void AddGroupByMenuItems(ToolStrip menuStrip, ToolStripDropDownItem item, Action<ReplicateValue> clickHandler, bool includeAll, string checkedValue, ref int iInsert)
         {
             var replicateValues = ReplicateValue.GetGroupableReplicateValues(Document).ToArray();
             if (!replicateValues.Any())
