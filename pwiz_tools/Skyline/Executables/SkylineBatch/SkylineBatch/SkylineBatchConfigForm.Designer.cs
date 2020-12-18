@@ -34,14 +34,12 @@
             this.textAnalysisPath = new System.Windows.Forms.TextBox();
             this.textSkylinePath = new System.Windows.Forms.TextBox();
             this.textDataPath = new System.Windows.Forms.TextBox();
-            this.textNamingPattern = new System.Windows.Forms.TextBox();
             this.linkLabelRegex = new System.Windows.Forms.LinkLabel();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.tabsConfig = new System.Windows.Forms.TabControl();
             this.tabSettings = new System.Windows.Forms.TabPage();
             this.textConfigName = new System.Windows.Forms.TextBox();
             this.labelConfigName = new System.Windows.Forms.Label();
-            this.groupBoxMain = new System.Windows.Forms.GroupBox();
             this.label3 = new System.Windows.Forms.Label();
             this.btnDataPath = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
@@ -58,7 +56,6 @@
             this.columnPath = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.columnScripts = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.tabSkyline = new System.Windows.Forms.TabPage();
-            this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.textSkylineInstallationPath = new System.Windows.Forms.TextBox();
             this.radioButtonSkylineDaily = new System.Windows.Forms.RadioButton();
             this.radioButtonSpecifySkylinePath = new System.Windows.Forms.RadioButton();
@@ -70,18 +67,17 @@
             this.lblConfigRunning = new System.Windows.Forms.Label();
             this.btnOkConfig = new System.Windows.Forms.Button();
             this.imageListToolbarIcons = new System.Windows.Forms.ImageList(this.components);
+            this.textNamingPattern = new System.Windows.Forms.TextBox();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
             this.tabsConfig.SuspendLayout();
             this.tabSettings.SuspendLayout();
-            this.groupBoxMain.SuspendLayout();
             this.tabReports.SuspendLayout();
             this.toolBar.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.gridReportSettings)).BeginInit();
             this.tabSkyline.SuspendLayout();
-            this.groupBox2.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -103,12 +99,6 @@
             this.textDataPath.Name = "textDataPath";
             this.toolTip1.SetToolTip(this.textDataPath, resources.GetString("textDataPath.ToolTip"));
             // 
-            // textNamingPattern
-            // 
-            resources.ApplyResources(this.textNamingPattern, "textNamingPattern");
-            this.textNamingPattern.Name = "textNamingPattern";
-            this.toolTip1.SetToolTip(this.textNamingPattern, resources.GetString("textNamingPattern.ToolTip"));
-            // 
             // linkLabelRegex
             // 
             resources.ApplyResources(this.linkLabelRegex, "linkLabelRegex");
@@ -121,6 +111,7 @@
             // splitContainer1
             // 
             resources.ApplyResources(this.splitContainer1, "splitContainer1");
+            this.splitContainer1.FixedPanel = System.Windows.Forms.FixedPanel.Panel2;
             this.splitContainer1.Name = "splitContainer1";
             // 
             // splitContainer1.Panel1
@@ -143,9 +134,19 @@
             // tabSettings
             // 
             this.tabSettings.BackColor = System.Drawing.Color.WhiteSmoke;
+            this.tabSettings.Controls.Add(this.textNamingPattern);
+            this.tabSettings.Controls.Add(this.linkLabelRegex);
             this.tabSettings.Controls.Add(this.textConfigName);
             this.tabSettings.Controls.Add(this.labelConfigName);
-            this.tabSettings.Controls.Add(this.groupBoxMain);
+            this.tabSettings.Controls.Add(this.label3);
+            this.tabSettings.Controls.Add(this.btnDataPath);
+            this.tabSettings.Controls.Add(this.textDataPath);
+            this.tabSettings.Controls.Add(this.textAnalysisPath);
+            this.tabSettings.Controls.Add(this.label1);
+            this.tabSettings.Controls.Add(this.btnAnalysisPath);
+            this.tabSettings.Controls.Add(this.btnSkylineFilePath);
+            this.tabSettings.Controls.Add(this.label2);
+            this.tabSettings.Controls.Add(this.textSkylinePath);
             resources.ApplyResources(this.tabSettings, "tabSettings");
             this.tabSettings.Name = "tabSettings";
             // 
@@ -158,23 +159,6 @@
             // 
             resources.ApplyResources(this.labelConfigName, "labelConfigName");
             this.labelConfigName.Name = "labelConfigName";
-            // 
-            // groupBoxMain
-            // 
-            resources.ApplyResources(this.groupBoxMain, "groupBoxMain");
-            this.groupBoxMain.Controls.Add(this.linkLabelRegex);
-            this.groupBoxMain.Controls.Add(this.textNamingPattern);
-            this.groupBoxMain.Controls.Add(this.label3);
-            this.groupBoxMain.Controls.Add(this.btnDataPath);
-            this.groupBoxMain.Controls.Add(this.textDataPath);
-            this.groupBoxMain.Controls.Add(this.label1);
-            this.groupBoxMain.Controls.Add(this.btnSkylineFilePath);
-            this.groupBoxMain.Controls.Add(this.textSkylinePath);
-            this.groupBoxMain.Controls.Add(this.label2);
-            this.groupBoxMain.Controls.Add(this.btnAnalysisPath);
-            this.groupBoxMain.Controls.Add(this.textAnalysisPath);
-            this.groupBoxMain.Name = "groupBoxMain";
-            this.groupBoxMain.TabStop = false;
             // 
             // label3
             // 
@@ -290,20 +274,13 @@
             // tabSkyline
             // 
             this.tabSkyline.BackColor = System.Drawing.Color.WhiteSmoke;
-            this.tabSkyline.Controls.Add(this.groupBox2);
+            this.tabSkyline.Controls.Add(this.textSkylineInstallationPath);
+            this.tabSkyline.Controls.Add(this.radioButtonSkylineDaily);
+            this.tabSkyline.Controls.Add(this.radioButtonSpecifySkylinePath);
+            this.tabSkyline.Controls.Add(this.radioButtonSkyline);
+            this.tabSkyline.Controls.Add(this.btnBrowse);
             resources.ApplyResources(this.tabSkyline, "tabSkyline");
             this.tabSkyline.Name = "tabSkyline";
-            // 
-            // groupBox2
-            // 
-            resources.ApplyResources(this.groupBox2, "groupBox2");
-            this.groupBox2.Controls.Add(this.textSkylineInstallationPath);
-            this.groupBox2.Controls.Add(this.radioButtonSkylineDaily);
-            this.groupBox2.Controls.Add(this.radioButtonSpecifySkylinePath);
-            this.groupBox2.Controls.Add(this.btnBrowse);
-            this.groupBox2.Controls.Add(this.radioButtonSkyline);
-            this.groupBox2.Name = "groupBox2";
-            this.groupBox2.TabStop = false;
             // 
             // textSkylineInstallationPath
             // 
@@ -342,8 +319,8 @@
             // groupBox1
             // 
             this.groupBox1.BackColor = System.Drawing.SystemColors.ControlLight;
-            this.groupBox1.Controls.Add(this.btnCancelConfig);
             this.groupBox1.Controls.Add(this.btnSaveConfig);
+            this.groupBox1.Controls.Add(this.btnCancelConfig);
             this.groupBox1.Controls.Add(this.lblConfigRunning);
             this.groupBox1.Controls.Add(this.btnOkConfig);
             resources.ApplyResources(this.groupBox1, "groupBox1");
@@ -384,6 +361,11 @@
             this.imageListToolbarIcons.Images.SetKeyName(0, "AddedIcon.ico");
             this.imageListToolbarIcons.Images.SetKeyName(1, "DeletedIcon.ico");
             // 
+            // textNamingPattern
+            // 
+            resources.ApplyResources(this.textNamingPattern, "textNamingPattern");
+            this.textNamingPattern.Name = "textNamingPattern";
+            // 
             // SkylineBatchConfigForm
             // 
             this.AcceptButton = this.btnSaveConfig;
@@ -402,16 +384,13 @@
             this.tabsConfig.ResumeLayout(false);
             this.tabSettings.ResumeLayout(false);
             this.tabSettings.PerformLayout();
-            this.groupBoxMain.ResumeLayout(false);
-            this.groupBoxMain.PerformLayout();
             this.tabReports.ResumeLayout(false);
             this.tabReports.PerformLayout();
             this.toolBar.ResumeLayout(false);
             this.toolBar.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.gridReportSettings)).EndInit();
             this.tabSkyline.ResumeLayout(false);
-            this.groupBox2.ResumeLayout(false);
-            this.groupBox2.PerformLayout();
+            this.tabSkyline.PerformLayout();
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             this.ResumeLayout(false);
@@ -430,14 +409,12 @@
         private System.Windows.Forms.TabPage tabSettings;
         private System.Windows.Forms.TextBox textConfigName;
         private System.Windows.Forms.Label labelConfigName;
-        private System.Windows.Forms.GroupBox groupBoxMain;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Button btnSkylineFilePath;
         private System.Windows.Forms.TextBox textSkylinePath;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Button btnAnalysisPath;
         private System.Windows.Forms.TextBox textAnalysisPath;
-        private System.Windows.Forms.TextBox textNamingPattern;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Button btnDataPath;
         private System.Windows.Forms.TextBox textDataPath;
@@ -459,6 +436,6 @@
         private System.Windows.Forms.RadioButton radioButtonSkyline;
         private System.Windows.Forms.RadioButton radioButtonSpecifySkylinePath;
         private System.Windows.Forms.TextBox textSkylineInstallationPath;
-        private System.Windows.Forms.GroupBox groupBox2;
+        private System.Windows.Forms.TextBox textNamingPattern;
     }
 }

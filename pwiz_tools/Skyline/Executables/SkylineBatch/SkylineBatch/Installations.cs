@@ -125,7 +125,9 @@ namespace SkylineBatch
                 }
                 catch (Exception)
                 {
+                    // ignored
                 }
+
                 if (rKey == null)
                     return false;
                 var latestRPath = rKey.GetValue(@"InstallPath") as string;

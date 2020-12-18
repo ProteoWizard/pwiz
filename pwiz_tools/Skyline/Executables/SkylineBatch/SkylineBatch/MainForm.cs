@@ -125,7 +125,7 @@ namespace SkylineBatch
             configManager.RemoveSelected();
             UpdateUiConfigurations();
 
-            UpdateLabelVisibility();
+            UpdateButtonsEnabled();
         }
         
         private void listViewConfigs_SelectedIndexChanged(object sender, EventArgs e)

@@ -56,7 +56,7 @@ namespace SkylineBatch
                     Log.Error(Resources.Program_SkylineBatch_encountered_an_unexpected_error, (Exception)e.ExceptionObject);
                     MessageBox.Show(Resources.Program_SkylineBatch_encountered_an_unexpected_error +
                                     @"Error details may be found in the SkylineBatchProgram.log file in this directory : "
-                                    + Path.GetDirectoryName(Application.ExecutablePath)
+                                    + Path.GetDirectoryName(Application.ExecutablePath) + Environment.NewLine + ((Exception)e.ExceptionObject).Message
                     );
                 }
                 finally
@@ -75,6 +75,7 @@ namespace SkylineBatch
 
                 InitializeSecurityProtocol();
 
+                
                 // Initialize log4net -- global application logging
                 XmlConfigurator.Configure();
 
