@@ -53,22 +53,22 @@ namespace pwiz.Skyline.Menus
             var documentOrig = DocumentUI;
             if (!documentOrig.Settings.HasResults)
             {
-                MessageDlg.Show(this, Resources.SkylineWindow_ShowReintegrateDialog_The_document_must_have_imported_results_);
+                MessageDlg.Show(SkylineWindow, Resources.SkylineWindow_ShowReintegrateDialog_The_document_must_have_imported_results_);
                 return;
             }
             if (documentOrig.MoleculeCount == 0)
             {
-                MessageDlg.Show(this, Resources.SkylineWindow_ShowReintegrateDialog_The_document_must_have_targets_in_order_to_reintegrate_chromatograms_);
+                MessageDlg.Show(SkylineWindow, Resources.SkylineWindow_ShowReintegrateDialog_The_document_must_have_targets_in_order_to_reintegrate_chromatograms_);
                 return;
             }
             if (!documentOrig.IsLoaded)
             {
-                MessageDlg.Show(this, Resources.SkylineWindow_ShowReintegrateDialog_The_document_must_be_fully_loaded_before_it_can_be_re_integrated_);
+                MessageDlg.Show(SkylineWindow, Resources.SkylineWindow_ShowReintegrateDialog_The_document_must_be_fully_loaded_before_it_can_be_re_integrated_);
                 return;
             }
             using (var dlg = new ReintegrateDlg(documentOrig))
             {
-                if (dlg.ShowDialog(this) == DialogResult.Cancel)
+                if (dlg.ShowDialog(SkylineWindow) == DialogResult.Cancel)
                     return;
                 ModifyDocument(Resources.SkylineWindow_ShowReintegrateDialog_Reintegrate_peaks, doc =>
                 {
@@ -85,7 +85,7 @@ namespace pwiz.Skyline.Menus
         {
             if (DocumentUI.PeptideCount == 0)
             {
-                MessageDlg.Show(this, Resources.SkylineWindow_generateDecoysMenuItem_Click_The_document_must_contain_peptides_to_generate_decoys_);
+                MessageDlg.Show(SkylineWindow, Resources.SkylineWindow_generateDecoysMenuItem_Click_The_document_must_contain_peptides_to_generate_decoys_);
                 return;
             }
             if (DocumentUI.PeptideGroups.Any(nodePeptideGroup => nodePeptideGroup.IsDecoy))
@@ -93,7 +93,7 @@ namespace pwiz.Skyline.Menus
                 var message = TextUtil.LineSeparate(Resources.SkylineWindow_generateDecoysMenuItem_Click_This_operation_will_replace_the_existing_decoys,
                                                     Resources.SkylineWindow_generateDecoysMenuItem_Click_Are_you_sure_you_want_to_continue);
                 // Warn about removing existing decoys
-                var result = MessageBox.Show(this, message, Program.Name, MessageBoxButtons.OKCancel);
+                var result = MessageBox.Show(SkylineWindow, message, Program.Name, MessageBoxButtons.OKCancel);
                 if (result == DialogResult.Cancel)
                     return;
             }
@@ -105,7 +105,7 @@ namespace pwiz.Skyline.Menus
         {
             using (var decoysDlg = new GenerateDecoysDlg(DocumentUI))
             {
-                if (decoysDlg.ShowDialog(owner ?? this) == DialogResult.OK)
+                if (decoysDlg.ShowDialog(owner ?? SkylineWindow) == DialogResult.OK)
                 {
                     var refinementSettings = new RefinementSettings { NumberOfDecoys = decoysDlg.NumDecoys, DecoysMethod = decoysDlg.DecoysMethod };
                     ModifyDocument(Resources.SkylineWindow_ShowGenerateDecoysDlg_Generate_Decoys, refinementSettings.GenerateDecoys,
@@ -136,21 +136,21 @@ namespace pwiz.Skyline.Menus
             var document = DocumentUI;
             if (!document.Settings.HasResults)
             {
-                MessageDlg.Show(this, Resources.SkylineWindow_ShowReintegrateDialog_The_document_must_have_imported_results_);
+                MessageDlg.Show(SkylineWindow, Resources.SkylineWindow_ShowReintegrateDialog_The_document_must_have_imported_results_);
                 return;
             }
             if (document.MoleculeCount == 0)
             {
-                MessageDlg.Show(this, Resources.SkylineWindow_ShowCompareModelsDlg_The_document_must_have_targets_in_order_to_compare_model_peak_picking_);
+                MessageDlg.Show(SkylineWindow, Resources.SkylineWindow_ShowCompareModelsDlg_The_document_must_have_targets_in_order_to_compare_model_peak_picking_);
                 return;
             }
             if (!document.IsLoaded)
             {
-                MessageDlg.Show(this, Resources.SkylineWindow_ShowCompareModelsDlg_The_document_must_be_fully_loaded_in_order_to_compare_model_peak_picking_);
+                MessageDlg.Show(SkylineWindow, Resources.SkylineWindow_ShowCompareModelsDlg_The_document_must_be_fully_loaded_in_order_to_compare_model_peak_picking_);
                 return;
             }
             var dlg = new ComparePeakPickingDlg(document);
-            dlg.Show(this);
+            dlg.Show(SkylineWindow);
         }
 
         private void removeMissingResultsMenuItem_Click(object sender, EventArgs e)
@@ -174,7 +174,7 @@ namespace pwiz.Skyline.Menus
         {
             using (var dlg = new RefineProteinListDlg(DocumentUI))
             {
-                if (dlg.ShowDialog(this) == DialogResult.OK)
+                if (dlg.ShowDialog(SkylineWindow) == DialogResult.OK)
                 {
                     var refinementSettings = new RefinementSettings
                     {
@@ -228,7 +228,7 @@ namespace pwiz.Skyline.Menus
         {
             using (var associateFasta = new AssociateProteinsDlg(SkylineWindow))
             {
-                associateFasta.ShowDialog(this);
+                associateFasta.ShowDialog(SkylineWindow);
             }
         }
 
@@ -241,7 +241,7 @@ namespace pwiz.Skyline.Menus
         {
             using (RenameProteinsDlg dlg = new RenameProteinsDlg(DocumentUI))
             {
-                if (dlg.ShowDialog(this) == DialogResult.OK)
+                if (dlg.ShowDialog(SkylineWindow) == DialogResult.OK)
                 {
                     ModifyDocument(Resources.SkylineWindow_ShowRenameProteinsDlg_Rename_proteins,
                         doc => RenameProtein(doc, dlg), dlg.FormSettings.EntryCreator.Create);
@@ -325,7 +325,7 @@ namespace pwiz.Skyline.Menus
         {
             using (var dlg = new RefineListDlg(DocumentUI))
             {
-                if (dlg.ShowDialog(this) == DialogResult.OK)
+                if (dlg.ShowDialog(SkylineWindow) == DialogResult.OK)
                 {
                     var refinementSettings = new RefinementSettings
                     {
@@ -349,7 +349,7 @@ namespace pwiz.Skyline.Menus
         {
             using (var dlg = new PermuteIsotopeModificationsDlg(SkylineWindow))
             {
-                dlg.ShowDialog(this);
+                dlg.ShowDialog(SkylineWindow);
             }
         }
 
@@ -362,7 +362,7 @@ namespace pwiz.Skyline.Menus
         {
             using (var refineDlg = new RefineDlg(SkylineWindow))
             {
-                if (refineDlg.ShowDialog(this) == DialogResult.OK)
+                if (refineDlg.ShowDialog(SkylineWindow) == DialogResult.OK)
                 {
                     ModifyDocument(Resources.SkylineWindow_ShowRefineDlg_Refine,
                         doc =>
