@@ -112,7 +112,12 @@ namespace SkylineBatch
         {
             if (Installations.FindSkyline())
                 return true;
-            
+
+            var form = new FindSkyline();
+            Application.Run(form);
+            if (form.DialogResult == DialogResult.OK)
+                return true;
+
             MessageBox.Show(string.Format(Resources.Program_InitSkylineSettings__0__requires_Skyline_to_run_, AppName()), string.Format(Resources.Program_InitSkylineSettings__0__Error, AppName()), MessageBoxButtons.OK, MessageBoxIcon.Error);
             return false;
 

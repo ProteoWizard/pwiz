@@ -127,7 +127,7 @@
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="checkBoxSelectAll.Location" type="System.Drawing.Point, System.Drawing">
-    <value>11, 7</value>
+    <value>12, 9</value>
   </data>
   <data name="checkBoxSelectAll.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -163,7 +163,7 @@
     <value>2, 2, 2, 2</value>
   </data>
   <data name="checkedSaveConfigs.Size" type="System.Drawing.Size, System.Drawing">
-    <value>344, 154</value>
+    <value>388, 154</value>
   </data>
   <data name="checkedSaveConfigs.TabIndex" type="System.Int32, mscorlib">
     <value>10</value>
@@ -190,7 +190,7 @@
     <value>2, 2, 2, 2</value>
   </data>
   <data name="textFileName.Size" type="System.Drawing.Size, System.Drawing">
-    <value>344, 20</value>
+    <value>388, 20</value>
   </data>
   <data name="textFileName.TabIndex" type="System.Int32, mscorlib">
     <value>11</value>
@@ -253,13 +253,13 @@
     <value>NoControl</value>
   </data>
   <data name="btnBrowse.Location" type="System.Drawing.Point, System.Drawing">
-    <value>366, 203</value>
+    <value>401, 203</value>
   </data>
   <data name="btnBrowse.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
   </data>
   <data name="btnBrowse.Size" type="System.Drawing.Size, System.Drawing">
-    <value>27, 23</value>
+    <value>32, 23</value>
   </data>
   <data name="btnBrowse.TabIndex" type="System.Int32, mscorlib">
     <value>13</value>
@@ -286,7 +286,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>318, 236</value>
+    <value>358, 236</value>
   </data>
   <data name="btnCancel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -322,7 +322,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnOk.Location" type="System.Drawing.Point, System.Drawing">
-    <value>239, 236</value>
+    <value>279, 236</value>
   </data>
   <data name="btnOk.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -355,7 +355,7 @@
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>404, 272</value>
+    <value>444, 272</value>
   </data>
   <data name="$this.Icon" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>

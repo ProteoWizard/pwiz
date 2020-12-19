@@ -257,7 +257,7 @@
     <value>Analysis folder directory {0} does not exist.</value>
   </data>
   <data name="Program_InitSkylineSettings__0__requires_Skyline_to_run_" xml:space="preserve">
-    <value>{0} requires Skyline to run. Could not find a web-based or administrative installation of Skyline or Skyline-daily.</value>
+    <value>{0} requires Skyline to run.</value>
   </data>
   <data name="Program_Please_install_R_to_use_SkylineBatch" xml:space="preserve">
     <value>Please install R to use SkylineBatch</value>

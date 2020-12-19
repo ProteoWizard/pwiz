@@ -38,14 +38,15 @@
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.tabsConfig = new System.Windows.Forms.TabControl();
             this.tabSettings = new System.Windows.Forms.TabPage();
+            this.textNamingPattern = new System.Windows.Forms.TextBox();
             this.textConfigName = new System.Windows.Forms.TextBox();
             this.labelConfigName = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
             this.btnDataPath = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
+            this.btnAnalysisPath = new System.Windows.Forms.Button();
             this.btnSkylineFilePath = new System.Windows.Forms.Button();
             this.label2 = new System.Windows.Forms.Label();
-            this.btnAnalysisPath = new System.Windows.Forms.Button();
             this.tabReports = new System.Windows.Forms.TabPage();
             this.toolBar = new System.Windows.Forms.ToolStrip();
             this.btnAddReport = new System.Windows.Forms.ToolStripButton();
@@ -59,15 +60,14 @@
             this.textSkylineInstallationPath = new System.Windows.Forms.TextBox();
             this.radioButtonSkylineDaily = new System.Windows.Forms.RadioButton();
             this.radioButtonSpecifySkylinePath = new System.Windows.Forms.RadioButton();
-            this.btnBrowse = new System.Windows.Forms.Button();
             this.radioButtonSkyline = new System.Windows.Forms.RadioButton();
+            this.btnBrowse = new System.Windows.Forms.Button();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.btnCancelConfig = new System.Windows.Forms.Button();
             this.btnSaveConfig = new System.Windows.Forms.Button();
+            this.btnCancelConfig = new System.Windows.Forms.Button();
             this.lblConfigRunning = new System.Windows.Forms.Label();
             this.btnOkConfig = new System.Windows.Forms.Button();
             this.imageListToolbarIcons = new System.Windows.Forms.ImageList(this.components);
-            this.textNamingPattern = new System.Windows.Forms.TextBox();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -150,6 +150,11 @@
             resources.ApplyResources(this.tabSettings, "tabSettings");
             this.tabSettings.Name = "tabSettings";
             // 
+            // textNamingPattern
+            // 
+            resources.ApplyResources(this.textNamingPattern, "textNamingPattern");
+            this.textNamingPattern.Name = "textNamingPattern";
+            // 
             // textConfigName
             // 
             resources.ApplyResources(this.textConfigName, "textConfigName");
@@ -177,6 +182,13 @@
             resources.ApplyResources(this.label1, "label1");
             this.label1.Name = "label1";
             // 
+            // btnAnalysisPath
+            // 
+            resources.ApplyResources(this.btnAnalysisPath, "btnAnalysisPath");
+            this.btnAnalysisPath.Name = "btnAnalysisPath";
+            this.btnAnalysisPath.UseVisualStyleBackColor = true;
+            this.btnAnalysisPath.Click += new System.EventHandler(this.btnAnalysisFilePath_Click);
+            // 
             // btnSkylineFilePath
             // 
             resources.ApplyResources(this.btnSkylineFilePath, "btnSkylineFilePath");
@@ -188,13 +200,6 @@
             // 
             resources.ApplyResources(this.label2, "label2");
             this.label2.Name = "label2";
-            // 
-            // btnAnalysisPath
-            // 
-            resources.ApplyResources(this.btnAnalysisPath, "btnAnalysisPath");
-            this.btnAnalysisPath.Name = "btnAnalysisPath";
-            this.btnAnalysisPath.UseVisualStyleBackColor = true;
-            this.btnAnalysisPath.Click += new System.EventHandler(this.btnAnalysisFilePath_Click);
             // 
             // tabReports
             // 
@@ -302,19 +307,19 @@
             this.radioButtonSpecifySkylinePath.UseVisualStyleBackColor = true;
             this.radioButtonSpecifySkylinePath.CheckedChanged += new System.EventHandler(this.radioButtonSpecifySkylinePath_CheckChanged);
             // 
-            // btnBrowse
-            // 
-            resources.ApplyResources(this.btnBrowse, "btnBrowse");
-            this.btnBrowse.Name = "btnBrowse";
-            this.btnBrowse.UseVisualStyleBackColor = true;
-            this.btnBrowse.Click += new System.EventHandler(this.btnBrowse_Click);
-            // 
             // radioButtonSkyline
             // 
             resources.ApplyResources(this.radioButtonSkyline, "radioButtonSkyline");
             this.radioButtonSkyline.Name = "radioButtonSkyline";
             this.radioButtonSkyline.TabStop = true;
             this.radioButtonSkyline.UseVisualStyleBackColor = true;
+            // 
+            // btnBrowse
+            // 
+            resources.ApplyResources(this.btnBrowse, "btnBrowse");
+            this.btnBrowse.Name = "btnBrowse";
+            this.btnBrowse.UseVisualStyleBackColor = true;
+            this.btnBrowse.Click += new System.EventHandler(this.btnBrowse_Click);
             // 
             // groupBox1
             // 
@@ -327,19 +332,19 @@
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.TabStop = false;
             // 
-            // btnCancelConfig
-            // 
-            resources.ApplyResources(this.btnCancelConfig, "btnCancelConfig");
-            this.btnCancelConfig.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancelConfig.Name = "btnCancelConfig";
-            this.btnCancelConfig.UseVisualStyleBackColor = true;
-            // 
             // btnSaveConfig
             // 
             resources.ApplyResources(this.btnSaveConfig, "btnSaveConfig");
             this.btnSaveConfig.Name = "btnSaveConfig";
             this.btnSaveConfig.UseVisualStyleBackColor = true;
             this.btnSaveConfig.Click += new System.EventHandler(this.btnSaveConfig_Click);
+            // 
+            // btnCancelConfig
+            // 
+            resources.ApplyResources(this.btnCancelConfig, "btnCancelConfig");
+            this.btnCancelConfig.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            this.btnCancelConfig.Name = "btnCancelConfig";
+            this.btnCancelConfig.UseVisualStyleBackColor = true;
             // 
             // lblConfigRunning
             // 
@@ -360,11 +365,6 @@
             this.imageListToolbarIcons.TransparentColor = System.Drawing.Color.Transparent;
             this.imageListToolbarIcons.Images.SetKeyName(0, "AddedIcon.ico");
             this.imageListToolbarIcons.Images.SetKeyName(1, "DeletedIcon.ico");
-            // 
-            // textNamingPattern
-            // 
-            resources.ApplyResources(this.textNamingPattern, "textNamingPattern");
-            this.textNamingPattern.Name = "textNamingPattern";
             // 
             // SkylineBatchConfigForm
             // 

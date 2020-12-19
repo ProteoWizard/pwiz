@@ -91,6 +91,9 @@
       <DependentUpon>AlertDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="FindSkyline.resx">
+      <DependentUpon>FindSkyline.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="LogForm.resx">
       <DependentUpon>LogForm.cs</DependentUpon>
     </EmbeddedResource>
@@ -111,6 +114,7 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
+    <None Include="SignAfterPublish.bat" />
     <None Include="University of Washington %28MacCoss Lab 2023%29.pfx" />
   </ItemGroup>
   <ItemGroup>
@@ -121,6 +125,12 @@
       <DependentUpon>AlertDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="ConfigManager.cs" />
+    <Compile Include="FindSkyline.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FindSkyline.Designer.cs">
+      <DependentUpon>FindSkyline.cs</DependentUpon>
+    </Compile>
     <Compile Include="SkylineSettings.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -251,6 +261,10 @@
     </COMReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>
+    </PostBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
