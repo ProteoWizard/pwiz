@@ -144,7 +144,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
                     best = ChangeProp(ImClone(best), im =>
                     {
                         im.StartRetentionTime = Math.Min(best.StartRetentionTime, value.StartRetentionTime);
-                        im.EndRetentionTime = Math.Max(best.EndRetentionTime, im.EndRetentionTime);
+                        im.EndRetentionTime = Math.Max(best.EndRetentionTime, value.EndRetentionTime);
                     });
                 }
             }

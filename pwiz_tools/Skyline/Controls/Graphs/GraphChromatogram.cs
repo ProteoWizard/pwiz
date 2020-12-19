@@ -940,6 +940,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         int countLabelTypes = settings.PeptideSettings.Modifications.CountLabelTypes;
                         DisplayTotals(timeRegressionFunction, chromatograms, mzMatchTolerance, 
                                       countLabelTypes, out RetentionTimeValues bestPeakTimes);
+                        firstBestPeak = lastBestPeak = bestPeakTimes;
                     }
                         // Single group with optimization data, not a transition selected,
                         // and single display mode
@@ -990,6 +991,8 @@ namespace pwiz.Skyline.Controls.Graphs
                                 }
                             }
                         }
+
+                        firstBestPeak = lastBestPeak = bestQuantitativePeak ?? bestNonQuantitativePeak;
                         _enableTrackingDot = enableTrackingDot;
 
                         // Should we show the scan selection point?
