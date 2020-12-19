@@ -54,11 +54,56 @@ namespace pwiz.SkylineTestFunctional
                 dlg.OkDialog();
             });
 
+            // Do a rescore so that we can be sure that the way things are in the document and exactly
+            // how the current version of Skyline calculates them
             var manageResultsDlg = ShowDialog<ManageResultsDlg>(SkylineWindow.ManageResults);
             RunDlg<RescoreResultsDlg>(manageResultsDlg.Rescore, dlg=>dlg.Rescore(false));
             WaitForDocumentLoaded();
 
             var document = SkylineWindow.Document;
+
+            // Make sure that the TransitionGroupChromInfo's have their values set based on the quantitative peaks, unless there
+            // are no quantitative peaks
+            foreach (var transitionGroupDocNode in document.MoleculeTransitionGroups)
+            {
+                for (int iReplicate = 0; iReplicate < transitionGroupDocNode.Results.Count; iReplicate++)
+                {
+                    var transitionGroupChromInfo = transitionGroupDocNode.Results[iReplicate][0];
+                    var quanChromInfos = new List<TransitionChromInfo>();
+                    var nonQuanChromInfos = new List<TransitionChromInfo>();
+                    foreach (var t in transitionGroupDocNode.Transitions)
+                    {
+                        var chromInfo = t.Results[iReplicate][0];
+                        if (chromInfo.IsEmpty)
+                        {
+                            continue;
+                        }
+
+                        if (t.IsQuantitative(document.Settings))
+                        {
+                            quanChromInfos.Add(chromInfo);
+                        }
+                        else
+                        {
+                            nonQuanChromInfos.Add(chromInfo);
+                        }
+                    }
+
+                    if (quanChromInfos.Any())
+                    {
+                        AssertEx.AreEqual(transitionGroupChromInfo.StartRetentionTime, quanChromInfos.Min(c=>c.StartRetentionTime));
+                        AssertEx.AreEqual(transitionGroupChromInfo.EndRetentionTime, quanChromInfos.Max(c=>c.EndRetentionTime));
+                        AssertEx.AreEqual(transitionGroupChromInfo.Height, quanChromInfos.Max(c=>c.Height));
+                    }
+                    else
+                    {
+                        AssertEx.AreEqual(transitionGroupChromInfo.StartRetentionTime, nonQuanChromInfos.Min(c=>c.StartRetentionTime));
+                        AssertEx.AreEqual(transitionGroupChromInfo.EndRetentionTime, nonQuanChromInfos.Max(c=>c.EndRetentionTime));
+                        AssertEx.IsNull(transitionGroupChromInfo.Height);
+                    }
+                }
+            }
+
             // Verify that the chromatogram graph correctly zooms to the best quantitative peak, or,
             // if there are no quantitative peaks, falls back to the best non-quantitative peak,
             // or is zoomed out entirely
