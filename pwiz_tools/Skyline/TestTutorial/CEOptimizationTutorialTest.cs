@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -173,6 +174,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.ExpandPeptides();
             });
 
+            RestoreViewOnScreen(5);
             PauseForScreenShot("Main Skyline window", 5);
 
             // Creating Optimization Methods, p. 5
@@ -224,7 +226,7 @@ namespace pwiz.SkylineTestTutorial
 
             FindNode(decorator + "IHGFDLAAINLQR");
             RestoreViewOnScreen(8);
-
+            RunUI(() => SkylineWindow.Size = new Size(984, 553));
             PauseForScreenShot("Main Skyline window", 8);
 
             if (IsCoverShotMode)
