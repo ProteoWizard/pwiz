@@ -730,9 +730,9 @@ namespace pwiz.Skyline.FileUI
                     helper.ShowTextBoxError(textTemplateFile, Resources.ExportMethodDlg_OkDialog_A_template_file_is_required_to_export_a_method);
                     return;
                 }
-                if ((Equals(InstrumentType, ExportInstrumentType.AGILENT6400) ||
-                    Equals(InstrumentType, ExportInstrumentType.BRUKER_TOF)) ?
-                                                                                 !Directory.Exists(templateName) : !File.Exists(templateName))
+                if (Equals(InstrumentType, ExportInstrumentType.AGILENT6400) || Equals(InstrumentType, ExportInstrumentType.AGILENT_ULTIVO) ||
+                    Equals(InstrumentType, ExportInstrumentType.BRUKER_TOF)
+                    ? !Directory.Exists(templateName) : !File.Exists(templateName))
                 {
                     helper.ShowTextBoxError(textTemplateFile, Resources.ExportMethodDlg_OkDialog_The_template_file__0__does_not_exist, templateName);
                     return;
@@ -743,6 +743,12 @@ namespace pwiz.Skyline.FileUI
                     helper.ShowTextBoxError(textTemplateFile,
                                             Resources.ExportMethodDlg_OkDialog_The_folder__0__does_not_appear_to_contain_an_Agilent_QQQ_method_template_The_folder_is_expected_to_have_a_m_extension_and_contain_the_file_qqqacqmethod_xsd,
                                             templateName);
+                    return;
+                }
+                if (Equals(InstrumentType, ExportInstrumentType.AGILENT_ULTIVO) &&
+                    !AgilentUltivoMethodExporter.IsMethodPath(templateName))
+                {
+                    helper.ShowTextBoxError(textTemplateFile, Resources.ExportMethodDlg_OkDialog_The_folder__0__does_not_appear_to_contain_an_Agilent_Ultivo_method_template__The_folder_is_expected_to_have_a__m_extension_, templateName);
                     return;
                 }
                 if (Equals(InstrumentType, ExportInstrumentType.BRUKER_TOF) &&
@@ -1789,7 +1795,7 @@ namespace pwiz.Skyline.FileUI
         private void btnBrowseTemplate_Click(object sender, EventArgs e)
         {
             string templateName = textTemplateFile.Text;
-            if (Equals(InstrumentType, ExportInstrumentType.AGILENT6400) ||
+            if (Equals(InstrumentType, ExportInstrumentType.AGILENT6400) || Equals(InstrumentType, ExportInstrumentType.AGILENT_ULTIVO) ||
                 Equals(InstrumentType, ExportInstrumentType.BRUKER_TOF))
             {
                 using (var chooseDirDialog = new FolderBrowserDialog
@@ -1809,6 +1815,12 @@ namespace pwiz.Skyline.FileUI
                             !AgilentMethodExporter.IsAgilentMethodPath(templateName))
                         {
                             MessageDlg.Show(this, Resources.ExportMethodDlg_btnBrowseTemplate_Click_The_chosen_folder_does_not_appear_to_contain_an_Agilent_QQQ_method_template_The_folder_is_expected_to_have_a_m_extension_and_contain_the_file_qqqacqmethod_xsd);
+                            return;
+                        }
+                        else if (Equals(InstrumentType, ExportInstrumentType.AGILENT_ULTIVO) &&
+                                 !AgilentUltivoMethodExporter.IsMethodPath(templateName))
+                        {
+                            MessageDlg.Show(this, Resources.ExportMethodDlg_btnBrowseTemplate_Click_The_chosen_folder_does_not_appear_to_contain_an_Agilent_Ultivo_method_template__The_folder_is_expected_to_have_a__m_extension_);
                             return;
                         }
                         else if (Equals(InstrumentType, ExportInstrumentType.BRUKER_TOF) &&
