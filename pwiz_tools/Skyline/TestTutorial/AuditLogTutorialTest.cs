@@ -84,8 +84,8 @@ namespace pwiz.SkylineTestTutorial
             TestFilesZipPaths = new[]
             {
                 UseRawFiles
-                    ? @"https://skyline.gs.washington.edu/tutorials/AuditLog.zip"
-                    : @"https://skyline.gs.washington.edu/tutorials/AuditLogMzml.zip",
+                    ? @"https://skyline.ms/tutorials/AuditLog.zip"
+                    : @"https://skyline.ms/tutorials/AuditLogMzml.zip",
                 @"TestTutorial\AuditLogViews.zip"
             };
 
