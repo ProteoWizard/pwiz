@@ -64,14 +64,14 @@ namespace pwiz.SkylineTestTutorial
 //            IsPauseForCoverShot = true;
             CoverShotName = "SmallMoleculeQuantification";
 
-            LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/SmallMoleculeQuantification.pdf";
+            LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/SmallMoleculeQuant-20_1.pdf";
             ForceMzml = true; // Prefer mzML as being the more efficient download
 
             TestFilesZipPaths = new[]
             {
                 (UseRawFiles
-                   ? @"https://skyline.gs.washington.edu/tutorials/SmallMoleculeQuantification.zip"
-                   : @"https://skyline.gs.washington.edu/tutorials/SmallMoleculeQuantification_mzML.zip"),
+                   ? @"https://skyline.ms/tutorials/SmallMoleculeQuantification.zip"
+                   : @"https://skyline.ms/tutorials/SmallMoleculeQuantification_mzML.zip"),
                 @"TestTutorial\SmallMoleculesQuantificationViews.zip"
             };
             RunFunctionalTest();
@@ -99,7 +99,7 @@ namespace pwiz.SkylineTestTutorial
                     pasteDlg.IsMolecule = true;
                     pasteDlg.SetSmallMoleculeColumns(null);  // Default columns
                 });
-                PauseForScreenShot<PasteDlg>("Paste Dialog in small molecule mode, default columns - show Columns checklist", 3);
+                PauseForScreenShot<PasteDlg>("Paste Dialog in small molecule mode, default columns - show Columns checklist", 4);
 
 
                 var columnsOrdered = new[]
@@ -118,14 +118,14 @@ namespace pwiz.SkylineTestTutorial
                 }.ToList();
                 RunUI(() => { pasteDlg.SetSmallMoleculeColumns(columnsOrdered); });
                 WaitForConditionUI(() => pasteDlg.GetUsableColumnCount() == columnsOrdered.Count);
-                PauseForScreenShot<PasteDlg>("Paste Dialog with selected and ordered columns", 4);
+                PauseForScreenShot<PasteDlg>("Paste Dialog with selected and ordered columns", 6);
 
                 var text = "DrugX,Drug,light,283.04,1,129.96,1,26,16,2.7\r\nDrugX,Drug,heavy,286.04,1,133.00,1,26,16,2.7\r\n";
                 text = text.Replace(',', TextUtil.CsvSeparator).Replace(".", LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator);
                 SetClipboardText(text);
                 RunUI(pasteDlg.PasteTransitions);
                 RunUI(pasteDlg.ValidateCells);
-                PauseForScreenShot<PasteDlg>("Paste Dialog with validated contents", 5);
+                PauseForScreenShot<PasteDlg>("Paste Dialog with validated contents", 6);
 
                 OkDialog(pasteDlg, pasteDlg.OkDialog);
                 var docTargets = WaitForDocumentChange(doc);
@@ -141,7 +141,7 @@ namespace pwiz.SkylineTestTutorial
                 SelectNode(SrmDocument.Level.Transitions, 0);
                 SelectNode(SrmDocument.Level.Transitions, 1);
                 SelectNode(SrmDocument.Level.Molecules, 0);
-                PauseForScreenShot<SkylineWindow>("Skyline with small molecule targets", 5);
+                PauseForScreenShot<SkylineWindow>("Skyline with small molecule targets", 7);
 
                 var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
                 RunUI(() =>

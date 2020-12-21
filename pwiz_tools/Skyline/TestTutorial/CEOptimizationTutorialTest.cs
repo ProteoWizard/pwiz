@@ -74,13 +74,13 @@ namespace pwiz.SkylineTestTutorial
 
             ForceMzml = true;   // Mzml is ~2x faster for this test.
 
-            LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/OptimizeCE-1_4.pdf";
+            LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/OptimizeCE-20_2.pdf";
 
             TestFilesZipPaths = new[]
             {
                 UseRawFiles
-                    ? @"https://skyline.gs.washington.edu/tutorials/OptimizeCE.zip"
-                    : @"https://skyline.gs.washington.edu/tutorials/OptimizeCEMzml.zip",
+                    ? @"https://skyline.ms/tutorials/OptimizeCE.zip"
+                    : @"https://skyline.ms/tutorials/OptimizeCEMzml.zip",
                 @"TestTutorial\CEOptimizationViews.zip"
             };
             RunFunctionalTest();
