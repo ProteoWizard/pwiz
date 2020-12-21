@@ -160,6 +160,7 @@
     <Compile Include="AccessServerTest.cs" />
     <Compile Include="AddAllPeptidesWithModificationsTest.cs" />
     <Compile Include="AssociateProteinVariantTest.cs" />
+    <Compile Include="BlibMoleculeListsTest.cs" />
     <Compile Include="CrosslinkChromatogramTest.cs" />
     <Compile Include="CrosslinkingTest.cs" />
     <Compile Include="CrosslinkNeutralLossTest.cs" />
@@ -174,6 +175,7 @@
     <Compile Include="MetadataRuleTest.cs" />
     <Compile Include="ModificationPermuterTest.cs" />
     <Compile Include="MultiSampleImportPeakBoundariesTest.cs" />
+    <Compile Include="NormalizeToCalibrationCurveTest.cs" />
     <Compile Include="PeptideSettingsTooltipTest.cs" />
     <Compile Include="ProxlTest.cs" />
     <Compile Include="QualitativeIonRatioTest.cs" />
@@ -182,6 +184,7 @@
     <Compile Include="RescoreRawChromatogramsTest.cs" />
     <Compile Include="SettingsChangeReimportTest.cs" />
     <Compile Include="SimpleRatiosTest.cs" />
+    <Compile Include="SkylineMenuTest.cs" />
     <Compile Include="SkypTest.cs" />
     <Compile Include="AddLibraryTest.cs" />
     <Compile Include="AreaCVHistogramTest.cs" />
@@ -528,6 +531,7 @@
     <None Include="SynchSiblingsSmallMoleculesTest.zip" />
     <None Include="SynchSiblingsTest.zip" />
     <None Include="TargetResolverTest.zip" />
+    <None Include="TestBlibMoleculeLists.zip" />
     <None Include="TicNormalizationTest.zip" />
     <None Include="ToolServiceTest.zip" />
     <None Include="ToolStoreDlgTest.zip" />

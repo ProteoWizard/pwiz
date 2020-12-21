@@ -160,6 +160,7 @@
     <Compile Include="PeakMatcherTestUtil.cs" />
     <Compile Include="ProcessKiller.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="NormalizedValueCalculatorVerifier.cs" />
     <Compile Include="ResultsUtil.cs" />
     <Compile Include="AbstractUnitTest.cs" />
     <Compile Include="Schemas\SchemaDocuments.cs" />
@@ -168,6 +169,7 @@
     <Compile Include="TestDocumentContainer.cs" />
     <Compile Include="TestFilesDir.cs" />
     <Compile Include="TestFunctional.cs" />
+    <Compile Include="TypeInspector.cs" />
     <Compile Include="UnifiTestUtil.cs" />
   </ItemGroup>
   <ItemGroup>

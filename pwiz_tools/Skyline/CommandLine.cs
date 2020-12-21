@@ -459,7 +459,7 @@ namespace pwiz.Skyline
             {
                 var labelType = GetLabelTypeHelper(commandArgs.RefinementCvLabelTypeName);
                 if (labelType != null)
-                    commandArgs.Refinement.NormalizationLabelType = labelType;
+                    commandArgs.Refinement.NormalizationMethod = NormalizeOption.FromIsotopeLabelType(labelType);
                 else
                     return false;
             }

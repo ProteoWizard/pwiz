@@ -1382,69 +1382,9 @@ namespace pwiz.Skyline
             }
         }
 
-        private void reintegrateToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowReintegrateDialog();
-        }
-        
         public void ShowReintegrateDialog()
         {
-            var documentOrig = DocumentUI;
-            if (!documentOrig.Settings.HasResults)
-            {
-                MessageDlg.Show(this, Resources.SkylineWindow_ShowReintegrateDialog_The_document_must_have_imported_results_);
-                return;
-            }
-            if (documentOrig.MoleculeCount == 0)
-            {
-                MessageDlg.Show(this, Resources.SkylineWindow_ShowReintegrateDialog_The_document_must_have_targets_in_order_to_reintegrate_chromatograms_);
-                return;
-            }
-            if (!documentOrig.IsLoaded)
-            {
-                MessageDlg.Show(this, Resources.SkylineWindow_ShowReintegrateDialog_The_document_must_be_fully_loaded_before_it_can_be_re_integrated_);
-                return;                
-            }
-            using (var dlg = new ReintegrateDlg(documentOrig))
-            {
-                if (dlg.ShowDialog(this) == DialogResult.Cancel)
-                    return;
-                ModifyDocument(Resources.SkylineWindow_ShowReintegrateDialog_Reintegrate_peaks, doc =>
-                {
-                    if (!ReferenceEquals(documentOrig, doc))
-                        throw new InvalidDataException(
-                            Resources.SkylineWindow_ShowReintegrateDialog_Unexpected_document_change_during_operation_);
-
-                    return dlg.Document;
-                }, dlg.FormSettings.EntryCreator.Create);
-            }
-        }
-
-        private void compareModelsToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowCompareModelsDlg();
-        }
-
-        public void ShowCompareModelsDlg()
-        {
-            var document = DocumentUI;
-            if (!document.Settings.HasResults)
-            {
-                MessageDlg.Show(this, Resources.SkylineWindow_ShowReintegrateDialog_The_document_must_have_imported_results_);
-                return;
-            }
-            if (document.MoleculeCount == 0)
-            {
-                MessageDlg.Show(this, Resources.SkylineWindow_ShowCompareModelsDlg_The_document_must_have_targets_in_order_to_compare_model_peak_picking_);
-                return;
-            }
-            if (!document.IsLoaded)
-            {
-                MessageDlg.Show(this, Resources.SkylineWindow_ShowCompareModelsDlg_The_document_must_be_fully_loaded_in_order_to_compare_model_peak_picking_);
-                return;
-            }
-            var dlg = new ComparePeakPickingDlg(document);
-            dlg.Show(this);
+            RefineMenu.ShowReintegrateDialog();
         }
 
         private void mProphetFeaturesMenuItem_Click(object sender, EventArgs e)

@@ -60,7 +60,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForDocumentLoaded();
             AddTrainedModels();
 
-            var comparePeakPickingDlg = ShowDialog<ComparePeakPickingDlg>(SkylineWindow.ShowCompareModelsDlg);
+            var comparePeakPickingDlg = ShowDialog<ComparePeakPickingDlg>(SkylineWindow.RefineMenu.ShowCompareModelsDlg);
             AddFile(comparePeakPickingDlg, "OpenSwath", peakBoundariesFile);
             AddModel(comparePeakPickingDlg, "skyline_default_plus");
             AddModel(comparePeakPickingDlg, "full model");

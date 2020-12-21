@@ -140,6 +140,7 @@
     <Compile Include="BilinearCurveFitTest.cs" />
     <Compile Include="BookmarkEnumeratorTest.cs" />
     <Compile Include="ChromatogramExporterTest.cs" />
+    <Compile Include="ObjectSizeTest.cs" />
     <Compile Include="ChromPeakTest.cs" />
     <Compile Include="ChromTransitionTest.cs" />
     <Compile Include="CodeInspectionTest.cs" />

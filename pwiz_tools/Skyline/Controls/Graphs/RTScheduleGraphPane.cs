@@ -22,6 +22,7 @@ using System.Drawing;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
+using pwiz.CLI.Bruker.PrmScheduling;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
@@ -71,10 +72,14 @@ namespace pwiz.Skyline.Controls.Graphs
             set { Settings.Default.BrukerPrmSqliteFile = value; }
         }
 
+        public SchedulingMetrics BrukerMetricType { get; set; }
+        public BrukerTimsTofMethodExporter.Metrics BrukerMetrics { get; set; }
+
         private bool _exportMethodDlg;
         private SrmDocument _documentShowing;
         private double[] _windowsShowing;
         private string _brukerTemplate;
+        private SchedulingMetrics _brukerMetricType;
 
         public RTScheduleGraphPane(GraphSummary graphSummary, bool isExportMethodDlg = false)
             : base(graphSummary)
@@ -91,25 +96,55 @@ namespace pwiz.Skyline.Controls.Graphs
             SrmDocument document = !_exportMethodDlg ? GraphSummary.DocumentUIContainer.DocumentUI : Program.MainWindow.DocumentUI;
             var windows = ScheduleWindows;
             var brukerTemplate = BrukerTemplateFile;
+            var brukerMetricType = BrukerMetricType;
             // No need to re-graph for a selection change
             if (ReferenceEquals(document, _documentShowing) && ArrayUtil.EqualsDeep(windows, _windowsShowing) &&
-                Equals(BrukerTemplateFile, _brukerTemplate))
+                Equals(BrukerTemplateFile, _brukerTemplate) && Equals(BrukerMetricType, _brukerMetricType))
                 return;
 
             _documentShowing = document;
             _windowsShowing = windows;
             _brukerTemplate = brukerTemplate;
+            _brukerMetricType = brukerMetricType;
 
             // TODO: Make it possible to see transition scheduling when full-scan enabled.
             if (string.IsNullOrEmpty(brukerTemplate))
             {
+                XAxis.Title.Text = Resources.RTScheduleGraphPane_RTScheduleGraphPane_Scheduled_Time;
                 YAxis.Title.Text = document.Settings.TransitionSettings.FullScan.IsEnabledMsMs
                     ? Resources.RTScheduleGraphPane_UpdateGraph_Concurrent_Precursors
                     : Resources.RTScheduleGraphPane_UpdateGraph_Concurrent_Transitions;
             }
+            else if (BrukerMetrics == null)
+            {
+                XAxis.Title.Text = Resources.RTScheduleGraphPane_RTScheduleGraphPane_Scheduled_Time;
+                YAxis.Title.Text = Resources.RTScheduleGraphPane_UpdateGraph_Concurrent_Accumulations;
+            }
             else
             {
-                YAxis.Title.Text = Resources.RTScheduleGraphPane_UpdateGraph_Concurrent_Accumulations;
+                switch (brukerMetricType)
+                {
+                    case SchedulingMetrics.CONCURRENT_FRAMES:
+                        XAxis.Title.Text = Resources.RTScheduleGraphPane_RTScheduleGraphPane_Scheduled_Time;
+                        YAxis.Title.Text = Resources.RTScheduleGraphPane_UpdateGraph_Concurrent_frames;
+                        break;
+                    case SchedulingMetrics.MAX_SAMPLING_TIMES:
+                        XAxis.Title.Text = Resources.RTScheduleGraphPane_UpdateGraph_Target;
+                        YAxis.Title.Text = Resources.RTScheduleGraphPane_UpdateGraph_Max_sampling_times;
+                        break;
+                    case SchedulingMetrics.MEAN_SAMPLING_TIMES:
+                        XAxis.Title.Text = Resources.RTScheduleGraphPane_UpdateGraph_Target;
+                        YAxis.Title.Text = Resources.RTScheduleGraphPane_UpdateGraph_Mean_sampling_times;
+                        break;
+                    case SchedulingMetrics.REDUNDANCY_OF_TARGETS:
+                        XAxis.Title.Text = Resources.RTScheduleGraphPane_RTScheduleGraphPane_Scheduled_Time;
+                        YAxis.Title.Text = Resources.RTScheduleGraphPane_UpdateGraph_Redundancy_of_targets;
+                        break;
+                    case SchedulingMetrics.TARGETS_PER_FRAME:
+                        XAxis.Title.Text = Resources.RTScheduleGraphPane_RTScheduleGraphPane_Scheduled_Time;
+                        YAxis.Title.Text = Resources.RTScheduleGraphPane_UpdateGraph_Targets_per_frame;
+                        break;
+                }
             }
 
             CurveList.Clear();
@@ -160,9 +195,17 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             if (!string.IsNullOrEmpty(BrukerTemplateFile))
             {
-                var exportProperties = new ExportDlgProperties(new ExportMethodDlg(document, ExportFileType.Method), new CancellationToken());
-                exportProperties.MethodType = ExportMethodType.Scheduled;
-                BrukerTimsTofMethodExporter.GetScheduling(document, exportProperties, BrukerTemplateFile, progressMonitor, out var brukerPoints);
+                IPointList brukerPoints = null;
+                if (BrukerMetrics != null)
+                {
+                    brukerPoints = BrukerMetrics.Get(BrukerMetricType);
+                }
+                else
+                {
+                    BrukerTimsTofMethodExporter.GetScheduling(document,
+                        new ExportDlgProperties(new ExportMethodDlg(document, ExportFileType.Method), new CancellationToken()) {MethodType = ExportMethodType.Scheduled},
+                        BrukerTemplateFile, progressMonitor, out brukerPoints);
+                }
                 AddCurve(document, brukerPoints, color);
                 return;
             }

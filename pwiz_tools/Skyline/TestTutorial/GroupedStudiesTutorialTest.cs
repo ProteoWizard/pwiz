@@ -48,12 +48,14 @@ namespace pwiz.SkylineTestTutorial
         {
             // Set true to look at tutorial screenshots.
             //IsPauseForScreenShots = true;
+ForceMzml = true;   // TODO(bspratt) remove this once we're convinced that WIFF isn't the source of leaks and hangs
+
 
             TestFilesZipPaths = new[]
                 {
                     UseRawFiles
                                ? @"https://skyline.gs.washington.edu/tutorials/GroupedStudies.zip"
-                               : @"https://skyline.gs.washington.edu/tutorials/GroupedStudiesMzml.zip",
+                               : @"https://skyline.gs.washington.edu/tutorials/GroupedStudiesMzmlV2.zip", // V2 has updated WIFF->mzML including machine serial #
                     @"TestTutorial\GroupedStudiesViews.zip"
                 };
             RunFunctionalTest();

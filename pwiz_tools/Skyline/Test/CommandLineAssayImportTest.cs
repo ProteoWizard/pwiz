@@ -25,6 +25,7 @@ using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -270,7 +271,9 @@ namespace pwiz.SkylineTest
                     foreach (var nodeTran in nodePep.TransitionGroups.SelectMany(g => g.Transitions))
                     {
                         if (!nodeTran.HasLibInfo)
-                            Assert.Fail("Missing library info from {0} - {1}", nodePep, nodeTran.GetDisplayText(new DisplaySettings(nodePep, false, 0, 0)));
+                            Assert.Fail("Missing library info from {0} - {1}", nodePep, nodeTran.GetDisplayText(new DisplaySettings(
+                                new NormalizedValueCalculator(docAfter), 
+                                nodePep, false, 0, NormalizeOption.RatioToFirstStandard(docAfter.Settings))));
                     }
                 }
             }

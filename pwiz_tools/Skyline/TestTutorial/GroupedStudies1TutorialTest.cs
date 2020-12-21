@@ -61,7 +61,7 @@ namespace pwiz.SkylineTestTutorial
         {
             // Set true to look at tutorial screenshots.
 //            IsPauseForScreenShots = true;
-//            IsPauseForCoverShot = true;
+//            IsCoverShotMode = true;
             CoverShotName = "GroupedStudies";
 
             ForceMzml = true;   // Mzml is faster for this test.
@@ -277,7 +277,7 @@ namespace pwiz.SkylineTestTutorial
 
             PauseForScreenShot("Peak Areas graph", 12);
 
-            RunUI(() => SkylineWindow.NormalizeAreaGraphTo(AreaNormalizeToView.area_percent_view));
+            RunUI(() => SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.TOTAL));
 
             PauseForScreenShot("Peak Areas graph (normalized to total)", 13);
 
@@ -358,7 +358,7 @@ namespace pwiz.SkylineTestTutorial
             SelectNode(SrmDocument.Level.Molecules, 1);
             ActivateReplicate("D_196_REP3");
 
-            RunUI(() => SkylineWindow.NormalizeAreaGraphTo(AreaNormalizeToView.none));
+            RunUI(() => SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.NONE));
 
             PauseForScreenShot("Peak Areas graph", 21);
 
@@ -369,7 +369,7 @@ namespace pwiz.SkylineTestTutorial
 
             RunUI(() =>
             {
-                SkylineWindow.NormalizeAreaGraphTo(AreaNormalizeToView.area_percent_view);
+                SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.TOTAL);
                 SkylineWindow.AutoZoomBestPeak();
             });
 
@@ -581,7 +581,7 @@ namespace pwiz.SkylineTestTutorial
             // Ensure some settings, in case prior steps did not occur
             RunUI(() =>
             {
-                SkylineWindow.NormalizeAreaGraphTo(AreaNormalizeToView.area_percent_view);
+                SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.TOTAL);
                 SkylineWindow.ShowReplicateOrder(SummaryReplicateOrder.time);
             });
 
@@ -623,7 +623,7 @@ namespace pwiz.SkylineTestTutorial
 
             PauseForScreenShot("Chromatogram graph with interference", 31);
 
-            RunUI(() => SkylineWindow.NormalizeAreaGraphTo(AreaNormalizeToView.none));
+            RunUI(() => SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.NONE));
 
             SelectNode(SrmDocument.Level.MoleculeGroups, SkylineWindow.Document.PeptideGroupCount - 1);
             ActivateReplicate("D_102_REP1");
@@ -664,7 +664,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 SkylineWindow.ShowAllTransitions();
-                SkylineWindow.NormalizeAreaGraphTo(AreaNormalizeToView.area_percent_view);
+                SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.TOTAL);
             });
 
             PauseForScreenShot("Peak area graph for LGPLVEDQR normalized", 35);
@@ -679,7 +679,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 // Ensure these important settings are set
-                SkylineWindow.NormalizeAreaGraphTo(AreaNormalizeToView.area_percent_view);
+                SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.TOTAL);
                 SkylineWindow.SetIntegrateAll(true);    
                 SkylineWindow.ShowReplicateOrder(SummaryReplicateOrder.time);
             });
@@ -745,7 +745,7 @@ namespace pwiz.SkylineTestTutorial
 
                 RunUI(() =>
                 {
-                    SkylineWindow.NormalizeAreaGraphTo(AreaNormalizeToView.none);
+                    SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.NONE);
                     SkylineWindow.Size = new Size(1380, 744);
                 });
                 
@@ -780,7 +780,7 @@ namespace pwiz.SkylineTestTutorial
                 ChangePeakBounds("D_154_REP3", 23, 23.5);
                 }
 
-                RunUI(() => SkylineWindow.NormalizeAreaGraphTo(AreaNormalizeToView.area_percent_view));
+                RunUI(() => SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.TOTAL));
 
                 SelectPeptidesUpUntil("GMYESLPVVAVK");
 
@@ -873,7 +873,7 @@ namespace pwiz.SkylineTestTutorial
 
                 RunUI(() =>
                 {
-                    SkylineWindow.NormalizeAreaGraphTo(AreaNormalizeToView.none);
+                    SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.NONE);
                     SkylineWindow.ShowReplicateOrder(SummaryReplicateOrder.time);
                 });
 
@@ -1196,7 +1196,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 SkylineWindow.ShowTotalTransitions();
-                SkylineWindow.NormalizeAreaGraphTo(AreaNormalizeToView.area_global_standard_view);
+                SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.GLOBAL_STANDARDS);
                 SkylineWindow.GroupByReplicateAnnotation("SubjectId");
                 SkylineWindow.ShowCVValues(true);
             });
@@ -1374,13 +1374,13 @@ namespace pwiz.SkylineTestTutorial
                 foldChangeGrid.ShowGraph();
             });
             PauseForScreenShot<FoldChangeBarGraph>("Healthy v Diseased:Graph", 66);
-            if (IsPauseForCoverShot)
+            if (IsCoverShotMode)
             {
                 RestoreCoverViewOnScreen();
                 foldChangeGrid = WaitForOpenForm<FoldChangeGrid>();
             }
             var foldChangeGraph = WaitForOpenForm<FoldChangeBarGraph>();
-            if (!IsPauseForCoverShot)
+            if (!IsCoverShotMode)
                 RunUI(() => foldChangeGraph.Show(foldChangeGraph.DockPanel, DockState.Floating));
             RunUI(() =>
             {
@@ -1411,7 +1411,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() => Assert.AreEqual(11, foldChangeGrid.DataboundGridControl.RowCount));
             PauseForScreenShot<FoldChangeBarGraph>("Right click on the graph and choose Copy", 67);
 
-            if (IsPauseForCoverShot)
+            if (IsCoverShotMode)
             {
                 RunUI(() =>
                 {
@@ -1421,7 +1421,7 @@ namespace pwiz.SkylineTestTutorial
                     SkylineWindow.ShowPeakAreaLegend(false);
                     SkylineWindow.ShowChromatogramLegends(false);
                     SkylineWindow.ShowAllTransitions();
-                    SkylineWindow.NormalizeAreaGraphTo(AreaNormalizeToView.area_percent_view);
+                    SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.TOTAL);
                     SkylineWindow.GroupByReplicateValue(null);
                 });
                 RunUI(SkylineWindow.AutoZoomBestPeak);
@@ -1437,7 +1437,7 @@ namespace pwiz.SkylineTestTutorial
                     gcFloatingWindow.Height = SkylineWindow.Height - 10;
                     gcFloatingWindow.Left = SkylineWindow.Right - gcFloatingWindow.Width - 5;
                 });
-                PauseForCoverShot();
+                TakeCoverShot();
                 return;
             }
 

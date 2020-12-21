@@ -60,8 +60,15 @@ namespace pwiz.Skyline.Controls.Graphs
             cbShowLegend.Checked = Settings.ShowLegend;
             GraphFontSize.PopulateCombo(cmbFontSize, Settings.FontSize);
 
-            tbAtLeastN.Maximum = _graphSummary.DocumentUIContainer.DocumentUI.MeasuredResults.Chromatograms.Count;
-            tbAtLeastN.Value = Settings.RepCount;
+            if (_graphSummary.DocumentUIContainer.DocumentUI.IsLoaded &&
+                _graphSummary.DocumentUIContainer.DocumentUI.MeasuredResults.Chromatograms.Count > 0)
+            {
+                tbAtLeastN.Maximum = _graphSummary.DocumentUIContainer.DocumentUI.MeasuredResults.Chromatograms.Count;
+                if(Settings.RepCount < tbAtLeastN.Maximum && Settings.RepCount > tbAtLeastN.Minimum)
+                    tbAtLeastN.Value = Settings.RepCount;
+                else
+                    tbAtLeastN.Value = tbAtLeastN.Maximum / 2;
+            }
             cmbTargetType.Focus();
         }
 
@@ -122,10 +129,10 @@ namespace pwiz.Skyline.Controls.Graphs
         public void SetQValueTo(float qValue)
         {
             if (qValue == .01f)
-                rbQValue01.Select();
+                rbQValue01.Checked = true;
             else
             {
-                rbQValueCustom.Select();
+                rbQValueCustom.Checked = true;
                 txtQValueCustom.Text = qValue.ToString(CultureInfo.CurrentCulture);
             }
         }

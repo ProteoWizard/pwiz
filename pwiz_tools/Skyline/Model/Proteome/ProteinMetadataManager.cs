@@ -255,12 +255,35 @@ namespace pwiz.Skyline.Model.Proteome
                 var listProteins = new List<PeptideGroupDocNode>();
                 foreach (PeptideGroupDocNode node in docOrig.MoleculeGroups)
                 {
-                    if (_processedNodes.ContainsKey(node.Id.GlobalIndex))
+                    if (_processedNodes.TryGetValue(node.Id.GlobalIndex, out var proteinMetadata))
                     {
-                        listProteins.Add(node.ChangeProteinMetadata(_processedNodes[node.Id.GlobalIndex]));
+                        // Compare existing and proposed metadata, ignoring name difference in case user changed 
+                        // the name manually in the Targets tree while a background metadata lookup was going on, and
+                        // ignoring web search details since the existing node probably hasn't any yet.
+                        //
+                        // This fixes issue https://skyline.ms/announcements/home/support/thread.view?rowId=49107 in which:
+                        //    the user pasted a protein sequence into the Targets tree
+                        //    then tried to type in a name to replace the default assigned name "sequence1"
+                        //    after a few seconds the displayed name reverted to "sequence1" upon background protein metadata search completion
+                        // N.B. as this is timing dependent, and our automated tests are mandated to not require internet
+                        // access, writing a test for this fix (i.e. adding timings to the fake web lookup system) proved to
+                        // be tricky and finally deemed not worth the effort for this fairly obscure problem.
+                        if (!Equals(node.ProteinMetadata.Name, proteinMetadata.Name) && // Different name
+                            Equals(node.ProteinMetadata.ChangeName(proteinMetadata.Name).ClearWebSearchInfo(), // But otherwise identical
+                                proteinMetadata.ClearWebSearchInfo())) 
+                        {
+                            // Leave (apparently user-renamed) node alone, and note the web search that was actually used.
+                            listProteins.Add(node.ChangeProteinMetadata(node.ProteinMetadata.ChangeWebSearchInfo(proteinMetadata.WebSearchInfo))); 
+                        }
+                        else
+                        {
+                            // Update the protein metadata for this node, if any
+                            listProteins.Add(node.ChangeProteinMetadata(proteinMetadata));
+                        }
                     }
                     else
                     {
+                        // Not yet processed
                         listProteins.Add(node);
                     }
                 }
