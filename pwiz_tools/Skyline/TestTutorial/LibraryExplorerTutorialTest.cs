@@ -49,7 +49,7 @@ namespace pwiz.SkylineTestTutorial
 //            IsPauseForCoverShot = true;
             CoverShotName = "LibraryExplorer";
 
-            LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/LibraryExplorer-1_4.pdf";
+            LinkPdf = "https://skyline.ms/labkey/_webdav/home/software/Skyline/%40files/tutorials/LibraryExplorer-20_2.pdf";
 
             TestFilesZipPaths = new[]
             {
