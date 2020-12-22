@@ -1,4 +1,22 @@
-﻿using System;
+﻿/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2020 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
@@ -9,7 +27,9 @@ using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.GroupComparison;
+using pwiz.Skyline.Model.Prosit.Models;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -41,69 +61,6 @@ namespace pwiz.Skyline.Menus
         }
 
         public IEnumerable<ToolStripItem> DropDownItems { get; }
-
-
-        public ToolStripMenuItem ReplicateComparisonMenuItem
-        {
-            get { return replicateComparisonMenuItem; }
-        }
-
-        public ToolStripMenuItem RetentionTimesMenuItem => retentionTimesMenuItem;
-        public ToolStripMenuItem RunToRunMenuItem => runToRunMenuItem;
-
-        public ToolStripMenuItem TimePeptideComparisonMenuItem => timePeptideComparisonMenuItem;
-
-        public ToolStripMenuItem RegressionMenuItem => regressionMenuItem;
-
-        public ToolStripMenuItem ScoreToRunMenuItem => scoreToRunMenuItem;
-
-        public ToolStripMenuItem SchedulingMenuItem => schedulingMenuItem;
-
-        public ToolStripMenuItem ResultsGridMenuItem => resultsGridMenuItem;
-
-        public ToolStripMenuItem PeakAreasMenuItem => peakAreasMenuItem;
-
-        public ToolStripMenuItem AreaReplicateComparisonMenuItem => areaReplicateComparisonMenuItem;
-        public ToolStripMenuItem AreaPeptideComparisonMenuItem => areaPeptideComparisonMenuItem;
-        public ToolStripMenuItem AreaCVHistogramMenuItem => areaCVHistogramMenuItem;
-        public ToolStripMenuItem AreaCVHistogram2DMenuItem => areaCVHistogram2DMenuItem;
-        public ToolStripMenuItem MassErrorsMenuItem => massErrorsMenuItem;
-        public ToolStripMenuItem MassErrorReplicateComparisonMenuItem => massErrorReplicateComparisonMenuItem;
-        public ToolStripMenuItem MassErrorPeptideComparisonMenuItem => massErrorPeptideComparisonMenuItem;
-        public ToolStripMenuItem DetectionsPlotsMenuItem => detectionsPlotsMenuItem;
-        public ToolStripMenuItem DetectionsHistogramMenuItem => detectionsHistogramMenuItem;
-        public ToolStripMenuItem DetectionsReplicateComparisonMenuItem => detectionsReplicateComparisonMenuItem;
-
-        public ToolStripMenuItem ChromatogramsMenuItem => chromatogramsMenuItem;
-        public ToolStripMenuItem TransitionsMenuItem => transitionsMenuItem;
-        public ToolStripMenuItem TransformChromMenuItem => transformChromMenuItem;
-        public ToolStripMenuItem AutoZoomMenuItem => autoZoomMenuItem;
-        public ToolStripMenuItem ArrangeGraphsToolStripMenuItem => arrangeGraphsToolStripMenuItem;
-
-        public ToolStripMenuItem LibraryMatchToolStripMenuItem => libraryMatchToolStripMenuItem;
-
-        public ToolStripMenuItem IonTypesMenuItem => ionTypesMenuItem;
-        public ToolStripMenuItem ChargesMenuItem => chargesMenuItem;
-        public ToolStripMenuItem RanksMenuItem => ranksMenuItem;
-        public ToolStripMenuItem PrecursorsTranMenuItem => precursorsTranMenuItem;
-        public ToolStripMenuItem ProductsTranMenuItem => productsTranMenuItem;
-        public ToolStripMenuItem BasePeakMenuItem => basePeakMenuItem;
-        public ToolStripMenuItem TicMenuItem => ticMenuItem;
-        public ToolStripMenuItem SplitGraphMenuItem => splitGraphMenuItem;
-        public ToolStripMenuItem QcMenuItem => qcMenuItem;
-        public ToolStripSeparator ToolStripSeparatorTranMain => toolStripSeparatorTranMain;
-        public ToolStripMenuItem SingleTranMenuItem => singleTranMenuItem;
-        public ToolStripMenuItem AllTranMenuItem => allTranMenuItem;
-        public ToolStripMenuItem TotalTranMenuItem => totalTranMenuItem;
-        public ToolStripMenuItem TransformChromNoneMenuItem => transformChromNoneMenuItem;
-        public ToolStripMenuItem TransformChromInterpolatedMenuItem => transformChromInterpolatedMenuItem;
-        public ToolStripMenuItem SecondDerivativeMenuItem => secondDerivativeMenuItem;
-        public ToolStripMenuItem FirstDerivativeMenuItem => firstDerivativeMenuItem;
-        public ToolStripMenuItem SmoothSGChromMenuItem => smoothSGChromMenuItem;
-        public ToolStripMenuItem AutoZoomNoneMenuItem => autoZoomNoneMenuItem;
-        public ToolStripMenuItem AutoZoomBestPeakMenuItem => autoZoomBestPeakMenuItem;
-        public ToolStripMenuItem AutoZoomRTWindowMenuItem => autoZoomRTWindowMenuItem;
-        public ToolStripMenuItem AutoZoomBothMenuItem => autoZoomBothMenuItem;
 
         public ToolStripMenuItem NextReplicateMenuItem => nextReplicateMenuItem;
         public ToolStripMenuItem PreviousReplicateMenuItem => previousReplicateMenuItem;
@@ -433,7 +390,63 @@ namespace pwiz.Skyline.Menus
 
         private void transitionsMenuItem_DropDownOpening(object sender, EventArgs e)
         {
-            SkylineWindow.TransitionsMenuItemDropDownOpening();
+            var displayType = GraphChromatogram.DisplayType;
+
+            // If both MS1 and MS/MS ions are not possible, then menu items to differentiate precursors and
+            // products are not necessary.
+            bool showIonTypeOptions = SkylineWindow.IsMultipleIonSources;
+            precursorsTranMenuItem.Visible = productsTranMenuItem.Visible = showIonTypeOptions;
+
+            if (!showIonTypeOptions &&
+                    (displayType == DisplayTypeChrom.precursors || displayType == DisplayTypeChrom.products))
+                displayType = DisplayTypeChrom.all;
+
+            // Only show all ions chromatogram options when at least one chromatogram of this type exists
+            bool showAllIonsOptions = DocumentUI.Settings.HasResults &&
+                DocumentUI.Settings.MeasuredResults.HasAllIonsChromatograms;
+            basePeakMenuItem.Visible = ticMenuItem.Visible = qcMenuItem.Visible =toolStripSeparatorTranMain.Visible = showAllIonsOptions;
+
+            if (!showAllIonsOptions &&
+                    (displayType == DisplayTypeChrom.base_peak || displayType == DisplayTypeChrom.tic || displayType == DisplayTypeChrom.qc))
+                displayType = DisplayTypeChrom.all;
+
+            if (showAllIonsOptions)
+            {
+                qcMenuItem.DropDownItems.Clear();
+                var qcTraceNames = DocumentUI.MeasuredResults.QcTraceNames.ToList();
+                if (qcTraceNames.Count > 0)
+                {
+                    var qcTraceItems = new ToolStripItem[qcTraceNames.Count];
+                    var qcContextTraceItems = new ToolStripItem[qcTraceNames.Count];
+                    for (int i = 0; i < qcTraceNames.Count; i++)
+                    {
+                        qcTraceItems[i] = new ToolStripMenuItem(qcTraceNames[i], null, qcMenuItem_Click)
+                        {
+                            Checked = displayType == DisplayTypeChrom.qc &&
+                                      Settings.Default.ShowQcTraceName == qcTraceNames[i]
+                        };
+                        qcContextTraceItems[i] = new ToolStripMenuItem(qcTraceNames[i], null, qcMenuItem_Click)
+                        {
+                            Checked = displayType == DisplayTypeChrom.qc &&
+                                      Settings.Default.ShowQcTraceName == qcTraceNames[i]
+                        };
+                    }
+
+                    qcMenuItem.DropDownItems.AddRange(qcTraceItems);
+                }
+                else
+                    qcMenuItem.Visible = false;
+            }
+
+            precursorsTranMenuItem.Checked = (displayType == DisplayTypeChrom.precursors);
+            productsTranMenuItem.Checked = (displayType == DisplayTypeChrom.products);
+            singleTranMenuItem.Checked = (displayType == DisplayTypeChrom.single);
+            allTranMenuItem.Checked = (displayType == DisplayTypeChrom.all);
+            totalTranMenuItem.Checked = (displayType == DisplayTypeChrom.total);
+            basePeakMenuItem.Checked = (displayType == DisplayTypeChrom.base_peak);
+            ticMenuItem.Checked = (displayType == DisplayTypeChrom.tic);
+            splitGraphMenuItem.Checked = Settings.Default.SplitChromatogramGraph;
+            onlyQuantitativeMenuItem.Checked = Settings.Default.ShowQuantitativeOnly;
         }
         private void singleTranMenuItem_Click(object sender, EventArgs e)
         {
@@ -481,8 +494,13 @@ namespace pwiz.Skyline.Menus
 
         private void transformChromMenuItem_DropDownOpening(object sender, EventArgs e)
         {
-            SkylineWindow.TransformChromMenuItemDropDownOpening();
+            var transform = GraphChromatogram.Transform;
 
+            transformChromNoneMenuItem.Checked = (transform == TransformChrom.raw);
+            transformChromInterpolatedMenuItem.Checked = (transform == TransformChrom.interpolated);
+            secondDerivativeMenuItem.Checked = (transform == TransformChrom.craw2d);
+            firstDerivativeMenuItem.Checked = (transform == TransformChrom.craw1d);
+            smoothSGChromMenuItem.Checked = (transform == TransformChrom.savitzky_golay);
         }
 
         private void transformChromNoneMenuItem_Click(object sender, EventArgs e)
@@ -513,7 +531,23 @@ namespace pwiz.Skyline.Menus
         }
         private void autozoomMenuItem_DropDownOpening(object sender, EventArgs e)
         {
-            SkylineWindow.AutozoomMenuItemDropDownOpening();
+            bool hasRt = (DocumentUI.Settings.PeptideSettings.Prediction.RetentionTime != null);
+            autoZoomRTWindowMenuItem.Enabled = hasRt;
+            autoZoomBothMenuItem.Enabled = hasRt;
+
+            var zoom = SkylineWindow.EffectiveAutoZoom;
+            if (!hasRt)
+            {
+                if (zoom == AutoZoomChrom.window)
+                    zoom = AutoZoomChrom.none;
+                else if (zoom == AutoZoomChrom.both)
+                    zoom = AutoZoomChrom.peak;
+            }
+
+            autoZoomNoneMenuItem.Checked = (zoom == AutoZoomChrom.none);
+            autoZoomBestPeakMenuItem.Checked = (zoom == AutoZoomChrom.peak);
+            autoZoomRTWindowMenuItem.Checked = (zoom == AutoZoomChrom.window);
+            autoZoomBothMenuItem.Checked = (zoom == AutoZoomChrom.both);
         }
 
         private void autoZoomNoneMenuItem_Click(object sender, EventArgs e)
@@ -538,7 +572,18 @@ namespace pwiz.Skyline.Menus
 
         private void timeGraphMenuItem_DropDownOpening(object sender, EventArgs e)
         {
-            SkylineWindow.TimeGraphMenuItemDropDownOpening();
+            var types = Settings.Default.RTGraphTypes;
+            var list = SkylineWindow.ListGraphRetentionTime;
+            bool runToRunRegression = SkylineWindow.GraphChecked(list, types, GraphTypeSummary.run_to_run_regression);
+            bool scoreToRunRegression = SkylineWindow.GraphChecked(list, types, GraphTypeSummary.score_to_run_regression);
+
+            runToRunMenuItem.Checked = runToRunRegression;
+            scoreToRunMenuItem.Checked = scoreToRunRegression;
+            regressionMenuItem.Checked = runToRunRegression || scoreToRunRegression;
+
+            replicateComparisonMenuItem.Checked = SkylineWindow.GraphChecked(list, types, GraphTypeSummary.replicate);
+            timePeptideComparisonMenuItem.Checked = SkylineWindow.GraphChecked(list, types, GraphTypeSummary.peptide);
+            schedulingMenuItem.Checked = SkylineWindow.GraphChecked(list, types, GraphTypeSummary.schedule);
         }
         private void replicateComparisonMenuItem_Click(object sender, EventArgs e)
         {
@@ -760,5 +805,118 @@ namespace pwiz.Skyline.Menus
             }
             ranksMenuItem.Checked = Settings.Default.ShowRanks;
         }
+
+        public void UpdateGraphUi(Action ensureLayoutLocked, SrmSettings settingsNew, bool deserialized)
+        {
+            EnableGraphSpectrum(ensureLayoutLocked, settingsNew, deserialized);
+            var enable = settingsNew.HasResults;
+            bool enableSchedule = SkylineWindow.IsRetentionTimeGraphTypeEnabled(GraphTypeSummary.schedule);
+            bool enableRunToRun = SkylineWindow.IsRetentionTimeGraphTypeEnabled(GraphTypeSummary.run_to_run_regression);
+            if (replicateComparisonMenuItem.Enabled != enable ||
+                retentionTimesMenuItem.Enabled != enableSchedule ||
+                runToRunMenuItem.Enabled != enableRunToRun)
+            {
+                retentionTimesMenuItem.Enabled = enableSchedule;
+                replicateComparisonMenuItem.Enabled = enable;
+                timePeptideComparisonMenuItem.Enabled = enable;
+                regressionMenuItem.Enabled = enable;
+                scoreToRunMenuItem.Enabled = enable;
+                runToRunMenuItem.Enabled = enableRunToRun;
+                schedulingMenuItem.Enabled = enableSchedule;
+                if (!deserialized)
+                {
+                    ensureLayoutLocked();
+                    SkylineWindow.UpdateUIGraphRetentionTime(SkylineWindow.IsRetentionTimeGraphTypeEnabled);
+                }
+            }
+
+            if (resultsGridMenuItem.Enabled != enable)
+            {
+                resultsGridMenuItem.Enabled = enable;
+                if (!deserialized)
+                {
+                    ensureLayoutLocked();
+                    SkylineWindow.ShowResultsGrid(enable && Settings.Default.ShowResultsGrid);
+                }
+            }
+            if (peakAreasMenuItem.Enabled != enable)
+            {
+                peakAreasMenuItem.Enabled = enable;
+                areaReplicateComparisonMenuItem.Enabled = enable;
+                areaPeptideComparisonMenuItem.Enabled = enable;
+                areaCVHistogramMenuItem.Enabled = enable;
+                areaCVHistogram2DMenuItem.Enabled = enable;
+
+                if (!deserialized)
+                {
+                    ensureLayoutLocked();
+                    SkylineWindow.UpdateUIGraphPeakArea(enable);
+                }
+            }
+            if (massErrorsMenuItem.Enabled != enable)
+            {
+                massErrorsMenuItem.Enabled = enable;
+                massErrorReplicateComparisonMenuItem.Enabled = enable;
+                massErrorPeptideComparisonMenuItem.Enabled = enable;
+
+                if (!deserialized)
+                {
+                    ensureLayoutLocked();
+                    SkylineWindow.UpdateUIGraphMassError(enable);
+                }
+            }
+
+            if (detectionsPlotsMenuItem.Enabled != enable)
+            {
+                detectionsPlotsMenuItem.Enabled = enable;
+                detectionsHistogramMenuItem.Enabled = enable;
+                detectionsReplicateComparisonMenuItem.Enabled = Enabled;
+                if (!deserialized)
+                {
+                    ensureLayoutLocked();
+                    SkylineWindow.UpdateUIGraphDetection(enable);
+                }
+            }
+            chromatogramsMenuItem.Enabled = enable;
+            transitionsMenuItem.Enabled = enable;
+            transformChromMenuItem.Enabled = enable;
+            autoZoomMenuItem.Enabled = enable;
+            arrangeGraphsToolStripMenuItem.Enabled = enable;
+        }
+
+        public void EnableGraphSpectrum(Action ensureLayoutLocked, SrmSettings settings, bool deserialized)
+        {
+            bool hasLibraries = settings.PeptideSettings.Libraries.HasLibraries;
+            bool enable = hasLibraries || PrositHelpers.PrositSettingsValid;
+            if (enable)
+            {
+                UpdateIonTypesMenuItemsVisibility();
+            }
+
+            bool enableChanging = libraryMatchToolStripMenuItem.Enabled != enable;
+            if (enableChanging)
+            {
+                libraryMatchToolStripMenuItem.Enabled = enable;
+                ionTypesMenuItem.Enabled = enable;
+                chargesMenuItem.Enabled = enable;
+                ranksMenuItem.Enabled = enable;
+            }
+
+            // Make sure we don't keep a spectrum graph around because it was
+            // persisted when Prosit settings were on and they no longer are
+            if ((enableChanging && !deserialized) || (deserialized && !hasLibraries && !enable))
+            {
+                ensureLayoutLocked();
+                SkylineWindow.ShowGraphSpectrum(enable && Settings.Default.ShowSpectra);
+            }
+        }
+        private void qcMenuItem_Click(object sender, EventArgs e)
+        {
+            var qcTraceItem = sender as ToolStripMenuItem;
+            if (qcTraceItem == null)
+                throw new InvalidOperationException(@"qcMenuItem_Click must be triggered by a ToolStripMenuItem");
+            SkylineWindow.ShowQc(qcTraceItem.Text);
+        }
+
     }
 }
