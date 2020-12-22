@@ -1844,7 +1844,7 @@ namespace pwiz.Skyline
             }
         }
 
-        private void ImportMassList(MassListInputs inputs, string description, bool assayLibrary)
+        public void ImportMassList(MassListInputs inputs, string description, bool assayLibrary)
         {
             SrmTreeNode nodePaste = SequenceTree.SelectedNode as SrmTreeNode;
             IdentityPath insertPath = nodePaste != null ? nodePaste.Path : null;
@@ -2377,7 +2377,7 @@ namespace pwiz.Skyline
             return docResult;
         }
 
-        private string FindSpectralLibrary(string libraryName, string fileName)
+        public string FindSpectralLibrary(string libraryName, string fileName)
         {
             string result = null;
             RunUIAction(() =>
@@ -2874,7 +2874,7 @@ namespace pwiz.Skyline
             }
         }
 
-        private void ReimportChromatograms(SrmDocument document, IEnumerable<ChromatogramSet> chromatogramSets)
+        public void ReimportChromatograms(SrmDocument document, IEnumerable<ChromatogramSet> chromatogramSets)
         {
             var setReimport = new HashSet<ChromatogramSet>(chromatogramSets);
             if (setReimport.Count == 0)
