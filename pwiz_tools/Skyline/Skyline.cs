@@ -215,21 +215,6 @@ namespace pwiz.Skyline
             if (maximize)
                 WindowState = FormWindowState.Maximized;
 
-            // Restore status bar and graph pane
-            statusToolStripMenuItem.Checked = Settings.Default.ShowStatusBar;
-            if (!statusToolStripMenuItem.Checked)
-                statusToolStripMenuItem_Click(this, new EventArgs());
-            toolBarToolStripMenuItem.Checked = Settings.Default.RTPredictorVisible;
-            if (!toolBarToolStripMenuItem.Checked)
-            {
-                toolBarToolStripMenuItem_Click(this, new EventArgs());
-            }
-
-            largeToolStripMenuItem.Checked = Settings.Default.TextZoom == TreeViewMS.LRG_TEXT_FACTOR;
-            extraLargeToolStripMenuItem.Checked = Settings.Default.TextZoom == TreeViewMS.XLRG_TEXT_FACTOR;
-            defaultTextToolStripMenuItem.Checked = 
-                !(largeToolStripMenuItem.Checked || extraLargeToolStripMenuItem.Checked);
-
             ShowSequenceTreeForm(true);
 
             // Force the handle into existence before any background threads
@@ -610,11 +595,7 @@ namespace pwiz.Skyline
             {
                 SetUIMode(ModeUI);
             }
-
-            proteomicsToolStripMenuItem.Checked = ModeUI == SrmDocument.DOCUMENT_TYPE.proteomic;
-            moleculeToolStripMenuItem.Checked = ModeUI == SrmDocument.DOCUMENT_TYPE.small_molecules;
-            mixedToolStripMenuItem.Checked = ModeUI == SrmDocument.DOCUMENT_TYPE.mixed;
-
+            ViewMenu.DocumentUiChanged();
         }
 
         public void ShowAutoTrainResults(object sender, DocumentChangedEventArgs e)
@@ -1266,7 +1247,7 @@ namespace pwiz.Skyline
                 // If it is a grid, then disable next and previous replicate keys in favor of ctrl-Up and ctrl-Down
                 // working in the grid
                 if (_activeClipboardControl is DataboundGridControl)
-                    nextReplicateMenuItem.Enabled = previousReplicateMenuItem.Enabled = false;
+                    ViewMenu.NextReplicateMenuItem.Enabled = ViewMenu.PreviousReplicateMenuItem.Enabled = false;
                 return;
             }
 
@@ -1278,7 +1259,7 @@ namespace pwiz.Skyline
             EditMenu.DeleteMenuItem.Enabled = enabled;
             EditMenu.SelectAllMenuItem.Enabled = true;
             // Always enable these, as they are harmless if enabled with no results and otherwise unmanaged.
-            nextReplicateMenuItem.Enabled = previousReplicateMenuItem.Enabled = true;
+            ViewMenu.NextReplicateMenuItem.Enabled = ViewMenu.PreviousReplicateMenuItem.Enabled = true;
         }
 
         private void deleteMenuItem_Click(object sender, EventArgs e) { EditDelete(); }
@@ -1829,11 +1810,6 @@ namespace pwiz.Skyline
 
         // See SkylineGraphs.cs
 
-        private void spectralLibrariesToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            ViewSpectralLibraries();
-        }
-
         public void ViewSpectralLibraries()
         {
             if (Settings.Default.SpectralLibraryList.Count == 0)
@@ -1867,31 +1843,12 @@ namespace pwiz.Skyline
             }
         }
 
-        private void defaultToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            ChangeTextSize(TreeViewMS.DEFAULT_TEXT_FACTOR);
-        }
-
-        private void largeToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            ChangeTextSize(TreeViewMS.LRG_TEXT_FACTOR);
-        }
-
-        private void extraLargeToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            ChangeTextSize(TreeViewMS.XLRG_TEXT_FACTOR);
-        }
-
         public double TargetsTextFactor
         {
-            get { return Settings.Default.TextZoom; }
+            get { return ViewMenu.TargetsTextFactor; }
             set
             {
-                Settings.Default.TextZoom = value;
-                largeToolStripMenuItem.Checked = (value == TreeViewMS.LRG_TEXT_FACTOR);
-                extraLargeToolStripMenuItem.Checked = (value == TreeViewMS.XLRG_TEXT_FACTOR);
-                defaultTextToolStripMenuItem.Checked = (!largeToolStripMenuItem.Checked &&
-                                                        !extraLargeToolStripMenuItem.Checked);
+                ViewMenu.TargetsTextFactor = value;
             }
         }
 
@@ -1915,16 +1872,14 @@ namespace pwiz.Skyline
             viewLibraryDlg.Show(this);
         }
 
-        private void statusToolStripMenuItem_Click(object sender, EventArgs e)
+        public void ShowStatusBar(bool show)
         {
-            bool show = statusToolStripMenuItem.Checked;
             Settings.Default.ShowStatusBar = show;
             statusStrip.Visible = show;
         }
 
-        private void toolBarToolStripMenuItem_Click(object sender, EventArgs e)
+        public void ShowToolBar(bool show)
         {
-            bool show = toolBarToolStripMenuItem.Checked;
             Settings.Default.RTPredictorVisible = show;
             mainToolStrip.Visible = show;
         }
@@ -1982,29 +1937,6 @@ namespace pwiz.Skyline
                                 uri))), AuditLogEntry.SettingsLogFunction);
         }
 
-        private void editGroupComparisonListMenuItem_Click(object sender, EventArgs e)
-        {
-            DisplayDocumentSettingsDialogPage(DocumentSettingsDlg.TABS.group_comparisons);
-        }
-
-        private void groupComparisonsMenuItem_DropDownOpening(object sender, EventArgs e)
-        {
-            groupComparisonsMenuItem.DropDownItems.Clear();
-            if (DocumentUI.Settings.DataSettings.GroupComparisonDefs.Any())
-            {
-                foreach (var groupComparisonDef in DocumentUI.Settings.DataSettings.GroupComparisonDefs)
-                {
-                    groupComparisonsMenuItem.DropDownItems.Add(MakeToolStripMenuItem(groupComparisonDef));
-                }
-                groupComparisonsMenuItem.DropDownItems.Add(new ToolStripSeparator());
-            }
-            groupComparisonsMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-            {
-                addGroupComparisonMenuItem,
-                editGroupComparisonListMenuItem
-            });
-        }
-
         private ToolStripMenuItem MakeToolStripMenuItem(GroupComparisonDef groupComparisonDef)
         {
             return new ToolStripMenuItem(groupComparisonDef.Name, null, (sender, args) =>
@@ -2018,47 +1950,6 @@ namespace pwiz.Skyline
             FoldChangeGrid.ShowFoldChangeGrid(dockPanel, GetFloatingRectangleForNewWindow(), this, groupComparisonName);
         }
         
-        public void UpdateTargetsDisplayMode(ProteinMetadataManager.ProteinDisplayMode mode)
-        {
-            Settings.Default.ShowPeptidesDisplayMode = mode.ToString();
-            Settings.Default.ShowPeptides = true;
-            ShowSequenceTreeForm(true, true);
-
-            CollectionUtil.ForEach(FormUtil.OpenForms.OfType<FoldChangeBarGraph>(), b => b.QueueUpdateGraph());
-            CollectionUtil.ForEach(FormUtil.OpenForms.OfType<FoldChangeVolcanoPlot>(), v => v.QueueUpdateGraph());
-        }
-
-        private void showTargetsByNameToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            UpdateTargetsDisplayMode(ProteinMetadataManager.ProteinDisplayMode.ByName);
-        }
-
-        private void showTargetsByAccessionToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            UpdateTargetsDisplayMode(ProteinMetadataManager.ProteinDisplayMode.ByAccession);
-        }
-
-        private void showTargetsByPreferredNameToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            UpdateTargetsDisplayMode(ProteinMetadataManager.ProteinDisplayMode.ByPreferredName);
-        }
-
-        private void showTargetsByGeneToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            UpdateTargetsDisplayMode(ProteinMetadataManager.ProteinDisplayMode.ByGene);
-        }
-
-        private void peptidesMenuItem_DropDownOpening(object sender, EventArgs e)
-        {
-            showTargetsByNameToolStripMenuItem.Checked =
-                (Settings.Default.ShowPeptidesDisplayMode == ProteinMetadataManager.ProteinDisplayMode.ByName.ToString());
-            showTargetsByAccessionToolStripMenuItem.Checked =
-                (Settings.Default.ShowPeptidesDisplayMode == ProteinMetadataManager.ProteinDisplayMode.ByAccession.ToString());
-            showTargetsByPreferredNameToolStripMenuItem.Checked =
-                (Settings.Default.ShowPeptidesDisplayMode == ProteinMetadataManager.ProteinDisplayMode.ByPreferredName.ToString());
-            showTargetsByGeneToolStripMenuItem.Checked =
-                (Settings.Default.ShowPeptidesDisplayMode == ProteinMetadataManager.ProteinDisplayMode.ByGene.ToString());
-        }
 
         private void addMoleculeContextMenuItem_Click(object sender, EventArgs e)
         {
@@ -4389,22 +4280,6 @@ namespace pwiz.Skyline
             RefineMenu.ShowAssociateProteinsDlg();
         }
 
-        private void listsMenuItem_DropDownOpening(object sender, EventArgs e)
-        {
-            while (listsMenuItem.DropDownItems.Count > 1)
-            {
-                listsMenuItem.DropDownItems.RemoveAt(listsMenuItem.DropDownItems.Count - 1);
-            }
-            foreach (var listData in Document.Settings.DataSettings.Lists)
-            {
-                string listName = listData.ListDef.Name;
-                listsMenuItem.DropDownItems.Add(new ToolStripMenuItem(listName, null, (a, args) =>
-                {
-                    ShowList(listName);
-                }));
-            }
-        }
-
         public void ShowList(string listName)
         {
             var listForm = Application.OpenForms.OfType<ListGridForm>()
@@ -4649,20 +4524,6 @@ namespace pwiz.Skyline
             return docNodeParent.ChangeChildrenChecked(newChildren);
         }
 
-        private void proteomicsToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            SetUIMode(SrmDocument.DOCUMENT_TYPE.proteomic);
-        }
-
-        private void moleculeToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            SetUIMode(SrmDocument.DOCUMENT_TYPE.small_molecules);
-        }
-
-        private void mixedToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            SetUIMode(SrmDocument.DOCUMENT_TYPE.mixed);
-        }
 
         private void prositLibMatchItem_Click(object sender, EventArgs e)
         {
@@ -4696,16 +4557,7 @@ namespace pwiz.Skyline
 
         private void viewToolStripMenuItem_DropDownOpening(object sender, EventArgs e)
         {
-            viewModificationsMenuItem.DropDownItems.Clear();
-            var currentOption = DisplayModificationOption.Current;
-            foreach (var opt in DisplayModificationOption.All)
-            {
-                var menuItem = new ToolStripMenuItem(opt.MenuItemText);
-                menuItem.Click += (s, a) => SetModifiedSequenceDisplayOption(opt);
-                menuItem.Checked = Equals(currentOption, opt);
-                viewModificationsMenuItem.DropDownItems.Add(menuItem);
-            }
-            ranksMenuItem.Checked = ranksContextMenuItem.Checked = Settings.Default.ShowRanks;
+            ViewMenu.ViewMenuDropDownOpening();
         }
 
         public void SetModifiedSequenceDisplayOption(DisplayModificationOption displayModificationOption)
@@ -4720,18 +4572,23 @@ namespace pwiz.Skyline
             RefineMenu.ShowPermuteIsotopeModificationsDlg();
         }
 
+        public EditMenu EditMenu { get; private set; }
+
+        public ViewMenu ViewMenu { get; private set; }
         public RefineMenu RefineMenu { get; private set; }
 
-        public EditMenu EditMenu { get; private set; }
 
         private void InitializeMenus()
         {
             _skylineMenuControls.Add(RefineMenu = new RefineMenu(this));
             _skylineMenuControls.Add(EditMenu = new EditMenu(this));
+            _skylineMenuControls.Add(ViewMenu= new ViewMenu(this));
             refineToolStripMenuItem.DropDownItems.Clear();
             refineToolStripMenuItem.DropDownItems.AddRange(RefineMenu.DropDownItems.ToArray());
             editToolStripMenuItem.DropDownItems.Clear();
             editToolStripMenuItem.DropDownItems.AddRange(EditMenu.DropDownItems.ToArray());
+            viewToolStripMenuItem.DropDownItems.Clear();
+            viewToolStripMenuItem.DropDownItems.AddRange(ViewMenu.DropDownItems.ToArray());
             foreach (var menuControl in _skylineMenuControls)
             {
                 foreach (var entry in menuControl.ModeUiHandler.GetHandledComponents())
