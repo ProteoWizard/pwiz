@@ -19,8 +19,10 @@
 using System;
 using System.ComponentModel;
 using System.Windows.Forms;
+using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Menus
@@ -74,6 +76,30 @@ namespace pwiz.Skyline.Menus
             get { return SkylineWindow?.SelectedPath; }
             set { SkylineWindow.SelectedPath = value; }
         }
+
+        public SequenceTree SequenceTree
+        {
+            get { return SkylineWindow.SequenceTree; }
+        }
+
+        public TreeNodeMS SelectedNode
+        {
+            get { return SkylineWindow.SelectedNode; }
+        }
+
+        public int SelectedResultsIndex
+        {
+            get
+            {
+                return SkylineWindow.SelectedResultsIndex;
+            }
+        }
+
+        public ChromFileInfoId GetSelectedChromFileId()
+        {
+            return SkylineWindow.GetSelectedChromFileId();
+        }
+
 
         protected override void Dispose(bool disposing)
         {

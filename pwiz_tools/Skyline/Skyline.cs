@@ -26,12 +26,8 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading;
 using System.Windows.Forms;
-using System.Xml;
-using System.Xml.Serialization;
 using DigitalRune.Windows.Docking;
 using JetBrains.Annotations;
 using log4net;
@@ -80,7 +76,6 @@ using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
-using DataFormats = System.Windows.Forms.DataFormats;
 using Peptide = pwiz.Skyline.Model.Peptide;
 using Timer = System.Windows.Forms.Timer;
 using Transition = pwiz.Skyline.Model.Transition;
@@ -131,6 +126,7 @@ namespace pwiz.Skyline
         private readonly Timer _timerGraphs;
         private readonly List<BackgroundLoader> _backgroundLoaders;
         private readonly object _documentChangeLock = new object();
+        private readonly List<SkylineControl> _skylineMenuControls = new List<SkylineControl>();
 
         /// <summary>
         /// Constructor for the main window of the Skyline program.
@@ -141,8 +137,8 @@ namespace pwiz.Skyline
             InitializeMenus();
             _undoManager = new UndoManager(this);
             var undoRedoButtons = new UndoRedoButtons(_undoManager,
-                undoMenuItem, undoToolBarButton,
-                redoMenuItem, redoToolBarButton,
+                EditMenu.UndoMenuItem, undoToolBarButton,
+                EditMenu.RedoMenuItem, redoToolBarButton,
                 RunUIAction);
             undoRedoButtons.AttachEventHandlers();
 
@@ -523,12 +519,12 @@ namespace pwiz.Skyline
 
         public bool CopyMenuItemEnabled()
         {
-            return copyMenuItem.Enabled;
+            return EditMenu.CopyMenuItem.Enabled;
         }
 
         public bool PasteMenuItemEnabled()
         {
-            return pasteMenuItem.Enabled;
+            return EditMenu.PasteMenuItem.Enabled;
         }
 
         /// <summary>
@@ -1106,7 +1102,10 @@ namespace pwiz.Skyline
 
             _timerGraphs.Dispose();
             _timerProgress.Dispose();
-            RefineMenu.Dispose();
+            foreach (var menuControl in _skylineMenuControls)
+            {
+                menuControl.Dispose();
+            }
 
             DatabaseResources.ReleaseAll(); // Let go of protDB SessionFactories
 
@@ -1182,13 +1181,8 @@ namespace pwiz.Skyline
 
             // Update edit menus
             UpdateClipboardMenuItems();
-            SrmTreeNode nodeTree = SequenceTree.SelectedNode as SrmTreeNode;
-            var enabled = nodeTree != null;
-            editNoteToolStripMenuItem.Enabled = enabled;
-            manageUniquePeptidesMenuItem.Enabled = UniquePeptidesDlg.PeptideSelection(SequenceTree).Any(); // Only works for peptide molecules, and only if selected
+            EditMenu.SequenceTreeAfterSelect();
             var nodePepTree = SequenceTree.GetNodeOfType<PeptideTreeNode>();
-            modifyPeptideMenuItem.Enabled = nodePepTree != null;
-            setStandardTypeMenuItem.Enabled = HasSelectedTargetPeptides();
 
             // Update active replicate, if using best replicate
             if (nodePepTree != null && SequenceTree.ShowReplicate == ReplicateDisplay.best)
@@ -1207,7 +1201,7 @@ namespace pwiz.Skyline
                 Program.MainToolService.SendSelectionChange();
         }
 
-        private bool StatementCompletionAction(Action<TextBox> act)
+        public bool StatementCompletionAction(Action<TextBox> act)
         {
             var completionEditBox = SequenceTree.StatementCompletionEditBox;
             if (completionEditBox == null)
@@ -1220,467 +1214,24 @@ namespace pwiz.Skyline
         private void cutMenuItem_Click(object sender, EventArgs e) { Cut(); }
         public void Cut()
         {
-            if (StatementCompletionAction(textBox => textBox.Cut()))
-                return;
-
-            Copy();
-            EditDelete();
-        }
-
-        private static int CompareNodeBounds(TreeNode x, TreeNode y)
-        {
-            return Comparer<int>.Default.Compare(x.Bounds.Top, y.Bounds.Top);
-        }
-
-        private int GetLineBreakCount(TreeNodeMS curNode, TreeNodeMS prevNode)
-        {
-            int count = 0;
-            if (prevNode != null)
-                count++;
-            if (curNode == null || prevNode == null)
-                return count;
-            TreeNodeMS nodeParent = curNode;
-            while (nodeParent != null)
-            {
-                if (nodeParent == prevNode)
-                    return count;
-                nodeParent = (TreeNodeMS)nodeParent.Parent;
-            }
-            TreeNodeMS nodeVisible = curNode;
-            while (nodeVisible != prevNode)
-            {
-                if (!SequenceTree.SelectedNodes.Contains(nodeVisible) && nodeVisible.Level < curNode.Level)
-                    return count + 1;
-                nodeVisible = (TreeNodeMS)nodeVisible.PrevVisibleNode;
-                if (nodeVisible == null)
-                    return count;
-            }
-            return count;
+            EditMenu.Cut();
         }
 
         private void copyMenuItem_Click(object sender, EventArgs e) { Copy(); }
         public void Copy()
         {
-            if (StatementCompletionAction(textBox => textBox.Copy()) || SequenceTree.SelectedNodes.Count < 0)
-                return;
-            
-            List<TreeNode> sortedNodes = new List<TreeNode>();
-            int shallowestLevel = int.MaxValue;
-            foreach (TreeNodeMS node in SequenceTree.SelectedNodes)
-            {
-                shallowestLevel = Math.Min(shallowestLevel, node.Level);
-                sortedNodes.Add(node);
-            }
-            sortedNodes.Sort(CompareNodeBounds);
-
-            StringBuilder htmlSb = new StringBuilder();
-            StringBuilder textSb = new StringBuilder();
-
-            TreeNodeMS prev = null;
-            foreach (TreeNodeMS node in sortedNodes)
-            {
-                IClipboardDataProvider provider = node as IClipboardDataProvider;
-                if (provider == null)
-                    continue;
-
-                DataObject data = provider.ProvideData();
-                int levels = node.Level - shallowestLevel;
-                int lineBreaks = GetLineBreakCount(node, prev);
-                string providerHtml = (string)data.GetData(DataFormats.Html);
-                if (providerHtml != null)
-                    AppendClipboardText(htmlSb, new HtmlFragment(providerHtml).Fragment,
-                        // ReSharper disable LocalizableElement
-                        "<br>\r\n", "&nbsp;&nbsp;&nbsp;&nbsp;", levels, lineBreaks);
-                        // ReSharper restore LocalizableElement
-                string providerText = (string)data.GetData(@"Text");
-                if (providerText != null)
-                    // ReSharper disable LocalizableElement
-                    AppendClipboardText(textSb, providerText, "\r\n", "    ", levels, lineBreaks);
-                    // ReSharper restore LocalizableElement
-
-                prev = node;
-            }
-            DataObject dataObj = new DataObject();
-            if (htmlSb.Length > 0)
-                dataObj.SetData(DataFormats.Html, HtmlFragment.ClipBoardText(htmlSb.AppendLine().ToString()));
-            if (textSb.Length > 0)
-                dataObj.SetData(DataFormats.Text, textSb.AppendLine().ToString());
-
-            bool selectionContainsProteins = SequenceTree.SelectedDocNodes.Contains(node =>
-                node is PeptideGroupDocNode); 
-
-            var docCopy = DocumentUI.RemoveAllBut(SequenceTree.SelectedDocNodes);
-            docCopy = docCopy.ChangeMeasuredResults(null);
-            var stringWriter = new XmlStringWriter();
-            using (var writer = new XmlTextWriter(stringWriter) { Formatting = Formatting.Indented })
-            {
-                XmlSerializer ser = new XmlSerializer(typeof(SrmDocument));
-                ser.Serialize(writer, docCopy);
-            }
-
-            var sbData = new StringBuilder();
-            sbData.Append(@"proteins-selected=").Append(selectionContainsProteins).AppendLine();
-            sbData.AppendLine();
-            sbData.Append(stringWriter);
-            dataObj.SetData(ClipboardEx.SKYLINE_FORMAT, sbData.ToString());
-
-            try
-            {
-                ClipboardEx.Clear();
-                ClipboardEx.SetDataObject(dataObj);
-            }
-            catch (ExternalException)
-            {
-                MessageDlg.Show(this, ClipboardHelper.GetCopyErrorMessage());
-            }
-        }
-
-        private static void AppendClipboardText(StringBuilder sb, string text, string lineSep, string indent, int levels, int lineBreaks)
-        {
-            for (int i = 0; i < lineBreaks; i++)
-                sb.Append(lineSep);
-            for (int i = 0; i < levels; i++)
-                sb.Append(indent);
-            sb.Append(text);
+            EditMenu.Copy();
         }
 
         private void pasteMenuItem_Click(object sender, EventArgs e) { Paste(); }
         public void Paste()
         {
-            if (StatementCompletionAction(textBox => textBox.Paste()))
-                return;
-
-            string dataObjectSkyline;
-
-            try
-            {
-                dataObjectSkyline = (string)ClipboardEx.GetData(ClipboardEx.SKYLINE_FORMAT);
-            }
-            catch (ExternalException)
-            {
-                MessageDlg.Show(this, ClipboardHelper.GetPasteErrorMessage());
-                return;
-            }
-        
-            if (dataObjectSkyline != null)
-            {
-                SrmTreeNode nodePaste = SequenceTree.SelectedNode as SrmTreeNode;
-
-                bool pasteToPeptideList  = false;
-
-                if (dataObjectSkyline.Substring(0, dataObjectSkyline.IndexOf('\r')).Equals(@"proteins-selected=False"))
-                {
-                    if (nodePaste != null)
-                        pasteToPeptideList = !(nodePaste.Path.GetIdentity((int) SrmDocument.Level.MoleculeGroups) is FastaSequence);
-                }
-
-                IdentityPath selectPath = null;
-
-                try
-                {
-                    IdentityPath nextAdd;
-                    ModifyDocument(string.Format(Resources.SkylineWindow_Paste_Paste__0__, (pasteToPeptideList ? Resources.SkylineWindow_Paste_peptides : Resources.SkylineWindow_Paste_proteins)), doc =>
-                        doc.ImportDocumentXml(new StringReader(dataObjectSkyline.Substring(dataObjectSkyline.IndexOf('<'))),
-                            null,
-                            MeasuredResults.MergeAction.remove,
-                            false,
-                            FindSpectralLibrary,
-                            Settings.Default.StaticModList,
-                            Settings.Default.HeavyModList,
-                            nodePaste != null ? nodePaste.Path : null,
-                            out selectPath,
-                            out nextAdd,
-                            pasteToPeptideList), docPair => AuditLogEntry.DiffDocNodes(MessageType.pasted_targets, docPair));
-                }
-                catch (Exception)
-                {
-                    MessageDlg.Show(this, Resources.SkylineWindow_Paste_Failed_reading_Skyline_document_from_the_clipboard_);
-                    return;
-                }
-
-                if (selectPath != null)
-                    SequenceTree.SelectedPath = selectPath;
-            }
-            else
-            {
-                string text;
-                string textCsv;
-                try
-                {
-                    text = ClipboardEx.GetText().Trim();
-                    textCsv = ClipboardEx.GetText(TextDataFormat.CommaSeparatedValue);
-                }
-                catch (Exception)
-                {
-                    MessageDlg.Show(this, ClipboardHelper.GetPasteErrorMessage());
-                    return;
-                }
-                try
-                {
-                    Paste(string.IsNullOrEmpty(textCsv) ? text : textCsv);
-                }
-                catch (Exception x)
-                {
-                    MessageDlg.ShowException(this, x);
-                }
-            }
+            EditMenu.Paste();
         }
 
         public void Paste(string text)
         {
-            bool peptideList = false;
-            Type[] columnTypes;
-            IFormatProvider formatProvider;
-            char separator;
-
-            // Check for a FASTA header
-            if (text.StartsWith(@">"))
-            {
-                // Make sure there is sequence information
-                string[] lines = text.Split('\n');
-                int aa = 0;
-                for (int i = 0; i < lines.Length; i++)
-                {
-                    string line = lines[i];
-                    if (line.StartsWith(@">"))
-                    {
-                        if (i > 0 && aa == 0)
-                        {
-                            throw new InvalidDataException(
-                                string.Format(Resources.SkylineWindow_Paste_Empty_sequence_found_at_line__0__, i + 1));
-                        }
-                        aa = 0;
-                        continue;
-                    }
-
-                    foreach (char c in line)
-                    {
-                        if (AminoAcid.IsExAA(c))
-                            aa++;
-                        else if (!char.IsWhiteSpace(c) && c != '*')
-                        {
-                            throw new InvalidDataException(
-                                string.Format(Resources.SkylineWindow_Unexpected_character__0__found_on_line__1__, c,
-                                              i + 1));
-                        }
-                    }
-                }
-            }
-            // Perhaps it's a small molecule list with headers
-            else if (SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(text) &&
-                     MassListImporter.IsColumnar(text, out formatProvider, out separator, out columnTypes))
-            {
-                InsertSmallMoleculeTransitionList(text, Resources.SkylineWindow_Paste_Paste_transition_list);
-            }
-            // If the text contains numbers, see if it can be imported as a mass list.
-            // It is definitly not a sequence, if it has numbers.  Whereas, sequences do
-            // allow internal white space including tabs.
-            else if (MassListImporter.IsColumnar(Transition.StripChargeIndicators(text, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE),
-                     out formatProvider, out separator, out columnTypes))
-            {
-                // If no numeric type is found, try the second line.  Ther first may be
-                // a header row.
-                if (!MassListImporter.HasNumericColumn(columnTypes))
-                {
-                    int endLine = text.IndexOf('\n');
-                    if (endLine != -1)
-                    {
-                        MassListImporter.IsColumnar(text.Substring(endLine + 1),
-                            out formatProvider, out separator, out columnTypes);
-                    }
-                }
-
-                if (MassListImporter.HasNumericColumn(columnTypes))
-                    ImportMassList(new MassListInputs(text, formatProvider, separator), Resources.SkylineWindow_Paste_Paste_transition_list, false);
-                // Handle unusual corner case where data is found to be columnar and contains numbers, 
-                // but first line is missing
-                else if (columnTypes.Length == 0)
-                {
-                    throw new InvalidDataException(Resources.CopyPasteTest_DoTest_Could_not_read_the_pasted_transition_list___Transition_list_must_be_in_separated_columns_and_cannot_contain_blank_lines_);
-                }
-                else if (columnTypes.Length <= 3 && columnTypes[columnTypes.Length - 1] != typeof(FastaSequence)) // Name, Description, Sequence
-                {
-                    var message = TextUtil.LineSeparate(Resources.SkylineWindow_Paste_Protein_sequence_not_found,
-                                                        Resources.SkylineWindow_Paste_The_protein_sequence_must_be_the_last_value_in_each_line);
-                    throw new InvalidDataException(message);
-                }
-                else
-                {
-                    string textFasta;
-                    try
-                    {
-                         textFasta = FastaImporter.ToFasta(text, separator);
-                    }
-                    catch (LineColNumberedIoException x)
-                    {                        
-                        throw new InvalidDataException(x.Message, x);
-                    }
-                    ImportFasta(new StringReader(textFasta), Helpers.CountLinesInString(textFasta),
-                        false, Resources.SkylineWindow_Paste_Paste_proteins, new ImportFastaInfo(false, textFasta));
-                }
-                return;
-            }
-            // Otherwise, look for a list of peptides, or a bare sequence
-            else
-            {
-                // First make sure it looks like a sequence.
-                List<double> lineLengths = new List<double>();
-                int lineLen = 0;
-                var textNoMods = FastaSequence.StripModifications(Transition.StripChargeIndicators(text, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE));
-                foreach (char c in textNoMods)
-                {
-                    if (!AminoAcid.IsExAA(c) && !char.IsWhiteSpace(c) && c != '*' && c != '.')
-                    {
-                        MessageDlg.Show(this, string.Format(Resources.SkylineWindow_Unexpected_character__0__found_on_line__1__, c, lineLengths.Count + 1));
-                        return;
-                    }
-                    if (c == '\n')
-                    {
-                        lineLengths.Add(lineLen);
-                        lineLen = 0;
-                    }
-                    else if (!char.IsWhiteSpace(c))
-                    {
-                        lineLen++;
-                    }
-                }
-                lineLengths.Add(lineLen);
-
-                // Check to see if the pasted text looks like a peptide list.
-                PeptideFilter filter = DocumentUI.Settings.PeptideSettings.Filter;
-                if (lineLengths.Count == 1 && lineLen < filter.MaxPeptideLength)
-                    peptideList = true;
-                else
-                {
-                    Statistics stats = new Statistics(lineLengths);
-                    // All lines smaller than the peptide filter
-                    if (stats.Max() <= filter.MaxPeptideLength ||
-                        // 3 out of 4 are peptide length
-                            (lineLengths.Count > 3 && stats.Percentile(0.75) <= filter.MaxPeptideLength))
-                        peptideList = true;
-                    // Probably a FASTA sequence, but ask if average line length is less than 40
-                    else if (stats.Mean() < 40)
-                    {
-                        using (PasteTypeDlg dlg = new PasteTypeDlg())
-                        {
-                            if (dlg.ShowDialog(this) == DialogResult.Cancel)
-                                return;
-                            peptideList = dlg.PeptideList;
-                        }
-                    }
-                }
-
-                if (peptideList)
-                {
-                    text = FilterPeptideList(text);
-                    if (text == null)
-                        return; // Canceled
-                }
-                else if (text.Contains(@"."))
-                {
-                    MessageBox.Show(this, Resources.SkylineWindow_Paste_Unexpected_character_period_found); 
-                    return;
-                }
-
-                // Choose an unused ID
-                string seqId = Document.GetPeptideGroupId(peptideList);
-
-                // Construct valid FASTA format (with >> to indicate custom name)
-                text = @">>" + TextUtil.LineSeparate(seqId,text);
-            }
-
-            string description = (peptideList ? Resources.SkylineWindow_Paste_Paste_peptide_list : Resources.SkylineWindow_Paste_Paste_FASTA);
-            ImportFasta(new StringReader(text), Helpers.CountLinesInString(text),
-                peptideList, description, new ImportFastaInfo(false, text));
-        }
-
-        private string FilterPeptideList(string text)
-        {
-            SrmSettings settings = DocumentUI.Settings;
-//            Enzyme enzyme = settings.PeptideSettings.Enzyme;
-
-            // Check to see if any of the peptides would be filtered
-            // by the current settings.
-            string[] pepSequences = text.Split('\n');
-            var setAdded = new HashSet<string>();
-            var listAllPeptides = new List<string>();
-            var listAcceptPeptides = new List<string>();
-            var listFilterPeptides = new List<string>();
-            for (int i = 0; i < pepSequences.Length; i++)
-            {
-                var charge = Transition.GetChargeFromIndicator(pepSequences[i].Trim(), TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE);
-                string pepSeqMod = CleanPeptideSequence(Transition.StripChargeIndicators(pepSequences[i], TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE));
-                string pepSeqClean = FastaSequence.StripModifications(pepSeqMod);
-                if (!charge.IsEmpty)
-                    pepSeqMod += Transition.GetChargeIndicator(charge);
-                if (string.IsNullOrEmpty(pepSeqMod))
-                    continue;
-                if (pepSeqClean.Contains(@"."))
-                {
-                    MessageBox.Show(this, string.Format(Resources.SkylineWindow_Unexpected_character__0__found_on_line__1__, @".", i + 1));
-                    return null;
-                }
-
-                // Make sure no duplicates are added during a paste
-                // With explicit modifications, there is now reason to add duplicates,
-                // when multiple modified forms are desired.
-                // if (setAdded.Contains(pepSeqClean))
-                //    continue;
-                setAdded.Add(pepSeqMod);
-                listAllPeptides.Add(pepSeqMod);
-
-                if (settings.Accept(pepSeqClean))
-                    listAcceptPeptides.Add(pepSeqMod);
-                else
-                    listFilterPeptides.Add(pepSeqMod);
-            }
-
-            // If filtered peptides, ask the user whether to filter or keep.
-            if (listFilterPeptides.Count > 0)
-            {
-                using (var dlg = new PasteFilteredPeptidesDlg { Peptides = listFilterPeptides })
-                {
-                    switch (dlg.ShowDialog(this))
-                    {
-                        case DialogResult.Cancel:
-                            return null;
-                        case DialogResult.Yes:
-                            if (listAcceptPeptides.Count == 0)
-                                return null;
-                            return TextUtil.LineSeparate(listAcceptPeptides);
-                    }
-                }
-            }
-            return TextUtil.LineSeparate(listAllPeptides);
-        }
-
-        // CONSIDER: Probably should go someplace else
-        private static string CleanPeptideSequence(string s)
-        {
-            s = s.Trim();
-            if (s.IndexOfAny(new[] { '\n', '\r', '\t', ' ', '.' }) == -1)
-                return s;
-            // Internal whitespace
-            var sb = new StringBuilder();
-            bool inParen = false;
-            foreach (char c in s)
-            {
-                if (c == '[' || c == '{')
-                    inParen = true;
-                if (c == ']' || c == '}')
-                    inParen = false;
-                // Preserve spaces inside brackets - modification names can have spaces.
-                if (inParen || !char.IsWhiteSpace(c))
-                    sb.Append(c);
-            }
-            // If the peptide is in the format K.PEPTIDER.C, then remove the periods
-            // and the preceding and trailing amino acids.
-            if (sb.Length > 4 && sb[1] == '.' && sb[sb.Length - 2] == '.')
-            {
-                sb.Remove(0, 2);
-                sb.Remove(sb.Length - 2, 2);
-            }
-            return sb.ToString();
+            EditMenu.Paste(text);
         }
 
         private Control _activeClipboardControl;
@@ -1707,11 +1258,11 @@ namespace pwiz.Skyline
             {
                 // If some other control wants to handle these commands, then we disable
                 // the menu items so the keystrokes don't get eaten up by TranslateMessage
-                cutToolBarButton.Enabled = cutMenuItem.Enabled = false;
-                copyToolBarButton.Enabled = copyMenuItem.Enabled = false;
-                pasteToolBarButton.Enabled = pasteMenuItem.Enabled = false;
-                deleteMenuItem.Enabled = false;
-                selectAllMenuItem.Enabled = false;
+                cutToolBarButton.Enabled = EditMenu.CutMenuItem.Enabled = false;
+                copyToolBarButton.Enabled = EditMenu.CopyMenuItem.Enabled = false;
+                pasteToolBarButton.Enabled = EditMenu.PasteMenuItem.Enabled = false;
+                EditMenu.DeleteMenuItem.Enabled = false;
+                EditMenu.SelectAllMenuItem.Enabled = false;
                 // If it is a grid, then disable next and previous replicate keys in favor of ctrl-Up and ctrl-Down
                 // working in the grid
                 if (_activeClipboardControl is DataboundGridControl)
@@ -1721,11 +1272,11 @@ namespace pwiz.Skyline
 
             // Allow deletion, copy/paste for any selection that contains a tree node.
             bool enabled = SequenceTree != null && SequenceTree.SelectedNodes.Any(n => n is SrmTreeNode);
-            cutToolBarButton.Enabled = cutMenuItem.Enabled = enabled;
-            copyToolBarButton.Enabled = copyMenuItem.Enabled = enabled;
-            pasteToolBarButton.Enabled = pasteMenuItem.Enabled = true;
-            deleteMenuItem.Enabled = enabled;
-            selectAllMenuItem.Enabled = true;
+            cutToolBarButton.Enabled = EditMenu.CutMenuItem.Enabled = enabled;
+            copyToolBarButton.Enabled = EditMenu.CopyMenuItem.Enabled = enabled;
+            pasteToolBarButton.Enabled = EditMenu.PasteMenuItem.Enabled = true;
+            EditMenu.DeleteMenuItem.Enabled = enabled;
+            EditMenu.SelectAllMenuItem.Enabled = true;
             // Always enable these, as they are harmless if enabled with no results and otherwise unmanaged.
             nextReplicateMenuItem.Enabled = previousReplicateMenuItem.Enabled = true;
         }
@@ -1733,61 +1284,7 @@ namespace pwiz.Skyline
         private void deleteMenuItem_Click(object sender, EventArgs e) { EditDelete(); }
         public void EditDelete()
         {
-            string undoText = Resources.SkylineWindow_EditDelete_items;
-            if (SequenceTree.SelectedNodes.Count == 1)
-            {
-                SrmTreeNode node = SequenceTree.SelectedNode as SrmTreeNode;
-                if (node != null)
-                    undoText = node.Text;
-            }
-
-            var removedNodes = new List<DocNode>();
-            ModifyDocument(string.Format(Resources.SkylineWindow_EditDelete_Delete__0__, undoText), doc =>
-            {
-                bool canSynchSiblings = !doc.Settings.PeptideSettings.Quantification.SimpleRatios;
-                var listRemoveParams = new List<RemoveParams>();    // Keep removals in order
-                var dictRemove = new Dictionary<int, RemoveParams>();   // Minimize removal operations
-                var setRemove = new HashSet<int>(); // Keep track of what is being removed
-                foreach (TreeNodeMS nodeTree in SequenceTree.SelectedNodes)
-                {
-                    var node = nodeTree as SrmTreeNode;
-                    if (node == null)
-                        continue;
-
-                    int indexRemove = node.Model.Id.GlobalIndex;
-                    setRemove.Add(indexRemove);
-
-                    IdentityPath path = node.Path;
-
-                    IdentityPath parentPath = path.Parent;
-                    int indexParent = parentPath.IsRoot
-                        ? -1
-                        : parentPath.GetIdentity(parentPath.Length - 1).GlobalIndex;
-
-                    // If parent is being removed, ignore this element
-                    if (setRemove.Contains(indexParent))
-                        continue;
-                    removedNodes.Add(node.Model);
-                    RemoveParams removeParams;
-                    if (!dictRemove.TryGetValue(indexParent, out removeParams))
-                    {
-                        removeParams = new RemoveParams(parentPath);
-                        listRemoveParams.Add(removeParams);
-                        dictRemove.Add(indexParent, removeParams);
-                    }
-                    removeParams.RemoveIds.Add(indexRemove);
-                }
-
-                foreach (var removeParams in listRemoveParams)
-                {
-                    var nodeParent = doc.FindNode(removeParams.ParentPath);
-                    if (canSynchSiblings && nodeParent is TransitionGroupDocNode)
-                        doc = (SrmDocument) doc.RemoveAllSynched(removeParams.ParentPath.Parent, removeParams.ParentPath.Child, removeParams.RemoveIds);
-                    else if (nodeParent != null)
-                        doc = (SrmDocument) doc.RemoveAll(removeParams.ParentPath, removeParams.RemoveIds);
-                }
-                return doc;
-            }, docPair => CreateDeleteNodesEntry(docPair, removedNodes.Select(node => AuditLogEntry.GetNodeName(docPair.OldDoc, node).ToString()), removedNodes.Count));
+            EditMenu.EditDelete();
         }
 
         public static AuditLogEntry CreateDeleteNodesEntry(SrmDocumentPair docPair, IEnumerable<string> items, int? count)
@@ -1801,223 +1298,50 @@ namespace pwiz.Skyline
             return entry;
         }
 
-        private class RemoveParams
-        {
-            public RemoveParams(IdentityPath parentPath)
-            {
-                ParentPath = parentPath;
-                RemoveIds = new HashSet<int>();
-            }
-
-            public IdentityPath ParentPath { get; private set; }
-            public ICollection<int> RemoveIds { get; private set; }
-        }
-
-        private void selectAllMenuItem_Click(object sender, EventArgs e) { SelectAll(); }
         public void SelectAll()
         {
-            TreeNode node = SequenceTree.Nodes[0];
-            SequenceTree.SelectedNode = node;
-            while(node.NextVisibleNode != null)
-            {
-                node = node.NextVisibleNode;
-            }
-            bool usingKeysOverride = SequenceTree.UseKeysOverride;
-            SequenceTree.UseKeysOverride = true;
-            SequenceTree.KeysOverride = Keys.Shift;
-            SequenceTree.SelectedNode = node;
-            SequenceTree.KeysOverride = Keys.None;
-            SequenceTree.UseKeysOverride = usingKeysOverride;
+            EditMenu.SelectAll();
         }
-
         
         private void editNoteMenuItem_Click(object sender, EventArgs e) { EditNote(); }
         public void EditNote()
         {
-            IList<IdentityPath> selPaths = SequenceTree.SelectedPaths;
-            var selectedSrmTreeNode = SequenceTree.SelectedNode as SrmTreeNode;
-            // Should not be possible to get here through the UI without a SrmTreeNode selected,
-            // but a stack trace for it seems to have been posted to the unexpected error page
-            if (selectedSrmTreeNode == null)
-                return;
-
-            using (EditNoteDlg dlg = new EditNoteDlg
-            {
-                Text = selPaths.Count > 1
-                            ? Resources.SkylineWindow_EditNote_Edit_Note
-                            : TextUtil.SpaceSeparate(Resources.SkylineWindow_EditNote_Edit_Note, selectedSrmTreeNode.Heading, SequenceTree.SelectedNode.Text)
-            })
-            {
-                dlg.Init(selectedSrmTreeNode.Document, selPaths);
-                if (dlg.ShowDialog(this) == DialogResult.OK)
-                {
-                    bool clearAll = dlg.ClearAll;
-                    var resultAnnotations = dlg.GetChangedAnnotations();
-                    var resultColorIndex = dlg.ColorIndex;
-                    string resultText = dlg.GetText();
-                    if (resultColorIndex != -1)
-                        Settings.Default.AnnotationColor = dlg.ColorIndex;
-
-                    var count = selPaths.Count;
-                    var changedTargets = count == 1 ? SelectedNode.Text : string.Format(AuditLogStrings.SkylineWindow_EditNote__0__targets, count);
-
-                    ModifyDocument(Resources.SkylineWindow_EditNote_Edit_Note, doc =>
-                                                    {
-                                                        foreach (IdentityPath nodePath in selPaths)
-                                                        {
-                                                            if (Equals(nodePath.Child, SequenceTree.NODE_INSERT_ID))
-                                                                continue;
-                                                            var nodeInDoc = doc.FindNode(nodePath);
-                                                            var newAnnotations = clearAll
-                                                                                     ? Annotations.EMPTY
-                                                                                     : nodeInDoc.Annotations.
-                                                                                           MergeNewAnnotations(
-                                                                                               resultText,
-                                                                                               resultColorIndex,
-                                                                                               resultAnnotations);
-                                                            if (Equals(newAnnotations, nodeInDoc.Annotations))
-                                                                continue;
-
-                                                            doc = (SrmDocument) doc.ReplaceChild(nodePath.Parent,
-                                                                                                 nodeInDoc.
-                                                                                                     ChangeAnnotations(
-                                                                                                         newAnnotations));
-                                                        }
-                                                        return doc;
-                                                    }, docPair => AuditLogEntry.DiffDocNodes(MessageType.edited_note, docPair, changedTargets));
-                }
-            }
+            EditMenu.EditNote();
         }
 
-        private void expandProteinsMenuItem_Click(object sender, EventArgs e) { ExpandProteins(); }
         public void ExpandProteins()
         {
-            if (Document.MoleculeCount > SequenceTree.MAX_PEPTIDE_EXPANSION)
-            {
-                MessageDlg.Show(this, Resources.SkylineWindow_ExpandProteins_The_number_of_targets_exceeds_the_limit_for_this_operation_);
-                return;
-            }
-            BulkUpdateTreeNodes<TreeNode>(() =>
-            {
-                foreach (PeptideGroupTreeNode node in SequenceTree.GetSequenceNodes())
-                    node.Expand();
-            });
-            Settings.Default.SequenceTreeExpandProteins = true;
+            EditMenu.ExpandProteins();
         }
 
-        private void expandPeptidesMenuItem_Click(object sender, EventArgs e) { ExpandPeptides(); }
         public void ExpandPeptides()
         {
-            if (Document.MoleculeCount > SequenceTree.MAX_PEPTIDE_EXPANSION)
-            {
-                MessageDlg.Show(this, Resources.SkylineWindow_ExpandProteins_The_number_of_targets_exceeds_the_limit_for_this_operation_);
-                return;
-            }
-            BulkUpdateTreeNodes<TreeNode>(() =>
-            {
-                foreach (PeptideGroupTreeNode node in SequenceTree.GetSequenceNodes())
-                {
-                    node.Expand();
-                    foreach (TreeNode nodeChild in node.Nodes)
-                        nodeChild.Expand();
-                }
-            });
-            Settings.Default.SequenceTreeExpandPeptides =
-                Settings.Default.SequenceTreeExpandProteins = true;
+            EditMenu.ExpandPeptides();
         }
 
-        private void expandPrecursorsMenuItem_Click(object sender, EventArgs e) { ExpandPrecursors(); }
         public void ExpandPrecursors()
         {
-            if (Document.MoleculeTransitionCount > SequenceTree.MAX_TRANSITION_EXPANSTION)
-            {
-                MessageDlg.Show(this, Resources.SkylineWindow_ExpandProteins_The_number_of_targets_exceeds_the_limit_for_this_operation_);
-                return;
-            }
-            BulkUpdateTreeNodes<TreeNode>(() =>
-            {
-                foreach (TreeNode node in SequenceTree.Nodes)
-                    node.ExpandAll();
-            });
-            Settings.Default.SequenceTreeExpandPrecursors =
-                Settings.Default.SequenceTreeExpandPeptides =
-                Settings.Default.SequenceTreeExpandProteins = true;
+            EditMenu.ExpandPrecursors();
         }
 
-        private void collapseProteinsMenuItem_Click(object sender, EventArgs e) { CollapseProteins(); }
         public void CollapseProteins()
         {
-            BulkUpdateTreeNodes<PeptideGroupTreeNode>(() =>
-            {
-                foreach (PeptideGroupTreeNode node in SequenceTree.GetSequenceNodes())
-                    node.CollapseAndClear();
-            });
-            Settings.Default.SequenceTreeExpandProteins =
-                Settings.Default.SequenceTreeExpandPeptides =
-                Settings.Default.SequenceTreeExpandPrecursors = false;
+            EditMenu.CollapseProteins();
         }
 
-        private void collapsePeptidesMenuItem_Click(object sender, EventArgs e) { CollapsePeptides(); }
         public void CollapsePeptides()
         {
-            BulkUpdateTreeNodes<PeptideTreeNode>(() =>
-            {
-                foreach (PeptideGroupTreeNode node in SequenceTree.GetSequenceNodes())
-                    foreach (PeptideTreeNode child in node.Nodes.OfType<PeptideTreeNode>())
-                        child.CollapseAndClear();
-            });
-            Settings.Default.SequenceTreeExpandPeptides =
-                Settings.Default.SequenceTreeExpandPrecursors = false;
-       }
+            EditMenu.CollapsePeptides();
+        }
 
-        private void collapsePrecursorsMenuItem_Click(object sender, EventArgs e) { CollapsePrecursors(); }
         public void CollapsePrecursors()
         {
-            BulkUpdateTreeNodes<PeptideTreeNode>(() =>
-            {
-                foreach (PeptideGroupTreeNode node in SequenceTree.GetSequenceNodes())
-                    foreach (PeptideTreeNode child in node.Nodes.OfType<PeptideTreeNode>())
-                        foreach (TransitionGroupTreeNode grandChild in child.Nodes.OfType<TransitionGroupTreeNode>())
-                            grandChild.CollapseAndClear();
-            });
-            Settings.Default.SequenceTreeExpandPrecursors = false;
-        }
-
-        private void BulkUpdateTreeNodes<TNode>(Action update)
-            where TNode : TreeNode
-        {
-            TreeNode nodeTop = SequenceTree.GetNodeOfType<TNode>(SequenceTree.TopNode) ??
-                SequenceTree.TopNode;
-
-            using (SequenceTree.BeginLargeUpdate())
-            {
-                update();
-            }
-            if (nodeTop != null)
-                SequenceTree.TopNode = nodeTop;
-        }
-
-        private void findMenuItem_Click(object sender, EventArgs e)
-        {
-            var index = OwnedForms.IndexOf(form => form is FindNodeDlg);
-            if (index != -1)
-                OwnedForms[index].Activate();
-            else
-                ShowFindNodeDlg();
-        }
-
-        private void findNextMenuItem_Click(object sender, EventArgs e)
-        {
-            FindNext(false);
+            EditMenu.CollapsePrecursors();
         }
 
         public void ShowFindNodeDlg()
         {
-            var dlg = new FindNodeDlg
-            {
-                FindOptions = FindOptions.ReadFromSettings(Settings.Default)
-            };
-            dlg.Show(this);
+            EditMenu.ShowFindNodeDlg();
         }
 
         public void FindNext(bool reverse)
@@ -2177,201 +1501,17 @@ namespace pwiz.Skyline
 
         public void ModifySmallMoleculeTransitionGroup()
         {
-            var nodeTransitionGroupTree = SequenceTree.GetNodeOfType<TransitionGroupTreeNode>();
-
-            if (nodeTransitionGroupTree == null)
-                return;
-
-            var nodeTransGroup = nodeTransitionGroupTree.DocNode;
-            if (!nodeTransGroup.Peptide.IsCustomMolecule)
-                return;
-
-            var existingPrecursors = nodeTransitionGroupTree.PepNode.TransitionGroups.Select(child => child.TransitionGroup).Where(c => c.IsCustomIon).ToArray();
-            using (var dlg = new EditCustomMoleculeDlg(this, 
-                    EditCustomMoleculeDlg.UsageMode.precursor,
-                    Resources.SkylineWindow_ModifySmallMoleculeTransitionGroup_Modify_Custom_Ion_Precursor, 
-                    nodeTransGroup.TransitionGroup, // Self
-                    existingPrecursors, // Self and siblings
-                    TransitionGroup.MIN_PRECURSOR_CHARGE,
-                    TransitionGroup.MAX_PRECURSOR_CHARGE,
-                    Document.Settings,
-                    nodeTransGroup.TransitionGroup.CustomMolecule,
-                    nodeTransGroup.TransitionGroup.PrecursorAdduct,
-                    nodeTransGroup.ExplicitValues,
-                    null,
-                    null,
-                    nodeTransGroup.TransitionGroup.LabelType))
-            {
-                dlg.SetResult(nodeTransGroup.CustomMolecule, nodeTransGroup.PrecursorAdduct); // Set initial value change check
-                if (dlg.ShowDialog(this) == DialogResult.OK)
-                {
-                    Assume.IsTrue(Equals(dlg.ResultCustomMolecule, nodeTransGroup.Peptide.CustomMolecule)); // Not expecting any change to neutral molecule
-                    var newTransGroup = new TransitionGroup(nodeTransGroup.Peptide, dlg.Adduct, dlg.IsotopeLabelType);
-                    ModifyDocument(string.Format(Resources.SkylineWindow_ModifyPeptide_Modify__0__,
-                            nodeTransitionGroupTree.Text),
-                        doc =>
-                        {
-                            if (!Equals(newTransGroup, nodeTransGroup.Id))
-                            {
-                                // ID Changes impact all children, because IDs have back pointers to their parents.
-                                // User altered some identity item so we have to insert a copy of the tree from here down, and delete  
-                                var newNode = nodeTransGroup.UpdateSmallMoleculeTransitionGroup(nodeTransGroup.Peptide, newTransGroup, Document.Settings);
-                                var newdoc = (SrmDocument) doc.Insert(nodeTransitionGroupTree.Path, newNode);
-                                return (SrmDocument) newdoc.RemoveChild(nodeTransitionGroupTree.Path.Parent, nodeTransGroup);
-                            }
-                            else
-                            {
-                                var newNode =
-                                    new TransitionGroupDocNode(nodeTransGroup.TransitionGroup,
-                                        nodeTransGroup.Annotations, Document.Settings, null, null,
-                                        dlg.ResultExplicitTransitionGroupValues, nodeTransGroup.Results,
-                                        nodeTransGroup.Children.Cast<TransitionDocNode>().ToArray(),
-                                        nodeTransGroup.AutoManageChildren);
-                                if (Equals(newNode, nodeTransGroup))
-                                    return doc;
-
-                                return (SrmDocument) doc.ReplaceChild(nodeTransitionGroupTree.Path.Parent, newNode);
-                            }
-                        }, docPair => AuditLogEntry.DiffDocNodes(MessageType.modified, docPair, AuditLogEntry.GetNodeName(docPair.OldDoc, nodeTransGroup)));
-                }
-            }
+            EditMenu.ModifySmallMoleculeTransitionGroup();
         }
 
         public void ModifyPeptide()
         {
-            var nodePepTree = SequenceTree.GetNodeOfType<PeptideTreeNode>();
-            if (nodePepTree != null)
-            {
-                var nodePep = nodePepTree.DocNode;
-                if (nodePep.Peptide.IsCustomMolecule)
-                {
-                    // End up here when modifying the small molecule equivalent of a peptide
-                    // We want to be able to adjust explicit retention time in particular
-                    using (
-                        var dlg = new EditCustomMoleculeDlg(this, Resources.SkylineWindow_ModifyPeptide_Modify_Small_Molecule,
-                            Document.Settings,
-                            nodePep.Peptide.CustomMolecule,
-                            nodePep.ExplicitRetentionTime ?? ExplicitRetentionTimeInfo.EMPTY))
-                    {
-                        dlg.SetResult(nodePep.Peptide.CustomMolecule, Adduct.EMPTY);
-                        if (dlg.ShowDialog(this) == DialogResult.OK)
-                        {
-                            ModifyDocument(
-                                string.Format(Resources.SkylineWindow_ModifyPeptide_Modify__0__, nodePepTree.Text),
-                                doc =>
-                                {
-                                    // If we didn't change the custom molecule's formula and/or mass, the ID should be unchanged and we can just change any needed transition info.
-                                    // But if custom molecule has changed then we can't "Replace", since newNode has a different identity and isn't in the document.  We have to 
-                                    // insert and delete instead.  
-                                    var newNode = nodePep.ChangeCustomIonValues(doc.Settings, dlg.ResultCustomMolecule, dlg.ExplicitRetentionTimeInfo);
-                                    // Nothing to do if the node is not changing
-                                    if (Equals(nodePep, newNode))
-                                        return doc;
-
-                                    if (!nodePep.Peptide.Equals(newNode.Peptide)) // Did that change the Id object?
-                                    {
-                                        // We don't want the tree selection to change, so note this as a replacement.
-                                        var newdoc = (SrmDocument)doc.Insert(nodePepTree.Path, newNode.ChangeReplacedId(nodePep.Id));
-                                        return (SrmDocument)newdoc.RemoveChild(nodePepTree.Path.Parent, nodePep);
-                                    }
-                                    else
-                                    {
-                                        return (SrmDocument)doc.ReplaceChild(nodePepTree.Path.Parent, newNode);
-                                    }
-                                }, docPair => AuditLogEntry.DiffDocNodes(MessageType.modified, docPair,
-                                    AuditLogEntry.GetNodeName(docPair.OldDoc, nodePep)));
-                        }
-                    }
-                }
-                else
-                {
-                    using (var dlg = new EditPepModsDlg(DocumentUI.Settings, nodePep, true))
-                    {
-                        dlg.Height = Math.Min(dlg.Height, Screen.FromControl(this).WorkingArea.Height);
-                        if (dlg.ShowDialog(this) == DialogResult.OK)
-                        {
-                            var listStaticMods = Settings.Default.StaticModList;
-                            var listHeavyMods = Settings.Default.HeavyModList;
-                            ModifyDocument(
-                                string.Format(Resources.SkylineWindow_ModifyPeptide_Modify__0__, nodePepTree.Text),
-                                doc =>
-                                    doc.ChangePeptideMods(nodePepTree.Path,
-                                        dlg.ExplicitMods,
-                                        dlg.IsCreateCopy,
-                                        listStaticMods,
-                                        listHeavyMods), docPair => AuditLogEntry.DiffDocNodes(MessageType.modified, docPair,
-                                                            AuditLogEntry.GetNodeName(docPair.OldDoc, nodePep)));
-                        }
-                    }
-                }
-            }
+            EditMenu.ModifyPeptide();
         }
 
         public void ModifyTransition(TransitionTreeNode nodeTranTree)
         {
-            var nodeTran = nodeTranTree.DocNode;
-            if (nodeTran.Transition.IsNonPrecursorNonReporterCustomIon())
-            {
-                var nodeGroupTree = SequenceTree.GetNodeOfType<TransitionGroupTreeNode>();
-                // Existing transitions to avoid duplication
-                var existingMolecules = nodeGroupTree.DocNode.Transitions
-                        .Select(nodeT => nodeT.Transition)
-                        .Where(t => t.IsNonReporterCustomIon()).ToArray();
-
-                using (var dlg = new EditCustomMoleculeDlg(this,
-                    EditCustomMoleculeDlg.UsageMode.fragment,
-                    Resources.SkylineWindow_ModifyTransition_Modify_Transition, 
-                    nodeTran.Transition, existingMolecules, // Self and siblings
-                    Transition.MIN_PRODUCT_CHARGE,
-                    Transition.MAX_PRODUCT_CHARGE,
-                    Document.Settings,
-                    nodeTran.Transition.CustomIon,
-                    nodeTran.Transition.Adduct,
-                    null,
-                    nodeTran.ExplicitValues,
-                    null, null))
-                {
-                    dlg.SetResult(nodeTran.Transition.CustomIon, nodeTran.Transition.Adduct);
-                    if (dlg.ShowDialog(this) == DialogResult.OK)
-                    {
-                        ModifyDocument(string.Format(Resources.SkylineWindow_ModifyTransition_Modify_product_ion__0_,
-                                nodeTranTree.Text),
-                            doc =>
-                            {
-                                Assume.IsTrue(ReferenceEquals(nodeGroupTree.DocNode.TransitionGroup, nodeTran.Transition.Group));
-                                var mass = dlg.ResultCustomMolecule.GetMass(
-                                        doc.Settings.TransitionSettings.Prediction.FragmentMassType);
-                                var transition = new Transition(nodeTran.Transition.Group, dlg.Adduct, null,
-                                    dlg.ResultCustomMolecule);
-                                var noTransitionChange = transition.Equals(nodeTran.Transition);
-                                var newDocNode = new TransitionDocNode(noTransitionChange ? nodeTran.Transition : transition,
-                                    nodeTran.Annotations,
-                                    nodeTran.Losses,
-                                    mass,
-                                    nodeTran.QuantInfo,
-                                    dlg.ResultExplicitTransitionValues,
-                                    null);
-                                // Nothing to do, if the transition is not changing
-                                if (Equals(newDocNode, nodeTran))
-                                    return doc;
-
-                                if (noTransitionChange)
-                                {
-                                    // If we are not changing anything in the transition ID, we can be more gentle in replacement
-                                    return (SrmDocument) doc.ReplaceChild(nodeTranTree.Path.Parent, newDocNode);
-                                }
-                                else
-                                {
-                                    // Note we can't just Replace the node, as it has a new Id that's not in the doc.
-                                    // But neither do we want the tree selection to change, so note this as a replacement.
-                                    var newDoc = doc.Insert(nodeTranTree.Path, newDocNode.ChangeReplacedId(nodeTran.Id));
-                                    return (SrmDocument)newDoc.RemoveChild(nodeTranTree.Path.Parent, nodeTran);
-                                }
-                            }, docPair => AuditLogEntry.DiffDocNodes(MessageType.modified, docPair,
-                                AuditLogEntry.GetNodeName(docPair.OldDoc, nodeTran)));
-                    }
-                }
-            }
+            EditMenu.ModifyTransition(nodeTranTree);
         }
 
         private void noStandardMenuItem_Click(object sender, EventArgs e)
@@ -2471,22 +1611,23 @@ namespace pwiz.Skyline
 
         public IDictionary<ToolStripMenuItem, StandardType> GetStandardTypeMenuItems()
         {
-            return new Dictionary<ToolStripMenuItem, StandardType>
+            var dict = new Dictionary<ToolStripMenuItem, StandardType>
             {
-                {noStandardMenuItem, null},
                 {noStandardContextMenuItem, null},
-                {normStandardMenuItem, StandardType.GLOBAL_STANDARD},
                 {normStandardContextMenuItem, StandardType.GLOBAL_STANDARD},
-                {surrogateStandardMenuItem, StandardType.SURROGATE_STANDARD},
                 {surrogateStandardContextMenuItem, StandardType.SURROGATE_STANDARD},
-                {qcStandardMenuItem, StandardType.QC},
                 {qcStandardContextMenuItem, StandardType.QC},
-                {irtStandardMenuItem, StandardType.IRT},
                 {irtStandardContextMenuItem, StandardType.IRT},
             };
+            foreach (var entry in EditMenu.GetStandardTypeMenuItems())
+            {
+                dict.Add(entry.Key, entry.Value);
+            }
+
+            return dict;
         }
 
-        private bool HasSelectedTargetPeptides()
+        public bool HasSelectedTargetPeptides()
         {
             return SequenceTree.SelectedDocNodes.Any(nodeSel =>
                 {
@@ -2502,31 +1643,7 @@ namespace pwiz.Skyline
 
         public void ShowUniquePeptidesDlg()
         {
-            if (DocumentUI.Settings.PeptideSettings.BackgroundProteome.IsNone)
-            {
-                MessageDlg.Show(this,
-                                TextUtil.LineSeparate(Resources.SkylineWindow_ShowUniquePeptidesDlg_Inspecting_peptide_uniqueness_requires_a_background_proteome,
-                                                      Resources.SkylineWindow_ShowUniquePeptidesDlg_Choose_a_background_proteome_in_the_Digestions_tab_of_the_Peptide_Settings));
-                return;
-            }
-
-            // Need at least one node selected in tree
-            var peptideGroupTreeNodes = UniquePeptidesDlg.PeptideSelection(SequenceTree);
-            if (!peptideGroupTreeNodes.Any())
-            {
-                return;  // No selection
-            }
-            if (!ViewLibraryDlg.EnsureDigested(this, DocumentUI.Settings.PeptideSettings.BackgroundProteome, null))
-            {
-                return;
-            }
-            using (UniquePeptidesDlg uniquePeptidesDlg = new UniquePeptidesDlg(this)
-            {
-                PeptideGroupTreeNodes = peptideGroupTreeNodes
-            })
-            {
-                uniquePeptidesDlg.ShowDialog(this);
-            }
+            EditMenu.ShowUniquePeptidesDlg();
         }
 
         private void insertFASTAToolStripMenuItem_Click(object sender, EventArgs e)
@@ -2536,74 +1653,22 @@ namespace pwiz.Skyline
 
         public void ShowPasteFastaDlg()  // Expose for test access
         {
-            using (var pasteDlg = new PasteDlg(this)
-            {
-                SelectedPath = SelectedPath,
-                PasteFormat = PasteFormat.fasta
-            })
-            {
-                if (pasteDlg.ShowDialog(this) == DialogResult.OK)
-                    SelectedPath = pasteDlg.SelectedPath;
-            }
+            EditMenu.ShowPasteFastaDlg();
         }
 
-        private void insertPeptidesToolStripMenuItem_Click(object sender, EventArgs e)
+        public void ShowPastePeptidesDlg()
         {
-            ShowPastePeptidesDlg();
-        }
-
-       public void ShowPastePeptidesDlg()
-       {
-           using (var pasteDlg = new PasteDlg(this)
-           {
-               SelectedPath = SelectedPath,
-               PasteFormat = PasteFormat.peptide_list
-           })
-           {
-               if (pasteDlg.ShowDialog(this) == DialogResult.OK)
-                   SelectedPath = pasteDlg.SelectedPath;
-           }
-       }
-
-        private void insertProteinsToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowPasteProteinsDlg();
+            EditMenu.ShowPastePeptidesDlg();
         }
 
         public void ShowPasteProteinsDlg()
         {
-            using (var pasteDlg = new PasteDlg(this)
-            {
-                SelectedPath = SelectedPath,
-                PasteFormat = PasteFormat.protein_list
-            })
-            {
-                if (pasteDlg.ShowDialog(this) == DialogResult.OK)
-                    SelectedPath = pasteDlg.SelectedPath;
-            }
+            EditMenu.ShowPasteProteinsDlg();
         }
 
-        private void insertTransitionListMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowPasteTransitionListDlg();
-        }
-       
         public void ShowPasteTransitionListDlg()
         {
-            using (var pasteDlg = new PasteDlg(this)
-            {
-                SelectedPath = SelectedPath,
-                PasteFormat = PasteFormat.transition_list
-            })
-            {
-                if (pasteDlg.ShowDialog(this) == DialogResult.OK)
-                    SelectedPath = pasteDlg.SelectedPath;
-            }
-        }
-
-        private void refineMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowRefineDlg();
+            EditMenu.ShowPasteTransitionListDlg();
         }
 
         public void ShowRefineDlg()
@@ -5319,11 +4384,6 @@ namespace pwiz.Skyline
 
         #endregion
 
-        public bool IsPasteKeys(Keys keys)
-        {
-            return Equals(pasteMenuItem.ShortcutKeys, keys);
-        }
-        
         public void ShowAssociateProteinsDlg()
         {
             RefineMenu.ShowAssociateProteinsDlg();
@@ -5662,14 +4722,22 @@ namespace pwiz.Skyline
 
         public RefineMenu RefineMenu { get; private set; }
 
+        public EditMenu EditMenu { get; private set; }
+
         private void InitializeMenus()
         {
-            RefineMenu = new RefineMenu(this);
+            _skylineMenuControls.Add(RefineMenu = new RefineMenu(this));
+            _skylineMenuControls.Add(EditMenu = new EditMenu(this));
             refineToolStripMenuItem.DropDownItems.Clear();
             refineToolStripMenuItem.DropDownItems.AddRange(RefineMenu.DropDownItems.ToArray());
-            foreach (var entry in RefineMenu.ModeUiHandler.GetHandledComponents())
+            editToolStripMenuItem.DropDownItems.Clear();
+            editToolStripMenuItem.DropDownItems.AddRange(EditMenu.DropDownItems.ToArray());
+            foreach (var menuControl in _skylineMenuControls)
             {
-                modeUIHandler.AddHandledComponent(entry.Key, entry.Value);
+                foreach (var entry in menuControl.ModeUiHandler.GetHandledComponents())
+                {
+                    modeUIHandler.AddHandledComponent(entry.Key, entry.Value);
+                }
             }
         }
     }
