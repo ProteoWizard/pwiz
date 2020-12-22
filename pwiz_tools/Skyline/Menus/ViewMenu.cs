@@ -65,6 +65,7 @@ namespace pwiz.Skyline.Menus
         public ToolStripMenuItem NextReplicateMenuItem => nextReplicateMenuItem;
         public ToolStripMenuItem PreviousReplicateMenuItem => previousReplicateMenuItem;
 
+        #region Text Size
         public double TargetsTextFactor
         {
             get { return Settings.Default.TextZoom; }
@@ -77,7 +78,28 @@ namespace pwiz.Skyline.Menus
                                                         !extraLargeToolStripMenuItem.Checked);
             }
         }
+        private void defaultToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ChangeTextSize(TreeViewMS.DEFAULT_TEXT_FACTOR);
+        }
 
+        private void largeToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ChangeTextSize(TreeViewMS.LRG_TEXT_FACTOR);
+        }
+
+        private void extraLargeToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ChangeTextSize(TreeViewMS.XLRG_TEXT_FACTOR);
+        }
+
+        public void ChangeTextSize(double textFactor)
+        {
+            SkylineWindow.ChangeTextSize(textFactor);
+        }
+        #endregion
+
+        #region Target Display Mode
         private void peptidesMenuItem_DropDownOpening(object sender, EventArgs e)
         {
             showTargetsByNameToolStripMenuItem.Checked =
@@ -119,25 +141,9 @@ namespace pwiz.Skyline.Menus
         {
             UpdateTargetsDisplayMode(ProteinMetadataManager.ProteinDisplayMode.ByGene);
         }
-        private void defaultToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            ChangeTextSize(TreeViewMS.DEFAULT_TEXT_FACTOR);
-        }
+        #endregion
 
-        private void largeToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            ChangeTextSize(TreeViewMS.LRG_TEXT_FACTOR);
-        }
-
-        private void extraLargeToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            ChangeTextSize(TreeViewMS.XLRG_TEXT_FACTOR);
-        }
-
-        public void ChangeTextSize(double textFactor)
-        {
-            SkylineWindow.ChangeTextSize(textFactor);
-        }
+        #region UI Modes
         private void proteomicsToolStripMenuItem_Click(object sender, EventArgs e)
         {
             SetUIMode(SrmDocument.DOCUMENT_TYPE.proteomic);
@@ -157,6 +163,7 @@ namespace pwiz.Skyline.Menus
         {
             SkylineWindow.SetUIMode(mode);
         }
+        #endregion
 
         private void spectralLibrariesToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -168,6 +175,7 @@ namespace pwiz.Skyline.Menus
             SkylineWindow.ViewSpectralLibraries();
         }
 
+        #region Arrange Graphs
         private void arrangeRowMenuItem_Click(object sender, EventArgs e)
         {
             ArrangeGraphs(DisplayGraphsType.Row);
@@ -194,9 +202,38 @@ namespace pwiz.Skyline.Menus
         {
             SkylineWindow.ArrangeGraphsTiled();
         }
-        private void graphsToolStripMenuItem_Click(object sender, EventArgs e)
+        #endregion
+        private void libraryMatchToolStripMenuItem_Click(object sender, EventArgs e)
         {
             SkylineWindow.ShowGraphSpectrum(Settings.Default.ShowSpectra = true);
+        }
+
+        #region View Ion Types
+        public void CheckIonCharge(Adduct adduct, bool check)
+        {
+            // Set charge settings without causing UI to update
+            var set = Settings.Default;
+            switch (Math.Abs(adduct.AdductCharge))  // TODO(bspratt) - need a lot more flexibility here, neg charges, M+Na etc
+            {
+                case 1: set.ShowCharge1 = charge1MenuItem.Checked = check; break;
+                case 2: set.ShowCharge2 = charge2MenuItem.Checked = check; break;
+                case 3: set.ShowCharge3 = charge3MenuItem.Checked = check; break;
+                case 4: set.ShowCharge4 = charge4MenuItem.Checked = check; break;
+            }
+        }
+        public void CheckIonType(IonType type, bool check, bool visible)
+        {
+            var set = Settings.Default;
+            switch (type)
+            {
+                case IonType.a: set.ShowAIons = aMenuItem.Checked = check; aMenuItem.Visible = visible; break;
+                case IonType.b: set.ShowBIons = bMenuItem.Checked = check; bMenuItem.Visible = visible; break;
+                case IonType.c: set.ShowCIons = cMenuItem.Checked = check; cMenuItem.Visible = visible; break;
+                case IonType.x: set.ShowXIons = xMenuItem.Checked = check; xMenuItem.Visible = visible; break;
+                case IonType.y: set.ShowYIons = yMenuItem.Checked = check; yMenuItem.Visible = visible; break;
+                case IonType.z: set.ShowZIons = zMenuItem.Checked = check; zMenuItem.Visible = visible; break;
+                case IonType.custom: set.ShowFragmentIons = fragmentsMenuItem.Checked = check; fragmentsMenuItem.Visible = visible; break;
+            }
         }
 
         private void ionTypesMenuItem_DropDownOpening(object sender, EventArgs e)
@@ -301,6 +338,9 @@ namespace pwiz.Skyline.Menus
             Settings.Default.ShowRanks = !Settings.Default.ShowRanks;
             SkylineWindow.UpdateSpectrumGraph(false);
         }
+        #endregion
+
+        #region Chromatograms
         private void chromatogramsMenuItem_DropDownOpening(object sender, EventArgs e)
         {
             ToolStripMenuItem menu = chromatogramsMenuItem;
@@ -387,7 +427,9 @@ namespace pwiz.Skyline.Menus
         {
             SkylineWindow.CloseAllChromatograms();
         }
+        #endregion
 
+        #region Transitions
         private void transitionsMenuItem_DropDownOpening(object sender, EventArgs e)
         {
             var displayType = GraphChromatogram.DisplayType;
@@ -398,12 +440,12 @@ namespace pwiz.Skyline.Menus
             precursorsTranMenuItem.Visible = productsTranMenuItem.Visible = showIonTypeOptions;
 
             if (!showIonTypeOptions &&
-                    (displayType == DisplayTypeChrom.precursors || displayType == DisplayTypeChrom.products))
+                (displayType == DisplayTypeChrom.precursors || displayType == DisplayTypeChrom.products))
                 displayType = DisplayTypeChrom.all;
 
             // Only show all ions chromatogram options when at least one chromatogram of this type exists
-            bool showAllIonsOptions = DocumentUI.Settings.HasResults &&
-                DocumentUI.Settings.MeasuredResults.HasAllIonsChromatograms;
+            bool showAllIonsOptions = DocumentUI.Settings.HasResults && 
+                                      DocumentUI.Settings.MeasuredResults.HasAllIonsChromatograms;
             basePeakMenuItem.Visible = ticMenuItem.Visible = qcMenuItem.Visible =toolStripSeparatorTranMain.Visible = showAllIonsOptions;
 
             if (!showAllIonsOptions &&
@@ -491,7 +533,8 @@ namespace pwiz.Skyline.Menus
         {
             SkylineWindow.ShowSplitChromatogramGraph(!Settings.Default.SplitChromatogramGraph);
         }
-
+        #endregion
+        #region Transform
         private void transformChromMenuItem_DropDownOpening(object sender, EventArgs e)
         {
             var transform = GraphChromatogram.Transform;
@@ -529,6 +572,9 @@ namespace pwiz.Skyline.Menus
         {
             SkylineWindow.SetTransformChrom(TransformChrom.savitzky_golay);
         }
+        #endregion
+
+        #region Auto Zoom
         private void autozoomMenuItem_DropDownOpening(object sender, EventArgs e)
         {
             bool hasRt = (DocumentUI.Settings.PeptideSettings.Prediction.RetentionTime != null);
@@ -569,8 +615,10 @@ namespace pwiz.Skyline.Menus
         {
             SkylineWindow.AutoZoomBoth();
         }
+        #endregion
 
-        private void timeGraphMenuItem_DropDownOpening(object sender, EventArgs e)
+        #region Retention Times
+        private void retentionTimesMenuItem_DropDownOpening(object sender, EventArgs e)
         {
             var types = Settings.Default.RTGraphTypes;
             var list = SkylineWindow.ListGraphRetentionTime;
@@ -611,7 +659,9 @@ namespace pwiz.Skyline.Menus
         {
             SkylineWindow.ShowRTSchedulingGraph();
         }
+        #endregion
 
+        #region Peak Areas
         private void areaGraphMenuItem_DropDownOpening(object sender, EventArgs e)
         {
             var types = Settings.Default.AreaGraphTypes;
@@ -637,6 +687,8 @@ namespace pwiz.Skyline.Menus
         {
             SkylineWindow.ShowPeakAreaCVHistogram2D();
         }
+        #endregion
+        #region Detections
         private void graphDetections_DropDownOpening(object sender, EventArgs e)
         {
             var types = Settings.Default.DetectionGraphTypes;
@@ -653,7 +705,9 @@ namespace pwiz.Skyline.Menus
         {
             SkylineWindow.ShowDetectionsHistogramGraph();
         }
+        #endregion
 
+        #region Mass Errors
         private void massErrorMenuItem_DropDownOpening(object sender, EventArgs e)
         {
             var types = Settings.Default.MassErrorGraphTypes;
@@ -682,10 +736,13 @@ namespace pwiz.Skyline.Menus
         {
             SkylineWindow.ShowMassErrorHistogramGraph2D();
         }
+        #endregion
         private void calibrationCurvesMenuItem_Click(object sender, EventArgs e)
         {
             SkylineWindow.ShowCalibrationForm();
         }
+
+        #region Grids
         private void documentGridMenuItem_Click(object sender, EventArgs e)
         {
             SkylineWindow.ShowDocumentGrid(true);
@@ -750,7 +807,7 @@ namespace pwiz.Skyline.Menus
         {
             SkylineWindow.ShowAuditLog();
         }
-
+        #endregion
         private void toolBarToolStripMenuItem_Click(object sender, EventArgs e)
         {
             SkylineWindow.ShowToolBar(toolBarToolStripMenuItem.Checked);
@@ -759,33 +816,6 @@ namespace pwiz.Skyline.Menus
         {
             SkylineWindow.ShowStatusBar(statusToolStripMenuItem.Checked);
         }
-        public void CheckIonCharge(Adduct adduct, bool check)
-        {
-            // Set charge settings without causing UI to update
-            var set = Settings.Default;
-            switch (Math.Abs(adduct.AdductCharge))  // TODO(bspratt) - need a lot more flexibility here, neg charges, M+Na etc
-            {
-                case 1: set.ShowCharge1 = charge1MenuItem.Checked = check; break;
-                case 2: set.ShowCharge2 = charge2MenuItem.Checked = check; break;
-                case 3: set.ShowCharge3 = charge3MenuItem.Checked = check; break;
-                case 4: set.ShowCharge4 = charge4MenuItem.Checked = check; break;
-            }
-        }
-        public void CheckIonType(IonType type, bool check, bool visible)
-        {
-            var set = Settings.Default;
-            switch (type)
-            {
-                case IonType.a: set.ShowAIons = aMenuItem.Checked = check; aMenuItem.Visible = visible; break;
-                case IonType.b: set.ShowBIons = bMenuItem.Checked = check; bMenuItem.Visible = visible; break;
-                case IonType.c: set.ShowCIons = cMenuItem.Checked = check; cMenuItem.Visible = visible; break;
-                case IonType.x: set.ShowXIons = xMenuItem.Checked = check; xMenuItem.Visible = visible; break;
-                case IonType.y: set.ShowYIons = yMenuItem.Checked = check; yMenuItem.Visible = visible; break;
-                case IonType.z: set.ShowZIons = zMenuItem.Checked = check; zMenuItem.Visible = visible; break;
-                case IonType.custom: set.ShowFragmentIons = fragmentsMenuItem.Checked = check; fragmentsMenuItem.Visible = visible; break;
-            }
-        }
-
         public void DocumentUiChanged()
         {
             proteomicsToolStripMenuItem.Checked = SkylineWindow.ModeUI == SrmDocument.DOCUMENT_TYPE.proteomic;

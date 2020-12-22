@@ -359,7 +359,7 @@
             // 
             resources.ApplyResources(this.libraryMatchToolStripMenuItem, "libraryMatchToolStripMenuItem");
             this.libraryMatchToolStripMenuItem.Name = "libraryMatchToolStripMenuItem";
-            this.libraryMatchToolStripMenuItem.Click += new System.EventHandler(this.graphsToolStripMenuItem_Click);
+            this.libraryMatchToolStripMenuItem.Click += new System.EventHandler(this.libraryMatchToolStripMenuItem_Click);
             // 
             // ionTypesMenuItem
             // 
@@ -725,7 +725,7 @@
             this.schedulingMenuItem});
             resources.ApplyResources(this.retentionTimesMenuItem, "retentionTimesMenuItem");
             this.retentionTimesMenuItem.Name = "retentionTimesMenuItem";
-            this.retentionTimesMenuItem.DropDownOpening += new System.EventHandler(this.timeGraphMenuItem_DropDownOpening);
+            this.retentionTimesMenuItem.DropDownOpening += new System.EventHandler(this.retentionTimesMenuItem_DropDownOpening);
             // 
             // replicateComparisonMenuItem
             // 
