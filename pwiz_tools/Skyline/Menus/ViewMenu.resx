@@ -273,16 +273,16 @@
   <data name="toolStripSeparator39.Size" type="System.Drawing.Size, System.Drawing">
     <value>188, 6</value>
   </data>
-  <data name="graphsToolStripMenuItem.Enabled" type="System.Boolean, mscorlib">
+  <data name="libraryMatchToolStripMenuItem.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
-  <data name="graphsToolStripMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
+  <data name="libraryMatchToolStripMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>Alt+1</value>
   </data>
-  <data name="graphsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="libraryMatchToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>191, 22</value>
   </data>
-  <data name="graphsToolStripMenuItem.Text" xml:space="preserve">
+  <data name="libraryMatchToolStripMenuItem.Text" xml:space="preserve">
     <value>Library &amp;Match</value>
   </data>
   <data name="aMenuItem.Size" type="System.Drawing.Size, System.Drawing">
@@ -552,13 +552,13 @@
   <data name="transformChromNoneMenuItem.Text" xml:space="preserve">
     <value>&amp;None</value>
   </data>
-  <data name="transformChromInterploatedMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
+  <data name="transformChromInterpolatedMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>F12</value>
   </data>
-  <data name="transformChromInterploatedMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="transformChromInterpolatedMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>297, 22</value>
   </data>
-  <data name="transformChromInterploatedMenuItem.Text" xml:space="preserve">
+  <data name="transformChromInterpolatedMenuItem.Text" xml:space="preserve">
     <value>&amp;Interpolated</value>
   </data>
   <data name="secondDerivativeMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
@@ -1077,10 +1077,10 @@
   <data name="&gt;&gt;toolStripSeparator39.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;graphsToolStripMenuItem.Name" xml:space="preserve">
-    <value>graphsToolStripMenuItem</value>
+  <data name="&gt;&gt;libraryMatchToolStripMenuItem.Name" xml:space="preserve">
+    <value>libraryMatchToolStripMenuItem</value>
   </data>
-  <data name="&gt;&gt;graphsToolStripMenuItem.Type" xml:space="preserve">
+  <data name="&gt;&gt;libraryMatchToolStripMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;ionTypesMenuItem.Name" xml:space="preserve">
@@ -1323,10 +1323,10 @@
   <data name="&gt;&gt;transformChromNoneMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;transformChromInterploatedMenuItem.Name" xml:space="preserve">
-    <value>transformChromInterploatedMenuItem</value>
+  <data name="&gt;&gt;transformChromInterpolatedMenuItem.Name" xml:space="preserve">
+    <value>transformChromInterpolatedMenuItem</value>
   </data>
-  <data name="&gt;&gt;transformChromInterploatedMenuItem.Type" xml:space="preserve">
+  <data name="&gt;&gt;transformChromInterpolatedMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;secondDerivativeMenuItem.Name" xml:space="preserve">

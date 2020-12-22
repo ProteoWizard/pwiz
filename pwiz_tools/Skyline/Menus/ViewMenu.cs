@@ -1,13 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Drawing;
-using System.Data;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using JetBrains.Annotations;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
@@ -86,7 +80,7 @@ namespace pwiz.Skyline.Menus
         public ToolStripMenuItem AutoZoomMenuItem => autoZoomMenuItem;
         public ToolStripMenuItem ArrangeGraphsToolStripMenuItem => arrangeGraphsToolStripMenuItem;
 
-        public ToolStripMenuItem GraphsToolStripMenuItem => graphsToolStripMenuItem;
+        public ToolStripMenuItem LibraryMatchToolStripMenuItem => libraryMatchToolStripMenuItem;
 
         public ToolStripMenuItem IonTypesMenuItem => ionTypesMenuItem;
         public ToolStripMenuItem ChargesMenuItem => chargesMenuItem;
@@ -102,14 +96,10 @@ namespace pwiz.Skyline.Menus
         public ToolStripMenuItem AllTranMenuItem => allTranMenuItem;
         public ToolStripMenuItem TotalTranMenuItem => totalTranMenuItem;
         public ToolStripMenuItem TransformChromNoneMenuItem => transformChromNoneMenuItem;
-        public ToolStripMenuItem TransformChromInterploatedMenuItem => transformChromInterploatedMenuItem;
+        public ToolStripMenuItem TransformChromInterpolatedMenuItem => transformChromInterpolatedMenuItem;
         public ToolStripMenuItem SecondDerivativeMenuItem => secondDerivativeMenuItem;
         public ToolStripMenuItem FirstDerivativeMenuItem => firstDerivativeMenuItem;
         public ToolStripMenuItem SmoothSGChromMenuItem => smoothSGChromMenuItem;
-
-        public ToolStripMenuItem MassErrorHistogramMenuItem => massErrorHistogramMenuItem;
-        public ToolStripMenuItem MassErrorHistogram2DMenuItem => massErrorHistogram2DMenuItem;
-
         public ToolStripMenuItem AutoZoomNoneMenuItem => autoZoomNoneMenuItem;
         public ToolStripMenuItem AutoZoomBestPeakMenuItem => autoZoomBestPeakMenuItem;
         public ToolStripMenuItem AutoZoomRTWindowMenuItem => autoZoomRTWindowMenuItem;
@@ -254,16 +244,16 @@ namespace pwiz.Skyline.Menus
 
         private void ionTypesMenuItem_DropDownOpening(object sender, EventArgs e)
         {
-                var set = Settings.Default;
-                aMenuItem.Checked = set.ShowAIons;
-                bMenuItem.Checked = set.ShowBIons;
-                cMenuItem.Checked = set.ShowCIons;
-                xMenuItem.Checked = set.ShowXIons;
-                yMenuItem.Checked = set.ShowYIons;
-                zMenuItem.Checked = set.ShowZIons;
-                fragmentsMenuItem.Checked = set.ShowFragmentIons;
-                precursorIonMenuItem.Checked = set.ShowPrecursorIon;
-                UpdateIonTypesMenuItemsVisibility();
+            var set = Settings.Default;
+            aMenuItem.Checked = set.ShowAIons;
+            bMenuItem.Checked = set.ShowBIons;
+            cMenuItem.Checked = set.ShowCIons;
+            xMenuItem.Checked = set.ShowXIons;
+            yMenuItem.Checked = set.ShowYIons;
+            zMenuItem.Checked = set.ShowZIons;
+            fragmentsMenuItem.Checked = set.ShowFragmentIons;
+            precursorIonMenuItem.Checked = set.ShowPrecursorIon;
+            UpdateIonTypesMenuItemsVisibility();
         }
 
         // Update the Ion Types menu for document contents
@@ -580,10 +570,11 @@ namespace pwiz.Skyline.Menus
         private void areaGraphMenuItem_DropDownOpening(object sender, EventArgs e)
         {
             var types = Settings.Default.AreaGraphTypes;
-            areaReplicateComparisonMenuItem.Checked = SkylineWindow.GraphChecked(GraphTypeSummary.replicate);
-            areaPeptideComparisonMenuItem.Checked = SkylineWindow.GraphChecked(GraphTypeSummary.peptide);
-            areaCVHistogramMenuItem.Checked = SkylineWindow.GraphChecked(GraphTypeSummary.histogram);
-            areaCVHistogram2DMenuItem.Checked = SkylineWindow.GraphChecked(GraphTypeSummary.histogram2d);
+            var list = SkylineWindow.ListGraphPeakArea;
+            areaReplicateComparisonMenuItem.Checked = SkylineWindow.GraphChecked(list, types, GraphTypeSummary.replicate);
+            areaPeptideComparisonMenuItem.Checked = SkylineWindow.GraphChecked(list, types, GraphTypeSummary.peptide);
+            areaCVHistogramMenuItem.Checked = SkylineWindow.GraphChecked(list, types, GraphTypeSummary.histogram);
+            areaCVHistogram2DMenuItem.Checked = SkylineWindow.GraphChecked(list, types, GraphTypeSummary.histogram2d);
         }
         private void areaReplicateComparisonMenuItem_Click(object sender, EventArgs e)
         {
@@ -603,8 +594,11 @@ namespace pwiz.Skyline.Menus
         }
         private void graphDetections_DropDownOpening(object sender, EventArgs e)
         {
-            detectionsReplicateComparisonMenuItem.Checked = detectionsReplicateComparisonMenuItem.Checked = SkylineWindow.GraphChecked(GraphTypeSummary.detections);
-            detectionsHistogramMenuItem.Checked = detectionsHistogramMenuItem.Checked = SkylineWindow.GraphChecked(GraphTypeSummary.detections_histogram);
+            var types = Settings.Default.DetectionGraphTypes;
+            var list = SkylineWindow.ListGraphDetections;
+
+            detectionsReplicateComparisonMenuItem.Checked = SkylineWindow.GraphChecked(list, types, GraphTypeSummary.detections);
+            detectionsHistogramMenuItem.Checked = SkylineWindow.GraphChecked(list, types, GraphTypeSummary.detections_histogram);
         }
         private void detectionsReplicateComparisonMenuItem_Click(object sender, EventArgs e)
         {
@@ -617,7 +611,14 @@ namespace pwiz.Skyline.Menus
 
         private void massErrorMenuItem_DropDownOpening(object sender, EventArgs e)
         {
-            SkylineWindow.massErrorMenuItem_DropDownOpening(sender, e);
+            var types = Settings.Default.MassErrorGraphTypes;
+            var list = SkylineWindow.ListGraphMassError;
+            massErrorReplicateComparisonMenuItem.Checked =
+                SkylineWindow.GraphChecked(list, types, GraphTypeSummary.replicate);
+            massErrorPeptideComparisonMenuItem.Checked =
+                SkylineWindow.GraphChecked(list, types, GraphTypeSummary.peptide);
+            massErrorHistogramMenuItem.Checked =SkylineWindow.GraphChecked(list, types, GraphTypeSummary.histogram);
+            massErrorHistogram2DMenuItem.Checked = SkylineWindow.GraphChecked(list, types, GraphTypeSummary.histogram2d);
         }
 
         private void massErrorReplicateComparisonMenuItem_Click(object sender, EventArgs e)

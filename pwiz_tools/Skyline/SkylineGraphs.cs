@@ -152,7 +152,7 @@ namespace pwiz.Skyline
 
             /// <summary>
             /// Called to lock layout of the <see cref="DockPanel"/>.  Locking
-            /// is defered until it is determined to be necessary to avoid the
+            /// is deferred until it is determined to be necessary to avoid the
             /// relayout calculation when locking is unnecessary.
             /// </summary>
             public void EnsureLocked()
@@ -628,7 +628,7 @@ namespace pwiz.Skyline
             DestroyGraphFullScan();
             dockPanel.LoadFromXml(layoutStream, DeserializeForm);
             // SequenceTree resizes often prior to display, so we must restore its scrolling after
-            // all resizing has occured
+            // all resizing has occurred
             if (SequenceTree != null)
                 SequenceTree.UpdateTopNode();
 
@@ -762,7 +762,7 @@ namespace pwiz.Skyline
             }
             if (Equals(persistentString, typeof(ImmediateWindow).ToString()))
             {
-                 return _immediateWindow ?? CreateImmediateWindow();
+                return _immediateWindow ?? CreateImmediateWindow();
             }
             if (persistentString.StartsWith(typeof(GraphChromatogram).ToString()))
             {
@@ -798,14 +798,6 @@ namespace pwiz.Skyline
             }
             return null;
         }
-
-        // Disabling these menuitems allows the normal meaning of Ctrl-Up/Down
-        // to cause scrolling in the tree view.
-//        private void UpdateReplicateMenuItems(bool hasResults)
-//        {
-//            nextReplicateMenuItem.Enabled = hasResults && comboResults.SelectedIndex < comboResults.Items.Count - 1;
-//            previousReplicateMenuItem.Enabled = hasResults && comboResults.SelectedIndex > 0;
-//        }
 
         public void UpdateGraphPanes()
         {
@@ -1816,15 +1808,6 @@ namespace pwiz.Skyline
             UpdateChromGraphs();
         }
 
-        private void nextReplicateMenuItem_Click(object sender, EventArgs e)
-        {
-            SelectedResultsIndex++;
-        }
-
-        private void previousReplicateMenuItem_Click(object sender, EventArgs e)
-        {
-            SelectedResultsIndex--;
-        }
         private void transitionsMenuItem_DropDownOpening(object sender, EventArgs e)
         {
             TransitionsMenuItemDropDownOpening();
@@ -2234,7 +2217,7 @@ namespace pwiz.Skyline
 
             ViewMenu.TransformChromNoneMenuItem.Checked = transformChromNoneContextMenuItem.Checked =
                 (transform == TransformChrom.raw);
-            ViewMenu.TransformChromInterploatedMenuItem.Checked = transformChromInterpolatedContextMenuItem.Checked =
+            ViewMenu.TransformChromInterpolatedMenuItem.Checked = transformChromInterpolatedContextMenuItem.Checked =
                 (transform == TransformChrom.interpolated);
             ViewMenu.SecondDerivativeMenuItem.Checked = secondDerivativeContextMenuItem.Checked =
                 (transform == TransformChrom.craw2d);
@@ -2978,9 +2961,9 @@ namespace pwiz.Skyline
             return graphs.Any(g => g.Type == type && !g.IsHidden);
         }
 
-        private bool GraphChecked(IEnumerable<GraphSummary> graphs, IList<GraphTypeSummary> types, GraphTypeSummary type)
+        public bool GraphChecked(IEnumerable<GraphSummary> graphs, IList<GraphTypeSummary> types, GraphTypeSummary type)
         {
-            return (types.Contains(type)) && GraphVisible(graphs, type);
+            return types.Contains(type) && GraphVisible(graphs, type);
         }
 
         private void ShowGraph(List<GraphSummary> graphs, bool show, GraphTypeSummary type,
@@ -4041,6 +4024,26 @@ namespace pwiz.Skyline
         #region Peak area graph
 
         public GraphSummary GraphPeakArea { get { return _listGraphPeakArea.FirstOrDefault(); } }
+        public ICollection<GraphSummary> ListGraphPeakArea
+        {
+            get { return _listGraphPeakArea; }
+        }
+
+        public ICollection<GraphSummary> ListGraphDetections
+        {
+            get
+            {
+                return _listGraphDetections;
+            }
+        }
+
+        public ICollection<GraphSummary> ListGraphMassError
+        {
+            get
+            {
+                return _listGraphMassError;
+            }
+        }
 
         public void UpdateUIGraphPeakArea(bool visible)
         {
@@ -4688,10 +4691,12 @@ namespace pwiz.Skyline
         }
         private void areaGraphMenuItem_DropDownOpening(object sender, EventArgs e)
         {
-            areaReplicateComparisonContextMenuItem.Checked = GraphChecked(GraphTypeSummary.replicate);
-            areaPeptideComparisonContextMenuItem.Checked = GraphChecked(GraphTypeSummary.peptide);
-            areaCVHistogramContextMenuItem.Checked = GraphChecked(GraphTypeSummary.histogram);
-            areaCVHistogram2DContextMenuItem.Checked = GraphChecked(GraphTypeSummary.histogram2d);
+            var types = Settings.Default.AreaGraphTypes;
+            var list = _listGraphPeakArea;
+            areaReplicateComparisonContextMenuItem.Checked = GraphChecked(list, types, GraphTypeSummary.replicate);
+            areaPeptideComparisonContextMenuItem.Checked = GraphChecked(list, types, GraphTypeSummary.peptide);
+            areaCVHistogramContextMenuItem.Checked = GraphChecked(list, types, GraphTypeSummary.histogram);
+            areaCVHistogram2DContextMenuItem.Checked = GraphChecked(list, types, GraphTypeSummary.histogram2d);
         }
 
         public bool GraphChecked(GraphTypeSummary type)
@@ -5177,20 +5182,16 @@ namespace pwiz.Skyline
 
         public void UpdateMassErrorGraph()
         {
-           _listGraphMassError.ForEach(g => g.UpdateUI());
+            _listGraphMassError.ForEach(g => g.UpdateUI());
         }
 
         internal void massErrorMenuItem_DropDownOpening(object sender, EventArgs e)
         {
             var types = Settings.Default.MassErrorGraphTypes;
-            massErrorReplicateComparisonContextMenuItem.Checked = ViewMenu.MassErrorReplicateComparisonMenuItem.Checked =
-                GraphChecked(_listGraphMassError, types, GraphTypeSummary.replicate);
-            massErrorPeptideComparisonContextMenuItem.Checked = ViewMenu.MassErrorPeptideComparisonMenuItem.Checked =
-                GraphChecked(_listGraphMassError, types, GraphTypeSummary.peptide);
-            massErrorHistogramContextMenuItem.Checked = ViewMenu.MassErrorHistogramMenuItem.Checked =
-                GraphChecked(_listGraphMassError, types, GraphTypeSummary.histogram);
-            massErrorHistogram2DContextMenuItem.Checked = ViewMenu.MassErrorHistogram2DMenuItem.Checked =
-                GraphChecked(_listGraphMassError, types, GraphTypeSummary.histogram2d);
+            massErrorReplicateComparisonContextMenuItem.Checked = GraphChecked(_listGraphMassError, types, GraphTypeSummary.replicate);
+            massErrorPeptideComparisonContextMenuItem.Checked = GraphChecked(_listGraphMassError, types, GraphTypeSummary.peptide);
+            massErrorHistogramContextMenuItem.Checked = GraphChecked(_listGraphMassError, types, GraphTypeSummary.histogram);
+            massErrorHistogram2DContextMenuItem.Checked = GraphChecked(_listGraphMassError, types, GraphTypeSummary.histogram2d);
         }
 
         private void BuildMassErrorGraphMenu(GraphSummary graph, ToolStrip menuStrip)

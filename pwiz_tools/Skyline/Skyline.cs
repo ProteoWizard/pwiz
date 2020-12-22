@@ -31,7 +31,6 @@ using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using JetBrains.Annotations;
 using log4net;
-using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Common.DataBinding.Documentation;
@@ -530,7 +529,7 @@ namespace pwiz.Skyline
                 // Clear the UndoManager, if this is a different document.
                 if (!ReferenceEquals(_documentUI.Id, documentPrevious.Id))
                     _undoManager.Clear();
-			}
+            }
 
             // Call the even handler for this window directly, since it may
             // close other listeners, and it is not possible to remove a listener
@@ -1884,11 +1883,6 @@ namespace pwiz.Skyline
             mainToolStrip.Visible = show;
         }
 
-        private void addFoldChangeMenuItem_Click(object sender, EventArgs e)
-        {
-            AddGroupComparison();
-        }
-
         public void AddGroupComparison()
         {
             using (var editDlg = new EditGroupComparisonDlg(this, GroupComparisonDef.EMPTY,
@@ -2396,7 +2390,7 @@ namespace pwiz.Skyline
             public void ToolStripMenuItemClick(object sender, EventArgs e)
             {
                 // If the current settings are not in a saved set, then ask to save
-                // before overriting them.
+                // before overwriting them.
                 if (_skyline.DocumentUI.Settings.Name == SrmSettingsList.DefaultName)
                 {
                     DialogResult result =
@@ -4162,9 +4156,9 @@ namespace pwiz.Skyline
             get
             {
                 return ComboResults != null && ComboResults.SelectedItem != null
-                           ? ComboResults.SelectedItem.ToString()
-                           : null;
-        }
+                    ? ComboResults.SelectedItem.ToString()
+                    : null;
+            }
         }
 
 

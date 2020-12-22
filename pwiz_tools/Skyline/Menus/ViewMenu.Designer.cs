@@ -55,7 +55,7 @@
             this.arrangedTabbedMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.groupedMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator39 = new System.Windows.Forms.ToolStripSeparator();
-            this.graphsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.libraryMatchToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.ionTypesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.bMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -96,7 +96,7 @@
             this.splitGraphMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.transformChromMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.transformChromNoneMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.transformChromInterploatedMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.transformChromInterpolatedMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.secondDerivativeMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.firstDerivativeMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.smoothSGChromMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -163,7 +163,7 @@
             this.toolStripSeparator32,
             this.arrangeGraphsToolStripMenuItem,
             this.toolStripSeparator39,
-            this.graphsToolStripMenuItem,
+            this.libraryMatchToolStripMenuItem,
             this.ionTypesMenuItem,
             this.chargesMenuItem,
             this.ranksMenuItem,
@@ -357,9 +357,9 @@
             // 
             // graphsToolStripMenuItem
             // 
-            resources.ApplyResources(this.graphsToolStripMenuItem, "graphsToolStripMenuItem");
-            this.graphsToolStripMenuItem.Name = "graphsToolStripMenuItem";
-            this.graphsToolStripMenuItem.Click += new System.EventHandler(this.graphsToolStripMenuItem_Click);
+            resources.ApplyResources(this.libraryMatchToolStripMenuItem, "libraryMatchToolStripMenuItem");
+            this.libraryMatchToolStripMenuItem.Name = "libraryMatchToolStripMenuItem";
+            this.libraryMatchToolStripMenuItem.Click += new System.EventHandler(this.graphsToolStripMenuItem_Click);
             // 
             // ionTypesMenuItem
             // 
@@ -637,7 +637,7 @@
             // 
             this.transformChromMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.transformChromNoneMenuItem,
-            this.transformChromInterploatedMenuItem,
+            this.transformChromInterpolatedMenuItem,
             this.secondDerivativeMenuItem,
             this.firstDerivativeMenuItem,
             this.smoothSGChromMenuItem});
@@ -653,9 +653,9 @@
             // 
             // transformChromInterploatedMenuItem
             // 
-            this.transformChromInterploatedMenuItem.Name = "transformChromInterploatedMenuItem";
-            resources.ApplyResources(this.transformChromInterploatedMenuItem, "transformChromInterploatedMenuItem");
-            this.transformChromInterploatedMenuItem.Click += new System.EventHandler(this.transformInterpolatedMenuItem_Click);
+            this.transformChromInterpolatedMenuItem.Name = "transformChromInterpolatedMenuItem";
+            resources.ApplyResources(this.transformChromInterpolatedMenuItem, "transformChromInterpolatedMenuItem");
+            this.transformChromInterpolatedMenuItem.Click += new System.EventHandler(this.transformInterpolatedMenuItem_Click);
             // 
             // secondDerivativeMenuItem
             // 
@@ -996,7 +996,7 @@
         private System.Windows.Forms.ToolStripMenuItem arrangedTabbedMenuItem;
         private System.Windows.Forms.ToolStripMenuItem groupedMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator39;
-        private System.Windows.Forms.ToolStripMenuItem graphsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem libraryMatchToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem ionTypesMenuItem;
         private System.Windows.Forms.ToolStripMenuItem aMenuItem;
         private System.Windows.Forms.ToolStripMenuItem bMenuItem;
@@ -1037,7 +1037,7 @@
         private System.Windows.Forms.ToolStripMenuItem splitGraphMenuItem;
         private System.Windows.Forms.ToolStripMenuItem transformChromMenuItem;
         private System.Windows.Forms.ToolStripMenuItem transformChromNoneMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem transformChromInterploatedMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem transformChromInterpolatedMenuItem;
         private System.Windows.Forms.ToolStripMenuItem secondDerivativeMenuItem;
         private System.Windows.Forms.ToolStripMenuItem firstDerivativeMenuItem;
         private System.Windows.Forms.ToolStripMenuItem smoothSGChromMenuItem;
