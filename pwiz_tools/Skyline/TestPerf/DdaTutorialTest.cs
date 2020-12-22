@@ -210,7 +210,7 @@ namespace TestPerf
             // Wait for search to finish
             WaitForConditionUI(60000 * 60, () => searchSucceeded.HasValue);
             Assert.IsTrue(searchSucceeded.Value);
-            if (IsPauseForCoverShot)
+            if (IsCoverShotMode)
             {
                 _searchLogImage = ScreenshotManager.TakeNextShot(importPeptideSearchDlg);
                 Assert.IsNotNull(_searchLogImage);
