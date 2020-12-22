@@ -63,7 +63,7 @@ namespace pwiz.SkylineTestTutorial
             {
                 UseRawFiles
                     ? @"https://skyline.ms/tutorials/iRT.zip"
-                    : @"https://skyline.ms/iRTMzml.zip",
+                    : @"https://skyline.ms/tutorials/iRTMzml.zip",
                 @"TestTutorial\IrtViews.zip"
             };
             RunFunctionalTest();
