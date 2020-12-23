@@ -556,7 +556,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 case Pages.import_fasta_page: // This is the last page (if there is no dda search)
                     if (ImportPeptideSearch.IsDDASearch)
                     {
-                        if (!ImportFastaControl.ContainsFastaContent) 
+                        if (!File.Exists(ImportFastaControl.FastaFile)) 
                         {
                             MessageBox.Show(this, Resources.ImportPeptideSearchDlg_NextPage_FastFileMissing_DDASearch,
                                 Program.Name, MessageBoxButtons.OK);
