@@ -22,6 +22,7 @@ using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.Controls.Clustering;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -44,8 +45,9 @@ namespace pwiz.Skyline.Controls.Clustering
             zedGraphControl1.GraphPane.Legend.IsVisible = false;
             zedGraphControl1.GraphPane.Margin.All = 0;
             zedGraphControl1.GraphPane.Border.IsVisible = false;
-            
         }
+
+        public SkylineWindow SkylineWindow { get; set; }
 
         public ClusterGraphResults GraphResults
         {
@@ -93,11 +95,16 @@ namespace pwiz.Skyline.Controls.Clustering
             var points = new PointPairList();
             foreach (var point in dataSet.Points)
             {
-                points.Add(new PointPair(point.ColumnIndex + 1, dataSet.RowCount - point.RowIndex)
+                if (point.Color.HasValue)
                 {
-                    Tag = point.Color
-                });
+                    var pointPair = new PointPair(point.ColumnIndex + 1, dataSet.RowCount - point.RowIndex)
+                    {
+                        Tag = point.Color
+                    };
+                    points.Add(pointPair);
+                }
             }
+
             zedGraphControl1.GraphPane.CurveList.Add(new ClusteredHeatMapItem(string.Empty, points));
 
             zedGraphControl1.GraphPane.YAxis.Type = AxisType.Text;
@@ -205,6 +212,12 @@ namespace pwiz.Skyline.Controls.Clustering
             {
                 Checked = ShowYAxisLabels
             });
+            var pointObject = PointFromMousePoint(mousePt);
+            if (pointObject?.ReplicateName != null || pointObject?.IdentityPath != null)
+            {
+                menuStrip.Items.Insert(0, new ToolStripSeparator());
+                menuStrip.Items.Insert(0, new ToolStripMenuItem(Resources.HierarchicalClusterGraph_zedGraphControl1_ContextMenuBuilder_Select, null, (o, args)=>SelectPoint(pointObject)));
+            }
         }
 
         private void ShowYAxisLabelsOnClick(object sender, EventArgs args)
@@ -215,6 +228,56 @@ namespace pwiz.Skyline.Controls.Clustering
         private void ShowXAxisLabelsOnClick(object sender, EventArgs args)
         {
             ShowXAxisLabels = !ShowXAxisLabels;
+        }
+
+
+        private ClusterGraphResults.Point PointFromMousePoint(Point mousePoint)
+        {
+            var graphPane = zedGraphControl1.GraphPane;
+            graphPane.ReverseTransform(new PointF(mousePoint.X, mousePoint.Y), out double x, out double y);
+            if (x < graphPane.XAxis.Scale.Min || x > graphPane.XAxis.Scale.Max)
+            {
+                return null;
+            }
+
+            if (y < graphPane.YAxis.Scale.Min || y > graphPane.YAxis.Scale.Max)
+            {
+                return null;
+            }
+
+            var columnIndex = (int)Math.Round(x - 1);
+            var rowIndex = (int)Math.Round(_graphResults.RowCount - y);
+            return _graphResults.Points.FirstOrDefault(p =>
+                p.ColumnIndex == columnIndex && p.RowIndex == rowIndex);
+        }
+
+        private void SelectPoint(ClusterGraphResults.Point point)
+        {
+            if (point == null || SkylineWindow == null)
+            {
+                return;
+            }
+            if (point.ReplicateName != null)
+            {
+                var replicateIndex = SkylineWindow?.DocumentUI.MeasuredResults?.Chromatograms
+                    .IndexOf(c => c.Name == point.ReplicateName);
+                if (replicateIndex.HasValue && replicateIndex.Value >= 0)
+                {
+                    SkylineWindow.SelectedResultsIndex = replicateIndex.Value;
+                }
+            }
+
+            if (point.IdentityPath != null)
+            {
+                try
+                {
+                    SkylineWindow.SelectedPath = point.IdentityPath;
+                }
+                catch (IdentityNotFoundException)
+                {
+                    // Ignore
+                }
+            }
         }
     }
 }

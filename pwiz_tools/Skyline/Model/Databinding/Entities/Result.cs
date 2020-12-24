@@ -23,7 +23,7 @@ using pwiz.Common.DataBinding;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
 {
-    public abstract class Result : SkylineObject, ILinkValue
+    public abstract class Result : SkylineObject, ILinkValue, IReplicateValue
     {
         private readonly ResultFile _resultFile;
         protected Result(SkylineDocNode docNode, ResultFile resultFile) : base(docNode.DataSchema)
@@ -68,6 +68,11 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public virtual bool IsEmpty()
         {
             return false;
+        }
+
+        Replicate IReplicateValue.GetReplicate()
+        {
+            return GetResultFile().Replicate;
         }
     }
 }

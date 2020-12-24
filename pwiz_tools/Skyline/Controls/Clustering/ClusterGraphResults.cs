@@ -21,6 +21,9 @@ using System.Collections.Generic;
 using System.Drawing;
 using pwiz.Common.Collections;
 using pwiz.Common.DataAnalysis.Clustering;
+using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Find;
 
 namespace pwiz.Skyline.Controls.Clustering
 {
@@ -73,9 +76,9 @@ namespace pwiz.Skyline.Controls.Clustering
             public ImmutableList<Header> Headers { get; private set; }
         }
 
-        public class Point
+        public class Point : Immutable
         {
-            public Point(int rowIndex, int columnIndex, Color color)
+            public Point(int rowIndex, int columnIndex, Color? color)
             {
                 RowIndex = rowIndex;
                 ColumnIndex = columnIndex;
@@ -83,7 +86,19 @@ namespace pwiz.Skyline.Controls.Clustering
             }
             public int ColumnIndex { get; set; }
             public int RowIndex { get; set; }
-            public Color Color { get; private set; }
+            public Color? Color { get; private set; }
+            public IdentityPath IdentityPath { get; private set; }
+
+            public Point ChangeIdentityPath(IdentityPath identityPath)
+            {
+                return ChangeProp(ImClone(this), im => im.IdentityPath = identityPath);
+            }
+            public string ReplicateName { get; private set; }
+
+            public Point ChangeReplicateName(string replicateName)
+            {
+                return ChangeProp(ImClone(this), im => im.ReplicateName = replicateName);
+            }
         }
     }
 }

@@ -11183,4 +11183,7 @@ Invalid peptide sequence at position 18
   <data name="DataboundGridControl_GetClusteredResults_Unable_to_choose_a_set_of_columns_to_use_for_hierarchical_clustering_" xml:space="preserve">
     <value>Unable to choose a set of columns to use for hierarchical clustering.</value>
   </data>
+  <data name="HierarchicalClusterGraph_zedGraphControl1_ContextMenuBuilder_Select" xml:space="preserve">
+    <value>Select</value>
+  </data>
 </root>

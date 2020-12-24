@@ -14465,6 +14465,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Select.
+        /// </summary>
+        public static string HierarchicalClusterGraph_zedGraphControl1_ContextMenuBuilder_Select {
+            get {
+                return ResourceManager.GetString("HierarchicalClusterGraph_zedGraphControl1_ContextMenuBuilder_Select", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to X-Axis Labels.
         /// </summary>
         public static string HierarchicalClusterGraph_zedGraphControl1_ContextMenuBuilder_X_Axis_Labels {
