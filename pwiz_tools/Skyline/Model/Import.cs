@@ -1288,7 +1288,7 @@ namespace pwiz.Skyline.Model
                 iLabelType = prec.LabelIndex;
 
                 indices.AssignDetected(iProt, iSequence, iPrecursor, iProduct, iLabelType, iFragmentName, iPrecursorCharge);
-
+                indices.IsSpecified();
                 return new GeneralRowReader(provider, separator, indices, settings, lines);
             }
 
@@ -2008,7 +2008,21 @@ namespace pwiz.Skyline.Model
             }
         }
 
-
+        public static bool IsSufficientlySpecified { get; set; }
+        // Check if a column select dialog is necessary, or if the essential columns are already identified by the headers
+        public void IsSpecified()
+        {
+            //These are the columns needed for a general case
+            if (PrecursorColumn != -1 &&
+                ProductColumn != -1 &&
+                PeptideColumn != -1 &&
+                ProteinColumn != -1 &&
+                Headers != null)
+            {
+                IsSufficientlySpecified = true;
+            }
+        }
+        
         // ReSharper disable StringLiteralTypo
         public static IEnumerable<string> ProteinNames { get { return new[] { @"proteinname", @"protein", @"proteinid", @"uniprotid" }; } }
         public static IEnumerable<string> PrecursorChargeNames { get { return new[] { @"precursorcharge" }; } }
