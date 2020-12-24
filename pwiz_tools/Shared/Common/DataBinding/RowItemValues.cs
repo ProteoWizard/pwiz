@@ -183,18 +183,19 @@ namespace pwiz.Common.DataBinding
         /// Returns a RowItemValues representing the values for a particular pivoted column along with that column's ancestors,
         /// plus the non-pivoted other columns.
         /// </summary>
-        public static RowItemValues ForCell(Type propertyType, DataPropertyDescriptor cellPropertyDescriptor, IEnumerable<DataPropertyDescriptor> otherPropertyDescriptors)
+        public static RowItemValues ForColumn(Type propertyType, IEnumerable<DataPropertyDescriptor> headers, IEnumerable<DataPropertyDescriptor> otherPropertyDescriptors)
         {
-            if (!(cellPropertyDescriptor is ColumnPropertyDescriptor columnPropertyDescriptor))
+            var headerColumns = headers.OfType<ColumnPropertyDescriptor>().ToList();
+            if (!headerColumns.Any())
             {
                 return Empty(propertyType);
             }
 
-            var pivotKeys = ImmutableList.Singleton(columnPropertyDescriptor.PivotKey);
+            var pivotKeys = ImmutableList.Singleton(headerColumns.First().PivotKey);
             var pivotPropertyPath = pivotKeys[0]?.Last.Key ?? PropertyPath.Root;
             var columnDescriptors = new List<ColumnDescriptor>();
 
-            foreach (var columnDescriptor in ColumnDescriptorsWithType(propertyType, new[] {columnPropertyDescriptor}))
+            foreach (var columnDescriptor in ColumnDescriptorsWithType(propertyType, headerColumns))
             {
                 if (!columnDescriptor.PropertyPath.StartsWith(pivotPropertyPath))
                 {

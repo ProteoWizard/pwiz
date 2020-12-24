@@ -1,4 +1,22 @@
-﻿using System;
+﻿/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2020 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -7,6 +25,8 @@ using pwiz.Common.Collections;
 using pwiz.Common.DataAnalysis.Clustering;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Clustering;
+using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
@@ -24,6 +44,8 @@ namespace pwiz.Skyline.Controls.Clustering
             InitializeComponent();
             Localizer = SkylineDataSchema.GetLocalizedSchemaLocalizer();
         }
+
+        public SkylineWindow SkylineWindow { get; set; }
 
         public Clusterer Clusterer { get; private set; }
 
@@ -198,7 +220,10 @@ namespace pwiz.Skyline.Controls.Clustering
                     color = entry.Key[colorHeaderLevel].Color;
                 }
 
-                var lineItem = new LineItem(label, entry.Value, color, symbolType);
+                var lineItem = new LineItem(label, entry.Value, color, symbolType)
+                {
+                    Tag = entry.Key
+                };
                 lineItem.Symbol.Fill = new Fill(color);
                 lineItem.Line.IsVisible = false;
                 zedGraphControl1.GraphPane.CurveList.Add(lineItem);
@@ -215,8 +240,8 @@ namespace pwiz.Skyline.Controls.Clustering
         private Dictionary<ImmutableList<HeaderLevel>, PointPairList> GetRowPointPairLists(int xAxisIndex, int yAxisIndex)
         {
             var pointLists = new Dictionary<ImmutableList<HeaderLevel>, PointPairList>();
-
             var results = Clusterer.PerformPcaOnRows(Math.Max(xAxisIndex, yAxisIndex) + 1);
+            var cellLocator = CellLocator.ForRow(Clusterer.Properties.RowHeaders);
             for (int iRow = 0; iRow < results.ItemLabels.Count; iRow++)
             {
                 var rowItem = results.ItemLabels[iRow];
@@ -235,7 +260,14 @@ namespace pwiz.Skyline.Controls.Clustering
                     pointPairList = new PointPairList();
                     pointLists.Add(key, pointPairList);
                 }
-                pointPairList.Add(results.ItemComponents[iRow][xAxisIndex], results.ItemComponents[iRow][yAxisIndex]);
+                var pointInfo = new PointInfo(key);
+                pointInfo = pointInfo.ChangeIdentityPath(cellLocator.GetSkylineDocNode(rowItem)?.IdentityPath)
+                    .ChangeReplicateName(cellLocator.GetReplicate(rowItem)?.Name);
+                var point = new PointPair(results.ItemComponents[iRow][xAxisIndex], results.ItemComponents[iRow][yAxisIndex])
+                {
+                    Tag = pointInfo
+                }; 
+                pointPairList.Add(point);
             }
 
             return pointLists;
@@ -266,7 +298,19 @@ namespace pwiz.Skyline.Controls.Clustering
                     pointPairList = new PointPairList();
                     pointLists.Add(key, pointPairList);
                 }
-                pointPairList.Add(results.ItemComponents[iColumn][xAxisIndex], results.ItemComponents[iColumn][yAxisIndex]);
+                var pointInfo = new PointInfo(key);
+                var cellLocator = CellLocator.ForColumn(headerLevels.Select(series => series.PropertyDescriptors[iColumn]).ToList(),
+                    ImmutableList.Empty<DataPropertyDescriptor>());
+                var rowItem = Clusterer.RowItems[0];
+                pointInfo = pointInfo.ChangeIdentityPath(cellLocator.GetSkylineDocNode(rowItem)?.IdentityPath)
+                    .ChangeReplicateName(cellLocator.GetReplicate(rowItem)?.Name);
+                var pointPair = new PointPair(results.ItemComponents[iColumn][xAxisIndex],
+                    results.ItemComponents[iColumn][yAxisIndex])
+                {
+                    Tag = pointInfo
+                };
+
+                pointPairList.Add(pointPair);
             }
 
             return pointLists;
@@ -309,6 +353,28 @@ namespace pwiz.Skyline.Controls.Clustering
             }
         }
 
+        public class PointInfo : Immutable
+        {
+            public PointInfo(IEnumerable<HeaderLevel> headerLevels)
+            {
+                HeaderLevels = ImmutableList.ValueOf(headerLevels);
+            }
+
+            public ImmutableList<HeaderLevel> HeaderLevels { get; private set; }
+            public IdentityPath IdentityPath { get; private set; }
+
+            public PointInfo ChangeIdentityPath(IdentityPath identityPath)
+            {
+                return ChangeProp(ImClone(this), im => im.IdentityPath = identityPath);
+            }
+            public string ReplicateName { get; private set; }
+
+            public PointInfo ChangeReplicateName(string replicateName)
+            {
+                return ChangeProp(ImClone(this), im => im.ReplicateName = replicateName);
+            }
+        }
+
         private void comboDataset_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (_inUpdateControls)
@@ -316,6 +382,45 @@ namespace pwiz.Skyline.Controls.Clustering
                 return;
             }
             UpdateGraph();
+        }
+
+        private bool zedGraphControl1_MouseDownEvent(ZedGraphControl sender, MouseEventArgs e)
+        {
+            var pointInfo = PointInfoFromMousePoint(e.Location);
+            if (pointInfo?.IdentityPath == null && pointInfo?.ReplicateName == null)
+            {
+                return false;
+            }
+            SkylineWindow?.SelectPathAndReplicate(pointInfo.IdentityPath, pointInfo.ReplicateName);
+            return true;
+        }
+
+        private PointInfo PointInfoFromMousePoint(Point point)
+        {
+            if (!zedGraphControl1.GraphPane.FindNearestPoint(point, out CurveItem nearestCurve, out int iNearest))
+            {
+                return null;
+            }
+
+            if (iNearest < 0 || iNearest >= nearestCurve.Points.Count)
+            {
+                return null;
+            }
+
+            var pointInfo = nearestCurve.Points[iNearest].Tag as PointInfo;
+            return pointInfo;
+        }
+
+        private bool zedGraphControl1_MouseMoveEvent(ZedGraphControl sender, MouseEventArgs e)
+        {
+            var pointInfo = PointInfoFromMousePoint(e.Location);
+            if (pointInfo?.IdentityPath == null && pointInfo?.ReplicateName == null)
+            {
+                return false;
+            }
+
+            sender.Cursor = Cursors.Hand;
+            return true;
         }
     }
 }

@@ -35,7 +35,6 @@ using pwiz.Skyline.Alerts;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Clustering;
 using pwiz.Skyline.Model.Databinding;
-using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -47,7 +46,6 @@ namespace pwiz.Skyline.Controls.Databinding
     public partial class DataboundGridControl: UserControl
     {
         private DataPropertyDescriptor _columnFilterPropertyDescriptor;
-        private int? _contextMenuRowIndex;
         private readonly object _errorMessageLock = new object();
         private bool _errorMessagePending;
         private bool _suppressErrorMessages;
@@ -105,6 +103,14 @@ namespace pwiz.Skyline.Controls.Databinding
                 }
             }
             return null;
+        }
+
+        private SkylineWindow DataSchemaSkylineWindow
+        {
+            get
+            {
+                return (BindingListSource.ViewContext?.DataSchema as SkylineDataSchema)?.SkylineWindow;
+            }
         }
 
         protected override void OnEnter(EventArgs e)
@@ -169,7 +175,7 @@ namespace pwiz.Skyline.Controls.Databinding
                     return false;
                 }
 
-                var skylineWindow = (BindingListSource.ViewContext?.DataSchema as SkylineDataSchema)?.SkylineWindow;
+                var skylineWindow = DataSchemaSkylineWindow;
                 if (skylineWindow == null)
                 {
                     return false;
@@ -267,7 +273,6 @@ namespace pwiz.Skyline.Controls.Databinding
             }
             e.ContextMenuStrip = contextMenuStrip;
             _columnFilterPropertyDescriptor = propertyDescriptor;
-            _contextMenuRowIndex = e.RowIndex;
             UpdateContextMenuItems();
         }
 
@@ -445,7 +450,7 @@ namespace pwiz.Skyline.Controls.Databinding
             {
                 return false;
             }
-            var skylineWindow = ((SkylineDataSchema) BindingListSource.ViewInfo.DataSchema).SkylineWindow;
+            var skylineWindow = DataSchemaSkylineWindow;
             if (null == skylineWindow)
             {
                 return false;
@@ -673,6 +678,7 @@ namespace pwiz.Skyline.Controls.Databinding
             var columnValues = new List<PivotedProperties.Series>();
             var columnGroups = new List<ClusterGraphResults.ColumnGroup>();
             var dataSchemaLocalizer = BindingListSource.ViewInfo.DataSchema.DataSchemaLocalizer;
+            var cellLocators = new List<CellLocator>();
             for (int iGroup = 0; iGroup < clusteredResults.PivotedProperties.SeriesGroups.Count; iGroup++)
             {
                 var group = clusteredResults.PivotedProperties.SeriesGroups[iGroup];
@@ -697,18 +703,15 @@ namespace pwiz.Skyline.Controls.Databinding
                         continue;
                     }
                     columnValues.Add(series);
-
                     columnGroups.Add(new ClusterGraphResults.ColumnGroup(
                         clusteredResults.ColumnGroupDendrogramDatas[iGroup].DendrogramData, groupHeaders));
-                }
-            }
-
-            var cellLocators = new List<CellLocator>();
-            foreach (var series in columnValues)
-            {
-                foreach (var propertyDescriptor in series.PropertyDescriptors)
-                {
-                    cellLocators.Add(CellLocator.ForColumn(propertyDescriptor, clusteredResults.ItemProperties));
+                    for (int iProperty = 0; iProperty < series.PropertyIndexes.Count; iProperty++)
+                    {
+                        var columnHeaders = groupColumnHeaders.Select(s => s.PropertyDescriptors[iProperty])
+                            .Prepend(series.PropertyDescriptors[iProperty]).ToList();
+                        var cellLocator = CellLocator.ForColumn(columnHeaders, clusteredResults.ItemProperties);
+                        cellLocators.Add(cellLocator);
+                    }
                 }
             }
             for (int iRow = 0; iRow < clusteredResults.RowCount; iRow++)
@@ -750,7 +753,7 @@ namespace pwiz.Skyline.Controls.Databinding
             var graphResults = new ClusterGraphResults(clusteredResults.RowDendrogramData.DendrogramData, rowHeaders, columnGroups, points);
             var heatMapGraph = new HierarchicalClusterGraph()
             {
-                SkylineWindow = ((SkylineDataSchema)BindingListSource.ViewInfo.DataSchema).SkylineWindow,
+                SkylineWindow = DataSchemaSkylineWindow,
                 GraphResults = graphResults
             };
             heatMapGraph.Show(FormUtil.FindTopLevelOwner(this));
@@ -961,43 +964,12 @@ namespace pwiz.Skyline.Controls.Databinding
         public void ShowPcaPlot()
         {
             var resultsTuple = GetClusteredResults();
-            var pcaPlot = new PcaPlot();
+            var pcaPlot = new PcaPlot()
+            {
+                SkylineWindow = DataSchemaSkylineWindow
+            };
             pcaPlot.SetData(resultsTuple.Item1, resultsTuple.Item3);
             pcaPlot.Show(FormUtil.FindTopLevelOwner(this));
-        }
-
-        private IEnumerable<ToolStripMenuItem> GetSelectMenuItems()
-        {
-            var menuItems = new List<ToolStripMenuItem>();
-            var reportResults = BindingListSource.ReportResults;
-            if (reportResults == null || !_contextMenuRowIndex.HasValue || _contextMenuRowIndex.Value < 0 || _contextMenuRowIndex.Value >= reportResults.RowCount)
-            {
-                return menuItems;
-            }
-
-            var rowItem = reportResults.RowItems[_contextMenuRowIndex.Value];
-            var selectTuple = GetElementsFromCell(rowItem, _columnFilterPropertyDescriptor, reportResults.ItemProperties);
-            var skylineDocNode = selectTuple.Item1;
-            if (skylineDocNode != null)
-            {
-                menuItems.Add(new ToolStripMenuItem(skylineDocNode.ToString(), null, (sender, args)=>skylineDocNode.LinkValueOnClick(sender, args)));
-            }
-
-            return menuItems;
-        }
-
-        public static Tuple<SkylineDocNode, Replicate> GetElementsFromCell(RowItem rowItem,
-            DataPropertyDescriptor columnPropertyDescriptor,
-            ICollection<DataPropertyDescriptor> otherPropertyDescriptors)
-        {
-            var skylineDocNode = RowItemValues.ForCell(typeof(SkylineDocNode),
-                columnPropertyDescriptor,
-                otherPropertyDescriptors).GetRowValues(rowItem).Cast<SkylineDocNode>().FirstOrDefault();
-            var replicate = RowItemValues
-                .ForCell(typeof(IReplicateValue), columnPropertyDescriptor, otherPropertyDescriptors)
-                .GetRowValues(rowItem).Cast<IReplicateValue>().Select(r => r.GetReplicate())
-                .FirstOrDefault(r => null != r);
-            return Tuple.Create(skylineDocNode, replicate);
         }
     }
 }

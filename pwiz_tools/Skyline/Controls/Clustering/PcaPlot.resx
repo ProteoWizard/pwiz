@@ -232,7 +232,7 @@
     <value>zedGraphControl1</value>
   </data>
   <data name="&gt;&gt;zedGraphControl1.Type" xml:space="preserve">
-    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.7650.15608, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
+    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.7662.26562, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
   </data>
   <data name="&gt;&gt;zedGraphControl1.Parent" xml:space="preserve">
     <value>$this</value>

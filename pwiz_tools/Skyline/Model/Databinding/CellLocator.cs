@@ -16,6 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
@@ -47,23 +49,34 @@ namespace pwiz.Skyline.Model.Databinding
 
         public Replicate GetReplicate(RowItem rowItem)
         {
-            return _replicateValues.GetRowValues(rowItem).OfType<IReplicateValue>()
-                .Select(r => r.GetReplicate()).FirstOrDefault(r => r != null);
+            return _replicateValues.GetRowValues(rowItem).OfType<Replicate>().FirstOrDefault();
         }
 
-        public static CellLocator ForColumn(DataPropertyDescriptor columnPropertyDescriptor,
+        private static IEnumerable<Type> ListDocNodeTypes()
+        {
+            return new[]
+            {
+                typeof(Entities.Transition),
+                typeof(Precursor),
+                typeof(Entities.Peptide),
+                typeof(Protein)
+            };
+        }
+
+        public static CellLocator ForColumn(ICollection<DataPropertyDescriptor> columnHeaders,
             ICollection<DataPropertyDescriptor> otherPropertyDescriptors)
         {
-            var docNodeValues = new[]
-                {
-                    typeof(Entities.Transition),
-                    typeof(Precursor),
-                    typeof(Entities.Peptide),
-                    typeof(Protein)
-                }.Select(type => RowItemValues.ForCell(type, columnPropertyDescriptor, otherPropertyDescriptors))
+            var docNodeValues = ListDocNodeTypes().Select(type => RowItemValues.ForColumn(type, columnHeaders, otherPropertyDescriptors))
                 .Where(v => !v.IsEmpty).ToList();
-            var replicateValue = RowItemValues.ForCell(typeof(IReplicateValue), columnPropertyDescriptor,
-                otherPropertyDescriptors);
+            var replicateValue = RowItemValues.ForColumn(typeof(Replicate), columnHeaders, otherPropertyDescriptors);
+            return new CellLocator(docNodeValues, replicateValue);
+        }
+
+        public static CellLocator ForRow(ICollection<DataPropertyDescriptor> rowHeaders)
+        {
+            var docNodeValues = ListDocNodeTypes().Select(type => RowItemValues.FromItemProperties(type, rowHeaders))
+                .Where(v => !v.IsEmpty).ToList();
+            var replicateValue = RowItemValues.FromItemProperties(typeof(Replicate), rowHeaders);
             return new CellLocator(docNodeValues, replicateValue);
         }
     }

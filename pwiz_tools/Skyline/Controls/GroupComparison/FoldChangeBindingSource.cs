@@ -361,7 +361,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
         }
 
         [InvariantDisplayName("ReplicateAbundance")]
-        public class ReplicateRow : IReplicateValue
+        public class ReplicateRow
         {
             public ReplicateRow(Replicate replicate, GroupIdentifier groupIdentifier, String identity, double? abundance)
             {
@@ -375,11 +375,6 @@ namespace pwiz.Skyline.Controls.GroupComparison
             public double? Abundance { get; private set; }
             public string ReplicateSampleIdentity { get; private set; }
             public GroupIdentifier ReplicateGroup { get; private set; }
-
-            Replicate IReplicateValue.GetReplicate()
-            {
-                return Replicate;
-            }
         }
     }
 }

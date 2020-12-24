@@ -253,31 +253,7 @@ namespace pwiz.Skyline.Controls.Clustering
 
         private void SelectPoint(ClusterGraphResults.Point point)
         {
-            if (point == null || SkylineWindow == null)
-            {
-                return;
-            }
-            if (point.ReplicateName != null)
-            {
-                var replicateIndex = SkylineWindow?.DocumentUI.MeasuredResults?.Chromatograms
-                    .IndexOf(c => c.Name == point.ReplicateName);
-                if (replicateIndex.HasValue && replicateIndex.Value >= 0)
-                {
-                    SkylineWindow.SelectedResultsIndex = replicateIndex.Value;
-                }
-            }
-
-            if (point.IdentityPath != null)
-            {
-                try
-                {
-                    SkylineWindow.SelectedPath = point.IdentityPath;
-                }
-                catch (IdentityNotFoundException)
-                {
-                    // Ignore
-                }
-            }
+            SkylineWindow?.SelectPathAndReplicate(point?.IdentityPath, point?.ReplicateName);
         }
     }
 }
