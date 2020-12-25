@@ -47,7 +47,6 @@ using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.ElementLocators.ExportAnnotations;
 using pwiz.Skyline.Model.GroupComparison;
-using pwiz.Skyline.Model.Prosit.Models;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
@@ -130,12 +129,7 @@ namespace pwiz.Skyline
             }
         }
 
-        private void graphsToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowGraphSpectrum(Settings.Default.ShowSpectra = true);
-        }
-
-        private class DockPanelLayoutLock : IDisposable
+        public class DockPanelLayoutLock : IDisposable
         {
             private DockPanel _dockPanel;
             private Control _coverControl;
@@ -152,7 +146,7 @@ namespace pwiz.Skyline
 
             /// <summary>
             /// Called to lock layout of the <see cref="DockPanel"/>.  Locking
-            /// is defered until it is determined to be necessary to avoid the
+            /// is deferred until it is determined to be necessary to avoid the
             /// relayout calculation when locking is unnecessary.
             /// </summary>
             public void EnsureLocked()
@@ -324,77 +318,11 @@ namespace pwiz.Skyline
                     }
                 }
 
-                EnableGraphSpectrum(layoutLock, settingsNew, deserialized);
+                ViewMenu.UpdateGraphUi(layoutLock.EnsureLocked, settingsNew, deserialized);
 
                 var enable = settingsNew.HasResults;
-                bool enableSchedule = IsRetentionTimeGraphTypeEnabled(GraphTypeSummary.schedule);
                 bool enableRunToRun = IsRetentionTimeGraphTypeEnabled(GraphTypeSummary.run_to_run_regression);
-                if (replicateComparisonMenuItem.Enabled != enable ||
-                    retentionTimesMenuItem.Enabled != enableSchedule ||
-                    runToRunMenuItem.Enabled != enableRunToRun)
-                {
-                    retentionTimesMenuItem.Enabled = enableSchedule;
-                    replicateComparisonMenuItem.Enabled = enable;
-                    timePeptideComparisonMenuItem.Enabled = enable;
-                    regressionMenuItem.Enabled = enable;
-                    scoreToRunMenuItem.Enabled = enable;
-                    runToRunMenuItem.Enabled = runToRunToolStripMenuItem.Enabled = enableRunToRun;
-                    schedulingMenuItem.Enabled = enableSchedule;
-                    if (!deserialized)
-                    {
-                        layoutLock.EnsureLocked();
-                        UpdateUIGraphRetentionTime(IsRetentionTimeGraphTypeEnabled);
-                    }
-                }
-
-                if (resultsGridMenuItem.Enabled != enable)
-                {
-                    resultsGridMenuItem.Enabled = enable;
-                    if (!deserialized)
-                    {
-                        layoutLock.EnsureLocked();
-                        ShowResultsGrid(enable && Settings.Default.ShowResultsGrid);
-                    }
-                }
-                if (peakAreasMenuItem.Enabled != enable)
-                {
-                    peakAreasMenuItem.Enabled = enable;
-                    areaReplicateComparisonMenuItem.Enabled = enable;
-                    areaPeptideComparisonMenuItem.Enabled = enable;
-                    areaCVHistogramMenuItem.Enabled = enable;
-                    areaCVHistogram2DMenuItem.Enabled = enable;
-
-                    if (!deserialized)
-                    {
-                        layoutLock.EnsureLocked();
-                        UpdateUIGraphPeakArea(enable);
-                    }
-                }
-                if (massErrorsMenuItem.Enabled != enable)
-                {
-                    massErrorsMenuItem.Enabled = enable;
-                    massErrorReplicateComparisonMenuItem.Enabled = enable;
-                    massErrorPeptideComparisonMenuItem.Enabled = enable;
-
-                    if (!deserialized)
-                    {
-                        layoutLock.EnsureLocked();
-                        UpdateUIGraphMassError(enable);
-                    }
-                }
-
-                if (detectionsPlotsMenuItem.Enabled != enable)
-                {
-                    detectionsPlotsMenuItem.Enabled = enable;
-                    detectionsHistogramMenuItem.Enabled = enable;
-                    detectionsReplicateComparisonMenuItem.Enabled = Enabled;
-                    if (!deserialized)
-                    {
-                        layoutLock.EnsureLocked();
-                        UpdateUIGraphDetection(enable);
-                    }
-                }
-
+                runToRunToolStripMenuItem.Enabled = enableRunToRun;
                 if (_graphFullScan != null && _graphFullScan.Visible && !enable)
                 {
                     layoutLock.EnsureLocked();
@@ -500,14 +428,6 @@ namespace pwiz.Skyline
                                           select graph;
                     listUpdateGraphs.AddRange(listGraphUpdate.ToArray());
 
-                    // Make sure view menu is correctly enabled
-                    bool enabled = settingsNew.HasResults;
-                    chromatogramsMenuItem.Enabled = enabled;
-                    transitionsMenuItem.Enabled = enabled;
-                    transformChromMenuItem.Enabled = enabled;
-                    autoZoomMenuItem.Enabled = enabled;
-                    arrangeGraphsToolStripMenuItem.Enabled = enabled;
-
 //                    UpdateReplicateMenuItems(enabled);
 
                     // CONSIDER: Enable/disable submenus too?
@@ -544,34 +464,7 @@ namespace pwiz.Skyline
         {
             using (var layoutLock = new DockPanelLayoutLock(dockPanel))
             {
-                EnableGraphSpectrum(layoutLock, DocumentUI.Settings, false);
-            }
-        }
-
-        private void EnableGraphSpectrum(DockPanelLayoutLock layoutLock, SrmSettings settings, bool deserialized)
-        {
-            bool hasLibraries = settings.PeptideSettings.Libraries.HasLibraries;
-            bool enable = hasLibraries || PrositHelpers.PrositSettingsValid;
-            if (enable)
-            {
-                UpdateIonTypesMenuItemsVisibility();
-            }
-
-            bool enableChanging = graphsToolStripMenuItem.Enabled != enable;
-            if (enableChanging)
-            {
-                graphsToolStripMenuItem.Enabled = enable;
-                ionTypesMenuItem.Enabled = enable;
-                chargesMenuItem.Enabled = enable;
-                ranksMenuItem.Enabled = enable;
-            }
-
-            // Make sure we don't keep a spectrum graph around because it was
-            // persisted when Prosit settings were on and they no longer are
-            if ((enableChanging && !deserialized) || (deserialized && !hasLibraries && !enable))
-            {
-                layoutLock.EnsureLocked();
-                ShowGraphSpectrum(enable && Settings.Default.ShowSpectra);
+                ViewMenu.EnableGraphSpectrum(layoutLock.EnsureLocked, DocumentUI.Settings, false);
             }
         }
 
@@ -628,7 +521,7 @@ namespace pwiz.Skyline
             DestroyGraphFullScan();
             dockPanel.LoadFromXml(layoutStream, DeserializeForm);
             // SequenceTree resizes often prior to display, so we must restore its scrolling after
-            // all resizing has occured
+            // all resizing has occurred
             if (SequenceTree != null)
                 SequenceTree.UpdateTopNode();
 
@@ -762,7 +655,7 @@ namespace pwiz.Skyline
             }
             if (Equals(persistentString, typeof(ImmediateWindow).ToString()))
             {
-                 return _immediateWindow ?? CreateImmediateWindow();
+                return _immediateWindow ?? CreateImmediateWindow();
             }
             if (persistentString.StartsWith(typeof(GraphChromatogram).ToString()))
             {
@@ -798,14 +691,6 @@ namespace pwiz.Skyline
             }
             return null;
         }
-
-        // Disabling these menuitems allows the normal meaning of Ctrl-Up/Down
-        // to cause scrolling in the tree view.
-//        private void UpdateReplicateMenuItems(bool hasResults)
-//        {
-//            nextReplicateMenuItem.Enabled = hasResults && comboResults.SelectedIndex < comboResults.Items.Count - 1;
-//            previousReplicateMenuItem.Enabled = hasResults && comboResults.SelectedIndex > 0;
-//        }
 
         public void UpdateGraphPanes()
         {
@@ -1000,26 +885,17 @@ namespace pwiz.Skyline
         private void ionTypesMenuItem_DropDownOpening(object sender, EventArgs e)
         {
             var set = Settings.Default;
-            aMenuItem.Checked = aionsContextMenuItem.Checked = set.ShowAIons;
-            bMenuItem.Checked = bionsContextMenuItem.Checked = set.ShowBIons;
-            cMenuItem.Checked = cionsContextMenuItem.Checked = set.ShowCIons;
-            xMenuItem.Checked = xionsContextMenuItem.Checked = set.ShowXIons;
-            yMenuItem.Checked = yionsContextMenuItem.Checked = set.ShowYIons;
-            zMenuItem.Checked = zionsContextMenuItem.Checked = set.ShowZIons;
-            fragmentsMenuItem.Checked = fragmentionsContextMenuItem.Checked = set.ShowFragmentIons;
-            precursorIonMenuItem.Checked = precursorIonContextMenuItem.Checked = set.ShowPrecursorIon;
-            UpdateIonTypesMenuItemsVisibility();
+            aionsContextMenuItem.Checked = set.ShowAIons;
+            bionsContextMenuItem.Checked = set.ShowBIons;
+            cionsContextMenuItem.Checked = set.ShowCIons;
+            xionsContextMenuItem.Checked = set.ShowXIons;
+            yionsContextMenuItem.Checked = set.ShowYIons;
+            zionsContextMenuItem.Checked = set.ShowZIons;
+            fragmentionsContextMenuItem.Checked = set.ShowFragmentIons;
+            precursorIonContextMenuItem.Checked = set.ShowPrecursorIon;
         }
 
         // Update the Ion Types menu for document contents
-        private void UpdateIonTypesMenuItemsVisibility()
-        {
-            aMenuItem.Visible = bMenuItem.Visible = cMenuItem.Visible = 
-               xMenuItem.Visible = yMenuItem.Visible = zMenuItem.Visible = 
-                  DocumentUI.DocumentType != SrmDocument.DOCUMENT_TYPE.small_molecules;
-
-            fragmentsMenuItem.Visible = DocumentUI.HasSmallMolecules;
-        }
 
         private void charge1MenuItem_Click(object sender, EventArgs e)
         {
@@ -1041,14 +917,16 @@ namespace pwiz.Skyline
             _graphSpectrumSettings.ShowCharge4 = !_graphSpectrumSettings.ShowCharge4;
         }
 
-        private void chargesMenuItem_DropDownOpening(object sender, EventArgs e)
+        public void chargesMenuItem_DropDownOpening(object sender, EventArgs e)
         {
             var set = _graphSpectrumSettings;
-            charge1MenuItem.Checked = charge1ContextMenuItem.Checked = set.ShowCharge1;
-            charge2MenuItem.Checked = charge2ContextMenuItem.Checked = set.ShowCharge2;
-            charge3MenuItem.Checked = charge3ContextMenuItem.Checked = set.ShowCharge3;
-            charge4MenuItem.Checked = charge4ContextMenuItem.Checked = set.ShowCharge4;
+            charge1ContextMenuItem.Checked = set.ShowCharge1;
+            charge2ContextMenuItem.Checked = set.ShowCharge2;
+            charge3ContextMenuItem.Checked = set.ShowCharge3;
+            charge4ContextMenuItem.Checked = set.ShowCharge4;
         }
+
+
 
         private void editToolStripMenuItem_DropDownOpening(object sender, EventArgs e)
         {
@@ -1370,7 +1248,7 @@ namespace pwiz.Skyline
             }
         }
 
-        private void UpdateSpectrumGraph(bool selectionChanged)
+        public void UpdateSpectrumGraph(bool selectionChanged)
         {
             if (_graphSpectrum != null)
                 _graphSpectrum.UpdateUI(selectionChanged);
@@ -1405,17 +1283,7 @@ namespace pwiz.Skyline
 
         private void CheckIonType(IonType type, bool check, bool visible)
         {
-            var set = Settings.Default;
-            switch (type)
-            {
-                case IonType.a: set.ShowAIons = aMenuItem.Checked = check; aMenuItem.Visible = visible; break;
-                case IonType.b: set.ShowBIons = bMenuItem.Checked = check; bMenuItem.Visible = visible; break;
-                case IonType.c: set.ShowCIons = cMenuItem.Checked = check; cMenuItem.Visible = visible; break;
-                case IonType.x: set.ShowXIons = xMenuItem.Checked = check; xMenuItem.Visible = visible; break;
-                case IonType.y: set.ShowYIons = yMenuItem.Checked = check; yMenuItem.Visible = visible; break;
-                case IonType.z: set.ShowZIons = zMenuItem.Checked = check; zMenuItem.Visible = visible; break;
-                case IonType.custom: set.ShowFragmentIons = fragmentsMenuItem.Checked = check; fragmentsMenuItem.Visible = visible; break;
-            }
+            ViewMenu.CheckIonType(type, check, visible);
         }
 
         // N.B. we're interested in the absolute value of charge here, so output list may be shorter than input list
@@ -1433,15 +1301,7 @@ namespace pwiz.Skyline
 
         private void CheckIonCharge(Adduct adduct, bool check)
         {
-            // Set charge settings without causing UI to update
-            var set = Settings.Default;
-            switch (Math.Abs(adduct.AdductCharge))  // TODO(bspratt) - need a lot more flexibility here, neg charges, M+Na etc
-            {
-                case 1: set.ShowCharge1 = charge1MenuItem.Checked = check; break;
-                case 2: set.ShowCharge2 = charge2MenuItem.Checked = check; break;
-                case 3: set.ShowCharge3 = charge3MenuItem.Checked = check; break;
-                case 4: set.ShowCharge4 = charge4MenuItem.Checked = check; break;
-            }
+            ViewMenu.CheckIonCharge(adduct, check);
         }
 
         public void HideFullScanGraph()
@@ -1523,74 +1383,6 @@ namespace pwiz.Skyline
         #endregion
 
         #region Chromatogram graphs
-
-        private void chromatogramsMenuItem_DropDownOpening(object sender, EventArgs e)
-        {
-            ToolStripMenuItem menu = chromatogramsMenuItem;
-            if (!DocumentUI.Settings.HasResults)
-            {
-                // Strange problem in .NET where a dropdown will show when
-                // its menuitem is disabled.
-                chromatogramsMenuItem.HideDropDown();
-                return;
-            }
-
-            // If MeasuredResults is null, then this menuitem is incorrectly enabled
-            var chromatograms = DocumentUI.Settings.MeasuredResults.Chromatograms;
-
-            int i = 0;
-            menu.DropDown.SuspendLayout();
-            try
-            {
-                foreach (var chrom in chromatograms)
-                {
-                    string name = chrom.Name;
-                    ToolStripMenuItem item = null;
-                    if (i < menu.DropDownItems.Count)
-                        item = menu.DropDownItems[i] as ToolStripMenuItem;
-                    if (item == null || name != item.Name)
-                    {
-                        // Remove the rest of the existing items
-                        while (!ReferenceEquals(menu.DropDownItems[i], toolStripSeparatorReplicates))
-                            menu.DropDownItems.RemoveAt(i);
-
-                        ShowChromHandler handler = new ShowChromHandler(this, chrom.Name);
-                        item = new ToolStripMenuItem(chrom.Name, null,
-                            handler.menuItem_Click);
-                        menu.DropDownItems.Insert(i, item);
-                    }
-
-                    i++;
-                }
-
-                // Remove the rest of the existing items
-                while (!ReferenceEquals(menu.DropDownItems[i], toolStripSeparatorReplicates))
-                    menu.DropDownItems.RemoveAt(i);
-            }
-            finally
-            {
-                menu.DropDown.ResumeLayout();
-            }
-
-            closeChromatogramMenuItem.Enabled = !string.IsNullOrEmpty(SelectedGraphChromName);
-        }
-
-        private class ShowChromHandler
-        {
-            private readonly SkylineWindow _skyline;
-            private readonly string _nameChromatogram;
-
-            public ShowChromHandler(SkylineWindow skyline, string nameChromatogram)
-            {
-                _skyline = skyline;
-                _nameChromatogram = nameChromatogram;
-            }
-
-            public void menuItem_Click(object sender, EventArgs e)
-            {
-                _skyline.ShowGraphChrom(_nameChromatogram, true);
-            }
-        }
 
         public PeptideGraphInfo GetPeptideGraphInfo(DocNode docNode)
         {
@@ -1909,16 +1701,6 @@ namespace pwiz.Skyline
             UpdateChromGraphs();
         }
 
-        private void nextReplicateMenuItem_Click(object sender, EventArgs e)
-        {
-            SelectedResultsIndex++;
-        }
-
-        private void previousReplicateMenuItem_Click(object sender, EventArgs e)
-        {
-            SelectedResultsIndex--;
-        }
-
         private void transitionsMenuItem_DropDownOpening(object sender, EventArgs e)
         {
             var displayType = GraphChromatogram.DisplayType;
@@ -1926,26 +1708,21 @@ namespace pwiz.Skyline
             // If both MS1 and MS/MS ions are not possible, then menu items to differentiate precursors and
             // products are not necessary.
             bool showIonTypeOptions = IsMultipleIonSources;
-            precursorsTranMenuItem.Visible =
-                precursorsTranContextMenuItem.Visible =
-                productsTranMenuItem.Visible =
+            precursorsTranContextMenuItem.Visible =
                 productsTranContextMenuItem.Visible = showIonTypeOptions;
 
             if (!showIonTypeOptions &&
-                    (displayType == DisplayTypeChrom.precursors || displayType == DisplayTypeChrom.products))
+                (displayType == DisplayTypeChrom.precursors || displayType == DisplayTypeChrom.products))
                 displayType = DisplayTypeChrom.all;
 
             // Only show all ions chromatogram options when at least one chromatogram of this type exists
             bool showAllIonsOptions = DocumentUI.Settings.HasResults &&
                 DocumentUI.Settings.MeasuredResults.HasAllIonsChromatograms;
-            basePeakMenuItem.Visible =
-                basePeakContextMenuItem.Visible =
-                ticMenuItem.Visible =
+
+            basePeakContextMenuItem.Visible =
                 ticContextMenuItem.Visible =
-                qcMenuItem.Visible =
-                qcContextMenuItem.Visible =
-                toolStripSeparatorTranMain.Visible =
-                toolStripSeparatorTran.Visible = showAllIonsOptions;
+                    qcContextMenuItem.Visible =
+                        toolStripSeparatorTran.Visible = showAllIonsOptions;
 
             if (!showAllIonsOptions &&
                     (displayType == DisplayTypeChrom.base_peak || displayType == DisplayTypeChrom.tic || displayType == DisplayTypeChrom.qc))
@@ -1953,20 +1730,13 @@ namespace pwiz.Skyline
 
             if (showAllIonsOptions)
             {
-                qcMenuItem.DropDownItems.Clear();
                 qcContextMenuItem.DropDownItems.Clear();
                 var qcTraceNames = DocumentUI.MeasuredResults.QcTraceNames.ToList();
                 if (qcTraceNames.Count > 0)
                 {
-                    var qcTraceItems = new ToolStripItem[qcTraceNames.Count];
                     var qcContextTraceItems = new ToolStripItem[qcTraceNames.Count];
                     for (int i = 0; i < qcTraceNames.Count; i++)
                     {
-                        qcTraceItems[i] = new ToolStripMenuItem(qcTraceNames[i], null, qcMenuItem_Click)
-                        {
-                            Checked = displayType == DisplayTypeChrom.qc &&
-                                      Settings.Default.ShowQcTraceName == qcTraceNames[i]
-                        };
                         qcContextTraceItems[i] = new ToolStripMenuItem(qcTraceNames[i], null, qcMenuItem_Click)
                         {
                             Checked = displayType == DisplayTypeChrom.qc &&
@@ -1974,34 +1744,24 @@ namespace pwiz.Skyline
                         };
                     }
 
-                    qcMenuItem.DropDownItems.AddRange(qcTraceItems);
                     qcContextMenuItem.DropDownItems.AddRange(qcContextTraceItems);
                 }
                 else
-                    qcMenuItem.Visible = qcContextMenuItem.Visible = false;
+                    qcContextMenuItem.Visible = false;
             }
 
-            precursorsTranMenuItem.Checked = precursorsTranContextMenuItem.Checked =
-                (displayType == DisplayTypeChrom.precursors);
-            productsTranMenuItem.Checked = productsTranContextMenuItem.Checked =
-                (displayType == DisplayTypeChrom.products);
-            singleTranMenuItem.Checked = singleTranContextMenuItem.Checked =
-                (displayType == DisplayTypeChrom.single);
-            allTranMenuItem.Checked = allTranContextMenuItem.Checked =
-                (displayType == DisplayTypeChrom.all);
-            totalTranMenuItem.Checked = totalTranContextMenuItem.Checked =
-                (displayType == DisplayTypeChrom.total);
-            basePeakMenuItem.Checked = basePeakContextMenuItem.Checked =
-                (displayType == DisplayTypeChrom.base_peak);
-            ticMenuItem.Checked = ticContextMenuItem.Checked =
-                (displayType == DisplayTypeChrom.tic);
-            splitGraphMenuItem.Checked = splitGraphContextMenuItem.Checked
-                = Settings.Default.SplitChromatogramGraph;
-            onlyQuantitativeContextMenuItem.Checked = onlyQuantitativeContextMenuItem.Checked 
-                = Settings.Default.ShowQuantitativeOnly;
+            precursorsTranContextMenuItem.Checked = (displayType == DisplayTypeChrom.precursors);
+            productsTranContextMenuItem.Checked = (displayType == DisplayTypeChrom.products);
+            singleTranContextMenuItem.Checked = (displayType == DisplayTypeChrom.single);
+            allTranContextMenuItem.Checked = (displayType == DisplayTypeChrom.all);
+            totalTranContextMenuItem.Checked = (displayType == DisplayTypeChrom.total);
+            basePeakContextMenuItem.Checked = (displayType == DisplayTypeChrom.base_peak);
+            ticContextMenuItem.Checked = (displayType == DisplayTypeChrom.tic);
+            splitGraphContextMenuItem.Checked = Settings.Default.SplitChromatogramGraph;
+            onlyQuantitativeContextMenuItem.Checked = Settings.Default.ShowQuantitativeOnly;
         }
 
-        private bool IsMultipleIonSources
+        public bool IsMultipleIonSources
         {
             get
             {
@@ -2316,16 +2076,17 @@ namespace pwiz.Skyline
         {
             var transform = GraphChromatogram.Transform;
 
-            transformChromNoneMenuItem.Checked = transformChromNoneContextMenuItem.Checked =
-                (transform == TransformChrom.raw);
-            transformChromInterploatedMenuItem.Checked = transformChromInterpolatedContextMenuItem.Checked =
-                (transform == TransformChrom.interpolated);
-            secondDerivativeMenuItem.Checked = secondDerivativeContextMenuItem.Checked =
-                (transform == TransformChrom.craw2d);
-            firstDerivativeMenuItem.Checked = firstDerivativeContextMenuItem.Checked =
-                (transform == TransformChrom.craw1d);
-            smoothSGChromMenuItem.Checked = smoothSGChromContextMenuItem.Checked =
-                (transform == TransformChrom.savitzky_golay);
+            transformChromNoneContextMenuItem.Checked = (transform == TransformChrom.raw);
+            transformChromInterpolatedContextMenuItem.Checked = (transform == TransformChrom.interpolated);
+            secondDerivativeContextMenuItem.Checked = (transform == TransformChrom.craw2d);
+            firstDerivativeContextMenuItem.Checked = (transform == TransformChrom.craw1d);
+            smoothSGChromContextMenuItem.Checked = (transform == TransformChrom.savitzky_golay);
+        }
+
+        public void SetTransformChrom(TransformChrom transformChrom)
+        {
+            Settings.Default.TransformTypeChromatogram = transformChrom.ToString();
+            UpdateChromGraphs();
         }
 
         private void transformChromNoneMenuItem_Click(object sender, EventArgs e)
@@ -2395,26 +2156,37 @@ namespace pwiz.Skyline
         private void autozoomMenuItem_DropDownOpening(object sender, EventArgs e)
         {
             bool hasRt = (DocumentUI.Settings.PeptideSettings.Prediction.RetentionTime != null);
-            autoZoomRTWindowMenuItem.Enabled = autoZoomRTWindowContextMenuItem.Enabled = hasRt;
-            autoZoomBothMenuItem.Enabled = autoZoomBothContextMenuItem.Enabled = hasRt;
+            autoZoomRTWindowContextMenuItem.Enabled = hasRt;
+            autoZoomBothContextMenuItem.Enabled = hasRt;
 
-            var zoom = GraphChromatogram.AutoZoom;
-            if (!hasRt)
+            var zoom = EffectiveAutoZoom;
+            autoZoomNoneContextMenuItem.Checked = (zoom == AutoZoomChrom.none);
+            autoZoomBestPeakContextMenuItem.Checked = (zoom == AutoZoomChrom.peak);
+            autoZoomRTWindowContextMenuItem.Checked = (zoom == AutoZoomChrom.window);
+            autoZoomBothContextMenuItem.Checked = (zoom == AutoZoomChrom.both);
+        }
+
+        public AutoZoomChrom EffectiveAutoZoom
+        {
+            get
             {
-                if (zoom == AutoZoomChrom.window)
-                    zoom = AutoZoomChrom.none;
-                else if (zoom == AutoZoomChrom.both)
-                    zoom = AutoZoomChrom.peak;
-            }
+                var zoom = GraphChromatogram.AutoZoom;
+                bool hasRt = (Document.Settings.PeptideSettings.Prediction.RetentionTime != null);
+                if (!hasRt)
+                {
+                    if (zoom == AutoZoomChrom.window)
+                    {
+                        return AutoZoomChrom.none;
+                    }
 
-            autoZoomNoneMenuItem.Checked = autoZoomNoneContextMenuItem.Checked =
-                (zoom == AutoZoomChrom.none);
-            autoZoomBestPeakMenuItem.Checked = autoZoomBestPeakContextMenuItem.Checked =
-                (zoom == AutoZoomChrom.peak);
-            autoZoomRTWindowMenuItem.Checked = autoZoomRTWindowContextMenuItem.Checked =
-                (zoom == AutoZoomChrom.window);
-            autoZoomBothMenuItem.Checked = autoZoomBothContextMenuItem.Checked =
-                (zoom == AutoZoomChrom.both);
+                    if (zoom == AutoZoomChrom.both)
+                    {
+                        return AutoZoomChrom.peak;
+                    }
+                }
+
+                return zoom;
+            }
         }
 
         private void autoZoomNoneMenuItem_Click(object sender, EventArgs e)
@@ -2475,7 +2247,7 @@ namespace pwiz.Skyline
             }
         }
 
-        private void ShowGraphChrom(string name, bool show)
+        internal void ShowGraphChrom(string name, bool show)
         {
             var graphChrom = GetGraphChrom(name);
             if (graphChrom != null)
@@ -2982,7 +2754,7 @@ namespace pwiz.Skyline
             }
         }
 
-        private void closeChromatogramMenuItem_Click(object sender, EventArgs e)
+        public void CloseMostRecentChromatogram()
         {
             var graphChromatogram = _listGraphChrom.LastOrDefault(g => !g.IsHidden);
             if (graphChromatogram != null)
@@ -3051,9 +2823,9 @@ namespace pwiz.Skyline
             return graphs.Any(g => g.Type == type && !g.IsHidden);
         }
 
-        private bool GraphChecked(IEnumerable<GraphSummary> graphs, IList<GraphTypeSummary> types, GraphTypeSummary type)
+        public bool GraphChecked(IEnumerable<GraphSummary> graphs, IList<GraphTypeSummary> types, GraphTypeSummary type)
         {
-            return (types.Contains(type)) && GraphVisible(graphs, type);
+            return types.Contains(type) && GraphVisible(graphs, type);
         }
 
         private void ShowGraph(List<GraphSummary> graphs, bool show, GraphTypeSummary type,
@@ -3105,7 +2877,7 @@ namespace pwiz.Skyline
             return _listGraphRetentionTime.Any(g => g.Type == type && !g.IsHidden);
         }
 
-        private void UpdateUIGraphRetentionTime(Func<GraphTypeSummary, bool> isEnabled)
+        public void UpdateUIGraphRetentionTime(Func<GraphTypeSummary, bool> isEnabled)
         {
             var list = Settings.Default.RTGraphTypes.ToArray();
             ShowGraphRetentionTime(isEnabled);
@@ -3121,7 +2893,7 @@ namespace pwiz.Skyline
             ShowGraphRetentionTime(t => show && IsRetentionTimeGraphTypeEnabled(t));
         }
 
-        private bool IsRetentionTimeGraphTypeEnabled(GraphTypeSummary type)
+        public bool IsRetentionTimeGraphTypeEnabled(GraphTypeSummary type)
         {
             bool enabled = DocumentUI.Settings.HasResults;
             switch (type)
@@ -3573,7 +3345,6 @@ namespace pwiz.Skyline
                 });
             }
         }
-
         private void timeGraphMenuItem_DropDownOpening(object sender, EventArgs e)
         {
             var types = Settings.Default.RTGraphTypes;
@@ -3582,17 +3353,11 @@ namespace pwiz.Skyline
 
             runToRunToolStripMenuItem.Checked = runToRunRegression;
             scoreToRunToolStripMenuItem.Checked = scoreToRunRegression;
-            runToRunMenuItem.Checked = runToRunRegression;
-            scoreToRunMenuItem.Checked = scoreToRunRegression;
-            regressionMenuItem.Checked = runToRunRegression || scoreToRunRegression;
             regressionContextMenuItem.Checked = runToRunRegression || scoreToRunRegression;
 
-            replicateComparisonMenuItem.Checked = replicateComparisonContextMenuItem.Checked = 
-                GraphChecked(_listGraphRetentionTime, types, GraphTypeSummary.replicate);
-            timePeptideComparisonMenuItem.Checked = timePeptideComparisonContextMenuItem.Checked = 
-                GraphChecked(_listGraphRetentionTime, types, GraphTypeSummary.peptide);
-            schedulingMenuItem.Checked = schedulingContextMenuItem.Checked = 
-                GraphChecked(_listGraphRetentionTime, types, GraphTypeSummary.schedule);
+            replicateComparisonContextMenuItem.Checked = GraphChecked(_listGraphRetentionTime, types, GraphTypeSummary.replicate);
+            timePeptideComparisonContextMenuItem.Checked = GraphChecked(_listGraphRetentionTime, types, GraphTypeSummary.peptide);
+            schedulingContextMenuItem.Checked = GraphChecked(_listGraphRetentionTime, types, GraphTypeSummary.schedule);
         }
 
         private void regressionMenuItem_Click(object sender, EventArgs e)
@@ -4110,6 +3875,31 @@ namespace pwiz.Skyline
         #region Peak area graph
 
         public GraphSummary GraphPeakArea { get { return _listGraphPeakArea.FirstOrDefault(); } }
+        public ICollection<GraphSummary> ListGraphPeakArea
+        {
+            get { return _listGraphPeakArea; }
+        }
+
+        public ICollection<GraphSummary> ListGraphDetections
+        {
+            get
+            {
+                return _listGraphDetections;
+            }
+        }
+
+        public ICollection<GraphSummary> ListGraphMassError
+        {
+            get
+            {
+                return _listGraphMassError;
+            }
+        }
+
+        public ICollection<GraphSummary> ListGraphRetentionTime
+        {
+            get { return _listGraphRetentionTime; }
+        }
 
         public void UpdateUIGraphPeakArea(bool visible)
         {
@@ -4755,14 +4545,38 @@ namespace pwiz.Skyline
             areaCVdecoysToolStripMenuItem.Visible = decoys;
             areaCVdecoysToolStripMenuItem.Checked = pointsType == PointsTypePeakArea.decoys;
         }
-
         private void areaGraphMenuItem_DropDownOpening(object sender, EventArgs e)
         {
             var types = Settings.Default.AreaGraphTypes;
-            areaReplicateComparisonMenuItem.Checked = areaReplicateComparisonContextMenuItem.Checked = GraphChecked(_listGraphPeakArea, types, GraphTypeSummary.replicate);
-            areaPeptideComparisonMenuItem.Checked = areaPeptideComparisonContextMenuItem.Checked = GraphChecked(_listGraphPeakArea, types, GraphTypeSummary.peptide);
-            areaCVHistogramMenuItem.Checked = areaCVHistogramContextMenuItem.Checked = GraphChecked(_listGraphPeakArea, types, GraphTypeSummary.histogram);
-            areaCVHistogram2DMenuItem.Checked = areaCVHistogram2DContextMenuItem.Checked = GraphChecked(_listGraphPeakArea, types, GraphTypeSummary.histogram2d);
+            var list = _listGraphPeakArea;
+            areaReplicateComparisonContextMenuItem.Checked = GraphChecked(list, types, GraphTypeSummary.replicate);
+            areaPeptideComparisonContextMenuItem.Checked = GraphChecked(list, types, GraphTypeSummary.peptide);
+            areaCVHistogramContextMenuItem.Checked = GraphChecked(list, types, GraphTypeSummary.histogram);
+            areaCVHistogram2DContextMenuItem.Checked = GraphChecked(list, types, GraphTypeSummary.histogram2d);
+        }
+
+        public bool GraphChecked(GraphTypeSummary type)
+        {
+            UniqueList<GraphTypeSummary> types;
+            List<GraphSummary> list;
+            switch (type)
+            {
+                case GraphTypeSummary.replicate:
+                case GraphTypeSummary.peptide:
+                case GraphTypeSummary.histogram:
+                case GraphTypeSummary.histogram2d:
+                    types = Settings.Default.AreaGraphTypes;
+                    list = _listGraphPeakArea;
+                    break;
+                case GraphTypeSummary.detections:
+                case GraphTypeSummary.detections_histogram:
+                    types = Settings.Default.DetectionGraphTypes;
+                    list = _listGraphDetections;
+                    break;
+                default: throw new ArgumentException();
+            }
+
+            return GraphChecked(list, types, type);
         }
 
         private void areaCV05binWidthToolStripMenuItem_Click(object sender, EventArgs e)
@@ -5224,20 +5038,16 @@ namespace pwiz.Skyline
 
         public void UpdateMassErrorGraph()
         {
-           _listGraphMassError.ForEach(g => g.UpdateUI());
+            _listGraphMassError.ForEach(g => g.UpdateUI());
         }
 
-        private void massErrorMenuItem_DropDownOpening(object sender, EventArgs e)
+        internal void massErrorMenuItem_DropDownOpening(object sender, EventArgs e)
         {
             var types = Settings.Default.MassErrorGraphTypes;
-            massErrorReplicateComparisonContextMenuItem.Checked = massErrorReplicateComparisonMenuItem.Checked =
-                GraphChecked(_listGraphMassError, types, GraphTypeSummary.replicate);
-            massErrorPeptideComparisonContextMenuItem.Checked = massErrorPeptideComparisonMenuItem.Checked =
-                GraphChecked(_listGraphMassError, types, GraphTypeSummary.peptide);
-            massErrorHistogramContextMenuItem.Checked = massErrorHistogramMenuItem.Checked =
-                GraphChecked(_listGraphMassError, types, GraphTypeSummary.histogram);
-            massErrorHistogram2DContextMenuItem.Checked = massErrorHistogram2DMenuItem.Checked =
-                GraphChecked(_listGraphMassError, types, GraphTypeSummary.histogram2d);
+            massErrorReplicateComparisonContextMenuItem.Checked = GraphChecked(_listGraphMassError, types, GraphTypeSummary.replicate);
+            massErrorPeptideComparisonContextMenuItem.Checked = GraphChecked(_listGraphMassError, types, GraphTypeSummary.peptide);
+            massErrorHistogramContextMenuItem.Checked = GraphChecked(_listGraphMassError, types, GraphTypeSummary.histogram);
+            massErrorHistogram2DContextMenuItem.Checked = GraphChecked(_listGraphMassError, types, GraphTypeSummary.histogram2d);
         }
 
         private void BuildMassErrorGraphMenu(GraphSummary graph, ToolStrip menuStrip)
@@ -5571,19 +5381,6 @@ namespace pwiz.Skyline
         #endregion
 
         #region Detections Graph
-        private void detectionsPlotsMenuItem_Click(object sender, EventArgs e)
-        {
-            var types = Settings.Default.DetectionGraphTypes;
-            detectionsReplicateComparisonMenuItem.Checked = detectionsReplicateComparisonMenuItem.Checked = GraphChecked(_listGraphDetections, types, GraphTypeSummary.detections);
-            detectionsHistogramMenuItem.Checked = detectionsHistogramMenuItem.Checked = GraphChecked(_listGraphDetections, types, GraphTypeSummary.detections_histogram);
-        }
-
-        private void graphDetections_DropDownOpening(object sender, EventArgs e)
-        {
-            var types = Settings.Default.DetectionGraphTypes;
-            detectionsReplicateComparisonMenuItem.Checked = detectionsReplicateComparisonMenuItem.Checked = GraphChecked(_listGraphDetections, types, GraphTypeSummary.detections);
-            detectionsHistogramMenuItem.Checked = detectionsHistogramMenuItem.Checked = GraphChecked(_listGraphDetections, types, GraphTypeSummary.detections_histogram);
-        }
 
         private void detectionsReplicateComparisonMenuItem_Click(object sender, EventArgs e)
         {
@@ -5830,11 +5627,6 @@ namespace pwiz.Skyline
 
         #region Results Grid
 
-        private void resultsGridMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowResultsGrid(Settings.Default.ShowResultsGrid = true);
-        }
-
         public void ShowResultsGrid(bool show)
         {
             if (show)
@@ -6079,11 +5871,6 @@ namespace pwiz.Skyline
 
         private const double MAX_TILED_ASPECT_RATIO = 2;
 
-        private void arrangeTiledMenuItem_Click(object sender, EventArgs e)
-        {
-            ArrangeGraphsTiled();
-        }
-
         public void ArrangeGraphsTiled()
         {
             ArrangeGraphs(DisplayGraphsType.Tiled);
@@ -6124,11 +5911,6 @@ namespace pwiz.Skyline
             {
                 ArrangeGraphsTabbed(listGraphs);
             }
-        }
-
-        private void arrangeGroupedMenuItem_Click(object sender, EventArgs e)
-        {
-            ArrangeGraphsGrouped();
         }
 
         public void ArrangeGraphsGrouped()
