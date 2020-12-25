@@ -11102,8 +11102,8 @@ Invalid peptide sequence at position 18
   <data name="PermuteIsotopeModificationsDlg_OkDialog_Permuting_Isotope_Modifications" xml:space="preserve">
     <value>Permuting Isotope Modifications</value>
   </data>
-  <data name="IsotopeModificationPermuter_PermuteIsotopeModifications_Permuting_isotope_modifiations" xml:space="preserve">
-    <value>Permuting isotope modifiations</value>
+  <data name="IsotopeModificationPermuter_PermuteIsotopeModifications_Permuting_isotope_modifications" xml:space="preserve">
+    <value>Permuting isotope modifications</value>
   </data>
   <data name="PermuteIsotopeModificationsDlg_OkDialog_Updating_settings" xml:space="preserve">
     <value>Updating settings</value>

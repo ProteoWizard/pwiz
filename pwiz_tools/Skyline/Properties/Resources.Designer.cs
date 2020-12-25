@@ -16266,12 +16266,12 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Permuting isotope modifiations.
+        ///   Looks up a localized string similar to Permuting isotope modifications.
         /// </summary>
-        public static string IsotopeModificationPermuter_PermuteIsotopeModifications_Permuting_isotope_modifiations {
+        public static string IsotopeModificationPermuter_PermuteIsotopeModifications_Permuting_isotope_modifications {
             get {
-                return ResourceManager.GetString("IsotopeModificationPermuter_PermuteIsotopeModifications_Permuting_isotope_modifia" +
-                        "tions", resourceCulture);
+                return ResourceManager.GetString("IsotopeModificationPermuter_PermuteIsotopeModifications_Permuting_isotope_modific" +
+                        "ations", resourceCulture);
             }
         }
         
