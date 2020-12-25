@@ -125,6 +125,7 @@ namespace pwiz.Skyline
             this.precursorsTranContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.productsTranContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.singleTranContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.deconvolutedContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.totalTranContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparatorTran = new System.Windows.Forms.ToolStripSeparator();
             this.basePeakContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -417,6 +418,7 @@ namespace pwiz.Skyline
             this.precursorsTranMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.productsTranMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.singleTranMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.deconvolutedMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.totalTranMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparatorTranMain = new System.Windows.Forms.ToolStripSeparator();
             this.basePeakMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -1199,6 +1201,7 @@ namespace pwiz.Skyline
             this.precursorsTranContextMenuItem,
             this.productsTranContextMenuItem,
             this.singleTranContextMenuItem,
+            this.deconvolutedContextMenuItem,
             this.totalTranContextMenuItem,
             this.toolStripSeparatorTran,
             this.basePeakContextMenuItem,
@@ -1235,6 +1238,12 @@ namespace pwiz.Skyline
             this.singleTranContextMenuItem.Name = "singleTranContextMenuItem";
             resources.ApplyResources(this.singleTranContextMenuItem, "singleTranContextMenuItem");
             this.singleTranContextMenuItem.Click += new System.EventHandler(this.singleTranMenuItem_Click);
+            // 
+            // deconvolutedContextMenuItem
+            // 
+            this.deconvolutedContextMenuItem.Name = "deconvolutedContextMenuItem";
+            resources.ApplyResources(this.deconvolutedContextMenuItem, "deconvolutedContextMenuItem");
+            this.deconvolutedContextMenuItem.Click += new System.EventHandler(this.deconvolutedMenuItem_Click);
             // 
             // totalTranContextMenuItem
             // 
@@ -3291,6 +3300,7 @@ namespace pwiz.Skyline
             this.precursorsTranMenuItem,
             this.productsTranMenuItem,
             this.singleTranMenuItem,
+            this.deconvolutedMenuItem,
             this.totalTranMenuItem,
             this.toolStripSeparatorTranMain,
             this.basePeakMenuItem,
@@ -3327,6 +3337,12 @@ namespace pwiz.Skyline
             this.singleTranMenuItem.Name = "singleTranMenuItem";
             resources.ApplyResources(this.singleTranMenuItem, "singleTranMenuItem");
             this.singleTranMenuItem.Click += new System.EventHandler(this.singleTranMenuItem_Click);
+            // 
+            // deconvolutedMenuItem
+            // 
+            this.deconvolutedMenuItem.Name = "deconvolutedMenuItem";
+            resources.ApplyResources(this.deconvolutedMenuItem, "deconvolutedMenuItem");
+            this.deconvolutedMenuItem.Click += new System.EventHandler(this.deconvolutedMenuItem_Click);
             // 
             // totalTranMenuItem
             // 
@@ -4837,6 +4853,8 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem detectionsPropertiesToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator detectionsToolStripSeparator3;
         private System.Windows.Forms.ToolStripMenuItem detectionsYScalePercentToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem deconvolutedContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem deconvolutedMenuItem;
     }
 }
 

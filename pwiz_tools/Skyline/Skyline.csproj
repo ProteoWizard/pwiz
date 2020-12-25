@@ -560,6 +560,9 @@
       <DependentUpon>PrositResources.resx</DependentUpon>
     </Compile>
     <Compile Include="Model\Prosit\PrositRetentionScoreCalculator.cs" />
+    <Compile Include="Model\Results\Deconvolution\DeconvolutedChromatogram.cs" />
+    <Compile Include="Model\Results\Deconvolution\Deconvoluter.cs" />
+    <Compile Include="Model\Results\Deconvolution\DeconvolutionKey.cs" />
     <Compile Include="Model\Results\PeakIntegrator.cs" />
     <Compile Include="Model\Results\NormalizedValueCalculator.cs" />
     <Compile Include="Model\Results\NormalizeOption.cs" />

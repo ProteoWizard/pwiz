@@ -2112,6 +2112,8 @@ namespace pwiz.Skyline
                 (displayType == DisplayTypeChrom.base_peak);
             ticMenuItem.Checked = ticContextMenuItem.Checked =
                 (displayType == DisplayTypeChrom.tic);
+            deconvolutedMenuItem.Checked = deconvolutedContextMenuItem.Checked =
+                (displayType == DisplayTypeChrom.deconvoluted);
             splitGraphMenuItem.Checked = splitGraphContextMenuItem.Checked
                 = Settings.Default.SplitChromatogramGraph;
             onlyQuantitativeContextMenuItem.Checked = onlyQuantitativeContextMenuItem.Checked 
@@ -2444,6 +2446,11 @@ namespace pwiz.Skyline
         public void ShowAllTransitions()
         {
             SetDisplayTypeChrom(DisplayTypeChrom.all);
+        }
+
+        private void deconvolutedMenuItem_Click(object sender, EventArgs e)
+        {
+            SetDisplayTypeChrom(DisplayTypeChrom.deconvoluted);
         }
 
         private void totalTranMenuItem_Click(object sender, EventArgs e)
