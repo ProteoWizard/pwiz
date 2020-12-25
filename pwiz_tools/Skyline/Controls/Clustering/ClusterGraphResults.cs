@@ -23,7 +23,6 @@ using pwiz.Common.Collections;
 using pwiz.Common.DataAnalysis.Clustering;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.Find;
 
 namespace pwiz.Skyline.Controls.Clustering
 {
