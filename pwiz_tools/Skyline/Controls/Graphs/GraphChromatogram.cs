@@ -39,6 +39,7 @@ using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.Themes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using SkylineTool;
 using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Graphs
@@ -2114,14 +2115,13 @@ ref double bestEndTime)
 
                 var timeIntensitiesScore = new TimeIntensities(timeIntensities.Times, timeIntensities.Intensities.Zip(scores,
                     (intensity, score) => (float)(intensity * score)), null, null);
-                var graphItemScore = new ChromGraphItem(nodeGroup, null, new ChromatogramInfo(timeIntensitiesScore),
-                    null, null, new bool[0], null, 0, true, false, null, 0, Color.Transparent, FontSize, LineWidth);
+                var graphItemScore = new ChromGraphItem(nodeGroup, null, new ChromatogramInfo(chromGroupInfo, 0) {TimeIntensities = timeIntensitiesScore},
+                    null, null, new bool[chromGroupInfo.NumPeaks], null, 0, true, false, null, 0, Color.Transparent, FontSize, LineWidth);
                 var scoreLine = (LineItem)_graphHelper.AddChromatogram(graphPaneKey, graphItemScore);
                 scoreLine.Line.Fill = new Fill(Color.FromArgb(30, color));
                 scoreLine.Label.IsVisible = false;
             }
         }
-
 
         private class DisplayPeptide
         {
