@@ -1896,7 +1896,6 @@
   <data name="editToolStripMenuItem.Text" xml:space="preserve">
     <value>&amp;Edit</value>
   </data>
-<<<<<<< HEAD
   <data name="undoMenuItem.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
@@ -2238,7 +2237,7 @@
   </data>
   <data name="manageResultsMenuItem.Text" xml:space="preserve">
     <value>Manage Re&amp;sults...</value>
-=======
+  </data>
   <data name="editToolStripMenuItem.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Fuchsia</value>
   </data>
@@ -2247,7 +2246,6 @@
   </data>
   <data name="editToolStripMenuItem.Text" xml:space="preserve">
     <value>&amp;Edit</value>
->>>>>>> remotes/origin/master
   </data>
   <data name="refineToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>52, 20</value>
@@ -3531,11 +3529,7 @@
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-<<<<<<< HEAD
     <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=20.2.1.354, Culture=neutral, PublicKeyToken=null</value>
-=======
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=20.2.1.350, Culture=neutral, PublicKeyToken=null</value>
->>>>>>> remotes/origin/master
   </data>
   <data name="&gt;&gt;cutContextMenuItem.Name" xml:space="preserve">
     <value>cutContextMenuItem</value>
@@ -6337,10 +6331,6 @@
     <value>SkylineWindow</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-<<<<<<< HEAD
-    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=20.2.1.354, Culture=neutral, PublicKeyToken=null</value>
-=======
     <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=20.2.1.350, Culture=neutral, PublicKeyToken=null</value>
->>>>>>> remotes/origin/master
   </data>
 </root>
