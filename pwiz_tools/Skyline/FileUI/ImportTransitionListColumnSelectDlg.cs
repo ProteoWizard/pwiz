@@ -23,7 +23,6 @@ using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
-using NHibernate.Mapping;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -31,7 +30,6 @@ using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
-using System.Diagnostics;
 
 namespace pwiz.Skyline.FileUI
 {
@@ -60,7 +58,6 @@ namespace pwiz.Skyline.FileUI
             DisplayData();
             PopulateComboBoxes();
             //dataGrid.Update();
-            CloseIfSpecified();
             ResizeComboBoxes();
         }
 
@@ -206,20 +203,8 @@ namespace pwiz.Skyline.FileUI
             comboPanelOuter.Size = new Size(gridWidth, height);
             comboPanelInner.Size = new Size(xOffset, height);
             comboPanelInner.Location = new Point(-dataGrid.HorizontalScrollingOffset, 0);
-
-            // This method seems to only work if it is placed here. Will move in the future. 
-            CloseIfSpecified();
-
         }
 
-        private void CloseIfSpecified()
-        {
-            // Closes the form if all the necessary columns have already been found in the headers
-            if (ColumnIndices.IsSufficientlySpecified)
-            {
-                buttonOk.PerformClick();
-            }
-        }
         // Sets the text of a combo box, with error checking
         private void SetComboBoxText(int comboBoxIndex, string text)
         {
