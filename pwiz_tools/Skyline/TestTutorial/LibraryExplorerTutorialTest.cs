@@ -17,6 +17,8 @@
  * limitations under the License.
  */
 using System;
+using System.Drawing;
+using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
@@ -47,10 +49,19 @@ namespace pwiz.SkylineTestTutorial
 //            IsCoverShotMode = true;
             CoverShotName = "LibraryExplorer";
 
-            LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/LibraryExplorer-1_4.pdf";
+            LinkPdf = "https://skyline.ms/labkey/_webdav/home/software/Skyline/%40files/tutorials/LibraryExplorer-20_2.pdf";
 
-            TestFilesZip = @"https://skyline.gs.washington.edu/tutorials/LibraryExplorer.zip";
+            TestFilesZipPaths = new[]
+            {
+                @"https://skyline.gs.washington.edu/tutorials/LibraryExplorer.zip",
+                @"TestTutorial\LibraryExplorerViews.zip"
+            };
             RunFunctionalTest();
+        }
+
+        private string GetTestPath(string relativePath)
+        {
+            return TestFilesDirs[0].GetTestPath(Path.Combine(@"LibraryExplorer", relativePath));
         }
 
         protected override void DoTest()
@@ -62,8 +73,7 @@ namespace pwiz.SkylineTestTutorial
             RunDlg<EditLibraryDlg>(editListUI.AddItem, editLibraryDlg =>
             {
                 editLibraryDlg.LibrarySpec =
-                    new BiblioSpecLibSpec("Experiment 15N", // Not L10N
-                        TestFilesDir.GetTestPath(@"LibraryExplorer\labeled_15N.blib")); // Not L10N
+                    new BiblioSpecLibSpec("Experiment 15N", GetTestPath(@"labeled_15N.blib"));
                 editLibraryDlg.OkDialog();
             });
             OkDialog(editListUI, editListUI.OkDialog);
@@ -147,15 +157,14 @@ namespace pwiz.SkylineTestTutorial
             
             // Settings > Peptides Settings
             var peptideSettingsUI1 = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
-            const string glnPyroGluName = "Gln->pyro-Glu"; // Not L10N
-            var glnPyroGlu = new StaticMod(glnPyroGluName, "Q", null, true, "-NH3", LabelAtoms.None, // Not L10N
-                                          RelativeRT.Unknown, null, null, null);
+            const string glnPyroGluName = "Gln->pyro-Glu (N-term Q)"; // Not L10N
+            var glnPyroGlu = UniMod.GetModification(glnPyroGluName, out _);
+            glnPyroGlu = glnPyroGlu.ChangeVariable(true);
             AddStaticMod(glnPyroGlu, peptideSettingsUI1, "Edit Structural Modification form", 8);
 
             RunUI(() => peptideSettingsUI1.PickedStaticMods = new[] {carbamidoName, glnPyroGluName});
             const string label15NName = "Label:15N"; // Not L10N
-            var mod15N = new StaticMod(label15NName, null, null, false, null, LabelAtoms.N15,
-                              RelativeRT.Matching, null, null, null);
+            var mod15N = UniMod.GetModification(label15NName, out _);
             AddHeavyMod(mod15N, peptideSettingsUI1, "Edit Structural Modification form", 9);
             RunUI(() => peptideSettingsUI1.PickedHeavyMods = new[] { label15NName });
             PauseForScreenShot<PeptideSettingsUI.ModificationsTab>("Peptide Settings - Modificatoins tab", 10);
@@ -215,7 +224,12 @@ namespace pwiz.SkylineTestTutorial
             Assert.AreEqual(peptideSequence2, docAdd2.Peptides.ToArray()[1].Peptide.Sequence);
 
             // Edit > ExpandAll > Peptides
-            RunUI(() => SkylineWindow.ExpandPeptides());
+            RunUI(() =>
+            {
+                SkylineWindow.ExpandPeptides();
+                SkylineWindow.Size = new Size(918, 553);
+            });
+            RestoreViewOnScreen(12);
             PauseForScreenShot("Main window", 12);
 
             // Adding DNAGAATEEFIKR++ (has ok)
@@ -250,7 +264,7 @@ namespace pwiz.SkylineTestTutorial
             OkDialog(viewLibraryDlg, viewLibraryDlg.CancelDialog);
 
             // Save current document as 15N_library_peptides.sky
-            RunUI(() => SkylineWindow.SaveDocument(TestFilesDir.GetTestPath(@"LibraryExplorer\15N_library_peptides.sky"))); // Not L10N
+            RunUI(() => SkylineWindow.SaveDocument(GetTestPath(@"15N_library_peptides.sky")));
             RunUI(() => SkylineWindow.NewDocument());
 
             // Neutral Losses p. 13
@@ -270,8 +284,7 @@ namespace pwiz.SkylineTestTutorial
             RunDlg<EditLibraryDlg>(editListUI1.AddItem, editLibraryDlg =>
             {
                 editLibraryDlg.LibrarySpec =
-                    new BiblioSpecLibSpec(humanPhosphoLibName,
-                        TestFilesDir.GetTestPath(@"LibraryExplorer\phospho.blib")); // Not L10N
+                    new BiblioSpecLibSpec(humanPhosphoLibName, GetTestPath(@"phospho.blib"));
                 editLibraryDlg.OkDialog();
             });
             OkDialog(editListUI1, editListUI1.OkDialog);
@@ -369,9 +382,8 @@ namespace pwiz.SkylineTestTutorial
                 ShowDialog<BuildBackgroundProteomeDlg>(peptideSettingsUI3.ShowBuildBackgroundProteomeDlg);
             RunUI(() =>
             {
-                buildBackgroundProteomeDlg.BackgroundProteomePath =
-                    TestFilesDir.GetTestPath(@"LibraryExplorer\human.protdb"); // Not L10N
-                buildBackgroundProteomeDlg.BackgroundProteomeName = "Human (mini)"; // Not L10N
+                buildBackgroundProteomeDlg.BackgroundProteomePath = GetTestPath(@"human.protdb");
+                buildBackgroundProteomeDlg.BackgroundProteomeName = "Human (mini)";
             });
             PauseForScreenShot<BuildBackgroundProteomeDlg>("Edit Background Proteome", 19);   // p. 19
 
@@ -420,7 +432,7 @@ namespace pwiz.SkylineTestTutorial
 
             {
                 var msgDlg = ShowDialog<MultiButtonMsgDlg>(filterMatchedPeptidesDlg.OkDialog);
-                PauseForScreenShot();   // p. 20, figure 2
+                PauseForScreenShot("Message form", 20);   // p. 20, figure 2
 
                 OkDialog(msgDlg, msgDlg.Btn1Click);
             }
@@ -430,7 +442,10 @@ namespace pwiz.SkylineTestTutorial
 
             AssertEx.IsDocumentState(docProteins, null, 250, 346, 347, 1041);
 
+            RestoreViewOnScreen(21);
             PauseForScreenShot("Main window", 21);
+
+            OkDialog(viewLibraryDlg, viewLibraryDlg.Close);
         }
     }
 }
