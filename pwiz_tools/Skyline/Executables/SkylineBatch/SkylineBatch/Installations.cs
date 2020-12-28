@@ -97,12 +97,12 @@ namespace SkylineBatch
             var skylinePath = Path.Combine(programFilesPath, Skyline);
             var skylineDailyPath = Path.Combine(programFilesPath, SkylineDaily);
             var adminInstallSkyline = Directory.Exists(skylinePath) &&
-                                      Directory.Exists(Path.Combine(skylinePath, SkylineCmdExe));
+                                      File.Exists(Path.Combine(skylinePath, SkylineCmdExe));
             Settings.Default.SkylineAdminCmdPath =
                 adminInstallSkyline ? Path.Combine(skylinePath, SkylineCmdExe) : null;
 
             var adminInstallSkylineDaily = Directory.Exists(skylineDailyPath) &&
-                                           Directory.Exists(Path.Combine(skylineDailyPath, SkylineCmdExe));
+                                           File.Exists(Path.Combine(skylineDailyPath, SkylineCmdExe));
             Settings.Default.SkylineDailyAdminCmdPath =
                 adminInstallSkylineDaily ? Path.Combine(skylineDailyPath, SkylineCmdExe) : null;
 

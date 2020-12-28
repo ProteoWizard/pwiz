@@ -57,6 +57,8 @@
             // 
             // textSkylineInstallPath
             // 
+            this.textSkylineInstallPath.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.textSkylineInstallPath.Location = new System.Drawing.Point(15, 50);
             this.textSkylineInstallPath.Name = "textSkylineInstallPath";
             this.textSkylineInstallPath.Size = new System.Drawing.Size(418, 20);
@@ -78,7 +80,7 @@
             // 
             // btnOk
             // 
-            this.btnOk.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
+            this.btnOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnOk.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F);
             this.btnOk.ImeMode = System.Windows.Forms.ImeMode.NoControl;
             this.btnOk.Location = new System.Drawing.Point(396, 79);
@@ -102,6 +104,9 @@
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.MaximizeBox = false;
+            this.MinimizeBox = false;
+            this.MinimumSize = new System.Drawing.Size(505, 152);
             this.Name = "FindSkyline";
             this.Text = "Specify Skyline Installation";
             this.ResumeLayout(false);
