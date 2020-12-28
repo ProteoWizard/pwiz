@@ -228,7 +228,7 @@
     <value>1</value>
   </data>
   <data name="checkShowMedian.Text" xml:space="preserve">
-    <value>メジアン(中央値)(&amp;D)</value>
+    <value>中央値(&amp;D)</value>
   </data>
   <data name="&gt;&gt;checkShowMedian.Name" xml:space="preserve">
     <value>checkShowMedian</value>

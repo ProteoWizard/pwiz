@@ -9,12 +9,13 @@ Undo Redo : 肽段设置 -- 修饰 已更改
 Summary   : 设置 > 肽段设置 -- 修饰 已更改
 All Info  :
 肽段设置 -- 修饰 已更改
-设置 > 肽段设置 -- 修饰 > 结构的修饰 : "Gln->pyro-Glu" 已添加
-设置 > 肽段设置 -- 修饰 > 结构的修饰 > "Gln->pyro-Glu" > 氨基酸 是 "Q"
-设置 > 肽段设置 -- 修饰 > 结构的修饰 > "Gln->pyro-Glu" > 变量 是 真
-设置 > 肽段设置 -- 修饰 > 结构的修饰 > "Gln->pyro-Glu" > 化学式 是 "-NH3"
-设置 > 肽段设置 -- 修饰 > 结构的修饰 > "Gln->pyro-Glu" > 单一同位素质量 是 "-17.026549"
-设置 > 肽段设置 -- 修饰 > 结构的修饰 > "Gln->pyro-Glu" > 平均质量 是 "-17.03052"
+设置 > 肽段设置 -- 修饰 > 结构的修饰 : "Gln->pyro-Glu (N-term Q)" 已添加
+设置 > 肽段设置 -- 修饰 > 结构的修饰 > "Gln->pyro-Glu (N-term Q)" > 氨基酸 是 "Q"
+设置 > 肽段设置 -- 修饰 > 结构的修饰 > "Gln->pyro-Glu (N-term Q)" > 末端 是 "N"
+设置 > 肽段设置 -- 修饰 > 结构的修饰 > "Gln->pyro-Glu (N-term Q)" > 变量 是 真
+设置 > 肽段设置 -- 修饰 > 结构的修饰 > "Gln->pyro-Glu (N-term Q)" > 化学式 是 "-H3N"
+设置 > 肽段设置 -- 修饰 > 结构的修饰 > "Gln->pyro-Glu (N-term Q)" > 单一同位素质量 是 "-17.026549"
+设置 > 肽段设置 -- 修饰 > 结构的修饰 > "Gln->pyro-Glu (N-term Q)" > 平均质量 是 "-17.03052"
 设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" : "Label:15N" 已添加
 设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" > "Label:15N" > 15N 是 真
 
@@ -63,7 +64,7 @@ All Info  :
 设置 > 肽段设置 -- 库 > 库 : "Experiment 15N" 已删除
 设置 > 肽段设置 -- 库 > 库 : "Human Phospho" 已添加
 设置 > 肽段设置 -- 库 > 库 > "Human Phospho" > 路径 是 "phospho.blib"
-设置 > 肽段设置 -- 修饰 > 结构的修饰 : "Gln->pyro-Glu" 已删除
+设置 > 肽段设置 -- 修饰 > 结构的修饰 : "Gln->pyro-Glu (N-term Q)" 已删除
 设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy": 已删除所有
 
 Undo Redo : 肽段设置 -- 修饰 > 结构的修饰 : "Phospho (ST)" 已添加
