@@ -55,15 +55,15 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
 //            IsCoverShotMode = true;
             CoverShotName = "HiResMetabolomics";
 
-            LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/HiResMetabolomics-20_1.pdf";
+            LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/HiResMetabolomics-20_1.pdf";
             ForceMzml = true; // Prefer mzML as being the more efficient download
 
             TestFilesPersistent = new[] { ExtWatersRaw };
             TestFilesZipPaths = new[]
             {
                 (UseRawFiles
-                   ? @"https://skyline.gs.washington.edu/tutorials/HiResMetabolomics.zip"
-                   : @"https://skyline.gs.washington.edu/tutorials/HiResMetabolomics_mzML.zip"),
+                   ? @"https://skyline.ms/tutorials/HiResMetabolomics.zip"
+                   : @"https://skyline.ms/tutorials/HiResMetabolomics_mzML.zip"),
                 @"TestPerf\HiResMetabolomicsViews.zip"
             };
             RunFunctionalTest();

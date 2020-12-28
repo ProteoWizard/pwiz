@@ -463,7 +463,7 @@
     <value>一致が見つかった場合に注釈に使用するテキストです。
 正規表現で括弧が使用されているときは、
 置換テキストに$1、$2、$3などを含んで
-一致するサブ表現に言及できます。</value>
+一致する代替表記に言及できます。</value>
   </data>
   <data name="&gt;&gt;tbxReplacement.Name" xml:space="preserve">
     <value>tbxReplacement</value>
