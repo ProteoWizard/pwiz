@@ -18,7 +18,7 @@ namespace SkylineBatch
     {
         public SkylineSettings(SkylineType type, string folderPath = "")
         {
-            this.Type = type;
+            Type = type;
 
             bool skylineAdminInstallation = !string.IsNullOrEmpty(Settings.Default.SkylineAdminCmdPath);
             bool skylineWebInstallation = !string.IsNullOrEmpty(Settings.Default.SkylineRunnerPath);
@@ -43,30 +43,27 @@ namespace SkylineBatch
                     CmdPath = Settings.Default.SkylineLocalCommandPath;
                     break;
                 case SkylineType.Custom:
-                    CmdPath = string.IsNullOrEmpty(folderPath) ? Settings.Default.SkylineCustomCmdPath : Path.Combine(folderPath, Installations.SkylineCmdExe);
-                    CmdPath = File.Exists(CmdPath) ? CmdPath : "";
+                    CmdPath = Path.Combine(folderPath, Installations.SkylineCmdExe);
                     break;
             }
-            
-            Validate();
+
+            if (string.IsNullOrEmpty(CmdPath) || !File.Exists(CmdPath))
+            {
+                SkylineType defaultType;
+                CmdPath = Installations.DefaultSkyline(out defaultType);
+                Type = defaultType;
+            }
         }
 
         public readonly SkylineType Type;
 
         public readonly string CmdPath;
 
-        public void Validate()
-        {
-            if (string.IsNullOrEmpty(CmdPath))
-            {
-                var typeString = Type.ToString().Contains("Skyline") ? Type + " installation": Type + " Skyline installation";
-                throw new ArgumentException($"Skyline Settings: Unable to find {typeString}.");
-            }
-        }
 
         private enum Attr
         {
-            Type
+            Type,
+            CmdPath,
         }
 
         
@@ -74,13 +71,15 @@ namespace SkylineBatch
         public static SkylineSettings ReadXml(XmlReader reader)
         {
             var type = Enum.Parse(typeof(SkylineType), reader.GetAttribute(Attr.Type), false);
-            return new SkylineSettings((SkylineType)type);
+            var cmdPath = Path.GetDirectoryName(reader.GetAttribute(Attr.CmdPath));
+            return new SkylineSettings((SkylineType)type, cmdPath);
         }
 
         public void WriteXml(XmlWriter writer)
         {
             writer.WriteStartElement("config_skyline_settings");
             writer.WriteAttributeIfString(Attr.Type, Type.ToString());
+            writer.WriteAttributeIfString(Attr.CmdPath, CmdPath);
             writer.WriteEndElement();
         }
 

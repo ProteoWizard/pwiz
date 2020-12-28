@@ -110,6 +110,36 @@ namespace SkylineBatch
 
         }
 
+        public static string DefaultSkyline(out SkylineType defaultType)
+        {
+            if (HasLocalSkylineCmd)
+            {
+                defaultType = SkylineType.Local;
+                return Settings.Default.SkylineLocalCommandPath;
+            }
+            if (HasSkyline)
+            {
+                defaultType = SkylineType.Skyline;
+                return string.IsNullOrEmpty(Settings.Default.SkylineAdminCmdPath)
+                    ? Settings.Default.SkylineRunnerPath
+                    : Settings.Default.SkylineAdminCmdPath;
+            } 
+            if (HasSkylineDaily)
+            {
+                defaultType = SkylineType.SkylineDaily;
+                return string.IsNullOrEmpty(Settings.Default.SkylineDailyAdminCmdPath)
+                    ? Settings.Default.SkylineDailyRunnerPath
+                    : Settings.Default.SkylineDailyAdminCmdPath;
+            }
+
+            if (HasCustomSkylineCmd)
+            {
+                defaultType = SkylineType.Custom;
+                return Settings.Default.SkylineCustomCmdPath;
+            }
+            throw new Exception("No Skyline installations found.");
+        }
+
         #endregion
 
 

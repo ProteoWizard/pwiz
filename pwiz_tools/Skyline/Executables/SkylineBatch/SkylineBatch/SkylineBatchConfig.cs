@@ -67,7 +67,7 @@ namespace SkylineBatch
             Name,
             Created,
             Modified
-        };
+        }
 
 
         #region XML
