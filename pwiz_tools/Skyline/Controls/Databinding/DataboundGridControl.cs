@@ -707,8 +707,8 @@ namespace pwiz.Skyline.Controls.Databinding
                         clusteredResults.ColumnGroupDendrogramDatas[iGroup].DendrogramData, groupHeaders));
                     for (int iProperty = 0; iProperty < series.PropertyIndexes.Count; iProperty++)
                     {
-                        var columnHeaders = groupColumnHeaders.Select(s => s.PropertyDescriptors[iProperty])
-                            .Prepend(series.PropertyDescriptors[iProperty]).ToList();
+                        var columnHeaders = groupColumnHeaders.Prepend(series)
+                            .Select(s => s.PropertyDescriptors[iProperty]).ToList();
                         var cellLocator = CellLocator.ForColumn(columnHeaders, clusteredResults.ItemProperties);
                         cellLocators.Add(cellLocator);
                     }
