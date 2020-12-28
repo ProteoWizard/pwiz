@@ -59,13 +59,13 @@ namespace pwiz.SkylineTestTutorial
 //            IsCoverShotMode = true;
             CoverShotName = "SmallMolecule";
 
-            LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/SmallMolecule-3_6.pdf";
+            LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/SmallMolecule-20_1.pdf";
 
             TestFilesZipPaths = new[]
             {
                 (UseRawFiles
-                   ? @"https://skyline.gs.washington.edu/tutorials/SmallMolecule_3_6.zip"
-                   : @"https://skyline.gs.washington.edu/tutorials/SmallMoleculeMzml_3_6.zip"),
+                   ? @"https://skyline.ms/tutorials/SmallMolecule_3_6.zip"
+                   : @"https://skyline.ms/tutorials/SmallMoleculeMzml_3_6.zip"),
                 @"TestTutorial\SmallMoleculeViews.zip"
             };
             RunFunctionalTest();

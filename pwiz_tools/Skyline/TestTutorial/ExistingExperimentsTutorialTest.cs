@@ -60,13 +60,13 @@ namespace pwiz.SkylineTestTutorial
 
             ForceMzml = false;
 
-            LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/ExistingQuant-1_4.pdf";
+            LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/ExistingQuant-20_1.pdf";
 
             TestFilesZipPaths = new[]
                 {
                     UseRawFilesOrFullData
-                        ? "https://skyline.gs.washington.edu/tutorials/ExistingQuant.zip"
-                        : "https://skyline.gs.washington.edu/tutorials/ExistingQuantMzml.zip",
+                        ? "https://skyline.ms/tutorials/ExistingQuant.zip"
+                        : "https://skyline.ms/tutorials/ExistingQuantMzml.zip",
                     @"TestTutorial\ExistingExperimentsViews.zip"
                 };
             RunFunctionalTest();
