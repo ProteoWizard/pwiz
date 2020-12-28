@@ -271,4 +271,10 @@
   <data name="Program_InitSkylineSettings__0__Error" xml:space="preserve">
     <value>{0} Error</value>
   </data>
+  <data name="FindSkyline_btnOkClick_Not_a_valid_Skyline_installation___" xml:space="preserve">
+    <value>Not a valid Skyline installation.</value>
+  </data>
+  <data name="FindSkyline_btnOkClick_No_SkylineCmd_exe_file_in__0__" xml:space="preserve">
+    <value>No SkylineCmd.exe file in {0}</value>
+  </data>
 </root>

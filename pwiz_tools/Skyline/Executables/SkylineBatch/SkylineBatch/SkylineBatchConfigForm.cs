@@ -127,6 +127,10 @@ namespace SkylineBatch
             {
                 textSkylineInstallationPath.Text = Path.GetDirectoryName(config.SkylineSettings.CmdPath);
             }
+            else if (!string.IsNullOrEmpty(Settings.Default.SkylineCustomCmdPath))
+            {
+                textSkylineInstallationPath.Text = Path.GetDirectoryName(Settings.Default.SkylineCustomCmdPath);
+            }
 
         }
 

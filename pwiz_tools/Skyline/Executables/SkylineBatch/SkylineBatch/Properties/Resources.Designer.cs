@@ -354,6 +354,24 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to No SkylineCmd.exe file in {0}.
+        /// </summary>
+        internal static string FindSkyline_btnOkClick_No_SkylineCmd_exe_file_in__0__ {
+            get {
+                return ResourceManager.GetString("FindSkyline_btnOkClick_No_SkylineCmd_exe_file_in__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Not a valid Skyline installation..
+        /// </summary>
+        internal static string FindSkyline_btnOkClick_Not_a_valid_Skyline_installation___ {
+            get {
+                return ResourceManager.GetString("FindSkyline_btnOkClick_Not_a_valid_Skyline_installation___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Select the {0} installation directory:.
         /// </summary>
         internal static string FindSkylineForm_btnBrowse_Click_Select_the__0__installation_directory {

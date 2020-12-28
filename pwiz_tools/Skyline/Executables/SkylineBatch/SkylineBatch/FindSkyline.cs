@@ -1,12 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using SkylineBatch.Properties;
 
@@ -37,17 +30,16 @@ namespace SkylineBatch
 
         private void btnOk_Click(object sender, EventArgs e)
         {
-            var CmdPath = Path.Combine(textSkylineInstallPath.Text, Installations.SkylineCmdExe);
-            if (File.Exists(CmdPath))
+            var cmdPath = Path.Combine(textSkylineInstallPath.Text, Installations.SkylineCmdExe);
+            if (File.Exists(cmdPath))
             {
-                if (CmdPath.Contains("SkylineDaily"))
-                    Settings.Default.SkylineDailyAdminCmdPath = CmdPath;
-                else
-                    Settings.Default.SkylineAdminCmdPath = CmdPath;
+                Settings.Default.SkylineCustomCmdPath = cmdPath;
                 DialogResult = DialogResult.OK;
                 Close();
+                return;
             }
-            MessageBox.Show("No SkylineCmd.exe file in " + textSkylineInstallPath.Text, "Not a valid Skyline installation.", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageBox.Show(string.Format(Resources.FindSkyline_btnOkClick_No_SkylineCmd_exe_file_in__0__, textSkylineInstallPath.Text),
+                Resources.FindSkyline_btnOkClick_Not_a_valid_Skyline_installation___, MessageBoxButtons.OK, MessageBoxIcon.Error);
 
         }
     }

@@ -93,5 +93,17 @@ namespace SkylineBatch.Properties {
                 this["SkylineDailyAdminCmdPath"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string SkylineCustomCmdPath {
+            get {
+                return ((string)(this["SkylineCustomCmdPath"]));
+            }
+            set {
+                this["SkylineCustomCmdPath"] = value;
+            }
+        }
     }
 }

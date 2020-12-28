@@ -43,7 +43,7 @@ namespace SkylineBatch
                     CmdPath = Settings.Default.SkylineLocalCommandPath;
                     break;
                 case SkylineType.Custom:
-                    CmdPath = Path.Combine(folderPath, Installations.SkylineCmdExe);
+                    CmdPath = string.IsNullOrEmpty(folderPath) ? Settings.Default.SkylineCustomCmdPath : Path.Combine(folderPath, Installations.SkylineCmdExe);
                     CmdPath = File.Exists(CmdPath) ? CmdPath : "";
                     break;
             }
@@ -66,8 +66,7 @@ namespace SkylineBatch
 
         private enum Attr
         {
-            Type,
-            CmdFolder
+            Type
         }
 
         
@@ -75,15 +74,13 @@ namespace SkylineBatch
         public static SkylineSettings ReadXml(XmlReader reader)
         {
             var type = Enum.Parse(typeof(SkylineType), reader.GetAttribute(Attr.Type), false);
-            var cmdPath = reader.GetAttribute(Attr.CmdFolder);
-            return new SkylineSettings((SkylineType)type, cmdPath);
+            return new SkylineSettings((SkylineType)type);
         }
 
         public void WriteXml(XmlWriter writer)
         {
             writer.WriteStartElement("config_skyline_settings");
             writer.WriteAttributeIfString(Attr.Type, Type.ToString());
-            writer.WriteAttributeIfString(Attr.CmdFolder, Path.GetDirectoryName(CmdPath));
             writer.WriteEndElement();
         }
 

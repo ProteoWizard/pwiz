@@ -40,6 +40,8 @@ namespace SkylineBatch
 
         public static bool HasLocalSkylineCmd => !string.IsNullOrEmpty(Settings.Default.SkylineLocalCommandPath);
 
+        public static bool HasCustomSkylineCmd => !string.IsNullOrEmpty(Settings.Default.SkylineCustomCmdPath) && File.Exists(Settings.Default.SkylineCustomCmdPath);
+
         public static bool HasSkyline => !string.IsNullOrEmpty(Settings.Default.SkylineAdminCmdPath) || !string.IsNullOrEmpty(Settings.Default.SkylineRunnerPath);
 
         public static bool HasSkylineDaily => !string.IsNullOrEmpty(Settings.Default.SkylineDailyAdminCmdPath) || !string.IsNullOrEmpty(Settings.Default.SkylineDailyRunnerPath);
@@ -51,7 +53,7 @@ namespace SkylineBatch
             FindLocalSkyline();
             FindClickOnceInstallations();
             FindAdministrativeInstallations();
-            return HasSkyline || HasSkylineDaily || HasLocalSkylineCmd;
+            return HasSkyline || HasSkylineDaily || HasLocalSkylineCmd || HasCustomSkylineCmd;
         }
 
         private static void FindLocalSkyline()
