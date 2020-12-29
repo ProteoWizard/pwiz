@@ -292,7 +292,7 @@ namespace pwiz.SkylineTestUtil
         }
 
 
-        public void TakeNextShot(Form activeWindow, string pathToSave = null, Action<Bitmap> processShot = null, double? scale = null)
+        public Bitmap TakeNextShot(Form activeWindow, string pathToSave = null, Action<Bitmap> processShot = null, double? scale = null)
         {
             _skylineWindow = Program.MainWindow;
             if (activeWindow == null)
@@ -335,6 +335,8 @@ namespace pwiz.SkylineTestUtil
                     clipThread.Join();
                 }
             }
+
+            return shotPic;
         }
 
         private void SaveToFile(string filePath, Bitmap bmp)

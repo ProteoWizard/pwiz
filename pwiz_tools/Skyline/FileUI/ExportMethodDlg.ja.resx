@@ -1397,7 +1397,7 @@ Skylineで制御されないトランジション値に対しては、単一の�
     <value>18</value>
   </data>
   <data name="btnGraph.Text" xml:space="preserve">
-    <value>グラフ化(&amp;G )...</value>
+    <value>グラフ化(&amp;G )…</value>
   </data>
   <data name="&gt;&gt;btnGraph.Name" xml:space="preserve">
     <value>btnGraph</value>
