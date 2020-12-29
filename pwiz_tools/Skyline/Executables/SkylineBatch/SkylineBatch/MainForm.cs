@@ -202,8 +202,11 @@ namespace SkylineBatch
             if (configManager.HasConfigs())
                 btnCancel.Enabled = true;
             // update ui log and switch to log tab
-            comboLogList.SelectedIndex = 0;
-            tabMain.SelectTab(tabLog);
+            if (configManager.ConfigsRunning())
+            {
+                comboLogList.SelectedIndex = 0;
+                tabMain.SelectTab(tabLog);
+            }
         }
 
         private void btnCancel_Click(object sender, EventArgs e)

@@ -33,18 +33,20 @@ namespace SkylineBatchTest
         [TestMethod]
         public void TestValidateConfig()
         {
+            TestUtils.InitializeInstallations();
             var validName = "Name";
             var invalidName = "";
             var validSkyr = TestUtils.GetTestFilePath("UniqueReport.skyr");
             var invalidSkyr = "invalidPath.skyr";
             var validRScripts = new List<Tuple<string,string>>();
             var invalidRscripts = new List<Tuple<string, string>>{new Tuple<string, string>("invalidPath.r", "1.2.3")};
-            TestValidateReportSettings(validName, invalidSkyr, validRScripts, "Report path invalidPath.skyr is not a valid path.");
-            TestValidateReportSettings(validName, validSkyr, invalidRscripts, "R script path invalidPath.r is not a valid path.");
+            TestValidateReportSettings(validName, invalidSkyr, validRScripts, "Report \"Name\": Report path invalidPath.skyr is not a valid path.");
+            TestValidateReportSettings(validName, validSkyr, invalidRscripts, "Report \"Name\": R script path invalidPath.r is not a valid path.");
             TestValidateReportSettings(invalidName, validSkyr, validRScripts, "Report must have name.");
             try
             {
                 var validReport = new ReportInfo(validName, validSkyr, validRScripts);
+                validReport.Validate();
             }
             catch (Exception)
             {
@@ -70,6 +72,7 @@ namespace SkylineBatchTest
             try
             {
                 var testValidMainSettings = new MainSettings(validTemplatePath, validAnalysisFolder, validDataDir, null);
+                testValidMainSettings.Validate();
             }
             catch (Exception)
             {
@@ -78,11 +81,12 @@ namespace SkylineBatchTest
 
             var validMainSettings = new MainSettings(validTemplatePath, validAnalysisFolder, validDataDir, null);
             var validReportSettings = new ReportSettings(new List<ReportInfo>());
-            var validSkylineSettings = new SkylineSettings(SkylineType.Skyline);
+            var validSkylineSettings = new SkylineSettings(SkylineType.Custom, "C:\\Program Files\\Skyline");
 
             try
             {
                 var invalidConfig = new SkylineBatchConfig(invalidName, DateTime.MinValue, DateTime.MinValue, validMainSettings, validReportSettings, validSkylineSettings);
+                invalidConfig.Validate();
                 Assert.Fail("Should have failed to validate invalid config");
             }
             catch (Exception e)
@@ -92,9 +96,10 @@ namespace SkylineBatchTest
 
             try
             {
-                var invalidConfig = new SkylineBatchConfig(validName, DateTime.MinValue, DateTime.MinValue, validMainSettings, validReportSettings, validSkylineSettings);
+                var validConfig = new SkylineBatchConfig(validName, DateTime.MinValue, DateTime.MinValue, validMainSettings, validReportSettings, validSkylineSettings);
+                validConfig.Validate();
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 Assert.Fail("Should have validated valid config");
             }
@@ -105,6 +110,7 @@ namespace SkylineBatchTest
             try
             {
                 var invalidReport = new ReportInfo(name, path, scripts);
+                invalidReport.Validate();
                 Assert.Fail("Should have failed to validate ReportInfo");
             }
             catch (ArgumentException e)
@@ -115,9 +121,10 @@ namespace SkylineBatchTest
 
         private void TestValidateMainSettings(string template, string analysis, string data, string pattern, string expectedError)
         {
+            var invalidMainSettings = new MainSettings(template, analysis, data, pattern);
             try
             {
-                var invalidMainSettings = new MainSettings(template, analysis, data, pattern);
+                invalidMainSettings.Validate();
                 Assert.Fail("Should have failed to validate MainSettings");
             }
             catch (ArgumentException e)

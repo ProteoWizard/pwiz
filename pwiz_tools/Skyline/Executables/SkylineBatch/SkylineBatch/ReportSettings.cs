@@ -39,7 +39,6 @@ namespace SkylineBatch
     public ReportSettings(List<ReportInfo> reports)
     {
         Reports = ImmutableList.CreateRange(reports);
-        Validate();
     }
 
     public readonly ImmutableList<ReportInfo> Reports;
@@ -133,7 +132,10 @@ namespace SkylineBatch
             ReportPath = path;
             RScripts = ImmutableList.Create<Tuple<string,string>>().AddRange(rScripts);
 
-            Validate();
+            if (string.IsNullOrWhiteSpace(Name))
+            {
+                throw new ArgumentException("Report must have name.");
+            }
         }
 
         public readonly string Name;
@@ -157,24 +159,25 @@ namespace SkylineBatch
         {
             if (string.IsNullOrWhiteSpace(Name))
             {
-                throw new ArgumentException("Report must have name.");
+                throw new ArgumentException(Resources.ReportSettings_Report_must_have_name_);
             }
 
             if (!File.Exists(ReportPath))
             {
-                throw new ArgumentException(string.Format("Report path {0} is not a valid path.", ReportPath));
+                throw new ArgumentException(
+                    string.Format(Resources.ReportSettings_Report__0__Report_path__1__is_not_a_valid_path_, Name, ReportPath));
             }
 
             foreach (var pathAndVersion in RScripts)
             {
                 if (!File.Exists(pathAndVersion.Item1))
                 {
-                    throw new ArgumentException(string.Format("R script path {0} is not a valid path.", pathAndVersion.Item1));
+                    throw new ArgumentException(string.Format(Resources.ReportSettings_Report__0__R_script_path__1__is_not_a_valid_path, Name, pathAndVersion.Item1));
                 }
                 
                 if (!Settings.Default.RVersions.ContainsKey(pathAndVersion.Item2))
                 {
-                    throw new ArgumentException(string.Format("R version {0} is not installed on this computer.", pathAndVersion.Item2));
+                    throw new ArgumentException(string.Format(Resources.ReportSettings_Report__0__R_version__1__is_not_installed_on_this_computer_, Name, pathAndVersion.Item2));
                 }
             }
         }

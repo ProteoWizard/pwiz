@@ -172,6 +172,15 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cannot run invalid configurations..
+        /// </summary>
+        internal static string ConfigManager_Cannot_run_invalid_configurations {
+            get {
+                return ResourceManager.GetString("ConfigManager_Cannot_run_invalid_configurations", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to \&quot;{0}\&quot; Error: {1}.
         /// </summary>
         internal static string ConfigManager_Configuration_error_message {
@@ -516,6 +525,42 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Report &quot;{0}&quot;: R script path {1} is not a valid path..
+        /// </summary>
+        internal static string ReportSettings_Report__0__R_script_path__1__is_not_a_valid_path {
+            get {
+                return ResourceManager.GetString("ReportSettings_Report__0__R_script_path__1__is_not_a_valid_path", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Report &quot;{0}&quot;: R version {1} is not installed on this computer..
+        /// </summary>
+        internal static string ReportSettings_Report__0__R_version__1__is_not_installed_on_this_computer_ {
+            get {
+                return ResourceManager.GetString("ReportSettings_Report__0__R_version__1__is_not_installed_on_this_computer_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Report &quot;{0}&quot;: Report path {1} is not a valid path..
+        /// </summary>
+        internal static string ReportSettings_Report__0__Report_path__1__is_not_a_valid_path_ {
+            get {
+                return ResourceManager.GetString("ReportSettings_Report__0__Report_path__1__is_not_a_valid_path_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Report must have name..
+        /// </summary>
+        internal static string ReportSettings_Report_must_have_name_ {
+            get {
+                return ResourceManager.GetString("ReportSettings_Report_must_have_name_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Open Skyline File.
         /// </summary>
         internal static string SkylineBatchConfigForm_btnSkylineFilePath_Click_Open_Skyline_File {
@@ -530,6 +575,42 @@ namespace SkylineBatch.Properties {
         internal static string SkylineBatchConfigForm_btnSkylineFilePath_Click_SKY___sky {
             get {
                 return ResourceManager.GetString("SkylineBatchConfigForm_btnSkylineFilePath_Click_SKY___sky", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to find local Skyline installation..
+        /// </summary>
+        internal static string SkylineSettings_Unable_to_find_local_Skyline_installation_ {
+            get {
+                return ResourceManager.GetString("SkylineSettings_Unable_to_find_local_Skyline_installation_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to find Skyline-Daily installation..
+        /// </summary>
+        internal static string SkylineSettings_Unable_to_find_Skyline_Daily_installation_ {
+            get {
+                return ResourceManager.GetString("SkylineSettings_Unable_to_find_Skyline_Daily_installation_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to find Skyline installation..
+        /// </summary>
+        internal static string SkylineSettings_Unable_to_find_Skyline_installation_ {
+            get {
+                return ResourceManager.GetString("SkylineSettings_Unable_to_find_Skyline_installation_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to find Skyline installation at {0}.
+        /// </summary>
+        internal static string SkylineSettings_Unable_to_find_Skyline_installation_at__0__ {
+            get {
+                return ResourceManager.GetString("SkylineSettings_Unable_to_find_Skyline_installation_at__0__", resourceCulture);
             }
         }
         

@@ -35,13 +35,16 @@ namespace SkylineBatch
         
         public SkylineBatchConfig(string name, DateTime created, DateTime modified, MainSettings mainSettings, ReportSettings reportSettings, SkylineSettings skylineSettings)
         {
+            if (string.IsNullOrEmpty(name))
+            {
+                throw new ArgumentException("Please enter a name for the configuration.");
+            }
             Name = name;
             Created = created;
             Modified = modified;
             MainSettings = mainSettings;
             ReportSettings = reportSettings;
             SkylineSettings = skylineSettings;
-            Validate();
         }
 
         public readonly string Name;
@@ -126,7 +129,7 @@ namespace SkylineBatch
 
         public void WriteXml(XmlWriter writer)
         {
-            Validate();
+            //Validate();
             writer.WriteStartElement("skylinebatch_config");
             writer.WriteAttribute(Attr.Name, Name);
             writer.WriteAttributeIfString(Attr.Created, Created.ToShortDateString() + " " + Created.ToShortTimeString());
@@ -146,7 +149,7 @@ namespace SkylineBatch
 
         public void Validate()
         {
-            if (MainSettings == null || ReportSettings == null)
+            if (MainSettings == null || ReportSettings == null || SkylineSettings == null)
             {
                 throw new Exception("Configuration settings not initialized.");
             }
@@ -158,7 +161,7 @@ namespace SkylineBatch
 
             MainSettings.Validate();
             ReportSettings.Validate();
-           
+            SkylineSettings.Validate();
         }
 
         public override string ToString()

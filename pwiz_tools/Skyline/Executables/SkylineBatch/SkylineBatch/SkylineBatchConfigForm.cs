@@ -347,6 +347,7 @@ namespace SkylineBatch
             {
                 //throws ArgumentException if any fields are invalid
                 var newConfig = GetConfigFromUi();
+                newConfig.Validate();
                 //throws ArgumentException if config has a duplicate name
                 if (_action == ConfigAction.Edit)
                     _mainControl.EditSelectedConfiguration(newConfig);

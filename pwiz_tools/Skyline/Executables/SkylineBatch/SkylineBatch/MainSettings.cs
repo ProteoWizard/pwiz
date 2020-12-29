@@ -40,7 +40,6 @@ namespace SkylineBatch
             AnalysisFolderPath = analysisFolderPath;
             DataFolderPath = dataFolderPath;
             ReplicateNamingPattern = replicateNamingPattern ?? "";
-            Validate();
         }
 
         public readonly string TemplateFilePath;

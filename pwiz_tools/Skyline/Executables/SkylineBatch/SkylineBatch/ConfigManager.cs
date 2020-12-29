@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -102,7 +103,6 @@ namespace SkylineBatch
             {
                 try
                 {
-                    config.Validate();
                     updatedConfigs.Add(config);
                 }
                 catch (ArgumentException)
@@ -133,6 +133,13 @@ namespace SkylineBatch
                     lvi.UseItemStyleForSubItems = false; // So that we can change the color for sub-items.
                     lvi.SubItems.Add(config.Created.ToShortDateString());
                     lvi.SubItems.Add(_configRunners[config.Name].GetDisplayStatus());
+                    try
+                    {
+                        config.Validate();
+                    } catch (ArgumentException)
+                    {
+                        lvi.ForeColor = Color.Red;
+                    }
                     listViewConfigs.Add(lvi);
                 }
                 return listViewConfigs;
@@ -317,6 +324,19 @@ namespace SkylineBatch
 
         public async void RunAll(int startStep)
         {
+            foreach (var config in _configList)
+            {
+                try
+                {
+                    config.Validate();
+                }
+                catch (ArgumentException)
+                {
+                    DisplayError(Resources.ConfigManager_Run_error_title, Resources.ConfigManager_Cannot_run_invalid_configurations);
+                    return;
+                }
+            }
+
             if (ConfigsRunning())
             {
                 DisplayError(Resources.ConfigManager_Run_error_title, Resources.ConfigManager_Cannot_run_busy_configurations);
@@ -370,7 +390,7 @@ namespace SkylineBatch
             }
         }
 
-        private bool ConfigsRunning()
+        public bool ConfigsRunning()
         {
             lock (_lock)
             {

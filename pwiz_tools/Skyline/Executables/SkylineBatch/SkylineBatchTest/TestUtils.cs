@@ -134,7 +134,7 @@ namespace SkylineBatchTest
 
         public static SkylineBatchConfig GetTestConfig(string name = "name")
         {
-            return new SkylineBatchConfig(name, DateTime.MinValue, DateTime.MinValue, GetTestMainSettings(), GetTestReportSettings(), new SkylineSettings(SkylineType.Skyline));
+            return new SkylineBatchConfig(name, DateTime.MinValue, DateTime.MinValue, GetTestMainSettings(), GetTestReportSettings(), new SkylineSettings(SkylineType.Custom, "C:\\Program Files\\Skyline"));
         }
 
         public static ConfigRunner GetTestConfigRunner(string configName = "name")

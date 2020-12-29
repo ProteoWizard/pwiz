@@ -93,6 +93,7 @@ namespace SkylineBatch
             try
             {
                 NewReportInfo = new ReportInfo(textReportName.Text, textReportPath.Text, GetScriptsFromUi());
+                NewReportInfo.Validate();
             }
             catch (ArgumentException ex)
             {

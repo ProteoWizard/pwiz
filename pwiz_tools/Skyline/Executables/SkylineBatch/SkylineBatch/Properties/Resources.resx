@@ -271,10 +271,37 @@
   <data name="Program_InitSkylineSettings__0__Error" xml:space="preserve">
     <value>{0} Error</value>
   </data>
+  <data name="ConfigManager_Cannot_run_invalid_configurations" xml:space="preserve">
+    <value>Cannot run invalid configurations.</value>
+  </data>
   <data name="FindSkyline_btnOkClick_Not_a_valid_Skyline_installation___" xml:space="preserve">
     <value>Not a valid Skyline installation.</value>
   </data>
   <data name="FindSkyline_btnOkClick_No_SkylineCmd_exe_file_in__0__" xml:space="preserve">
     <value>No SkylineCmd.exe file in {0}</value>
+  </data>
+  <data name="ReportSettings_Report_must_have_name_" xml:space="preserve">
+    <value>Report must have name.</value>
+  </data>
+  <data name="ReportSettings_Report__0__Report_path__1__is_not_a_valid_path_" xml:space="preserve">
+    <value>Report "{0}": Report path {1} is not a valid path.</value>
+  </data>
+  <data name="ReportSettings_Report__0__R_script_path__1__is_not_a_valid_path" xml:space="preserve">
+    <value>Report "{0}": R script path {1} is not a valid path.</value>
+  </data>
+  <data name="ReportSettings_Report__0__R_version__1__is_not_installed_on_this_computer_" xml:space="preserve">
+    <value>Report "{0}": R version {1} is not installed on this computer.</value>
+  </data>
+  <data name="SkylineSettings_Unable_to_find_local_Skyline_installation_" xml:space="preserve">
+    <value>Unable to find local Skyline installation.</value>
+  </data>
+  <data name="SkylineSettings_Unable_to_find_Skyline_Daily_installation_" xml:space="preserve">
+    <value>Unable to find Skyline-Daily installation.</value>
+  </data>
+  <data name="SkylineSettings_Unable_to_find_Skyline_installation_" xml:space="preserve">
+    <value>Unable to find Skyline installation.</value>
+  </data>
+  <data name="SkylineSettings_Unable_to_find_Skyline_installation_at__0__" xml:space="preserve">
+    <value>Unable to find Skyline installation at {0}</value>
   </data>
 </root>
