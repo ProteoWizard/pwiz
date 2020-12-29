@@ -264,8 +264,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
         public void UseResults()
         {
-            if (SetCalibrationPeptides() && IsRecalibration)
-                IsRecalibration = false;
+            SetCalibrationPeptides();
         }
 
         public bool SetCalibrationPeptides()
@@ -324,6 +323,8 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 }
             }
 
+            if (IsRecalibration)
+                IsRecalibration = false;
             _gridViewDriver.Recalculate(document, count, SelectedRegressionOption, excludePeps);
             return true;
         }
@@ -825,7 +826,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
         private void gridViewCalibrate_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
         {
-            if (e.Value is double value && double.IsNaN(value))
+            if (e.Value is double value)
             {
                 e.Value = !double.IsNaN(value) ? value.ToString(Formats.RETENTION_TIME, CultureInfo.CurrentCulture) : string.Empty;
                 e.FormattingApplied = true;

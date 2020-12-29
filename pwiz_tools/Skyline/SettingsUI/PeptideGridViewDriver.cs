@@ -46,6 +46,9 @@ namespace pwiz.Skyline.SettingsUI
         }
 
         protected bool AllowNegativeTime { get; set; }
+        
+        // For when a peptide may be missing a measured retention time but still should be in the grid.
+        // For example, in CalibrateIrtDlg, a peptide's measured retention time may be unknown but it still has an iRT value.
         protected bool AllowMissingTime { get; set; }
 
         public TargetResolver TargetResolver { get; set; }
