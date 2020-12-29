@@ -209,6 +209,69 @@ namespace AutoQC.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Configuration &quot;{0}&quot; already exists..
+        /// </summary>
+        internal static string ConfigManager_CheckIfExists_Error_configuration_already_exists {
+            get {
+                return ResourceManager.GetString("ConfigManager_CheckIfExists_Error_configuration_already_exists", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Configuration &quot;{0}&quot; does not exist..
+        /// </summary>
+        internal static string ConfigManager_CheckIfExists_Error_configuration_does_not_exist {
+            get {
+                return ResourceManager.GetString("ConfigManager_CheckIfExists_Error_configuration_does_not_exist", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not save the following configurations:.
+        /// </summary>
+        internal static string ConfigManager_SaveConfigs_Could_not_save_configurations {
+            get {
+                return ResourceManager.GetString("ConfigManager_SaveConfigs_Could_not_save_configurations", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Save configuration error.
+        /// </summary>
+        internal static string ConfigManager_SaveConfigs_Save_configuration_error {
+            get {
+                return ResourceManager.GetString("ConfigManager_SaveConfigs_Save_configuration_error", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select the {0} installation directory.
+        /// </summary>
+        internal static string FindSkylineForm_btnBrowse_Click_Select_the__0__installation_directory {
+            get {
+                return ResourceManager.GetString("FindSkylineForm_btnBrowse_Click_Select_the__0__installation_directory", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No SkylineCmd.exe file in {0}.
+        /// </summary>
+        internal static string FindSkylineForm_btnOkClick_No_SkylineCmd_exe_file_in__0__ {
+            get {
+                return ResourceManager.GetString("FindSkylineForm_btnOkClick_No_SkylineCmd_exe_file_in__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Not a valid Skyline installation..
+        /// </summary>
+        internal static string FindSkylineForm_btnOkClick_Not_a_valid_Skyline_installation___ {
+            get {
+                return ResourceManager.GetString("FindSkylineForm_btnOkClick_Not_a_valid_Skyline_installation___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} Settings Updated.
         /// </summary>
         internal static string MainForm_ApplyChangesToSkylineSettings__0__Settings_Updated {
@@ -283,7 +346,7 @@ namespace AutoQC.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Save configurations....
+        ///   Looks up a localized string similar to Save configurations.
         /// </summary>
         internal static string MainForm_btnExport_Click_Save_configurations___ {
             get {
@@ -523,7 +586,7 @@ namespace AutoQC.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Edit.
+        ///   Looks up a localized string similar to &amp;Edit....
         /// </summary>
         internal static string MainForm_UpdateButtons_Edit {
             get {
@@ -532,7 +595,7 @@ namespace AutoQC.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to View.
+        ///   Looks up a localized string similar to Vi&amp;ew....
         /// </summary>
         internal static string MainForm_UpdateButtons_View {
             get {
@@ -555,6 +618,15 @@ namespace AutoQC.Properties {
         internal static string MainForm_ViewLog_Log_for_this_configuration_is_not_yet_initialized_ {
             get {
                 return ResourceManager.GetString("MainForm_ViewLog_Log_for_this_configuration_is_not_yet_initialized_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ... Log truncated ....
+        /// </summary>
+        internal static string MainForm_ViewLog_Log_Truncated {
+            get {
+                return ResourceManager.GetString("MainForm_ViewLog_Log_Truncated", resourceCulture);
             }
         }
         
@@ -648,6 +720,15 @@ namespace AutoQC.Properties {
         internal static string Program_Main_Unable_to_update__0__shortcut___Error_was___1_ {
             get {
                 return ResourceManager.GetString("Program_Main_Unable_to_update__0__shortcut___Error_was___1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to XML Files(*.xml)|*.xml.
+        /// </summary>
+        internal static string XML_file_extension {
+            get {
+                return ResourceManager.GetString("XML_file_extension", resourceCulture);
             }
         }
     }
