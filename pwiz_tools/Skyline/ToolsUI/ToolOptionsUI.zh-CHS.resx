@@ -596,7 +596,7 @@
   </data>
   <data name="prositDescrLabel.Text" xml:space="preserve">
     <value>Prosit 是一个深度学习框架，
-可使用任何生物和蛋白质的
+可使用任何物种和蛋白质的
 预测的高质量 HCD MS2 谱图以及 iRT预测，
 免费且轻松地生成自定义谱图库。</value>
   </data>

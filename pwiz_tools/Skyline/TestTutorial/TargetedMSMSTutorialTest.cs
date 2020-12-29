@@ -97,13 +97,13 @@ namespace pwiz.SkylineTestTutorial
             if (smallMoleculesTestMode !=  RefinementSettings.ConvertToSmallMoleculesMode.none)
                 TestDirectoryName = "AsSmMol_" + smallMoleculesTestMode;
 
-            LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/TargetedMSMS-2_5.pdf";
+            LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/PRM-20_1.pdf";
 
             TestFilesZipPaths = new[]
                 {
                     UseRawFiles
-                        ? @"http://skyline.gs.washington.edu/tutorials/TargetedMSMS_2.zip"
-                        : @"http://skyline.gs.washington.edu/tutorials/TargetedMSMSMzml_2.zip",
+                        ? @"http://skyline.ms/tutorials/TargetedMSMS_2.zip"
+                        : @"http://skyline.ms/tutorials/TargetedMSMSMzml_2.zip",
                     @"TestTutorial\TargetedMSMSViews.zip"
                 };
             RunFunctionalTest();
