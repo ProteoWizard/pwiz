@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Drawing;
 using System.IO;
 using System.Reflection;
 using System.Text;
@@ -64,15 +65,16 @@ namespace AutoQC
             Error
         }
 
-        public ConfigRunner(AutoQcConfig config, IMainUiControl uiControl)
+        public ConfigRunner(AutoQcConfig config, IAutoQcLogger logger, IMainUiControl uiControl = null)
         {
             _runnerStatus = RunnerStatus.Stopped;
 
             Config = config;
 
-            _uiControl = uiControl;
+            _logger = logger;
 
-            CreateLogger();
+            _uiControl = uiControl;
+            
         }
 
         public RunnerStatus GetStatus()
@@ -85,8 +87,21 @@ namespace AutoQC
 
         public string GetDisplayStatus()
         {
-            RunnerStatus status = GetStatus();
+            RunnerStatus status = _runnerStatus; // bypassed lock
             return status == RunnerStatus.Disconnected ? RunnerStatus.Running.ToString() : status.ToString();
+        }
+
+        public Color GetDisplayColor()
+        {
+            if (IsRunning())
+                return Color.Green;
+            if (IsDisconnected())
+                return Color.Orange;
+            if (IsError())
+                return Color.Red;
+            if (IsDisconnected())
+                return Color.DarkOrange;
+            return Color.Black;
         }
 
         public string GetConfigName()
@@ -165,7 +180,6 @@ namespace AutoQC
             try
             {
                 CreateConfigDir();
-                InitLogger();
             }
             catch (Exception)
             {
@@ -178,43 +192,11 @@ namespace AutoQC
 
         public void ChangeStatus(RunnerStatus runnerStatus)
         {
-            SetStatus(runnerStatus);
-            _uiControl.ChangeConfigUiStatus(this);
-        }
-
-        private void SetStatus(RunnerStatus runnerStatus)
-        {
             lock (_lock)
             {
                 _runnerStatus = runnerStatus;
+                _uiControl.UpdateUiConfigurations();
             }
-        }
-
-        private void CreateLogger()
-        {
-            var logFile = Path.Combine(GetConfigDir(), "AutoQC.log");
-            _logger = new AutoQcLogger(logFile, GetConfigName());   
-        }
-
-        private void InitLogger()
-        {
-            try
-            {
-                ((AutoQcLogger)_logger).Init();
-            }
-            catch (Exception e)
-            {
-                var err = TextUtil.LineSeparate(
-                    string.Format("Logger could not be initialized for configuration \"{0}\"", GetConfigName()),
-                    string.Format("Log file: {0}", _logger.GetFile()), 
-                        e.Message);
-                throw new ConfigRunnerException(err, e);
-            }
-
-            var msg = new StringBuilder("Logging initialized...").AppendLine();
-            msg.AppendLine(string.Format("Version: {0}", Program.Version()));
-            msg.Append(Config).AppendLine();
-            _logger.Log(msg.ToString());
         }
 
         private void RunBackgroundWorker(DoWorkEventHandler doWork, RunWorkerCompletedEventHandler doOnComplete)
@@ -244,18 +226,10 @@ namespace AutoQC
             try
             {
                 ChangeStatus(RunnerStatus.Starting);
-
-                var originalPanoramaUrl = Config.PanoramaSettings.PanoramaServerUrl;
+                
                 Config.MainSettings.ValidateSettings();
 
                 Config.PanoramaSettings.ValidateSettings();
-
-                if (Config.PanoramaSettings.PublishToPanorama && !originalPanoramaUrl.Equals(Config.PanoramaSettings.PanoramaServerUrl))
-                {
-                   _uiControl.UpdatePanoramaServerUrl(Config);
-                }
-
-                // Thread.Sleep(2000);
 
                 _fileWatcher = new AutoQCFileSystemWatcher(_logger, this);
 
@@ -597,20 +571,18 @@ namespace AutoQC
 
                 if (_worker != null && _worker.IsBusy)
                 {
-                    SetStatus(RunnerStatus.Stopping);
+                    ChangeStatus(RunnerStatus.Stopping);
                     CancelAsync();
                 }
                 else if(_runnerStatus != RunnerStatus.Error)
                 {
-                    SetStatus(RunnerStatus.Stopped);
+                    ChangeStatus(RunnerStatus.Stopped);
                 }
 
                 if (_runnerStatus == RunnerStatus.Stopped && _panoramaUploadError)
                 {
-                    SetStatus(RunnerStatus.Error);
+                    ChangeStatus(RunnerStatus.Error);
                 }
-
-                _uiControl.ChangeConfigUiStatus(this);
 
                 _panoramaPinger?.Stop();
             });
@@ -684,7 +656,7 @@ namespace AutoQC
                     @" --in=""{0}"" --report-conflict-resolution=overwrite --report-add=""{1}"" --report-name=""{2}"" --report-file=""{3}""",
                     Config.MainSettings.SkylineFilePath, skyrFile, "AcquisitionTimes", reportFile);
 
-            var procInfo = new ProcessInfo(MainForm.GetExePath(), args, args);
+            var procInfo = new ProcessInfo(Config.SkylineSettings.CmdPath, args, args);
             if (processControl.RunProcess(procInfo) == ProcStatus.Error)
             {
                 logger.LogError("Error getting the last acquired file date from the Skyline document.");
@@ -820,7 +792,7 @@ namespace AutoQC
         {
             var processInfos = new List<ProcessInfo>();
 
-            var runBefore = Config.MainSettings.RunBefore(importContext);
+            var runBefore = Config.RunBefore(importContext);
             if (runBefore != null)
             {
                 runBefore.WorkingDirectory = importContext.WorkingDir;
@@ -830,10 +802,10 @@ namespace AutoQC
 
             var skylineRunnerArgs = GetSkylineRunnerArgs(importContext);
             var argsToPrint = GetSkylineRunnerArgs(importContext, true);
-            var skylineRunner = new ProcessInfo(MainForm.GetExePath(), skylineRunnerArgs, argsToPrint);
+            var skylineRunner = new ProcessInfo(Config.SkylineSettings.CmdPath, skylineRunnerArgs, argsToPrint);
             processInfos.Add(skylineRunner);
             
-            var runAfter = Config.MainSettings.RunAfter(importContext);
+            var runAfter = Config.RunAfter(importContext);
             if (runAfter != null)
             {
                 processInfos.Add(runAfter);

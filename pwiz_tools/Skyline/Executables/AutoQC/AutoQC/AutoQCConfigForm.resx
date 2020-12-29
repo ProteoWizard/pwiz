@@ -125,14 +125,20 @@
   <data name="splitContainer1.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 0</value>
   </data>
+  <data name="splitContainer1.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
   <data name="splitContainer1.Orientation" type="System.Windows.Forms.Orientation, System.Windows.Forms">
     <value>Horizontal</value>
   </data>
   <data name="textConfigName.Location" type="System.Drawing.Point, System.Drawing">
-    <value>30, 31</value>
+    <value>22, 25</value>
+  </data>
+  <data name="textConfigName.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
   </data>
   <data name="textConfigName.Size" type="System.Drawing.Size, System.Drawing">
-    <value>430, 20</value>
+    <value>324, 20</value>
   </data>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="textConfigName.TabIndex" type="System.Int32, mscorlib">
@@ -157,7 +163,10 @@
     <value>Microsoft Sans Serif, 8.25pt, style=Bold</value>
   </data>
   <data name="labelConfigName.Location" type="System.Drawing.Point, System.Drawing">
-    <value>29, 15</value>
+    <value>22, 12</value>
+  </data>
+  <data name="labelConfigName.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 0, 2, 0</value>
   </data>
   <data name="labelConfigName.Size" type="System.Drawing.Size, System.Drawing">
     <value>116, 13</value>
@@ -184,7 +193,10 @@
     <value>True</value>
   </data>
   <data name="checkBoxRemoveResults.Location" type="System.Drawing.Point, System.Drawing">
-    <value>21, 234</value>
+    <value>16, 190</value>
+  </data>
+  <data name="checkBoxRemoveResults.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
   </data>
   <data name="checkBoxRemoveResults.Size" type="System.Drawing.Size, System.Drawing">
     <value>104, 17</value>
@@ -218,7 +230,10 @@ Results time window is a rolling window and only results acquired within the las
     <value>True</value>
   </data>
   <data name="labelQcFilePattern.Location" type="System.Drawing.Point, System.Drawing">
-    <value>211, 153</value>
+    <value>158, 124</value>
+  </data>
+  <data name="labelQcFilePattern.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 0, 2, 0</value>
   </data>
   <data name="labelQcFilePattern.Size" type="System.Drawing.Size, System.Drawing">
     <value>44, 13</value>
@@ -242,10 +257,13 @@ Results time window is a rolling window and only results acquired within the las
     <value>1</value>
   </data>
   <data name="comboBoxFileFilter.Location" type="System.Drawing.Point, System.Drawing">
-    <value>23, 172</value>
+    <value>17, 140</value>
+  </data>
+  <data name="comboBoxFileFilter.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
   </data>
   <data name="comboBoxFileFilter.Size" type="System.Drawing.Size, System.Drawing">
-    <value>161, 21</value>
+    <value>122, 21</value>
   </data>
   <data name="comboBoxFileFilter.TabIndex" type="System.Int32, mscorlib">
     <value>66</value>
@@ -266,7 +284,10 @@ Results time window is a rolling window and only results acquired within the las
     <value>True</value>
   </data>
   <data name="label5.Location" type="System.Drawing.Point, System.Drawing">
-    <value>20, 153</value>
+    <value>15, 124</value>
+  </data>
+  <data name="label5.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 0, 2, 0</value>
   </data>
   <data name="label5.Size" type="System.Drawing.Size, System.Drawing">
     <value>48, 13</value>
@@ -293,7 +314,10 @@ Results time window is a rolling window and only results acquired within the las
     <value>True</value>
   </data>
   <data name="includeSubfoldersCb.Location" type="System.Drawing.Point, System.Drawing">
-    <value>23, 115</value>
+    <value>17, 93</value>
+  </data>
+  <data name="includeSubfoldersCb.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
   </data>
   <data name="includeSubfoldersCb.Size" type="System.Drawing.Size, System.Drawing">
     <value>112, 17</value>
@@ -317,10 +341,13 @@ Results time window is a rolling window and only results acquired within the las
     <value>4</value>
   </data>
   <data name="textQCFilePattern.Location" type="System.Drawing.Point, System.Drawing">
-    <value>211, 172</value>
+    <value>158, 140</value>
+  </data>
+  <data name="textQCFilePattern.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
   </data>
   <data name="textQCFilePattern.Size" type="System.Drawing.Size, System.Drawing">
-    <value>240, 20</value>
+    <value>181, 20</value>
   </data>
   <data name="textQCFilePattern.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -344,7 +371,10 @@ Results time window is a rolling window and only results acquired within the las
     <value>True</value>
   </data>
   <data name="labelMinutes.Location" type="System.Drawing.Point, System.Drawing">
-    <value>396, 313</value>
+    <value>297, 254</value>
+  </data>
+  <data name="labelMinutes.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 0, 2, 0</value>
   </data>
   <data name="labelMinutes.Size" type="System.Drawing.Size, System.Drawing">
     <value>43, 13</value>
@@ -371,7 +401,10 @@ Results time window is a rolling window and only results acquired within the las
     <value>True</value>
   </data>
   <data name="labelAquisitionTime.Location" type="System.Drawing.Point, System.Drawing">
-    <value>287, 293</value>
+    <value>215, 238</value>
+  </data>
+  <data name="labelAquisitionTime.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 0, 2, 0</value>
   </data>
   <data name="labelAquisitionTime.Size" type="System.Drawing.Size, System.Drawing">
     <value>149, 13</value>
@@ -398,10 +431,13 @@ Results time window is a rolling window and only results acquired within the las
     <value>7</value>
   </data>
   <data name="textAquisitionTime.Location" type="System.Drawing.Point, System.Drawing">
-    <value>290, 310</value>
+    <value>218, 252</value>
+  </data>
+  <data name="textAquisitionTime.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
   </data>
   <data name="textAquisitionTime.Size" type="System.Drawing.Size, System.Drawing">
-    <value>100, 20</value>
+    <value>76, 20</value>
   </data>
   <data name="textAquisitionTime.TabIndex" type="System.Int32, mscorlib">
     <value>7</value>
@@ -425,7 +461,10 @@ Results time window is a rolling window and only results acquired within the las
     <value>True</value>
   </data>
   <data name="labelDays.Location" type="System.Drawing.Point, System.Drawing">
-    <value>320, 237</value>
+    <value>297, 193</value>
+  </data>
+  <data name="labelDays.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 0, 2, 0</value>
   </data>
   <data name="labelDays.Size" type="System.Drawing.Size, System.Drawing">
     <value>29, 13</value>
@@ -449,10 +488,13 @@ Results time window is a rolling window and only results acquired within the las
     <value>9</value>
   </data>
   <data name="textResultsTimeWindow.Location" type="System.Drawing.Point, System.Drawing">
-    <value>214, 234</value>
+    <value>218, 190</value>
+  </data>
+  <data name="textResultsTimeWindow.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
   </data>
   <data name="textResultsTimeWindow.Size" type="System.Drawing.Size, System.Drawing">
-    <value>100, 20</value>
+    <value>76, 20</value>
   </data>
   <data name="textResultsTimeWindow.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -476,7 +518,10 @@ Results time window is a rolling window and only results acquired within the las
     <value>True</value>
   </data>
   <data name="labelAccumulationTimeWindow.Location" type="System.Drawing.Point, System.Drawing">
-    <value>211, 218</value>
+    <value>215, 177</value>
+  </data>
+  <data name="labelAccumulationTimeWindow.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 0, 2, 0</value>
   </data>
   <data name="labelAccumulationTimeWindow.Size" type="System.Drawing.Size, System.Drawing">
     <value>106, 13</value>
@@ -503,7 +548,10 @@ Results time window is a rolling window and only results acquired within the las
     <value>True</value>
   </data>
   <data name="labelInstrumentType.Location" type="System.Drawing.Point, System.Drawing">
-    <value>20, 292</value>
+    <value>15, 237</value>
+  </data>
+  <data name="labelInstrumentType.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 0, 2, 0</value>
   </data>
   <data name="labelInstrumentType.Size" type="System.Drawing.Size, System.Drawing">
     <value>82, 13</value>
@@ -545,10 +593,13 @@ Results time window is a rolling window and only results acquired within the las
     <value>Shimadzu</value>
   </data>
   <data name="comboBoxInstrumentType.Location" type="System.Drawing.Point, System.Drawing">
-    <value>21, 309</value>
+    <value>16, 251</value>
+  </data>
+  <data name="comboBoxInstrumentType.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
   </data>
   <data name="comboBoxInstrumentType.Size" type="System.Drawing.Size, System.Drawing">
-    <value>163, 21</value>
+    <value>123, 21</value>
   </data>
   <data name="comboBoxInstrumentType.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
@@ -566,10 +617,13 @@ Results time window is a rolling window and only results acquired within the las
     <value>13</value>
   </data>
   <data name="btnFolderToWatch.Location" type="System.Drawing.Point, System.Drawing">
-    <value>470, 85</value>
+    <value>344, 70</value>
+  </data>
+  <data name="btnFolderToWatch.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
   </data>
   <data name="btnFolderToWatch.Size" type="System.Drawing.Size, System.Drawing">
-    <value>29, 23</value>
+    <value>32, 23</value>
   </data>
   <data name="btnFolderToWatch.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -596,7 +650,10 @@ Results time window is a rolling window and only results acquired within the las
     <value>Microsoft Sans Serif, 9pt</value>
   </data>
   <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>20, 20</value>
+    <value>15, 16</value>
+  </data>
+  <data name="label2.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 0, 2, 0</value>
   </data>
   <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
     <value>95, 15</value>
@@ -626,7 +683,10 @@ Results time window is a rolling window and only results acquired within the las
     <value>Microsoft Sans Serif, 9pt</value>
   </data>
   <data name="label3.Location" type="System.Drawing.Point, System.Drawing">
-    <value>20, 70</value>
+    <value>15, 57</value>
+  </data>
+  <data name="label3.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 0, 2, 0</value>
   </data>
   <data name="label3.Size" type="System.Drawing.Size, System.Drawing">
     <value>93, 15</value>
@@ -650,10 +710,13 @@ Results time window is a rolling window and only results acquired within the las
     <value>16</value>
   </data>
   <data name="textFolderToWatchPath.Location" type="System.Drawing.Point, System.Drawing">
-    <value>21, 89</value>
+    <value>16, 72</value>
+  </data>
+  <data name="textFolderToWatchPath.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
   </data>
   <data name="textFolderToWatchPath.Size" type="System.Drawing.Size, System.Drawing">
-    <value>430, 20</value>
+    <value>324, 20</value>
   </data>
   <data name="textFolderToWatchPath.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -673,11 +736,17 @@ Results time window is a rolling window and only results acquired within the las
   <data name="&gt;&gt;textFolderToWatchPath.ZOrder" xml:space="preserve">
     <value>17</value>
   </data>
+  <data name="btnSkylineFilePath.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
   <data name="btnSkylineFilePath.Location" type="System.Drawing.Point, System.Drawing">
-    <value>470, 38</value>
+    <value>344, 30</value>
+  </data>
+  <data name="btnSkylineFilePath.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
   </data>
   <data name="btnSkylineFilePath.Size" type="System.Drawing.Size, System.Drawing">
-    <value>29, 23</value>
+    <value>32, 23</value>
   </data>
   <data name="btnSkylineFilePath.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -698,10 +767,13 @@ Results time window is a rolling window and only results acquired within the las
     <value>18</value>
   </data>
   <data name="textSkylinePath.Location" type="System.Drawing.Point, System.Drawing">
-    <value>21, 39</value>
+    <value>16, 32</value>
+  </data>
+  <data name="textSkylinePath.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
   </data>
   <data name="textSkylinePath.Size" type="System.Drawing.Size, System.Drawing">
-    <value>430, 20</value>
+    <value>324, 20</value>
   </data>
   <data name="textSkylinePath.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -722,10 +794,16 @@ Results time window is a rolling window and only results acquired within the las
     <value>19</value>
   </data>
   <data name="groupBoxMain.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 57</value>
+    <value>7, 46</value>
+  </data>
+  <data name="groupBoxMain.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="groupBoxMain.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
   </data>
   <data name="groupBoxMain.Size" type="System.Drawing.Size, System.Drawing">
-    <value>519, 369</value>
+    <value>389, 300</value>
   </data>
   <data name="groupBoxMain.TabIndex" type="System.Int32, mscorlib">
     <value>53</value>
@@ -745,14 +823,11 @@ Results time window is a rolling window and only results acquired within the las
   <data name="tabSettings.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 28</value>
   </data>
-  <data name="tabSettings.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 4, 4, 4</value>
-  </data>
   <data name="tabSettings.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 4, 4, 4</value>
+    <value>3, 3, 3, 3</value>
   </data>
   <data name="tabSettings.Size" type="System.Drawing.Size, System.Drawing">
-    <value>536, 433</value>
+    <value>400, 345</value>
   </data>
   <data name="tabSettings.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -776,7 +851,10 @@ Results time window is a rolling window and only results acquired within the las
     <value>True</value>
   </data>
   <data name="cbPublishToPanorama.Location" type="System.Drawing.Point, System.Drawing">
-    <value>19, 36</value>
+    <value>14, 29</value>
+  </data>
+  <data name="cbPublishToPanorama.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
   </data>
   <data name="cbPublishToPanorama.Size" type="System.Drawing.Size, System.Drawing">
     <value>123, 17</value>
@@ -806,7 +884,10 @@ Results time window is a rolling window and only results acquired within the las
     <value>NoControl</value>
   </data>
   <data name="labelPanoramaFolder.Location" type="System.Drawing.Point, System.Drawing">
-    <value>14, 195</value>
+    <value>10, 158</value>
+  </data>
+  <data name="labelPanoramaFolder.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 0, 2, 0</value>
   </data>
   <data name="labelPanoramaFolder.Size" type="System.Drawing.Size, System.Drawing">
     <value>204, 13</value>
@@ -830,13 +911,16 @@ Results time window is a rolling window and only results acquired within the las
     <value>0</value>
   </data>
   <data name="textPanoramaFolder.Location" type="System.Drawing.Point, System.Drawing">
-    <value>16, 213</value>
+    <value>12, 173</value>
+  </data>
+  <data name="textPanoramaFolder.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
   </data>
   <data name="textPanoramaFolder.ScrollBars" type="System.Windows.Forms.ScrollBars, System.Windows.Forms">
     <value>Vertical</value>
   </data>
   <data name="textPanoramaFolder.Size" type="System.Drawing.Size, System.Drawing">
-    <value>378, 20</value>
+    <value>284, 20</value>
   </data>
   <data name="textPanoramaFolder.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -860,7 +944,10 @@ Results time window is a rolling window and only results acquired within the las
     <value>NoControl</value>
   </data>
   <data name="lblPanoramaUrl.Location" type="System.Drawing.Point, System.Drawing">
-    <value>14, 32</value>
+    <value>10, 26</value>
+  </data>
+  <data name="lblPanoramaUrl.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 0, 2, 0</value>
   </data>
   <data name="lblPanoramaUrl.Size" type="System.Drawing.Size, System.Drawing">
     <value>188, 13</value>
@@ -884,13 +971,16 @@ Results time window is a rolling window and only results acquired within the las
     <value>2</value>
   </data>
   <data name="textPanoramaUrl.Location" type="System.Drawing.Point, System.Drawing">
-    <value>16, 49</value>
+    <value>12, 40</value>
+  </data>
+  <data name="textPanoramaUrl.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
   </data>
   <data name="textPanoramaUrl.ScrollBars" type="System.Windows.Forms.ScrollBars, System.Windows.Forms">
     <value>Vertical</value>
   </data>
   <data name="textPanoramaUrl.Size" type="System.Drawing.Size, System.Drawing">
-    <value>378, 20</value>
+    <value>284, 20</value>
   </data>
   <data name="textPanoramaUrl.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -908,13 +998,16 @@ Results time window is a rolling window and only results acquired within the las
     <value>3</value>
   </data>
   <data name="textPanoramaPasswd.Location" type="System.Drawing.Point, System.Drawing">
-    <value>17, 156</value>
+    <value>13, 127</value>
+  </data>
+  <data name="textPanoramaPasswd.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
   </data>
   <data name="textPanoramaPasswd.PasswordChar" type="System.Char, mscorlib" xml:space="preserve">
     <value>*</value>
   </data>
   <data name="textPanoramaPasswd.Size" type="System.Drawing.Size, System.Drawing">
-    <value>207, 20</value>
+    <value>156, 20</value>
   </data>
   <data name="textPanoramaPasswd.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -938,7 +1031,10 @@ Results time window is a rolling window and only results acquired within the las
     <value>NoControl</value>
   </data>
   <data name="lblPanoramaPasswd.Location" type="System.Drawing.Point, System.Drawing">
-    <value>14, 139</value>
+    <value>10, 113</value>
+  </data>
+  <data name="lblPanoramaPasswd.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 0, 2, 0</value>
   </data>
   <data name="lblPanoramaPasswd.Size" type="System.Drawing.Size, System.Drawing">
     <value>56, 13</value>
@@ -968,7 +1064,10 @@ Results time window is a rolling window and only results acquired within the las
     <value>NoControl</value>
   </data>
   <data name="lblPanoramaEmail.Location" type="System.Drawing.Point, System.Drawing">
-    <value>14, 86</value>
+    <value>10, 70</value>
+  </data>
+  <data name="lblPanoramaEmail.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 0, 2, 0</value>
   </data>
   <data name="lblPanoramaEmail.Size" type="System.Drawing.Size, System.Drawing">
     <value>35, 13</value>
@@ -992,10 +1091,13 @@ Results time window is a rolling window and only results acquired within the las
     <value>6</value>
   </data>
   <data name="textPanoramaEmail.Location" type="System.Drawing.Point, System.Drawing">
-    <value>16, 103</value>
+    <value>12, 84</value>
+  </data>
+  <data name="textPanoramaEmail.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
   </data>
   <data name="textPanoramaEmail.Size" type="System.Drawing.Size, System.Drawing">
-    <value>207, 20</value>
+    <value>156, 20</value>
   </data>
   <data name="textPanoramaEmail.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -1013,10 +1115,16 @@ Results time window is a rolling window and only results acquired within the las
     <value>7</value>
   </data>
   <data name="groupBoxPanorama.Location" type="System.Drawing.Point, System.Drawing">
-    <value>19, 74</value>
+    <value>14, 60</value>
+  </data>
+  <data name="groupBoxPanorama.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="groupBoxPanorama.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
   </data>
   <data name="groupBoxPanorama.Size" type="System.Drawing.Size, System.Drawing">
-    <value>482, 295</value>
+    <value>362, 240</value>
   </data>
   <data name="groupBoxPanorama.TabIndex" type="System.Int32, mscorlib">
     <value>56</value>
@@ -1039,17 +1147,20 @@ Results time window is a rolling window and only results acquired within the las
   <data name="tabPanoramaSettings.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 28</value>
   </data>
+  <data name="tabPanoramaSettings.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
   <data name="tabPanoramaSettings.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 3, 3, 3</value>
+    <value>2, 2, 2, 2</value>
   </data>
   <data name="tabPanoramaSettings.Size" type="System.Drawing.Size, System.Drawing">
-    <value>536, 433</value>
+    <value>400, 345</value>
   </data>
   <data name="tabPanoramaSettings.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
   </data>
   <data name="tabPanoramaSettings.Text" xml:space="preserve">
-    <value>Panorama Settings</value>
+    <value>Panorama</value>
   </data>
   <data name="&gt;&gt;tabPanoramaSettings.Name" xml:space="preserve">
     <value>tabPanoramaSettings</value>
@@ -1063,17 +1174,224 @@ Results time window is a rolling window and only results acquired within the las
   <data name="&gt;&gt;tabPanoramaSettings.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
+  <data name="textSkylineInstallationPath.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
+  <data name="textSkylineInstallationPath.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="textSkylineInstallationPath.Location" type="System.Drawing.Point, System.Drawing">
+    <value>25, 76</value>
+  </data>
+  <data name="textSkylineInstallationPath.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="textSkylineInstallationPath.Size" type="System.Drawing.Size, System.Drawing">
+    <value>332, 20</value>
+  </data>
+  <data name="textSkylineInstallationPath.TabIndex" type="System.Int32, mscorlib">
+    <value>24</value>
+  </data>
+  <data name="textSkylineInstallationPath.Text" xml:space="preserve">
+    <value>C:\Program Files\Skyline</value>
+  </data>
+  <data name="&gt;&gt;textSkylineInstallationPath.Name" xml:space="preserve">
+    <value>textSkylineInstallationPath</value>
+  </data>
+  <data name="&gt;&gt;textSkylineInstallationPath.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textSkylineInstallationPath.Parent" xml:space="preserve">
+    <value>tabSkylineSettings</value>
+  </data>
+  <data name="&gt;&gt;textSkylineInstallationPath.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="radioButtonSkylineDaily.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="radioButtonSkylineDaily.CheckAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>TopLeft</value>
+  </data>
+  <data name="radioButtonSkylineDaily.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="radioButtonSkylineDaily.Location" type="System.Drawing.Point, System.Drawing">
+    <value>7, 34</value>
+  </data>
+  <data name="radioButtonSkylineDaily.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="radioButtonSkylineDaily.Size" type="System.Drawing.Size, System.Drawing">
+    <value>105, 17</value>
+  </data>
+  <data name="radioButtonSkylineDaily.TabIndex" type="System.Int32, mscorlib">
+    <value>28</value>
+  </data>
+  <data name="radioButtonSkylineDaily.Text" xml:space="preserve">
+    <value>Use Skyline-&amp;daily</value>
+  </data>
+  <data name="&gt;&gt;radioButtonSkylineDaily.Name" xml:space="preserve">
+    <value>radioButtonSkylineDaily</value>
+  </data>
+  <data name="&gt;&gt;radioButtonSkylineDaily.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;radioButtonSkylineDaily.Parent" xml:space="preserve">
+    <value>tabSkylineSettings</value>
+  </data>
+  <data name="&gt;&gt;radioButtonSkylineDaily.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="radioButtonSpecifySkylinePath.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="radioButtonSpecifySkylinePath.CheckAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>BottomLeft</value>
+  </data>
+  <data name="radioButtonSpecifySkylinePath.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="radioButtonSpecifySkylinePath.Location" type="System.Drawing.Point, System.Drawing">
+    <value>7, 55</value>
+  </data>
+  <data name="radioButtonSpecifySkylinePath.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="radioButtonSpecifySkylinePath.Size" type="System.Drawing.Size, System.Drawing">
+    <value>192, 17</value>
+  </data>
+  <data name="radioButtonSpecifySkylinePath.TabIndex" type="System.Int32, mscorlib">
+    <value>26</value>
+  </data>
+  <data name="radioButtonSpecifySkylinePath.Text" xml:space="preserve">
+    <value>&amp;Specify Skyline installation directory</value>
+  </data>
+  <data name="&gt;&gt;radioButtonSpecifySkylinePath.Name" xml:space="preserve">
+    <value>radioButtonSpecifySkylinePath</value>
+  </data>
+  <data name="&gt;&gt;radioButtonSpecifySkylinePath.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;radioButtonSpecifySkylinePath.Parent" xml:space="preserve">
+    <value>tabSkylineSettings</value>
+  </data>
+  <data name="&gt;&gt;radioButtonSpecifySkylinePath.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="radioButtonSkyline.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="radioButtonSkyline.CheckAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>TopLeft</value>
+  </data>
+  <data name="radioButtonSkyline.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="radioButtonSkyline.Location" type="System.Drawing.Point, System.Drawing">
+    <value>7, 13</value>
+  </data>
+  <data name="radioButtonSkyline.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="radioButtonSkyline.Size" type="System.Drawing.Size, System.Drawing">
+    <value>81, 17</value>
+  </data>
+  <data name="radioButtonSkyline.TabIndex" type="System.Int32, mscorlib">
+    <value>25</value>
+  </data>
+  <data name="radioButtonSkyline.Text" xml:space="preserve">
+    <value>&amp;Use Skyline</value>
+  </data>
+  <data name="&gt;&gt;radioButtonSkyline.Name" xml:space="preserve">
+    <value>radioButtonSkyline</value>
+  </data>
+  <data name="&gt;&gt;radioButtonSkyline.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;radioButtonSkyline.Parent" xml:space="preserve">
+    <value>tabSkylineSettings</value>
+  </data>
+  <data name="&gt;&gt;radioButtonSkyline.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="btnBrowse.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="btnBrowse.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="btnBrowse.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="btnBrowse.Location" type="System.Drawing.Point, System.Drawing">
+    <value>361, 74</value>
+  </data>
+  <data name="btnBrowse.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="btnBrowse.Size" type="System.Drawing.Size, System.Drawing">
+    <value>32, 23</value>
+  </data>
+  <data name="btnBrowse.TabIndex" type="System.Int32, mscorlib">
+    <value>27</value>
+  </data>
+  <data name="btnBrowse.Text" xml:space="preserve">
+    <value>...</value>
+  </data>
+  <data name="&gt;&gt;btnBrowse.Name" xml:space="preserve">
+    <value>btnBrowse</value>
+  </data>
+  <data name="&gt;&gt;btnBrowse.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnBrowse.Parent" xml:space="preserve">
+    <value>tabSkylineSettings</value>
+  </data>
+  <data name="&gt;&gt;btnBrowse.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="tabSkylineSettings.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 28</value>
+  </data>
+  <data name="tabSkylineSettings.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="tabSkylineSettings.Size" type="System.Drawing.Size, System.Drawing">
+    <value>400, 345</value>
+  </data>
+  <data name="tabSkylineSettings.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="tabSkylineSettings.Text" xml:space="preserve">
+    <value>Skyline</value>
+  </data>
+  <data name="&gt;&gt;tabSkylineSettings.Name" xml:space="preserve">
+    <value>tabSkylineSettings</value>
+  </data>
+  <data name="&gt;&gt;tabSkylineSettings.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabSkylineSettings.Parent" xml:space="preserve">
+    <value>tabControl</value>
+  </data>
+  <data name="&gt;&gt;tabSkylineSettings.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
   <data name="tabControl.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
   </data>
   <data name="tabControl.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 0</value>
   </data>
+  <data name="tabControl.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
   <data name="tabControl.Padding" type="System.Drawing.Point, System.Drawing">
     <value>20, 6</value>
   </data>
   <data name="tabControl.Size" type="System.Drawing.Size, System.Drawing">
-    <value>544, 465</value>
+    <value>408, 377</value>
   </data>
   <data name="tabControl.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1102,35 +1420,14 @@ Results time window is a rolling window and only results acquired within the las
   <data name="&gt;&gt;splitContainer1.Panel1.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="btnOkConfig.Location" type="System.Drawing.Point, System.Drawing">
-    <value>223, 28</value>
-  </data>
-  <data name="btnOkConfig.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
-  </data>
-  <data name="btnOkConfig.TabIndex" type="System.Int32, mscorlib">
-    <value>59</value>
-  </data>
-  <data name="btnOkConfig.Text" xml:space="preserve">
-    <value>OK</value>
-  </data>
-  <data name="&gt;&gt;btnOkConfig.Name" xml:space="preserve">
-    <value>btnOkConfig</value>
-  </data>
-  <data name="&gt;&gt;btnOkConfig.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnOkConfig.Parent" xml:space="preserve">
-    <value>groupBox1</value>
-  </data>
-  <data name="&gt;&gt;btnOkConfig.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
   <data name="lblConfigRunning.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="lblConfigRunning.Location" type="System.Drawing.Point, System.Drawing">
-    <value>130, 62</value>
+    <value>20, 13</value>
+  </data>
+  <data name="lblConfigRunning.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 0, 2, 0</value>
   </data>
   <data name="lblConfigRunning.Size" type="System.Drawing.Size, System.Drawing">
     <value>243, 13</value>
@@ -1152,13 +1449,16 @@ Results time window is a rolling window and only results acquired within the las
     <value>groupBox1</value>
   </data>
   <data name="&gt;&gt;lblConfigRunning.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>0</value>
   </data>
   <data name="btnCancelConfig.Location" type="System.Drawing.Point, System.Drawing">
-    <value>275, 26</value>
+    <value>321, 39</value>
+  </data>
+  <data name="btnCancelConfig.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
   </data>
   <data name="btnCancelConfig.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 26</value>
+    <value>75, 23</value>
   </data>
   <data name="btnCancelConfig.TabIndex" type="System.Int32, mscorlib">
     <value>57</value>
@@ -1176,16 +1476,19 @@ Results time window is a rolling window and only results acquired within the las
     <value>groupBox1</value>
   </data>
   <data name="&gt;&gt;btnCancelConfig.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>1</value>
   </data>
   <data name="btnSaveConfig.Font" type="System.Drawing.Font, System.Drawing">
     <value>Microsoft Sans Serif, 9pt</value>
   </data>
   <data name="btnSaveConfig.Location" type="System.Drawing.Point, System.Drawing">
-    <value>181, 26</value>
+    <value>242, 39</value>
+  </data>
+  <data name="btnSaveConfig.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
   </data>
   <data name="btnSaveConfig.Size" type="System.Drawing.Size, System.Drawing">
-    <value>79, 26</value>
+    <value>75, 23</value>
   </data>
   <data name="btnSaveConfig.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1203,13 +1506,46 @@ Results time window is a rolling window and only results acquired within the las
     <value>groupBox1</value>
   </data>
   <data name="&gt;&gt;btnSaveConfig.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="btnOkConfig.Location" type="System.Drawing.Point, System.Drawing">
+    <value>321, 39</value>
+  </data>
+  <data name="btnOkConfig.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="btnOkConfig.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="btnOkConfig.TabIndex" type="System.Int32, mscorlib">
+    <value>59</value>
+  </data>
+  <data name="btnOkConfig.Text" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="&gt;&gt;btnOkConfig.Name" xml:space="preserve">
+    <value>btnOkConfig</value>
+  </data>
+  <data name="&gt;&gt;btnOkConfig.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnOkConfig.Parent" xml:space="preserve">
+    <value>groupBox1</value>
+  </data>
+  <data name="&gt;&gt;btnOkConfig.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
   <data name="groupBox1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, -3</value>
+    <value>3, -2</value>
+  </data>
+  <data name="groupBox1.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="groupBox1.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
   </data>
   <data name="groupBox1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>537, 85</value>
+    <value>403, 69</value>
   </data>
   <data name="groupBox1.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1239,10 +1575,13 @@ Results time window is a rolling window and only results acquired within the las
     <value>1</value>
   </data>
   <data name="splitContainer1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>544, 555</value>
+    <value>408, 451</value>
   </data>
   <data name="splitContainer1.SplitterDistance" type="System.Int32, mscorlib">
-    <value>465</value>
+    <value>377</value>
+  </data>
+  <data name="splitContainer1.SplitterWidth" type="System.Int32, mscorlib">
+    <value>3</value>
   </data>
   <data name="splitContainer1.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1269,7 +1608,7 @@ Results time window is a rolling window and only results acquired within the las
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>544, 555</value>
+    <value>408, 451</value>
   </data>
   <data name="$this.Icon" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
@@ -1808,6 +2147,12 @@ Results time window is a rolling window and only results acquired within the las
         AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
         AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==
 </value>
+  </data>
+  <data name="$this.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
+    <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
     <value>AutoQC Configuration</value>

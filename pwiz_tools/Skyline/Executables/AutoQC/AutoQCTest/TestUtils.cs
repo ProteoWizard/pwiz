@@ -17,12 +17,169 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Text;
+using System.IO;
 using AutoQC;
 
 namespace AutoQCTest
 {
-    class TestLogger: IAutoQcLogger
+    public class TestUtils
+    {
+        public static string GetTestFilePath(string fileName)
+        {
+            var currentPath = Directory.GetCurrentDirectory();
+            var autoQcTestPath = Path.GetDirectoryName(Path.GetDirectoryName(currentPath));
+            return autoQcTestPath + "\\Test\\" + fileName;
+        }
+
+        public static string CreateTestFolder(string folderName)
+        {
+            var newFolder = GetTestFilePath(folderName);
+            Directory.CreateDirectory(newFolder);
+            return newFolder;
+        }
+
+        public static MainSettings GetTestMainSettings(string configName) => GetTestMainSettings(configName, null, null);
+        
+
+        public static MainSettings GetTestMainSettings(string configName, string changedVariable, string value)
+        {
+            var skylineFilePath = GetTestFilePath("EmptyTemplate.sky");
+            var folderToWatch = CreateTestFolder(configName);
+
+            var fileFilter = MainSettings.GetDefaultQcFileFilter();
+            var resultsWindow = MainSettings.GetDefaultResultsWindow();
+            var removeResults = MainSettings.GetDefaultRemoveResults();
+            var acquisitionTime = MainSettings.GetDefaultAcquisitionTime();
+            var instrumentType = MainSettings.GetDefaultInstrumentType();
+            
+            
+            return new MainSettings(skylineFilePath, folderToWatch, false, fileFilter, removeResults, resultsWindow, instrumentType, acquisitionTime, DateTime.MinValue, DateTime.MinValue);
+        }
+
+        public static PanoramaSettings GetTestPanoramaSettings() => new PanoramaSettings();
+
+        public static PanoramaSettings GetTestPanoramaSettings(string variable, string value)
+        {
+            var panoramaServerUrl = "https://panoramaweb.org/";
+            var panoramaUserEmail = "alimarsh@mit.edu";
+            var panoramaPassword = "Alonfshss1!";
+            var panoramaFolder = "/00Developer/Ali/QC/";
+
+            if (string.IsNullOrEmpty(variable))
+            {
+            }
+            else if (variable.Equals("publishToPanorama"))
+            {
+                if (!value.Equals("false")) throw new ArgumentException("Invalid or redundant value for publishToPanorama.");
+                return new PanoramaSettings();
+            }
+            else if (variable.Equals("panoramaServerUrl"))
+                panoramaServerUrl = variable;
+            else if (variable.Equals("panoramaUserEmail"))
+                panoramaUserEmail = variable;
+            else if (variable.Equals("panoramaPassword"))
+                panoramaPassword = variable;
+            else if (variable.Equals("panoramaFolder"))
+                panoramaFolder = variable;
+            return new PanoramaSettings(true, panoramaServerUrl, panoramaUserEmail, panoramaPassword, panoramaFolder);
+        }
+
+        public static SkylineSettings GetTestSkylineSettings()
+        {
+            return new SkylineSettings(SkylineType.Custom, "C:\\Program Files\\Skyline");
+        }
+
+        public static AutoQcConfig GetTestConfig(string name)
+        {
+            //return GetTestConfig(name, null, null);
+            return new AutoQcConfig(name, false, DateTime.MinValue, DateTime.MinValue, GetTestMainSettings(name), new PanoramaSettings(), GetTestSkylineSettings());
+        } 
+
+        public static AutoQcConfig GetTestConfig(string name, string changedVariable, string value)
+        {
+            var created = DateTime.MinValue;
+            if (changedVariable.Equals("created"))
+            {
+                DateTime.TryParse(value, out created);
+            }
+
+            return new AutoQcConfig(name, false, created, DateTime.MinValue, GetTestMainSettings(name, changedVariable, value), GetTestPanoramaSettings(changedVariable, value), GetTestSkylineSettings());
+        }
+
+        public static ConfigRunner GetTestConfigRunner(string configName = "Config")
+        {
+            var testConfig = GetTestConfig(configName);
+            return new ConfigRunner(testConfig, new AutoQcLogger(testConfig, null));
+        }
+
+        public static List<AutoQcConfig> ConfigListFromNames(string[] names)
+        {
+            var configList = new List<AutoQcConfig>();
+            foreach (var name in names)
+            {
+                configList.Add(GetTestConfig(name));
+            }
+            return configList;
+        }
+
+        public static ConfigManager GetTestConfigManager(List<AutoQcConfig> configs = null)
+        {
+            var testConfigManager = new ConfigManager();
+            while (testConfigManager.HasConfigs())
+            {
+                testConfigManager.SelectConfig(0);
+                testConfigManager.RemoveSelected();
+            }
+
+            if (configs == null)
+            {
+                configs = new List<AutoQcConfig>
+                {
+                    GetTestConfig("one"),
+                    GetTestConfig("two"),
+                    GetTestConfig("three")
+                };
+            }
+
+            foreach(var config in configs)
+                testConfigManager.AddConfiguration(config);
+            
+            return testConfigManager;
+        }
+
+        public static void ClearSavedConfigurations()
+        {
+            var testConfigManager = new ConfigManager();
+            while (testConfigManager.HasConfigs())
+            {
+                testConfigManager.SelectConfig(0);
+                testConfigManager.RemoveSelected();
+            }
+            testConfigManager.Close();
+        }
+
+        public static List<string> GetAllLogFiles(string directory = null)
+        {
+            //directory = directory == null ? GetTestFilePath("") : directory;
+            //var files = Directory.GetFiles(directory);
+            var logFiles = new List<string>();
+            /*foreach (var fullName in files)
+            {
+                var file = Path.GetFileName(fullName);
+                if (file.EndsWith(".log"))
+                    logFiles.Add(fullName);
+            }*/
+            return logFiles;
+        }
+
+        public static void DeleteAllLogFiles()
+        {
+            /*var logFiles = GetAllLogFiles();
+            foreach (var file in logFiles)
+                File.Delete(file);*/
+        }
+    }
+    /*class TestLogger: IAutoQcLogger
     {
         private readonly StringBuilder log = new StringBuilder();
         private readonly  StringBuilder _programLog = new StringBuilder();
@@ -87,9 +244,9 @@ namespace AutoQCTest
         {
             log.Clear();
         }
-    }
+    }*/
 
-    class TestAppControl : IMainUiControl
+    /*class TestAppControl : IMainUiControl
     {
         private MainSettings _mainSettings = new MainSettings();
         private PanoramaSettings _panoramaSettings = new PanoramaSettings();
@@ -187,7 +344,7 @@ namespace AutoQCTest
         }
 
         #endregion
-    }
+    }*/
 
     class TestImportContext : ImportContext
     {
@@ -207,27 +364,4 @@ namespace AutoQCTest
         }
     }
 
-    class TestConfigRunner : IConfigRunner
-    {
-        private ConfigRunner.RunnerStatus _runnerStatus;
-        public void ChangeStatus(ConfigRunner.RunnerStatus status)
-        {
-            _runnerStatus = status;
-        }
-
-        public bool IsRunning()
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool IsStopped()
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool IsDisconnected()
-        {
-            return false;
-        }
-    }
 }

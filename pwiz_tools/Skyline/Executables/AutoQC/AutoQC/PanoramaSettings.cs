@@ -28,55 +28,81 @@ namespace AutoQC
 {
     
     [XmlRoot("panorama_settings")]
-    public class PanoramaSettings: IXmlSerializable, IConfigSettings
+    public class PanoramaSettings//: IConfigSettings
     {
-        public bool PublishToPanorama { get; private set; }
-        public string PanoramaServerUrl { get; private set; }
-        public string PanoramaUserEmail { get; private set; }
-        public string PanoramaPassword { get; private set; }
-        public string PanoramaFolder { get; private set; }
+        public static bool GetDefaultPublishToPanorama() { return false; }
 
-        public Uri PanoramaServerUri { get; private set; }
+        public readonly bool PublishToPanorama;
+        public readonly string PanoramaServerUrl;
+        public readonly string PanoramaUserEmail;
+        public readonly string PanoramaPassword;
+        public readonly string PanoramaFolder;
+
+        public readonly Uri PanoramaServerUri;
 
         public PanoramaSettings()
         {
             PublishToPanorama = false;
+            ValidateSettings();
         }
 
-        public PanoramaSettings(bool publishToPanorama, string panoramaServerUrl, string panoramaFolder)
+        public PanoramaSettings(bool publishToPanorama, string panoramaServerUrl, string panoramaUserEmail, string panoramaPassword, string panoramaFolder, Uri panoramaServerUri = null)
         {
             PublishToPanorama = publishToPanorama;
             PanoramaServerUrl = panoramaServerUrl;
-            PanoramaFolder = panoramaFolder;
-        }
-
-        public PanoramaSettings(bool publishToPanorama, string panoramaServerUrl, string panoramaFolder,
-            string panoramaUserEmail, string panoramaPassword) : this(publishToPanorama, panoramaServerUrl,
-            panoramaFolder)
-        {
             PanoramaUserEmail = panoramaUserEmail;
             PanoramaPassword = panoramaPassword;
-        }
+            PanoramaFolder = panoramaFolder;
+            PanoramaServerUri = panoramaServerUri;
 
-        public static PanoramaSettings GetDefault()
-        {
-            return new PanoramaSettings();
-        }
+            ValidateSettings();
 
-        public PanoramaSettings Copy()
-        {
-            return new PanoramaSettings
+            if (!PublishToPanorama)
+                return;
+
+            if (PanoramaServerUri == null)
             {
-                PublishToPanorama = PublishToPanorama,
-                PanoramaServerUrl = PanoramaServerUrl,
-                PanoramaFolder = PanoramaFolder
-            };
+                try
+                {
+                    PanoramaServerUri = new Uri(PanoramaUtil.ServerNameToUrl(PanoramaServerUrl));
+                }
+                catch (UriFormatException)
+                {
+                    Program.LogError("Panorama server name is invalid.");
+                }
+            }
+
+            var panoramaClient = new WebPanoramaClient(PanoramaServerUri);
+            try
+            {
+                PanoramaUtil.VerifyServerInformation(panoramaClient, PanoramaUserEmail, PanoramaPassword);
+                PanoramaServerUri = panoramaClient.ServerUri ?? PanoramaServerUri;
+                if (!(PanoramaServerUri is null)) PanoramaServerUrl = PanoramaServerUri.AbsoluteUri;
+            }
+            catch (Exception ex)
+            {
+                throw new ArgumentException(ex.Message);
+            }
+
+            try
+            {
+                PanoramaUtil.VerifyFolder(panoramaClient,
+                    new Server(PanoramaServerUri, PanoramaUserEmail,
+                        PanoramaPassword),
+                    PanoramaFolder);
+            }
+            catch (Exception ex)
+            {
+                throw new ArgumentException(ex.Message);
+            }
         }
 
         public virtual bool IsSelected()
         {
             return PublishToPanorama;
         }
+
+
 
         public void ValidateSettings()
         {
@@ -88,14 +114,6 @@ namespace AutoQC
             if (string.IsNullOrWhiteSpace(PanoramaServerUrl))
             {
                 throw new ArgumentException("Please specify a Panorama server URL.");
-            }
-            try
-            {
-                PanoramaServerUri = new Uri(PanoramaUtil.ServerNameToUrl(PanoramaServerUrl));
-            }
-            catch (UriFormatException)
-            {
-                throw new ArgumentException("Panorama server name is invalid.");
             }
 
             if (string.IsNullOrWhiteSpace(PanoramaUserEmail))
@@ -110,31 +128,6 @@ namespace AutoQC
             if (string.IsNullOrWhiteSpace(PanoramaFolder))
             {
                 throw new ArgumentException("Please specify a folder on the Panorama server.");
-            }
-
-            // Verify that we can connect to the given Panorama server with the user's credentials.
-            var panoramaClient = new WebPanoramaClient(PanoramaServerUri);
-            try
-            {
-                PanoramaUtil.VerifyServerInformation(panoramaClient, PanoramaUserEmail, PanoramaPassword);
-                PanoramaServerUri = panoramaClient.ServerUri ?? PanoramaServerUri;
-                PanoramaServerUrl = PanoramaServerUri.AbsoluteUri;
-            }
-            catch (Exception ex)
-            {
-                throw new ArgumentException(ex.Message);
-            }
-
-            try
-            {
-                PanoramaUtil.VerifyFolder(panoramaClient,
-                    new Server(PanoramaServerUri, PanoramaUserEmail, 
-                        PanoramaPassword),
-                       PanoramaFolder);
-            }
-            catch (Exception ex)
-            {
-                throw new ArgumentException(ex.Message);
             }
         }
 
@@ -213,13 +206,13 @@ namespace AutoQC
 
         #region Implementation of IXmlSerializable interface
 
-        private enum ATTR
+        private enum Attr
         {
-            publish_to_panorama,
-            panorama_server_url,
-            panorama_user_email,
-            panorama_user_password,
-            panorama_folder
+            PublishToPanorama,
+            PanoramaServerUrl,
+            PanoramaUserEmail,
+            PanoramaUserPassword,
+            PanoramaFolder
         };
 
         public XmlSchema GetSchema()
@@ -227,18 +220,15 @@ namespace AutoQC
             return null;
         }
 
-        public void ReadXml(XmlReader reader)
+        public static PanoramaSettings ReadXml(XmlReader reader)
         {
-            PublishToPanorama = reader.GetBoolAttribute(ATTR.publish_to_panorama);
-            PanoramaServerUrl = reader.GetAttribute(ATTR.panorama_server_url);
-            PanoramaUserEmail = reader.GetAttribute(ATTR.panorama_user_email);
-            PanoramaPassword = DecryptPassword(reader.GetAttribute(ATTR.panorama_user_password));
-            PanoramaFolder = reader.GetAttribute(ATTR.panorama_folder);
-
-            if (PublishToPanorama)
-            {
-                PanoramaServerUri = new Uri(PanoramaUtil.ServerNameToUrl(PanoramaServerUrl));
-            }
+            var publishToPanorama = reader.GetBoolAttribute(Attr.PublishToPanorama);
+            var panoramaServerUrl = reader.GetAttribute(Attr.PanoramaServerUrl);
+            var panoramaUserEmail = reader.GetAttribute(Attr.PanoramaUserEmail);
+            var panoramaPassword = DecryptPassword(reader.GetAttribute(Attr.PanoramaUserPassword));
+            var panoramaFolder = reader.GetAttribute(Attr.PanoramaFolder);
+            var panoramaServerUri = publishToPanorama ? new Uri(PanoramaUtil.ServerNameToUrl(panoramaServerUrl)) : null;
+            return new PanoramaSettings(publishToPanorama, panoramaServerUrl, panoramaUserEmail, panoramaPassword, panoramaFolder, panoramaServerUri);
         }
 
         public void WriteXml(XmlWriter writer)
@@ -246,11 +236,11 @@ namespace AutoQC
             writer.WriteStartElement("panorama_settings");
             if (PublishToPanorama)
             {
-                writer.WriteAttribute(ATTR.publish_to_panorama, PublishToPanorama);
-                writer.WriteAttributeIfString(ATTR.panorama_server_url, PanoramaServerUrl);
-                writer.WriteAttributeIfString(ATTR.panorama_user_email, PanoramaUserEmail);
-                writer.WriteAttributeIfString(ATTR.panorama_user_password, EncryptPassword(PanoramaPassword));
-                writer.WriteAttributeIfString(ATTR.panorama_folder, PanoramaFolder);
+                writer.WriteAttribute(Attr.PublishToPanorama, PublishToPanorama);
+                writer.WriteAttributeIfString(Attr.PanoramaServerUrl, PanoramaServerUrl);
+                writer.WriteAttributeIfString(Attr.PanoramaUserEmail, PanoramaUserEmail);
+                writer.WriteAttributeIfString(Attr.PanoramaUserPassword, EncryptPassword(PanoramaPassword));
+                writer.WriteAttributeIfString(Attr.PanoramaFolder, PanoramaFolder);
             }
             writer.WriteEndElement();
         }
@@ -260,13 +250,14 @@ namespace AutoQC
 
         protected bool Equals(PanoramaSettings other)
         {
-            var equal = PublishToPanorama == other.PublishToPanorama 
-                && string.Equals(PanoramaServerUrl, other.PanoramaServerUrl) 
-                && string.Equals(PanoramaUserEmail, other.PanoramaUserEmail) 
-                && string.Equals(PanoramaPassword, other.PanoramaPassword) 
-                && string.Equals(PanoramaFolder, other.PanoramaFolder);
+            if (!PublishToPanorama && PublishToPanorama == other.PublishToPanorama)
+                return true;
 
-            return equal;
+            return PublishToPanorama == other.PublishToPanorama
+                   && string.Equals(PanoramaServerUrl, other.PanoramaServerUrl)
+                   && string.Equals(PanoramaUserEmail, other.PanoramaUserEmail)
+                   && string.Equals(PanoramaPassword, other.PanoramaPassword)
+                   && string.Equals(PanoramaFolder, other.PanoramaFolder);
         }
 
         public override bool Equals(object obj)
