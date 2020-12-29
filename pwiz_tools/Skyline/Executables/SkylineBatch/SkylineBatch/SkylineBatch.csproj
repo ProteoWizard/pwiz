@@ -69,7 +69,7 @@
     <GenerateManifests>true</GenerateManifests>
   </PropertyGroup>
   <PropertyGroup>
-    <SignManifests>true</SignManifests>
+    <SignManifests>false</SignManifests>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>SkylineBatch_release.ico</ApplicationIcon>
@@ -116,7 +116,6 @@
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
     <None Include="SignAfterPublish.bat" />
-    <None Include="University of Washington %28MacCoss Lab 2023%29.pfx" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AlertDlg.cs">
