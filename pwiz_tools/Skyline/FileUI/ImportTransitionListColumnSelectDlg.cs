@@ -381,6 +381,7 @@ namespace pwiz.Skyline.FileUI
         /// Parse the mass list text, then show a status dialog if:
         ///     errors are found, or
         ///     errors are not found and "silentSuccess" arg is false
+        /// Shows a special error message and forces the user to alter their entry if the list is missing Precursor m/z, Product m/z or Peptide Sequence.
         /// Return false if no errors found.
         /// </summary>
         /// <param name="silentSuccess">If true, don't show the confirmation dialog when there are no errors</param>
@@ -401,7 +402,7 @@ namespace pwiz.Skyline.FileUI
                 // There are errors, show them to user
                 var isErrorAll = ReferenceEquals(docNew, _docCurrent);
                 DialogResult response;
-                using (var dlg = new ImportTransitionListErrorDlg(testErrorList, isErrorAll, silentSuccess))
+                using (var dlg = new ImportTransitionListErrorDlg(testErrorList, isErrorAll, silentSuccess, false))
                 {
                     response = dlg.ShowDialog(this);
                 }
