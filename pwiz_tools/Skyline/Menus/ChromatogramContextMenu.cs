@@ -1,17 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Drawing;
-using System.Data;
+using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
+using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
+using ZedGraph;
 
 namespace pwiz.Skyline.Menus
 {
@@ -21,6 +18,254 @@ namespace pwiz.Skyline.Menus
         {
             InitializeComponent();
         }
+
+        public void BuildChromatogramMenu(ZedGraphControl zedGraphControl, PaneKey paneKey, ContextMenuStrip menuStrip, ChromFileInfoId chromFileInfoId)
+        {
+            // Store original menu items in an array, and insert a separator
+            ToolStripItem[] items = new ToolStripItem[menuStrip.Items.Count];
+            int iUnzoom = -1;
+            for (int i = 0; i < items.Length; i++)
+            {
+                items[i] = menuStrip.Items[i];
+                string tag = (string)items[i].Tag;
+                if (tag == @"unzoom")
+                    iUnzoom = i;
+            }
+
+            if (iUnzoom != -1)
+                menuStrip.Items.Insert(iUnzoom, toolStripSeparator26);
+
+            // Insert skyline specific menus
+            var set = Settings.Default;
+            int iInsert = 0;
+
+            var settings = DocumentUI.Settings;
+            bool retentionPredict = (settings.PeptideSettings.Prediction.RetentionTime != null);
+            bool peptideIdTimes = (settings.PeptideSettings.Libraries.HasLibraries &&
+                                   (settings.TransitionSettings.FullScan.IsEnabled || settings.PeptideSettings.Libraries.HasMidasLibrary));
+            AddApplyRemovePeak(menuStrip, paneKey.IsotopeLabelType, 1, ref iInsert);
+            legendChromContextMenuItem.Checked = set.ShowChromatogramLegend;
+            menuStrip.Items.Insert(iInsert++, legendChromContextMenuItem);
+            var fullScan = Document.Settings.TransitionSettings.FullScan;
+            if (ChromatogramCache.FORMAT_VERSION_CACHE > ChromatogramCache.FORMAT_VERSION_CACHE_4
+                && fullScan.IsEnabled
+                && (fullScan.IsHighResPrecursor || fullScan.IsHighResProduct))
+            {
+                massErrorContextMenuItem.Checked = set.ShowMassError;
+                menuStrip.Items.Insert(iInsert++, massErrorContextMenuItem);
+            }
+
+            peakBoundariesContextMenuItem.Checked = set.ShowPeakBoundaries;
+            menuStrip.Items.Insert(iInsert++, peakBoundariesContextMenuItem);
+
+            originalPeakMenuItem.Checked = set.ShowOriginalPeak;
+            menuStrip.Items.Insert(iInsert++, originalPeakMenuItem);
+
+            menuStrip.Items.Insert(iInsert++, retentionTimesContextMenuItem);
+            if (retentionTimesContextMenuItem.DropDownItems.Count == 0)
+            {
+                retentionTimesContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
+                {
+                    allRTContextMenuItem,
+                    bestRTContextMenuItem,
+                    thresholdRTContextMenuItem,
+                    noneRTContextMenuItem,
+                    rawTimesMenuItemSplitter,
+                    rawTimesContextMenuItem
+                });
+            }
+            if (retentionPredict)
+            {
+                retentionTimePredContextMenuItem.Checked = set.ShowRetentionTimePred;
+                menuStrip.Items.Insert(iInsert++, retentionTimePredContextMenuItem);
+            }
+            rawTimesContextMenuItem.Checked = set.ChromShowRawTimes;
+            bool alignedTimes = settings.HasAlignedTimes();
+            bool unalignedTimes = settings.HasUnalignedTimes();
+            if (peptideIdTimes || alignedTimes || unalignedTimes)
+            {
+                menuStrip.Items.Insert(iInsert++, peptideIDTimesContextMenuItem);
+                peptideIDTimesContextMenuItem.DropDownItems.Clear();
+                idTimesNoneContextMenuItem.Checked = false;
+                peptideIDTimesContextMenuItem.DropDownItems.Add(idTimesNoneContextMenuItem);
+                if (peptideIdTimes)
+                {
+                    idTimesMatchingContextMenuItem.Checked = set.ShowPeptideIdTimes;
+                    peptideIDTimesContextMenuItem.DropDownItems.Add(idTimesMatchingContextMenuItem);
+                }
+                if (settings.HasAlignedTimes())
+                {
+                    idTimesAlignedContextMenuItem.Checked = set.ShowAlignedPeptideIdTimes;
+                    peptideIDTimesContextMenuItem.DropDownItems.Add(idTimesAlignedContextMenuItem);
+                }
+                if (settings.HasUnalignedTimes())
+                {
+
+                    idTimesOtherContextMenuItem.Checked = set.ShowUnalignedPeptideIdTimes;
+                    peptideIDTimesContextMenuItem.DropDownItems.Add(idTimesOtherContextMenuItem);
+                }
+
+                idTimesNoneContextMenuItem.Checked = !peptideIDTimesContextMenuItem.DropDownItems
+                    .Cast<ToolStripMenuItem>()
+                    .Any(idItem => idItem.Checked);
+            }
+            menuStrip.Items.Insert(iInsert++, toolStripSeparator16);
+            AddTransitionContextMenu(menuStrip, iInsert++);
+            menuStrip.Items.Insert(iInsert++, transformChromContextMenuItem);
+            // Sometimes child menuitems are stripped from the parent
+            if (transformChromContextMenuItem.DropDownItems.Count == 0)
+            {
+                transformChromContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
+                {
+                    transformChromNoneContextMenuItem,
+                    transformChromInterpolatedContextMenuItem,
+                    secondDerivativeContextMenuItem,
+                    firstDerivativeContextMenuItem,
+                    smoothSGChromContextMenuItem
+                });
+            }
+            menuStrip.Items.Insert(iInsert++, toolStripSeparator17);
+            menuStrip.Items.Insert(iInsert++, autoZoomContextMenuItem);
+            // Sometimes child menuitems are stripped from the parent
+            if (autoZoomContextMenuItem.DropDownItems.Count == 0)
+            {
+                autoZoomContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
+                {
+                    autoZoomNoneContextMenuItem,
+                    autoZoomBestPeakContextMenuItem,
+                    autoZoomRTWindowContextMenuItem,
+                    autoZoomBothContextMenuItem
+                });
+            }
+            lockYChromContextMenuItem.Checked = set.LockYChrom;
+            menuStrip.Items.Insert(iInsert++, lockYChromContextMenuItem);
+            synchronizeZoomingContextMenuItem.Checked = set.AutoZoomAllChromatograms;
+            menuStrip.Items.Insert(iInsert++, synchronizeZoomingContextMenuItem);
+            iInsert = InsertAlignmentMenuItems(menuStrip.Items, chromFileInfoId, iInsert);
+            menuStrip.Items.Insert(iInsert++, toolStripSeparator18);
+            menuStrip.Items.Insert(iInsert++, chromPropsContextMenuItem);
+            menuStrip.Items.Insert(iInsert, toolStripSeparator19);
+
+            // Remove some ZedGraph menu items not of interest
+            foreach (var item in items)
+            {
+                string tag = (string)item.Tag;
+                if (tag == @"set_default" || tag == @"show_val")
+                    menuStrip.Items.Remove(item);
+            }
+            CopyEmfToolStripMenuItem.AddToContextMenu(zedGraphControl, menuStrip);
+        }
+
+        /// <summary>
+        /// If the predicted retention time is auto calculated, add a "Show {Prediction} score" menu item.
+        /// If there are retention time alignments available for the specified chromFileInfoId, then adds 
+        /// a "Align Times To {Specified File}" menu item to a context menu.
+        /// </summary>
+        private int InsertAlignmentMenuItems(ToolStripItemCollection items, ChromFileInfoId chromFileInfoId, int iInsert)
+        {
+            var predictRT = Document.Settings.PeptideSettings.Prediction.RetentionTime;
+            if (predictRT != null && predictRT.IsAutoCalculated)
+            {
+                var menuItem = new ToolStripMenuItem(string.Format(Resources.SkylineWindow_ShowCalculatorScoreFormat, predictRT.Calculator.Name), null,
+                    (sender, eventArgs) => SkylineWindow.AlignToRtPrediction = !SkylineWindow.AlignToRtPrediction)
+                {
+                    Checked = SkylineWindow.AlignToRtPrediction,
+                };
+                items.Insert(iInsert++, menuItem);
+            }
+            if (null != chromFileInfoId && DocumentUI.Settings.HasResults &&
+                !DocumentUI.Settings.DocumentRetentionTimes.FileAlignments.IsEmpty)
+            {
+                foreach (var chromatogramSet in DocumentUI.Settings.MeasuredResults.Chromatograms)
+                {
+                    var chromFileInfo = chromatogramSet.GetFileInfo(chromFileInfoId);
+                    if (null == chromFileInfo)
+                    {
+                        continue;
+                    }
+                    string fileItemName = Path.GetFileNameWithoutExtension(SampleHelp.GetFileName(chromFileInfo.FilePath));
+                    var menuItemText = string.Format(Resources.SkylineWindow_AlignTimesToFileFormat, fileItemName);
+                    var alignToFileItem = new ToolStripMenuItem(menuItemText);
+                    if (ReferenceEquals(chromFileInfoId, SkylineWindow.AlignToFile))
+                    {
+                        alignToFileItem.Click += (sender, eventArgs) => SkylineWindow.AlignToFile = null;
+                        alignToFileItem.Checked = true;
+                    }
+                    else
+                    {
+                        alignToFileItem.Click += (sender, eventArgs) => SkylineWindow.AlignToFile = chromFileInfoId;
+                        alignToFileItem.Checked = false;
+                    }
+                    items.Insert(iInsert++, alignToFileItem);
+                }
+            }
+            return iInsert;
+        }
+        public void AddApplyRemovePeak(ToolStrip menuStrip, IsotopeLabelType labelType, int separator, ref int iInsert)
+        {
+            var removePeakItems = removePeakGraphMenuItem.DropDownItems;
+            var document = DocumentUI;
+            SkylineWindow.EditMenu.CanApplyOrRemovePeak(removePeakItems, labelType, out var canApply, out var canRemove);
+            if (canApply || canRemove)
+            {
+                if (separator < 0)
+                    menuStrip.Items.Insert(iInsert++, toolStripSeparator33);
+                if (canApply)
+                {
+                    menuStrip.Items.Insert(iInsert++, applyPeakAllGraphMenuItem);
+                    menuStrip.Items.Insert(iInsert++, applyPeakSubsequentGraphMenuItem);
+                    var groupable = ReplicateValue.GetGroupableReplicateValues(document).ToArray();
+                    if (groupable.Any())
+                    {
+                        var groupBy = SkylineWindow.EditMenu.GetGroupApplyToDescription();
+                        if (groupBy != null)
+                        {
+                            applyPeakGroupGraphMenuItem.Text =
+                                Resources.SkylineWindow_BuildChromatogramMenu_Apply_Peak_to_ + groupBy;
+                            menuStrip.Items.Insert(iInsert++, applyPeakGroupGraphMenuItem);
+                        }
+
+                        SkylineWindow.EditMenu.AddGroupByMenuItems(menuStrip, groupApplyToByGraphMenuItem, SkylineWindow.SetGroupApplyToBy, false, Settings.Default.GroupApplyToBy, ref iInsert);
+                        groupApplyToByGraphMenuItem.Visible = true;
+                    }
+                    else
+                    {
+                        groupApplyToByGraphMenuItem.Visible = false;
+                    }
+                }
+                if (canRemove)
+                    menuStrip.Items.Insert(iInsert++, removePeakGraphMenuItem);
+                if (separator > 0)
+                    menuStrip.Items.Insert(iInsert++, toolStripSeparator33);
+            }
+        }
+
+
+        public void AddTransitionContextMenu(ToolStrip menuStrip, int iInsert)
+        {
+            menuStrip.Items.Insert(iInsert, transitionsContextMenuItem);
+            // Sometimes child menuitems are stripped from the parent
+            if (transitionsContextMenuItem.DropDownItems.Count == 0)
+            {
+                transitionsContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
+                {
+                    allTranContextMenuItem,
+                    precursorsTranContextMenuItem,
+                    productsTranContextMenuItem,
+                    singleTranContextMenuItem,
+                    totalTranContextMenuItem,
+                    toolStripSeparatorTran,
+                    basePeakContextMenuItem,
+                    ticContextMenuItem,
+                    qcContextMenuItem,
+                    toolStripSeparatorOnlyQuantitative,
+                    onlyQuantitativeContextMenuItem,
+                    toolStripSeparatorSplitGraph,
+                    splitGraphContextMenuItem,
+                });
+            }
+        }
+
 
         private void applyPeakAllMenuItem_Click(object sender, EventArgs e)
         {
@@ -32,6 +277,7 @@ namespace pwiz.Skyline.Menus
             ApplyPeak(true, false);
         }
 
+        public ToolStripMenuItem GroupApplyToByGraphMenuItem => groupApplyToByGraphMenuItem;
         private void applyPeakGroupGraphMenuItem_Click(object sender, EventArgs e)
         {
             ApplyPeak(false, true);
@@ -112,7 +358,7 @@ namespace pwiz.Skyline.Menus
 
         private void removePeakMenuItem_Click(object sender, EventArgs e)
         {
-            SkylineWindow.RemovePeak(true);
+            SkylineWindow.EditMenu.RemovePeak(false);
         }
 
         private class RemovePeakHandler
@@ -232,7 +478,7 @@ namespace pwiz.Skyline.Menus
 
             // Only show all ions chromatogram options when at least one chromatogram of this type exists
             bool showAllIonsOptions = DocumentUI.Settings.HasResults &&
-                DocumentUI.Settings.MeasuredResults.HasAllIonsChromatograms;
+                                      DocumentUI.Settings.MeasuredResults.HasAllIonsChromatograms;
 
             basePeakContextMenuItem.Visible =
                 ticContextMenuItem.Visible =
@@ -240,7 +486,8 @@ namespace pwiz.Skyline.Menus
                         toolStripSeparatorTran.Visible = showAllIonsOptions;
 
             if (!showAllIonsOptions &&
-                    (displayType == DisplayTypeChrom.base_peak || displayType == DisplayTypeChrom.tic || displayType == DisplayTypeChrom.qc))
+                (displayType == DisplayTypeChrom.base_peak || displayType == DisplayTypeChrom.tic ||
+                 displayType == DisplayTypeChrom.qc))
                 displayType = DisplayTypeChrom.all;
 
             if (showAllIonsOptions)
@@ -398,6 +645,5 @@ namespace pwiz.Skyline.Menus
         {
             SkylineWindow.ShowChromatogramProperties();
         }
-
     }
 }

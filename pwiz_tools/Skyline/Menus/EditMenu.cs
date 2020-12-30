@@ -749,11 +749,11 @@ namespace pwiz.Skyline.Menus
                     }
                     var i = 0;
                     AddGroupByMenuItems(null, groupApplyToByToolStripMenuItem, replicateValue => Settings.Default.GroupApplyToBy = replicateValue?.ToPersistedString(), false, Settings.Default.GroupApplyToBy, ref i);
-                    SkylineWindow.GroupApplyToByGraphMenuItem.Visible = true;
+                    SkylineWindow.ChromatogramContextMenu.GroupApplyToByGraphMenuItem.Visible = true;
                 }
                 else
                 {
-                    SkylineWindow.GroupApplyToByGraphMenuItem.Visible = false;
+                    SkylineWindow.ChromatogramContextMenu.GroupApplyToByGraphMenuItem.Visible = false;
                 }
                 removePeakToolStripMenuItem.Enabled = canRemove;
                 integrationToolStripMenuItem.Enabled = true;
@@ -834,7 +834,7 @@ namespace pwiz.Skyline.Menus
             RemovePeak(false);
         }
 
-        public void RemovePeak(bool removePeakByContextMenu)
+        public void RemovePeak(bool removePeakBySequenceTreeContextMenu)
         {
             var chromFileInfoId = SkylineWindow.GetSelectedChromFileId();
             SkylineWindow.CanApplyOrRemovePeak(null, null, out _, out var canRemove);
@@ -860,7 +860,7 @@ namespace pwiz.Skyline.Menus
             }
 
             TransitionDocNode nodeTran = null;
-            if (removePeakByContextMenu)
+            if (removePeakBySequenceTreeContextMenu)
             {
                 var nodeTranTree = SelectedNode as TransitionTreeNode;
                 if (nodeTranTree != null)
