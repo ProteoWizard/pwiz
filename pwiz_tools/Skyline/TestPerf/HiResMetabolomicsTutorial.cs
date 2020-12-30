@@ -28,6 +28,7 @@ using pwiz.Common.DataBinding;
 using pwiz.Skyline;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
@@ -278,7 +279,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                         Settings.Default.ChromatogramFontSize = 14;
                         Settings.Default.AreaFontSize = 14;
                         SkylineWindow.ChangeTextSize(TreeViewMS.LRG_TEXT_FACTOR);
-                        SkylineWindow.AutoZoomBestPeak();
+                        SkylineWindow.SetAutoZoomChrom(AutoZoomChrom.peak);
                         SkylineWindow.ShowPeakAreaLegend(false);
                         SkylineWindow.ShowRTLegend(false);
                     });

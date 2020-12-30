@@ -1615,6 +1615,12 @@ namespace pwiz.Skyline
             UpdateChromGraphs();
         }
 
+        public void SetShowRetentionTimes(ShowRTChrom showRTChrom)
+        {
+            Settings.Default.ShowRetentionTimesEnum = showRTChrom.ToString();
+            UpdateChromGraphs();
+        }
+
         private void thresholdRTContextMenuItem_Click(object sender, EventArgs e)
         {
             ShowChromatogramRTThresholdDlg();
@@ -1660,6 +1666,13 @@ namespace pwiz.Skyline
             UpdateChromGraphs();
         }
 
+        public void SetShowRetentionTimePred(bool showRetentionTimePred)
+        {
+            Settings.Default.ShowRetentionTimePred = showRetentionTimePred;
+            UpdateChromGraphs();
+
+        }
+
         private void peptideIDTimesContextMenuItem_Click(object sender, EventArgs e)
         {
             ShowPeptideIDTimes(idTimesMatchingContextMenuItem.Checked);
@@ -1693,7 +1706,7 @@ namespace pwiz.Skyline
             UpdateChromGraphs();
         }
 
-        private void idTimesNoneContextMenuItem_Click(object sender, EventArgs e)
+        public void HideAllIdTimes()
         {
             Settings.Default.ShowPeptideIdTimes =
                 Settings.Default.ShowAlignedPeptideIdTimes =
@@ -1875,51 +1888,7 @@ namespace pwiz.Skyline
 
         public void ApplyPeak(bool subsequent, bool group)
         {
-            CanApplyOrRemovePeak(null, null, out var canApply, out _);
-            if (!canApply)
-                return;
-
-            var nodePepTree = SequenceTree.GetNodeOfType<PeptideTreeNode>();
-            var nodeTranGroupTree = SequenceTree.GetNodeOfType<TransitionGroupTreeNode>();
-            var nodeTranGroup = nodeTranGroupTree?.DocNode;
-
-            using (var longWait = new LongWaitDlg(this) { Text = Resources.SkylineWindow_ApplyPeak_Applying_Peak })
-            {
-                SrmDocument doc = null;
-                try
-                {
-                    var resultsIndex = SelectedResultsIndex;
-                    var chromatogramSet = Document.MeasuredResults.Chromatograms[resultsIndex];
-                    var resultsFile = GetGraphChrom(chromatogramSet.Name).GetChromFileInfoId();
-                    var groupBy =
-                        ReplicateValue.FromPersistedString(Document.Settings, Settings.Default.GroupApplyToBy);
-                    object groupByValue = null;
-                    if (groupBy != null)
-                    {
-                        groupByValue = groupBy.GetValue(new AnnotationCalculator(Document), chromatogramSet);
-                    }
-                    longWait.PerformWork(this, 800, monitor =>
-                        doc = PeakMatcher.ApplyPeak(Document, nodePepTree, ref nodeTranGroup, resultsIndex, resultsFile, subsequent, groupBy, groupByValue, monitor));
-                }
-                catch (Exception x)
-                {
-                    MessageDlg.ShowWithException(this, TextUtil.LineSeparate(Resources.SkylineWindow_ApplyPeak_Failed_to_apply_peak_, x.Message), x);
-                }
-
-                if (!longWait.IsCanceled && doc != null && !ReferenceEquals(doc, Document))
-                {
-                    // ReSharper disable once PossibleNullReferenceException
-                    var path = PropertyName.ROOT
-                        .SubProperty(((PeptideGroupTreeNode) nodePepTree.SrmParent).DocNode.AuditLogText)
-                        .SubProperty(nodePepTree.DocNode.AuditLogText)
-                        .SubProperty(nodeTranGroup.AuditLogText);
-
-                    var msg = subsequent ? MessageType.applied_peak_subsequent : MessageType.applied_peak_all;
-
-                    ModifyDocument(Resources.SkylineWindow_PickPeakInChromatograms_Apply_picked_peak, document => doc,
-                        docPair => AuditLogEntry.CreateSimpleEntry(msg, docPair.NewDocumentType, path.ToString()));
-                }
-            }
+            EditMenu.ApplyPeak(subsequent, group);
         }
 
         private void removePeakMenuItem_Click(object sender, EventArgs e)
@@ -2196,19 +2165,12 @@ namespace pwiz.Skyline
 
         public void AutoZoomNone()
         {
-            Settings.Default.AutoZoomChromatogram = AutoZoomChrom.none.ToString();
-            UpdateChromGraphs();
+            SetAutoZoomChrom(AutoZoomChrom.none);
         }
 
         private void autoZoomBestPeakMenuItem_Click(object sender, EventArgs e)
         {
-            AutoZoomBestPeak();
-        }
-
-        public void AutoZoomBestPeak()
-        {
-            Settings.Default.AutoZoomChromatogram = AutoZoomChrom.peak.ToString();
-            UpdateChromGraphs();
+            SetAutoZoomChrom(AutoZoomChrom.peak);
         }
 
         private void autoZoomRTWindowMenuItem_Click(object sender, EventArgs e)
@@ -2218,7 +2180,12 @@ namespace pwiz.Skyline
 
         public void AutoZoomRTWindow()
         {
-            Settings.Default.AutoZoomChromatogram = AutoZoomChrom.window.ToString();
+            SetAutoZoomChrom(AutoZoomChrom.window);
+        }
+
+        public void SetAutoZoomChrom(AutoZoomChrom autoZoomChrom)
+        {
+            Settings.Default.AutoZoomChromatogram = autoZoomChrom.ToString();
             UpdateChromGraphs();
         }
 
@@ -2229,8 +2196,7 @@ namespace pwiz.Skyline
 
         public void AutoZoomBoth()
         {
-            Settings.Default.AutoZoomChromatogram = AutoZoomChrom.both.ToString();
-            UpdateChromGraphs();
+            SetAutoZoomChrom(AutoZoomChrom.both);
         }
 
         private void chromPropsContextMenuItem_Click(object sender, EventArgs e)

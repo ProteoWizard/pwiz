@@ -449,7 +449,8 @@ namespace pwiz.Skyline.Menus
             basePeakMenuItem.Visible = ticMenuItem.Visible = qcMenuItem.Visible =toolStripSeparatorTranMain.Visible = showAllIonsOptions;
 
             if (!showAllIonsOptions &&
-                    (displayType == DisplayTypeChrom.base_peak || displayType == DisplayTypeChrom.tic || displayType == DisplayTypeChrom.qc))
+                (displayType == DisplayTypeChrom.base_peak || displayType == DisplayTypeChrom.tic ||
+                 displayType == DisplayTypeChrom.qc))
                 displayType = DisplayTypeChrom.all;
 
             if (showAllIonsOptions)
@@ -603,7 +604,7 @@ namespace pwiz.Skyline.Menus
 
         private void autoZoomBestPeakMenuItem_Click(object sender, EventArgs e)
         {
-            SkylineWindow.AutoZoomBestPeak();
+            SkylineWindow.SetAutoZoomChrom(AutoZoomChrom.peak);
         }
 
         private void autoZoomRTWindowMenuItem_Click(object sender, EventArgs e)

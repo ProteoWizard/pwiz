@@ -310,7 +310,7 @@ namespace pwiz.SkylineTestTutorial
                 Assert.IsNotNull(nodePepTree);
                 Assert.AreEqual("VLQAVLPPLPQVVCTYR", nodePepTree.DocNode.Peptide.Sequence);
                 SkylineWindow.ShowSplitChromatogramGraph(true);
-                SkylineWindow.AutoZoomBestPeak();
+                SkylineWindow.SetAutoZoomChrom(AutoZoomChrom.peak);
                 var graphChrom = SkylineWindow.GetGraphChrom(prefixKeep + "1");
                 var labelStrings = graphChrom.GetAnnotationLabelStrings().ToArray();
                 Assert.IsTrue(labelStrings.Contains(string.Format("{0}\n+{1} ppm", 75.4, 3)),
@@ -362,7 +362,7 @@ namespace pwiz.SkylineTestTutorial
 
             PauseForScreenShot<GraphChromatogram>("Chromatogram graph metafile - zoomed out and small peak", 30);
 
-            RunUI(SkylineWindow.AutoZoomBestPeak);
+            RunUI(() => SkylineWindow.SetAutoZoomChrom(AutoZoomChrom.peak));
 
             PauseForScreenShot<GraphChromatogram>("Chromatogram graph metafile - zoomed to peak", 31);
             if (IsFullImportMode)

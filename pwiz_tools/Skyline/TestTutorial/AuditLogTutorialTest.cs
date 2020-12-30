@@ -213,7 +213,7 @@ namespace pwiz.SkylineTestTutorial
                           Settings.Default.ArrangeGraphsOrder = GroupGraphsOrder.Document.ToString();
                           Settings.Default.ArrangeGraphsReversed = false;
                           SkylineWindow.ArrangeGraphsTabbed();
-                          SkylineWindow.AutoZoomBestPeak();
+                          SkylineWindow.SetAutoZoomChrom(AutoZoomChrom.peak);
                       });
             WaitForCondition(() => Equals(9, SkylineWindow.GraphChromatograms.Count(graphChrom => !graphChrom.IsHidden)),
                 "unexpected visible graphChromatogram count");

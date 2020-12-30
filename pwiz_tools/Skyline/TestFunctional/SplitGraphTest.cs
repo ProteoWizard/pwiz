@@ -57,7 +57,7 @@ namespace pwiz.SkylineTestFunctional
                 {
                     // Select the first transition group
                     SkylineWindow.SelectedPath = SkylineWindow.Document.GetPathTo(2, 0);
-                    SkylineWindow.AutoZoomBestPeak();
+                    SkylineWindow.SetAutoZoomChrom(AutoZoomChrom.peak);
                     // Make sure that we are zoomed in to approximately the best peak
                     Assert.AreEqual(graphChromatogramGraphControl.GraphPane.XAxis.Scale.Min, 13.0, 1.0);
                     Assert.AreEqual(graphChromatogramGraphControl.GraphPane.XAxis.Scale.Max, 14.0, 1.0);

@@ -198,7 +198,7 @@ namespace pwiz.SkylineTestTutorial
             FindNode("ETFP"); // Not L10N
             RunUI(() =>
             {
-                SkylineWindow.AutoZoomBestPeak();
+                SkylineWindow.SetAutoZoomChrom(AutoZoomChrom.peak);
                 SkylineWindow.SequenceTree.TopNode = SkylineWindow.SequenceTree.Nodes[5];
             });
             PauseForScreenShot("Main window with data imported", 12);
@@ -600,7 +600,7 @@ namespace pwiz.SkylineTestTutorial
                     Settings.Default.ChromatogramFontSize = 14;
                     Settings.Default.AreaFontSize = 14;
                     SkylineWindow.ChangeTextSize(TreeViewMS.LRG_TEXT_FACTOR);
-                    SkylineWindow.AutoZoomBestPeak();
+                    SkylineWindow.SetAutoZoomChrom(AutoZoomChrom.peak);
                 });
                 RestoreCoverViewOnScreen();
                 RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.Parent);

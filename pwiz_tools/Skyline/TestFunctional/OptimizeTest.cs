@@ -286,7 +286,7 @@ namespace pwiz.SkylineTestFunctional
 
             SelectNode(SrmDocument.Level.Transitions, 0);
 
-            RunUI(SkylineWindow.AutoZoomBestPeak);
+            RunUI(() => SkylineWindow.SetAutoZoomChrom(AutoZoomChrom.peak));
 
             // Add some heavy precursors while loading
             const LabelAtoms labelAtoms = LabelAtoms.C13 | LabelAtoms.N15;

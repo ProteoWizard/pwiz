@@ -451,7 +451,7 @@ namespace pwiz.SkylineTestTutorial
                 {
                     SkylineWindow.Size = new Size(1600, 960);
                     SkylineWindow.ShowGraphRetentionTime(false, GraphTypeSummary.replicate);
-                    SkylineWindow.AutoZoomBestPeak();
+                    SkylineWindow.SetAutoZoomChrom(AutoZoomChrom.peak);
                     AdjustSequenceTreePanelWidth();
                     SkylineWindow.ShowSingleTransition();
                     SkylineWindow.ShowSplitChromatogramGraph(true);

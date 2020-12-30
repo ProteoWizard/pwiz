@@ -384,7 +384,7 @@ namespace pwiz.SkylineTestTutorial
             {
                 RestoreCoverViewOnScreen();
                 var documentGridFormCover = WaitForOpenForm<DocumentGridForm>();
-                RunUI(SkylineWindow.AutoZoomBestPeak);
+                RunUI(() => SkylineWindow.SetAutoZoomChrom(AutoZoomChrom.peak));
                 WaitForGraphs();
                 var viewEditorCover = ShowDialog<ViewEditor>(documentGridFormCover.NavBar.CustomizeView);
                 RunUI(() =>
@@ -460,7 +460,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 resultsGrid = resultsGridForm.DataGridView;
-                SkylineWindow.AutoZoomBestPeak();
+                SkylineWindow.SetAutoZoomChrom(AutoZoomChrom.peak);
                 SkylineWindow.SelectedPath = ((SrmTreeNode)SkylineWindow.SequenceTree.SelectedNode.Nodes[0]).Path;
             });
             WaitForGraphs();

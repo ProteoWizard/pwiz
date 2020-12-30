@@ -95,7 +95,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.ChangeTextSize(TreeViewMS.LRG_TEXT_FACTOR);
 
                 SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0].Nodes[0];
-                SkylineWindow.AutoZoomBestPeak();
+                SkylineWindow.SetAutoZoomChrom(AutoZoomChrom.peak);
                 SkylineWindow.GraphSpectrumSettings.ShowBIons = true;
                 SkylineWindow.Size = new Size(1266, 736);
 
@@ -174,7 +174,7 @@ namespace pwiz.SkylineTestTutorial
             if (IsCoverShotMode)
             {
                 RestoreCoverViewOnScreen();
-                RunUI(SkylineWindow.AutoZoomBestPeak);
+                RunUI(() => SkylineWindow.SetAutoZoomChrom(AutoZoomChrom.peak));
                 // Change and restore selection to ensure all graphs are updated
                 RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.PrevNode);
                 WaitForGraphs();
@@ -192,7 +192,7 @@ namespace pwiz.SkylineTestTutorial
             {
                 SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0].Nodes[0];
                 SkylineWindow.AutoZoomNone();
-                SkylineWindow.AutoZoomBestPeak();
+                SkylineWindow.SetAutoZoomChrom(AutoZoomChrom.peak);
                 SkylineWindow.EditDelete();
                 SkylineWindow.ShowRTRegressionGraphScoreToRun();
             });
@@ -274,7 +274,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0].Nodes[0];
             });
 
-            RunUI(SkylineWindow.AutoZoomBestPeak);
+            RunUI(() => SkylineWindow.SetAutoZoomChrom(AutoZoomChrom.peak));
             PauseForScreenShot("Targets view clipped from the main window AND chromatogram graph metafile", 14);
             RestoreViewOnScreen(16);
             PauseForScreenShot("Library Match plot metafile", 16);
@@ -344,7 +344,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.Size = new Size(722, 449);
             });
 
-            RunUI(SkylineWindow.AutoZoomBestPeak);
+            RunUI(() => SkylineWindow.SetAutoZoomChrom(AutoZoomChrom.peak));
             RestoreViewOnScreen(17);
             PauseForScreenShot("Targets view clipped from main window and chromatogram graph metafile", 17);
 
@@ -460,7 +460,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.ShowGraphSpectrum(false);
                 SkylineWindow.ArrangeGraphsTiled();
                 SkylineWindow.AutoZoomNone();
-                SkylineWindow.AutoZoomBestPeak();
+                SkylineWindow.SetAutoZoomChrom(AutoZoomChrom.peak);
             });
             FindNode("FWEVISDEHGIQPDGTFK");
 

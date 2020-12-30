@@ -4591,6 +4591,146 @@ namespace pwiz.Skyline
                 }
             }
         }
+
+        private void dockPanel_ActiveDocumentChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void newMenuItem_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void openMenuItem_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void saveMenuItem_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void publishMenuItem_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void startPageMenuItem_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void openContainingFolderMenuItem_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void saveAsMenuItem_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void shareDocumentMenuItem_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void importResultsMenuItem_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void peakBoundariesToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void importPeptideSearchMenuItem_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void importFASTAMenuItem_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void importAssayLibraryMenuItem_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void importMassListMenuItem_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void importDocumentMenuItem_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void importAnnotationsMenuItem_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void exportTransitionListMenuItem_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void exportIsolationListMenuItem_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void exportMethodMenuItem_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void exportReportMenuItem_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void espFeaturesMenuItem_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void exportSpectralLibraryMenuItem_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void chromatogramsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void mProphetFeaturesMenuItem_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void exportAnnotationsMenuItem_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void fileMenu_DropDownOpening(object sender, EventArgs e)
+        {
+
+        }
+
+        private void editToolStripMenuItem_DropDownOpening(object sender, EventArgs e)
+        {
+
+        }
     }
 }
 

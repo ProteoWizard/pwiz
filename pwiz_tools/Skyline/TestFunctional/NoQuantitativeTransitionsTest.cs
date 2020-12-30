@@ -44,7 +44,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(()=>
             {
                 SkylineWindow.OpenFile(TestFilesDir.GetTestPath("NoQuantitativeTransitionsTest.sky"));
-                SkylineWindow.AutoZoomBestPeak();
+                SkylineWindow.SetAutoZoomChrom(AutoZoomChrom.peak);
             });
             WaitForDocumentLoaded();
             RunDlg<ChromChartPropertyDlg>(SkylineWindow.ShowChromatogramProperties, dlg =>
@@ -133,7 +133,7 @@ namespace pwiz.SkylineTestFunctional
                                         SkylineWindow.SelectedPath = new IdentityPath(protein.Id, peptide.Id,
                                             precursor.Id, transition.Id);
                                         SkylineWindow.AutoZoomNone();
-                                        SkylineWindow.AutoZoomBestPeak();
+                                        SkylineWindow.SetAutoZoomChrom(AutoZoomChrom.peak);
                                     });
                                     var transitionChromInfos = new List<TransitionChromInfo>();
                                     if (displayTypeChrom == DisplayTypeChrom.single)
