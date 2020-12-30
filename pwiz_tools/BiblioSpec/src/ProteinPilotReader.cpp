@@ -88,7 +88,14 @@ bool ProteinPilotReader::parseFile()
 
     Verbosity::debug("ProteinPilotReader is parsing %s (%d kb).", filename.c_str(), filesize);
     bool success = parse();
-    Verbosity::debug("ProteinPilotReader finished parsing %s.", filename.c_str());
+    if (success)
+    {
+        Verbosity::debug("ProteinPilotReader finished parsing %s.", filename.c_str());
+    }
+    else
+    {
+        Verbosity::debug("ProteinPilotReader failed to parse %s.", filename.c_str());
+    }
 
     if( ! success ){
         return success;
