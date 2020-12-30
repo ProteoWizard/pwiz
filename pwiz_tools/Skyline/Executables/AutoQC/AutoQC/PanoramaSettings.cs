@@ -28,7 +28,7 @@ namespace AutoQC
 {
     
     [XmlRoot("panorama_settings")]
-    public class PanoramaSettings//: IConfigSettings
+    public class PanoramaSettings
     {
         public static bool GetDefaultPublishToPanorama() { return false; }
 
@@ -43,7 +43,6 @@ namespace AutoQC
         public PanoramaSettings()
         {
             PublishToPanorama = false;
-            ValidateSettings();
         }
 
         public PanoramaSettings(bool publishToPanorama, string panoramaServerUrl, string panoramaUserEmail, string panoramaPassword, string panoramaFolder, Uri panoramaServerUri = null)
@@ -54,8 +53,6 @@ namespace AutoQC
             PanoramaPassword = panoramaPassword;
             PanoramaFolder = panoramaFolder;
             PanoramaServerUri = panoramaServerUri;
-
-            ValidateSettings();
 
             if (!PublishToPanorama)
                 return;
@@ -79,21 +76,9 @@ namespace AutoQC
                 PanoramaServerUri = panoramaClient.ServerUri ?? PanoramaServerUri;
                 if (!(PanoramaServerUri is null)) PanoramaServerUrl = PanoramaServerUri.AbsoluteUri;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                throw new ArgumentException(ex.Message);
-            }
-
-            try
-            {
-                PanoramaUtil.VerifyFolder(panoramaClient,
-                    new Server(PanoramaServerUri, PanoramaUserEmail,
-                        PanoramaPassword),
-                    PanoramaFolder);
-            }
-            catch (Exception ex)
-            {
-                throw new ArgumentException(ex.Message);
+                // ignored
             }
         }
 
@@ -128,6 +113,27 @@ namespace AutoQC
             if (string.IsNullOrWhiteSpace(PanoramaFolder))
             {
                 throw new ArgumentException("Please specify a folder on the Panorama server.");
+            }
+
+            var panoramaClient = new WebPanoramaClient(PanoramaServerUri);
+            try
+            {
+                PanoramaUtil.VerifyServerInformation(panoramaClient, PanoramaUserEmail, PanoramaPassword);
+            }
+            catch (Exception ex)
+            {
+                throw new ArgumentException(ex.Message);
+            }
+            try
+            {
+                PanoramaUtil.VerifyFolder(panoramaClient,
+                    new Server(PanoramaServerUri, PanoramaUserEmail,
+                        PanoramaPassword),
+                    PanoramaFolder);
+            }
+            catch (Exception ex)
+            {
+                throw new ArgumentException(ex.Message);
             }
         }
 

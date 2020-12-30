@@ -336,4 +336,19 @@
   <data name="FindSkylineForm_btnOkClick_No_SkylineCmd_exe_file_in__0__" xml:space="preserve">
     <value>No SkylineCmd.exe file in {0}</value>
   </data>
+  <data name="AutoQcConfig_Please_enter_a_name_for_the_configuration_" xml:space="preserve">
+    <value>Please enter a name for the configuration.</value>
+  </data>
+  <data name="ConfigManager_Cannot_run_invalid_configuration" xml:space="preserve">
+    <value>Cannot run invalid configuration</value>
+  </data>
+  <data name="SkylineSettings_Unable_to_find_Skyline_Daily_installation_" xml:space="preserve">
+    <value>Unable to find Skyline-daily installation.</value>
+  </data>
+  <data name="SkylineSettings_Unable_to_find_Skyline_installation_" xml:space="preserve">
+    <value>Unable to find Skyline installation.</value>
+  </data>
+  <data name="SkylineSettings_Unable_to_find_Skyline_installation_at__0__" xml:space="preserve">
+    <value>Unable to find Skyline installation at {0}</value>
+  </data>
 </root>

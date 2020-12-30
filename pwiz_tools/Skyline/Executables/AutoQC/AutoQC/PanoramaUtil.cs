@@ -61,6 +61,9 @@ namespace AutoQC
 
         public static void VerifyServerInformation(IPanoramaClient panoramaClient, string username, string password)
         {
+            if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
+                throw new ArgumentException("Username and password cannot be null");
+
             var uriServer = panoramaClient.ServerUri;
 
             switch (panoramaClient.GetServerState())

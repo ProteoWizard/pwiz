@@ -126,7 +126,8 @@ namespace AutoQC
 
         private string GetConfigDir()
         {
-            return Path.Combine(Config.MainSettings.SkylineFileDir, GetSafeName(Config.Name));
+            var skylineFileDir = Path.GetDirectoryName(Config.MainSettings.SkylineFilePath);
+            return Path.Combine(skylineFileDir, GetSafeName(Config.Name));
         }
 
         private void CreateConfigDir()

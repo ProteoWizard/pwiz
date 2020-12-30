@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -84,25 +85,9 @@ namespace AutoQC
         private void SaveConfigList()
         {
             var updatedConfigs = new ConfigList();
-            var invalidConfigNames = "";
             foreach (var config in _configList)
             {
-                try
-                {
-                    config.Validate();
-                    updatedConfigs.Add(config);
-                }
-                catch (ArgumentException)
-                {
-                    invalidConfigNames += config.Name + Environment.NewLine;
-                }
-
-            }
-            if (invalidConfigNames.Length > 0)
-            {
-                DisplayError(Resources.ConfigManager_SaveConfigs_Save_configuration_error,
-                    Resources.ConfigManager_SaveConfigs_Could_not_save_configurations + Environment.NewLine +
-                    invalidConfigNames);
+                updatedConfigs.Add(config);
             }
             Settings.Default.ConfigList = updatedConfigs;
             Settings.Default.Save();
@@ -137,6 +122,14 @@ namespace AutoQC
                 lvi.SubItems.Add(config.Created.ToShortDateString());
                 lvi.SubItems.Add(configRunner.GetDisplayStatus());
                 lvi.SubItems[runnerStatusIndex].ForeColor = configRunner.GetDisplayColor();
+                try
+                {
+                    config.Validate();
+                }
+                catch (ArgumentException)
+                {
+                    lvi.ForeColor = Color.Red;
+                }
                 listViewConfigs.Add(lvi);
             }
             return listViewConfigs;
@@ -334,7 +327,7 @@ namespace AutoQC
             _sortedColumn = columnIndex;
         }
 
-        public void ReorderConfigs(List<int> newIndexOrder, bool sameColumn)
+        private void ReorderConfigs(List<int> newIndexOrder, bool sameColumn)
         {
             if (sameColumn && IsSorted(newIndexOrder))
             {
@@ -350,7 +343,7 @@ namespace AutoQC
             SelectConfigFromName(selectedName);
         }
 
-        public bool IsSorted(List<int> list)
+        private bool IsSorted(List<int> list)
         {
             if (list.Count == 0) return true;
             var lastValue = list[0];
@@ -424,7 +417,15 @@ namespace AutoQC
             var selectedConfig = GetSelectedConfig();
             if (selectedConfig.IsEnabled == newIsEnabled)
                 return;
-
+            try
+            {
+                selectedConfig.Validate();
+            }
+            catch (ArgumentException ex)
+            {
+                DisplayError(Resources.ConfigManager_Cannot_run_invalid_configuration, ex.Message);
+                return;
+            }
             var configRunner = GetSelectedConfigRunner();
             if (configRunner.IsStarting() || configRunner.IsStopping())
             {

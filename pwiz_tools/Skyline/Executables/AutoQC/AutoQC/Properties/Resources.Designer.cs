@@ -134,6 +134,15 @@ namespace AutoQC.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Please enter a name for the configuration..
+        /// </summary>
+        internal static string AutoQcConfig_Please_enter_a_name_for_the_configuration_ {
+            get {
+                return ResourceManager.GetString("AutoQcConfig_Please_enter_a_name_for_the_configuration_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Directory where the instrument will write QC files..
         /// </summary>
         internal static string AutoQcConfigForm_btnFolderToWatch_Click_Directory_where_the_instrument_will_write_QC_files_ {
@@ -205,6 +214,15 @@ namespace AutoQC.Properties {
         internal static string AutoQcLogger_LogTruncatedMessage_____Log_truncated__Full_log_is_in__0_ {
             get {
                 return ResourceManager.GetString("AutoQcLogger_LogTruncatedMessage_____Log_truncated__Full_log_is_in__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot run invalid configuration.
+        /// </summary>
+        internal static string ConfigManager_Cannot_run_invalid_configuration {
+            get {
+                return ResourceManager.GetString("ConfigManager_Cannot_run_invalid_configuration", resourceCulture);
             }
         }
         
@@ -720,6 +738,33 @@ namespace AutoQC.Properties {
         internal static string Program_Main_Unable_to_update__0__shortcut___Error_was___1_ {
             get {
                 return ResourceManager.GetString("Program_Main_Unable_to_update__0__shortcut___Error_was___1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to find Skyline-daily installation..
+        /// </summary>
+        internal static string SkylineSettings_Unable_to_find_Skyline_Daily_installation_ {
+            get {
+                return ResourceManager.GetString("SkylineSettings_Unable_to_find_Skyline_Daily_installation_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to find Skyline installation..
+        /// </summary>
+        internal static string SkylineSettings_Unable_to_find_Skyline_installation_ {
+            get {
+                return ResourceManager.GetString("SkylineSettings_Unable_to_find_Skyline_installation_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to find Skyline installation at {0}.
+        /// </summary>
+        internal static string SkylineSettings_Unable_to_find_Skyline_installation_at__0__ {
+            get {
+                return ResourceManager.GetString("SkylineSettings_Unable_to_find_Skyline_installation_at__0__", resourceCulture);
             }
         }
         

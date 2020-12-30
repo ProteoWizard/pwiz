@@ -51,11 +51,11 @@ namespace AutoQC
             // Initialize file filter combobox
             var filterOptions = new object[]
             {
-                AllFileFilter.NAME, 
-                StartsWithFilter.NAME, 
-                EndsWithFilter.NAME, 
-                ContainsFilter.NAME,
-                RegexFilter.NAME
+                AllFileFilter.FilterName, 
+                StartsWithFilter.FilterName, 
+                EndsWithFilter.FilterName, 
+                ContainsFilter.FilterName,
+                RegexFilter.FilterName
             };
             comboBoxFileFilter.Items.AddRange(filterOptions);
 
@@ -186,7 +186,7 @@ namespace AutoQC
         private void comboBoxFileFilter_SelectedIndexChanged(object sender, EventArgs e)
         {
             var selectedItem = comboBoxFileFilter.SelectedItem;
-            if (selectedItem.Equals(AllFileFilter.NAME))
+            if (selectedItem.Equals(AllFileFilter.FilterName))
             {
                 textQCFilePattern.Hide();
                 labelQcFilePattern.Hide();
@@ -333,6 +333,7 @@ namespace AutoQC
             {
                 //throws ArgumentException if any fields are invalid
                 var newConfig = GetConfigFromUi();
+                newConfig.Validate();
                 //throws ArgumentException if config has a duplicate name
                 if (_action == ConfigAction.Edit)
                     _mainControl.EditSelectedConfiguration(newConfig);

@@ -3,6 +3,7 @@ using System.Text;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
+using AutoQC.Properties;
 
 namespace AutoQC
 {
@@ -13,6 +14,10 @@ namespace AutoQC
         public AutoQcConfig(string name, bool isEnabled, DateTime created, DateTime modified,
             MainSettings mainSettings, PanoramaSettings panoramaSettings, SkylineSettings skylineSettings)
         {
+            if (string.IsNullOrEmpty(name))
+            {
+                throw new ArgumentException(Resources.AutoQcConfig_Please_enter_a_name_for_the_configuration_);
+            }
             Name = name;
             IsEnabled = isEnabled;
             User = panoramaSettings.PanoramaUserEmail;
@@ -21,7 +26,6 @@ namespace AutoQC
             MainSettings = mainSettings;
             PanoramaSettings = panoramaSettings;
             SkylineSettings = skylineSettings;
-            Validate();
         }
 
         public readonly string Name;
@@ -139,6 +143,7 @@ namespace AutoQC
 
             MainSettings.ValidateSettings();
             PanoramaSettings.ValidateSettings();
+            SkylineSettings.Validate();
            
         }
 

@@ -17,7 +17,7 @@ namespace AutoQC
     {
         public SkylineSettings(SkylineType type, string folderPath = "")
         {
-            this.Type = type;
+            Type = type;
 
             bool skylineAdminInstallation = !string.IsNullOrEmpty(Settings.Default.SkylineAdminCmdPath);
             bool skylineWebInstallation = !string.IsNullOrEmpty(Settings.Default.SkylineRunnerPath);
@@ -39,26 +39,31 @@ namespace AutoQC
                         CmdPath = Settings.Default.SkylineDailyAdminCmdPath;
                     break;
                 case SkylineType.Custom:
-                    CmdPath = string.IsNullOrEmpty(folderPath) ? Settings.Default.SkylineCustomCmdPath : Path.Combine(folderPath, Installations.SkylineCmdExe);
-                    CmdPath = File.Exists(CmdPath) ? CmdPath : "";
+                    CmdPath = Path.Combine(folderPath, Installations.SkylineCmdExe);
                     break;
             }
+        }
 
-            Validate();
+        public void Validate()
+        {
+            if (!File.Exists(CmdPath))
+            {
+                switch (Type)
+                {
+                    case SkylineType.Skyline:
+                        throw new ArgumentException(Resources.SkylineSettings_Unable_to_find_Skyline_installation_);
+                    case SkylineType.SkylineDaily:
+                        throw new ArgumentException(Resources.SkylineSettings_Unable_to_find_Skyline_Daily_installation_);
+                    case SkylineType.Custom:
+                        throw new ArgumentException(string.Format(Resources.SkylineSettings_Unable_to_find_Skyline_installation_at__0__, CmdPath));
+                }
+            }
         }
 
         public readonly SkylineType Type;
 
         public readonly string CmdPath;
 
-        public void Validate()
-        {
-            if (string.IsNullOrEmpty(CmdPath))
-            {
-                var typeString = Type.ToString().Contains("Skyline") ? Type + " installation" : Type + " Skyline installation";
-                throw new ArgumentException($"Skyline Settings: Unable to find {typeString}.");
-            }
-        }
 
         private enum Attr
         {

@@ -46,7 +46,6 @@ namespace AutoQC
 
             UpdateButtonsEnabled();
             UpdateUiConfigurations();
-            UpdateLabelVisibility();
             UpdateUiLoggers();
             UpdateSettingsTab();
 
@@ -124,7 +123,6 @@ namespace AutoQC
             configManager.RemoveSelected();
             UpdateUiConfigurations();
             UpdateUiLoggers();
-            UpdateLabelVisibility();
         }
 
         private void btnImport_Click(object sender, EventArgs e)
@@ -138,7 +136,6 @@ namespace AutoQC
             configManager.Import(filePath);
             UpdateUiConfigurations();
             UpdateUiLoggers();
-            UpdateLabelVisibility();
         }
 
         private void btnExport_Click(object sender, EventArgs e)
@@ -156,6 +153,7 @@ namespace AutoQC
                 return;
             configManager.SelectConfig(e.Index);
             configManager.UpdateSelectedEnabled(newIsEnabled);
+            UpdateUiConfigurations();
             UpdateButtonsEnabled();
         }
 

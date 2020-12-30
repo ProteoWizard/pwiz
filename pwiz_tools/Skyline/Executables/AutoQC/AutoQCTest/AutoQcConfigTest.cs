@@ -41,11 +41,12 @@ namespace AutoQCTest
                 "\"Results time window\" cannot be less than 31 days.");
             TestInvalidMainSettings("acquisitionTime", "aaaa", "Invalid value for \"Acquisition Time\": aaaa.");
             TestInvalidMainSettings("acquisitionTime", "-1", "\"Expected acquisition time\" cannot be less than 0 minutes.");
+            var testValidMainSettings = new MainSettings(TestUtils.GetTestFilePath("EmptyTemplate.sky"), TestUtils.GetTestFilePath("Config"),
+                true, MainSettings.GetDefaultQcFileFilter(), true, "50", MainSettings.SCIEX,
+                "500", DateTime.MaxValue, DateTime.MinValue);
             try
             {
-                var testValidMainSettings = new MainSettings(TestUtils.GetTestFilePath("EmptyTemplate.sky"), TestUtils.GetTestFilePath("Config"), 
-                    true, MainSettings.GetDefaultQcFileFilter(), true, "50", MainSettings.SCIEX, 
-                    "500", DateTime.MaxValue, DateTime.MinValue);
+                testValidMainSettings.ValidateSettings();
             }
             catch (Exception)
             {
@@ -87,6 +88,7 @@ namespace AutoQCTest
                 var invalidMainSettings = new MainSettings(skylineFilePath, folderToWatch, true, fileFilter,
                     false, resultsWindow, instrumentType, acquisitionTime,
                     DateTime.MinValue, DateTime.MinValue);
+                invalidMainSettings.ValidateSettings();
                 Assert.Fail("Should have failed to validate MainSettings with Error:" + Environment.NewLine + expectedError);
             }
             catch (ArgumentException e)
@@ -113,11 +115,14 @@ namespace AutoQCTest
             TestInvalidPanoramaSettings("panoramaFolder", "", 
                 "Please specify a folder on the Panorama server.");
 
+
+            var noPublishToPanorama = new PanoramaSettings();
+            var validPanoramaSettings = new PanoramaSettings(true, "https://panoramaweb.org/", "alimarsh@mit.edu",
+                "Alonfshss1!", "/00Developer/Ali/QC/");
             try
             {
-                var noPublishToPanorama = new PanoramaSettings();
-                var validPanoramaSettings = new PanoramaSettings(true, "https://panoramaweb.org/", "alimarsh@mit.edu",
-                        "Alonfshss1!",  "/00Developer/Ali/QC/");
+                noPublishToPanorama.ValidateSettings();
+                validPanoramaSettings.ValidateSettings();
             }
             catch (Exception)
             {
@@ -150,11 +155,11 @@ namespace AutoQCTest
                 default:
                     throw new ArgumentException("No such variable: " + invalidVariable);
             }
-
+            var invalidPanoramaSettings = new PanoramaSettings(true, panoramaServerUrl, panoramaUserEmail,
+                panoramaPassword, panoramaFolder);
             try
             {
-                var invalidPanoramaSettings = new PanoramaSettings(true, panoramaServerUrl, panoramaUserEmail,
-                    panoramaPassword, panoramaFolder);
+                invalidPanoramaSettings.ValidateSettings();
                 Assert.Fail("Should have failed to validate MainSettings with Error:" + Environment.NewLine + expectedError);
             }
             catch (ArgumentException e)

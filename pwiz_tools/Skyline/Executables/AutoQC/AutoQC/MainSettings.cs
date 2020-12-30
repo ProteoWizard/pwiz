@@ -30,7 +30,7 @@ using AutoQC.Properties;
 namespace AutoQC
 {
     [XmlRoot("main_settings")]
-    public class MainSettings //: IConfigSettings
+    public class MainSettings
     {
         public const int ACCUM_TIME_WINDOW = 31;
         public const int ACQUISITION_TIME = 75;
@@ -42,7 +42,7 @@ namespace AutoQC
         public const string SHIMADZU = "Shimadzu";
 
         // Default getters
-        public static FileFilter GetDefaultQcFileFilter() { return FileFilter.GetFileFilter(AllFileFilter.NAME, string.Empty); }
+        public static FileFilter GetDefaultQcFileFilter() { return FileFilter.GetFileFilter(AllFileFilter.FilterName, string.Empty); }
         public static bool GetDefaultRemoveResults() { return true; }
         public static string GetDefaultResultsWindow() { return ACCUM_TIME_WINDOW.ToString(); }
         public static string GetDefaultInstrumentType() { return THERMO; }
@@ -50,7 +50,6 @@ namespace AutoQC
 
 
         public readonly string SkylineFilePath;
-        public readonly string SkylineFileDir;
         public readonly string FolderToWatch;
         public readonly bool IncludeSubfolders;
         public readonly FileFilter QcFileFilter;
@@ -78,8 +77,6 @@ namespace AutoQC
             AcquisitionTime = ValidateIntTextField(acquisitionTimeString, Resources.AutoQcConfigForm_GetMainSettingsFromUI_Acquisition_Time);
             LastAcquiredFileDate = lastAcquiredFileDate;
             LastArchivalDate = lastArchivalDate;
-            SkylineFileDir = string.IsNullOrEmpty(SkylineFilePath) ? "" : Path.GetDirectoryName(SkylineFilePath); // TODO: fix
-            ValidateSettings();
         }
 
         public virtual bool IsSelected()
@@ -305,7 +302,7 @@ namespace AutoQC
             if (string.IsNullOrEmpty(filterType) && !string.IsNullOrEmpty(pattern))
             {
                 // Support for older version where filter type was not written to XML; only regex filters were allowed
-                filterType = RegexFilter.NAME;
+                filterType = RegexFilter.FilterName;
             }
             var qcFileFilter = FileFilter.GetFileFilter(filterType, pattern);
             var removeResults = reader.GetBoolAttribute(Attr.RemoveResults, true);
@@ -428,13 +425,13 @@ namespace AutoQC
         {
             switch (filterType)
             {
-                case StartsWithFilter.NAME:
+                case StartsWithFilter.FilterName:
                     return new StartsWithFilter(pattern);
-                case EndsWithFilter.NAME:
+                case EndsWithFilter.FilterName:
                     return new EndsWithFilter(pattern);
-                case ContainsFilter.NAME:
+                case ContainsFilter.FilterName:
                     return new ContainsFilter(pattern);
-                case RegexFilter.NAME:
+                case RegexFilter.FilterName:
                     return new RegexFilter(pattern);
                 default:
                     return new AllFileFilter(string.Empty);
@@ -488,7 +485,7 @@ namespace AutoQC
 
     public class AllFileFilter : FileFilter
     {
-        public static readonly string NAME = "All";
+        public static readonly string FilterName = "All";
 
         public AllFileFilter(string pattern)
             : base(pattern)
@@ -503,7 +500,7 @@ namespace AutoQC
 
         public override string Name()
         {
-            return NAME;
+            return FilterName;
         }
 
         #endregion
@@ -511,7 +508,7 @@ namespace AutoQC
 
     public class StartsWithFilter: FileFilter
     {
-        public const string NAME = "Starts with";
+        public const string FilterName = "Starts with";
 
         public StartsWithFilter(string pattern)
             : base(pattern)
@@ -527,7 +524,7 @@ namespace AutoQC
 
         public override string Name()
         {
-            return NAME;
+            return FilterName;
         }
 
         #endregion
@@ -535,7 +532,7 @@ namespace AutoQC
 
     public class EndsWithFilter : FileFilter
     {
-        public const string NAME = "Ends with";
+        public const string FilterName = "Ends with";
 
         public EndsWithFilter(string pattern)
             : base(pattern)
@@ -551,14 +548,14 @@ namespace AutoQC
 
         public override string Name()
         {
-            return NAME;
+            return FilterName;
         }
         #endregion
     }
 
     public class ContainsFilter : FileFilter
     {
-        public const string NAME = "Contains";
+        public const string FilterName = "Contains";
 
         public ContainsFilter(string pattern)
             : base(pattern)
@@ -574,14 +571,14 @@ namespace AutoQC
 
         public override string Name()
         {
-            return NAME;
+            return FilterName;
         }
         #endregion
     }
 
     public class RegexFilter : FileFilter
     {
-        public const string NAME = "Regular expression";
+        public const string FilterName = "Regular expression";
 
         public readonly Regex Regex;
 
@@ -608,7 +605,7 @@ namespace AutoQC
 
         public override string Name()
         {
-            return NAME;
+            return FilterName;
         }
         #endregion
     }

@@ -46,7 +46,8 @@ namespace AutoQC
 
         public AutoQcLogger(AutoQcConfig config, IMainUiControl mainUi, IAutoQcLogger oldLogger = null)
         {
-            var defaultFileFolder = Path.Combine(config.MainSettings.SkylineFileDir, GetSafeName(config.Name));
+            var skylineFileDir = Path.GetDirectoryName(config.MainSettings.SkylineFilePath);
+            var defaultFileFolder = Path.Combine(skylineFileDir, GetSafeName(config.Name));
             if (!Directory.Exists(defaultFileFolder))
                 Directory.CreateDirectory(defaultFileFolder);
             var defaultFilePath = Path.Combine(defaultFileFolder, "AutoQC.log");
