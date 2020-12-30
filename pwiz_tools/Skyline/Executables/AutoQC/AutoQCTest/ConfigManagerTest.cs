@@ -180,12 +180,26 @@ namespace AutoQCTest
             Assert.IsTrue(configManager.ConfigOrderEquals(new[] { "oneReplaced", "two", "three" }));
         }
 
+        [TestMethod]
+        public void TestEnableInvalid()
+        {
+            TestUtils.ClearSavedConfigurations();
+            var configManager = TestUtils.GetTestConfigManager();
+            ImportInvalidConfiguration(configManager);
+            configManager.SelectConfig(3);
+            configManager.UpdateSelectedEnabled(true);
+            Assert.IsTrue(!configManager.GetSelectedConfig().IsEnabled);
+        }
 
-       
+        private void ImportInvalidConfiguration(ConfigManager configManager)
+        {
+            configManager.Import("C:\\proj_2\\ProteoWizard\\pwiz\\pwiz_tools\\Skyline\\Executables\\AutoQC\\AutoQCTest\\Test\\bad.xml");
+        }
+
 
 
         #endregion
-        
+
         #region XML Parsing
 
         [TestMethod]

@@ -144,15 +144,16 @@ namespace AutoQC
             shareForm.ShowDialog();
         }
 
-        private void listViewConfigs_ItemCheck(object sender, ItemCheckEventArgs e)
+        private void btnRun_MouseClick(object sender, MouseEventArgs e)
         {
-            if (!_loaded)
-                return;
-            var newIsEnabled = e.NewValue == CheckState.Checked;
-            if (configManager.GetConfigAt(e.Index).IsEnabled == newIsEnabled)
-                return;
-            configManager.SelectConfig(e.Index);
-            configManager.UpdateSelectedEnabled(newIsEnabled);
+            configManager.UpdateSelectedEnabled(true);
+            UpdateUiConfigurations();
+            UpdateButtonsEnabled();
+        }
+
+        private void btnStop_MouseClick(object sender, MouseEventArgs e)
+        {
+            configManager.UpdateSelectedEnabled(false);
             UpdateUiConfigurations();
             UpdateButtonsEnabled();
         }
@@ -168,13 +169,20 @@ namespace AutoQC
             UpdateButtonsEnabled();
         }
 
-        private void UpdateButtonsEnabled()
+        public void UpdateButtonsEnabled()
         {
-            var configSelected = configManager.HasSelectedConfig();
-            btnEdit.Enabled = configSelected;
-            btnCopy.Enabled = configSelected;
-            btnDelete.Enabled = configSelected;
-            btnViewLog.Enabled = configSelected;
+            RunUi(() =>
+            {
+                var configSelected = configManager.HasSelectedConfig();
+                btnEdit.Enabled = configSelected;
+                btnCopy.Enabled = configSelected;
+                btnDelete.Enabled = configSelected;
+                btnViewLog.Enabled = configSelected;
+                
+                btnRun.Enabled = configSelected && configManager.GetSelectedConfigRunner().CanStart();
+                btnStop.Enabled = configSelected && configManager.GetSelectedConfigRunner().CanStop();
+            });
+
         }
 
         private void listViewConfigs_ColumnClick(object sender, ColumnClickEventArgs e)
@@ -525,6 +533,8 @@ namespace AutoQC
         void AddConfiguration(AutoQcConfig config);
         void EditSelectedConfiguration(AutoQcConfig newVersion);
         void UpdateUiConfigurations();
+
+        void UpdateButtonsEnabled();
 
         void LogToUi(string name, string text, bool scrollToEnd = true, bool trim = true);
         void LogErrorToUi(string name, string text, bool scrollToEnd = true, bool trim = true);

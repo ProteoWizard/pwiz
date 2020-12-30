@@ -116,7 +116,6 @@ namespace AutoQC
             {
                 var lvi = new ListViewItem(config.Name);
                 var configRunner = _configRunners[config.Name];
-                lvi.Checked = config.IsEnabled;
                 lvi.UseItemStyleForSubItems = false; // So that we can change the color for sub-items.
                 lvi.SubItems.Add(config.User);
                 lvi.SubItems.Add(config.Created.ToShortDateString());
@@ -421,9 +420,10 @@ namespace AutoQC
             {
                 selectedConfig.Validate();
             }
-            catch (ArgumentException ex)
+            catch (ArgumentException)
             {
-                DisplayError(Resources.ConfigManager_Cannot_run_invalid_configuration, ex.Message);
+                DisplayError(Resources.ConfigManager_Run_Error,
+                    string.Format(Resources.ConfigManager_Please_edit_configuration__0__and_try_again_, selectedConfig.Name));
                 return;
             }
             var configRunner = GetSelectedConfigRunner();

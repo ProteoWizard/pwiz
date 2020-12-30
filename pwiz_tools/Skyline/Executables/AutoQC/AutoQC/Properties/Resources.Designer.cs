@@ -218,15 +218,6 @@ namespace AutoQC.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cannot run invalid configuration.
-        /// </summary>
-        internal static string ConfigManager_Cannot_run_invalid_configuration {
-            get {
-                return ResourceManager.GetString("ConfigManager_Cannot_run_invalid_configuration", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Configuration &quot;{0}&quot; already exists..
         /// </summary>
         internal static string ConfigManager_CheckIfExists_Error_configuration_already_exists {
@@ -241,6 +232,24 @@ namespace AutoQC.Properties {
         internal static string ConfigManager_CheckIfExists_Error_configuration_does_not_exist {
             get {
                 return ResourceManager.GetString("ConfigManager_CheckIfExists_Error_configuration_does_not_exist", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid Configuration: Please edit configuration &quot;{0}&quot; and try again..
+        /// </summary>
+        internal static string ConfigManager_Please_edit_configuration__0__and_try_again_ {
+            get {
+                return ResourceManager.GetString("ConfigManager_Please_edit_configuration__0__and_try_again_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Run Error.
+        /// </summary>
+        internal static string ConfigManager_Run_Error {
+            get {
+                return ResourceManager.GetString("ConfigManager_Run_Error", resourceCulture);
             }
         }
         

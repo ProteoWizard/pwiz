@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+    <userSettings>
+        <AutoQC.Properties.Settings>
+            <setting name="SkylineDailyRunnerPath" serializeAs="String">
+                <value />
+            </setting>
+            <setting name="SkylineRunnerPath" serializeAs="String">
+                <value>C:\proj_2\ProteoWizard\pwiz\pwiz_tools\Skyline\Executables\AutoQC\AutoQC\bin\Debug\SkylineRunner.exe</value>
+            </setting>
+            <setting name="SkylineAdminCmdPath" serializeAs="String">
+                <value>C:\Program Files\Skyline\SkylineCmd.exe</value>
+            </setting>
+            <setting name="SkylineDailyAdminCmdPath" serializeAs="String">
+                <value />
+            </setting>
+            <setting name="ConfigList" serializeAs="Xml">
+                <value>
+                    <ConfigList>
+                        <autoqc_config Name="Bad" Created="12/29/2020 2:34 PM" Modified="12/29/2020 2:34 PM">
+                            <main_settings SkylineFilePath="I_DONT_EXIST.sky"
+                                FolderToWatch="C:\Users\alimarsh\Documents\AutoQC\Ali" FileFilterType="All"
+                                ResultsWindow="31" InstrumentType="Thermo" AcquisitionTime="75"
+                                LastAcquiredDate="12/29/2020 2:34 PM" LastArchivalTime="12/29/2020 2:34 PM" />
+                            <panorama_settings />
+                            <config_skyline_settings Type="SkylineDaily" />
+                        </autoqc_config>
+                    </ConfigList>
+                </value>
+            </setting>
+        </AutoQC.Properties.Settings>
+    </userSettings>
+</configuration>

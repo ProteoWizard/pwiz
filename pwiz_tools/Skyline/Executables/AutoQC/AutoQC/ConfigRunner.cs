@@ -197,6 +197,7 @@ namespace AutoQC
             {
                 _runnerStatus = runnerStatus;
                 _uiControl.UpdateUiConfigurations();
+                _uiControl.UpdateButtonsEnabled();
             }
         }
 
@@ -786,6 +787,16 @@ namespace AutoQC
         public bool IsDisconnected()
         {
             return _runnerStatus == RunnerStatus.Disconnected;
+        }
+
+        public bool CanStart()
+        {
+            return IsStopped() || IsDisconnected() || IsError();
+        }
+
+        public bool CanStop()
+        {
+            return IsRunning();
         }
 
         #region [Implementation of IProcessControl interface]

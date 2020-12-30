@@ -39,15 +39,12 @@
             this.btnViewLog = new System.Windows.Forms.Button();
             this.tabMain = new System.Windows.Forms.TabControl();
             this.tabFront = new System.Windows.Forms.TabPage();
-            this.listViewConfigs = new AutoQC.MyListView();
-            this.listViewConfigName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.listViewUser = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.listViewCreated = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.listViewStatus = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.panel1 = new System.Windows.Forms.Panel();
             this.btnImportConfigs = new System.Windows.Forms.Button();
             this.btnExportConfigs = new System.Windows.Forms.Button();
             this.panel2 = new System.Windows.Forms.Panel();
+            this.btnStop = new System.Windows.Forms.Button();
+            this.btnRun = new System.Windows.Forms.Button();
             this.tabLog = new System.Windows.Forms.TabPage();
             this.btnOpenFolder = new System.Windows.Forms.Button();
             this.lblConfigSelect = new System.Windows.Forms.Label();
@@ -59,6 +56,11 @@
             this.cb_keepRunning = new System.Windows.Forms.CheckBox();
             this.toolTip_MainForm = new System.Windows.Forms.ToolTip(this.components);
             this.systray_icon = new System.Windows.Forms.NotifyIcon(this.components);
+            this.listViewConfigs = new System.Windows.Forms.ListView();
+            this.columnName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnUser = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnCreated = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnStatus = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.tabMain.SuspendLayout();
             this.tabFront.SuspendLayout();
             this.panel1.SuspendLayout();
@@ -133,41 +135,6 @@
             resources.ApplyResources(this.tabFront, "tabFront");
             this.tabFront.Name = "tabFront";
             // 
-            // listViewConfigs
-            // 
-            resources.ApplyResources(this.listViewConfigs, "listViewConfigs");
-            this.listViewConfigs.CheckBoxes = true;
-            this.listViewConfigs.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.listViewConfigName,
-            this.listViewUser,
-            this.listViewCreated,
-            this.listViewStatus});
-            this.listViewConfigs.FullRowSelect = true;
-            this.listViewConfigs.HideSelection = false;
-            this.listViewConfigs.Name = "listViewConfigs";
-            this.listViewConfigs.UseCompatibleStateImageBehavior = false;
-            this.listViewConfigs.View = System.Windows.Forms.View.Details;
-            this.listViewConfigs.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.listViewConfigs_ColumnClick);
-            this.listViewConfigs.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.listViewConfigs_ItemCheck);
-            this.listViewConfigs.SelectedIndexChanged += new System.EventHandler(this.listViewConfigs_SelectedIndexChanged);
-            this.listViewConfigs.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.HandleEditEvent);
-            // 
-            // listViewConfigName
-            // 
-            resources.ApplyResources(this.listViewConfigName, "listViewConfigName");
-            // 
-            // listViewUser
-            // 
-            resources.ApplyResources(this.listViewUser, "listViewUser");
-            // 
-            // listViewCreated
-            // 
-            resources.ApplyResources(this.listViewCreated, "listViewCreated");
-            // 
-            // listViewStatus
-            // 
-            resources.ApplyResources(this.listViewStatus, "listViewStatus");
-            // 
             // panel1
             // 
             resources.ApplyResources(this.panel1, "panel1");
@@ -199,8 +166,24 @@
             // panel2
             // 
             resources.ApplyResources(this.panel2, "panel2");
+            this.panel2.Controls.Add(this.btnStop);
+            this.panel2.Controls.Add(this.btnRun);
             this.panel2.Controls.Add(this.lblNoConfigs);
             this.panel2.Name = "panel2";
+            // 
+            // btnStop
+            // 
+            resources.ApplyResources(this.btnStop, "btnStop");
+            this.btnStop.Name = "btnStop";
+            this.btnStop.UseVisualStyleBackColor = true;
+            this.btnStop.MouseClick += new System.Windows.Forms.MouseEventHandler(this.btnStop_MouseClick);
+            // 
+            // btnRun
+            // 
+            resources.ApplyResources(this.btnRun, "btnRun");
+            this.btnRun.Name = "btnRun";
+            this.btnRun.UseVisualStyleBackColor = true;
+            this.btnRun.MouseClick += new System.Windows.Forms.MouseEventHandler(this.btnRun_MouseClick);
             // 
             // tabLog
             // 
@@ -271,6 +254,40 @@
             resources.ApplyResources(this.systray_icon, "systray_icon");
             this.systray_icon.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.systray_icon_MouseDoubleClick);
             // 
+            // listViewConfigs
+            // 
+            resources.ApplyResources(this.listViewConfigs, "listViewConfigs");
+            this.listViewConfigs.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.columnName,
+            this.columnUser,
+            this.columnCreated,
+            this.columnStatus});
+            this.listViewConfigs.FullRowSelect = true;
+            this.listViewConfigs.HideSelection = false;
+            this.listViewConfigs.MultiSelect = false;
+            this.listViewConfigs.Name = "listViewConfigs";
+            this.listViewConfigs.UseCompatibleStateImageBehavior = false;
+            this.listViewConfigs.View = System.Windows.Forms.View.Details;
+            this.listViewConfigs.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.listViewConfigs_ColumnClick);
+            this.listViewConfigs.SelectedIndexChanged += new System.EventHandler(this.listViewConfigs_SelectedIndexChanged);
+            this.listViewConfigs.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.HandleEditEvent);
+            // 
+            // columnName
+            // 
+            resources.ApplyResources(this.columnName, "columnName");
+            // 
+            // columnUser
+            // 
+            resources.ApplyResources(this.columnUser, "columnUser");
+            // 
+            // columnCreated
+            // 
+            resources.ApplyResources(this.columnCreated, "columnCreated");
+            // 
+            // columnStatus
+            // 
+            resources.ApplyResources(this.columnStatus, "columnStatus");
+            // 
             // MainForm
             // 
             resources.ApplyResources(this, "$this");
@@ -320,10 +337,12 @@
         private System.Windows.Forms.NotifyIcon systray_icon;
         private System.Windows.Forms.Panel panel2;
         private System.Windows.Forms.Panel panel1;
-        private MyListView listViewConfigs;
-        private System.Windows.Forms.ColumnHeader listViewConfigName;
-        private System.Windows.Forms.ColumnHeader listViewUser;
-        private System.Windows.Forms.ColumnHeader listViewCreated;
-        private System.Windows.Forms.ColumnHeader listViewStatus;
+        private System.Windows.Forms.Button btnStop;
+        private System.Windows.Forms.Button btnRun;
+        private System.Windows.Forms.ListView listViewConfigs;
+        private System.Windows.Forms.ColumnHeader columnName;
+        private System.Windows.Forms.ColumnHeader columnUser;
+        private System.Windows.Forms.ColumnHeader columnCreated;
+        private System.Windows.Forms.ColumnHeader columnStatus;
     }
 }

@@ -339,8 +339,8 @@
   <data name="AutoQcConfig_Please_enter_a_name_for_the_configuration_" xml:space="preserve">
     <value>Please enter a name for the configuration.</value>
   </data>
-  <data name="ConfigManager_Cannot_run_invalid_configuration" xml:space="preserve">
-    <value>Cannot run invalid configuration</value>
+  <data name="ConfigManager_Run_Error" xml:space="preserve">
+    <value>Run Error</value>
   </data>
   <data name="SkylineSettings_Unable_to_find_Skyline_Daily_installation_" xml:space="preserve">
     <value>Unable to find Skyline-daily installation.</value>
@@ -350,5 +350,8 @@
   </data>
   <data name="SkylineSettings_Unable_to_find_Skyline_installation_at__0__" xml:space="preserve">
     <value>Unable to find Skyline installation at {0}</value>
+  </data>
+  <data name="ConfigManager_Please_edit_configuration__0__and_try_again_" xml:space="preserve">
+    <value>Invalid Configuration: Please edit configuration "{0}" and try again.</value>
   </data>
 </root>
