@@ -1,0 +1,11 @@
+[11/10/2020 9:49:35 AM]    ------------------------------ Starting Configuration: FourteenMaybe -------------------------------
+[11/10/2020 9:49:35 AM]    Microsoft Windows [Version 10.0.18363.1139]
+[11/10/2020 9:49:35 AM]    (c) 2019 Microsoft Corporation. All rights reserved.
+[11/10/2020 9:49:35 AM]    
+[11/10/2020 9:49:35 AM]    C:\proj\ProteoWizard\pwiz\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatch\bin\Debug>"C:\proj\ProteoWizard\pwiz\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatch\bin\Debug\SkylineRunner.exe" --in="C:\Users\alimarsh\Documents\Webinar 14\SkylineBatch\Navarro 2016 Assay Lib.sky" --out="C:\Users\alimarsh\Documents\ConfigTest\fourteen\Navarro 2016 Assay Lib.sky" --save-settings --version
+[11/10/2020 9:49:36 AM]    Skyline (64-bit) 20.2.0.286 (59e53e849)
+[11/10/2020 9:49:36 AM]        ProteoWizard MSData 3.0.20286
+[11/10/2020 9:49:36 AM]    Opening file...
+[11/10/2020 9:49:38 AM]    Navarro 2016 Assay Lib.sky
+[11/10/2020 9:49:39 AM]    Process terminated: exiting.
+[11/10/2020 9:49:40 AM]    ------------------------------ FourteenMaybe: Cancelled -------------------------------
