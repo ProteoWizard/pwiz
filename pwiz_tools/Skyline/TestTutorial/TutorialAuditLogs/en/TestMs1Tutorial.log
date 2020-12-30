@@ -40,9 +40,6 @@ Import Peptide Search > Configure Full-Scan Settings > Resolving power is "10000
 Import Peptide Search > Configure Full-Scan Settings > Isotope labeling enrichment is "Default"
 Import Peptide Search > Import FASTA > Max missed cleavages is "2"
 Import Peptide Search > Import FASTA > FASTA file is "12_proteins.062011.fasta"
-Import Peptide Search > DDA converter settings > DDA conversion protocol is "MSConvert"
-Import Peptide Search > DDA converter settings > Instrument preset is "TripleTOF"
-Import Peptide Search > DDA converter settings > DDA conversion non-default settings is Missing
 Extra Info: Extract Chromatograms = 
 {
     Found results files = 
@@ -74,12 +71,6 @@ Import FASTA =
 {
     Max missed cleavages = "2",
     FASTA file = "12_proteins.062011.fasta"
-},
-DDA converter settings = 
-{
-    DDA conversion protocol = "MSConvert",
-    Instrument preset = "TripleTOF",
-    DDA conversion non-default settings = Missing
 }
 
 Undo Redo : Changed peak bounds of sp|Q09666|AHNK_HUMAN > R.ISMSEVDLNVAAPK.V [568, 581] > 777.3677++
