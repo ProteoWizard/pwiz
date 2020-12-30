@@ -265,7 +265,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't require a mas
                 SkylineWindow.ShowChromatogramLegends(false);
                 //   •	Right-click in a chromatogram graph, choose Transitions and click Split Graph (leave if already checked).
                 SkylineWindow.ShowSplitChromatogramGraph(true);
-                SkylineWindow.SetAutoZoomChrom(AutoZoomChrom.peak);
+                SkylineWindow.AutoZoomBestPeak();
                 SkylineWindow.Size = new Size(1487, 786);
             });
             RunDlg<ChromChartPropertyDlg>(SkylineWindow.ShowChromatogramProperties, propDlg =>

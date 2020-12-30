@@ -31,7 +31,6 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
-using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.Graphs.Calibration;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
@@ -375,7 +374,7 @@ namespace pwiz.SkylineTestTutorial
                         Settings.Default.ChromatogramFontSize = 14;
                         Settings.Default.AreaFontSize = 14;
                         SkylineWindow.ChangeTextSize(TreeViewMS.LRG_TEXT_FACTOR);
-                        SkylineWindow.SetAutoZoomChrom(AutoZoomChrom.peak);
+                        SkylineWindow.AutoZoomBestPeak();
                     });
 
                     RestoreCoverViewOnScreen();

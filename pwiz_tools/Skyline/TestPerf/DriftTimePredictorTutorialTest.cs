@@ -153,7 +153,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
             RunUI(() =>
             {
                 SkylineWindow.ArrangeGraphsTiled();
-                SkylineWindow.SetAutoZoomChrom(AutoZoomChrom.peak);
+                SkylineWindow.AutoZoomBestPeak();
                 SkylineWindow.ShowSplitChromatogramGraph(true);
             });
             FindNode("R.FKDLGEEHFK.G");
@@ -168,7 +168,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
             const int wideWidth = 1547;
             RunUI(() =>
             {
-                SkylineWindow.SetAutoZoomChrom(AutoZoomChrom.peak);
+                SkylineWindow.AutoZoomBestPeak();
                 SkylineWindow.ShowRTReplicateGraph();
                 SkylineWindow.ShowGraphPeakArea(true);
                 SkylineWindow.ShowChromatogramLegends(false);

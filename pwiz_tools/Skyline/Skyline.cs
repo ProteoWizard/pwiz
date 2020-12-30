@@ -1526,11 +1526,6 @@ namespace pwiz.Skyline
             UpdateStandardTypeMenu();
         }
 
-        private void setStandardTypeMenuItem_DropDownOpening(object sender, EventArgs e)
-        {
-            UpdateStandardTypeMenu();
-        }
-
         private void UpdateStandardTypeMenu()
         {
             var selectedPeptides = SequenceTree.SelectedDocNodes
@@ -1616,19 +1611,9 @@ namespace pwiz.Skyline
                 });
         }
 
-        private void manageUniquePeptidesMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowUniquePeptidesDlg();
-        }
-
         public void ShowUniquePeptidesDlg()
         {
             EditMenu.ShowUniquePeptidesDlg();
-        }
-
-        private void insertFASTAToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowPasteFastaDlg();
         }
 
         public void ShowPasteFastaDlg()  // Expose for test access
@@ -1900,11 +1885,6 @@ namespace pwiz.Skyline
             }
         }
 
-        private void defineNewListMenuItem_Click(object sender, EventArgs e)
-        {
-            AddListDefinition();
-        }
-
         public void AddListDefinition()
         {
             using (var editDlg = new ListDesigner(ListData.EMPTY, Settings.Default.ListDefList))
@@ -1929,14 +1909,6 @@ namespace pwiz.Skyline
                             doc.Settings.ChangeDataSettings(
                                 doc.Settings.DataSettings.ChangePanoramaPublishUri(
                                 uri))), AuditLogEntry.SettingsLogFunction);
-        }
-
-        private ToolStripMenuItem MakeToolStripMenuItem(GroupComparisonDef groupComparisonDef)
-        {
-            return new ToolStripMenuItem(groupComparisonDef.Name, null, (sender, args) =>
-            {
-                ShowGroupComparisonWindow(groupComparisonDef.Name);
-            });
         }
 
         public void ShowGroupComparisonWindow(string groupComparisonName)
@@ -2878,7 +2850,6 @@ namespace pwiz.Skyline
         }
 
         public static TextBoxStreamWriterHelper _skylineTextBoxStreamWriterHelper;
-        private readonly Alarms _removeStatusAlarms = new Alarms();
 
         private ImmediateWindow CreateImmediateWindow()
         {

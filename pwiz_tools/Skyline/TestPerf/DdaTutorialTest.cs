@@ -24,7 +24,6 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
 using pwiz.Skyline.Alerts;
-using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model.DocSettings;
@@ -298,7 +297,7 @@ namespace TestPerf
             RunUI(() =>
             {
                 SkylineWindow.ShowChromatogramLegends(false);
-                SkylineWindow.SetAutoZoomChrom(AutoZoomChrom.peak);
+                SkylineWindow.AutoZoomBestPeak();
             });
             RestoreViewOnScreen(19);
             RefreshGraphs();

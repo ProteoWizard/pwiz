@@ -663,7 +663,7 @@ namespace TestPerf
             FindNode("_HUMAN");
             WaitForGraphs();
             FindNode("LPQVEGTGGDVQPSQDLVR");
-            RunUI(() => SkylineWindow.SetAutoZoomChrom(AutoZoomChrom.peak));
+            RunUI(SkylineWindow.AutoZoomBestPeak);
             WaitForGraphs();
             PauseForScreenShot("Snip just one chromatogram pane", 21);
 

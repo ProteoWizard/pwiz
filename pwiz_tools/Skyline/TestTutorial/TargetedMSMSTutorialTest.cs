@@ -490,7 +490,7 @@ namespace pwiz.SkylineTestTutorial
                     Assert.IsTrue(Math.Round(dotp, 2) >= minDotp, string.Format("Library dot-product {0} found below {1}", dotp, minDotp));
                 }
             }
-            RunUI(() => SkylineWindow.SetAutoZoomChrom(AutoZoomChrom.peak));
+            RunUI(() => SkylineWindow.AutoZoomBestPeak());
             // Ensure Graphs look like p21. (checked)
             WaitForGraphs();
             PauseForScreenShot("Chromatogram graphs clipped from main window with zoomed peaks", 21);
@@ -848,7 +848,7 @@ namespace pwiz.SkylineTestTutorial
                 Assert.AreEqual(13.6, graphChrom1.BestPeakTime ?? 0, 0.05);
             });
 
-            RunUI(() => SkylineWindow.SetAutoZoomChrom(AutoZoomChrom.peak));
+            RunUI(SkylineWindow.AutoZoomBestPeak);
             WaitForGraphs();
 
             PauseForScreenShot("Chromatogram graphs clipped from main window zoomed", 33);

@@ -370,7 +370,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.TOTAL);
-                SkylineWindow.SetAutoZoomChrom(AutoZoomChrom.peak);
+                SkylineWindow.AutoZoomBestPeak();
             });
 
             PauseForScreenShot("Chromatogram graph zoomed", 22);
@@ -618,7 +618,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 SkylineWindow.ActivateReplicate("H_159_REP2");
-                SkylineWindow.SetAutoZoomChrom(AutoZoomChrom.peak);
+                SkylineWindow.AutoZoomBestPeak();
             });
 
             PauseForScreenShot("Chromatogram graph with interference", 31);
@@ -1424,7 +1424,7 @@ namespace pwiz.SkylineTestTutorial
                     SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.TOTAL);
                     SkylineWindow.GroupByReplicateValue(null);
                 });
-                RunUI(() => SkylineWindow.SetAutoZoomChrom(AutoZoomChrom.peak));
+                RunUI(SkylineWindow.AutoZoomBestPeak);
                 RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.PrevNode);
                 WaitForGraphs();
                 RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.NextNode);

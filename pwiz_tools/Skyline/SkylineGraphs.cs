@@ -880,21 +880,7 @@ namespace pwiz.Skyline
             _graphSpectrumSettings.ShowPrecursorIon = !_graphSpectrumSettings.ShowPrecursorIon;
         }
 
-        private void ionTypesMenuItem_DropDownOpening(object sender, EventArgs e)
-        {
-            var set = Settings.Default;
-            aionsContextMenuItem.Checked = set.ShowAIons;
-            bionsContextMenuItem.Checked = set.ShowBIons;
-            cionsContextMenuItem.Checked = set.ShowCIons;
-            xionsContextMenuItem.Checked = set.ShowXIons;
-            yionsContextMenuItem.Checked = set.ShowYIons;
-            zionsContextMenuItem.Checked = set.ShowZIons;
-            fragmentionsContextMenuItem.Checked = set.ShowFragmentIons;
-            precursorIonContextMenuItem.Checked = set.ShowPrecursorIon;
-        }
-
         // Update the Ion Types menu for document contents
-
         private void charge1MenuItem_Click(object sender, EventArgs e)
         {
             _graphSpectrumSettings.ShowCharge1 = !_graphSpectrumSettings.ShowCharge1;
@@ -930,11 +916,6 @@ namespace pwiz.Skyline
         {
             EditMenu.EditToolStripMenuItemDropDownOpening();
         }
-        public void CanApplyOrRemovePeak(ToolStripItemCollection removePeakItems, IsotopeLabelType labelType, out bool canApply, out bool canRemove)
-        {
-            EditMenu.CanApplyOrRemovePeak(removePeakItems, labelType, out canApply, out canRemove);
-        }
-
         public ChromFileInfoId GetSelectedChromFileId()
         {
             var document = Document;
@@ -1404,11 +1385,6 @@ namespace pwiz.Skyline
             }
         }
 
-        private void rawTimesContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ToggleRawTimesMenuItem();
-        }
-
         public void ToggleRawTimesMenuItem()
         {
             Settings.Default.ChromShowRawTimes = !Settings.Default.ChromShowRawTimes;
@@ -1461,104 +1437,6 @@ namespace pwiz.Skyline
             }
         }
 
-        private void removePeakMenuItem_DropDownOpening(object sender, EventArgs e)
-        {
-            CanApplyOrRemovePeak(null, null, out _, out var canRemove);
-            if (!canRemove)
-                return;
-
-            if (!(sender is ToolStripMenuItem menu) || !menu.DropDownItems.OfType<object>().Any())
-                return;
-
-            var nodeGroupTree = SequenceTree.GetNodeOfType<TransitionGroupTreeNode>();
-            if (nodeGroupTree != null)
-            {
-                var nodeGroup = nodeGroupTree.DocNode;
-                var pathGroup = nodeGroupTree.Path;
-                var nodeTranTree = (TransitionTreeNode)SelectedNode;
-                var nodeTran = nodeTranTree.DocNode;
-
-                menu.DropDownItems.Clear();
-
-                if (nodeGroup.TransitionCount > 1)
-                {
-                    var handler = new RemovePeakHandler(this, pathGroup, nodeGroup, null);
-                    var item = new ToolStripMenuItem(Resources.SkylineWindow_removePeaksGraphMenuItem_DropDownOpening_All, null, handler.menuItem_Click);
-                    menu.DropDownItems.Insert(0, item);
-                }
-
-                var chromInfo = GetTransitionChromInfo(nodeTran, SequenceTree.ResultsIndex, GetSelectedChromFileId());
-                if (chromInfo != null && !chromInfo.IsEmpty)
-                {
-                    var handler = new RemovePeakHandler(this, pathGroup, nodeGroup, nodeTran);
-                    var item = new ToolStripMenuItem(ChromGraphItem.GetTitle(nodeTran), null, handler.menuItem_Click);
-                    menu.DropDownItems.Insert(0, item);
-                }
-                return;
-            }
-
-            var nodePepTree = SequenceTree.GetNodeOfType<PeptideTreeNode>();
-            if (nodePepTree != null)
-            {
-                var placeholder = menu.DropDownItems.OfType<object>().FirstOrDefault() as ToolStripMenuItem;
-                if (placeholder == null)
-                    return;
-
-                var isotopeLabelType = placeholder.Tag as IsotopeLabelType;
-                if (isotopeLabelType == null)
-                    return;
-
-                menu.DropDownItems.Clear();
-
-                var transitionGroupDocNode = nodePepTree.DocNode.TransitionGroups.FirstOrDefault(transitionGroup => Equals(transitionGroup.TransitionGroup.LabelType, isotopeLabelType));
-                if (transitionGroupDocNode == null)
-                    return;
-
-                var item = new ToolStripMenuItem(Resources.SkylineWindow_removePeaksGraphMenuItem_DropDownOpening_All, null, removePeakMenuItem_Click);
-                menu.DropDownItems.Insert(0, item);
-
-                var handler = new RemovePeakHandler(this, new IdentityPath(nodePepTree.Path, transitionGroupDocNode.Id), transitionGroupDocNode, null);
-                item = new ToolStripMenuItem(isotopeLabelType.Title, null, handler.menuItem_Click);
-                menu.DropDownItems.Insert(0, item);
-            }
-        }
-
-        private class RemovePeakHandler
-        {
-            private readonly SkylineWindow _skyline;
-            private readonly IdentityPath _groupPath;
-            private readonly TransitionGroupDocNode _nodeGroup;
-            private readonly TransitionDocNode _nodeTran;
-
-            public RemovePeakHandler(SkylineWindow skyline, IdentityPath groupPath,
-                TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran)
-            {
-                _skyline = skyline;
-                _groupPath = groupPath;
-                _nodeGroup = nodeGroup;
-                _nodeTran = nodeTran;
-            }
-
-            public void menuItem_Click(object sender, EventArgs e)
-            {
-                _skyline.RemovePeak(_groupPath, _nodeGroup, _nodeTran);
-            }
-        }
-
-        private void applyPeakAllMenuItem_Click(object sender, EventArgs e)
-        {
-            ApplyPeak(false, false);
-        }
-
-        private void applyPeakSubsequentMenuItem_Click(object sender, EventArgs e)
-        {
-            ApplyPeak(true, false);
-        }
-
-        private void applyPeakGroupGraphMenuItem_Click(object sender, EventArgs e)
-        {
-            ApplyPeak(false, true);
-        }
 
         public void ApplyPeak(bool subsequent, bool group)
         {
@@ -1578,11 +1456,6 @@ namespace pwiz.Skyline
         public void RemovePeak(IdentityPath groupPath, TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran)
         {
             EditMenu.RemovePeak(groupPath, nodeGroup, nodeTran);
-        }
-
-        private static TransitionChromInfo GetTransitionChromInfo(TransitionDocNode nodeTran, int iResults, ChromFileInfoId chromFileInfoId)
-        {
-            return nodeTran.GetChromInfo(iResults, chromFileInfoId);
         }
 
         public void ShowSingleTransition()
@@ -1687,19 +1560,9 @@ namespace pwiz.Skyline
             }
         }
 
-        private void autoZoomNoneMenuItem_Click(object sender, EventArgs e)
-        {
-            AutoZoomNone();
-        }
-
         public void AutoZoomNone()
         {
             SetAutoZoomChrom(AutoZoomChrom.none);
-        }
-
-        private void autoZoomBestPeakMenuItem_Click(object sender, EventArgs e)
-        {
-            SetAutoZoomChrom(AutoZoomChrom.peak);
         }
 
         public void AutoZoomRTWindow()
@@ -1711,6 +1574,11 @@ namespace pwiz.Skyline
         {
             Settings.Default.AutoZoomChromatogram = autoZoomChrom.ToString();
             UpdateChromGraphs();
+        }
+
+        public void AutoZoomBestPeak()
+        {
+            SetAutoZoomChrom(AutoZoomChrom.peak);
         }
 
         public void AutoZoomBoth()
@@ -2220,11 +2088,6 @@ namespace pwiz.Skyline
 //            }
         }
 
-        private void closeAllChromatogramsMenuItem_Click(object sender, EventArgs e)
-        {
-            CloseAllChromatograms();
-        }
-
         public void CloseAllChromatograms()
         {
             foreach (var graphChromatogram in _listGraphChrom.ToList())
@@ -2246,20 +2109,10 @@ namespace pwiz.Skyline
 
         #endregion
 
-        private void splitChromGraphMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowSplitChromatogramGraph(!Settings.Default.SplitChromatogramGraph);
-        }
-
         public void ShowSplitChromatogramGraph(bool split)
         {
             Settings.Default.SplitChromatogramGraph = split;
             UpdateGraphPanes();
-        }
-
-        private void onlyQuantitativeMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowOnlyQuantitative(!Settings.Default.ShowQuantitativeOnly);
         }
 
         public void ShowOnlyQuantitative(bool showOnlyQuantitative)
@@ -3327,11 +3180,6 @@ namespace pwiz.Skyline
                     Settings.Default.RTCalculatorName = string.Empty;
                 }
             });
-        }
-
-        private void retentionTimeAlignmentToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowRetentionTimeAlignmentForm();
         }
 
         public AlignmentForm ShowRetentionTimeAlignmentForm()
@@ -4861,16 +4709,6 @@ namespace pwiz.Skyline
 
         #region Detections Graph
 
-        private void detectionsReplicateComparisonMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowDetectionsReplicateComparisonGraph();
-        }
-
-        private void detectionsHistogramMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowDetectionsHistogramGraph();
-        }
-
         public void UpdateUIGraphDetection(bool visible)
         {
             var list = Settings.Default.DetectionGraphTypes.ToArray();
@@ -5167,11 +5005,6 @@ namespace pwiz.Skyline
 
         #region Document Grid
 
-        private void documentGridMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowDocumentGrid(true);
-        }
-
         public void ShowDocumentGrid(bool show)
         {
             if (show)
@@ -5234,11 +5067,6 @@ namespace pwiz.Skyline
         #endregion
 
         #region Calibration Curves
-
-        private void calibrationCurvesMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowCalibrationForm();
-        }
 
         private CalibrationForm CreateCalibrationForm()
         {
@@ -5320,11 +5148,6 @@ namespace pwiz.Skyline
             }
         }
 
-        private void auditLogMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowAuditLog();
-        }
-
         private void _auditLogForm_FormClosed(object sender, FormClosedEventArgs e)
         {
             _auditLogForm = null;
@@ -5355,16 +5178,6 @@ namespace pwiz.Skyline
             ArrangeGraphs(DisplayGraphsType.Tiled);
         }
 
-        private void arrangeRowMenuItem_Click(object sender, EventArgs e)
-        {
-            ArrangeGraphs(DisplayGraphsType.Row);
-        }
-
-        private void arrangeColumnMenuItem_Click(object sender, EventArgs e)
-        {
-            ArrangeGraphs(DisplayGraphsType.Column);
-        }
-
         public void ArrangeGraphs(DisplayGraphsType displayGraphsType)
         {
             var listGraphs = GetArrangeableGraphs();
@@ -5374,11 +5187,6 @@ namespace pwiz.Skyline
             {
                 ArrangeGraphsGrouped(listGraphs, listGraphs.Count, GroupGraphsType.separated, displayGraphsType);
             }
-        }
-
-        private void arrangeTabbedMenuItem_Click(object sender, EventArgs e)
-        {
-            ArrangeGraphsTabbed();
         }
 
         public void ArrangeGraphsTabbed()

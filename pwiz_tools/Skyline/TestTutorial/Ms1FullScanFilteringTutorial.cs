@@ -423,7 +423,7 @@ namespace pwiz.SkylineTestTutorial
             RestoreViewOnScreen(15);
             RunUI(() =>
             {
-                SkylineWindow.SetAutoZoomChrom(AutoZoomChrom.peak);
+                SkylineWindow.AutoZoomBestPeak();
                 SkylineWindow.ArrangeGraphsTiled();
                 SkylineWindow.ShowChromatogramLegends(false);
             });

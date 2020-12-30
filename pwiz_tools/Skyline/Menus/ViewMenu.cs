@@ -46,11 +46,13 @@ namespace pwiz.Skyline.Menus
             DropDownItems = ImmutableList.ValueOf(viewToolStripMenuItem.DropDownItems.Cast<ToolStripItem>());
             statusToolStripMenuItem.Checked = Settings.Default.ShowStatusBar;
             if (!statusToolStripMenuItem.Checked)
-                statusToolStripMenuItem_Click(this, new EventArgs());
+            {
+                SkylineWindow.ShowStatusBar(statusToolStripMenuItem.Checked);
+            }
             toolBarToolStripMenuItem.Checked = Settings.Default.RTPredictorVisible;
             if (!toolBarToolStripMenuItem.Checked)
             {
-                toolBarToolStripMenuItem_Click(this, new EventArgs());
+                SkylineWindow.ShowToolBar(toolBarToolStripMenuItem.Checked);
             }
 
             largeToolStripMenuItem.Checked = Settings.Default.TextZoom == TreeViewMS.LRG_TEXT_FACTOR;

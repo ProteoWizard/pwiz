@@ -215,7 +215,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() => 
             {
                 SkylineWindow.ShowSingleTransition();
-                SkylineWindow.SetAutoZoomChrom(AutoZoomChrom.peak);
+                SkylineWindow.AutoZoomBestPeak();
                 SkylineWindow.ShowPeakAreaReplicateComparison();
             });
 

@@ -659,11 +659,6 @@ namespace pwiz.Skyline.Menus
         {
             SkylineWindow.FindNext(reverse);
         }
-
-        private IEnumerable<FindResult> FindAll(ILongWaitBroker longWaitBroker, FindPredicate findPredicate)
-        {
-            return findPredicate.FindAll(longWaitBroker, Document);
-        }
         #endregion
         private void editNoteMenuItem_Click(object sender, EventArgs e) { EditNote(); }
         public void EditNote()
@@ -727,7 +722,7 @@ namespace pwiz.Skyline.Menus
 
         public void EditToolStripMenuItemDropDownOpening()
         {
-            SkylineWindow.CanApplyOrRemovePeak(null, null, out var canApply, out var canRemove);
+            CanApplyOrRemovePeak(null, null, out var canApply, out var canRemove);
             if (!canApply && !canRemove)
             {
                 integrationToolStripMenuItem.Enabled = false;
@@ -749,16 +744,10 @@ namespace pwiz.Skyline.Menus
                     }
                     var i = 0;
                     AddGroupByMenuItems(null, groupApplyToByToolStripMenuItem, replicateValue => Settings.Default.GroupApplyToBy = replicateValue?.ToPersistedString(), false, Settings.Default.GroupApplyToBy, ref i);
-                    SkylineWindow.ChromatogramContextMenu.GroupApplyToByGraphMenuItem.Visible = true;
-                }
-                else
-                {
-                    SkylineWindow.ChromatogramContextMenu.GroupApplyToByGraphMenuItem.Visible = false;
                 }
                 removePeakToolStripMenuItem.Enabled = canRemove;
                 integrationToolStripMenuItem.Enabled = true;
             }
-
         }
 
         #region Peaks
@@ -779,7 +768,7 @@ namespace pwiz.Skyline.Menus
 
         public void ApplyPeak(bool subsequent, bool group)
         {
-            SkylineWindow.CanApplyOrRemovePeak(null, null, out var canApply, out _);
+            CanApplyOrRemovePeak(null, null, out var canApply, out _);
             if (!canApply)
                 return;
 
@@ -837,7 +826,7 @@ namespace pwiz.Skyline.Menus
         public void RemovePeak(bool removePeakBySequenceTreeContextMenu)
         {
             var chromFileInfoId = SkylineWindow.GetSelectedChromFileId();
-            SkylineWindow.CanApplyOrRemovePeak(null, null, out _, out var canRemove);
+            CanApplyOrRemovePeak(null, null, out _, out var canRemove);
             if (!canRemove)
                 return;
 

@@ -115,7 +115,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
                       {
                           SkylineWindow.ShowRTReplicateGraph();
-                          SkylineWindow.SetAutoZoomChrom(AutoZoomChrom.peak);
+                          SkylineWindow.AutoZoomBestPeak();
                           SkylineWindow.SelectedPath = docCalibrate.GetPathTo((int) SrmDocument.Level.Molecules, 0);
                           SkylineWindow.Size = new Size(914, 560);
                       });
@@ -375,7 +375,7 @@ namespace pwiz.SkylineTestTutorial
                           Assert.AreEqual(expectedItems, findAllForm.ItemCount);
 
                           SkylineWindow.ShowAllTransitions();
-                          SkylineWindow.SetAutoZoomChrom(AutoZoomChrom.peak);
+                          SkylineWindow.AutoZoomBestPeak();
                           SkylineWindow.Size = new Size(657, 632);
                       });
 

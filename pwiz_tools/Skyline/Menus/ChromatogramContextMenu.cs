@@ -1,4 +1,22 @@
-﻿using System;
+﻿/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2020 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -19,6 +37,7 @@ namespace pwiz.Skyline.Menus
             InitializeComponent();
         }
 
+        #region Build Menu
         public void BuildChromatogramMenu(ZedGraphControl zedGraphControl, PaneKey paneKey, ContextMenuStrip menuStrip, ChromFileInfoId chromFileInfoId)
         {
             // Store original menu items in an array, and insert a separator
@@ -265,7 +284,9 @@ namespace pwiz.Skyline.Menus
                 });
             }
         }
+        #endregion
 
+        #region Peaks
 
         private void applyPeakAllMenuItem_Click(object sender, EventArgs e)
         {
@@ -277,7 +298,6 @@ namespace pwiz.Skyline.Menus
             ApplyPeak(true, false);
         }
 
-        public ToolStripMenuItem GroupApplyToByGraphMenuItem => groupApplyToByGraphMenuItem;
         private void applyPeakGroupGraphMenuItem_Click(object sender, EventArgs e)
         {
             ApplyPeak(false, true);
@@ -290,7 +310,7 @@ namespace pwiz.Skyline.Menus
 
         private void removePeakMenuItem_DropDownOpening(object sender, EventArgs e)
         {
-            SkylineWindow.CanApplyOrRemovePeak(null, null, out _, out var canRemove);
+            SkylineWindow.EditMenu.CanApplyOrRemovePeak(null, null, out _, out var canRemove);
             if (!canRemove)
                 return;
 
@@ -382,7 +402,9 @@ namespace pwiz.Skyline.Menus
                 _skyline.RemovePeak(_groupPath, _nodeGroup, _nodeTran);
             }
         }
+        #endregion
 
+        #region Hide And Show things
         private void legendChromContextMenuItem_Click(object sender, EventArgs e)
         {
             SkylineWindow.ShowChromatogramLegends(legendChromContextMenuItem.Checked);
@@ -402,6 +424,9 @@ namespace pwiz.Skyline.Menus
         {
             SkylineWindow.ShowMassErrors(massErrorContextMenuItem.Checked);
         }
+        #endregion
+
+        #region Retention Times
 
         private void retentionTimesContextMenuItem_DropDownOpening(object sender, EventArgs e)
         {
@@ -462,6 +487,8 @@ namespace pwiz.Skyline.Menus
         {
             SkylineWindow.ShowOtherRunPeptideIDTimes(idTimesOtherContextMenuItem.Checked);
         }
+        #endregion
+        #region Transitions
         private void transitionsMenuItem_DropDownOpening(object sender, EventArgs e)
         {
             var displayType = GraphChromatogram.DisplayType;
@@ -566,6 +593,8 @@ namespace pwiz.Skyline.Menus
         {
             SkylineWindow.ShowSplitChromatogramGraph(!Settings.Default.SplitChromatogramGraph);
         }
+        #endregion
+        #region Transform
         private void transformChromMenuItem_DropDownOpening(object sender, EventArgs e)
         {
             var transform = GraphChromatogram.Transform;
@@ -602,7 +631,8 @@ namespace pwiz.Skyline.Menus
         {
             SkylineWindow.SetTransformChrom(TransformChrom.savitzky_golay);
         }
-
+        #endregion
+        #region Auto Zoom
         private void autozoomMenuItem_DropDownOpening(object sender, EventArgs e)
         {
             bool hasRt = (DocumentUI.Settings.PeptideSettings.Prediction.RetentionTime != null);
@@ -641,6 +671,7 @@ namespace pwiz.Skyline.Menus
         {
             SkylineWindow.SynchronizeZooming(synchronizeZoomingContextMenuItem.Checked);
         }
+        #endregion
         private void chromPropsContextMenuItem_Click(object sender, EventArgs e)
         {
             SkylineWindow.ShowChromatogramProperties();
