@@ -304,4 +304,7 @@
   <data name="SkylineSettings_Unable_to_find_Skyline_installation_at__0__" xml:space="preserve">
     <value>Unable to find Skyline installation at {0}</value>
   </data>
+  <data name="SkylineBatchConfig_Please_enter_a_name_for_the_configuration_" xml:space="preserve">
+    <value>Please enter a name for the configuration.</value>
+  </data>
 </root>
