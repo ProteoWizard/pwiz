@@ -455,6 +455,7 @@ namespace pwiz.SkylineTest
             result.Add("Executables\\Tools\\QuaSAR");
             result.Add("Executables\\Tools\\SProCoP");
             result.Add("Executables\\Tools\\TestArgCollector");
+            result.Add("Executables\\Tools\\ExampleInteractiveTool");
             return result.ToArray();
         }
 
