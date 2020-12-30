@@ -50,6 +50,9 @@ namespace pwiz.Skyline.FileUI
                 errorListMessage = errorList.Count == 1 ? Resources.ImportTransitionListErrorDlg_ImportTransitionListErrorDlg_The_imported_transition_contains_an_error__Please_check_the_transition_list_and_the_Skyline_settings_and_try_importing_again_ :
                                                           string.Format(Resources.ImportTransitionListErrorDlg_ImportTransitionListErrorDlg_All__0__transitions_contained_errors___Please_check_the_transition_list_for_errors_and_try_importing_again_, errorList.Count);
                 buttonCancel.Visible = false;
+                // In this case, the OK button should close the error dialog but not the column select dialog
+                // Simplest way to do this is to treat it as a cancel button
+                buttonOk.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             }
             else if (offerCancelButton)
             {
