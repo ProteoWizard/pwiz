@@ -590,9 +590,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 return pointPair;
             }
 
-            protected RetentionTimeValues? ScaleRetentionTimeValues(ChromFileInfoId chromFileInfoId, RetentionTimeValues? retentionTimeValues)
+            protected RetentionTimeValues ScaleRetentionTimeValues(ChromFileInfoId chromFileInfoId, RetentionTimeValues retentionTimeValues)
             {
-                if (!retentionTimeValues.HasValue)
+                if (retentionTimeValues == null)
                 {
                     return null;
                 }
@@ -605,7 +605,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     return null;
                 }
-                return retentionTimeValues.Value.Scale(regressionFunction);
+                return retentionTimeValues.Scale(regressionFunction);
             }
 
             protected virtual bool AddBlankPointsForGraphPanes { get { return false; } }

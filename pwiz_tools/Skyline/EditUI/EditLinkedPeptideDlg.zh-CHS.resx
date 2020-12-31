@@ -229,7 +229,7 @@
     <value>5</value>
   </data>
   <data name="btnEditModifications.Text" xml:space="preserve">
-    <value>编辑修饰(&amp;M)...</value>
+    <value>编辑修饰(&amp;M)…</value>
   </data>
   <data name="&gt;&gt;btnEditModifications.Name" xml:space="preserve">
     <value>btnEditModifications</value>
