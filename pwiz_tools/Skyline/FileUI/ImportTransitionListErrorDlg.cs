@@ -16,6 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System.Collections.Generic;
 using System.Windows.Forms;
 using pwiz.Common.DataBinding;
@@ -31,7 +32,7 @@ namespace pwiz.Skyline.FileUI
     {
         // trioMissing denotes whether a transition list is missing any of: Product m/z, Precursor m/z, or Peptide Sequence, in which case it is not
         // a valid transition list and the user must try again
-        public ImportTransitionListErrorDlg(List<TransitionImportErrorInfo> errorList, bool isErrorAll, bool offerCancelButton, bool trioMissing)
+        public ImportTransitionListErrorDlg(List<TransitionImportErrorInfo> errorList, bool isErrorAll, bool offerCancelButton, List<string> MissingEssentialColumns)
         {
             InitializeComponent();
 
@@ -49,9 +50,23 @@ namespace pwiz.Skyline.FileUI
             // If all of the transitions were errors, canceling and accepting are the same
             // so give a different message and disable the cancel button
             string errorListMessage;
-            if (trioMissing)
+            // If the transition list is missing essential columns, tell the user in a 
+            // readable way
+            if (MissingEssentialColumns.Count != 0)
             {
-                errorListMessage = "Your transition list must contain Product m/z, Precursor m/z, and Peptide Sequence";
+                errorListMessage = @"Your transition list must contain ";
+                for (var i = 0; i < MissingEssentialColumns.Count; i++)
+                {
+                    if (i == 0)
+                    {
+                        errorListMessage = errorListMessage + MissingEssentialColumns[i];
+                    }
+                    if(i != 0)
+                    {
+                        errorListMessage = errorListMessage + @" and " + MissingEssentialColumns[i];
+                    }
+                }
+                errorListMessage = errorListMessage + @" column(s)";
                 buttonCancel.Visible = false;
                 // In this case, the OK button should close the error dialog but not the column select dialog
                 // Simplest way to do this is to treat it as a cancel button

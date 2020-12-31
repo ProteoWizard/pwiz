@@ -377,6 +377,15 @@ namespace pwiz.Skyline.FileUI
             CheckForErrors(false);
         }
 
+        private static List<string> MissingEssentialColumns { get; set; }
+        // If an essential column is missing, add it to a list to display later
+        private void CheckEssentialColumn(Tuple<int, string> column)
+        {
+            if (column.Item1 == -1)
+            {
+                MissingEssentialColumns.Add(column.Item2);
+            }
+        }
         /// <summary>
         /// Parse the mass list text, then show a status dialog if:
         ///     errors are found, or
@@ -393,7 +402,11 @@ namespace pwiz.Skyline.FileUI
             List<SpectrumMzInfo> testLibrarySpectra = null;
             List<TransitionImportErrorInfo> testErrorList = null;
             List<PeptideGroupDocNode> testPeptideGroups = null;
-
+            var columns = Importer.RowReader.Indices;
+            MissingEssentialColumns = new List<string>();
+            CheckEssentialColumn(new Tuple<int, string>(columns.PeptideColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence));
+            CheckEssentialColumn(new Tuple<int, string>(columns.PrecursorColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z));
+            CheckEssentialColumn(new Tuple<int, string>(columns.ProductColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z));
             var docNew = _docCurrent.ImportMassList(_inputs, Importer, null,
                 _insertPath, out testSelectPath, out testIrtPeptides, out testLibrarySpectra,
                 out testErrorList, out testPeptideGroups);
@@ -402,7 +415,7 @@ namespace pwiz.Skyline.FileUI
                 // There are errors, show them to user
                 var isErrorAll = ReferenceEquals(docNew, _docCurrent);
                 DialogResult response;
-                using (var dlg = new ImportTransitionListErrorDlg(testErrorList, isErrorAll, silentSuccess, false))
+                using (var dlg = new ImportTransitionListErrorDlg(testErrorList, isErrorAll, silentSuccess, MissingEssentialColumns))
                 {
                     response = dlg.ShowDialog(this);
                 }
