@@ -54,19 +54,11 @@ namespace pwiz.Skyline.FileUI
             // readable way
             if (MissingEssentialColumns.Count != 0)
             {
-                errorListMessage = @"Your transition list must contain ";
+                errorListMessage = Resources.ImportTransitionListErrorDlg_ImportTransitionListErrorDlg_This_transition_list_cannot_be_imported_as_it_does_not_provide_values_for_;
                 for (var i = 0; i < MissingEssentialColumns.Count; i++)
                 {
-                    if (i == 0)
-                    {
-                        errorListMessage = errorListMessage + MissingEssentialColumns[i];
-                    }
-                    if(i != 0)
-                    {
-                        errorListMessage = errorListMessage + @" and " + MissingEssentialColumns[i];
-                    }
+                    errorListMessage = errorListMessage + @" " +  MissingEssentialColumns[i];
                 }
-                errorListMessage = errorListMessage + @" column(s)";
                 buttonCancel.Visible = false;
                 // In this case, the OK button should close the error dialog but not the column select dialog
                 // Simplest way to do this is to treat it as a cancel button

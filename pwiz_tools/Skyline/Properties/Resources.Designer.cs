@@ -15436,6 +15436,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to This transition list cannot be imported as it does not provide values for:.
+        /// </summary>
+        public static string ImportTransitionListErrorDlg_ImportTransitionListErrorDlg_This_transition_list_cannot_be_imported_as_it_does_not_provide_values_for_ {
+            get {
+                return ResourceManager.GetString("ImportTransitionListErrorDlg_ImportTransitionListErrorDlg_This_transition_list_ca" +
+                        "nnot_be_imported_as_it_does_not_provide_values_for_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The calculator {0} requires all of its standard peptides in order to determine a regression..
         /// </summary>
         public static string IncompleteStandardException_ERROR_The_calculator__0__requires_all_of_its_standard_peptides_in_order_to_determine_a_regression_ {
