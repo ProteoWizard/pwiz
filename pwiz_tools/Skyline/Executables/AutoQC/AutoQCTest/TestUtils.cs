@@ -61,8 +61,8 @@ namespace AutoQCTest
         public static PanoramaSettings GetTestPanoramaSettings(string variable, string value)
         {
             var panoramaServerUrl = "https://panoramaweb.org/";
-            var panoramaUserEmail = "alimarsh@mit.edu";
-            var panoramaPassword = "Alonfshss1!";
+            var panoramaUserEmail = "test";
+            var panoramaPassword = "test";
             var panoramaFolder = "/00Developer/Ali/QC/";
 
             if (string.IsNullOrEmpty(variable))

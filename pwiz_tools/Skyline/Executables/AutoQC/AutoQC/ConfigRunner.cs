@@ -164,16 +164,6 @@ namespace AutoQC
             return Path.GetDirectoryName(_logger.GetFile());
         }
 
-        public void DisableUiLogging()
-        {
-            _logger.DisableUiLogging();
-        }
-
-        public void EnableUiLogging()
-        {
-            _logger.LogToUi(_uiControl);   
-        }
-
         public void Start()
         {
             _panoramaUploadError = false;
@@ -196,8 +186,11 @@ namespace AutoQC
             lock (_lock)
             {
                 _runnerStatus = runnerStatus;
-                _uiControl.UpdateUiConfigurations();
-                _uiControl.UpdateButtonsEnabled();
+                if (_uiControl != null)
+                {
+                    _uiControl.UpdateUiConfigurations();
+                    _uiControl.UpdateButtonsEnabled();
+                }
             }
         }
 
@@ -278,7 +271,8 @@ namespace AutoQC
                 ChangeStatus(RunnerStatus.Error);
 
                 err.AppendLine().AppendLine().Append(x.Message);
-                _uiControl.DisplayError("Configuration Validation Error", err.ToString());
+                if (_uiControl != null)
+                    _uiControl.DisplayError("Configuration Validation Error", err.ToString());
             }
             catch (FileWatcherException x)
             {
@@ -289,7 +283,8 @@ namespace AutoQC
                 ChangeStatus(RunnerStatus.Error);
 
                 err.AppendLine().AppendLine().Append(x.Message);
-                _uiControl.DisplayError("File Watcher Error", err.ToString());   
+                if (_uiControl != null)
+                    _uiControl.DisplayError("File Watcher Error", err.ToString());   
             }
             catch (Exception x)
             {

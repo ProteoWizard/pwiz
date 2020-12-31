@@ -32,15 +32,46 @@ namespace AutoQCTest
         [TestMethod]
         public void TestValidateMainSettings()
         {
+            var skylinePath = TestUtils.GetTestFilePath("EmptyTemplate.sky");
+            var folderToWatch = TestUtils.GetTestFilePath("Config");
+            var resultsWindow = "51";
+            var acquisitionTime = "500";
 
-            TestInvalidMainSettings("skylineFilePath", TestUtils.GetTestFilePath("NotReal.sky"), 
-                $"Skyline file {TestUtils.GetTestFilePath("NotReal.sky")} does not exist.");
-            TestInvalidMainSettings("folderToWatch", TestUtils.GetTestFilePath("NotReal"), 
-                $"Folder to watch: {TestUtils.GetTestFilePath("NotReal")} does not exist.");
-            TestInvalidMainSettings("resultsWindow", "30",
+            var fileFilter = MainSettings.GetDefaultQcFileFilter();
+            var instrumentType = MainSettings.GetDefaultInstrumentType();
+
+            var badSkylinePath = TestUtils.GetTestFilePath("NotReal.sky");
+            TestInvalidMainSettings(new MainSettings(badSkylinePath, folderToWatch, false, fileFilter, false, 
+                resultsWindow, instrumentType, acquisitionTime, DateTime.MinValue, DateTime.MinValue),
+                $"Skyline file {badSkylinePath} does not exist.");
+
+            var badFolderPath = TestUtils.GetTestFilePath("NotReal");
+            TestInvalidMainSettings(new MainSettings(skylinePath, badFolderPath, false, fileFilter, false,
+                    resultsWindow, instrumentType, acquisitionTime, DateTime.MinValue, DateTime.MinValue),
+                $"Folder to watch: {badFolderPath} does not exist.");
+
+            var smallResultsWindow = "30";
+            TestInvalidMainSettings(new MainSettings(skylinePath, folderToWatch, false, fileFilter, false,
+                    smallResultsWindow, instrumentType, acquisitionTime, DateTime.MinValue, DateTime.MinValue),
                 "\"Results time window\" cannot be less than 31 days.");
-            TestInvalidMainSettings("acquisitionTime", "aaaa", "Invalid value for \"Acquisition Time\": aaaa.");
-            TestInvalidMainSettings("acquisitionTime", "-1", "\"Expected acquisition time\" cannot be less than 0 minutes.");
+
+            var negativeAcquisitionTime = "-1";
+            TestInvalidMainSettings(new MainSettings(skylinePath, folderToWatch, false, fileFilter, false,
+                    resultsWindow, instrumentType, negativeAcquisitionTime, DateTime.MinValue, DateTime.MinValue),
+                "\"Expected acquisition time\" cannot be less than 0 minutes.");
+
+            var nonNumberAcquisitionTime = "aaa";
+            try
+            {
+                new MainSettings(skylinePath, folderToWatch, false, fileFilter, false,
+                    resultsWindow, instrumentType, nonNumberAcquisitionTime, DateTime.MinValue, DateTime.MinValue);
+                Assert.Fail("Expected non-number acquisition time to throw exception upon MainSettings construction.");
+            }
+            catch (ArgumentException e)
+            {
+                Assert.AreEqual($"Invalid value for \"Acquisition Time\": {nonNumberAcquisitionTime}.", e.Message);
+            }
+
             var testValidMainSettings = new MainSettings(TestUtils.GetTestFilePath("EmptyTemplate.sky"), TestUtils.GetTestFilePath("Config"),
                 true, MainSettings.GetDefaultQcFileFilter(), true, "50", MainSettings.SCIEX,
                 "500", DateTime.MaxValue, DateTime.MinValue);
@@ -55,40 +86,11 @@ namespace AutoQCTest
 
         }
 
-        private void TestInvalidMainSettings(string invalidVariable, string invalidValue, string expectedError)
+        private void TestInvalidMainSettings(MainSettings testMainSettings, string expectedError)
         {
-            var skylineFilePath = TestUtils.GetTestFilePath("EmptyTemplate.sky");
-            var folderToWatch = TestUtils.GetTestFilePath("Config");
-            var resultsWindow = "51";
-            var acquisitionTime = "500";
-
-            var fileFilter = MainSettings.GetDefaultQcFileFilter();
-            var instrumentType = MainSettings.GetDefaultInstrumentType();
-
-            switch (invalidVariable)
-            {
-                case "skylineFilePath":
-                    skylineFilePath = invalidValue;
-                    break;
-                case "folderToWatch":
-                    folderToWatch = invalidValue;
-                    break;
-                case "resultsWindow":
-                    resultsWindow = invalidValue;
-                    break;
-                case "acquisitionTime":
-                    acquisitionTime = invalidValue;
-                    break;
-                default:
-                    throw new ArgumentException("No such variable: " + invalidVariable);
-            }
-
             try
             {
-                var invalidMainSettings = new MainSettings(skylineFilePath, folderToWatch, true, fileFilter,
-                    false, resultsWindow, instrumentType, acquisitionTime,
-                    DateTime.MinValue, DateTime.MinValue);
-                invalidMainSettings.ValidateSettings();
+                testMainSettings.ValidateSettings();
                 Assert.Fail("Should have failed to validate MainSettings with Error:" + Environment.NewLine + expectedError);
             }
             catch (ArgumentException e)
@@ -100,29 +102,25 @@ namespace AutoQCTest
         [TestMethod]
         public void TestValidatePanoramaSettings()
         {
-            TestInvalidPanoramaSettings("panoramaServerUrl", "https://fake_panoramaweb.org/",
+            TestInvalidPanoramaSettings(new PanoramaSettings(true, "https://fake_panoramaweb.org/", "testEmail", "testPassword", "testFolder"), 
                 "The server https://fake_panoramaweb.org/ does not exist");
-            TestInvalidPanoramaSettings("panoramaServerUrl", "",
+            TestInvalidPanoramaSettings(new PanoramaSettings(true, "", "testEmail", "testPassword", "testFolder"),
                 "Please specify a Panorama server URL.");
-            TestInvalidPanoramaSettings("panoramaUserEmail", "bad_email@bad.bad",
+            TestInvalidPanoramaSettings(new PanoramaSettings(true, "https://panoramaweb.org/", "bad_email@bad.bad", "testPassword", "testFolder"),
                 "The username and password could not be authenticated with the panorama server");
-            TestInvalidPanoramaSettings("panoramaUserEmail", "",
+            TestInvalidPanoramaSettings(new PanoramaSettings(true, "https://panoramaweb.org/", "", "testPassword", "testFolder"),
                 "Please specify a Panorama login email.");
-            TestInvalidPanoramaSettings("panoramaPassword", "not_the_password",
+            TestInvalidPanoramaSettings(new PanoramaSettings(true, "https://panoramaweb.org/", "testEmail", "not_the_password", "testFolder"),
                 "The username and password could not be authenticated with the panorama server");
-            TestInvalidPanoramaSettings("panoramaPassword", "",
+            TestInvalidPanoramaSettings(new PanoramaSettings(true, "https://panoramaweb.org/", "testEmail", "", "testFolder"),
                 "Please specify a Panorama user password.");
-            TestInvalidPanoramaSettings("panoramaFolder", "", 
+            TestInvalidPanoramaSettings(new PanoramaSettings(true, "https://panoramaweb.org/", "testEmail", "testPassword", ""),
                 "Please specify a folder on the Panorama server.");
 
-
             var noPublishToPanorama = new PanoramaSettings();
-            var validPanoramaSettings = new PanoramaSettings(true, "https://panoramaweb.org/", "alimarsh@mit.edu",
-                "Alonfshss1!", "/00Developer/Ali/QC/");
             try
             {
                 noPublishToPanorama.ValidateSettings();
-                validPanoramaSettings.ValidateSettings();
             }
             catch (Exception)
             {
@@ -131,36 +129,12 @@ namespace AutoQCTest
         }
 
 
-        private void TestInvalidPanoramaSettings(string invalidVariable, string invalidValue, string expectedError)
+        private void TestInvalidPanoramaSettings(PanoramaSettings testPanoramaSettings, string expectedError)
         {
-            var panoramaServerUrl = "https://panoramaweb.org/";
-            var panoramaUserEmail = "alimarsh@mit.edu";
-            var panoramaPassword = "Alonfshss1!";
-            var panoramaFolder = "/00Developer/Ali/QC/";
-
-            switch (invalidVariable)
-            {
-                case "panoramaServerUrl":
-                    panoramaServerUrl = invalidValue;
-                    break;
-                case "panoramaUserEmail":
-                    panoramaUserEmail = invalidValue;
-                    break;
-                case "panoramaPassword":
-                    panoramaPassword = invalidValue;
-                    break;
-                case "panoramaFolder":
-                    panoramaFolder = invalidValue;
-                    break;
-                default:
-                    throw new ArgumentException("No such variable: " + invalidVariable);
-            }
-            var invalidPanoramaSettings = new PanoramaSettings(true, panoramaServerUrl, panoramaUserEmail,
-                panoramaPassword, panoramaFolder);
             try
             {
-                invalidPanoramaSettings.ValidateSettings();
-                Assert.Fail("Should have failed to validate MainSettings with Error:" + Environment.NewLine + expectedError);
+                testPanoramaSettings.ValidateSettings();
+                Assert.Fail("Should have failed to validate PanoramaSettings with Error:" + Environment.NewLine + expectedError);
             }
             catch (ArgumentException e)
             {
@@ -183,10 +157,10 @@ namespace AutoQCTest
         [TestMethod]
         public void TestPanoramaSettingsEquals()
         {
-            var panoramaSettingsOne = new PanoramaSettings(true, "https://panoramaweb.org/", "alimarsh@mit.edu",
-                "Alonfshss1!", "/00Developer/Ali/QC/");
-            var panoramaSettingsTwo = new PanoramaSettings(true, "https://panoramaweb.org/", "alimarsh@mit.edu",
-                "Alonfshss1!", "/00Developer/Ali/QC/");
+            var panoramaSettingsOne = new PanoramaSettings(true, "https://panoramaweb.org/", "bad@email.edu",
+                "BadPassword", "badfolder");
+            var panoramaSettingsTwo = new PanoramaSettings(true, "https://panoramaweb.org/", "bad@email.edu",
+                "BadPassword", "badfolder");
             Assert.IsTrue(Equals(panoramaSettingsOne, panoramaSettingsTwo));
             var differentPanoramaSettings = new PanoramaSettings();
             Assert.IsFalse(Equals(panoramaSettingsOne, null));
@@ -203,8 +177,8 @@ namespace AutoQCTest
             var differentMainSettings = new AutoQcConfig("Config", false, DateTime.MinValue, DateTime.MinValue, TestUtils.GetTestMainSettings("other"), TestUtils.GetTestPanoramaSettings(), TestUtils.GetTestSkylineSettings());
             Assert.IsFalse(Equals(testConfig, differentMainSettings));
 
-            var publishingPanorama = new PanoramaSettings(true, "https://panoramaweb.org/", "alimarsh@mit.edu",
-                "Alonfshss1!", "/00Developer/Ali/QC/");
+            var publishingPanorama = new PanoramaSettings(true, "https://panoramaweb.org/", "bad@email.edu",
+                "BadPassword", "badfolder");
             var differentPanoramaSettings = new AutoQcConfig("Config", false, DateTime.MinValue, DateTime.MinValue, TestUtils.GetTestMainSettings("Config"), publishingPanorama, TestUtils.GetTestSkylineSettings());
             Assert.IsFalse(Equals(testConfig, differentPanoramaSettings));
         }
