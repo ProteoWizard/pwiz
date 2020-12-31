@@ -346,7 +346,7 @@
     <value>校正から除外</value>
   </data>
   <data name="ExplicitAnalyteConcentration">
-    <value>明示的アナライト濃度</value>
+    <value>表示されたアナライト濃度</value>
   </data>
   <data name="ExplicitCollisionEnergy">
     <value>明示的衝突エネルギー</value>
@@ -598,10 +598,10 @@
     <value>最大保持時間</value>
   </data>
   <data name="Median">
-    <value>メジアン</value>
+    <value>中央値</value>
   </data>
   <data name="MedianDetectionQValue" xml:space="preserve">
-    <value>メジアン検出Q値</value>
+    <value>検出Q値の中央値</value>
   </data>
   <data name="Mean">
     <value>平均</value>
@@ -859,7 +859,7 @@
     <value>プリカーサー濃度</value>
   </data>
   <data name="PrecursorExplicitCollisionEnergy">
-    <value>プリカーサー明示的衝突エネルギー</value>
+    <value>表示されたプリカーサー衝突エネルギー</value>
   </data>
   <data name="PrecursorIonName">
     <value>プリカーサーイオン名</value>

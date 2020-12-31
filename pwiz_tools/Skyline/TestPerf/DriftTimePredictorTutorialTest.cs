@@ -60,7 +60,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
 //            IsCoverShotMode = true;
             CoverShotName = "IMSFiltering";
 
-            LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/IMSFiltering-3_7.pdf";
+            LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/IMSFiltering-20_2.pdf";
 
             const string dataRoot = "http://skyline.ms/tutorials/data-drift/";
             TestFilesZipPaths = new[]

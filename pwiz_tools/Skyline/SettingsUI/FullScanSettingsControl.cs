@@ -29,7 +29,6 @@ using pwiz.Skyline.Controls;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
-using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -893,7 +892,7 @@ namespace pwiz.Skyline.SettingsUI
             usercontrolIonMobilityFiltering.InitializeSettings(_documentContainer);
         }
 
-        public void ModifyOptionsForImportPeptideSearchWizard(ImportPeptideSearchDlg.Workflow workflow, Library lib)
+        public void ModifyOptionsForImportPeptideSearchWizard(ImportPeptideSearchDlg.Workflow workflow, bool libIonMobilities)
         {
             var settings = _documentContainer.Document.Settings;
 
@@ -970,7 +969,7 @@ namespace pwiz.Skyline.SettingsUI
             }
 
             // Ask about ion mobility filtering if any IM values in library
-            if (lib != null && PeptideLibraries.HasIonMobilities(lib, null))
+            if (libIonMobilities)
             {
                 usercontrolIonMobilityFiltering.Top = groupBoxRetentionTimeToKeep.Bottom + sepMS1FromMS2;
                 usercontrolIonMobilityFiltering.InitializeSettings(_documentContainer, true);

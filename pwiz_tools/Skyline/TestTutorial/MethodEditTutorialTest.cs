@@ -61,11 +61,11 @@ namespace pwiz.SkylineTestTutorial
 //            IsCoverShotMode = true;
             CoverShotName = "MethodEdit";
 
-            LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/MethodEdit-3_7.pdf";
+            LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/MethodEdit-20_1.pdf";
             
             TestFilesZipPaths = new[]
             {
-                @"https://skyline.gs.washington.edu/tutorials/MethodEdit.zip",
+                @"https://skyline.ms/tutorials/MethodEdit.zip",
                 @"TestTutorial\MethodEditCSVs.zip",
                 @"TestTutorial\MethodEditViews.zip"
             };
