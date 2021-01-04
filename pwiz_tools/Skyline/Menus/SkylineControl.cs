@@ -93,6 +93,10 @@ namespace pwiz.Skyline.Menus
             {
                 return SkylineWindow.SelectedResultsIndex;
             }
+            set
+            {
+                SkylineWindow.SelectedResultsIndex = value;
+            }
         }
 
         public ChromFileInfoId GetSelectedChromFileId()

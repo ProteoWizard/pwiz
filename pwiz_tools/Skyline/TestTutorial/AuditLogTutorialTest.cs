@@ -79,13 +79,13 @@ namespace pwiz.SkylineTestTutorial
 
             ForceMzml = true;   // Mzml is ~8x faster for this test.
                                                     
-            LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/AuditLog-20_1.pdf";
+            LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/AuditLog-20_1_1.pdf";
 
             TestFilesZipPaths = new[]
             {
                 UseRawFiles
-                    ? @"https://skyline.gs.washington.edu/tutorials/AuditLog.zip"
-                    : @"https://skyline.gs.washington.edu/tutorials/AuditLogMzml.zip",
+                    ? @"https://skyline.ms/tutorials/AuditLog.zip"
+                    : @"https://skyline.ms/tutorials/AuditLogMzml.zip",
                 @"TestTutorial\AuditLogViews.zip"
             };
 

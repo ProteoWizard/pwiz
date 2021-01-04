@@ -213,6 +213,7 @@
     <None Include="ExistingExperimentsViews.zip" />
     <None Include="GroupedStudies1Views.zip" />
     <None Include="IrtViews.zip" />
+    <None Include="LibraryExplorerViews.zip" />
     <None Include="MethodEditCSVs.zip" />
     <None Include="MethodEditViews.zip" />
     <None Include="MethodRefinementViews.zip" />
