@@ -485,13 +485,13 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     case COLUMN_SEQUENCE:
                         {
-                            if (!string.IsNullOrWhiteSpace(optimization.PeptideModSeq))
+                            if (!Target.IsNullOrEmpty(optimization.Target))
                             {
                                 if (optimization.Target.IsProteomic)
                                 {
                                     e.Value = (Math.Abs(optimization.Adduct.AdductCharge) > 1)
-                                    ? optimization.PeptideModSeq + Transition.GetChargeIndicator(optimization.Adduct)
-                                    : optimization.PeptideModSeq;
+                                        ? optimization.Target.Sequence + Transition.GetChargeIndicator(optimization.Adduct)
+                                        : optimization.Target.Sequence;
                                     
                                 }
                                 else
@@ -883,7 +883,7 @@ namespace pwiz.Skyline.SettingsUI
                 }
             }
 
-            protected override bool DoRowValidating(int rowIndex)
+            protected override bool DoRowValidating(int rowIndex, bool requireCompleteMolecule)
             {
                 var row = GridView.Rows[rowIndex];
                 if (row.IsNewRow)

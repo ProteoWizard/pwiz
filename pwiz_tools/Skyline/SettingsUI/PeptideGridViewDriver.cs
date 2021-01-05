@@ -16,7 +16,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
@@ -122,54 +121,31 @@ namespace pwiz.Skyline.SettingsUI
                 return false;
             }
 
-            string seq = columns[COLUMN_SEQUENCE] as string;
-            string time = columns[COLUMN_TIME] as string;
-            string message = null;
-            if (string.IsNullOrWhiteSpace(seq))
+            // Validate the peptide, or the small molecule columns if any
+            if (!ValidateRowTarget(columns, parent, grid, lineNumber, COLUMN_SEQUENCE))
             {
-                message = string.Format(Resources.PeptideGridViewDriver_ValidateRow_Missing_peptide_sequence_on_line__0_, lineNumber);
+                return false;
             }
-            else if (!FastaSequence.IsExSequence(seq))
+
+            string time = columns[COLUMN_TIME] as string;
+            string message;
+
+            if (string.IsNullOrWhiteSpace(time))
             {
-                // Use target resolver if available
-                var targetColumn = grid?.Columns[COLUMN_SEQUENCE] as TargetColumn;
-                if (targetColumn == null || targetColumn.TryResolveTarget(seq, columns.Select(c => c as string).ToArray(), lineNumber, out _) == null)
-                {
-                    message = string.Format(Resources.PeptideGridViewDriver_ValidateRow_The_text__0__is_not_a_valid_peptide_sequence_on_line__1_, seq, lineNumber);
-                }
+                message = string.Format(Resources.PeptideGridViewDriver_ValidateRow_Missing_value_on_line__0_, lineNumber);
+            }
+            else if (!double.TryParse(time, out var dTime))
+            {
+                message = string.Format(Resources.PeptideGridViewDriver_ValidateRow_Invalid_decimal_number_format__0__on_line__1_, time, lineNumber);
+            }
+            else if (postiveTime && dTime <= 0)
+            {
+                message = string.Format(Resources.PeptideGridViewDriver_ValidateRow_The_time__0__must_be_greater_than_zero_on_line__1_, time, lineNumber);
             }
             else
             {
-                try
-                {
-                    columns[COLUMN_SEQUENCE] = SequenceMassCalc.NormalizeModifiedSequence(seq);
-                }
-                catch (Exception x)
-                {
-                    message = x.Message;
-                }
-            }
-
-            if (message == null)
-            {
-                double dTime;
-                if (string.IsNullOrWhiteSpace(time))
-                {
-                    message = string.Format(Resources.PeptideGridViewDriver_ValidateRow_Missing_value_on_line__0_, lineNumber);
-                }
-                else if (!double.TryParse(time, out dTime))
-                {
-                    message = string.Format(Resources.PeptideGridViewDriver_ValidateRow_Invalid_decimal_number_format__0__on_line__1_, time, lineNumber);
-                }
-                else if (postiveTime && dTime <= 0)
-                {
-                    message = string.Format(Resources.PeptideGridViewDriver_ValidateRow_The_time__0__must_be_greater_than_zero_on_line__1_, time, lineNumber);
-                }
-                else
-                {
-                    return true;
-                }                    
-            }
+                return true;
+            }                    
 
             MessageDlg.Show(parent, message);
             return false;
@@ -184,21 +160,34 @@ namespace pwiz.Skyline.SettingsUI
         protected virtual bool DoCellValidating(int rowIndex, int columnIndex, string value)
         {
             string errorText = null;
-            if (columnIndex == COLUMN_SEQUENCE && GridView.IsCurrentCellInEditMode)
+            if (GridView.IsCurrentCellInEditMode)
             {
-                var sequence = TryResolveTarget(value, rowIndex, out errorText);
-                if (errorText == null)
+                var isSmallMolDetail =
+                    GridView.Rows[rowIndex].Cells[columnIndex] is TargetDetailColumn.TargetDetailCell;
+                if (columnIndex == COLUMN_SEQUENCE || isSmallMolDetail)
                 {
-                    SmallMoleculeColumnsManager.UpdateSmallMoleculeDetails(sequence, GridView.Rows[rowIndex]); // If this is a small molecule, show formula, InChiKey etc
-                    int iExist = Items.ToArray().IndexOf(pep => Equals(pep.Target, sequence));
-                    if (iExist != -1 && iExist != rowIndex)
-                        errorText = string.Format(Resources.PeptideGridViewDriver_DoCellValidating_The_sequence__0__is_already_present_in_the_list, sequence);
+                    var name = isSmallMolDetail ? 
+                        GridView.Rows[rowIndex].Cells[COLUMN_SEQUENCE].EditedFormattedValue.ToString() : 
+                        value;
+                    var target = TryResolveTarget(name, rowIndex, out errorText, false); // Be tolerant of partially specified molecules until user tries to leave row
+                    if (errorText == null)
+                    {
+                        SmallMoleculeColumnsManager.UpdateSmallMoleculeDetails(target, GridView.Rows[rowIndex]); // If this is a small molecule, show formula, InChiKey etc
+                        if (columnIndex != COLUMN_SEQUENCE &&
+                            !Equals(target, GridView.Rows[rowIndex].Cells[COLUMN_SEQUENCE].Value))
+                        {
+                            GridView.Rows[rowIndex].Cells[COLUMN_SEQUENCE].Value = target;
+                        }
+                        int iExist = Items.ToArray().IndexOf(pep => Equals(pep.Target, target));
+                        if (iExist != -1 && iExist != rowIndex)
+                            errorText = string.Format(Resources.PeptideGridViewDriver_DoCellValidating_The_sequence__0__is_already_present_in_the_list, target);
+                    }
                 }
-            }
-            else if (columnIndex == COLUMN_TIME && GridView.IsCurrentCellInEditMode)
-            {
-                string rtText = value;
-                errorText = MeasuredPeptide.ValidateRetentionTime(rtText, AllowNegativeTime);
+                else if (columnIndex == COLUMN_TIME)
+                {
+                    string rtText = value;
+                    errorText = MeasuredPeptide.ValidateRetentionTime(rtText, AllowNegativeTime);
+                }
             }
             if (errorText != null)
             {
@@ -210,49 +199,16 @@ namespace pwiz.Skyline.SettingsUI
 
         private void gridView_RowValidating(object sender, DataGridViewCellCancelEventArgs e)
         {
-            if (!DoRowValidating(e.RowIndex))
+            if (!DoRowValidating(e.RowIndex, false)) // Tolerate incomplete molecule information in row
                 e.Cancel = true;
         }
 
-        protected virtual bool DoRowValidating(int rowIndex)
+        protected override string DoRowValidatingNonTargetColumns(int rowIndex)
         {
-            if (rowIndex >= Items.Count)
-            {
-                return true;
-            }
-            var row = GridView.Rows[rowIndex];
-            if (row.IsNewRow)
-                return true;
-            var cell = row.Cells[COLUMN_SEQUENCE];
-            string errorText;
-            TryResolveTarget(cell.FormattedValue?.ToString(), rowIndex, out errorText);
-            if (errorText == null)
-            {
-                cell = row.Cells[COLUMN_TIME];
-                errorText = MeasuredPeptide.ValidateRetentionTime(cell.FormattedValue != null
-                                                                      ? cell.FormattedValue.ToString()
-                                                                      : null, AllowNegativeTime);
-            }
-            if (errorText != null)
-            {
-                bool messageShown = false;
-                try
-                {
-                    GridView.CurrentCell = cell;
-                    MessageDlg.Show(MessageParent, errorText);
-                    messageShown = true;
-                    GridView.BeginEdit(true);
-                }
-                catch (Exception)
-                {
-                    // Exception may be thrown if current cell is changed in the wrong context.
-                    if (!messageShown)
-                        MessageDlg.Show(MessageParent, errorText);
-                }
-                return false;
-            }
-
-            return true;
+            return MeasuredPeptide.ValidateRetentionTime(
+                GridView.Rows[rowIndex].Cells[COLUMN_TIME].FormattedValue != null
+                    ? GridView.Rows[rowIndex].Cells[COLUMN_TIME].FormattedValue.ToString()
+                    : null, AllowNegativeTime);
         }
     }
 }

@@ -28967,6 +28967,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error in molecule description on line {0}: {1}.
+        /// </summary>
+        public static string SmallMoleculeColumnsManager_TryGetSmallMoleculeTargetFromDetails_Error_in_molecule_description_on_line__0_____1__ {
+            get {
+                return ResourceManager.GetString("SmallMoleculeColumnsManager_TryGetSmallMoleculeTargetFromDetails_Error_in_molecul" +
+                        "e_description_on_line__0_____1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Molecule description on line {0} requires at least a name and chemical formula.
         /// </summary>
         public static string SmallMoleculeColumnsManager_TryGetSmallMoleculeTargetFromDetails_Molecule_description_on_line__0__requires_at_least_a_name_and_chemical_formula {

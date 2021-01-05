@@ -721,7 +721,12 @@ namespace pwiz.Skyline.Model
 
         public CustomMolecule Molecule { get; private set; }
         public bool IsProteomic { get { return Molecule == null; } }
-        
+
+        public static bool IsNullOrEmpty(Target t) { return t == null || t.IsEmpty; }
+
+        // During a user edit in the UI, a molecule may not be completely specified yet
+        public bool IsComplete => IsProteomic || !(Molecule is IncompleteCustomMolecule);
+
         public Target ChangeSequence(string sequence)
         {
             if (Equals(sequence, Sequence))

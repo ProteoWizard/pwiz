@@ -29,6 +29,7 @@ namespace pwiz.Skyline.Controls
     /// Column which displays a Target as a single string, and in the case of
     /// small molecules cooperates with other automatically generated columns
     /// via <see cref="SmallMoleculeColumnsManager"/> to show better detail (e.g. formula, InChIKey etc).
+    /// The display string for a target may also contain charge information.
     /// </summary>
     public class TargetColumn : DataGridViewTextBoxColumn
     {
@@ -51,24 +52,24 @@ namespace pwiz.Skyline.Controls
             SmallMoleculeColumnsManager = gridViewDriver;
         }
 
-        public Target TryResolveTarget(string targetName, DataGridViewCellCollection cells, int rowIndex, out string errorMessage)
+        public Target TryResolveTarget(string targetName, DataGridViewCellCollection cells, int rowIndex, out string errorMessage, bool strict = true)
         {
             var target = TargetResolver.TryResolveTarget(targetName, out errorMessage);
             if (target == null)
             {
                 // Can we construct a target from what we find in the other columns?
-                target = SmallMoleculeColumnsManager.TryGetSmallMoleculeTargetFromDetails(targetName, cells, rowIndex, out errorMessage);
+                target = SmallMoleculeColumnsManager.TryGetSmallMoleculeTargetFromDetails(targetName, cells, rowIndex, out errorMessage, strict);
             }
             SmallMoleculeColumnsManager.UpdateSmallMoleculeDetails(target, rowIndex);
             return target;
         }
-        public Target TryResolveTarget(string targetName, IEnumerable<string> values, int rowIndex, out string errorMessage)
+        public Target TryResolveTarget(string targetName, IEnumerable<string> values, int rowIndex, out string errorMessage, bool strict = true)
         {
             var target = TargetResolver.TryResolveTarget(targetName, out errorMessage);
             if (target == null)
             {
                 // Can we construct a target from what we find in the other columns?
-                target = SmallMoleculeColumnsManager.TryGetSmallMoleculeTargetFromDetails(targetName, values, rowIndex, out errorMessage);
+                target = SmallMoleculeColumnsManager.TryGetSmallMoleculeTargetFromDetails(targetName, values, rowIndex, out errorMessage, strict);
             }
             SmallMoleculeColumnsManager.UpdateSmallMoleculeDetails(target, rowIndex);
             return target;
@@ -78,7 +79,7 @@ namespace pwiz.Skyline.Controls
         {
             public TargetColumn TargetColumn { get; set; }
 
-            private TargetResolver TargetResolver
+            protected TargetResolver TargetResolver
             {
                 get { return TargetColumn?.TargetResolver ?? TargetResolver.EMPTY; }
             }
@@ -111,6 +112,12 @@ namespace pwiz.Skyline.Controls
                 return result;
             }
 
+            public override string ToString()
+            {
+                var target = Value as Target;
+                return target == null ? base.ToString() : target.DisplayName;
+            }
+
             public override object ParseFormattedValue(object formattedValue, DataGridViewCellStyle cellStyle,
                 TypeConverter formattedValueTypeConverter, TypeConverter valueTypeConverter)
             {
@@ -125,6 +132,11 @@ namespace pwiz.Skyline.Controls
                         return new Target(molecule);
                     }
                 }
+                else if (TargetColumn?.SmallMoleculeColumnsManager != null && 
+                         TargetColumn.SmallMoleculeColumnsManager.HasSmallMoleculeColumns )
+                {
+                    return Value; // Assume user is in the midst of hand edit, and still has other columns to populate
+                }
                 return TargetResolver.ResolveTarget(formattedValue as string);
             }
 
@@ -136,4 +148,33 @@ namespace pwiz.Skyline.Controls
             }
         }
     }
+
+    public class TargetDetailColumn : DataGridViewTextBoxColumn
+    {
+        [SuppressMessage("ReSharper", "VirtualMemberCallInConstructor")]
+        public TargetDetailColumn(TargetColumn targetColumn)
+        {
+            CellTemplate = new TargetDetailCell(targetColumn);
+        }
+
+        public class TargetDetailCell : DataGridViewTextBoxCell
+        {
+            public TargetColumn TargetColumn { get; set; }
+
+            public TargetDetailCell() {}
+
+            public TargetDetailCell(TargetColumn targetColumn)
+            {
+                TargetColumn = targetColumn;
+
+            }
+            public override object Clone()
+            {
+                var targetDetailCell = (TargetDetailCell)base.Clone();
+                targetDetailCell.TargetColumn = TargetColumn;
+                return targetDetailCell;
+            }
+        }
+    }
+
 }

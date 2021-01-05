@@ -10782,6 +10782,9 @@ There might be something wrong with default web browser on this computer.</value
   <data name="SmallMoleculeColumnsManager_TryGetSmallMoleculeTargetFromDetails_Molecule_description_on_line__0__requires_at_least_a_name_and_chemical_formula" xml:space="preserve">
     <value>Molecule description on line {0} requires at least a name and chemical formula</value>
   </data>
+  <data name="SmallMoleculeColumnsManager_TryGetSmallMoleculeTargetFromDetails_Error_in_molecule_description_on_line__0_____1__" xml:space="preserve">
+    <value>Error in molecule description on line {0}: {1}</value>
+  </data>
   <data name="EditLinkedPeptideDlg_TryMakeLinkedPeptide_The_crosslinker___0___cannot_attach_to_the_amino_acid___1___" xml:space="preserve">
     <value>The crosslinker '{0}' cannot attach to the amino acid '{1}'.</value>
   </data>

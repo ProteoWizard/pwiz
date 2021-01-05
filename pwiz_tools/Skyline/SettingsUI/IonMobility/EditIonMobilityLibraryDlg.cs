@@ -1136,15 +1136,15 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
 
         private void gridView_RowValidating(object sender, DataGridViewCellCancelEventArgs e)
         {
-            if (!DoRowValidating(e.RowIndex))
+            if (!DoRowValidating(e.RowIndex, true))
                 e.Cancel = true;
         }
 
-        protected virtual bool DoRowValidating(int rowIndex)
+        protected override string DoRowValidatingNonTargetColumns(int rowIndex)
         {
             var row = GridView.Rows[rowIndex];
             if (row.IsNewRow)
-                return true;
+                return null;
             var cells = new List<object>();
             for (var i = 0; i < row.Cells.Count; i++)
             {
@@ -1167,9 +1167,8 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                     if (!messageShown)
                         MessageDlg.Show(MessageParent, errorText);
                 }
-                return false;
             }
-            return true;
+            return errorText;
         }
     }
 }

@@ -623,7 +623,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 Items.ListChanged += parent.StandardsChanged;
             }
 
-            public bool ItemsValid => Items.All(item => item.Target != null && !(item.RetentionTime <= 0));
+            public bool ItemsValid => Items.All(item => item.Target != null && item.Target.IsComplete && !(item.RetentionTime <= 0));
 
             protected override void DoPaste()
             {

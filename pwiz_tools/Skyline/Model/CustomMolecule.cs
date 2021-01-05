@@ -322,12 +322,17 @@ namespace pwiz.Skyline.Model
 
         public CustomMolecule(string formula, TypedMass monoisotopicMass, TypedMass averageMass, string name, MoleculeAccessionNumbers moleculeAccessionNumbers)
         {
+            Initialize(formula, monoisotopicMass, averageMass, name, moleculeAccessionNumbers);
+            Validate();
+        }
+
+        protected void Initialize(string formula, TypedMass monoisotopicMass, TypedMass averageMass, string name, MoleculeAccessionNumbers moleculeAccessionNumbers)
+        {
             Formula = formula;
             MonoisotopicMass = monoisotopicMass;
             AverageMass = averageMass;
             Name = name ?? string.Empty;
             AccessionNumbers = moleculeAccessionNumbers ?? MoleculeAccessionNumbers.EMPTY;
-            Validate();
         }
 
         /// <summary>
@@ -773,4 +778,32 @@ namespace pwiz.Skyline.Model
             return true;
         }
     }
+
+    /// <summary>
+    /// Special type of CustomMolecule that doesn't mind being only partially specified, for use when user is editing a DataGridView
+    /// </summary>
+    public class IncompleteCustomMolecule : CustomMolecule
+    {
+        public IncompleteCustomMolecule(string formula, double? monoisotopicMass, double? averageMass, string name,
+            MoleculeAccessionNumbers moleculeAccessionNumbers)
+        {
+            Initialize(formula,
+                new TypedMass(monoisotopicMass ?? averageMass ?? 0, MassType.Monoisotopic),
+                new TypedMass(averageMass ?? monoisotopicMass ?? 0, MassType.Average),
+                name, moleculeAccessionNumbers);
+        }
+
+        public IncompleteCustomMolecule(string formula, string name, MoleculeAccessionNumbers moleculeAccessionNumbers)
+            : this(formula, null, null, name, moleculeAccessionNumbers)
+        {}
+
+        // Try to create an actual CustomMolecule with the values held here (may throw)
+        public CustomMolecule GetValidatedCustomMolecule()
+        {
+            return new CustomMolecule(Formula, MonoisotopicMass, AverageMass, Name, AccessionNumbers);
+        }
+
+        public new void Validate() { } // Do nothing - we expect that there may be missing attributes
+    }
+
 }

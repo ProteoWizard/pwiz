@@ -46,6 +46,7 @@ namespace pwiz.SkylineTestFunctional
 
         void TestPasteIRTs()
         {
+            //IsPauseForScreenShots = true; // Uncomment for a convenient informal demo of dynamic small mol columns
             // Check irt paste of small molecule columns (target name, iRT, target formula, CAS)
             var txt =
                 "bar\t2\t2\tC5H9S\t12-34-56\n" + // N.B. These are nonsense values
@@ -63,6 +64,7 @@ namespace pwiz.SkylineTestFunctional
             var peptideSettingsUi = ShowDialog<PeptideSettingsUI>(() => SkylineWindow.ShowPeptideSettingsUI(PeptideSettingsUI.TABS.Prediction));
             var irtCalc = ShowDialog<EditIrtCalcDlg>(peptideSettingsUi.AddCalculator);
             var calibrateDlg = ShowDialog<CalibrateIrtDlg>(irtCalc.Calibrate);
+            PauseForScreenShot("we don't know what to expect from paste, so all small mol columns are made available");
             SetClipboardTextUI(txt);
             RunUI(() => calibrateDlg.PasteCalibration());
             AssertEx.AreEqual(10, calibrateDlg.StandardPeptideCount);
@@ -81,7 +83,7 @@ namespace pwiz.SkylineTestFunctional
                 irtCalc.CalcName = "Nonsense";
                 irtCalc.CreateDatabase(TestFilesDir.GetTestPath("Nonsense.irtdb"));
             });
-// PauseTest(); // Uncomment for a convenient informal demo stopping point
+            PauseForScreenShot("pasted"); 
             OkDialog(irtCalc, irtCalc.OkDialog);
             OkDialog(peptideSettingsUi, peptideSettingsUi.OkDialog);
 
@@ -120,6 +122,7 @@ namespace pwiz.SkylineTestFunctional
             var addStandardsDlg = ShowDialog<AddIrtStandardsDlg>(calibrateDlg.UseResults);
             RunUI(() => addStandardsDlg.StandardCount = 10);
             OkDialog(addStandardsDlg, addStandardsDlg.OkDialog);
+            PauseForScreenShot("this document's molecules only have mass information, show that's all we show");
             RunUI(() => calibrateDlg.StandardName = "Document");
             OkDialog(calibrateDlg, calibrateDlg.OkDialog);
             var addIrtPeptidesDlg = ShowDialog<AddIrtPeptidesDlg>(irtCalc.AddResults);

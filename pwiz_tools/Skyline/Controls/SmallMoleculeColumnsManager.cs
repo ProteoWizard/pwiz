@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
@@ -49,6 +50,14 @@ namespace pwiz.Skyline.Controls
         public SmallMoleculeColumnsManager(DataGridView gridView, TargetResolver targetResolver, SrmDocument.DOCUMENT_TYPE modeUI, bool readOnly, int insertColumnsAt = -1)
         {
             DataGridView = gridView;
+            for (var targetColumnIndex = 0; targetColumnIndex < gridView.ColumnCount; targetColumnIndex++)
+            {
+                if (gridView.Columns[targetColumnIndex] is TargetColumn)
+                {
+                    TargetColumnIndex = targetColumnIndex;
+                    break;
+                }
+            }
             TargetResolver = targetResolver;
             ModeUI = modeUI;
             InsertColumnsAt = insertColumnsAt;
@@ -83,11 +92,12 @@ namespace pwiz.Skyline.Controls
             var formulaHeader = Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Formula;
             var hasFormulaColumn = gridView.Columns.Contains(formulaHeader);
             var addedHeaders = new List<string>();
+            var targetColumn = gridView.Columns[TargetColumnIndex] as TargetColumn;
 
             if (!hasFormulaColumn && smallMoleculeLibraryAttributes.Any(a => !string.IsNullOrEmpty(a.Value.ChemicalFormula)))
             {
                 // Add a column for chemical formula
-                gridView.Columns.Insert(InsertColumnsAt, new DataGridViewTextBoxColumn());
+                gridView.Columns.Insert(InsertColumnsAt, new TargetDetailColumn(targetColumn));
                 FormulaColumnIndex = InsertColumnsAt;
                 var dataGridViewColumn = gridView.Columns[InsertColumnsAt++];
                 dataGridViewColumn.Name = dataGridViewColumn.HeaderText = formulaHeader;
@@ -121,7 +131,7 @@ namespace pwiz.Skyline.Controls
                     if (!hasColumn)
                     {
                         // Add a column for mass
-                        gridView.Columns.Insert(InsertColumnsAt, new DataGridViewTextBoxColumn());
+                        gridView.Columns.Insert(InsertColumnsAt, new TargetDetailColumn(targetColumn));
                         var dataGridViewColumn = gridView.Columns[InsertColumnsAt];
                         var dataGridViewCellStyle = new DataGridViewCellStyle();
                         var format = @"0." + new string('0', CustomMolecule.DEFAULT_ION_MASS_PRECISION); // N.B. the "N" format provides a thousands separator which we don't want
@@ -174,7 +184,7 @@ namespace pwiz.Skyline.Controls
                     smallMoleculeLibraryAttributes.Any(a => a.Value.CreateMoleculeID().AccessionNumbers.Keys.Contains(tag));
                 if (!hasAccessionColumnForTag && hasValueForAccessionTag)
                 {
-                    gridView.Columns.Insert(InsertColumnsAt, new DataGridViewTextBoxColumn());
+                    gridView.Columns.Insert(InsertColumnsAt, new TargetDetailColumn(targetColumn));
                     AccessionColumnIndexes.Add(tag, InsertColumnsAt);
                     var dataGridViewColumn = gridView.Columns[InsertColumnsAt++];
                     dataGridViewColumn.Name = dataGridViewColumn.HeaderText = tag;
@@ -241,6 +251,7 @@ namespace pwiz.Skyline.Controls
         }
 
         private DataGridView DataGridView { get; }
+        public int TargetColumnIndex { get; } // Index of column that shows peptide sequence or molecule name
         private int? FormulaColumnIndex { get; } // Always leftmost of inserted detail columns (when formula is available)
         private int? MonoisotopicMassColumnIndex { get; } // Always leftmost of inserted detail columns (when formula is unavailable)
         private int? AverageMassColumnIndex { get; }  // Always next-to-leftmost of inserted detail columns (when formula is unavailable)
@@ -249,6 +260,11 @@ namespace pwiz.Skyline.Controls
         private bool ReadOnly; // When true, small molecule details are display only (i.e. not for pasting in new lists)
         private SrmDocument.DOCUMENT_TYPE ModeUI;
         private Dictionary<string, int> AccessionColumnIndexes { get; } // Inserted in order of MoleculeAccessionNumbers.PREFERRED_ACCESSION_TYPE_ORDER
+
+        public bool HasSmallMoleculeColumns
+        {
+            get { return FormulaColumnIndex.HasValue || MonoisotopicMassColumnIndex.HasValue || AccessionColumnIndexes != null; }
+        }
 
         /// <summary>
         /// Populate the molecule detail cells for this target in this row
@@ -269,29 +285,34 @@ namespace pwiz.Skyline.Controls
 
         public void UpdateSmallMoleculeDetails(Target target, DataGridViewRow row)
         {
+            void Wipe(int? columnIndex)
+            {
+                if (columnIndex.HasValue && !row.Cells[columnIndex.Value].IsInEditMode)
+                {
+                    row.Cells[columnIndex.Value].Value = string.Empty;
+                }
+            }
+
+            void SetSmallMolDetailText(int? columnIndex, string value)
+            {
+                if (columnIndex.HasValue)
+                {
+                    row.Cells[columnIndex.Value].Value = value ?? string.Empty;
+                }
+            }
+
             if (target == null || target.IsProteomic)
             {
                 // Clear out small molecule detail columns, if any
-                if (FormulaColumnIndex.HasValue)
-                {
-                    row.Cells[FormulaColumnIndex.Value].Value = string.Empty;
-                }
-
-                if (MonoisotopicMassColumnIndex.HasValue)
-                {
-                    row.Cells[MonoisotopicMassColumnIndex.Value].Value = string.Empty;
-                }
-
-                if (AverageMassColumnIndex.HasValue)
-                {
-                    row.Cells[AverageMassColumnIndex.Value].Value = string.Empty;
-                }
+                Wipe(FormulaColumnIndex);
+                Wipe(MonoisotopicMassColumnIndex);
+                Wipe(AverageMassColumnIndex);
 
                 if (AccessionColumnIndexes != null)
                 {
-                    foreach (var col in AccessionColumnIndexes)
+                    foreach (var col in AccessionColumnIndexes.Values)
                     {
-                        row.Cells[col.Value].Value = string.Empty;
+                        Wipe(col);
                     }
                 }
 
@@ -299,53 +320,58 @@ namespace pwiz.Skyline.Controls
             }
 
             var mol = target.Molecule;
-            if (FormulaColumnIndex.HasValue)
-            {
-                row.Cells[FormulaColumnIndex.Value].Value = mol.Formula ?? string.Empty;
-            }
-
-            if (MonoisotopicMassColumnIndex.HasValue)
-            {
-                row.Cells[MonoisotopicMassColumnIndex.Value].Value = string.IsNullOrEmpty(mol.Formula) ? FormatMass(mol.MonoisotopicMass) : string.Empty;
-            }
-
-            if (AverageMassColumnIndex.HasValue)
-            {
-                row.Cells[AverageMassColumnIndex.Value].Value = string.IsNullOrEmpty(mol.Formula) ? FormatMass(mol.AverageMass) : string.Empty;
-            }
+            SetSmallMolDetailText(FormulaColumnIndex, mol.Formula);
+            SetSmallMolDetailText(MonoisotopicMassColumnIndex, string.IsNullOrEmpty(mol.Formula) ? FormatMass(mol.MonoisotopicMass) : string.Empty);
+            SetSmallMolDetailText(AverageMassColumnIndex, string.IsNullOrEmpty(mol.Formula) ? FormatMass(mol.AverageMass) : string.Empty);
 
             var accessionNumbers = mol.AccessionNumbers.AccessionNumbers;
             foreach (var col in AccessionColumnIndexes)
             {
                 if (accessionNumbers.TryGetValue(col.Key, out var value))
                 {
-                    row.Cells[col.Value].Value = value ?? string.Empty;
+                    SetSmallMolDetailText(col.Value, value);
                 }
                 else
                 {
-                    row.Cells[col.Value].Value = string.Empty;
+                    SetSmallMolDetailText(col.Value, string.Empty);
+                }
+            }
+
+            var newTarget = new Target(mol);
+            if (!Equals(newTarget, row.Cells[TargetColumnIndex].Value))
+            {
+                if (row.Cells[TargetColumnIndex].Value is string)
+                {
+                    row.Cells[TargetColumnIndex].Value = newTarget.ToSerializableString();
+                }
+                else
+                {
+                    row.Cells[TargetColumnIndex].Value = newTarget;
                 }
             }
         }
 
         // Get details from an existing line in the grid
-        public Target TryGetSmallMoleculeTargetFromDetails(string name, DataGridViewCellCollection cells, int rowIndex, out string errorMessage)
+        public Target TryGetSmallMoleculeTargetFromDetails(
+            string name, DataGridViewCellCollection cells, int rowIndex, out string errorMessage,
+            bool strict = true) // When true, all necessary fields must be present and correct
         {
             var values = Enumerable.Range(0, cells.Count).Select(i => cells[i]).Select(cell => cell.Value?.ToString()).ToArray();
-            return TryGetSmallMoleculeTargetFromDetails(name, values, 0, rowIndex, out errorMessage);
+            return TryGetSmallMoleculeTargetFromDetails(name, values, 0, rowIndex, out errorMessage, strict);
         }
 
         // Get details from a set of values not yet pasted into the grid, taking hidden columns into account 
         public Target TryGetSmallMoleculeTargetFromDetails(string name, IEnumerable<object> values, int rowIndex,
-            out string errorMessage)
+            out string errorMessage, bool strict = true)
         {
-            return TryGetSmallMoleculeTargetFromDetails(name, values, FormulaColumnShift, rowIndex, out errorMessage);
+            return TryGetSmallMoleculeTargetFromDetails(name, values, FormulaColumnShift, rowIndex, out errorMessage, strict);
         }
 
-        private Target TryGetSmallMoleculeTargetFromDetails(string name, IEnumerable<object> values, int nHiddenColumns, int rowIndex, out string errorMessage)
+        private Target TryGetSmallMoleculeTargetFromDetails(string name, IEnumerable<object> values, int nHiddenColumns, int rowIndex, out string errorMessage,
+            bool strict = true) // When true, fail if we don't have minimum info to describe a molecule
         {
             errorMessage = null;
-            var strings = values.Select(v => v.ToString()).ToArray();
+            var strings = values.Select(v => v?.ToString()).ToArray();
             var formula = FormulaColumnIndex.HasValue && strings.Length > FormulaColumnIndex.Value - nHiddenColumns ?  strings[FormulaColumnIndex.Value - nHiddenColumns] : null;
             var accessionNumbers = new Dictionary<string, string>();
             if (AccessionColumnIndexes != null)
@@ -359,15 +385,27 @@ namespace pwiz.Skyline.Controls
                 }
             }
 
+            var moleculeAccessionNumbers = new MoleculeAccessionNumbers(accessionNumbers);
             if (!string.IsNullOrEmpty(formula))
             {
-                if (string.IsNullOrEmpty(name))
+                if (strict && string.IsNullOrEmpty(name))
                 {
                     errorMessage = string.Format(Resources.SmallMoleculeColumnsManager_TryGetSmallMoleculeTargetFromDetails_Molecule_description_on_line__0__requires_at_least_a_name_and_chemical_formula, rowIndex);
                     return null;
                 }
-                var molecule = new CustomMolecule(formula, name, new MoleculeAccessionNumbers(accessionNumbers));
-                return new Target(molecule);
+                try
+                {
+                    return new Target(new CustomMolecule(formula, name, moleculeAccessionNumbers));
+                }
+                catch (Exception e)
+                {
+                    if (strict)
+                    {
+                        errorMessage = string.Format(Resources.SmallMoleculeColumnsManager_TryGetSmallMoleculeTargetFromDetails_Error_in_molecule_description_on_line__0_____1__, rowIndex, e.Message);
+                        return null;
+                    }
+                    return new Target(new IncompleteCustomMolecule(formula, name, moleculeAccessionNumbers));
+                }
             }
 
             double? averageMass = null;
@@ -389,16 +427,32 @@ namespace pwiz.Skyline.Controls
 
             if (monoisotopicMass.HasValue && averageMass.HasValue)
             {
-                var molecule = new CustomMolecule(
-                    new TypedMass(monoisotopicMass.Value, MassType.Monoisotopic), 
-                    new TypedMass(averageMass.Value, MassType.Average),
-                    name, new MoleculeAccessionNumbers(accessionNumbers));
-                return new Target(molecule);
+                try
+                {
+                    return new Target(new CustomMolecule(
+                        new TypedMass(monoisotopicMass.Value, MassType.Monoisotopic),
+                        new TypedMass(averageMass.Value, MassType.Average),
+                        name, moleculeAccessionNumbers));
+                }
+                catch(Exception e)
+                {
+                    if (strict)
+                    {
+                        errorMessage = string.Format(Resources.SmallMoleculeColumnsManager_TryGetSmallMoleculeTargetFromDetails_Error_in_molecule_description_on_line__0_____1__, rowIndex, e.Message);
+                        return null;
+                    }
+                    return new Target(new IncompleteCustomMolecule(null, monoisotopicMass, averageMass, name, moleculeAccessionNumbers));
+                }
             }
 
             if (accessionNumbers.Any())
             {
                 errorMessage = string.Format(Resources.SmallMoleculeColumnsManager_TryGetSmallMoleculeTargetFromDetails_Molecule_description_on_line__0__requires_at_least_a_name_and_chemical_formula, rowIndex);
+            }
+
+            if (!strict)
+            {
+                return new Target(new IncompleteCustomMolecule(formula, monoisotopicMass, averageMass, name, moleculeAccessionNumbers));
             }
 
             return null;

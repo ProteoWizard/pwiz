@@ -40,7 +40,7 @@ namespace pwiz.Skyline.SettingsUI
             bindingSource.DataSource = items;
         }
 
-        protected DataGridView GridView { get { return _gridView; } }
+        protected DataGridViewEx GridView { get { return _gridView; } }
 
         protected Control MessageParent { get { return FormEx.GetParentForm(GridView); } }
 
