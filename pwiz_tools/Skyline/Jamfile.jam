@@ -154,8 +154,18 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         $(MSVC_CURRENT_SETUP_SCRIPT)
         echo Building SkylineBatch in $(CONFIGURATION:L) configuration...
         msbuild $(SKYLINE_PATH)/Executables/SkylineBatch/SkylineBatch.sln /p:Configuration=$(CONFIGURATION);OutDir=$(OUTPUT_PATH) /t:SkylineBatchTest /nologo /verbosity:minimal
-        IF ERRORLEVEL 1 exit %ERRORLEVEL%
+        set status=%ERRORLEVEL%
+        exit %status%
+    }
 
+    rule do_skyline_batch_test ( targets + : sources * : properties * )
+    {
+        return [ build-properties $(targets) : $(sources) : $(properties) ] ;
+    }
+
+    actions do_skyline_batch_test
+    {
+        $(MSVC_CURRENT_SETUP_SCRIPT)
         echo Unit testing SkylineBatch in $(CONFIGURATION:L) configuration...
         vstest.console.exe $(OUTPUT_PATH)\SkylineBatchTest.dll
         set status=%ERRORLEVEL%
@@ -392,6 +402,19 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
             <conditional>@build-location
             <dependency>Skyline.exe
         ;
+        
+    make SkylineBatchTest
+        : # sources
+        : # actions
+            @do_skyline_batch_test
+        : # requirements
+            <link>shared:<build>no
+            <conditional>@no-express-requirement
+            <conditional>@msvc-dotnet-requirement
+            <conditional>@build-location
+            <dependency>SkylineBatch.exe
+        ;
+    explicit SkylineBatchTest ;
         
     
         

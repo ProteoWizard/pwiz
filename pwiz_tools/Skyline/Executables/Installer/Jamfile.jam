@@ -110,7 +110,7 @@ make setup.exe
         @msbuild_deploy
     : # requirements
         <variant>debug:<build>no # don't make debug installs
-        <dependency>../..//Skyline.exe
+        <dependency>../..//SkylineBatch.exe
         <conditional>@build-location
         <conditional>@msvc-requirement
     ;
