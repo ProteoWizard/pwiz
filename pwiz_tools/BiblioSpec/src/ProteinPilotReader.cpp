@@ -39,7 +39,7 @@
 
 */
 
-#define OLDSKOOLDEBUG Verbosity::debug("at %d", __LINE__);
+#define OLDSKOOLDEBUG Verbosity::debug("%s %d", __func__, __LINE__);
 
 namespace BiblioSpec {
 
@@ -61,20 +61,14 @@ OLDSKOOLDEBUG
     this->setFileName(xmlFileName); // this is done for the saxhandler
 OLDSKOOLDEBUG
     curPSM_ = NULL;
-OLDSKOOLDEBUG
     curSpec_ = NULL;
-OLDSKOOLDEBUG
     lookUpBy_ = NAME_ID;
-OLDSKOOLDEBUG
 
-OLDSKOOLDEBUG
     // point to self as spec reader
 OLDSKOOLDEBUG
     delete specReader_;
 OLDSKOOLDEBUG
     specReader_ = this;
-OLDSKOOLDEBUG
-    OLDSKOOLDEBUG
 OLDSKOOLDEBUG
     initReadAddProgress();
 OLDSKOOLDEBUG
@@ -86,9 +80,7 @@ OLDSKOOLDEBUG
                         // itself
 OLDSKOOLDEBUG
     delete curSpec_;
-OLDSKOOLDEBUG
     // free all spec in map
-OLDSKOOLDEBUG
     map<string, SpecData*>::iterator it;
 OLDSKOOLDEBUG
     for(it = spectrumMap_.begin(); it != spectrumMap_.end(); ++it){
@@ -279,23 +271,16 @@ OLDSKOOLDEBUG
             state_ = ROOT_STATE;
 OLDSKOOLDEBUG
         }
-OLDSKOOLDEBUG
     }
-OLDSKOOLDEBUG
 
-OLDSKOOLDEBUG
     // go back to spectrum state at the end of matches and peaks
-OLDSKOOLDEBUG
     // go back to root state at the end of spectrum
-OLDSKOOLDEBUG
     if (isElement("SPECTRUM", name) ){
-OLDSKOOLDEBUG
         //cerr << "ending spectrum" << endl;
 OLDSKOOLDEBUG
         saveMatch();
 OLDSKOOLDEBUG
         state_ = ROOT_STATE;
-OLDSKOOLDEBUG
 
 OLDSKOOLDEBUG
         int position = getCurrentByteIndex() / 1000ull;
@@ -323,7 +308,6 @@ OLDSKOOLDEBUG
         state_ = SPECTRUM_STATE;
 OLDSKOOLDEBUG
     } 
-OLDSKOOLDEBUG
 }
 void ProteinPilotReader::parseSearchID(const XML_Char** attr){
 OLDSKOOLDEBUG
@@ -340,7 +324,6 @@ OLDSKOOLDEBUG
 }
 void ProteinPilotReader::parseSpectrumElement(const XML_Char** attr)
 {
-OLDSKOOLDEBUG
     // start a new PSM, get id
 OLDSKOOLDEBUG
     curPSM_ = new PSM();
@@ -352,23 +335,17 @@ OLDSKOOLDEBUG
 }
 void ProteinPilotReader::parseMatchElement(const XML_Char** attr)
 {
-OLDSKOOLDEBUG
     // make sure we have a spectrum
 OLDSKOOLDEBUG
     if( curPSM_ == NULL || curPSM_->specName.empty() ){
 OLDSKOOLDEBUG
-
-OLDSKOOLDEBUG
-        throw BlibException(false,
+Verbosity::debug("Cannot find spectrum associated with match %s, sequence %s.", getAttrValue("xml:id", attr), getAttrValue("seq", attr));
+    throw BlibException(false,
                             "Cannot find spectrum associated with match %s, "
                             "sequence %s.", getAttrValue("xml:id", attr),
                             getAttrValue("seq", attr));
     } 
-OLDSKOOLDEBUG
-
-OLDSKOOLDEBUG
     // get confidence and skip if doesn't pass cutoff 
-OLDSKOOLDEBUG
     // or if it is ranked higher than first
 OLDSKOOLDEBUG
     double score = getDoubleRequiredAttrValue("confidence", attr);
@@ -379,11 +356,9 @@ OLDSKOOLDEBUG
 OLDSKOOLDEBUG
         return;
     } 
-OLDSKOOLDEBUG
     // find out what spectrum file this came from
 OLDSKOOLDEBUG
     string searchID = getRequiredAttrValue("searches", attr);
-OLDSKOOLDEBUG
     // create a vector of PSMs for this search/file if not present
 OLDSKOOLDEBUG
     map<string, vector<PSM*> >::iterator mapAccess 
@@ -402,9 +377,6 @@ OLDSKOOLDEBUG
         curSearchPSMs_ = &(mapAccess->second);
 OLDSKOOLDEBUG
     }
-OLDSKOOLDEBUG
-
-OLDSKOOLDEBUG
     // if this not the first match, create a new psm
 OLDSKOOLDEBUG
     if( curPSM_->score != 0 ){
@@ -418,12 +390,9 @@ OLDSKOOLDEBUG
         curPSM_->specName = mapAccess == searchIdPsmMap_.end()
             ? specName
             : (mapAccess->second.back())->specName;
-OLDSKOOLDEBUG
     }
 OLDSKOOLDEBUG
     curPSM_->score = score;
-OLDSKOOLDEBUG
-
 OLDSKOOLDEBUG
     // get charge, m/z, seq
 OLDSKOOLDEBUG
@@ -432,7 +401,6 @@ OLDSKOOLDEBUG
     curPSM_->unmodSeq = getRequiredAttrValue("seq", attr);
 OLDSKOOLDEBUG
     curSpecMz_ = getDoubleRequiredAttrValue("mz", attr);
-OLDSKOOLDEBUG
     //cerr << "keeping match score " << score << endl;
 OLDSKOOLDEBUG
     skipMods_ = false;
@@ -440,22 +408,16 @@ OLDSKOOLDEBUG
     skipNTermMods_ = ( strcmp(getAttrValue("nt", attr), "") == 0) ;
 OLDSKOOLDEBUG
     skipCTermMods_ = ( strcmp(getAttrValue("ct", attr), "") == 0) ;
-OLDSKOOLDEBUG
-    
-OLDSKOOLDEBUG
     // Verbosity::debug("Parsed spectrum %s match %s", curPSM_->specName.c_str(), curPSM_->unmodSeq.c_str());
 OLDSKOOLDEBUG
 }
 void ProteinPilotReader::saveMatch(){
-OLDSKOOLDEBUG
     // if we have a PSM, keep it, if not free the PSM
 OLDSKOOLDEBUG
     if( curPSM_ == NULL ){
 OLDSKOOLDEBUG
         return;
-OLDSKOOLDEBUG
     }
-OLDSKOOLDEBUG
 
 OLDSKOOLDEBUG
     if( curPSM_->unmodSeq.empty() ){
@@ -476,53 +438,44 @@ OLDSKOOLDEBUG
 void ProteinPilotReader::parseMatchModElement(const XML_Char** attr, bool termMod)
 {
 OLDSKOOLDEBUG
-    
-OLDSKOOLDEBUG
     if( skipMods_ ){
 OLDSKOOLDEBUG
         return;
-OLDSKOOLDEBUG
     }
 OLDSKOOLDEBUG
     SeqMod mod;
-OLDSKOOLDEBUG
     // get the position and the name
 OLDSKOOLDEBUG
     mod.position = getIntRequiredAttrValue("pos", attr);
 OLDSKOOLDEBUG
     if (termMod) {
-OLDSKOOLDEBUG
         // Check for internal consistency, since group2xml can
-OLDSKOOLDEBUG
         // sometimes write bogus TERM_MOD_FEATURE tags.
 OLDSKOOLDEBUG
-        if (skipNTermMods_ && mod.position == 1)
-            return;
+        if (skipNTermMods_ && mod.position == 1) {
 OLDSKOOLDEBUG
-        if (skipCTermMods_ && mod.position == strlen(curPSM_->unmodSeq.c_str()))
-            return;
+                return;
+        }
+OLDSKOOLDEBUG
+        if (skipCTermMods_ && mod.position == strlen(curPSM_->unmodSeq.c_str())) {
+            OLDSKOOLDEBUG
+                return;
+        }
 OLDSKOOLDEBUG
     }
 OLDSKOOLDEBUG
     string name = getRequiredAttrValue("mod", attr);
-OLDSKOOLDEBUG
-
-OLDSKOOLDEBUG
     // skip if it is the absence of a modification
 OLDSKOOLDEBUG
     if( name.compare(0, strlen("No "), "No ") == 0 ||
         name.compare(0, strlen("no "), "no ") == 0 ){
-        return;
+OLDSKOOLDEBUG
+            return;
     }
-OLDSKOOLDEBUG
 
-OLDSKOOLDEBUG
     // from the name look up the mass shift
 OLDSKOOLDEBUG
     mod.deltaMass = getModMass(name);
-OLDSKOOLDEBUG
-
-OLDSKOOLDEBUG
     // add the new mod
 OLDSKOOLDEBUG
     curPSM_->mods.push_back(mod);
@@ -534,24 +487,18 @@ OLDSKOOLDEBUG
 OLDSKOOLDEBUG
     if( found == modTable_.end() ){
 OLDSKOOLDEBUG
+Verbosity::debug("PSM has an unrecognized mod, %s.",    name.c_str());
         throw BlibException(false, "PSM has an unrecognized mod, %s.", 
                             name.c_str());
-OLDSKOOLDEBUG
     }
 OLDSKOOLDEBUG
     return modTable_[name];//deltaMass;
-OLDSKOOLDEBUG
 }
 /**
-OLDSKOOLDEBUG
  * Handler for all characters between tags.  We are only interested in
-OLDSKOOLDEBUG
  * the peaks data in the MSMSPEAKS elements and the values for
-OLDSKOOLDEBUG
  * chemical elements and modifications.  Use the state to
-OLDSKOOLDEBUG
  * determine if we are there.
-OLDSKOOLDEBUG
  */
 void ProteinPilotReader::characters(const XML_Char *s, int len){
 OLDSKOOLDEBUG
@@ -563,9 +510,6 @@ OLDSKOOLDEBUG
 OLDSKOOLDEBUG
     if( state_ == PEAKS_STATE && curPSM_ != NULL 
         && !curPSM_->unmodSeq.empty() && len > 0 ){
-OLDSKOOLDEBUG
-
-OLDSKOOLDEBUG
         // copy len characters
 OLDSKOOLDEBUG
         char* buf = new char[len + 1];
@@ -573,27 +517,18 @@ OLDSKOOLDEBUG
         strncpy(buf, s, len);
 OLDSKOOLDEBUG
         buf[len] = '\0';
-OLDSKOOLDEBUG
-
-OLDSKOOLDEBUG
         // add it to the collected peaks
 OLDSKOOLDEBUG
         peaksStr_ += buf;
 OLDSKOOLDEBUG
         delete [] buf;
 OLDSKOOLDEBUG
-
-OLDSKOOLDEBUG
     } else if( state_ == MOD_STATE || state_ == ELEMENT_STATE ){
 OLDSKOOLDEBUG
         for(int i=0; i < len; i++ ){
-OLDSKOOLDEBUG
             nextWord_ += s[i];
-OLDSKOOLDEBUG
         }
-OLDSKOOLDEBUG
     }
-OLDSKOOLDEBUG
 }
 void ProteinPilotReader::saveSpectrum()
 {
@@ -601,19 +536,16 @@ OLDSKOOLDEBUG
     if( peaksStr_.empty() ){
 OLDSKOOLDEBUG
         return;
-OLDSKOOLDEBUG
     }
 OLDSKOOLDEBUG
     if( curPSM_ == NULL ){
 OLDSKOOLDEBUG
+Verbosity::debug("Found MS/MS peaks but no spectrum information.");
         throw BlibException(false, 
                             "Found MS/MS peaks but no spectrum information.");
         // or more to the point, it somehow got deleted 
-OLDSKOOLDEBUG
     }
-OLDSKOOLDEBUG
 
-OLDSKOOLDEBUG
     // translate peaksStr into a vector of peaks
 OLDSKOOLDEBUG
     istringstream peakParser(peaksStr_);
@@ -621,13 +553,14 @@ OLDSKOOLDEBUG
     while( !peakParser.eof() ){
 OLDSKOOLDEBUG
         PEAK_T peak;
-OLDSKOOLDEBUG
         double charge;
 OLDSKOOLDEBUG
         peakParser >> peak.mz >> charge >> peak.intensity;
 OLDSKOOLDEBUG
-        if( peak.mz == 0 && peak.intensity == 0 ){ break; }
+        if( peak.mz == 0 && peak.intensity == 0 ) {
 OLDSKOOLDEBUG
+          break;
+        }
         // peak location is actually M+H if charge > 0;  adjust
 OLDSKOOLDEBUG
         if( charge > 0 ){
@@ -639,30 +572,22 @@ OLDSKOOLDEBUG
         curPeaks_.push_back(peak);
 OLDSKOOLDEBUG
     }
-OLDSKOOLDEBUG
-
-OLDSKOOLDEBUG
     // check that we got the correct number
 OLDSKOOLDEBUG
     if( expectedNumPeaks_ != curPeaks_.size() ){
 OLDSKOOLDEBUG
         Verbosity::comment(V_ALL, "peaksStr is %s", peaksStr_.c_str());
 OLDSKOOLDEBUG
+      Verbosity::debug("Spectrum %s should have %d peaks but d were read.", curPSM_->specName.c_str(),         expectedNumPeaks_, curPeaks_.size());
         throw BlibException(false, "Spectrum %s should have %d peaks but "
                             "%d were read.", curPSM_->specName.c_str(), 
                             expectedNumPeaks_, curPeaks_.size());
     }
-OLDSKOOLDEBUG
-
-OLDSKOOLDEBUG
     // sort them
 OLDSKOOLDEBUG
     sort(curPeaks_.begin(), curPeaks_.end(), PeakProcessor::compPeakMz);
-OLDSKOOLDEBUG
 
-OLDSKOOLDEBUG
     // this is the end of the msmspeaks element
-OLDSKOOLDEBUG
     // create a new spectrum and fill in the data
 OLDSKOOLDEBUG
     SpecData* specD = new SpecData();
@@ -682,20 +607,14 @@ OLDSKOOLDEBUG
         specD->mzs[i] = curPeaks_[i].mz;
 OLDSKOOLDEBUG
         specD->intensities[i] = curPeaks_[i].intensity;
-OLDSKOOLDEBUG
     }
-OLDSKOOLDEBUG
-
-OLDSKOOLDEBUG
     // save it in the hash, keyed by spec name
 OLDSKOOLDEBUG
     spectrumMap_[curPSM_->specName] = specD;
 OLDSKOOLDEBUG
 }
 void ProteinPilotReader::getElementName(){
-OLDSKOOLDEBUG
     // only fill the element table once, even though 
-OLDSKOOLDEBUG
     // there may be multiple copies in the file
 OLDSKOOLDEBUG
     map<string, double>::iterator found = elementTable_.find(nextWord_);
@@ -723,7 +642,6 @@ OLDSKOOLDEBUG
     if( elementTable_[curElement_] == -1 ){
 OLDSKOOLDEBUG
         elementTable_[curElement_] = atof(nextWord_.c_str());
-OLDSKOOLDEBUG
         //cerr << "Element mass is " << elementTable_[curElement_] << endl;
 OLDSKOOLDEBUG
     }
@@ -732,30 +650,25 @@ OLDSKOOLDEBUG
 void ProteinPilotReader::getModName(){
 OLDSKOOLDEBUG
     curMod_.name = nextWord_;
-OLDSKOOLDEBUG
     //cerr << "Mod name is " << curMod_.name << endl;
 OLDSKOOLDEBUG
 }
 //TODO: some elements have multi letter codes (duh)
 // don't store the list of elements, just add up the mass
 void ProteinPilotReader::getModFormula( bool add ){
-OLDSKOOLDEBUG
     //cerr << "formula to " << (add ? "add" : "subtract") << " is " << nextWord_ << endl;
 OLDSKOOLDEBUG
     string element;
 OLDSKOOLDEBUG
     int sign = (add ? 1 : -1);
-OLDSKOOLDEBUG
 
 OLDSKOOLDEBUG
     for(size_t i=0; i < nextWord_.length() ; i++){
 OLDSKOOLDEBUG
         if( nextWord_[i] >= 'A' && nextWord_[i] <= 'Z' ){
-OLDSKOOLDEBUG
             // add the last element we found
 OLDSKOOLDEBUG
             addElement( curMod_.deltaMass, element, sign );
-OLDSKOOLDEBUG
             // set the new element
 OLDSKOOLDEBUG
             element = nextWord_[i];
@@ -777,7 +690,6 @@ OLDSKOOLDEBUG
     }
 OLDSKOOLDEBUG
     // now add the last element (if the formula didn't end with a number
-OLDSKOOLDEBUG
     addElement( curMod_.deltaMass, element, sign );
 OLDSKOOLDEBUG
 }
@@ -786,47 +698,41 @@ OLDSKOOLDEBUG
     if( element.empty() ){
 OLDSKOOLDEBUG
         return;
-OLDSKOOLDEBUG
     }
-OLDSKOOLDEBUG
-
-OLDSKOOLDEBUG
     // look up the element mass
 OLDSKOOLDEBUG
     map<string, double>::iterator found = elementTable_.find(element);
 OLDSKOOLDEBUG
     if( found == elementTable_.end() ){
 OLDSKOOLDEBUG
+      Verbosity::debug("The formula for modification '%s' has an unrecognzied element, %s.", curMod_.name.c_str(), element.c_str());)
         throw BlibException(false, "The formula for modification '%s' has an "
                             "unrecognzied element, %s.", curMod_.name.c_str(),
                             element.c_str());
     }
 OLDSKOOLDEBUG
     // add it
-OLDSKOOLDEBUG
     double newMass = found->second;
 OLDSKOOLDEBUG
     mass += (count * newMass);
 OLDSKOOLDEBUG
 }
 void ProteinPilotReader::addMod(){
-OLDSKOOLDEBUG
     // first check to see if we already have one for this mod
 OLDSKOOLDEBUG
     map<string, double>::iterator found = modTable_.find(curMod_.name);
 OLDSKOOLDEBUG
     if( found != modTable_.end() && //if it was found and has different mass
         found->second != modTable_[curMod_.name] ){
-        throw BlibException(false, "Two entries for a modification named %s,"
+OLDSKOOLDEBUG
+Verbosity::debug("Two entries for a modification named %s, one with delta mass %d and one with %d.",    found->second, modTable_[curMod_.name]);
+            throw BlibException(false, "Two entries for a modification named %s,"
                             "one with delta mass %d and one with %d.",
                             found->second, modTable_[curMod_.name]);
-OLDSKOOLDEBUG
     }
-OLDSKOOLDEBUG
 
 OLDSKOOLDEBUG
     // else add it
-OLDSKOOLDEBUG
     modTable_[curMod_.name] = curMod_.deltaMass;
 OLDSKOOLDEBUG
     curMod_.name.clear();
@@ -841,7 +747,6 @@ bool ProteinPilotReader::getSpectrum(string scanName,
                                      bool getPeaks){
 OLDSKOOLDEBUG
     Verbosity::comment(V_DETAIL, "Looking for spectrum %s", scanName.c_str());
-OLDSKOOLDEBUG
 
 OLDSKOOLDEBUG
     map<string,SpecData*>::iterator found = spectrumMap_.find(scanName);
@@ -849,9 +754,7 @@ OLDSKOOLDEBUG
     if( found == spectrumMap_.end() ){
 OLDSKOOLDEBUG
         return false;
-OLDSKOOLDEBUG
     }
-OLDSKOOLDEBUG
 
 OLDSKOOLDEBUG
     if( ! getPeaks ){
