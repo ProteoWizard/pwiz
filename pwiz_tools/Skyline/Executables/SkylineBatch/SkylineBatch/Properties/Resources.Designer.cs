@@ -561,6 +561,15 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Please enter a name for the configuration..
+        /// </summary>
+        internal static string SkylineBatchConfig_Please_enter_a_name_for_the_configuration_ {
+            get {
+                return ResourceManager.GetString("SkylineBatchConfig_Please_enter_a_name_for_the_configuration_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Open Skyline File.
         /// </summary>
         internal static string SkylineBatchConfigForm_btnSkylineFilePath_Click_Open_Skyline_File {
