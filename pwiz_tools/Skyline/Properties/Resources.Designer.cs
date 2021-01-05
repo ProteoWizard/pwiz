@@ -3055,6 +3055,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Please enter at least {0} standard peptides..
+        /// </summary>
+        public static string CalibrateIrtDlg_OkDialog_Please_enter_at_least__0__standard_peptides_ {
+            get {
+                return ResourceManager.GetString("CalibrateIrtDlg_OkDialog_Please_enter_at_least__0__standard_peptides_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The iRT standard {0} already exists..
         /// </summary>
         public static string CalibrateIrtDlg_OkDialog_The_iRT_standard__0__already_exists_ {
