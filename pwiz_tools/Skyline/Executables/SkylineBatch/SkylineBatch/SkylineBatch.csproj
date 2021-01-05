@@ -115,7 +115,6 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
-    <None Include="SignAfterPublish.bat" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AlertDlg.cs">
@@ -272,7 +271,6 @@
   <Target Name="AfterBuild">
   </Target>
   <Target Name="AfterPublish">
-    <Exec Command="SignAfterPublish.bat &quot;$(ProjectDir)University of Washington (MacCoss Lab).pfx&quot; password &quot;$(ProjectDir)bin\$(ConfigurationName)\app.publish&quot; $(TargetName)" />
   </Target>
   -->
 </Project>
