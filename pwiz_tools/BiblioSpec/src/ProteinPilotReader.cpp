@@ -719,21 +719,22 @@ OLDSKOOLDEBUG
 }
 void ProteinPilotReader::addMod(){
     // first check to see if we already have one for this mod
-OLDSKOOLDEBUG
+Verbosity::debug("checking for existing mod %s with delta mass %d", curMod_.name, curMod_.deltaMass);
     map<string, double>::iterator found = modTable_.find(curMod_.name);
 OLDSKOOLDEBUG
     if( found != modTable_.end() && //if it was found and has different mass
         found->second != modTable_[curMod_.name] ){
 OLDSKOOLDEBUG
-Verbosity::debug("Two entries for a modification named %s, one with delta mass %d and one with %d.",    found->second, modTable_[curMod_.name]);
+Verbosity::debug("Two entries for a modification named %s, one with delta mass %d and one with %d.", curMod_.name,   found->second, modTable_[curMod_.name]);
             throw BlibException(false, "Two entries for a modification named %s,"
                             "one with delta mass %d and one with %d.",
-                            found->second, modTable_[curMod_.name]);
+                curMod_.name, found->second, modTable_[curMod_.name]); // THIS CHANGE MATTERS
     }
 
+// else add it
+Verbosity::debug("adding mod %s with delta mass %d", curMod_.name, curMod_.deltaMass);
 OLDSKOOLDEBUG
-    // else add it
-    modTable_[curMod_.name] = curMod_.deltaMass;
+modTable_[curMod_.name] = curMod_.deltaMass;
 OLDSKOOLDEBUG
     curMod_.name.clear();
 OLDSKOOLDEBUG
