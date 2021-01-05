@@ -24,7 +24,9 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
@@ -415,12 +417,27 @@ namespace pwiz.Skyline.FileUI
                 // There are errors, show them to user
                 var isErrorAll = ReferenceEquals(docNew, _docCurrent);
                 DialogResult response;
-                using (var dlg = new ImportTransitionListErrorDlg(testErrorList, isErrorAll, silentSuccess, MissingEssentialColumns))
+                if (MissingEssentialColumns.Count != 0)
                 {
-                    response = dlg.ShowDialog(this);
+                    // If the transition list is missing essential columns, tell the user in a 
+                    // readable way
+                    string errorMessage = Resources.ImportTransitionListErrorDlg_ImportTransitionListErrorDlg_This_transition_list_cannot_be_imported_as_it_does_not_provide_values_for_;
+                    for (var i = 0; i < MissingEssentialColumns.Count; i++)
+                    {
+                        errorMessage = errorMessage + @" " + MissingEssentialColumns[i];
+                    }
+                    MessageBox.Show(errorMessage);
+                    return true;
                 }
+                else
+                {
+                    using (var dlg = new ImportTransitionListErrorDlg(testErrorList, isErrorAll, silentSuccess))
+                    {
+                        response = dlg.ShowDialog(this);
+                    }
 
-                return response == DialogResult.Cancel; // There are errors, and user does not want to ignore them
+                    return response == DialogResult.Cancel; // There are errors, and user does not want to ignore them
+                }
             }
             else if (!silentSuccess) 
             {
