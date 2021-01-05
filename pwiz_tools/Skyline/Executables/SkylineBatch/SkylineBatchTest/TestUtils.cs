@@ -111,8 +111,15 @@ namespace SkylineBatchTest
         public static string GetTestFilePath(string fileName)
         {
             var currentPath = Directory.GetCurrentDirectory();
-            var batchTestPath = Path.GetDirectoryName(Path.GetDirectoryName(currentPath));
-            return batchTestPath + "\\Test\\" + fileName;
+            if (File.Exists(Path.Combine(currentPath, "SkylineCmd.exe")))
+                currentPath = Path.Combine(currentPath, "..", "..", "..", "Executables", "SkylineBatch", "SkylineBatchTest");
+            else
+                currentPath = Path.Combine(currentPath, "..", "..");
+
+            var batchTestPath = Path.Combine(currentPath, "Test");
+            if (!Directory.Exists(batchTestPath))
+                throw new DirectoryNotFoundException("Unable to find test data directory at: " + batchTestPath);
+            return Path.Combine(batchTestPath, fileName);
         }
 
         public static MainSettings GetTestMainSettings()

@@ -114,11 +114,19 @@
         <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall"/>
         <RegistryValue Root="HKCU" Key="Software\MacCossLabUW\Skyline64" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
       </Component>
+      <Component Id="ApplicationBatchShortcut64">
+        <Shortcut Id="ApplicationBatchMenuShortcut32" Name="$(var.ProductName) Batch" Target="[#SkylineBatch_exe]"/>
+        <RegistryValue Root="HKCU" Key="Software\MacCossLabUW\SkylineBatch64" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
+      </Component>
       <?else?>
       <Component Id="ApplicationShortcut32" Guid="{0FC0030E-EE86-4B41-8A69-FE2EDED596E7}">
         <Shortcut Id="ApplicationMenuShortcut32" Name="$(var.ProductName)" Target="[#Skyline.exe_file]"/>
         <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall" />
         <RegistryValue Root="HKCU" Key="Software\MacCossLabUW\Skyline32" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
+      </Component>
+      <Component Id="ApplicationBatchShortcut32" Guid="{E6F13332-2C6F-4FC2-BCE5-40A8CDE70D94}">
+        <Shortcut Id="ApplicationBatchMenuShortcut32" Name="$(var.ProductName)" Target="[#SkylineBatch_exe]"/>
+        <RegistryValue Root="HKCU" Key="Software\MacCossLabUW\SkylineBatch32" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
       </Component>
       <?endif?>
     </ComponentGroup>
@@ -280,6 +288,9 @@
       </Component>
       <Component Id="Skyline.pdb">
         <File Source="$(var.Skyline.TargetDir)/$(var.Skyline.TargetName).pdb" KeyPath="yes"/>
+      </Component>
+      <Component Id="SkylineBatch.exe">
+        <File Source="$(var.Skyline.TargetDir)/SkylineBatch.exe" KeyPath="yes" Id="SkylineBatch_exe"/>
       </Component>
       <Component Id="SkylineCmd.exe">
         <File Source="$(var.Skyline.TargetDir)/SkylineCmd.exe" KeyPath="yes"/>
