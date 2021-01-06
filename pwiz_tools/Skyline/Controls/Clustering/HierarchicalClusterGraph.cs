@@ -34,19 +34,56 @@ namespace pwiz.Skyline.Controls.Clustering
         private ClusterGraphResults _graphResults;
         private DendrogramScale _rowDendrogramScale;
         private DendrogramScale _columnDendrogramScale;
+        private bool _showSelection = true;
         public HierarchicalClusterGraph()
         {
             InitializeComponent();
             InitializeDendrograms();
-            zedGraphControl1.GraphPane.Title.IsVisible = false;
-            zedGraphControl1.GraphPane.XAxis.Title.IsVisible = false;
-            zedGraphControl1.GraphPane.YAxis.Title.IsVisible = false;
-            zedGraphControl1.GraphPane.Legend.IsVisible = false;
-            zedGraphControl1.GraphPane.Margin.All = 0;
-            zedGraphControl1.GraphPane.Border.IsVisible = false;
+            var graphPane = zedGraphControl1.GraphPane;
+            graphPane.Title.IsVisible = false;
+            graphPane.XAxis.Title.IsVisible = false;
+            graphPane.YAxis.Title.IsVisible = false;
+            graphPane.Legend.IsVisible = false;
+            graphPane.Margin.All = 0;
+            graphPane.Border.IsVisible = false;
+            foreach (var axis in new Axis[] {graphPane.XAxis, graphPane.YAxis, graphPane.X2Axis, graphPane.Y2Axis})
+            {
+                axis.MajorTic.IsInside = false;
+                axis.MinorTic.IsInside = false;
+            }
         }
 
         public SkylineWindow SkylineWindow { get; set; }
+
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+            if (SkylineWindow != null)
+            {
+                SkylineWindow.SequenceTree.AfterSelect += SequenceTree_OnAfterSelect;
+                SkylineWindow.ComboResults.SelectedIndexChanged += ComboResults_OnSelectedIndexChanged;
+            }
+        }
+
+        protected override void OnHandleDestroyed(EventArgs e)
+        {
+            if (SkylineWindow != null)
+            {
+                SkylineWindow.SequenceTree.AfterSelect -= SequenceTree_OnAfterSelect;
+                SkylineWindow.ComboResults.SelectedIndexChanged -= ComboResults_OnSelectedIndexChanged;
+            }
+            base.OnHandleDestroyed(e);
+        }
+        private void ComboResults_OnSelectedIndexChanged(object sender, EventArgs e)
+        {
+            UpdateSelection();
+        }
+
+        private void SequenceTree_OnAfterSelect(object sender, TreeViewEventArgs e)
+        {
+            UpdateSelection();
+        }
+
 
         public ClusterGraphResults GraphResults
         {
@@ -75,7 +112,6 @@ namespace pwiz.Skyline.Controls.Clustering
         public void UpdateGraph()
         {
             zedGraphControl1.GraphPane.CurveList.Clear();
-            zedGraphControl1.GraphPane.GraphObjList.Clear();
 
             var dataSet = GraphResults;
             if (dataSet.ColumnGroups.Count == 1)
@@ -90,20 +126,15 @@ namespace pwiz.Skyline.Controls.Clustering
 
             zedGraphControl1.GraphPane.YAxis.Title.Text =
                 TextUtil.SpaceSeparate(dataSet.RowHeaders.Select(header => header.Caption));
-
             var points = new PointPairList();
             foreach (var point in dataSet.Points)
             {
                 if (point.Color.HasValue)
                 {
-                    var pointPair = new PointPair(point.ColumnIndex + 1, dataSet.RowCount - point.RowIndex)
-                    {
-                        Tag = point.Color
-                    };
+                    var pointPair = MakePointPair(point);
                     points.Add(pointPair);
                 }
             }
-
             zedGraphControl1.GraphPane.CurveList.Add(new ClusteredHeatMapItem(string.Empty, points));
 
             zedGraphControl1.GraphPane.YAxis.Type = AxisType.Text;
@@ -114,10 +145,57 @@ namespace pwiz.Skyline.Controls.Clustering
                 dataSet.ColumnGroups.SelectMany(group => group.Headers.Select(header=>header.Caption)).ToArray();
             AxisLabelScaler scaler = new AxisLabelScaler(zedGraphControl1.GraphPane);
             scaler.ScaleAxisLabels();
+            UpdateSelection();
             zedGraphControl1.AxisChange();
             zedGraphControl1.Invalidate();
 
             UpdateDendrograms();
+        }
+
+        private PointPair MakePointPair(ClusterGraphResults.Point point)
+        {
+            var dataSet = GraphResults;
+            return new PointPair(point.ColumnIndex + 1, dataSet.RowCount - point.RowIndex)
+            {
+                Tag = point.Color
+            };
+        }
+
+        public void UpdateSelection()
+        {
+            if (!ShowSelection)
+            {
+                if (!zedGraphControl1.GraphPane.GraphObjList.Any())
+                {
+                    return;
+                }
+            }
+            var selectedPath = SkylineWindow.SelectedPath;
+            string selectedReplicate = null;
+            if (SkylineWindow.SelectedResultsIndex >= 0)
+            {
+                selectedReplicate = SkylineWindow.DocumentUI.MeasuredResults
+                    ?.Chromatograms[SkylineWindow.SelectedResultsIndex].Name;
+            }
+
+            zedGraphControl1.GraphPane.GraphObjList.Clear();
+            if (ShowSelection)
+            {
+                var selectedPoints = GraphResults.Points.Where(p =>
+                    Equals(p.IdentityPath, selectedPath) && Equals(p.ReplicateName, selectedReplicate)).ToList();
+                foreach (var selectedPoint in selectedPoints)
+                {
+                    var pointPair = MakePointPair(selectedPoint);
+                    var graphObj = new BoxObj(pointPair.X - .5, pointPair.Y + .5, 1, 1, Color.Red, Color.Transparent)
+                    {
+                        IsClippedToChartRect = true,
+                        ZOrder = ZOrder.D_BehindAxis,
+
+                    };
+                    zedGraphControl1.GraphPane.GraphObjList.Add(graphObj);
+                }
+            }
+            zedGraphControl1.Invalidate();
         }
 
         public List<DendrogramFormat> GetUpdatedColumnDendrograms()
@@ -200,16 +278,34 @@ namespace pwiz.Skyline.Controls.Clustering
             }
         }
 
+        public bool ShowSelection
+        {
+            get
+            {
+                return _showSelection;
+            }
+            set
+            {
+                _showSelection = value;
+                UpdateSelection();
+            }
+        }
+
         private void zedGraphControl1_ContextMenuBuilder(ZedGraphControl sender, ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
         {
             ZedGraphHelper.BuildContextMenu(sender, menuStrip, true);
-            menuStrip.Items.Add(new ToolStripMenuItem(Resources.HierarchicalClusterGraph_zedGraphControl1_ContextMenuBuilder_X_Axis_Labels, null, ShowXAxisLabelsOnClick)
+            menuStrip.Items.Insert(0, new ToolStripSeparator());
+            menuStrip.Items.Insert(0, new ToolStripMenuItem(Resources.HierarchicalClusterGraph_zedGraphControl1_ContextMenuBuilder_Y_Axis_Labels, null, ShowYAxisLabelsOnClick)
+            {
+                Checked = ShowYAxisLabels
+            });
+            menuStrip.Items.Insert(0, new ToolStripMenuItem(Resources.HierarchicalClusterGraph_zedGraphControl1_ContextMenuBuilder_X_Axis_Labels, null, ShowXAxisLabelsOnClick)
             {
                 Checked = ShowXAxisLabels
             });
-            menuStrip.Items.Add(new ToolStripMenuItem(Resources.HierarchicalClusterGraph_zedGraphControl1_ContextMenuBuilder_Y_Axis_Labels, null, ShowYAxisLabelsOnClick)
+            menuStrip.Items.Insert(0, new ToolStripMenuItem(Resources.HierarchicalClusterGraph_zedGraphControl1_ContextMenuBuilder_Show_Selection, null, ShowSelectionOnClick)
             {
-                Checked = ShowYAxisLabels
+                Checked = ShowSelection
             });
             var pointObject = PointFromMousePoint(mousePt);
             if (pointObject?.ReplicateName != null || pointObject?.IdentityPath != null)
@@ -227,6 +323,11 @@ namespace pwiz.Skyline.Controls.Clustering
         private void ShowXAxisLabelsOnClick(object sender, EventArgs args)
         {
             ShowXAxisLabels = !ShowXAxisLabels;
+        }
+
+        private void ShowSelectionOnClick(object sender, EventArgs args)
+        {
+            ShowSelection = !ShowSelection;
         }
 
 

@@ -154,5 +154,24 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 .ChangeDefaultLayoutName(viewLayout.Name);
             return viewLayoutList;
         }
+
+        public override void ToggleClustering(BindingListSource bindingListSource, bool turnClusteringOn)
+        {
+            if (Equals(ViewGroup.BUILT_IN.Id, bindingListSource.ViewInfo.ViewGroup.Id))
+            {
+                if (turnClusteringOn && bindingListSource.ViewInfo.ViewSpec.Name == AbstractViewContext.DefaultViewName)
+                {
+                    bindingListSource.SetViewContext(this, GetViewInfo(ViewGroup.BUILT_IN.Id.ViewName(FoldChangeBindingSource.CLUSTERED_VIEW_NAME)));
+                    return;
+                }
+
+                if (!turnClusteringOn && bindingListSource.ViewInfo.ViewSpec.Name ==
+                    FoldChangeBindingSource.CLUSTERED_VIEW_NAME)
+                {
+                    bindingListSource.SetViewContext(this, GetViewInfo(ViewGroup.BUILT_IN.Id.ViewName(AbstractViewContext.DefaultViewName)));
+                }
+            }
+            base.ToggleClustering(bindingListSource, turnClusteringOn);
+        }
     }
 }

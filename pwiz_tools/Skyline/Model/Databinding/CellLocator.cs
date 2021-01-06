@@ -49,7 +49,7 @@ namespace pwiz.Skyline.Model.Databinding
 
         public Replicate GetReplicate(RowItem rowItem)
         {
-            return _replicateValues.GetRowValues(rowItem).OfType<Replicate>().FirstOrDefault();
+            return _replicateValues.GetRowValues(rowItem).OfType<IReplicateValue>().FirstOrDefault()?.GetReplicate();
         }
 
         private static IEnumerable<Type> ListDocNodeTypes()
@@ -68,7 +68,7 @@ namespace pwiz.Skyline.Model.Databinding
         {
             var docNodeValues = ListDocNodeTypes().Select(type => RowItemValues.ForColumn(type, columnHeaders, otherPropertyDescriptors))
                 .Where(v => !v.IsEmpty).ToList();
-            var replicateValue = RowItemValues.ForColumn(typeof(Replicate), columnHeaders, otherPropertyDescriptors);
+            var replicateValue = RowItemValues.ForColumn(typeof(IReplicateValue), columnHeaders, otherPropertyDescriptors);
             return new CellLocator(docNodeValues, replicateValue);
         }
 
@@ -76,7 +76,7 @@ namespace pwiz.Skyline.Model.Databinding
         {
             var docNodeValues = ListDocNodeTypes().Select(type => RowItemValues.FromItemProperties(type, rowHeaders))
                 .Where(v => !v.IsEmpty).ToList();
-            var replicateValue = RowItemValues.FromItemProperties(typeof(Replicate), rowHeaders);
+            var replicateValue = RowItemValues.FromItemProperties(typeof(IReplicateValue), rowHeaders);
             return new CellLocator(docNodeValues, replicateValue);
         }
     }

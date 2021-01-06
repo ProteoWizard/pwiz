@@ -32,7 +32,7 @@ using pwiz.Skyline.Properties;
 namespace pwiz.Skyline.Model.Databinding.Entities
 {
     [AnnotationTarget(AnnotationDef.AnnotationTarget.replicate)]
-    public class Replicate : SkylineObject, ILinkValue, IComparable
+    public class Replicate : SkylineObject, ILinkValue, IComparable, IReplicateValue
     {
         private static readonly ChromatogramSet EMPTY_CHROMATOGRAM_SET = (ChromatogramSet) new ChromatogramSet(
             XmlNamedElement.NAME_INTERNAL, new MsDataFileUri[0]).ChangeName(string.Empty);
@@ -211,6 +211,11 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public override ElementRef GetElementRef()
         {
             return ReplicateRef.PROTOTYPE.ChangeName(ChromatogramSet.Name);
+        }
+
+        Replicate IReplicateValue.GetReplicate()
+        {
+            return this;
         }
     }
 

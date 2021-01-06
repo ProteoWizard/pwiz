@@ -623,30 +623,17 @@ namespace pwiz.Common.DataBinding.Controls
 
         private void navBarButtonCluster_ButtonClick(object sender, EventArgs e)
         {
-            if (null == BindingListSource.ClusteringSpec)
+            if (null != BindingListSource.ClusteringSpec && !BindingListSource.IsComplete &&
+                !(BindingListSource.ReportResults is ClusteredReportResults))
             {
-                BindingListSource.ClusteringSpec = ClusteringSpec.DEFAULT;
+                return;
             }
-            else
-            {
-                if (!BindingListSource.IsComplete && !(BindingListSource.ReportResults is ClusteredReportResults))
-                {
-                    return;
-                }
-                BindingListSource.ClusteringSpec = null;
-            }
+            BindingListSource.ViewContext.ToggleClustering(BindingListSource, BindingListSource.ClusteringSpec == null);
         }
 
         private void navBarButtonClusterGrid_Click(object sender, EventArgs e)
         {
-            if (navBarButtonClusterGrid.Checked)
-            {
-                BindingListSource.ClusteringSpec = null;
-            }
-            else
-            {
-                BindingListSource.ClusteringSpec = ClusteringSpec.DEFAULT;
-            }
+            BindingListSource.ViewContext.ToggleClustering(BindingListSource, !navBarButtonClusterGrid.Checked);
         }
 
         public ToolStripSplitButton ClusterSplitButton

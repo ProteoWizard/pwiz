@@ -142,6 +142,10 @@ namespace pwiz.Common.DataAnalysis.Clustering
         public ClusterResults<TRow, TColumn> ClusterRows()
         {
             int columnCount = DataFrames.Sum(frame => frame.ColumnHeaders.Count);
+            if (columnCount == 0)
+            {
+                return new ClusterResults<TRow, TColumn>(this, null, null);
+            }
             var rowDataSet = new double[RowLabels.Count, columnCount];
             for (int iRow = 0; iRow < RowLabels.Count; iRow++)
             {

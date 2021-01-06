@@ -215,7 +215,7 @@
             // 
             // navBarButtonCluster
             // 
-            this.navBarButtonCluster.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.navBarButtonCluster.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.navBarButtonCluster.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.navBarButtonClusterGrid,
             this.advancedToolStripMenuItem});
