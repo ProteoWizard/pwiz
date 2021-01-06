@@ -179,7 +179,7 @@ namespace pwiz.Skyline.Model.AuditLog
             for (var i = entries.Count; i-- > 0;)
             {
                 result = entries[i].ChangeParent(result);
-                var h = entries[i].Hash;        //ensure that the hash is calculated after the deserialization
+                result.SetHash();        //ensure that the hash is calculated after deserialization
             }
             return result;
         }
@@ -624,13 +624,18 @@ namespace pwiz.Skyline.Model.AuditLog
         {
             get
             {
-                if (_hash == null)
-                    return _hash = new AuditLogHash(this, null);
-                if (_hash.ActualHash == null)
-                    return _hash = new AuditLogHash(this, _hash.SkylHash);
+                SetHash();
                 return _hash;
             }
             private set { _hash = value; }
+        }
+
+        public void SetHash()
+        {
+            if (_hash == null)
+                _hash = new AuditLogHash(this, null);
+            if (_hash.ActualHash == null)
+                _hash = new AuditLogHash(this, _hash.SkylHash);
         }
 
         public bool InsertUndoRedoIntoAllInfo
@@ -1410,7 +1415,8 @@ namespace pwiz.Skyline.Model.AuditLog
                 ? reader.ReadElementString(EL.hash.ToString())
                 : null;
 
-            Hash = new AuditLogHash(this, hash == null? null : AuditLog.Hash.FromBase64(hash));
+            //Don't need to calculate actual hash because the parent is not set yet.
+            Hash = new AuditLogHash(hash == null? null : AuditLog.Hash.FromBase64(hash));
 
             if (hash == null && reader.GetAttribute(ATTR.format_version) != null)
             {
@@ -1553,6 +1559,11 @@ namespace pwiz.Skyline.Model.AuditLog
                 ActualHash = entry.GetAuditLogHash(docFormat.Value);
             else
                 ActualHash = entry.GetAuditLogHash();
+            SkylHash = skylHash;
+        }
+
+        public AuditLogHash(Hash skylHash)
+        {
             SkylHash = skylHash;
         }
 
