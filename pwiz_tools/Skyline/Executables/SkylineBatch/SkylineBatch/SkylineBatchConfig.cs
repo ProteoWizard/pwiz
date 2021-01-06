@@ -34,7 +34,8 @@ namespace SkylineBatch
         // script that will copy the skyline file, import data, export reports, and run r scripts.
 
         
-        public SkylineBatchConfig(string name, DateTime created, DateTime modified, MainSettings mainSettings, ReportSettings reportSettings, SkylineSettings skylineSettings)
+        public SkylineBatchConfig(string name, DateTime created, DateTime modified, MainSettings mainSettings, 
+            FileSettings fileSettings, ReportSettings reportSettings, SkylineSettings skylineSettings)
         {
             if (string.IsNullOrEmpty(name))
             {
@@ -44,6 +45,7 @@ namespace SkylineBatch
             Created = created;
             Modified = modified;
             MainSettings = mainSettings;
+            FileSettings = fileSettings;
             ReportSettings = reportSettings;
             SkylineSettings = skylineSettings;
         }
@@ -55,6 +57,8 @@ namespace SkylineBatch
         public readonly DateTime Modified;
 
         public readonly MainSettings MainSettings;
+
+        public readonly FileSettings FileSettings;
 
         public readonly ReportSettings ReportSettings;
 
@@ -95,6 +99,7 @@ namespace SkylineBatch
             } while (reader.NodeType != XmlNodeType.Element);
 
             MainSettings mainSettings = null;
+            FileSettings fileSettings = null;
             ReportSettings reportSettings = null;
             SkylineSettings skylineSettings = null;
             string exceptionMessage = null;
@@ -105,6 +110,13 @@ namespace SkylineBatch
                 {
                     reader.Read();
                 } while (reader.NodeType != XmlNodeType.Element);
+
+                fileSettings = FileSettings.ReadXml(reader);
+                do
+                {
+                    reader.Read();
+                } while (reader.NodeType != XmlNodeType.Element);
+
                 reportSettings = ReportSettings.ReadXml(reader);
                 do
                 {
@@ -125,7 +137,7 @@ namespace SkylineBatch
             if (exceptionMessage != null)
                 throw new ArgumentException(exceptionMessage);
 
-            return new SkylineBatchConfig(name, created, modified, mainSettings, reportSettings, skylineSettings);
+            return new SkylineBatchConfig(name, created, modified, mainSettings, fileSettings, reportSettings, skylineSettings);
         }
 
         public void WriteXml(XmlWriter writer)
@@ -136,6 +148,7 @@ namespace SkylineBatch
             writer.WriteAttributeIfString(Attr.Created, Created.ToShortDateString() + " " + Created.ToShortTimeString());
             writer.WriteAttributeIfString(Attr.Modified, Modified.ToShortDateString() + " " + Modified.ToShortTimeString());
             MainSettings.WriteXml(writer);
+            FileSettings.WriteXml(writer);
             ReportSettings.WriteXml(writer);
             SkylineSettings.WriteXml(writer);
             writer.WriteEndElement();
@@ -161,6 +174,7 @@ namespace SkylineBatch
             }
 
             MainSettings.Validate();
+            FileSettings.Validate();
             ReportSettings.Validate();
             SkylineSettings.Validate();
         }

@@ -68,6 +68,11 @@
             this.lblConfigRunning = new System.Windows.Forms.Label();
             this.btnOkConfig = new System.Windows.Forms.Button();
             this.imageListToolbarIcons = new System.Windows.Forms.ImageList(this.components);
+            this.tabFile = new System.Windows.Forms.TabPage();
+            this.textRetentionTime = new System.Windows.Forms.TextBox();
+            this.linkLabel1 = new System.Windows.Forms.LinkLabel();
+            this.textResolvingPower = new System.Windows.Forms.TextBox();
+            this.linkLabel2 = new System.Windows.Forms.LinkLabel();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -79,6 +84,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.gridReportSettings)).BeginInit();
             this.tabSkyline.SuspendLayout();
             this.groupBox1.SuspendLayout();
+            this.tabFile.SuspendLayout();
             this.SuspendLayout();
             // 
             // textAnalysisPath
@@ -125,6 +131,7 @@
             // tabsConfig
             // 
             this.tabsConfig.Controls.Add(this.tabSettings);
+            this.tabsConfig.Controls.Add(this.tabFile);
             this.tabsConfig.Controls.Add(this.tabReports);
             this.tabsConfig.Controls.Add(this.tabSkyline);
             resources.ApplyResources(this.tabsConfig, "tabsConfig");
@@ -366,6 +373,38 @@
             this.imageListToolbarIcons.Images.SetKeyName(0, "AddedIcon.ico");
             this.imageListToolbarIcons.Images.SetKeyName(1, "DeletedIcon.ico");
             // 
+            // tabFile
+            // 
+            this.tabFile.BackColor = System.Drawing.Color.WhiteSmoke;
+            this.tabFile.Controls.Add(this.textResolvingPower);
+            this.tabFile.Controls.Add(this.linkLabel2);
+            this.tabFile.Controls.Add(this.textRetentionTime);
+            this.tabFile.Controls.Add(this.linkLabel1);
+            resources.ApplyResources(this.tabFile, "tabFile");
+            this.tabFile.Name = "tabFile";
+            // 
+            // textRetentionTime
+            // 
+            resources.ApplyResources(this.textRetentionTime, "textRetentionTime");
+            this.textRetentionTime.Name = "textRetentionTime";
+            // 
+            // linkLabel1
+            // 
+            resources.ApplyResources(this.linkLabel1, "linkLabel1");
+            this.linkLabel1.Name = "linkLabel1";
+            this.linkLabel1.UseCompatibleTextRendering = true;
+            // 
+            // textResolvingPower
+            // 
+            resources.ApplyResources(this.textResolvingPower, "textResolvingPower");
+            this.textResolvingPower.Name = "textResolvingPower";
+            // 
+            // linkLabel2
+            // 
+            resources.ApplyResources(this.linkLabel2, "linkLabel2");
+            this.linkLabel2.Name = "linkLabel2";
+            this.linkLabel2.UseCompatibleTextRendering = true;
+            // 
             // SkylineBatchConfigForm
             // 
             this.AcceptButton = this.btnSaveConfig;
@@ -393,6 +432,8 @@
             this.tabSkyline.PerformLayout();
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
+            this.tabFile.ResumeLayout(false);
+            this.tabFile.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -437,5 +478,10 @@
         private System.Windows.Forms.RadioButton radioButtonSpecifySkylinePath;
         private System.Windows.Forms.TextBox textSkylineInstallationPath;
         private System.Windows.Forms.TextBox textNamingPattern;
+        private System.Windows.Forms.TabPage tabFile;
+        private System.Windows.Forms.TextBox textResolvingPower;
+        private System.Windows.Forms.LinkLabel linkLabel2;
+        private System.Windows.Forms.TextBox textRetentionTime;
+        private System.Windows.Forms.LinkLabel linkLabel1;
     }
 }

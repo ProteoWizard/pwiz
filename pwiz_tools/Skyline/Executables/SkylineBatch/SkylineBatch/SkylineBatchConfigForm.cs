@@ -96,42 +96,22 @@ namespace SkylineBatch
             if (config == null)
                 return;
 
-            var mainSettings = config.MainSettings;
-
-            textConfigName.Text = config.Name;
-            textAnalysisPath.Text = mainSettings.AnalysisFolderPath;
-            textNamingPattern.Text = mainSettings.ReplicateNamingPattern;
-            InitReportsFromConfig(config);
-
-            if (_action != ConfigAction.Edit)
-            {
-                textConfigName.Text = "";
-                if (_action == ConfigAction.Add)
-                {
-                    textAnalysisPath.Text = Path.GetDirectoryName(mainSettings.AnalysisFolderPath) + @"\";
-                    textNamingPattern.Text = "";
-                }
-            }
-            
-            textSkylinePath.Text = mainSettings.TemplateFilePath;
-            textDataPath.Text = mainSettings.DataFolderPath;
-
+            textConfigName.Text = _action == ConfigAction.Edit ? config.Name : "";
             textConfigName.TextChanged += textConfigName_TextChanged;
 
-            if (!_canEditSkylineSettings) return;
-            
-            radioButtonSkyline.Checked = config.UsesSkyline;
-            radioButtonSkylineDaily.Checked = config.UsesSkylineDaily;
-            radioButtonSpecifySkylinePath.Checked = config.UsesCustomSkylinePath;
-            if (config.UsesCustomSkylinePath)
-            {
-                textSkylineInstallationPath.Text = Path.GetDirectoryName(config.SkylineSettings.CmdPath);
-            }
-            else if (!string.IsNullOrEmpty(Settings.Default.SkylineCustomCmdPath))
-            {
-                textSkylineInstallationPath.Text = Path.GetDirectoryName(Settings.Default.SkylineCustomCmdPath);
-            }
 
+            SetInitialMainSettings(config);
+
+
+            SetInitialFileSettings(config);
+
+
+            InitReportsFromConfig(config);
+
+
+            SetInitialSkylineSettings(config);
+
+          
         }
 
         public void DisableUserInputs(Control parentControl = null)
@@ -155,7 +135,20 @@ namespace SkylineBatch
 
         #region Edit main settings
 
+        private void SetInitialMainSettings(SkylineBatchConfig config)
+        {
+            var mainSettings = config.MainSettings;
+            textAnalysisPath.Text = mainSettings.AnalysisFolderPath;
+            textNamingPattern.Text = mainSettings.ReplicateNamingPattern;
+            if (_action == ConfigAction.Add)
+            {
+                textAnalysisPath.Text = Path.GetDirectoryName(mainSettings.AnalysisFolderPath) + @"\";
+                textNamingPattern.Text = "";
+            }
 
+            textSkylinePath.Text = mainSettings.TemplateFilePath;
+            textDataPath.Text = mainSettings.DataFolderPath;
+        }
 
         private MainSettings GetMainSettingsFromUi()
         {
@@ -212,6 +205,29 @@ namespace SkylineBatch
         }
 
         #endregion
+
+
+        #region File Settings
+
+        private void SetInitialFileSettings(SkylineBatchConfig config)
+        {
+            if (_action == ConfigAction.Add) return;
+
+            if (config.FileSettings.ResolvingPower != null)
+                textResolvingPower.Text = config.FileSettings.ResolvingPower;
+            if (config.FileSettings.RetentionTime != null)
+                textRetentionTime.Text = config.FileSettings.RetentionTime;
+        }
+
+        private FileSettings GetFileSettingsFromUi()
+        {
+            return new FileSettings(textResolvingPower.Text, textRetentionTime.Text);
+        }
+
+        
+
+        #endregion
+
 
 
         #region Reports
@@ -286,6 +302,23 @@ namespace SkylineBatch
 
         #region Skyline Settings
 
+        private void SetInitialSkylineSettings(SkylineBatchConfig config)
+        {
+            if (!_canEditSkylineSettings) return;
+
+            radioButtonSkyline.Checked = config.UsesSkyline;
+            radioButtonSkylineDaily.Checked = config.UsesSkylineDaily;
+            radioButtonSpecifySkylinePath.Checked = config.UsesCustomSkylinePath;
+            if (config.UsesCustomSkylinePath)
+            {
+                textSkylineInstallationPath.Text = Path.GetDirectoryName(config.SkylineSettings.CmdPath);
+            }
+            else if (!string.IsNullOrEmpty(Settings.Default.SkylineCustomCmdPath))
+            {
+                textSkylineInstallationPath.Text = Path.GetDirectoryName(Settings.Default.SkylineCustomCmdPath);
+            }
+        }
+
         private SkylineSettings GetSkylineSettingsFromUi()
         {
             if (!_canEditSkylineSettings)
@@ -335,10 +368,11 @@ namespace SkylineBatch
         {
             var name = textConfigName.Text;
             var mainSettings = GetMainSettingsFromUi();
+            var fileSettings = GetFileSettingsFromUi();
             var reportSettings = new ReportSettings(_newReportList);
             var skylineSettings = GetSkylineSettingsFromUi();
             var created = _action == ConfigAction.Edit ? _initialCreated : DateTime.Now;
-            return new SkylineBatchConfig(name, created, DateTime.Now, mainSettings, reportSettings, skylineSettings);
+            return new SkylineBatchConfig(name, created, DateTime.Now, mainSettings, fileSettings, reportSettings, skylineSettings);
         }
 
         private void Save()

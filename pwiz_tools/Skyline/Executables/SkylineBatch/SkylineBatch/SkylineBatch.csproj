@@ -124,6 +124,7 @@
       <DependentUpon>AlertDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="ConfigManager.cs" />
+    <Compile Include="FileSettings.cs" />
     <Compile Include="FindSkyline.cs">
       <SubType>Form</SubType>
     </Compile>
