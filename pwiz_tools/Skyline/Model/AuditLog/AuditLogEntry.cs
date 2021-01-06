@@ -343,27 +343,32 @@ namespace pwiz.Skyline.Model.AuditLog
             // and get Skyline to successfully load the audit log
 
             // recalculate the hashes for the current document format
-            var hashes = result.AuditLogEntries.Enumerate().Select(e =>
+            var hashes = new List<AuditLogHash>();
+            var entriesWithIncorrectHash = new List<AuditLogEntry>();
+            foreach(var entry in result.AuditLogEntries.Enumerate())
             {
+                AuditLogHash hash;
                 if (DocumentFormat.CURRENT.Equals(docFormat))
-                    return new {Key = e.Hash, Value = e};
+                    hash = entry.Hash;
                 else
-                    return new {Key = new AuditLogHash(e, e.Hash.SkylHash, docFormat), Value = e};
-            }).ToList();
+                    hash = new AuditLogHash(entry, entry.Hash.SkylHash, docFormat);
+                // Identify entries with mismatching hash
+                if (!hash.SkylAndActualHashesEqual())
+                    entriesWithIncorrectHash.Add(entry);
+                hashes.Add(hash);
+            }
 
-            // Identify any entry with mismatching hash
-            var modifiedEntries = hashes.Where(pair => !pair.Key.SkylAndActualHashesEqual()).Select(p => p.Value).ToArray();
             // Calculate the root hash for the doc format specified in the audit log file
             var rootHashForDocumentFormat = new AuditLogHash()
-                .ChangeActualHash(CalculateRootHash(ImmutableList.ValueOf(hashes.Select(h => h.Key))))
+                .ChangeActualHash(CalculateRootHash(ImmutableList.ValueOf(hashes)))
                 .ChangeSkylHash(Hash.FromBase64(rootHashString));
             // Validate the hashes and report any failures
             // If the docFormat is null, this is an old audit log and there won't be any entry hashes.
-            if (docFormat != null && (!rootHashForDocumentFormat.SkylAndActualHashesEqual() || modifiedEntries.Length > 0))
+            if (docFormat != null && (!rootHashForDocumentFormat.SkylAndActualHashesEqual() || entriesWithIncorrectHash.Count> 0))
             {
                 throw new AuditLogException(
                     AuditLogStrings.AuditLogList_ReadFromFile_The_following_audit_log_entries_were_modified +
-                    TextUtil.LineSeparate(modifiedEntries.Select(entry => entry.UndoRedo.ToString())));
+                    TextUtil.LineSeparate(entriesWithIncorrectHash.Select(entry => entry.UndoRedo.ToString())));
             }
 
             reader.ReadEndElement();
