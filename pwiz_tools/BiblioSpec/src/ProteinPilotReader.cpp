@@ -495,8 +495,8 @@ void ProteinPilotReader::addElement(double& mass, string element, int count){
 }
 
 void ProteinPilotReader::initializeMod() {
-            curMod_.name.clear();
-            curMod_.deltaMass = 0;
+    curMod_.name.clear();
+    curMod_.deltaMass = 0;
 }
 
 void ProteinPilotReader::addMod(){
