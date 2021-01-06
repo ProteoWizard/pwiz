@@ -661,14 +661,17 @@ OLDSKOOLDEBUG
     string element;
 OLDSKOOLDEBUG
     int sign = (add ? 1 : -1);
+Verbosity::debug("getModFormula parsing %s", nextWord_);
 
 OLDSKOOLDEBUG
     for(size_t i=0; i < nextWord_.length() ; i++){
 OLDSKOOLDEBUG
         if( nextWord_[i] >= 'A' && nextWord_[i] <= 'Z' ){
             // add the last element we found
-OLDSKOOLDEBUG
+            OLDSKOOLDEBUG
+Verbosity::debug("add %d %s to mod %s with inital deltamass %f", sign, element, curMod_.name, curMod_.deltaMass);
             addElement( curMod_.deltaMass, element, sign );
+Verbosity::debug("resulting deltamass %f", curMod_.deltaMass);
             // set the new element
 OLDSKOOLDEBUG
             element = nextWord_[i];
@@ -679,10 +682,13 @@ OLDSKOOLDEBUG
 OLDSKOOLDEBUG
         } else if( nextWord_[i] > '0' &&nextWord_[i] <= '9' ){
 OLDSKOOLDEBUG
+Verbosity::debug("parse count as atoi of %s", nextWord_.c_str() + i);
             int count = atoi( nextWord_.c_str() + i );
 OLDSKOOLDEBUG
+Verbosity::debug("add %d %s to mod %s with inital deltamass %f", sign*count, element, curMod_.name, curMod_.deltaMass);
             addElement( curMod_.deltaMass, element, sign * count );
-OLDSKOOLDEBUG
+Verbosity::debug("resulting deltamass %f", curMod_.deltaMass);
+            OLDSKOOLDEBUG
             element.clear();
 OLDSKOOLDEBUG
         }
@@ -690,8 +696,10 @@ OLDSKOOLDEBUG
     }
 OLDSKOOLDEBUG
     // now add the last element (if the formula didn't end with a number
-    addElement( curMod_.deltaMass, element, sign );
-OLDSKOOLDEBUG
+Verbosity::debug("add %d %s to mod %s with inital deltamass %f", sign, element, curMod_.name, curMod_.deltaMass);
+  addElement( curMod_.deltaMass, element, sign );
+Verbosity::debug("resulting deltamass %f", curMod_.deltaMass);
+  OLDSKOOLDEBUG
 }
 void ProteinPilotReader::addElement(double& mass, string element, int count){
 OLDSKOOLDEBUG
@@ -719,15 +727,15 @@ OLDSKOOLDEBUG
 }
 void ProteinPilotReader::addMod(){
     // first check to see if we already have one for this mod
-Verbosity::debug("checking for existing mod %s with delta mass %d", curMod_.name, curMod_.deltaMass);
+Verbosity::debug("checking for existing mod %s with delta mass %f", curMod_.name, curMod_.deltaMass);
     map<string, double>::iterator found = modTable_.find(curMod_.name);
 OLDSKOOLDEBUG
     if( found != modTable_.end() && //if it was found and has different mass
         found->second != modTable_[curMod_.name] ){
 OLDSKOOLDEBUG
-Verbosity::debug("Two entries for a modification named %s, one with delta mass %d and one with %d.", curMod_.name,   found->second, modTable_[curMod_.name]);
+Verbosity::debug("Two entries for a modification named %s, one with delta mass %f and one with %f.", curMod_.name,   found->second, modTable_[curMod_.name]);
             throw BlibException(false, "Two entries for a modification named %s,"
-                            "one with delta mass %d and one with %d.",
+                            "one with delta mass %f and one with %f.", // THIS CHANGE MATTERS
                 curMod_.name, found->second, modTable_[curMod_.name]); // THIS CHANGE MATTERS
     }
 
