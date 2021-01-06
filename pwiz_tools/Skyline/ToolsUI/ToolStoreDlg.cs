@@ -388,7 +388,7 @@ namespace pwiz.Skyline.ToolsUI
             string contentDisposition = webClient.ResponseHeaders.Get(@"Content-Disposition");
             // contentDisposition is filename="ToolBasename.zip"
             // ReSharper disable LocalizableElement
-            Match match = Regex.Match(contentDisposition, "^filename=\"(.+)\"$", RegexOptions.IgnoreCase);
+            Match match = Regex.Match(contentDisposition, "^filename=\"(.+)\"$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
             // ReSharper restore LocalizableElement
             string downloadedFile = directory + match.Groups[1].Value;
             File.WriteAllBytes(downloadedFile, toolZip);
