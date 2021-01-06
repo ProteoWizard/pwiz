@@ -161,6 +161,7 @@ namespace pwiz.Skyline.FileUI
                 {
                     // The method is called for every tuplet on the list. Item 1 is the index position and item 2 is the name
                     SetComboBoxText(Settings.Default.CustomImportTransitionListColumnsList[i].Item1, Settings.Default.CustomImportTransitionListColumnsList[i].Item2);
+                    ComboChanged(ComboBoxes[i], new EventArgs());
                 }
             }
             else {
@@ -312,24 +313,16 @@ namespace pwiz.Skyline.FileUI
         private void UpdateColumnsList()
         {
             var ColumnList = new List<Tuple<int, string>>();
-            var columns = Importer.RowReader.Indices;
-            // Adds columns to the list as pairs: the index position and the name
-            ColumnList.Add(new Tuple<int, string>(columns.DecoyColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Decoy));
-            ColumnList.Add(new Tuple<int, string>(columns.IrtColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_iRT));
-            ColumnList.Add(new Tuple<int, string> (columns.LabelTypeColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type));
-            ColumnList.Add(new Tuple<int, string> (columns.LibraryColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Relative_Intensity));
-            ColumnList.Add(new Tuple<int, string> (columns.PeptideColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence));
-            ColumnList.Add(new Tuple<int, string> (columns.PrecursorColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z));
-            ColumnList.Add(new Tuple<int, string> (columns.ProductColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z));
-            ColumnList.Add(new Tuple<int, string> (columns.ProteinColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name));
-            ColumnList.Add(new Tuple<int, string> (columns.FragmentNameColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Fragment_Name));
-            // Commented out for consistency because there is no product charge column yet
-            // ColumnList.Add(new Tuple<int, string> (columns.PrecursorChargeColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge));
+            var numColumns = Importer.RowReader.Lines[0].ParseDsvFields(Importer.Separator).Length;
+            // Adds every column to the list as pairs: the index position and the name
+            for (int i = 0; i < numColumns; i++)
+            {
+                ColumnList.Add(new Tuple<int, string>(i, ComboBoxes[i].Text));
+            }
 
             Settings.Default.CustomImportTransitionListColumnsList = ColumnList;
 
-            Settings.Default.CustomImportTransitionListColumnCount =
-                Importer.RowReader.Lines[0].ParseDsvFields(Importer.Separator).Length;
+            Settings.Default.CustomImportTransitionListColumnCount = numColumns;
         }
         // Saves a list of the current document's headers, if any exist, so that they can be compared to those of the next document
         private void UpdateHeadersList()
