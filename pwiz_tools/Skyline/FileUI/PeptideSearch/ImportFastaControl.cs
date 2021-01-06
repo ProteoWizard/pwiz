@@ -83,9 +83,19 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
         private readonly int tbxFastaHeightDifference;
+        private bool _isDdaSearch;
 
         public bool ContainsFastaContent { get { return !string.IsNullOrWhiteSpace(tbxFasta.Text); } }
-        public bool IsDDASearch { get; set; }
+
+        public bool IsDDASearch
+        {
+            get => _isDdaSearch;
+            set
+            {
+                _isDdaSearch = value;
+                _fastaFile = true;
+            }
+        }
 
         public ImportFastaSettings ImportSettings
         {
@@ -222,12 +232,20 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private void tbxFasta_TextChanged(object sender, EventArgs e)
         {
             ImportFastaHelper.ClearFastaError();
+            if (_fastaFile)
+            {
+                FastaFile = tbxFasta.Text;
+                if (!File.Exists(FastaFile))
+                    ImportFastaHelper.ShowFastaError(Resources.ToolDescription_RunTool_File_not_found_);
+            }
         }
 
         public void SetFastaContent(string fastaFilePath)
         {
             try
             {
+                FastaFile = fastaFilePath;
+
                 var fileInfo = new FileInfo(fastaFilePath);
                 if (IsDDASearch || fileInfo.Length > MAX_FASTA_TEXTBOX_LENGTH)
                 {
@@ -239,8 +257,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     _fastaFile = false;
                     tbxFasta.Text = GetFastaFileContent(fastaFilePath);
                 }
-
-                FastaFile = fastaFilePath;
             }
             catch (Exception x)
             {
@@ -451,8 +467,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private void clearBtn_Click(object sender, EventArgs e)
         {
+            _fastaFile = IsDDASearch;
             tbxFasta.Clear();
-            _fastaFile = false;
         }
 
         private void enzyme_SelectedIndexChanged(object sender, EventArgs e)
