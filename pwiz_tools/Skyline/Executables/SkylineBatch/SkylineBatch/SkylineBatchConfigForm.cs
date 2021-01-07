@@ -118,12 +118,12 @@ namespace SkylineBatch
         {
             if (parentControl == null) parentControl = Controls[0];
 
-            if (parentControl is TextBoxBase)
-                ((TextBoxBase)parentControl).ReadOnly = true;
-            if (parentControl is ButtonBase && parentControl.Text != @"OK")
-                ((ButtonBase)parentControl).Enabled = false;
-            if (parentControl is ToolStrip)
-                ((ToolStrip)parentControl).Enabled = false;
+            if (parentControl is TextBoxBase @base)
+                @base.ReadOnly = true;
+            if (parentControl is ButtonBase buttonBase && buttonBase.Text != @"OK")
+                buttonBase.Enabled = false;
+            if (parentControl is ToolStrip strip)
+                strip.Enabled = false;
 
             foreach (Control control in parentControl.Controls)
             {
