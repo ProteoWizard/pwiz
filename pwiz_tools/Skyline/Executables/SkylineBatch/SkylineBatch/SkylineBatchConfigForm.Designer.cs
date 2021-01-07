@@ -47,6 +47,11 @@
             this.btnAnalysisPath = new System.Windows.Forms.Button();
             this.btnSkylineFilePath = new System.Windows.Forms.Button();
             this.label2 = new System.Windows.Forms.Label();
+            this.tabFile = new System.Windows.Forms.TabPage();
+            this.textResolvingPower = new System.Windows.Forms.TextBox();
+            this.linkLabel2 = new System.Windows.Forms.LinkLabel();
+            this.textRetentionTime = new System.Windows.Forms.TextBox();
+            this.linkLabel1 = new System.Windows.Forms.LinkLabel();
             this.tabReports = new System.Windows.Forms.TabPage();
             this.toolBar = new System.Windows.Forms.ToolStrip();
             this.btnAddReport = new System.Windows.Forms.ToolStripButton();
@@ -68,23 +73,18 @@
             this.lblConfigRunning = new System.Windows.Forms.Label();
             this.btnOkConfig = new System.Windows.Forms.Button();
             this.imageListToolbarIcons = new System.Windows.Forms.ImageList(this.components);
-            this.tabFile = new System.Windows.Forms.TabPage();
-            this.textRetentionTime = new System.Windows.Forms.TextBox();
-            this.linkLabel1 = new System.Windows.Forms.LinkLabel();
-            this.textResolvingPower = new System.Windows.Forms.TextBox();
-            this.linkLabel2 = new System.Windows.Forms.LinkLabel();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
             this.tabsConfig.SuspendLayout();
             this.tabSettings.SuspendLayout();
+            this.tabFile.SuspendLayout();
             this.tabReports.SuspendLayout();
             this.toolBar.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.gridReportSettings)).BeginInit();
             this.tabSkyline.SuspendLayout();
             this.groupBox1.SuspendLayout();
-            this.tabFile.SuspendLayout();
             this.SuspendLayout();
             // 
             // textAnalysisPath
@@ -207,6 +207,38 @@
             // 
             resources.ApplyResources(this.label2, "label2");
             this.label2.Name = "label2";
+            // 
+            // tabFile
+            // 
+            this.tabFile.BackColor = System.Drawing.Color.WhiteSmoke;
+            this.tabFile.Controls.Add(this.textResolvingPower);
+            this.tabFile.Controls.Add(this.linkLabel2);
+            this.tabFile.Controls.Add(this.textRetentionTime);
+            this.tabFile.Controls.Add(this.linkLabel1);
+            resources.ApplyResources(this.tabFile, "tabFile");
+            this.tabFile.Name = "tabFile";
+            // 
+            // textResolvingPower
+            // 
+            resources.ApplyResources(this.textResolvingPower, "textResolvingPower");
+            this.textResolvingPower.Name = "textResolvingPower";
+            // 
+            // linkLabel2
+            // 
+            resources.ApplyResources(this.linkLabel2, "linkLabel2");
+            this.linkLabel2.Name = "linkLabel2";
+            this.linkLabel2.UseCompatibleTextRendering = true;
+            // 
+            // textRetentionTime
+            // 
+            resources.ApplyResources(this.textRetentionTime, "textRetentionTime");
+            this.textRetentionTime.Name = "textRetentionTime";
+            // 
+            // linkLabel1
+            // 
+            resources.ApplyResources(this.linkLabel1, "linkLabel1");
+            this.linkLabel1.Name = "linkLabel1";
+            this.linkLabel1.UseCompatibleTextRendering = true;
             // 
             // tabReports
             // 
@@ -373,38 +405,6 @@
             this.imageListToolbarIcons.Images.SetKeyName(0, "AddedIcon.ico");
             this.imageListToolbarIcons.Images.SetKeyName(1, "DeletedIcon.ico");
             // 
-            // tabFile
-            // 
-            this.tabFile.BackColor = System.Drawing.Color.WhiteSmoke;
-            this.tabFile.Controls.Add(this.textResolvingPower);
-            this.tabFile.Controls.Add(this.linkLabel2);
-            this.tabFile.Controls.Add(this.textRetentionTime);
-            this.tabFile.Controls.Add(this.linkLabel1);
-            resources.ApplyResources(this.tabFile, "tabFile");
-            this.tabFile.Name = "tabFile";
-            // 
-            // textRetentionTime
-            // 
-            resources.ApplyResources(this.textRetentionTime, "textRetentionTime");
-            this.textRetentionTime.Name = "textRetentionTime";
-            // 
-            // linkLabel1
-            // 
-            resources.ApplyResources(this.linkLabel1, "linkLabel1");
-            this.linkLabel1.Name = "linkLabel1";
-            this.linkLabel1.UseCompatibleTextRendering = true;
-            // 
-            // textResolvingPower
-            // 
-            resources.ApplyResources(this.textResolvingPower, "textResolvingPower");
-            this.textResolvingPower.Name = "textResolvingPower";
-            // 
-            // linkLabel2
-            // 
-            resources.ApplyResources(this.linkLabel2, "linkLabel2");
-            this.linkLabel2.Name = "linkLabel2";
-            this.linkLabel2.UseCompatibleTextRendering = true;
-            // 
             // SkylineBatchConfigForm
             // 
             this.AcceptButton = this.btnSaveConfig;
@@ -423,6 +423,8 @@
             this.tabsConfig.ResumeLayout(false);
             this.tabSettings.ResumeLayout(false);
             this.tabSettings.PerformLayout();
+            this.tabFile.ResumeLayout(false);
+            this.tabFile.PerformLayout();
             this.tabReports.ResumeLayout(false);
             this.tabReports.PerformLayout();
             this.toolBar.ResumeLayout(false);
@@ -432,8 +434,6 @@
             this.tabSkyline.PerformLayout();
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
-            this.tabFile.ResumeLayout(false);
-            this.tabFile.PerformLayout();
             this.ResumeLayout(false);
 
         }

@@ -142,8 +142,7 @@ namespace SkylineBatch
                 foreach(var scriptAndVersion in report.RScripts)
                 {
                     var rVersionExe = Settings.Default.RVersions[scriptAndVersion.Item2];
-                    var workingDirectory = Config.MainSettings.AnalysisFolderPath;
-                    scriptCommands.Add(string.Format("\"{0}\" \"{1}\" \"{2}\" 2>&1", rVersionExe, scriptAndVersion.Item1, workingDirectory));
+                    scriptCommands.Add(string.Format("\"{0}\" \"{1}\" \"{2}\" 2>&1", rVersionExe, scriptAndVersion.Item1, newReportPath));
                 }
 
             }
