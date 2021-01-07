@@ -262,7 +262,7 @@
     <value>Bottom, Left</value>
   </data>
   <data name="labelMzNegative.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Microsoft Sans Serif, 7.8pt, style=Italic</value>
+    <value>Microsoft Sans Serif, 7.8pt</value>
   </data>
   <data name="labelMzNegative.Location" type="System.Drawing.Point, System.Drawing">
     <value>121, 183</value>

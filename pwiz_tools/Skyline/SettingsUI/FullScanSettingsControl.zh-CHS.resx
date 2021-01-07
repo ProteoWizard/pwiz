@@ -1171,7 +1171,7 @@
     <value>2</value>
   </data>
   <data name="labelIsolationScheme.Text" xml:space="preserve">
-    <value>隔离方案(&amp;L)：</value>
+    <value>分离方案(&amp;L)：</value>
   </data>
   <data name="&gt;&gt;labelIsolationScheme.Name" xml:space="preserve">
     <value>labelIsolationScheme</value>
