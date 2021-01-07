@@ -326,12 +326,11 @@ namespace pwiz.Skyline.Model.AuditLog
 
             result = reader.DeserializeElement<AuditLogList>();
             result.FormatVersion = docFormat;
-            result.VerifyHashValues();
             if (rootHashString != null)
             {
                 result.RootHash = Hash.FromBase64(rootHashString);
             }
-
+            result.VerifyHashValues();
             if (loggedSkylineDocumentHash != null)
             {
                 result.DocumentHash = Hash.FromBase64(loggedSkylineDocumentHash);
@@ -348,7 +347,7 @@ namespace pwiz.Skyline.Model.AuditLog
                 return;
             }
 
-            var recalculated = RecalculateHashValues(FormatVersion.Value, DocumentHash.HashString);
+            var recalculated = RecalculateHashValues(FormatVersion.Value, DocumentHash?.HashString);
             var entriesWithIncorrectHash = new List<AuditLogEntry>();
             var hashes = new List<Hash>();
             var entries = AuditLogEntries.Enumerate().ToList();
@@ -357,19 +356,24 @@ namespace pwiz.Skyline.Model.AuditLog
             for (int i = 0; i < entries.Count; i++)
             {
                 var entry = entries[i];
-                if (!Equals(entry.Hash.HashString, recalcEntries[i].Hash.HashString))
+                if (!HashesEqual(entry.Hash, recalcEntries[i].Hash))
                 {
                     entriesWithIncorrectHash.Add(entry);
                 }
                 hashes.Add(entry.Hash);
             }
             Hash expectedRootHash = CalculateRootHash(hashes);
-            if (entriesWithIncorrectHash.Count > 0 || !Equals(RootHash?.HashString, expectedRootHash.HashString))
+            if (entriesWithIncorrectHash.Count > 0 || !HashesEqual(RootHash, expectedRootHash))
             {
                 throw new AuditLogException(
                     AuditLogStrings.AuditLogList_ReadFromFile_The_following_audit_log_entries_were_modified +
                     TextUtil.LineSeparate(entriesWithIncorrectHash.Select(entry => entry.UndoRedo.ToString())));
             }
+        }
+
+        public static bool HashesEqual(Hash hash1, Hash hash2)
+        {
+            return (hash1?.HashString ?? string.Empty) == (hash2?.HashString ?? string.Empty);
         }
     }
 
