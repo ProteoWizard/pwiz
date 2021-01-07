@@ -30,6 +30,9 @@
         {
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(SkylineBatchConfigForm));
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.textAnalysisPath = new System.Windows.Forms.TextBox();
             this.textSkylinePath = new System.Windows.Forms.TextBox();
@@ -47,6 +50,9 @@
             this.btnAnalysisPath = new System.Windows.Forms.Button();
             this.btnSkylineFilePath = new System.Windows.Forms.Button();
             this.label2 = new System.Windows.Forms.Label();
+            this.tabFile = new System.Windows.Forms.TabPage();
+            this.textResolvingPower = new System.Windows.Forms.TextBox();
+            this.textRetentionTime = new System.Windows.Forms.TextBox();
             this.tabReports = new System.Windows.Forms.TabPage();
             this.toolBar = new System.Windows.Forms.ToolStrip();
             this.btnAddReport = new System.Windows.Forms.ToolStripButton();
@@ -68,12 +74,17 @@
             this.lblConfigRunning = new System.Windows.Forms.Label();
             this.btnOkConfig = new System.Windows.Forms.Button();
             this.imageListToolbarIcons = new System.Windows.Forms.ImageList(this.components);
+            this.label4 = new System.Windows.Forms.Label();
+            this.label5 = new System.Windows.Forms.Label();
+            this.label6 = new System.Windows.Forms.Label();
+            this.label7 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
             this.tabsConfig.SuspendLayout();
             this.tabSettings.SuspendLayout();
+            this.tabFile.SuspendLayout();
             this.tabReports.SuspendLayout();
             this.toolBar.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.gridReportSettings)).BeginInit();
@@ -125,6 +136,7 @@
             // tabsConfig
             // 
             this.tabsConfig.Controls.Add(this.tabSettings);
+            this.tabsConfig.Controls.Add(this.tabFile);
             this.tabsConfig.Controls.Add(this.tabReports);
             this.tabsConfig.Controls.Add(this.tabSkyline);
             resources.ApplyResources(this.tabsConfig, "tabsConfig");
@@ -201,6 +213,28 @@
             resources.ApplyResources(this.label2, "label2");
             this.label2.Name = "label2";
             // 
+            // tabFile
+            // 
+            this.tabFile.BackColor = System.Drawing.Color.WhiteSmoke;
+            this.tabFile.Controls.Add(this.label7);
+            this.tabFile.Controls.Add(this.label6);
+            this.tabFile.Controls.Add(this.label5);
+            this.tabFile.Controls.Add(this.label4);
+            this.tabFile.Controls.Add(this.textResolvingPower);
+            this.tabFile.Controls.Add(this.textRetentionTime);
+            resources.ApplyResources(this.tabFile, "tabFile");
+            this.tabFile.Name = "tabFile";
+            // 
+            // textResolvingPower
+            // 
+            resources.ApplyResources(this.textResolvingPower, "textResolvingPower");
+            this.textResolvingPower.Name = "textResolvingPower";
+            // 
+            // textRetentionTime
+            // 
+            resources.ApplyResources(this.textRetentionTime, "textRetentionTime");
+            this.textRetentionTime.Name = "textRetentionTime";
+            // 
             // tabReports
             // 
             this.tabReports.BackColor = System.Drawing.Color.WhiteSmoke;
@@ -250,13 +284,37 @@
             resources.ApplyResources(this.gridReportSettings, "gridReportSettings");
             this.gridReportSettings.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
             this.gridReportSettings.AutoSizeRowsMode = System.Windows.Forms.DataGridViewAutoSizeRowsMode.DisplayedCells;
+            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.gridReportSettings.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
             this.gridReportSettings.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.gridReportSettings.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.columnName,
             this.columnPath,
             this.columnScripts});
+            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.gridReportSettings.DefaultCellStyle = dataGridViewCellStyle2;
             this.gridReportSettings.EditMode = System.Windows.Forms.DataGridViewEditMode.EditProgrammatically;
             this.gridReportSettings.Name = "gridReportSettings";
+            dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle3.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle3.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle3.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle3.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.gridReportSettings.RowHeadersDefaultCellStyle = dataGridViewCellStyle3;
             this.gridReportSettings.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.gridReportSettings.TabStop = false;
             this.gridReportSettings.SelectionChanged += new System.EventHandler(this.gridReportSettings_SelectionChanged);
@@ -366,6 +424,26 @@
             this.imageListToolbarIcons.Images.SetKeyName(0, "AddedIcon.ico");
             this.imageListToolbarIcons.Images.SetKeyName(1, "DeletedIcon.ico");
             // 
+            // label4
+            // 
+            resources.ApplyResources(this.label4, "label4");
+            this.label4.Name = "label4";
+            // 
+            // label5
+            // 
+            resources.ApplyResources(this.label5, "label5");
+            this.label5.Name = "label5";
+            // 
+            // label6
+            // 
+            resources.ApplyResources(this.label6, "label6");
+            this.label6.Name = "label6";
+            // 
+            // label7
+            // 
+            resources.ApplyResources(this.label7, "label7");
+            this.label7.Name = "label7";
+            // 
             // SkylineBatchConfigForm
             // 
             this.AcceptButton = this.btnSaveConfig;
@@ -384,6 +462,8 @@
             this.tabsConfig.ResumeLayout(false);
             this.tabSettings.ResumeLayout(false);
             this.tabSettings.PerformLayout();
+            this.tabFile.ResumeLayout(false);
+            this.tabFile.PerformLayout();
             this.tabReports.ResumeLayout(false);
             this.tabReports.PerformLayout();
             this.toolBar.ResumeLayout(false);
@@ -437,5 +517,12 @@
         private System.Windows.Forms.RadioButton radioButtonSpecifySkylinePath;
         private System.Windows.Forms.TextBox textSkylineInstallationPath;
         private System.Windows.Forms.TextBox textNamingPattern;
+        private System.Windows.Forms.TabPage tabFile;
+        private System.Windows.Forms.TextBox textResolvingPower;
+        private System.Windows.Forms.TextBox textRetentionTime;
+        private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.Label label4;
     }
 }

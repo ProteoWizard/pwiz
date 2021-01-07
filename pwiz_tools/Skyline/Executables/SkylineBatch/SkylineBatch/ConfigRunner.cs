@@ -57,7 +57,7 @@ namespace SkylineBatch
             _logger = logger;
         }
         
-        public SkylineBatchConfig Config { get; private set; }
+        public SkylineBatchConfig Config { get; }
 
         public RunnerStatus GetStatus()
         {
@@ -104,14 +104,20 @@ namespace SkylineBatch
 
             var skylineRunner = Config.SkylineSettings.CmdPath;
             var templateFullName = Config.MainSettings.TemplateFilePath;
+            var resolvingPower = Config.FileSettings.ResolvingPower;
+            var retentionTime = Config.FileSettings.RetentionTime;
             var newSkylineFileName = Config.MainSettings.GetNewTemplatePath();
             var dataDir = Config.MainSettings.DataFolderPath;
             var namingPattern = Config.MainSettings.ReplicateNamingPattern;
 
             // STEP 1: open skyline file and save copy to analysis folder
-            var firstStep = string.Format("\"{0}\" --in=\"{1}\" --out=\"{2}\" ‑‑save‑settings", skylineRunner,
-                templateFullName, newSkylineFileName);
-            
+            var firstStep = string.Format("\"{0}\" --in=\"{1}\" ", skylineRunner, templateFullName);
+
+            firstStep += !string.IsNullOrEmpty(resolvingPower) ? string.Format("--full-scan-product-res={0} ", resolvingPower) : "";
+            firstStep += !string.IsNullOrEmpty(retentionTime) ? string.Format("--full-scan-rt-filter-tolerance={0} ", retentionTime) : "";
+
+            firstStep += string.Format("--out=\"{0}\" ‑‑save‑settings", newSkylineFileName);
+
             if (startStep <= 1)
                 commands.Add(firstStep);
 
@@ -136,8 +142,7 @@ namespace SkylineBatch
                 foreach(var scriptAndVersion in report.RScripts)
                 {
                     var rVersionExe = Settings.Default.RVersions[scriptAndVersion.Item2];
-                    var workingDirectory = Config.MainSettings.AnalysisFolderPath;
-                    scriptCommands.Add(string.Format("\"{0}\" \"{1}\" \"{2}\" 2>&1", rVersionExe, scriptAndVersion.Item1, workingDirectory));
+                    scriptCommands.Add(string.Format("\"{0}\" \"{1}\" \"{2}\" 2>&1", rVersionExe, scriptAndVersion.Item1, newReportPath));
                 }
 
             }
