@@ -57,7 +57,7 @@ namespace SkylineBatch
             _logger = logger;
         }
         
-        public SkylineBatchConfig Config { get; private set; }
+        public SkylineBatchConfig Config { get; }
 
         public RunnerStatus GetStatus()
         {

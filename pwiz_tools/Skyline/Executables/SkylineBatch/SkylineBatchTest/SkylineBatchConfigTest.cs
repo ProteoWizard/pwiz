@@ -99,7 +99,7 @@ namespace SkylineBatchTest
                 var validConfig = new SkylineBatchConfig(validName, DateTime.MinValue, DateTime.MinValue, validMainSettings, new FileSettings("", ""), validReportSettings, validSkylineSettings);
                 validConfig.Validate();
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 Assert.Fail("Should have validated valid config");
             }
