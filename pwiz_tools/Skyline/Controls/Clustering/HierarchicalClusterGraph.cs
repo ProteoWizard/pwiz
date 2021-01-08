@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using NHibernate.Criterion;
 using pwiz.Common.Collections;
 using pwiz.Common.Controls.Clustering;
 using pwiz.Skyline.Properties;
@@ -48,11 +49,18 @@ namespace pwiz.Skyline.Controls.Clustering
             graphPane.Legend.IsVisible = false;
             graphPane.Margin.All = 0;
             graphPane.Border.IsVisible = false;
-            foreach (var axis in new Axis[] {graphPane.XAxis, graphPane.YAxis, graphPane.X2Axis, graphPane.Y2Axis})
-            {
-                axis.MajorTic.IsInside = false;
-                axis.MinorTic.IsInside = false;
-            }
+
+            graphPane.XAxis.MinorTic.Size = 0;
+            graphPane.XAxis.MajorTic.IsOpposite = false;
+            graphPane.XAxis.MajorTic.Size = 2;
+            graphPane.YAxis.MinorTic.Size = 0;
+            graphPane.YAxis.MajorTic.IsOpposite = false;
+            graphPane.YAxis.MajorTic.Size = 2;
+
+            graphPane.X2Axis.MinorTic.Size = 0;
+            graphPane.X2Axis.MajorTic.Size = 0;
+            graphPane.Y2Axis.MinorTic.Size = 0;
+            graphPane.Y2Axis.MajorTic.Size = 0;
             _xAxisLabelScaler = new AxisLabelScaler(graphPane, graphPane.XAxis)
             {
                 IsRepeatRemovalAllowed = true
