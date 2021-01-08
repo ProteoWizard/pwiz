@@ -104,6 +104,7 @@ namespace BiblioSpec {
         void saveMatch();
         void saveSpectrum();
         void getElementName();
+        void initializeMod();
         void getElementMass();
         void addElement(double& mass, string element, int count = 1);
         void getModName();

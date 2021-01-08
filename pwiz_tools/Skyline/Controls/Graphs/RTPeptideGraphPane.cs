@@ -131,17 +131,17 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     if (chromInfo.OptimizationStep == 0)
                     {
-                        var retentionTimeValues = ScaleRetentionTimeValues(chromInfo.FileId, RetentionTimeValues.GetValues(chromInfo));
-                        if (!retentionTimeValues.HasValue)
+                        var retentionTimeValues = ScaleRetentionTimeValues(chromInfo.FileId, RetentionTimeValues.FromTransitionGroupChromInfo(chromInfo));
+                        if (retentionTimeValues == null)
                         {
                             continue;
                         }
-                        listTimes.Add(retentionTimeValues.Value.RetentionTime);
-                        listStarts.Add(retentionTimeValues.Value.StartRetentionTime);
-                        listEnds.Add(retentionTimeValues.Value.EndRetentionTime);
-                        if (retentionTimeValues.Value.Fwhm.HasValue)
+                        listTimes.Add(retentionTimeValues.RetentionTime);
+                        listStarts.Add(retentionTimeValues.StartRetentionTime);
+                        listEnds.Add(retentionTimeValues.EndRetentionTime);
+                        if (retentionTimeValues.Fwhm.HasValue)
                         {
-                            listFwhms.Add(retentionTimeValues.Value.Fwhm.Value);
+                            listFwhms.Add(retentionTimeValues.Fwhm.Value);
                         }
                     }
                 }
@@ -151,24 +151,20 @@ namespace pwiz.Skyline.Controls.Graphs
 
             protected override double? GetValue(TransitionGroupChromInfo chromInfo)
             {
-                var retentionTimeValues = RetentionTimeValues.GetValues(chromInfo);
-                if (!retentionTimeValues.HasValue)
-                {
-                    return null;
-                }
-                retentionTimeValues = ScaleRetentionTimeValues(chromInfo.FileId, retentionTimeValues.Value);
-                if (!retentionTimeValues.HasValue)
+                var retentionTimeValues = RetentionTimeValues.FromTransitionGroupChromInfo(chromInfo);
+                retentionTimeValues = ScaleRetentionTimeValues(chromInfo.FileId, retentionTimeValues);
+                if (retentionTimeValues == null)
                 {
                     return null;
                 }
                 switch (RTValue)
                 {
                     case RTPeptideValue.Retention:
-                        return retentionTimeValues.Value.RetentionTime;
+                        return retentionTimeValues.RetentionTime;
                     case RTPeptideValue.FWHM:
-                        return retentionTimeValues.Value.Fwhm;
+                        return retentionTimeValues.Fwhm;
                     case RTPeptideValue.FWB:
-                        return retentionTimeValues.Value.Fwb;
+                        return retentionTimeValues.Fwb;
                 }
                 return null;
             }
@@ -189,13 +185,13 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     if (chromInfo.OptimizationStep == 0 && !chromInfo.IsEmpty)
                     {
-                        var retentionTimeValues = ScaleRetentionTimeValues(chromInfo.FileId, RetentionTimeValues.GetValues(chromInfo));
-                        if (retentionTimeValues.HasValue)
+                        var retentionTimeValues = ScaleRetentionTimeValues(chromInfo.FileId, RetentionTimeValues.FromTransitionChromInfo(chromInfo));
+                        if (retentionTimeValues != null)
                         {
-                            listTimes.Add(retentionTimeValues.Value.RetentionTime);
-                            listStarts.Add(retentionTimeValues.Value.StartRetentionTime);
-                            listEnds.Add(retentionTimeValues.Value.EndRetentionTime);
-                            listFwhms.Add(retentionTimeValues.Value.Fwhm ?? 0);
+                            listTimes.Add(retentionTimeValues.RetentionTime);
+                            listStarts.Add(retentionTimeValues.StartRetentionTime);
+                            listEnds.Add(retentionTimeValues.EndRetentionTime);
+                            listFwhms.Add(retentionTimeValues.Fwhm ?? 0);
                         }
                     }
                 }
@@ -205,19 +201,19 @@ namespace pwiz.Skyline.Controls.Graphs
 
             protected override double GetValue(TransitionChromInfo chromInfo)
             {
-                var retentionTimeValues = ScaleRetentionTimeValues(chromInfo.FileId, RetentionTimeValues.GetValues(chromInfo));
-                if (!retentionTimeValues.HasValue)
+                var retentionTimeValues = ScaleRetentionTimeValues(chromInfo.FileId, RetentionTimeValues.FromTransitionChromInfo(chromInfo));
+                if (retentionTimeValues == null)
                 {
                     return 0;
                 }
                 switch (RTValue)
                 {
                     case RTPeptideValue.Retention:
-                        return retentionTimeValues.Value.RetentionTime;
+                        return retentionTimeValues.RetentionTime;
                     case RTPeptideValue.FWHM:
-                        return retentionTimeValues.Value.Fwhm ?? 0;
+                        return retentionTimeValues.Fwhm ?? 0;
                     case RTPeptideValue.FWB:
-                        return retentionTimeValues.Value.Fwb;
+                        return retentionTimeValues.Fwb;
                 }
                 return 0;
             }

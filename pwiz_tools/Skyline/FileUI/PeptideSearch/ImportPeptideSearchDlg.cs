@@ -300,14 +300,19 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             : this(skylineWindow, libraryManager)
         {
             BuildPepSearchLibControl.ForceWorkflow(workflowType);
-            var ionMobilityControlHeight = FullScanSettingsControl.IonMobilityFiltering.Height + 2*label1.Height; // Might need real estate to ask about using ion mobility data found in imported spectral libraries
-            var adjustedHeight = MinimumSize.Height + ionMobilityControlHeight;
             if (workflowType == Workflow.dda)
             {
-                adjustedHeight -= FullScanSettingsControl.GroupBoxMS2Height; // No MS2 control
+                AdjustHeight(-FullScanSettingsControl.GroupBoxMS2Height); // No MS2 control
             }
-            MinimumSize = new Size(MinimumSize.Width, adjustedHeight);
-            Height = adjustedHeight;
+        }
+
+        public void AdjustHeight(int change)
+        {
+            MinimumSize = new Size(MinimumSize.Width, MinimumSize.Height + change);
+            if (change < 0)
+            {
+                Height += change;
+            }
         }
 
         private SkylineWindow SkylineWindow { get; set; }
@@ -483,7 +488,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         }
 
                         // Set up full scan settings page
-                        FullScanSettingsControl.ModifyOptionsForImportPeptideSearchWizard(WorkflowType, BuildPepSearchLibControl.ImportPeptideSearch.DocLib);
+                        var lib = BuildPepSearchLibControl.ImportPeptideSearch.DocLib;
+                        var libIonMobilities = lib != null && PeptideLibraries.HasIonMobilities(lib, null);
+                        FullScanSettingsControl.ModifyOptionsForImportPeptideSearchWizard(WorkflowType, libIonMobilities);
+                        if (libIonMobilities)
+                        {
+                            AdjustHeight(FullScanSettingsControl.IonMobilityFiltering.Height + 2 * label1.Height); // Need real estate to ask about using ion mobility data found in imported spectral libraries
+                        }
 
                         bool hasMatchedMods = MatchModificationsControl.Initialize(Document);
                         if (!hasMatchedMods && !BuildPepSearchLibControl.PerformDDASearch)
@@ -556,7 +567,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 case Pages.import_fasta_page: // This is the last page (if there is no dda search)
                     if (ImportPeptideSearch.IsDDASearch)
                     {
-                        if (!ImportFastaControl.ContainsFastaContent) 
+                        if (!File.Exists(ImportFastaControl.FastaFile)) 
                         {
                             MessageBox.Show(this, Resources.ImportPeptideSearchDlg_NextPage_FastFileMissing_DDASearch,
                                 Program.Name, MessageBoxButtons.OK);

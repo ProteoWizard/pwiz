@@ -66,7 +66,7 @@ namespace pwiz.SkylineTestFunctional
             foreach (ProteinMetadataManager.ProteinDisplayMode mode in Enum.GetValues(typeof(ProteinMetadataManager.ProteinDisplayMode)))
             {
                 ProteinMetadataManager.ProteinDisplayMode arg = mode;
-                RunUI(() => SkylineWindow.UpdateTargetsDisplayMode(arg)); // This should alter the text displayed by the node in the sequence tree view
+                RunUI(() => SkylineWindow.ViewMenu.UpdateTargetsDisplayMode(arg)); // This should alter the text displayed by the node in the sequence tree view
                 WaitForConditionUI(() =>
                 {
                     var displayText = SkylineWindow.SequenceTree.GetSequenceNodes().First().Text;
@@ -86,18 +86,18 @@ namespace pwiz.SkylineTestFunctional
                 {
                     case ProteinMetadataManager.ProteinDisplayMode.ByName:
                         expectedTopName = "YAL003W";
-                        RunUI(() => SkylineWindow.sortProteinsByNameToolStripMenuItem_Click(null, null));
+                        RunUI(() => SkylineWindow.RefineMenu.sortProteinsByNameToolStripMenuItem_Click(null, null));
                         break;
                     case ProteinMetadataManager.ProteinDisplayMode.ByAccession:
                         expectedTopName = "YFL038C";
-                        RunUI(() => SkylineWindow.sortProteinsByAccessionToolStripMenuItem_Click(null, null));
+                        RunUI(() => SkylineWindow.RefineMenu.sortProteinsByAccessionToolStripMenuItem_Click(null, null));
                         break;
                     case ProteinMetadataManager.ProteinDisplayMode.ByPreferredName:
-                        RunUI(() => SkylineWindow.sortProteinsByPreferredNameToolStripMenuItem_Click(null, null));
+                        RunUI(() => SkylineWindow.RefineMenu.sortProteinsByPreferredNameToolStripMenuItem_Click(null, null));
                         expectedTopName = "YAL016W";
                         break;
                     case ProteinMetadataManager.ProteinDisplayMode.ByGene:
-                        RunUI(() => SkylineWindow.sortProteinsByGeneToolStripMenuItem_Click(null, null));
+                        RunUI(() => SkylineWindow.RefineMenu.sortProteinsByGeneToolStripMenuItem_Click(null, null));
                         expectedTopName = "YGL234W";
                         break;
                 }

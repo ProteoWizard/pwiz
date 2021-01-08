@@ -1260,7 +1260,7 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
   </data>
   <data name="tbxIonRatioThreshold.ToolTip" xml:space="preserve">
     <value>「合格」と考慮される、観測された定性イオン比に許可されるターゲット定性イオン比からのパーセント偏差です。
-定性イオン比は、非定性トランジションピーク面積の和を定量トランジションピーク面積の和で割ったものです。
+定性イオン比は、非定量トランジションピーク面積の和を定量トランジションピーク面積の和で割ったものです。
 ターゲット定性イオン比は、校正から除外されていない外部標準全体での定性イオン比の平均です。</value>
   </data>
   <data name="&gt;&gt;tbxIonRatioThreshold.Name" xml:space="preserve">
