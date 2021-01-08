@@ -178,20 +178,8 @@
   <data name="fillDownToolStripMenuItem.Text" xml:space="preserve">
     <value>Fill Down</value>
   </data>
-  <data name="heatMapContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>180, 22</value>
-  </data>
-  <data name="heatMapContextMenuItem.Text" xml:space="preserve">
-    <value>Heat Map</value>
-  </data>
-  <data name="pCAToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>180, 22</value>
-  </data>
-  <data name="pCAToolStripMenuItem.Text" xml:space="preserve">
-    <value>PCA</value>
-  </data>
   <data name="contextMenuStrip.Size" type="System.Drawing.Size, System.Drawing">
-    <value>181, 264</value>
+    <value>181, 220</value>
   </data>
   <data name="&gt;&gt;contextMenuStrip.Name" xml:space="preserve">
     <value>contextMenuStrip</value>
@@ -310,7 +298,7 @@
     <value>boundDataGridView</value>
   </data>
   <data name="&gt;&gt;boundDataGridView.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.Databinding.BoundDataGridViewEx, Skyline-daily, Version=20.2.1.343, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.Databinding.BoundDataGridViewEx, Skyline-daily, Version=20.2.1.358, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;boundDataGridView.Parent" xml:space="preserve">
     <value>splitContainerHorizontal.Panel2</value>
@@ -490,18 +478,6 @@
     <value>fillDownToolStripMenuItem</value>
   </data>
   <data name="&gt;&gt;fillDownToolStripMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;heatMapContextMenuItem.Name" xml:space="preserve">
-    <value>heatMapContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;heatMapContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;pCAToolStripMenuItem.Name" xml:space="preserve">
-    <value>pCAToolStripMenuItem</value>
-  </data>
-  <data name="&gt;&gt;pCAToolStripMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;bindingListSource.Name" xml:space="preserve">

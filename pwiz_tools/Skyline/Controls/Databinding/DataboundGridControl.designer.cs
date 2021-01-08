@@ -45,8 +45,6 @@
             this.formatToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.fillDownToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.heatMapContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.pCAToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.splitContainerVertical = new System.Windows.Forms.SplitContainer();
             this.rowDendrogram = new pwiz.Common.Controls.Clustering.DendrogramControl();
             this.splitContainerHorizontal = new System.Windows.Forms.SplitContainer();
@@ -80,9 +78,7 @@
             this.toolStripSeparator2,
             this.formatToolStripMenuItem,
             this.toolStripSeparator3,
-            this.fillDownToolStripMenuItem,
-            this.heatMapContextMenuItem,
-            this.pCAToolStripMenuItem});
+            this.fillDownToolStripMenuItem});
             this.contextMenuStrip.Name = "contextMenuStrip";
             resources.ApplyResources(this.contextMenuStrip, "contextMenuStrip");
             this.contextMenuStrip.Opening += new System.ComponentModel.CancelEventHandler(this.contextMenuStrip_Opening);
@@ -149,18 +145,6 @@
             this.fillDownToolStripMenuItem.Name = "fillDownToolStripMenuItem";
             resources.ApplyResources(this.fillDownToolStripMenuItem, "fillDownToolStripMenuItem");
             this.fillDownToolStripMenuItem.Click += new System.EventHandler(this.fillDownToolStripMenuItem_Click);
-            // 
-            // heatMapContextMenuItem
-            // 
-            this.heatMapContextMenuItem.Name = "heatMapContextMenuItem";
-            resources.ApplyResources(this.heatMapContextMenuItem, "heatMapContextMenuItem");
-            this.heatMapContextMenuItem.Click += new System.EventHandler(this.heatMapContextMenuItem_Click);
-            // 
-            // pCAToolStripMenuItem
-            // 
-            this.pCAToolStripMenuItem.Name = "pCAToolStripMenuItem";
-            resources.ApplyResources(this.pCAToolStripMenuItem, "pCAToolStripMenuItem");
-            this.pCAToolStripMenuItem.Click += new System.EventHandler(this.pCAToolStripMenuItem_Click);
             // 
             // splitContainerVertical
             // 
@@ -299,11 +283,9 @@
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
         private System.Windows.Forms.ToolStripMenuItem formatToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
-        private System.Windows.Forms.ToolStripMenuItem heatMapContextMenuItem;
         private System.Windows.Forms.SplitContainer splitContainerVertical;
         private Common.Controls.Clustering.DendrogramControl rowDendrogram;
         private System.Windows.Forms.SplitContainer splitContainerHorizontal;
         private Common.Controls.Clustering.DendrogramControl columnDendrogram;
-        private System.Windows.Forms.ToolStripMenuItem pCAToolStripMenuItem;
     }
 }

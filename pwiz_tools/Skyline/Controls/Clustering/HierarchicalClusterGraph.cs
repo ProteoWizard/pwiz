@@ -23,6 +23,7 @@ using System.Windows.Forms;
 using NHibernate.Criterion;
 using pwiz.Common.Collections;
 using pwiz.Common.Controls.Clustering;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -61,6 +62,11 @@ namespace pwiz.Skyline.Controls.Clustering
             graphPane.X2Axis.MajorTic.Size = 0;
             graphPane.Y2Axis.MinorTic.Size = 0;
             graphPane.Y2Axis.MajorTic.Size = 0;
+
+            graphPane.XAxis.Scale.FontSpec = GraphSummary.CreateFontSpec(Color.Black);
+            graphPane.YAxis.Scale.FontSpec = GraphSummary.CreateFontSpec(Color.Black);
+            graphPane.YAxis.Scale.FontSpec.Angle = 90;
+
             _xAxisLabelScaler = new AxisLabelScaler(graphPane, graphPane.XAxis)
             {
                 IsRepeatRemovalAllowed = true
@@ -202,7 +208,7 @@ namespace pwiz.Skyline.Controls.Clustering
                 foreach (var selectedPoint in selectedPoints)
                 {
                     var pointPair = MakePointPair(selectedPoint);
-                    var graphObj = new BoxObj(pointPair.X - .5, pointPair.Y + .5, 1, 1, Color.Red, Color.Transparent)
+                    var graphObj = new BoxObj(pointPair.X - .5, pointPair.Y + .5, 1, 1, Color.Black, Color.Transparent)
                     {
                         IsClippedToChartRect = true,
                         ZOrder = ZOrder.D_BehindAxis,
