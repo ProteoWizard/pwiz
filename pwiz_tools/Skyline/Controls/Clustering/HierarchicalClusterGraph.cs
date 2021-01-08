@@ -35,6 +35,8 @@ namespace pwiz.Skyline.Controls.Clustering
         private DendrogramScale _rowDendrogramScale;
         private DendrogramScale _columnDendrogramScale;
         private bool _showSelection = true;
+        private AxisLabelScaler _xAxisLabelScaler;
+        private AxisLabelScaler _yAxisLabelScaler;
         public HierarchicalClusterGraph()
         {
             InitializeComponent();
@@ -51,6 +53,14 @@ namespace pwiz.Skyline.Controls.Clustering
                 axis.MajorTic.IsInside = false;
                 axis.MinorTic.IsInside = false;
             }
+            _xAxisLabelScaler = new AxisLabelScaler(graphPane, graphPane.XAxis)
+            {
+                IsRepeatRemovalAllowed = true
+            };
+            _yAxisLabelScaler = new AxisLabelScaler(graphPane, graphPane.YAxis)
+            {
+                IsRepeatRemovalAllowed = true
+            };
         }
 
         public SkylineWindow SkylineWindow { get; set; }
@@ -143,10 +153,8 @@ namespace pwiz.Skyline.Controls.Clustering
             zedGraphControl1.GraphPane.XAxis.Type = AxisType.Text;
             zedGraphControl1.GraphPane.XAxis.Scale.TextLabels =
                 dataSet.ColumnGroups.SelectMany(group => group.Headers.Select(header=>header.Caption)).ToArray();
-            AxisLabelScaler scaler = new AxisLabelScaler(zedGraphControl1.GraphPane);
-            scaler.ScaleAxisLabels();
             UpdateSelection();
-            zedGraphControl1.AxisChange();
+            ScaleAxisLabels();
             zedGraphControl1.Invalidate();
 
             UpdateDendrograms();
@@ -246,8 +254,15 @@ namespace pwiz.Skyline.Controls.Clustering
 
         private void zedGraphControl1_Resize(object sender, EventArgs e)
         {
-            zedGraphControl1.GraphPane.Draw(zedGraphControl1.CreateGraphics());
-            //UpdateDendrograms();
+            ScaleAxisLabels();
+        }
+
+        private void ScaleAxisLabels()
+        {
+            _yAxisLabelScaler.ScaleAxisLabels();
+            zedGraphControl1.AxisChange();
+            _xAxisLabelScaler.ScaleAxisLabels();
+            zedGraphControl1.AxisChange();
         }
 
         public bool ShowXAxisLabels
