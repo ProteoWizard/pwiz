@@ -68,5 +68,7 @@ namespace pwiz.Common.DataBinding
         event Action ViewsChanged;
         DataSchema DataSchema { get; }
         IEnumerable<IUiModeInfo> AvailableUiModes { get; }
+
+        void ToggleClustering(BindingListSource bindingListSource, bool turnClusteringOn);
     }
 }

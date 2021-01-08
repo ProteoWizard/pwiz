@@ -218,7 +218,7 @@ namespace pwiz.Common.DataBinding
             {
                 if (null != pivotKey)
                 {
-                    if (!rowItem.PivotKeys.Contains(pivotKey))
+                    if (!rowItem.ContainsPivotKey(pivotKey))
                     {
                         return null;
                     }

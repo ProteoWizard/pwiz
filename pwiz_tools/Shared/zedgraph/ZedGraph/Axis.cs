@@ -481,6 +481,21 @@ namespace ZedGraph
 		{
 			get { return _scale; }
 		}
+
+		/// <summary>
+		/// Sets the scale to a scale which has already been constructed.
+		/// </summary>
+		/// <remarks>Allows for more flexibility in a ZedGraph Axis.
+		/// </remarks>
+		public void SetScale(Scale scale)
+		{
+            if (!ReferenceEquals(scale._ownerAxis, this))
+            {
+                throw new ArgumentException("Wrong owner");
+            }
+
+            _scale = scale;
+		}
 		/// <summary>
 		/// Gets or sets the scale value at which this axis should cross the "other" axis.
 		/// </summary>

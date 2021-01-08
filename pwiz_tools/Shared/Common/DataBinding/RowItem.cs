@@ -17,50 +17,61 @@
  * limitations under the License.
  */
 using System.Collections.Generic;
+using System.Linq;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.DataBinding
 {
-    public class RowItem
+    public class RowItem : Immutable
     {
-        public RowItem(object value) : this(value, PivotKey.EMPTY, ImmutableList.Empty<PivotKey>())
-        {
-        }
-        public RowItem(object value, PivotKey rowKey, IEnumerable<PivotKey> pivotKeys)
+        private HashSet<PivotKey> _pivotKeys;
+        public RowItem(object value)
         {
             Value = value;
-            RowKey = rowKey;
-            PivotKeys = ImmutableList.ValueOf(pivotKeys);
+            RowKey = PivotKey.EMPTY;
         }
-        protected RowItem(RowItem copy)
-        {
-            Value = copy.Value;
-            RowKey = copy.RowKey;
-            PivotKeys = copy.PivotKeys;
-        }
-
         public PivotKey RowKey { get; private set; }
 
         public RowItem SetRowKey(PivotKey rowKey)
         {
-            return new RowItem(this){RowKey = rowKey};
+            return ChangeProp(ImClone(this), im => im.RowKey = rowKey);
         }
 
         public object Value { get; private set; }
 
-        public RowItem SetValue(object value)
+        public IEnumerable<PivotKey> PivotKeys
         {
-            return new RowItem(this) {Value = value};
+            get
+            {
+                return _pivotKeys?.AsEnumerable() ?? ImmutableList.Empty<PivotKey>();
+            }
         }
-        public ICollection<PivotKey> PivotKeys { get; private set; }
+
+        public int PivotKeyCount
+        {
+            get { return _pivotKeys?.Count ?? 0; }
+        }
+
+        public bool ContainsPivotKey(PivotKey pivotKey)
+        {
+            if (_pivotKeys == null)
+            {
+                return false;
+            }
+
+            return _pivotKeys.Contains(pivotKey);
+        }
+
         public RowItem SetPivotKeys(IEnumerable<PivotKey> pivotKeys)
         {
-            var newPivotKeys = ImmutableList.ValueOf(pivotKeys);
-            if (newPivotKeys.Count == 0 && PivotKeys.Count == 0)
+            var newPivotKeys = pivotKeys.ToHashSet();
+            if (newPivotKeys.Count == 0 && _pivotKeys == null)
             {
                 return this;
             }
-            return new RowItem(this) { PivotKeys = newPivotKeys };
+
+            return ChangeProp(ImClone(this), im => im._pivotKeys = newPivotKeys.Count == 0 ? null : newPivotKeys);
         }
     }
 }

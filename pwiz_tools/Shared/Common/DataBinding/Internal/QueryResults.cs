@@ -19,6 +19,7 @@
 
 using System.Collections.Generic;
 using pwiz.Common.Collections;
+using pwiz.Common.DataBinding.Clustering;
 using pwiz.Common.DataBinding.Layout;
 using pwiz.Common.SystemUtil;
 
@@ -44,7 +45,7 @@ namespace pwiz.Common.DataBinding.Internal
             return result;
         }
 
-        public ImmutableList<DataPropertyDescriptor> ItemProperties
+        public ItemProperties ItemProperties
         {
             get { return (TransformResults ?? TransformResults.EMPTY).PivotedRows.ItemProperties; }
         }
@@ -87,7 +88,7 @@ namespace pwiz.Common.DataBinding.Internal
         }
     }
 
-    internal class QueryParameters
+    internal class QueryParameters : Immutable
     {
         public static readonly QueryParameters Empty = new QueryParameters();
         private QueryParameters()
@@ -95,29 +96,21 @@ namespace pwiz.Common.DataBinding.Internal
             ViewInfo = null;
             TransformStack = TransformStack.EMPTY;
         }
-
-        public QueryParameters(QueryParameters that)
-        {
-            ViewInfo = that.ViewInfo;
-            TransformStack = that.TransformStack;
-        }
         public ViewInfo ViewInfo { get; private set;}
-        public QueryParameters SetViewInfo(ViewInfo value)
+        public QueryParameters ChangeViewInfo(ViewInfo value)
         {
-            return new QueryParameters(this) {ViewInfo = value};
+            return ChangeProp(ImClone(this), im => im.ViewInfo = value);
         }
         public TransformStack TransformStack { get; private set; }
-        public QueryParameters SetTransformStack(TransformStack value)
+        public QueryParameters ChangeTransformStack(TransformStack value)
         {
-            return new QueryParameters(this) { TransformStack = value };
+            return ChangeProp(ImClone(this), im => im.TransformStack = value);
         }
-        public bool QueryValid(QueryParameters that)
+        public ClusteringSpec ClusteringSpec { get; private set; }
+
+        public QueryParameters ChangeIsClusteringRequested(ClusteringSpec clusteringSpec)
         {
-            return ReferenceEquals(ViewInfo, that.ViewInfo);
-        }
-        public bool FilterValid(QueryParameters that)
-        {
-            return QueryValid(that) && Equals(TransformStack, that.TransformStack);
+            return ChangeProp(ImClone(this), im => im.ClusteringSpec = clusteringSpec);
         }
     }
 }
