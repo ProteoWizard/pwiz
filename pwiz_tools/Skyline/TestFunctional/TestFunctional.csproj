@@ -175,6 +175,7 @@
     <Compile Include="MetadataRuleTest.cs" />
     <Compile Include="ModificationPermuterTest.cs" />
     <Compile Include="MultiSampleImportPeakBoundariesTest.cs" />
+    <Compile Include="NoQuantitativeTransitionsTest.cs" />
     <Compile Include="NormalizeToCalibrationCurveTest.cs" />
     <Compile Include="PeptideSettingsTooltipTest.cs" />
     <Compile Include="ProxlTest.cs" />
@@ -184,6 +185,7 @@
     <Compile Include="RescoreRawChromatogramsTest.cs" />
     <Compile Include="SettingsChangeReimportTest.cs" />
     <Compile Include="SimpleRatiosTest.cs" />
+    <Compile Include="SkylineMenuTest.cs" />
     <Compile Include="SkypTest.cs" />
     <Compile Include="AddLibraryTest.cs" />
     <Compile Include="AreaCVHistogramTest.cs" />
@@ -483,6 +485,7 @@
     <None Include="MultiSelectRetentionTimeTest.zip" />
     <None Include="NegativeIonChromatogramsTest.zip" />
     <None Include="NeutralLossLibraryTest.zip" />
+    <None Include="NoQuantitativeTransitionsTest.zip" />
     <None Include="OptimizeTest.zip" />
     <None Include="OrderByReplicateAnnotationTest.zip" />
     <None Include="PasteMoleculeTest.zip" />

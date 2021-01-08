@@ -118,6 +118,7 @@ bool SAXHandler::parse()
     }
     catch(BlibException e) { // probably from BuildParser
         if( e.hasFilename() ){
+            Verbosity::debug(e.what());
             throw e;
         } else {
             message = e.what();
@@ -131,6 +132,7 @@ bool SAXHandler::parse()
 
     if (!success) {
         string error = generateError(message.empty() ? getParserError() : message);
+        Verbosity::debug(error.c_str());
         throw BlibException(true, error.c_str());
     }
     
