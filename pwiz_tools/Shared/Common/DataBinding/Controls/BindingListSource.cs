@@ -23,7 +23,7 @@ using System.Linq;
 using System.ComponentModel;
 using System.Threading;
 using System.Windows.Forms;
-using pwiz.Common.Collections;
+using pwiz.Common.DataBinding.Clustering;
 using pwiz.Common.DataBinding.Internal;
 using pwiz.Common.DataBinding.Layout;
 
@@ -206,11 +206,32 @@ namespace pwiz.Common.DataBinding.Controls
             get; private set;
         }
 
-        public ImmutableList<DataPropertyDescriptor> ItemProperties { get { return BindingListView.ItemProperties; } }
+        public ItemProperties ItemProperties { get { return BindingListView.ItemProperties; } }
 
         public DataPropertyDescriptor FindDataProperty(string dataPropertyName)
         {
-            return BindingListView.FindDataProperty(dataPropertyName);
+            int index = BindingListView.ItemProperties.IndexOfName(dataPropertyName);
+            if (index < 0)
+            {
+                return null;
+            }
+
+            return ItemProperties[index];
+        }
+
+        public ReportResults ReportResults
+        {
+            get { return BindingListView.ReportResults; }
+        }
+
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public ClusteringSpec ClusteringSpec
+        {
+            get { return BindingListView.ClusteringSpec; }
+            set
+            {
+                BindingListView.ClusteringSpec = value;
+            }
         }
 
         public void ApplyLayout(ViewLayout viewLayout)
@@ -220,7 +241,7 @@ namespace pwiz.Common.DataBinding.Controls
             {
                 ColumnFormats.SetFormat(format.Item1, format.Item2);
             }
-            // TODO: sort
+            ClusteringSpec = viewLayout.ClusterSpec;
         }
 
         public INewRowHandler NewRowHandler
