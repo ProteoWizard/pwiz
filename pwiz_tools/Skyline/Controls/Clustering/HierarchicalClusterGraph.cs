@@ -20,7 +20,6 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
-using NHibernate.Criterion;
 using pwiz.Common.Collections;
 using pwiz.Common.Controls.Clustering;
 using pwiz.Skyline.Controls.Graphs;
