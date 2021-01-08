@@ -50,11 +50,15 @@ namespace SkylineTester
                 int pauseSeconds = -1;
                 if (MainWindow.ModeTutorialsCoverShots.Checked)
                     pauseSeconds = -2; // Magic number that tells TestRunner to grab tutorial cover shot then move on to next test
-                else if (!MainWindow.PauseTutorialsScreenShots.Checked &&
-                         !Int32.TryParse(MainWindow.PauseTutorialsSeconds.Text, out pauseSeconds))
+                else if (MainWindow.PauseTutorialsScreenShots.Checked)
+                {
+                    int startPage;
+                    if (Int32.TryParse(MainWindow.PauseStartPage.Text, out startPage) && startPage > 1)
+                        args.Append(" startpage=").Append(startPage);
+                }
+                else if (!Int32.TryParse(MainWindow.PauseTutorialsSeconds.Text, out pauseSeconds))
                     pauseSeconds = 0;
-                args.Append(" pause=");
-                args.Append(pauseSeconds);
+                args.Append(" pause=").Append(pauseSeconds);
             }
             args.Append(" screenshotlist=\"");
             args.Append(Path.Combine(MainWindow.RootDir, "ScreenShotForms.txt"));

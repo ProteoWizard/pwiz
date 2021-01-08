@@ -1438,6 +1438,7 @@ namespace SkylineTester
         public CheckBox         Pass0                       { get { return pass0; } }
         public CheckBox         Pass1                       { get { return pass1; } }
         public RadioButton      ModeTutorialsCoverShots   { get { return modeTutorialsCoverShots; } }
+        public TextBox          PauseStartPage              { get { return pauseStartPage; } }
         public RadioButton      PauseTutorialsScreenShots   { get { return pauseTutorialsScreenShots; } }
         public NumericUpDown    PauseTutorialsSeconds       { get { return pauseTutorialsSeconds; } }
         public RadioButton      QualityChooseTests          { get { return qualityChooseTests; } }
