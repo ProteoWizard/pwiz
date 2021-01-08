@@ -44,7 +44,7 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     local v = $(SKYLINE_YEAR) $(SKYLINE_ORDINAL) $(SKYLINE_BRANCH) $(SKYLINE_DOY) ;
     constant SKYLINE_VERSION : $(v:J=) ;
 
-    if --skyline-release in [ modules.peek : ARGV ]
+    if $(SKYLINE_BRANCH) = 0
     {
         constant SKYLINE_TARGETNAME : "Skyline" ;
     }
