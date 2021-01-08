@@ -707,6 +707,20 @@
                             <xs:attribute name="caseSensitive" type="xs:boolean"/>
                           </xs:complexType>
                         </xs:element>
+                        <xs:element name="cluster">
+                          <xs:complexType>
+                            <xs:sequence>
+                              <xs:element name="value" minOccurs="0" maxOccurs="unbounded">
+                                <xs:complexType>
+                                  <xs:attribute name="column_id" type="xs:string" />
+                                  <xs:attribute name="property_path" type="xs:string" />
+                                  <xs:attribute name="role" type="xs:string" />
+                                </xs:complexType>
+                              </xs:element>
+                            </xs:sequence>
+                            <xs:attribute name="distance_metric" type="xs:string"/>
+                          </xs:complexType>
+                        </xs:element>
                       </xs:choice>
                       <xs:attribute name="name" type="xs:string"/>
                     </xs:complexType>

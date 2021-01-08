@@ -4307,6 +4307,31 @@ namespace pwiz.Skyline
             }
         }
 
+        public void SelectPathAndReplicate(IdentityPath identityPath, string replicateName)
+        {
+            if (identityPath != null)
+            {
+                try
+                {
+                    SelectedPath = identityPath;
+                }
+                catch (IdentityNotFoundException)
+                {
+                }
+            }
+
+            if (replicateName != null)
+            {
+                int resultsIndex = (DocumentUI.Settings.MeasuredResults?.Chromatograms.IndexOf(r => r.Name == replicateName))
+                    .GetValueOrDefault(-1);
+                if (resultsIndex >= 0)
+                {
+                    SelectedResultsIndex = resultsIndex;
+                }
+            }
+            
+        }
+
         public sealed override void SetUIMode(SrmDocument.DOCUMENT_TYPE mode)
         {
             base.SetUIMode(mode);
