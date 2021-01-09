@@ -29,6 +29,7 @@ using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding.Attributes;
+using pwiz.Common.DataBinding.Clustering;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Common.DataBinding.Layout;
@@ -682,6 +683,23 @@ namespace pwiz.Common.DataBinding
         public virtual IEnumerable<IUiModeInfo> AvailableUiModes
         {
             get { yield break; }
+        }
+
+        public virtual void ToggleClustering(BindingListSource bindingListSource, bool turnClusteringOn)
+        {
+            if (null == bindingListSource.ClusteringSpec)
+            {
+                bindingListSource.ClusteringSpec = ClusteringSpec.DEFAULT;
+            }
+            else
+            {
+                if (!bindingListSource.IsComplete && !(bindingListSource.ReportResults is ClusteredReportResults))
+                {
+                    return;
+                }
+                bindingListSource.ClusteringSpec = null;
+            }
+
         }
 
         // Default implementation of ViewsChanged which never fires.

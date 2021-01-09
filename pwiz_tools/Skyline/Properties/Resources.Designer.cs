@@ -7889,6 +7889,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Show Heat Map.
+        /// </summary>
+        public static string DataboundGridControl_DataboundGridControl_Show_Heat_Map {
+            get {
+                return ResourceManager.GetString("DataboundGridControl_DataboundGridControl_Show_Heat_Map", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Show PCA Plot.
+        /// </summary>
+        public static string DataboundGridControl_DataboundGridControl_Show_PCA_Plot {
+            get {
+                return ResourceManager.GetString("DataboundGridControl_DataboundGridControl_Show_PCA_Plot", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to An error occured while displaying the data rows:.
         /// </summary>
         public static string DataboundGridControl_DisplayError_An_error_occured_while_displaying_the_data_rows_ {
@@ -7932,6 +7950,26 @@ namespace pwiz.Skyline.Properties {
         public static string DataboundGridControl_FillDown_Fill_Down {
             get {
                 return ResourceManager.GetString("DataboundGridControl_FillDown_Fill_Down", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An error occured while performing clustering..
+        /// </summary>
+        public static string DataboundGridControl_GetClusteredResults_An_error_occured_while_performing_clustering_ {
+            get {
+                return ResourceManager.GetString("DataboundGridControl_GetClusteredResults_An_error_occured_while_performing_cluste" +
+                        "ring_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to choose a set of columns to use for hierarchical clustering..
+        /// </summary>
+        public static string DataboundGridControl_GetClusteredResults_Unable_to_choose_a_set_of_columns_to_use_for_hierarchical_clustering_ {
+            get {
+                return ResourceManager.GetString("DataboundGridControl_GetClusteredResults_Unable_to_choose_a_set_of_columns_to_use" +
+                        "_for_hierarchical_clustering_", resourceCulture);
             }
         }
         
@@ -14436,6 +14474,42 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Select.
+        /// </summary>
+        public static string HierarchicalClusterGraph_zedGraphControl1_ContextMenuBuilder_Select {
+            get {
+                return ResourceManager.GetString("HierarchicalClusterGraph_zedGraphControl1_ContextMenuBuilder_Select", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Show Selection.
+        /// </summary>
+        public static string HierarchicalClusterGraph_zedGraphControl1_ContextMenuBuilder_Show_Selection {
+            get {
+                return ResourceManager.GetString("HierarchicalClusterGraph_zedGraphControl1_ContextMenuBuilder_Show_Selection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to X-Axis Labels.
+        /// </summary>
+        public static string HierarchicalClusterGraph_zedGraphControl1_ContextMenuBuilder_X_Axis_Labels {
+            get {
+                return ResourceManager.GetString("HierarchicalClusterGraph_zedGraphControl1_ContextMenuBuilder_X_Axis_Labels", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Y-Axis Labels.
+        /// </summary>
+        public static string HierarchicalClusterGraph_zedGraphControl1_ContextMenuBuilder_Y_Axis_Labels {
+            get {
+                return ResourceManager.GetString("HierarchicalClusterGraph_zedGraphControl1_ContextMenuBuilder_Y_Axis_Labels", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Only showing {0}/{1} peptides.
         /// </summary>
         public static string HistogramHelper_CreateAndShowFindResults_Only_showing__0___1__peptides {
@@ -20706,6 +20780,33 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("PathChooserDlg_OkDialog_You_must_select_an_empty_directory_for_the_tutorial_files" +
                         "_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to  Across .
+        /// </summary>
+        public static string PcaPlot_UpdateGraph__Across_ {
+            get {
+                return ResourceManager.GetString("PcaPlot_UpdateGraph__Across_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to PCA on rows.
+        /// </summary>
+        public static string PcaPlot_UpdateGraph_PCA_on_rows {
+            get {
+                return ResourceManager.GetString("PcaPlot_UpdateGraph_PCA_on_rows", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Principal Component {0}.
+        /// </summary>
+        public static string PcaPlot_UpdateGraph_Principal_Component__0_ {
+            get {
+                return ResourceManager.GetString("PcaPlot_UpdateGraph_Principal_Component__0_", resourceCulture);
             }
         }
         

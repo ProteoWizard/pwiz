@@ -503,7 +503,7 @@ void ProteinPilotReader::addMod(){
     // first check to see if we already have one for this mod
     map<string, double>::iterator found = modTable_.find(curMod_.name);
     if( found != modTable_.end() && //if it was found and has different mass
-        found->second != modTable_[curMod_.name] ){
+        found->second != curMod_.deltaMass ){
         throw BlibException(false, "Two entries for a modification named %s,"
                             "one with delta mass %f and one with %f.",
                             curMod_.name, found->second, modTable_[curMod_.name]);

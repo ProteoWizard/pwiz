@@ -196,6 +196,42 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Chebyshev.
+        /// </summary>
+        public static string ClusterMetricType_chebyshev {
+            get {
+                return ResourceManager.GetString("ClusterMetricType_chebyshev", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Euclidean.
+        /// </summary>
+        public static string ClusterMetricType_euclidean {
+            get {
+                return ResourceManager.GetString("ClusterMetricType_euclidean", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to City block.
+        /// </summary>
+        public static string ClusterMetricType_manhattan {
+            get {
+                return ResourceManager.GetString("ClusterMetricType_manhattan", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Pearson.
+        /// </summary>
+        public static string ClusterMetricType_pearson {
+            get {
+                return ResourceManager.GetString("ClusterMetricType_pearson", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Count.
         /// </summary>
         public static string CountImpl_Count {
