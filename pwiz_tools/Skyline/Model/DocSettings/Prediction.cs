@@ -27,7 +27,6 @@ using System.Xml.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Common.DataAnalysis;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Optimization;
