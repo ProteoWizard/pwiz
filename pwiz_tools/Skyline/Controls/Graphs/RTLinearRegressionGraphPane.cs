@@ -59,7 +59,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private GraphData _data;
         private NodeTip _tip;
         private CancellationTokenSource _cancellationTokenSource;
-        public PaneProgressBar _progressBar;
+        public IProgressBar _progressBar;
 
         private bool _pendingUpdate;
 
@@ -425,7 +425,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                 maxCount = document.MoleculeCount + (document.MoleculeCount - decoyCount) * calcCount;
 
                             _progressBar = ProgressMonitor.RegisterProgressBar(token, maxCount
-                                , 1, this);
+                                , 1, new PaneProgressBar(this));
 
                             ActionUtil.RunAsync(() => UpdateAndRefine(ctx, token),
                                 @"Update and refine regression data");

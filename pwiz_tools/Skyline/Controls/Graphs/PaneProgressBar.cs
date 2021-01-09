@@ -18,17 +18,15 @@
  */
 
 using System;
-using System.Collections.Concurrent;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
-using System.Threading;
-using pwiz.Common.Collections;
+using pwiz.Skyline.Model;
 using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    public class PaneProgressBar : IDisposable
+    public class PaneProgressBar : IProgressBar
     {
         readonly LineObj _left = new LineObj()
         {
@@ -116,124 +114,30 @@ namespace pwiz.Skyline.Controls.Graphs
             var graph = _parent.GraphSummary.GraphControl;
             graph.Invoke((Action) (() => { this.UpdateProgressUI(progress); }));
         }
+
         //must be called on the UI thread
         public void UpdateProgressUI(int progress)
         {
             var graph = _parent.GraphSummary.GraphControl;
             if (graph != null && !graph.IsDisposed && graph.IsHandleCreated)
-                graph.Invoke((Action)(() => { this.DrawBar(progress); }));
-        }
-    }
-
-    public class ProgressMonitor
-    {
-        public int ProgressRaw => _progressRaw;
-        public int MaxProgressRaw { get; private set; }
-        public int ReportingStep { get; private set; }
-        public PaneProgressBar ProgressBar { get; private set; }
-        public int Step => _step;
-
-        private int _progressSteps;
-        private int _step;
-        private int _progressRaw;
-
-        private static ConcurrentDictionary<CancellationToken, ProgressMonitor> _monitors =
-            new ConcurrentDictionary<CancellationToken, ProgressMonitor>();
-
-        //this method must be called on the UI thread
-        public static PaneProgressBar RegisterProgressBar(CancellationToken token, int maxProgress, int reportingStep, 
-            SummaryGraphPane parent)
-        {
-            //collection cleanup
-            _monitors.ForEach((pair) =>
-            {
-                if (pair.Value.ProgressBar.Parent.GraphSummary.IsDisposed)
-                    if (_monitors.TryRemove(pair.Key, out var monitor))
-                        monitor.ProgressBar.Dispose();
-            });
-
-            if (token.IsCancellationRequested)
-            {
-                TerminateProgressBar(token);
-                return null;
-            }
-            else
-            {
-                if (_monitors.TryGetValue(token, out ProgressMonitor monitor))
-                {
-                    if (monitor.ProgressBar.IsDisposed)
-                        TerminateProgressBar(token);
-                    else
-                        return monitor.ProgressBar;
-                }
-
-                if (maxProgress >= 100)
-                {
-                    var bar = new PaneProgressBar(parent);
-                    _monitors.TryAdd(token, new ProgressMonitor(maxProgress, reportingStep, bar));
-                    return bar;
-                }
-                else return null;
-            }
+                graph.Invoke((Action) (() => { this.DrawBar(progress); }));
         }
 
-        public static void TerminateProgressBar(CancellationToken token)
+        bool IProgressBar.IsDisposed()
         {
-            if (_monitors.TryRemove(token, out var monitor))
-            {
-                monitor.ProgressBar.Parent.GraphSummary.GraphControl.Invoke(new Action(monitor.ProgressBar.Dispose));
-            }
+            var graph = _parent.GraphSummary.GraphControl;
+            return IsDisposed || graph == null || !graph.IsHandleCreated || graph.IsDisposed;
         }
 
-        public static void CheckCanceled(CancellationToken token)
+        void IProgressBar.UpdateProgress(int progress)
         {
-            if (token.IsCancellationRequested)
-            {
-                TerminateProgressBar(token);
-                throw new OperationCanceledException();
-            }
-            else
-            {
-                //update the progress bar
-                if (_monitors.TryGetValue(token, out ProgressMonitor monitor))
-                {
-                    if(monitor.Step > 0 && monitor.UpdateAndCheck())
-                        monitor.UpdateProgressBar();
-                }
-            }
+            this.UpdateProgress(progress);
         }
 
-        private ProgressMonitor(int maxProgress, int reportingStep, PaneProgressBar bar)
+        void IProgressBar.UIInvoke(Action act)
         {
-            MaxProgressRaw = maxProgress;
-            ReportingStep = reportingStep;
-            ProgressBar = bar;
-
-            _step = MaxProgressRaw / 100 * ReportingStep;
-        }
-
-        public bool UpdateAndCheck()
-        {
-            var res = (_progressRaw == _progressSteps && ProgressRaw <= MaxProgressRaw);
-            Interlocked.Increment(ref _progressRaw);
-            return res;
-        }
-
-        public void UpdateProgressBar()
-        {
-            var graph = ProgressBar.Parent.GraphSummary.GraphControl;
-            try { 
-                graph.Invoke(new Action(() =>
-                    {
-                        ProgressBar.UpdateProgress(_progressSteps / _step);
-                        _progressSteps += _step;
-                    }
-                ));
-            }
-            //It is possible that the graph is disposed by another thread during
-            //  the Invoke() call. This is normal and this exception does not require
-            //  any processing.
-            catch (ObjectDisposedException) { }
+            var graph = _parent.GraphSummary.GraphControl;
+            graph.Invoke(act);
         }
     }
 }
