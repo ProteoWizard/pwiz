@@ -2072,6 +2072,12 @@ namespace pwiz.Skyline
             UpdateMassErrorGraph();
         }
 
+        public void SetDisplayDeconvolutedChromatograms(bool displayDeconvolutedChromatograms)
+        {
+            Settings.Default.DisplayDeconvolutedChromatograms = displayDeconvolutedChromatograms;
+            UpdateChromGraphs();
+        }
+
         private void transformChromMenuItem_DropDownOpening(object sender, EventArgs e)
         {
             var transform = GraphChromatogram.Transform;

@@ -39,7 +39,6 @@ using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.Themes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
-using SkylineTool;
 using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Graphs
@@ -48,7 +47,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
     public enum AutoZoomChrom { none, peak, window, both }
 
-    public enum DisplayTypeChrom { single, precursors, products, all, deconvoluted, total, base_peak, tic, qc }
+    public enum DisplayTypeChrom { single, precursors, products, all, total, base_peak, tic, qc }
 
     public partial class GraphChromatogram : DockableFormEx, IGraphContainer
     {
@@ -935,12 +934,8 @@ namespace pwiz.Skyline.Controls.Graphs
                     {
                         multipleGroupsPerPane = nodeGroups.Length > 1;
                     }
-                    if (DisplayType == DisplayTypeChrom.deconvoluted)
-                    {
-                        DisplayDeconvoluted(settings, chromatograms, nodePeps, ref bestStartTime, ref bestEndTime);
-                    }
 
-                    else if (multipleGroupsPerPane || DisplayType == DisplayTypeChrom.total)
+                    if (multipleGroupsPerPane || DisplayType == DisplayTypeChrom.total)
                     {
                         // If displaying multiple groups or the total of a single group
                         int countLabelTypes = settings.PeptideSettings.Modifications.CountLabelTypes;

@@ -484,7 +484,7 @@ namespace pwiz.Skyline.Menus
             productsTranMenuItem.Checked = (displayType == DisplayTypeChrom.products);
             singleTranMenuItem.Checked = (displayType == DisplayTypeChrom.single);
             allTranMenuItem.Checked = (displayType == DisplayTypeChrom.all);
-            deconvolutedMenuItem.Checked = (displayType == DisplayTypeChrom.deconvoluted);
+            deconvolutedMenuItem.Checked = Settings.Default.DisplayDeconvolutedChromatograms;
             totalTranMenuItem.Checked = (displayType == DisplayTypeChrom.total);
             basePeakMenuItem.Checked = (displayType == DisplayTypeChrom.base_peak);
             ticMenuItem.Checked = (displayType == DisplayTypeChrom.tic);
@@ -951,7 +951,7 @@ namespace pwiz.Skyline.Menus
 
         private void deconvoluteToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            SkylineWindow.SetDisplayTypeChrom(DisplayTypeChrom.deconvoluted);
+            SkylineWindow.SetDisplayDeconvolutedChromatograms(!Settings.Default.DisplayDeconvolutedChromatograms);
         }
     }
 }
