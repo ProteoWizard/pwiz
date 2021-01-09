@@ -493,7 +493,7 @@
     <value>19</value>
   </data>
   <data name="textBoxPrecursorCollisionEnergy.ToolTip" xml:space="preserve">
-    <value>予測された、またはライブラリの衝突エネルギー値を上書きすると、それ自体がトランジションレベルの明示的な値で上書きされることがあります。</value>
+    <value>予測された、またはライブラリの衝突エネルギー値を上書きすると、それ自体がトランジションレベルで表示された値で上書きされることがあります。</value>
   </data>
   <data name="&gt;&gt;textBoxPrecursorCollisionEnergy.Name" xml:space="preserve">
     <value>textBoxPrecursorCollisionEnergy</value>

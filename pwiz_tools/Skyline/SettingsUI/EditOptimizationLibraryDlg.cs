@@ -398,7 +398,7 @@ namespace pwiz.Skyline.SettingsUI
 
             public BindingList<DbOptimization> Optimizations { get; private set; }
 
-            private static readonly Regex RGX_PRODUCT_ION = new Regex(@"^[\s]*(?<ion>precursor|[abcxyz][\d]+)[\s]*(?:-[\s]*(?<loss>[\d]+(?:[\.,][\d]+)?)[\s]*)?$", RegexOptions.IgnoreCase);
+            private static readonly Regex RGX_PRODUCT_ION = new Regex(@"^[\s]*(?<ion>precursor|[abcxyz][\d]+)[\s]*(?:-[\s]*(?<loss>[\d]+(?:[\.,][\d]+)?)[\s]*)?$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 
             public LibraryGridViewDriver(DataGridViewEx gridView, BindingSource bindingSource,
                                          SortableBindingList<DbOptimization> items, EditOptimizationLibraryDlg form, SrmDocument document, TargetResolver targetResolver)

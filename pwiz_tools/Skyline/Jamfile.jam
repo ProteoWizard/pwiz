@@ -24,7 +24,7 @@
 import modules generate-version ;
 if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ]
 {
-    import path feature ;
+    import path feature errors ;
     path-constant SKYLINE_PATH : $(PWIZ_ROOT_PATH)/pwiz_tools/Skyline ;
     path-constant PWIZ_WRAPPER_PATH : $(PWIZ_ROOT_PATH)/pwiz_tools/Shared/ProteowizardWrapper ;
     path-constant BIBLIO_SPEC_PATH :  $(PWIZ_ROOT_PATH)/pwiz_tools/Shared/BiblioSpec ;
@@ -43,6 +43,15 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
 
     local v = $(SKYLINE_YEAR) $(SKYLINE_ORDINAL) $(SKYLINE_BRANCH) $(SKYLINE_DOY) ;
     constant SKYLINE_VERSION : $(v:J=) ;
+
+    if $(SKYLINE_BRANCH) = 0
+    {
+        constant SKYLINE_TARGETNAME : "Skyline" ;
+    }
+    else
+    {
+        constant SKYLINE_TARGETNAME : "Skyline-daily" ;
+    }
 
     rule generate-skyline-AssemblyInfo.cs ( name : description : path )
     {
@@ -77,16 +86,7 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
             CONFIGURATION on $(<[1]) = "Release" ;
         }
 
-        local .target_name ;
-        if --official in [ modules.peek : ARGV ]
-        {
-            .target_name = "Skyline" ;
-        }
-        else
-        {
-            .target_name = "Skyline-daily" ;
-        }
-        TARGET_NAME on $(targets) = $(.target_name) ;
+        TARGET_NAME on $(targets) = $(SKYLINE_TARGETNAME) ;
 
         local address-model = [ feature.get-values <address-model> : $(properties) ] ;
         ADDRESS_MODEL on $(targets) = $(address-model:E=32) ;
@@ -257,6 +257,21 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         This is a fake file so Skyline can point at both msparser.dll and msparserD.dll unconditionally.
         ) > "$(<)"
     }
+    
+    if --official in [ modules.peek : ARGV ]
+    {
+        constant SKYLINE_PROSIT_CONFIG : "$(SKYLINE_PATH)/Model/Prosit/Config/PrositConfig_production.xml" ;
+        if ! [ path.exists $(SKYLINE_PROSIT_CONFIG) ]
+        {
+            errors.user-error "PrositConfig_production.xml must be present for an official build" ;
+        }
+    }
+    else
+    {
+        constant SKYLINE_PROSIT_CONFIG : "$(SKYLINE_PATH)/Model/Prosit/Config/PrositConfig_development.xml" ;
+    }
+
+    make PrositConfig.xml : $(SKYLINE_PROSIT_CONFIG) : @common.copy : <location>$(SKYLINE_PATH)/Model/Prosit/Config ;
 
     rule build-location ( properties * )
     {
@@ -315,6 +330,7 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
             <dependency>../../pwiz_tools/BiblioSpec/src//BlibFilter/<location>$(BIBLIO_SPEC_PATH)/obj/$(PLATFORM)
             <dependency>../../pwiz_tools/BiblioSpec/src//BlibToMs2/<location>$(BIBLIO_SPEC_PATH)/obj/$(PLATFORM)
             <dependency>$(PWIZ_ROOT_PATH)//INSTALLER_VENDOR_FILES.txt
+            <dependency>PrositConfig.xml
     ;
     explicit Skyline.exe ;
 

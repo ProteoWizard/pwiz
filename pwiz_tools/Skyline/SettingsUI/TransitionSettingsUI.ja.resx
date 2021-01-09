@@ -2938,7 +2938,7 @@ MSスペクトルライブラリのピークに基づいて選択されます。
   </data>
   <data name="cbxTriggeredAcquisition.ToolTip" xml:space="preserve">
     <value>特定のアナライトに対してスペクトルを取得した場合、保持時間に大きなギャップがある可能性があることを示しています。
-ピークは、これらのギャップと重ならないように切り詰められ、バックグラウンドが差し引かれます。</value>
+ピークは、これらのギャップと重ならないように切り詰められ、バックグラウンドは差し引かれません。</value>
   </data>
   <data name="&gt;&gt;cbxTriggeredAcquisition.Name" xml:space="preserve">
     <value>cbxTriggeredAcquisition</value>
