@@ -121,9 +121,18 @@
     <value>17, 17</value>
   </metadata>
   <metadata name="contextMenuTreeNode.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>763, 17</value>
+    <value>556, 17</value>
   </metadata>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="contextMenuTreeNode.Size" type="System.Drawing.Size, System.Drawing">
+    <value>229, 374</value>
+  </data>
+  <data name="&gt;&gt;contextMenuTreeNode.Name" xml:space="preserve">
+    <value>contextMenuTreeNode</value>
+  </data>
+  <data name="&gt;&gt;contextMenuTreeNode.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="cutContextMenuItem.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Fuchsia</value>
   </data>
@@ -193,6 +202,12 @@
   <data name="removePeakContextMenuItem.Text" xml:space="preserve">
     <value>Remove Peak</value>
   </data>
+  <data name="setStandardTypeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>228, 22</value>
+  </data>
+  <data name="setStandardTypeContextMenuItem.Text" xml:space="preserve">
+    <value>Set Standard Type</value>
+  </data>
   <data name="noStandardContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>175, 22</value>
   </data>
@@ -222,12 +237,6 @@
   </data>
   <data name="irtStandardContextMenuItem.Text" xml:space="preserve">
     <value>iRT</value>
-  </data>
-  <data name="setStandardTypeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>228, 22</value>
-  </data>
-  <data name="setStandardTypeContextMenuItem.Text" xml:space="preserve">
-    <value>Set Standard Type</value>
   </data>
   <data name="modifyPeptideContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>228, 22</value>
@@ -266,17 +275,23 @@
   <data name="toolStripSeparatorRatios.Size" type="System.Drawing.Size, System.Drawing">
     <value>225, 6</value>
   </data>
+  <data name="ratiosContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>228, 22</value>
+  </data>
+  <data name="ratiosContextMenuItem.Text" xml:space="preserve">
+    <value>Ratios To</value>
+  </data>
   <data name="ratiosToGlobalStandardsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>163, 22</value>
   </data>
   <data name="ratiosToGlobalStandardsMenuItem.Text" xml:space="preserve">
     <value>Global Standards</value>
   </data>
-  <data name="ratiosContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="replicatesTreeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>228, 22</value>
   </data>
-  <data name="ratiosContextMenuItem.Text" xml:space="preserve">
-    <value>Ratios To</value>
+  <data name="replicatesTreeContextMenuItem.Text" xml:space="preserve">
+    <value>Replicates</value>
   </data>
   <data name="singleReplicateTreeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>106, 22</value>
@@ -290,24 +305,18 @@
   <data name="bestReplicateTreeContextMenuItem.Text" xml:space="preserve">
     <value>Best</value>
   </data>
-  <data name="replicatesTreeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>228, 22</value>
+  <metadata name="contextMenuSpectrum.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>380, 56</value>
+  </metadata>
+  <data name="contextMenuSpectrum.Size" type="System.Drawing.Size, System.Drawing">
+    <value>194, 486</value>
   </data>
-  <data name="replicatesTreeContextMenuItem.Text" xml:space="preserve">
-    <value>Replicates</value>
+  <data name="&gt;&gt;contextMenuSpectrum.Name" xml:space="preserve">
+    <value>contextMenuSpectrum</value>
   </data>
-  <data name="contextMenuTreeNode.Size" type="System.Drawing.Size, System.Drawing">
-    <value>229, 374</value>
-  </data>
-  <data name="&gt;&gt;contextMenuTreeNode.Name" xml:space="preserve">
-    <value>contextMenuTreeNode</value>
-  </data>
-  <data name="&gt;&gt;contextMenuTreeNode.Type" xml:space="preserve">
+  <data name="&gt;&gt;contextMenuSpectrum.Type" xml:space="preserve">
     <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <metadata name="contextMenuSpectrum.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>588, 56</value>
-  </metadata>
   <data name="aionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>193, 22</value>
   </data>
@@ -359,6 +368,12 @@
   <data name="toolStripSeparator11.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 6</value>
   </data>
+  <data name="chargesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>193, 22</value>
+  </data>
+  <data name="chargesContextMenuItem.Text" xml:space="preserve">
+    <value>Charges</value>
+  </data>
   <data name="charge1ContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>80, 22</value>
   </data>
@@ -382,12 +397,6 @@
   </data>
   <data name="charge4ContextMenuItem.Text" xml:space="preserve">
     <value>4</value>
-  </data>
-  <data name="chargesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>193, 22</value>
-  </data>
-  <data name="chargesContextMenuItem.Text" xml:space="preserve">
-    <value>Charges</value>
   </data>
   <data name="toolStripSeparator12.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 6</value>
@@ -473,342 +482,24 @@
   <data name="showLibraryChromatogramsSpectrumContextMenuItem.Text" xml:space="preserve">
     <value>Show Chromatograms</value>
   </data>
-  <data name="contextMenuSpectrum.Size" type="System.Drawing.Size, System.Drawing">
-    <value>194, 486</value>
-  </data>
-  <data name="&gt;&gt;contextMenuSpectrum.Name" xml:space="preserve">
-    <value>contextMenuSpectrum</value>
-  </data>
-  <data name="&gt;&gt;contextMenuSpectrum.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <metadata name="contextMenuChromatogram.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>155, 17</value>
-  </metadata>
-  <data name="applyPeakAllGraphMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>212, 22</value>
-  </data>
-  <data name="applyPeakAllGraphMenuItem.Text" xml:space="preserve">
-    <value>Apply Peak to All</value>
-  </data>
-  <data name="applyPeakSubsequentGraphMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>212, 22</value>
-  </data>
-  <data name="applyPeakSubsequentGraphMenuItem.Text" xml:space="preserve">
-    <value>Apply Peak to Subsequent</value>
-  </data>
-  <data name="applyPeakGroupGraphMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>212, 22</value>
-  </data>
-  <data name="applyPeakGroupGraphMenuItem.Text" xml:space="preserve">
-    <value>Apply Peak to Group</value>
-  </data>
-  <data name="groupApplyToByGraphMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>212, 22</value>
-  </data>
-  <data name="groupApplyToByGraphMenuItem.Text" xml:space="preserve">
-    <value>Group Apply to By</value>
-  </data>
-  <data name="removePeakGraphMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>212, 22</value>
-  </data>
-  <data name="removePeakGraphMenuItem.Text" xml:space="preserve">
-    <value>Remove Peak</value>
-  </data>
-  <data name="toolStripSeparator33.Size" type="System.Drawing.Size, System.Drawing">
-    <value>209, 6</value>
-  </data>
-  <data name="legendChromContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>212, 22</value>
-  </data>
-  <data name="legendChromContextMenuItem.Text" xml:space="preserve">
-    <value>Legend</value>
-  </data>
-  <data name="peakBoundariesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>212, 22</value>
-  </data>
-  <data name="peakBoundariesContextMenuItem.Text" xml:space="preserve">
-    <value>Peak Boundaries</value>
-  </data>
-  <data name="originalPeakMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>212, 22</value>
-  </data>
-  <data name="originalPeakMenuItem.Text" xml:space="preserve">
-    <value>Original Peak</value>
-  </data>
-  <data name="massErrorContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>212, 22</value>
-  </data>
-  <data name="massErrorContextMenuItem.Text" xml:space="preserve">
-    <value>Mass Error</value>
-  </data>
-  <data name="allRTContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>172, 22</value>
-  </data>
-  <data name="allRTContextMenuItem.Text" xml:space="preserve">
-    <value>All</value>
-  </data>
-  <data name="bestRTContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>172, 22</value>
-  </data>
-  <data name="bestRTContextMenuItem.Text" xml:space="preserve">
-    <value>Best Peak</value>
-  </data>
-  <data name="thresholdRTContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>172, 22</value>
-  </data>
-  <data name="thresholdRTContextMenuItem.Text" xml:space="preserve">
-    <value>Above Threshold...</value>
-  </data>
-  <data name="noneRTContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>172, 22</value>
-  </data>
-  <data name="noneRTContextMenuItem.Text" xml:space="preserve">
-    <value>None</value>
-  </data>
-  <data name="rawTimesMenuItemSplitter.Size" type="System.Drawing.Size, System.Drawing">
-    <value>169, 6</value>
-  </data>
-  <data name="rawTimesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>172, 22</value>
-  </data>
-  <data name="rawTimesContextMenuItem.Text" xml:space="preserve">
-    <value>Show Raw Times</value>
-  </data>
-  <data name="retentionTimesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>212, 22</value>
-  </data>
-  <data name="retentionTimesContextMenuItem.Text" xml:space="preserve">
-    <value>Retention Times</value>
-  </data>
-  <data name="retentionTimePredContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>212, 22</value>
-  </data>
-  <data name="retentionTimePredContextMenuItem.Text" xml:space="preserve">
-    <value>Retention Time Prediction</value>
-  </data>
-  <data name="idTimesNoneContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>164, 22</value>
-  </data>
-  <data name="idTimesNoneContextMenuItem.Text" xml:space="preserve">
-    <value>None</value>
-  </data>
-  <data name="idTimesMatchingContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>164, 22</value>
-  </data>
-  <data name="idTimesMatchingContextMenuItem.Text" xml:space="preserve">
-    <value>Matching</value>
-  </data>
-  <data name="idTimesAlignedContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>164, 22</value>
-  </data>
-  <data name="idTimesAlignedContextMenuItem.Text" xml:space="preserve">
-    <value>Aligned</value>
-  </data>
-  <data name="idTimesOtherContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>164, 22</value>
-  </data>
-  <data name="idTimesOtherContextMenuItem.Text" xml:space="preserve">
-    <value>From Other Runs</value>
-  </data>
-  <data name="peptideIDTimesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>212, 22</value>
-  </data>
-  <data name="peptideIDTimesContextMenuItem.Text" xml:space="preserve">
-    <value>Peptide ID Times</value>
-  </data>
-  <data name="toolStripSeparator16.Size" type="System.Drawing.Size, System.Drawing">
-    <value>209, 6</value>
-  </data>
-  <data name="allTranContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>167, 22</value>
-  </data>
-  <data name="allTranContextMenuItem.Text" xml:space="preserve">
-    <value>All</value>
-  </data>
-  <data name="precursorsTranContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>167, 22</value>
-  </data>
-  <data name="precursorsTranContextMenuItem.Text" xml:space="preserve">
-    <value>Precursors</value>
-  </data>
-  <data name="productsTranContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>167, 22</value>
-  </data>
-  <data name="productsTranContextMenuItem.Text" xml:space="preserve">
-    <value>Products</value>
-  </data>
-  <data name="singleTranContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>167, 22</value>
-  </data>
-  <data name="singleTranContextMenuItem.Text" xml:space="preserve">
-    <value>Single</value>
-  </data>
-  <data name="totalTranContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>167, 22</value>
-  </data>
-  <data name="totalTranContextMenuItem.Text" xml:space="preserve">
-    <value>Total</value>
-  </data>
-  <data name="toolStripSeparatorTran.Size" type="System.Drawing.Size, System.Drawing">
-    <value>164, 6</value>
-  </data>
-  <data name="basePeakContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>167, 22</value>
-  </data>
-  <data name="basePeakContextMenuItem.Text" xml:space="preserve">
-    <value>Base Peak</value>
-  </data>
-  <data name="ticContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>167, 22</value>
-  </data>
-  <data name="ticContextMenuItem.Text" xml:space="preserve">
-    <value>TIC</value>
-  </data>
-  <data name="qcContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>167, 22</value>
-  </data>
-  <data name="qcContextMenuItem.Text" xml:space="preserve">
-    <value>QC</value>
-  </data>
-  <data name="toolStripSeparatorOnlyQuantitative.Size" type="System.Drawing.Size, System.Drawing">
-    <value>164, 6</value>
-  </data>
-  <data name="onlyQuantitativeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>167, 22</value>
-  </data>
-  <data name="onlyQuantitativeContextMenuItem.Text" xml:space="preserve">
-    <value>Only Quantitative</value>
-  </data>
-  <data name="toolStripSeparatorSplitGraph.Size" type="System.Drawing.Size, System.Drawing">
-    <value>164, 6</value>
-  </data>
-  <data name="splitGraphContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>167, 22</value>
-  </data>
-  <data name="splitGraphContextMenuItem.Text" xml:space="preserve">
-    <value>Split Graph</value>
-  </data>
-  <data name="transitionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>212, 22</value>
-  </data>
-  <data name="transitionsContextMenuItem.Text" xml:space="preserve">
-    <value>Transitions</value>
-  </data>
-  <data name="transformChromNoneContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>213, 22</value>
-  </data>
-  <data name="transformChromNoneContextMenuItem.Text" xml:space="preserve">
-    <value>None</value>
-  </data>
-  <data name="transformChromInterpolatedContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>213, 22</value>
-  </data>
-  <data name="transformChromInterpolatedContextMenuItem.Text" xml:space="preserve">
-    <value>Interpolated</value>
-  </data>
-  <data name="secondDerivativeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>213, 22</value>
-  </data>
-  <data name="secondDerivativeContextMenuItem.Text" xml:space="preserve">
-    <value>Second Derivative</value>
-  </data>
-  <data name="firstDerivativeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>213, 22</value>
-  </data>
-  <data name="firstDerivativeContextMenuItem.Text" xml:space="preserve">
-    <value>First Derivative</value>
-  </data>
-  <data name="smoothSGChromContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>213, 22</value>
-  </data>
-  <data name="smoothSGChromContextMenuItem.Text" xml:space="preserve">
-    <value>Savitzky-Golay Smoothing</value>
-  </data>
-  <data name="transformChromContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>212, 22</value>
-  </data>
-  <data name="transformChromContextMenuItem.Text" xml:space="preserve">
-    <value>Transform</value>
-  </data>
-  <data name="toolStripSeparator17.Size" type="System.Drawing.Size, System.Drawing">
-    <value>209, 6</value>
-  </data>
-  <data name="autoZoomNoneContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>201, 22</value>
-  </data>
-  <data name="autoZoomNoneContextMenuItem.Text" xml:space="preserve">
-    <value>None</value>
-  </data>
-  <data name="autoZoomBestPeakContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>201, 22</value>
-  </data>
-  <data name="autoZoomBestPeakContextMenuItem.Text" xml:space="preserve">
-    <value>Best Peak</value>
-  </data>
-  <data name="autoZoomRTWindowContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>201, 22</value>
-  </data>
-  <data name="autoZoomRTWindowContextMenuItem.Text" xml:space="preserve">
-    <value>Retention Time Window</value>
-  </data>
-  <data name="autoZoomBothContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>201, 22</value>
-  </data>
-  <data name="autoZoomBothContextMenuItem.Text" xml:space="preserve">
-    <value>Both</value>
-  </data>
-  <data name="autoZoomContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>212, 22</value>
-  </data>
-  <data name="autoZoomContextMenuItem.Text" xml:space="preserve">
-    <value>Auto-zoom X-axis</value>
-  </data>
-  <data name="lockYChromContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>212, 22</value>
-  </data>
-  <data name="lockYChromContextMenuItem.Text" xml:space="preserve">
-    <value>Auto-scale Y-axis</value>
-  </data>
-  <data name="synchronizeZoomingContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>212, 22</value>
-  </data>
-  <data name="synchronizeZoomingContextMenuItem.Text" xml:space="preserve">
-    <value>Synchronize Zooming</value>
-  </data>
-  <data name="toolStripSeparator18.Size" type="System.Drawing.Size, System.Drawing">
-    <value>209, 6</value>
-  </data>
-  <data name="chromPropsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>212, 22</value>
-  </data>
-  <data name="chromPropsContextMenuItem.Text" xml:space="preserve">
-    <value>Properties...</value>
-  </data>
-  <data name="toolStripSeparator19.Size" type="System.Drawing.Size, System.Drawing">
-    <value>209, 6</value>
-  </data>
-  <data name="zoomChromContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>212, 22</value>
-  </data>
-  <data name="zoomChromContextMenuItem.Text" xml:space="preserve">
-    <value>Zoom Out</value>
-  </data>
-  <data name="toolStripSeparator26.Size" type="System.Drawing.Size, System.Drawing">
-    <value>209, 6</value>
-  </data>
-  <data name="contextMenuChromatogram.Size" type="System.Drawing.Size, System.Drawing">
-    <value>213, 458</value>
-  </data>
-  <data name="&gt;&gt;contextMenuChromatogram.Name" xml:space="preserve">
-    <value>contextMenuChromatogram</value>
-  </data>
-  <data name="&gt;&gt;contextMenuChromatogram.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <metadata name="contextMenuRetentionTimes.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 56</value>
+    <value>733, 17</value>
   </metadata>
+  <data name="contextMenuRetentionTimes.Size" type="System.Drawing.Size, System.Drawing">
+    <value>191, 430</value>
+  </data>
+  <data name="&gt;&gt;contextMenuRetentionTimes.Name" xml:space="preserve">
+    <value>contextMenuRetentionTimes</value>
+  </data>
+  <data name="&gt;&gt;contextMenuRetentionTimes.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="timeGraphContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>190, 22</value>
+  </data>
+  <data name="timeGraphContextMenuItem.Text" xml:space="preserve">
+    <value>Graph</value>
+  </data>
   <data name="replicateComparisonContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 22</value>
   </data>
@@ -820,6 +511,12 @@
   </data>
   <data name="timePeptideComparisonContextMenuItem.Text" xml:space="preserve">
     <value>Peptide Comparison</value>
+  </data>
+  <data name="regressionContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>190, 22</value>
+  </data>
+  <data name="regressionContextMenuItem.Text" xml:space="preserve">
+    <value>Regression</value>
   </data>
   <data name="scoreToRunToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>142, 22</value>
@@ -833,23 +530,17 @@
   <data name="runToRunToolStripMenuItem.Text" xml:space="preserve">
     <value>Run To Run</value>
   </data>
-  <data name="regressionContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>190, 22</value>
-  </data>
-  <data name="regressionContextMenuItem.Text" xml:space="preserve">
-    <value>Regression</value>
-  </data>
   <data name="schedulingContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 22</value>
   </data>
   <data name="schedulingContextMenuItem.Text" xml:space="preserve">
     <value>Scheduling</value>
   </data>
-  <data name="timeGraphContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="timePlotContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 22</value>
   </data>
-  <data name="timeGraphContextMenuItem.Text" xml:space="preserve">
-    <value>Graph</value>
+  <data name="timePlotContextMenuItem.Text" xml:space="preserve">
+    <value>Plot</value>
   </data>
   <data name="timeCorrelationContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>133, 22</value>
@@ -863,11 +554,11 @@
   <data name="timeResidualsContextMenuItem.Text" xml:space="preserve">
     <value>Residuals</value>
   </data>
-  <data name="timePlotContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="timePointsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 22</value>
   </data>
-  <data name="timePlotContextMenuItem.Text" xml:space="preserve">
-    <value>Plot</value>
+  <data name="timePointsContextMenuItem.Text" xml:space="preserve">
+    <value>Points</value>
   </data>
   <data name="timeTargetsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>167, 22</value>
@@ -893,11 +584,11 @@
   <data name="timeDecoysContextMenuItem.Text" xml:space="preserve">
     <value>Decoys</value>
   </data>
-  <data name="timePointsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="rtValueMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 22</value>
   </data>
-  <data name="timePointsContextMenuItem.Text" xml:space="preserve">
-    <value>Points</value>
+  <data name="rtValueMenuItem.Text" xml:space="preserve">
+    <value>Value</value>
   </data>
   <data name="allRTValueContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>154, 22</value>
@@ -922,12 +613,6 @@
   </data>
   <data name="fwbRTValueContextMenuItem.Text" xml:space="preserve">
     <value>FWB</value>
-  </data>
-  <data name="rtValueMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>190, 22</value>
-  </data>
-  <data name="rtValueMenuItem.Text" xml:space="preserve">
-    <value>Value</value>
   </data>
   <data name="showRTLegendContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 22</value>
@@ -959,6 +644,12 @@
   <data name="predictionRTContextMenuItem.Text" xml:space="preserve">
     <value>Prediction</value>
   </data>
+  <data name="replicatesRTContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>190, 22</value>
+  </data>
+  <data name="replicatesRTContextMenuItem.Text" xml:space="preserve">
+    <value>Replicates</value>
+  </data>
   <data name="averageReplicatesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>106, 22</value>
   </data>
@@ -977,17 +668,17 @@
   <data name="bestReplicateRTContextMenuItem.Text" xml:space="preserve">
     <value>Best</value>
   </data>
-  <data name="replicatesRTContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>190, 22</value>
-  </data>
-  <data name="replicatesRTContextMenuItem.Text" xml:space="preserve">
-    <value>Replicates</value>
-  </data>
   <data name="setRTThresholdContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 22</value>
   </data>
   <data name="setRTThresholdContextMenuItem.Text" xml:space="preserve">
     <value>Set Threshold...</value>
+  </data>
+  <data name="setRegressionMethodContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>190, 22</value>
+  </data>
+  <data name="setRegressionMethodContextMenuItem.Text" xml:space="preserve">
+    <value>Regression Method</value>
   </data>
   <data name="linearRegressionContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>208, 22</value>
@@ -1013,12 +704,6 @@
   <data name="loessContextMenuItem.Text" xml:space="preserve">
     <value>Loess</value>
   </data>
-  <data name="setRegressionMethodContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>190, 22</value>
-  </data>
-  <data name="setRegressionMethodContextMenuItem.Text" xml:space="preserve">
-    <value>Regression Method</value>
-  </data>
   <data name="toolStripSeparator22.Size" type="System.Drawing.Size, System.Drawing">
     <value>187, 6</value>
   </data>
@@ -1027,6 +712,12 @@
   </data>
   <data name="createRTRegressionContextMenuItem.Text" xml:space="preserve">
     <value>Create Regression...</value>
+  </data>
+  <data name="chooseCalculatorContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>190, 22</value>
+  </data>
+  <data name="chooseCalculatorContextMenuItem.Text" xml:space="preserve">
+    <value>Calculator</value>
   </data>
   <data name="placeholderToolStripMenuItem1.Size" type="System.Drawing.Size, System.Drawing">
     <value>152, 22</value>
@@ -1048,12 +739,6 @@
   </data>
   <data name="updateCalculatorContextMenuItem.Text" xml:space="preserve">
     <value>Edit Current...</value>
-  </data>
-  <data name="chooseCalculatorContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>190, 22</value>
-  </data>
-  <data name="chooseCalculatorContextMenuItem.Text" xml:space="preserve">
-    <value>Calculator</value>
   </data>
   <data name="toolStripSeparator23.Size" type="System.Drawing.Size, System.Drawing">
     <value>187, 6</value>
@@ -1091,18 +776,24 @@
   <data name="toolStripSeparator25.Size" type="System.Drawing.Size, System.Drawing">
     <value>187, 6</value>
   </data>
-  <data name="contextMenuRetentionTimes.Size" type="System.Drawing.Size, System.Drawing">
-    <value>191, 430</value>
+  <metadata name="contextMenuPeakAreas.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>200, 56</value>
+  </metadata>
+  <data name="contextMenuPeakAreas.Size" type="System.Drawing.Size, System.Drawing">
+    <value>210, 434</value>
   </data>
-  <data name="&gt;&gt;contextMenuRetentionTimes.Name" xml:space="preserve">
-    <value>contextMenuRetentionTimes</value>
+  <data name="&gt;&gt;contextMenuPeakAreas.Name" xml:space="preserve">
+    <value>contextMenuPeakAreas</value>
   </data>
-  <data name="&gt;&gt;contextMenuRetentionTimes.Type" xml:space="preserve">
+  <data name="&gt;&gt;contextMenuPeakAreas.Type" xml:space="preserve">
     <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <metadata name="contextMenuPeakAreas.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>408, 56</value>
-  </metadata>
+  <data name="areaGraphContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="areaGraphContextMenuItem.Text" xml:space="preserve">
+    <value>Graph</value>
+  </data>
   <data name="areaReplicateComparisonContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 22</value>
   </data>
@@ -1127,11 +818,11 @@
   <data name="areaCVHistogram2DContextMenuItem.Text" xml:space="preserve">
     <value>CV 2D Histogram</value>
   </data>
-  <data name="areaGraphContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="graphTypeToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>209, 22</value>
   </data>
-  <data name="areaGraphContextMenuItem.Text" xml:space="preserve">
-    <value>Graph</value>
+  <data name="graphTypeToolStripMenuItem.Text" xml:space="preserve">
+    <value>Graph Type</value>
   </data>
   <data name="barAreaGraphDisplayTypeMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>96, 22</value>
@@ -1145,11 +836,11 @@
   <data name="lineAreaGraphDisplayTypeMenuItem.Text" xml:space="preserve">
     <value>Line</value>
   </data>
-  <data name="graphTypeToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="peptideOrderContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>209, 22</value>
   </data>
-  <data name="graphTypeToolStripMenuItem.Text" xml:space="preserve">
-    <value>Graph Type</value>
+  <data name="peptideOrderContextMenuItem.Text" xml:space="preserve">
+    <value>Order</value>
   </data>
   <data name="peptideOrderDocumentContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>154, 22</value>
@@ -1175,10 +866,10 @@
   <data name="peptideOrderMassErrorContextMenuItem.Text" xml:space="preserve">
     <value>Mass Error</value>
   </data>
-  <data name="peptideOrderContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="replicateOrderContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>209, 22</value>
   </data>
-  <data name="peptideOrderContextMenuItem.Text" xml:space="preserve">
+  <data name="replicateOrderContextMenuItem.Text" xml:space="preserve">
     <value>Order</value>
   </data>
   <data name="replicateOrderDocumentContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
@@ -1193,17 +884,17 @@
   <data name="replicateOrderAcqTimeContextMenuItem.Text" xml:space="preserve">
     <value>Acquired Time</value>
   </data>
-  <data name="replicateOrderContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>209, 22</value>
-  </data>
-  <data name="replicateOrderContextMenuItem.Text" xml:space="preserve">
-    <value>Order</value>
-  </data>
   <data name="areaNormalizeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>209, 22</value>
   </data>
   <data name="areaNormalizeContextMenuItem.Text" xml:space="preserve">
     <value>Normalized To</value>
+  </data>
+  <data name="scopeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="scopeContextMenuItem.Text" xml:space="preserve">
+    <value>Scope</value>
   </data>
   <data name="documentScopeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>130, 22</value>
@@ -1216,12 +907,6 @@
   </data>
   <data name="proteinScopeContextMenuItem.Text" xml:space="preserve">
     <value>Protein</value>
-  </data>
-  <data name="scopeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>209, 22</value>
-  </data>
-  <data name="scopeContextMenuItem.Text" xml:space="preserve">
-    <value>Scope</value>
   </data>
   <data name="showPeakAreaLegendContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>209, 22</value>
@@ -1262,17 +947,23 @@
   <data name="areaPropsContextMenuItem.Text" xml:space="preserve">
     <value>Properties...</value>
   </data>
+  <data name="groupReplicatesByContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="groupReplicatesByContextMenuItem.Text" xml:space="preserve">
+    <value>Group By</value>
+  </data>
   <data name="groupByReplicateContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>122, 22</value>
   </data>
   <data name="groupByReplicateContextMenuItem.Text" xml:space="preserve">
     <value>Replicate</value>
   </data>
-  <data name="groupReplicatesByContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="areaCVbinWidthToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>209, 22</value>
   </data>
-  <data name="groupReplicatesByContextMenuItem.Text" xml:space="preserve">
-    <value>Group By</value>
+  <data name="areaCVbinWidthToolStripMenuItem.Text" xml:space="preserve">
+    <value>Bin Width</value>
   </data>
   <data name="areaCV05binWidthToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>67, 22</value>
@@ -1286,11 +977,11 @@
   <data name="areaCV20binWidthToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>67, 22</value>
   </data>
-  <data name="areaCVbinWidthToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="pointsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>209, 22</value>
   </data>
-  <data name="areaCVbinWidthToolStripMenuItem.Text" xml:space="preserve">
-    <value>Bin Width</value>
+  <data name="pointsToolStripMenuItem.Text" xml:space="preserve">
+    <value>Points</value>
   </data>
   <data name="areaCVtargetsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>112, 22</value>
@@ -1301,11 +992,11 @@
   <data name="areaCVdecoysToolStripMenuItem.Text" xml:space="preserve">
     <value>Decoys</value>
   </data>
-  <data name="pointsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="areaCVTransitionsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>209, 22</value>
   </data>
-  <data name="pointsToolStripMenuItem.Text" xml:space="preserve">
-    <value>Points</value>
+  <data name="areaCVTransitionsToolStripMenuItem.Text" xml:space="preserve">
+    <value>Transitions</value>
   </data>
   <data name="areaCVAllTransitionsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>129, 22</value>
@@ -1340,12 +1031,6 @@
   <data name="areaCVProductsToolStripMenuItem.Text" xml:space="preserve">
     <value>Products</value>
   </data>
-  <data name="areaCVTransitionsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>209, 22</value>
-  </data>
-  <data name="areaCVTransitionsToolStripMenuItem.Text" xml:space="preserve">
-    <value>Transitions</value>
-  </data>
   <data name="areaCVNormalizedToToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>209, 22</value>
   </data>
@@ -1367,16 +1052,43 @@
   <data name="toolStripSeparator57.Size" type="System.Drawing.Size, System.Drawing">
     <value>206, 6</value>
   </data>
-  <data name="contextMenuPeakAreas.Size" type="System.Drawing.Size, System.Drawing">
-    <value>210, 434</value>
+  <data name="&gt;&gt;dockPanel.Name" xml:space="preserve">
+    <value>dockPanel</value>
   </data>
-  <data name="&gt;&gt;contextMenuPeakAreas.Name" xml:space="preserve">
-    <value>contextMenuPeakAreas</value>
+  <data name="&gt;&gt;dockPanel.Type" xml:space="preserve">
+    <value>DigitalRune.Windows.Docking.DockPanel, DigitalRune.Windows.Docking, Version=1.3.5.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
-  <data name="&gt;&gt;contextMenuPeakAreas.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="&gt;&gt;dockPanel.Parent" xml:space="preserve">
+    <value>panel1</value>
+  </data>
+  <data name="&gt;&gt;dockPanel.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="panel1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="panel1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 49</value>
+  </data>
+  <data name="panel1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>734, 443</value>
+  </data>
+  <data name="panel1.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;panel1.Name" xml:space="preserve">
+    <value>panel1</value>
+  </data>
+  <data name="&gt;&gt;panel1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;panel1.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;panel1.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
   <data name="dockPanel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
@@ -1401,35 +1113,32 @@
   <data name="&gt;&gt;dockPanel.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="panel1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Fill</value>
-  </data>
-  <data name="panel1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 49</value>
-  </data>
-  <data name="panel1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>734, 443</value>
-  </data>
-  <data name="panel1.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;panel1.Name" xml:space="preserve">
-    <value>panel1</value>
-  </data>
-  <data name="&gt;&gt;panel1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;panel1.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;panel1.ZOrder" xml:space="preserve">
-    <value>7</value>
-  </data>
   <metadata name="statusStrip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>654, 17</value>
+    <value>447, 17</value>
   </metadata>
   <data name="statusStrip.AutoSize" type="System.Boolean, mscorlib">
     <value>False</value>
+  </data>
+  <data name="statusStrip.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 492</value>
+  </data>
+  <data name="statusStrip.Size" type="System.Drawing.Size, System.Drawing">
+    <value>734, 22</value>
+  </data>
+  <data name="statusStrip.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="&gt;&gt;statusStrip.Name" xml:space="preserve">
+    <value>statusStrip</value>
+  </data>
+  <data name="&gt;&gt;statusStrip.Type" xml:space="preserve">
+    <value>System.Windows.Forms.StatusStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;statusStrip.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;statusStrip.ZOrder" xml:space="preserve">
+    <value>7</value>
   </data>
   <data name="statusGeneral.Size" type="System.Drawing.Size, System.Drawing">
     <value>569, 17</value>
@@ -1491,30 +1200,33 @@
   <data name="statusIons.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
     <value>MiddleRight</value>
   </data>
-  <data name="statusStrip.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 492</value>
+  <metadata name="mainToolStrip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>556, 56</value>
+  </metadata>
+  <data name="mainToolStrip.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 24</value>
   </data>
-  <data name="statusStrip.Size" type="System.Drawing.Size, System.Drawing">
-    <value>734, 22</value>
+  <data name="mainToolStrip.Size" type="System.Drawing.Size, System.Drawing">
+    <value>734, 25</value>
   </data>
-  <data name="statusStrip.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
+  <data name="mainToolStrip.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
   </data>
-  <data name="&gt;&gt;statusStrip.Name" xml:space="preserve">
-    <value>statusStrip</value>
+  <data name="mainToolStrip.Text" xml:space="preserve">
+    <value>toolStrip1</value>
   </data>
-  <data name="&gt;&gt;statusStrip.Type" xml:space="preserve">
-    <value>System.Windows.Forms.StatusStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="&gt;&gt;mainToolStrip.Name" xml:space="preserve">
+    <value>mainToolStrip</value>
   </data>
-  <data name="&gt;&gt;statusStrip.Parent" xml:space="preserve">
+  <data name="&gt;&gt;mainToolStrip.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;mainToolStrip.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;statusStrip.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;mainToolStrip.ZOrder" xml:space="preserve">
     <value>8</value>
   </data>
-  <metadata name="mainToolStrip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>764, 56</value>
-  </metadata>
   <data name="newToolBarButton.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Magenta</value>
   </data>
@@ -1623,33 +1335,42 @@
   <data name="modeUIToolBarDropDownButton.Text" xml:space="preserve">
     <value>User interface selection</value>
   </data>
-  <data name="mainToolStrip.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 24</value>
+  <metadata name="menuMain.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>337, 17</value>
+  </metadata>
+  <data name="menuMain.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 0</value>
   </data>
-  <data name="mainToolStrip.Size" type="System.Drawing.Size, System.Drawing">
-    <value>734, 25</value>
+  <data name="menuMain.Size" type="System.Drawing.Size, System.Drawing">
+    <value>734, 24</value>
   </data>
-  <data name="mainToolStrip.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
+  <data name="menuMain.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
   </data>
-  <data name="mainToolStrip.Text" xml:space="preserve">
-    <value>toolStrip1</value>
+  <data name="menuMain.Text" xml:space="preserve">
+    <value>menuStrip1</value>
   </data>
-  <data name="&gt;&gt;mainToolStrip.Name" xml:space="preserve">
-    <value>mainToolStrip</value>
+  <data name="&gt;&gt;menuMain.Name" xml:space="preserve">
+    <value>menuMain</value>
   </data>
-  <data name="&gt;&gt;mainToolStrip.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="&gt;&gt;menuMain.Type" xml:space="preserve">
+    <value>System.Windows.Forms.MenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;mainToolStrip.Parent" xml:space="preserve">
+  <data name="&gt;&gt;menuMain.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;mainToolStrip.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;menuMain.ZOrder" xml:space="preserve">
     <value>9</value>
   </data>
-  <metadata name="menuMain.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>544, 17</value>
-  </metadata>
+  <data name="fileToolStripMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
+    <value>Ctrl+N</value>
+  </data>
+  <data name="fileToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>37, 20</value>
+  </data>
+  <data name="fileToolStripMenuItem.Text" xml:space="preserve">
+    <value>&amp;File</value>
+  </data>
   <data name="startPageMenuItem.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Fuchsia</value>
   </data>
@@ -1728,6 +1449,12 @@
   <data name="toolStripSeparator2.Size" type="System.Drawing.Size, System.Drawing">
     <value>194, 6</value>
   </data>
+  <data name="importToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>197, 22</value>
+  </data>
+  <data name="importToolStripMenuItem.Text" xml:space="preserve">
+    <value>&amp;Import</value>
+  </data>
   <data name="importResultsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>170, 22</value>
   </data>
@@ -1782,11 +1509,11 @@
   <data name="importAnnotationsMenuItem.Text" xml:space="preserve">
     <value>Annotations...</value>
   </data>
-  <data name="importToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="exportToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>197, 22</value>
   </data>
-  <data name="importToolStripMenuItem.Text" xml:space="preserve">
-    <value>&amp;Import</value>
+  <data name="exportToolStripMenuItem.Text" xml:space="preserve">
+    <value>&amp;Export</value>
   </data>
   <data name="exportTransitionListMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>183, 22</value>
@@ -1851,12 +1578,6 @@
   <data name="exportAnnotationsMenuItem.Text" xml:space="preserve">
     <value>Annotations...</value>
   </data>
-  <data name="exportToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>197, 22</value>
-  </data>
-  <data name="exportToolStripMenuItem.Text" xml:space="preserve">
-    <value>&amp;Export</value>
-  </data>
   <data name="mruBeforeToolStripSeparator.Size" type="System.Drawing.Size, System.Drawing">
     <value>194, 6</value>
   </data>
@@ -1871,15 +1592,6 @@
   </data>
   <data name="exitMenuItem.Text" xml:space="preserve">
     <value>E&amp;xit</value>
-  </data>
-  <data name="fileToolStripMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
-    <value>Ctrl+N</value>
-  </data>
-  <data name="fileToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>37, 20</value>
-  </data>
-  <data name="fileToolStripMenuItem.Text" xml:space="preserve">
-    <value>&amp;File</value>
   </data>
   <data name="editToolStripMenuItem.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Fuchsia</value>
@@ -1901,6 +1613,12 @@
   </data>
   <data name="viewToolStripMenuItem.Text" xml:space="preserve">
     <value>&amp;View</value>
+  </data>
+  <data name="settingsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>61, 20</value>
+  </data>
+  <data name="settingsToolStripMenuItem.Text" xml:space="preserve">
+    <value>&amp;Settings</value>
   </data>
   <data name="toolStripSeparatorSettings.Size" type="System.Drawing.Size, System.Drawing">
     <value>181, 6</value>
@@ -1965,11 +1683,11 @@
   <data name="integrateAllMenuItem.Text" xml:space="preserve">
     <value>I&amp;ntegrate All</value>
   </data>
-  <data name="settingsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>61, 20</value>
+  <data name="toolsMenu.Size" type="System.Drawing.Size, System.Drawing">
+    <value>46, 20</value>
   </data>
-  <data name="settingsToolStripMenuItem.Text" xml:space="preserve">
-    <value>&amp;Settings</value>
+  <data name="toolsMenu.Text" xml:space="preserve">
+    <value>&amp;Tools</value>
   </data>
   <data name="placeholderToolsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>178, 22</value>
@@ -2022,11 +1740,11 @@
   <data name="optionsToolStripMenuItem.Text" xml:space="preserve">
     <value>&amp;Options...</value>
   </data>
-  <data name="toolsMenu.Size" type="System.Drawing.Size, System.Drawing">
-    <value>46, 20</value>
+  <data name="helpToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>44, 20</value>
   </data>
-  <data name="toolsMenu.Text" xml:space="preserve">
-    <value>&amp;Tools</value>
+  <data name="helpToolStripMenuItem.Text" xml:space="preserve">
+    <value>&amp;Help</value>
   </data>
   <data name="homeMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>171, 22</value>
@@ -2052,6 +1770,12 @@
   <data name="tutorialsMenuItem.Text" xml:space="preserve">
     <value>&amp;Tutorials</value>
   </data>
+  <data name="documentationToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>171, 22</value>
+  </data>
+  <data name="documentationToolStripMenuItem.Text" xml:space="preserve">
+    <value>&amp;Documentation</value>
+  </data>
   <data name="reportsHelpMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>156, 22</value>
   </data>
@@ -2069,12 +1793,6 @@
   </data>
   <data name="otherDocsHelpMenuItem.Text" xml:space="preserve">
     <value>&amp;Other</value>
-  </data>
-  <data name="documentationToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>171, 22</value>
-  </data>
-  <data name="documentationToolStripMenuItem.Text" xml:space="preserve">
-    <value>&amp;Documentation</value>
   </data>
   <data name="supportMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>171, 22</value>
@@ -2106,39 +1824,24 @@
   <data name="aboutMenuItem.Text" xml:space="preserve">
     <value>&amp;About</value>
   </data>
-  <data name="helpToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>44, 20</value>
-  </data>
-  <data name="helpToolStripMenuItem.Text" xml:space="preserve">
-    <value>&amp;Help</value>
-  </data>
-  <data name="menuMain.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 0</value>
-  </data>
-  <data name="menuMain.Size" type="System.Drawing.Size, System.Drawing">
-    <value>734, 24</value>
-  </data>
-  <data name="menuMain.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="menuMain.Text" xml:space="preserve">
-    <value>menuStrip1</value>
-  </data>
-  <data name="&gt;&gt;menuMain.Name" xml:space="preserve">
-    <value>menuMain</value>
-  </data>
-  <data name="&gt;&gt;menuMain.Type" xml:space="preserve">
-    <value>System.Windows.Forms.MenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;menuMain.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;menuMain.ZOrder" xml:space="preserve">
-    <value>10</value>
-  </data>
   <metadata name="contextMenuMassErrors.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>225, 56</value>
+    <value>17, 56</value>
   </metadata>
+  <data name="contextMenuMassErrors.Size" type="System.Drawing.Size, System.Drawing">
+    <value>137, 180</value>
+  </data>
+  <data name="&gt;&gt;contextMenuMassErrors.Name" xml:space="preserve">
+    <value>contextMenuMassErrors</value>
+  </data>
+  <data name="&gt;&gt;contextMenuMassErrors.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="massErrorGraphContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>136, 22</value>
+  </data>
+  <data name="massErrorGraphContextMenuItem.Text" xml:space="preserve">
+    <value>Graph</value>
+  </data>
   <data name="massErrorReplicateComparisonContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 22</value>
   </data>
@@ -2163,12 +1866,6 @@
   <data name="massErrorHistogram2DContextMenuItem.Text" xml:space="preserve">
     <value>2D Histogram</value>
   </data>
-  <data name="massErrorGraphContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>136, 22</value>
-  </data>
-  <data name="massErrorGraphContextMenuItem.Text" xml:space="preserve">
-    <value>Graph</value>
-  </data>
   <data name="massErrorPropsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>136, 22</value>
   </data>
@@ -2180,6 +1877,12 @@
   </data>
   <data name="showMassErrorLegendContextMenuItem.Text" xml:space="preserve">
     <value>Legend</value>
+  </data>
+  <data name="massErrorPointsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>136, 22</value>
+  </data>
+  <data name="massErrorPointsContextMenuItem.Text" xml:space="preserve">
+    <value>Points</value>
   </data>
   <data name="massErrorTargetsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>167, 22</value>
@@ -2199,11 +1902,11 @@
   <data name="massErrorDecoysContextMenuItem.Text" xml:space="preserve">
     <value>Decoys</value>
   </data>
-  <data name="massErrorPointsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="binCountContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>136, 22</value>
   </data>
-  <data name="massErrorPointsContextMenuItem.Text" xml:space="preserve">
-    <value>Points</value>
+  <data name="binCountContextMenuItem.Text" xml:space="preserve">
+    <value>Bin Width</value>
   </data>
   <data name="ppm05ContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>117, 22</value>
@@ -2229,11 +1932,11 @@
   <data name="ppm20ContextMenuItem.Text" xml:space="preserve">
     <value>2.0 ppm</value>
   </data>
-  <data name="binCountContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="massErrorTransitionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>136, 22</value>
   </data>
-  <data name="binCountContextMenuItem.Text" xml:space="preserve">
-    <value>Bin Width</value>
+  <data name="massErrorTransitionsContextMenuItem.Text" xml:space="preserve">
+    <value>Transitions</value>
   </data>
   <data name="massErrorAllTransitionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>129, 22</value>
@@ -2262,11 +1965,11 @@
   <data name="MassErrorProductsContextMenuItem.Text" xml:space="preserve">
     <value>Products</value>
   </data>
-  <data name="massErrorTransitionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="massErrorXAxisContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>136, 22</value>
   </data>
-  <data name="massErrorTransitionsContextMenuItem.Text" xml:space="preserve">
-    <value>Transitions</value>
+  <data name="massErrorXAxisContextMenuItem.Text" xml:space="preserve">
+    <value>X-Axis</value>
   </data>
   <data name="massErorrRetentionTimeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>156, 22</value>
@@ -2280,30 +1983,30 @@
   <data name="massErrorMassToChargContextMenuItem.Text" xml:space="preserve">
     <value>Mass to Charge</value>
   </data>
-  <data name="massErrorXAxisContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>136, 22</value>
-  </data>
-  <data name="massErrorXAxisContextMenuItem.Text" xml:space="preserve">
-    <value>X-Axis</value>
-  </data>
   <data name="massErrorlogScaleContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>136, 22</value>
   </data>
   <data name="massErrorlogScaleContextMenuItem.Text" xml:space="preserve">
     <value>Log Scale</value>
   </data>
-  <data name="contextMenuMassErrors.Size" type="System.Drawing.Size, System.Drawing">
-    <value>137, 180</value>
+  <metadata name="contextMenuDetections.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>155, 17</value>
+  </metadata>
+  <data name="contextMenuDetections.Size" type="System.Drawing.Size, System.Drawing">
+    <value>137, 132</value>
   </data>
-  <data name="&gt;&gt;contextMenuMassErrors.Name" xml:space="preserve">
-    <value>contextMenuMassErrors</value>
+  <data name="&gt;&gt;contextMenuDetections.Name" xml:space="preserve">
+    <value>contextMenuDetections</value>
   </data>
-  <data name="&gt;&gt;contextMenuMassErrors.Type" xml:space="preserve">
+  <data name="&gt;&gt;contextMenuDetections.Type" xml:space="preserve">
     <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <metadata name="contextMenuDetections.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>362, 17</value>
-  </metadata>
+  <data name="detectionsTargetToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>136, 22</value>
+  </data>
+  <data name="detectionsTargetToolStripMenuItem.Text" xml:space="preserve">
+    <value>Target</value>
+  </data>
   <data name="detectionsTargetPrecursorToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>124, 22</value>
   </data>
@@ -2316,11 +2019,11 @@
   <data name="detectionsTargetPeptideToolStripMenuItem.Text" xml:space="preserve">
     <value>Peptide</value>
   </data>
-  <data name="detectionsTargetToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="detectionsGraphTypeToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>136, 22</value>
   </data>
-  <data name="detectionsTargetToolStripMenuItem.Text" xml:space="preserve">
-    <value>Target</value>
+  <data name="detectionsGraphTypeToolStripMenuItem.Text" xml:space="preserve">
+    <value>Graph Type</value>
   </data>
   <data name="detectionsGraphTypeReplicateToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>130, 22</value>
@@ -2334,14 +2037,14 @@
   <data name="detectionsGraphTypeHistogramToolStripMenuItem.Text" xml:space="preserve">
     <value>Histogram</value>
   </data>
-  <data name="detectionsGraphTypeToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>136, 22</value>
-  </data>
-  <data name="detectionsGraphTypeToolStripMenuItem.Text" xml:space="preserve">
-    <value>Graph Type</value>
-  </data>
   <data name="detectionsToolStripSeparator1.Size" type="System.Drawing.Size, System.Drawing">
     <value>133, 6</value>
+  </data>
+  <data name="detectionsShowToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>136, 22</value>
+  </data>
+  <data name="detectionsShowToolStripMenuItem.Text" xml:space="preserve">
+    <value>Show</value>
   </data>
   <data name="detectionsShowSelectionToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>184, 22</value>
@@ -2367,11 +2070,11 @@
   <data name="detectionsShowAtLeastNToolStripMenuItem.Text" xml:space="preserve">
     <value>At Least N Replicates</value>
   </data>
-  <data name="detectionsShowToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="detectionsYScaleToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>136, 22</value>
   </data>
-  <data name="detectionsShowToolStripMenuItem.Text" xml:space="preserve">
-    <value>Show</value>
+  <data name="detectionsYScaleToolStripMenuItem.Text" xml:space="preserve">
+    <value>Y Scale</value>
   </data>
   <data name="detectionsYScaleOneToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>150, 22</value>
@@ -2385,12 +2088,6 @@
   <data name="detectionsYScalePercentToolStripMenuItem.Text" xml:space="preserve">
     <value>Percent</value>
   </data>
-  <data name="detectionsYScaleToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>136, 22</value>
-  </data>
-  <data name="detectionsYScaleToolStripMenuItem.Text" xml:space="preserve">
-    <value>Y Scale</value>
-  </data>
   <data name="detectionsToolStripSeparator2.Size" type="System.Drawing.Size, System.Drawing">
     <value>133, 6</value>
   </data>
@@ -2402,15 +2099,6 @@
   </data>
   <data name="detectionsToolStripSeparator3.Size" type="System.Drawing.Size, System.Drawing">
     <value>133, 6</value>
-  </data>
-  <data name="contextMenuDetections.Size" type="System.Drawing.Size, System.Drawing">
-    <value>137, 132</value>
-  </data>
-  <data name="&gt;&gt;contextMenuDetections.Name" xml:space="preserve">
-    <value>contextMenuDetections</value>
-  </data>
-  <data name="&gt;&gt;contextMenuDetections.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -2431,7 +2119,7 @@
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=20.2.1.357, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=20.2.1.365, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;cutContextMenuItem.Name" xml:space="preserve">
     <value>cutContextMenuItem</value>
@@ -2780,348 +2468,6 @@
   </data>
   <data name="&gt;&gt;showLibraryChromatogramsSpectrumContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;applyPeakAllGraphMenuItem.Name" xml:space="preserve">
-    <value>applyPeakAllGraphMenuItem</value>
-  </data>
-  <data name="&gt;&gt;applyPeakAllGraphMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;applyPeakSubsequentGraphMenuItem.Name" xml:space="preserve">
-    <value>applyPeakSubsequentGraphMenuItem</value>
-  </data>
-  <data name="&gt;&gt;applyPeakSubsequentGraphMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;applyPeakGroupGraphMenuItem.Name" xml:space="preserve">
-    <value>applyPeakGroupGraphMenuItem</value>
-  </data>
-  <data name="&gt;&gt;applyPeakGroupGraphMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;groupApplyToByGraphMenuItem.Name" xml:space="preserve">
-    <value>groupApplyToByGraphMenuItem</value>
-  </data>
-  <data name="&gt;&gt;groupApplyToByGraphMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;removePeakGraphMenuItem.Name" xml:space="preserve">
-    <value>removePeakGraphMenuItem</value>
-  </data>
-  <data name="&gt;&gt;removePeakGraphMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;toolStripSeparator33.Name" xml:space="preserve">
-    <value>toolStripSeparator33</value>
-  </data>
-  <data name="&gt;&gt;toolStripSeparator33.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;legendChromContextMenuItem.Name" xml:space="preserve">
-    <value>legendChromContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;legendChromContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;peakBoundariesContextMenuItem.Name" xml:space="preserve">
-    <value>peakBoundariesContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;peakBoundariesContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;originalPeakMenuItem.Name" xml:space="preserve">
-    <value>originalPeakMenuItem</value>
-  </data>
-  <data name="&gt;&gt;originalPeakMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;massErrorContextMenuItem.Name" xml:space="preserve">
-    <value>massErrorContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;massErrorContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;retentionTimesContextMenuItem.Name" xml:space="preserve">
-    <value>retentionTimesContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;retentionTimesContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;allRTContextMenuItem.Name" xml:space="preserve">
-    <value>allRTContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;allRTContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;bestRTContextMenuItem.Name" xml:space="preserve">
-    <value>bestRTContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;bestRTContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;thresholdRTContextMenuItem.Name" xml:space="preserve">
-    <value>thresholdRTContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;thresholdRTContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;noneRTContextMenuItem.Name" xml:space="preserve">
-    <value>noneRTContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;noneRTContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;rawTimesMenuItemSplitter.Name" xml:space="preserve">
-    <value>rawTimesMenuItemSplitter</value>
-  </data>
-  <data name="&gt;&gt;rawTimesMenuItemSplitter.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;rawTimesContextMenuItem.Name" xml:space="preserve">
-    <value>rawTimesContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;rawTimesContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;retentionTimePredContextMenuItem.Name" xml:space="preserve">
-    <value>retentionTimePredContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;retentionTimePredContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;peptideIDTimesContextMenuItem.Name" xml:space="preserve">
-    <value>peptideIDTimesContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;peptideIDTimesContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;idTimesNoneContextMenuItem.Name" xml:space="preserve">
-    <value>idTimesNoneContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;idTimesNoneContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;idTimesMatchingContextMenuItem.Name" xml:space="preserve">
-    <value>idTimesMatchingContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;idTimesMatchingContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;idTimesAlignedContextMenuItem.Name" xml:space="preserve">
-    <value>idTimesAlignedContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;idTimesAlignedContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;idTimesOtherContextMenuItem.Name" xml:space="preserve">
-    <value>idTimesOtherContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;idTimesOtherContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;toolStripSeparator16.Name" xml:space="preserve">
-    <value>toolStripSeparator16</value>
-  </data>
-  <data name="&gt;&gt;toolStripSeparator16.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;transitionsContextMenuItem.Name" xml:space="preserve">
-    <value>transitionsContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;transitionsContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;allTranContextMenuItem.Name" xml:space="preserve">
-    <value>allTranContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;allTranContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;precursorsTranContextMenuItem.Name" xml:space="preserve">
-    <value>precursorsTranContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;precursorsTranContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;productsTranContextMenuItem.Name" xml:space="preserve">
-    <value>productsTranContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;productsTranContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;singleTranContextMenuItem.Name" xml:space="preserve">
-    <value>singleTranContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;singleTranContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;totalTranContextMenuItem.Name" xml:space="preserve">
-    <value>totalTranContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;totalTranContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;toolStripSeparatorTran.Name" xml:space="preserve">
-    <value>toolStripSeparatorTran</value>
-  </data>
-  <data name="&gt;&gt;toolStripSeparatorTran.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;basePeakContextMenuItem.Name" xml:space="preserve">
-    <value>basePeakContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;basePeakContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;ticContextMenuItem.Name" xml:space="preserve">
-    <value>ticContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;ticContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;qcContextMenuItem.Name" xml:space="preserve">
-    <value>qcContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;qcContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;toolStripSeparatorOnlyQuantitative.Name" xml:space="preserve">
-    <value>toolStripSeparatorOnlyQuantitative</value>
-  </data>
-  <data name="&gt;&gt;toolStripSeparatorOnlyQuantitative.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;onlyQuantitativeContextMenuItem.Name" xml:space="preserve">
-    <value>onlyQuantitativeContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;onlyQuantitativeContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;toolStripSeparatorSplitGraph.Name" xml:space="preserve">
-    <value>toolStripSeparatorSplitGraph</value>
-  </data>
-  <data name="&gt;&gt;toolStripSeparatorSplitGraph.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;splitGraphContextMenuItem.Name" xml:space="preserve">
-    <value>splitGraphContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;splitGraphContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;transformChromContextMenuItem.Name" xml:space="preserve">
-    <value>transformChromContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;transformChromContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;transformChromNoneContextMenuItem.Name" xml:space="preserve">
-    <value>transformChromNoneContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;transformChromNoneContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;transformChromInterpolatedContextMenuItem.Name" xml:space="preserve">
-    <value>transformChromInterpolatedContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;transformChromInterpolatedContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;secondDerivativeContextMenuItem.Name" xml:space="preserve">
-    <value>secondDerivativeContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;secondDerivativeContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;firstDerivativeContextMenuItem.Name" xml:space="preserve">
-    <value>firstDerivativeContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;firstDerivativeContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;smoothSGChromContextMenuItem.Name" xml:space="preserve">
-    <value>smoothSGChromContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;smoothSGChromContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;toolStripSeparator17.Name" xml:space="preserve">
-    <value>toolStripSeparator17</value>
-  </data>
-  <data name="&gt;&gt;toolStripSeparator17.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;autoZoomContextMenuItem.Name" xml:space="preserve">
-    <value>autoZoomContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;autoZoomContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;autoZoomNoneContextMenuItem.Name" xml:space="preserve">
-    <value>autoZoomNoneContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;autoZoomNoneContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;autoZoomBestPeakContextMenuItem.Name" xml:space="preserve">
-    <value>autoZoomBestPeakContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;autoZoomBestPeakContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;autoZoomRTWindowContextMenuItem.Name" xml:space="preserve">
-    <value>autoZoomRTWindowContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;autoZoomRTWindowContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;autoZoomBothContextMenuItem.Name" xml:space="preserve">
-    <value>autoZoomBothContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;autoZoomBothContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;lockYChromContextMenuItem.Name" xml:space="preserve">
-    <value>lockYChromContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;lockYChromContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;synchronizeZoomingContextMenuItem.Name" xml:space="preserve">
-    <value>synchronizeZoomingContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;synchronizeZoomingContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;toolStripSeparator18.Name" xml:space="preserve">
-    <value>toolStripSeparator18</value>
-  </data>
-  <data name="&gt;&gt;toolStripSeparator18.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;chromPropsContextMenuItem.Name" xml:space="preserve">
-    <value>chromPropsContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;chromPropsContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;toolStripSeparator19.Name" xml:space="preserve">
-    <value>toolStripSeparator19</value>
-  </data>
-  <data name="&gt;&gt;toolStripSeparator19.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;zoomChromContextMenuItem.Name" xml:space="preserve">
-    <value>zoomChromContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;zoomChromContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;toolStripSeparator26.Name" xml:space="preserve">
-    <value>toolStripSeparator26</value>
-  </data>
-  <data name="&gt;&gt;toolStripSeparator26.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;timeGraphContextMenuItem.Name" xml:space="preserve">
     <value>timeGraphContextMenuItem</value>
@@ -4567,6 +3913,6 @@
     <value>SkylineWindow</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=20.2.1.357, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=20.2.1.365, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>
