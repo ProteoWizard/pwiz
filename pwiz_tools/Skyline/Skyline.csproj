@@ -423,6 +423,12 @@
       <DependentUpon>DocumentChangeLogEntryDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="Controls\Graphs\AreaCVGraphData.cs" />
+    <Compile Include="Menus\ChromatogramContextMenu.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Menus\ChromatogramContextMenu.Designer.cs">
+      <DependentUpon>ChromatogramContextMenu.cs</DependentUpon>
+    </Compile>
     <Compile Include="Menus\EditMenu.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -2541,6 +2547,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ChooseIrtStandardPeptidesDlg.resx">
       <DependentUpon>ChooseIrtStandardPeptidesDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Menus\ChromatogramContextMenu.resx">
+      <DependentUpon>ChromatogramContextMenu.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Menus\EditMenu.resx">
       <DependentUpon>EditMenu.cs</DependentUpon>
