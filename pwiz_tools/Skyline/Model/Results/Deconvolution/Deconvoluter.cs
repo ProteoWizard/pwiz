@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using MathNet.Numerics.LinearAlgebra;
 using MathNet.Numerics.LinearAlgebra.Double;
@@ -44,9 +45,10 @@ namespace pwiz.Skyline.Model.Results.Deconvolution
             return calc.GetMZDistributionSinglePoint(transitionGroupDocNode.PrecursorMz);
         }
 
-        public IEnumerable<DeconvolutedChromatogram> DeconvoluteChromatograms(IList<ChromatogramGroupInfo> chromGroups,
-            IList<DeconvolutionKey> keys, List<double> scores)
+        public DeconvolutedChromatograms DeconvoluteChromatograms(IList<ChromatogramGroupInfo> chromGroups,
+            IList<DeconvolutionKey> keys)
         {
+            var scores = new List<double>();
             var predictedIntensities = keys.Select(key => new List<double>()).ToArray();
             
             var timeIntensities = new List<TimeIntensities>();
@@ -75,9 +77,8 @@ namespace pwiz.Skyline.Model.Results.Deconvolution
                     }
                 }
             }
-
-            return keys.Zip(Deconvolute(timeIntensities, predictedIntensities, scores),
-                (key, chrom) => new DeconvolutedChromatogram(key, chrom));
+            var entries = keys.Zip(Deconvolute(timeIntensities, predictedIntensities, scores), Tuple.Create);
+            return new DeconvolutedChromatograms(entries, scores);
         }
 
         private static double GetIntensityInRange(MassDistribution massDistribution, double minMz, double maxMz)

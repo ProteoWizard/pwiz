@@ -94,13 +94,13 @@
             this.onlyQuantitativeMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator48 = new System.Windows.Forms.ToolStripSeparator();
             this.splitGraphMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.deconvolutedMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.transformChromMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.transformChromNoneMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.transformChromInterpolatedMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.secondDerivativeMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.firstDerivativeMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.smoothSGChromMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.deconvoluteChromMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.autoZoomMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.autoZoomNoneMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.autoZoomBestPeakMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -141,6 +141,7 @@
             this.toolStripSeparator36 = new System.Windows.Forms.ToolStripSeparator();
             this.toolBarToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.statusToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
@@ -548,7 +549,6 @@
             this.productsTranMenuItem,
             this.singleTranMenuItem,
             this.totalTranMenuItem,
-            this.deconvolutedMenuItem,
             this.toolStripSeparatorTranMain,
             this.basePeakMenuItem,
             this.ticMenuItem,
@@ -635,12 +635,6 @@
             resources.ApplyResources(this.splitGraphMenuItem, "splitGraphMenuItem");
             this.splitGraphMenuItem.Click += new System.EventHandler(this.splitChromGraphMenuItem_Click);
             // 
-            // deconvolutedMenuItem
-            // 
-            this.deconvolutedMenuItem.Name = "deconvolutedMenuItem";
-            resources.ApplyResources(this.deconvolutedMenuItem, "deconvolutedMenuItem");
-            this.deconvolutedMenuItem.Click += new System.EventHandler(this.deconvoluteToolStripMenuItem_Click);
-            // 
             // transformChromMenuItem
             // 
             this.transformChromMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -648,7 +642,9 @@
             this.transformChromInterpolatedMenuItem,
             this.secondDerivativeMenuItem,
             this.firstDerivativeMenuItem,
-            this.smoothSGChromMenuItem});
+            this.smoothSGChromMenuItem,
+            this.toolStripSeparator1,
+            this.deconvoluteChromMenuItem});
             resources.ApplyResources(this.transformChromMenuItem, "transformChromMenuItem");
             this.transformChromMenuItem.Name = "transformChromMenuItem";
             this.transformChromMenuItem.DropDownOpening += new System.EventHandler(this.transformChromMenuItem_DropDownOpening);
@@ -682,6 +678,12 @@
             this.smoothSGChromMenuItem.Name = "smoothSGChromMenuItem";
             resources.ApplyResources(this.smoothSGChromMenuItem, "smoothSGChromMenuItem");
             this.smoothSGChromMenuItem.Click += new System.EventHandler(this.smoothSGChromMenuItem_Click);
+            // 
+            // deconvoluteChromMenuItem
+            // 
+            this.deconvoluteChromMenuItem.Name = "deconvoluteChromMenuItem";
+            resources.ApplyResources(this.deconvoluteChromMenuItem, "deconvoluteChromMenuItem");
+            this.deconvoluteChromMenuItem.Click += new System.EventHandler(this.deconvoluteChromMenuItem_Click);
             // 
             // autoZoomMenuItem
             // 
@@ -962,6 +964,11 @@
             resources.ApplyResources(this.statusToolStripMenuItem, "statusToolStripMenuItem");
             this.statusToolStripMenuItem.Click += new System.EventHandler(this.statusToolStripMenuItem_Click);
             // 
+            // toolStripSeparator1
+            // 
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            resources.ApplyResources(this.toolStripSeparator1, "toolStripSeparator1");
+            // 
             // ViewMenu
             // 
             resources.ApplyResources(this, "$this");
@@ -1089,6 +1096,7 @@
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator36;
         private System.Windows.Forms.ToolStripMenuItem toolBarToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem statusToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem deconvolutedMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem deconvoluteChromMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
     }
 }

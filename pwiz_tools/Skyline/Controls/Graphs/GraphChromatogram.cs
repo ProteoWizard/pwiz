@@ -964,16 +964,14 @@ namespace pwiz.Skyline.Controls.Graphs
                         for (int i = 0; i < _nodeGroups.Length; i++)
                         {
                             var nodeGroup = _nodeGroups[i];
-                            var chromGroupInfo = ChromGroupInfos.FindEntry(nodeGroup.TransitionGroup)?.ChromatogramGroupInfo;
-                            if (chromGroupInfo == null)
-                                continue;
                             if (!_graphHelper.AllowSplitGraph || nodeGroupsInSeparatePanes)
                             {
                                 DisplayTransitions(timeRegressionFunction, nodeTranSelected, chromatograms,
-                                                   mzMatchTolerance,
-                                                   nodeGroup, chromGroupInfo,
-                                                   new PaneKey(nodeGroup),
-                                                   GetDisplayType(DocumentUI, nodeGroup), ref bestQuantitativePeak, ref bestNonQuantitativePeak);
+                                    mzMatchTolerance,
+                                    nodeGroup, ChromGroupInfos,
+                                    new PaneKey(nodeGroup),
+                                    GetDisplayType(DocumentUI, nodeGroup), ref bestQuantitativePeak,
+                                    ref bestNonQuantitativePeak);
                                 enableTrackingDot = enableTrackingDot || _enableTrackingDot;
                             }
                             else
@@ -981,16 +979,18 @@ namespace pwiz.Skyline.Controls.Graphs
                                 displayType = GetDisplayType(DocumentUI, nodeGroup);
                                 if (displayType != DisplayTypeChrom.products)
                                 {
-                                    DisplayTransitions(timeRegressionFunction, nodeTranSelected, chromatograms, mzMatchTolerance,
-                                                       nodeGroup, chromGroupInfo, PaneKey.PRECURSORS, DisplayTypeChrom.precursors,
-                                                       ref bestQuantitativePeak, ref bestNonQuantitativePeak);
+                                    DisplayTransitions(timeRegressionFunction, nodeTranSelected, chromatograms,
+                                        mzMatchTolerance,
+                                        nodeGroup, ChromGroupInfos, PaneKey.PRECURSORS, DisplayTypeChrom.precursors,
+                                        ref bestQuantitativePeak, ref bestNonQuantitativePeak);
                                     enableTrackingDot = enableTrackingDot || _enableTrackingDot;
                                 }
                                 if (displayType != DisplayTypeChrom.precursors)
                                 {
-                                    DisplayTransitions(timeRegressionFunction, nodeTranSelected, chromatograms, mzMatchTolerance, 
-                                                       nodeGroup, chromGroupInfo, PaneKey.PRODUCTS, DisplayTypeChrom.products,
-                                                       ref bestQuantitativePeak, ref bestNonQuantitativePeak);
+                                    DisplayTransitions(timeRegressionFunction, nodeTranSelected, chromatograms,
+                                        mzMatchTolerance,
+                                        nodeGroup, ChromGroupInfos, PaneKey.PRODUCTS, DisplayTypeChrom.products,
+                                        ref bestQuantitativePeak, ref bestNonQuantitativePeak);
                                     enableTrackingDot = enableTrackingDot || _enableTrackingDot;
                                 }
                             }
@@ -1255,13 +1255,18 @@ namespace pwiz.Skyline.Controls.Graphs
                                         ChromatogramSet chromatograms,
                                         float mzMatchTolerance,
                                         TransitionGroupDocNode nodeGroup,
-                                        ChromatogramGroupInfo chromGroupInfo,
+                                        ChromGroupSet chromGroupSet,
                                         PaneKey graphPaneKey,
                                         DisplayTypeChrom displayType,
                                         ref RetentionTimeValues bestQuantitativePeak,
                                         ref RetentionTimeValues bestNonQuantitativePeak)
         {
-            var fileId = chromatograms.FindFile(chromGroupInfo);
+            var chromGroupInfo = chromGroupSet.FindEntry(nodeGroup.TransitionGroup)?.ChromatogramGroupInfo;
+            if (chromGroupInfo == null)
+            {
+                return;
+            }
+            var fileId = chromatograms.FindFile(chromGroupInfo.FilePath);
 
             // Get points for all transitions, and pick maximum peaks.
             ChromatogramInfo[] arrayChromInfo;
@@ -1314,6 +1319,11 @@ namespace pwiz.Skyline.Controls.Graphs
                     var nodeTran = displayTrans[i];
                     // Get chromatogram info for this transition
                     arrayChromInfo[i] = chromGroupInfo.GetTransitionInfo(nodeTran, mzMatchTolerance, TransformChrom.raw, chromatograms.OptimizationFunction);
+                }
+
+                if (Settings.Default.DisplayDeconvolutedChromatograms)
+                {
+                    chromGroupSet.DeconvoluteChromatograms(displayTrans, arrayChromInfo);
                 }
             }
 
@@ -1381,8 +1391,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
 
                 var info = arrayChromInfo[i];
-                    if (info == null)
-                        continue;
+                if (info == null)
+                    continue;
 
                 // Apply any active transform
                 info.Transform(transform);
@@ -1975,6 +1985,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 TransitionChromInfo tranPeakInfo = null;
                 float maxPeakHeight = float.MinValue;
                 var listChromInfo = new List<ChromatogramInfo>();
+                var listTransitions = new List<TransitionDocNode>();
                 bool anyQuantitative = nodeGroup.Transitions.Any(IsQuantitative);
                 foreach (TransitionDocNode nodeTran in nodeGroup.Children)
                 {
@@ -1987,6 +1998,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         continue;
 
                     listChromInfo.Add(info);
+                    listTransitions.Add(nodeTran);
 
                     // Keep track of which chromatogram owns the tallest member of
                     // the peak on the document tree.
@@ -2003,6 +2015,11 @@ namespace pwiz.Skyline.Controls.Graphs
 
                     // Adjust best peak window used to zoom the graph to the best peak
                     bestPeakTimes = RetentionTimeValues.Merge(bestPeakTimes, RetentionTimeValues.FromTransitionChromInfo(transitionChromInfo));
+                }
+
+                if (Settings.Default.DisplayDeconvolutedChromatograms)
+                {
+                    chromGroupInfos.DeconvoluteChromatograms(listTransitions, listChromInfo);
                 }
 
                 // If any transitions are present for this group, add a graph item to
@@ -2583,7 +2600,7 @@ ref double bestEndTime)
 
                 if (entries.Any())
                 {
-                    listChromGroupSets.Add(new ChromGroupSet(entries));
+                    listChromGroupSets.Add(new ChromGroupSet(DocumentUI.Settings, entries));
                 }
             }
 
@@ -2640,11 +2657,11 @@ ref double bestEndTime)
             var chromGroupSets = new List<ChromGroupSet>();
             foreach (var grouping in entries.ToLookup(entry => entry.ChromatogramGroupInfo.FilePath))
             {
-                chromGroupSets.Add(new ChromGroupSet(grouping));
+                chromGroupSets.Add(new ChromGroupSet(DocumentUI.Settings, grouping));
             }
             if (canBeMerged && chromGroupSets.Count > 1)
             {
-                chromGroupSets.Insert(0, new ChromGroupSet(entries));
+                chromGroupSets.Insert(0, new ChromGroupSet(DocumentUI.Settings, entries));
             }
             _arrayChromInfo = ImmutableList.ValueOf(chromGroupSets);
             return true;
