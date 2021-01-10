@@ -578,6 +578,7 @@
       <DependentUpon>PrositResources.resx</DependentUpon>
     </Compile>
     <Compile Include="Model\Prosit\PrositRetentionScoreCalculator.cs" />
+    <Compile Include="Model\Results\Deconvolution\ChromGroupSet.cs" />
     <Compile Include="Model\Results\Deconvolution\DeconvolutedChromatogram.cs" />
     <Compile Include="Model\Results\Deconvolution\Deconvoluter.cs" />
     <Compile Include="Model\Results\Deconvolution\DeconvolutionKey.cs" />

@@ -3057,5 +3057,17 @@ namespace pwiz.Skyline.Properties {
                 this["DisplayDeconvolutedChromatograms"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("-1")]
+        public string AreaCVRatioIndex {
+            get {
+                return ((string)(this["AreaCVRatioIndex"]));
+            }
+            set {
+                this["AreaCVRatioIndex"] = value;
+            }
+        }
     }
 }

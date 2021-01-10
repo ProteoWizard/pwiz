@@ -26,6 +26,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.MSGraph;
 using pwiz.ProteowizardWrapper;
@@ -187,8 +188,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private ChromExtractor? _extractor;
         private TransitionGroupDocNode[] _nodeGroups;
         private IdentityPath[] _groupPaths;
-        private ChromatogramGroupInfo[][] _arrayChromInfo;
-        private bool _hasMergedChromInfo;
+        private ImmutableList<ChromGroupSet> _arrayChromInfo;
         private int _chromIndex;
         private bool _showPeptideTotals;
         private bool _enableTrackingDot;
@@ -591,7 +591,7 @@ namespace pwiz.Skyline.Controls.Graphs
         /// <summary>
         /// Gets the set of chomatogram info for the selected file of the groups.
         /// </summary>
-        public ChromatogramGroupInfo[] ChromGroupInfos
+        public ChromGroupSet ChromGroupInfos
         {
             get
             {
@@ -615,7 +615,8 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 return null;
             }
-            var chromGroupInfo = ChromGroupInfos[0];
+
+            var chromGroupInfo = ChromGroupInfo;
             if (chromGroupInfo == null)
             {
                 return null;
@@ -667,7 +668,9 @@ namespace pwiz.Skyline.Controls.Graphs
             get
             {
                 // CONSIDER: Is this really the selected file?
-                return ChromGroupInfos.FirstOrDefault(info => info != null);
+                return ChromGroupInfos.Entries
+                    .FirstOrDefault(entry => entry.ChromatogramGroupInfo != null)
+                    ?.ChromatogramGroupInfo;
             }
         }
 
@@ -747,9 +750,9 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 Assume.IsNotNull(chromatograms, @"chromatograms");
                 Assume.IsNotNull(ChromGroupInfos, @"ChromGroupInfos");
-                if (ChromGroupInfos != null && ChromGroupInfos.Length > 0 && null != ChromGroupInfos[0])
+                if (ChromGroupInfos != null)
                 {
-                    retentionTimeTransformOp.TryGetRegressionFunction(chromatograms.FindFile(ChromGroupInfos[0]), out timeRegressionFunction);
+                    retentionTimeTransformOp.TryGetRegressionFunction(chromatograms.FindFile(ChromGroupInfos.FirstFilePath), out timeRegressionFunction);
                 }
                 if (null != timeRegressionFunction)
                 {
@@ -843,7 +846,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (displayToExtractor.ContainsKey(displayType))
                 {
                     var extractor = displayToExtractor[displayType];
-                    if (EnsureChromInfo(results,
+                    if (EnsureChromInfoForExtractor(results,
                                         chromatograms,
                                         nodeGroups,
                                         groupPaths,
@@ -961,7 +964,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         for (int i = 0; i < _nodeGroups.Length; i++)
                         {
                             var nodeGroup = _nodeGroups[i];
-                            var chromGroupInfo = ChromGroupInfos[i];
+                            var chromGroupInfo = ChromGroupInfos.FindEntry(nodeGroup.TransitionGroup)?.ChromatogramGroupInfo;
                             if (chromGroupInfo == null)
                                 continue;
                             if (!_graphHelper.AllowSplitGraph || nodeGroupsInSeparatePanes)
@@ -1162,12 +1165,12 @@ namespace pwiz.Skyline.Controls.Graphs
                                            out RetentionTimeValues bestRetentionTimes)
         {
             bestRetentionTimes = null;
-            if (ChromGroupInfos.Length == 0)
+            var chromGroupInfo = ChromGroupInfos.Entries.FirstOrDefault()?.ChromatogramGroupInfo;
+            if (chromGroupInfo == null)
             {
                 return;
             }
-            var chromGroupInfo = ChromGroupInfos[0];
-            var fileId = chromatograms.FindFile(chromGroupInfo);
+            var fileId = chromatograms.FindFile(chromGroupInfo.FilePath);
 
             var nodeGroup = _nodeGroups != null ? _nodeGroups.FirstOrDefault() : null;
             if (nodeGroup == null)
@@ -1683,7 +1686,7 @@ namespace pwiz.Skyline.Controls.Graphs
             for (int i = 0; i < _nodeGroups.Length; i++)
             {
                 TransitionGroupDocNode nodeGroup = _nodeGroups[i];
-                ChromatogramGroupInfo groupInfo = ChromGroupInfos[i];
+                ChromatogramGroupInfo groupInfo = ChromGroupInfos.Entries.FirstOrDefault()?.ChromatogramGroupInfo;
                 if (nodeGroup == null || groupInfo == null)
                 {
                     continue;
@@ -1960,7 +1963,7 @@ namespace pwiz.Skyline.Controls.Graphs
             for (int i = 0; i < _nodeGroups.Length; i++)
             {
                 var nodeGroup = _nodeGroups[i];
-                var chromGroupInfo = chromGroupInfos[i];
+                var chromGroupInfo = chromGroupInfos.FindEntry(nodeGroup.TransitionGroup)?.ChromatogramGroupInfo;
                 if (chromGroupInfo == null)
                     continue;
 
@@ -2061,6 +2064,7 @@ namespace pwiz.Skyline.Controls.Graphs
             return transitionDocNode.IsQuantitative(DocumentUI.Settings);
         }
 
+#if false
         private void DisplayDeconvoluted(SrmSettings settings, ChromatogramSet chromatogramSet, PeptideDocNode[] peptideDocNodes,
 ref double bestStartTime,
 ref double bestEndTime)
@@ -2140,6 +2144,7 @@ ref double bestEndTime)
                 scoreLine.Label.IsVisible = false;
             }
         }
+#endif
 
         private class DisplayPeptide
         {
@@ -2189,7 +2194,7 @@ ref double bestEndTime)
                     int indexInfo;
                     if (!lookupChromGroupInfoIndex.TryGetValue(precursor.Id.GlobalIndex, out indexInfo))
                         continue;
-                    var chromGroupInfo = chromGroupInfos[indexInfo];
+                    var chromGroupInfo = chromGroupInfos.FindEntry(precursor.TransitionGroup)?.ChromatogramGroupInfo;
                     if (chromGroupInfo == null)
                         continue;
                     ChromFileInfoId fileId = chromatograms.FindFile(chromGroupInfo);
@@ -2489,7 +2494,7 @@ ref double bestEndTime)
             return null;
         }
 
-        private void UpdateToolbar(IList<ChromatogramGroupInfo[]> arrayChromInfo)
+        private void UpdateToolbar(IList<ChromGroupSet> arrayChromInfo)
         {
             if (arrayChromInfo == null || arrayChromInfo.Count < 2)
             {
@@ -2503,25 +2508,8 @@ ref double bestEndTime)
             else
             {
                 // Check to see if the list of files has changed.
-                var listNames = new List<string>();
-                if (_hasMergedChromInfo)
-                    listNames.Add(Resources.GraphChromatogram_UpdateToolbar_All);
-                for (int i = _hasMergedChromInfo ? 1 : 0; i < arrayChromInfo.Count; i++)
-                {
-                    var arrayInfo = arrayChromInfo[i];
-                    string name = string.Empty;
-                    foreach (var info in arrayInfo)
-                    {
-                        if (info != null)
-                        {
-                            name = SampleHelp.GetPathSampleNamePart(info.FilePath);
-                            if (string.IsNullOrEmpty(name))
-                                name = info.FilePath.GetFileName();
-                            break;
-                        }
-                    }
-                    listNames.Add(name);
-                }
+                bool hasMergedChromInfo = arrayChromInfo[0].DistinctFilePaths.Count() > 1;
+                var listNames = new List<string>(arrayChromInfo.Select(chromGroupSet=>chromGroupSet.GetFileNameLabel()));
                 var listExisting = new List<string>();
                 foreach (var item in comboFiles.Items)
                     listExisting.Add(item.ToString());
@@ -2534,7 +2522,7 @@ ref double bestEndTime)
                         comboFiles.Items.Add(name);
                     _dontSyncSelectedFile = true;
                     if (selected == null || comboFiles.Items.IndexOf(selected) == -1 || 
-                        (_hasMergedChromInfo && listNames[0] != listExisting[0]))
+                        (hasMergedChromInfo && listNames[0] != listExisting[0]))
                         comboFiles.SelectedIndex = 0;
                     else
                         comboFiles.SelectedItem = selected;
@@ -2552,7 +2540,7 @@ ref double bestEndTime)
             }
         }
 
-        private bool EnsureChromInfo(MeasuredResults results,
+        private bool EnsureChromInfoForExtractor(MeasuredResults results,
                                      ChromatogramSet chromatograms,
                                      TransitionGroupDocNode[] nodeGroups,
                                      IdentityPath[] groupPaths,
@@ -2562,9 +2550,9 @@ ref double bestEndTime)
         {
             bool qcTraceNameMatches = extractor != ChromExtractor.qc ||
                                       (_arrayChromInfo != null &&
-                                       _arrayChromInfo.Length > 0 &&
-                                       _arrayChromInfo[0].Length > 0 &&
-                                       _arrayChromInfo[0][0].TextId == Settings.Default.ShowQcTraceName);
+                                       _arrayChromInfo.Count > 0 &&
+                                       _arrayChromInfo[0].Entries.Count > 0 &&
+                                       _arrayChromInfo[0].Entries[0].ChromatogramGroupInfo.TextId == Settings.Default.ShowQcTraceName);
 
             if (UpdateGroups(nodeGroups, groupPaths, out changedGroups, out changedGroupIds) &&
                 _extractor == extractor &&
@@ -2572,60 +2560,34 @@ ref double bestEndTime)
                 return true;
 
             _extractor = extractor;
-
-            bool success = false;
-            try
+            _arrayChromInfo = null;
+            ChromatogramGroupInfo[] arrayAllIonsChromInfo;
+            if (!results.TryLoadAllIonsChromatogram(chromatograms, extractor, true,
+                out arrayAllIonsChromInfo))
             {
-                // Get chromatogram sets for all transition groups, recording unique
-                // file paths in the process.
-                var listArrayChromInfo = new List<ChromatogramGroupInfo[]>();
-                var listFiles = new List<MsDataFileUri>();
-                ChromatogramGroupInfo[] arrayAllIonsChromInfo;
-                if (!results.TryLoadAllIonsChromatogram(chromatograms, extractor, true,
-                                                        out arrayAllIonsChromInfo))
+                return false;
+            }
+
+            var listChromGroupSets = new List<ChromGroupSet>();
+            foreach (var grouping in arrayAllIonsChromInfo.ToLookup(chromInfo => chromInfo.FilePath))
+            {
+                var entries = new List<ChromGroupSet.ChromGroupEntry>();
+                foreach (var chromInfo in grouping)
                 {
-                    return false;
-                }
-                else
-                {
-                    listArrayChromInfo.Add(arrayAllIonsChromInfo);
-                    foreach (var chromInfo in arrayAllIonsChromInfo)
+                    qcTraceNameMatches = extractor != ChromExtractor.qc || Settings.Default.ShowQcTraceName == chromInfo.TextId;
+                    if (qcTraceNameMatches)
                     {
-                        var filePath = chromInfo.FilePath;
-                        if (!listFiles.Contains(filePath))
-                            listFiles.Add(filePath);
+                        entries.Add(new ChromGroupSet.ChromGroupEntry(null, null, null, chromInfo));
                     }
                 }
 
-                _hasMergedChromInfo = false;
-                _arrayChromInfo = new ChromatogramGroupInfo[listFiles.Count][];
-                for (int i = 0; i < _arrayChromInfo.Length; i++)
+                if (entries.Any())
                 {
-                    var arrayNew = new ChromatogramGroupInfo[listArrayChromInfo.Count];
-                    for (int j = 0; j < arrayNew.Length; j++)
-                    {
-                        var arrayChromInfo = listArrayChromInfo[j];
-                        if (arrayChromInfo == null)
-                            continue;
-                        foreach (var chromInfo in arrayChromInfo)
-                        {
-                            qcTraceNameMatches = extractor != ChromExtractor.qc || Settings.Default.ShowQcTraceName == chromInfo.TextId;
-                            if (arrayNew[j] == null && Equals(listFiles[i], chromInfo.FilePath) && qcTraceNameMatches)
-                                arrayNew[j] = chromInfo;
-                        }
-                    }
-                    _arrayChromInfo[i] = arrayNew;
+                    listChromGroupSets.Add(new ChromGroupSet(entries));
                 }
-
-                success = true;
-            }
-            finally
-            {
-                // Make sure the info array is set to null on failure.
-                if (!success)
-                    _arrayChromInfo = null;
             }
 
+            _arrayChromInfo = ImmutableList.ValueOf(listChromGroupSets);
             return true;
         }
 
@@ -2642,110 +2604,50 @@ ref double bestEndTime)
                 return true;
 
             _extractor = null;
+            _arrayChromInfo = null;
 
-            bool success = false;
-            try
+            // Get chromatogram sets for all transition groups, recording unique
+            // file paths in the process.
+            var entries = new List<ChromGroupSet.ChromGroupEntry>();
+            bool canBeMerged = true;
+            for (int i = 0; i < nodeGroups.Length; i++)
             {
-                // Get chromatogram sets for all transition groups, recording unique
-                // file paths in the process.
-                var listArrayChromInfo = new List<ChromatogramGroupInfo[]>();
-                var listFiles = new List<MsDataFileUri>();
-                for (int i = 0; i < nodeGroups.Length; i++)
+                ChromatogramGroupInfo[] arrayChromInfo;
+                if (!results.TryLoadChromatogram(
+                    chromatograms, 
+                    nodePeps[i], 
+                    nodeGroups[i], 
+                    mzMatchTolerance, 
+                    true,
+                    out arrayChromInfo))
                 {
-                    ChromatogramGroupInfo[] arrayChromInfo;
-                    if (!results.TryLoadChromatogram(
-                        chromatograms, 
-                        nodePeps[i], 
-                        nodeGroups[i], 
-                        mzMatchTolerance, 
-                        true,
-                        out arrayChromInfo))
-                    {
-                        listArrayChromInfo.Add(null);
-                        continue;
-                    }
-
-                    listArrayChromInfo.Add(arrayChromInfo);
-                    foreach (var chromInfo in arrayChromInfo)
-                    {
-                        var filePath = chromInfo.FilePath;
-                        if (!listFiles.Contains(filePath))
-                            listFiles.Add(filePath);
-                    }
+                    continue;
                 }
 
-                // If no data was found, then return false
-                if (listFiles.Count == 0)
-                    return false;
-
-                // Make a list of chromatogram info by unique file path corresponding
-                // to the groups passed in.
-                _arrayChromInfo = new ChromatogramGroupInfo[listFiles.Count][];
-                for (int i = 0; i < _arrayChromInfo.Length; i++)
+                if (arrayChromInfo.Length > 1)
                 {
-                    var arrayNew = new ChromatogramGroupInfo[listArrayChromInfo.Count];
-                    for (int j = 0; j < arrayNew.Length; j++)
-                    {
-                        var arrayChromInfo = listArrayChromInfo[j];
-                        if (arrayChromInfo == null)
-                            continue;
-                        foreach (var chromInfo in arrayChromInfo)
-                        {
-                            if (arrayNew[j] == null && Equals(listFiles[i], chromInfo.FilePath))
-                                arrayNew[j] = chromInfo;
-                        }
-                    }
-                    _arrayChromInfo[i] = arrayNew;
+                    canBeMerged = false;
                 }
-
-                // If multiple replicate files contain mutually exclusive data, create "all files" option.
-                var mergedChromGroupInfo = GetMergedChromInfo();
-                _hasMergedChromInfo = (mergedChromGroupInfo != null);
-                if (_hasMergedChromInfo)
+                foreach (var chromInfo in arrayChromInfo)
                 {
-                    var arrayNew = new ChromatogramGroupInfo[_arrayChromInfo.Length + 1][];
-                    arrayNew[0] = mergedChromGroupInfo;
-                    for (int i = 1; i < arrayNew.Length; i++)
-                        arrayNew[i] = _arrayChromInfo[i - 1];
-                    _arrayChromInfo = arrayNew;
+                    entries.Add(new ChromGroupSet.ChromGroupEntry(groupPaths[i], nodePeps[i], nodeGroups[i], chromInfo));
                 }
-
-                success = true;
-            }
-            finally
-            {
-                // Make sure the info array is set to null on failure.
-                if (!success)
-                    _arrayChromInfo = null;
             }
 
+            // If no data was found, then return false
+            if (entries.Count == 0)
+                return false;
+            var chromGroupSets = new List<ChromGroupSet>();
+            foreach (var grouping in entries.ToLookup(entry => entry.ChromatogramGroupInfo.FilePath))
+            {
+                chromGroupSets.Add(new ChromGroupSet(grouping));
+            }
+            if (canBeMerged && chromGroupSets.Count > 1)
+            {
+                chromGroupSets.Insert(0, new ChromGroupSet(entries));
+            }
+            _arrayChromInfo = ImmutableList.ValueOf(chromGroupSets);
             return true;
-        }
-
-        /// <summary>
-        /// If multiple replicate files contain mutually exclusive chromatogram groups, create
-        /// a merged chromatogram group.  If there are any collisions, return null.
-        /// </summary>
-        private ChromatogramGroupInfo[] GetMergedChromInfo()
-        {
-            if (!_showPeptideTotals || _arrayChromInfo.Length < 2)
-                return null;
-
-            var mergedChromGroupInfo = new ChromatogramGroupInfo[_arrayChromInfo[0].Length];
-            for (int i = 0; i < _arrayChromInfo.Length; i++)
-            {
-                for (int j = 0; j < mergedChromGroupInfo.Length; j++)
-                {
-                    if (_arrayChromInfo[i][j] != null)
-                    {
-                        if (mergedChromGroupInfo[j] != null)
-                            return null;
-                        mergedChromGroupInfo[j] = _arrayChromInfo[i][j];
-                    }
-                }
-            }
-
-            return mergedChromGroupInfo;
         }
 
         /// <summary>
@@ -2800,7 +2702,7 @@ ref double bestEndTime)
             return null;
         }
 
-        #region Implementation of IGraphContainer
+#region Implementation of IGraphContainer
 
         public void LockYAxis(bool lockY)
         {
@@ -2808,9 +2710,9 @@ ref double bestEndTime)
             graphControl.Refresh();
         }
 
-        #endregion
+#endregion
 
-        #region Editing support
+#region Editing support
 
         public IdentityPath FindIdentityPath(TextObj label)
         {
@@ -3536,7 +3438,7 @@ ref double bestEndTime)
             }
         }
 
-        #endregion
+#endregion
 
         private void graphControl_ContextMenuBuilder(ZedGraphControl sender,
                                                      ContextMenuStrip menuStrip, Point mousePt,
@@ -3573,7 +3475,7 @@ ref double bestEndTime)
             return iCharge * countLabelTypes + nodeGroup.TransitionGroup.LabelType.SortOrder;
         }
 
-        #region Test support
+#region Test support
 
         public void TestMouseMove(double x, double y, PaneKey? paneKey)
         {
@@ -3607,7 +3509,7 @@ ref double bestEndTime)
             return true;
         }
 
-        #endregion Test support
+#endregion Test support
     }
 
     public static class AddTransitions
