@@ -294,6 +294,9 @@ values.</value>
     <value>Declustering Potential for the precursor ion according to
 instrument/vendor specific default declustering potential equation within Skyline</value>
   </data>
+  <data name="DeconvolutedPrecursorArea">
+    <value>The observed MS1 area adjusted based on the predicted isotope distribution of the precursors</value>
+  </data>
   <data name="DecoyMzShift">
     <value>Shift in m/z applied to the precursor to create
 the decoy m/z</value>
@@ -1272,6 +1275,12 @@ using the Results Grid.</value>
   </data>
   <data name="TransitionResult">
     <value>Transition Result</value>
+  </data>
+  <data name="TransitionResultIsMs1">
+    <value>Whether this result was obtained from an MS1 scan.</value>
+  </data>
+  <data name="TransitionResultIsQuantitative">
+    <value>Whether this result is treated as quantitative, based on the Quantitative property of the Transition and the Full Scan Acquisition Method.</value>
   </data>
   <data name="TransitionResultLocator">
     <value>Unique identifier of the transition result within the document. This begins with "TransitionResult:" and usually ends with the replicate name, but may have additional attributes for the optimization step and result file.</value>

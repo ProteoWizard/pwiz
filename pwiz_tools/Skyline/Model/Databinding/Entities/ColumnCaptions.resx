@@ -306,6 +306,9 @@
   <data name="DeclusteringPotential">
     <value>Declustering Potential</value>
   </data>
+  <data name="DeconvolutedPrecursorArea">
+    <value>Deconvoluted Precursor Area</value>
+  </data>
   <data name="DecoyMzShift">
     <value>Decoy Mz Shift</value>
   </data>
@@ -1215,6 +1218,12 @@
   </data>
   <data name="TransitionResult">
     <value>Transition Result</value>
+  </data>
+  <data name="TransitionResultIsMs1">
+    <value>Transition Result Is MS1</value>
+  </data>
+  <data name="TransitionResultIsQuantitative">
+    <value>Transition Result Is Quantitative</value>
   </data>
   <data name="TransitionResultLocator">
     <value>Transition Result Locator</value>
