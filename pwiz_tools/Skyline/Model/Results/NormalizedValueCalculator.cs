@@ -280,7 +280,6 @@ namespace pwiz.Skyline.Model.Results
                 new PeptideDocNode.TransitionKey(transitionGroupDocNode,
                     new TransitionLossKey(transitionGroupDocNode, transition, transition.Losses),
                     transitionGroupDocNode.LabelType)
-
             );
         }
 
