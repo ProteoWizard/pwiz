@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using pwiz.Common.DataBinding;
@@ -27,7 +28,9 @@ using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.Results.Deconvolution;
 using pwiz.Skyline.Model.Results.Scoring;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
@@ -96,11 +99,65 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public double? LibraryDotProduct { get { return ChromInfo.LibraryDotProduct; } }
         [Format(Formats.STANDARD_RATIO, NullValue = TextUtil.EXCEL_NA)]
         public double? IsotopeDotProduct { get { return ChromInfo.IsotopeDotProduct; } }
-        public double? AdjustedPrecursorArea
+        [Format(Formats.PEAK_AREA)]
+        public double? DeconvolutedPrecursorArea
         {
             get
             {
-                return
+                var deconvoluter = new Deconvoluter(SrmDocument.Settings);
+                int? myIndex = null;
+                var myDocNode = Precursor.DocNode;
+                var myUnlabeledAdduct = myDocNode.PrecursorAdduct.Unlabeled;
+                var deconvolutionKeys = new List<DeconvolutionKey>();
+                var areas = new List<KeyValuePair<double, double>>();
+                int replicateIndex = GetResultFile().Replicate.ReplicateIndex;
+                var fileId = GetResultFile().ChromFileInfoId;
+                int optStep = GetResultFile().OptimizationStep;
+
+                foreach (var transitionGroup in Precursor.Peptide.DocNode.TransitionGroups)
+                {
+                    if (!myUnlabeledAdduct.Equals(transitionGroup.PrecursorAdduct.Unlabeled))
+                    {
+                        continue;
+                    }
+                    if (ReferenceEquals(transitionGroup.TransitionGroup, myDocNode.TransitionGroup))
+                    {
+                        myIndex = deconvolutionKeys.Count;
+                    }
+                    deconvolutionKeys.Add(deconvoluter.MakeDeconvolutionKey(Precursor.Peptide.DocNode, transitionGroup));
+                    foreach (var transition in transitionGroup.Transitions)
+                    {
+                        if (!transition.IsMs1)
+                        {
+                            continue;
+                        }
+
+                        if (transition.Results == null ||
+                            transition.Results.Count <= replicateIndex)
+                        {
+                            continue;
+                        }
+
+                        var transitionChromInfo = transition.Results[replicateIndex].FirstOrDefault(
+                            tci => ReferenceEquals(tci?.FileId, fileId) && optStep == tci?.OptimizationStep);
+                        if (transitionChromInfo == null || transitionChromInfo.IsEmpty)
+                        {
+                            continue;
+                        }
+                        areas.Add(new KeyValuePair<double, double>(transition.Mz, transitionChromInfo.Area));
+                    }
+                }
+
+                if (!myIndex.HasValue)
+                {
+                    return null;
+                }
+
+                var minMz = deconvolutionKeys.Min(key => key.TransitionGroupDocNode.PrecursorMz.Value);
+                // TODO(nicksh): decide the window width based on Full Scan settings
+                var windowWidth = minMz / 10000;
+                var result = deconvoluter.DeconvoluteAreas(deconvolutionKeys, areas, windowWidth);
+                return result[myIndex.Value];
             }
         }
 

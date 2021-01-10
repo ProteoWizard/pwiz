@@ -6,6 +6,7 @@ using MathNet.Numerics.LinearAlgebra.Double;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results.Deconvolution
 {
@@ -79,6 +80,41 @@ namespace pwiz.Skyline.Model.Results.Deconvolution
             }
             var entries = keys.Zip(Deconvolute(timeIntensities, predictedIntensities, scores), Tuple.Create);
             return new DeconvolutedChromatograms(entries, scores);
+        }
+
+        public List<double> DeconvoluteAreas(IList<DeconvolutionKey> keys,
+            IList<KeyValuePair<double, double>> areas, double windowWidth)
+        {
+            var predictedIntensities = keys.Select(key => new List<double>()).ToArray();
+            var observedIntensities = new List<double>();
+            foreach (var mzIntensity in areas)
+            {
+                observedIntensities.Add(mzIntensity.Value);
+                for (int iMassDist = 0; iMassDist < keys.Count; iMassDist++)
+                {
+                    var massDist = keys[iMassDist].MassDistribution;
+                    double mzMiddle = mzIntensity.Key;
+                    double mzLower = mzMiddle - windowWidth / 2;
+                    double mzUpper = mzMiddle + windowWidth / 2;
+                    double intensity = GetIntensityInRange(massDist, mzLower, mzUpper);
+                    predictedIntensities[iMassDist].Add(intensity);
+                }
+            }
+
+            var times = ImmutableList.Singleton(0f);
+            var timeIntensitiesList = observedIntensities.Select(i =>
+                new TimeIntensities(times, ImmutableList.Singleton((float) i), null, null)).ToList();
+            var scores = new List<double>();
+            var deconvoluted = Deconvolute(timeIntensitiesList, predictedIntensities, scores);
+            var result = new List<double>();
+            for (int i = 0; i < keys.Count; i++)
+            {
+                var timeIntensities = deconvoluted[i];
+                Assume.AreEqual(1, timeIntensities.Times.Count);
+                result.Add(timeIntensities.Intensities[0]);
+            }
+
+            return result;
         }
 
         private static double GetIntensityInRange(MassDistribution massDistribution, double minMz, double maxMz)

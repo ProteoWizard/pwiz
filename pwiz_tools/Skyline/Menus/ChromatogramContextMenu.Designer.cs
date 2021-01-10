@@ -88,6 +88,9 @@
             this.toolStripSeparator19 = new System.Windows.Forms.ToolStripSeparator();
             this.zoomChromContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator26 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.deconvoluteIsotopesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.contextMenuChromatogram.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -384,7 +387,9 @@
             this.transformChromInterpolatedContextMenuItem,
             this.secondDerivativeContextMenuItem,
             this.firstDerivativeContextMenuItem,
-            this.smoothSGChromContextMenuItem});
+            this.smoothSGChromContextMenuItem,
+            this.toolStripSeparator1,
+            this.deconvoluteIsotopesContextMenuItem});
             this.transformChromContextMenuItem.Name = "transformChromContextMenuItem";
             resources.ApplyResources(this.transformChromContextMenuItem, "transformChromContextMenuItem");
             this.transformChromContextMenuItem.DropDownOpening += new System.EventHandler(this.transformChromMenuItem_DropDownOpening);
@@ -499,11 +504,23 @@
             this.toolStripSeparator26.Name = "toolStripSeparator26";
             resources.ApplyResources(this.toolStripSeparator26, "toolStripSeparator26");
             // 
+            // toolStripSeparator1
+            // 
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            resources.ApplyResources(this.toolStripSeparator1, "toolStripSeparator1");
+            // 
+            // deconvoluteIsotopesContextMenuItem
+            // 
+            this.deconvoluteIsotopesContextMenuItem.Name = "deconvoluteIsotopesContextMenuItem";
+            resources.ApplyResources(this.deconvoluteIsotopesContextMenuItem, "deconvoluteIsotopesContextMenuItem");
+            this.deconvoluteIsotopesContextMenuItem.Click += new System.EventHandler(this.deconvoluteIsotopesContextMenuItem_Click);
+            // 
             // ChromatogramContextMenu
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Name = "ChromatogramContextMenu";
+            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             this.contextMenuChromatogram.ResumeLayout(false);
             this.ResumeLayout(false);
 
@@ -569,5 +586,7 @@
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator19;
         private System.Windows.Forms.ToolStripMenuItem zoomChromContextMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator26;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
+        private System.Windows.Forms.ToolStripMenuItem deconvoluteIsotopesContextMenuItem;
     }
 }

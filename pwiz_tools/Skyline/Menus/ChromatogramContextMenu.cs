@@ -604,6 +604,7 @@ namespace pwiz.Skyline.Menus
             secondDerivativeContextMenuItem.Checked = (transform == TransformChrom.craw2d);
             firstDerivativeContextMenuItem.Checked = (transform == TransformChrom.craw1d);
             smoothSGChromContextMenuItem.Checked = (transform == TransformChrom.savitzky_golay);
+            deconvoluteIsotopesContextMenuItem.Checked = Settings.Default.DisplayDeconvolutedChromatograms;
         }
         private void transformChromNoneMenuItem_Click(object sender, EventArgs e)
         {
@@ -630,6 +631,10 @@ namespace pwiz.Skyline.Menus
         private void smoothSGChromMenuItem_Click(object sender, EventArgs e)
         {
             SkylineWindow.SetTransformChrom(TransformChrom.savitzky_golay);
+        }
+        private void deconvoluteIsotopesContextMenuItem_Click(object sender, EventArgs e)
+        {
+            SkylineWindow.SetDisplayDeconvolutedChromatograms(!Settings.Default.DisplayDeconvolutedChromatograms);
         }
         #endregion
         #region Auto Zoom
