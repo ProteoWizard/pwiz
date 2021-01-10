@@ -12,7 +12,7 @@ namespace pwiz.Skyline.Model.Results.Deconvolution
     {
         private static readonly IdentityEqualityComparer<TransitionGroup> TRANSITION_GROUP_COMPARER = new IdentityEqualityComparer<TransitionGroup>();
         private Dictionary<TransitionGroup, ChromGroupEntry> _index;
-        private Dictionary<MsDataFileUri, DeconvolutedChromatograms> _deconvolutedChromatograms = new Dictionary<MsDataFileUri, DeconvolutedChromatograms>();
+        private Dictionary<MsDataFileUri, ImmutableList<DeconvolutedChromatograms>> _deconvolutedChromatograms = new Dictionary<MsDataFileUri, ImmutableList<DeconvolutedChromatograms>>();
         public ChromGroupSet(SrmSettings settings, IEnumerable<ChromGroupEntry> entries)
         {
             Settings = settings;
@@ -93,7 +93,7 @@ namespace pwiz.Skyline.Model.Results.Deconvolution
             public ChromatogramGroupInfo ChromatogramGroupInfo { get; private set; }
         }
 
-        public DeconvolutedChromatograms GetDeconvolutedChromatograms(MsDataFileUri dataFileUri)
+        public IList<DeconvolutedChromatograms> GetDeconvolutedChromatograms(MsDataFileUri dataFileUri)
         {
             if (_deconvolutedChromatograms.TryGetValue(dataFileUri, out var deconvolutedChromatograms))
             {
@@ -116,8 +116,8 @@ namespace pwiz.Skyline.Model.Results.Deconvolution
                 chromatogramGroupInfos.Add(entry.ChromatogramGroupInfo);
             }
 
-            deconvolutedChromatograms =
-                deconvoluter.DeconvoluteChromatograms(chromatogramGroupInfos, deconvolutionKeys);
+            deconvolutedChromatograms = ImmutableList.ValueOf(
+                deconvoluter.DeconvoluteChromatograms(chromatogramGroupInfos, deconvolutionKeys));
             _deconvolutedChromatograms[dataFileUri] = deconvolutedChromatograms;
             return deconvolutedChromatograms;
         }
@@ -156,18 +156,18 @@ namespace pwiz.Skyline.Model.Results.Deconvolution
                 var deconvolutedChromatograms = GetDeconvolutedChromatograms(grouping.Key);
                 foreach (var precursorGroup in grouping.ToLookup(precursorEntry=>precursorEntry.Item3.Transition.Group, TRANSITION_GROUP_COMPARER))
                 {
-                    ReplaceChroamtogramInfos(deconvolutedChromatograms, chromatogramInfos, precursorGroup.Key, precursorGroup);
+                    ReplaceChromatogramInfos(deconvolutedChromatograms, chromatogramInfos, precursorGroup.Key, precursorGroup);
                 }
             }
         }
 
-        private void ReplaceChroamtogramInfos(
-            DeconvolutedChromatograms deconvolutedChromatograms,
+        private void ReplaceChromatogramInfos(
+            IEnumerable<DeconvolutedChromatograms> deconvolutedChromatograms,
             IList<ChromatogramInfo> chromatogramInfos,
             TransitionGroup transitionGroup,
             IEnumerable<Tuple<int, ChromGroupEntry, TransitionDocNode>> precursorTransitionTuples)
         {
-            var timeIntensities = deconvolutedChromatograms.Chromatograms.FirstOrDefault(tuple =>
+            var timeIntensities = deconvolutedChromatograms.SelectMany(dc=>dc.Chromatograms).FirstOrDefault(tuple =>
                 ReferenceEquals(tuple.Item1.TransitionGroupDocNode.TransitionGroup, transitionGroup))?.Item2;
             if (timeIntensities == null)
             {

@@ -46,10 +46,9 @@ namespace pwiz.Skyline.Model.Results.Deconvolution
             return calc.GetMZDistributionSinglePoint(transitionGroupDocNode.PrecursorMz);
         }
 
-        public DeconvolutedChromatograms DeconvoluteChromatograms(IList<ChromatogramGroupInfo> chromGroups,
+        public IEnumerable<DeconvolutedChromatograms> DeconvoluteChromatograms(IList<ChromatogramGroupInfo> chromGroups,
             IList<DeconvolutionKey> keys)
         {
-            var scores = new List<double>();
             var predictedIntensities = keys.Select(key => new List<double>()).ToArray();
             
             var timeIntensities = new List<TimeIntensities>();
@@ -78,8 +77,23 @@ namespace pwiz.Skyline.Model.Results.Deconvolution
                     }
                 }
             }
-            var entries = keys.Zip(Deconvolute(timeIntensities, predictedIntensities, scores), Tuple.Create);
-            return new DeconvolutedChromatograms(entries, scores);
+
+            foreach (var group in FindNonOverlappingGroups(predictedIntensities))
+            {
+                var activeIndexes = Enumerable.Range(0, timeIntensities.Count)
+                    .Where(i => group.Any(groupMember => predictedIntensities[groupMember][i] != 0)).ToList();
+                var activeTimeIntensities = activeIndexes.Select(i => timeIntensities[i]).ToList();
+                var groupPredictedIntensities = new List<IList<double>>();
+                foreach (int groupMember in group)
+                {
+                    groupPredictedIntensities.Add(activeIndexes.Select(i=>predictedIntensities[groupMember][i]).ToList());
+                }
+
+                var scores = new List<double>();
+                var deconvolutedTimeIntensities = Deconvolute(activeTimeIntensities, groupPredictedIntensities, scores);
+                var timeIntensityTuples = group.Select(groupMember=>keys[groupMember]).Zip(deconvolutedTimeIntensities, Tuple.Create);
+                yield return new DeconvolutedChromatograms(timeIntensityTuples, scores);
+            }
         }
 
         public List<double> DeconvoluteAreas(IList<DeconvolutionKey> keys,
@@ -223,6 +237,43 @@ namespace pwiz.Skyline.Model.Results.Deconvolution
             var matrixATAInv = matrixATA.Inverse();
             var matrixResult = matrixATAInv.Multiply(matrixAT).Multiply(matrixP);
             return matrixResult.Column(0);
+        }
+
+        public IEnumerable<IList<int>> FindNonOverlappingGroups(IList<IList<double>> predictedIntensities)
+        {
+            var nonZeroPositions = new List<HashSet<int>>();
+            foreach (var intensities in predictedIntensities)
+            {
+                nonZeroPositions.Add(new HashSet<int>(Enumerable.Range(0, intensities.Count).Where(i=>intensities[i] != 0)));
+            }
+
+            var remainingIndexes = Enumerable.Range(0, predictedIntensities.Count).ToList();
+            while (remainingIndexes.Count > 0)
+            {
+                int firstIndex = remainingIndexes[0];
+                remainingIndexes.RemoveAt(0);
+                var group = new List<int>{firstIndex};
+                var groupPositions = new HashSet<int>(nonZeroPositions[firstIndex]);
+                bool anyFound = true;
+                while (anyFound)
+                {
+                    anyFound = false;
+                    for (int iTry = 0; iTry < remainingIndexes.Count; iTry++)
+                    {
+                        var nextIndex = remainingIndexes[iTry];
+                        if (nonZeroPositions[nextIndex].Intersect(groupPositions).Any())
+                        {
+                            anyFound = true;
+                            group.Add(nextIndex);
+                            groupPositions.UnionWith(nonZeroPositions[nextIndex]);
+                            remainingIndexes.RemoveAt(iTry);
+                            break;
+                        }
+                    }
+                }
+
+                yield return group;
+            }
         }
     }
 }
