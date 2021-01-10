@@ -302,7 +302,7 @@ namespace pwiz.SkylineTestTutorial
                 Assert.IsNotNull(graphChrom);
                 Assert.AreEqual(unknownReplicate, graphChrom.NameSet);
 
-                var firstGroupInfo = graphChrom.ChromGroupInfos.FirstOrDefault();
+                var firstGroupInfo = graphChrom.ChromGroupInfos.Entries.FirstOrDefault()?.ChromatogramGroupInfo;
                 Assert.IsNotNull(firstGroupInfo, "Missing group info");
                 var firstChromItem = graphChrom.GraphItems.FirstOrDefault(gci => gci.TransitionChromInfo != null);
                 Assert.IsNotNull(firstChromItem, "Missing graph item");

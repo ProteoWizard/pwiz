@@ -256,7 +256,7 @@ namespace pwiz.SkylineTestTutorial
                 var listChanges = new List<ChangedPeakBoundsEventArgs>
                 {
                     new ChangedPeakBoundsEventArgs(pathGroup, null, graphChrom.NameSet,
-                                                    graphChrom.ChromGroupInfos[0].FilePath,
+                                                    graphChrom.ChromGroupInfos.Entries[0].ChromatogramGroupInfo.FilePath,
                                                     new ScaledRetentionTime(29.8, 29.8),
                                                     new ScaledRetentionTime(30.4, 30.4),
                                                     PeakIdentification.FALSE,

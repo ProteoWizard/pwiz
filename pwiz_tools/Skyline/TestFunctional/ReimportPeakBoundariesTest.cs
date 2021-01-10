@@ -61,7 +61,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Manually choose the peak at newPeakTime
             var graphChromatogram = SkylineWindow.GraphChromatograms.First();
-            var chromGroupInfo = graphChromatogram.ChromGroupInfos[0];
+            var chromGroupInfo = graphChromatogram.ChromGroupInfos.Entries[0].ChromatogramGroupInfo;
             var chromatogramInfo =
                 chromGroupInfo.TransitionPointSets.FirstOrDefault(chrom =>
                     Math.Abs(transitionDocNode.Mz - chrom.ProductMz) < 0.055);

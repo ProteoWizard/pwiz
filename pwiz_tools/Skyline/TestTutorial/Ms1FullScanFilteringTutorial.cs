@@ -833,7 +833,7 @@ namespace pwiz.SkylineTestTutorial
                     new ChangedPeakBoundsEventArgs(new IdentityPath(pathPep, nodeGroup.TransitionGroup),
                         null,
                         graphChrom.NameSet,
-                        graphChrom.ChromGroupInfos[0].FilePath,
+                        graphChrom.ChromGroupInfos.Entries[0].ChromatogramGroupInfo.FilePath,
                         graphChrom.GraphItems.First().GetValidPeakBoundaryTime(startDisplayTime),
                         graphChrom.GraphItems.First().GetValidPeakBoundaryTime(endDisplayTime),
                         PeakIdentification.ALIGNED,
