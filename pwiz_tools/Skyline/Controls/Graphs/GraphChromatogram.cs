@@ -2676,8 +2676,13 @@ ref double bestEndTime)
         {
             changedGroups = false;
             changedGroupIds = false;
-            if (ArrayUtil.ReferencesEqual(nodeGroups, _nodeGroups) && _arrayChromInfo != null)
-                return true;
+            if (ArrayUtil.ReferencesEqual(nodeGroups, _nodeGroups))
+            {
+                if (ReferenceEquals(_arrayChromInfo?.FirstOrDefault()?.Settings, DocumentUI.Settings))
+                {
+                    return true;
+                }
+            }
 
             changedGroups = true;
             int lenNew = nodeGroups.SafeLength();

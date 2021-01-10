@@ -10,14 +10,14 @@ namespace pwiz.Skyline.Model.Results.Deconvolution
 {
     public class ChromGroupSet
     {
-        private static readonly IdentityEqualityComparer<TransitionGroup> _transitionGroupComparer;
+        private static readonly IdentityEqualityComparer<TransitionGroup> TRANSITION_GROUP_COMPARER = new IdentityEqualityComparer<TransitionGroup>();
         private Dictionary<TransitionGroup, ChromGroupEntry> _index;
         private Dictionary<MsDataFileUri, DeconvolutedChromatograms> _deconvolutedChromatograms = new Dictionary<MsDataFileUri, DeconvolutedChromatograms>();
         public ChromGroupSet(SrmSettings settings, IEnumerable<ChromGroupEntry> entries)
         {
             Settings = settings;
             Entries = ImmutableList.ValueOf(entries);
-            _index = new Dictionary<TransitionGroup, ChromGroupEntry>(_transitionGroupComparer);
+            _index = new Dictionary<TransitionGroup, ChromGroupEntry>(TRANSITION_GROUP_COMPARER);
             foreach (var entry in Entries)
             {
                 if (null != entry.TransitionGroupDocNode)
@@ -154,7 +154,7 @@ namespace pwiz.Skyline.Model.Results.Deconvolution
             foreach (var grouping in precursorEntries.ToLookup(tuple => tuple.Item2.ChromatogramGroupInfo.FilePath))
             {
                 var deconvolutedChromatograms = GetDeconvolutedChromatograms(grouping.Key);
-                foreach (var precursorGroup in grouping.ToLookup(precursorEntry=>precursorEntry.Item3.Transition.Group, _transitionGroupComparer))
+                foreach (var precursorGroup in grouping.ToLookup(precursorEntry=>precursorEntry.Item3.Transition.Group, TRANSITION_GROUP_COMPARER))
                 {
                     ReplaceChroamtogramInfos(deconvolutedChromatograms, chromatogramInfos, precursorGroup.Key, precursorGroup);
                 }
@@ -202,7 +202,7 @@ namespace pwiz.Skyline.Model.Results.Deconvolution
                 result = transition1.Transition.MassIndex.CompareTo(transition2.Transition.MassIndex);
             }
 
-            return 0;
+            return result;
         }
     }
 }
