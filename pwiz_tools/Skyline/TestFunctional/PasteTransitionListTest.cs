@@ -141,19 +141,12 @@ namespace pwiz.SkylineTestFunctional
                 dlg.dataGrid.Columns[0].Width -= 20;
                 Assert.AreNotEqual(oldBoxWidth, comboBoxes[0].Width);
             });
-            // Clicking the "Check for Errors" button should bring up the error list dialog
-            var importTransitionListErrorDlg = ShowDialog<ImportTransitionListErrorDlg>(() => dlg.buttonCheckForErrors.PerformClick());
-            // Dismiss it
-            var errorDlg = importTransitionListErrorDlg;
-            OkDialog(importTransitionListErrorDlg, () => errorDlg.DialogResult = DialogResult.OK);
+            // Clicking the "Check for Errors" button should bring up the special column missing dialog
+            RunDlg<MessageDlg>(dlg.buttonCheckForErrors.PerformClick, messageDlg => { messageDlg.OkDialog(); });   // Dismiss it
             // Clicking OK while input is invalid should also pop up the error list
-            var importTransitionListErrorDlg2 = ShowDialog<ImportTransitionListErrorDlg>(() => dlg.DialogResult = DialogResult.OK);
-            // Dismiss it and should be back to import dialog again
-            var dlg2 = importTransitionListErrorDlg2;
-            OkDialog(importTransitionListErrorDlg2, () => dlg2.DialogResult = DialogResult.OK);
+            RunDlg<MessageDlg>(dlg.buttonOk.PerformClick, messageDlg => { messageDlg.OkDialog(); });   // Dismiss it
             // Only way out without fixing the columns is to cancel
-            var dlg1 = dlg;
-            OkDialog(dlg, () => dlg1.DialogResult = DialogResult.Cancel);
+            dlg.CancelButton.PerformClick();
 
             // Now check UI interactions with a bad import file whose headers we correct in the dialog
             using (new CheckDocumentState(1,2,2,9))

@@ -419,7 +419,7 @@ namespace pwiz.Skyline.FileUI
                     {
                         errorMessage = errorMessage + @" " + MissingEssentialColumns[i];
                     }
-                    MessageBox.Show(errorMessage);
+                    MessageDlg.Show(this, errorMessage);
                     return true;
                 }
                 else
