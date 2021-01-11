@@ -1868,9 +1868,6 @@ namespace pwiz.Skyline
                     return;
             }
             
-            // User feedback
-            // Change importer based on user feedback
-            ///////////////////////////////////////////////////////
             using (var longWaitDlg = new LongWaitDlg(this) {Text = description})
             {
                 var status = longWaitDlg.PerformWork(this, 1000, longWaitBroker =>

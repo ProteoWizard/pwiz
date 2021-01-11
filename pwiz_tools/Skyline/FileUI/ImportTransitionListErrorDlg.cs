@@ -30,8 +30,6 @@ namespace pwiz.Skyline.FileUI
 {
     public partial class ImportTransitionListErrorDlg : FormEx
     {
-        // trioMissing denotes whether a transition list is missing any of: Product m/z, Precursor m/z, or Peptide Sequence, in which case it is not
-        // a valid transition list and the user must try again
         public ImportTransitionListErrorDlg(List<TransitionImportErrorInfo> errorList, bool isErrorAll, bool offerCancelButton)
         {
             InitializeComponent();
