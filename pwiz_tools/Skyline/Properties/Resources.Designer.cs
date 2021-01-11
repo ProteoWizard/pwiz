@@ -3461,6 +3461,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The file appears to be corrupted.
+        /// </summary>
+        public static string ChromatogramCache_LoadStructs_The_file_appears_to_be_corrupted {
+            get {
+                return ResourceManager.GetString("ChromatogramCache_LoadStructs_The_file_appears_to_be_corrupted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The SKYD file format {0} is not supported by Skyline {1}..
         /// </summary>
         public static string ChromatogramCache_LoadStructs_The_SKYD_file_format__0__is_not_supported_by_Skyline__1__ {

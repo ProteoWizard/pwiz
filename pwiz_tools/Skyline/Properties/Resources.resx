@@ -11192,4 +11192,7 @@ Invalid peptide sequence at position 18
   <data name="HierarchicalClusterGraph_zedGraphControl1_ContextMenuBuilder_Show_Selection" xml:space="preserve">
     <value>Show Selection</value>
   </data>
+  <data name="ChromatogramCache_LoadStructs_The_file_appears_to_be_corrupted" xml:space="preserve">
+    <value>The file appears to be corrupted</value>
+  </data>
 </root>
