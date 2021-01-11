@@ -191,6 +191,7 @@ namespace pwiz.Skyline.Model.Lists
                 return listIds;
             }
             var selectedRows = dataGridView.SelectedRows.Cast<DataGridViewRow>()
+                .Where(row=>!row.IsNewRow)
                 .Select(row => (RowItem)bindingSource[row.Index]).ToArray();
             if (!selectedRows.Any())
             {

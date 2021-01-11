@@ -2731,11 +2731,6 @@ namespace pwiz.Skyline
                 results.Chromatograms.FirstOrDefault(set => Equals(name, set.Name)));
         }
 
-        private void manageResultsMenuItem_Click(object sender, EventArgs e)
-        {
-            ManageResults();
-        }
-
         public void ManageResults()
         {
             var documentUI = DocumentUI;
