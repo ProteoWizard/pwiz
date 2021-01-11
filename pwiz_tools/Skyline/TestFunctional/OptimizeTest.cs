@@ -208,8 +208,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(1, addOptDlgAskAvg.ExistingOptimizationsCount);
             RunUI(() => addOptDlgAskAvg.Action = AddOptimizationsAction.average);
             OkDialog(addOptDlgAskAvg, addOptDlgAskAvg.OkDialog);
-            PauseTest();
-             Assert.AreEqual(7.5, editOptLib.GetCEOptimization(target_AAC, GetAdduct(5), "y2", GetAdduct(2)).Value);
+            Assert.AreEqual(7.5, editOptLib.GetCEOptimization(target_AAC, GetAdduct(5), "y2", GetAdduct(2)).Value);
             // Add duplicates and replace existing
             var addOptDbDlgReplace = ShowDialog<AddOptimizationLibraryDlg>(editOptLib.AddOptimizationDatabase);
             RunUI(() =>
