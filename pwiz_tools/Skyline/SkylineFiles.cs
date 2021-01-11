@@ -1856,7 +1856,7 @@ namespace pwiz.Skyline
             var docCurrent = DocumentUI;
             SrmDocument docNew = null;
 
-            // Play around here with PreImport of mass list
+            // PreImport of mass list
             var importer = docCurrent.PreImportMassList(inputs, null);
             if (importer == null)
                 return;
