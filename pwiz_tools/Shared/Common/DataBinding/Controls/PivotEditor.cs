@@ -217,7 +217,7 @@ namespace pwiz.Common.DataBinding.Controls
             }
             else
             {
-                _allProperties = BindingListSource.ItemProperties;
+                _allProperties = BindingListSource.ItemProperties.AsImmutableList();
             }
             UpdateUi();
         }
@@ -310,7 +310,7 @@ namespace pwiz.Common.DataBinding.Controls
             {
                 var transformResults = bindingListSource.BindingListView.QueryResults.TransformResults;
                 var currentPivotSpec = alwaysAddNewLevel ? null : transformResults.RowTransform as PivotSpec;
-                ImmutableList<DataPropertyDescriptor> allProperties;
+                IList<DataPropertyDescriptor> allProperties;
                 if (currentPivotSpec == null)
                 {
                     allProperties = transformResults.PivotedRows.ItemProperties;

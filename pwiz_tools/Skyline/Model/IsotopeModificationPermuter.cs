@@ -22,6 +22,7 @@ using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -120,7 +121,13 @@ namespace pwiz.Skyline.Model
             }
 
             document = (SrmDocument) document.ChangeChildren(ImmutableList.ValueOf(newMoleculeGroups.Cast<DocNode>()));
-
+            var pepModsNew = document.Settings.PeptideSettings.Modifications;
+            pepModsNew = pepModsNew.DeclareExplicitMods(document, GlobalStaticMods, GlobalIsotopeMods);
+            if (!Equals(pepModsNew, document.Settings.PeptideSettings.Modifications))
+            {
+                var newSettings = document.Settings.ChangePeptideModifications(m => pepModsNew);
+                document = document.ChangeSettings(newSettings);
+            }
             return document;
         }
 

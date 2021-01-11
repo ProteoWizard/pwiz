@@ -50,6 +50,9 @@
             this.lblFilterApplied = new System.Windows.Forms.ToolStripLabel();
             this.bindingNavigator1 = new System.Windows.Forms.BindingNavigator(this.components);
             this.btnGroupTotal = new System.Windows.Forms.ToolStripSplitButton();
+            this.navBarButtonCluster = new System.Windows.Forms.ToolStripSplitButton();
+            this.navBarButtonClusterGrid = new System.Windows.Forms.ToolStripMenuItem();
+            this.advancedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.navBarButtonCopyAll = new System.Windows.Forms.ToolStripButton();
             this.navBarButtonActions = new System.Windows.Forms.ToolStripDropDownButton();
@@ -173,6 +176,7 @@
             this.bindingNavigator1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.navBarButtonViews,
             this.btnGroupTotal,
+            this.navBarButtonCluster,
             this.bindingNavigatorMoveFirstItem,
             this.bindingNavigatorMovePreviousItem,
             this.bindingNavigatorSeparator,
@@ -208,6 +212,29 @@
             this.btnGroupTotal.Name = "btnGroupTotal";
             this.btnGroupTotal.ButtonClick += new System.EventHandler(this.btnGroupTotal_Click);
             this.btnGroupTotal.DropDownOpening += new System.EventHandler(this.btnGroupTotal_DropDownOpening);
+            // 
+            // navBarButtonCluster
+            // 
+            this.navBarButtonCluster.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.navBarButtonCluster.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.navBarButtonClusterGrid,
+            this.advancedToolStripMenuItem});
+            resources.ApplyResources(this.navBarButtonCluster, "navBarButtonCluster");
+            this.navBarButtonCluster.Name = "navBarButtonCluster";
+            this.navBarButtonCluster.ButtonClick += new System.EventHandler(this.navBarButtonCluster_ButtonClick);
+            this.navBarButtonCluster.DropDownOpening += new System.EventHandler(this.navBarButtonCluster_DropDownOpening);
+            // 
+            // navBarButtonClusterGrid
+            // 
+            this.navBarButtonClusterGrid.Name = "navBarButtonClusterGrid";
+            resources.ApplyResources(this.navBarButtonClusterGrid, "navBarButtonClusterGrid");
+            this.navBarButtonClusterGrid.Click += new System.EventHandler(this.navBarButtonClusterGrid_Click);
+            // 
+            // advancedToolStripMenuItem
+            // 
+            this.advancedToolStripMenuItem.Name = "advancedToolStripMenuItem";
+            resources.ApplyResources(this.advancedToolStripMenuItem, "advancedToolStripMenuItem");
+            this.advancedToolStripMenuItem.Click += new System.EventHandler(this.advancedToolStripMenuItem_Click);
             // 
             // toolStripSeparator3
             // 
@@ -267,5 +294,8 @@
         private System.Windows.Forms.ToolStripButton navBarButtonCopyAll;
         private System.Windows.Forms.ToolStripSplitButton btnGroupTotal;
         private System.Windows.Forms.ToolStripDropDownButton navBarButtonActions;
+        private System.Windows.Forms.ToolStripSplitButton navBarButtonCluster;
+        private System.Windows.Forms.ToolStripMenuItem advancedToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem navBarButtonClusterGrid;
     }
 }

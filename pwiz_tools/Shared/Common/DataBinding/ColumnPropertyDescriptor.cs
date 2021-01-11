@@ -96,6 +96,20 @@ namespace pwiz.Common.DataBinding
             get { return DisplayColumn.GetColumnDescription(PivotKey); }
         }
 
+        public override PivotedColumnId PivotedColumnId
+        {
+            get
+            {
+                IColumnCaption pivotCaption = null;
+                if (PivotKey != null)
+                {
+                    pivotCaption = CaptionComponentList.SpaceSeparate(PivotKey.KeyPairs.Select(kvp => kvp.Value));
+                }
+
+                return new PivotedColumnId(PivotKey, pivotCaption, DisplayColumn.PropertyPath, DisplayColumn.GetColumnCaption(null));
+            }
+        }
+
         #region Equality Members
         protected bool Equals(ColumnPropertyDescriptor other)
         {
