@@ -90,7 +90,7 @@ namespace pwiz.Skyline.Model.Results.Deconvolution
                 }
 
                 var scores = new List<double>();
-                var deconvolutedTimeIntensities = Deconvolute(activeTimeIntensities, groupPredictedIntensities, scores);
+                var deconvolutedTimeIntensities = DeconvoluteTimeIntensities(activeTimeIntensities, groupPredictedIntensities, scores);
                 var timeIntensityTuples = group.Select(groupMember=>keys[groupMember]).Zip(deconvolutedTimeIntensities, Tuple.Create);
                 yield return new DeconvolutedChromatograms(timeIntensityTuples, scores);
             }
@@ -100,10 +100,10 @@ namespace pwiz.Skyline.Model.Results.Deconvolution
             IList<KeyValuePair<double, double>> areas, double windowWidth)
         {
             var predictedIntensities = keys.Select(key => new List<double>()).ToArray();
-            var observedIntensities = new List<double>();
+            var observedAreas = new List<double>();
             foreach (var mzIntensity in areas)
             {
-                observedIntensities.Add(mzIntensity.Value);
+                observedAreas.Add(mzIntensity.Value);
                 for (int iMassDist = 0; iMassDist < keys.Count; iMassDist++)
                 {
                     var massDist = keys[iMassDist].MassDistribution;
@@ -115,17 +115,15 @@ namespace pwiz.Skyline.Model.Results.Deconvolution
                 }
             }
 
-            var times = ImmutableList.Singleton(0f);
-            var timeIntensitiesList = observedIntensities.Select(i =>
-                new TimeIntensities(times, ImmutableList.Singleton((float) i), null, null)).ToList();
+            var observedIntensities = observedAreas.Select(area => (IList<double>) ImmutableList.Singleton(area)).ToList();
             var scores = new List<double>();
-            var deconvoluted = Deconvolute(timeIntensitiesList, predictedIntensities, scores);
+            var deconvoluted = DeconvoluteIntensities(observedIntensities, predictedIntensities, scores);
             var result = new List<double>();
             for (int i = 0; i < keys.Count; i++)
             {
-                var timeIntensities = deconvoluted[i];
-                Assume.AreEqual(1, timeIntensities.Times.Count);
-                result.Add(timeIntensities.Intensities[0]);
+                var intensities = deconvoluted[i];
+                Assume.AreEqual(1, intensities.Count);
+                result.Add(intensities[0]);
             }
 
             return result;
@@ -145,23 +143,33 @@ namespace pwiz.Skyline.Model.Results.Deconvolution
             return totalIntensity;
         }
 
-        private static IList<TimeIntensities> Deconvolute(IList<TimeIntensities> timeIntensities, 
+        private static IList<TimeIntensities> DeconvoluteTimeIntensities(IList<TimeIntensities> timeIntensities, 
             IList<IList<double>> predictedIntensities, List<double> scores)
         {
             var allTimes = ImmutableList.ValueOf(timeIntensities.SelectMany(ti => ti.Times).Distinct().OrderBy(t => t));
             var mergedTimeIntensities = timeIntensities.Select(ti => ti.Interpolate(allTimes, false)).ToArray();
-            var deconvolutedIntensities = predictedIntensities.Select(x => new List<float>(allTimes.Count)).ToArray();
+            var observedIntensities =
+                mergedTimeIntensities.Select(ti => (IList<double>) ti.Intensities.Select(i => (double) i).ToList()).ToList();
+            var deconvolutedIntensities = DeconvoluteIntensities(observedIntensities, predictedIntensities, scores);
+            return deconvolutedIntensities.Select(intensities => new TimeIntensities(allTimes, intensities.Select(i=>(float)i), null, null)).ToArray();
+        }
+
+        private static IList<IList<double>> DeconvoluteIntensities(IList<IList<double>> observedIntensities,
+            IList<IList<double>> predictedIntensities, List<double> scores)
+        {
+            int timeCount = observedIntensities[0].Count;
+            var deconvolutedIntensities = predictedIntensities.Select(x => new List<double>(timeCount)).ToArray();
             var candidateVectors = predictedIntensities.Select(intens => (Vector<double>)new DenseVector(intens.ToArray())).ToList();
-            for (int iTime = 0; iTime < allTimes.Count; iTime++)
+            for (int iTime = 0; iTime < timeCount; iTime++)
             {
-                var observedVector = new DenseVector(mergedTimeIntensities.Select(ti => (double) ti.Intensities[iTime]).ToArray());
+                var observedVector = new DenseVector(observedIntensities.Select(intensities => intensities[iTime]).ToArray());
                 Vector<double> amounts = FindBestCombinationFilterNegatives(observedVector, candidateVectors);
-                Vector<double> totalPrediction = new DenseVector(timeIntensities.Count);
+                Vector<double> totalPrediction = new DenseVector(observedIntensities.Count);
                 for (int iCandidate = 0; iCandidate < deconvolutedIntensities.Length; iCandidate++)
                 {
                     var scaledVector = candidateVectors[iCandidate].Multiply(amounts[iCandidate]);
                     totalPrediction = totalPrediction.Add(scaledVector);
-                    deconvolutedIntensities[iCandidate].Add((float) amounts[iCandidate]);
+                    deconvolutedIntensities[iCandidate].Add((float)amounts[iCandidate]);
                 }
                 if (scores != null)
                 {
@@ -169,8 +177,8 @@ namespace pwiz.Skyline.Model.Results.Deconvolution
                     scores.Add(score);
                 }
             }
-            
-            return deconvolutedIntensities.Select(intensities => new TimeIntensities(allTimes, intensities, null, null)).ToArray();
+
+            return deconvolutedIntensities;
         }
 
         static Vector<double> FindBestCombinationFilterNegatives(Vector<double> observedIntensities,
