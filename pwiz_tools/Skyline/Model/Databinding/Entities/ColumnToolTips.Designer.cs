@@ -79,6 +79,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The value for this replicate which was used to calculate the fold change. The number depends on the normalization method, and whether the fold change is being calculated at the protein or peptide level..
+        /// </summary>
+        public static string Abundance {
+            get {
+                return ResourceManager.GetString("Abundance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Ratio of Calculated Concentration the Analyte Concentration (specified on the Replicate).
         /// </summary>
         public static string Accuracy {
@@ -2927,6 +2936,24 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Information about the values from the replicate which were used to calculate the fold change.
+        /// </summary>
+        public static string ReplicateAbundance {
+            get {
+                return ResourceManager.GetString("ReplicateAbundance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A collection of values from individual replicates which were used to calculate the fold change.
+        /// </summary>
+        public static string ReplicateAbundances {
+            get {
+                return ResourceManager.GetString("ReplicateAbundances", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The calibration curve made using the replicates that have the same Batch Name as this replicate.
         ///If the Precursor Concentration is specified on any of the Precursors in this Peptide then the Calibration Curve will be an isotopolog response curve..
         /// </summary>
@@ -2951,6 +2978,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string ReplicateErrorMessage {
             get {
                 return ResourceManager.GetString("ReplicateErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The cohort to which the Replicate Abundance belongs.
+        /// </summary>
+        public static string ReplicateGroup {
+            get {
+                return ResourceManager.GetString("ReplicateGroup", resourceCulture);
             }
         }
         
@@ -3032,6 +3068,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string Replicates {
             get {
                 return ResourceManager.GetString("Replicates", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The biological replicate for the Replicate Abundance.
+        /// </summary>
+        public static string ReplicateSampleIdentity {
+            get {
+                return ResourceManager.GetString("ReplicateSampleIdentity", resourceCulture);
             }
         }
         

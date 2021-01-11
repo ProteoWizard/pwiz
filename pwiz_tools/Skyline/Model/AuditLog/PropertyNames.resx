@@ -1580,4 +1580,16 @@
   <data name="QuantificationSettings_SimpleRatios">
     <value>Simple ratios</value>
   </data>
+  <data name="ViewLayout_ClusterSpec">
+    <value>Clustering specification</value>
+  </data>
+  <data name="ClusteringSpec_Values">
+    <value>Values</value>
+  </data>
+  <data name="ClusteringSpec_DistanceMetric">
+    <value>Distance Metric</value>
+  </data>
+  <data name="ValueSpec_ColumnRef">
+    <value>Column reference</value>
+  </data>
 </root>

@@ -328,8 +328,9 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
             var rows = _bindingListSource.OfType<RowItem>()
                 .Select(rowItem => rowItem.Value)
-                .OfType<FoldChangeBindingSource.FoldChangeRow>()
-                .ToArray();
+                .OfType<FoldChangeBindingSource.AbstractFoldChangeRow>()
+                .SelectMany(row=>row.GetFoldChangeRows())
+                .ToList();
 
             var selectedPoints = new PointPairList();
             var otherPoints = new PointPairList();
