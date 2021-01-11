@@ -16,15 +16,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using pwiz.Common.DataBinding.Internal;
 using pwiz.Common.DataBinding.Layout;
 
 namespace pwiz.Common.DataBinding
 {
     internal class TransformResults
     {
-        public static readonly TransformResults EMPTY = new TransformResults {PivotedRows = PivotedRows.EMPTY};
-        public TransformResults(TransformResults parent, IRowTransform transform, PivotedRows pivotedRows)
+        public static readonly TransformResults EMPTY = new TransformResults {PivotedRows = ReportResults.EMPTY};
+        public TransformResults(TransformResults parent, IRowTransform transform, ReportResults pivotedRows)
         {
             Parent = parent ?? EMPTY;
             RowTransform = transform;
@@ -38,7 +37,7 @@ namespace pwiz.Common.DataBinding
 
         public TransformResults Parent { get; private set; }
         public IRowTransform RowTransform { get; private set; }
-        public PivotedRows PivotedRows { get; private set; }
+        public ReportResults PivotedRows { get; private set; }
         public int Depth { get; private set; }
         public bool IsEmpty { get { return Depth == 0; } }
 

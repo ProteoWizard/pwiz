@@ -486,7 +486,7 @@ namespace pwiz.Skyline.EditUI
             }
 
             var msLevel = AreaCVMsLevel.products;
-            if (comboTransitions.Items.Count > 0)
+            if (comboTransitions.Items.Count > 0 && null != comboTransType.SelectedItem)
             {
                 var selectedMs = comboTransType.SelectedItem.ToString();
                 msLevel = AreCVMsLevelExtension.GetEnum(selectedMs);

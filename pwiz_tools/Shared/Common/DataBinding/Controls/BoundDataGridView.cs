@@ -19,11 +19,15 @@
 
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
+using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
+using pwiz.Common.Colors;
 using pwiz.Common.Controls;
 using pwiz.Common.DataBinding.Attributes;
+using pwiz.Common.DataBinding.Clustering;
 using pwiz.Common.DataBinding.Internal;
 using pwiz.Common.DataBinding.Layout;
 
@@ -40,7 +44,7 @@ namespace pwiz.Common.DataBinding.Controls
     {
         private BindingListSource _bindingListSource;
         private IViewContext _viewContext;
-        private ImmutableList<DataPropertyDescriptor> _itemProperties;
+        private ItemProperties _itemProperties;
         private ImmutableList<ColumnFormat> _columnFormats;
 
         public BoundDataGridView()
@@ -86,40 +90,76 @@ namespace pwiz.Common.DataBinding.Controls
         private void BindingListSourceOnAllRowsChanged(object sender, EventArgs eventArgs)
         {
             Invalidate();
+            UpdateColorScheme();
         }
 
+        private bool _inUpdateColumns;
         protected virtual void UpdateColumns()
         {
-            var bindingListSource = DataSource as BindingListSource;
-            if (DesignMode)
+            if (_inUpdateColumns)
             {
                 return;
             }
-            if (null == bindingListSource || null == _viewContext)
+
+            try
             {
-                return;
-            }
-            var newItemProperties = bindingListSource.ItemProperties;
-            if (!Equals(newItemProperties, _itemProperties))
-            {
-                var newColumns = new List<DataGridViewColumn>();
-                for (int i = 0; i < newItemProperties.Count; i++)
+                _inUpdateColumns = true;
+                var bindingListSource = DataSource as BindingListSource;
+                if (DesignMode)
                 {
-                    var propertyDescriptor = newItemProperties[i];
-                    var column = _viewContext.CreateGridViewColumn(propertyDescriptor);
-                    if (null != column)
-                    {
-                        newColumns.Add(column);
-                    }
+                    return;
                 }
-				if (newColumns.Count > 0)
-				{
-					Columns.Clear();
-					AddColumns(newColumns.ToArray());
-				}
-				_itemProperties = newItemProperties;
+
+                if (null == bindingListSource || null == _viewContext)
+                {
+                    return;
+                }
+
+                var columnsToHide = new HashSet<string>();
+                var clusteredProperties =
+                    (bindingListSource.ReportResults as ClusteredReportResults)?.ClusteredProperties;
+                if (clusteredProperties != null)
+                {
+                    columnsToHide.UnionWith(clusteredProperties.GetAllColumnHeaderProperties().Select(p => p.Name));
+                }
+
+                var newItemProperties = bindingListSource.ItemProperties;
+                if (!Equals(newItemProperties, _itemProperties))
+                {
+                    var newColumns = new List<DataGridViewColumn>();
+                    for (int i = 0; i < newItemProperties.Count; i++)
+                    {
+                        var propertyDescriptor = newItemProperties[i];
+                        if (columnsToHide.Contains(propertyDescriptor.Name))
+                        {
+                            continue;
+                        }
+
+                        var column = _viewContext.CreateGridViewColumn(propertyDescriptor);
+                        if (null != column)
+                        {
+                            newColumns.Add(column);
+                        }
+                    }
+
+                    if (newColumns.Count > 0)
+                    {
+                        Columns.Clear();
+                        AddColumns(newColumns.ToArray());
+                    }
+
+                    _itemProperties = newItemProperties;
+                }
+
+                UpdateColumnFormats(false);
+                UpdateColorScheme();
+
             }
-            UpdateColumnFormats(false);
+            finally
+            {
+                _inUpdateColumns = false;
+            }
+
         }
 
         protected override void OnCellContentClick(DataGridViewCellEventArgs e)
@@ -279,5 +319,88 @@ namespace pwiz.Common.DataBinding.Controls
             }
             base.OnCellErrorTextNeeded(e);
         }
+
+        protected override void OnCellFormatting(DataGridViewCellFormattingEventArgs e)
+        {
+            base.OnCellFormatting(e);
+            if (ReportColorScheme == null)
+            {
+                return;
+            }
+
+            if (e.ColumnIndex < 0 || e.ColumnIndex >= ColumnCount)
+            {
+                return;
+            }
+            var reportResults = (DataSource as BindingListSource)?.ReportResults;
+            if (reportResults == null)
+            {
+                return;
+            }
+
+            if (e.RowIndex < 0 || e.RowIndex >= reportResults.RowCount)
+            {
+                return;
+            }
+
+            var column = Columns[e.ColumnIndex];
+            if (column == null)
+            {
+                return;
+            }
+            var propertyDescriptor = reportResults.ItemProperties.FindByName(Columns[e.ColumnIndex].DataPropertyName);
+            if (propertyDescriptor == null)
+            {
+                return;
+            }
+
+            var color = ReportColorScheme.GetColor(propertyDescriptor, reportResults.RowItems[e.RowIndex]);
+            if (color.HasValue)
+            {
+                e.CellStyle.BackColor = LightenColor(color.Value);
+            }
+        }
+
+        private bool use_hsv = false;
+        public Color LightenColor(Color color)
+        {
+            if (use_hsv)
+            {
+                ColorPalettes.ColorToHSV(color, out double hue, out double saturation, out double value);
+                var newSaturation = saturation < .5 ? saturation : (saturation + .5) / 2;
+                var newValue = value > .5 ? value : (value + .5) / 2;
+                if (newSaturation == saturation && newValue == value)
+                {
+                    return color;
+                }
+                return ColorPalettes.ColorFromHSV(hue, saturation / 2, (1 + value) / 2);
+            }
+            return Color.FromArgb(color.A, LightenRgbComponent(color.R), LightenRgbComponent(color.G), LightenRgbComponent(color.B));
+        }
+
+        private int LightenRgbComponent(int component)
+        {
+            if (component > 255)
+            {
+                return component;
+            }
+
+            return (component + 255) / 2;
+        }
+
+        public void UpdateColorScheme()
+        {
+            var reportResults = (DataSource as BindingListSource)?.ReportResults as ClusteredReportResults;
+            if (reportResults == null)
+            {
+                ReportColorScheme = null;
+            }
+            else
+            {
+                ReportColorScheme = ReportColorScheme.FromClusteredResults(CancellationToken.None, reportResults);
+            }
+        }
+
+        public ReportColorScheme ReportColorScheme { get; set; }
     }
 }

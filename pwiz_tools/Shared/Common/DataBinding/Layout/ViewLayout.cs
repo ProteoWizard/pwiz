@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Xml;
 using pwiz.Common.Collections;
+using pwiz.Common.DataBinding.Clustering;
 using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.DataBinding.Layout
@@ -47,6 +48,14 @@ namespace pwiz.Common.DataBinding.Layout
             return ChangeProp(ImClone(this), im => im.RowTransforms = ImmutableList.ValueOf(rowTransforms));
         }
 
+        [Track]
+        public ClusteringSpec ClusterSpec { get; private set; }
+
+        public ViewLayout ChangeClusterSpec(ClusteringSpec clusterSpec)
+        {
+            return ChangeProp(ImClone(this), im => im.ClusterSpec = clusterSpec);
+        }
+
         public string AuditLogText
         {
             get { return Name; }
@@ -59,8 +68,9 @@ namespace pwiz.Common.DataBinding.Layout
 
         protected bool Equals(ViewLayout other)
         {
-            return string.Equals(Name, other.Name) && 
-                   Equals(ColumnFormats, other.ColumnFormats) && Equals(RowTransforms, other.RowTransforms);
+            return string.Equals(Name, other.Name) &&
+                   Equals(ColumnFormats, other.ColumnFormats) && Equals(RowTransforms, other.RowTransforms) &&
+                   Equals(ClusterSpec, other.ClusterSpec);
         }
 
         public override bool Equals(object obj)
@@ -78,6 +88,7 @@ namespace pwiz.Common.DataBinding.Layout
                 var hashCode = (Name != null ? Name.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (ColumnFormats != null ? ColumnFormats.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (RowTransforms != null ? RowTransforms.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (ClusterSpec != null ? ClusterSpec.GetHashCode() : 0);
                 return hashCode;
             }
         }
@@ -102,23 +113,25 @@ namespace pwiz.Common.DataBinding.Layout
             }
             foreach (var rowTransform in RowTransforms)
             {
-                var pivotSpec = rowTransform as PivotSpec;
-                if (pivotSpec != null)
+                if (rowTransform is PivotSpec pivotSpec)
                 {
                     writer.WriteStartElement("pivot");
                     pivotSpec.WriteXml(writer);
                     writer.WriteEndElement();
                 }
-                else
+                else if (rowTransform is RowFilter rowFilter)
                 {
-                    var rowFilter = rowTransform as RowFilter;
-                    if (rowFilter != null)
-                    {
-                        writer.WriteStartElement("rowFilter");
-                        rowFilter.WriteXml(writer);
-                        writer.WriteEndElement();
-                    }
+                    writer.WriteStartElement("rowFilter");
+                    rowFilter.WriteXml(writer);
+                    writer.WriteEndElement();
                 }
+            }
+
+            if (ClusterSpec != null)
+            {
+                writer.WriteStartElement("cluster");
+                ClusterSpec.WriteXml(writer);
+                writer.WriteEndElement();
             }
         }
 
@@ -133,6 +146,7 @@ namespace pwiz.Common.DataBinding.Layout
             reader.Read();
             var columnFormats = new List<Tuple<ColumnId, ColumnFormat>>();
             var rowTransforms = new List<IRowTransform>();
+            ClusteringSpec clusterSpec = null;
             while (true)
             {
                 if (reader.IsStartElement("columnFormat"))
@@ -163,6 +177,10 @@ namespace pwiz.Common.DataBinding.Layout
                 {
                     rowTransforms.Add(RowFilter.ReadXml(reader));
                 }
+                else if (reader.IsStartElement("cluster"))
+                {
+                    clusterSpec = ClusteringSpec.ReadXml(reader);
+                }
                 else if (reader.NodeType == XmlNodeType.EndElement)
                 {
                     reader.ReadEndElement();
@@ -175,6 +193,7 @@ namespace pwiz.Common.DataBinding.Layout
             }
             viewLayout.ColumnFormats = ImmutableList.ValueOf(columnFormats);
             viewLayout.RowTransforms = ImmutableList.ValueOf(rowTransforms);
+            viewLayout.ClusterSpec = clusterSpec;
             return viewLayout;
         }
         // ReSharper restore LocalizableElement
