@@ -3452,20 +3452,21 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The file appears to be corrupted and cannot be read.
+        ///It is recommended that you delete this file so that Skyline can create a new file by again extracting chromatograms from the raw data files..
+        /// </summary>
+        public static string ChromatogramCache_LoadStructs_FileCorrupted {
+            get {
+                return ResourceManager.GetString("ChromatogramCache_LoadStructs_FileCorrupted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Please check for a newer release..
         /// </summary>
         public static string ChromatogramCache_LoadStructs_Please_check_for_a_newer_release_ {
             get {
                 return ResourceManager.GetString("ChromatogramCache_LoadStructs_Please_check_for_a_newer_release_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The file appears to be corrupted.
-        /// </summary>
-        public static string ChromatogramCache_LoadStructs_The_file_appears_to_be_corrupted {
-            get {
-                return ResourceManager.GetString("ChromatogramCache_LoadStructs_The_file_appears_to_be_corrupted", resourceCulture);
             }
         }
         
