@@ -70,7 +70,6 @@
             this.comboStandards = new System.Windows.Forms.ComboBox();
             this.comboRegressionType = new System.Windows.Forms.ComboBox();
             this.label5 = new System.Windows.Forms.Label();
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceLibrary)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceStandard)).BeginInit();
             this.contextMenuAdd.SuspendLayout();
@@ -366,7 +365,6 @@
             this.ShowInTaskbar = false;
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.EditIrtCalcDlg_FormClosing);
             this.Load += new System.EventHandler(this.OnLoad);
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceLibrary)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceStandard)).EndInit();
             this.contextMenuAdd.ResumeLayout(false);
