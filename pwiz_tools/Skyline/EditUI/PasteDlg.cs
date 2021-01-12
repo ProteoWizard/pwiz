@@ -1945,14 +1945,6 @@ namespace pwiz.Skyline.EditUI
         transition_list,
     }
 
-    public class PasteError
-    {
-        public String Message { get; set; }
-        public int Line { get; set; }
-        public int Column { get; set; }
-        public int Length { get; set; }
-    }
-
     public class ImportFastaHelper
     {
         public ImportFastaHelper(TextBox tbxFasta, TextBox tbxError, Panel panelError, ToolTip helpTip)
