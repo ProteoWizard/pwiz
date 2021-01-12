@@ -344,7 +344,6 @@ namespace pwiz.Skyline
             this.detectionsToolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.detectionsPropertiesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.detectionsToolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.contextMenuTreeNode.SuspendLayout();
             this.contextMenuSpectrum.SuspendLayout();
             this.contextMenuRetentionTimes.SuspendLayout();
@@ -2556,7 +2555,6 @@ namespace pwiz.Skyline
             this.Activated += new System.EventHandler(this.SkylineWindow_Activated);
             this.Move += new System.EventHandler(this.SkylineWindow_Move);
             this.Resize += new System.EventHandler(this.SkylineWindow_Resize);
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             this.contextMenuTreeNode.ResumeLayout(false);
             this.contextMenuSpectrum.ResumeLayout(false);
             this.contextMenuRetentionTimes.ResumeLayout(false);

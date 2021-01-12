@@ -40,7 +40,6 @@
             this.lblElementTypes = new System.Windows.Forms.Label();
             this.cbxRemoveBlankRows = new System.Windows.Forms.CheckBox();
             this.lblInstructions = new System.Windows.Forms.Label();
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -144,7 +143,6 @@
             this.Name = "ExportAnnotationsDlg";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.Panel1.PerformLayout();
             this.splitContainer1.Panel2.ResumeLayout(false);

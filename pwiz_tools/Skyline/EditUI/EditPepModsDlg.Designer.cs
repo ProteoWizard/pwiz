@@ -43,7 +43,6 @@
             this.btnReset = new System.Windows.Forms.Button();
             this.cbCreateCopy = new System.Windows.Forms.CheckBox();
             this.toolTip = new System.Windows.Forms.ToolTip(this.components);
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.panelMain.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -142,7 +141,6 @@
             this.MinimizeBox = false;
             this.Name = "EditPepModsDlg";
             this.ShowInTaskbar = false;
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             this.panelMain.ResumeLayout(false);
             this.panelMain.PerformLayout();
             this.ResumeLayout(false);
