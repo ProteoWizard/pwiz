@@ -73,7 +73,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.lblSearchSettings = new System.Windows.Forms.Label();
             this.ddaSearchTitlePanel = new System.Windows.Forms.Panel();
             this.lblDDASearch = new System.Windows.Forms.Label();
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.wizardPagesImportPeptideSearch.SuspendLayout();
             this.buildSearchSpecLibPage.SuspendLayout();
             this.buildSpectralLibraryTitlePanel.SuspendLayout();
@@ -435,7 +434,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.MinimizeBox = false;
             this.Name = "ImportPeptideSearchDlg";
             this.ShowInTaskbar = false;
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             this.wizardPagesImportPeptideSearch.ResumeLayout(false);
             this.buildSearchSpecLibPage.ResumeLayout(false);
             this.buildSpectralLibraryTitlePanel.ResumeLayout(false);
