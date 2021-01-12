@@ -102,7 +102,6 @@ namespace pwiz.Skyline.SettingsUI
             this.toolStripSeparator15 = new System.Windows.Forms.ToolStripSeparator();
             this.zoomSpectrumContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator27 = new System.Windows.Forms.ToolStripSeparator();
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.splitPeptideList)).BeginInit();
             this.splitPeptideList.Panel1.SuspendLayout();
             this.splitPeptideList.Panel2.SuspendLayout();
@@ -709,7 +708,6 @@ namespace pwiz.Skyline.SettingsUI
             this.Load += new System.EventHandler(this.ViewLibraryDlg_Load);
             this.Shown += new System.EventHandler(this.ViewLibraryDlg_Shown);
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.ViewLibraryDlg_KeyDown);
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             this.splitPeptideList.Panel1.ResumeLayout(false);
             this.splitPeptideList.Panel2.ResumeLayout(false);
             this.splitPeptideList.Panel2.PerformLayout();

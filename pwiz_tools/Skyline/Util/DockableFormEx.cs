@@ -56,7 +56,6 @@ namespace pwiz.Skyline.Util
             this._components = new System.ComponentModel.Container();
             this.ModeUIExtender = new Helpers.ModeUIExtender(_components);
             this._modeUIHelper = new Helpers.ModeUIAwareFormHelper(ModeUIExtender);
-            ((System.ComponentModel.ISupportInitialize)(this.ModeUIExtender)).BeginInit();
         }
         #endregion
 
