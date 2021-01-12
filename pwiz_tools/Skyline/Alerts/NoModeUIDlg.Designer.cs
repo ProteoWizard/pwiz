@@ -64,7 +64,6 @@ namespace pwiz.Skyline.Alerts
             this.label2 = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.buttonOK = new System.Windows.Forms.Button();
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.SuspendLayout();
             // 
             // imageListModeUI
@@ -131,7 +130,6 @@ namespace pwiz.Skyline.Alerts
             this.MinimizeBox = false;
             this.Name = "NoModeUIDlg";
             this.ShowInTaskbar = false;
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
