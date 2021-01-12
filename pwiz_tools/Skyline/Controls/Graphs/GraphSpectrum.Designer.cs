@@ -39,7 +39,6 @@
             this.comboCE = new System.Windows.Forms.ToolStripComboBox();
             this.GraphPanel = new System.Windows.Forms.Panel();
             this.graphControl = new pwiz.MSGraph.MSGraphControl();
-            ((System.ComponentModel.ISupportInitialize)(this.ModeUIExtender)).BeginInit();
             this.toolBar.SuspendLayout();
             this.GraphPanel.SuspendLayout();
             this.SuspendLayout();
@@ -132,7 +131,6 @@
             this.Name = "GraphSpectrum";
             this.VisibleChanged += new System.EventHandler(this.GraphSpectrum_VisibleChanged);
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.GraphSpectrum_KeyDown);
-            ((System.ComponentModel.ISupportInitialize)(this.ModeUIExtender)).EndInit();
             this.toolBar.ResumeLayout(false);
             this.toolBar.PerformLayout();
             this.GraphPanel.ResumeLayout(false);
