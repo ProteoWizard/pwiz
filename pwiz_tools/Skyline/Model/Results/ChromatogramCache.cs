@@ -701,7 +701,7 @@ namespace pwiz.Skyline.Model.Results
 
             if (cacheHeader.IsCorrupted(stream.Length))
             {
-                throw new InvalidDataException("The file appears to be corrupted and cannot be read.\r\nIt is recommended that you delete this file so that Skyline can create a new file by extracting chromatograms from your raw data files.);
+                throw new InvalidDataException(Resources.ChromatogramCache_LoadStructs_FileCorrupted);
             }
 
             var formatVersion = cacheHeader.formatVersion;
