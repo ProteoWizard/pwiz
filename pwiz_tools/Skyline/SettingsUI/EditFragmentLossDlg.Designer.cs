@@ -35,7 +35,6 @@
             this.lblCharge = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.comboIncludeLoss = new System.Windows.Forms.ComboBox();
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.SuspendLayout();
             // 
             // btnOk
@@ -91,7 +90,6 @@
             this.MinimizeBox = false;
             this.Name = "EditFragmentLossDlg";
             this.ShowInTaskbar = false;
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
