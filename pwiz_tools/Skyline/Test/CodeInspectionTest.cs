@@ -88,7 +88,7 @@ namespace pwiz.SkylineTest
                 Level.Warn, // Any failure is treated as an error, and overall test fails
                 null, // There are no parts of the codebase that should skip this check
                 @"namespace pwiz.Skyline.Model", // If the file contains this, then check for forbidden pattern
-                @".*using.*pwiz.Skyline.*UI.*", // Forbidden pattern
+                @".*using.*pwiz\.Skyline\.(Alerts|Controls|.*UI);.*", // Forbidden pattern
                 true, // Pattern is a regular expression
                 @"Skyline model code must not depend on UI code"); // Explanation for prohibition, appears in report
 
