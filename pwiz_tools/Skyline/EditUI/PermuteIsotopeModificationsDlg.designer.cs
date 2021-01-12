@@ -20,7 +20,6 @@ namespace pwiz.Skyline.EditUI
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOK = new System.Windows.Forms.Button();
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.groupBoxPermutationStyle.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -88,7 +87,6 @@ namespace pwiz.Skyline.EditUI
             this.MinimizeBox = false;
             this.Name = "PermuteIsotopeModificationsDlg";
             this.ShowIcon = false;
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             this.groupBoxPermutationStyle.ResumeLayout(false);
             this.groupBoxPermutationStyle.PerformLayout();
             this.ResumeLayout(false);
