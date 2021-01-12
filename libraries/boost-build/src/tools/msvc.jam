@@ -2000,6 +2000,7 @@ local rule register-toolset-really ( )
         feature.feature pch-source  :                 : dependency free ;
         feature.feature secure-scl          : default on off        : propagated ;
         feature.feature iterator-debugging  : default on off        : propagated ;
+        feature.feature runtime-checks      : off on                : propagated ;
         feature.feature assembly            :                       : free dependency ;
         feature.feature assembly-dependency :                       : free dependency ;
         feature.feature assembly-dependency-ex :                    : free ;
@@ -2008,6 +2009,9 @@ local rule register-toolset-really ( )
         feature.feature using-clr           : false true            : composite ;
         feature.compose <using-clr>true     : <asynch-exceptions>on <runtime-link>shared ;
     }
+    
+    toolset.add-requirements <runtime-checks>on:<optimization>off ;
+    toolset.add-requirements <using-clr>true:<runtime-checks>off ;
 
     # Declare generators.
     {
@@ -2076,6 +2080,8 @@ local rule register-toolset-really ( )
     toolset.flags msvc.compile C++FLAGS  <iterator-debugging>on/<variant>debug : -D_ITERATOR_DEBUG_LEVEL=1 ;
     toolset.flags msvc.compile C++FLAGS  <iterator-debugging>on/<variant>release : -D_ITERATOR_DEBUG_LEVEL=2 ;
     toolset.flags msvc.compile C++FLAGS  <iterator-debugging>off : -D_ITERATOR_DEBUG_LEVEL=0 ;
+
+    toolset.flags msvc.compile CFLAGS <runtime-checks>on : /RTCs ;
 
     toolset.flags msvc.compile CFLAGS <optimization>speed : /O2 ;
     toolset.flags msvc.compile CFLAGS <optimization>space : /O1 ;
