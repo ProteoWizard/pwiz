@@ -30,12 +30,29 @@
         {
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(GraphSummary));
-            this.graphControl = new ZedGraph.ZedGraphControl();
             this.splitContainer = new System.Windows.Forms.SplitContainer();
+            this.graphControl = new ZedGraph.ZedGraphControl();
+            ((System.ComponentModel.ISupportInitialize)(this.ModeUIExtender)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer)).BeginInit();
             this.splitContainer.Panel2.SuspendLayout();
             this.splitContainer.SuspendLayout();
             this.SuspendLayout();
+            // 
+            // splitContainer
+            // 
+            resources.ApplyResources(this.splitContainer, "splitContainer");
+            this.splitContainer.FixedPanel = System.Windows.Forms.FixedPanel.Panel1;
+            this.splitContainer.Name = "splitContainer";
+            // 
+            // splitContainer.Panel1
+            // 
+            resources.ApplyResources(this.splitContainer.Panel1, "splitContainer.Panel1");
+            this.splitContainer.Panel1Collapsed = true;
+            // 
+            // splitContainer.Panel2
+            // 
+            resources.ApplyResources(this.splitContainer.Panel2, "splitContainer.Panel2");
+            this.splitContainer.Panel2.Controls.Add(this.graphControl);
             // 
             // graphControl
             // 
@@ -59,17 +76,6 @@
             this.graphControl.MouseMoveEvent += new ZedGraph.ZedGraphControl.ZedMouseEventHandler(this.graphControl_MouseMoveEvent);
             this.graphControl.MouseClick += new System.Windows.Forms.MouseEventHandler(this.graphControl_MouseClick);
             // 
-            // splitContainer
-            // 
-            resources.ApplyResources(this.splitContainer, "splitContainer");
-            this.splitContainer.FixedPanel = System.Windows.Forms.FixedPanel.Panel1;
-            this.splitContainer.Name = "splitContainer";
-            this.splitContainer.Panel1Collapsed = true;
-            // 
-            // splitContainer.Panel2
-            // 
-            this.splitContainer.Panel2.Controls.Add(this.graphControl);
-            // 
             // GraphSummary
             // 
             resources.ApplyResources(this, "$this");
@@ -84,6 +90,7 @@
             this.VisibleChanged += new System.EventHandler(this.GraphSummary_VisibleChanged);
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.GraphSummary_KeyDown);
             this.Resize += new System.EventHandler(this.GraphSummary_Resize);
+            ((System.ComponentModel.ISupportInitialize)(this.ModeUIExtender)).EndInit();
             this.splitContainer.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer)).EndInit();
             this.splitContainer.ResumeLayout(false);
