@@ -35,7 +35,6 @@
             this.toolButtonVolcano = new System.Windows.Forms.ToolStripButton();
             this.toolStripButtonChangeSettings = new System.Windows.Forms.ToolStripButton();
             this.toolButtonShowGraph = new System.Windows.Forms.ToolStripButton();
-            ((System.ComponentModel.ISupportInitialize)(this.ModeUIExtender)).BeginInit();
             this.toolStrip.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -84,7 +83,6 @@
             this.Controls.Add(this.toolStrip);
             this.Name = "FoldChangeGrid";
             this.ShowInTaskbar = false;
-            ((System.ComponentModel.ISupportInitialize)(this.ModeUIExtender)).EndInit();
             this.toolStrip.ResumeLayout(false);
             this.toolStrip.PerformLayout();
             this.ResumeLayout(false);

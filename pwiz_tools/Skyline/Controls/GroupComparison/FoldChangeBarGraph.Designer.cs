@@ -31,7 +31,6 @@
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FoldChangeBarGraph));
             this.zedGraphControl = new ZedGraph.ZedGraphControl();
-            ((System.ComponentModel.ISupportInitialize)(this.ModeUIExtender)).BeginInit();
             this.SuspendLayout();
             // 
             // zedGraphControl
@@ -58,7 +57,6 @@
             this.Controls.Add(this.zedGraphControl);
             this.Name = "FoldChangeBarGraph";
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.FoldChangeBarGraph_KeyDown);
-            ((System.ComponentModel.ISupportInitialize)(this.ModeUIExtender)).EndInit();
             this.ResumeLayout(false);
 
         }

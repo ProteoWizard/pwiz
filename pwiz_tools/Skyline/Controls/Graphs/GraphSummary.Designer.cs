@@ -32,7 +32,6 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(GraphSummary));
             this.splitContainer = new System.Windows.Forms.SplitContainer();
             this.graphControl = new ZedGraph.ZedGraphControl();
-            ((System.ComponentModel.ISupportInitialize)(this.ModeUIExtender)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer)).BeginInit();
             this.splitContainer.Panel2.SuspendLayout();
             this.splitContainer.SuspendLayout();
@@ -90,7 +89,6 @@
             this.VisibleChanged += new System.EventHandler(this.GraphSummary_VisibleChanged);
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.GraphSummary_KeyDown);
             this.Resize += new System.EventHandler(this.GraphSummary_Resize);
-            ((System.ComponentModel.ISupportInitialize)(this.ModeUIExtender)).EndInit();
             this.splitContainer.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer)).EndInit();
             this.splitContainer.ResumeLayout(false);
