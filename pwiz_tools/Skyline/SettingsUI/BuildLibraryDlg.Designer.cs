@@ -64,7 +64,6 @@
             this.helpTip = new System.Windows.Forms.ToolTip(this.components);
             this.ceLabel = new System.Windows.Forms.Label();
             this.ceCombo = new System.Windows.Forms.ComboBox();
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.panelProperties.SuspendLayout();
             this.panelFilesPrositProperties.SuspendLayout();
             this.panelFilesProps.SuspendLayout();
@@ -337,7 +336,6 @@
             this.Name = "BuildLibraryDlg";
             this.ShowInTaskbar = false;
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.BuildLibraryDlg_FormClosing);
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             this.panelProperties.ResumeLayout(false);
             this.panelProperties.PerformLayout();
             this.panelFilesPrositProperties.ResumeLayout(false);
