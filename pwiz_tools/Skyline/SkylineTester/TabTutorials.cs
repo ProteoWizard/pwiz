@@ -52,9 +52,9 @@ namespace SkylineTester
                     pauseSeconds = -2; // Magic number that tells TestRunner to grab tutorial cover shot then move on to next test
                 else if (MainWindow.PauseTutorialsScreenShots.Checked)
                 {
-                    int startPage;
-                    if (Int32.TryParse(MainWindow.PauseStartPage.Text, out startPage) && startPage > 1)
-                        args.Append(" startpage=").Append(startPage);
+                    int startingPage;
+                    if (Int32.TryParse(MainWindow.PauseStartingPage.Text, out startingPage) && startingPage > 1)
+                        args.Append(" startingpage=").Append(startingPage);
                 }
                 else if (!Int32.TryParse(MainWindow.PauseTutorialsSeconds.Text, out pauseSeconds))
                     pauseSeconds = 0;

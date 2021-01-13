@@ -1065,7 +1065,7 @@ namespace pwiz.SkylineTestUtil
             return Path.Combine(folderPath, CoverShotName + suffix + cultureSuffix + ".png");
         }
 
-        public int PauseStartPage { get; set; }
+        public int PauseStartingPage { get; set; }
 
         public static bool IsPauseForAuditLog { get; set; }
 
@@ -1139,7 +1139,7 @@ namespace pwiz.SkylineTestUtil
                 Thread.Sleep(3 * 1000);
             else if (Program.PauseSeconds > 0)
                 Thread.Sleep(Program.PauseSeconds * 1000);
-            else if (IsPauseForScreenShots && Math.Max(PauseStartPage, Program.StartPage) <= (pageNum ?? int.MaxValue))
+            else if (IsPauseForScreenShots && Math.Max(PauseStartingPage, Program.PauseStartingPage) <= (pageNum ?? int.MaxValue))
             {
                 if (screenshotForm == null)
                 {

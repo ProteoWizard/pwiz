@@ -205,7 +205,7 @@ namespace TestRunner
             const string commandLineOptions =
                 "?;/?;-?;help;skylinetester;debug;results;" +
                 "test;skip;filter;form;" +
-                "loop=0;repeat=1;pause=0;startpage=1;random=off;offscreen=on;multi=1;wait=off;internet=off;" +
+                "loop=0;repeat=1;pause=0;startingpage=1;random=off;offscreen=on;multi=1;wait=off;internet=off;" +
                 "maxsecondspertest=-1;" +
                 "demo=off;showformnames=off;showpages=off;status=off;buildcheck=0;screenshotlist;" +
                 "quality=off;pass0=off;pass1=off;pass2=on;" +
@@ -417,7 +417,7 @@ namespace TestRunner
             bool pass2 = commandLineArgs.ArgAsBool("pass2");
             int timeoutMultiplier = (int) commandLineArgs.ArgAsLong("multi");
             int pauseSeconds = (int) commandLineArgs.ArgAsLong("pause");
-            int startPage = (int)commandLineArgs.ArgAsLong("startpage");
+            int pauseStartingPage = (int)commandLineArgs.ArgAsLong("startingpage");
             var formList = commandLineArgs.ArgAsString("form");
             if (!formList.IsNullOrEmpty())
                 perftests = true;
@@ -468,7 +468,7 @@ namespace TestRunner
                 demoMode, buildMode, offscreen, internet, showStatus, perftests,
                 runsmallmoleculeversions, recordauditlogs, teamcityTestDecoration,
                 retrydatadownloads,
-                pauseDialogs, pauseSeconds, startPage, useVendorReaders, timeoutMultiplier, 
+                pauseDialogs, pauseSeconds, pauseStartingPage, useVendorReaders, timeoutMultiplier, 
                 results, log, verbose);
             
             if (asNightly && !string.IsNullOrEmpty(dmpDir) && Directory.Exists(dmpDir))

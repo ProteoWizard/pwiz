@@ -102,6 +102,8 @@ namespace SkylineTester
             this.groupBox3 = new System.Windows.Forms.GroupBox();
             this.tutorialsTree = new SkylineTester.MyTreeView();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
+            this.pauseStartingPage = new System.Windows.Forms.TextBox();
+            this.labelPauseStartingPage = new System.Windows.Forms.Label();
             this.modeTutorialsCoverShots = new System.Windows.Forms.RadioButton();
             this.pauseTutorialsSeconds = new System.Windows.Forms.NumericUpDown();
             this.tutorialsDemoMode = new System.Windows.Forms.RadioButton();
@@ -298,8 +300,6 @@ namespace SkylineTester
             this.radioButton5 = new System.Windows.Forms.RadioButton();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.myTreeView1 = new SkylineTester.MyTreeView();
-            this.labelPauseStartPage = new System.Windows.Forms.Label();
-            this.pauseStartPage = new System.Windows.Forms.TextBox();
             this.mainPanel.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             this.tabs.SuspendLayout();
@@ -755,8 +755,8 @@ namespace SkylineTester
             // 
             // groupBox4
             // 
-            this.groupBox4.Controls.Add(this.pauseStartPage);
-            this.groupBox4.Controls.Add(this.labelPauseStartPage);
+            this.groupBox4.Controls.Add(this.pauseStartingPage);
+            this.groupBox4.Controls.Add(this.labelPauseStartingPage);
             this.groupBox4.Controls.Add(this.modeTutorialsCoverShots);
             this.groupBox4.Controls.Add(this.pauseTutorialsSeconds);
             this.groupBox4.Controls.Add(this.tutorialsDemoMode);
@@ -771,6 +771,23 @@ namespace SkylineTester
             this.groupBox4.TabIndex = 0;
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "Pause";
+            // 
+            // pauseStartingPage
+            // 
+            this.pauseStartingPage.Location = new System.Drawing.Point(99, 45);
+            this.pauseStartingPage.Name = "pauseStartingPage";
+            this.pauseStartingPage.Size = new System.Drawing.Size(41, 20);
+            this.pauseStartingPage.TabIndex = 2;
+            this.pauseStartingPage.Text = "1";
+            // 
+            // labelPauseStartingPage
+            // 
+            this.labelPauseStartingPage.AutoSize = true;
+            this.labelPauseStartingPage.Location = new System.Drawing.Point(25, 48);
+            this.labelPauseStartingPage.Name = "labelPauseStartingPage";
+            this.labelPauseStartingPage.Size = new System.Drawing.Size(73, 13);
+            this.labelPauseStartingPage.TabIndex = 1;
+            this.labelPauseStartingPage.Text = "Starting page:";
             // 
             // modeTutorialsCoverShots
             // 
@@ -2614,7 +2631,7 @@ namespace SkylineTester
             // 
             this.outputSplitContainer.Panel2.Controls.Add(this.errorConsole);
             this.outputSplitContainer.Size = new System.Drawing.Size(671, 562);
-            this.outputSplitContainer.SplitterDistance = 386;
+            this.outputSplitContainer.SplitterDistance = 374;
             this.outputSplitContainer.SplitterWidth = 10;
             this.outputSplitContainer.TabIndex = 35;
             // 
@@ -2636,7 +2653,7 @@ namespace SkylineTester
             this.commandShell.NextCommand = 0;
             this.commandShell.RestartCount = 0;
             this.commandShell.RunStartTime = new System.DateTime(((long)(0)));
-            this.commandShell.Size = new System.Drawing.Size(671, 386);
+            this.commandShell.Size = new System.Drawing.Size(671, 374);
             this.commandShell.StopButton = null;
             this.commandShell.TabIndex = 2;
             this.commandShell.Text = "";
@@ -2654,7 +2671,7 @@ namespace SkylineTester
             this.errorConsole.Margin = new System.Windows.Forms.Padding(0);
             this.errorConsole.Name = "errorConsole";
             this.errorConsole.ReadOnly = true;
-            this.errorConsole.Size = new System.Drawing.Size(671, 166);
+            this.errorConsole.Size = new System.Drawing.Size(671, 178);
             this.errorConsole.TabIndex = 3;
             this.errorConsole.Text = "";
             this.errorConsole.SelectionChanged += new System.EventHandler(this.errorConsole_SelectionChanged);
@@ -3097,23 +3114,6 @@ namespace SkylineTester
             this.myTreeView1.Size = new System.Drawing.Size(309, 350);
             this.myTreeView1.TabIndex = 15;
             // 
-            // labelPauseStartPage
-            // 
-            this.labelPauseStartPage.AutoSize = true;
-            this.labelPauseStartPage.Location = new System.Drawing.Point(25, 48);
-            this.labelPauseStartPage.Name = "labelPauseStartPage";
-            this.labelPauseStartPage.Size = new System.Drawing.Size(59, 13);
-            this.labelPauseStartPage.TabIndex = 1;
-            this.labelPauseStartPage.Text = "Start page:";
-            // 
-            // pauseStartPage
-            // 
-            this.pauseStartPage.Location = new System.Drawing.Point(90, 45);
-            this.pauseStartPage.Name = "pauseStartPage";
-            this.pauseStartPage.Size = new System.Drawing.Size(49, 20);
-            this.pauseStartPage.TabIndex = 2;
-            this.pauseStartPage.Text = "1";
-            // 
             // SkylineTesterWindow
             // 
             this.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
@@ -3443,7 +3443,7 @@ namespace SkylineTester
         private CheckBox nightlyRunIndefinitely;
         private CheckBox recordAuditLogs;
         private RadioButton modeTutorialsCoverShots;
-        private TextBox pauseStartPage;
-        private Label labelPauseStartPage;
+        private TextBox pauseStartingPage;
+        private Label labelPauseStartingPage;
     }
 }
