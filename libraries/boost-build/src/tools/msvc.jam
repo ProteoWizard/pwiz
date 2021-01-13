@@ -2150,6 +2150,7 @@ local rule register-toolset-really ( )
     {
         toolset.flags msvc.link PDB_LINKFLAG <debug-symbols>on/<debug-store>database : "/PDB:" ;  # not used yet
         toolset.flags msvc.link LINKFLAGS <debug-symbols>on : /DEBUG ;
+        toolset.flags msvc.link LINKFLAGS <debug-symbols>on/<debug-store>database : /PDBCOMPRESS ;
         toolset.flags msvc.link DEF_FILE <def-file> ;
         toolset.flags msvc.link ASSEMBLIES <assembly> ;
 
