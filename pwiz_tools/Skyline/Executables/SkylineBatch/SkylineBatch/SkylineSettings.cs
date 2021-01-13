@@ -61,7 +61,7 @@ namespace SkylineBatch
                     case SkylineType.Local:
                         throw new ArgumentException(Resources.SkylineSettings_Unable_to_find_local_Skyline_installation_);
                     case SkylineType.Custom:
-                        throw new ArgumentException(string.Format(Resources.SkylineSettings_Unable_to_find_Skyline_installation_at__0__, CmdPath));
+                        throw new ArgumentException(string.Format(Resources.SkylineSettings_Unable_to_find_Skyline_installation_at__0__, Path.GetDirectoryName(CmdPath)));
                 }
             }
         }

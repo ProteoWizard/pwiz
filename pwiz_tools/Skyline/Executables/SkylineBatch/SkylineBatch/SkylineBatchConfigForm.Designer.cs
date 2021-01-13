@@ -38,9 +38,11 @@
             this.textSkylinePath = new System.Windows.Forms.TextBox();
             this.textDataPath = new System.Windows.Forms.TextBox();
             this.linkLabelRegex = new System.Windows.Forms.LinkLabel();
+            this.label5 = new System.Windows.Forms.Label();
+            this.label4 = new System.Windows.Forms.Label();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.tabsConfig = new System.Windows.Forms.TabControl();
-            this.tabSettings = new System.Windows.Forms.TabPage();
+            this.tabFiles = new System.Windows.Forms.TabPage();
             this.textNamingPattern = new System.Windows.Forms.TextBox();
             this.textConfigName = new System.Windows.Forms.TextBox();
             this.labelConfigName = new System.Windows.Forms.Label();
@@ -50,7 +52,9 @@
             this.btnAnalysisPath = new System.Windows.Forms.Button();
             this.btnSkylineFilePath = new System.Windows.Forms.Button();
             this.label2 = new System.Windows.Forms.Label();
-            this.tabFile = new System.Windows.Forms.TabPage();
+            this.tabSettings = new System.Windows.Forms.TabPage();
+            this.label7 = new System.Windows.Forms.Label();
+            this.label6 = new System.Windows.Forms.Label();
             this.textResolvingPower = new System.Windows.Forms.TextBox();
             this.textRetentionTime = new System.Windows.Forms.TextBox();
             this.tabReports = new System.Windows.Forms.TabPage();
@@ -74,17 +78,13 @@
             this.lblConfigRunning = new System.Windows.Forms.Label();
             this.btnOkConfig = new System.Windows.Forms.Button();
             this.imageListToolbarIcons = new System.Windows.Forms.ImageList(this.components);
-            this.label4 = new System.Windows.Forms.Label();
-            this.label5 = new System.Windows.Forms.Label();
-            this.label6 = new System.Windows.Forms.Label();
-            this.label7 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
             this.tabsConfig.SuspendLayout();
+            this.tabFiles.SuspendLayout();
             this.tabSettings.SuspendLayout();
-            this.tabFile.SuspendLayout();
             this.tabReports.SuspendLayout();
             this.toolBar.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.gridReportSettings)).BeginInit();
@@ -119,6 +119,18 @@
             this.linkLabelRegex.UseCompatibleTextRendering = true;
             this.linkLabelRegex.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelRegex_LinkClicked);
             // 
+            // label5
+            // 
+            resources.ApplyResources(this.label5, "label5");
+            this.label5.Name = "label5";
+            this.toolTip1.SetToolTip(this.label5, resources.GetString("label5.ToolTip"));
+            // 
+            // label4
+            // 
+            resources.ApplyResources(this.label4, "label4");
+            this.label4.Name = "label4";
+            this.toolTip1.SetToolTip(this.label4, resources.GetString("label4.ToolTip"));
+            // 
             // splitContainer1
             // 
             resources.ApplyResources(this.splitContainer1, "splitContainer1");
@@ -135,32 +147,32 @@
             // 
             // tabsConfig
             // 
+            this.tabsConfig.Controls.Add(this.tabFiles);
             this.tabsConfig.Controls.Add(this.tabSettings);
-            this.tabsConfig.Controls.Add(this.tabFile);
             this.tabsConfig.Controls.Add(this.tabReports);
             this.tabsConfig.Controls.Add(this.tabSkyline);
             resources.ApplyResources(this.tabsConfig, "tabsConfig");
             this.tabsConfig.Name = "tabsConfig";
             this.tabsConfig.SelectedIndex = 0;
             // 
-            // tabSettings
+            // tabFiles
             // 
-            this.tabSettings.BackColor = System.Drawing.Color.WhiteSmoke;
-            this.tabSettings.Controls.Add(this.textNamingPattern);
-            this.tabSettings.Controls.Add(this.linkLabelRegex);
-            this.tabSettings.Controls.Add(this.textConfigName);
-            this.tabSettings.Controls.Add(this.labelConfigName);
-            this.tabSettings.Controls.Add(this.label3);
-            this.tabSettings.Controls.Add(this.btnDataPath);
-            this.tabSettings.Controls.Add(this.textDataPath);
-            this.tabSettings.Controls.Add(this.textAnalysisPath);
-            this.tabSettings.Controls.Add(this.label1);
-            this.tabSettings.Controls.Add(this.btnAnalysisPath);
-            this.tabSettings.Controls.Add(this.btnSkylineFilePath);
-            this.tabSettings.Controls.Add(this.label2);
-            this.tabSettings.Controls.Add(this.textSkylinePath);
-            resources.ApplyResources(this.tabSettings, "tabSettings");
-            this.tabSettings.Name = "tabSettings";
+            this.tabFiles.BackColor = System.Drawing.Color.WhiteSmoke;
+            this.tabFiles.Controls.Add(this.textNamingPattern);
+            this.tabFiles.Controls.Add(this.linkLabelRegex);
+            this.tabFiles.Controls.Add(this.textConfigName);
+            this.tabFiles.Controls.Add(this.labelConfigName);
+            this.tabFiles.Controls.Add(this.label3);
+            this.tabFiles.Controls.Add(this.btnDataPath);
+            this.tabFiles.Controls.Add(this.textDataPath);
+            this.tabFiles.Controls.Add(this.textAnalysisPath);
+            this.tabFiles.Controls.Add(this.label1);
+            this.tabFiles.Controls.Add(this.btnAnalysisPath);
+            this.tabFiles.Controls.Add(this.btnSkylineFilePath);
+            this.tabFiles.Controls.Add(this.label2);
+            this.tabFiles.Controls.Add(this.textSkylinePath);
+            resources.ApplyResources(this.tabFiles, "tabFiles");
+            this.tabFiles.Name = "tabFiles";
             // 
             // textNamingPattern
             // 
@@ -213,17 +225,27 @@
             resources.ApplyResources(this.label2, "label2");
             this.label2.Name = "label2";
             // 
-            // tabFile
+            // tabSettings
             // 
-            this.tabFile.BackColor = System.Drawing.Color.WhiteSmoke;
-            this.tabFile.Controls.Add(this.label7);
-            this.tabFile.Controls.Add(this.label6);
-            this.tabFile.Controls.Add(this.label5);
-            this.tabFile.Controls.Add(this.label4);
-            this.tabFile.Controls.Add(this.textResolvingPower);
-            this.tabFile.Controls.Add(this.textRetentionTime);
-            resources.ApplyResources(this.tabFile, "tabFile");
-            this.tabFile.Name = "tabFile";
+            this.tabSettings.BackColor = System.Drawing.Color.WhiteSmoke;
+            this.tabSettings.Controls.Add(this.label7);
+            this.tabSettings.Controls.Add(this.label6);
+            this.tabSettings.Controls.Add(this.label5);
+            this.tabSettings.Controls.Add(this.label4);
+            this.tabSettings.Controls.Add(this.textResolvingPower);
+            this.tabSettings.Controls.Add(this.textRetentionTime);
+            resources.ApplyResources(this.tabSettings, "tabSettings");
+            this.tabSettings.Name = "tabSettings";
+            // 
+            // label7
+            // 
+            resources.ApplyResources(this.label7, "label7");
+            this.label7.Name = "label7";
+            // 
+            // label6
+            // 
+            resources.ApplyResources(this.label6, "label6");
+            this.label6.Name = "label6";
             // 
             // textResolvingPower
             // 
@@ -424,26 +446,6 @@
             this.imageListToolbarIcons.Images.SetKeyName(0, "AddedIcon.ico");
             this.imageListToolbarIcons.Images.SetKeyName(1, "DeletedIcon.ico");
             // 
-            // label4
-            // 
-            resources.ApplyResources(this.label4, "label4");
-            this.label4.Name = "label4";
-            // 
-            // label5
-            // 
-            resources.ApplyResources(this.label5, "label5");
-            this.label5.Name = "label5";
-            // 
-            // label6
-            // 
-            resources.ApplyResources(this.label6, "label6");
-            this.label6.Name = "label6";
-            // 
-            // label7
-            // 
-            resources.ApplyResources(this.label7, "label7");
-            this.label7.Name = "label7";
-            // 
             // SkylineBatchConfigForm
             // 
             this.AcceptButton = this.btnSaveConfig;
@@ -460,10 +462,10 @@
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
             this.splitContainer1.ResumeLayout(false);
             this.tabsConfig.ResumeLayout(false);
+            this.tabFiles.ResumeLayout(false);
+            this.tabFiles.PerformLayout();
             this.tabSettings.ResumeLayout(false);
             this.tabSettings.PerformLayout();
-            this.tabFile.ResumeLayout(false);
-            this.tabFile.PerformLayout();
             this.tabReports.ResumeLayout(false);
             this.tabReports.PerformLayout();
             this.toolBar.ResumeLayout(false);
@@ -486,7 +488,7 @@
         private System.Windows.Forms.Button btnCancelConfig;
         private System.Windows.Forms.Label lblConfigRunning;
         private System.Windows.Forms.TabControl tabsConfig;
-        private System.Windows.Forms.TabPage tabSettings;
+        private System.Windows.Forms.TabPage tabFiles;
         private System.Windows.Forms.TextBox textConfigName;
         private System.Windows.Forms.Label labelConfigName;
         private System.Windows.Forms.Label label1;
@@ -517,7 +519,7 @@
         private System.Windows.Forms.RadioButton radioButtonSpecifySkylinePath;
         private System.Windows.Forms.TextBox textSkylineInstallationPath;
         private System.Windows.Forms.TextBox textNamingPattern;
-        private System.Windows.Forms.TabPage tabFile;
+        private System.Windows.Forms.TabPage tabSettings;
         private System.Windows.Forms.TextBox textResolvingPower;
         private System.Windows.Forms.TextBox textRetentionTime;
         private System.Windows.Forms.Label label7;

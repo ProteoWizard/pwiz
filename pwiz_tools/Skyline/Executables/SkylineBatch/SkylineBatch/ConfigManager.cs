@@ -646,6 +646,8 @@ namespace SkylineBatch
 
         public void ExportConfigs(string filePath, int[] indiciesToSave)
         {
+            if (!Directory.Exists(Path.GetDirectoryName(filePath)))
+                throw new ArgumentException("Invalid file path.");
             var savingConfigs = new ConfigList();
             foreach(int index in indiciesToSave)
                 savingConfigs.Add(_configList[index]);

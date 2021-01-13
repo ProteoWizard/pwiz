@@ -174,8 +174,9 @@ namespace SkylineBatch
             OpenFileDialog openDialog = new OpenFileDialog();
             openDialog.Filter = Resources.SkylineBatchConfigForm_btnSkylineFilePath_Click_SKY___sky;
             openDialog.Title = Resources.SkylineBatchConfigForm_btnSkylineFilePath_Click_Open_Skyline_File;
-            openDialog.ShowDialog();
-            textSkylinePath.Text = openDialog.FileName;
+            openDialog.InitialDirectory = Path.GetDirectoryName(textSkylinePath.Text);
+            if (openDialog.ShowDialog()== DialogResult.OK)
+                textSkylinePath.Text = openDialog.FileName;
         }
 
         private void btnAnalysisFilePath_Click(object sender, EventArgs e)

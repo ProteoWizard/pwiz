@@ -28,18 +28,15 @@ namespace SkylineBatch
     public partial class ReportsAddForm : Form
     {
         private readonly IMainUiControl _uiControl;
-       // private readonly Dictionary<string,string> rScriptVersions;
         public ReportsAddForm(IMainUiControl uiControl, ReportInfo editingReport = null)
         {
             InitializeComponent();
             _uiControl = uiControl;
-            //rScriptVersions = SkylineSettings.GetRscriptExeList();
 
             if (editingReport != null)
             {
                 textReportName.Text = editingReport.Name;
                 textReportPath.Text = editingReport.ReportPath;
-                //var rScripts = editingReport.GetRScripts();
                 foreach (var scriptAndVersion in editingReport.RScripts)
                 {
                     dataGridScripts.Rows.Add(scriptAndVersion.Item1, scriptAndVersion.Item2);
@@ -50,7 +47,6 @@ namespace SkylineBatch
             {
                 rVersionsDropDown.Items.Add(version);
             }
-            //rVersionsDropDown.Items.AddRange(SkylineSettings.GetRscriptExeList());
 
         }
         public ReportInfo NewReportInfo { get; private set; }
@@ -71,7 +67,6 @@ namespace SkylineBatch
 
         private void btnRemove_Click(object sender, EventArgs e)
         {
-            //dataGridScripts.SelectedCells[0].RowIndex;
             if (dataGridScripts.SelectedCells.Count > 0)
             {
                 dataGridScripts.Rows.RemoveAt(dataGridScripts.SelectedCells[0].RowIndex);
