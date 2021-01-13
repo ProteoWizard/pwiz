@@ -2090,7 +2090,7 @@ local rule register-toolset-really ( )
     toolset.flags msvc.compile CFLAGS $(.cpu-arch-ia64)/<instruction-set>$(.cpu-type-itanium2) : /G2 ;
 
     toolset.flags msvc.compile CFLAGS <debug-symbols>on/<debug-store>object : /Z7 ;
-    toolset.flags msvc.compile CFLAGS <debug-symbols>on/<debug-store>database : /Zi ;
+    toolset.flags msvc.compile CFLAGS <debug-symbols>on/<debug-store>database : "/Zi /PDBCOMPRESS" ;
     toolset.flags msvc.compile CFLAGS <optimization>off : /Od ;
     toolset.flags msvc.compile CFLAGS <inlining>off : /Ob0 ;
     toolset.flags msvc.compile CFLAGS <inlining>on : /Ob1 ;
