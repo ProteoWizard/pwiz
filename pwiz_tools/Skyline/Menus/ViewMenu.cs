@@ -46,11 +46,13 @@ namespace pwiz.Skyline.Menus
             DropDownItems = ImmutableList.ValueOf(viewToolStripMenuItem.DropDownItems.Cast<ToolStripItem>());
             statusToolStripMenuItem.Checked = Settings.Default.ShowStatusBar;
             if (!statusToolStripMenuItem.Checked)
-                statusToolStripMenuItem_Click(this, new EventArgs());
+            {
+                SkylineWindow.ShowStatusBar(statusToolStripMenuItem.Checked);
+            }
             toolBarToolStripMenuItem.Checked = Settings.Default.RTPredictorVisible;
             if (!toolBarToolStripMenuItem.Checked)
             {
-                toolBarToolStripMenuItem_Click(this, new EventArgs());
+                SkylineWindow.ShowToolBar(toolBarToolStripMenuItem.Checked);
             }
 
             largeToolStripMenuItem.Checked = Settings.Default.TextZoom == TreeViewMS.LRG_TEXT_FACTOR;
@@ -449,7 +451,8 @@ namespace pwiz.Skyline.Menus
             basePeakMenuItem.Visible = ticMenuItem.Visible = qcMenuItem.Visible =toolStripSeparatorTranMain.Visible = showAllIonsOptions;
 
             if (!showAllIonsOptions &&
-                    (displayType == DisplayTypeChrom.base_peak || displayType == DisplayTypeChrom.tic || displayType == DisplayTypeChrom.qc))
+                (displayType == DisplayTypeChrom.base_peak || displayType == DisplayTypeChrom.tic ||
+                 displayType == DisplayTypeChrom.qc))
                 displayType = DisplayTypeChrom.all;
 
             if (showAllIonsOptions)
@@ -603,7 +606,7 @@ namespace pwiz.Skyline.Menus
 
         private void autoZoomBestPeakMenuItem_Click(object sender, EventArgs e)
         {
-            SkylineWindow.AutoZoomBestPeak();
+            SkylineWindow.SetAutoZoomChrom(AutoZoomChrom.peak);
         }
 
         private void autoZoomRTWindowMenuItem_Click(object sender, EventArgs e)
