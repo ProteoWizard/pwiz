@@ -36,9 +36,7 @@
             this.comboPanelInner = new System.Windows.Forms.Panel();
             this.fileLabel = new System.Windows.Forms.Label();
             this.dataGrid = new pwiz.Skyline.Controls.DataGridViewEx();
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.comboPanelOuter.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dataGrid)).BeginInit();
             this.SuspendLayout();
             // 
             // buttonOk
@@ -114,9 +112,7 @@
             this.ShowInTaskbar = false;
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.ImportTransitionListColumnSelectDlg_FormClosing);
             this.Resize += new System.EventHandler(this.form_Resize);
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             this.comboPanelOuter.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.dataGrid)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
