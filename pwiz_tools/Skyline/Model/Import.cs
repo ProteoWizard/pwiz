@@ -471,6 +471,7 @@ namespace pwiz.Skyline.Model
             var lines = RowReader.Lines;
 
             // Process lines
+            _linesSeen = 0;
             for (var index = 0; index < lines.Count; index++)
             {
                 string row = lines[index];
