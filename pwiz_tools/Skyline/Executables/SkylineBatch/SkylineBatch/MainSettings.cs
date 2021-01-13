@@ -67,30 +67,46 @@ namespace SkylineBatch
 
         public void Validate()
         {
-            CheckIfEmptyPath(TemplateFilePath, "Skyline file");
-            if (!File.Exists(TemplateFilePath))
+            ValidateSkylineFile(TemplateFilePath);
+            ValidateDataFolder(DataFolderPath);
+            ValidateAnalysisFolder(AnalysisFolderPath);
+        }
+
+        public static void ValidateSkylineFile(string skylineFile, string name = "")
+        {
+            CheckIfEmptyPath(skylineFile, "Skyline file");
+            if (!File.Exists(skylineFile))
             {
-                throw new ArgumentException(string.Format(Resources.MainSettings_Template_file_does_not_exist, TemplateFilePath));
+                throw new ArgumentException(string.Format(Resources.MainSettings_Template_file_does_not_exist, skylineFile));
             }
-            CheckIfEmptyPath(AnalysisFolderPath, "analysis folder");
-            var analysisFolderDirectory = Path.GetDirectoryName(AnalysisFolderPath);
+        }
+
+        public static void ValidateAnalysisFolder(string analysisFolder, string name = "")
+        {
+            CheckIfEmptyPath(analysisFolder, "analysis folder");
+            var analysisFolderDirectory = Path.GetDirectoryName(analysisFolder);
             if (!Directory.Exists(analysisFolderDirectory))
             {
                 throw new ArgumentException(string.Format(Resources.MainSettings_Analysis_folder_directory__0__does_not_exist, analysisFolderDirectory));
             }
-            CheckIfEmptyPath(DataFolderPath, "data folder");
-            if (!Directory.Exists(DataFolderPath))
-            {
-                throw new ArgumentException(string.Format(Resources.MainSettings_Data_folder_does_not_exist, DataFolderPath));
-            }
+
             // create analysis folder if doesn't exist
-            if (!Directory.Exists(AnalysisFolderPath))
+            if (!Directory.Exists(analysisFolder))
             {
-                Directory.CreateDirectory(AnalysisFolderPath);
+                Directory.CreateDirectory(analysisFolder);
             }
         }
 
-        public void CheckIfEmptyPath(string input, string name)
+        public static void ValidateDataFolder(string dataFolder, string name = "")
+        {
+            CheckIfEmptyPath(dataFolder, "data folder");
+            if (!Directory.Exists(dataFolder))
+            {
+                throw new ArgumentException(string.Format(Resources.MainSettings_Data_folder_does_not_exist, dataFolder));
+            }
+        }
+
+        public static void CheckIfEmptyPath(string input, string name)
         {
             if (string.IsNullOrWhiteSpace(input))
             {

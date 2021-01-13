@@ -283,14 +283,14 @@
   <data name="ReportSettings_Report_must_have_name_" xml:space="preserve">
     <value>Report must have name.</value>
   </data>
-  <data name="ReportSettings_Report__0__Report_path__1__is_not_a_valid_path_" xml:space="preserve">
-    <value>Report "{0}": Report path {1} is not a valid path.</value>
+  <data name="ReportSettings__0__Report_path__1__is_not_a_valid_path_" xml:space="preserve">
+    <value>{0}Report path {1} is not a valid path.</value>
   </data>
-  <data name="ReportSettings_Report__0__R_script_path__1__is_not_a_valid_path" xml:space="preserve">
-    <value>Report "{0}": R script path {1} is not a valid path.</value>
+  <data name="ReportSettings__0__R_script_path__1__is_not_a_valid_path" xml:space="preserve">
+    <value>{0}R script path {1} is not a valid path.</value>
   </data>
-  <data name="ReportSettings_Report__0__R_version__1__is_not_installed_on_this_computer_" xml:space="preserve">
-    <value>Report "{0}": R version {1} is not installed on this computer.</value>
+  <data name="ReportSettings__0__R_version__1__is_not_installed_on_this_computer_" xml:space="preserve">
+    <value>{0}R version {1} is not installed on this computer.</value>
   </data>
   <data name="SkylineSettings_Unable_to_find_local_Skyline_installation_" xml:space="preserve">
     <value>Unable to find local Skyline installation.</value>
@@ -318,5 +318,20 @@
   </data>
   <data name="FileSettings_ValidateIntTextField_Invalid_value_for__0___1__" xml:space="preserve">
     <value>Invalid value for "{0}": {1}.</value>
+  </data>
+  <data name="FilePathControl_Could_not_find_path_to_the__0___" xml:space="preserve">
+    <value>Could not find path to the {0}:</value>
+  </data>
+  <data name="FilePathControl_Open_File" xml:space="preserve">
+    <value>Open File</value>
+  </data>
+  <data name="FilePathControl_Select_Folder" xml:space="preserve">
+    <value>Select Folder</value>
+  </data>
+  <data name="RVersionControl_R__0__Not_Found" xml:space="preserve">
+    <value>R-{0} Not Found</value>
+  </data>
+  <data name="RVersionControl_Select_an_R_version_for__0___" xml:space="preserve">
+    <value>Select an R version for {0}:</value>
   </data>
 </root>

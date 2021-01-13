@@ -363,6 +363,33 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Could not find path to the {0}:.
+        /// </summary>
+        internal static string FilePathControl_Could_not_find_path_to_the__0___ {
+            get {
+                return ResourceManager.GetString("FilePathControl_Could_not_find_path_to_the__0___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Open File.
+        /// </summary>
+        internal static string FilePathControl_Open_File {
+            get {
+                return ResourceManager.GetString("FilePathControl_Open_File", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select Folder.
+        /// </summary>
+        internal static string FilePathControl_Select_Folder {
+            get {
+                return ResourceManager.GetString("FilePathControl_Select_Folder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Resolving Power.
         /// </summary>
         internal static string FileSettings_Resolving_Power {
@@ -561,29 +588,29 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Report &quot;{0}&quot;: R script path {1} is not a valid path..
+        ///   Looks up a localized string similar to {0}R script path {1} is not a valid path..
         /// </summary>
-        internal static string ReportSettings_Report__0__R_script_path__1__is_not_a_valid_path {
+        internal static string ReportSettings__0__R_script_path__1__is_not_a_valid_path {
             get {
-                return ResourceManager.GetString("ReportSettings_Report__0__R_script_path__1__is_not_a_valid_path", resourceCulture);
+                return ResourceManager.GetString("ReportSettings__0__R_script_path__1__is_not_a_valid_path", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Report &quot;{0}&quot;: R version {1} is not installed on this computer..
+        ///   Looks up a localized string similar to {0}R version {1} is not installed on this computer..
         /// </summary>
-        internal static string ReportSettings_Report__0__R_version__1__is_not_installed_on_this_computer_ {
+        internal static string ReportSettings__0__R_version__1__is_not_installed_on_this_computer_ {
             get {
-                return ResourceManager.GetString("ReportSettings_Report__0__R_version__1__is_not_installed_on_this_computer_", resourceCulture);
+                return ResourceManager.GetString("ReportSettings__0__R_version__1__is_not_installed_on_this_computer_", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Report &quot;{0}&quot;: Report path {1} is not a valid path..
+        ///   Looks up a localized string similar to {0}Report path {1} is not a valid path..
         /// </summary>
-        internal static string ReportSettings_Report__0__Report_path__1__is_not_a_valid_path_ {
+        internal static string ReportSettings__0__Report_path__1__is_not_a_valid_path_ {
             get {
-                return ResourceManager.GetString("ReportSettings_Report__0__Report_path__1__is_not_a_valid_path_", resourceCulture);
+                return ResourceManager.GetString("ReportSettings__0__Report_path__1__is_not_a_valid_path_", resourceCulture);
             }
         }
         
@@ -593,6 +620,24 @@ namespace SkylineBatch.Properties {
         internal static string ReportSettings_Report_must_have_name_ {
             get {
                 return ResourceManager.GetString("ReportSettings_Report_must_have_name_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to R-{0} Not Found.
+        /// </summary>
+        internal static string RVersionControl_R__0__Not_Found {
+            get {
+                return ResourceManager.GetString("RVersionControl_R__0__Not_Found", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select an R version for {0}:.
+        /// </summary>
+        internal static string RVersionControl_Select_an_R_version_for__0___ {
+            get {
+                return ResourceManager.GetString("RVersionControl_Select_an_R_version_for__0___", resourceCulture);
             }
         }
         

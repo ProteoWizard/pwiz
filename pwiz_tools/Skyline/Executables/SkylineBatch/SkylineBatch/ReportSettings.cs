@@ -162,25 +162,42 @@ namespace SkylineBatch
                 throw new ArgumentException(Resources.ReportSettings_Report_must_have_name_);
             }
 
-            if (!File.Exists(ReportPath))
-            {
-                throw new ArgumentException(
-                    string.Format(Resources.ReportSettings_Report__0__Report_path__1__is_not_a_valid_path_, Name, ReportPath));
-            }
+            ValidateReportPath(ReportPath, Name);
 
             foreach (var pathAndVersion in RScripts)
             {
-                if (!File.Exists(pathAndVersion.Item1))
-                {
-                    throw new ArgumentException(string.Format(Resources.ReportSettings_Report__0__R_script_path__1__is_not_a_valid_path, Name, pathAndVersion.Item1));
-                }
+                ValidateRScriptPath(pathAndVersion.Item1, Name);
+                ValidateRVersion(pathAndVersion.Item2, Name);
                 
-                if (!Settings.Default.RVersions.ContainsKey(pathAndVersion.Item2))
-                {
-                    throw new ArgumentException(string.Format(Resources.ReportSettings_Report__0__R_version__1__is_not_installed_on_this_computer_, Name, pathAndVersion.Item2));
-                }
             }
         }
+
+        public static void ValidateReportPath(string reportPath, string name = "")
+        {
+            if (!File.Exists(reportPath))
+            {
+                throw new ArgumentException(
+                    string.Format(Resources.ReportSettings__0__Report_path__1__is_not_a_valid_path_, name != "" ? $"Report \"{name}\": " : name, reportPath));
+            }
+        }
+
+        public static void ValidateRScriptPath(string rScriptPath, string name = "")
+        {
+            if (!File.Exists(rScriptPath))
+            {
+                throw new ArgumentException(string.Format(Resources.ReportSettings__0__R_script_path__1__is_not_a_valid_path, name != "" ? $"Report \"{name}\": " : name, rScriptPath));
+            }
+        }
+
+        public static void ValidateRVersion(string rVersion, string name = "")
+        {
+            if (!Settings.Default.RVersions.ContainsKey(rVersion))
+            {
+                throw new ArgumentException(string.Format(Resources.ReportSettings__0__R_version__1__is_not_installed_on_this_computer_, name != "" ? $"Report \"{name}\": " : name, rVersion));
+            }
+        }
+
+
 
         private enum Attr
         {

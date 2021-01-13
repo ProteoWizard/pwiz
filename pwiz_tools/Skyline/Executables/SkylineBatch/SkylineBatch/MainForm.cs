@@ -99,11 +99,27 @@ namespace SkylineBatch
         private void HandleEditEvent(object sender, EventArgs e)
         {
             var configRunner = _configManager.GetSelectedConfigRunner();
+            var config = configRunner.Config;
+            try
+            {
+                config.Validate();
+            }
+            catch (ArgumentException)
+            {
+                if (configRunner.IsRunning()) throw new Exception("Invalid configuration cannot be running.");
+                var validateConfigForm = new FixInvalidConfigForm(config, this);
+                validateConfigForm.ShowDialog();
+                if (validateConfigForm.DialogResult != DialogResult.OK)
+                    return;
+                config = validateConfigForm.ValidConfig;
+            }
+
             // can edit if config is not busy running, otherwise is view only
             Program.LogInfo(string.Format("{0} configuration \"{1}\"",
                 (!configRunner.IsRunning() ? "Editing" : "Viewing"),
                 configRunner.GetConfigName()));
-            var configForm = new SkylineBatchConfigForm(this, configRunner.Config, ConfigAction.Edit, configRunner.IsBusy());
+
+            var configForm = new SkylineBatchConfigForm(this, config, ConfigAction.Edit, configRunner.IsBusy());
             configForm.ShowDialog();
         }
 
