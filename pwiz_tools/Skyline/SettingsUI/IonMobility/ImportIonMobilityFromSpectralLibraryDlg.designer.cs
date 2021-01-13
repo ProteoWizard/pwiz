@@ -41,7 +41,6 @@
             this.label3 = new System.Windows.Forms.Label();
             this.btnBrowseFile = new System.Windows.Forms.Button();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.SuspendLayout();
             // 
             // btnCancel
@@ -131,7 +130,6 @@
             this.MinimizeBox = false;
             this.Name = "ImportIonMobilityFromSpectralLibraryDlg";
             this.ShowInTaskbar = false;
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 

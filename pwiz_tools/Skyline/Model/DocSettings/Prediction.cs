@@ -1068,19 +1068,26 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
-        public void RecalculateCalcCache(RetentionScoreCalculatorSpec calculator)
+        public void RecalculateCalcCache(RetentionScoreCalculatorSpec calculator, CustomCancellationToken token)
         {
             var calcCache = _cache[calculator.Name];
             if(calcCache != null)
             {
-                var newCalcCache = new Dictionary<Target, double>();
-                foreach (var key in calcCache.Keys)
+                try
                 {
-                    //force recalculation
-                    newCalcCache.Add(key, CalcScore(calculator, key, null));
-                }
+                    var newCalcCache = new Dictionary<Target, double>();
+                    foreach (var key in calcCache.Keys)
+                    {
+                        //force recalculation
+                        newCalcCache.Add(key, CalcScore(calculator, key, null));
+                        ProgressMonitor.CheckCanceled(token.Token);
+                    }
 
-                _cache[calculator.Name] = newCalcCache;
+                    _cache[calculator.Name] = newCalcCache;
+                }
+                catch (OperationCanceledException)
+                {
+                }
             }
         }
 
@@ -1102,9 +1109,8 @@ namespace pwiz.Skyline.Model.DocSettings
             foreach (var pep in peptides)
             {
                 result.Add(CalcScore(calculator, pep, cacheCalc));
-                ThreadingHelper.CheckCanceled(token);
+                ProgressMonitor.CheckCanceled(token.Token);
             }
-
             return result;
         }
 
