@@ -43,6 +43,7 @@ namespace pwiz.Skyline.FileUI
             this.labelTolerance = new System.Windows.Forms.Label();
             this.labelDaTolerance = new System.Windows.Forms.Label();
             this.textLockmassTolerance = new System.Windows.Forms.TextBox();
+            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.SuspendLayout();
             // 
             // btnCancel
@@ -133,6 +134,7 @@ namespace pwiz.Skyline.FileUI
             this.Name = "ImportResultsLockMassDlg";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
+            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 

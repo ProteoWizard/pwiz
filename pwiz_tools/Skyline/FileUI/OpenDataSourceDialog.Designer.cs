@@ -57,7 +57,6 @@ namespace pwiz.Skyline.FileUI
             this.desktopButton = new System.Windows.Forms.Button();
             this.myDocumentsButton = new System.Windows.Forms.Button();
             this.myComputerButton = new System.Windows.Forms.Button();
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.navToolStrip.SuspendLayout();
             this.flowLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
@@ -308,7 +307,6 @@ namespace pwiz.Skyline.FileUI
             this.Name = "OpenDataSourceDialog";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             this.navToolStrip.ResumeLayout(false);
             this.navToolStrip.PerformLayout();
             this.flowLayoutPanel1.ResumeLayout(false);

@@ -49,5 +49,10 @@ namespace pwiz.Common.DataBinding
                 return hashCode;
             }
         }
+
+        public virtual PivotedColumnId PivotedColumnId
+        {
+            get { return null; }
+        }
     }
 }
