@@ -22,15 +22,15 @@ tools on Microsoft Windows. The supported products and versions of
 command line tools are listed below:
 
 * Visual Studio 2019-14.2
-* Visual Studio 2017—14.1
-* Visual Studio 2015—14.0
-* Visual Studio 2013—12.0
-* Visual Studio 2012—11.0
-* Visual Studio 2010—10.0
-* Visual Studio 2008—9.0
-* Visual Studio 2005—8.0
-* Visual Studio .NET 2003—7.1
-* Visual Studio .NET—7.0
+* Visual Studio 2017-14.1
+* Visual Studio 2015-14.0
+* Visual Studio 2013-12.0
+* Visual Studio 2012-11.0
+* Visual Studio 2010-10.0
+* Visual Studio 2008-9.0
+* Visual Studio 2005-8.0
+* Visual Studio .NET 2003-7.1
+* Visual Studio .NET-7.0
 * Visual Studio 6.0, Service Pack 5--6.5
 
 The user would then call the boost build executable with the toolset set
@@ -2081,7 +2081,7 @@ local rule register-toolset-really ( )
     toolset.flags msvc.compile C++FLAGS  <iterator-debugging>on/<variant>release : -D_ITERATOR_DEBUG_LEVEL=2 ;
     toolset.flags msvc.compile C++FLAGS  <iterator-debugging>off : -D_ITERATOR_DEBUG_LEVEL=0 ;
 
-    toolset.flags msvc.compile CFLAGS <runtime-checks>on : /RTCs ;
+    toolset.flags msvc.compile CFLAGS <runtime-checks>on : "/RTCs /bigobj" ;
 
     toolset.flags msvc.compile CFLAGS <optimization>speed : /O2 ;
     toolset.flags msvc.compile CFLAGS <optimization>space : /O1 ;
