@@ -23,6 +23,7 @@ using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Properties;
@@ -62,7 +63,7 @@ namespace pwiz.Skyline.SettingsUI
 
             txtName.Text = libName;
             Calculator = new RCalcIrt(Helpers.GetUniqueName(libName, Settings.Default.RTScoreCalculatorList.Select(calc => calc.Name).ToArray()), libPath);
-            txtWindow.Text = EditRTDlg.DEFAULT_RT_WINDOW.ToString(LocalizationHelper.CurrentCulture);
+            txtWindow.Text = ImportPeptideSearch.DEFAULT_RT_WINDOW.ToString(LocalizationHelper.CurrentCulture);
 
             if (!allowCancel)
                 btnCancel.Hide();
