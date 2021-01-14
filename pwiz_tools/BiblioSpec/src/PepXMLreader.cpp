@@ -229,8 +229,8 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
        // handle msfragger source extensions for both native msfragger pepXMLs or PeptideProphet-analyzed pep.xmls
        if (search_engine_version.find("msfragger") == 0)
        {
-           extensions.push_back("_calibrated.mgf");
            extensions.push_back("_uncalibrated.mgf");
+           extensions.push_back("_calibrated.mgf");
 
            if (analysisType_ != MSFRAGGER_ANALYSIS)
                parentAnalysisType_ = MSFRAGGER_ANALYSIS;

@@ -31,7 +31,6 @@
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FoldChangeVolcanoPlot));
             this.zedGraphControl = new ZedGraph.ZedGraphControl();
-            ((System.ComponentModel.ISupportInitialize)(this.ModeUIExtender)).BeginInit();
             this.SuspendLayout();
             // 
             // zedGraphControl
@@ -57,7 +56,6 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.zedGraphControl);
             this.Name = "FoldChangeVolcanoPlot";
-            ((System.ComponentModel.ISupportInitialize)(this.ModeUIExtender)).EndInit();
             this.ResumeLayout(false);
 
         }

@@ -161,6 +161,7 @@
     <Compile Include="AddAllPeptidesWithModificationsTest.cs" />
     <Compile Include="AssociateProteinVariantTest.cs" />
     <Compile Include="BlibMoleculeListsTest.cs" />
+    <Compile Include="ClusteredHeatMapTest.cs" />
     <Compile Include="CrosslinkChromatogramTest.cs" />
     <Compile Include="CrosslinkingTest.cs" />
     <Compile Include="CrosslinkNeutralLossTest.cs" />
@@ -171,6 +172,7 @@
     <Compile Include="GroupComparisonRefineTest.cs" />
     <Compile Include="InvalidPeptideRankIdTest.cs" />
     <Compile Include="InvalidPeptidesInLibraryTest.cs" />
+    <Compile Include="ListClusteringTest.cs" />
     <Compile Include="LongWaitDlgResizeTest.cs" />
     <Compile Include="MetadataRuleTest.cs" />
     <Compile Include="ModificationPermuterTest.cs" />
@@ -450,6 +452,7 @@
     <None Include="FullScanIdTest.zip" />
     <None Include="GroupComparisonPivotEditorTest.zip" />
     <None Include="GroupComparisonTest.zip" />
+    <None Include="ClusteredHeatMapTest.zip" />
     <None Include="HighPrecModsTest.zip" />
     <None Include="HighReplicateCountTest.zip" />
     <None Include="ImportAnnotationsTest.zip" />

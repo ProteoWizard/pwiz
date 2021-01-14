@@ -1526,11 +1526,6 @@ namespace pwiz.Skyline
             UpdateStandardTypeMenu();
         }
 
-        private void setStandardTypeMenuItem_DropDownOpening(object sender, EventArgs e)
-        {
-            UpdateStandardTypeMenu();
-        }
-
         private void UpdateStandardTypeMenu()
         {
             var selectedPeptides = SequenceTree.SelectedDocNodes
@@ -1616,19 +1611,9 @@ namespace pwiz.Skyline
                 });
         }
 
-        private void manageUniquePeptidesMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowUniquePeptidesDlg();
-        }
-
         public void ShowUniquePeptidesDlg()
         {
             EditMenu.ShowUniquePeptidesDlg();
-        }
-
-        private void insertFASTAToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowPasteFastaDlg();
         }
 
         public void ShowPasteFastaDlg()  // Expose for test access
@@ -1900,11 +1885,6 @@ namespace pwiz.Skyline
             }
         }
 
-        private void defineNewListMenuItem_Click(object sender, EventArgs e)
-        {
-            AddListDefinition();
-        }
-
         public void AddListDefinition()
         {
             using (var editDlg = new ListDesigner(ListData.EMPTY, Settings.Default.ListDefList))
@@ -1929,14 +1909,6 @@ namespace pwiz.Skyline
                             doc.Settings.ChangeDataSettings(
                                 doc.Settings.DataSettings.ChangePanoramaPublishUri(
                                 uri))), AuditLogEntry.SettingsLogFunction);
-        }
-
-        private ToolStripMenuItem MakeToolStripMenuItem(GroupComparisonDef groupComparisonDef)
-        {
-            return new ToolStripMenuItem(groupComparisonDef.Name, null, (sender, args) =>
-            {
-                ShowGroupComparisonWindow(groupComparisonDef.Name);
-            });
         }
 
         public void ShowGroupComparisonWindow(string groupComparisonName)
@@ -2878,7 +2850,6 @@ namespace pwiz.Skyline
         }
 
         public static TextBoxStreamWriterHelper _skylineTextBoxStreamWriterHelper;
-        private readonly Alarms _removeStatusAlarms = new Alarms();
 
         private ImmediateWindow CreateImmediateWindow()
         {
@@ -3155,7 +3126,7 @@ namespace pwiz.Skyline
                     if (fastaSequence != null)
                     {
                         if (peptideSequence == null)
-                            modifyMessage = string.Format(Resources.SkylineWindow_sequenceTree_AfterNodeEdit_Add__0__, fastaSequence.Name);
+                            modifyMessage = string.Format(Resources.SkylineWindow_sequenceTree_AfterNodeEdit_Add__0__, fastaSequence.DisplayName);
                         else
                         {
                             modifyMessage = string.Format(Resources.SkylineWindow_sequenceTree_AfterNodeEdit_Add__0__, peptideSequence);
@@ -4336,6 +4307,31 @@ namespace pwiz.Skyline
             }
         }
 
+        public void SelectPathAndReplicate(IdentityPath identityPath, string replicateName)
+        {
+            if (identityPath != null)
+            {
+                try
+                {
+                    SelectedPath = identityPath;
+                }
+                catch (IdentityNotFoundException)
+                {
+                }
+            }
+
+            if (replicateName != null)
+            {
+                int resultsIndex = (DocumentUI.Settings.MeasuredResults?.Chromatograms.IndexOf(r => r.Name == replicateName))
+                    .GetValueOrDefault(-1);
+                if (resultsIndex >= 0)
+                {
+                    SelectedResultsIndex = resultsIndex;
+                }
+            }
+            
+        }
+
         public sealed override void SetUIMode(SrmDocument.DOCUMENT_TYPE mode)
         {
             base.SetUIMode(mode);
@@ -4571,12 +4567,14 @@ namespace pwiz.Skyline
         public ViewMenu ViewMenu { get; private set; }
         public RefineMenu RefineMenu { get; private set; }
 
+        public ChromatogramContextMenu ChromatogramContextMenu { get; private set; }
 
         private void InitializeMenus()
         {
             _skylineMenuControls.Add(RefineMenu = new RefineMenu(this));
             _skylineMenuControls.Add(EditMenu = new EditMenu(this));
             _skylineMenuControls.Add(ViewMenu= new ViewMenu(this));
+            _skylineMenuControls.Add(ChromatogramContextMenu = new ChromatogramContextMenu(this));
             refineToolStripMenuItem.DropDownItems.Clear();
             refineToolStripMenuItem.DropDownItems.AddRange(RefineMenu.DropDownItems.ToArray());
             editToolStripMenuItem.DropDownItems.Clear();

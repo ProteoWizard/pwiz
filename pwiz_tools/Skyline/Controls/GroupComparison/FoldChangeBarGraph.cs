@@ -157,7 +157,8 @@ namespace pwiz.Skyline.Controls.GroupComparison
             var textLabels = new List<string>();
             var rows = _bindingListSource.OfType<RowItem>()
                 .Select(rowItem => rowItem.Value)
-                .OfType<FoldChangeBindingSource.FoldChangeRow>()
+                .OfType<FoldChangeBindingSource.AbstractFoldChangeRow>()
+                .SelectMany(row=>row.GetFoldChangeRows())
                 .ToArray();
             bool showLabelType = rows.Select(row => row.IsotopeLabelType).Distinct().Count() > 1;
             bool showMsLevel = rows.Select(row => row.MsLevel).Distinct().Count() > 1;
