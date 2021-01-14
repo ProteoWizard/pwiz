@@ -21,6 +21,7 @@ using System.Text;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
+using SkylineBatch.Properties;
 
 namespace SkylineBatch
 {
@@ -37,7 +38,7 @@ namespace SkylineBatch
         {
             if (string.IsNullOrEmpty(name))
             {
-                throw new ArgumentException("Please enter a name for the configuration.");
+                throw new ArgumentException(Resources.SkylineBatchConfig_Please_enter_a_name_for_the_configuration_);
             }
             Name = name;
             Created = created;

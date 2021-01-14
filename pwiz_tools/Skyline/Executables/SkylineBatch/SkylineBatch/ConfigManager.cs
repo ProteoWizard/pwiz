@@ -98,22 +98,9 @@ namespace SkylineBatch
         private void SaveConfigList()
         {
             var updatedConfigs = new ConfigList();
-            var invalidConfigNames = "";
             foreach (var config in _configList)
             {
-                try
-                {
-                    updatedConfigs.Add(config);
-                }
-                catch (ArgumentException)
-                {
-                    invalidConfigNames += config.Name + Environment.NewLine;
-                }
-            }
-            if (invalidConfigNames.Length > 0)
-            {
-                DisplayError(Resources.ConfigManager_Save_configuration_error,
-                    Resources.ConfigManager_Could_not_save_configurations + Environment.NewLine + invalidConfigNames);
+                updatedConfigs.Add(config);
             }
             Settings.Default.ConfigList = updatedConfigs;
             Settings.Default.Save();
