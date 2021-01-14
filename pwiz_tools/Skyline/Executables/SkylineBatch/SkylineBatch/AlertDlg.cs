@@ -119,9 +119,14 @@ namespace SkylineBatch
         /// <summary>
         /// Returns the buttons on the button bar from LEFT to RIGHT.
         /// </summary>
-        private IEnumerable<Button> VisibleButtons =>
-            // return the buttons in reverse order because buttonPanel is a right-to-left FlowPanel.
-            buttonPanel.Controls.OfType<Button>().Reverse();
+        private IEnumerable<Button> VisibleButtons
+        {
+            get
+            {
+                // return the buttons in reverse order because buttonPanel is a right-to-left FlowPanel.
+                return buttonPanel.Controls.OfType<Button>().Reverse();
+            }
+        }
 
         public void ClickButton(DialogResult dialogResult)
         {
@@ -266,7 +271,10 @@ namespace SkylineBatch
 
         public string DetailMessage
         {
-            get => _detailMessage;
+            get
+            {
+                return _detailMessage;
+            }
             set
             {
                 _detailMessage = value;
@@ -314,8 +322,8 @@ namespace SkylineBatch
         /// </summary>
         public sealed override string Text
         {
-            get => base.Text;
-            set => base.Text = value;
+            get { return base.Text; }
+            set { base.Text = value; }
         }
     }
 }

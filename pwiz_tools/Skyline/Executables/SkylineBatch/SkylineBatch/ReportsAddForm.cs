@@ -18,6 +18,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
@@ -42,7 +43,7 @@ namespace SkylineBatch
                 //var rScripts = editingReport.GetRScripts();
                 foreach (var scriptAndVersion in editingReport.RScripts)
                 {
-                    dataGridScripts.Rows.Add(scriptAndVersion.Item1, scriptAndVersion.Item2);
+                    dataGridScripts.Rows.Add(new[] { scriptAndVersion.Item1, scriptAndVersion.Item2});
                 }
             }
 
@@ -64,7 +65,7 @@ namespace SkylineBatch
             openDialog.ShowDialog();
             foreach (var fileName in openDialog.FileNames)
             {
-                dataGridScripts.Rows.Add(fileName, rVersionsDropDown.Items[rVersionsDropDown.Items.Count - 1].AccessibilityObject.Name);
+                dataGridScripts.Rows.Add(new []{ fileName, rVersionsDropDown.Items[rVersionsDropDown.Items.Count - 1].AccessibilityObject.Name});
             }
             
         }

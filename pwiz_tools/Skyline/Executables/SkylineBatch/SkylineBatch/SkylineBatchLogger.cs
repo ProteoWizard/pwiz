@@ -374,7 +374,7 @@ namespace SkylineBatch
 
                 foreach (var line in lines)
                 {
-                    var error = line.Contains("Fatal error: ") || line.Contains("Error: ");
+                    var error = line.ToLower().Contains("error");
                     if (error)
                     {
                         if (!lastLineErr && toLog.Count > 0)

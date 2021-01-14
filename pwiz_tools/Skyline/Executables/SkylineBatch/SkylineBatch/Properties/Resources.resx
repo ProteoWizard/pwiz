@@ -307,16 +307,4 @@
   <data name="SkylineBatchConfig_Please_enter_a_name_for_the_configuration_" xml:space="preserve">
     <value>Please enter a name for the configuration.</value>
   </data>
-  <data name="FileSettings_Resolving_Power" xml:space="preserve">
-    <value>Resolving Power</value>
-  </data>
-  <data name="FileSettings_Retention_Time" xml:space="preserve">
-    <value>Retention Time</value>
-  </data>
-  <data name="FileSettings_Retention_time_must_be_greater_than_0__" xml:space="preserve">
-    <value>Retention time must be greater than 0.</value>
-  </data>
-  <data name="FileSettings_ValidateIntTextField_Invalid_value_for__0___1__" xml:space="preserve">
-    <value>Invalid value for "{0}": {1}.</value>
-  </data>
 </root>

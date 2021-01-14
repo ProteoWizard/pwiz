@@ -363,42 +363,6 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Resolving Power.
-        /// </summary>
-        internal static string FileSettings_Resolving_Power {
-            get {
-                return ResourceManager.GetString("FileSettings_Resolving_Power", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Retention Time.
-        /// </summary>
-        internal static string FileSettings_Retention_Time {
-            get {
-                return ResourceManager.GetString("FileSettings_Retention_Time", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Retention time must be greater than 0..
-        /// </summary>
-        internal static string FileSettings_Retention_time_must_be_greater_than_0__ {
-            get {
-                return ResourceManager.GetString("FileSettings_Retention_time_must_be_greater_than_0__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Invalid value for &quot;{0}&quot;: {1}..
-        /// </summary>
-        internal static string FileSettings_ValidateIntTextField_Invalid_value_for__0___1__ {
-            get {
-                return ResourceManager.GetString("FileSettings_ValidateIntTextField_Invalid_value_for__0___1__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to No SkylineCmd.exe file in {0}.
         /// </summary>
         internal static string FindSkyline_btnOkClick_No_SkylineCmd_exe_file_in__0__ {

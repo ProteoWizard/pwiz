@@ -29,9 +29,9 @@ namespace SkylineBatch
     public partial class MainForm : Form, IMainUiControl
     {
 
-        private readonly ConfigManager _configManager;
+        private ConfigManager configManager;
 
-        private readonly ISkylineBatchLogger _skylineBatchLogger;
+        private ISkylineBatchLogger _skylineBatchLogger;
 
         private bool _loaded;
 
@@ -46,7 +46,7 @@ namespace SkylineBatch
             btnRunOptions.Text = char.ConvertFromUtf32(0x2BC6);
 
             Program.LogInfo("Loading configurations from saved settings.");
-            _configManager = new ConfigManager(_skylineBatchLogger, this);
+            configManager = new ConfigManager(_skylineBatchLogger, this);
 
             UpdateButtonsEnabled();
             UpdateUiConfigurations();
@@ -85,20 +85,20 @@ namespace SkylineBatch
         private void btnNewConfig_Click(object sender, EventArgs e)
         {
             var initialConfigValues =
-                _configManager.HasConfigs() ? _configManager.GetLastCreated() : null;
+                configManager.HasConfigs() ? configManager.GetLastCreated() : null;
             var configForm = new SkylineBatchConfigForm(this, initialConfigValues, ConfigAction.Add, false);
             configForm.ShowDialog();
         }
 
         public void AddConfiguration(SkylineBatchConfig config)
         {
-            _configManager.AddConfiguration(config);
+            configManager.AddConfiguration(config);
             UpdateUiConfigurations();
         }
 
         private void HandleEditEvent(object sender, EventArgs e)
         {
-            var configRunner = _configManager.GetSelectedConfigRunner();
+            var configRunner = configManager.GetSelectedConfigRunner();
             // can edit if config is not busy running, otherwise is view only
             Program.LogInfo(string.Format("{0} configuration \"{1}\"",
                 (!configRunner.IsRunning() ? "Editing" : "Viewing"),
@@ -109,20 +109,20 @@ namespace SkylineBatch
 
         public void EditSelectedConfiguration(SkylineBatchConfig newVersion)
         {
-            _configManager.ReplaceSelectedConfig(newVersion);
+            configManager.ReplaceSelectedConfig(newVersion);
             UpdateUiConfigurations();
         }
 
         private void btnCopy_Click(object sender, EventArgs e)
         {
-            var configForm = new SkylineBatchConfigForm(this, _configManager.GetSelectedConfig(), ConfigAction.Copy, false);
+            var configForm = new SkylineBatchConfigForm(this, configManager.GetSelectedConfig(), ConfigAction.Copy, false);
             configForm.ShowDialog();
         }
 
 
         private void btnDelete_Click(object sender, EventArgs e)
         {
-            _configManager.RemoveSelected();
+            configManager.RemoveSelected();
             UpdateUiConfigurations();
 
             UpdateButtonsEnabled();
@@ -131,31 +131,31 @@ namespace SkylineBatch
         private void listViewConfigs_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (listViewConfigs.SelectedItems.Count > 0)
-                _configManager.SelectConfig(listViewConfigs.SelectedIndices[0]);
+                configManager.SelectConfig(listViewConfigs.SelectedIndices[0]);
             else
-                _configManager.DeselectConfig();
+                configManager.DeselectConfig();
             UpdateButtonsEnabled();
         }
 
         private void UpdateButtonsEnabled()
         {
-            var configSelected = _configManager.HasSelectedConfig();
+            var configSelected = configManager.HasSelectedConfig();
             btnEdit.Enabled = configSelected;
             btnCopy.Enabled = configSelected;
             btnDelete.Enabled = configSelected;
-            btnUpArrow.Enabled = configSelected && _configManager.SelectedConfig != 0;
-            btnDownArrow.Enabled = configSelected && _configManager.SelectedConfig < listViewConfigs.Items.Count - 1;
+            btnUpArrow.Enabled = configSelected && configManager.SelectedConfig != 0;
+            btnDownArrow.Enabled = configSelected && configManager.SelectedConfig < listViewConfigs.Items.Count - 1;
         }
 
         private void btnUpArrow_Click(object sender, EventArgs e)
         {
-            _configManager.MoveSelectedConfig(true);
+            configManager.MoveSelectedConfig(true);
             UpdateUiConfigurations();
         }
 
         private void btnDownArrow_Click(object sender, EventArgs e)
         {
-            _configManager.MoveSelectedConfig(false);
+            configManager.MoveSelectedConfig(false);
             UpdateUiConfigurations();
         }
 
@@ -195,14 +195,14 @@ namespace SkylineBatch
             {
                 if (((ToolStripMenuItem)batchRunDropDown.Items[i - 1]).Checked)
                 {
-                    _configManager.RunAll(i);
+                    configManager.RunAll(i);
                     break;
                 }
             }
-            if (_configManager.HasConfigs())
+            if (configManager.HasConfigs())
                 btnCancel.Enabled = true;
             // update ui log and switch to log tab
-            if (_configManager.ConfigsRunning())
+            if (configManager.ConfigsRunning())
             {
                 comboLogList.SelectedIndex = 0;
                 tabMain.SelectTab(tabLog);
@@ -211,7 +211,7 @@ namespace SkylineBatch
 
         private void btnCancel_Click(object sender, EventArgs e)
         {
-            _configManager.CancelRunners();
+            configManager.CancelRunners();
             btnCancel.Enabled = false;
         }
 
@@ -229,11 +229,11 @@ namespace SkylineBatch
             {
                 Program.LogInfo("Updating configurations");
                 listViewConfigs.Items.Clear();
-                var listViewItems = _configManager.ConfigsListViewItems();
+                var listViewItems = configManager.ConfigsListViewItems();
                 foreach (var lvi in listViewItems)
                     listViewConfigs.Items.Add(lvi);
-                if (_configManager.SelectedConfig >= 0)
-                    listViewConfigs.Items[_configManager.SelectedConfig].Selected = true;
+                if (configManager.SelectedConfig >= 0)
+                    listViewConfigs.Items[configManager.SelectedConfig].Selected = true;
                 UpdateLabelVisibility(); 
             });
 
@@ -246,9 +246,9 @@ namespace SkylineBatch
             {
                 Program.LogInfo("Updating log files");
                 comboLogList.Items.Clear();
-                comboLogList.Items.AddRange(_configManager.GetAllLogFiles());
-                comboLogList.SelectedIndex = _configManager.SelectedLog;
-                btnDeleteLogs.Enabled = _configManager.HasOldLogs();
+                comboLogList.Items.AddRange(configManager.GetAllLogFiles());
+                comboLogList.SelectedIndex = configManager.SelectedLog;
+                btnDeleteLogs.Enabled = configManager.HasOldLogs();
             });
 
         }
@@ -266,7 +266,7 @@ namespace SkylineBatch
         // Toggle label if no configs
         private void UpdateLabelVisibility()
         {
-            if (_configManager.HasConfigs())
+            if (configManager.HasConfigs())
             {
                 lblNoConfigs.Hide();
             }
@@ -289,13 +289,13 @@ namespace SkylineBatch
 
             var filePath = dialog.FileName;
 
-            _configManager.Import(filePath);
+            configManager.Import(filePath);
             UpdateUiConfigurations();
         }
 
         private void btnExport_Click(object sender, EventArgs e)
         {
-            var shareForm = new ShareConfigsForm(this, _configManager);
+            var shareForm = new ShareConfigsForm(this, configManager);
             shareForm.ShowDialog();
         }
 
@@ -313,7 +313,7 @@ namespace SkylineBatch
 
         private void comboLogList_SelectedIndexChanged(object sender, EventArgs e)
         {
-            _configManager.SelectLog(comboLogList.SelectedIndex);
+            configManager.SelectLog(comboLogList.SelectedIndex);
             SwitchLogger();
         }
 
@@ -321,7 +321,7 @@ namespace SkylineBatch
         {
             textBoxLog.Clear();
 
-            var logger = _configManager.GetSelectedLogger();
+            var logger = configManager.GetSelectedLogger();
             try
             {
                 await Task.Run(() =>
@@ -349,7 +349,7 @@ namespace SkylineBatch
 
         private void btnDeleteLogs_Click(object sender, EventArgs e)
         {
-            var manageLogsForm = new LogForm(_configManager);
+            var manageLogsForm = new LogForm(configManager);
             manageLogsForm.ShowDialog();
         }
 
@@ -359,17 +359,11 @@ namespace SkylineBatch
             RunUi(() =>
             {
                 if (comboLogList.SelectedIndex != 0) return; // don't log if old log is displayed
-                if (text.Contains("Fatal error: ") || text.Contains("Error: "))
-                {
-                    LogErrorToUi(text, scrollToEnd, trim);
-                    return;
-                }
-
                 if (trim)
                 {
                     TrimDisplayedLog();
                 }
-                
+
                 textBoxLog.AppendText(text);
                 textBoxLog.AppendText(Environment.NewLine);
 
@@ -462,7 +456,7 @@ namespace SkylineBatch
 
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            _configManager.Close();
+            configManager.Close();
         }
 
         public void DisplayError(string title, string message)

@@ -45,7 +45,9 @@ namespace SkylineBatch.Properties
                 }
                 return list;
             }
-            set => this["ConfigList"] = value; // Not L10N
+            set {
+                this["ConfigList"] = value; // Not L10N
+            }
         }
         
         [ApplicationScopedSetting]
@@ -61,7 +63,10 @@ namespace SkylineBatch.Properties
                 }
                 return dict;
             }
-            set => this["RVersions"] = value; // Not L10N
+            set
+            {
+                this["RVersions"] = value; // Not L10N
+            }
         }
     }
 

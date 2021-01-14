@@ -15,7 +15,7 @@ namespace SkylineBatch
     /// </summary>
     public static class XmlUtil
     {
-        //public const string XML_DIRECTIVE = "<?xml version=\"1.0\" encoding=\"utf-16\"?>\r\n";  // Not L10N
+        public const string XML_DIRECTIVE = "<?xml version=\"1.0\" encoding=\"utf-16\"?>\r\n";  // Not L10N
 
         public static void WriteAttributeString(this XmlWriter writer, Enum name, string value)
         {
@@ -342,11 +342,11 @@ namespace SkylineBatch
             return reader.GetNullableFloatAttribute(name) ?? defaultValue;
         }
 
-        public enum EnumCase { Unkown, Lower, Upper }
+        public enum EnumCase { unkown, lower, upper }
 
         public static TAttr GetEnumAttribute<TAttr>(this XmlReader reader, Enum name, TAttr defaultValue)
         {
-            return reader.GetEnumAttribute(name, defaultValue, EnumCase.Unkown);
+            return reader.GetEnumAttribute(name, defaultValue, EnumCase.unkown);
         }
 
         public static TAttr GetEnumAttribute<TAttr>(this XmlReader reader, Enum name, TAttr defaultValue, EnumCase enumCase)
@@ -368,7 +368,7 @@ namespace SkylineBatch
 
         public static TAttr GetEnumAttribute<TAttr>(this XmlReader reader, string name, TAttr defaultValue)
         {
-            return reader.GetEnumAttribute(name, defaultValue, EnumCase.Unkown);
+            return reader.GetEnumAttribute(name, defaultValue, EnumCase.unkown);
         }
 
         public static TAttr GetEnumAttribute<TAttr>(this XmlReader reader, string name, TAttr defaultValue, EnumCase enumCase)
@@ -392,9 +392,9 @@ namespace SkylineBatch
         {
             switch (enumCase)
             {
-                case EnumCase.Lower:
+                case EnumCase.lower:
                     return value.ToLowerInvariant();
-                case EnumCase.Upper:
+                case EnumCase.upper:
                     return value.ToUpperInvariant();
                 default:
                     return value;
@@ -445,7 +445,7 @@ namespace SkylineBatch
             return objNew;
         }
 
-        public static readonly Regex RegexXmlError = new Regex(@"\((\d+), ?(\d+)\)"); // Not L10N
+        public static readonly Regex REGEX_XML_ERROR = new Regex(@"\((\d+), ?(\d+)\)"); // Not L10N
 
         public static bool TryGetXmlLineColumn(string message, out int line, out int column)
         {
@@ -454,7 +454,7 @@ namespace SkylineBatch
             if (!message.Contains("XML")) // Not L10N
                 return false;
 
-            Match match = RegexXmlError.Match(message);
+            Match match = REGEX_XML_ERROR.Match(message);
             if (!match.Success)
                 return false;
             if (!int.TryParse(match.Groups[1].Value, out line))
