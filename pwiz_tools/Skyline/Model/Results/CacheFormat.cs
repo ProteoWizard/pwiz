@@ -125,6 +125,26 @@ namespace pwiz.Skyline.Model.Results
             formatVersion = cacheFormat.FormatVersion;
             versionRequired = cacheFormat.VersionRequired;
         }
+
+        public bool IsCorrupted(long cacheFileSize)
+        {
+            if (numFiles < 0 || numChromatograms < 0 || numTransitions < 0 || numPeaks < 0)
+            {
+                return true;
+            }
+
+            if (locationFiles < 0 || locationHeaders < 0 || locationTransitions < 0 || locationPeaks < 0)
+            {
+                return true;
+            }
+
+            if (locationFiles > cacheFileSize || locationHeaders > cacheFileSize || locationTransitions > cacheFileSize || locationPeaks > cacheFileSize)
+            {
+                return true;
+            }
+
+            return false;
+        }
     }
 
     /// <summary>

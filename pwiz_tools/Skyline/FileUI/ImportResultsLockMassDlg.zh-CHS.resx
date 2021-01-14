@@ -130,6 +130,33 @@
   <data name="labelMzPos.Text" xml:space="preserve">
     <value>质荷比</value>
   </data>
+  <data name="&gt;&gt;labelMzPos.Name" xml:space="preserve">
+    <value>labelMzPos</value>
+  </data>
+  <data name="&gt;&gt;labelMzPos.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelMzPos.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;labelMzPos.ZOrder" xml:space="preserve">
+    <value>7</value>
+  </data>
+  <data name="labelMzNegative.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="labelMzNegative.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Microsoft Sans Serif, 7.8pt</value>
+  </data>
+  <data name="labelMzNegative.Location" type="System.Drawing.Point, System.Drawing">
+    <value>121, 183</value>
+  </data>
+  <data name="labelMzNegative.Size" type="System.Drawing.Size, System.Drawing">
+    <value>41, 23</value>
+  </data>
+  <data name="labelMzNegative.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
   <data name="labelMzNegative.Text" xml:space="preserve">
     <value>质荷比</value>
   </data>
