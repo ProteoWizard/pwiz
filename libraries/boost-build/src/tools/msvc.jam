@@ -1997,6 +1997,7 @@ local rule register-toolset-really ( )
     # Declare msvc toolset specific features.
     {
         feature.feature debug-store : object database : propagated ;
+        feature.feature debug-store-compress : on off : propagated ;
         feature.feature pch-source  :                 : dependency free ;
         feature.feature secure-scl          : default on off        : propagated ;
         feature.feature iterator-debugging  : default on off        : propagated ;
@@ -2150,6 +2151,7 @@ local rule register-toolset-really ( )
     {
         toolset.flags msvc.link PDB_LINKFLAG <debug-symbols>on/<debug-store>database : "/PDB:" ;  # not used yet
         toolset.flags msvc.link LINKFLAGS <debug-symbols>on : /DEBUG ;
+        toolset.flags msvc.link LINKFLAGS <debug-store-compress>on : /PDBCOMPRESS ;
         toolset.flags msvc.link DEF_FILE <def-file> ;
         toolset.flags msvc.link ASSEMBLIES <assembly> ;
 
