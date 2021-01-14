@@ -153,7 +153,7 @@ namespace AutoQC
             var resultsWindow = textResultsTimeWindow.Text;
             var instrumentType = comboBoxInstrumentType.SelectedItem.ToString();
             var acquisitionTime = textAquisitionTime.Text;
-            var mainSettings = new MainSettings(skylineFilePath, folderToWatch, includeSubfolders, qcFileFilter, removeResults, resultsWindow, instrumentType, acquisitionTime, DateTime.Now, DateTime.Now);
+            var mainSettings = new MainSettings(skylineFilePath, folderToWatch, includeSubfolders, qcFileFilter, removeResults, resultsWindow, instrumentType, acquisitionTime);
             return mainSettings;
         }
 

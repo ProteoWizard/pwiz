@@ -64,8 +64,7 @@ namespace AutoQC
 
 
         public MainSettings(string skylineFilePath, string folderToWatch, bool includeSubFolders, FileFilter qcFileFilter, 
-            bool removeResults, string resultsWindowString, string instrumentType, string acquisitionTimeString, 
-            DateTime lastAcquiredFileDate, DateTime lastArchivalDate)
+            bool removeResults, string resultsWindowString, string instrumentType, string acquisitionTimeString)
         {
             SkylineFilePath = skylineFilePath;
             FolderToWatch = folderToWatch;
@@ -75,8 +74,6 @@ namespace AutoQC
             ResultsWindow = ValidateIntTextField(resultsWindowString, Resources.AutoQcConfigForm_GetMainSettingsFromUI_Results_Window);
             InstrumentType = instrumentType;
             AcquisitionTime = ValidateIntTextField(acquisitionTimeString, Resources.AutoQcConfigForm_GetMainSettingsFromUI_Acquisition_Time);
-            LastAcquiredFileDate = lastAcquiredFileDate;
-            LastArchivalDate = lastArchivalDate;
         }
 
         public virtual bool IsSelected()
@@ -317,7 +314,7 @@ namespace AutoQC
 
             return new MainSettings(skylineFilePath, folderToWatch, includeSubfolders, 
                 qcFileFilter, removeResults, resultsWindow, instrumentType, 
-                acquisitionTime, lastAcquiredFileDate, lastArchivalTime);
+                acquisitionTime);
         }
 
         public void WriteXml(XmlWriter writer)

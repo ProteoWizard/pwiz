@@ -44,32 +44,32 @@ namespace AutoQCTest
 
             var defaultFileFilter = FileFilter.GetFileFilter(AllFileFilter.FilterName, string.Empty);
             var mainSettings = new MainSettings(skyFile, folderToWatch, false, defaultFileFilter, true,
-                MainSettings.ACCUM_TIME_WINDOW.ToString(), instrument, MainSettings.ACQUISITION_TIME.ToString(), DateTime.MinValue, DateTime.MinValue);
+                MainSettings.ACCUM_TIME_WINDOW.ToString(), instrument, MainSettings.ACQUISITION_TIME.ToString());
             FilesFromWatcherEquals(mainSettings, new[] {dataFiles[0]});
             
             // include subfolders
            mainSettings = new MainSettings(skyFile, folderToWatch, true, defaultFileFilter, true,
-                MainSettings.ACCUM_TIME_WINDOW.ToString(), instrument, MainSettings.ACQUISITION_TIME.ToString(), DateTime.MinValue, DateTime.MinValue);
+                MainSettings.ACCUM_TIME_WINDOW.ToString(), instrument, MainSettings.ACQUISITION_TIME.ToString());
            FilesFromWatcherEquals(mainSettings, new[] { dataFiles[0], dataFiles[1], dataFiles[2], dataFiles[3], dataFiles[4] });
             
             var fileFilter = FileFilter.GetFileFilter(ContainsFilter.FilterName, "QC");
             mainSettings = new MainSettings(skyFile, folderToWatch, true, fileFilter, true,
-                MainSettings.ACCUM_TIME_WINDOW.ToString(), instrument, MainSettings.ACQUISITION_TIME.ToString(), DateTime.MinValue, DateTime.MinValue);
+                MainSettings.ACCUM_TIME_WINDOW.ToString(), instrument, MainSettings.ACQUISITION_TIME.ToString());
             FilesFromWatcherEquals(mainSettings, new[] { dataFiles[0], dataFiles[1], dataFiles[2], dataFiles[3]});
 
             fileFilter = FileFilter.GetFileFilter(StartsWithFilter.FilterName, "QC_");
             mainSettings = new MainSettings(skyFile, folderToWatch, true, fileFilter, true,
-                MainSettings.ACCUM_TIME_WINDOW.ToString(), instrument, MainSettings.ACQUISITION_TIME.ToString(), DateTime.MinValue, DateTime.MinValue);
+                MainSettings.ACCUM_TIME_WINDOW.ToString(), instrument, MainSettings.ACQUISITION_TIME.ToString());
             FilesFromWatcherEquals(mainSettings, new[] { dataFiles[1] });
 
             fileFilter = FileFilter.GetFileFilter(EndsWithFilter.FilterName, "_QC_");
             mainSettings = new MainSettings(skyFile, folderToWatch, true, fileFilter, true,
-                MainSettings.ACCUM_TIME_WINDOW.ToString(), instrument, MainSettings.ACQUISITION_TIME.ToString(), DateTime.MinValue, DateTime.MinValue);
+                MainSettings.ACCUM_TIME_WINDOW.ToString(), instrument, MainSettings.ACQUISITION_TIME.ToString());
             FilesFromWatcherEquals(mainSettings, new[] { dataFiles[0], dataFiles[2] });
 
             fileFilter = FileFilter.GetFileFilter(RegexFilter.FilterName, "[ab]_QC");
             mainSettings = new MainSettings(skyFile, folderToWatch, true, fileFilter, true,
-                MainSettings.ACCUM_TIME_WINDOW.ToString(), instrument, MainSettings.ACQUISITION_TIME.ToString(), DateTime.MinValue, DateTime.MinValue);
+                MainSettings.ACCUM_TIME_WINDOW.ToString(), instrument, MainSettings.ACQUISITION_TIME.ToString());
             FilesFromWatcherEquals(mainSettings, new[] { dataFiles[2], dataFiles[3] });
         }
 
@@ -164,7 +164,7 @@ namespace AutoQCTest
 
             var defaultFileFilter = FileFilter.GetFileFilter(AllFileFilter.FilterName, string.Empty);
             var mainSettings = new MainSettings(skyFile, folderToWatch, false, defaultFileFilter, true,
-                MainSettings.ACCUM_TIME_WINDOW.ToString(), instrument, MainSettings.ACQUISITION_TIME.ToString(), DateTime.MinValue, DateTime.MinValue);
+                MainSettings.ACCUM_TIME_WINDOW.ToString(), instrument, MainSettings.ACQUISITION_TIME.ToString());
 
             var config = new AutoQcConfig("test", false, DateTime.MinValue, DateTime.MinValue, mainSettings, new PanoramaSettings(), TestUtils.GetTestSkylineSettings());
 
@@ -205,7 +205,7 @@ namespace AutoQCTest
             skyFile = CreateFile(folderToWatch, "test2_b.sky");
 
             mainSettings = new MainSettings(skyFile, folderToWatch, true, defaultFileFilter, true,
-                MainSettings.ACCUM_TIME_WINDOW.ToString(), instrument, MainSettings.ACQUISITION_TIME.ToString(), DateTime.MinValue, DateTime.MinValue);
+                MainSettings.ACCUM_TIME_WINDOW.ToString(), instrument, MainSettings.ACQUISITION_TIME.ToString());
 
             config = new AutoQcConfig("test", false, DateTime.MinValue, DateTime.MinValue, mainSettings, new PanoramaSettings(), TestUtils.GetTestSkylineSettings());
 
@@ -245,7 +245,7 @@ namespace AutoQCTest
             var fileFilter = FileFilter.GetFileFilter(ContainsFilter.FilterName, "_QC_"); // file name pattern
             // watch sub folders
             mainSettings = new MainSettings(skyFile, folderToWatch, true, fileFilter, true,
-                MainSettings.ACCUM_TIME_WINDOW.ToString(), instrument, MainSettings.ACQUISITION_TIME.ToString(), DateTime.MinValue, DateTime.MinValue);
+                MainSettings.ACCUM_TIME_WINDOW.ToString(), instrument, MainSettings.ACQUISITION_TIME.ToString());
 
             config = new AutoQcConfig("test", false, DateTime.MinValue, DateTime.MinValue, mainSettings, new PanoramaSettings(), TestUtils.GetTestSkylineSettings());
 
@@ -283,7 +283,7 @@ namespace AutoQCTest
             skyFile = CreateFile(folderToWatch, "test2_d.sky");
 
             mainSettings = new MainSettings(skyFile, folderToWatch, false, defaultFileFilter, true,
-                MainSettings.ACCUM_TIME_WINDOW.ToString(), instrument, MainSettings.ACQUISITION_TIME.ToString(), DateTime.MinValue, DateTime.MinValue);
+                MainSettings.ACCUM_TIME_WINDOW.ToString(), instrument, MainSettings.ACQUISITION_TIME.ToString());
 
             config = new AutoQcConfig("test", false, DateTime.MinValue, DateTime.MinValue, mainSettings, new PanoramaSettings(), TestUtils.GetTestSkylineSettings());
 
@@ -335,7 +335,7 @@ namespace AutoQCTest
                 if (files.Count == expectedFileCount)
                     return;
                 await Task.Delay(timestep);
-                x = (int)(DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond);
+                x = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
             }
             Assert.Fail($"Expected <{expectedFileCount}> files but Actual <{files.Count}>.");
         }

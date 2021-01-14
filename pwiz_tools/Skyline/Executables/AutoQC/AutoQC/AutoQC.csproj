@@ -109,7 +109,6 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
-    <None Include="University of Washington %28MacCoss Lab%29.pfx" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AlertDlg.cs">

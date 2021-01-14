@@ -53,13 +53,12 @@
   </Choose>
   <ItemGroup>
     <Compile Include="ConfigManagerTest.cs" />
-    <Compile Include="ConfigRunnerTest.cs" />
     <Compile Include="MainSettingsTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="AutoQcConfigTest.cs" />
-    <Compile Include="SkylineBatchLoggerTest.cs" />
     <Compile Include="TestUtils.cs" />
     <Compile Include="AutoQcFileSystemWatcherTest.cs" />
+    <Compile Include="PanoramaTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Test\" />

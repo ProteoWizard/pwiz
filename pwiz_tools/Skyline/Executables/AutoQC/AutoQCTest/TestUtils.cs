@@ -53,7 +53,7 @@ namespace AutoQCTest
             var instrumentType = MainSettings.GetDefaultInstrumentType();
             
             
-            return new MainSettings(skylineFilePath, folderToWatch, false, fileFilter, removeResults, resultsWindow, instrumentType, acquisitionTime, DateTime.MinValue, DateTime.MinValue);
+            return new MainSettings(skylineFilePath, folderToWatch, false, fileFilter, removeResults, resultsWindow, instrumentType, acquisitionTime);
         }
 
         public static PanoramaSettings GetTestPanoramaSettings() => new PanoramaSettings();
@@ -170,13 +170,6 @@ namespace AutoQCTest
                     logFiles.Add(fullName);
             }*/
             return logFiles;
-        }
-
-        public static void DeleteAllLogFiles()
-        {
-            /*var logFiles = GetAllLogFiles();
-            foreach (var file in logFiles)
-                File.Delete(file);*/
         }
     }
     /*class TestLogger: IAutoQcLogger

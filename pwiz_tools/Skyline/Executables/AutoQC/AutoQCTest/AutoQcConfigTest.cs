@@ -17,6 +17,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using AutoQC;
 
@@ -42,29 +43,29 @@ namespace AutoQCTest
 
             var badSkylinePath = TestUtils.GetTestFilePath("NotReal.sky");
             TestInvalidMainSettings(new MainSettings(badSkylinePath, folderToWatch, false, fileFilter, false, 
-                resultsWindow, instrumentType, acquisitionTime, DateTime.MinValue, DateTime.MinValue),
+                resultsWindow, instrumentType, acquisitionTime),
                 $"Skyline file {badSkylinePath} does not exist.");
 
             var badFolderPath = TestUtils.GetTestFilePath("NotReal");
             TestInvalidMainSettings(new MainSettings(skylinePath, badFolderPath, false, fileFilter, false,
-                    resultsWindow, instrumentType, acquisitionTime, DateTime.MinValue, DateTime.MinValue),
+                    resultsWindow, instrumentType, acquisitionTime),
                 $"Folder to watch: {badFolderPath} does not exist.");
 
             var smallResultsWindow = "30";
             TestInvalidMainSettings(new MainSettings(skylinePath, folderToWatch, false, fileFilter, false,
-                    smallResultsWindow, instrumentType, acquisitionTime, DateTime.MinValue, DateTime.MinValue),
+                    smallResultsWindow, instrumentType, acquisitionTime),
                 "\"Results time window\" cannot be less than 31 days.");
 
             var negativeAcquisitionTime = "-1";
             TestInvalidMainSettings(new MainSettings(skylinePath, folderToWatch, false, fileFilter, false,
-                    resultsWindow, instrumentType, negativeAcquisitionTime, DateTime.MinValue, DateTime.MinValue),
+                    resultsWindow, instrumentType, negativeAcquisitionTime),
                 "\"Expected acquisition time\" cannot be less than 0 minutes.");
 
             var nonNumberAcquisitionTime = "aaa";
             try
             {
                 new MainSettings(skylinePath, folderToWatch, false, fileFilter, false,
-                    resultsWindow, instrumentType, nonNumberAcquisitionTime, DateTime.MinValue, DateTime.MinValue);
+                    resultsWindow, instrumentType, nonNumberAcquisitionTime);
                 Assert.Fail("Expected non-number acquisition time to throw exception upon MainSettings construction.");
             }
             catch (ArgumentException e)
@@ -72,9 +73,10 @@ namespace AutoQCTest
                 Assert.AreEqual($"Invalid value for \"Acquisition Time\": {nonNumberAcquisitionTime}.", e.Message);
             }
 
-            var testValidMainSettings = new MainSettings(TestUtils.GetTestFilePath("EmptyTemplate.sky"), TestUtils.GetTestFilePath("Config"),
+            var testValidMainSettings = new MainSettings(TestUtils.GetTestFilePath("EmptyTemplate.sky"),
+                TestUtils.GetTestFilePath("Config"),
                 true, MainSettings.GetDefaultQcFileFilter(), true, "50", MainSettings.SCIEX,
-                "500", DateTime.MaxValue, DateTime.MinValue);
+                "500");
             try
             {
                 testValidMainSettings.ValidateSettings();
@@ -118,13 +120,15 @@ namespace AutoQCTest
                 "Please specify a folder on the Panorama server.");
 
             var noPublishToPanorama = new PanoramaSettings();
+            var validPanoramaSettings = new PanoramaSettings(true, "https://panoramaweb.org/", "skyline_tester@proteinms.net", "lclcmsms", "UniqueFolder");
             try
             {
                 noPublishToPanorama.ValidateSettings();
+                validPanoramaSettings.ValidateSettings();
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                Assert.Fail("Should have validated valid PanoramaSettings");
+                Assert.Fail("Should have validated valid PanoramaSettings, threw exception: " + e.Message);
             }
         }
 
@@ -142,8 +146,18 @@ namespace AutoQCTest
             }
         }
 
+        [TestMethod]
+        public void TestGetLastArchivalDate()
+        {
+            var mainSettings = new MainSettings(@"C:\Dummy\path\Test_file.sky", "", false, null, true,
+                MainSettings.ACCUM_TIME_WINDOW.ToString(), "Thermo", MainSettings.ACQUISITION_TIME.ToString());
+            var fsUtil = new TestFileSystemUtil();
 
-        
+            Assert.AreEqual(new DateTime(2015, 06, 01), mainSettings.GetLastArchivalDate(fsUtil));
+        }
+
+
+
         [TestMethod]
         public void TestMainSettingsEquals()
         {
@@ -181,6 +195,55 @@ namespace AutoQCTest
                 "BadPassword", "badfolder");
             var differentPanoramaSettings = new AutoQcConfig("Config", false, DateTime.MinValue, DateTime.MinValue, TestUtils.GetTestMainSettings("Config"), publishingPanorama, TestUtils.GetTestSkylineSettings());
             Assert.IsFalse(Equals(testConfig, differentPanoramaSettings));
+        }
+
+
+
+        private class TestFileSystemUtil : IFileSystemUtil
+        {
+            private readonly Dictionary<string, TestFileInfo> fileMap;
+
+            public TestFileSystemUtil()
+            {
+                fileMap = new Dictionary<string, TestFileInfo>();
+                var file = "Test_file_2015_04.sky.zip";
+                fileMap.Add(file, new TestFileInfo(file, new DateTime(2015, 04, 01)));
+                file = "Test_file_2015_05.sky.zip";
+                fileMap.Add(file, new TestFileInfo(file, new DateTime(2015, 05, 01)));
+                file = "Test_file_2015_06.sky.zip";
+                fileMap.Add(file, new TestFileInfo(file, new DateTime(2015, 06, 01)));
+            }
+
+            public IEnumerable<string> GetSkyZipFiles(string dirPath)
+            {
+                return fileMap.Keys;
+            }
+
+            public DateTime LastWriteTime(string filePath)
+            {
+                TestFileInfo fileInfo;
+                if (fileMap.TryGetValue(filePath, out fileInfo))
+                {
+                    return fileInfo.LastWriteTime;
+                }
+                return DateTime.Today;
+            }
+        }
+
+
+
+
+
+        private class TestFileInfo
+        {
+            private readonly string FilePath;
+            public readonly DateTime LastWriteTime;
+
+            public TestFileInfo(string filePath, DateTime lastWriteTime)
+            {
+                FilePath = filePath;
+                LastWriteTime = lastWriteTime;
+            }
         }
 
     }
