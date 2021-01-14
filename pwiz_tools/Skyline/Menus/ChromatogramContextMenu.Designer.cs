@@ -90,7 +90,6 @@
             this.toolStripSeparator26 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.deconvoluteIsotopesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.contextMenuChromatogram.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -520,7 +519,6 @@
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Name = "ChromatogramContextMenu";
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             this.contextMenuChromatogram.ResumeLayout(false);
             this.ResumeLayout(false);
 
