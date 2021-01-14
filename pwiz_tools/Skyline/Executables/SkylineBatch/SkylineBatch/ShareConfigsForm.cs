@@ -32,6 +32,7 @@ namespace SkylineBatch
                 return;
 
             textFileName.Text = dialog.FileName;
+            Export();
         }
 
         private void checkedSaveConfigs_ItemCheck(object sender, ItemCheckEventArgs e)
@@ -47,12 +48,13 @@ namespace SkylineBatch
 
         private void btnOk_Click(object sender, EventArgs e)
         {
+            Export();
+        }
+
+        private void Export()
+        {
             var indiciesToSave = new int[checkedSaveConfigs.CheckedIndices.Count];
             checkedSaveConfigs.CheckedIndices.CopyTo(indiciesToSave, 0);
-            /*var successfulExport = _configManager.ExportConfigs(textFileName.Text, indiciesToSave);
-            if (!successfulExport)
-                return;
-            Close();*/
 
             try
             {

@@ -106,6 +106,8 @@ namespace SkylineBatch
             var templateFullName = Config.MainSettings.TemplateFilePath;
             var resolvingPower = Config.FileSettings.ResolvingPower;
             var retentionTime = Config.FileSettings.RetentionTime;
+            var addDecoys = Config.FileSettings.AddDecoys;
+            var shuffleDecoys = Config.FileSettings.ShuffleDecoys;
             var newSkylineFileName = Config.MainSettings.GetNewTemplatePath();
             var dataDir = Config.MainSettings.DataFolderPath;
             var namingPattern = Config.MainSettings.ReplicateNamingPattern;
@@ -115,6 +117,7 @@ namespace SkylineBatch
 
             firstStep += !string.IsNullOrEmpty(resolvingPower) ? string.Format("--full-scan-product-res={0} ", resolvingPower) : "";
             firstStep += !string.IsNullOrEmpty(retentionTime) ? string.Format("--full-scan-rt-filter-tolerance={0} ", retentionTime) : "";
+            firstStep += addDecoys ? string.Format("--decoys-add={0} ", shuffleDecoys ? "shuffle" : "reverse") : "";
 
             firstStep += string.Format("--out=\"{0}\" ‑‑save‑settings", newSkylineFileName);
 

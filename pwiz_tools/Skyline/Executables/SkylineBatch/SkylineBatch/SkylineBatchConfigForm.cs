@@ -204,11 +204,19 @@ namespace SkylineBatch
                 textResolvingPower.Text = config.FileSettings.ResolvingPower;
             if (config.FileSettings.RetentionTime != null)
                 textRetentionTime.Text = config.FileSettings.RetentionTime;
+            checkBoxDecoys.Checked = config.FileSettings.AddDecoys;
+            radioShuffleDecoys.Checked = config.FileSettings.ShuffleDecoys;
+        }
+
+        private void checkBoxDecoys_CheckedChanged(object sender, EventArgs e)
+        {
+            radioShuffleDecoys.Enabled = checkBoxDecoys.Checked;
+            radioReverseDecoys.Enabled = checkBoxDecoys.Checked;
         }
 
         private FileSettings GetFileSettingsFromUi()
         {
-            return new FileSettings(textResolvingPower.Text, textRetentionTime.Text);
+            return new FileSettings(textResolvingPower.Text, textRetentionTime.Text, checkBoxDecoys.Checked, radioShuffleDecoys.Enabled && radioShuffleDecoys.Checked);
         }
 
         
@@ -355,12 +363,12 @@ namespace SkylineBatch
             _mainControl.DisplayError("Configuration Validation Error", message);
         }
 
+
+
+
+
+
         #endregion
-
-
-
-
-        
 
     }
 }

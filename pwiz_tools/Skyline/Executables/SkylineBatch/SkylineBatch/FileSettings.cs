@@ -33,16 +33,21 @@ namespace SkylineBatch
         // Holds file locations and naming pattern to use when running the configuration
 
 
-        public FileSettings(string resolvingPower, string retentionTime)
+        public FileSettings(string resolvingPower, string retentionTime, bool addDecoys, bool shuffleDecoys)
         {
             ResolvingPower = resolvingPower ?? "";
             RetentionTime = retentionTime ?? "";
+            AddDecoys = addDecoys;
+            ShuffleDecoys = shuffleDecoys;
         }
 
         public readonly string ResolvingPower;
 
         public readonly string RetentionTime;
-        
+
+        public readonly bool AddDecoys;
+
+        public readonly bool ShuffleDecoys;
 
         private int ValidateIntTextField(string textToParse, string fieldName)
         {
@@ -83,14 +88,18 @@ namespace SkylineBatch
         private enum Attr
         {
             ResolvingPower,
-            RetentionTime
+            RetentionTime,
+            AddDecoys,
+            ShuffleDecoys
         };
 
         public static FileSettings ReadXml(XmlReader reader)
         {
             var resolvingPower = reader.GetAttribute(Attr.ResolvingPower);
             var retentionTime = reader.GetAttribute(Attr.RetentionTime);
-            return new FileSettings(resolvingPower, retentionTime);
+            var addDecoys = reader.GetBoolAttribute(Attr.AddDecoys);
+            var shuffleDecoys = reader.GetBoolAttribute(Attr.ShuffleDecoys);
+            return new FileSettings(resolvingPower, retentionTime, addDecoys, shuffleDecoys);
         }
 
         public void WriteXml(XmlWriter writer)
@@ -98,6 +107,8 @@ namespace SkylineBatch
             writer.WriteStartElement("file_settings");
             writer.WriteAttributeIfString(Attr.ResolvingPower, ResolvingPower);
             writer.WriteAttributeIfString(Attr.RetentionTime, RetentionTime);
+            writer.WriteAttribute(Attr.AddDecoys, AddDecoys);
+            writer.WriteAttribute(Attr.ShuffleDecoys, ShuffleDecoys);
             writer.WriteEndElement();
         }
         #endregion
