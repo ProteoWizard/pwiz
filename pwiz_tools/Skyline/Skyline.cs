@@ -3126,7 +3126,7 @@ namespace pwiz.Skyline
                     if (fastaSequence != null)
                     {
                         if (peptideSequence == null)
-                            modifyMessage = string.Format(Resources.SkylineWindow_sequenceTree_AfterNodeEdit_Add__0__, fastaSequence.Name);
+                            modifyMessage = string.Format(Resources.SkylineWindow_sequenceTree_AfterNodeEdit_Add__0__, fastaSequence.DisplayName);
                         else
                         {
                             modifyMessage = string.Format(Resources.SkylineWindow_sequenceTree_AfterNodeEdit_Add__0__, peptideSequence);

@@ -21,6 +21,7 @@
 
 namespace BiblioSpec
 {
+const int LATEST_SUPPORTED_VERSION = -2;
 
 // code adapted from CC4-by-licensed diann.cpp by Vadim Demichev (https://github.com/vdemichev/DiaNN)
 namespace {
@@ -41,11 +42,11 @@ template<class F> void read_string(F &in, std::string &s) {
     }
 }
 
-template <class F, class T> void read_array(F &in, std::vector<T> &a) {
+template <class F, class T> void read_array(F &in, std::vector<T> &a, int v = 0) {
     int size = 0; in.read((char*)&size, sizeof(int)); 
     if (size) {
         a.resize(size);
-        for (int i = 0; i < size; i++) a[i].read(in);
+        for (int i = 0; i < size; i++) a[i].read(in, v);
     }
 }
 
@@ -273,6 +274,7 @@ class Peptide {
     public:
     int index = 0, charge = 0, length = 0, no_cal = 0;
     float mz = 0.0, iRT = 0.0, sRT = 0.0, lib_qvalue = 0.0;
+    float iIM = 0.0, sIM = 0.0;
     std::vector<Product> fragments;
 
     void init(float _mz, float _iRT, int _charge, int _index) {
@@ -287,7 +289,7 @@ class Peptide {
         std::vector<Product>().swap(fragments);
     }
 
-    template <class F> void read(F &in) {
+    template <class F> void read(F &in, int v) {
         in.read((char*)&index, sizeof(int));
         in.read((char*)&charge, sizeof(int));
         in.read((char*)&length, sizeof(int));
@@ -295,6 +297,12 @@ class Peptide {
         in.read((char*)&mz, sizeof(float));
         in.read((char*)&iRT, sizeof(float));
         in.read((char*)&sRT, sizeof(float));
+
+        if (v <= -2) {
+            in.read((char*)&lib_qvalue, sizeof(float));
+            in.read((char*)&iIM, sizeof(float));
+            in.read((char*)&sIM, sizeof(float));
+        }
 
         read_vector(in, fragments);
     }
@@ -321,7 +329,7 @@ public:
 
     friend inline bool operator < (const Isoform &left, const Isoform &right) { return left.id < right.id; }
 
-    template <class F> void read(F &in) {
+    template <class F> void read(F &in, int v = 0) {
         int sp = 0, size = 0;
         in.read((char*)&sp, sizeof(int));
         in.read((char*)&size, sizeof(int));
@@ -357,7 +365,7 @@ public:
 
     friend inline bool operator < (const PG &left, const PG &right) { return left.ids < right.ids; }
 
-    template <class F> void read(F &in) {
+    template <class F> void read(F &in, int v = 0) {
         int size_p = 0;
         in.read((char*)&size_p, sizeof(int));
 
@@ -414,10 +422,10 @@ class Library {
             decoy.free();
         }
 
-        template <class F> void read(F &in) {
-            target.read(in);
+        template <class F> void read(F &in, int v) {
+            target.read(in, v);
             int dc = 0; in.read((char*)&dc, sizeof(int));
-            if (dc) decoy.read(in);
+            if (dc) decoy.read(in, v);
 
             int ff = 0, prt = 0;
             in.read((char*)&ff, sizeof(int));
@@ -434,8 +442,11 @@ class Library {
         int gd = 0, gc = 0, ip = 0, version = 0;
 
         in.read((char*)&version, sizeof(int));
-        if (version >= 0) gd = version;
+        if (version >= 0) { gd = version; version = 0; }
         else in.read((char*)&gd, sizeof(int));
+
+        if (version < LATEST_SUPPORTED_VERSION)
+            Verbosity::error("speclib file has version %d, but BiblioSpec only supports up to version %d", -1*version, -1*LATEST_SUPPORTED_VERSION);
 
         in.read((char*)&gc, sizeof(int));
         in.read((char*)&ip, sizeof(int));
@@ -450,7 +461,7 @@ class Library {
         read_strings(in, genes);
         in.read((char*)&iRT_min, sizeof(double));
         in.read((char*)&iRT_max, sizeof(double));
-        read_array(in, entries);
+        read_array(in, entries, version);
         for (auto &e : entries) e.lib = this;
         if (version <= -1 && in.peek() != std::char_traits<char>::eof()) read_vector(in, elution_groups);
     }
@@ -476,7 +487,7 @@ class Library {
         if (co_elution_index.size()) co_elution_index[0].second = 0;
         for (auto it = ce.begin(); it != ce.end(); it++, i++) {
             co_elution[i] = it->second;
-            if (it->first != peg) co_elution_index[it->first].first = (int) i;
+            if (it->first != (int) peg) co_elution_index[it->first].first = (int) i;
             else co_elution_index[it->first].second++;
             peg = it->first;
         }
