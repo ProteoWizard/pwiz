@@ -13,6 +13,7 @@ namespace SkylineBatch
         {
             InitializeComponent();
 
+            _version = oldVersion;
             labelTitle.Text = string.Format(Resources.RVersionControl_R__0__Not_Found, oldVersion);
             labelMessage.Text = string.Format(Resources.RVersionControl_Select_an_R_version_for__0___,
                 Path.GetFileName(scriptName));

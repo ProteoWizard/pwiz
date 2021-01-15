@@ -83,11 +83,13 @@ namespace SkylineBatch
             if (_oldRoot == null && !invalidPath.Equals(path))
             {
                 GetRootReplacement(invalidPath, path);
-
-                if (!_newRoot.Equals(path) && !invalidPath.StartsWith(_newRoot))
+                
+                if (!_newRoot.Equals(_oldRoot))
+                {
                     _replaceRoot = _mainControl.DisplayQuestion("Replace All",
                         "Would you like to use this root for all paths?" + Environment.NewLine +
                         _newRoot) == DialogResult.Yes;
+                }
             }
             RemoveControl(folderControl);
             
@@ -104,7 +106,7 @@ namespace SkylineBatch
         private async Task<SkylineSettings> FixInvalidSkylineSettings()
         {
             var skylineTypeControl = new SkylineTypeControl(_invalidConfig.UsesSkyline, _invalidConfig.UsesSkylineDaily, _invalidConfig.UsesCustomSkylinePath, _invalidConfig.SkylineSettings.CmdPath);
-            return (SkylineSettings) await GetValidVariable(_invalidConfig.SkylineSettings.CmdPath, "Invalid Skyline Installation", skylineTypeControl);
+            return (SkylineSettings) await GetValidVariable(_invalidConfig.SkylineSettings, "Invalid Skyline Installation", skylineTypeControl);
         }
 
 
