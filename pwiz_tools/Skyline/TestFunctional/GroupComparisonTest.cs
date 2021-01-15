@@ -45,7 +45,7 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
-      [TestMethod]
+        [TestMethod]
         public void TestGroupComparisonAsSmallMolecules()
         {
             if (!RunSmallMoleculeTestVersions)
@@ -78,6 +78,7 @@ namespace pwiz.SkylineTestFunctional
             var editGroupComparisonDlg = ShowDialog<EditGroupComparisonDlg>(SkylineWindow.AddGroupComparison);
             RunUI(() =>
             {
+                Assert.IsTrue(string.IsNullOrEmpty(editGroupComparisonDlg.TextBoxName.Text));
                 editGroupComparisonDlg.TextBoxName.Text = "One-Two";
                 editGroupComparisonDlg.ComboControlAnnotation.SelectedItem = "DilutionNumber";
             });

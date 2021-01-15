@@ -1069,6 +1069,10 @@ namespace pwiz.Skyline.Controls
                 string keyChar = e.KeyChar.ToString(LocalizationHelper.CurrentCulture);
                 if (IsKeyLocked(Keys.CapsLock))
                     keyChar = keyChar.ToLower();
+                if (@"+^%~(){}[]".IndexOf(keyChar, StringComparison.Ordinal) >= 0)
+                {
+                    keyChar = @"{" + keyChar + @"}";
+                }
                 SendKeys.Send(keyChar);
                 e.Handled = true;
             }
