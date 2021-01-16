@@ -89,8 +89,36 @@ namespace pwiz.Skyline.Model
             lock (CHANGE_EVENT_LOCK)
             {
                 // Wait for completing document changed event
+                uint nLoops = 0;
                 while (!IsFinal(Document))
-                    Monitor.Wait(CHANGE_EVENT_LOCK, 1000);  // Check ever second or risk deadlock
+                {
+                    Monitor.Wait(CHANGE_EVENT_LOCK, 1000);  // Check every second or risk deadlock
+
+                    // Help for debugging occasional hangs in tests - report after an hour's wait, and once an hour after that
+                    if (++nLoops % 3600 == 0 && Program.UnitTest && !IsFinal(Document))
+                    {
+                        const string PREAMBLE = @"# "; // Leading hash is a cue to SkylineTester to ignore these informational lines
+                        Console.WriteLine(PREAMBLE + @"unusually long WaitForComplete():");
+                        foreach (var why in Document.NonLoadedStateDescriptionsFull)
+                        {
+                            Console.WriteLine(PREAMBLE + why);
+                        }
+
+                        if (LastProgress != null)
+                        {
+                            Console.WriteLine(PREAMBLE + @"LastProgress status:");
+                            Console.WriteLine(PREAMBLE + LastProgress.State);
+                            if (!string.IsNullOrEmpty(LastProgress.Message))
+                            {
+                                Console.WriteLine(PREAMBLE + LastProgress.Message);
+                            }
+                            if (!string.IsNullOrEmpty(LastProgress.WarningMessage))
+                            {
+                                Console.WriteLine(PREAMBLE + LastProgress.WarningMessage);
+                            }
+                        }
+                    }
+                }
             }
         }
 

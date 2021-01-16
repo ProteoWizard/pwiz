@@ -22,15 +22,15 @@ tools on Microsoft Windows. The supported products and versions of
 command line tools are listed below:
 
 * Visual Studio 2019-14.2
-* Visual Studio 2017—14.1
-* Visual Studio 2015—14.0
-* Visual Studio 2013—12.0
-* Visual Studio 2012—11.0
-* Visual Studio 2010—10.0
-* Visual Studio 2008—9.0
-* Visual Studio 2005—8.0
-* Visual Studio .NET 2003—7.1
-* Visual Studio .NET—7.0
+* Visual Studio 2017-14.1
+* Visual Studio 2015-14.0
+* Visual Studio 2013-12.0
+* Visual Studio 2012-11.0
+* Visual Studio 2010-10.0
+* Visual Studio 2008-9.0
+* Visual Studio 2005-8.0
+* Visual Studio .NET 2003-7.1
+* Visual Studio .NET-7.0
 * Visual Studio 6.0, Service Pack 5--6.5
 
 The user would then call the boost build executable with the toolset set
@@ -1997,9 +1997,11 @@ local rule register-toolset-really ( )
     # Declare msvc toolset specific features.
     {
         feature.feature debug-store : object database : propagated ;
+        feature.feature debug-store-compress : on off : propagated ;
         feature.feature pch-source  :                 : dependency free ;
         feature.feature secure-scl          : default on off        : propagated ;
         feature.feature iterator-debugging  : default on off        : propagated ;
+        feature.feature runtime-checks      : off on                : propagated ;
         feature.feature assembly            :                       : free dependency ;
         feature.feature assembly-dependency :                       : free dependency ;
         feature.feature assembly-dependency-ex :                    : free ;
@@ -2008,6 +2010,9 @@ local rule register-toolset-really ( )
         feature.feature using-clr           : false true            : composite ;
         feature.compose <using-clr>true     : <asynch-exceptions>on <runtime-link>shared ;
     }
+    
+    toolset.add-requirements <runtime-checks>on:<optimization>off ;
+    toolset.add-requirements <using-clr>true:<runtime-checks>off ;
 
     # Declare generators.
     {
@@ -2077,6 +2082,8 @@ local rule register-toolset-really ( )
     toolset.flags msvc.compile C++FLAGS  <iterator-debugging>on/<variant>release : -D_ITERATOR_DEBUG_LEVEL=2 ;
     toolset.flags msvc.compile C++FLAGS  <iterator-debugging>off : -D_ITERATOR_DEBUG_LEVEL=0 ;
 
+    toolset.flags msvc.compile CFLAGS <runtime-checks>on : "/RTCs /bigobj" ;
+
     toolset.flags msvc.compile CFLAGS <optimization>speed : /O2 ;
     toolset.flags msvc.compile CFLAGS <optimization>space : /O1 ;
 
@@ -2144,6 +2151,7 @@ local rule register-toolset-really ( )
     {
         toolset.flags msvc.link PDB_LINKFLAG <debug-symbols>on/<debug-store>database : "/PDB:" ;  # not used yet
         toolset.flags msvc.link LINKFLAGS <debug-symbols>on : /DEBUG ;
+        toolset.flags msvc.link LINKFLAGS <debug-store-compress>on : /PDBCOMPRESS ;
         toolset.flags msvc.link DEF_FILE <def-file> ;
         toolset.flags msvc.link ASSEMBLIES <assembly> ;
 

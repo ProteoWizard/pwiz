@@ -349,6 +349,37 @@
   <data name="btnGroupTotal.Text" xml:space="preserve">
     <value>Group/Total</value>
   </data>
+  <data name="navBarButtonClusterGrid.Size" type="System.Drawing.Size, System.Drawing">
+    <value>180, 22</value>
+  </data>
+  <data name="navBarButtonClusterGrid.Text" xml:space="preserve">
+    <value>Cluster Grid</value>
+  </data>
+  <data name="advancedToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>180, 22</value>
+  </data>
+  <data name="advancedToolStripMenuItem.Text" xml:space="preserve">
+    <value>Advanced...</value>
+  </data>
+  <data name="navBarButtonCluster.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
+        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAADfSURBVDhPY6AaeJgV9B+GdzDowfHv5d1wfPv+PTiGakMA
+        ig1AVoiM/57bA8eHr/+CY6g2BMCmGYSJNuD15eP/YRjZqffuIfDCI//hGKoNASg2AFnh4mP/4RjZ2dm9
+        7+EYqg0BKDZg35Uf/2E4q+cDHIMUV8388L9u9gf8XsBlQC1Q49Ltr/7PWff4/+Zzf3AbgGy6Y9hVOE4q
+        vv2/ruvC/6LaY/87F7/9n9T6Coyh2hAAlwEgXNhw939Z273/6Z0QzVgNQHY2TBEII4sjWwLVhgDICvEZ
+        sPgoDgPIAwwMAAqnE2U1A0VYAAAAAElFTkSuQmCC
+</value>
+  </data>
+  <data name="navBarButtonCluster.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
+  </data>
+  <data name="navBarButtonCluster.Size" type="System.Drawing.Size, System.Drawing">
+    <value>32, 22</value>
+  </data>
+  <data name="navBarButtonCluster.Text" xml:space="preserve">
+    <value>Cluster</value>
+  </data>
   <data name="toolStripSeparator3.Size" type="System.Drawing.Size, System.Drawing">
     <value>6, 25</value>
   </data>
@@ -388,7 +419,7 @@
     <value>0, 0</value>
   </data>
   <data name="bindingNavigator1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>800, 25</value>
+    <value>855, 25</value>
   </data>
   <data name="bindingNavigator1.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -415,7 +446,7 @@
     <value>True</value>
   </data>
   <data name="$this.Size" type="System.Drawing.Size, System.Drawing">
-    <value>800, 25</value>
+    <value>855, 25</value>
   </data>
   <data name="&gt;&gt;navBarButtonViews.Name" xml:space="preserve">
     <value>navBarButtonViews</value>
@@ -530,6 +561,24 @@
   </data>
   <data name="&gt;&gt;btnGroupTotal.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripSplitButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;navBarButtonCluster.Name" xml:space="preserve">
+    <value>navBarButtonCluster</value>
+  </data>
+  <data name="&gt;&gt;navBarButtonCluster.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripSplitButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;navBarButtonClusterGrid.Name" xml:space="preserve">
+    <value>navBarButtonClusterGrid</value>
+  </data>
+  <data name="&gt;&gt;navBarButtonClusterGrid.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;advancedToolStripMenuItem.Name" xml:space="preserve">
+    <value>advancedToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;advancedToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;toolStripSeparator3.Name" xml:space="preserve">
     <value>toolStripSeparator3</value>
