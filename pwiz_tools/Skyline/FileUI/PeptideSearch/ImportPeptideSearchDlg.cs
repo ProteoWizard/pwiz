@@ -621,8 +621,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     if (!ImportFastaControl.ImportFasta(ImportPeptideSearch.IrtStandard))
                         return;
 
-                    ImportPeptideSearch.SearchEngine.Dispose();
-
                     WizardFinish();
                     return;
 
@@ -1039,6 +1037,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             // Close file handles to the peptide search library
             ImportPeptideSearch.ClosePeptideSearchLibraryStreams(Document);
+
+            // Dispose DDA SearchEngine if it is initialized
+            ImportPeptideSearch.SearchEngine?.Dispose();
+
             DialogResult = result;
         }
 
