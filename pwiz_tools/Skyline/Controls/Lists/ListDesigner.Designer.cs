@@ -55,7 +55,6 @@
             this.comboIdProperty = new System.Windows.Forms.ComboBox();
             this.tbxListName = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceListProperties)).BeginInit();
             this.panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewProperties)).BeginInit();
@@ -250,7 +249,6 @@
             this.Name = "ListDesigner";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceListProperties)).EndInit();
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
