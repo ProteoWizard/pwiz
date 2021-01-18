@@ -613,19 +613,15 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         ImportPeptideSearch.SearchFilenames[i] = outFilePath;
                     }
                     BuildPepSearchLibControl.AddSearchFiles(ImportPeptideSearch.SearchFilenames);
-                    ImportPeptideSearch.SearchEngine.Dispose();
 
                     if (!BuildPeptideSearchLibrary(eCancel2))
-                    {
-                        // Page shows error
-                        if (eCancel2.Cancel)
-                            return;
-                        CloseWizard(DialogResult.Cancel);
-                    }
+                        return;
 
                     //load proteins after search
                     if (!ImportFastaControl.ImportFasta(ImportPeptideSearch.IrtStandard))
                         return;
+
+                    ImportPeptideSearch.SearchEngine.Dispose();
 
                     WizardFinish();
                     return;
