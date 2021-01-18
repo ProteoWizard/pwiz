@@ -93,7 +93,15 @@ namespace pwiz.Skyline.Model.DdaSearch
         private List<int> consideredCharges;
         private bool useMonoIsotopicMass;
         private MSDataRunPath msdataRunPath;
+        private readonly string _spectrumIdFormatAccession;
+        private readonly string _fileFormatAccession;
         public Dictionary<int, string> SpectTitleMap { get; }
+
+        public string SpectrumIdFormatName { get; }
+        public string FileFormatName { get; }
+
+        public string SpectrumIdFormatAccession => _spectrumIdFormatAccession;
+        public string FileFormatAccession => _fileFormatAccession;
 
         public int CurrentSpectrum { get; private set; }
         public int TotalSpectra { get; private set; }
@@ -109,6 +117,10 @@ namespace pwiz.Skyline.Model.DdaSearch
             msdataRunPath = new MSDataRunPath(file);
             SpectTitleMap = new Dictionary<int, string>();
             CurrentSpectrum = 0;
+
+            spectrumFileReader.GetNativeIdAndFileFormat(out _spectrumIdFormatAccession, out _fileFormatAccession);
+            SpectrumIdFormatName = MsDataFileImpl.GetCvParamName(_spectrumIdFormatAccession);
+            FileFormatName = MsDataFileImpl.GetCvParamName(_fileFormatAccession);
         }
         public void Dispose()
         {

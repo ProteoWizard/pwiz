@@ -428,6 +428,20 @@ namespace pwiz.ProteowizardWrapper
                    !String.Equals(@"unknown", uParam.value.ToString().ToLowerInvariant());
         }
 
+        public static string GetCvParamName(string cvParamAccession)
+        {
+            return CV.cvTermInfo(cvParamAccession).shortName();
+        }
+
+        public void GetNativeIdAndFileFormat(out string nativeIdFormatAccession, out string fileFormatAccession)
+        {
+            var firstSource = _msDataFile.fileDescription.sourceFiles.First(source =>
+                source.hasCVParamChild(CVID.MS_nativeID_format) &&
+                source.hasCVParamChild(CVID.MS_file_format));
+            nativeIdFormatAccession = CV.cvTermInfo(firstSource.cvParamChild(CVID.MS_nativeID_format).cvid).id;
+            fileFormatAccession = CV.cvTermInfo(firstSource.cvParamChild(CVID.MS_file_format).cvid).id;
+        }
+
         public bool IsABFile
         {
             get { return _msDataFile.fileDescription.sourceFiles.Any(source => source.hasCVParam(CVID.MS_ABI_WIFF_format)); }
