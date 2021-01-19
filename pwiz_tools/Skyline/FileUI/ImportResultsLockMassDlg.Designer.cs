@@ -43,7 +43,6 @@ namespace pwiz.Skyline.FileUI
             this.labelTolerance = new System.Windows.Forms.Label();
             this.labelDaTolerance = new System.Windows.Forms.Label();
             this.textLockmassTolerance = new System.Windows.Forms.TextBox();
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.SuspendLayout();
             // 
             // btnCancel
