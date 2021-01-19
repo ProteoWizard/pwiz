@@ -79,6 +79,8 @@ class PWIZ_API_DECL SpectrumList_ChargeFromIsotope : public msdata::SpectrumList
 
     virtual msdata::SpectrumPtr spectrum(size_t index, bool getBinaryData = true) const;
 
+    virtual bool benefitsFromWorkerThreads() const { return true; }
+
     void getMS1RetentionTimes();
     void simulateSSE(const int,const int);
     void simulateKL(const double,const int,const int);
