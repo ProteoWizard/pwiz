@@ -72,9 +72,7 @@ namespace SkylineBatch
         private async Task<string> GetValidPath(string variableName, string invalidPath, bool folder, Validator validator)
         {
             // replace path root
-            var path = _replaceRoot && invalidPath.StartsWith(_oldRoot)
-                ? invalidPath.Replace(_oldRoot, _newRoot)
-                : invalidPath;
+            var path = _replaceRoot ? ReplacePathRoot(invalidPath) : invalidPath;
 
             var folderControl = new FilePathControl(variableName, path, folder, validator);
             path = (string) await GetValidVariable(path, "Invalid Path", folderControl, false);
@@ -83,13 +81,10 @@ namespace SkylineBatch
             if (_oldRoot == null && !invalidPath.Equals(path))
             {
                 GetRootReplacement(invalidPath, path);
-                
-                if (!_newRoot.Equals(_oldRoot))
-                {
-                    _replaceRoot = _mainControl.DisplayQuestion("Replace All",
-                        "Would you like to use this root for all paths?" + Environment.NewLine +
-                        _newRoot) == DialogResult.Yes;
-                }
+
+                _replaceRoot = _mainControl.DisplayQuestion("Replace All",
+                    "Would you like to use this root for all paths?" + Environment.NewLine +
+                    _newRoot) == DialogResult.Yes;
             }
             RemoveControl(folderControl);
             
@@ -141,6 +136,35 @@ namespace SkylineBatch
             var numberSharedFolders = i - 2;
             _oldRoot = string.Join("\\", oldPathFolders.Take(oldPathFolders.Length - numberSharedFolders).ToArray());
             _newRoot = string.Join("\\", newPathFolders.Take(newPathFolders.Length - numberSharedFolders).ToArray());
+        }
+
+
+        private string ReplacePathRoot(string path)
+        {
+            var oldRootFolders = _oldRoot.Split('\\');
+            var newRootFolders = _newRoot.Split('\\');
+            var pathFolders = path.Split('\\');
+
+            var i = 0;
+            var sameRoot = true;
+            while (sameRoot && i < Math.Min(pathFolders.Length, oldRootFolders.Length))
+            {
+                var oldFolder = oldRootFolders[i];
+                var currentFolder = pathFolders[i];
+                sameRoot = oldFolder.Equals(currentFolder);
+                i++;
+            }
+            var sharedFolders = i - 1;
+
+            if (sharedFolders < oldRootFolders.Length - 1)
+            {
+                var fewerFolders = oldRootFolders.Length - sharedFolders;
+                var currentRoot = string.Join("\\", oldRootFolders.Take(sharedFolders).ToArray());
+                var newRoot = string.Join("\\", newRootFolders.Take(newRootFolders.Length - fewerFolders).ToArray());
+                return path.Replace(currentRoot, newRoot);
+            }
+            
+            return path.Replace(_oldRoot, _newRoot);
         }
 
 

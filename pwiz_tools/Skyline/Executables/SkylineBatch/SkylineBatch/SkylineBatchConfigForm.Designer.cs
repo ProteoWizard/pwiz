@@ -30,9 +30,9 @@
         {
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(SkylineBatchConfigForm));
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle7 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle8 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle9 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.textAnalysisPath = new System.Windows.Forms.TextBox();
             this.textSkylinePath = new System.Windows.Forms.TextBox();
@@ -53,6 +53,9 @@
             this.btnSkylineFilePath = new System.Windows.Forms.Button();
             this.label2 = new System.Windows.Forms.Label();
             this.tabSettings = new System.Windows.Forms.TabPage();
+            this.radioShuffleDecoys = new System.Windows.Forms.RadioButton();
+            this.radioReverseDecoys = new System.Windows.Forms.RadioButton();
+            this.checkBoxDecoys = new System.Windows.Forms.CheckBox();
             this.label7 = new System.Windows.Forms.Label();
             this.label6 = new System.Windows.Forms.Label();
             this.textResolvingPower = new System.Windows.Forms.TextBox();
@@ -74,9 +77,6 @@
             this.lblConfigRunning = new System.Windows.Forms.Label();
             this.btnOkConfig = new System.Windows.Forms.Button();
             this.imageListToolbarIcons = new System.Windows.Forms.ImageList(this.components);
-            this.checkBoxDecoys = new System.Windows.Forms.CheckBox();
-            this.radioReverseDecoys = new System.Windows.Forms.RadioButton();
-            this.radioShuffleDecoys = new System.Windows.Forms.RadioButton();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -239,6 +239,27 @@
             resources.ApplyResources(this.tabSettings, "tabSettings");
             this.tabSettings.Name = "tabSettings";
             // 
+            // radioShuffleDecoys
+            // 
+            resources.ApplyResources(this.radioShuffleDecoys, "radioShuffleDecoys");
+            this.radioShuffleDecoys.Name = "radioShuffleDecoys";
+            this.radioShuffleDecoys.UseVisualStyleBackColor = true;
+            // 
+            // radioReverseDecoys
+            // 
+            resources.ApplyResources(this.radioReverseDecoys, "radioReverseDecoys");
+            this.radioReverseDecoys.Checked = true;
+            this.radioReverseDecoys.Name = "radioReverseDecoys";
+            this.radioReverseDecoys.TabStop = true;
+            this.radioReverseDecoys.UseVisualStyleBackColor = true;
+            // 
+            // checkBoxDecoys
+            // 
+            resources.ApplyResources(this.checkBoxDecoys, "checkBoxDecoys");
+            this.checkBoxDecoys.Name = "checkBoxDecoys";
+            this.checkBoxDecoys.UseVisualStyleBackColor = true;
+            this.checkBoxDecoys.CheckedChanged += new System.EventHandler(this.checkBoxDecoys_CheckedChanged);
+            // 
             // label7
             // 
             resources.ApplyResources(this.label7, "label7");
@@ -308,37 +329,37 @@
             resources.ApplyResources(this.gridReportSettings, "gridReportSettings");
             this.gridReportSettings.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
             this.gridReportSettings.AutoSizeRowsMode = System.Windows.Forms.DataGridViewAutoSizeRowsMode.DisplayedCells;
-            dataGridViewCellStyle7.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle7.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle7.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle7.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle7.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle7.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle7.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.gridReportSettings.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle7;
+            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.gridReportSettings.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
             this.gridReportSettings.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.gridReportSettings.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.columnName,
             this.columnPath,
             this.columnScripts});
-            dataGridViewCellStyle8.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle8.BackColor = System.Drawing.SystemColors.Window;
-            dataGridViewCellStyle8.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle8.ForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle8.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle8.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle8.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.gridReportSettings.DefaultCellStyle = dataGridViewCellStyle8;
+            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.gridReportSettings.DefaultCellStyle = dataGridViewCellStyle2;
             this.gridReportSettings.EditMode = System.Windows.Forms.DataGridViewEditMode.EditProgrammatically;
             this.gridReportSettings.Name = "gridReportSettings";
-            dataGridViewCellStyle9.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle9.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle9.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle9.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle9.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle9.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle9.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.gridReportSettings.RowHeadersDefaultCellStyle = dataGridViewCellStyle9;
+            dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle3.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle3.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle3.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle3.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.gridReportSettings.RowHeadersDefaultCellStyle = dataGridViewCellStyle3;
             this.gridReportSettings.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.gridReportSettings.TabStop = false;
             this.gridReportSettings.SelectionChanged += new System.EventHandler(this.gridReportSettings_SelectionChanged);
@@ -414,27 +435,6 @@
             this.imageListToolbarIcons.TransparentColor = System.Drawing.Color.Transparent;
             this.imageListToolbarIcons.Images.SetKeyName(0, "AddedIcon.ico");
             this.imageListToolbarIcons.Images.SetKeyName(1, "DeletedIcon.ico");
-            // 
-            // checkBoxDecoys
-            // 
-            resources.ApplyResources(this.checkBoxDecoys, "checkBoxDecoys");
-            this.checkBoxDecoys.Name = "checkBoxDecoys";
-            this.checkBoxDecoys.UseVisualStyleBackColor = true;
-            this.checkBoxDecoys.CheckedChanged += new System.EventHandler(this.checkBoxDecoys_CheckedChanged);
-            // 
-            // radioReverseDecoys
-            // 
-            resources.ApplyResources(this.radioReverseDecoys, "radioReverseDecoys");
-            this.radioReverseDecoys.Checked = true;
-            this.radioReverseDecoys.Name = "radioReverseDecoys";
-            this.radioReverseDecoys.TabStop = true;
-            this.radioReverseDecoys.UseVisualStyleBackColor = true;
-            // 
-            // radioShuffleDecoys
-            // 
-            resources.ApplyResources(this.radioShuffleDecoys, "radioShuffleDecoys");
-            this.radioShuffleDecoys.Name = "radioShuffleDecoys";
-            this.radioShuffleDecoys.UseVisualStyleBackColor = true;
             // 
             // SkylineBatchConfigForm
             // 
