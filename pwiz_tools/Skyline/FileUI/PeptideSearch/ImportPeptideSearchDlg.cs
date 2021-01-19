@@ -444,12 +444,22 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                             : Resources.ImportPeptideSearchDlg_NextPage_Import_FASTA__required_;
 
                         // The next page is going to be the chromatograms page.
-                        var oldImportResultsControl = (ImportResultsControl) ImportResultsControl;
+                        var oldImportResultsControl = (Control) ImportResultsControl;
 
                         if (WorkflowType != Workflow.dia || HasPeakBoundaries)
                         {
-                            oldImportResultsControl.InitializeChromatogramsPage(Document);
+                            if (!(ImportResultsControl is ImportResultsControl))
+                            {
+                                ImportResultsControl = new ImportResultsControl(ImportPeptideSearch, DocumentFilePath)
+                                {
+                                    Anchor = oldImportResultsControl.Anchor,
+                                    Location = oldImportResultsControl.Location
+                                };
+                                getChromatogramsPage.Controls.Remove(oldImportResultsControl);
+                                getChromatogramsPage.Controls.Add((Control) ImportResultsControl);
+                            }
 
+                            ((ImportResultsControl) ImportResultsControl).InitializeChromatogramsPage(Document);
                             if (WorkflowType == Workflow.dda)
                             {
                                 _pagesToSkip.Add(Pages.transition_settings_page);
@@ -458,13 +468,16 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         else
                         {
                             // DIA workflow, replace old ImportResultsControl
-                            ImportResultsControl = new ImportResultsDIAControl(this)
+                            if (!(ImportResultsControl is ImportResultsDIAControl))
                             {
-                                Anchor = oldImportResultsControl.Anchor,
-                                Location = oldImportResultsControl.Location
-                            };
-                            getChromatogramsPage.Controls.Remove(oldImportResultsControl);
-                            getChromatogramsPage.Controls.Add((Control) ImportResultsControl);
+                                ImportResultsControl = new ImportResultsDIAControl(this)
+                                {
+                                    Anchor = oldImportResultsControl.Anchor,
+                                    Location = oldImportResultsControl.Location
+                                };
+                                getChromatogramsPage.Controls.Remove(oldImportResultsControl);
+                                getChromatogramsPage.Controls.Add((Control) ImportResultsControl);
+                            }
                         }
 
                         if (!BuildPepSearchLibControl.PerformDDASearch)
