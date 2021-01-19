@@ -19,15 +19,15 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.SettingsUI;
 
 namespace pwiz.Skyline.Model
 {
     /// <summary>
     /// Given a list of known targets, decides how to reversibly convert them to strings so they can
     /// be looked up by peptide sequence, name, accession number etc.
-    /// CONSIDER(bspratt) make this case insenstive? More useful for user intraction that way
+    /// CONSIDER(bspratt) make this case insensitive? More useful for user interaction that way
     /// </summary>
     public class TargetResolver
     {

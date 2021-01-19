@@ -1989,11 +1989,11 @@ namespace pwiz.Skyline.Model
             var auditLogPath = GetAuditLogPath(documentPath);
             if (File.Exists(auditLogPath))
             {
-                if (AuditLogList.ReadFromFile(auditLogPath, out var loggedSkylineDocumentHash, out var auditLogList))
+                if (AuditLogList.ReadFromFile(auditLogPath, out var auditLogList))
                 {
                     auditLog = auditLogList;
 
-                    if (expectedSkylineDocumentHash != loggedSkylineDocumentHash)
+                    if (expectedSkylineDocumentHash != auditLogList.DocumentHash.HashString)
                     {
                         var entry = getDefaultEntry() ?? AuditLogEntry.CreateUndocumentedChangeEntry();
                         auditLog = new AuditLogList(entry.ChangeParent(auditLog.AuditLogEntries));
@@ -2054,8 +2054,11 @@ namespace pwiz.Skyline.Model
 
             var auditLogPath = GetAuditLogPath(displayName);
 
-            if (Settings.DataSettings.AuditLogging)
-                AuditLog?.WriteToFile(auditLogPath, hash);
+            if (Settings.DataSettings.AuditLogging && AuditLog != null)
+            {
+                var auditLog = AuditLog.RecalculateHashValues(skylineVersion.SrmDocumentVersion, hash);
+                auditLog.WriteToFile(auditLogPath, hash, skylineVersion.SrmDocumentVersion);
+            }
             else if (File.Exists(auditLogPath))
                 Helpers.TryTwice(() => File.Delete(auditLogPath));
         }

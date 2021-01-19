@@ -32,7 +32,13 @@ namespace pwiz.Skyline.Model.GroupComparison
     [XmlRoot("group_comparison")]
     public sealed class GroupComparisonDef : XmlNamedElement
     {
-        public static readonly GroupComparisonDef EMPTY = new GroupComparisonDef(NAME_INTERNAL);
+        public static readonly GroupComparisonDef EMPTY = new GroupComparisonDef
+        {
+            NormalizationMethod = NormalizationMethod.NONE,
+            SummarizationMethod = SummarizationMethod.AVERAGING,
+            ConfidenceLevelTimes100 = 95,
+            ColorRows = ImmutableList<MatchRgbHexColor>.EMPTY
+        };
 
         public GroupComparisonDef(string name) : base(name)
         {
