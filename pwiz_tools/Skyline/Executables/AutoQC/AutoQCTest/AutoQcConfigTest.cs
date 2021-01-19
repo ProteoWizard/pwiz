@@ -120,7 +120,7 @@ namespace AutoQCTest
                 "Please specify a folder on the Panorama server.");
 
             var noPublishToPanorama = new PanoramaSettings();
-            var validPanoramaSettings = new PanoramaSettings(true, "https://panoramaweb.org/", "skyline_tester@proteinms.net", "lclcmsms", "UniqueFolder");
+            var validPanoramaSettings = TestUtils.GetTestPanoramaSettings();
             try
             {
                 noPublishToPanorama.ValidateSettings();

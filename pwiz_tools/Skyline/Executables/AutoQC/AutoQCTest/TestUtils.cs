@@ -43,7 +43,7 @@ namespace AutoQCTest
 
         public static MainSettings GetTestMainSettings(string configName, string changedVariable, string value)
         {
-            var skylineFilePath = GetTestFilePath("EmptyTemplate.sky");
+            var skylineFilePath = GetTestFilePath("QEP_2015_0424_RJ.sky");
             var folderToWatch = CreateTestFolder(configName);
 
             var fileFilter = MainSettings.GetDefaultQcFileFilter();
@@ -56,32 +56,14 @@ namespace AutoQCTest
             return new MainSettings(skylineFilePath, folderToWatch, false, fileFilter, removeResults, resultsWindow, instrumentType, acquisitionTime);
         }
 
-        public static PanoramaSettings GetTestPanoramaSettings() => new PanoramaSettings();
-
-        public static PanoramaSettings GetTestPanoramaSettings(string variable, string value)
+        public static PanoramaSettings GetTestPanoramaSettings(bool publishToPanorama = true)
         {
-            var panoramaServerUrl = "https://panoramaweb.org/";
-            var panoramaUserEmail = "test";
-            var panoramaPassword = "test";
-            var panoramaFolder = "/00Developer/Ali/QC/";
+            var panoramaServerUrl = publishToPanorama ? "https://panoramaweb.org/" : "";
+            var panoramaUserEmail = publishToPanorama ? "skyline_tester@proteinms.net" : "";
+            var panoramaPassword = publishToPanorama ? "lclcmsms" : "";
+            var panoramaFolder = publishToPanorama ? "/SkylineTest/AutoQcTest" : "";
 
-            if (string.IsNullOrEmpty(variable))
-            {
-            }
-            else if (variable.Equals("publishToPanorama"))
-            {
-                if (!value.Equals("false")) throw new ArgumentException("Invalid or redundant value for publishToPanorama.");
-                return new PanoramaSettings();
-            }
-            else if (variable.Equals("panoramaServerUrl"))
-                panoramaServerUrl = variable;
-            else if (variable.Equals("panoramaUserEmail"))
-                panoramaUserEmail = variable;
-            else if (variable.Equals("panoramaPassword"))
-                panoramaPassword = variable;
-            else if (variable.Equals("panoramaFolder"))
-                panoramaFolder = variable;
-            return new PanoramaSettings(true, panoramaServerUrl, panoramaUserEmail, panoramaPassword, panoramaFolder);
+            return new PanoramaSettings(publishToPanorama, panoramaServerUrl, panoramaUserEmail, panoramaPassword, panoramaFolder);
         }
 
         public static SkylineSettings GetTestSkylineSettings()
@@ -92,10 +74,10 @@ namespace AutoQCTest
         public static AutoQcConfig GetTestConfig(string name)
         {
             //return GetTestConfig(name, null, null);
-            return new AutoQcConfig(name, false, DateTime.MinValue, DateTime.MinValue, GetTestMainSettings(name), new PanoramaSettings(), GetTestSkylineSettings());
+            return new AutoQcConfig(name, false, DateTime.MinValue, DateTime.MinValue, GetTestMainSettings(name), GetTestPanoramaSettings(), GetTestSkylineSettings());
         } 
 
-        public static AutoQcConfig GetTestConfig(string name, string changedVariable, string value)
+        /*public static AutoQcConfig GetTestConfig(string name)
         {
             var created = DateTime.MinValue;
             if (changedVariable.Equals("created"))
@@ -104,7 +86,7 @@ namespace AutoQCTest
             }
 
             return new AutoQcConfig(name, false, created, DateTime.MinValue, GetTestMainSettings(name, changedVariable, value), GetTestPanoramaSettings(changedVariable, value), GetTestSkylineSettings());
-        }
+        }*/
 
         public static ConfigRunner GetTestConfigRunner(string configName = "Config")
         {

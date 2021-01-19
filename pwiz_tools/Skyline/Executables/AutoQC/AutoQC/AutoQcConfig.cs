@@ -52,11 +52,11 @@ namespace AutoQC
 
         private enum Attr
         {
-            Name,
-            IsEnabled,
-            User,
-            Created,
-            Modified
+            name,
+            is_enabled,
+            user,
+            created,
+            modified
         }
 
 
@@ -69,13 +69,13 @@ namespace AutoQC
 
         public static AutoQcConfig ReadXml(XmlReader reader)
         {
-            var name = reader.GetAttribute(Attr.Name);
+            var name = reader.GetAttribute(Attr.name);
             
-            var isEnabled = reader.GetBoolAttribute(Attr.IsEnabled);
+            var isEnabled = reader.GetBoolAttribute(Attr.is_enabled);
             DateTime dateTime;
-            DateTime.TryParse(reader.GetAttribute(Attr.Created), out dateTime);
+            DateTime.TryParse(reader.GetAttribute(Attr.created), out dateTime);
             var created = dateTime;
-            DateTime.TryParse(reader.GetAttribute(Attr.Modified), out dateTime);
+            DateTime.TryParse(reader.GetAttribute(Attr.modified), out dateTime);
             var modified = dateTime;
 
             do
@@ -98,8 +98,14 @@ namespace AutoQC
                 do
                 {
                     reader.Read();
+
+                    if (reader.Name.Equals("autoqc_config")) // handles old configurations without skyline settings
+                    {
+                        skylineSettings = new SkylineSettings(SkylineType.Skyline);
+                        break;
+                    }
                 } while (reader.NodeType != XmlNodeType.Element);
-                skylineSettings = SkylineSettings.ReadXml(reader);
+                skylineSettings = skylineSettings ?? SkylineSettings.ReadXml(reader);
             }
             catch (ArgumentException e)
             {
@@ -107,10 +113,10 @@ namespace AutoQC
             }
 
             // finish reading config before exception is thrown so following configs aren't messed up
-            do
+            while (!(reader.Name == "autoqc_config" && reader.NodeType == XmlNodeType.EndElement))
             {
                 reader.Read();
-            } while (!(reader.Name == "autoqc_config" && reader.NodeType == XmlNodeType.EndElement));
+            } 
 
             if (exceptionMessage != null)
                 throw new ArgumentException(exceptionMessage);
@@ -121,11 +127,11 @@ namespace AutoQC
         public void WriteXml(XmlWriter writer)
         {
             writer.WriteStartElement("autoqc_config");
-            writer.WriteAttribute(Attr.Name, Name);
-            writer.WriteAttribute(Attr.IsEnabled, IsEnabled);
-            writer.WriteAttributeIfString(Attr.User, User);
-            writer.WriteAttributeIfString(Attr.Created, Created.ToShortDateString() + " " + Created.ToShortTimeString());
-            writer.WriteAttributeIfString(Attr.Modified, Modified.ToShortDateString() + " " + Modified.ToShortTimeString());
+            writer.WriteAttribute(Attr.name, Name);
+            writer.WriteAttribute(Attr.is_enabled, IsEnabled);
+            writer.WriteAttributeIfString(Attr.user, User);
+            writer.WriteAttributeIfString(Attr.created, Created.ToShortDateString() + " " + Created.ToShortTimeString());
+            writer.WriteAttributeIfString(Attr.modified, Modified.ToShortDateString() + " " + Modified.ToShortTimeString());
             MainSettings.WriteXml(writer);
             PanoramaSettings.WriteXml(writer);
             SkylineSettings.WriteXml(writer);

@@ -39,6 +39,11 @@
             this.btnViewLog = new System.Windows.Forms.Button();
             this.tabMain = new System.Windows.Forms.TabControl();
             this.tabFront = new System.Windows.Forms.TabPage();
+            this.listViewConfigs = new System.Windows.Forms.ListView();
+            this.columnName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnUser = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnCreated = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnStatus = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.panel1 = new System.Windows.Forms.Panel();
             this.btnImportConfigs = new System.Windows.Forms.Button();
             this.btnExportConfigs = new System.Windows.Forms.Button();
@@ -56,11 +61,6 @@
             this.cb_keepRunning = new System.Windows.Forms.CheckBox();
             this.toolTip_MainForm = new System.Windows.Forms.ToolTip(this.components);
             this.systray_icon = new System.Windows.Forms.NotifyIcon(this.components);
-            this.listViewConfigs = new System.Windows.Forms.ListView();
-            this.columnName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.columnUser = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.columnCreated = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.columnStatus = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.tabMain.SuspendLayout();
             this.tabFront.SuspendLayout();
             this.panel1.SuspendLayout();
@@ -134,6 +134,40 @@
             this.tabFront.Controls.Add(this.panel2);
             resources.ApplyResources(this.tabFront, "tabFront");
             this.tabFront.Name = "tabFront";
+            // 
+            // listViewConfigs
+            // 
+            resources.ApplyResources(this.listViewConfigs, "listViewConfigs");
+            this.listViewConfigs.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.columnName,
+            this.columnUser,
+            this.columnCreated,
+            this.columnStatus});
+            this.listViewConfigs.FullRowSelect = true;
+            this.listViewConfigs.HideSelection = false;
+            this.listViewConfigs.MultiSelect = false;
+            this.listViewConfigs.Name = "listViewConfigs";
+            this.listViewConfigs.UseCompatibleStateImageBehavior = false;
+            this.listViewConfigs.View = System.Windows.Forms.View.Details;
+            this.listViewConfigs.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.listViewConfigs_ColumnClick);
+            this.listViewConfigs.SelectedIndexChanged += new System.EventHandler(this.listViewConfigs_SelectedIndexChanged);
+            this.listViewConfigs.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.HandleEditEvent);
+            // 
+            // columnName
+            // 
+            resources.ApplyResources(this.columnName, "columnName");
+            // 
+            // columnUser
+            // 
+            resources.ApplyResources(this.columnUser, "columnUser");
+            // 
+            // columnCreated
+            // 
+            resources.ApplyResources(this.columnCreated, "columnCreated");
+            // 
+            // columnStatus
+            // 
+            resources.ApplyResources(this.columnStatus, "columnStatus");
             // 
             // panel1
             // 
@@ -253,40 +287,6 @@
             // 
             resources.ApplyResources(this.systray_icon, "systray_icon");
             this.systray_icon.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.systray_icon_MouseDoubleClick);
-            // 
-            // listViewConfigs
-            // 
-            resources.ApplyResources(this.listViewConfigs, "listViewConfigs");
-            this.listViewConfigs.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.columnName,
-            this.columnUser,
-            this.columnCreated,
-            this.columnStatus});
-            this.listViewConfigs.FullRowSelect = true;
-            this.listViewConfigs.HideSelection = false;
-            this.listViewConfigs.MultiSelect = false;
-            this.listViewConfigs.Name = "listViewConfigs";
-            this.listViewConfigs.UseCompatibleStateImageBehavior = false;
-            this.listViewConfigs.View = System.Windows.Forms.View.Details;
-            this.listViewConfigs.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.listViewConfigs_ColumnClick);
-            this.listViewConfigs.SelectedIndexChanged += new System.EventHandler(this.listViewConfigs_SelectedIndexChanged);
-            this.listViewConfigs.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.HandleEditEvent);
-            // 
-            // columnName
-            // 
-            resources.ApplyResources(this.columnName, "columnName");
-            // 
-            // columnUser
-            // 
-            resources.ApplyResources(this.columnUser, "columnUser");
-            // 
-            // columnCreated
-            // 
-            resources.ApplyResources(this.columnCreated, "columnCreated");
-            // 
-            // columnStatus
-            // 
-            resources.ApplyResources(this.columnStatus, "columnStatus");
             // 
             // MainForm
             // 

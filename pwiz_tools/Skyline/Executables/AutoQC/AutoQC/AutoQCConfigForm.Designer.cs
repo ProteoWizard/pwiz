@@ -137,6 +137,7 @@ namespace AutoQC
             // 
             // groupBoxMain
             // 
+            resources.ApplyResources(this.groupBoxMain, "groupBoxMain");
             this.groupBoxMain.Controls.Add(this.checkBoxRemoveResults);
             this.groupBoxMain.Controls.Add(this.labelQcFilePattern);
             this.groupBoxMain.Controls.Add(this.comboBoxFileFilter);
@@ -157,7 +158,6 @@ namespace AutoQC
             this.groupBoxMain.Controls.Add(this.textFolderToWatchPath);
             this.groupBoxMain.Controls.Add(this.btnSkylineFilePath);
             this.groupBoxMain.Controls.Add(this.textSkylinePath);
-            resources.ApplyResources(this.groupBoxMain, "groupBoxMain");
             this.groupBoxMain.Name = "groupBoxMain";
             this.groupBoxMain.TabStop = false;
             // 
@@ -306,6 +306,7 @@ namespace AutoQC
             // 
             // groupBoxPanorama
             // 
+            resources.ApplyResources(this.groupBoxPanorama, "groupBoxPanorama");
             this.groupBoxPanorama.Controls.Add(this.labelPanoramaFolder);
             this.groupBoxPanorama.Controls.Add(this.textPanoramaFolder);
             this.groupBoxPanorama.Controls.Add(this.lblPanoramaUrl);
@@ -314,7 +315,6 @@ namespace AutoQC
             this.groupBoxPanorama.Controls.Add(this.lblPanoramaPasswd);
             this.groupBoxPanorama.Controls.Add(this.lblPanoramaEmail);
             this.groupBoxPanorama.Controls.Add(this.textPanoramaEmail);
-            resources.ApplyResources(this.groupBoxPanorama, "groupBoxPanorama");
             this.groupBoxPanorama.Name = "groupBoxPanorama";
             this.groupBoxPanorama.TabStop = false;
             // 
@@ -423,8 +423,8 @@ namespace AutoQC
             // 
             // btnCancelConfig
             // 
-            this.btnCancelConfig.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             resources.ApplyResources(this.btnCancelConfig, "btnCancelConfig");
+            this.btnCancelConfig.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.btnCancelConfig.Name = "btnCancelConfig";
             this.btnCancelConfig.UseVisualStyleBackColor = true;
             // 
@@ -449,7 +449,6 @@ namespace AutoQC
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancelConfig;
             this.Controls.Add(this.splitContainer1);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "AutoQcConfigForm";

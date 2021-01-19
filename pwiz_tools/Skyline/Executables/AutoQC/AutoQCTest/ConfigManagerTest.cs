@@ -134,9 +134,9 @@ namespace AutoQCTest
 
             var configCreatedManager = TestUtils.GetTestConfigManager(new List<AutoQcConfig>()
             {
-                TestUtils.GetTestConfig("middle", "created", DateToString(DateTime.Now)),
-                TestUtils.GetTestConfig("last", "created", DateToString(DateTime.MaxValue)),
-                TestUtils.GetTestConfig("first", "created", DateToString(DateTime.MinValue)),
+                new AutoQcConfig("middle", false, DateTime.Now, DateTime.MinValue, TestUtils.GetTestMainSettings("middle"), TestUtils.GetTestPanoramaSettings(false), TestUtils.GetTestSkylineSettings()),
+                new AutoQcConfig("last", false, DateTime.MaxValue, DateTime.MinValue, TestUtils.GetTestMainSettings("middle"), TestUtils.GetTestPanoramaSettings(false), TestUtils.GetTestSkylineSettings()),
+                new AutoQcConfig("first", false, DateTime.MinValue, DateTime.MinValue, TestUtils.GetTestMainSettings("middle"), TestUtils.GetTestPanoramaSettings(false), TestUtils.GetTestSkylineSettings())
             });
             configCreatedManager.SortByValue(2);
             Assert.IsTrue(configCreatedManager.ConfigOrderEquals(new[] { "last", "middle", "first" }));
@@ -146,7 +146,7 @@ namespace AutoQCTest
 
             var configUserManager = TestUtils.GetTestConfigManager(new List<AutoQcConfig>()
             {
-                TestUtils.GetTestConfig("noUser", "publishToPanorama", "false"),
+                new AutoQcConfig("noUser", false, DateTime.Now, DateTime.MinValue, TestUtils.GetTestMainSettings("noUser"), TestUtils.GetTestPanoramaSettings(false), TestUtils.GetTestSkylineSettings()),
                 TestUtils.GetTestConfig("User"),
             });
             configUserManager.SortByValue(1);
@@ -185,15 +185,10 @@ namespace AutoQCTest
         {
             TestUtils.ClearSavedConfigurations();
             var configManager = TestUtils.GetTestConfigManager();
-            ImportInvalidConfiguration(configManager);
+            configManager.Import(TestUtils.GetTestFilePath("bad.xml"));
             configManager.SelectConfig(3);
             configManager.UpdateSelectedEnabled(true);
             Assert.IsTrue(!configManager.GetSelectedConfig().IsEnabled);
-        }
-
-        private void ImportInvalidConfiguration(ConfigManager configManager)
-        {
-            configManager.Import("C:\\proj_2\\ProteoWizard\\pwiz\\pwiz_tools\\Skyline\\Executables\\AutoQC\\AutoQCTest\\Test\\bad.xml");
         }
 
 

@@ -6,24 +6,23 @@
                 <value />
             </setting>
             <setting name="SkylineRunnerPath" serializeAs="String">
-                <value>C:\proj_2\ProteoWizard\pwiz\pwiz_tools\Skyline\Executables\AutoQC\AutoQC\bin\Debug\SkylineRunner.exe</value>
+                <value>C:\Branches\Skylinework20201229_AutoQC_updates\ProteoWizard\pwiz\pwiz_tools\Skyline\Executables\AutoQC\AutoQC\bin\Debug\SkylineRunner.exe</value>
             </setting>
             <setting name="SkylineAdminCmdPath" serializeAs="String">
                 <value>C:\Program Files\Skyline\SkylineCmd.exe</value>
             </setting>
             <setting name="SkylineDailyAdminCmdPath" serializeAs="String">
-                <value />
+                <value>C:\Program Files\Skyline-daily\SkylineCmd.exe</value>
             </setting>
             <setting name="ConfigList" serializeAs="Xml">
                 <value>
                     <ConfigList>
-                        <autoqc_config Name="Bad" Created="12/29/2020 2:34 PM" Modified="12/29/2020 2:34 PM">
-                            <main_settings SkylineFilePath="I_DONT_EXIST.sky"
-                                FolderToWatch="C:\Users\alimarsh\Documents\AutoQC\Ali" FileFilterType="All"
-                                ResultsWindow="31" InstrumentType="Thermo" AcquisitionTime="75"
-                                LastAcquiredDate="12/29/2020 2:34 PM" LastArchivalTime="12/29/2020 2:34 PM" />
+                        <autoqc_config name="Bad" created="1/19/2021 10:44 AM" modified="1/19/2021 10:44 AM">
+                            <main_settings skyline_file_path="I_DONT_EXIST.sky"
+                                folder_to_watch="C:\Users\alimarsh\Documents\AutoQC\Ali" file_filter_type="All"
+                                results_window="31" instrument_type="Thermo" acquisition_time="75" />
                             <panorama_settings />
-                            <config_skyline_settings Type="SkylineDaily" />
+                            <config_skyline_settings type="SkylineDaily" command_path="C:\Program Files\Skyline-daily\SkylineCmd.exe" />
                         </autoqc_config>
                     </ConfigList>
                 </value>

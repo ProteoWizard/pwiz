@@ -271,17 +271,15 @@ namespace AutoQC
 
         private enum Attr
         {
-            SkylineFilePath,
-            FolderToWatch,
-            IncludeSubfolders,
-            FileFilterType,
-            QcFilePattern,
-            RemoveResults,
-            ResultsWindow,
-            InstrumentType,
-            AcquisitionTime,
-            LastAcquiredDate,
-            LastArchivalTime
+            skyline_file_path,
+            folder_to_watch,
+            include_subfolders,
+            file_filter_type,
+            qc_file_pattern,
+            remove_results,
+            results_window,
+            instrument_type,
+            acquisition_time
         };
 
         public XmlSchema GetSchema()
@@ -291,25 +289,21 @@ namespace AutoQC
 
         public static MainSettings ReadXml(XmlReader reader)
         {
-            var skylineFilePath = reader.GetAttribute(Attr.SkylineFilePath);
-            var folderToWatch = reader.GetAttribute(Attr.FolderToWatch);
-            var includeSubfolders = reader.GetBoolAttribute(Attr.IncludeSubfolders);
-            var pattern = reader.GetAttribute(Attr.QcFilePattern);
-            var filterType = reader.GetAttribute(Attr.FileFilterType);
+            var skylineFilePath = reader.GetAttribute(Attr.skyline_file_path);
+            var folderToWatch = reader.GetAttribute(Attr.folder_to_watch);
+            var includeSubfolders = reader.GetBoolAttribute(Attr.include_subfolders);
+            var pattern = reader.GetAttribute(Attr.qc_file_pattern);
+            var filterType = reader.GetAttribute(Attr.file_filter_type);
             if (string.IsNullOrEmpty(filterType) && !string.IsNullOrEmpty(pattern))
             {
                 // Support for older version where filter type was not written to XML; only regex filters were allowed
                 filterType = RegexFilter.FilterName;
             }
             var qcFileFilter = FileFilter.GetFileFilter(filterType, pattern);
-            var removeResults = reader.GetBoolAttribute(Attr.RemoveResults, true);
-            var resultsWindow = reader.GetAttribute(Attr.ResultsWindow);
-            var instrumentType = reader.GetAttribute(Attr.InstrumentType);
-            var acquisitionTime = reader.GetAttribute(Attr.AcquisitionTime);
-            DateTime lastAcquiredFileDate;
-            DateTime lastArchivalTime;
-            DateTime.TryParse(reader.GetAttribute(Attr.LastAcquiredDate), out lastAcquiredFileDate);
-            DateTime.TryParse(reader.GetAttribute(Attr.LastArchivalTime), out lastArchivalTime);
+            var removeResults = reader.GetBoolAttribute(Attr.remove_results, true);
+            var resultsWindow = reader.GetAttribute(Attr.results_window);
+            var instrumentType = reader.GetAttribute(Attr.instrument_type);
+            var acquisitionTime = reader.GetAttribute(Attr.acquisition_time);
 
 
             return new MainSettings(skylineFilePath, folderToWatch, includeSubfolders, 
@@ -320,17 +314,15 @@ namespace AutoQC
         public void WriteXml(XmlWriter writer)
         {
             writer.WriteStartElement("main_settings");
-            writer.WriteAttributeIfString(Attr.SkylineFilePath, SkylineFilePath);
-            writer.WriteAttributeIfString(Attr.FolderToWatch, FolderToWatch);
-            writer.WriteAttribute(Attr.IncludeSubfolders, IncludeSubfolders);
-            writer.WriteAttributeIfString(Attr.QcFilePattern, QcFileFilter.Pattern);
-            writer.WriteAttributeString(Attr.FileFilterType, QcFileFilter.Name());   
-            writer.WriteAttribute(Attr.RemoveResults, RemoveResults, true);
-            writer.WriteAttributeNullable(Attr.ResultsWindow, ResultsWindow);
-            writer.WriteAttributeIfString(Attr.InstrumentType, InstrumentType);
-            writer.WriteAttributeNullable(Attr.AcquisitionTime, AcquisitionTime);
-            writer.WriteAttributeIfString(Attr.LastAcquiredDate, LastAcquiredFileDate.ToShortDateString() + " " + LastAcquiredFileDate.ToShortTimeString());
-            writer.WriteAttributeIfString(Attr.LastArchivalTime, LastArchivalDate.ToShortDateString() + " " + LastArchivalDate.ToShortTimeString());
+            writer.WriteAttributeIfString(Attr.skyline_file_path, SkylineFilePath);
+            writer.WriteAttributeIfString(Attr.folder_to_watch, FolderToWatch);
+            writer.WriteAttribute(Attr.include_subfolders, IncludeSubfolders);
+            writer.WriteAttributeIfString(Attr.qc_file_pattern, QcFileFilter.Pattern);
+            writer.WriteAttributeString(Attr.file_filter_type, QcFileFilter.Name());   
+            writer.WriteAttribute(Attr.remove_results, RemoveResults, true);
+            writer.WriteAttributeNullable(Attr.results_window, ResultsWindow);
+            writer.WriteAttributeIfString(Attr.instrument_type, InstrumentType);
+            writer.WriteAttributeNullable(Attr.acquisition_time, AcquisitionTime);
             writer.WriteEndElement();
         }
         #endregion

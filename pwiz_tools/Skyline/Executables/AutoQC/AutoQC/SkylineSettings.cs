@@ -67,24 +67,24 @@ namespace AutoQC
 
         private enum Attr
         {
-            Type,
-            CmdPath,
+            type,
+            command_path,
         }
 
         
 
         public static SkylineSettings ReadXml(XmlReader reader)
         {
-            var type = Enum.Parse(typeof(SkylineType), reader.GetAttribute(Attr.Type), false);
-            var cmdPath = Path.GetDirectoryName(reader.GetAttribute(Attr.CmdPath));
+            var type = Enum.Parse(typeof(SkylineType), reader.GetAttribute(Attr.type), false);
+            var cmdPath = Path.GetDirectoryName(reader.GetAttribute(Attr.command_path));
             return new SkylineSettings((SkylineType)type, cmdPath);
         }
 
         public void WriteXml(XmlWriter writer)
         {
             writer.WriteStartElement("config_skyline_settings");
-            writer.WriteAttributeIfString(Attr.Type, Type.ToString());
-            writer.WriteAttributeIfString(Attr.CmdPath, CmdPath);
+            writer.WriteAttributeIfString(Attr.type, Type.ToString());
+            writer.WriteAttributeIfString(Attr.command_path, CmdPath);
             writer.WriteEndElement();
         }
 

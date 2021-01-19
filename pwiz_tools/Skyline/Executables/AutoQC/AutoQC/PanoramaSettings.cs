@@ -214,11 +214,11 @@ namespace AutoQC
 
         private enum Attr
         {
-            PublishToPanorama,
-            PanoramaServerUrl,
-            PanoramaUserEmail,
-            PanoramaUserPassword,
-            PanoramaFolder
+            publish_to_panorama,
+            panorama_server_url,
+            panorama_user_email,
+            panorama_user_password,
+            panorama_folder
         };
 
         public XmlSchema GetSchema()
@@ -228,11 +228,11 @@ namespace AutoQC
 
         public static PanoramaSettings ReadXml(XmlReader reader)
         {
-            var publishToPanorama = reader.GetBoolAttribute(Attr.PublishToPanorama);
-            var panoramaServerUrl = reader.GetAttribute(Attr.PanoramaServerUrl);
-            var panoramaUserEmail = reader.GetAttribute(Attr.PanoramaUserEmail);
-            var panoramaPassword = DecryptPassword(reader.GetAttribute(Attr.PanoramaUserPassword));
-            var panoramaFolder = reader.GetAttribute(Attr.PanoramaFolder);
+            var publishToPanorama = reader.GetBoolAttribute(Attr.publish_to_panorama);
+            var panoramaServerUrl = reader.GetAttribute(Attr.panorama_server_url);
+            var panoramaUserEmail = reader.GetAttribute(Attr.panorama_user_email);
+            var panoramaPassword = DecryptPassword(reader.GetAttribute(Attr.panorama_user_password));
+            var panoramaFolder = reader.GetAttribute(Attr.panorama_folder);
             var panoramaServerUri = publishToPanorama ? new Uri(PanoramaUtil.ServerNameToUrl(panoramaServerUrl)) : null;
             return new PanoramaSettings(publishToPanorama, panoramaServerUrl, panoramaUserEmail, panoramaPassword, panoramaFolder, panoramaServerUri);
         }
@@ -242,11 +242,11 @@ namespace AutoQC
             writer.WriteStartElement("panorama_settings");
             if (PublishToPanorama)
             {
-                writer.WriteAttribute(Attr.PublishToPanorama, PublishToPanorama);
-                writer.WriteAttributeIfString(Attr.PanoramaServerUrl, PanoramaServerUrl);
-                writer.WriteAttributeIfString(Attr.PanoramaUserEmail, PanoramaUserEmail);
-                writer.WriteAttributeIfString(Attr.PanoramaUserPassword, EncryptPassword(PanoramaPassword));
-                writer.WriteAttributeIfString(Attr.PanoramaFolder, PanoramaFolder);
+                writer.WriteAttribute(Attr.publish_to_panorama, PublishToPanorama);
+                writer.WriteAttributeIfString(Attr.panorama_server_url, PanoramaServerUrl);
+                writer.WriteAttributeIfString(Attr.panorama_user_email, PanoramaUserEmail);
+                writer.WriteAttributeIfString(Attr.panorama_user_password, EncryptPassword(PanoramaPassword));
+                writer.WriteAttributeIfString(Attr.panorama_folder, PanoramaFolder);
             }
             writer.WriteEndElement();
         }
