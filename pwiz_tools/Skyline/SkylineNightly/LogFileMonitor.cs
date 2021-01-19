@@ -85,18 +85,21 @@ namespace SkylineNightly
             }
         }
 
-        private int HangThreshold => _runMode != Nightly.RunMode.perf && _runMode != Nightly.RunMode.release_perf && _runMode != Nightly.RunMode.integration_perf ? 30 : 60;
+        private int HangThreshold => _runMode != Nightly.RunMode.perf && _runMode != Nightly.RunMode.release_perf && _runMode != Nightly.RunMode.integration_perf ? 60 : 90;
         private string RunModeName => Enum.GetName(typeof(Nightly.RunMode), _runMode);
 
-        public bool ExtendNightlyEndTime()
+        public bool ExtendNightlyEndTime
         {
-            try
+            get
             {
-                return File.GetLastWriteTime(_testerLog).Equals(_lastReportedHang);
-            }
-            catch
-            {
-                return false;
+                try
+                {
+                    return File.GetLastWriteTime(_testerLog).Equals(_lastReportedHang);
+                }
+                catch
+                {
+                    return false;
+                }
             }
         }
 
