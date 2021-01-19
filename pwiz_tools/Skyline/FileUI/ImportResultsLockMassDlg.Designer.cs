@@ -133,6 +133,7 @@ namespace pwiz.Skyline.FileUI
             this.Name = "ImportResultsLockMassDlg";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
+            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
