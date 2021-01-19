@@ -451,16 +451,27 @@ namespace SkylineNightly
 
                     if (endTime == originalEndTime)
                     {
-                        if (logMonitor.ExtendNightlyEndTime())
+                        if (logMonitor.ExtendNightlyEndTime)
                         {
-                            // extend the end time until 12pm to give us more time to attach a debugger
-                            var newEndTime = originalEndTime.AddHours(16);
-                            newEndTime = new DateTime(newEndTime.Year, newEndTime.Month, newEndTime.Day, 12, 0, 0);
-                            if (SetEndTime(newEndTime))
-                                endTime = newEndTime;
+                            var now = DateTime.Now;
+                            if (9 <= now.Hour && now.Hour < 17)
+                            {
+                                // between 9am-5pm, set end time to 4 hours from now (unless scheduled end is already 4+ hours from now)
+                                var newEndTime = DateTime.Now.AddHours(4);
+                                if (newEndTime > originalEndTime && SetEndTime(newEndTime))
+                                    endTime = newEndTime;
+                            }
+                            else
+                            {
+                                // extend the end time until 12pm to give us more time to attach a debugger
+                                var newEndTime = originalEndTime.AddHours(16);
+                                newEndTime = new DateTime(newEndTime.Year, newEndTime.Month, newEndTime.Day, 12, 0, 0);
+                                if (SetEndTime(newEndTime))
+                                    endTime = newEndTime;
+                            }
                         }
                     }
-                    else if (!logMonitor.ExtendNightlyEndTime())
+                    else if (!logMonitor.ExtendNightlyEndTime)
                     {
                         // If we get here, we've already extended the end time due to a hang and log file is now being modified again.
                         // Assume that the log file is being modified because someone has taken manual action, and extend the end time further
