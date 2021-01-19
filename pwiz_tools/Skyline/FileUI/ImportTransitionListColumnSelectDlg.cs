@@ -94,7 +94,10 @@ namespace pwiz.Skyline.FileUI
             if (headers != null && headers.Length > 0)
             {
                 for (var i = 0; i < numColumns; i++)
-                    dataGrid.Columns[i].HeaderText = headers[i];
+                {
+                    // Put quotes around the user column names
+                    dataGrid.Columns[i].HeaderText = @"""" + headers[i] + @"""";
+                }
                 dataGrid.ColumnHeadersVisible = true;
             }
 
@@ -124,7 +127,7 @@ namespace pwiz.Skyline.FileUI
                     Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Decoy,
                     Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_iRT,
                     Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type,
-                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Relative_Intensity,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Library_Intensity,
                     Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence,
                     Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z,
                     Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z,
@@ -166,7 +169,7 @@ namespace pwiz.Skyline.FileUI
                 SetComboBoxText(columns.DecoyColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Decoy);
                 SetComboBoxText(columns.IrtColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_iRT);
                 SetComboBoxText(columns.LabelTypeColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type);
-                SetComboBoxText(columns.LibraryColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Relative_Intensity);
+                SetComboBoxText(columns.LibraryColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Library_Intensity);
                 SetComboBoxText(columns.PeptideColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence);
                 SetComboBoxText(columns.PrecursorColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z);
                 SetComboBoxText(columns.ProductColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
@@ -248,7 +251,7 @@ namespace pwiz.Skyline.FileUI
                 columns.ResetDuplicateColumns(comboBoxIndex);
                 columns.LabelTypeColumn = comboBoxIndex;
             }
-            else if (comboBox.Text == Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Relative_Intensity)
+            else if (comboBox.Text == Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Library_Intensity)
             {
                 CheckForComboBoxOverlap(columns.LibraryColumn, 0, comboBoxIndex);
                 columns.ResetDuplicateColumns(comboBoxIndex);

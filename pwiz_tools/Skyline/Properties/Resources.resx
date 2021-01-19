@@ -9685,8 +9685,8 @@ Recognized isotopes include: {2}</value>
   <data name="ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type" xml:space="preserve">
     <value>Label Type</value>
   </data>
-  <data name="ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Relative_Intensity" xml:space="preserve">
-    <value>Relative Intensity</value>
+  <data name="ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Library_Intensity" xml:space="preserve">
+    <value>Library Intensity</value>
   </data>
   <data name="ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence" xml:space="preserve">
     <value>Peptide Modified Sequence</value>

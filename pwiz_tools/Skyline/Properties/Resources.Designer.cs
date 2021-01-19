@@ -15424,6 +15424,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Library Intensity.
+        /// </summary>
+        public static string ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Library_Intensity {
+            get {
+                return ResourceManager.GetString("ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Library_Intensity", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Peptide Modified Sequence.
         /// </summary>
         public static string ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence {
@@ -15465,15 +15474,6 @@ namespace pwiz.Skyline.Properties {
         public static string ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name {
             get {
                 return ResourceManager.GetString("ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Relative Intensity.
-        /// </summary>
-        public static string ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Relative_Intensity {
-            get {
-                return ResourceManager.GetString("ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Relative_Intensity", resourceCulture);
             }
         }
         
