@@ -186,6 +186,7 @@ namespace pwiz.Skyline.Model
         }
 
         public override string Name { get { return _name; } }
+        public string DisplayName => string.IsNullOrEmpty(_name) ? _sequence : _name;
         public override string Description { get { return _description; } }
         public override string Sequence { get { return _sequence; } }
         public new bool IsDecoy { get { return _isDecoy; } }

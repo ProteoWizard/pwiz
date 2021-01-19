@@ -216,7 +216,7 @@ namespace pwiz.Skyline.EditUI
             var i = 0;
             foreach (var entry in proteinAssociations)
             {
-                checkBoxListMatches.Items.Add(entry.Key.Name);
+                checkBoxListMatches.Items.Add(entry.Key.DisplayName);
                 checkBoxListMatches.SetItemCheckState(i, CheckState.Checked);
                 i++;
             }
@@ -306,7 +306,7 @@ namespace pwiz.Skyline.EditUI
             get
             {
                 var proteins = checkBoxListMatches.CheckedIndices.OfType<int>()
-                    .Select(i => _associatedProteins[i].Key.Name)
+                    .Select(i => _associatedProteins[i].Key.DisplayName)
                     .ToList();
 
                 var fileName = Path.GetFileName(_fileName);

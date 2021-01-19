@@ -19,6 +19,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Net;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -38,6 +39,9 @@ namespace SkylineTester
         [STAThread]
         static void Main(string[] args)
         {
+            // Make sure we can negotiate with HTTPS servers that demand TLS 1.2 (default in dotNet 4.6, but has to be turned on in 4.5)
+            ServicePointManager.SecurityProtocol |= (SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12);
+
             if (Settings.Default.SettingsUpgradeRequired)
             {
                 Settings.Default.Upgrade();
