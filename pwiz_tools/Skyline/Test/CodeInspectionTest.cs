@@ -85,7 +85,7 @@ namespace pwiz.SkylineTest
             // Looking for Model code depending on UI code
             AddTextInspection(@"*.cs", // Examine files with this mask
                 Inspection.Forbidden, // This is a test for things that should NOT be in such files
-                Level.Warn, // Any failure is treated as an error, and overall test fails
+                Level.Error, // Any failure is treated as an error, and overall test fails
                 null, // There are no parts of the codebase that should skip this check
                 @"namespace pwiz.Skyline.Model", // If the file contains this, then check for forbidden pattern
                 @".*using.*pwiz\.Skyline\.(Alerts|Controls|.*UI);.*", // Forbidden pattern
