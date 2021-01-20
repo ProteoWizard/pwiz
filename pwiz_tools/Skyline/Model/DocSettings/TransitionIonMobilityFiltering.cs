@@ -116,6 +116,27 @@ namespace pwiz.Skyline.Model.DocSettings
             // Defer further validation to the SrmSettings object
         }
 
+        public eIonMobilityUnits GetFirstSeenIonMobilityUnits()
+        {
+            if (IonMobilityLibrary != null && !IonMobilityLibrary.IsNone)
+            {
+                var dict = IonMobilityLibrary.GetIonMobilityLibKeyMap();
+                var val =
+                    dict?.AsDictionary().Values.FirstOrDefault
+                        (v => v.Any(l => l.IonMobility.Units != eIonMobilityUnits.none));
+                if (val != null)
+                {
+                    var item = val.FirstOrDefault(i => i.IonMobility.Units != eIonMobilityUnits.none);
+                    if (item!=null)
+                    {
+                        return item.IonMobility.Units;
+                    }
+                }
+            }
+
+            return eIonMobilityUnits.none; // Didn't find anything
+        }
+
         public IonMobilityAndCCS GetIonMobilityFilter(LibKey ion, double mz,
             IIonMobilityFunctionsProvider ionMobilityFunctionsProvider)
         {
@@ -973,6 +994,11 @@ namespace pwiz.Skyline.Model.DocSettings
                 default:
                     return null;
             }
+        }
+
+        public static bool AcceptNegativeMobilityValues(eIonMobilityUnits units)
+        {
+            return units == eIonMobilityUnits.compensation_V;
         }
 
         public static eIonMobilityUnits IonMobilityUnitsFromL10NString(string units)

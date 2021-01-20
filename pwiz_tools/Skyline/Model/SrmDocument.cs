@@ -52,6 +52,7 @@ using System.Threading;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
+using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.AuditLog;
@@ -2248,6 +2249,19 @@ namespace pwiz.Skyline.Model
                                 Settings, nodePep, nodeTranGroup, null, OptimizedMethodType.Precursor, GetCompensationVoltageRough);
                             break;
                     }
+
+                    if (!cov.HasValue)
+                    {
+                        // Check for CoV as an ion mobility parameter
+                        var libKey = nodeTranGroup.GetLibKey(Settings, nodePep);
+                        var imInfo = Settings.GetIonMobilities(new[] { libKey }, null);
+                        var im = imInfo.GetLibraryMeasuredIonMobilityAndCCS(libKey, nodeTranGroup.PrecursorMz, null);
+                        if (im.IonMobility.Units == eIonMobilityUnits.compensation_V)
+                        {
+                            cov = im.IonMobility.Mobility;
+                        }
+                    }
+
                     if (!cov.HasValue || cov.Value.Equals(0))
                     {
                         yield return nodeTranGroup.ToString();
