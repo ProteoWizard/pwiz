@@ -109,6 +109,7 @@ namespace AutoQC
         {
             configManager.ReplaceSelectedConfig(newVersion);
             UpdateUiConfigurations();
+            UpdateUiLoggers();
         }
 
         private void btnCopy_Click(object sender, EventArgs e)
@@ -160,13 +161,20 @@ namespace AutoQC
 
         private void listViewConfigs_SelectedIndexChanged(object sender, EventArgs e)
         {
-            var newSelection = listViewConfigs.SelectedItems.Count > 0 ? listViewConfigs.SelectedIndices[0] : -1;
-            if (newSelection == configManager.SelectedConfig)
+            listViewConfigs.SelectedIndices.Clear();
+        }
+
+        private void listViewConfigs_MouseUp(object sender, MouseEventArgs e)
+        {
+            // Select configuration through _configManager
+            var index = listViewConfigs.GetItemAt(e.X, e.Y) != null ? listViewConfigs.GetItemAt(e.X, e.Y).Index : -1;
+
+            if (index < 0)
+            {
+                configManager.DeselectConfig();
                 return;
-            configManager.DeselectConfig();
-            if (newSelection >= 0)
-                configManager.SelectConfig(newSelection);
-            UpdateButtonsEnabled();
+            }
+            configManager.SelectConfig(index);
         }
 
         public void UpdateButtonsEnabled()
@@ -208,6 +216,7 @@ namespace AutoQC
                 if (configManager.SelectedConfig >= 0)
                     listViewConfigs.Items[configManager.SelectedConfig].Selected = true;
                 UpdateLabelVisibility();
+                UpdateButtonsEnabled();
             });
         }
 

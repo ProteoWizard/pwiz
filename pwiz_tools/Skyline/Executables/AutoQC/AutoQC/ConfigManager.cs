@@ -136,6 +136,16 @@ namespace AutoQC
 
                 if (!_configsValidated[config.Name])
                     lvi.ForeColor = Color.Red;
+
+                if (SelectedConfig >= 0 && _configList[SelectedConfig].Name.Equals(lvi.Text))
+                {
+                    lvi.BackColor = Color.LightGray;
+                    foreach (ListViewItem.ListViewSubItem subitem in lvi.SubItems)
+                    {
+                        subitem.BackColor = Color.LightGray;
+                    }
+                }
+
                 listViewConfigs.Add(lvi);
             }
             return listViewConfigs;
@@ -155,12 +165,20 @@ namespace AutoQC
         {
             if (newIndex < 0 || newIndex >= _configList.Count)
                 throw new IndexOutOfRangeException("No configuration at index: " + newIndex);
-            SelectedConfig = newIndex;
+            if (SelectedConfig != newIndex)
+            {
+                SelectedConfig = newIndex;
+                _uiControl?.UpdateUiConfigurations();
+            }
         }
 
         public void DeselectConfig()
         {
-            SelectedConfig = -1;
+            if (SelectedConfig != -1)
+            {
+                SelectedConfig = -1;
+                _uiControl?.UpdateUiConfigurations();
+            }
         }
 
         private void CheckConfigSelected()
