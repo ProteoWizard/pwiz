@@ -140,17 +140,23 @@ namespace SkylineBatch
             _configManager.RemoveSelected();
             UpdateUiConfigurations();
         }
-        
 
-        private void listViewConfigs_Click(object sender, EventArgs e)
+        private void listViewConfigs_MouseDown(object sender, MouseEventArgs e)
         {
-            if (listViewConfigs.SelectedItems.Count > 0)
+
+            var index = listViewConfigs.GetItemAt(e.X, e.Y) != null ? listViewConfigs.GetItemAt(e.X, e.Y).Index : -1;
+
+            if (index < 0 || index == _configManager.SelectedConfig)
             {
-                _configManager.SelectConfig(listViewConfigs.SelectedIndices[0]);
-                listViewConfigs.SelectedIndices.Clear();
-            }
-            else
                 _configManager.DeselectConfig();
+                return;
+            }
+            _configManager.SelectConfig(index);
+        }
+
+        private void listViewConfigs_MouseUp(object sender, MouseEventArgs e)
+        {
+            listViewConfigs.SelectedIndices.Clear();
         }
 
         private void UpdateButtonsEnabled()

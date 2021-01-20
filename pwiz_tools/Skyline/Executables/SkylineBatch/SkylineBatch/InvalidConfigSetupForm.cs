@@ -113,8 +113,7 @@ namespace SkylineBatch
 
                 if (!string.IsNullOrEmpty(_oldRoot))
                     _replaceRoot = AlertDlg.ShowQuestion(this, "Would you like to use this root for all paths?" + Environment.NewLine +
-                                                           _newRoot + Environment.NewLine +
-                                                           _oldRoot, "Replace All") == DialogResult.Yes;
+                                                           _newRoot, "Replace All") == DialogResult.Yes;
             }
             RemoveControl(folderControl);
             

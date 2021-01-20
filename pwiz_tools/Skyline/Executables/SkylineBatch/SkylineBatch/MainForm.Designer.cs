@@ -231,12 +231,14 @@
             this.listViewStatus});
             this.listViewConfigs.FullRowSelect = true;
             this.listViewConfigs.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
+            this.listViewConfigs.HideSelection = false;
             this.listViewConfigs.MultiSelect = false;
             this.listViewConfigs.Name = "listViewConfigs";
             this.listViewConfigs.UseCompatibleStateImageBehavior = false;
             this.listViewConfigs.View = System.Windows.Forms.View.Details;
-            this.listViewConfigs.Click += new System.EventHandler(this.listViewConfigs_Click);
             this.listViewConfigs.DoubleClick += new System.EventHandler(this.HandleEditEvent);
+            this.listViewConfigs.MouseDown += new System.Windows.Forms.MouseEventHandler(this.listViewConfigs_MouseDown);
+            this.listViewConfigs.MouseUp += new System.Windows.Forms.MouseEventHandler(this.listViewConfigs_MouseUp);
             // 
             // listViewConfigName
             // 

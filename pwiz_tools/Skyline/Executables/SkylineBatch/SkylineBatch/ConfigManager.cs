@@ -164,6 +164,7 @@ namespace SkylineBatch
             lock (_lock)
             {
                 SelectedConfig = -1;
+                _uiControl?.UpdateUiConfigurations();
             }
         }
 
