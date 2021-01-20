@@ -76,6 +76,7 @@
             resources.ApplyResources(this.textIonMobility, "textIonMobility");
             this.textIonMobility.Name = "textIonMobility";
             this.toolTip1.SetToolTip(this.textIonMobility, resources.GetString("textIonMobility.ToolTip"));
+            this.textIonMobility.TextChanged += new System.EventHandler(this.textIonMobility_TextChanged);
             // 
             // textIonMobilityHighEnergyOffset
             // 
