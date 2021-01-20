@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Windows.Forms;
 using SkylineBatch.Properties;
 
@@ -49,13 +50,17 @@ namespace SkylineBatch
 
         private void btnBrowse_Click(object sender, EventArgs e)
         {
+            var initialDirectory = textFilePath.Text;
+            while (!Directory.Exists(initialDirectory) || initialDirectory == "")
+                initialDirectory = Path.GetDirectoryName(initialDirectory);
+            
             if (_folder)
             {
                 using (FolderBrowserDialog dlg = new FolderBrowserDialog
                 {
                     Description = Resources.FilePathControl_Select_Folder,
                     ShowNewFolderButton = false,
-                    SelectedPath = textFilePath.Text
+                    SelectedPath = initialDirectory
                 })
                 {
                     if (dlg.ShowDialog(this) != DialogResult.OK)
@@ -66,12 +71,11 @@ namespace SkylineBatch
                 return;
             }
 
-
             OpenFileDialog openDialog = new OpenFileDialog();
             if (!string.IsNullOrEmpty(_type))
                 openDialog.Filter = _type;
             openDialog.Title = Resources.FilePathControl_Open_File;
-            openDialog.InitialDirectory = System.IO.Path.GetDirectoryName(textFilePath.Text);
+            openDialog.InitialDirectory = initialDirectory;
             if (openDialog.ShowDialog() == DialogResult.OK)
                 textFilePath.Text = openDialog.FileName;
         }
