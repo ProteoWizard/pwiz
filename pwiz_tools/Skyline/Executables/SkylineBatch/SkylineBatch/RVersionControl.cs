@@ -5,7 +5,7 @@ using SkylineBatch.Properties;
 
 namespace SkylineBatch
 {
-    public partial class RVersionControl : UserControl, IVariableInputControl
+    public partial class RVersionControl : UserControl, IValidatorControl
     {
 
         private string _version;

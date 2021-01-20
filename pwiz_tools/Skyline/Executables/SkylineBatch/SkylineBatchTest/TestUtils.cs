@@ -127,6 +127,11 @@ namespace SkylineBatchTest
             return new MainSettings(GetTestFilePath("emptyTemplate.sky"), GetTestFilePath("analysis"), GetTestFilePath("emptyData"), "");
         }
 
+        public static FileSettings GetTestFileSettings()
+        {
+            return new FileSettings("", "", false, false);
+        }
+
         public static ReportSettings GetTestReportSettings()
         {
             var reportList = new List<ReportInfo>{GetTestReportInfo() };
@@ -141,7 +146,7 @@ namespace SkylineBatchTest
 
         public static SkylineBatchConfig GetTestConfig(string name = "name")
         {
-            return new SkylineBatchConfig(name, DateTime.MinValue, DateTime.MinValue, GetTestMainSettings(), new FileSettings("", ""), GetTestReportSettings(), new SkylineSettings(SkylineType.Custom, "C:\\Program Files\\Skyline"));
+            return new SkylineBatchConfig(name, DateTime.MinValue, DateTime.MinValue, GetTestMainSettings(), GetTestFileSettings(), GetTestReportSettings(), new SkylineSettings(SkylineType.Custom, "C:\\Program Files\\Skyline"));
         }
 
         public static ConfigRunner GetTestConfigRunner(string configName = "name")

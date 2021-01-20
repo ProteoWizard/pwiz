@@ -5,7 +5,7 @@ using SkylineBatch.Properties;
 
 namespace SkylineBatch
 {
-    public partial class SkylineTypeControl : UserControl, IVariableInputControl
+    public partial class SkylineTypeControl : UserControl, IValidatorControl
     {
         public SkylineTypeControl(bool skyline, bool skylineDaily, bool custom, string path)
         {

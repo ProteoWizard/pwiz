@@ -4,7 +4,7 @@ using SkylineBatch.Properties;
 
 namespace SkylineBatch
 {
-    public partial class FilePathControl : UserControl, IVariableInputControl
+    public partial class FilePathControl : UserControl, IValidatorControl
     {
         private string _path;
         private readonly bool _folder;

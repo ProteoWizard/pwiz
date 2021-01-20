@@ -117,7 +117,6 @@ namespace SkylineBatch
                 foreach (var config in _configList)
                 {
                     var lvi = new ListViewItem(config.Name);
-                    lvi.UseItemStyleForSubItems = false; // So that we can change the color for sub-items.
                     lvi.SubItems.Add(config.Created.ToShortDateString());
                     lvi.SubItems.Add(_configRunners[config.Name].GetDisplayStatus());
                     try
@@ -152,7 +151,11 @@ namespace SkylineBatch
             {
                 if (newIndex < 0 || newIndex >= _configList.Count)
                     throw new IndexOutOfRangeException("No configuration at index: " + newIndex);
-                SelectedConfig = newIndex;
+                if (SelectedConfig != newIndex)
+                {
+                    SelectedConfig = newIndex;
+                    _uiControl?.UpdateUiConfigurations();
+                }
             }
         }
 

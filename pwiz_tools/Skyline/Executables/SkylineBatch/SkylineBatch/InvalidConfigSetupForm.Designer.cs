@@ -1,6 +1,6 @@
 ﻿namespace SkylineBatch
 {
-    partial class FixInvalidConfigForm
+    partial class InvalidConfigSetupForm
     {
         /// <summary>
         /// Required designer variable.
@@ -28,7 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FixInvalidConfigForm));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(InvalidConfigSetupForm));
             this.panel1 = new System.Windows.Forms.Panel();
             this.btnNext = new System.Windows.Forms.Button();
             this.SuspendLayout();
@@ -53,6 +53,7 @@
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "FixInvalidConfigForm";
+            this.ShowInTaskbar = false;
             this.ResumeLayout(false);
 
         }

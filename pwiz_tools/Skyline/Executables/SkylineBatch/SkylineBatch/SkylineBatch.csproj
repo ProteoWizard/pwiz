@@ -13,7 +13,7 @@
     <FileAlignment>512</FileAlignment>
     <IsWebBootstrapper>true</IsWebBootstrapper>
     <TargetFrameworkProfile />
-    <PublishUrl>Z:\labkey\static\software\SkylineBatch\</PublishUrl>
+    <PublishUrl>Z:\labkey\static\software\SkylineBatch-test\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Web</InstallFrom>
     <UpdateEnabled>true</UpdateEnabled>
@@ -23,13 +23,13 @@
     <UpdatePeriodically>false</UpdatePeriodically>
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>false</MapFileExtensions>
-    <InstallUrl>http://skyline.gs.washington.edu/software/SkylineBatch/</InstallUrl>
+    <InstallUrl>http://skyline.gs.washington.edu/software/SkylineBatch-test/</InstallUrl>
     <ProductName>Skyline Batch</ProductName>
     <PublisherName>University of Washington</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>353</ApplicationRevision>
-    <ApplicationVersion>20.2.0.353</ApplicationVersion>
+    <ApplicationRevision>384</ApplicationRevision>
+    <ApplicationVersion>20.2.0.384</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -98,8 +98,8 @@
     <EmbeddedResource Include="FindSkyline.resx">
       <DependentUpon>FindSkyline.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="FixInvalidConfigForm.resx">
-      <DependentUpon>FixInvalidConfigForm.cs</DependentUpon>
+    <EmbeddedResource Include="InvalidConfigSetupForm.resx">
+      <DependentUpon>InvalidConfigSetupForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="LogForm.resx">
       <DependentUpon>LogForm.cs</DependentUpon>
@@ -146,11 +146,11 @@
     <Compile Include="FindSkyline.Designer.cs">
       <DependentUpon>FindSkyline.cs</DependentUpon>
     </Compile>
-    <Compile Include="FixInvalidConfigForm.cs">
+    <Compile Include="InvalidConfigSetupForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="FixInvalidConfigForm.Designer.cs">
-      <DependentUpon>FixInvalidConfigForm.cs</DependentUpon>
+    <Compile Include="InvalidConfigSetupForm.Designer.cs">
+      <DependentUpon>InvalidConfigSetupForm.cs</DependentUpon>
     </Compile>
     <Compile Include="RVersionControl.cs">
       <SubType>UserControl</SubType>

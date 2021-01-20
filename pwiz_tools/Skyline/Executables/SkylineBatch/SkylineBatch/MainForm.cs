@@ -48,7 +48,6 @@ namespace SkylineBatch
             Program.LogInfo("Loading configurations from saved settings.");
             _configManager = new ConfigManager(_skylineBatchLogger, this);
 
-            UpdateButtonsEnabled();
             UpdateUiConfigurations();
             UpdateLabelVisibility();
             UpdateUiLogFiles();
@@ -107,7 +106,7 @@ namespace SkylineBatch
             catch (ArgumentException)
             {
                 if (configRunner.IsRunning()) throw new Exception("Invalid configuration cannot be running.");
-                var validateConfigForm = new FixInvalidConfigForm(config, this);
+                var validateConfigForm = new InvalidConfigSetupForm(config, this);
                 validateConfigForm.ShowDialog();
                 if (validateConfigForm.DialogResult != DialogResult.OK)
                     return;
@@ -140,17 +139,18 @@ namespace SkylineBatch
         {
             _configManager.RemoveSelected();
             UpdateUiConfigurations();
-
-            UpdateButtonsEnabled();
         }
         
-        private void listViewConfigs_SelectedIndexChanged(object sender, EventArgs e)
+
+        private void listViewConfigs_Click(object sender, EventArgs e)
         {
             if (listViewConfigs.SelectedItems.Count > 0)
+            {
                 _configManager.SelectConfig(listViewConfigs.SelectedIndices[0]);
+                listViewConfigs.SelectedIndices.Clear();
+            }
             else
                 _configManager.DeselectConfig();
-            UpdateButtonsEnabled();
         }
 
         private void UpdateButtonsEnabled()
@@ -249,8 +249,12 @@ namespace SkylineBatch
                 foreach (var lvi in listViewItems)
                     listViewConfigs.Items.Add(lvi);
                 if (_configManager.SelectedConfig >= 0)
-                    listViewConfigs.Items[_configManager.SelectedConfig].Selected = true;
-                UpdateLabelVisibility(); 
+                {
+                    listViewConfigs.Items[_configManager.SelectedConfig].BackColor = Color.LightGray;
+                }
+
+                UpdateLabelVisibility();
+                UpdateButtonsEnabled();
             });
 
         }
