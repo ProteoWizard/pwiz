@@ -649,9 +649,22 @@ namespace pwiz.SkylineTestUtil
             }
             else
             {
-                Console.Write(@"{0:0.##}, ", actual);
+                if (CheckDocumentResultsGridValuesRecordedCount > 0)
+                {
+                    Console.Write(@", ");
+                }
                 if (++CheckDocumentResultsGridValuesRecordedCount % 18 == 0)
+                {
                     Console.WriteLine();
+                }
+                if (actual.HasValue)
+                {
+                    Console.Write(@"{0:0.##}", actual);
+                }
+                else
+                {
+                    Console.Write(@"null");
+                }
             }
         }
 
@@ -665,7 +678,7 @@ namespace pwiz.SkylineTestUtil
             });
         }
 
-        public DocumentGridForm EnableDocumentGridIonMobilityResultsColumns()
+        public DocumentGridForm EnableDocumentGridIonMobilityResultsColumns(int? expectedRowCount = null)
         {
             /* Add these IMS related columns to the standard mixed transition list report
                 <column name="Results!*.Value.PrecursorResult.CollisionalCrossSection" />
@@ -695,7 +708,7 @@ namespace pwiz.SkylineTestUtil
                     "Proteins!*.Peptides!*.Precursors!*.Transitions!*.Results!*.Value.Chromatogram.ChromatogramIonMobilityUnits"
                 },
                 null,
-                SkylineWindow.Document.MoleculeTransitionCount * (SkylineWindow.Document.MeasuredResults?.Chromatograms.Count ?? 1));
+                expectedRowCount ?? SkylineWindow.Document.MoleculeTransitionCount * (SkylineWindow.Document.MeasuredResults?.Chromatograms.Count ?? 1));
             return documentGrid;
         }
         
