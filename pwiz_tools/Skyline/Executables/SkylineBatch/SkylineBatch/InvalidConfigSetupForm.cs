@@ -107,7 +107,7 @@ namespace SkylineBatch
             path = (string) await GetValidVariable(path, "Invalid Path", folderControl, false);
 
             // the first time a path is changed, ask if user wants all path roots replaced
-            if (_oldRoot == null)
+            if (string.IsNullOrEmpty(_oldRoot))
             {
                 GetBestRoot(invalidPath, path);
 
@@ -167,6 +167,11 @@ namespace SkylineBatch
             var matchingEndFolders = 1;
             while (matchingEndFolders < Math.Min(oldPathFolders.Length, newPathFolders.Length))
             {
+                // If path ends do not match we cannot replace root
+                if (!oldPathFolders[oldPathFolders.Length - matchingEndFolders]
+                    .Equals(newPathFolders[newPathFolders.Length - matchingEndFolders]))
+                    return;
+
                 var testOldRoot = string.Join("\\", oldPathFolders.Take(oldPathFolders.Length - matchingEndFolders).ToArray());
                 var testNewRoot = string.Join("\\", newPathFolders.Take(newPathFolders.Length - matchingEndFolders).ToArray());
                 var validFiles = GetValidPathNumber(testOldRoot, testNewRoot);

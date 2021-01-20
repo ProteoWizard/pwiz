@@ -141,12 +141,12 @@ namespace SkylineBatch
             UpdateUiConfigurations();
         }
 
-        private void listViewConfigs_MouseDown(object sender, MouseEventArgs e)
+        private void listViewConfigs_MouseUp(object sender, MouseEventArgs e)
         {
-
+            // Select configuration through _configManager
             var index = listViewConfigs.GetItemAt(e.X, e.Y) != null ? listViewConfigs.GetItemAt(e.X, e.Y).Index : -1;
 
-            if (index < 0 || index == _configManager.SelectedConfig)
+            if (index < 0)
             {
                 _configManager.DeselectConfig();
                 return;
@@ -154,8 +154,11 @@ namespace SkylineBatch
             _configManager.SelectConfig(index);
         }
 
-        private void listViewConfigs_MouseUp(object sender, MouseEventArgs e)
+
+        private void listViewConfigs_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
         {
+            // Disable automatic item selection - selected configuration set through _configManager
+            //      Automatic selection changes selected text white, can't see invalid configurations
             listViewConfigs.SelectedIndices.Clear();
         }
 
@@ -515,6 +518,7 @@ namespace SkylineBatch
         {
             return AlertDlg.ShowQuestion(this, message, title);
         }
+
 
 
 
