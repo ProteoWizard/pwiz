@@ -18,6 +18,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SkylineBatch;
 
@@ -81,7 +83,7 @@ namespace SkylineBatchTest
 
             var validMainSettings = new MainSettings(validTemplatePath, validAnalysisFolder, validDataDir, null);
             var validReportSettings = new ReportSettings(new List<ReportInfo>());
-            var validSkylineSettings = new SkylineSettings(SkylineType.Custom, "C:\\Program Files\\Skyline");
+            var validSkylineSettings = new SkylineSettings(SkylineType.Custom, GetSkylineDir());
             var validFileSettings = new FileSettings("", "", false, false);
 
             try
@@ -100,9 +102,9 @@ namespace SkylineBatchTest
                 var validConfig = new SkylineBatchConfig(validName, DateTime.MinValue, DateTime.MinValue, validMainSettings, validFileSettings, validReportSettings, validSkylineSettings);
                 validConfig.Validate();
             }
-            catch (Exception)
+            catch (Exception x)
             {
-                Assert.Fail("Should have validated valid config");
+                Assert.Fail("Should have validated valid config: " + x.Message);
             }
         }
 
@@ -183,6 +185,23 @@ namespace SkylineBatchTest
             var differentMainSettings = new SkylineBatchConfig("name", DateTime.MinValue, DateTime.MinValue, differentMain, TestUtils.GetTestFileSettings(), TestUtils.GetTestReportSettings(), new SkylineSettings(SkylineType.Skyline));
             Assert.IsFalse(Equals(testConfig, differentMainSettings));
         }
-        
+
+        public static string GetSkylineDir()
+        {
+            return GetProjectDirectory("bin\\x64\\Release");
+        }
+
+        public static string GetProjectDirectory(string relativePath)
+        {
+            for (String directory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                directory != null && directory.Length > 10;
+                directory = Path.GetDirectoryName(directory))
+            {
+                if (File.Exists(Path.Combine(directory, "Skyline.sln")))
+                    return Path.Combine(directory, relativePath);
+            }
+
+            return null;
+        }
     }
 }

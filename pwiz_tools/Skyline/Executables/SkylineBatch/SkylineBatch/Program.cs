@@ -23,7 +23,6 @@ using System.Deployment.Application;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using log4net;
@@ -53,10 +52,12 @@ namespace SkylineBatch
             {
                 try
                 {
-                    Log.Error(Resources.Program_SkylineBatch_encountered_an_unexpected_error, (Exception)e.ExceptionObject);
-                    MessageBox.Show(Resources.Program_SkylineBatch_encountered_an_unexpected_error +
-                                    @"Error details may be found in the SkylineBatchProgram.log file in this directory : "
-                                    + Path.GetDirectoryName(Application.ExecutablePath) + Environment.NewLine + Environment.NewLine + ((Exception)e.ExceptionObject).Message
+                    Log.Error(Resources.Program_Main_An_unexpected_error_occured_during_initialization_, (Exception)e.ExceptionObject);
+                    MessageBox.Show(Resources.Program_Main_An_unexpected_error_occured_during_initialization_ + Environment.NewLine +
+                                    string.Format(Resources.Program_Main_Error_details_may_be_found_in_the_file__0_,
+                                        Path.Combine(Path.GetDirectoryName(Application.ExecutablePath) ?? string.Empty, "SkylineBatchProgram.log")) + Environment.NewLine +
+                                    Environment.NewLine +
+                                    ((Exception)e.ExceptionObject).Message
                     );
                 }
                 finally
@@ -69,7 +70,7 @@ namespace SkylineBatch
             {
                 if (!mutex.WaitOne(TimeSpan.Zero))
                 {
-                    MessageBox.Show($@"Another instance of {AppName()} is already running.", $@"{AppName()} Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(string.Format(Resources.Program_Main_Another_instance_of__0__is_already_running_, AppName()), AppName(), MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
 
@@ -98,7 +99,7 @@ namespace SkylineBatch
                 // CurrentDeployment is null if it isn't network deployed.
                 _version = ApplicationDeployment.IsNetworkDeployed
                     ? ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString()
-                    : "";
+                    : string.Empty;
                 form.Text = Version();
 
                 Application.Run(form);

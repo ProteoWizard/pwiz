@@ -199,9 +199,6 @@
   <data name="ConfigManager_Save_configurations" xml:space="preserve">
     <value>Save configurations...</value>
   </data>
-  <data name="Program_SkylineBatch_encountered_an_unexpected_error" xml:space="preserve">
-    <value>SkylineBatch encountered an unexpected error. </value>
-  </data>
   <data name="ReportsAddForm_Skyr_file_extension" xml:space="preserve">
     <value>SKYR|*.skyr</value>
   </data>
@@ -248,7 +245,7 @@
     <value>{0} requires Skyline to run.</value>
   </data>
   <data name="Program_Please_install_R_to_use_SkylineBatch" xml:space="preserve">
-    <value>Please install R to use SkylineBatch</value>
+    <value>Please install R to use {0}.</value>
   </data>
   <data name="Program_SkylineBatch_requires_at_least_one_installation_of_R" xml:space="preserve">
     <value>SkylineBatch requires at least one version of R with rScript.exe to be installed on the computer.</value>
@@ -318,5 +315,14 @@
   </data>
   <data name="RVersionControl_Select_an_R_version_for__0___" xml:space="preserve">
     <value>Select an R version for {0}:</value>
+  </data>
+  <data name="Program_Main_Another_instance_of__0__is_already_running_" xml:space="preserve">
+    <value>Another instance of {0} is already running.</value>
+  </data>
+  <data name="Program_Main_An_unexpected_error_occured_during_initialization_" xml:space="preserve">
+    <value>An unexpected error occured during initialization.</value>
+  </data>
+  <data name="Program_Main_Error_details_may_be_found_in_the_file__0_" xml:space="preserve">
+    <value>Error details may be found in the file {0}</value>
   </data>
 </root>

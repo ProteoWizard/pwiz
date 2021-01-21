@@ -471,20 +471,38 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Please install R to use SkylineBatch.
+        ///   Looks up a localized string similar to An unexpected error occured during initialization..
         /// </summary>
-        internal static string Program_Please_install_R_to_use_SkylineBatch {
+        internal static string Program_Main_An_unexpected_error_occured_during_initialization_ {
             get {
-                return ResourceManager.GetString("Program_Please_install_R_to_use_SkylineBatch", resourceCulture);
+                return ResourceManager.GetString("Program_Main_An_unexpected_error_occured_during_initialization_", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to SkylineBatch encountered an unexpected error. .
+        ///   Looks up a localized string similar to Another instance of {0} is already running..
         /// </summary>
-        internal static string Program_SkylineBatch_encountered_an_unexpected_error {
+        internal static string Program_Main_Another_instance_of__0__is_already_running_ {
             get {
-                return ResourceManager.GetString("Program_SkylineBatch_encountered_an_unexpected_error", resourceCulture);
+                return ResourceManager.GetString("Program_Main_Another_instance_of__0__is_already_running_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error details may be found in the file {0}.
+        /// </summary>
+        internal static string Program_Main_Error_details_may_be_found_in_the_file__0_ {
+            get {
+                return ResourceManager.GetString("Program_Main_Error_details_may_be_found_in_the_file__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please install R to use {0}..
+        /// </summary>
+        internal static string Program_Please_install_R_to_use_SkylineBatch {
+            get {
+                return ResourceManager.GetString("Program_Please_install_R_to_use_SkylineBatch", resourceCulture);
             }
         }
         
