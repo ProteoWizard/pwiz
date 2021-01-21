@@ -18,6 +18,8 @@ namespace SkylineBatch
         private string _oldRoot;
         private string _newRoot;
 
+        private string _lastInputPath;
+        private bool _removeRScripts;
 
         public InvalidConfigSetupForm(SkylineBatchConfig invalidConfig, IMainUiControl mainControl)
         {
@@ -69,13 +71,24 @@ namespace SkylineBatch
                 var validReportPath = await GetValidPath(report.Name + " report", report.ReportPath, false,
                     ReportInfo.ValidateReportPath);
                 var validScripts = new List<Tuple<string, string>>();
-                foreach (var scriptAndVersion in report.RScripts)
+                if (!_removeRScripts)
                 {
-                    var validRScript = await GetValidPath(Path.GetFileName(scriptAndVersion.Item1) + " R script", scriptAndVersion.Item1, false,
-                        ReportInfo.ValidateRScriptPath);
-                    var validVersion = await GetValidRVersion(scriptAndVersion.Item1, scriptAndVersion.Item2);
-                    validScripts.Add(new Tuple<string, string>(validRScript, validVersion));
+                    foreach (var scriptAndVersion in report.RScripts)
+                    {
+                        var validVersion = await GetValidRVersion(scriptAndVersion.Item1, scriptAndVersion.Item2);
+                        if (validVersion == null)
+                        {
+                            _removeRScripts = true;
+                            break;
+                        }
+                        var validRScript = await GetValidPath(Path.GetFileName(scriptAndVersion.Item1) + " R script",
+                            scriptAndVersion.Item1, false,
+                            ReportInfo.ValidateRScriptPath);
+                        
+                        validScripts.Add(new Tuple<string, string>(validRScript, validVersion));
+                    }
                 }
+
                 validReports.Add(new ReportInfo(report.Name, validReportPath, validScripts));
             }
 
@@ -103,9 +116,13 @@ namespace SkylineBatch
             // replace path root
             var path = _replaceRoot ? invalidPath.Replace(_oldRoot, _newRoot) : invalidPath;
 
-            var folderControl = new FilePathControl(variableName, path, folder, validator);
+            var folderControl = new FilePathControl(variableName, path, _lastInputPath, folder, validator);
             path = (string) await GetValidVariable(path, "Invalid Path", folderControl, false);
 
+            if (path.Equals(invalidPath))
+                return path;
+
+            _lastInputPath = path;
             // the first time a path is changed, ask if user wants all path roots replaced
             if (string.IsNullOrEmpty(_oldRoot))
             {
@@ -113,17 +130,16 @@ namespace SkylineBatch
 
                 if (!string.IsNullOrEmpty(_oldRoot))
                     _replaceRoot = AlertDlg.ShowQuestion(this, "Would you like to use this root for all paths?" + Environment.NewLine +
-                                                           _newRoot, "Replace All") == DialogResult.Yes;
+                                                           _newRoot) == DialogResult.Yes;
             }
             RemoveControl(folderControl);
-            
             return path;
         }
 
         private async Task<string> GetValidRVersion(string scriptName, string invalidVersion)
         {
             var version = invalidVersion;
-            var rVersionControl = new RVersionControl(scriptName, version);
+            var rVersionControl = new RVersionControl(scriptName, version, _removeRScripts);
             return (string) await GetValidVariable(version, "Invalid R installation", rVersionControl);
         }
 
@@ -140,7 +156,7 @@ namespace SkylineBatch
                 await btnNext;
                 valid = control.IsValid(out errorMessage);
                 if (!valid)
-                    _mainControl.DisplayError(errorTitle, errorMessage);
+                    _mainControl.DisplayError(errorMessage);
             }
 
             if (removeControl) RemoveControl((UserControl)control);

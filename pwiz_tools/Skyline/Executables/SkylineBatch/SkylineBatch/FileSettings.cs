@@ -33,20 +33,19 @@ namespace SkylineBatch
         // Holds file locations and naming pattern to use when running the configuration
 
 
-        public FileSettings(string resolvingPower, string retentionTime, bool addDecoys, bool shuffleDecoys)
+        public FileSettings(string msOneResolvingPower, string msMsResolvingPower, string retentionTime, bool addDecoys, bool shuffleDecoys)
         {
-            ResolvingPower = resolvingPower ?? "";
+            MsOneResolvingPower = msOneResolvingPower ?? "";
+            MsMsResolvingPower = msMsResolvingPower ?? "";
             RetentionTime = retentionTime ?? "";
             AddDecoys = addDecoys;
             ShuffleDecoys = shuffleDecoys;
         }
 
-        public readonly string ResolvingPower;
-
+        public readonly string MsOneResolvingPower;
+        public readonly string MsMsResolvingPower;
         public readonly string RetentionTime;
-
         public readonly bool AddDecoys;
-
         public readonly bool ShuffleDecoys;
 
         private int ValidateIntTextField(string textToParse, string fieldName)
@@ -65,17 +64,19 @@ namespace SkylineBatch
         public override string ToString()
         {
             var sb = new StringBuilder();
-            sb.Append("Resolving power: ").AppendLine(ResolvingPower);
+            sb.Append("MS1 filtering res/accuracy: ").AppendLine(MsOneResolvingPower);
+            sb.Append("Ms/Ms filtering res/accuracy: ").AppendLine(MsMsResolvingPower);
             sb.Append("Retention time: ").AppendLine(RetentionTime);
             return sb.ToString();
         }
 
         public void Validate()
         {
-            /*var resolvingPowerInt = */ValidateIntTextField(ResolvingPower, Resources.FileSettings_Resolving_Power);
-            /*var retentionTimeInt = */ValidateIntTextField(RetentionTime, Resources.FileSettings_Retention_Time);
+            ValidateIntTextField(MsOneResolvingPower, Resources.FileSettings_Resolving_Power);
+            ValidateIntTextField(MsMsResolvingPower, Resources.FileSettings_Resolving_Power);
+            ValidateIntTextField(RetentionTime, Resources.FileSettings_Retention_Time);
             
-            // TODO: Add validation
+            // CONSIDER: adding validation that checks if numbers are within a certain range
         }
 
 
@@ -87,7 +88,8 @@ namespace SkylineBatch
 
         private enum Attr
         {
-            ResolvingPower,
+            MsOneResolvingPower,
+            MsMsResolvingPower,
             RetentionTime,
             AddDecoys,
             ShuffleDecoys
@@ -95,17 +97,19 @@ namespace SkylineBatch
 
         public static FileSettings ReadXml(XmlReader reader)
         {
-            var resolvingPower = reader.GetAttribute(Attr.ResolvingPower);
+            var msOneResolvingPower = reader.GetAttribute(Attr.MsOneResolvingPower);
+            var msMsResolvingPower = reader.GetAttribute(Attr.MsMsResolvingPower);
             var retentionTime = reader.GetAttribute(Attr.RetentionTime);
             var addDecoys = reader.GetBoolAttribute(Attr.AddDecoys);
             var shuffleDecoys = reader.GetBoolAttribute(Attr.ShuffleDecoys);
-            return new FileSettings(resolvingPower, retentionTime, addDecoys, shuffleDecoys);
+            return new FileSettings(msOneResolvingPower, msMsResolvingPower, retentionTime, addDecoys, shuffleDecoys);
         }
 
         public void WriteXml(XmlWriter writer)
         {
             writer.WriteStartElement("file_settings");
-            writer.WriteAttributeIfString(Attr.ResolvingPower, ResolvingPower);
+            writer.WriteAttributeIfString(Attr.MsOneResolvingPower, MsOneResolvingPower);
+            writer.WriteAttributeIfString(Attr.MsMsResolvingPower, MsMsResolvingPower);
             writer.WriteAttributeIfString(Attr.RetentionTime, RetentionTime);
             writer.WriteAttribute(Attr.AddDecoys, AddDecoys);
             writer.WriteAttribute(Attr.ShuffleDecoys, ShuffleDecoys);
@@ -116,7 +120,11 @@ namespace SkylineBatch
         protected bool Equals(FileSettings other)
         {
 
-            return other.ResolvingPower == ResolvingPower && other.RetentionTime == RetentionTime;
+            return other.MsOneResolvingPower == MsOneResolvingPower &&
+                   other.MsMsResolvingPower == MsMsResolvingPower &&
+                   other.RetentionTime == RetentionTime &&
+                   other.AddDecoys == AddDecoys &&
+                   other.ShuffleDecoys == ShuffleDecoys;
         }
 
         public override bool Equals(object obj)
@@ -130,7 +138,8 @@ namespace SkylineBatch
         public override int GetHashCode()
         {
             return RetentionTime.GetHashCode() +
-                   ResolvingPower.GetHashCode();
+                   MsOneResolvingPower.GetHashCode() +
+                   MsMsResolvingPower.GetHashCode();
         }
     }
 }

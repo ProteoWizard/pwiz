@@ -62,7 +62,7 @@ namespace SkylineBatch
             }
             catch (ArgumentException)
             {
-                _uiControl.DisplayError("Save Configuration Error", $"This is not a valid file path: \"{textFileName.Text}\"");
+                _uiControl.DisplayError($"This is not a valid file path: \"{textFileName.Text}\"");
                 return;
             }
 

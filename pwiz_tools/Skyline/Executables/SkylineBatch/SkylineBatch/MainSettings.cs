@@ -77,7 +77,8 @@ namespace SkylineBatch
             CheckIfEmptyPath(skylineFile, "Skyline file");
             if (!File.Exists(skylineFile))
             {
-                throw new ArgumentException(string.Format(Resources.MainSettings_Template_file_does_not_exist, skylineFile));
+                throw new ArgumentException(string.Format(Resources.MainSettings_Template_file_does_not_exist, skylineFile) + Environment.NewLine +
+                                            "Please provide a valid file.");
             }
         }
 
@@ -87,13 +88,8 @@ namespace SkylineBatch
             var analysisFolderDirectory = Path.GetDirectoryName(analysisFolder);
             if (!Directory.Exists(analysisFolderDirectory))
             {
-                throw new ArgumentException(string.Format(Resources.MainSettings_Analysis_folder_directory__0__does_not_exist, analysisFolderDirectory));
-            }
-
-            // create analysis folder if doesn't exist
-            if (!Directory.Exists(analysisFolder))
-            {
-                Directory.CreateDirectory(analysisFolder);
+                throw new ArgumentException(string.Format(Resources.MainSettings_Analysis_folder__0__does_not_exist, analysisFolderDirectory) + Environment.NewLine +
+                                            "Please provide a valid folder.");
             }
         }
 
@@ -102,7 +98,8 @@ namespace SkylineBatch
             CheckIfEmptyPath(dataFolder, "data folder");
             if (!Directory.Exists(dataFolder))
             {
-                throw new ArgumentException(string.Format(Resources.MainSettings_Data_folder_does_not_exist, dataFolder));
+                throw new ArgumentException(string.Format(Resources.MainSettings_Data_folder_does_not_exist, dataFolder) + Environment.NewLine +
+                                            "Please provide a valid folder.");
             }
         }
 

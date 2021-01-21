@@ -257,11 +257,6 @@ namespace SkylineBatch
                 var listViewItems = _configManager.ConfigsListViewItems();
                 foreach (var lvi in listViewItems)
                     listViewConfigs.Items.Add(lvi);
-                if (_configManager.SelectedConfig >= 0)
-                {
-                    listViewConfigs.Items[_configManager.SelectedConfig].BackColor = Color.LightGray;
-                }
-
                 UpdateLabelVisibility();
                 UpdateButtonsEnabled();
             });
@@ -361,7 +356,7 @@ namespace SkylineBatch
             }
             catch (Exception ex)
             {
-                DisplayError("Error Reading Log", ex.Message);
+                DisplayError(ex.Message);
             }
 
             ScrollToLogEnd();
@@ -494,29 +489,29 @@ namespace SkylineBatch
             _configManager.Close();
         }
 
-        public void DisplayError(string title, string message)
+        public void DisplayError(string message)
         {
-            RunUi(() => { AlertDlg.ShowError(this, message, title); });
+            RunUi(() => { AlertDlg.ShowError(this, message); });
         }
 
-        public void DisplayWarning(string title, string message)
+        public void DisplayWarning(string message)
         {
-            RunUi(() => { AlertDlg.ShowWarning(this, message, title); });
+            RunUi(() => { AlertDlg.ShowWarning(this, message); });
         }
 
-        public void DisplayInfo(string title, string message)
+        public void DisplayInfo(string message)
         {
-            RunUi(() => { AlertDlg.ShowInfo(this, message, title); });
+            RunUi(() => { AlertDlg.ShowInfo(this, message); });
         }
 
-        public void DisplayErrorWithException(string title, string message, Exception exception)
+        public void DisplayErrorWithException(string message, Exception exception)
         {
-            RunUi(() => { AlertDlg.ShowErrorWithException(this, message, title, exception); });
+            RunUi(() => { AlertDlg.ShowErrorWithException(this, message, exception); });
         }
 
-        public DialogResult DisplayQuestion(string title, string message)
+        public DialogResult DisplayQuestion(string message)
         {
-            return AlertDlg.ShowQuestion(this, message, title);
+            return AlertDlg.ShowQuestion(this, message);
         }
 
 
@@ -542,10 +537,10 @@ namespace SkylineBatch
         void LogLinesToUi(List<string> lines);
         void LogErrorLinesToUi(List<string> lines);
 
-        void DisplayError(string title, string message);
-        void DisplayWarning(string title, string message);
-        void DisplayInfo(string title, string message);
-        void DisplayErrorWithException(string title, string message, Exception exception);
-        DialogResult DisplayQuestion(string title, string message);
+        void DisplayError(string message);
+        void DisplayWarning(string message);
+        void DisplayInfo(string message);
+        void DisplayErrorWithException(string message, Exception exception);
+        DialogResult DisplayQuestion(string message);
     }
 }

@@ -53,6 +53,15 @@ namespace SkylineBatch
 
         private void btnAddRScript_Click(object sender, EventArgs e)
         {
+            if (Settings.Default.RVersions.Count == 0)
+            {
+                _uiControl.DisplayError("Could not find any R Installations in: " + Environment.NewLine + 
+                                                                    Installations.RLocation + Environment.NewLine +
+                                                                    Environment.NewLine +
+                                                                    "Please install R before adding R scripts to this configuration.");
+                return;
+            }
+            
             var openDialog = new OpenFileDialog();
             openDialog.Filter = Resources.ReportsAddForm_R_file_extension;
             openDialog.Title = Resources.ReportsAddForm_Open_R_Script;
@@ -91,7 +100,7 @@ namespace SkylineBatch
             }
             catch (ArgumentException ex)
             {
-                _uiControl.DisplayError("Error", ex.Message);
+                _uiControl.DisplayError(ex.Message);
                 return;
             }
             DialogResult = DialogResult.OK;

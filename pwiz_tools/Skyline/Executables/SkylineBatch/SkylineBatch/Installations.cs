@@ -46,6 +46,8 @@ namespace SkylineBatch
 
         public static bool HasSkylineDaily => !string.IsNullOrEmpty(Settings.Default.SkylineDailyAdminCmdPath) || !string.IsNullOrEmpty(Settings.Default.SkylineDailyRunnerPath);
 
+        public static string RLocation => Settings.Default.RDir ?? "C:\\Program Files\\R";
+
         #region Skyline
 
         public static bool FindSkyline()

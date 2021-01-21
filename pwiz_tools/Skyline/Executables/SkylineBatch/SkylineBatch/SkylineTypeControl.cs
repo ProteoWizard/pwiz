@@ -37,7 +37,7 @@ namespace SkylineBatch
                     return SkylineType.SkylineDaily;
                 if (radioButtonSpecifySkylinePath.Checked)
                     return SkylineType.Custom;
-                throw new Exception("No skyline type selected.");
+                throw new ArgumentException("No valid skyline type selected.");
             }
         }
 

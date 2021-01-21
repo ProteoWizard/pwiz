@@ -90,7 +90,7 @@ namespace SkylineBatch
                 }
                 
                 if (!InitSkylineSettings()) return;
-                if (!InitRSettings()) return;
+                Installations.FindRDirectory();
 
 
                 var form = new MainForm();
@@ -121,23 +121,6 @@ namespace SkylineBatch
             MessageBox.Show(string.Format(Resources.Program_InitSkylineSettings__0__requires_Skyline_to_run_, AppName()), string.Format(Resources.Program_InitSkylineSettings__0__Error, AppName()), MessageBoxButtons.OK, MessageBoxIcon.Error);
             return false;
 
-        }
-
-        private static bool InitRSettings()
-        {
-            if (Installations.FindRDirectory())
-            {
-                return true;
-            }
-
-            var message = new StringBuilder();
-            message.AppendLine(
-                    Resources.Program_SkylineBatch_requires_at_least_one_installation_of_R)
-                .AppendLine(
-                    Resources.Program_Please_install_R_to_use_SkylineBatch);
-            MessageBox.Show(message.ToString(), Resources.Program_Unable_To_Find_R,
-                MessageBoxButtons.OK, MessageBoxIcon.Error);
-            return false;
         }
 
         public static void LogError(string message)

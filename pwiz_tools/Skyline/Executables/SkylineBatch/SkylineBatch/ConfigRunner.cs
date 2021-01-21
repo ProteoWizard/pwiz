@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.IO;
 using System.Management;
 using System.Threading.Tasks;
 using SkylineBatch.Properties;
@@ -104,7 +105,8 @@ namespace SkylineBatch
 
             var skylineRunner = Config.SkylineSettings.CmdPath;
             var templateFullName = Config.MainSettings.TemplateFilePath;
-            var resolvingPower = Config.FileSettings.ResolvingPower;
+            var msOneResolvingPower = Config.FileSettings.MsOneResolvingPower;
+            var msMsResolvingPower = Config.FileSettings.MsMsResolvingPower;
             var retentionTime = Config.FileSettings.RetentionTime;
             var addDecoys = Config.FileSettings.AddDecoys;
             var shuffleDecoys = Config.FileSettings.ShuffleDecoys;
@@ -112,10 +114,14 @@ namespace SkylineBatch
             var dataDir = Config.MainSettings.DataFolderPath;
             var namingPattern = Config.MainSettings.ReplicateNamingPattern;
 
+            if (!Directory.Exists(Config.MainSettings.AnalysisFolderPath))
+                Directory.CreateDirectory(Config.MainSettings.AnalysisFolderPath);
+
             // STEP 1: open skyline file and save copy to analysis folder
             var firstStep = string.Format("\"{0}\" --in=\"{1}\" ", skylineRunner, templateFullName);
 
-            firstStep += !string.IsNullOrEmpty(resolvingPower) ? string.Format("--full-scan-product-res={0} ", resolvingPower) : "";
+            firstStep += !string.IsNullOrEmpty(msOneResolvingPower) ? string.Format("--full-scan-product-res={0} ", msOneResolvingPower) : "";
+            firstStep += !string.IsNullOrEmpty(msMsResolvingPower) ? string.Format("--full-scan-precursor-res={0} ", msMsResolvingPower) : "";
             firstStep += !string.IsNullOrEmpty(retentionTime) ? string.Format("--full-scan-rt-filter-tolerance={0} ", retentionTime) : "";
             firstStep += addDecoys ? string.Format("--decoys-add={0} ", shuffleDecoys ? "shuffle" : "reverse") : "";
 

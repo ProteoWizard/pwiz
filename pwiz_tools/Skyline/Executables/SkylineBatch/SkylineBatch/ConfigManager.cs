@@ -126,6 +126,8 @@ namespace SkylineBatch
                     {
                         lvi.ForeColor = Color.Red;
                     }
+                    if (HasSelectedConfig() && _configList[SelectedConfig].Name.Equals(lvi.Text))
+                        lvi.BackColor = Color.LightGray;
                     listViewConfigs.Add(lvi);
                 }
                 return listViewConfigs;
@@ -258,13 +260,13 @@ namespace SkylineBatch
 
                 if (configRunner.IsBusy())
                 {
-                    DisplayWarning(Resources.ConfigManager_Cannot_Delete, string.Format(
-                        @"Configuration ""{0}"" is running. Please stop the configuration and try again. ",
+                    DisplayWarning(string.Format(
+                        @"Configuration ""{0}"" is still running. Please stop the configuration and try again. ",
                         configRunner.GetConfigName()));
                     return;
                 }
 
-                var doDelete = DisplayQuestion(Resources.ConfigManager_Confirm_Delete, 
+                var doDelete = DisplayQuestion( 
                     string.Format(@"Are you sure you want to delete configuration ""{0}""?",
                         configRunner.GetConfigName()));
 
@@ -317,20 +319,36 @@ namespace SkylineBatch
         {
             foreach (var config in _configList)
             {
+                var invalidConfigNames = new List<string>();
                 try
                 {
                     config.Validate();
                 }
                 catch (ArgumentException)
                 {
-                    DisplayError(Resources.ConfigManager_Run_error_title, Resources.ConfigManager_Cannot_run_invalid_configurations);
+                    invalidConfigNames.Add(config.Name);
+                }
+
+                if (invalidConfigNames.Count > 0)
+                {
+                    if (invalidConfigNames.Count == 1)
+                    {
+                        _uiControl?.DisplayError("Cannot run configurations while {0} is invalid." + Environment.NewLine + "Fix {0} by editing and saving it.");
+                    }
+                    else
+                    {
+                        _uiControl?.DisplayError("Cannot run the following configurations:" + Environment.NewLine + 
+                                                 string.Join(Environment.NewLine, invalidConfigNames) + Environment.NewLine + 
+                                                 "Fix each red configuration by editing and saving it.");
+                    }
                     return;
                 }
+
             }
 
             if (ConfigsRunning())
             {
-                DisplayError(Resources.ConfigManager_Run_error_title, Resources.ConfigManager_Cannot_run_busy_configurations);
+                DisplayError(Resources.ConfigManager_Cannot_run_busy_configurations);
                 return;
             }
             UpdateIsRunning(true);
@@ -499,32 +517,32 @@ namespace SkylineBatch
 
         #region UI Control
 
-        private void DisplayError(string title, string message)
+        private void DisplayError(string message)
         {
             if (!_runningUi)
                 return;
-            _uiControl.DisplayError(title, message);
+            _uiControl.DisplayError(message);
         }
 
-        private void DisplayWarning(string title, string message)
+        private void DisplayWarning(string message)
         {
             if (!_runningUi)
                 return;
-            _uiControl.DisplayWarning(title, message);
+            _uiControl.DisplayWarning(message);
         }
 
-        private void DisplayInfo(string title, string message)
+        private void DisplayInfo(string message)
         {
             if (!_runningUi)
                 return;
-            _uiControl.DisplayInfo(title, message);
+            _uiControl.DisplayInfo(message);
         }
 
-        private DialogResult DisplayQuestion(string title, string message)
+        private DialogResult DisplayQuestion(string message)
         {
             if (!_runningUi)
                 return DialogResult.Yes;
-            return _uiControl.DisplayQuestion(title, message);
+            return _uiControl.DisplayQuestion(message);
         }
 
         private void UpdateUiLogs()
@@ -587,16 +605,16 @@ namespace SkylineBatch
                     }
                 }
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                DisplayError(Resources.ConfigManager_Import_configs_error_title, string.Format(Resources.ConfigManager_No_configs_imported, filePath));
+                DisplayError(string.Format("An error occured while importing configurations from {0}:", filePath) + Environment.NewLine +
+                             e.Message);
                 return;
             }
 
             if (readConfigs.Count == 0 && validationErrors.Count == 0)
             {
-                DisplayWarning(Resources.ConfigManager_Import_configs_error_title,
-                    string.Format(Resources.ConfigManager_No_configs_imported, filePath));
+                DisplayWarning(string.Format("No configurations were found in {0}.", filePath));
                 return;
             }
 
@@ -635,7 +653,7 @@ namespace SkylineBatch
                     message.Append(error).Append(Environment.NewLine);
                 }
             }
-            DisplayInfo(Resources.ConfigManager_Import_configurations, message.ToString());
+            Program.LogInfo(message.ToString());
         }
 
 

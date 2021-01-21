@@ -200,8 +200,10 @@ namespace SkylineBatch
         {
             if (_action == ConfigAction.Add) return;
 
-            if (config.FileSettings.ResolvingPower != null)
-                textResolvingPower.Text = config.FileSettings.ResolvingPower;
+            if (config.FileSettings.MsOneResolvingPower != null)
+                textMsOneResolvingPower.Text = config.FileSettings.MsOneResolvingPower;
+            if (config.FileSettings.MsMsResolvingPower != null)
+                textMsMsResolvingPower.Text = config.FileSettings.MsMsResolvingPower;
             if (config.FileSettings.RetentionTime != null)
                 textRetentionTime.Text = config.FileSettings.RetentionTime;
             checkBoxDecoys.Checked = config.FileSettings.AddDecoys;
@@ -216,7 +218,7 @@ namespace SkylineBatch
 
         private FileSettings GetFileSettingsFromUi()
         {
-            return new FileSettings(textResolvingPower.Text, textRetentionTime.Text, checkBoxDecoys.Checked, radioShuffleDecoys.Enabled && radioShuffleDecoys.Checked);
+            return new FileSettings(textMsOneResolvingPower.Text, textMsMsResolvingPower.Text, textRetentionTime.Text, checkBoxDecoys.Checked, radioShuffleDecoys.Enabled && radioShuffleDecoys.Checked);
         }
 
         
@@ -360,7 +362,7 @@ namespace SkylineBatch
 
         private void ShowErrorDialog(string message)
         {
-            _mainControl.DisplayError("Configuration Validation Error", message);
+            _mainControl.DisplayError(message);
         }
 
 

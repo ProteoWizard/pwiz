@@ -86,8 +86,12 @@
   </PropertyGroup>
   <ItemGroup>
     <Content Include="SkylineBatch_release.ico" />
-    <Content Include="SkylineDailyRunner.exe" />
-    <Content Include="SkylineRunner.exe" />
+    <Content Include="SkylineDailyRunner.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="SkylineRunner.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <EmbeddedResource Include="AlertDlg.resx">
       <DependentUpon>AlertDlg.cs</DependentUpon>
       <SubType>Designer</SubType>

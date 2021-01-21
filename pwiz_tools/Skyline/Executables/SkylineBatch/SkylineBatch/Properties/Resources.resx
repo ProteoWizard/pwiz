@@ -130,14 +130,8 @@
   <data name="downarrow" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\downarrow.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="ConfigManager_Run_error_title" xml:space="preserve">
-    <value>Run Error</value>
-  </data>
   <data name="MainSettings_Template_file_does_not_exist" xml:space="preserve">
     <value>Skyline file {0} does not exist.</value>
-  </data>
-  <data name="ConfigManager_Import_configs_error_title" xml:space="preserve">
-    <value>Import Configurations Error</value>
   </data>
   <data name="ConfigManager_Cannot_run_busy_configurations" xml:space="preserve">
     <value>Cannot run configurations while they are still running.</value>
@@ -156,9 +150,6 @@
   </data>
   <data name="MainSettings_Specify_path_to" xml:space="preserve">
     <value>Please specify path to: {0}.</value>
-  </data>
-  <data name="ConfigManager_No_configs_imported" xml:space="preserve">
-    <value>Could not import configurations from file {0}</value>
   </data>
   <data name="ConfigRunner_Process_terminated" xml:space="preserve">
     <value>Process terminated: exiting.</value>
@@ -192,9 +183,6 @@
   </data>
   <data name="ConfigManager_Confirm_Delete" xml:space="preserve">
     <value>Confirm Delete</value>
-  </data>
-  <data name="ConfigManager_Import_configurations" xml:space="preserve">
-    <value>Import Configurations</value>
   </data>
   <data name="ReportsAddForm_Open_Report" xml:space="preserve">
     <value>Open Report</value>
@@ -253,8 +241,8 @@
   <data name="FindSkylineForm_btnOk_Click_Cannot_Update__0__Settings" xml:space="preserve">
     <value>Cannot Update {0} Settings</value>
   </data>
-  <data name="MainSettings_Analysis_folder_directory__0__does_not_exist" xml:space="preserve">
-    <value>Analysis folder directory {0} does not exist.</value>
+  <data name="MainSettings_Analysis_folder__0__does_not_exist" xml:space="preserve">
+    <value>Analysis folder {0} does not exist.</value>
   </data>
   <data name="Program_InitSkylineSettings__0__requires_Skyline_to_run_" xml:space="preserve">
     <value>{0} requires Skyline to run.</value>
@@ -270,9 +258,6 @@
   </data>
   <data name="Program_InitSkylineSettings__0__Error" xml:space="preserve">
     <value>{0} Error</value>
-  </data>
-  <data name="ConfigManager_Cannot_run_invalid_configurations" xml:space="preserve">
-    <value>Cannot run invalid configurations.</value>
   </data>
   <data name="FindSkyline_btnOkClick_Not_a_valid_Skyline_installation___" xml:space="preserve">
     <value>Not a valid Skyline installation.</value>

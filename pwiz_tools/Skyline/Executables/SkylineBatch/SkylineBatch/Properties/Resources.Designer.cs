@@ -172,15 +172,6 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cannot run invalid configurations..
-        /// </summary>
-        internal static string ConfigManager_Cannot_run_invalid_configurations {
-            get {
-                return ResourceManager.GetString("ConfigManager_Cannot_run_invalid_configurations", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to \&quot;{0}\&quot; Error: {1}.
         /// </summary>
         internal static string ConfigManager_Configuration_error_message {
@@ -204,33 +195,6 @@ namespace SkylineBatch.Properties {
         internal static string ConfigManager_Could_not_save_configurations {
             get {
                 return ResourceManager.GetString("ConfigManager_Could_not_save_configurations", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Import Configurations Error.
-        /// </summary>
-        internal static string ConfigManager_Import_configs_error_title {
-            get {
-                return ResourceManager.GetString("ConfigManager_Import_configs_error_title", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Import Configurations.
-        /// </summary>
-        internal static string ConfigManager_Import_configurations {
-            get {
-                return ResourceManager.GetString("ConfigManager_Import_configurations", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Could not import configurations from file {0}.
-        /// </summary>
-        internal static string ConfigManager_No_configs_imported {
-            get {
-                return ResourceManager.GetString("ConfigManager_No_configs_imported", resourceCulture);
             }
         }
         
@@ -276,15 +240,6 @@ namespace SkylineBatch.Properties {
         internal static string ConfigManager_Operation_fail_config_nonexistant {
             get {
                 return ResourceManager.GetString("ConfigManager_Operation_fail_config_nonexistant", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Run Error.
-        /// </summary>
-        internal static string ConfigManager_Run_error_title {
-            get {
-                return ResourceManager.GetString("ConfigManager_Run_error_title", resourceCulture);
             }
         }
         
@@ -462,11 +417,11 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Analysis folder directory {0} does not exist..
+        ///   Looks up a localized string similar to Analysis folder {0} does not exist..
         /// </summary>
-        internal static string MainSettings_Analysis_folder_directory__0__does_not_exist {
+        internal static string MainSettings_Analysis_folder__0__does_not_exist {
             get {
-                return ResourceManager.GetString("MainSettings_Analysis_folder_directory__0__does_not_exist", resourceCulture);
+                return ResourceManager.GetString("MainSettings_Analysis_folder__0__does_not_exist", resourceCulture);
             }
         }
         

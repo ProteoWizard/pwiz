@@ -8,6 +8,7 @@ namespace SkylineBatch
     public partial class FilePathControl : UserControl, IValidatorControl
     {
         private string _path;
+        private string _lastUsedPath;
         private readonly bool _folder;
         private readonly string _type;
 
@@ -15,12 +16,12 @@ namespace SkylineBatch
 
         //public delegate void Validator(string variable);
 
-        public FilePathControl(string variableName, string invalidPath, bool folder, Validator pathValidator)
+        public FilePathControl(string variableName, string invalidPath, string lastInputPath, bool folder, Validator pathValidator)
         {
             _path = invalidPath;
             InitializeComponent();
 
-
+            _lastUsedPath = lastInputPath ?? invalidPath;
             _pathValidator = pathValidator;
             _folder = folder;
             if (!folder && invalidPath.Contains("."))
@@ -50,7 +51,7 @@ namespace SkylineBatch
 
         private void btnBrowse_Click(object sender, EventArgs e)
         {
-            var initialDirectory = textFilePath.Text;
+            var initialDirectory = _lastUsedPath;
             while (!Directory.Exists(initialDirectory) || initialDirectory == "")
                 initialDirectory = Path.GetDirectoryName(initialDirectory);
             
@@ -59,7 +60,6 @@ namespace SkylineBatch
                 using (FolderBrowserDialog dlg = new FolderBrowserDialog
                 {
                     Description = Resources.FilePathControl_Select_Folder,
-                    ShowNewFolderButton = false,
                     SelectedPath = initialDirectory
                 })
                 {
@@ -67,6 +67,7 @@ namespace SkylineBatch
                         return;
 
                     textFilePath.Text = dlg.SelectedPath;
+                    _lastUsedPath = dlg.SelectedPath;
                 }
                 return;
             }
