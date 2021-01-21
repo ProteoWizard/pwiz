@@ -805,7 +805,7 @@ namespace pwiz.SkylineTestFunctional
                 dlg.ReimportResults();
                 dlg.OkDialog();
             });
-            WaitForDocumentLoaded();
+            doc = WaitForDocumentLoaded();
             var progress = new SilentProgressMonitor();
             var exported = testFilesDir.GetTestPath("export.blib");
             new SpectralLibraryExporter(SkylineWindow.Document, SkylineWindow.DocumentFilePath)
@@ -813,6 +813,29 @@ namespace pwiz.SkylineTestFunctional
             var refSpectra = GetRefSpectra(exported);
             AssertEx.IsTrue(refSpectra.All(r => (r.IonMobility??0) > 0));
 
+            // Now simulate user tinkering with IMS library values - make sure they persist
+            transitionSettingsDlg = ShowDialog<TransitionSettingsUI>(() => SkylineWindow.ShowTransitionSettingsUI(TransitionSettingsUI.TABS.IonMobility));
+            ionMobilityLibraryDlg = ShowDialog<EditIonMobilityLibraryDlg>(transitionSettingsDlg.IonMobilityControl.EditIonMobilityLibrary);
+            RunUI(() =>
+            {
+                var values = ionMobilityLibraryDlg.LibraryMobilitiesFlat;
+                values[0].IonMobility = expectedDT2+1;
+                ionMobilityLibraryDlg.LibraryMobilitiesFlat = values;
+            });
+            RunUI(() =>
+            {
+                ionMobilityLibraryDlg.OkDialog();
+            });
+            WaitForClosedForm(ionMobilityLibraryDlg);
+            RunUI(() =>
+            {
+                transitionSettingsDlg.OkDialog();
+            });
+            WaitForClosedForm(transitionSettingsDlg);
+            doc = WaitForDocumentChange(doc);
+            result = doc.Settings.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary;
+            AssertEx.AreEqual(expectedDT2+1, result.GetIonMobilityInfo(key2).First().IonMobility.Mobility.Value, .001);
+            AssertEx.AreEqual(expectedOffset2, result.GetIonMobilityInfo(key2).First().HighEnergyIonMobilityValueOffset.Value, .001);  // High energy offset
 
             // Deleting the msdata file prevents us from reading the raw IM data, expect an exception
             File.Delete(testFilesDir.GetTestPath(@"..\BlibDriftTimeTest\ID12692_01_UCA168_3727_040714" + ExtensionTestContext.ExtMz5)); // So we can't read raw IMS data
