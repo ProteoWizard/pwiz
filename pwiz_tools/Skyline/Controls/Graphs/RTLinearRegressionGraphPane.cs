@@ -731,7 +731,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 foreach (var nodePeptide in document.Molecules)
                 {
                     ProgressMonitor.CheckCanceled(token.Token);
-
+                    index++;
                     switch (RTGraphController.PointsType)
                     {
                         case PointsTypeRT.targets:
