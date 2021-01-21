@@ -750,7 +750,7 @@ namespace pwiz.Skyline.Controls.Databinding
                     }
                 }
             }
-            var graphResults = new ClusterGraphResults(clusteredResults.RowDendrogramData.DendrogramData, rowHeaders, columnGroups, points);
+            var graphResults = new ClusterGraphResults(clusteredResults.RowDendrogramData?.DendrogramData, rowHeaders, columnGroups, points);
             var heatMapGraph = new HierarchicalClusterGraph()
             {
                 SkylineWindow = DataSchemaSkylineWindow,
@@ -836,10 +836,11 @@ namespace pwiz.Skyline.Controls.Databinding
                 rowDendrogram.Bounds = new Rectangle(0, dendrogramTop, splitContainerVertical.Panel1.Width,
                     splitContainerVertical.Panel1.Height - dendrogramTop);
                 var firstDisplayedCell = DataGridView.FirstDisplayedCell;
-                var rowHeight = firstDisplayedCell.Size.Height;
+                var rowHeight = firstDisplayedCell?.Size.Height ?? DataGridView.Rows[0].Height;
+                int firstDisplayedRowIndex = firstDisplayedCell?.RowIndex ?? 0;
                 var firstLocation = 3.5;
                 var rowLocations = ImmutableList.ValueOf(Enumerable.Range(0, reportResults.RowCount).Select(rowIndex =>
-                        (rowIndex - firstDisplayedCell.RowIndex) * rowHeight + firstLocation))
+                        (rowIndex - firstDisplayedRowIndex) * rowHeight + firstLocation))
                     .Select(d => new KeyValuePair<double, double>(d, d + rowHeight));
                 IEnumerable<IEnumerable<Color>> rowColors = null;
                 if (colorScheme != null)

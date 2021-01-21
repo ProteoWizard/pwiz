@@ -90,6 +90,10 @@ namespace pwiz.Common.Controls.Clustering
         public override SizeF GetScaleMaxSpace(Graphics g, GraphPane pane, float scaleFactor,
             bool applyAngle)
         {
+            if (_formats == null)
+            {
+                return new SizeF(0, 0);
+            }
             return new SizeF(Width, 100);
         }
 
@@ -102,7 +106,7 @@ namespace pwiz.Common.Controls.Clustering
         /// <param name="formats"></param>
         public void Update(List<DendrogramFormat> formats)
         {
-            this._formats = formats;
+            _formats = formats;
         }
 
         private PointF CoordinatesToPoint(double location, double yFraction, GraphPane pane, float xAxisHeight, float yAxisWidth)
