@@ -1479,7 +1479,7 @@ namespace pwiz.Skyline.Model.Serialization
             TransitionDocNode node;
             if (mods != null && mods.HasCrosslinks)
             {
-                ComplexFragmentIon complexFragmentIon = new ComplexFragmentIon(transition, info.Losses, mods.Crosslinks, info.OrphanedCrosslinkIon);
+                LegacyComplexFragmentIon complexFragmentIon = new LegacyComplexFragmentIon(transition, info.Losses, mods.Crosslinks, info.OrphanedCrosslinkIon);
                 foreach (var linkedIon in info.LinkedFragmentIons)
                 {
                     var linkedPeptide = mods.GetLinkedPeptide(linkedIon.Key);

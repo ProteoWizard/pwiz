@@ -20,7 +20,6 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using System.Text;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.SeqNode;
@@ -70,7 +69,7 @@ namespace pwiz.Skyline.Model
             {
                 mods = ExplicitMods.EMPTY; // Small molecules take label info from adducts, but a null value is problematic
             }
-            ExplicitMods = mods;
+            PeptideStructure = PeptideStructure.SinglePeptide(id, mods);
             SourceKey = sourceKey;
             GlobalStandardType = standardType;
             Rank = rank;
@@ -182,30 +181,16 @@ namespace pwiz.Skyline.Model
             return EMPTY_LOGGABLE;
         }
 
-        public ExplicitMods ExplicitMods { get; private set; }
+        public PeptideStructure PeptideStructure { get; private set; }
+
+        public ExplicitMods ExplicitMods
+        {
+            get { return PeptideStructure.Peptides[0].ExplicitMods; }
+        }
 
         public string GetCrosslinkedSequence()
         {
-            if (ExplicitMods == null || !ExplicitMods.HasCrosslinks)
-            {
-                return Peptide.Sequence;
-            }
-
-            var stack = new List<LinkedPeptide>(ExplicitMods.Crosslinks.Values.Reverse());
-            StringBuilder stringBuilder = new StringBuilder(Peptide.Sequence);
-            while (stack.Count > 0)
-            {
-                var linkedPeptide = stack[stack.Count - 1];
-                stack.RemoveAt(stack.Count - 1);
-                stringBuilder.Append(@"-");
-                stringBuilder.Append(linkedPeptide.PeptideSequence);
-                if (linkedPeptide.ExplicitMods != null)
-                {
-                    stack.AddRange(linkedPeptide.ExplicitMods.Crosslinks.Values.Reverse());
-                }
-            }
-
-            return stringBuilder.ToString();
+            return string.Join(@"-", PeptideStructure.Peptides.Select(pep => pep.Peptide.Sequence));
         }
         public ModifiedSequenceMods SourceKey { get; private set; }
 
@@ -606,7 +591,10 @@ namespace pwiz.Skyline.Model
 
         public PeptideDocNode ChangeExplicitMods(ExplicitMods prop)
         {
-            return ChangeProp(ImClone(this), im => im.ExplicitMods = prop);
+            return ChangeProp(ImClone(this), im => im.PeptideStructure = new PeptideStructure(
+                im.PeptideStructure.Peptides.ReplaceAt(0,
+                    new ModifiedPeptide(im.PeptideStructure.Peptides[0].Peptide, prop)),
+                im.PeptideStructure.Crosslinks));
         }
 
         public PeptideDocNode ChangeSourceKey(ModifiedSequenceMods prop)

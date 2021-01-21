@@ -346,11 +346,6 @@ namespace pwiz.Skyline.Model
             return new ModifiedSequence(_unmodifiedSequence, newModifications, _defaultMassType);
         }
 
-        public ModifiedSequence SeverCrosslinks()
-        {
-            return new ModifiedSequence(_unmodifiedSequence, _explicitMods.Select(mod=>mod.ChangeLinkedPeptideSequence(null)), _defaultMassType);
-        }
-
         public static string FormatThreeLetterCode(Modification modification)
         {
             if (string.IsNullOrEmpty(modification.ShortName))

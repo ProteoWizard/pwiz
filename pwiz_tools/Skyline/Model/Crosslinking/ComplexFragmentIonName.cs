@@ -27,7 +27,7 @@ using pwiz.Skyline.Model.Serialization;
 namespace pwiz.Skyline.Model.Crosslinking
 {
     /// <summary>
-    /// Represents the parts of a <see cref="ComplexFragmentIon"/> separated from the actual Transition and TransitionGroup objects.
+    /// Represents the parts of a <see cref="LegacyComplexFragmentIon"/> separated from the actual Transition and TransitionGroup objects.
     /// </summary>
     public class ComplexFragmentIonName : Immutable
     {

@@ -78,26 +78,26 @@ namespace pwiz.Skyline.Model.Crosslinking
             return transitionGroupDocNode.GetNeutralFormula(settings, ExplicitMods);
         }
 
-        public IEnumerable<ComplexFragmentIon> ListComplexFragmentIons(SrmSettings settings, int maxFragmentEventCount, bool useFilter)
+        public IEnumerable<LegacyComplexFragmentIon> ListComplexFragmentIons(SrmSettings settings, int maxFragmentEventCount, bool useFilter)
         {
-            IEnumerable<ComplexFragmentIon> result = ListSimpleFragmentIons(settings, useFilter);
+            IEnumerable<LegacyComplexFragmentIon> result = ListSimpleFragmentIons(settings, useFilter);
             result = PermuteComplexFragmentIons(ExplicitMods, settings, maxFragmentEventCount, useFilter, result);
             return result;
         }
 
-        public IEnumerable<ComplexFragmentIon> PermuteFragmentIons(SrmSettings settings, int maxFragmentationCount, bool useFilter,
-            ModificationSite modificationSite, IEnumerable<ComplexFragmentIon> startingFragmentIons)
+        public IEnumerable<LegacyComplexFragmentIon> PermuteFragmentIons(SrmSettings settings, int maxFragmentationCount, bool useFilter,
+            ModificationSite modificationSite, IEnumerable<LegacyComplexFragmentIon> startingFragmentIons)
         {
             var linkedFragmentIonList = ImmutableList.ValueOf(ListComplexFragmentIons(settings, maxFragmentationCount, useFilter));
             return startingFragmentIons.SelectMany(cfi =>
                 PermuteFragmentIon(settings, maxFragmentationCount, cfi, modificationSite, linkedFragmentIonList));
 
         }
-        private IEnumerable<ComplexFragmentIon> PermuteFragmentIon(SrmSettings settings, 
+        private IEnumerable<LegacyComplexFragmentIon> PermuteFragmentIon(SrmSettings settings, 
             int maxFragmentationCount,
-            ComplexFragmentIon fragmentIon,
+            LegacyComplexFragmentIon fragmentIon,
             ModificationSite modificationSite,
-            IList<ComplexFragmentIon> linkedFragmentIons)
+            IList<LegacyComplexFragmentIon> linkedFragmentIons)
         {
             if (fragmentIon.IsOrphan && !fragmentIon.IsEmptyOrphan
                 || !fragmentIon.IncludesAaIndex(modificationSite.IndexAa))
@@ -132,11 +132,11 @@ namespace pwiz.Skyline.Model.Crosslinking
             }
         }
 
-        public IEnumerable<ComplexFragmentIon> ListSimpleFragmentIons(SrmSettings settings, bool useFilter)
+        public IEnumerable<LegacyComplexFragmentIon> ListSimpleFragmentIons(SrmSettings settings, bool useFilter)
         {
             var transitionGroupDocNode =
                 GetTransitionGroupDocNode(settings, IsotopeLabelType.light, Adduct.SINGLY_PROTONATED);
-            yield return ComplexFragmentIon.NewOrphanFragmentIon(transitionGroupDocNode.TransitionGroup, ExplicitMods, Adduct.SINGLY_PROTONATED);
+            yield return LegacyComplexFragmentIon.NewOrphanFragmentIon(transitionGroupDocNode.TransitionGroup, ExplicitMods, Adduct.SINGLY_PROTONATED);
             foreach (var transitionDocNode in transitionGroupDocNode.TransitionGroup.GetTransitions(settings,
                 transitionGroupDocNode, ExplicitMods, transitionGroupDocNode.PrecursorMz,
                 transitionGroupDocNode.IsotopeDist, null, null, useFilter, false))
@@ -145,7 +145,7 @@ namespace pwiz.Skyline.Model.Crosslinking
                 {
                     continue;
                 }
-                yield return new ComplexFragmentIon(transitionDocNode.Transition, transitionDocNode.Losses, CrosslinkStructure);
+                yield return new LegacyComplexFragmentIon(transitionDocNode.Transition, transitionDocNode.Losses, CrosslinkStructure);
             }
         }
 
@@ -174,9 +174,9 @@ namespace pwiz.Skyline.Model.Crosslinking
             }
         }
 
-        public static IEnumerable<ComplexFragmentIon> PermuteComplexFragmentIons(
+        public static IEnumerable<LegacyComplexFragmentIon> PermuteComplexFragmentIons(
             [CanBeNull] ExplicitMods mods, 
-            SrmSettings settings, int maxFragmentationCount, bool useFilter, IEnumerable<ComplexFragmentIon> startingFragmentIons)
+            SrmSettings settings, int maxFragmentationCount, bool useFilter, IEnumerable<LegacyComplexFragmentIon> startingFragmentIons)
         {
             var result = FilterImpossibleCleavages(mods, startingFragmentIons);
             if (mods != null)
@@ -194,8 +194,8 @@ namespace pwiz.Skyline.Model.Crosslinking
         /// <summary>
         /// Remove ions where fragmentation is occurring between two ends of a looplink.
         /// </summary>
-        public static IEnumerable<ComplexFragmentIon> FilterImpossibleCleavages(ExplicitMods mods,
-            IEnumerable<ComplexFragmentIon> startingFragmentIons)
+        public static IEnumerable<LegacyComplexFragmentIon> FilterImpossibleCleavages(ExplicitMods mods,
+            IEnumerable<LegacyComplexFragmentIon> startingFragmentIons)
         {
             if (mods == null)
             {
@@ -233,7 +233,7 @@ namespace pwiz.Skyline.Model.Crosslinking
             });
         }
 
-        public ComplexFragmentIon MakeComplexFragmentIon(SrmSettings settings, IsotopeLabelType labelType, ComplexFragmentIonName complexFragmentIonName)
+        public LegacyComplexFragmentIon MakeComplexFragmentIon(SrmSettings settings, IsotopeLabelType labelType, ComplexFragmentIonName complexFragmentIonName)
         {
             var transitionGroup = GetTransitionGroup(labelType, Adduct.SINGLY_PROTONATED);
             Transition transition;
@@ -248,7 +248,7 @@ namespace pwiz.Skyline.Model.Crosslinking
                     0, Adduct.SINGLY_PROTONATED);
             }
 
-            var result = new ComplexFragmentIon(transition, null, CrosslinkStructure, complexFragmentIonName.IsOrphan);
+            var result = new LegacyComplexFragmentIon(transition, null, CrosslinkStructure, complexFragmentIonName.IsOrphan);
             if (ExplicitMods != null)
             {
                 foreach (var child in complexFragmentIonName.Children)

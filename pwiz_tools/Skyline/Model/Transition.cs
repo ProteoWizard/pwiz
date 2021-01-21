@@ -751,6 +751,26 @@ namespace pwiz.Skyline.Model
             }
         }
 
+        public bool IncludesAaIndex(int aaIndex)
+        {
+            switch (IonType)
+            {
+                case IonType.precursor:
+                    return true;
+                case IonType.a:
+                case IonType.b:
+                case IonType.c:
+                    return CleavageOffset >= aaIndex;
+                case IonType.x:
+                case IonType.y:
+                case IonType.z:
+                    return CleavageOffset < aaIndex;
+                default:
+                    return true;
+            }
+        }
+
+
         #region object overrides
 
         public bool Equals(Transition obj)

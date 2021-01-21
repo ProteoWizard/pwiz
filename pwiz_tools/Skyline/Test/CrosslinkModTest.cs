@@ -95,8 +95,8 @@ namespace pwiz.SkylineTest
                 new[] {new ExplicitMod(0, staticMod).ChangeLinkedPeptide(linkedPeptide)},
                 new TypedExplicitModifications[0]);
             Assert.AreEqual("C5H14N2O6", mainTransitionGroupDocNode.GetNeutralFormula(srmSettings, modsWithLinkedPeptide).Molecule.ToString());
-            var mainComplexFragmentIon = new ComplexFragmentIon(new Transition(mainTransitionGroup, IonType.precursor, mainPeptide.Length - 1, 0, Adduct.SINGLY_PROTONATED), null, modsWithLinkedPeptide.Crosslinks);
-            var linkedComplexFragmentIon = new ComplexFragmentIon(
+            var mainComplexFragmentIon = new LegacyComplexFragmentIon(new Transition(mainTransitionGroup, IonType.precursor, mainPeptide.Length - 1, 0, Adduct.SINGLY_PROTONATED), null, modsWithLinkedPeptide.Crosslinks);
+            var linkedComplexFragmentIon = new LegacyComplexFragmentIon(
                 new Transition(linkedPeptide.GetTransitionGroup(IsotopeLabelType.light, Adduct.SINGLY_PROTONATED),
                     IonType.precursor, linkedPeptide.Peptide.Length - 1, 0, Adduct.SINGLY_PROTONATED), null, LinkedPeptide.EMPTY_CROSSLINK_STRUCTURE);
             var complexFragmentIon =
@@ -241,14 +241,14 @@ namespace pwiz.SkylineTest
             var peptide = new Peptide("AD");
             var transitionGroup = new TransitionGroup(peptide, Adduct.SINGLY_PROTONATED, IsotopeLabelType.light);
             var precursor =
-                new ComplexFragmentIon(new Transition(transitionGroup, IonType.precursor, peptide.Length - 1, 0, Adduct.SINGLY_PROTONATED), null, LinkedPeptide.EMPTY_CROSSLINK_STRUCTURE);
+                new LegacyComplexFragmentIon(new Transition(transitionGroup, IonType.precursor, peptide.Length - 1, 0, Adduct.SINGLY_PROTONATED), null, LinkedPeptide.EMPTY_CROSSLINK_STRUCTURE);
             Assert.IsTrue(precursor.IncludesAaIndex(0));
             Assert.IsTrue(precursor.IncludesAaIndex(1));
-            var y1 = new ComplexFragmentIon(new Transition(transitionGroup, IonType.y, Transition.OrdinalToOffset(IonType.y, 1, peptide.Length), 0, Adduct.SINGLY_PROTONATED), null, LinkedPeptide.EMPTY_CROSSLINK_STRUCTURE);
+            var y1 = new LegacyComplexFragmentIon(new Transition(transitionGroup, IonType.y, Transition.OrdinalToOffset(IonType.y, 1, peptide.Length), 0, Adduct.SINGLY_PROTONATED), null, LinkedPeptide.EMPTY_CROSSLINK_STRUCTURE);
             Assert.AreEqual(1, y1.Transition.Ordinal);
             Assert.IsFalse(y1.IncludesAaIndex(0));
             Assert.IsTrue(y1.IncludesAaIndex(1));
-            var b1 = new ComplexFragmentIon(new Transition(transitionGroup, IonType.b, Transition.OrdinalToOffset(IonType.b, 1, peptide.Length), 0, Adduct.SINGLY_PROTONATED), null, LinkedPeptide.EMPTY_CROSSLINK_STRUCTURE);
+            var b1 = new LegacyComplexFragmentIon(new Transition(transitionGroup, IonType.b, Transition.OrdinalToOffset(IonType.b, 1, peptide.Length), 0, Adduct.SINGLY_PROTONATED), null, LinkedPeptide.EMPTY_CROSSLINK_STRUCTURE);
             Assert.AreEqual(1, b1.Transition.Ordinal);
             Assert.IsTrue(b1.IncludesAaIndex(0));
             Assert.IsFalse(b1.IncludesAaIndex(1));
@@ -276,11 +276,11 @@ namespace pwiz.SkylineTest
             {
                 int offset = Transition.OrdinalToOffset(tuple.Item1, tuple.Item2, peptide.Sequence.Length);
                 var transition = new Transition(transitionGroup, tuple.Item1, offset, 0, Adduct.FromChargeProtonated(tuple.Item3));
-                var complexFragmentIon = new ComplexFragmentIon(transition, null, explicitMods.Crosslinks);
+                var complexFragmentIon = new LegacyComplexFragmentIon(transition, null, explicitMods.Crosslinks);
                 if (complexFragmentIon.IncludesAaIndex(explicitMod.IndexAA))
                 {
                     complexFragmentIon = complexFragmentIon.AddChild(explicitMod.ModificationSite,
-                        new ComplexFragmentIon(linkedTransition, null, LinkedPeptide.EMPTY_CROSSLINK_STRUCTURE));
+                        new LegacyComplexFragmentIon(linkedTransition, null, LinkedPeptide.EMPTY_CROSSLINK_STRUCTURE));
                 }
                 var complexTransitionDocNode = complexFragmentIon.MakeTransitionDocNode(srmSettings, explicitMods, null);
                 Assert.AreEqual(tuple.Item4, complexTransitionDocNode.Mz, .0001, "{0}{1}{2}", tuple.Item1, tuple.Item2,

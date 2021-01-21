@@ -1102,16 +1102,13 @@ namespace pwiz.Skyline.Model
             return nodeResult;
         }
 
-        public IEnumerable<TransitionDocNode> GetTransitions(SrmSettings settings, ExplicitMods mods, double precursorMz,
+        public IEnumerable<TransitionDocNode> GetTransitions(SrmSettings settings, PeptideStructure peptideStructure, double precursorMz,
             IsotopeDistInfo isotopeDist, SpectrumHeaderInfo libInfo, Dictionary<double, LibraryRankedSpectrumInfo.RankedMI> transitionRanks, bool useFilter)
         {
-            SrmSettings simpleFilterSettings = settings;
-            bool hasCrosslinks = mods != null && mods.HasCrosslinks;
-            var simpleTransitions = TransitionGroup.GetTransitions(simpleFilterSettings, this, mods, precursorMz, isotopeDist, libInfo, transitionRanks,
-                useFilter, !hasCrosslinks);
-            if (!hasCrosslinks)
+            if (!peptideStructure.HasCrosslinks)
             {
-                return simpleTransitions;
+                return TransitionGroup.GetTransitions(settings, this, peptideStructure.Peptides[0].ExplicitMods, precursorMz, isotopeDist, libInfo, transitionRanks,
+                    useFilter, true);
             }
             var crosslinkBuilder = new CrosslinkBuilder(settings, TransitionGroup.Peptide, mods, LabelType);
             return crosslinkBuilder.GetComplexTransitions(TransitionGroup, precursorMz, isotopeDist, transitionRanks,

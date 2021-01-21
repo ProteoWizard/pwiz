@@ -1010,7 +1010,7 @@ namespace pwiz.Skyline.Model.Lib
             return (TransitionGroupDocNode) transitionGroupDocNode.ChangeChildren(children);
         }
 
-        public IEnumerable<IonType> GetAllIonTypes(ComplexFragmentIon complexFragmentIon)
+        public IEnumerable<IonType> GetAllIonTypes(LegacyComplexFragmentIon complexFragmentIon)
         {
             return new[] {complexFragmentIon.Transition.IonType}.Concat(
                 complexFragmentIon.Children.Values.SelectMany(child => GetAllIonTypes(child)));
