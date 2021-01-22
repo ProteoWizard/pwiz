@@ -142,7 +142,7 @@
     <value>248, 17</value>
   </metadata>
   <data name="cbUseSpectralLibraryIonMobilities.ToolTip" xml:space="preserve">
-    <value>If checked, then ion mobility values in any loaded spectral libraries will be used in chromatogram extraction.</value>
+    <value>If checked, then ion mobility values in any loaded spectral libraries will be used in chromatogram extraction if the ion mobility library does not provide a value.</value>
   </data>
   <data name="&gt;&gt;cbUseSpectralLibraryIonMobilities.Name" xml:space="preserve">
     <value>cbUseSpectralLibraryIonMobilities</value>
