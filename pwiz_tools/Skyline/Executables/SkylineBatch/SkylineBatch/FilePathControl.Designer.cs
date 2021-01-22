@@ -46,7 +46,6 @@
             // 
             resources.ApplyResources(this.textFilePath, "textFilePath");
             this.textFilePath.Name = "textFilePath";
-            this.textFilePath.TextChanged += new System.EventHandler(this.textFilePath_TextChanged);
             // 
             // label1
             // 

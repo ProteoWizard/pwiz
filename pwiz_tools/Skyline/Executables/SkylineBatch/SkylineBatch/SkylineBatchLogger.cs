@@ -21,8 +21,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using SkylineBatch.Properties;
 
-namespace SkylineBatch
+ namespace SkylineBatch
 {
     public interface ISkylineBatchLogger
     {
@@ -34,7 +35,6 @@ namespace SkylineBatch
         string GetFileName();
         SkylineBatchLogger Archive();
         void DisplayLog();
-
     }
 
     public class SkylineBatchLogger : ISkylineBatchLogger
@@ -50,8 +50,7 @@ namespace SkylineBatch
         private readonly object _lock = new object();
 
         private IMainUiControl _mainUi;
-
-        public const string LogTruncatedMessage = "... Log truncated ... Full log is in {0}";
+        
 
         private Queue<string> _memLogMessages;
         private const int MemLogSize = 100; // Keep the last 100 log messages in memory
@@ -89,8 +88,8 @@ namespace SkylineBatch
                 }
                 catch (Exception e)
                 {
-                    var err = new StringBuilder("Error occurred while trying to backup log file: ").AppendLine(_filePath);
-                    err.AppendLine("Exception stack trace: ");
+                    var err = new StringBuilder(Resources.SkylineBatchLogger_WriteToFile_Error_occurred_while_trying_to_backup_log_file__).AppendLine(_filePath);
+                    err.AppendLine(Resources.SkylineBatchLogger_WriteToFile_Exception_stack_trace__);
                     Program.LogError(err.ToString(), e);
                 }
 
@@ -127,18 +126,18 @@ namespace SkylineBatch
                     var fileNotFound = e.GetType().IsAssignableFrom(typeof(FileNotFoundException));
                     if (!fileNotFound)
                     {
-                        WriteToBuffer($"ERROR writing to the log file: {e.Message}. Check program log for details: {Program.GetProgramLogFilePath()}");
+                        WriteToBuffer(string.Format(Resources.SkylineBatchLogger_WriteToFile_ERROR_writing_to_the_log_file___0___Check_program_log_for_details___1_, e.Message, Program.GetProgramLogFilePath()));
                     }
 
-                    Program.LogError($"Error occurred writing to log file: {_filePath}. Attempted to write:");
+                    Program.LogError(string.Format(Resources.SkylineBatchLogger_WriteToFile_Error_occurred_writing_to_log_file___0___Attempted_to_write_, _filePath));
                     Program.LogError(message);
                     if (!fileNotFound)
                     {
-                        Program.LogError("Exception stack trace:", e);
+                        Program.LogError(Resources.SkylineBatchLogger_WriteToFile_Exception_stack_trace_, e);
                     }
                     else
                     {
-                        Program.LogError($"Error message was {e.Message}.");
+                        Program.LogError(string.Format(Resources.SkylineBatchLogger_WriteToFile_Error_message_was__0__, e.Message));
                     }
                 }
             }
@@ -154,7 +153,7 @@ namespace SkylineBatch
 
             if (_logBuffer.Length > LogBufferSize)
             {
-                _logBuffer.AppendLine("!!! LOG BUFFER IS FULL !!!");
+                _logBuffer.AppendLine(Resources.SkylineBatchLogger_WriteToBuffer_____LOG_BUFFER_IS_FULL____);
             }
         }
 
@@ -202,7 +201,7 @@ namespace SkylineBatch
 
         private void LogErrorToFile(string message)
         {
-            message = "ERROR: " + message;
+            message = string.Format(Resources.SkylineBatchLogger_LogErrorToFile_ERROR___0_, message);
             WriteToFile(message);
         }
 
@@ -237,7 +236,7 @@ namespace SkylineBatch
                 line = string.Format(line, args);
             }
 
-            var exStr = ex != null ? ex.ToString() : "";
+            var exStr = ex != null ? ex.ToString() : string.Empty;
             if (_mainUi != null)
             {
                 line = GetDate() + line;
@@ -317,10 +316,10 @@ namespace SkylineBatch
                 if (!File.Exists(_filePath))
                 {
                     // If the log file is not accessible, display the contents of the in memory buffer and anything saved in the log buffer
-                    _mainUi.LogErrorToUi($"Could not read the log file: {_filePath}. File does not exist", false, false);
+                    _mainUi.LogErrorToUi(string.Format(Resources.SkylineBatchLogger_DisplayLog_Could_not_read_the_log_file___0___File_does_not_exist_, _filePath), false, false);
                     if (_memLogMessages != null && _memLogMessages.Count > 0)
                     {
-                        _mainUi.LogErrorToUi($"Displaying last {_memLogMessages.Count} saved log messages", false, false);
+                        _mainUi.LogErrorToUi(string.Format(Resources.SkylineBatchLogger_DisplayLog_Displaying_last__0__saved_log_messages_, _memLogMessages.Count), false, false);
                         string[] arr = _memLogMessages.ToArray();
                         foreach (var s in arr)
                         {
@@ -330,7 +329,7 @@ namespace SkylineBatch
 
                     if (_logBuffer != null && _logBuffer.Length > 0)
                     {
-                        _mainUi.LogErrorToUi($"Displaying messages since log file became unavailable", false, false);
+                        _mainUi.LogErrorToUi(Resources.SkylineBatchLogger_DisplayLog_Displaying_messages_since_log_file_became_unavailable_, false, false);
                         _mainUi.LogToUi(_logBuffer.ToString(), false, false);
                     }
                     return;
@@ -366,7 +365,7 @@ namespace SkylineBatch
 
                 if (truncated)
                 {
-                    _mainUi.LogErrorToUi(string.Format(LogTruncatedMessage, GetFile()), false);
+                    _mainUi.LogErrorToUi(string.Format(Resources.SkylineBatchLogger_DisplayLog_____Log_truncated_____Full_log_is_in__0_, GetFile()), false);
                 }
 
                 var toLog = new List<string>();
@@ -374,6 +373,7 @@ namespace SkylineBatch
 
                 foreach (var line in lines)
                 {
+                    // CONSIDER: Find a different way to determine errors
                     var error = line.Contains("Fatal error: ") || line.Contains("Error: ");
                     if (error)
                     {

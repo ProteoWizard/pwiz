@@ -38,7 +38,6 @@ namespace SkylineBatch
         private static readonly ILog Log = LogManager.GetLogger("SkylineBatch");
         private static string _version;
         
-
         [STAThread]
         public static void Main(string[] args)
         {
@@ -75,7 +74,6 @@ namespace SkylineBatch
                 }
 
                 InitializeSecurityProtocol();
-
                 
                 // Initialize log4net -- global application logging
                 XmlConfigurator.Configure();
@@ -83,7 +81,7 @@ namespace SkylineBatch
                 try
                 {
                     var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal);
-                    LogInfo(string.Format("user.config path: {0}", config.FilePath));
+                    LogInfo(string.Format(Resources.Program_Main_Saved_configurations_were_found_in___0_, config.FilePath));
                 }
                 catch (Exception)
                 {
@@ -92,23 +90,19 @@ namespace SkylineBatch
                 
                 if (!InitSkylineSettings()) return;
                 Installations.FindRDirectory();
-
-
+                
                 var form = new MainForm();
-
                 // CurrentDeployment is null if it isn't network deployed.
                 _version = ApplicationDeployment.IsNetworkDeployed
                     ? ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString()
                     : string.Empty;
                 form.Text = Version();
-
                 Application.Run(form);
 
                 mutex.ReleaseMutex();
             }
         }
-
-
+        
         private static bool InitSkylineSettings()
         {
             if (Installations.FindSkyline())
@@ -120,9 +114,8 @@ namespace SkylineBatch
                 return true;
 
             MessageBox.Show(string.Format(Resources.Program_InitSkylineSettings__0__requires_Skyline_to_run_, AppName()) + Environment.NewLine +
-                string.Format("Please install Skyline to start {0}.", AppName()), AppName(), MessageBoxButtons.OK, MessageBoxIcon.Error);
+                string.Format(Resources.Program_InitSkylineSettings_Please_install_Skyline_to_start__0__, AppName()), AppName(), MessageBoxButtons.OK, MessageBoxIcon.Error);
             return false;
-
         }
 
         public static void LogError(string message)
@@ -159,7 +152,6 @@ namespace SkylineBatch
                 rootAppender = repository.Root.Appenders.OfType<FileAppender>()
                     .FirstOrDefault();
             }
-
             return rootAppender != null ? rootAppender.File : string.Empty;
         }
 

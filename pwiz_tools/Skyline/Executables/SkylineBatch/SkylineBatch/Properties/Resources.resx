@@ -400,4 +400,70 @@ with:
   <data name="FilePathControl_FilePathControl_Please_specify_the_path_to_the__0__" xml:space="preserve">
     <value>Please specify the path to the {0}:</value>
   </data>
+  <data name="MainForm_MainForm_Loading_configurations_from_saved_settings_" xml:space="preserve">
+    <value>Loading configurations from saved settings.</value>
+  </data>
+  <data name="SkylineBatchConfigForm_SkylineBatchConfigForm_Viewing_configuration___0__" xml:space="preserve">
+    <value>Viewing configuration "{0}"</value>
+  </data>
+  <data name="SkylineBatchConfigForm_SkylineBatchConfigForm_Editing_configuration___0__" xml:space="preserve">
+    <value>Editing configuration "{0}"</value>
+  </data>
+  <data name="SkylineBatchLogger_DisplayLog_____Log_truncated_____Full_log_is_in__0_" xml:space="preserve">
+    <value>... Log truncated ... Full log is in {0}</value>
+  </data>
+  <data name="MainForm_TrimDisplayedLog_____Log_truncated____" xml:space="preserve">
+    <value>... Log truncated ...</value>
+  </data>
+  <data name="Program_InitSkylineSettings_Please_install_Skyline_to_start__0__" xml:space="preserve">
+    <value>Please install Skyline to start {0}.</value>
+  </data>
+  <data name="Program_Main_Saved_configurations_were_found_in___0_" xml:space="preserve">
+    <value>Saved configurations were found in: {0}</value>
+  </data>
+  <data name="ReportsAddForm_btnAddRScript_Click_Could_not_find_any_R_Installations_in__" xml:space="preserve">
+    <value>Could not find any R Installations in: </value>
+  </data>
+  <data name="ReportsAddForm_btnAddRScript_Click_Please_install_R_before_adding_R_scripts_to_this_configuration_" xml:space="preserve">
+    <value>Please install R before adding R scripts to this configuration.</value>
+  </data>
+  <data name="SkylineBatchConfigForm_btnAddReport_Click_Creating_new_report_" xml:space="preserve">
+    <value>Creating new report.</value>
+  </data>
+  <data name="SkylineBatchConfigForm_btnEditReport_Click_Editing_report_" xml:space="preserve">
+    <value>Editing report.</value>
+  </data>
+  <data name="SkylineBatchLogger_LogErrorToFile_ERROR___0_" xml:space="preserve">
+    <value>ERROR: {0}</value>
+  </data>
+  <data name="SkylineBatchLogger_WriteToBuffer_____LOG_BUFFER_IS_FULL____" xml:space="preserve">
+    <value>!!! LOG BUFFER IS FULL !!!</value>
+  </data>
+  <data name="SkylineBatchLogger_WriteToFile_ERROR_writing_to_the_log_file___0___Check_program_log_for_details___1_" xml:space="preserve">
+    <value>ERROR writing to the log file: {0}. Check program log for details: {1}</value>
+  </data>
+  <data name="SkylineBatchLogger_WriteToFile_Error_occurred_writing_to_log_file___0___Attempted_to_write_" xml:space="preserve">
+    <value>Error occurred writing to log file: {0}. Attempted to write:</value>
+  </data>
+  <data name="SkylineBatchLogger_WriteToFile_Exception_stack_trace_" xml:space="preserve">
+    <value>Exception stack trace:</value>
+  </data>
+  <data name="SkylineBatchLogger_WriteToFile_Error_message_was__0__" xml:space="preserve">
+    <value>Error message was {0}.</value>
+  </data>
+  <data name="SkylineBatchLogger_WriteToFile_Error_occurred_while_trying_to_backup_log_file__" xml:space="preserve">
+    <value>Error occurred while trying to backup log file: </value>
+  </data>
+  <data name="SkylineBatchLogger_WriteToFile_Exception_stack_trace__" xml:space="preserve">
+    <value>Exception stack trace: </value>
+  </data>
+  <data name="SkylineBatchLogger_DisplayLog_Could_not_read_the_log_file___0___File_does_not_exist_" xml:space="preserve">
+    <value>Could not read the log file: {0}. File does not exist.</value>
+  </data>
+  <data name="SkylineBatchLogger_DisplayLog_Displaying_last__0__saved_log_messages_" xml:space="preserve">
+    <value>Displaying last {0} saved log messages.</value>
+  </data>
+  <data name="SkylineBatchLogger_DisplayLog_Displaying_messages_since_log_file_became_unavailable_" xml:space="preserve">
+    <value>Displaying messages since log file became unavailable.</value>
+  </data>
 </root>

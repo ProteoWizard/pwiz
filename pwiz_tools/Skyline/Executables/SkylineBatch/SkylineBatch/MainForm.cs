@@ -30,9 +30,7 @@ namespace SkylineBatch
     {
 
         private readonly ConfigManager _configManager;
-
         private readonly ISkylineBatchLogger _skylineBatchLogger;
-
         private bool _loaded;
 
         public MainForm()
@@ -45,7 +43,7 @@ namespace SkylineBatch
             
             btnRunOptions.Text = char.ConvertFromUtf32(0x2BC6);
 
-            Program.LogInfo("Loading configurations from saved settings.");
+            Program.LogInfo(Resources.MainForm_MainForm_Loading_configurations_from_saved_settings_);
             _configManager = new ConfigManager(_skylineBatchLogger, this);
 
             UpdateUiConfigurations();
@@ -80,7 +78,6 @@ namespace SkylineBatch
 
         #region Manipulating configuration list
         
-
         private void btnNewConfig_Click(object sender, EventArgs e)
         {
             Program.LogInfo(Resources.MainForm_btnNewConfig_Click_Creating_a_new_configuration_);
@@ -112,12 +109,6 @@ namespace SkylineBatch
                     return;
                 config = validateConfigForm.ValidConfig;
             }
-
-            // can edit if config is not busy running, otherwise is view only
-            Program.LogInfo(string.Format("{0} configuration \"{1}\"",
-                (!configRunner.IsRunning() ? "Editing" : "Viewing"),
-                configRunner.GetConfigName()));
-
             var configForm = new SkylineBatchConfigForm(this, config, ConfigAction.Edit, configRunner.IsBusy());
             configForm.ShowDialog();
         }
@@ -153,12 +144,11 @@ namespace SkylineBatch
             }
             _configManager.SelectConfig(index);
         }
-
-
+        
         private void listViewConfigs_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
         {
             // Disable automatic item selection - selected configuration set through _configManager
-            //      Automatic selection changes selected text white, can't see invalid configurations
+            //      Automatic selection disables red text, can't see invalid configurations
             listViewConfigs.SelectedIndices.Clear();
         }
 
@@ -186,8 +176,7 @@ namespace SkylineBatch
         }
 
         #endregion
-
-
+        
         #region Running configurations
 
         private void btnRunOptions_Click(object sender, EventArgs e)
@@ -241,11 +230,8 @@ namespace SkylineBatch
             btnCancel.Enabled = false;
         }
 
-
-
         #endregion
-
-
+        
         #region Update UI
 
         // Reload configurations from configManager
@@ -302,8 +288,7 @@ namespace SkylineBatch
         }
 
         #endregion
-
-
+        
         #region Import / export
 
         private void btnImport_Click(object sender, EventArgs e)
@@ -323,11 +308,9 @@ namespace SkylineBatch
             var shareForm = new ShareConfigsForm(this, _configManager);
             shareForm.ShowDialog();
         }
-
-
+        
         #endregion
-
-
+        
         #region Logging
 
         private void btnViewLog_Click(object sender, EventArgs e)
@@ -359,7 +342,6 @@ namespace SkylineBatch
             {
                 DisplayError(ex.Message);
             }
-
             ScrollToLogEnd();
         }
 
@@ -380,7 +362,6 @@ namespace SkylineBatch
 
         public void LogToUi(string text, bool scrollToEnd, bool trim)
         {
-
             RunUi(() =>
             {
                 if (comboLogList.SelectedIndex != 0) return; // don't log if old log is displayed
@@ -402,7 +383,6 @@ namespace SkylineBatch
 
                 ScrollToLogEnd();
             });
-
         }
 
         private void TrimDisplayedLog()
@@ -414,8 +394,8 @@ namespace SkylineBatch
                 var unTruncated = textBoxLog.Text;
                 var startIndex = textBoxLog.GetFirstCharIndexFromLine(numLines - SkylineBatchLogger.MaxLogLines);
                 var message = (_skylineBatchLogger != null)
-                    ? string.Format(SkylineBatchLogger.LogTruncatedMessage, _skylineBatchLogger.GetFile())
-                    : "... Log truncated ...";
+                    ? string.Format(Resources.SkylineBatchLogger_DisplayLog_____Log_truncated_____Full_log_is_in__0_, _skylineBatchLogger.GetFile())
+                    : Resources.MainForm_TrimDisplayedLog_____Log_truncated____;
                 message += Environment.NewLine;
                 textBoxLog.Text = message + unTruncated.Substring(startIndex);
                 textBoxLog.SelectionStart = 0;
@@ -469,13 +449,9 @@ namespace SkylineBatch
                 textBoxLog.SelectionColor = Color.Red;
             });
         }
-
-
-
+        
         #endregion
-
-
-
+        
         #region Mainform event handlers and errors
 
         private void systray_icon_MouseDoubleClick(object sender, MouseEventArgs e)
@@ -514,12 +490,8 @@ namespace SkylineBatch
         {
             return AlertDlg.ShowQuestion(this, message);
         }
-
-
-
-
+        
         #endregion
-
     }
 
 

@@ -28,6 +28,8 @@ namespace SkylineBatch
 
     public class Installations
     {
+        // Finds and saves information about the computer's Skyline and R installation locations
+
         public const string SkylineCmdExe = "SkylineCmd.exe";
         public const string Skyline = "Skyline";
         public const string SkylineDaily = "Skyline-daily";

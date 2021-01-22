@@ -12,10 +12,11 @@ namespace SkylineBatch
         Local,
         Custom
     }
-
-
+    
     public class SkylineSettings
     {
+        // The skyline installation to use when a configuration is run
+
         public SkylineSettings(SkylineType type, string folderPath = "")
         {
             Type = type;
@@ -48,6 +49,9 @@ namespace SkylineBatch
             }
         }
 
+        public readonly SkylineType Type; // The type of skyline installation
+        public readonly string CmdPath; // the path to a SkylineCmd or SkylineRunner
+
         public void Validate()
         {
             if (!File.Exists(CmdPath))
@@ -68,20 +72,13 @@ namespace SkylineBatch
                 }
             }
         }
-
-        public readonly SkylineType Type;
-
-        public readonly string CmdPath;
-
-
+        
         private enum Attr
         {
             Type,
             CmdPath,
         }
-
         
-
         public static SkylineSettings ReadXml(XmlReader reader)
         {
             var type = Enum.Parse(typeof(SkylineType), reader.GetAttribute(Attr.Type), false);
@@ -112,7 +109,6 @@ namespace SkylineBatch
 
         public override int GetHashCode()
         {
-
             return Type.GetHashCode();
         }
     }

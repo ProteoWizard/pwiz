@@ -6,6 +6,9 @@ namespace SkylineBatch
 {
     public partial class FindSkylineForm : Form
     {
+        // The dialog that appears if Skyline Batch was unable to find a Skyline Installation when first started
+        // User must enter a path to a valid skyline installation to continue
+
         public FindSkylineForm()
         {
             InitializeComponent();

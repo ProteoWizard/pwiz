@@ -77,8 +77,7 @@ namespace SkylineBatch
             Created,
             Modified
         }
-
-
+        
         #region XML
 
         public XmlSchema GetSchema()
@@ -143,7 +142,6 @@ namespace SkylineBatch
 
         public void WriteXml(XmlWriter writer)
         {
-            //Validate();
             writer.WriteStartElement("skylinebatch_config");
             writer.WriteAttribute(Attr.Name, Name);
             writer.WriteAttributeIfString(Attr.Created, Created.ToShortDateString() + " " + Created.ToShortTimeString());
@@ -154,26 +152,11 @@ namespace SkylineBatch
             SkylineSettings.WriteXml(writer);
             writer.WriteEndElement();
         }
-
-
-
-        #endregion
-
         
-
-
+        #endregion
+        
         public void Validate()
         {
-            if (MainSettings == null || ReportSettings == null || SkylineSettings == null)
-            {
-                throw new Exception("Configuration settings not initialized.");
-            }
-
-            if (string.IsNullOrEmpty(Name))
-            {
-                throw new ArgumentException("Please enter a name for the configuration.");
-            }
-
             MainSettings.Validate();
             FileSettings.Validate();
             ReportSettings.Validate();
@@ -195,7 +178,7 @@ namespace SkylineBatch
             sb.Append("Name: ").AppendLine(Name);
             sb.Append("Created: ").Append(Created.ToShortDateString()).AppendLine(Created.ToShortTimeString());
             sb.Append("Modified: ").Append(Modified.ToShortDateString()).AppendLine(Modified.ToShortTimeString());
-            sb.AppendLine("").AppendLine("Main Settings");
+            sb.AppendLine(string.Empty).AppendLine("Main Settings");
             sb.Append(MainSettings);
             return sb.ToString();
         }

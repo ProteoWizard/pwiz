@@ -42,26 +42,25 @@ namespace SkylineBatch
                     dataGridScripts.Rows.Add(scriptAndVersion.Item1, scriptAndVersion.Item2);
                 }
             }
-
             foreach (var version in Settings.Default.RVersions.Keys)
             {
                 rVersionsDropDown.Items.Add(version);
             }
-
         }
+
         public ReportInfo NewReportInfo { get; private set; }
 
         private void btnAddRScript_Click(object sender, EventArgs e)
         {
             if (Settings.Default.RVersions.Count == 0)
             {
-                _uiControl.DisplayError("Could not find any R Installations in: " + Environment.NewLine + 
+                // Prevent user from adding R script if R is not installed
+                _uiControl.DisplayError(Resources.ReportsAddForm_btnAddRScript_Click_Could_not_find_any_R_Installations_in__ + Environment.NewLine + 
                                                                     Installations.RLocation + Environment.NewLine +
                                                                     Environment.NewLine +
-                                                                    "Please install R before adding R scripts to this configuration.");
+                                                                    Resources.ReportsAddForm_btnAddRScript_Click_Please_install_R_before_adding_R_scripts_to_this_configuration_);
                 return;
             }
-            
             var openDialog = new OpenFileDialog();
             openDialog.Filter = TextUtil.FILTER_R;
             openDialog.Multiselect = true;
@@ -70,7 +69,6 @@ namespace SkylineBatch
             {
                 dataGridScripts.Rows.Add(fileName, rVersionsDropDown.Items[rVersionsDropDown.Items.Count - 1].AccessibilityObject.Name);
             }
-            
         }
 
         private void btnRemove_Click(object sender, EventArgs e)
@@ -116,9 +114,7 @@ namespace SkylineBatch
             }
             return scripts;
         }
-
         
-
         private void dataGridScripts_SelectionChanged(object sender, EventArgs e)
         {
             rVersionsDropDown.Hide();
@@ -160,7 +156,6 @@ namespace SkylineBatch
         {
             if (e.ColumnIndex != 0 || string.IsNullOrEmpty((string) dataGridScripts.SelectedCells[0].Value))
                 return;
-               
             var selectedCell = dataGridScripts.SelectedCells[0];
             var openDialog = new OpenFileDialog();
             openDialog.Filter = TextUtil.FILTER_R;

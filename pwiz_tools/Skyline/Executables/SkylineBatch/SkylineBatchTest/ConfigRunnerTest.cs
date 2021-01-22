@@ -29,8 +29,6 @@ namespace SkylineBatchTest
     [TestClass]
     public class ConfigRunnerTest
     {
-
-        
         [TestMethod]
         public async Task TestExecuteCommandLine()
         {
@@ -43,7 +41,7 @@ namespace SkylineBatchTest
            Assert.IsTrue(File.Exists(TestUtils.GetTestFilePath("cmdTest.txt")));
            Assert.IsTrue(testRunner.IsCompleted());
            var multipleCommands = new List<string>
-               {"cd " + TestUtils.GetTestFilePath(""), "del cmdTest.txt"};
+               {"cd " + TestUtils.GetTestFilePath(string.Empty), "del cmdTest.txt"};
            await testRunner.ExecuteCommandLine(multipleCommands);
            Assert.IsFalse(File.Exists(TestUtils.GetTestFilePath("cmdTest.txt")));
            Assert.IsTrue(testRunner.IsCompleted());
@@ -59,7 +57,7 @@ namespace SkylineBatchTest
             Assert.IsTrue(testRunner.IsCompleted());
         }
 
-        // TODO: tests for configRunner.run
+        // CONSIDER: add tests for configRunner.run
     }
     
 }

@@ -40,7 +40,7 @@ namespace SkylineBatchTest
 
             Assert.AreEqual("one  two  three  new  ", configManager.ListConfigNames());
             Assert.IsTrue(firstThreadException != null, "Should have failed to add the second time, since no index selected");
-            Assert.AreEqual("Failed operation \"Add\": Configuration \"new\" already exists.", firstThreadException.Message);
+            Assert.AreEqual("Error: new already exists.", firstThreadException.Message);
         }
 
         [TestMethod]
@@ -73,7 +73,7 @@ namespace SkylineBatchTest
 
             Assert.AreEqual("three  one  two  ", configManager.ListConfigNames());
             Assert.AreEqual(0, configManager.SelectedConfig);
-            var exceptionMessage = firstThreadException == null ? "" : firstThreadException.Message;
+            var exceptionMessage = firstThreadException == null ? string.Empty : firstThreadException.Message;
             Assert.IsTrue(firstThreadException == null, "Unexpected Exception: " + exceptionMessage);
         }
 
@@ -109,7 +109,7 @@ namespace SkylineBatchTest
 
             Assert.AreEqual("two  three  ", configManager.ListConfigNames());
             Assert.IsTrue(firstThreadException != null, "Should have failed to remove the second time, since no index selected");
-            Assert.AreEqual("No configuration selected.", firstThreadException.Message);
+            Assert.AreEqual("There is no configuration selected.", firstThreadException.Message);
         }
 
 
@@ -149,7 +149,7 @@ namespace SkylineBatchTest
             var expectedConfigLists = new List<string> {"new  two  three  ", "one  new  three  ", "one  two  new  "};
             Assert.IsTrue(expectedConfigLists.Contains(configManager.ListConfigNames()), "Unexpected config list: " + configManager.ListConfigNames());
             if (firstThreadException != null)
-                Assert.AreEqual("Failed operation \"Replace\": Configuration \"new\" already exists.", firstThreadException.Message); // possible no exception thrown if random index was always same number
+                Assert.AreEqual("Error: new already exists.", firstThreadException.Message); // possible no exception thrown if random index was always same number
             
         }
 

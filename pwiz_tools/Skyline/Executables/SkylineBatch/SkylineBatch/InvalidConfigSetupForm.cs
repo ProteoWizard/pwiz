@@ -9,17 +9,20 @@ using SkylineBatch.Properties;
 
 namespace SkylineBatch
 {
-    
     public partial class InvalidConfigSetupForm : Form
     {
+        // The Configuration Setup Manager Form
+        // Allows users to correct file paths, R versions, and Skyline types of an invalid configuration.
+
         private readonly SkylineBatchConfig _invalidConfig;
         private readonly ConfigManager _configManager;
         private readonly IMainUiControl _mainControl;
 
-        private string _lastInputPath;
-        private bool _removeRScripts;
+        private string _lastInputPath; // the last user-entered file or folder path
+        private bool _removeRScripts; // if all R scripts should be automatically removed from the configuration
+                                      // (true iff R is not installed and the user chooses to remove scripts)
 
-        private bool _askedAboutRootReplacement;
+        private bool _askedAboutRootReplacement; // if the user has been asked about replacing path roots for this configuration
 
         public InvalidConfigSetupForm(SkylineBatchConfig invalidConfig, ConfigManager configManager, IMainUiControl mainControl)
         {
@@ -35,11 +38,14 @@ namespace SkylineBatch
 
         private async void CreateValidConfig()
         {
+            // get valid settings
             var validMainSettings = await FixInvalidMainSettings();
             var validReportSettings = await FixInvalidReportSettings();
             var validSkylineSettings = await FixInvalidSkylineSettings();
+            // create valid configuration
             ValidConfig = new SkylineBatchConfig(_invalidConfig.Name, _invalidConfig.Created, DateTime.Now, 
                 validMainSettings, _invalidConfig.FileSettings, validReportSettings, validSkylineSettings);
+            // save invalid configuration
             _configManager.ReplaceSelectedConfig(ValidConfig);
             _mainControl.UpdateUiConfigurations();
             DialogResult = DialogResult.OK;
@@ -112,18 +118,10 @@ namespace SkylineBatch
 
             if (path.Equals(invalidPath))
                 return path;
-
             _lastInputPath = path;
 
-            GetNewRoot(invalidPath, path, out string oldRoot, out string newRoot);
-            // the first time a path is changed, ask if user wants all path roots replaced
-            if (!_askedAboutRootReplacement && oldRoot.Length > 0 && !Directory.Exists(oldRoot) && !_configManager.RootReplacement.ContainsKey(oldRoot))
-            {
-                var replaceRoot = AlertDlg.ShowQuestion(this, string.Format(Resources.InvalidConfigSetupForm_GetValidPath_Would_you_like_to_replace__0__with__1___, oldRoot, newRoot)) == DialogResult.Yes;
-                _askedAboutRootReplacement = true;
-                if (replaceRoot)
-                    _configManager.AddRootReplacement(oldRoot, newRoot);
-            }
+            GetNewRoot(invalidPath, path);
+            
             RemoveControl(folderControl);
             return path;
         }
@@ -138,10 +136,12 @@ namespace SkylineBatch
 
         private async Task<object> GetValidVariable(IValidatorControl control, bool removeControl = true)
         {
-            if (control.IsValid(out string errorMessage)) return control.GetVariable();
-            AddControl((UserControl)control);
-
+            // return existing variable if it is valid
+            if (control.IsValid(out string errorMessage))
+                return control.GetVariable();
+            // display the control to get user input for invalid variable
             var valid = false;
+            AddControl((UserControl)control);
             while (!valid)
             {
                 await btnNext;
@@ -149,7 +149,7 @@ namespace SkylineBatch
                 if (!valid)
                     AlertDlg.ShowError(this, errorMessage);
             }
-
+            // remove the control and return the valid variable
             if (removeControl) RemoveControl((UserControl)control);
             return control.GetVariable();
         }
@@ -158,16 +158,15 @@ namespace SkylineBatch
         
         #region Find Path Root
 
-        private void GetNewRoot(string oldPath, string newPath, out string oldRoot, out string newRoot)
+        private void GetNewRoot(string oldPath, string newPath)
         {
             var oldPathFolders = oldPath.Split('\\');
             var newPathFolders = newPath.Split('\\');
-
-            oldRoot = "";
-            newRoot = "";
+            string oldRoot = string.Empty;
+            string newRoot = string.Empty;
 
             var matchingEndFolders = 1;
-            while (matchingEndFolders < Math.Min(oldPathFolders.Length, newPathFolders.Length))
+            while (matchingEndFolders <= Math.Min(oldPathFolders.Length, newPathFolders.Length))
             {
                 // If path ends do not match we cannot replace root
                 if (!oldPathFolders[oldPathFolders.Length - matchingEndFolders]
@@ -176,12 +175,18 @@ namespace SkylineBatch
 
                 oldRoot = string.Join("\\", oldPathFolders.Take(oldPathFolders.Length - matchingEndFolders).ToArray());
                 newRoot = string.Join("\\", newPathFolders.Take(newPathFolders.Length - matchingEndFolders).ToArray());
-                
                 matchingEndFolders++;
             }
+            // the first time a path is changed, ask if user wants all path roots replaced
+            if (!_askedAboutRootReplacement && oldRoot.Length > 0 && !Directory.Exists(oldRoot) && !_configManager.RootReplacement.ContainsKey(oldRoot))
+            {
+                var replaceRoot = AlertDlg.ShowQuestion(this, string.Format(Resources.InvalidConfigSetupForm_GetValidPath_Would_you_like_to_replace__0__with__1___, oldRoot, newRoot)) == DialogResult.Yes;
+                _askedAboutRootReplacement = true;
+                if (replaceRoot)
+                    _configManager.AddRootReplacement(oldRoot, newRoot);
+            }
         }
-
-
+        
         private string TryReplaceRoot(string path)
         {
             var bestRoot = string.Empty;
@@ -196,11 +201,7 @@ namespace SkylineBatch
         }
 
         #endregion
-
-
-
-
-
+        
         private void AddControl(UserControl control)
         {
             control.Dock = DockStyle.Fill;
@@ -213,11 +214,8 @@ namespace SkylineBatch
             control.Hide();
             panel1.Controls.Remove(control);
         }
-        
-
     }
-
-
+    
     // Validates a string variable, throws ArgumentException if invalid
     public delegate void Validator(string variable, string name = "");
     
@@ -229,13 +227,8 @@ namespace SkylineBatch
         // Uses Validator to determine if variable is valid
         bool IsValid(out string errorMessage);
     }
-
-
-
+    
     // Class that lets you wait for button click (ex: "await btnNext")
-
-
-
     public static class ButtonAwaiterExtensions
     {
         public static ButtonAwaiter GetAwaiter(this Button button)
@@ -246,9 +239,7 @@ namespace SkylineBatch
             };
         }
     }
-
-
-
+    
     public class ButtonAwaiter : INotifyCompletion
     {
 
@@ -259,7 +250,6 @@ namespace SkylineBatch
         
         public void GetResult()
         {
-
         }
         
         public Button Button { get; set; }

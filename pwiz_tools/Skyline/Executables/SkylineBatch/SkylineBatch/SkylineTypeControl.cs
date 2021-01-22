@@ -7,6 +7,12 @@ namespace SkylineBatch
 {
     public partial class SkylineTypeControl : UserControl, IValidatorControl
     {
+        // A control used by the InvalidConfigSetupForm to switch to a Skyline Installation that exists on this computer
+
+        // Implements IValidatorControl:
+        //    - GetVariable() returns a SkylineSettings instance using the Type from the radioButtons and CommandPath from textSkylineInstallationPath
+        //    - IsValid() uses skylineSettings.Validate to determine if the selection is valid.
+
         public SkylineTypeControl(bool skyline, bool skylineDaily, bool custom, string path)
         {
             InitializeComponent();
@@ -64,7 +70,6 @@ namespace SkylineBatch
         {
             using (var folderBrowserDlg = new FolderBrowserDialog())
             {
-                folderBrowserDlg.Description = "Select the skyline installation directory";
                 folderBrowserDlg.ShowNewFolderButton = false;
                 folderBrowserDlg.SelectedPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
                 if (folderBrowserDlg.ShowDialog() == DialogResult.OK)

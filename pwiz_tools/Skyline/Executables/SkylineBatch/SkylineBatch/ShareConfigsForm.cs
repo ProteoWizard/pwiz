@@ -7,8 +7,7 @@ namespace SkylineBatch
     {
         private readonly ConfigManager _configManager;
         private readonly IMainUiControl _uiControl;
-
-
+        
         public ShareConfigsForm(IMainUiControl uiControl, ConfigManager configManager)
         {
             InitializeComponent();

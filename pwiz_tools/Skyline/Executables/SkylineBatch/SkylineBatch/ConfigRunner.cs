@@ -68,7 +68,7 @@ namespace SkylineBatch
         public string GetDisplayStatus()
         {
             RunnerStatus status = GetStatus();
-            return status == RunnerStatus.Stopped ? "" : status.ToString();
+            return status == RunnerStatus.Stopped ? string.Empty : status.ToString();
         }
 
         public string GetConfigName()

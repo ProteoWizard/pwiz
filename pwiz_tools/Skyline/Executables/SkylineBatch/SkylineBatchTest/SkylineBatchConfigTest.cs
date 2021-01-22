@@ -37,13 +37,13 @@ namespace SkylineBatchTest
         {
             TestUtils.InitializeInstallations();
             var validName = "Name";
-            var invalidName = "";
+            var invalidName = string.Empty;
             var validSkyr = TestUtils.GetTestFilePath("UniqueReport.skyr");
             var invalidSkyr = "invalidPath.skyr";
             var validRScripts = new List<Tuple<string,string>>();
             var invalidRscripts = new List<Tuple<string, string>>{new Tuple<string, string>("invalidPath.r", "1.2.3")};
-            TestValidateReportSettings(validName, invalidSkyr, validRScripts, "Report \"Name\": Report path invalidPath.skyr is not a valid path.");
-            TestValidateReportSettings(validName, validSkyr, invalidRscripts, "Report \"Name\": R script path invalidPath.r is not a valid path.");
+            TestValidateReportSettings(validName, invalidSkyr, validRScripts, "Report Name:\r\nReport path invalidPath.skyr is not a valid path.\r\nPlease enter a path to an existing file.");
+            TestValidateReportSettings(validName, validSkyr, invalidRscripts, "Report Name:\r\nR script path invalidPath.r is not a valid path.\r\nPlease enter a path to an existing file.");
             TestValidateReportSettings(invalidName, validSkyr, validRScripts, "Report must have name.");
             try
             {
@@ -57,20 +57,20 @@ namespace SkylineBatchTest
 
             var validTemplatePath = TestUtils.GetTestFilePath("emptyTemplate.sky");
             var invalidTemplatePath = TestUtils.GetTestFilePath("nonexistent.sky");
-            var validAnalysisFolder = TestUtils.GetTestFilePath("") + "folderToCreate";
-            var invalidAnalysisFolder = TestUtils.GetTestFilePath("") + @"nonexistentOne\nonexistentTwo\";
+            var validAnalysisFolder = TestUtils.GetTestFilePath(string.Empty) + "folderToCreate";
+            var invalidAnalysisFolder = TestUtils.GetTestFilePath(string.Empty) + @"nonexistentOne\nonexistentTwo\";
             var validDataDir = TestUtils.GetTestFilePath("emptyData");
             var invalidDataDir = TestUtils.GetTestFilePath("nonexistentData");
-            var validPattern = "";
+            var validPattern = string.Empty;
 
             TestValidateMainSettings(invalidTemplatePath, validAnalysisFolder, validDataDir, validPattern,
-                string.Format("Skyline file {0} does not exist.", invalidTemplatePath));
+                string.Format("The skyline template file {0} does not exist.\r\nPlease provide a valid file.", invalidTemplatePath));
             TestValidateMainSettings(validTemplatePath, invalidAnalysisFolder, validDataDir, validPattern,
-                string.Format("Analysis folder directory {0} does not exist.", TestUtils.GetTestFilePath("") + @"nonexistentOne\nonexistentTwo"));
+                string.Format("The analysis folder {0} does not exist.\r\nPlease provide a valid folder.", TestUtils.GetTestFilePath(string.Empty) + @"nonexistentOne\nonexistentTwo"));
             TestValidateMainSettings(validTemplatePath, validAnalysisFolder, invalidDataDir, validPattern,
-                string.Format("Data folder {0} does not exist.", invalidDataDir));
+                string.Format("The data folder {0} does not exist.\r\nPlease provide a valid folder.", invalidDataDir));
             TestValidateMainSettings(invalidTemplatePath, invalidAnalysisFolder, invalidDataDir, validPattern,
-                string.Format("Skyline file {0} does not exist.", invalidTemplatePath));
+                string.Format("The skyline template file {0} does not exist.\r\nPlease provide a valid file.", invalidTemplatePath));
             try
             {
                 var testValidMainSettings = new MainSettings(validTemplatePath, validAnalysisFolder, validDataDir, null);
@@ -84,7 +84,7 @@ namespace SkylineBatchTest
             var validMainSettings = new MainSettings(validTemplatePath, validAnalysisFolder, validDataDir, null);
             var validReportSettings = new ReportSettings(new List<ReportInfo>());
             var validSkylineSettings = new SkylineSettings(SkylineType.Custom, GetSkylineDir());
-            var validFileSettings = new FileSettings("", "", false, false);
+            var validFileSettings = new FileSettings(string.Empty, string.Empty, string.Empty, false, false, true);
 
             try
             {
@@ -94,7 +94,7 @@ namespace SkylineBatchTest
             }
             catch (Exception e)
             {
-                Assert.AreEqual("Please enter a name for the configuration.", e.Message);
+                Assert.AreEqual("\"\" is not a valid name for the configuration.\r\nPlease enter a name.", e.Message);
             }
 
             try
@@ -180,7 +180,7 @@ namespace SkylineBatchTest
             Assert.IsFalse(Equals(testConfig, differentReportSettings));
 
             var differentMain = new MainSettings(testConfig.MainSettings.TemplateFilePath,
-                TestUtils.GetTestFilePath(""), testConfig.MainSettings.DataFolderPath,
+                TestUtils.GetTestFilePath(string.Empty), testConfig.MainSettings.DataFolderPath,
                 testConfig.MainSettings.ReplicateNamingPattern);
             var differentMainSettings = new SkylineBatchConfig("name", DateTime.MinValue, DateTime.MinValue, differentMain, TestUtils.GetTestFileSettings(), TestUtils.GetTestReportSettings(), new SkylineSettings(SkylineType.Skyline));
             Assert.IsFalse(Equals(testConfig, differentMainSettings));

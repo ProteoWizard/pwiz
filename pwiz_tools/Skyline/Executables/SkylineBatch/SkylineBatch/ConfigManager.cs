@@ -647,7 +647,7 @@ namespace SkylineBatch
 
         public void ExportConfigs(string filePath, int[] indiciesToSave)
         {
-            var directory = Path.GetDirectoryName(filePath) ?? "";
+            var directory = Path.GetDirectoryName(filePath) ?? string.Empty;
             // Exception if no configurations are selected to export
             if (indiciesToSave.Length == 0)
             {
@@ -734,7 +734,7 @@ namespace SkylineBatch
         {
             lock (_lock)
             {
-                var names = "";
+                var names = string.Empty;
                 foreach (var config in _configList)
                 {
                     names += config.Name + "  ";

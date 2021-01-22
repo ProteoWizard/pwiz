@@ -28,9 +28,9 @@ namespace SkylineBatch
     public class FileSettings
     {
 
-        // IMMUTABLE - all fields are readonly strings
-        // Holds file locations and naming pattern to use when running the configuration
-        
+        // IMMUTABLE - all fields are readonly literals
+        // Describes file modifications user would like to do on the .sky file in the analysis folder
+
         public FileSettings(string msOneResolvingPower, string msMsResolvingPower, string retentionTime, bool addDecoys, bool shuffleDecoys, bool trainMProphet)
         {
             MsOneResolvingPower = msOneResolvingPower ?? string.Empty;

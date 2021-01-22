@@ -39,7 +39,7 @@ namespace SkylineBatch
             TemplateFilePath = templateFilePath;
             AnalysisFolderPath = analysisFolderPath;
             DataFolderPath = dataFolderPath;
-            ReplicateNamingPattern = replicateNamingPattern ?? "";
+            ReplicateNamingPattern = replicateNamingPattern ?? string.Empty;
         }
 
         public readonly string TemplateFilePath;

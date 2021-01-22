@@ -51,6 +51,7 @@ namespace SkylineBatch
             label1.Text = string.Format(Resources.FilePathControl_FilePathControl_Could_not_find_the__0__, variableName);
             label2.Text = string.Format(Resources.FilePathControl_FilePathControl_Please_specify_the_path_to_the__0__, variableName);
             textFilePath.Text = _path;
+            textFilePath.TextChanged += textFilePath_TextChanged;
         }
 
         public object GetVariable() => _path;

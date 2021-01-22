@@ -124,12 +124,12 @@ namespace SkylineBatchTest
 
         public static MainSettings GetTestMainSettings()
         {
-            return new MainSettings(GetTestFilePath("emptyTemplate.sky"), GetTestFilePath("analysis"), GetTestFilePath("emptyData"), "");
+            return new MainSettings(GetTestFilePath("emptyTemplate.sky"), GetTestFilePath("analysis"), GetTestFilePath("emptyData"), string.Empty);
         }
 
         public static FileSettings GetTestFileSettings()
         {
-            return new FileSettings("", "", false, false);
+            return new FileSettings(string.Empty, string.Empty, string.Empty, false, false, true);
         }
 
         public static ReportSettings GetTestReportSettings()
@@ -197,7 +197,7 @@ namespace SkylineBatchTest
 
         public static List<string> GetAllLogFiles(string directory = null)
         {
-            directory = directory == null ? GetTestFilePath("") : directory;
+            directory = directory == null ? GetTestFilePath(string.Empty) : directory;
             var files = Directory.GetFiles(directory);
             var logFiles = new List<string>();
             foreach (var fullName in files)

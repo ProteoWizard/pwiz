@@ -34,9 +34,8 @@ namespace SkylineBatch
     {
         // Allows a user to create a new configuration and add it to the list of configurations,
         // or replace an existing configuration.
-        // Currently running configurations cannot be replaced, and will be opened in a read only mode.
+        // Running configurations cannot be replaced, and will be opened in a read only mode.
         
-
         private readonly IMainUiControl _mainControl;
         private readonly bool _isBusy;
         private readonly ConfigAction _action;
@@ -49,9 +48,12 @@ namespace SkylineBatch
         public SkylineBatchConfigForm(IMainUiControl mainControl, SkylineBatchConfig config, ConfigAction action, bool isBusy)
         {
             InitializeComponent();
-
+            if (isBusy)
+                Program.LogInfo(string.Format(Resources.SkylineBatchConfigForm_SkylineBatchConfigForm_Viewing_configuration___0__, config.Name));
+            else
+                Program.LogInfo(string.Format(Resources.SkylineBatchConfigForm_SkylineBatchConfigForm_Editing_configuration___0__, config.Name));
             _action = action;
-            _initialCreated = config?.Created ?? DateTime.MinValue;
+            _initialCreated = config != null ? config.Created : DateTime.MinValue;
             _newReportList = new List<ReportInfo>();
 
             _mainControl = mainControl;
@@ -82,22 +84,13 @@ namespace SkylineBatch
             if (config == null)
                 return;
 
-            textConfigName.Text = _action == ConfigAction.Edit ? config.Name : "";
+            textConfigName.Text = _action == ConfigAction.Add ? string.Empty : config.Name;
             textConfigName.TextChanged += textConfigName_TextChanged;
-
-
+            // Initialize UI input values using config
             SetInitialMainSettings(config);
-
-
             SetInitialFileSettings(config);
-
-
-            InitReportsFromConfig(config);
-
-
+            SetInitialReportSettings(config);
             SetInitialSkylineSettings(config);
-
-          
         }
 
         public void DisableUserInputs(Control parentControl = null)
@@ -106,7 +99,7 @@ namespace SkylineBatch
 
             if (parentControl is TextBoxBase @base)
                 @base.ReadOnly = true;
-            if (parentControl is ButtonBase buttonBase && buttonBase.Text != @"OK")
+            if (parentControl is ButtonBase buttonBase && !buttonBase.Text.Equals(btnOkConfig.Text))
                 buttonBase.Enabled = false;
             if (parentControl is ToolStrip strip)
                 strip.Enabled = false;
@@ -116,9 +109,7 @@ namespace SkylineBatch
                 DisableUserInputs(control);
             }
         }
-
-
-
+        
         #region Edit main settings
 
         private void SetInitialMainSettings(SkylineBatchConfig config)
@@ -129,7 +120,7 @@ namespace SkylineBatch
             if (_action == ConfigAction.Add)
             {
                 textAnalysisPath.Text = Path.GetDirectoryName(mainSettings.AnalysisFolderPath) + @"\";
-                textNamingPattern.Text = "";
+                textNamingPattern.Text = string.Empty;
             }
 
             textSkylinePath.Text = mainSettings.TemplateFilePath;
@@ -191,14 +182,11 @@ namespace SkylineBatch
         }
 
         #endregion
-
-
+        
         #region File Settings
 
         private void SetInitialFileSettings(SkylineBatchConfig config)
         {
-            if (_action == ConfigAction.Add) return;
-
             if (config.FileSettings.MsOneResolvingPower != null)
                 textMsOneResolvingPower.Text = config.FileSettings.MsOneResolvingPower;
             if (config.FileSettings.MsMsResolvingPower != null)
@@ -221,16 +209,12 @@ namespace SkylineBatch
             return new FileSettings(textMsOneResolvingPower.Text, textMsMsResolvingPower.Text, textRetentionTime.Text, 
                 checkBoxDecoys.Checked, radioShuffleDecoys.Enabled && radioShuffleDecoys.Checked, checkBoxMProphet.Checked);
         }
-
         
-
         #endregion
-
-
-
+        
         #region Reports
 
-        private void InitReportsFromConfig(SkylineBatchConfig config)
+        private void SetInitialReportSettings(SkylineBatchConfig config)
         {
             if (_action == ConfigAction.Add)
                 return;
@@ -238,13 +222,13 @@ namespace SkylineBatch
             foreach (var report in config.ReportSettings.Reports)
             {
                 _newReportList.Add(report);
-                gridReportSettings.Rows.Add(report.AsArray());
+                gridReportSettings.Rows.Add(report.AsObjectArray());
             }
         }
 
         private void btnAddReport_Click(object sender, EventArgs e)
         {
-            Program.LogInfo("Creating new report");
+            Program.LogInfo(Resources.SkylineBatchConfigForm_btnAddReport_Click_Creating_new_report_);
             ShowAddReportDialog(_newReportList.Count);
         }
 
@@ -256,21 +240,19 @@ namespace SkylineBatch
             if (addReportResult == DialogResult.OK)
             {
                 var newReportInfo = addReportsForm.NewReportInfo;
-
                 if (addingIndex < _newReportList.Count) // existing report was edited
                 {
                     _newReportList.RemoveAt(addingIndex);
                     gridReportSettings.Rows.RemoveAt(addingIndex);
                 }
-
                 _newReportList.Insert(addingIndex,newReportInfo);
-                gridReportSettings.Rows.Insert(addingIndex, newReportInfo.AsArray());
+                gridReportSettings.Rows.Insert(addingIndex, newReportInfo.AsObjectArray());
             }
         }
 
         private void btnEditReport_Click(object sender, EventArgs e)
         {
-            Program.LogInfo("Editing report");
+            Program.LogInfo(Resources.SkylineBatchConfigForm_btnEditReport_Click_Editing_report_);
             var indexSelected = gridReportSettings.SelectedRows[0].Index;
             var editingReport = _newReportList.Count > indexSelected ? _newReportList[indexSelected] : null;
             ShowAddReportDialog(indexSelected, editingReport);
@@ -295,9 +277,7 @@ namespace SkylineBatch
         }
 
         #endregion
-
-
-
+        
         #region Skyline Settings
         
         private void SetInitialSkylineSettings(SkylineBatchConfig config)
@@ -319,8 +299,7 @@ namespace SkylineBatch
         }
 
         #endregion
-
-
+        
         #region Save config
 
         private void btnSaveConfig_Click(object sender, EventArgs e)
@@ -363,15 +342,9 @@ namespace SkylineBatch
 
         private void ShowErrorDialog(string message)
         {
-            _mainControl.DisplayError(message);
+            AlertDlg.ShowError(this, message);
         }
-
-
-
-
-
-
+        
         #endregion
-
     }
 }

@@ -30,12 +30,9 @@ namespace SkylineBatch
     public class ReportSettings
     {
         // IMMUTABLE
-        //
         // ReportSettings contains a list of reportInfos, each of which represents an individual report with R scripts to run on it.
         // An empty reportSettings is a valid instance of this class, as configurations don't require reports to run the batch commands.
-
-    
-
+        
         public ReportSettings(List<ReportInfo> reports)
         {
             Reports = ImmutableList.CreateRange(reports);
@@ -65,8 +62,6 @@ namespace SkylineBatch
             return anyReplaced;
         }
 
-
-
         public static ReportSettings ReadXml(XmlReader reader)
         {
             var reports = new List<ReportInfo>();
@@ -84,7 +79,6 @@ namespace SkylineBatch
 
                 reader.Read();
             }
-
             return new ReportSettings(reports);
         }
 
@@ -95,7 +89,6 @@ namespace SkylineBatch
             {
                 report.WriteXml(writer);
             }
-
             writer.WriteEndElement();
         }
 
@@ -111,7 +104,6 @@ namespace SkylineBatch
                 if (!Reports[i].Equals(other.Reports[i]))
                     return false;
             }
-
             return true;
         }
 
@@ -141,7 +133,6 @@ namespace SkylineBatch
         // IMMUTABLE
         // Represents a report and associated r scripts to run using that report.
         
-
         public ReportInfo(string name, string path, List<Tuple<string, string>> rScripts)
         {
             Name = name;
@@ -160,14 +151,13 @@ namespace SkylineBatch
 
         public readonly ImmutableList<Tuple<string,string>> RScripts;
 
-        public object[] AsArray()
+        public object[] AsObjectArray()
         {
-            var scriptsString = "";
+            var scriptsString = string.Empty;
             foreach (var script in RScripts)
             {
-                scriptsString += Path.GetFileName(script.Item1) + "\n";
+                scriptsString += Path.GetFileName(script.Item1) + Environment.NewLine;
             }
-
             return new object[] {Name, ReportPath, scriptsString};
         }
 
@@ -178,14 +168,11 @@ namespace SkylineBatch
                 throw new ArgumentException(Resources.ReportInfo_Validate_Report_must_have_name_ + Environment.NewLine +
                                             Resources.ReportInfo_Validate_Please_enter_a_name_for_this_report_);
             }
-
             ValidateReportPath(ReportPath, Name);
-
             foreach (var pathAndVersion in RScripts)
             {
                 ValidateRScriptPath(pathAndVersion.Item1, Name);
                 ValidateRVersion(pathAndVersion.Item2, Name);
-                
             }
         }
 
@@ -244,8 +231,7 @@ namespace SkylineBatch
             pathReplacedReportInfo = new ReportInfo(Name, replacedReportPath, replacedRScripts);
             return reportReplaced || anyScriptReplaced;
         }
-
-
+        
         private enum Attr
         {
             Name,
@@ -272,8 +258,7 @@ namespace SkylineBatch
 
             return new ReportInfo(name, reportPath, rScripts);
         }
-
-
+        
         public void WriteXml(XmlWriter writer)
         {
             writer.WriteStartElement("report_info");
@@ -313,6 +298,4 @@ namespace SkylineBatch
             return Name.GetHashCode() + ReportPath.GetHashCode();
         }
     }
-
-
 }

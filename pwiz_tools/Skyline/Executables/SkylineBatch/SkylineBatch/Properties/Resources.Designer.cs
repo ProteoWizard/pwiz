@@ -617,6 +617,24 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Loading configurations from saved settings..
+        /// </summary>
+        internal static string MainForm_MainForm_Loading_configurations_from_saved_settings_ {
+            get {
+                return ResourceManager.GetString("MainForm_MainForm_Loading_configurations_from_saved_settings_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ... Log truncated ....
+        /// </summary>
+        internal static string MainForm_TrimDisplayedLog_____Log_truncated____ {
+            get {
+                return ResourceManager.GetString("MainForm_TrimDisplayedLog_____Log_truncated____", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The analysis folder {0} does not exist..
         /// </summary>
         internal static string MainSettings_ValidateAnalysisFolder_The_analysis_folder__0__does_not_exist_ {
@@ -631,6 +649,15 @@ namespace SkylineBatch.Properties {
         internal static string Program_InitSkylineSettings__0__requires_Skyline_to_run_ {
             get {
                 return ResourceManager.GetString("Program_InitSkylineSettings__0__requires_Skyline_to_run_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please install Skyline to start {0}..
+        /// </summary>
+        internal static string Program_InitSkylineSettings_Please_install_Skyline_to_start__0__ {
+            get {
+                return ResourceManager.GetString("Program_InitSkylineSettings_Please_install_Skyline_to_start__0__", resourceCulture);
             }
         }
         
@@ -677,6 +704,15 @@ namespace SkylineBatch.Properties {
             get {
                 return ResourceManager.GetString("Program_Main_Error_details_may_be_found_in_the_SkylineBatchProgram_log_file_in_th" +
                         "is_directory____0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Saved configurations were found in: {0}.
+        /// </summary>
+        internal static string Program_Main_Saved_configurations_were_found_in___0_ {
+            get {
+                return ResourceManager.GetString("Program_Main_Saved_configurations_were_found_in___0_", resourceCulture);
             }
         }
         
@@ -753,6 +789,25 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Could not find any R Installations in: .
+        /// </summary>
+        internal static string ReportsAddForm_btnAddRScript_Click_Could_not_find_any_R_Installations_in__ {
+            get {
+                return ResourceManager.GetString("ReportsAddForm_btnAddRScript_Click_Could_not_find_any_R_Installations_in__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please install R before adding R scripts to this configuration..
+        /// </summary>
+        internal static string ReportsAddForm_btnAddRScript_Click_Please_install_R_before_adding_R_scripts_to_this_configuration_ {
+            get {
+                return ResourceManager.GetString("ReportsAddForm_btnAddRScript_Click_Please_install_R_before_adding_R_scripts_to_th" +
+                        "is_configuration_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Click next to remove R scripts from this configuration..
         /// </summary>
         internal static string RVersionControl_RVersionControl_Click_next_to_remove_R_scripts_from_this_configuration_ {
@@ -806,6 +861,154 @@ namespace SkylineBatch.Properties {
         internal static string SkylineBatchConfig_SkylineBatchConfig_Please_enter_a_name_ {
             get {
                 return ResourceManager.GetString("SkylineBatchConfig_SkylineBatchConfig_Please_enter_a_name_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Creating new report..
+        /// </summary>
+        internal static string SkylineBatchConfigForm_btnAddReport_Click_Creating_new_report_ {
+            get {
+                return ResourceManager.GetString("SkylineBatchConfigForm_btnAddReport_Click_Creating_new_report_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Editing report..
+        /// </summary>
+        internal static string SkylineBatchConfigForm_btnEditReport_Click_Editing_report_ {
+            get {
+                return ResourceManager.GetString("SkylineBatchConfigForm_btnEditReport_Click_Editing_report_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Editing configuration &quot;{0}&quot;.
+        /// </summary>
+        internal static string SkylineBatchConfigForm_SkylineBatchConfigForm_Editing_configuration___0__ {
+            get {
+                return ResourceManager.GetString("SkylineBatchConfigForm_SkylineBatchConfigForm_Editing_configuration___0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Viewing configuration &quot;{0}&quot;.
+        /// </summary>
+        internal static string SkylineBatchConfigForm_SkylineBatchConfigForm_Viewing_configuration___0__ {
+            get {
+                return ResourceManager.GetString("SkylineBatchConfigForm_SkylineBatchConfigForm_Viewing_configuration___0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ... Log truncated ... Full log is in {0}.
+        /// </summary>
+        internal static string SkylineBatchLogger_DisplayLog_____Log_truncated_____Full_log_is_in__0_ {
+            get {
+                return ResourceManager.GetString("SkylineBatchLogger_DisplayLog_____Log_truncated_____Full_log_is_in__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not read the log file: {0}. File does not exist..
+        /// </summary>
+        internal static string SkylineBatchLogger_DisplayLog_Could_not_read_the_log_file___0___File_does_not_exist_ {
+            get {
+                return ResourceManager.GetString("SkylineBatchLogger_DisplayLog_Could_not_read_the_log_file___0___File_does_not_exi" +
+                        "st_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Displaying last {0} saved log messages..
+        /// </summary>
+        internal static string SkylineBatchLogger_DisplayLog_Displaying_last__0__saved_log_messages_ {
+            get {
+                return ResourceManager.GetString("SkylineBatchLogger_DisplayLog_Displaying_last__0__saved_log_messages_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Displaying messages since log file became unavailable..
+        /// </summary>
+        internal static string SkylineBatchLogger_DisplayLog_Displaying_messages_since_log_file_became_unavailable_ {
+            get {
+                return ResourceManager.GetString("SkylineBatchLogger_DisplayLog_Displaying_messages_since_log_file_became_unavailab" +
+                        "le_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ERROR: {0}.
+        /// </summary>
+        internal static string SkylineBatchLogger_LogErrorToFile_ERROR___0_ {
+            get {
+                return ResourceManager.GetString("SkylineBatchLogger_LogErrorToFile_ERROR___0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to !!! LOG BUFFER IS FULL !!!.
+        /// </summary>
+        internal static string SkylineBatchLogger_WriteToBuffer_____LOG_BUFFER_IS_FULL____ {
+            get {
+                return ResourceManager.GetString("SkylineBatchLogger_WriteToBuffer_____LOG_BUFFER_IS_FULL____", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error message was {0}..
+        /// </summary>
+        internal static string SkylineBatchLogger_WriteToFile_Error_message_was__0__ {
+            get {
+                return ResourceManager.GetString("SkylineBatchLogger_WriteToFile_Error_message_was__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error occurred while trying to backup log file: .
+        /// </summary>
+        internal static string SkylineBatchLogger_WriteToFile_Error_occurred_while_trying_to_backup_log_file__ {
+            get {
+                return ResourceManager.GetString("SkylineBatchLogger_WriteToFile_Error_occurred_while_trying_to_backup_log_file__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error occurred writing to log file: {0}. Attempted to write:.
+        /// </summary>
+        internal static string SkylineBatchLogger_WriteToFile_Error_occurred_writing_to_log_file___0___Attempted_to_write_ {
+            get {
+                return ResourceManager.GetString("SkylineBatchLogger_WriteToFile_Error_occurred_writing_to_log_file___0___Attempted" +
+                        "_to_write_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ERROR writing to the log file: {0}. Check program log for details: {1}.
+        /// </summary>
+        internal static string SkylineBatchLogger_WriteToFile_ERROR_writing_to_the_log_file___0___Check_program_log_for_details___1_ {
+            get {
+                return ResourceManager.GetString("SkylineBatchLogger_WriteToFile_ERROR_writing_to_the_log_file___0___Check_program_" +
+                        "log_for_details___1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Exception stack trace:.
+        /// </summary>
+        internal static string SkylineBatchLogger_WriteToFile_Exception_stack_trace_ {
+            get {
+                return ResourceManager.GetString("SkylineBatchLogger_WriteToFile_Exception_stack_trace_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Exception stack trace: .
+        /// </summary>
+        internal static string SkylineBatchLogger_WriteToFile_Exception_stack_trace__ {
+            get {
+                return ResourceManager.GetString("SkylineBatchLogger_WriteToFile_Exception_stack_trace__", resourceCulture);
             }
         }
         

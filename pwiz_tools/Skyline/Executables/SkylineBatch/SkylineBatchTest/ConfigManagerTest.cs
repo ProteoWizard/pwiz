@@ -66,7 +66,7 @@ namespace SkylineBatchTest
             }
             catch (IndexOutOfRangeException e)
             {
-                Assert.AreEqual(e.Message, "No configuration at index: -1");
+                Assert.AreEqual("There is no configuration at index: -1", e.Message);
             }
             try
             {
@@ -75,7 +75,7 @@ namespace SkylineBatchTest
             }
             catch (IndexOutOfRangeException e)
             {
-                Assert.AreEqual(e.Message, "No configuration at index: 3");
+                Assert.AreEqual("There is no configuration at index: 3", e.Message);
             }
         }
 
@@ -103,7 +103,7 @@ namespace SkylineBatchTest
             }
             catch (ArgumentException e)
             {
-                Assert.AreEqual(e.Message, "Failed operation \"Add\": Configuration \"one\" already exists.");
+                Assert.AreEqual("Error: one already exists.", e.Message);
             }
             Assert.IsTrue(testConfigManager.ConfigListEquals(threeConfigs));
         }
@@ -127,7 +127,7 @@ namespace SkylineBatchTest
             }
             catch (IndexOutOfRangeException e)
             {
-                Assert.AreEqual("No configuration selected.", e.Message);
+                Assert.AreEqual("There is no configuration selected.", e.Message);
             }
             Assert.IsTrue(configManager.ConfigListEquals(oneRemoved));
         }
@@ -168,7 +168,7 @@ namespace SkylineBatchTest
             }
             catch (ArgumentException e)
             {
-                Assert.AreEqual(e.Message, "Failed operation \"Replace\": Configuration \"oneReplaced\" already exists.");
+                Assert.AreEqual("Error: oneReplaced already exists.", e.Message);
             }
             Assert.IsTrue(configManager.ConfigListEquals(expectedOneReplaced));
         }
