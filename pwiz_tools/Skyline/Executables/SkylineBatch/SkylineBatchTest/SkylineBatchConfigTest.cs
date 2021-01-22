@@ -50,9 +50,9 @@ namespace SkylineBatchTest
                 var validReport = new ReportInfo(validName, validSkyr, validRScripts);
                 validReport.Validate();
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                Assert.Fail("Should have validated valid ReportInfo");
+                Assert.Fail("Should have validated valid ReportInfo. Threw exception: " + e.Message);
             }
 
             var validTemplatePath = TestUtils.GetTestFilePath("emptyTemplate.sky");
@@ -76,9 +76,9 @@ namespace SkylineBatchTest
                 var testValidMainSettings = new MainSettings(validTemplatePath, validAnalysisFolder, validDataDir, null);
                 testValidMainSettings.Validate();
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                Assert.Fail("Should have validated valid MainSettings");
+                Assert.Fail("Should have validated valid MainSettings. Threw exception: " + e.Message);
             }
 
             var validMainSettings = new MainSettings(validTemplatePath, validAnalysisFolder, validDataDir, null);
@@ -86,16 +86,18 @@ namespace SkylineBatchTest
             var validSkylineSettings = new SkylineSettings(SkylineType.Custom, GetSkylineDir());
             var validFileSettings = new FileSettings(string.Empty, string.Empty, string.Empty, false, false, true);
 
+            var validatedNoName = false;
             try
             {
                 var invalidConfig = new SkylineBatchConfig(invalidName, DateTime.MinValue, DateTime.MinValue, validMainSettings, validFileSettings, validReportSettings, validSkylineSettings);
                 invalidConfig.Validate();
-                Assert.Fail("Should have failed to validate invalid config");
+                validatedNoName = true;
             }
             catch (Exception e)
             {
                 Assert.AreEqual("\"\" is not a valid name for the configuration.\r\nPlease enter a name.", e.Message);
             }
+            Assert.IsTrue(!validatedNoName, "Should have failed to validate invalid config");
 
             try
             {
@@ -110,30 +112,34 @@ namespace SkylineBatchTest
 
         private void TestValidateReportSettings(string name, string path, List<Tuple<string, string>> scripts, string expectedError)
         {
+            var validatedInvalidReportInfo = false;
             try
             {
                 var invalidReport = new ReportInfo(name, path, scripts);
                 invalidReport.Validate();
-                Assert.Fail("Should have failed to validate ReportInfo");
+                validatedInvalidReportInfo = true;
             }
             catch (ArgumentException e)
             {
                 Assert.AreEqual(expectedError, e.Message);
             }
+            Assert.IsTrue(!validatedInvalidReportInfo, "Should have failed to validate ReportInfo");
         }
 
         private void TestValidateMainSettings(string template, string analysis, string data, string pattern, string expectedError)
         {
             var invalidMainSettings = new MainSettings(template, analysis, data, pattern);
+            var validatedInvalidMainSettings = false;
             try
             {
                 invalidMainSettings.Validate();
-                Assert.Fail("Should have failed to validate MainSettings");
+                validatedInvalidMainSettings = true;
             }
             catch (ArgumentException e)
             {
                 Assert.AreEqual(expectedError, e.Message);
             }
+            Assert.IsTrue(!validatedInvalidMainSettings, "Should have failed to validate MainSettings");
         }
 
         [TestMethod]

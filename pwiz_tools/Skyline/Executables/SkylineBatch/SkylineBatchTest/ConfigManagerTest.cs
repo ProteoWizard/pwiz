@@ -21,12 +21,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SkylineBatch;
 
@@ -54,29 +50,34 @@ namespace SkylineBatchTest
                 testConfigManager.DeselectConfig();
                 Assert.IsTrue(testConfigManager.SelectedConfig == -1);
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                Assert.Fail("Expected to successfully select configurations within range");
+                Assert.Fail("Expected to successfully select configurations within range. Threw exception: " + e.Message);
             }
 
+            var selectedNegativeIndex = false;
             try
             {
                 testConfigManager.SelectConfig(-1);
-                Assert.Fail("Expected index out of range exception");
+                selectedNegativeIndex = true;
             }
             catch (IndexOutOfRangeException e)
             {
                 Assert.AreEqual("There is no configuration at index: -1", e.Message);
             }
+            Assert.IsTrue(!selectedNegativeIndex, "Expected index out of range exception");
+
+            var selectedIndexAboveRange = false;
             try
             {
                 testConfigManager.SelectConfig(3);
-                Assert.Fail("Expected index out of range exception");
+                selectedIndexAboveRange = true;
             }
             catch (IndexOutOfRangeException e)
             {
                 Assert.AreEqual("There is no configuration at index: 3", e.Message);
             }
+            Assert.IsTrue(!selectedIndexAboveRange, "Expected index out of range exception");
         }
 
         [TestMethod]
@@ -96,15 +97,17 @@ namespace SkylineBatchTest
             var threeConfigs = TestUtils.ConfigListFromNames(new List<string> { "one", "two", "three" });
             Assert.IsTrue(testConfigManager.ConfigListEquals(threeConfigs));
 
+            var addedDuplicateConfig = false;
             try
             {
                 testConfigManager.AddConfiguration(addedConfig);
-                Assert.Fail("Expected exception for duplicate configuration added.");
+                addedDuplicateConfig = true;
             }
             catch (ArgumentException e)
             {
                 Assert.AreEqual("Error: one already exists.", e.Message);
             }
+            Assert.IsTrue(!addedDuplicateConfig, "Expected exception for duplicate configuration added.");
             Assert.IsTrue(testConfigManager.ConfigListEquals(threeConfigs));
         }
 
@@ -120,15 +123,17 @@ namespace SkylineBatchTest
             var oneRemoved = TestUtils.ConfigListFromNames(new List<string> { "two", "three" });
             Assert.IsTrue(configManager.ConfigListEquals(oneRemoved));
 
+            var removedNonexistantConfig = false;
             try
             {
                 configManager.RemoveSelected();
-                Assert.Fail("Expected exception for nonexistent configuration removed.");
+                removedNonexistantConfig = true;
             }
             catch (IndexOutOfRangeException e)
             {
                 Assert.AreEqual("There is no configuration selected.", e.Message);
             }
+            Assert.IsTrue(!removedNonexistantConfig, "Expected exception for nonexistent configuration removed.");
             Assert.IsTrue(configManager.ConfigListEquals(oneRemoved));
         }
 
@@ -160,16 +165,18 @@ namespace SkylineBatchTest
             var expectedOneReplaced = TestUtils.ConfigListFromNames(new List<string> { "oneReplaced", "two", "three" });
             Assert.IsTrue(configManager.ConfigListEquals(expectedOneReplaced));
 
+            var replacedWithDuplicate = false;
             try
             {
                 configManager.SelectConfig(1);
                 configManager.ReplaceSelectedConfig(TestUtils.GetTestConfig("oneReplaced"));
-                Assert.Fail("Expected exception for duplicate config.");
+                replacedWithDuplicate = true;
             }
             catch (ArgumentException e)
             {
                 Assert.AreEqual("Error: oneReplaced already exists.", e.Message);
             }
+            Assert.IsTrue(!replacedWithDuplicate, "Expected exception for duplicate config.");
             Assert.IsTrue(configManager.ConfigListEquals(expectedOneReplaced));
         }
 
