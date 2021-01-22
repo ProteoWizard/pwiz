@@ -61,14 +61,35 @@ namespace SkylineBatch
                                                                     Resources.ReportsAddForm_btnAddRScript_Click_Please_install_R_before_adding_R_scripts_to_this_configuration_);
                 return;
             }
-            var openDialog = new OpenFileDialog();
-            openDialog.Filter = TextUtil.FILTER_R;
-            openDialog.Multiselect = true;
-            openDialog.ShowDialog();
-            foreach (var fileName in openDialog.FileNames)
+
+            var fileNames = OpenRScript(Path.GetDirectoryName(textReportPath.Text), true);
+            foreach (var fileName in fileNames)
             {
                 dataGridScripts.Rows.Add(fileName, rVersionsDropDown.Items[rVersionsDropDown.Items.Count - 1].AccessibilityObject.Name);
             }
+        }
+
+        private void dataGridScripts_CellContentDoubleClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.ColumnIndex != 0 || string.IsNullOrEmpty((string)dataGridScripts.SelectedCells[0].Value))
+                return;
+            var selectedCell = dataGridScripts.SelectedCells[0];
+            var fileNames = OpenRScript(Path.GetDirectoryName((string)selectedCell.Value), false);
+            if (fileNames.Length > 0)
+            {
+                selectedCell.Value = fileNames[0];
+            }
+        }
+
+        private string[] OpenRScript(string initialDirectory, bool allowMultiSelect)
+        {
+            var openDialog = new OpenFileDialog();
+            openDialog.Filter = TextUtil.FILTER_R;
+            openDialog.Multiselect = allowMultiSelect;
+            openDialog.InitialDirectory = Path.GetDirectoryName(initialDirectory);
+            if (openDialog.ShowDialog() != DialogResult.OK)
+                return new string[]{};
+            return openDialog.FileNames;
         }
 
         private void btnRemove_Click(object sender, EventArgs e)
@@ -83,6 +104,7 @@ namespace SkylineBatch
         {
             OpenFileDialog openDialog = new OpenFileDialog();
             openDialog.Filter = TextUtil.FILTER_SKYR;
+            openDialog.InitialDirectory = Path.GetDirectoryName(textReportPath.Text);
             openDialog.ShowDialog();
             textReportPath.Text = openDialog.FileName;
         }
@@ -150,22 +172,6 @@ namespace SkylineBatch
         {
             SelectRVersion(e.ClickedItem.Name);
             dataGridScripts.SelectedCells[0].Value = e.ClickedItem.AccessibilityObject.Name;
-        }
-
-        private void dataGridScripts_CellContentDoubleClick(object sender, DataGridViewCellEventArgs e)
-        {
-            if (e.ColumnIndex != 0 || string.IsNullOrEmpty((string) dataGridScripts.SelectedCells[0].Value))
-                return;
-            var selectedCell = dataGridScripts.SelectedCells[0];
-            var openDialog = new OpenFileDialog();
-            openDialog.Filter = TextUtil.FILTER_R;
-            openDialog.Multiselect = false;
-            openDialog.InitialDirectory = Path.GetDirectoryName((string)selectedCell.Value);
-            openDialog.ShowDialog();
-            if (!string.IsNullOrEmpty(openDialog.FileName))
-            {
-                selectedCell.Value = openDialog.FileName;
-            }
         }
     }
 }

@@ -26,6 +26,7 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SkylineBatch;
 
+
 namespace SkylineBatchTest
 {
     [TestClass]
@@ -105,7 +106,7 @@ namespace SkylineBatchTest
             }
             catch (ArgumentException e)
             {
-                Assert.AreEqual("Error: one already exists.", e.Message);
+                Assert.AreEqual("Error: \"one\" already exists.", e.Message);
             }
             Assert.IsTrue(!addedDuplicateConfig, "Expected exception for duplicate configuration added.");
             Assert.IsTrue(testConfigManager.ConfigListEquals(threeConfigs));
@@ -174,7 +175,7 @@ namespace SkylineBatchTest
             }
             catch (ArgumentException e)
             {
-                Assert.AreEqual("Error: oneReplaced already exists.", e.Message);
+                Assert.AreEqual("Error: \"oneReplaced\" already exists.", e.Message);
             }
             Assert.IsTrue(!replacedWithDuplicate, "Expected exception for duplicate config.");
             Assert.IsTrue(configManager.ConfigListEquals(expectedOneReplaced));

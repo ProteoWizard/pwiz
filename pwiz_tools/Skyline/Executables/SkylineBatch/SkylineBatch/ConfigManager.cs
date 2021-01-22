@@ -261,12 +261,12 @@ namespace SkylineBatch
                 if (configRunner.IsBusy())
                 {
                     DisplayWarning(string.Format(
-                        Resources.ConfigManager_RemoveSelected__0__is_still_running__Please_stop_the_current_run_before_deleting__0__,
+                        Resources.ConfigManager_RemoveSelected___0___is_still_running__Please_stop_the_current_run_before_deleting___0___,
                         configRunner.GetConfigName()));
                     return;
                 }
                 var doDelete = DisplayQuestion( 
-                    string.Format(Resources.ConfigManager_RemoveSelected_Are_you_sure_you_want_to_delete__0__,
+                    string.Format(Resources.ConfigManager_RemoveSelected_Are_you_sure_you_want_to_delete___0___,
                         configRunner.GetConfigName()));
                 if (doDelete != DialogResult.Yes)
                     return;
@@ -291,8 +291,8 @@ namespace SkylineBatch
             if (exists != expectedValue)
             {
                 var message = expectedValue
-                        ? string.Format(Resources.ConfigManager_CheckIfExists_Error___0__does_not_exist_, config.Name)
-                        : string.Format(Resources.ConfigManager_CheckIfExists_Error___0__already_exists_, config.Name);
+                        ? string.Format(Resources.ConfigManager_CheckIfExists_Error____0___does_not_exist_, config.Name)
+                        : string.Format(Resources.ConfigManager_CheckIfExists_Error____0___already_exists_, config.Name);
                 throw new ArgumentException(message);
             }
         }
@@ -322,8 +322,8 @@ namespace SkylineBatch
             {
                 if (invalidConfigNames.Count == 1)
                 {
-                    DisplayError(string.Format(Resources.ConfigManager_RunAll_Cannot_run_configurations_while__0__has_an_error_, invalidConfigNames[0]) + Environment.NewLine +
-                                 string.Format(Resources.ConfigManager_RunAll_Please_edit__0__to_enable_running_, invalidConfigNames[0]));
+                    DisplayError(string.Format(Resources.ConfigManager_RunAll_Cannot_run_configurations_while___0___has_an_error_, invalidConfigNames[0]) + Environment.NewLine +
+                                 string.Format(Resources.ConfigManager_RunAll_Please_edit___0___to_enable_running_, invalidConfigNames[0]));
                 }
                 else
                 {

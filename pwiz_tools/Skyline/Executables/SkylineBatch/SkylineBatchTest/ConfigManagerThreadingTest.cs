@@ -40,7 +40,7 @@ namespace SkylineBatchTest
 
             Assert.AreEqual("one  two  three  new  ", configManager.ListConfigNames());
             Assert.IsTrue(firstThreadException != null, "Should have failed to add the second time, since no index selected");
-            Assert.AreEqual("Error: new already exists.", firstThreadException.Message);
+            Assert.AreEqual("Error: \"new\" already exists.", firstThreadException.Message);
         }
 
         [TestMethod]
@@ -149,7 +149,7 @@ namespace SkylineBatchTest
             var expectedConfigLists = new List<string> {"new  two  three  ", "one  new  three  ", "one  two  new  "};
             Assert.IsTrue(expectedConfigLists.Contains(configManager.ListConfigNames()), "Unexpected config list: " + configManager.ListConfigNames());
             if (firstThreadException != null)
-                Assert.AreEqual("Error: new already exists.", firstThreadException.Message); // possible no exception thrown if random index was always same number
+                Assert.AreEqual("Error: \"new\" already exists.", firstThreadException.Message); // possible no exception thrown if random index was always same number
             
         }
 

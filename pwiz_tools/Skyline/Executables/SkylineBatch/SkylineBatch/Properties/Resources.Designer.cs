@@ -163,20 +163,20 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error: {0} already exists..
+        ///   Looks up a localized string similar to Error: &quot;{0}&quot; already exists..
         /// </summary>
-        internal static string ConfigManager_CheckIfExists_Error___0__already_exists_ {
+        internal static string ConfigManager_CheckIfExists_Error____0___already_exists_ {
             get {
-                return ResourceManager.GetString("ConfigManager_CheckIfExists_Error___0__already_exists_", resourceCulture);
+                return ResourceManager.GetString("ConfigManager_CheckIfExists_Error____0___already_exists_", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error: {0} does not exist..
+        ///   Looks up a localized string similar to Error: &quot;{0}&quot; does not exist..
         /// </summary>
-        internal static string ConfigManager_CheckIfExists_Error___0__does_not_exist_ {
+        internal static string ConfigManager_CheckIfExists_Error____0___does_not_exist_ {
             get {
-                return ResourceManager.GetString("ConfigManager_CheckIfExists_Error___0__does_not_exist_", resourceCulture);
+                return ResourceManager.GetString("ConfigManager_CheckIfExists_Error____0___does_not_exist_", resourceCulture);
             }
         }
         
@@ -283,21 +283,21 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} is still running. Please stop the current run before deleting {0}..
+        ///   Looks up a localized string similar to &quot;{0}&quot; is still running. Please stop the current run before deleting &quot;{0}&quot;..
         /// </summary>
-        internal static string ConfigManager_RemoveSelected__0__is_still_running__Please_stop_the_current_run_before_deleting__0__ {
+        internal static string ConfigManager_RemoveSelected___0___is_still_running__Please_stop_the_current_run_before_deleting___0___ {
             get {
-                return ResourceManager.GetString("ConfigManager_RemoveSelected__0__is_still_running__Please_stop_the_current_run_be" +
-                        "fore_deleting__0__", resourceCulture);
+                return ResourceManager.GetString("ConfigManager_RemoveSelected___0___is_still_running__Please_stop_the_current_run_" +
+                        "before_deleting___0___", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Are you sure you want to delete {0}?.
+        ///   Looks up a localized string similar to Are you sure you want to delete &quot;{0}&quot;?.
         /// </summary>
-        internal static string ConfigManager_RemoveSelected_Are_you_sure_you_want_to_delete__0__ {
+        internal static string ConfigManager_RemoveSelected_Are_you_sure_you_want_to_delete___0___ {
             get {
-                return ResourceManager.GetString("ConfigManager_RemoveSelected_Are_you_sure_you_want_to_delete__0__", resourceCulture);
+                return ResourceManager.GetString("ConfigManager_RemoveSelected_Are_you_sure_you_want_to_delete___0___", resourceCulture);
             }
         }
         
@@ -311,11 +311,11 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cannot run configurations while {0} has an error..
+        ///   Looks up a localized string similar to Cannot run configurations while &quot;{0}&quot; has an error..
         /// </summary>
-        internal static string ConfigManager_RunAll_Cannot_run_configurations_while__0__has_an_error_ {
+        internal static string ConfigManager_RunAll_Cannot_run_configurations_while___0___has_an_error_ {
             get {
-                return ResourceManager.GetString("ConfigManager_RunAll_Cannot_run_configurations_while__0__has_an_error_", resourceCulture);
+                return ResourceManager.GetString("ConfigManager_RunAll_Cannot_run_configurations_while___0___has_an_error_", resourceCulture);
             }
         }
         
@@ -338,11 +338,11 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Please edit {0} to enable running..
+        ///   Looks up a localized string similar to Please edit &quot;{0}&quot; to enable running..
         /// </summary>
-        internal static string ConfigManager_RunAll_Please_edit__0__to_enable_running_ {
+        internal static string ConfigManager_RunAll_Please_edit___0___to_enable_running_ {
             get {
-                return ResourceManager.GetString("ConfigManager_RunAll_Please_edit__0__to_enable_running_", resourceCulture);
+                return ResourceManager.GetString("ConfigManager_RunAll_Please_edit___0___to_enable_running_", resourceCulture);
             }
         }
         

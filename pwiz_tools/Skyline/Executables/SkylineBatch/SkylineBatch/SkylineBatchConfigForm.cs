@@ -48,10 +48,6 @@ namespace SkylineBatch
         public SkylineBatchConfigForm(IMainUiControl mainControl, SkylineBatchConfig config, ConfigAction action, bool isBusy)
         {
             InitializeComponent();
-            if (isBusy)
-                Program.LogInfo(string.Format(Resources.SkylineBatchConfigForm_SkylineBatchConfigForm_Viewing_configuration___0__, config.Name));
-            else
-                Program.LogInfo(string.Format(Resources.SkylineBatchConfigForm_SkylineBatchConfigForm_Editing_configuration___0__, config.Name));
             _action = action;
             _initialCreated = config != null ? config.Created : DateTime.MinValue;
             _newReportList = new List<ReportInfo>();
