@@ -1,13 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using SkylineBatch.Properties;
 
 namespace SkylineBatch
 {
@@ -22,12 +14,12 @@ namespace SkylineBatch
             InitializeComponent();
             _uiControl = uiControl;
             _configManager = configManager;
-            checkedSaveConfigs.Items.AddRange(_configManager.GetConfigNames());
+            checkedSaveConfigs.Items.AddRange(_configManager.ConfigNamesAsObjectArray());
         }
 
         private void btnBrowse_Click(object sender, EventArgs e)
         {
-            var dialog = new SaveFileDialog { Title = Resources.ConfigManager_Save_configurations, Filter = Resources.ConfigManager_XML_file_extension, FileName = textFileName.Text };
+            var dialog = new SaveFileDialog { Filter = TextUtil.FILTER_XML, FileName = textFileName.Text };
             if (dialog.ShowDialog(this) != DialogResult.OK)
                 return;
 
@@ -60,9 +52,9 @@ namespace SkylineBatch
             {
                 _configManager.ExportConfigs(textFileName.Text, indiciesToSave);
             }
-            catch (ArgumentException)
+            catch (ArgumentException e)
             {
-                _uiControl.DisplayError($"This is not a valid file path: \"{textFileName.Text}\"");
+                _uiControl.DisplayError(e.Message);
                 return;
             }
 

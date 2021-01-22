@@ -39,7 +39,8 @@ namespace SkylineBatch
         {
             if (string.IsNullOrEmpty(name))
             {
-                throw new ArgumentException(Resources.SkylineBatchConfig_Please_enter_a_name_for_the_configuration_);
+                throw new ArgumentException(string.Format(Resources.SkylineBatchConfig_SkylineBatchConfig___0___is_not_a_valid_name_for_the_configuration_, name) + Environment.NewLine +
+                                            Resources.SkylineBatchConfig_SkylineBatchConfig_Please_enter_a_name_);
             }
             Name = name;
             Created = created;
@@ -177,6 +178,15 @@ namespace SkylineBatch
             FileSettings.Validate();
             ReportSettings.Validate();
             SkylineSettings.Validate();
+        }
+
+        public bool TryPathReplace(string oldRoot, string newRoot, out SkylineBatchConfig replacedPathConfig)
+        {
+            var mainSettingsReplaced = MainSettings.TryPathReplace(oldRoot, newRoot, out MainSettings pathReplacedMainSettings);
+            var reportSettingsReplaced =
+                ReportSettings.TryPathReplace(oldRoot, newRoot, out ReportSettings pathReplacedReportSettings);
+            replacedPathConfig = new SkylineBatchConfig(Name, Created, DateTime.Now, pathReplacedMainSettings, FileSettings, pathReplacedReportSettings, SkylineSettings);
+            return mainSettingsReplaced || reportSettingsReplaced;
         }
 
         public override string ToString()

@@ -18,10 +18,10 @@ namespace SkylineBatch
             _version = !_hasRInstalled && removeRScripts ? null : oldVersion;
 
 
-            labelTitle.Text = _hasRInstalled ? string.Format(Resources.RVersionControl_R__0__Not_Found, oldVersion) :
-                "Could not find any R installations on this computer.";
-            labelMessage.Text = _hasRInstalled ? string.Format(Resources.RVersionControl_Select_an_R_version_for__0___, Path.GetFileName(scriptName)) :
-                "Click next to use this configuration without R scripts.";
+            labelTitle.Text = _hasRInstalled ? string.Format(Resources.RVersionControl_RVersionControl_R_version__0__not_found_, oldVersion) :
+                Resources.RVersionControl_RVersionControl_Could_not_find_any_R_installations_on_this_computer_;
+            labelMessage.Text = _hasRInstalled ? string.Format(Resources.RVersionControl_RVersionControl_Select_an_R_version_for__0__, Path.GetFileName(scriptName)) :
+                Resources.RVersionControl_RVersionControl_Click_next_to_remove_R_scripts_from_this_configuration_;
             foreach (var version in Settings.Default.RVersions.Keys)
             {
                 comboRVersions.Items.Add(version);

@@ -17,7 +17,6 @@
  */
 
 using System;
-using System.IO;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
@@ -31,13 +30,12 @@ namespace SkylineBatch
 
         // IMMUTABLE - all fields are readonly strings
         // Holds file locations and naming pattern to use when running the configuration
-
-
-        public FileSettings(string msOneResolvingPower, string msMsResolvingPower, string retentionTime, bool addDecoys, bool shuffleDecoys)
+        
+        public FileSettings(string msOneResolvingPower, string msMsResolvingPower, string retentionTime, bool addDecoys, bool shuffleDecoys, bool trainMProfit)
         {
-            MsOneResolvingPower = msOneResolvingPower ?? "";
-            MsMsResolvingPower = msMsResolvingPower ?? "";
-            RetentionTime = retentionTime ?? "";
+            MsOneResolvingPower = msOneResolvingPower ?? string.Empty;
+            MsMsResolvingPower = msMsResolvingPower ?? string.Empty;
+            RetentionTime = retentionTime ?? string.Empty;
             AddDecoys = addDecoys;
             ShuffleDecoys = shuffleDecoys;
         }
@@ -47,6 +45,7 @@ namespace SkylineBatch
         public readonly string RetentionTime;
         public readonly bool AddDecoys;
         public readonly bool ShuffleDecoys;
+        public readonly bool TrainMProfit;
 
         private int ValidateIntTextField(string textToParse, string fieldName)
         {
@@ -54,9 +53,9 @@ namespace SkylineBatch
             int parsedInt;
             if (!Int32.TryParse(textToParse, out parsedInt))
             {
-                throw new ArgumentException(string.Format(
-                    Resources.FileSettings_ValidateIntTextField_Invalid_value_for__0___1__, fieldName,
-                    textToParse));
+                throw new ArgumentException(string.Format(Resources.FileSettings_ValidateIntTextField__0__is_not_a_valid_value_for__1__, fieldName,
+                    textToParse) + Environment.NewLine +
+                                            Resources.FileSettings_ValidateIntTextField_Please_enter_a_number_);
             }
             return parsedInt;
         }
@@ -72,18 +71,12 @@ namespace SkylineBatch
 
         public void Validate()
         {
-            ValidateIntTextField(MsOneResolvingPower, Resources.FileSettings_Resolving_Power);
-            ValidateIntTextField(MsMsResolvingPower, Resources.FileSettings_Resolving_Power);
-            ValidateIntTextField(RetentionTime, Resources.FileSettings_Retention_Time);
-            
+            ValidateIntTextField(MsOneResolvingPower, Resources.FileSettings_Validate_MS1_filtering_res_accuracy);
+            ValidateIntTextField(MsMsResolvingPower, Resources.FileSettings_Validate_Ms_Ms_filtering_res_accuracy);
+            ValidateIntTextField(RetentionTime, Resources.FileSettings_Validate_retention_time_filtering);
             // CONSIDER: adding validation that checks if numbers are within a certain range
         }
-
-
-
-
-
-
+        
         #region Read/Write XML
 
         private enum Attr
@@ -92,7 +85,8 @@ namespace SkylineBatch
             MsMsResolvingPower,
             RetentionTime,
             AddDecoys,
-            ShuffleDecoys
+            ShuffleDecoys,
+            TrainMProfit
         };
 
         public static FileSettings ReadXml(XmlReader reader)
@@ -102,7 +96,8 @@ namespace SkylineBatch
             var retentionTime = reader.GetAttribute(Attr.RetentionTime);
             var addDecoys = reader.GetBoolAttribute(Attr.AddDecoys);
             var shuffleDecoys = reader.GetBoolAttribute(Attr.ShuffleDecoys);
-            return new FileSettings(msOneResolvingPower, msMsResolvingPower, retentionTime, addDecoys, shuffleDecoys);
+            var trainMProfit = reader.GetBoolAttribute(Attr.TrainMProfit);
+            return new FileSettings(msOneResolvingPower, msMsResolvingPower, retentionTime, addDecoys, shuffleDecoys, trainMProfit);
         }
 
         public void WriteXml(XmlWriter writer)
@@ -113,13 +108,13 @@ namespace SkylineBatch
             writer.WriteAttributeIfString(Attr.RetentionTime, RetentionTime);
             writer.WriteAttribute(Attr.AddDecoys, AddDecoys);
             writer.WriteAttribute(Attr.ShuffleDecoys, ShuffleDecoys);
+            writer.WriteAttribute(Attr.TrainMProfit, TrainMProfit);
             writer.WriteEndElement();
         }
         #endregion
 
         protected bool Equals(FileSettings other)
         {
-
             return other.MsOneResolvingPower == MsOneResolvingPower &&
                    other.MsMsResolvingPower == MsMsResolvingPower &&
                    other.RetentionTime == RetentionTime &&

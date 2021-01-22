@@ -15,8 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
+ 
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -26,8 +25,6 @@ using SkylineBatch.Properties;
 
 namespace SkylineBatch
 {
-
-
 
     public class Installations
     {
@@ -67,14 +64,14 @@ namespace SkylineBatch
         private static void FindClickOnceInstallations()
         {
             var baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            // Skyline click-once install
             var skylineInstallExists = ClickOnceInstallExists(Skyline);
             Settings.Default.SkylineRunnerPath =
                 skylineInstallExists ? Path.Combine(baseDirectory, SkylineRunnerExe) : null;
-
+            // Skyline-daily click-once install
             var skylineDailyInstallExists = ClickOnceInstallExists(SkylineDaily);
             Settings.Default.SkylineDailyRunnerPath =
                 skylineDailyInstallExists ? Path.Combine(baseDirectory, SkylineDailyRunnerExe) : null;
-
         }
 
         private static bool ClickOnceInstallExists(string skylineType)
@@ -97,55 +94,22 @@ namespace SkylineBatch
         private static void FindAdministrativeInstallations()
         {
             var programFilesPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
-
+            // Skyline administrative install
             var skylinePath = Path.Combine(programFilesPath, Skyline);
-            var skylineDailyPath = Path.Combine(programFilesPath, SkylineDaily);
             var adminInstallSkyline = Directory.Exists(skylinePath) &&
                                       File.Exists(Path.Combine(skylinePath, SkylineCmdExe));
             Settings.Default.SkylineAdminCmdPath =
                 adminInstallSkyline ? Path.Combine(skylinePath, SkylineCmdExe) : null;
-
+            // Skyline-daily administrative install
+            var skylineDailyPath = Path.Combine(programFilesPath, SkylineDaily);
             var adminInstallSkylineDaily = Directory.Exists(skylineDailyPath) &&
                                            File.Exists(Path.Combine(skylineDailyPath, SkylineCmdExe));
             Settings.Default.SkylineDailyAdminCmdPath =
                 adminInstallSkylineDaily ? Path.Combine(skylineDailyPath, SkylineCmdExe) : null;
-
-        }
-
-        public static string DefaultSkyline(out SkylineType defaultType)
-        {
-            if (HasLocalSkylineCmd)
-            {
-                defaultType = SkylineType.Local;
-                return Settings.Default.SkylineLocalCommandPath;
-            }
-            if (HasSkyline)
-            {
-                defaultType = SkylineType.Skyline;
-                return string.IsNullOrEmpty(Settings.Default.SkylineAdminCmdPath)
-                    ? Settings.Default.SkylineRunnerPath
-                    : Settings.Default.SkylineAdminCmdPath;
-            } 
-            if (HasSkylineDaily)
-            {
-                defaultType = SkylineType.SkylineDaily;
-                return string.IsNullOrEmpty(Settings.Default.SkylineDailyAdminCmdPath)
-                    ? Settings.Default.SkylineDailyRunnerPath
-                    : Settings.Default.SkylineDailyAdminCmdPath;
-            }
-
-            if (HasCustomSkylineCmd)
-            {
-                defaultType = SkylineType.Custom;
-                return Settings.Default.SkylineCustomCmdPath;
-            }
-            throw new Exception("No Skyline installations found.");
         }
 
         #endregion
-
-
-
+        
         #region R
 
         public static bool FindRDirectory()
@@ -161,7 +125,6 @@ namespace SkylineBatch
                 {
                     // ignored
                 }
-
                 if (rKey == null)
                     return false;
                 var latestRPath = rKey.GetValue(@"InstallPath") as string;
@@ -179,7 +142,6 @@ namespace SkylineBatch
             {
                 return;
             }
-
             var rVersions = Directory.GetDirectories(Settings.Default.RDir);
             foreach (var rVersion in rVersions)
             {
@@ -194,15 +156,9 @@ namespace SkylineBatch
                 }
 
             }
-
             Settings.Default.RVersions = rPaths;
         }
 
         #endregion
-
-
-
-
-
     }
 }

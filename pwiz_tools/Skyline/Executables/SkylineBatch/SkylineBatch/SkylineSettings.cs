@@ -55,13 +55,16 @@ namespace SkylineBatch
                 switch (Type)
                 {
                     case SkylineType.Skyline:
-                        throw new ArgumentException(Resources.SkylineSettings_Unable_to_find_Skyline_installation_);
+                        throw new ArgumentException(Resources.SkylineSettings_Validate_Could_not_find_a_Skyline_installation_on_this_computer_ + Environment.NewLine +
+                                                    Resources.SkylineSettings_Validate_Please_try_a_different_Skyline_option_);
                     case SkylineType.SkylineDaily:
-                        throw new ArgumentException(Resources.SkylineSettings_Unable_to_find_Skyline_Daily_installation_);
+                        throw new ArgumentException(Resources.SkylineSettings_Validate_Could_not_find_a_Skyline_daily_installation_on_this_computer_ + Environment.NewLine +
+                              Resources.SkylineSettings_Validate_Please_try_a_different_Skyline_option_); 
                     case SkylineType.Local:
-                        throw new ArgumentException(Resources.SkylineSettings_Unable_to_find_local_Skyline_installation_);
+                        throw new ArgumentException(string.Format(Resources.SkylineSettings_Validate_Could_not_find__0__at_this_location___1_, Installations.SkylineCmdExe, CmdPath));
                     case SkylineType.Custom:
-                        throw new ArgumentException(string.Format(Resources.SkylineSettings_Unable_to_find_Skyline_installation_at__0__, Path.GetDirectoryName(CmdPath)));
+                        throw new ArgumentException(string.Format(Resources.SkylineSettings_Validate_Could_not_find_a_Skyline_installation_at_this_location___0_, Path.GetDirectoryName(CmdPath)) + Environment.NewLine +
+                                                    string.Format(Resources.SkylineSettings_Validate_Please_select_a_folder_containing__0__, Installations.SkylineCmdExe));
                 }
             }
         }

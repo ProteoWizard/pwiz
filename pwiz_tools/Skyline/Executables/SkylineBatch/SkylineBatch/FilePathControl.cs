@@ -10,11 +10,10 @@ namespace SkylineBatch
         private string _path;
         private string _lastUsedPath;
         private readonly bool _folder;
-        private readonly string _type;
+        private readonly string _filter;
 
         private readonly Validator _pathValidator;
-
-        //public delegate void Validator(string variable);
+        
 
         public FilePathControl(string variableName, string invalidPath, string lastInputPath, bool folder, Validator pathValidator)
         {
@@ -24,12 +23,29 @@ namespace SkylineBatch
             _lastUsedPath = lastInputPath ?? invalidPath;
             _pathValidator = pathValidator;
             _folder = folder;
-            if (!folder && invalidPath.Contains("."))
+            if (!folder)
             {
-                var suffix = invalidPath.Substring(invalidPath.LastIndexOf(".", StringComparison.Ordinal));
-                _type = $"{suffix.Substring(1).ToUpper()}|*{suffix}|All files|*.*";
+                var suffix = invalidPath.Contains(".") ? 
+                    invalidPath.Substring(invalidPath.LastIndexOf(".", StringComparison.Ordinal)) : 
+                    string.Empty;
+                switch (suffix)
+                {
+                    case TextUtil.EXT_R:
+                        _filter = TextUtil.FILTER_R;
+                        break;
+                    case TextUtil.EXT_SKY:
+                        _filter = TextUtil.FILTER_SKY;
+                        break;
+                    case TextUtil.EXT_SKYR:
+                        _filter = TextUtil.FILTER_SKYR;
+                        break;
+                    default:
+                        _filter = TextUtil.FILTER_ALL;
+                        break;
+                }
             }
-            label1.Text = string.Format(Resources.FilePathControl_Could_not_find_path_to_the__0___, variableName);
+            label1.Text = string.Format(Resources.FilePathControl_FilePathControl_Could_not_find_the__0__, variableName);
+            label2.Text = string.Format("Please specify the path to the {0}:", variableName);
             textFilePath.Text = _path;
         }
 
@@ -52,14 +68,13 @@ namespace SkylineBatch
         private void btnBrowse_Click(object sender, EventArgs e)
         {
             var initialDirectory = _lastUsedPath;
-            while (!Directory.Exists(initialDirectory) || initialDirectory == "")
+            while (!Directory.Exists(initialDirectory) || initialDirectory == string.Empty)
                 initialDirectory = Path.GetDirectoryName(initialDirectory);
             
             if (_folder)
             {
                 using (FolderBrowserDialog dlg = new FolderBrowserDialog
                 {
-                    Description = Resources.FilePathControl_Select_Folder,
                     SelectedPath = initialDirectory
                 })
                 {
@@ -73,12 +88,13 @@ namespace SkylineBatch
             }
 
             OpenFileDialog openDialog = new OpenFileDialog();
-            if (!string.IsNullOrEmpty(_type))
-                openDialog.Filter = _type;
-            openDialog.Title = Resources.FilePathControl_Open_File;
+            openDialog.Filter = _filter;
             openDialog.InitialDirectory = initialDirectory;
             if (openDialog.ShowDialog() == DialogResult.OK)
+            {
                 textFilePath.Text = openDialog.FileName;
+                _lastUsedPath = openDialog.FileName;
+            }
         }
 
         private void textFilePath_TextChanged(object sender, EventArgs e)

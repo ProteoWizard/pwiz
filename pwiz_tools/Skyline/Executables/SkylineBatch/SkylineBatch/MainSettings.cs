@@ -52,7 +52,7 @@ namespace SkylineBatch
 
         public string GetNewTemplatePath()
         {
-            return AnalysisFolderPath + "\\" + Path.GetFileName(TemplateFilePath);
+            return Path.Combine(AnalysisFolderPath, Path.GetFileName(TemplateFilePath));
         }
 
         public override string ToString()
@@ -77,7 +77,7 @@ namespace SkylineBatch
             CheckIfEmptyPath(skylineFile, "Skyline file");
             if (!File.Exists(skylineFile))
             {
-                throw new ArgumentException(string.Format(Resources.MainSettings_Template_file_does_not_exist, skylineFile) + Environment.NewLine +
+                throw new ArgumentException(string.Format("The skyline template file {0} does not exist.", skylineFile) + Environment.NewLine +
                                             "Please provide a valid file.");
             }
         }
@@ -88,7 +88,7 @@ namespace SkylineBatch
             var analysisFolderDirectory = Path.GetDirectoryName(analysisFolder);
             if (!Directory.Exists(analysisFolderDirectory))
             {
-                throw new ArgumentException(string.Format(Resources.MainSettings_Analysis_folder__0__does_not_exist, analysisFolderDirectory) + Environment.NewLine +
+                throw new ArgumentException(string.Format(Resources.MainSettings_ValidateAnalysisFolder_The_analysis_folder__0__does_not_exist_, analysisFolderDirectory) + Environment.NewLine +
                                             "Please provide a valid folder.");
             }
         }
@@ -98,7 +98,7 @@ namespace SkylineBatch
             CheckIfEmptyPath(dataFolder, "data folder");
             if (!Directory.Exists(dataFolder))
             {
-                throw new ArgumentException(string.Format(Resources.MainSettings_Data_folder_does_not_exist, dataFolder) + Environment.NewLine +
+                throw new ArgumentException(string.Format("The data folder {0} does not exist.", dataFolder) + Environment.NewLine +
                                             "Please provide a valid folder.");
             }
         }
@@ -107,14 +107,21 @@ namespace SkylineBatch
         {
             if (string.IsNullOrWhiteSpace(input))
             {
-                throw new ArgumentException(string.Format(Resources.MainSettings_Specify_path_to, name));
+                throw new ArgumentException(string.Format("Please specify a path to {0}", name));
             }
         }
 
-        
-
-        
-
+        public bool TryPathReplace(string oldRoot, string newRoot, out MainSettings pathReplacedMainSettings)
+        {
+            var templateReplaced =
+                TextUtil.TryReplaceStart(oldRoot, newRoot, TemplateFilePath, out string replacedTemplatePath);
+            var analysisReplaced =
+                TextUtil.TryReplaceStart(oldRoot, newRoot, AnalysisFolderPath, out string replacedAnalysisPath);
+            var dataReplaced =
+                TextUtil.TryReplaceStart(oldRoot, newRoot, DataFolderPath, out string replacedDataPath);
+            pathReplacedMainSettings = new MainSettings(replacedTemplatePath, replacedAnalysisPath, replacedDataPath, ReplicateNamingPattern);
+            return templateReplaced || analysisReplaced || dataReplaced;
+        }
 
         #region Read/Write XML
 

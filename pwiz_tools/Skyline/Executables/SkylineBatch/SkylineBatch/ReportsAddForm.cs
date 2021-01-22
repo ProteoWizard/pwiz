@@ -63,8 +63,7 @@ namespace SkylineBatch
             }
             
             var openDialog = new OpenFileDialog();
-            openDialog.Filter = Resources.ReportsAddForm_R_file_extension;
-            openDialog.Title = Resources.ReportsAddForm_Open_R_Script;
+            openDialog.Filter = TextUtil.FILTER_R;
             openDialog.Multiselect = true;
             openDialog.ShowDialog();
             foreach (var fileName in openDialog.FileNames)
@@ -85,8 +84,7 @@ namespace SkylineBatch
         private void btnReportPath_Click(object sender, EventArgs e)
         {
             OpenFileDialog openDialog = new OpenFileDialog();
-            openDialog.Filter = Resources.ReportsAddForm_Skyr_file_extension;
-            openDialog.Title = Resources.ReportsAddForm_Open_Report;
+            openDialog.Filter = TextUtil.FILTER_SKYR;
             openDialog.ShowDialog();
             textReportPath.Text = openDialog.FileName;
         }
@@ -165,8 +163,7 @@ namespace SkylineBatch
                
             var selectedCell = dataGridScripts.SelectedCells[0];
             var openDialog = new OpenFileDialog();
-            openDialog.Filter = Resources.ReportsAddForm_R_file_extension;
-            openDialog.Title = Resources.ReportsAddForm_Open_R_Script;
+            openDialog.Filter = TextUtil.FILTER_R;
             openDialog.Multiselect = false;
             openDialog.InitialDirectory = Path.GetDirectoryName((string)selectedCell.Value);
             openDialog.ShowDialog();

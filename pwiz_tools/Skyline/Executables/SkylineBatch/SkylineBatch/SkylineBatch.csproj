@@ -99,8 +99,8 @@
     <EmbeddedResource Include="FilePathControl.resx">
       <DependentUpon>FilePathControl.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="FindSkyline.resx">
-      <DependentUpon>FindSkyline.cs</DependentUpon>
+    <EmbeddedResource Include="FindSkylineForm.resx">
+      <DependentUpon>FindSkylineForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="InvalidConfigSetupForm.resx">
       <DependentUpon>InvalidConfigSetupForm.cs</DependentUpon>
@@ -144,11 +144,11 @@
       <DependentUpon>FilePathControl.cs</DependentUpon>
     </Compile>
     <Compile Include="FileSettings.cs" />
-    <Compile Include="FindSkyline.cs">
+    <Compile Include="FindSkylineForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="FindSkyline.Designer.cs">
-      <DependentUpon>FindSkyline.cs</DependentUpon>
+    <Compile Include="FindSkylineForm.Designer.cs">
+      <DependentUpon>FindSkylineForm.cs</DependentUpon>
     </Compile>
     <Compile Include="InvalidConfigSetupForm.cs">
       <SubType>Form</SubType>

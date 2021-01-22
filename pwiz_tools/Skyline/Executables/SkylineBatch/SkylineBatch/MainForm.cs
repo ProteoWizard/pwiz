@@ -83,8 +83,8 @@ namespace SkylineBatch
 
         private void btnNewConfig_Click(object sender, EventArgs e)
         {
-            var initialConfigValues =
-                _configManager.HasConfigs() ? _configManager.GetLastCreated() : null;
+            Program.LogInfo(Resources.MainForm_btnNewConfig_Click_Creating_a_new_configuration_);
+            var initialConfigValues =_configManager.GetLastCreated();
             var configForm = new SkylineBatchConfigForm(this, initialConfigValues, ConfigAction.Add, false);
             configForm.ShowDialog();
         }
@@ -106,7 +106,7 @@ namespace SkylineBatch
             catch (ArgumentException)
             {
                 if (configRunner.IsRunning()) throw new Exception("Invalid configuration cannot be running.");
-                var validateConfigForm = new InvalidConfigSetupForm(config, this);
+                var validateConfigForm = new InvalidConfigSetupForm(config, _configManager, this);
                 validateConfigForm.ShowDialog();
                 if (validateConfigForm.DialogResult != DialogResult.OK)
                     return;
@@ -227,7 +227,7 @@ namespace SkylineBatch
             if (_configManager.HasConfigs())
                 btnCancel.Enabled = true;
             // update ui log and switch to log tab
-            if (_configManager.ConfigsRunning())
+            if (_configManager.ConfigsRunning().Count > 0)
             {
                 comboLogList.SelectedIndex = 0;
                 tabMain.SelectTab(tabLog);
@@ -308,7 +308,7 @@ namespace SkylineBatch
         private void btnImport_Click(object sender, EventArgs e)
         {
             var dialog = new OpenFileDialog();
-            dialog.Filter = Resources.ConfigManager_XML_file_extension;
+            dialog.Filter = TextUtil.FILTER_XML;
             if (dialog.ShowDialog(this) != DialogResult.OK) return;
 
             var filePath = dialog.FileName;

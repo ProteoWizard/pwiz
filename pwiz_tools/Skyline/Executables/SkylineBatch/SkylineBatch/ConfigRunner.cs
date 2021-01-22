@@ -50,11 +50,8 @@ namespace SkylineBatch
         public ConfigRunner(SkylineBatchConfig config, ISkylineBatchLogger logger, IMainUiControl uiControl = null)
         {
             _runnerStatus = RunnerStatus.Stopped;
-
             Config = config;
-
             _uiControl = uiControl;
-
             _logger = logger;
         }
         
@@ -88,7 +85,7 @@ namespace SkylineBatch
 
         public async Task Run(int startStep)
         {
-            LogToUi(string.Format(Resources.ConfigRunner_Start_running_config_log_message, Config.Name));
+            LogToUi(string.Format(Resources.ConfigRunner_Run________________________________Starting_Configuration___0_________________________________, Config.Name));
             try
             {
                 Config.Validate();
@@ -97,7 +94,7 @@ namespace SkylineBatch
             {
                 LogToUi("Error: " + e.Message);
                 ChangeStatus(RunnerStatus.Error);
-                LogToUi(string.Format(Resources.ConfigRunner_Terminated_running_config_log_message, Config.Name, GetStatus()));
+                LogToUi(string.Format(Resources.ConfigRunner_Run_________________________________0____1_________________________________, Config.Name, GetStatus()));
                 return;
             }
 
@@ -110,6 +107,7 @@ namespace SkylineBatch
             var retentionTime = Config.FileSettings.RetentionTime;
             var addDecoys = Config.FileSettings.AddDecoys;
             var shuffleDecoys = Config.FileSettings.ShuffleDecoys;
+            var trainMProfit = Config.FileSettings.TrainMProfit;
             var newSkylineFileName = Config.MainSettings.GetNewTemplatePath();
             var dataDir = Config.MainSettings.DataFolderPath;
             var namingPattern = Config.MainSettings.ReplicateNamingPattern;
@@ -120,8 +118,8 @@ namespace SkylineBatch
             // STEP 1: open skyline file and save copy to analysis folder
             var firstStep = string.Format("\"{0}\" --in=\"{1}\" ", skylineRunner, templateFullName);
 
-            firstStep += !string.IsNullOrEmpty(msOneResolvingPower) ? string.Format("--full-scan-product-res={0} ", msOneResolvingPower) : "";
-            firstStep += !string.IsNullOrEmpty(msMsResolvingPower) ? string.Format("--full-scan-precursor-res={0} ", msMsResolvingPower) : "";
+            firstStep += !string.IsNullOrEmpty(msOneResolvingPower) ? string.Format("--full-scan-precursor-res={0} ", msOneResolvingPower) : "";
+            firstStep += !string.IsNullOrEmpty(msMsResolvingPower) ? string.Format("--full-scan-product-res={0} ", msMsResolvingPower) : "";
             firstStep += !string.IsNullOrEmpty(retentionTime) ? string.Format("--full-scan-rt-filter-tolerance={0} ", retentionTime) : "";
             firstStep += addDecoys ? string.Format("--decoys-add={0} ", shuffleDecoys ? "shuffle" : "reverse") : "";
 
@@ -134,8 +132,9 @@ namespace SkylineBatch
 
             var secondStep = string.Format("\"{0}\" --in=\"{1}\" --import-all=\"{2}\" ", skylineRunner, newSkylineFileName, dataDir);
             secondStep += string.IsNullOrEmpty(namingPattern) ? "" : string.Format("--import-naming-pattern=\"{0}\" ", namingPattern);
-            secondStep += string.Format("--reintegrate-model-name=\"{0}\" ", Config.Name);
-            secondStep += " --reintegrate-create-model --reintegrate-overwrite-peaks --save";
+            secondStep += string.Format("--reintegrate-model-name=\"{0}\" --reintegrate-create-model --reintegrate-overwrite-peaks ", Config.Name);
+            secondStep += trainMProfit ? "‑‑reintegrate‑model‑type=<mProphet> " : string.Empty;
+            secondStep += "--save";
             if (startStep <= 2)
                 commands.Add(secondStep);
 
@@ -163,7 +162,7 @@ namespace SkylineBatch
                 commands[0] += " --version";
             await ExecuteCommandLine(commands);
 
-            LogToUi(string.Format(Resources.ConfigRunner_Terminated_running_config_log_message, Config.Name, GetStatus()));
+            LogToUi(string.Format(Resources.ConfigRunner_Run_________________________________0____1_________________________________, Config.Name, GetStatus()));
         }
 
         public async Task ExecuteCommandLine(List<string> commands)
@@ -210,7 +209,7 @@ namespace SkylineBatch
             // end cmd and skylinerunner processes if runner has been stopped before completion
             if (!cmd.HasExited)
             {
-                LogToUi(Resources.ConfigRunner_Process_terminated);
+                LogToUi("Process terminated.");
                 await KillProcessChildren((UInt32)cmd.Id);
                 if (!cmd.HasExited) cmd.Kill();
                 if (!IsError())
@@ -314,7 +313,5 @@ namespace SkylineBatch
             return _runnerStatus == RunnerStatus.Waiting;
         }
 
-        
-        
     }
 }

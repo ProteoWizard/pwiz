@@ -158,8 +158,7 @@ namespace SkylineBatch
         private void btnSkylineFilePath_Click(object sender, EventArgs e)
         {
             OpenFileDialog openDialog = new OpenFileDialog();
-            openDialog.Filter = Resources.SkylineBatchConfigForm_btnSkylineFilePath_Click_SKY___sky;
-            openDialog.Title = Resources.SkylineBatchConfigForm_btnSkylineFilePath_Click_Open_Skyline_File;
+            openDialog.Filter = TextUtil.FILTER_SKY;
             openDialog.InitialDirectory = Path.GetDirectoryName(textSkylinePath.Text);
             if (openDialog.ShowDialog()== DialogResult.OK)
                 textSkylinePath.Text = openDialog.FileName;
@@ -208,6 +207,7 @@ namespace SkylineBatch
                 textRetentionTime.Text = config.FileSettings.RetentionTime;
             checkBoxDecoys.Checked = config.FileSettings.AddDecoys;
             radioShuffleDecoys.Checked = config.FileSettings.ShuffleDecoys;
+            checkBoxNProfit.Checked = config.FileSettings.TrainMProfit;
         }
 
         private void checkBoxDecoys_CheckedChanged(object sender, EventArgs e)
@@ -218,7 +218,8 @@ namespace SkylineBatch
 
         private FileSettings GetFileSettingsFromUi()
         {
-            return new FileSettings(textMsOneResolvingPower.Text, textMsMsResolvingPower.Text, textRetentionTime.Text, checkBoxDecoys.Checked, radioShuffleDecoys.Enabled && radioShuffleDecoys.Checked);
+            return new FileSettings(textMsOneResolvingPower.Text, textMsMsResolvingPower.Text, textRetentionTime.Text, 
+                checkBoxDecoys.Checked, radioShuffleDecoys.Enabled && radioShuffleDecoys.Checked, checkBoxNProfit.Checked);
         }
 
         

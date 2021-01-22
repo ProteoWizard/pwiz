@@ -64,9 +64,7 @@ namespace SkylineBatch
         {
             using (var folderBrowserDlg = new FolderBrowserDialog())
             {
-                folderBrowserDlg.Description =
-                    string.Format(Resources.FindSkylineForm_btnBrowse_Click_Select_the__0__installation_directory,
-                        Installations.Skyline);
+                folderBrowserDlg.Description = "Select the skyline installation directory";
                 folderBrowserDlg.ShowNewFolderButton = false;
                 folderBrowserDlg.SelectedPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
                 if (folderBrowserDlg.ShowDialog() == DialogResult.OK)

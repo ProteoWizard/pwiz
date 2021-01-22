@@ -36,9 +36,9 @@ namespace SkylineBatch
         // Handles all modification to configs, the config list, configRunners, and log files
         // The UI should reflect the configs, runners, and log files from this class
 
-
         private readonly List<SkylineBatchConfig> _configList; // the list of configurations. Every config must have a runner in configRunners
         private readonly Dictionary<string, ConfigRunner> _configRunners; // dictionary mapping from config name to that config's runner
+        private readonly Dictionary<string, bool> _configValidation; // dictionary mapping from config name to if that config is valid
 
         private readonly ISkylineBatchLogger _logger; // the current logger - always logs to SkylineBatch.log
         private readonly List<ISkylineBatchLogger> _oldLogs; // list of archived loggers, from most recent to least recent
@@ -49,6 +49,8 @@ namespace SkylineBatch
         private readonly object _lock = new object(); // lock required for any mutator or getter method on _configList, _configRunners, or SelectedConfig
         private readonly object _loggerLock = new object(); // lock required for any mutator or getter method on _logger, _oldLogs or SelectedLog
 
+        public Dictionary<string, string> RootReplacement;
+
         public ConfigManager(ISkylineBatchLogger logger, IMainUiControl uiControl = null)
         {
             SelectedConfig = -1;
@@ -57,26 +59,16 @@ namespace SkylineBatch
             _uiControl = uiControl;
             _runningUi = uiControl != null;
             _configRunners = new Dictionary<string, ConfigRunner>();
+            _configValidation = new Dictionary<string, bool>();
             _configList = new List<SkylineBatchConfig>();
             _oldLogs = new List<ISkylineBatchLogger>();
+            RootReplacement = new Dictionary<string, string>();
             LoadOldLogs();
             LoadConfigList();
         }
 
         public int SelectedConfig { get; private set; } // index of the selected configuration
         public int SelectedLog { get; private set; } // index of the selected log. index 0 corresponds to _logger, any index > 0 corresponds to oldLogs[index - 1]
-
-
-        public enum Operation
-        {
-            Add,
-            Insert,
-            Remove,
-            Replace
-        }
-
-
-        
 
         private void LoadConfigList()
         {
@@ -85,6 +77,15 @@ namespace SkylineBatch
                 _configList.Add(config);
                 var runner = new ConfigRunner(config, _logger, _uiControl);
                 _configRunners.Add(config.Name, runner);
+                try
+                {
+                    config.Validate();
+                    _configValidation.Add(config.Name, true);
+                }
+                catch (ArgumentException)
+                {
+                    _configValidation.Add(config.Name, false);
+                }
             }
         }
 
@@ -119,15 +120,10 @@ namespace SkylineBatch
                     var lvi = new ListViewItem(config.Name);
                     lvi.SubItems.Add(config.Created.ToShortDateString());
                     lvi.SubItems.Add(_configRunners[config.Name].GetDisplayStatus());
-                    try
-                    {
-                        config.Validate();
-                    } catch (ArgumentException)
-                    {
+                    if (!_configValidation[config.Name])
                         lvi.ForeColor = Color.Red;
-                    }
                     if (HasSelectedConfig() && _configList[SelectedConfig].Name.Equals(lvi.Text))
-                        lvi.BackColor = Color.LightGray;
+                        lvi.BackColor = Color.LightSteelBlue;
                     listViewConfigs.Add(lvi);
                 }
                 return listViewConfigs;
@@ -152,7 +148,7 @@ namespace SkylineBatch
             lock (_lock)
             {
                 if (newIndex < 0 || newIndex >= _configList.Count)
-                    throw new IndexOutOfRangeException("No configuration at index: " + newIndex);
+                    throw new IndexOutOfRangeException(string.Format(Resources.ConfigManager_SelectConfig_There_is_no_configuration_at_index___0_, newIndex));
                 if (SelectedConfig != newIndex)
                 {
                     SelectedConfig = newIndex;
@@ -174,7 +170,7 @@ namespace SkylineBatch
         {
             if (SelectedConfig < 0)
             {
-                throw new IndexOutOfRangeException("No configuration selected.");
+                throw new IndexOutOfRangeException(Resources.ConfigManager_CheckConfigSelected_There_is_no_configuration_selected_);
             }
         }
 
@@ -183,15 +179,13 @@ namespace SkylineBatch
             lock (_lock)
             {
                 if (!HasConfigs())
-                    throw new ArgumentException("No configurations to create from.");
-                Program.LogInfo("Creating new configuration");
+                    return null;
                 var lastCreated = _configList[0];
                 foreach (var config in _configList)
                 {
                     if (config.Created > lastCreated.Created)
                         lastCreated = config;
                 }
-
                 return lastCreated;
             }
         }
@@ -207,21 +201,29 @@ namespace SkylineBatch
 
         public void AddConfiguration(SkylineBatchConfig config)
         {
-            InsertConfiguration(config, _configList.Count, Operation.Add);
+            InsertConfiguration(config, _configList.Count);
         }
 
-        private void InsertConfiguration(SkylineBatchConfig config, int index, Operation operation = Operation.Insert)
+        private void InsertConfiguration(SkylineBatchConfig config, int index)
         {
             lock (_lock)
             {
-                CheckIfExists(config, false, operation);
-                Program.LogInfo(string.Format("Adding configuration \"{0}\"", config.Name));
+                CheckIfExists(config, false);
+                Program.LogInfo(string.Format(Resources.ConfigManager_InsertConfiguration_Adding_configuration___0___, config.Name));
                 _configList.Insert(index, config);
 
                 var newRunner = new ConfigRunner(config, _logger, _uiControl);
                 _configRunners.Add(config.Name, newRunner);
+                try
+                {
+                    config.Validate();
+                    _configValidation.Add(config.Name, true);
+                }
+                catch (ArgumentException)
+                {
+                    _configValidation.Add(config.Name, false);
+                }
             }
-            
         }
 
         public void ReplaceSelectedConfig(SkylineBatchConfig newConfig)
@@ -231,7 +233,7 @@ namespace SkylineBatch
                 CheckConfigSelected();
                 var oldConfig = _configList[SelectedConfig];
                 if (!string.Equals(oldConfig.Name, newConfig.Name))
-                    CheckIfExists(newConfig, false, Operation.Replace);
+                    CheckIfExists(newConfig, false);
                 RemoveConfig(oldConfig);
                 InsertConfiguration(newConfig, SelectedConfig);
             }
@@ -255,26 +257,20 @@ namespace SkylineBatch
             {
                 CheckConfigSelected();
                 var configRunner = GetSelectedConfigRunner();
-
                 var config = configRunner.Config;
-
                 if (configRunner.IsBusy())
                 {
                     DisplayWarning(string.Format(
-                        @"Configuration ""{0}"" is still running. Please stop the configuration and try again. ",
+                        Resources.ConfigManager_RemoveSelected__0__is_still_running__Please_stop_the_current_run_before_deleting__0__,
                         configRunner.GetConfigName()));
                     return;
                 }
-
                 var doDelete = DisplayQuestion( 
-                    string.Format(@"Are you sure you want to delete configuration ""{0}""?",
+                    string.Format(Resources.ConfigManager_RemoveSelected_Are_you_sure_you_want_to_delete__0__,
                         configRunner.GetConfigName()));
-
                 if (doDelete != DialogResult.Yes)
                     return;
-
-                // remove config
-                Program.LogInfo(string.Format("Removing configuration \"{0}\"", config.Name));
+                Program.LogInfo(string.Format(Resources.ConfigManager_RemoveSelected_Removing_configuration____0__, config.Name));
                 RemoveConfig(config);
                 DeselectConfig();
             }
@@ -282,28 +278,27 @@ namespace SkylineBatch
 
         private void RemoveConfig(SkylineBatchConfig config)
         {
-            CheckIfExists(config, true, Operation.Remove);
+            CheckIfExists(config, true);
             _configList.Remove(config);
             _configRunners[config.Name].Cancel();
             _configRunners.Remove(config.Name);
+            _configValidation.Remove(config.Name);
         }
 
-        private void CheckIfExists(SkylineBatchConfig config, bool expectedValue, Operation typeOperation)
+        private void CheckIfExists(SkylineBatchConfig config, bool expectedValue)
         {
             bool exists = _configRunners.Keys.Contains(config.Name);
             if (exists != expectedValue)
             {
                 var message = expectedValue
-                        ? string.Format(Resources.ConfigManager_Operation_fail_config_nonexistant, typeOperation.ToString(), config.Name)
-                        : string.Format(Resources.ConfigManager_Operation_fail_config_exists, typeOperation.ToString(), config.Name);
+                        ? string.Format(Resources.ConfigManager_CheckIfExists_Error___0__does_not_exist_, config.Name)
+                        : string.Format(Resources.ConfigManager_CheckIfExists_Error___0__already_exists_, config.Name);
                 throw new ArgumentException(message);
             }
-
         }
 
         #endregion
-
-
+        
         #region Run Configs
 
         public ConfigRunner GetSelectedConfigRunner()
@@ -317,38 +312,34 @@ namespace SkylineBatch
 
         public async void RunAll(int startStep)
         {
+            var invalidConfigNames = new List<string>();
             foreach (var config in _configList)
             {
-                var invalidConfigNames = new List<string>();
-                try
-                {
-                    config.Validate();
-                }
-                catch (ArgumentException)
-                {
+                if (!_configValidation[config.Name])
                     invalidConfigNames.Add(config.Name);
-                }
-
-                if (invalidConfigNames.Count > 0)
+            }
+            if (invalidConfigNames.Count > 0)
+            {
+                if (invalidConfigNames.Count == 1)
                 {
-                    if (invalidConfigNames.Count == 1)
-                    {
-                        _uiControl?.DisplayError("Cannot run configurations while {0} is invalid." + Environment.NewLine + "Fix {0} by editing and saving it.");
-                    }
-                    else
-                    {
-                        _uiControl?.DisplayError("Cannot run the following configurations:" + Environment.NewLine + 
-                                                 string.Join(Environment.NewLine, invalidConfigNames) + Environment.NewLine + 
-                                                 "Fix each red configuration by editing and saving it.");
-                    }
-                    return;
+                    DisplayError(string.Format(Resources.ConfigManager_RunAll_Cannot_run_configurations_while__0__has_an_error_, invalidConfigNames[0]) + Environment.NewLine +
+                                 string.Format(Resources.ConfigManager_RunAll_Please_edit__0__to_enable_running_, invalidConfigNames[0]));
                 }
-
+                else
+                {
+                    DisplayError(Resources.ConfigManager_RunAll_Cannot_run_while_the_following_configurations_have_errors_ + Environment.NewLine +
+                                 string.Join(Environment.NewLine, invalidConfigNames) + Environment.NewLine +
+                                 Resources.ConfigManager_RunAll_Please_edit_these_configurations_to_enable_running_);
+                }
+                return;
             }
 
-            if (ConfigsRunning())
+            var cofigsRunning = ConfigsRunning();
+            if (cofigsRunning.Count > 0)
             {
-                DisplayError(Resources.ConfigManager_Cannot_run_busy_configurations);
+                DisplayError(Resources.ConfigManager_RunAll_Cannot_run_while_the_following_configurations_are_running_ + Environment.NewLine +
+                             string.Join(Environment.NewLine, cofigsRunning) + Environment.NewLine +
+                             Resources.ConfigManager_RunAll_Please_wait_until_the_current_run_is_finished_);
                 return;
             }
             UpdateIsRunning(true);
@@ -378,7 +369,7 @@ namespace SkylineBatch
                 nextConfig = GetNextWaitingConfig();
             }
 
-            while (ConfigsRunning())
+            while (ConfigsRunning().Count > 0)
                 await Task.Delay(3000);
             UpdateIsRunning(false);
         }
@@ -394,22 +385,21 @@ namespace SkylineBatch
                         return config.Name;
                     }
                 }
-
                 return null;
             }
         }
 
-        public bool ConfigsRunning()
+        public List<string> ConfigsRunning()
         {
             lock (_lock)
             {
+                var configsRunning = new List<string>();
                 foreach (var runner in _configRunners.Values)
                 {
                     if (runner.IsBusy())
-                        return true;
+                        configsRunning.Add(runner.GetConfigName());
                 }
-
-                return false;
+                return configsRunning;
             }
         }
 
@@ -425,7 +415,6 @@ namespace SkylineBatch
 
         #endregion
 
-
         #region Logging
 
         public bool HasOldLogs()
@@ -439,7 +428,7 @@ namespace SkylineBatch
             lock (_loggerLock)
             {
                 if (selected < 0 || selected > _oldLogs.Count)
-                    throw new IndexOutOfRangeException("No log at index: " + selected);
+                    throw new IndexOutOfRangeException(Resources.ConfigManager_SelectLog_No_log_at_index__ + selected);
                 SelectedLog = selected;
             }
         }
@@ -514,7 +503,6 @@ namespace SkylineBatch
 
         #endregion
 
-
         #region UI Control
 
         private void DisplayError(string message)
@@ -563,13 +551,12 @@ namespace SkylineBatch
 
         #endregion
 
-
         #region Import/Export
 
         public void Import(string filePath)
         {
             var readConfigs = new List<SkylineBatchConfig>();
-            var validationErrors = new List<string>();
+            var readXmlErrors = new List<string>();
             try
             {
                 using (var stream = new FileStream(filePath, FileMode.Open))
@@ -578,8 +565,8 @@ namespace SkylineBatch
                     {
                         while (reader.Name != "skylinebatch_config")
                         {
-                            if (reader.Name == "userSettings" && !reader.IsStartElement()) // there are no configurations in the file
-                                break;
+                            if (reader.Name == "userSettings" && !reader.IsStartElement())
+                                break; // there are no configurations in the file
                             reader.Read();
                         }
                         while (reader.IsStartElement())
@@ -593,7 +580,7 @@ namespace SkylineBatch
                                 }
                                 catch (Exception ex)
                                 {
-                                    validationErrors.Add(ex.Message);
+                                    readXmlErrors.Add(ex.Message);
                                 }
                                 
                                 if (config != null)
@@ -607,14 +594,13 @@ namespace SkylineBatch
             }
             catch (Exception e)
             {
-                DisplayError(string.Format("An error occured while importing configurations from {0}:", filePath) + Environment.NewLine +
+                DisplayError(string.Format(Resources.ConfigManager_Import_An_error_occurred_while_importing_configurations_from__0__, filePath) + Environment.NewLine +
                              e.Message);
                 return;
             }
-
-            if (readConfigs.Count == 0 && validationErrors.Count == 0)
+            if (readConfigs.Count == 0 && readXmlErrors.Count == 0)
             {
-                DisplayWarning(string.Format("No configurations were found in {0}.", filePath));
+                DisplayWarning(string.Format(Resources.ConfigManager_Import_No_configurations_were_found_in__0__, filePath));
                 return;
             }
 
@@ -625,40 +611,42 @@ namespace SkylineBatch
                 // Make sure that the configuration name is unique
                 if (_configRunners.Keys.Contains(config.Name))
                 {
-                    // If a configuration with the same name already exists, don't add it
                     duplicateConfigs.Add(config.Name);
                     continue;
                 }
-                
-                AddConfiguration(config);
+                AddConfiguration(RunRootReplacement(config));
                 numAdded++;
             }
-            var message = new StringBuilder(Resources.ConfigManager_Number_configs_imported);
+            var message = new StringBuilder(Resources.ConfigManager_Import_Number_of_configurations_imported_);
             message.Append(numAdded).Append(Environment.NewLine);
             if (duplicateConfigs.Count > 0)
             {
-                message.Append(Resources.ConfigManager_Number_configs_duplicates)
+                var duplicateMessage = new StringBuilder(Resources.ConfigManager_Import_These_configurations_already_exist_and_could_not_be_imported_)
                     .Append(Environment.NewLine);
                 foreach (var name in duplicateConfigs)
                 {
-                    message.Append("\"").Append(name).Append("\"").Append(Environment.NewLine);
+                    duplicateMessage.Append("\"").Append(name).Append("\"").Append(Environment.NewLine);
                 }
+
+                duplicateMessage.Append(Resources.ConfigManager_Import_Please_remove_the_configurations_you_would_like_to_import_);
+                message.Append(duplicateMessage);
+                DisplayError(duplicateMessage.ToString());
             }
-            if (validationErrors.Count > 0)
+            if (readXmlErrors.Count > 0)
             {
-                message.Append(Resources.ConfigManager_Number_configs_not_valid)
+                var errorMessage = new StringBuilder(Resources.ConfigManager_Import_Number_of_configurations_with_errors_that_could_not_be_imported_)
                     .Append(Environment.NewLine);
-                foreach (var error in validationErrors)
+                foreach (var error in readXmlErrors)
                 {
-                    message.Append(error).Append(Environment.NewLine);
+                    errorMessage.Append(error).Append(Environment.NewLine);
                 }
+                message.Append(errorMessage);
+                DisplayError(errorMessage.ToString());
             }
             Program.LogInfo(message.ToString());
         }
-
-
-
-        public object[] GetConfigNames()
+        
+        public object[] ConfigNamesAsObjectArray()
         {
             var names = new object[_configList.Count];
             for (int i = 0; i < _configList.Count; i++)
@@ -668,8 +656,18 @@ namespace SkylineBatch
 
         public void ExportConfigs(string filePath, int[] indiciesToSave)
         {
-            if (!Directory.Exists(Path.GetDirectoryName(filePath)))
-                throw new ArgumentException("Invalid file path.");
+            var directory = Path.GetDirectoryName(filePath) ?? "";
+            try
+            {
+                directory = Path.GetDirectoryName(filePath);
+            }
+            catch (ArgumentException)
+            {
+            }
+            if (!Directory.Exists(directory))
+                throw new ArgumentException(Resources.ConfigManager_ExportConfigs_Could_not_save_configurations_to_ + Environment.NewLine +
+                                            filePath + Environment.NewLine +
+                                            Resources.ConfigManager_ExportConfigs_Please_provide_a_path_to_a_file_inside_an_existing_folder_);
             var savingConfigs = new ConfigList();
             foreach(int index in indiciesToSave)
                 savingConfigs.Add(_configList[index]);
@@ -681,9 +679,43 @@ namespace SkylineBatch
             Settings.Default.Save();
         }
 
+        public void AddRootReplacement(string oldRoot, string newRoot)
+        {
+            RootReplacement.Add(oldRoot, newRoot);
+            lock (_lock)
+            {
+                for (int i = 0; i < _configList.Count; i++)
+                {
+                    var config = _configList[i];
+                    if (!_configValidation[config.Name] && config.MainSettings.TemplateFilePath.Contains(oldRoot))
+                    {
+                        var pathsReplaced = config.TryPathReplace(oldRoot, newRoot, out SkylineBatchConfig replacedPathConfig);
+                        if (pathsReplaced)
+                        {
+                            RemoveConfig(config);
+                            InsertConfiguration(replacedPathConfig, i);
+                        }
+                    }
+                }
+            }
+        }
+
+        public SkylineBatchConfig RunRootReplacement(SkylineBatchConfig config)
+        {
+            foreach (var oldRoot in RootReplacement.Keys)
+            {
+                if (config.MainSettings.TemplateFilePath.Contains(oldRoot))
+                {
+                    var success = config.TryPathReplace(oldRoot, RootReplacement[oldRoot],
+                        out SkylineBatchConfig pathReplacedConfig);
+                    if (success) return pathReplacedConfig;
+                }
+            }
+            return config;
+        }
+
         #endregion
-
-
+        
         #region Tests
         
         public bool ConfigListEquals(List<SkylineBatchConfig> otherConfigs)
@@ -696,7 +728,6 @@ namespace SkylineBatch
                 {
                     if (!Equals(otherConfigs[i], _configList[i])) return false;
                 }
-
                 return true;
             }
         }
@@ -710,16 +741,12 @@ namespace SkylineBatch
                 {
                     names += config.Name + "  ";
                 }
-
                 return names;
             }
         }
         
-
-
         #endregion
-
-
+        
     }
 }
 

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using SkylineBatch.Properties;
 
 namespace SkylineBatch
 {
@@ -12,23 +13,20 @@ namespace SkylineBatch
     public partial class InvalidConfigSetupForm : Form
     {
         private readonly SkylineBatchConfig _invalidConfig;
+        private readonly ConfigManager _configManager;
         private readonly IMainUiControl _mainControl;
-
-        private bool _replaceRoot;
-        private string _oldRoot;
-        private string _newRoot;
 
         private string _lastInputPath;
         private bool _removeRScripts;
 
-        public InvalidConfigSetupForm(SkylineBatchConfig invalidConfig, IMainUiControl mainControl)
+        private bool _askedAboutRootReplacement;
+
+        public InvalidConfigSetupForm(SkylineBatchConfig invalidConfig, ConfigManager configManager, IMainUiControl mainControl)
         {
             InitializeComponent();
-
             _invalidConfig = invalidConfig;
+            _configManager = configManager;
             _mainControl = mainControl;
-            _replaceRoot = false;
-
             CreateValidConfig();
         }
 
@@ -40,35 +38,37 @@ namespace SkylineBatch
             var validMainSettings = await FixInvalidMainSettings();
             var validReportSettings = await FixInvalidReportSettings();
             var validSkylineSettings = await FixInvalidSkylineSettings();
-
-
             ValidConfig = new SkylineBatchConfig(_invalidConfig.Name, _invalidConfig.Created, DateTime.Now, 
                 validMainSettings, _invalidConfig.FileSettings, validReportSettings, validSkylineSettings);
+            _configManager.ReplaceSelectedConfig(ValidConfig);
+            _mainControl.UpdateUiConfigurations();
             DialogResult = DialogResult.OK;
             Close();
         }
-
-
+        
         #region Fix Configuration Settings
 
         private async Task<MainSettings> FixInvalidMainSettings()
         {
             var mainSettings = _invalidConfig.MainSettings;
-            var validTemplateFilePath = await GetValidPath("skyline file", mainSettings.TemplateFilePath, false, MainSettings.ValidateSkylineFile);
-            var validAnalysisFolderPath = await GetValidPath("analysis folder", mainSettings.AnalysisFolderPath, true, MainSettings.ValidateAnalysisFolder);
-            var validDataFolderPath = await GetValidPath("data folder", mainSettings.DataFolderPath, true, MainSettings.ValidateDataFolder);
+            var validTemplateFilePath = await GetValidPath(Resources.InvalidConfigSetupForm_FixInvalidMainSettings_Skyline_template_file, 
+                mainSettings.TemplateFilePath, false, MainSettings.ValidateSkylineFile);
+            var validAnalysisFolderPath = await GetValidPath(Resources.InvalidConfigSetupForm_FixInvalidMainSettings_analysis_folder, 
+                mainSettings.AnalysisFolderPath, true, MainSettings.ValidateAnalysisFolder);
+            var validDataFolderPath = await GetValidPath(Resources.InvalidConfigSetupForm_FixInvalidMainSettings_data_folder, 
+                mainSettings.DataFolderPath, true, MainSettings.ValidateDataFolder);
 
             return new MainSettings(validTemplateFilePath, validAnalysisFolderPath, validDataFolderPath, _invalidConfig.MainSettings.ReplicateNamingPattern);
         }
-
-
+        
         private async Task<ReportSettings> FixInvalidReportSettings()
         {
             var reports = _invalidConfig.ReportSettings.Reports;
             var validReports = new List<ReportInfo>();
             foreach (var report in reports)
             {
-                var validReportPath = await GetValidPath(report.Name + " report", report.ReportPath, false,
+                var validReportPath = await GetValidPath(string.Format(Resources.InvalidConfigSetupForm_FixInvalidReportSettings__0__report, 
+                        report.Name), report.ReportPath, false,
                     ReportInfo.ValidateReportPath);
                 var validScripts = new List<Tuple<string, string>>();
                 if (!_removeRScripts)
@@ -81,56 +81,48 @@ namespace SkylineBatch
                             _removeRScripts = true;
                             break;
                         }
-                        var validRScript = await GetValidPath(Path.GetFileName(scriptAndVersion.Item1) + " R script",
+                        var validRScript = await GetValidPath(string.Format(Resources.InvalidConfigSetupForm_FixInvalidReportSettings__0__R_script, Path.GetFileNameWithoutExtension(scriptAndVersion.Item1)),
                             scriptAndVersion.Item1, false,
                             ReportInfo.ValidateRScriptPath);
                         
                         validScripts.Add(new Tuple<string, string>(validRScript, validVersion));
                     }
                 }
-
                 validReports.Add(new ReportInfo(report.Name, validReportPath, validScripts));
             }
-
             return new ReportSettings(validReports);
         }
-
         
         private async Task<SkylineSettings> FixInvalidSkylineSettings()
         {
             var skylineTypeControl = new SkylineTypeControl(_invalidConfig.UsesSkyline, _invalidConfig.UsesSkylineDaily, _invalidConfig.UsesCustomSkylinePath, _invalidConfig.SkylineSettings.CmdPath);
-            return (SkylineSettings)await GetValidVariable(_invalidConfig.SkylineSettings, "Invalid Skyline Installation", skylineTypeControl);
+            return (SkylineSettings)await GetValidVariable(skylineTypeControl);
         }
-
-
+        
         #endregion
-
-
-
-
-
+        
         #region Get Valid Variables
 
         private async Task<string> GetValidPath(string variableName, string invalidPath, bool folder, Validator validator)
         {
-            // replace path root
-            var path = _replaceRoot ? invalidPath.Replace(_oldRoot, _newRoot) : invalidPath;
-
+            var path = TryReplaceRoot(invalidPath);
+            
             var folderControl = new FilePathControl(variableName, path, _lastInputPath, folder, validator);
-            path = (string) await GetValidVariable(path, "Invalid Path", folderControl, false);
+            path = (string) await GetValidVariable(folderControl, false);
 
             if (path.Equals(invalidPath))
                 return path;
 
             _lastInputPath = path;
-            // the first time a path is changed, ask if user wants all path roots replaced
-            if (string.IsNullOrEmpty(_oldRoot))
-            {
-                GetBestRoot(invalidPath, path);
 
-                if (!string.IsNullOrEmpty(_oldRoot))
-                    _replaceRoot = AlertDlg.ShowQuestion(this, "Would you like to use this root for all paths?" + Environment.NewLine +
-                                                           _newRoot) == DialogResult.Yes;
+            GetNewRoot(invalidPath, path, out string oldRoot, out string newRoot);
+            // the first time a path is changed, ask if user wants all path roots replaced
+            if (!_askedAboutRootReplacement && oldRoot.Length > 0 && !Directory.Exists(oldRoot) && !_configManager.RootReplacement.ContainsKey(oldRoot))
+            {
+                var replaceRoot = AlertDlg.ShowQuestion(this, string.Format(Resources.InvalidConfigSetupForm_GetValidPath_Would_you_like_to_replace__0__with__1___, oldRoot, newRoot)) == DialogResult.Yes;
+                _askedAboutRootReplacement = true;
+                if (replaceRoot)
+                    _configManager.AddRootReplacement(oldRoot, newRoot);
             }
             RemoveControl(folderControl);
             return path;
@@ -140,14 +132,13 @@ namespace SkylineBatch
         {
             var version = invalidVersion;
             var rVersionControl = new RVersionControl(scriptName, version, _removeRScripts);
-            return (string) await GetValidVariable(version, "Invalid R installation", rVersionControl);
+            return (string) await GetValidVariable(rVersionControl);
         }
 
 
-        private async Task<object> GetValidVariable(object initialVariable, string errorTitle, IValidatorControl control, bool removeControl = true)
+        private async Task<object> GetValidVariable(IValidatorControl control, bool removeControl = true)
         {
-            var variable = initialVariable;
-            if (control.IsValid(out string errorMessage)) return variable;
+            if (control.IsValid(out string errorMessage)) return control.GetVariable();
             AddControl((UserControl)control);
 
             var valid = false;
@@ -156,7 +147,7 @@ namespace SkylineBatch
                 await btnNext;
                 valid = control.IsValid(out errorMessage);
                 if (!valid)
-                    _mainControl.DisplayError(errorMessage);
+                    AlertDlg.ShowError(this, errorMessage);
             }
 
             if (removeControl) RemoveControl((UserControl)control);
@@ -164,21 +155,16 @@ namespace SkylineBatch
         }
 
         #endregion
-
-
-
-
-
+        
         #region Find Path Root
 
-        private void GetBestRoot(string oldPath, string newPath)
+        private void GetNewRoot(string oldPath, string newPath, out string oldRoot, out string newRoot)
         {
             var oldPathFolders = oldPath.Split('\\');
             var newPathFolders = newPath.Split('\\');
-            var maxValidFiles = 0;
 
-            _oldRoot = "";
-            _newRoot = "";
+            oldRoot = "";
+            newRoot = "";
 
             var matchingEndFolders = 1;
             while (matchingEndFolders < Math.Min(oldPathFolders.Length, newPathFolders.Length))
@@ -186,60 +172,27 @@ namespace SkylineBatch
                 // If path ends do not match we cannot replace root
                 if (!oldPathFolders[oldPathFolders.Length - matchingEndFolders]
                     .Equals(newPathFolders[newPathFolders.Length - matchingEndFolders]))
-                    return;
+                    break;
 
-                var testOldRoot = string.Join("\\", oldPathFolders.Take(oldPathFolders.Length - matchingEndFolders).ToArray());
-                var testNewRoot = string.Join("\\", newPathFolders.Take(newPathFolders.Length - matchingEndFolders).ToArray());
-                var validFiles = GetValidPathNumber(testOldRoot, testNewRoot);
-                if (validFiles > maxValidFiles)
-                {
-                    _oldRoot = testOldRoot;
-                    _newRoot = testNewRoot;
-                    maxValidFiles = validFiles;
-                }
-
+                oldRoot = string.Join("\\", oldPathFolders.Take(oldPathFolders.Length - matchingEndFolders).ToArray());
+                newRoot = string.Join("\\", newPathFolders.Take(newPathFolders.Length - matchingEndFolders).ToArray());
+                
                 matchingEndFolders++;
             }
         }
 
 
-        private int GetValidPathNumber(string oldRoot, string newRoot)
+        private string TryReplaceRoot(string path)
         {
-            int validFiles = 0;
-
-            if (ValidPath(_invalidConfig.MainSettings.AnalysisFolderPath, oldRoot, newRoot, MainSettings.ValidateAnalysisFolder))
-                validFiles++;
-            if (ValidPath(_invalidConfig.MainSettings.DataFolderPath, oldRoot, newRoot, MainSettings.ValidateDataFolder))
-                validFiles++;
-
-            foreach (var report in _invalidConfig.ReportSettings.Reports)
+            var bestRoot = string.Empty;
+            foreach (var oldRoot in _configManager.RootReplacement.Keys)
             {
-                if (ValidPath(report.ReportPath, oldRoot, newRoot, ReportInfo.ValidateReportPath))
-                    validFiles++;
-                foreach (var rScript in report.RScripts)
-                {
-                    if (ValidPath(rScript.Item1, oldRoot, newRoot, ReportInfo.ValidateRScriptPath))
-                        validFiles++;
-                }
+                if (path.StartsWith(oldRoot) && oldRoot.Length > bestRoot.Length)
+                    bestRoot = oldRoot;
             }
-
-            return validFiles;
-        }
-
-        private bool ValidPath(string path, string oldRoot, string newRoot, Validator validator)
-        {
-            if (!path.Contains(oldRoot)) return false;
-            var replacedRoot = path.Replace(oldRoot, newRoot);
-
-            try
-            {
-                validator(replacedRoot);
-                return true;
-            }
-            catch (ArgumentException)
-            {
-                return false;
-            }
+            if (string.IsNullOrEmpty(bestRoot))
+                return path;
+            return path.Replace(bestRoot, _configManager.RootReplacement[bestRoot]);
         }
 
         #endregion
