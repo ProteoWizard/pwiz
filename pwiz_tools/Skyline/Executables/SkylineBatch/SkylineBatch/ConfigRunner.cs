@@ -131,9 +131,8 @@ namespace SkylineBatch
             // STEP 2: import data to new skyline file
 
             var secondStep = string.Format("\"{0}\" --in=\"{1}\" --import-all=\"{2}\" ", skylineRunner, newSkylineFileName, dataDir);
-            secondStep += string.IsNullOrEmpty(namingPattern) ? "" : string.Format("--import-naming-pattern=\"{0}\" ", namingPattern);
-            secondStep += string.Format("--reintegrate-model-name=\"{0}\" --reintegrate-create-model --reintegrate-overwrite-peaks ", Config.Name);
-            secondStep += trainMProfit ? "‑‑reintegrate‑model‑type=<mProphet> " : string.Empty;
+            secondStep += !string.IsNullOrEmpty(namingPattern) ? string.Format("--import-naming-pattern=\"{0}\" ", namingPattern) : string.Empty;
+            secondStep += trainMProfit ? string.Format("--reintegrate-model-name=\"{0}\" --reintegrate-create-model --reintegrate-overwrite-peaks ", Config.Name) : string.Empty;
             secondStep += "--save";
             if (startStep <= 2)
                 commands.Add(secondStep);
