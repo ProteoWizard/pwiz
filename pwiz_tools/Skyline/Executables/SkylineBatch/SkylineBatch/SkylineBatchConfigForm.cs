@@ -207,7 +207,7 @@ namespace SkylineBatch
                 textRetentionTime.Text = config.FileSettings.RetentionTime;
             checkBoxDecoys.Checked = config.FileSettings.AddDecoys;
             radioShuffleDecoys.Checked = config.FileSettings.ShuffleDecoys;
-            checkBoxMProphet.Checked = config.FileSettings.TrainMProfit;
+            checkBoxMProphet.Checked = config.FileSettings.TrainMProphet;
         }
 
         private void checkBoxDecoys_CheckedChanged(object sender, EventArgs e)

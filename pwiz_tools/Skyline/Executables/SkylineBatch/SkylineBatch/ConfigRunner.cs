@@ -107,7 +107,7 @@ namespace SkylineBatch
             var retentionTime = Config.FileSettings.RetentionTime;
             var addDecoys = Config.FileSettings.AddDecoys;
             var shuffleDecoys = Config.FileSettings.ShuffleDecoys;
-            var trainMProfit = Config.FileSettings.TrainMProfit;
+            var trainMProfit = Config.FileSettings.TrainMProphet;
             var newSkylineFileName = Config.MainSettings.GetNewTemplatePath();
             var dataDir = Config.MainSettings.DataFolderPath;
             var namingPattern = Config.MainSettings.ReplicateNamingPattern;

@@ -7,7 +7,7 @@ namespace SkylineBatch
 {
     public partial class FilePathControl : UserControl, IValidatorControl
     {
-        // A control used by the InvalidConfigSetupForm to correct invalid paths
+        // A control used by the InvalidConfigSetupForm to correct invalid file/folder paths
 
         // Implements IValidatorControl:
         //    - GetVariable() returns the current path (_path)
