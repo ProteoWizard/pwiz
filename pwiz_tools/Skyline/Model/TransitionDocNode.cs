@@ -671,6 +671,7 @@ namespace pwiz.Skyline.Model
                 new TransitionQuantInfo(isotopeDistInfo, libInfo, !transitionProto.NotQuantitative);
             if (mods != null && mods.HasCrosslinks)
             {
+                throw new NotImplementedException();
                 // DONTCHECKIN
                 // LegacyComplexFragmentIon complexFragmentIon = new LegacyComplexFragmentIon(transition, losses, mods.Crosslinks, transitionProto.OrphanedCrosslinkIon);
                 // crosslinkBuilder = crosslinkBuilder ?? complexFragmentIon.GetCrosslinkBuilder(settings, mods);

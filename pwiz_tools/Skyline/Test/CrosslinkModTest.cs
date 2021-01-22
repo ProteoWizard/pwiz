@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
+using pwiz.Common.Collections;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
@@ -95,12 +96,13 @@ namespace pwiz.SkylineTest
                 new[] {new ExplicitMod(0, staticMod).ChangeLinkedPeptide(linkedPeptide)},
                 new TypedExplicitModifications[0]);
             Assert.AreEqual("C5H14N2O6", mainTransitionGroupDocNode.GetNeutralFormula(srmSettings, modsWithLinkedPeptide).Molecule.ToString());
-            var mainComplexFragmentIon = new LegacyComplexFragmentIon(new Transition(mainTransitionGroup, IonType.precursor, mainPeptide.Length - 1, 0, Adduct.SINGLY_PROTONATED), null, modsWithLinkedPeptide.Crosslinks);
-            var linkedComplexFragmentIon = new LegacyComplexFragmentIon(
-                new Transition(linkedPeptide.GetTransitionGroup(IsotopeLabelType.light, Adduct.SINGLY_PROTONATED),
-                    IonType.precursor, linkedPeptide.Peptide.Length - 1, 0, Adduct.SINGLY_PROTONATED), null, LinkedPeptide.EMPTY_CROSSLINK_STRUCTURE);
+            var mainComplexFragmentIon = ComplexFragmentIon.Simple(
+                new Transition(mainTransitionGroup, IonType.precursor, mainPeptide.Length - 1, 0,
+                    Adduct.SINGLY_PROTONATED), null);
+            var linkedComplexFragmentIon = ComplexFragmentIon.Simple(new Transition(linkedPeptide.GetTransitionGroup(IsotopeLabelType.light, Adduct.SINGLY_PROTONATED),
+                    IonType.precursor, linkedPeptide.Peptide.Length - 1, 0, Adduct.SINGLY_PROTONATED), null);
             var complexFragmentIon =
-                mainComplexFragmentIon.AddChild(new ModificationSite(0, staticMod.Name), linkedComplexFragmentIon);
+                mainComplexFragmentIon.Concat(linkedComplexFragmentIon);
             var transition = complexFragmentIon.MakeTransitionDocNode(srmSettings, modsWithLinkedPeptide, null);
             var sequenceMassCalc = new SequenceMassCalc(MassType.Monoisotopic);
             var expectedMz = sequenceMassCalc.GetPrecursorMass("A") + sequenceMassCalc.GetPrecursorMass("D") - 24 - BioMassCalc.MassProton;
@@ -276,11 +278,10 @@ namespace pwiz.SkylineTest
             {
                 int offset = Transition.OrdinalToOffset(tuple.Item1, tuple.Item2, peptide.Sequence.Length);
                 var transition = new Transition(transitionGroup, tuple.Item1, offset, 0, Adduct.FromChargeProtonated(tuple.Item3));
-                var complexFragmentIon = new LegacyComplexFragmentIon(transition, null, explicitMods.Crosslinks);
-                if (complexFragmentIon.IncludesAaIndex(explicitMod.IndexAA))
+                var complexFragmentIon = ComplexFragmentIon.Simple(transition, null);
+                if (transition.IncludesAaIndex(explicitMod.IndexAA))
                 {
-                    complexFragmentIon = complexFragmentIon.AddChild(explicitMod.ModificationSite,
-                        new LegacyComplexFragmentIon(linkedTransition, null, LinkedPeptide.EMPTY_CROSSLINK_STRUCTURE));
+                    complexFragmentIon = complexFragmentIon.Concat(ComplexFragmentIon.Simple(linkedTransition, null));
                 }
                 var complexTransitionDocNode = complexFragmentIon.MakeTransitionDocNode(srmSettings, explicitMods, null);
                 Assert.AreEqual(tuple.Item4, complexTransitionDocNode.Mz, .0001, "{0}{1}{2}", tuple.Item1, tuple.Item2,
@@ -337,9 +338,9 @@ namespace pwiz.SkylineTest
             var complexFragmentIons = choices.Select(transition => transition.ComplexFragmentIon.GetName()).ToArray();
             // Make sure none of the transitions involve a cleavage in between the two ends of the looplink
             // PEpTIdE
-            var yOrdinals = complexFragmentIons.Where(ion => ion.IonType == IonType.y).Select(ion => ion.Ordinal)
+            var yOrdinals = complexFragmentIons.Where(ion => ion.IonTypes[0] == IonType.y).Select(ion => ion.IonOrdinals[0])
                 .Distinct().ToList();
-            var bOrdinals = complexFragmentIons.Where(ion => ion.IonType == IonType.b).Select(ion => ion.Ordinal)
+            var bOrdinals = complexFragmentIons.Where(ion => ion.IonTypes[0] == IonType.b).Select(ion => ion.IonOrdinals[0])
                 .Distinct().ToList();
             CollectionAssert.AreEquivalent(new[]{6,5,1}, yOrdinals);
             CollectionAssert.AreEquivalent(new[]{1,2,6}, bOrdinals);
@@ -365,8 +366,7 @@ namespace pwiz.SkylineTest
                 new Peptide("AKIQDKEGIPPDQQR"), SrmSettingsDiff.ALL, out _);
             Assert.IsNotNull(peptideDocNode);
             Assert.IsNotNull(peptideDocNode.ExplicitMods);
-            Assert.AreEqual(1, peptideDocNode.ExplicitMods.Crosslinks.Count);
-            Assert.AreEqual(null, peptideDocNode.ExplicitMods.Crosslinks[0].Value.Peptide);
+            Assert.AreEqual(1, peptideDocNode.ExplicitMods.Crosslinks.LinkedPeptides.Count);
         }
     }
 }

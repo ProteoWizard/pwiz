@@ -175,8 +175,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 }
                 else
                 {
-                    var crosslinkBuilder = new CrosslinkBuilder(SrmDocument.Settings, DocNode.PeptideStructure,
-                        IsotopeLabelType.light);
+                    var crosslinkBuilder = new CrosslinkBuilder(SrmDocument.Settings, DocNode.Peptide,
+                        DocNode.ExplicitMods, IsotopeLabelType.light);
                     return crosslinkBuilder.GetPrecursorFormula().Molecule.ToString();
                 }
             }

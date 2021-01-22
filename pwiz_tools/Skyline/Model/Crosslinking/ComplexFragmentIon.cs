@@ -5,6 +5,7 @@ using System.Text;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Crosslinking
@@ -266,6 +267,20 @@ namespace pwiz.Skyline.Model.Crosslinking
         public TypedMass GetFragmentMass(SrmSettings settings, ExplicitMods explicitMods)
         {
             return GetCrosslinkBuilder(settings, explicitMods).GetFragmentMass(this);
+        }
+        public TransitionDocNode MakeTransitionDocNode(SrmSettings settings, ExplicitMods explicitMods, IsotopeDistInfo isotopeDist)
+        {
+            return MakeTransitionDocNode(settings, explicitMods, isotopeDist, Annotations.EMPTY, TransitionDocNode.TransitionQuantInfo.DEFAULT, ExplicitTransitionValues.EMPTY, null);
+        }
+
+        public TransitionDocNode MakeTransitionDocNode(SrmSettings settings, ExplicitMods explicitMods,
+            IsotopeDistInfo isotopeDist,
+            Annotations annotations,
+            TransitionDocNode.TransitionQuantInfo transitionQuantInfo,
+            ExplicitTransitionValues explicitTransitionValues,
+            Results<TransitionChromInfo> results)
+        {
+            return GetCrosslinkBuilder(settings, explicitMods).MakeTransitionDocNode(this, isotopeDist, annotations, transitionQuantInfo, explicitTransitionValues, results);
         }
 
     }

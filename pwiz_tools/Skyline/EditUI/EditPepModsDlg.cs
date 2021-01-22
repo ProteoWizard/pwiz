@@ -103,10 +103,11 @@ namespace pwiz.Skyline.EditUI
             var modsDoc = DocSettings.PeptideSettings.Modifications;
             if (null != nodePeptide.ExplicitMods?.StaticModifications)
             {
-                foreach (var crosslink in nodePeptide.ExplicitMods.Crosslinks)
-                {
-                    _linkedPeptides[crosslink.Key.IndexAa] = crosslink.Value;
-                }
+                // DONTCHECKIN
+                // foreach (var crosslink in nodePeptide.ExplicitMods.Crosslinks)
+                // {
+                //     _linkedPeptides[crosslink.Key.IndexAa] = crosslink.Value;
+                // }
             }
             _listLabelTypeHeavy.AddRange(from typedMods in modsDoc.GetHeavyModifications()
                                          select typedMods.LabelType);

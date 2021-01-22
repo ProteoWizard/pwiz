@@ -48,9 +48,10 @@ namespace pwiz.Skyline.Model.Crosslinking
         /// </summary>
         public static LegacyComplexFragmentIon NewOrphanFragmentIon(TransitionGroup transitionGroup, ExplicitMods explicitMods, Adduct adduct)
         {
-            var transition = new Transition(transitionGroup, IonType.precursor,
-                transitionGroup.Peptide.Sequence.Length - 1, 0, adduct);
-            return new LegacyComplexFragmentIon(transition, null, explicitMods?.Crosslinks, true);
+            throw new NotImplementedException();
+            // var transition = new Transition(transitionGroup, IonType.precursor,
+            //     transitionGroup.Peptide.Sequence.Length - 1, 0, adduct);
+            // return new LegacyComplexFragmentIon(transition, null, explicitMods?.Crosslinks, true);
         }
 
         public Transition Transition { get; private set; }
@@ -198,12 +199,14 @@ namespace pwiz.Skyline.Model.Crosslinking
             ExplicitTransitionValues explicitTransitionValues,
             Results<TransitionChromInfo> results)
         {
-            return GetCrosslinkBuilder(settings, explicitMods).MakeTransitionDocNode(this, isotopeDist, annotations, transitionQuantInfo, explicitTransitionValues, results);
+            throw new NotImplementedException();
+            // return GetCrosslinkBuilder(settings, explicitMods).MakeTransitionDocNode(this, isotopeDist, annotations, transitionQuantInfo, explicitTransitionValues, results);
         }
 
         public TypedMass GetFragmentMass(SrmSettings settings, ExplicitMods explicitMods)
         {
-            return GetCrosslinkBuilder(settings, explicitMods).GetFragmentMass(this);
+            throw new NotImplementedException();
+            // return GetCrosslinkBuilder(settings, explicitMods).GetFragmentMass(this);
         }
 
         /// <summary>

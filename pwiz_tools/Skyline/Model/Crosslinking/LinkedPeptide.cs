@@ -53,7 +53,10 @@ namespace pwiz.Skyline.Model.Crosslinking
 
         public ImmutableSortedList<ModificationSite, LinkedPeptide> CrosslinkStructure
         {
-            get { return ExplicitMods?.Crosslinks ?? EMPTY_CROSSLINK_STRUCTURE; }
+            get
+            {
+                return null; // DONTCHECKIN ExplicitMods?.Crosslinks ?? EMPTY_CROSSLINK_STRUCTURE;
+            }
         }
 
         public LinkedPeptide ChangeExplicitMods(ExplicitMods explicitMods)
@@ -181,11 +184,12 @@ namespace pwiz.Skyline.Model.Crosslinking
             var result = FilterImpossibleCleavages(mods, startingFragmentIons);
             if (mods != null)
             {
-                foreach (var crosslinkMod in mods.LinkedCrossslinks)
-                {
-                    result = crosslinkMod.Value.PermuteFragmentIons(settings, maxFragmentationCount, useFilter,
-                        crosslinkMod.Key, result);
-                }
+                // DONTCHECKIN
+                // foreach (var crosslinkMod in mods.LinkedCrossslinks)
+                // {
+                //     result = crosslinkMod.Value.PermuteFragmentIons(settings, maxFragmentationCount, useFilter,
+                //         crosslinkMod.Key, result);
+                // }
             }
 
             return result.Where(cfi => !cfi.IsEmptyOrphan);
@@ -197,6 +201,8 @@ namespace pwiz.Skyline.Model.Crosslinking
         public static IEnumerable<LegacyComplexFragmentIon> FilterImpossibleCleavages(ExplicitMods mods,
             IEnumerable<LegacyComplexFragmentIon> startingFragmentIons)
         {
+            throw new NotImplementedException();
+#if false
             if (mods == null)
             {
                 return startingFragmentIons;
@@ -231,6 +237,7 @@ namespace pwiz.Skyline.Model.Crosslinking
                 int cleavageOffset = cfi.Transition.CleavageOffset;
                 return !looplinks.Any(looplink => looplink.Item1 <= cleavageOffset && looplink.Item2 > cleavageOffset);
             });
+#endif
         }
 
         public LegacyComplexFragmentIon MakeComplexFragmentIon(SrmSettings settings, IsotopeLabelType labelType, ComplexFragmentIonName complexFragmentIonName)
@@ -249,20 +256,21 @@ namespace pwiz.Skyline.Model.Crosslinking
             }
 
             var result = new LegacyComplexFragmentIon(transition, null, CrosslinkStructure, complexFragmentIonName.IsOrphan);
-            if (ExplicitMods != null)
-            {
-                foreach (var child in complexFragmentIonName.Children)
-                {
-                    LinkedPeptide linkedPeptide;
-                    if (!ExplicitMods.Crosslinks.TryGetValue(child.Item1, out linkedPeptide))
-                    {
-                        throw new InvalidOperationException(@"No crosslink at " + child.Item1);
-                    }
-                    result = result.AddChild(child.Item1,
-                        linkedPeptide.MakeComplexFragmentIon(settings, labelType, child.Item2));
-                }
-            }
-
+            // DONTCHECKIN
+            // if (ExplicitMods != null)
+            // {
+            //     foreach (var child in complexFragmentIonName.Children)
+            //     {
+            //         LinkedPeptide linkedPeptide;
+            //         if (!ExplicitMods.Crosslinks.TryGetValue(child.Item1, out linkedPeptide))
+            //         {
+            //             throw new InvalidOperationException(@"No crosslink at " + child.Item1);
+            //         }
+            //         result = result.AddChild(child.Item1,
+            //             linkedPeptide.MakeComplexFragmentIon(settings, labelType, child.Item2));
+            //     }
+            // }
+            //
             return result;
         }
 
@@ -278,7 +286,8 @@ namespace pwiz.Skyline.Model.Crosslinking
             int result = 1;
             if (ExplicitMods != null)
             {
-                result += ExplicitMods.Crosslinks.Values.Sum(linkedPeptide => linkedPeptide.CountDescendents());
+                // DONTCHECKIN
+                // result += ExplicitMods.Crosslinks.Values.Sum(linkedPeptide => linkedPeptide.CountDescendents());
             }
 
             return result;
