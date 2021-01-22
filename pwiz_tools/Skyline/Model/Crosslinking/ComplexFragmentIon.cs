@@ -257,15 +257,15 @@ namespace pwiz.Skyline.Model.Crosslinking
             return ChangeProp(ImClone(this), im => im.Transitions = im.Transitions.ReplaceAt(0, transition));
         }
 
-        public CrosslinkBuilder GetCrosslinkBuilder(SrmSettings settings, PeptideStructure peptideStructure)
+        public CrosslinkBuilder GetCrosslinkBuilder(SrmSettings settings, ExplicitMods explicitMods)
         {
-            return new CrosslinkBuilder(settings, peptideStructure, PrimaryTransition.Group.LabelType);
+            return new CrosslinkBuilder(settings, PrimaryTransition.Group.Peptide, explicitMods, PrimaryTransition.Group.LabelType);
         }
 
 
-        public TypedMass GetFragmentMass(SrmSettings settings, PeptideStructure peptideStructure)
+        public TypedMass GetFragmentMass(SrmSettings settings, ExplicitMods explicitMods)
         {
-            return GetCrosslinkBuilder(settings, peptideStructure).GetFragmentMass(this);
+            return GetCrosslinkBuilder(settings, explicitMods).GetFragmentMass(this);
         }
 
     }

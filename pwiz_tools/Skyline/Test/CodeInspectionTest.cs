@@ -92,6 +92,9 @@ namespace pwiz.SkylineTest
                 true, // Pattern is a regular expression
                 @"Skyline model code must not depend on UI code"); // Explanation for prohibition, appears in report
 
+            AddTextInspection(@"*.*", Inspection.Forbidden, Level.Error, null, null, 
+                @"DONT" + @"CHECKIN", false, "Code is marked as not to be checked in");
+
             // A few lines of fake tests that can be useful in development of this mechanism
             // AddInspection(@"*.Designer.cs", Inspection.Required, Level.Error, null, "Windows Form Designer generated code", @"DetectionsToolbar", @"fake, debug purposes only"); // Uncomment for debug purposes
             // AddInspection(@"*.cs", Inspection.Forbidden, Level.Error, null, string.Empty, @"DetectionsToolbar", @"fake, debug purposes only"); // Uncomment for debug purposes

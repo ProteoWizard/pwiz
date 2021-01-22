@@ -1,42 +1,35 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 
 namespace pwiz.Skyline.Model.Crosslinking
 {
-    public class PeptideStructure : Immutable
+    public class CrosslinkStructure : Immutable
     {
-        public PeptideStructure(IEnumerable<ModifiedPeptide> peptides, IEnumerable<CrosslinkModification> crosslinks)
+        public static readonly CrosslinkStructure EMPTY = new CrosslinkStructure(ImmutableList<Peptide>.EMPTY,
+            ImmutableList<ExplicitMods>.EMPTY, ImmutableList<CrosslinkModification>.EMPTY);
+        public CrosslinkStructure(IEnumerable<Peptide> peptides, IEnumerable<ExplicitMods> explicitModsList, IEnumerable<CrosslinkModification> crosslinks)
         {
-            Peptides = ImmutableList.ValueOf(peptides);
+            LinkedPeptides = ImmutableList.ValueOf(peptides);
+            LinkedExplicitMods = ImmutableList.ValueOf(explicitModsList);
+            if (LinkedExplicitMods.Any(mod => mod.HasCrosslinks))
+            {
+                throw new ArgumentException(@"Cannot nest crosslinks");
+            }
             Crosslinks = ImmutableList.ValueOfOrEmpty(crosslinks);
         }
 
-        public Peptide PrimaryPeptide
-        {
-            get { return Peptides[0].Peptide; }
-        }
-
-        public ExplicitMods PrimaryExplicitMods
-        {
-            get
-            {
-                return Peptides[0].ExplicitMods;
-            }
-        }
-
-        public ImmutableList<ModifiedPeptide> Peptides { get; private set; }
+        public ImmutableList<Peptide> LinkedPeptides { get; private set; }
+        public ImmutableList<ExplicitMods> LinkedExplicitMods { get; private set; }
         public ImmutableList<CrosslinkModification> Crosslinks { get; private set; }
 
-        public static PeptideStructure SinglePeptide(Peptide peptide, ExplicitMods explicitMods)
+        protected bool Equals(CrosslinkStructure other)
         {
-            return new PeptideStructure(ImmutableList.Singleton(new ModifiedPeptide(peptide, explicitMods)), null);
-        }
-
-        protected bool Equals(PeptideStructure other)
-        {
-            return Peptides.Equals(other.Peptides) && Crosslinks.Equals(other.Crosslinks);
+            return LinkedPeptides.Equals(other.LinkedPeptides) && LinkedExplicitMods.Equals(other.LinkedExplicitMods) && Crosslinks.Equals(other.Crosslinks);
         }
 
         public override bool Equals(object obj)
@@ -44,14 +37,17 @@ namespace pwiz.Skyline.Model.Crosslinking
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != this.GetType()) return false;
-            return Equals((PeptideStructure) obj);
+            return Equals((CrosslinkStructure) obj);
         }
 
         public override int GetHashCode()
         {
             unchecked
             {
-                return (Peptides.GetHashCode() * 397) ^ Crosslinks.GetHashCode();
+                var hashCode = LinkedPeptides.GetHashCode();
+                hashCode = (hashCode * 397) ^ LinkedExplicitMods.GetHashCode();
+                hashCode = (hashCode * 397) ^ Crosslinks.GetHashCode();
+                return hashCode;
             }
         }
 
@@ -62,5 +58,40 @@ namespace pwiz.Skyline.Model.Crosslinking
                 return Crosslinks.Count > 0;
             }
         }
+
+        public MoleculeMassOffset GetNeutralFormula(SrmSettings settings, IsotopeLabelType labelType)
+        {
+            MoleculeMassOffset result = MoleculeMassOffset.EMPTY;
+            for (int i = 0; i < LinkedPeptides.Count; i++)
+            {
+                IPrecursorMassCalc massCalc = settings.GetPrecursorCalc(labelType, LinkedExplicitMods[i]);
+                result = result.Plus(new MoleculeMassOffset(Molecule.Parse(massCalc.GetMolecularFormula(LinkedPeptides[i].Sequence)), 0, 0));
+            }
+
+            foreach (var crosslink in Crosslinks)
+            {
+                result = result.Plus(crosslink.Crosslinker.GetMoleculeMassOffset());
+            }
+
+            return result;
+        }
+    }
+
+    public class PeptideStructure
+    {
+        public PeptideStructure(Peptide peptide, ExplicitMods explicitMods)
+        {
+            var crosslinkStructure = explicitMods?.Crosslinks ?? CrosslinkStructure.EMPTY;
+            Peptides = ImmutableList.ValueOf(crosslinkStructure.LinkedPeptides.Prepend(peptide));
+            ExplicitModList =
+                ImmutableList.ValueOf(
+                    crosslinkStructure.LinkedExplicitMods.Prepend(
+                        explicitMods?.ChangeCrosslinks(CrosslinkStructure.EMPTY)));
+            Crosslinks = crosslinkStructure.Crosslinks;
+        }
+
+        public ImmutableList<Peptide> Peptides { get; private set; }
+        public ImmutableList<ExplicitMods> ExplicitModList { get; private set; }
+        public ImmutableList<CrosslinkModification> Crosslinks { get; private set; }
     }
 }

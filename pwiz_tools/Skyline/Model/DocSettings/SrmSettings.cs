@@ -289,15 +289,16 @@ namespace pwiz.Skyline.Model.DocSettings
             return result;
         }
 
-        public TypedMass GetPrecursorMass(IsotopeLabelType labelType, PeptideStructure peptideStructure)
+        public TypedMass GetPrecursorMass(IsotopeLabelType labelType, Target seq, ExplicitMods mods)
         {
-            var precursorCalc = GetPrecursorCalc(labelType, peptideStructure.PrimaryExplicitMods);
-            if (peptideStructure.HasCrosslinks)
+            var precursorCalc = GetPrecursorCalc(labelType, mods);
+
+            if (mods != null && mods.HasCrosslinks)
             {
-                var crosslinkBuilder = new CrosslinkBuilder(this, peptideStructure, labelType);
+                var crosslinkBuilder = new CrosslinkBuilder(this, new Peptide(seq), mods, labelType);
                 return crosslinkBuilder.GetPrecursorMass(precursorCalc.MassType);
             }
-            return precursorCalc.GetPrecursorMass(peptideStructure.PrimaryPeptide.Target);
+            return precursorCalc.GetPrecursorMass(seq);
         }
 
         public TypedMass GetPrecursorMass(IsotopeLabelType labelType, CustomMolecule mol, TypedModifications mods, Adduct adductForIsotopeLabels, out string isotopicFormula)
@@ -876,12 +877,12 @@ namespace pwiz.Skyline.Model.DocSettings
             return PeptideSettings.Libraries.ContainsAny(sequence);
         }
 
-        public bool TryGetLibInfo(PeptideStructure peptideStructure, Adduct adduct,
+        public bool TryGetLibInfo(Peptide peptide, Adduct adduct, ExplicitMods mods,
             out IsotopeLabelType type, out SpectrumHeaderInfo libInfo)
         {
-            if (peptideStructure.PrimaryPeptide.IsCustomMolecule)
+            if (peptide.IsCustomMolecule)
             {
-                return TryGetLibInfoSmallMolecule(peptideStructure.PrimaryPeptide, adduct, peptideStructure.Peptides[0].ExplicitMods, out type, out libInfo);
+                return TryGetLibInfoSmallMolecule(peptide, adduct, mods, out type, out libInfo);
             }
             var libraries = PeptideSettings.Libraries;
             var sequence = peptide.Target;

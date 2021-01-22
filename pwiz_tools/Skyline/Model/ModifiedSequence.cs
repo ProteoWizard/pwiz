@@ -327,16 +327,7 @@ namespace pwiz.Skyline.Model
                     newModifications.Add(modification);
                     continue;
                 }
-                var formula = modification.StaticMod.Formula;
-                MoleculeMassOffset moleculeMassOffset;
-                if (string.IsNullOrEmpty(formula))
-                {
-                    moleculeMassOffset = new MoleculeMassOffset(Molecule.Empty, modification.StaticMod.MonoisotopicMass ?? 0, modification.StaticMod.AverageMass ?? 0);
-                }
-                else
-                {
-                    moleculeMassOffset = new MoleculeMassOffset(Molecule.ParseExpression(formula), 0, 0);
-                }
+                MoleculeMassOffset moleculeMassOffset = modification.StaticMod.GetMoleculeMassOffset();
                 moleculeMassOffset = moleculeMassOffset.Plus(modification.ExplicitMod.LinkedPeptide.GetNeutralFormula(settings, labelType));
                 var fragmentedMoleculeSettings = FragmentedMolecule.Settings.FromSrmSettings(settings);
                 moleculeMassOffset = fragmentedMoleculeSettings.ReplaceMoleculeWithMassOffset(moleculeMassOffset);

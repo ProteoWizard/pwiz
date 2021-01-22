@@ -200,7 +200,7 @@ namespace pwiz.Skyline.Model
         /// <summary>
         /// // Gives list of precursors - formerly in TransitionGroupTreeNode.GetChoices
         /// </summary>
-        public IList<DocNode> GetPrecursorChoices(SrmSettings settings, PeptideStructure peptideStucture, bool useFilter)
+        public IList<DocNode> GetPrecursorChoices(SrmSettings settings, ExplicitMods mods, bool useFilter)
         {
             SpectrumHeaderInfo libInfo = null;
             var transitionRanks = new Dictionary<double, LibraryRankedSpectrumInfo.RankedMI>();
@@ -800,10 +800,10 @@ namespace pwiz.Skyline.Model
             return mz;
         }
 
-        private double CalcCrosslinkedPrecursorMz(SrmSettings settings, PeptideStructure peptideStructure,
+        private double CalcCrosslinkedPrecursorMz(SrmSettings settings, ExplicitMods mods,
             out IsotopeDistInfo isotopeDist, out TypedMass mass)
         {
-            var crosslinkBuilder = new CrosslinkBuilder(settings, peptideStructure, LabelType);
+            var crosslinkBuilder = new CrosslinkBuilder(settings, TransitionGroup.Peptide, mods, LabelType);
             MassType massType = settings.TransitionSettings.Prediction.PrecursorMassType;
             mass = crosslinkBuilder.GetPrecursorMass(massType);
             Assume.IsFalse(mass.IsMassH());
@@ -841,14 +841,9 @@ namespace pwiz.Skyline.Model
             }
             IPrecursorMassCalc massCalc = settings.GetPrecursorCalc(LabelType, mods);
             MoleculeMassOffset moleculeMassOffset = new MoleculeMassOffset(Molecule.Parse(massCalc.GetMolecularFormula(Peptide.Sequence)), 0, 0);
-            if (mods != null)
-            {
-                foreach (var crosslink in mods.Crosslinks)
-                {
-                    moleculeMassOffset = moleculeMassOffset.Plus(crosslink.Value.GetNeutralFormula(settings, LabelType));
-                }
-            }
-
+            moleculeMassOffset = moleculeMassOffset.Plus((mods?.Crosslinks ?? CrosslinkStructure.EMPTY)
+                .GetNeutralFormula(settings, LabelType));
+            
             return moleculeMassOffset;
         }
 
@@ -883,7 +878,7 @@ namespace pwiz.Skyline.Model
             return ChangeProp(ImClone(this), im => im.PrecursorConcentration = precursorConcentration);
         }
 
-        public TransitionGroupDocNode ChangeSettings(SrmSettings settingsNew, PeptideDocNode nodePep, PeptideStructure peptideStructure, SrmSettingsDiff diff)
+        public TransitionGroupDocNode ChangeSettings(SrmSettings settingsNew, PeptideDocNode nodePep, ExplicitMods mods, SrmSettingsDiff diff)
         {
             double precursorMz = PrecursorMz;
             IsotopeDistInfo isotopeDist = IsotopeDist;
@@ -1102,17 +1097,17 @@ namespace pwiz.Skyline.Model
             return nodeResult;
         }
 
-        public IEnumerable<TransitionDocNode> GetTransitions(SrmSettings settings, PeptideStructure peptideStructure, double precursorMz,
+        public IEnumerable<TransitionDocNode> GetTransitions(SrmSettings settings, ExplicitMods mods, double precursorMz,
             IsotopeDistInfo isotopeDist, SpectrumHeaderInfo libInfo, Dictionary<double, LibraryRankedSpectrumInfo.RankedMI> transitionRanks, bool useFilter)
         {
-            if (!peptideStructure.HasCrosslinks)
+            if (mods == null || !mods.HasCrosslinks)
             {
-                return TransitionGroup.GetTransitions(settings, this, peptideStructure.Peptides[0].ExplicitMods, precursorMz, isotopeDist, libInfo, transitionRanks,
+                return TransitionGroup.GetTransitions(settings, this, mods, precursorMz, isotopeDist, libInfo, transitionRanks,
                     useFilter, true);
             }
             var crosslinkBuilder = new CrosslinkBuilder(settings, TransitionGroup.Peptide, mods, LabelType);
-            return crosslinkBuilder.GetComplexTransitions(TransitionGroup, precursorMz, isotopeDist, transitionRanks,
-                simpleTransitions, useFilter);
+            return crosslinkBuilder.GetTransitionDocNodes(TransitionGroup, precursorMz, isotopeDist, transitionRanks,
+                useFilter);
         }
 
         public DocNode EnsureChildren(PeptideDocNode parent, ExplicitMods mods, SrmSettings settings)
@@ -3013,7 +3008,7 @@ namespace pwiz.Skyline.Model
 
         #endregion
 
-        public void GetLibraryInfo(SrmSettings settings, PeptideStructure peptideStructure, bool useFilter,
+        public void GetLibraryInfo(SrmSettings settings, ExplicitMods mods, bool useFilter,
             ref SpectrumHeaderInfo libInfo,
             Dictionary<double, LibraryRankedSpectrumInfo.RankedMI> transitionRanks)
         {

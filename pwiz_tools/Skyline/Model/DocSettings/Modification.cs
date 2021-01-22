@@ -20,8 +20,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Serialization;
+using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.AuditLog;
@@ -347,6 +349,16 @@ namespace pwiz.Skyline.Model.DocSettings
         public int PrecisionRequired { get { return _precisionRequired ?? 1; }}
 
         public CrosslinkerSettings CrosslinkerSettings { get; private set; }
+
+        public MoleculeMassOffset GetMoleculeMassOffset()
+        {
+            if (string.IsNullOrEmpty(Formula))
+            {
+                return new MoleculeMassOffset(Molecule.Empty, MonoisotopicMass ?? 0, AverageMass ?? 0);
+            }
+
+            return new MoleculeMassOffset(Molecule.ParseExpression(Formula), 0, 0);
+        }
 
         #region Property change methods
 
@@ -873,6 +885,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public ExplicitMods(Peptide peptide, IList<ExplicitMod> staticMods,
             IEnumerable<TypedExplicitModifications> heavyMods, bool isVariable = false)
         {
+            Crosslinks = CrosslinkStructure.EMPTY;
             Peptide = peptide;
             IsVariableStaticMods = isVariable;
 
@@ -889,7 +902,6 @@ namespace pwiz.Skyline.Model.DocSettings
                 modifications.AddRange(heavyMods);
             }
             _modifications = MakeReadOnly(modifications.ToArray());
-            Crosslinks = GetLinkedPeptides(StaticModifications);
         }
 
         /// <summary>
@@ -907,6 +919,7 @@ namespace pwiz.Skyline.Model.DocSettings
             IEnumerable<TypedModifications> heavyMods, MappedList<string, StaticMod> listHeavyMods,
             bool implicitOnly = false)
         {
+            Crosslinks = CrosslinkStructure.EMPTY;
             Peptide = nodePep.Peptide;
 
             var modifications = new List<TypedExplicitModifications>();
@@ -934,7 +947,6 @@ namespace pwiz.Skyline.Model.DocSettings
                 modifications.Add(typedHeavyMods.AddModMasses(staticTypedMods));
             }
             _modifications = MakeReadOnly(modifications.ToArray());
-            Crosslinks = GetLinkedPeptides(StaticModifications);
         }
 
         private static IList<ExplicitMod> MergeExplicitMods(IList<ExplicitMod> modsPrimary,
@@ -1035,44 +1047,19 @@ namespace pwiz.Skyline.Model.DocSettings
             get { return GetModifications(IsotopeLabelType.heavy); }
         }
 
-        public ImmutableSortedList<ModificationSite, LinkedPeptide> Crosslinks
+        public CrosslinkStructure Crosslinks
         {
             get; private set;
         }
 
-        public IEnumerable<KeyValuePair<ModificationSite, LinkedPeptide>> LinkedCrossslinks
+        public ExplicitMods ChangeCrosslinks(CrosslinkStructure crosslinks)
         {
-            get { return Crosslinks.Where(entry => entry.Value.Peptide != null); }
+            return ChangeProp(ImClone(this), im => im.Crosslinks = crosslinks);
         }
 
         public bool HasCrosslinks
         {
-            get { return Crosslinks.Any(); }
-        }
-
-        public bool HasMultipleCrosslinks
-        {
-            get
-            {
-                if (Crosslinks.Count == 1)
-                {
-                    var linkedPeptide = Crosslinks.Values[0];
-                    return linkedPeptide.ExplicitMods != null && linkedPeptide.ExplicitMods.HasMultipleCrosslinks;
-                }
-
-                return Crosslinks.Count > 1;
-            }
-        }
-
-        public LinkedPeptide GetLinkedPeptide(ModificationSite modificationSite)
-        {
-            LinkedPeptide linkedPeptide;
-            if (!Crosslinks.TryGetValue(modificationSite, out linkedPeptide))
-            {
-                throw new ArgumentException(@"No linked peptide found at site " + modificationSite);
-            }
-
-            return linkedPeptide;
+            get { return Crosslinks.HasCrosslinks; }
         }
 
         public IList<ExplicitMod> GetModifications(IsotopeLabelType labelType)

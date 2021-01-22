@@ -671,17 +671,18 @@ namespace pwiz.Skyline.Model
                 new TransitionQuantInfo(isotopeDistInfo, libInfo, !transitionProto.NotQuantitative);
             if (mods != null && mods.HasCrosslinks)
             {
-                LegacyComplexFragmentIon complexFragmentIon = new LegacyComplexFragmentIon(transition, losses, mods.Crosslinks, transitionProto.OrphanedCrosslinkIon);
-                crosslinkBuilder = crosslinkBuilder ?? complexFragmentIon.GetCrosslinkBuilder(settings, mods);
-                foreach (var linkedIon in transitionProto.LinkedIons)
-                {
-                    var modificationSite = new ModificationSite(linkedIon.ModificationIndex, linkedIon.ModificationName);
-                    var linkedPeptide = mods.GetLinkedPeptide(modificationSite);
-                    var childName = ComplexFragmentIonName.FromLinkedIonProto(linkedIon);
-                    complexFragmentIon = complexFragmentIon.AddChild(modificationSite,
-                        linkedPeptide.MakeComplexFragmentIon(settings, group.LabelType, childName));
-                }
-                transitionDocNode = crosslinkBuilder.MakeTransitionDocNode(complexFragmentIon, isotopeDist, annotations, transitionQuantInfo, explicitTransitionValues, results);
+                // DONTCHECKIN
+                // LegacyComplexFragmentIon complexFragmentIon = new LegacyComplexFragmentIon(transition, losses, mods.Crosslinks, transitionProto.OrphanedCrosslinkIon);
+                // crosslinkBuilder = crosslinkBuilder ?? complexFragmentIon.GetCrosslinkBuilder(settings, mods);
+                // foreach (var linkedIon in transitionProto.LinkedIons)
+                // {
+                //     var modificationSite = new ModificationSite(linkedIon.ModificationIndex, linkedIon.ModificationName);
+                //     var linkedPeptide = mods.GetLinkedPeptide(modificationSite);
+                //     var childName = ComplexFragmentIonName.FromLinkedIonProto(linkedIon);
+                //     complexFragmentIon = complexFragmentIon.AddChild(modificationSite,
+                //         linkedPeptide.MakeComplexFragmentIon(settings, group.LabelType, childName));
+                // }
+                // transitionDocNode = crosslinkBuilder.MakeTransitionDocNode(complexFragmentIon, isotopeDist, annotations, transitionQuantInfo, explicitTransitionValues, results);
             }
             else
             {
@@ -969,10 +970,10 @@ namespace pwiz.Skyline.Model
         {
             public static readonly TransitionQuantInfo DEFAULT = new TransitionQuantInfo(null, null, true);
             private bool _notQuantitative;
-            public static TransitionQuantInfo GetTransitionQuantInfo(LegacyComplexFragmentIon complexFragmentIon, IsotopeDistInfo isotopeDist, TypedMass massH, IDictionary<double, LibraryRankedSpectrumInfo.RankedMI> ranks)
+            public static TransitionQuantInfo GetTransitionQuantInfo(ComplexFragmentIon complexFragmentIon, IsotopeDistInfo isotopeDist, TypedMass massH, IDictionary<double, LibraryRankedSpectrumInfo.RankedMI> ranks)
             {
-                var transitionIsotopeDistInfo = complexFragmentIon.IsMs1 ? GetIsotopeDistInfo(complexFragmentIon.Transition, complexFragmentIon.TransitionLosses, isotopeDist) : null;
-                return GetLibTransitionQuantInfo(complexFragmentIon.Transition, complexFragmentIon.TransitionLosses, massH, ranks).ChangeIsotopeDistInfo(transitionIsotopeDistInfo);
+                var transitionIsotopeDistInfo = complexFragmentIon.IsMs1 ? GetIsotopeDistInfo(complexFragmentIon.PrimaryTransition, complexFragmentIon.TransitionLosses, isotopeDist) : null;
+                return GetLibTransitionQuantInfo(complexFragmentIon.PrimaryTransition, complexFragmentIon.TransitionLosses, massH, ranks).ChangeIsotopeDistInfo(transitionIsotopeDistInfo);
             }
 
             public static TransitionQuantInfo GetLibTransitionQuantInfo(Transition transition, TransitionLosses losses, TypedMass massH,

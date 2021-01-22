@@ -20,7 +20,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Chemistry;
-using pwiz.Common.Collections;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
@@ -30,14 +29,23 @@ namespace pwiz.Skyline.Model.Crosslinking
 {
     public class CrosslinkBuilder
     {
-        private ImmutableList<CrosslinkPeptideBuilder> _peptideBuilders;
+        private List<CrosslinkPeptideBuilder> _peptideBuilders;
+
+        public CrosslinkBuilder(SrmSettings settings, Peptide peptide, ExplicitMods explicitMods,
+            IsotopeLabelType labelType) : this(settings, new PeptideStructure(peptide, explicitMods), labelType)
+        {
+
+        }
         public CrosslinkBuilder(SrmSettings settings, PeptideStructure peptideStructure, IsotopeLabelType labelType)
         {
             Settings = settings;
             PeptideStructure = peptideStructure;
             LabelType = labelType;
-            _peptideBuilders = ImmutableList.ValueOf(peptideStructure.Peptides.Select(pep =>
-                new CrosslinkPeptideBuilder(settings, pep.Peptide, pep.ExplicitMods, labelType)));
+            _peptideBuilders = new List<CrosslinkPeptideBuilder>();
+            for (int i = 0; i < PeptideStructure.Peptides.Count; i++)
+            {
+                _peptideBuilders.Add(new CrosslinkPeptideBuilder(settings, PeptideStructure.Peptides[i], PeptideStructure.ExplicitModList[i], labelType));
+            }
         }
 
         public SrmSettings Settings { get; private set; }
