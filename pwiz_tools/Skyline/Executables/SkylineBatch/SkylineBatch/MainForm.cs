@@ -170,6 +170,7 @@ namespace SkylineBatch
             btnDelete.Enabled = configSelected;
             btnUpArrow.Enabled = configSelected && _configManager.SelectedConfig != 0;
             btnDownArrow.Enabled = configSelected && _configManager.SelectedConfig < listViewConfigs.Items.Count - 1;
+            btnExportConfigs.Enabled = _configManager.HasConfigs();
         }
 
         private void btnUpArrow_Click(object sender, EventArgs e)

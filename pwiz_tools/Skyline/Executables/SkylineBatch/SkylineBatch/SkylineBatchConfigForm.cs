@@ -207,7 +207,7 @@ namespace SkylineBatch
                 textRetentionTime.Text = config.FileSettings.RetentionTime;
             checkBoxDecoys.Checked = config.FileSettings.AddDecoys;
             radioShuffleDecoys.Checked = config.FileSettings.ShuffleDecoys;
-            checkBoxNProfit.Checked = config.FileSettings.TrainMProfit;
+            checkBoxMProphet.Checked = config.FileSettings.TrainMProfit;
         }
 
         private void checkBoxDecoys_CheckedChanged(object sender, EventArgs e)
@@ -219,7 +219,7 @@ namespace SkylineBatch
         private FileSettings GetFileSettingsFromUi()
         {
             return new FileSettings(textMsOneResolvingPower.Text, textMsMsResolvingPower.Text, textRetentionTime.Text, 
-                checkBoxDecoys.Checked, radioShuffleDecoys.Enabled && radioShuffleDecoys.Checked, checkBoxNProfit.Checked);
+                checkBoxDecoys.Checked, radioShuffleDecoys.Enabled && radioShuffleDecoys.Checked, checkBoxMProphet.Checked);
         }
 
         

@@ -200,6 +200,24 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Please select a configuration to share..
+        /// </summary>
+        internal static string ConfigManager_ExportConfigs_Please_select_a_configuration_to_share_ {
+            get {
+                return ResourceManager.GetString("ConfigManager_ExportConfigs_Please_select_a_configuration_to_share_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There is no configuration selected..
+        /// </summary>
+        internal static string ConfigManager_ExportConfigs_There_is_no_configuration_selected_ {
+            get {
+                return ResourceManager.GetString("ConfigManager_ExportConfigs_There_is_no_configuration_selected_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to An error occurred while importing configurations from {0}:.
         /// </summary>
         internal static string ConfigManager_Import_An_error_occurred_while_importing_configurations_from__0__ {

@@ -373,4 +373,10 @@ with:
   <data name="Program_Main_Error_details_may_be_found_in_the_file__0_" xml:space="preserve">
     <value>Error details may be found in the file: {0}.</value>
   </data>
+  <data name="ConfigManager_ExportConfigs_There_is_no_configuration_selected_" xml:space="preserve">
+    <value>There is no configuration selected.</value>
+  </data>
+  <data name="ConfigManager_ExportConfigs_Please_select_a_configuration_to_share_" xml:space="preserve">
+    <value>Please select a configuration to share.</value>
+  </data>
 </root>

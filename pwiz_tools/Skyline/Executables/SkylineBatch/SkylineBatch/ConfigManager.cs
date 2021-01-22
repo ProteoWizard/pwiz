@@ -657,6 +657,12 @@ namespace SkylineBatch
         public void ExportConfigs(string filePath, int[] indiciesToSave)
         {
             var directory = Path.GetDirectoryName(filePath) ?? "";
+            // Exception if no configurations are selected to export
+            if (indiciesToSave.Length == 0)
+            {
+                throw new ArgumentException(Resources.ConfigManager_ExportConfigs_There_is_no_configuration_selected_ + Environment.NewLine +
+                                           Resources.ConfigManager_ExportConfigs_Please_select_a_configuration_to_share_);
+            }
             try
             {
                 directory = Path.GetDirectoryName(filePath);
@@ -664,6 +670,7 @@ namespace SkylineBatch
             catch (ArgumentException)
             {
             }
+            // Exception if file folder does not exist
             if (!Directory.Exists(directory))
                 throw new ArgumentException(Resources.ConfigManager_ExportConfigs_Could_not_save_configurations_to_ + Environment.NewLine +
                                             filePath + Environment.NewLine +
