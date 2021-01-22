@@ -598,6 +598,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     btnNext.Enabled = false;
                     btnCancel.Enabled = false;
                     btnBack.Enabled = false;
+                    ControlBox = false;
                     SearchControl.RunSearch();
                     break;
 
@@ -676,6 +677,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             btnCancel.Enabled = true;
             btnBack.Enabled = true;
+            ControlBox = true;
             if (success)
                 btnNext.Enabled = true;
         }
@@ -1035,13 +1037,19 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public void CloseWizard(DialogResult result)
         {
+            DialogResult = result;
+        }
+
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
             // Close file handles to the peptide search library
             ImportPeptideSearch.ClosePeptideSearchLibraryStreams(Document);
 
-            // Dispose DDA SearchEngine if it is initialized
+            // Cancel and dispose DDA SearchEngine
+            SearchControl?.Cancel();
             ImportPeptideSearch.SearchEngine?.Dispose();
 
-            DialogResult = result;
+            base.OnFormClosing(e);
         }
 
         private void BuildPepSearchLibForm_OnInputFilesChanged(object sender,
