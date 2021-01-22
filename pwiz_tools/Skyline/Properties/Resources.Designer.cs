@@ -9356,6 +9356,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Please specify the ion mobility units..
+        /// </summary>
+        public static string EditCustomMoleculeDlg_OkDialog_Please_specify_the_ion_mobility_units_ {
+            get {
+                return ResourceManager.GetString("EditCustomMoleculeDlg_OkDialog_Please_specify_the_ion_mobility_units_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The color scheme &apos;{0}&apos; already exists..
         /// </summary>
         public static string EditCustomThemeDlg_buttonSave_Click_The_color_scheme___0___already_exists_ {
@@ -14209,6 +14218,15 @@ namespace pwiz.Skyline.Properties {
         public static string GraphFullScan_CreateGraph__0_____1_F2__min_ {
             get {
                 return ResourceManager.GetString("GraphFullScan_CreateGraph__0_____1_F2__min_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to IM={0}.
+        /// </summary>
+        public static string GraphFullScan_CreateGraph_IM__0_ {
+            get {
+                return ResourceManager.GetString("GraphFullScan_CreateGraph_IM__0_", resourceCulture);
             }
         }
         
