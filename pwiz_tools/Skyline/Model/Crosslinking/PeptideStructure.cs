@@ -17,6 +17,15 @@ namespace pwiz.Skyline.Model.Crosslinking
         {
             get { return Peptides[0].Peptide; }
         }
+
+        public ExplicitMods PrimaryExplicitMods
+        {
+            get
+            {
+                return Peptides[0].ExplicitMods;
+            }
+        }
+
         public ImmutableList<ModifiedPeptide> Peptides { get; private set; }
         public ImmutableList<CrosslinkModification> Crosslinks { get; private set; }
 

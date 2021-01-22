@@ -486,6 +486,8 @@
     </Compile>
     <Compile Include="Model\AuditLog\ReflectorEnumerator.cs" />
     <Compile Include="Model\AuditLog\ReflectorToString.cs" />
+    <Compile Include="Model\Crosslinking\ComplexFragmentIonKey.cs" />
+    <Compile Include="Model\Crosslinking\CrosslinkPeptideBuilder.cs" />
     <Compile Include="Model\Crosslinking\LegacyComplexFragmentIon.cs" />
     <Compile Include="Model\Crosslinking\CrosslinkBuilder.cs" />
     <Compile Include="Model\Crosslinking\ComplexFragmentIonName.cs" />

@@ -640,10 +640,12 @@ namespace pwiz.Skyline.Model.Serialization
                 }
             }
 
+#if false // TODO
             if (nodeTransition.ComplexFragmentIon.IsOrphan)
             {
                 writer.WriteAttribute(ATTR.orphaned_crosslink_ion, true);
             }
+#endif
 
             // Order of elements matters for XSD validation
             WriteAnnotations(writer, nodeTransition.Annotations);
@@ -707,11 +709,12 @@ namespace pwiz.Skyline.Model.Serialization
                 writer.WriteElementString(EL.declustering_potential, dp.Value);
             }
             WriteTransitionLosses(writer, nodeTransition.Losses);
+#if false // TODO(nicksh)
             foreach (var linkedIon in nodeTransition.ComplexFragmentIon.Children)
             {
                 WriteLinkedIon(writer, linkedIon.Key, linkedIon.Value);
             }
-
+#endif
             if (nodeTransition.HasLibInfo)
             {
                 writer.WriteStartElement(EL.transition_lib_info);

@@ -200,7 +200,7 @@ namespace pwiz.Skyline.Model
         /// <summary>
         /// // Gives list of precursors - formerly in TransitionGroupTreeNode.GetChoices
         /// </summary>
-        public IList<DocNode> GetPrecursorChoices(SrmSettings settings, ExplicitMods mods, bool useFilter)
+        public IList<DocNode> GetPrecursorChoices(SrmSettings settings, PeptideStructure peptideStucture, bool useFilter)
         {
             SpectrumHeaderInfo libInfo = null;
             var transitionRanks = new Dictionary<double, LibraryRankedSpectrumInfo.RankedMI>();
@@ -800,10 +800,10 @@ namespace pwiz.Skyline.Model
             return mz;
         }
 
-        private double CalcCrosslinkedPrecursorMz(SrmSettings settings, ExplicitMods mods,
+        private double CalcCrosslinkedPrecursorMz(SrmSettings settings, PeptideStructure peptideStructure,
             out IsotopeDistInfo isotopeDist, out TypedMass mass)
         {
-            var crosslinkBuilder = new CrosslinkBuilder(settings, TransitionGroup.Peptide, mods, LabelType);
+            var crosslinkBuilder = new CrosslinkBuilder(settings, peptideStructure, LabelType);
             MassType massType = settings.TransitionSettings.Prediction.PrecursorMassType;
             mass = crosslinkBuilder.GetPrecursorMass(massType);
             Assume.IsFalse(mass.IsMassH());
@@ -883,7 +883,7 @@ namespace pwiz.Skyline.Model
             return ChangeProp(ImClone(this), im => im.PrecursorConcentration = precursorConcentration);
         }
 
-        public TransitionGroupDocNode ChangeSettings(SrmSettings settingsNew, PeptideDocNode nodePep, ExplicitMods mods, SrmSettingsDiff diff)
+        public TransitionGroupDocNode ChangeSettings(SrmSettings settingsNew, PeptideDocNode nodePep, PeptideStructure peptideStructure, SrmSettingsDiff diff)
         {
             double precursorMz = PrecursorMz;
             IsotopeDistInfo isotopeDist = IsotopeDist;
@@ -3013,7 +3013,7 @@ namespace pwiz.Skyline.Model
 
         #endregion
 
-        public void GetLibraryInfo(SrmSettings settings, ExplicitMods mods, bool useFilter,
+        public void GetLibraryInfo(SrmSettings settings, PeptideStructure peptideStructure, bool useFilter,
             ref SpectrumHeaderInfo libInfo,
             Dictionary<double, LibraryRankedSpectrumInfo.RankedMI> transitionRanks)
         {

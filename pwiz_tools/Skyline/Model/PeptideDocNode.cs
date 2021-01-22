@@ -903,7 +903,7 @@ namespace pwiz.Skyline.Model
                         if (recurse)
                         {
                             nodeGroups = nodeGroups.Select(nodeGroup =>
-                                nodeGroup.ChangeSettings(settingsNew, nodeResult, explicitMods, diffNode)).ToList();
+                                nodeGroup.ChangeSettings(settingsNew, nodeResult, PeptideStructure, diffNode)).ToList();
                         }
                         foreach (var nodeGroup in nodeGroups)
                         {
@@ -931,7 +931,7 @@ namespace pwiz.Skyline.Model
                             if (existing.Count == 1)
                             {
                                 childrenNew[i] = existing.First()
-                                    .ChangeSettings(settingsNew, nodeResult, explicitMods, diff);
+                                    .ChangeSettings(settingsNew, nodeResult, PeptideStructure, diff);
                             }
                         }
                     }
@@ -966,7 +966,7 @@ namespace pwiz.Skyline.Model
                     // Enumerate the nodes making necessary changes.
                     foreach (TransitionGroupDocNode nodeGroup in nodeResult.Children)
                     {
-                        TransitionGroupDocNode nodeChanged = nodeGroup.ChangeSettings(settingsNew, nodeResult, explicitMods, diff);
+                        TransitionGroupDocNode nodeChanged = nodeGroup.ChangeSettings(settingsNew, nodeResult, PeptideStructure, diff);
                         // Skip if the node can no longer be measured on the target instrument
                         if (!transitionSettings.IsMeasurablePrecursor(nodeChanged.PrecursorMz))
                             continue;
@@ -976,7 +976,7 @@ namespace pwiz.Skyline.Model
                             !Peptide.IsCustomMolecule) // No mods on customs (TODO bspratt - not sure this holds true any longer)
                         {
                             var precursorMassLight = settingsNew.GetPrecursorMass(
-                                IsotopeLabelType.light, Peptide.Target, explicitMods);
+                                IsotopeLabelType.light, PeptideStructure);
                             double precursorMzLight = SequenceMassCalc.GetMZ(precursorMassLight,
                                                                              nodeChanged.TransitionGroup.PrecursorCharge);
                             if (nodeChanged.PrecursorMz == precursorMzLight)

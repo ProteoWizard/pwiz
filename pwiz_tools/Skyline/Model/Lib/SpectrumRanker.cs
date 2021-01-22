@@ -985,9 +985,9 @@ namespace pwiz.Skyline.Model.Lib
             return new MoleculeMasses(predictDocNode.PrecursorMz, matchMasses).ChangePredictIonMasses(predictMasses);
         }
 
-        private IonType DecideIonType(ComplexFragmentIonName complexFragmentIon)
+        private IonType DecideIonType(ComplexFragmentIonKey complexFragmentIon)
         {
-            var allIonTypes = complexFragmentIon.EnumerateIonTypes().ToHashSet();
+            var allIonTypes = complexFragmentIon.IonTypes.ToHashSet();
             foreach (var ionType in FragmentFilterObj.IonTypesToDisplay.Prepend(IonType.precursor))
             {
                 allIonTypes.Remove(ionType);
