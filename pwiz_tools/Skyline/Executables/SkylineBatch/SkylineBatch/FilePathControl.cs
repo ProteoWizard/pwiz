@@ -7,19 +7,23 @@ namespace SkylineBatch
 {
     public partial class FilePathControl : UserControl, IValidatorControl
     {
-        private string _path;
-        private string _lastUsedPath;
-        private readonly bool _folder;
-        private readonly string _filter;
+        // A control used by the InvalidConfigSetupForm to correct invalid paths
 
-        private readonly Validator _pathValidator;
+        // Implements IValidatorControl:
+        //    - GetVariable() returns the current path (_path)
+        //    - IsValid() uses the pathValidator to determine if _path is valid
+
+        private string _path; // the current path displayed in the textFilePath TextBox
+        private string _lastUsedPath; // the last path the user navigated to in a open File or open folder dialog
+        private readonly bool _folder; // if the desired path is a folder path (true) or a file path (false)
+        private readonly string _filter; // the filter to use in a OpenFileDialog. Has no impact when _folder == true.
+
+        private readonly Validator _pathValidator; // the validator to use on the path. Throws an ArgumentException if the path is invalid.
         
-
         public FilePathControl(string variableName, string invalidPath, string lastInputPath, bool folder, Validator pathValidator)
         {
-            _path = invalidPath;
             InitializeComponent();
-
+            _path = invalidPath;
             _lastUsedPath = lastInputPath ?? invalidPath;
             _pathValidator = pathValidator;
             _folder = folder;
@@ -45,7 +49,7 @@ namespace SkylineBatch
                 }
             }
             label1.Text = string.Format(Resources.FilePathControl_FilePathControl_Could_not_find_the__0__, variableName);
-            label2.Text = string.Format("Please specify the path to the {0}:", variableName);
+            label2.Text = string.Format(Resources.FilePathControl_FilePathControl_Please_specify_the_path_to_the__0__, variableName);
             textFilePath.Text = _path;
         }
 
@@ -78,28 +82,24 @@ namespace SkylineBatch
                     SelectedPath = initialDirectory
                 })
                 {
-                    if (dlg.ShowDialog(this) != DialogResult.OK)
-                        return;
-
-                    textFilePath.Text = dlg.SelectedPath;
-                    _lastUsedPath = dlg.SelectedPath;
+                    if (dlg.ShowDialog(this) == DialogResult.OK)
+                        textFilePath.Text = dlg.SelectedPath;
                 }
-                return;
             }
-
-            OpenFileDialog openDialog = new OpenFileDialog();
-            openDialog.Filter = _filter;
-            openDialog.InitialDirectory = initialDirectory;
-            if (openDialog.ShowDialog() == DialogResult.OK)
+            else
             {
-                textFilePath.Text = openDialog.FileName;
-                _lastUsedPath = openDialog.FileName;
+                OpenFileDialog openDialog = new OpenFileDialog();
+                openDialog.Filter = _filter;
+                openDialog.InitialDirectory = initialDirectory;
+                if (openDialog.ShowDialog() == DialogResult.OK)
+                    textFilePath.Text = openDialog.FileName;
             }
         }
 
         private void textFilePath_TextChanged(object sender, EventArgs e)
         {
             _path = textFilePath.Text;
+            _lastUsedPath = textFilePath.Text;
         }
     }
 }

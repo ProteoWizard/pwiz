@@ -383,6 +383,62 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Process terminated..
+        /// </summary>
+        internal static string ConfigRunner_ExecuteCommandLine_Process_terminated_ {
+            get {
+                return ResourceManager.GetString("ConfigRunner_ExecuteCommandLine_Process_terminated_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot kill child process..
+        /// </summary>
+        internal static string ConfigRunner_KillProcessChildren_Cannot_kill_child_process_ {
+            get {
+                return ResourceManager.GetString("ConfigRunner_KillProcessChildren_Cannot_kill_child_process_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Killing {0} processes spawned by the process with Id: {1}.
+        /// </summary>
+        internal static string ConfigRunner_KillProcessChildren_Killing__0__processes_spawned_by_the_process_with_Id___1_ {
+            get {
+                return ResourceManager.GetString("ConfigRunner_KillProcessChildren_Killing__0__processes_spawned_by_the_process_wit" +
+                        "h_Id___1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Killing a processes spawned by the process with Id: {0}.
+        /// </summary>
+        internal static string ConfigRunner_KillProcessChildren_Killing_a_processes_spawned_by_the_process_with_Id___0_ {
+            get {
+                return ResourceManager.GetString("ConfigRunner_KillProcessChildren_Killing_a_processes_spawned_by_the_process_with_" +
+                        "Id___0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Killing child process &quot;{0}&quot; with Id: {1}.
+        /// </summary>
+        internal static string ConfigRunner_KillProcessChildren_Killing_child_process___0___with_Id___1_ {
+            get {
+                return ResourceManager.GetString("ConfigRunner_KillProcessChildren_Killing_child_process___0___with_Id___1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The child process has already been terminated..
+        /// </summary>
+        internal static string ConfigRunner_KillProcessChildren_The_child_process_has_already_been_terminated_ {
+            get {
+                return ResourceManager.GetString("ConfigRunner_KillProcessChildren_The_child_process_has_already_been_terminated_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to ------------------------------ {0}: {1} -------------------------------.
         /// </summary>
         internal static string ConfigRunner_Run_________________________________0____1_________________________________ {
@@ -437,6 +493,15 @@ namespace SkylineBatch.Properties {
         internal static string FilePathControl_FilePathControl_Please_enter_a_valid_path_ {
             get {
                 return ResourceManager.GetString("FilePathControl_FilePathControl_Please_enter_a_valid_path_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please specify the path to the {0}:.
+        /// </summary>
+        internal static string FilePathControl_FilePathControl_Please_specify_the_path_to_the__0__ {
+            get {
+                return ResourceManager.GetString("FilePathControl_FilePathControl_Please_specify_the_path_to_the__0__", resourceCulture);
             }
         }
         

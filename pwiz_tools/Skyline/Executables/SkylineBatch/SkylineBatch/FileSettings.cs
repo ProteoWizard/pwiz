@@ -31,13 +31,14 @@ namespace SkylineBatch
         // IMMUTABLE - all fields are readonly strings
         // Holds file locations and naming pattern to use when running the configuration
         
-        public FileSettings(string msOneResolvingPower, string msMsResolvingPower, string retentionTime, bool addDecoys, bool shuffleDecoys, bool trainMProfit)
+        public FileSettings(string msOneResolvingPower, string msMsResolvingPower, string retentionTime, bool addDecoys, bool shuffleDecoys, bool trainMProphet)
         {
             MsOneResolvingPower = msOneResolvingPower ?? string.Empty;
             MsMsResolvingPower = msMsResolvingPower ?? string.Empty;
             RetentionTime = retentionTime ?? string.Empty;
             AddDecoys = addDecoys;
             ShuffleDecoys = shuffleDecoys;
+            TrainMProphet = trainMProphet;
         }
 
         public readonly string MsOneResolvingPower;
@@ -45,7 +46,7 @@ namespace SkylineBatch
         public readonly string RetentionTime;
         public readonly bool AddDecoys;
         public readonly bool ShuffleDecoys;
-        public readonly bool TrainMProfit;
+        public readonly bool TrainMProphet;
 
         private int ValidateIntTextField(string textToParse, string fieldName)
         {
@@ -86,7 +87,7 @@ namespace SkylineBatch
             RetentionTime,
             AddDecoys,
             ShuffleDecoys,
-            TrainMProfit
+            TrainMProphet
         };
 
         public static FileSettings ReadXml(XmlReader reader)
@@ -96,8 +97,8 @@ namespace SkylineBatch
             var retentionTime = reader.GetAttribute(Attr.RetentionTime);
             var addDecoys = reader.GetBoolAttribute(Attr.AddDecoys);
             var shuffleDecoys = reader.GetBoolAttribute(Attr.ShuffleDecoys);
-            var trainMProfit = reader.GetBoolAttribute(Attr.TrainMProfit);
-            return new FileSettings(msOneResolvingPower, msMsResolvingPower, retentionTime, addDecoys, shuffleDecoys, trainMProfit);
+            var trainMProphet = reader.GetBoolAttribute(Attr.TrainMProphet);
+            return new FileSettings(msOneResolvingPower, msMsResolvingPower, retentionTime, addDecoys, shuffleDecoys, trainMProphet);
         }
 
         public void WriteXml(XmlWriter writer)
@@ -108,7 +109,7 @@ namespace SkylineBatch
             writer.WriteAttributeIfString(Attr.RetentionTime, RetentionTime);
             writer.WriteAttribute(Attr.AddDecoys, AddDecoys);
             writer.WriteAttribute(Attr.ShuffleDecoys, ShuffleDecoys);
-            writer.WriteAttribute(Attr.TrainMProfit, TrainMProfit);
+            writer.WriteAttribute(Attr.TrainMProphet, TrainMProphet);
             writer.WriteEndElement();
         }
         #endregion

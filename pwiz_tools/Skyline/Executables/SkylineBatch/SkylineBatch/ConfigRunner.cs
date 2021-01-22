@@ -118,11 +118,10 @@ namespace SkylineBatch
             // STEP 1: open skyline file and save copy to analysis folder
             var firstStep = string.Format("\"{0}\" --in=\"{1}\" ", skylineRunner, templateFullName);
 
-            firstStep += !string.IsNullOrEmpty(msOneResolvingPower) ? string.Format("--full-scan-precursor-res={0} ", msOneResolvingPower) : "";
-            firstStep += !string.IsNullOrEmpty(msMsResolvingPower) ? string.Format("--full-scan-product-res={0} ", msMsResolvingPower) : "";
-            firstStep += !string.IsNullOrEmpty(retentionTime) ? string.Format("--full-scan-rt-filter-tolerance={0} ", retentionTime) : "";
-            firstStep += addDecoys ? string.Format("--decoys-add={0} ", shuffleDecoys ? "shuffle" : "reverse") : "";
-
+            firstStep += !string.IsNullOrEmpty(msOneResolvingPower) ? string.Format("--full-scan-precursor-res={0} ", msOneResolvingPower) : string.Empty;
+            firstStep += !string.IsNullOrEmpty(msMsResolvingPower) ? string.Format("--full-scan-product-res={0} ", msMsResolvingPower) : string.Empty;
+            firstStep += !string.IsNullOrEmpty(retentionTime) ? string.Format("--full-scan-rt-filter-tolerance={0} ", retentionTime) : string.Empty;
+            firstStep += addDecoys ? string.Format("--decoys-add={0} ", shuffleDecoys ? "shuffle" : "reverse") : string.Empty;
             firstStep += string.Format("--out=\"{0}\" ‑‑save‑settings", newSkylineFileName);
 
             if (startStep <= 1)
@@ -190,7 +189,6 @@ namespace SkylineBatch
                     if (_logger != null)
                         _logger.Log(e.Data);
                 }
-                    
             };
             cmd.Start();
             cmd.BeginOutputReadLine();
@@ -205,10 +203,10 @@ namespace SkylineBatch
                 await Task.Delay(2000);
             }
 
-            // end cmd and skylinerunner processes if runner has been stopped before completion
+            // end cmd and SkylineRunner/SkylineCmd processes if runner has been stopped before completion
             if (!cmd.HasExited)
             {
-                LogToUi("Process terminated.");
+                LogToUi(Resources.ConfigRunner_ExecuteCommandLine_Process_terminated_);
                 await KillProcessChildren((UInt32)cmd.Id);
                 if (!cmd.HasExited) cmd.Kill();
                 if (!IsError())
@@ -226,7 +224,15 @@ namespace SkylineBatch
             ManagementObjectCollection collection = searcher.Get();
             if (collection.Count > 0)
             {
-                Program.LogInfo("Killing [" + collection.Count + "] processes spawned by process with Id [" + parentProcessId + "]");
+                if (collection.Count == 1)
+                {
+                    Program.LogInfo(string.Format(Resources.ConfigRunner_KillProcessChildren_Killing_a_processes_spawned_by_the_process_with_Id___0_, parentProcessId));
+                }
+                else
+                {
+                    Program.LogInfo(string.Format(Resources.ConfigRunner_KillProcessChildren_Killing__0__processes_spawned_by_the_process_with_Id___1_, collection.Count, parentProcessId));
+                }
+
                 foreach (var item in collection)
                 {
                     UInt32 childProcessId = (UInt32)item["ProcessId"];
@@ -237,16 +243,16 @@ namespace SkylineBatch
                         try
                         {
                             var childProcess = Process.GetProcessById((int)childProcessId);
-                            Program.LogInfo("Killing child process [" + childProcess.ProcessName + "] with Id [" + childProcessId + "]");
+                            Program.LogInfo(string.Format(Resources.ConfigRunner_KillProcessChildren_Killing_child_process___0___with_Id___1_, childProcess.ProcessName, childProcessId));
                             childProcess.Kill();
                         }
                         catch (ArgumentException)
                         {
-                            Program.LogInfo("Child process already terminated");
+                            Program.LogInfo(Resources.ConfigRunner_KillProcessChildren_The_child_process_has_already_been_terminated_);
                         }
                         catch (Win32Exception)
                         {
-                            Program.LogInfo("Cannot kill windows child process.");
+                            Program.LogInfo(Resources.ConfigRunner_KillProcessChildren_Cannot_kill_child_process_);
                         }
                     }
                 }
@@ -263,8 +269,7 @@ namespace SkylineBatch
                 }
                 _runnerStatus = runnerStatus;
             }
-            if (_uiControl != null)
-                _uiControl.UpdateUiConfigurations();
+            _uiControl?.UpdateUiConfigurations();
         }
 
         public void Cancel()
@@ -279,9 +284,7 @@ namespace SkylineBatch
         {
             return _runnerStatus == RunnerStatus.Cancelling;
         }
-
-
-
+        
         public bool IsBusy()
         {
             return IsRunning() || IsWaiting() || IsCancelling();
@@ -311,6 +314,5 @@ namespace SkylineBatch
         {
             return _runnerStatus == RunnerStatus.Waiting;
         }
-
     }
 }

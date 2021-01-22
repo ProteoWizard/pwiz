@@ -519,13 +519,6 @@ namespace SkylineBatch
             _uiControl.DisplayWarning(message);
         }
 
-        private void DisplayInfo(string message)
-        {
-            if (!_runningUi)
-                return;
-            _uiControl.DisplayInfo(message);
-        }
-
         private DialogResult DisplayQuestion(string message)
         {
             if (!_runningUi)
@@ -546,9 +539,7 @@ namespace SkylineBatch
                 return;
             _uiControl.UpdateRunningButtons(isRunning);
         }
-
-
-
+        
         #endregion
 
         #region Import/Export
@@ -753,7 +744,6 @@ namespace SkylineBatch
         }
         
         #endregion
-        
     }
 }
 
