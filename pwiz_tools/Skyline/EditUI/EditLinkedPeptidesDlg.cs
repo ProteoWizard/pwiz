@@ -3,10 +3,13 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Web.UI.WebControls;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.EditUI
@@ -59,19 +62,20 @@ namespace pwiz.Skyline.EditUI
             _originalPeptideDocNode = peptideDocNode;
             _peptideRows.Clear();
             _crosslinkRows.Clear();
-            var peptideStructure = peptideDocNode.GetPeptideStructure();
-            for (int i = 0; i < peptideStructure.Peptides.Count; i++)
+            tbxPrimaryPeptide.Text = peptideDocNode.Peptide.Sequence;
+            var crosslinkStructure = peptideDocNode.CrosslinkStructure;
+            for (int i = 0; i < crosslinkStructure.LinkedPeptides.Count; i++)
             {
                 _peptideRows.Add(new PeptideRow()
                 {
-                    Sequence =  peptideStructure.Peptides[i].Sequence,
-                    ExplicitMods = peptideStructure.ExplicitModList[i]
+                    Sequence = crosslinkStructure.LinkedPeptides[i].Sequence,
+                    ExplicitMods = crosslinkStructure.LinkedExplicitMods[i]
                 });
             }
 
-            for (int i = 0; i < peptideStructure.Crosslinks.Count; i++)
+            for (int i = 0; i < crosslinkStructure.Crosslinks.Count; i++)
             {
-                var crosslink = peptideStructure.Crosslinks[i];
+                var crosslink = crosslinkStructure.Crosslinks[i];
                 if (crosslink.Sites.Count != 2)
                 {
                     continue;
@@ -91,9 +95,10 @@ namespace pwiz.Skyline.EditUI
 
         private void UpdateComboBoxes()
         {
-            var longestSequence = _peptideRows.Max(row => row.Sequence?.Length ?? 0);
-            var peptideChoices = Enumerable.Range(0, _peptideRows.Count).Select(i => new KeyValuePair<string, int>(
-                (i + 1) + @":" + _peptideRows[i].Sequence,
+            var peptideSequences = GetPeptideSequences();
+            var longestSequence = peptideSequences .Max(sequence => sequence?.Length ?? 0);
+            var peptideChoices = Enumerable.Range(0, peptideSequences.Count).Select(i => new KeyValuePair<string, int>(
+                (i + 1) + @":" + peptideSequences[i],
                 i)).ToList();
             ReplaceDropdownItems(colPeptide1, peptideChoices);
             ReplaceDropdownItems(colPeptide2, peptideChoices);
@@ -102,6 +107,13 @@ namespace pwiz.Skyline.EditUI
                 .Select(i => MakeAaIndexOption(null, i)).ToList();
             ReplaceDropdownItems(colAminoAcid1, aaChoices);
             ReplaceDropdownItems(colAminoAcid2, aaChoices);
+        }
+
+        public IList<string> GetPeptideSequences()
+        {
+            var list = new List<string> {_originalPeptideDocNode.Peptide.Sequence};
+            list.AddRange(_peptideRows.Select(row => row.Sequence ?? string.Empty));
+            return list;
         }
 
         private void ReplaceDropdownItems<TValue>(DataGridViewComboBoxColumn column,
@@ -145,6 +157,10 @@ namespace pwiz.Skyline.EditUI
             var peptideRow = _peptideRows[e.RowIndex];
             if (e.ColumnIndex == colPeptideSequence.Index)
             {
+                if (string.IsNullOrEmpty(peptideRow.Sequence) && e.RowIndex == _peptideRows.Count - 1)
+                {
+                    return;
+                }
                 try
                 {
                     FastaSequence.ValidateSequence(peptideRow.Sequence);
@@ -211,10 +227,12 @@ namespace pwiz.Skyline.EditUI
                     peptideIndex = crosslinkRow.PeptideIndex2;
                     chosenAaIndex = crosslinkRow.AaIndex2;
                 }
+
+                var peptideList = GetPeptideSequences();
                 string peptideSequence = null;
-                if (peptideIndex >= 0 && peptideIndex < _peptideRows.Count)
+                if (peptideIndex >= 0 && peptideIndex < peptideList.Count)
                 {
-                    peptideSequence = _peptideRows[peptideIndex].Sequence;
+                    peptideSequence = peptideList[peptideIndex];
                 }
 
                 if (peptideSequence != null)
@@ -314,6 +332,7 @@ namespace pwiz.Skyline.EditUI
             if (e.ColumnIndex == colAminoAcid1.Index || e.ColumnIndex == colAminoAcid2.Index)
             {
                 int peptideIndex, aaIndex;
+                var peptideSequences = GetPeptideSequences();
                 if (e.ColumnIndex == colAminoAcid1.Index)
                 {
                     peptideIndex = crosslinkRow.PeptideIndex1;
@@ -325,9 +344,9 @@ namespace pwiz.Skyline.EditUI
                     aaIndex = crosslinkRow.AaIndex2;
                 }
                 string peptideSequence = null;
-                if (peptideIndex >= 0 && peptideIndex < _peptideRows.Count)
+                if (peptideIndex >= 0 && peptideIndex < peptideSequences.Count)
                 {
-                    peptideSequence = _peptideRows[peptideIndex].Sequence;
+                    peptideSequence = peptideSequences[peptideIndex];
                 }
 
                 e.Value = MakeAaIndexOption(peptideSequence, aaIndex).Key;
@@ -364,6 +383,133 @@ namespace pwiz.Skyline.EditUI
                     peptideRow.ExplicitMods = editPepModsDlg.ExplicitMods;
                 }
             }
+        }
+
+        public ExplicitMods ExplicitMods { get; private set; }
+        public void OkDialog()
+        {
+            var peptideSequences = GetPeptideSequences();
+            var linkedPeptides = new List<Peptide>();
+            var linkedExplicitMods = new List<ExplicitMods>();
+            for (int i = 0; i < _peptideRows.Count; i++)
+            {
+                var peptideRow = _peptideRows[i];
+                Peptide peptide;
+                try
+                {
+                    peptide = new Peptide(peptideRow.Sequence);
+                }
+                catch (Exception ex)
+                {
+                    MessageDlg.ShowWithException(this, ex.Message, ex);
+                    SetGridFocus(dataGridViewLinkedPeptides, i, colPeptideSequence);
+                    return;
+                }
+
+                linkedPeptides.Add(peptide);
+                linkedExplicitMods.Add(peptideRow.ExplicitMods);
+            }
+
+            var crosslinks = new List<CrosslinkModification>();
+            for (int i = 0; i < _crosslinkRows.Count; i++)
+            {
+                var crosslinkRow = _crosslinkRows[i];
+                if (crosslinkRow.Crosslinker == null)
+                {
+                    continue;
+                }
+
+                StaticMod crosslinker;
+                _crosslinkers.TryGetValue(crosslinkRow.Crosslinker, out crosslinker);
+                if (crosslinker == null)
+                {
+                    MessageDlg.Show(this, string.Format(Resources.MessageBoxHelper_ValidateNameTextBox__0__cannot_be_empty, colCrosslinker.HeaderText));
+                    SetGridFocus(dataGridViewCrosslinks, i, colCrosslinker);
+                    return;
+                }
+
+                var siteTuples = new[]
+                {
+                    Tuple.Create(new CrosslinkSite(crosslinkRow.PeptideIndex1, crosslinkRow.AaIndex1), colPeptide1, colAminoAcid1),
+                    Tuple.Create(new CrosslinkSite(crosslinkRow.PeptideIndex2, crosslinkRow.AaIndex2), colPeptide2, colAminoAcid2)
+                };
+
+                var sites = new List<CrosslinkSite>();
+                foreach (var siteTuple in siteTuples)
+                {
+                    var site = siteTuple.Item1;
+                    if (site.PeptideIndex < 0 || site.PeptideIndex >= peptideSequences.Count)
+                    {
+                        MessageDlg.Show(this, "This peptide is not valid.");
+                        SetGridFocus(dataGridViewCrosslinks, i, siteTuple.Item2);
+                        return;
+                    }
+
+                    var peptideSequence = peptideSequences[site.PeptideIndex];
+                    if (site.AaIndex < 0 || site.AaIndex >= peptideSequence.Length)
+                    {
+                        MessageDlg.Show(this, "This is not a valid amino acid position in this peptide.");
+                        SetGridFocus(dataGridViewCrosslinks, i, siteTuple.Item3);
+                        return;
+                    }
+
+                    if (sites.Contains(site))
+                    {
+                        MessageDlg.Show(this, "Both ends of this crosslink cannot be the same.");
+                        SetGridFocus(dataGridViewCrosslinks, i, siteTuple.Item3);
+                        return;
+                    }
+                    sites.Add(site);
+                }
+                crosslinks.Add(new CrosslinkModification(crosslinker, sites));
+            }
+
+            var aaIndexesByPeptideIndex = crosslinks.SelectMany(link => link.Sites).Distinct()
+                .ToLookup(site => site.PeptideIndex, site => site.AaIndex);
+            for (int i = 0; i < linkedExplicitMods.Count; i++)
+            {
+                if (null == linkedExplicitMods[i])
+                {
+                    linkedExplicitMods[i] =
+                        GetDefaultExplicitMods(linkedPeptides[i], aaIndexesByPeptideIndex[i + 1].ToHashSet());
+                }
+            }
+            var crosslinkStructure = new CrosslinkStructure(linkedPeptides, linkedExplicitMods, crosslinks);
+            if (!crosslinkStructure.IsConnected())
+            {
+                MessageDlg.Show(this, "Some peptides are not connected.");
+                return;
+            }
+
+            var mainPeptide = _originalPeptideDocNode.Peptide;
+            var mainExplicitMods = _originalPeptideDocNode.ExplicitMods;
+            if (mainExplicitMods == null)
+            {
+                mainExplicitMods = GetDefaultExplicitMods(mainPeptide, aaIndexesByPeptideIndex[0].ToHashSet());
+            }
+
+            ExplicitMods = mainExplicitMods.ChangeCrosslinks(crosslinkStructure);
+            DialogResult = DialogResult.OK;
+        }
+
+        public void SetGridFocus(DataGridView dataGridView, int rowIndex, DataGridViewColumn column)
+        {
+            dataGridView.CurrentCell = dataGridView.Rows[rowIndex].Cells[column.Index];
+            dataGridView.Focus();
+        }
+
+        public ExplicitMods GetDefaultExplicitMods(Peptide peptide, ICollection<int> crosslinkedAaIndexes)
+        {
+            var modifiedSequence = ModifiedSequence.GetModifiedSequence(SrmSettings, peptide.Sequence, null, IsotopeLabelType.light);
+            var staticMods = modifiedSequence.ExplicitMods.Where(mod => !crosslinkedAaIndexes.Contains(mod.IndexAA))
+                .Select(mod=>mod.ExplicitMod)
+                .ToList();
+            return new ExplicitMods(peptide, staticMods, null);
+        }
+
+        private void btnOk_Click(object sender, EventArgs e)
+        {
+            OkDialog();
         }
     }
 }

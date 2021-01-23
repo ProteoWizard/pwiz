@@ -30,7 +30,6 @@
         {
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.dataGridViewLinkedPeptides = new System.Windows.Forms.DataGridView();
-            this.colModificationsButton = new System.Windows.Forms.DataGridViewButtonColumn();
             this.toolStripPeptides = new System.Windows.Forms.MenuStrip();
             this.btnUpPeptide = new System.Windows.Forms.ToolStripButton();
             this.btnDownPeptide = new System.Windows.Forms.ToolStripButton();
@@ -41,9 +40,10 @@
             this.btnDeleteCrosslink = new System.Windows.Forms.ToolStripButton();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOk = new System.Windows.Forms.Button();
+            this.lblTitle = new System.Windows.Forms.Label();
+            this.tbxPrimaryPeptide = new System.Windows.Forms.TextBox();
+            this.colModificationsButton = new System.Windows.Forms.DataGridViewButtonColumn();
             this.dataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.dataGridViewTextBoxColumn2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colPeptideNumber = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colPeptideSequence = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dataGridViewCrosslinks = new pwiz.Skyline.Controls.DataGridViewEx();
             this.colCrosslinker = new System.Windows.Forms.DataGridViewComboBoxColumn();
@@ -51,6 +51,7 @@
             this.colAminoAcid1 = new System.Windows.Forms.DataGridViewComboBoxColumn();
             this.colPeptide2 = new System.Windows.Forms.DataGridViewComboBoxColumn();
             this.colAminoAcid2 = new System.Windows.Forms.DataGridViewComboBoxColumn();
+            this.dataGridViewTextBoxColumn2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -66,7 +67,7 @@
             this.splitContainer1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.splitContainer1.Location = new System.Drawing.Point(0, 31);
+            this.splitContainer1.Location = new System.Drawing.Point(0, 56);
             this.splitContainer1.Name = "splitContainer1";
             this.splitContainer1.Orientation = System.Windows.Forms.Orientation.Horizontal;
             // 
@@ -79,31 +80,23 @@
             // 
             this.splitContainer1.Panel2.Controls.Add(this.dataGridViewCrosslinks);
             this.splitContainer1.Panel2.Controls.Add(this.menuStrip1);
-            this.splitContainer1.Size = new System.Drawing.Size(675, 241);
-            this.splitContainer1.SplitterDistance = 120;
+            this.splitContainer1.Size = new System.Drawing.Size(675, 299);
+            this.splitContainer1.SplitterDistance = 148;
             this.splitContainer1.TabIndex = 0;
             // 
             // dataGridViewLinkedPeptides
             // 
             this.dataGridViewLinkedPeptides.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataGridViewLinkedPeptides.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-            this.colPeptideNumber,
             this.colPeptideSequence,
             this.colModificationsButton});
             this.dataGridViewLinkedPeptides.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dataGridViewLinkedPeptides.Location = new System.Drawing.Point(0, 0);
             this.dataGridViewLinkedPeptides.Name = "dataGridViewLinkedPeptides";
-            this.dataGridViewLinkedPeptides.Size = new System.Drawing.Size(643, 120);
+            this.dataGridViewLinkedPeptides.Size = new System.Drawing.Size(643, 148);
             this.dataGridViewLinkedPeptides.TabIndex = 0;
             this.dataGridViewLinkedPeptides.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridViewLinkedPeptides_CellContentClick);
             this.dataGridViewLinkedPeptides.CellErrorTextNeeded += new System.Windows.Forms.DataGridViewCellErrorTextNeededEventHandler(this.dataGridViewLinkedPeptides_CellErrorTextNeeded);
-            // 
-            // colModificationsButton
-            // 
-            this.colModificationsButton.HeaderText = "";
-            this.colModificationsButton.Name = "colModificationsButton";
-            this.colModificationsButton.ReadOnly = true;
-            this.colModificationsButton.Width = 20;
             // 
             // toolStripPeptides
             // 
@@ -115,7 +108,7 @@
             this.btnDeletePeptide});
             this.toolStripPeptides.Location = new System.Drawing.Point(643, 0);
             this.toolStripPeptides.Name = "toolStripPeptides";
-            this.toolStripPeptides.Size = new System.Drawing.Size(32, 120);
+            this.toolStripPeptides.Size = new System.Drawing.Size(32, 148);
             this.toolStripPeptides.TabIndex = 1;
             this.toolStripPeptides.Text = "menuStrip1";
             // 
@@ -156,7 +149,7 @@
             this.btnDeleteCrosslink});
             this.menuStrip1.Location = new System.Drawing.Point(643, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(32, 117);
+            this.menuStrip1.Size = new System.Drawing.Size(32, 147);
             this.menuStrip1.TabIndex = 2;
             this.menuStrip1.Text = "menuStrip1";
             // 
@@ -192,7 +185,7 @@
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.btnCancel.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.btnCancel.Location = new System.Drawing.Point(586, 284);
+            this.btnCancel.Location = new System.Drawing.Point(586, 367);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
             this.btnCancel.TabIndex = 9;
@@ -202,35 +195,46 @@
             // btnOk
             // 
             this.btnOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnOk.DialogResult = System.Windows.Forms.DialogResult.OK;
             this.btnOk.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.btnOk.Location = new System.Drawing.Point(505, 284);
+            this.btnOk.Location = new System.Drawing.Point(505, 367);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(75, 23);
             this.btnOk.TabIndex = 8;
             this.btnOk.Text = "OK";
             this.btnOk.UseVisualStyleBackColor = true;
+            this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
+            // 
+            // lblTitle
+            // 
+            this.lblTitle.AutoSize = true;
+            this.lblTitle.Location = new System.Drawing.Point(8, 10);
+            this.lblTitle.Name = "lblTitle";
+            this.lblTitle.Size = new System.Drawing.Size(82, 13);
+            this.lblTitle.TabIndex = 10;
+            this.lblTitle.Text = "Primary peptide:";
+            // 
+            // tbxPrimaryPeptide
+            // 
+            this.tbxPrimaryPeptide.Location = new System.Drawing.Point(11, 30);
+            this.tbxPrimaryPeptide.Name = "tbxPrimaryPeptide";
+            this.tbxPrimaryPeptide.ReadOnly = true;
+            this.tbxPrimaryPeptide.Size = new System.Drawing.Size(260, 20);
+            this.tbxPrimaryPeptide.TabIndex = 11;
+            // 
+            // colModificationsButton
+            // 
+            this.colModificationsButton.HeaderText = "";
+            this.colModificationsButton.Name = "colModificationsButton";
+            this.colModificationsButton.ReadOnly = true;
+            this.colModificationsButton.Width = 20;
             // 
             // dataGridViewTextBoxColumn1
             // 
+            this.dataGridViewTextBoxColumn1.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.dataGridViewTextBoxColumn1.DataPropertyName = "Sequence";
             this.dataGridViewTextBoxColumn1.HeaderText = "#";
             this.dataGridViewTextBoxColumn1.Name = "dataGridViewTextBoxColumn1";
             this.dataGridViewTextBoxColumn1.ReadOnly = true;
-            this.dataGridViewTextBoxColumn1.Width = 40;
-            // 
-            // dataGridViewTextBoxColumn2
-            // 
-            this.dataGridViewTextBoxColumn2.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.dataGridViewTextBoxColumn2.DataPropertyName = "Sequence";
-            this.dataGridViewTextBoxColumn2.HeaderText = "Peptide Sequence";
-            this.dataGridViewTextBoxColumn2.Name = "dataGridViewTextBoxColumn2";
-            // 
-            // colPeptideNumber
-            // 
-            this.colPeptideNumber.HeaderText = "#";
-            this.colPeptideNumber.Name = "colPeptideNumber";
-            this.colPeptideNumber.ReadOnly = true;
-            this.colPeptideNumber.Width = 40;
             // 
             // colPeptideSequence
             // 
@@ -252,7 +256,7 @@
             this.dataGridViewCrosslinks.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dataGridViewCrosslinks.Location = new System.Drawing.Point(0, 0);
             this.dataGridViewCrosslinks.Name = "dataGridViewCrosslinks";
-            this.dataGridViewCrosslinks.Size = new System.Drawing.Size(643, 117);
+            this.dataGridViewCrosslinks.Size = new System.Drawing.Size(643, 147);
             this.dataGridViewCrosslinks.TabIndex = 0;
             this.dataGridViewCrosslinks.CellFormatting += new System.Windows.Forms.DataGridViewCellFormattingEventHandler(this.dataGridViewCrosslinks_CellFormatting);
             this.dataGridViewCrosslinks.DataError += new System.Windows.Forms.DataGridViewDataErrorEventHandler(this.dataGridViewCrosslinks_DataError);
@@ -313,11 +317,20 @@
             this.colAminoAcid2.Resizable = System.Windows.Forms.DataGridViewTriState.True;
             this.colAminoAcid2.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
             // 
+            // dataGridViewTextBoxColumn2
+            // 
+            this.dataGridViewTextBoxColumn2.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.dataGridViewTextBoxColumn2.DataPropertyName = "Sequence";
+            this.dataGridViewTextBoxColumn2.HeaderText = "Peptide Sequence";
+            this.dataGridViewTextBoxColumn2.Name = "dataGridViewTextBoxColumn2";
+            // 
             // EditLinkedPeptidesDlg
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(673, 319);
+            this.ClientSize = new System.Drawing.Size(673, 402);
+            this.Controls.Add(this.tbxPrimaryPeptide);
+            this.Controls.Add(this.lblTitle);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnOk);
             this.Controls.Add(this.splitContainer1);
@@ -338,6 +351,7 @@
             this.menuStrip1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewCrosslinks)).EndInit();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -354,9 +368,6 @@
         private System.Windows.Forms.ToolStripButton btnDownCrosslink;
         private System.Windows.Forms.ToolStripButton btnDeleteCrosslink;
         private Controls.DataGridViewEx dataGridViewCrosslinks;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colPeptideNumber;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colPeptideSequence;
-        private System.Windows.Forms.DataGridViewButtonColumn colModificationsButton;
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Button btnOk;
         private System.Windows.Forms.DataGridViewComboBoxColumn colCrosslinker;
@@ -366,5 +377,9 @@
         private System.Windows.Forms.DataGridViewComboBoxColumn colAminoAcid2;
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn1;
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn2;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colPeptideSequence;
+        private System.Windows.Forms.DataGridViewButtonColumn colModificationsButton;
+        private System.Windows.Forms.Label lblTitle;
+        private System.Windows.Forms.TextBox tbxPrimaryPeptide;
     }
 }

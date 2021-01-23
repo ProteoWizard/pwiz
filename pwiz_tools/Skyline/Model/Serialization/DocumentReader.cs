@@ -1037,6 +1037,7 @@ namespace pwiz.Skyline.Model.Serialization
                 }
                 else
                 {
+                    reader.ReadStartElement();
                     explicitMods = ReadExplicitMods(reader, peptide);
                     reader.ReadEndElement();
                 }
@@ -1567,7 +1568,7 @@ namespace pwiz.Skyline.Model.Serialization
                             linkedTransition = ComplexFragmentIon.EmptyTransition(linkedTransitionGroup);
                             break;
                         case IonType.precursor:
-                            linkedTransition = new Transition(linkedTransitionGroup, IonType.precursor, group.Peptide.Sequence.Length - 1, 0, Adduct.SINGLY_PROTONATED);
+                            linkedTransition = new Transition(linkedTransitionGroup, IonType.precursor, linkedPeptide.Sequence.Length - 1, 0, Adduct.SINGLY_PROTONATED);
                             break;
                         default:
                             linkedTransition = new Transition(linkedTransitionGroup, linkedIon.Key,

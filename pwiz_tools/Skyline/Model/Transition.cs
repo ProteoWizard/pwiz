@@ -904,7 +904,10 @@ namespace pwiz.Skyline.Model
         {
             unchecked
             {
-                return (Transition.GetHashCode()*397) ^ (Losses != null ? Losses.GetHashCode() : 0);
+                int result = Transition.GetHashCode();
+                result = (result * 397) ^ (Losses != null ? Losses.GetHashCode() : 0);
+                result = (result * 397) ^ (ComplexFragmentIonName != null ? ComplexFragmentIonName.GetHashCode() : 0);
+                return result;
             }
         }
 

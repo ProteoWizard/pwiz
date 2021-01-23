@@ -1507,7 +1507,18 @@ namespace pwiz.Skyline.Menus
                 {
                     return;
                 }
-
+                var listStaticMods = Settings.Default.StaticModList;
+                var listHeavyMods = Settings.Default.HeavyModList;
+                ModifyDocument(
+                    string.Format(Resources.SkylineWindow_ModifyPeptide_Modify__0__, nodePepTree.Text),
+                    doc =>
+                        doc.ChangePeptideMods(nodePepTree.Path,
+                            editLinkedPeptidesDlg.ExplicitMods,
+                            false,
+                            listStaticMods,
+                            listHeavyMods), docPair => AuditLogEntry.DiffDocNodes(MessageType.modified,
+                        docPair,
+                        AuditLogEntry.GetNodeName(docPair.OldDoc, peptideDocNode)));
             }
         }
 

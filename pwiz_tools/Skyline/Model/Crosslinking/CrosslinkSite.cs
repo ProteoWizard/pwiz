@@ -11,6 +11,15 @@ namespace pwiz.Skyline.Model.Crosslinking
     {
         public CrosslinkSite(int peptideIndex, int aaIndex) : this()
         {
+            if (peptideIndex < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(peptideIndex));
+            }
+
+            if (aaIndex < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(aaIndex));
+            }
             PeptideIndex = peptideIndex;
             AaIndex = aaIndex;
         }
@@ -68,6 +77,14 @@ namespace pwiz.Skyline.Model.Crosslinking
         public ImmutableList<CrosslinkSite> Sites
         {
             get { return _sites ?? ImmutableList<CrosslinkSite>.EMPTY; }
+        }
+
+        public IEnumerable<int> PeptideIndexes
+        {
+            get
+            {
+                return Sites.Select(site => site.PeptideIndex);
+            }
         }
 
         IEnumerator IEnumerable.GetEnumerator()

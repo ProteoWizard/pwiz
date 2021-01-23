@@ -170,6 +170,10 @@ namespace pwiz.Skyline.Model.Crosslinking
                 {
                     stringBuilder.Append(@"*");
                 }
+                else if (transition.IonType == IonType.precursor)
+                {
+                    stringBuilder.Append(@"p");
+                }
                 else
                 {
                     stringBuilder.Append(transition.IonType);
@@ -275,9 +279,14 @@ namespace pwiz.Skyline.Model.Crosslinking
 
         public ComplexFragmentIon ChangeAdduct(Adduct adduct)
         {
+            var newCustomIon = PrimaryTransition.CustomIon;
+            if (newCustomIon != null && !Equals(adduct, newCustomIon.Adduct))
+            {
+                newCustomIon = new CustomIon(EMPTY_MOLECULE, adduct);
+            }
             return ChangePrimaryTransition(new Transition(PrimaryTransition.Group, PrimaryTransition.IonType,
                 PrimaryTransition.CleavageOffset,
-                PrimaryTransition.MassIndex, adduct, PrimaryTransition.DecoyMassShift, PrimaryTransition.CustomIon));
+                PrimaryTransition.MassIndex, adduct, PrimaryTransition.DecoyMassShift, newCustomIon));
         }
 
         private ComplexFragmentIon ChangePrimaryTransition(Transition transition)

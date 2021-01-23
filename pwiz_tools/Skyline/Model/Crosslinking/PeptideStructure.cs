@@ -99,6 +99,54 @@ namespace pwiz.Skyline.Model.Crosslinking
 
             return result;
         }
+
+        public bool IsConnected()
+        {
+            var allPeptideIndexes = Crosslinks.SelectMany(link => link.Sites.PeptideIndexes).ToHashSet();
+            if (allPeptideIndexes.Count == 0)
+            {
+                return false;
+            }
+
+            if (allPeptideIndexes.Count != allPeptideIndexes.Max() + 1)
+            {
+                return false;
+            }
+
+            if (allPeptideIndexes.Min() != 0)
+            {
+                return false;
+            }
+            var visitedPeptides = new HashSet<int> { 0 };
+            IReadOnlyList<CrosslinkModification> remainingCrosslinks = Crosslinks;
+            while (true)
+            {
+                var nextQueue = new List<CrosslinkModification>();
+                foreach (var crosslink in remainingCrosslinks)
+                {
+                    if (crosslink.Sites.PeptideIndexes.Any(visitedPeptides.Contains))
+                    {
+                        visitedPeptides.UnionWith(crosslink.Sites.PeptideIndexes);
+                    }
+                    else
+                    {
+                        nextQueue.Add(crosslink);
+                    }
+                }
+
+                if (nextQueue.Count == 0)
+                {
+                    return true;
+                }
+
+                if (nextQueue.Count == remainingCrosslinks.Count)
+                {
+                    return false;
+                }
+
+                remainingCrosslinks = nextQueue;
+            }
+        }
     }
 
     public class PeptideStructure
