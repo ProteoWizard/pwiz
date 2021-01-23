@@ -115,7 +115,7 @@ namespace pwiz.Skyline.Model
             {
                 foreach (var staticMod in implicitMods)
                 {
-                    if (staticMod.IsExplicit || staticMod.IsVariable)
+                    if (staticMod.IsExplicit || staticMod.IsVariable || null != staticMod.CrosslinkerSettings)
                     {
                         continue;
                     }

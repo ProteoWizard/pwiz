@@ -38,7 +38,6 @@
             this.comboHeavy1_1 = new System.Windows.Forms.ComboBox();
             this.labelAA1 = new System.Windows.Forms.Label();
             this.panelMain = new System.Windows.Forms.Panel();
-            this.btnEditLink1 = new System.Windows.Forms.Button();
             this.imageList1 = new System.Windows.Forms.ImageList(this.components);
             this.btnReset = new System.Windows.Forms.Button();
             this.cbCreateCopy = new System.Windows.Forms.CheckBox();
@@ -92,20 +91,12 @@
             // panelMain
             // 
             resources.ApplyResources(this.panelMain, "panelMain");
-            this.panelMain.Controls.Add(this.btnEditLink1);
             this.panelMain.Controls.Add(this.comboHeavy1_1);
             this.panelMain.Controls.Add(this.labelAA1);
             this.panelMain.Controls.Add(this.comboStatic1);
             this.panelMain.Controls.Add(this.label1);
             this.panelMain.Controls.Add(this.labelHeavy1);
             this.panelMain.Name = "panelMain";
-            // 
-            // btnEditLink1
-            // 
-            resources.ApplyResources(this.btnEditLink1, "btnEditLink1");
-            this.btnEditLink1.ImageList = this.imageList1;
-            this.btnEditLink1.Name = "btnEditLink1";
-            this.btnEditLink1.UseVisualStyleBackColor = true;
             // 
             // imageList1
             // 
@@ -160,7 +151,6 @@
         private System.Windows.Forms.Panel panelMain;
         private System.Windows.Forms.Button btnReset;
         private System.Windows.Forms.CheckBox cbCreateCopy;
-        private System.Windows.Forms.Button btnEditLink1;
         private System.Windows.Forms.ImageList imageList1;
         private System.Windows.Forms.ToolTip toolTip;
     }

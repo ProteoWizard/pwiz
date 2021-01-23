@@ -404,6 +404,12 @@
     <Compile Include="EditUI\EditLinkedPeptideDlg.Designer.cs">
       <DependentUpon>EditLinkedPeptideDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="EditUI\EditLinkedPeptidesDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EditUI\EditLinkedPeptidesDlg.Designer.cs">
+      <DependentUpon>EditLinkedPeptidesDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="EditUI\PermuteIsotopeModificationsDlg.designer.cs">
       <DependentUpon>PermuteIsotopeModificationsDlg.cs</DependentUpon>
     </Compile>
@@ -2452,6 +2458,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\EditLinkedPeptideDlg.zh-CHS.resx">
       <DependentUpon>EditLinkedPeptideDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\EditLinkedPeptidesDlg.resx">
+      <DependentUpon>EditLinkedPeptidesDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\MassErrorChartPropertyDlg.ja.resx">
       <DependentUpon>MassErrorChartPropertyDlg.cs</DependentUpon>

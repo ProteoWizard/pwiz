@@ -1479,6 +1479,38 @@ namespace pwiz.Skyline.Menus
                 }
             }
         }
+        private void editCrosslinksMenuItem_Click(object sender, EventArgs e)
+        {
+            EditCrosslinks();
+        }
+
+        public void EditCrosslinks()
+        {
+            var nodePepTree = SequenceTree.GetNodeOfType<PeptideTreeNode>();
+            if (nodePepTree == null)
+            {
+                return;
+            }
+
+            var peptideDocNode = nodePepTree.DocNode;
+            var srmSettings = DocumentUI.Settings;
+            if (!peptideDocNode.CrosslinkStructure.HasCrosslinks &&
+                !EditLinkedPeptidesDlg.AvailableCrosslinkers(srmSettings).Any())
+            {
+                MessageDlg.Show(this, "You must define a crosslinker modification in Peptide Settings in order to add crosslinks to a peptide.");
+                return;
+            }
+
+            using (var editLinkedPeptidesDlg = new EditLinkedPeptidesDlg(srmSettings, peptideDocNode))
+            {
+                if (editLinkedPeptidesDlg.ShowDialog(this)== DialogResult.Cancel)
+                {
+                    return;
+                }
+
+            }
+        }
+
         #endregion
 
         private void manageUniquePeptidesMenuItem_Click(object sender, EventArgs e)

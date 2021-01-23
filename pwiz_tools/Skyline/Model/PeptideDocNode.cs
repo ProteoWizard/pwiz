@@ -188,6 +188,11 @@ namespace pwiz.Skyline.Model
             get { return ExplicitMods?.Crosslinks ?? CrosslinkStructure.EMPTY; }
         }
 
+        public PeptideStructure GetPeptideStructure()
+        {
+            return new PeptideStructure(Peptide, ExplicitMods);
+        }
+
         public string GetCrosslinkedSequence()
         {
             return string.Join(@"-", CrosslinkStructure.LinkedPeptides.Prepend(Peptide).Select(pep => pep.Sequence));

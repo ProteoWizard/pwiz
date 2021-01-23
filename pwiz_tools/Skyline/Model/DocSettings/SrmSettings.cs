@@ -609,12 +609,12 @@ namespace pwiz.Skyline.Model.DocSettings
             SequenceMassCalc calc = new SequenceMassCalc(type);
             // Add implicit modifications to the mass calculator
             calc.AddStaticModifications(from mod in staticMods
-                                        where !mod.IsExplicit
+                                        where !mod.IsExplicit && null == mod.CrosslinkerSettings
                                         select mod);
             if (heavyMods != null)
             {
                 calc.AddHeavyModifications(from mod in heavyMods
-                                           where !mod.IsExplicit
+                                           where !mod.IsExplicit && null == mod.CrosslinkerSettings
                                            select mod);
             }
             return calc;

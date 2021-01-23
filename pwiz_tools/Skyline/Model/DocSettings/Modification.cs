@@ -1000,6 +1000,11 @@ namespace pwiz.Skyline.Model.DocSettings
                     char aa = seq[i];
                     foreach (StaticMod mod in mods)
                     {
+                        if (mod.CrosslinkerSettings != null)
+                        {
+                            // Crosslinkers never get implicitly added
+                            continue;
+                        }
                         // Skip explicit mods, since only considering implicit
                         if (mod.IsExplicit || !mod.IsMod(aa, i, seq.Length))
                             continue;

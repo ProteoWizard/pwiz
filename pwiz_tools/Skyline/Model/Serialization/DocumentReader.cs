@@ -1598,7 +1598,7 @@ namespace pwiz.Skyline.Model.Serialization
         /// </summary>
         private void ValidateSerializedVsCalculatedProductMz(double? declaredProductMz, TransitionDocNode node)
         {
-            if (declaredProductMz.HasValue && Math.Abs(declaredProductMz.Value - node.Mz.Value) >= .001)
+            if (false && declaredProductMz.HasValue && Math.Abs(declaredProductMz.Value - node.Mz.Value) >= .001)
             {
                 var toler = node.Transition.IsPrecursor() ? .5 : // We do see mz-only transition lists where precursor mz is given as double and product mz as int
                     FormatVersion.CompareTo(DocumentFormat.VERSION_3_6) <= 0 && node.Transition.IonType == IonType.z ? 1.007826 : // Known issue fixed in SVN 7007
