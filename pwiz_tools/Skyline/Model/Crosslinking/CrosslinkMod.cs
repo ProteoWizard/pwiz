@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Windows.Forms;
 using pwiz.Skyline.Model.DocSettings;
 
 namespace pwiz.Skyline.Model.Crosslinking
@@ -12,6 +13,7 @@ namespace pwiz.Skyline.Model.Crosslinking
             Crosslinker = crosslinker;
             Sites = new CrosslinkSites(sites);
         }
+
 
         public StaticMod Crosslinker { get; private set; }
 

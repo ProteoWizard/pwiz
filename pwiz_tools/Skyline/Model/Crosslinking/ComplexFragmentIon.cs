@@ -213,30 +213,44 @@ namespace pwiz.Skyline.Model.Crosslinking
 
         public bool IsAllowed(PeptideStructure peptideStructure)
         {
-            int countIncluded = 0;
-            int countExcluded = 0;
             foreach (var crosslink in peptideStructure.Crosslinks)
             {
-                foreach (var site in crosslink.Sites)
+                if (!ContainsCrosslink(crosslink.Sites).HasValue)
                 {
-                    switch (IncludesSite(site))
-                    {
-                        case true:
-                            countIncluded++;
-                            break;
-                        case false:
-                            countExcluded++;
-                            break;
-                    }
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        public bool? ContainsCrosslink(IEnumerable<CrosslinkSite> crosslinkSites)
+        {
+            int countIncluded = 0;
+            int countExcluded = 0;
+            foreach (var site in crosslinkSites)
+            {
+                switch (IncludesSite(site))
+                {
+                    case true:
+                        countIncluded++;
+                        break;
+                    case false:
+                        countExcluded++;
+                        break;
                 }
             }
 
-            if (countIncluded != 0 && countExcluded != 0)
+            if (countIncluded == 0)
             {
                 return false;
             }
 
-            return true;
+            if (countExcluded == 0)
+            {
+                return true;
+            }
+
+            return null;
         }
 
         public ComplexFragmentIon ChangeMassIndex(int massIndex)

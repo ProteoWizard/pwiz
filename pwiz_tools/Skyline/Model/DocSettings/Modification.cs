@@ -1373,12 +1373,6 @@ namespace pwiz.Skyline.Model.DocSettings
         [TrackChildren(ignoreName: true)]
         public ExplicitMod ExplicitMod { get; private set; }
 
-        [TrackChildren(defaultValues:typeof(DefaultValuesNull))]
-        public LinkedPeptide LinkedPeptide
-        {
-            get { return ExplicitMod.LinkedPeptide; }
-        }
-
         public string PeptideSequence { get; private set; }
 
         public string AuditLogText

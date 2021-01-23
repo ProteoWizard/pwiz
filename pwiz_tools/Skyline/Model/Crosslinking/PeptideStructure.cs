@@ -15,13 +15,30 @@ namespace pwiz.Skyline.Model.Crosslinking
         public CrosslinkStructure(IEnumerable<Peptide> peptides, IEnumerable<ExplicitMods> explicitModsList, IEnumerable<CrosslinkModification> crosslinks)
         {
             LinkedPeptides = ImmutableList.ValueOf(peptides);
-            LinkedExplicitMods = ImmutableList.ValueOf(explicitModsList);
-            if (LinkedExplicitMods.Any(mod => mod.HasCrosslinks))
+            if (explicitModsList == null)
+            {
+                LinkedExplicitMods = ImmutableList.ValueOf(new ExplicitMods[LinkedPeptides.Count]);
+            }
+            else
+            {
+                LinkedExplicitMods = ImmutableList.ValueOf(explicitModsList);
+            }
+            if (LinkedExplicitMods.Any(mod => mod != null && mod.HasCrosslinks))
             {
                 throw new ArgumentException(@"Cannot nest crosslinks");
             }
             Crosslinks = ImmutableList.ValueOfOrEmpty(crosslinks);
         }
+
+        public static CrosslinkStructure ToPeptide(Peptide peptide, ExplicitMods explicitMods, StaticMod mod, int aaIndex1, int aaIndex2)
+        {
+            return new CrosslinkStructure(ImmutableList.Singleton(peptide), ImmutableList.Singleton(explicitMods),
+                ImmutableList.Singleton(
+                    new CrosslinkModification(mod,
+                        new[] {new CrosslinkSite(0, aaIndex1), new CrosslinkSite(1, aaIndex2),})
+                ));
+        }
+
 
         public ImmutableList<Peptide> LinkedPeptides { get; private set; }
         public ImmutableList<ExplicitMods> LinkedExplicitMods { get; private set; }

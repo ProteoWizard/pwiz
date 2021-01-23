@@ -90,6 +90,14 @@ namespace pwiz.Skyline.Model.Crosslinking
                 result = result.Plus(_peptideBuilders[i].GetFragmentFormula(complexFragmentIon.Transitions[i]));
             }
 
+            foreach (var crosslink in PeptideStructure.Crosslinks)
+            {
+                if (true == complexFragmentIon.ContainsCrosslink(crosslink.Sites))
+                {
+                    result = result.Plus(crosslink.Crosslinker.GetMoleculeMassOffset());
+                }
+            }
+
             return result;
         }
 
