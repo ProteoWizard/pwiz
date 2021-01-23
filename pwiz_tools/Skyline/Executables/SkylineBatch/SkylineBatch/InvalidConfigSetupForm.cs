@@ -132,8 +132,7 @@ namespace SkylineBatch
             var rVersionControl = new RVersionControl(scriptName, version, _removeRScripts);
             return (string) await GetValidVariable(rVersionControl);
         }
-
-
+        
         private async Task<object> GetValidVariable(IValidatorControl control, bool removeControl = true)
         {
             // return existing variable if it is valid
@@ -165,10 +164,10 @@ namespace SkylineBatch
             string oldRoot = string.Empty;
             string newRoot = string.Empty;
 
-            var matchingEndFolders = 1;
+            var matchingEndFolders = 2;
             while (matchingEndFolders <= Math.Min(oldPathFolders.Length, newPathFolders.Length))
             {
-                // If path ends do not match we cannot replace root
+                // If path folders do not match we cannot replace root
                 if (!oldPathFolders[oldPathFolders.Length - matchingEndFolders]
                     .Equals(newPathFolders[newPathFolders.Length - matchingEndFolders]))
                     break;

@@ -18,6 +18,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Threading.Tasks;
@@ -37,10 +38,7 @@ namespace SkylineBatch
         {
             InitializeComponent();
 
-            var skylineFileDir = Path.GetDirectoryName(Directory.GetCurrentDirectory());
-            var logFile = Path.Combine(skylineFileDir ?? string.Empty, "SkylineBatch.log");
-            _skylineBatchLogger = new SkylineBatchLogger(logFile, this);
-            
+            _skylineBatchLogger = new SkylineBatchLogger(Program.AppName() + ".log", this);
             btnRunOptions.Text = char.ConvertFromUtf32(0x2BC6);
 
             Program.LogInfo(Resources.MainForm_MainForm_Loading_configurations_from_saved_settings_);
@@ -358,6 +356,13 @@ namespace SkylineBatch
         {
             var manageLogsForm = new LogForm(_configManager);
             manageLogsForm.ShowDialog();
+        }
+
+        private void btnOpenFolder_Click(object sender, EventArgs e)
+        {
+            var logger = _configManager.GetSelectedLogger();
+            var arg = "/select, \"" + logger.GetFile() + "\"";
+            Process.Start("explorer.exe", arg);
         }
 
         public void LogToUi(string text, bool scrollToEnd, bool trim)

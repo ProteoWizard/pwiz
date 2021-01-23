@@ -272,13 +272,14 @@ namespace SkylineBatch
                     return;
                 Program.LogInfo(string.Format(Resources.ConfigManager_RemoveSelected_Removing_configuration____0__, config.Name));
                 RemoveConfig(config);
-                DeselectConfig();
             }
         }
 
         private void RemoveConfig(SkylineBatchConfig config)
         {
             CheckIfExists(config, true);
+            if (SelectedConfig == _configList.Count - 1)
+                SelectedConfig--;
             _configList.Remove(config);
             _configRunners[config.Name].Cancel();
             _configRunners.Remove(config.Name);
@@ -443,7 +444,7 @@ namespace SkylineBatch
         {
             lock (_loggerLock)
             {
-                var logDirectory = Path.GetDirectoryName(_logger.GetFile());
+                var logDirectory = SkylineBatchLogger.LogFolder;
                 var files = logDirectory != null ? new DirectoryInfo(logDirectory).GetFiles() : new FileInfo[0];
                 foreach (var file in files)
                 {

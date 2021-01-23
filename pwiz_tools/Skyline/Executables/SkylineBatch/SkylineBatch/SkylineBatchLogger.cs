@@ -42,7 +42,7 @@ using SkylineBatch.Properties;
         public const long MaxLogSize = 10 * 1024 * 1024; // 10MB
         private const int MaxBackups = 5;
         public const int MaxLogLines = 5000;
-
+        
         private string _lastMessage = string.Empty; // To avoid logging duplicate messages.
 
         private readonly string _filePath;
@@ -57,12 +57,28 @@ using SkylineBatch.Properties;
         private StringBuilder _logBuffer; // To be used when the log file is unavailable for writing
         private const int LogBufferSize = 10240;
 
-        public SkylineBatchLogger(string filePath, IMainUiControl mainUi = null)
+        public SkylineBatchLogger(string logFileName, IMainUiControl mainUi = null)
         {
-            _filePath = filePath;
+            _filePath = Path.Combine(LogFolder, logFileName);
             _mainUi = mainUi;
             Init();
         }
+
+        public static string LogFolder
+        {
+            get
+            {
+                var roamingFolder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                var localFolder = Path.Combine(Path.GetDirectoryName(roamingFolder), "local");
+                var logFolder = Path.Combine(localFolder, Program.AppName());
+                if (!Directory.Exists(logFolder))
+                {
+                    Directory.CreateDirectory(logFolder);
+                }
+
+                return logFolder;
+            }
+        } 
 
         public void Init()
         {

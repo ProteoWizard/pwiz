@@ -69,6 +69,7 @@
             this.btnCopy = new System.Windows.Forms.Button();
             this.btnDelete = new System.Windows.Forms.Button();
             this.tabMain = new System.Windows.Forms.TabControl();
+            this.btnOpenFolder = new System.Windows.Forms.Button();
             this.batchRunDropDown.SuspendLayout();
             this.tabLog.SuspendLayout();
             this.tabFront.SuspendLayout();
@@ -186,6 +187,7 @@
             // tabLog
             // 
             this.tabLog.BackColor = System.Drawing.Color.Transparent;
+            this.tabLog.Controls.Add(this.btnOpenFolder);
             this.tabLog.Controls.Add(this.btnDeleteLogs);
             this.tabLog.Controls.Add(this.label1);
             this.tabLog.Controls.Add(this.comboLogList);
@@ -361,6 +363,14 @@
             this.tabMain.Name = "tabMain";
             this.tabMain.SelectedIndex = 0;
             // 
+            // btnOpenFolder
+            // 
+            resources.ApplyResources(this.btnOpenFolder, "btnOpenFolder");
+            this.btnOpenFolder.Name = "btnOpenFolder";
+            this.toolTip_MainForm.SetToolTip(this.btnOpenFolder, resources.GetString("btnOpenFolder.ToolTip"));
+            this.btnOpenFolder.UseVisualStyleBackColor = true;
+            this.btnOpenFolder.Click += new System.EventHandler(this.btnOpenFolder_Click);
+            // 
             // MainForm
             // 
             resources.ApplyResources(this, "$this");
@@ -424,5 +434,6 @@
         private System.Windows.Forms.Button btnCopy;
         private System.Windows.Forms.Button btnDelete;
         private System.Windows.Forms.TabControl tabMain;
+        private System.Windows.Forms.Button btnOpenFolder;
     }
 }
