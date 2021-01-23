@@ -10,7 +10,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Crosslinking
 {
-    public class ComplexFragmentIon : Immutable
+    public class ComplexFragmentIon : Immutable, IComparable<ComplexFragmentIon>
     {
         public static readonly ComplexFragmentIon EMPTY = new ComplexFragmentIon(ImmutableList.Empty<Transition>(), null);
         private static CustomMolecule EMPTY_MOLECULE = new CustomMolecule(
@@ -101,6 +101,14 @@ namespace pwiz.Skyline.Model.Crosslinking
             get
             {
                 return Transitions[0].IsPrecursor();
+            }
+        }
+
+        public bool IsEmpty
+        {
+            get
+            {
+                return Transitions.All(IsEmptyTransition);
             }
         }
 
@@ -264,7 +272,7 @@ namespace pwiz.Skyline.Model.Crosslinking
         {
             return ChangePrimaryTransition(new Transition(PrimaryTransition.Group, PrimaryTransition.IonType,
                 PrimaryTransition.CleavageOffset,
-                PrimaryTransition.MassIndex, adduct, PrimaryTransition.DecoyMassShift));
+                PrimaryTransition.MassIndex, adduct, PrimaryTransition.DecoyMassShift, PrimaryTransition.CustomIon));
         }
 
         private ComplexFragmentIon ChangePrimaryTransition(Transition transition)
@@ -295,6 +303,41 @@ namespace pwiz.Skyline.Model.Crosslinking
             Results<TransitionChromInfo> results)
         {
             return GetCrosslinkBuilder(settings, explicitMods).MakeTransitionDocNode(this, isotopeDist, annotations, transitionQuantInfo, explicitTransitionValues, results);
+        }
+        public int CompareTo(ComplexFragmentIon other)
+        {
+            if (IsIonTypePrecursor)
+            {
+                if (!other.IsIonTypePrecursor)
+                {
+                    return -1;
+                }
+            }
+            else if (other.IsIonTypePrecursor)
+            {
+                return 1;
+            }
+
+            for (int i = 0; i < Math.Min(Transitions.Count, other.Transitions.Count); i++)
+            {
+                int result = IsEmptyTransition(Transitions[i]).CompareTo(IsEmptyTransition(other.Transitions[i]));
+                if (result == 0)
+                {
+                    result = TransitionGroup.CompareTransitionIds(Transitions[i], other.Transitions[i]);
+                }
+
+                if (result == 0 && i == 0)
+                {
+                    result = Comparer<double?>.Default.Compare(TransitionLosses?.Mass, other.TransitionLosses?.Mass);
+                }
+
+                if (result != 0)
+                {
+                    return result;
+                }
+            }
+
+            return Transitions.Count.CompareTo(other.Transitions.Count);
         }
 
     }

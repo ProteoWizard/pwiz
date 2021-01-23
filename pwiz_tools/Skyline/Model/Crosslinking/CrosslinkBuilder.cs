@@ -169,6 +169,11 @@ namespace pwiz.Skyline.Model.Crosslinking
                     moleculeMassOffset.Plus(
                         new MoleculeMassOffset(_peptideBuilders[i].GetPrecursorMolecule().PrecursorFormula));
             }
+
+            foreach (var crosslink in PeptideStructure.Crosslinks)
+            {
+                moleculeMassOffset = moleculeMassOffset.Plus(crosslink.Crosslinker.GetMoleculeMassOffset());
+            }
             return moleculeMassOffset;
         }
 
@@ -295,6 +300,10 @@ namespace pwiz.Skyline.Model.Crosslinking
 
             foreach (var complexFragmentIon in complexFragmentIons)
             {
+                if (complexFragmentIon.IsEmpty)
+                {
+                    continue;
+                }
                 ICollection<Adduct> adducts;
                 bool isPrecursor = complexFragmentIon.IsIonTypePrecursor;
                 if (isPrecursor)
@@ -320,7 +329,6 @@ namespace pwiz.Skyline.Model.Crosslinking
                 {
                     adducts = productAdducts;
                 }
-
                 foreach (var adduct in adducts)
                 {
                     yield return MakeTransitionDocNode(complexFragmentIon.ChangeAdduct(adduct), isotopeDist);

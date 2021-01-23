@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using pwiz.Common.Collections;
 
 namespace pwiz.Skyline.Model.Crosslinking
@@ -16,6 +17,11 @@ namespace pwiz.Skyline.Model.Crosslinking
 
         public int PeptideIndex { get; private set; }
         public int AaIndex { get; private set; }
+
+        public int Position
+        {
+            get { return AaIndex + 1; }
+        }
 
         public override string ToString()
         {
@@ -77,6 +83,30 @@ namespace pwiz.Skyline.Model.Crosslinking
         public static CrosslinkSites FromSites(IEnumerable<CrosslinkSite> sites)
         {
             return new CrosslinkSites(sites);
+        }
+
+        public override string ToString()
+        {
+            StringBuilder stringBuilder = new StringBuilder();
+            ILookup<int, int> sitesByPeptideIndex = Sites.ToLookup(site => site.PeptideIndex, site => site.Position);
+            int maxPeptide = Sites.Max(site => site.PeptideIndex);
+            string strComma = string.Empty;
+            for (int i = 0; i <= maxPeptide; i++)
+            {
+                stringBuilder.Append(strComma);
+                strComma = @",";
+                string strIndexes = string.Join(@"-", sitesByPeptideIndex[i]);
+                if (strIndexes.Length == 0)
+                {
+                    stringBuilder.Append(@"*");
+                }
+                else
+                {
+                    stringBuilder.Append(strIndexes);
+                }
+            }
+
+            return stringBuilder.ToString();
         }
     }
 }

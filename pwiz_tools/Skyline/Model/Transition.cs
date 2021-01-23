@@ -852,7 +852,7 @@ namespace pwiz.Skyline.Model
             Transition = transition.Transition;
             Losses = losses;
             ComplexFragmentIonName = transition.ComplexFragmentIon.GetName();
-            if (Transition.IsCustom())
+            if (Transition.IsCustom() && !transition.ComplexFragmentIon.IsCrosslinked)
             {
                 if (!string.IsNullOrEmpty(transition.PrimaryCustomIonEquivalenceKey))
                     CustomIonEquivalenceTestValue = transition.PrimaryCustomIonEquivalenceKey;
