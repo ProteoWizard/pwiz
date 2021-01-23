@@ -59,9 +59,14 @@ namespace pwiz.Skyline.Model.Crosslinking
             return transition.IonType == IonType.custom;
         }
 
-        public static ComplexFragmentIon EmptyTransition(TransitionGroup transitionGroup)
+        public static Transition EmptyTransition(TransitionGroup transitionGroup)
         {
-            return Simple(new Transition(transitionGroup, Adduct.SINGLY_PROTONATED, null, EMPTY_MOLECULE), null);
+            return new Transition(transitionGroup, Adduct.SINGLY_PROTONATED, null, EMPTY_MOLECULE);
+        }
+
+        public static ComplexFragmentIon EmptyComplexFragmentIon(TransitionGroup transitionGroup)
+        {
+            return Simple(EmptyTransition(transitionGroup), null);
         }
 
         public bool? IncludesSite(CrosslinkSite site)

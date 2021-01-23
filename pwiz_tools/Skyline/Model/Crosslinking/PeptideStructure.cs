@@ -39,6 +39,13 @@ namespace pwiz.Skyline.Model.Crosslinking
                 ));
         }
 
+        public bool IsEmpty
+        {
+            get
+            {
+                return LinkedPeptides.Count == 0 && Crosslinks.Count == 0;
+            }
+        }
 
         public ImmutableList<Peptide> LinkedPeptides { get; private set; }
         public ImmutableList<ExplicitMods> LinkedExplicitMods { get; private set; }

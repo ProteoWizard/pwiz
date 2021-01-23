@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
@@ -218,9 +217,10 @@ namespace pwiz.SkylineTest
                     .ChangePeptideIonTypes(new[] { IonType.precursor, IonType.y, IonType.b })
             )); var mainPeptide = new Peptide("MERCURY");
             var transitionGroup = new TransitionGroup(mainPeptide, Adduct.DOUBLY_PROTONATED, IsotopeLabelType.light);
-            var linkedPeptide = new LinkedPeptide(new Peptide("ARSENIC"), 2, null);
-            var crosslinkMod = new ExplicitMod(3, crosslinkerDef).ChangeLinkedPeptide(linkedPeptide);
-            var explicitModsWithCrosslink = new ExplicitMods(mainPeptide, new[]{crosslinkMod}, new TypedExplicitModifications[0]);
+            var linkedPeptide = new Peptide("ARSENIC");//, 2, null);
+            var explicitModsWithCrosslink =
+                new ExplicitMods(mainPeptide, null, null).ChangeCrosslinks(
+                    CrosslinkStructure.ToPeptide(linkedPeptide, null, crosslinkerDef, 3, 2));
             var transitionGroupDocNode = new TransitionGroupDocNode(transitionGroup, Annotations.EMPTY, settings,
                 explicitModsWithCrosslink, null, ExplicitTransitionGroupValues.EMPTY, null, null, true);
             
@@ -284,7 +284,7 @@ namespace pwiz.SkylineTest
                 else
                 {
                     complexFragmentIon =
-                        complexFragmentIon.Concat(ComplexFragmentIon.EmptyTransition(linkedTransition.Group));
+                        complexFragmentIon.Concat(ComplexFragmentIon.EmptyComplexFragmentIon(linkedTransition.Group));
                 }
                 var complexTransitionDocNode = complexFragmentIon.MakeTransitionDocNode(srmSettings, explicitMods, null);
                 Assert.AreEqual(tuple.Item4, complexTransitionDocNode.Mz, .0001, "{0}{1}{2}", tuple.Item1, tuple.Item2,

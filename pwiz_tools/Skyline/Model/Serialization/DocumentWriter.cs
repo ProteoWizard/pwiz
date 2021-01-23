@@ -278,6 +278,7 @@ namespace pwiz.Skyline.Model.Serialization
                 WriteExplicitMods(writer, node.Peptide.Target.Sequence, node.ExplicitMods);
                 WriteImplicitMods(writer, node);
                 WriteLookupMods(writer, node);
+                WriteCrosslinkStructure(writer, node.ExplicitMods?.Crosslinks);
             }
             if (node.HasResults)
             {
@@ -439,6 +440,42 @@ namespace pwiz.Skyline.Model.Serialization
                 {
                     WriteExplicitMods(writer, linkedPeptide.Peptide.Sequence, linkedPeptide.ExplicitMods);
                 }
+            }
+            writer.WriteEndElement();
+        }
+
+        private void WriteCrosslinkStructure(XmlWriter writer, CrosslinkStructure crosslinkStructure)
+        {
+            if (crosslinkStructure == null || crosslinkStructure.IsEmpty)
+            {
+                return;
+            }
+            writer.WriteStartElement(EL.crosslinks);
+            for (int i = 0; i < crosslinkStructure.LinkedPeptides.Count; i++)
+            {
+                var peptide = crosslinkStructure.LinkedPeptides[i];
+                writer.WriteStartElement(EL.linked_peptide);
+                writer.WriteAttributeIfString(ATTR.sequence, peptide.Sequence);
+                var explicitMods = crosslinkStructure.LinkedExplicitMods[i];
+                if (null != explicitMods)
+                {
+                    WriteExplicitMods(writer, peptide.Sequence, explicitMods);
+                }
+                writer.WriteEndElement();
+            }
+
+            foreach (var crosslink in crosslinkStructure.Crosslinks)
+            {
+                writer.WriteStartElement(EL.crosslink);
+                writer.WriteAttribute(ATTR.modification_name, crosslink.Crosslinker.Name);
+                foreach (var site in crosslink.Sites)
+                {
+                    writer.WriteStartElement(EL.site);
+                    writer.WriteAttribute(ATTR.peptide_index, site.PeptideIndex);
+                    writer.WriteAttribute(ATTR.index_aa, site.AaIndex);
+                    writer.WriteEndElement();
+                }
+                writer.WriteEndElement();
             }
             writer.WriteEndElement();
         }
@@ -709,6 +746,7 @@ namespace pwiz.Skyline.Model.Serialization
                 writer.WriteElementString(EL.declustering_potential, dp.Value);
             }
             WriteTransitionLosses(writer, nodeTransition.Losses);
+            WriteLinkedIons(writer, nodeTransition.ComplexFragmentIon);
 #if false // TODO(nicksh)
             foreach (var linkedIon in nodeTransition.ComplexFragmentIon.Children)
             {
@@ -774,7 +812,7 @@ namespace pwiz.Skyline.Model.Serialization
             writer.WriteEndElement();
         }
 
-        private void WriteLinkedIon(XmlWriter writer, ModificationSite modificationSite, LegacyComplexFragmentIon complexFragmentIon)
+        private void WriteLegacyLinkedIon(XmlWriter writer, ModificationSite modificationSite, LegacyComplexFragmentIon complexFragmentIon)
         {
             writer.WriteStartElement(EL.linked_fragment_ion);
             if (!complexFragmentIon.IsOrphan)
@@ -791,9 +829,26 @@ namespace pwiz.Skyline.Model.Serialization
             WriteTransitionLosses(writer, complexFragmentIon.TransitionLosses);
             foreach (var child in complexFragmentIon.Children)
             {
-                WriteLinkedIon(writer, child.Key, child.Value);
+                WriteLegacyLinkedIon(writer, child.Key, child.Value);
             }
             writer.WriteEndElement();
+        }
+
+        private void WriteLinkedIons(XmlWriter writer, ComplexFragmentIon complexFragmentIon)
+        {
+            foreach (var transition in complexFragmentIon.Transitions.Skip(1))
+            {
+                writer.WriteStartElement(EL.linked_fragment_ion);
+                if (!ComplexFragmentIon.IsEmptyTransition(transition))
+                {
+                    writer.WriteAttribute(ATTR.fragment_type, transition.IonType);
+                    if (transition.IonType != IonType.precursor)
+                    {
+                        writer.WriteAttribute(ATTR.fragment_ordinal, transition.Ordinal);
+                    }
+                }
+                writer.WriteEndElement();
+            }
         }
 
         private void WriteTransitionChromInfo(XmlWriter writer, TransitionChromInfo chromInfo)
