@@ -1,13 +1,21 @@
 ﻿using System;
+using System.Windows.Forms;
 
 namespace pwiz.Skyline.Model.Crosslinking
 {
-    public struct IonFragment : IComparable<IonFragment>
+    public struct FragmentIonType : IComparable<FragmentIonType>
     {
-        public static readonly IonFragment? EMPTY = null;
-        public static readonly IonFragment PRECURSOR = new IonFragment(IonType.precursor, 0);
+        public static FragmentIonType? Empty
+        {
+            get { return null; }
+        }
 
-        public IonFragment(IonType ionType, int ordinal) : this()
+        public static FragmentIonType Precursor
+        {
+            get { return new FragmentIonType(IonType.precursor, 0); }
+        }
+
+        public FragmentIonType(IonType ionType, int ordinal) : this()
         {
             IonType = ionType;
             Ordinal = ionType == IonType.precursor ? 0 : ordinal;
@@ -16,9 +24,9 @@ namespace pwiz.Skyline.Model.Crosslinking
         public IonType IonType { get; private set; }
         public int Ordinal { get; private set; }
 
-        public static IonFragment? FromTransition(Transition transition)
+        public static FragmentIonType? FromTransition(Transition transition)
         {
-            return transition == null ? EMPTY : new IonFragment(transition.IonType, transition.Ordinal);
+            return transition == null ? Empty : new FragmentIonType(transition.IonType, transition.Ordinal);
         }
 
         public override string ToString()
@@ -77,7 +85,7 @@ namespace pwiz.Skyline.Model.Crosslinking
             }
         }
 
-        public int CompareTo(IonFragment ionFragment)
+        public int CompareTo(FragmentIonType ionFragment)
         {
             int result = IonTypeOrder.CompareTo(ionFragment.IonTypeOrder);
             if (result != 0)

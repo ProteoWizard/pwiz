@@ -2,20 +2,16 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using JetBrains.Annotations;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Model.V01;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Crosslinking
 {
     public class ComplexFragmentIon : Immutable, IComparable<ComplexFragmentIon>
     {
-        public ComplexFragmentIon(IEnumerable<IonFragment?> parts, TransitionLosses losses)
+        public ComplexFragmentIon(IEnumerable<FragmentIonType?> parts, TransitionLosses losses)
         {
             Parts = ImmutableList.ValueOf(parts);
             Losses = losses;
@@ -23,7 +19,7 @@ namespace pwiz.Skyline.Model.Crosslinking
 
         public static ComplexFragmentIon Simple(TransitionDocNode transitionDocNode)
         {
-            return new ComplexFragmentIon(ImmutableList.Singleton(IonFragment.FromTransition(transitionDocNode.Transition)), transitionDocNode.Losses);
+            return new ComplexFragmentIon(ImmutableList.Singleton(FragmentIonType.FromTransition(transitionDocNode.Transition)), transitionDocNode.Losses);
         }
 
         private ComplexFragmentIon Append(SimpleFragmentIon child)
@@ -48,7 +44,7 @@ namespace pwiz.Skyline.Model.Crosslinking
         {
             if (left == null)
             {
-                return new ComplexFragmentIon(ImmutableList<IonFragment?>.Singleton(right?.Id), right?.Losses);
+                return new ComplexFragmentIon(ImmutableList<FragmentIonType?>.Singleton(right?.Id), right?.Losses);
             }
 
             return left.Append(right);
@@ -56,7 +52,7 @@ namespace pwiz.Skyline.Model.Crosslinking
 
         public Adduct Adduct { get; private set; }
 
-        public ImmutableList<IonFragment?> Parts { get; private set; }
+        public ImmutableList<FragmentIonType?> Parts { get; private set; }
 
         public int PartCount
         {
@@ -84,7 +80,7 @@ namespace pwiz.Skyline.Model.Crosslinking
 
         public static ComplexFragmentIon Simple(Transition transition, TransitionLosses losses)
         {
-            return new ComplexFragmentIon(ImmutableList.Singleton(IonFragment.FromTransition(transition)), losses);
+            return new ComplexFragmentIon(ImmutableList.Singleton(FragmentIonType.FromTransition(transition)), losses);
         }
 
         public bool IsMs1

@@ -490,7 +490,7 @@
     <Compile Include="Model\Crosslinking\ComplexFragmentIonKey.cs" />
     <Compile Include="Model\Crosslinking\CrosslinkedSequences.cs" />
     <Compile Include="Model\Crosslinking\CrosslinkPeptideBuilder.cs" />
-    <Compile Include="Model\Crosslinking\FragmentId.cs" />
+    <Compile Include="Model\Crosslinking\FragmentIonType.cs" />
     <Compile Include="Model\Crosslinking\LegacyComplexFragmentIon.cs" />
     <Compile Include="Model\Crosslinking\CrosslinkBuilder.cs" />
     <Compile Include="Model\Crosslinking\ComplexFragmentIonName.cs" />

@@ -112,7 +112,7 @@ AMNFS[Phospho (ST)]GSPGAVSTSPT[Phospho (ST)]QSFM[Oxidation (M)]NTLPR");
             {
                 // AMNFSGSPGAV(11)-STSPTQSFMNTLPR(14)
                 
-var parts = new List<IonFragment?>();
+var parts = new List<FragmentIonType?>();
 #if false
                 switch (transitionDocNode.Transition.IonType)
                 {

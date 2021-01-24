@@ -9,12 +9,12 @@ namespace pwiz.Skyline.Model.Crosslinking
     public class ComplexFragmentIonKey
     {
 
-        public ComplexFragmentIonKey(IEnumerable<IonFragment?> parts)
+        public ComplexFragmentIonKey(IEnumerable<FragmentIonType?> parts)
         {
             Parts = ImmutableList.ValueOf(parts);
         }
 
-        public ImmutableList<IonFragment?> Parts { get; private set; }
+        public ImmutableList<FragmentIonType?> Parts { get; private set; }
 
         public IEnumerable<IonType> IonTypes
         {

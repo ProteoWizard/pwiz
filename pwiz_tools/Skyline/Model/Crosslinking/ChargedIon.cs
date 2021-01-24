@@ -55,7 +55,7 @@ namespace pwiz.Skyline.Model.Crosslinking
         public static ChargedIon Simple(Transition transition, TransitionLosses losses)
         {
             return new ChargedIon(transition,
-                new ComplexFragmentIon(ImmutableList.Singleton(IonFragment.FromTransition(transition)), losses),
+                new ComplexFragmentIon(ImmutableList.Singleton(FragmentIonType.FromTransition(transition)), losses),
                 (PeptideStructure)null);
         }
         public string GetFragmentIonName()

@@ -541,7 +541,7 @@ namespace pwiz.Skyline.Model
                 transitionProto.ExplicitSLens = DataValues.ToOptional(ExplicitValues.SLens);
             }
 
-            foreach (IonFragment? part in ComplexFragmentIon.ComplexFragmentIon.Parts)
+            foreach (FragmentIonType? part in ComplexFragmentIon.ComplexFragmentIon.Parts)
             {
                 var linkedIon = new SkylineDocumentProto.Types.LinkedIon();
                 if (part == null)
@@ -668,21 +668,21 @@ namespace pwiz.Skyline.Model
                 new TransitionQuantInfo(isotopeDistInfo, libInfo, !transitionProto.NotQuantitative);
             if (mods != null && mods.HasCrosslinks)
             {
-                var parts = new List<IonFragment?>();
+                var parts = new List<FragmentIonType?>();
                 parts.Add(transitionProto.OrphanedCrosslinkIon
-                    ? IonFragment.EMPTY
-                    : IonFragment.FromTransition(transition));
+                    ? FragmentIonType.Empty
+                    : FragmentIonType.FromTransition(transition));
                 foreach (var linkedIon in transitionProto.LinkedIons)
                 {
                     var linkedPeptide = crosslinkBuilder.PeptideStructure.Peptides[parts.Count];
                     var linkedTransitionGroup = new TransitionGroup(linkedPeptide, Adduct.SINGLY_PROTONATED, group.LabelType);
                     if (linkedIon.Orphan)
                     {
-                        parts.Add(IonFragment.EMPTY);
+                        parts.Add(FragmentIonType.Empty);
                     }
                     else
                     {
-                        parts.Add(new IonFragment(DataValues.FromIonType(linkedIon.IonType), linkedIon.Ordinal));
+                        parts.Add(new FragmentIonType(DataValues.FromIonType(linkedIon.IonType), linkedIon.Ordinal));
                     }
                 }
                 var complexFragmentIon = new ComplexFragmentIon(parts, losses);

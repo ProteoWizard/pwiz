@@ -20,6 +20,7 @@ using System;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
+using pwiz.Skyline;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
@@ -98,7 +99,7 @@ namespace pwiz.SkylineTest
             var mainComplexFragmentIon = ComplexFragmentIon.Simple(
                 new Transition(mainTransitionGroup, IonType.precursor, mainPeptide.Length - 1, 0,
                     Adduct.SINGLY_PROTONATED), null);
-            var linkedComplexFragmentIon = new SimpleFragmentIon(new IonFragment(IonType.precursor, 0), null);
+            var linkedComplexFragmentIon = new SimpleFragmentIon(new FragmentIonType(IonType.precursor, 0), null);
             var complexFragmentIon = ComplexFragmentIon.Append(mainComplexFragmentIon, linkedComplexFragmentIon);
             var chargedIon =
                 complexFragmentIon.MakeChargedIon(mainTransitionGroup, Adduct.SINGLY_PROTONATED, modsWithLinkedPeptide);
@@ -376,6 +377,15 @@ namespace pwiz.SkylineTest
             Assert.IsNotNull(peptideDocNode);
             Assert.IsNotNull(peptideDocNode.ExplicitMods);
             Assert.AreEqual(1, peptideDocNode.ExplicitMods.Crosslinks.LinkedPeptides.Count);
+        }
+
+        [TestMethod]
+        public void TestFragmentIonType()
+        {
+            var assembly = typeof(SkylineWindow).Assembly;
+
+            var fragmentIonType = new FragmentIonType(IonType.z, 7);
+            Assert.IsNotNull(fragmentIonType.ToString());
         }
     }
 }
