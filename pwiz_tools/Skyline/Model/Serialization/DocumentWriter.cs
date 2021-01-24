@@ -677,12 +677,10 @@ namespace pwiz.Skyline.Model.Serialization
                 }
             }
 
-#if false // TODO
             if (nodeTransition.ComplexFragmentIon.IsOrphan)
             {
                 writer.WriteAttribute(ATTR.orphaned_crosslink_ion, true);
             }
-#endif
 
             // Order of elements matters for XSD validation
             WriteAnnotations(writer, nodeTransition.Annotations);
@@ -836,11 +834,12 @@ namespace pwiz.Skyline.Model.Serialization
 
         private void WriteLinkedIons(XmlWriter writer, ComplexFragmentIon complexFragmentIon)
         {
-            foreach (var transition in complexFragmentIon.Transitions.Skip(1))
+            foreach (var part in complexFragmentIon.Parts.Skip(1))
             {
                 writer.WriteStartElement(EL.linked_fragment_ion);
-                if (!ComplexFragmentIon.IsEmptyTransition(transition))
+                if (!part.IsEmpty)
                 {
+                    var transition = part.Transition;
                     writer.WriteAttribute(ATTR.fragment_type, transition.IonType);
                     if (transition.IonType != IonType.precursor)
                     {

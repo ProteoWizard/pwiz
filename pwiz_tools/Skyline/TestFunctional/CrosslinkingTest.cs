@@ -83,7 +83,6 @@ namespace pwiz.SkylineTestFunctional
                 SetCrosslinker(editLinkedPeptidesDialog, 0, crosslinkerName, new CrosslinkSite(0, 6), new CrosslinkSite(1, 5));
                 OkDialog(editLinkedPeptidesDialog, editLinkedPeptidesDialog.OkDialog);
             }
-            PauseTest();
             RunUI(()=>SkylineWindow.ShowGraphSpectrum(true));
             WaitForGraphs();
             var graphSpectrum = FindOpenForm<GraphSpectrum>();

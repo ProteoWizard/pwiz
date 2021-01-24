@@ -1555,29 +1555,28 @@ namespace pwiz.Skyline.Model.Serialization
             TransitionDocNode node;
             if (mods != null && mods.HasCrosslinks)
             {
-                var transitions = new List<Transition>() {transition};
+                var parts = new List<ComplexFragmentIon.Part>() {new ComplexFragmentIon.Part(transition, info.OrphanedCrosslinkIon)};
                 foreach (var linkedIon in info.LinkedFragmentIons)
                 {
-                    var linkedPeptide = crosslinkBuilder.PeptideStructure.Peptides[transitions.Count];
+                    var linkedPeptide = crosslinkBuilder.PeptideStructure.Peptides[parts.Count];
                     var linkedTransitionGroup = new TransitionGroup(linkedPeptide, Adduct.SINGLY_PROTONATED, group.LabelType);
-                    Transition linkedTransition;
                     switch (linkedIon.Key)
                     {
                         case IonType.custom:
-                            linkedTransition = ComplexFragmentIon.EmptyTransition(linkedTransitionGroup);
+                            parts.Add(ComplexFragmentIon.EmptyPart(linkedTransitionGroup));
                             break;
                         case IonType.precursor:
-                            linkedTransition = new Transition(linkedTransitionGroup, IonType.precursor, linkedPeptide.Sequence.Length - 1, 0, Adduct.SINGLY_PROTONATED);
+                            parts.Add(new ComplexFragmentIon.Part(new Transition(linkedTransitionGroup, IonType.precursor, linkedPeptide.Sequence.Length - 1, 0, Adduct.SINGLY_PROTONATED), false));
                             break;
                         default:
-                            linkedTransition = new Transition(linkedTransitionGroup, linkedIon.Key,
+                            var linkedTransition = new Transition(linkedTransitionGroup, linkedIon.Key,
                                 Transition.OrdinalToOffset(linkedIon.Key, linkedIon.Value,
                                     linkedPeptide.Sequence.Length), 0, Adduct.SINGLY_PROTONATED);
+                            parts.Add(ComplexFragmentIon.TransitionPart(linkedTransition));
                             break;
                     }
-                    transitions.Add(linkedTransition);
                 }
-                var complexFragmentIon = new ComplexFragmentIon(transitions, info.Losses);
+                var complexFragmentIon = new ComplexFragmentIon(parts, info.Losses);
                 node = crosslinkBuilder.MakeTransitionDocNode(complexFragmentIon, isotopeDist, info.Annotations,
                     quantInfo, info.ExplicitValues, info.Results);
             }
@@ -1598,7 +1597,7 @@ namespace pwiz.Skyline.Model.Serialization
         /// </summary>
         private void ValidateSerializedVsCalculatedProductMz(double? declaredProductMz, TransitionDocNode node)
         {
-            if (false && declaredProductMz.HasValue && Math.Abs(declaredProductMz.Value - node.Mz.Value) >= .001)
+            if (declaredProductMz.HasValue && Math.Abs(declaredProductMz.Value - node.Mz.Value) >= .001)
             {
                 var toler = node.Transition.IsPrecursor() ? .5 : // We do see mz-only transition lists where precursor mz is given as double and product mz as int
                     FormatVersion.CompareTo(DocumentFormat.VERSION_3_6) <= 0 && node.Transition.IonType == IonType.z ? 1.007826 : // Known issue fixed in SVN 7007

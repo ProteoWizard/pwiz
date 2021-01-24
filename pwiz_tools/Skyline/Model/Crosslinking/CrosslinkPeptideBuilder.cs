@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using pwiz.Common.Chemistry;
-using pwiz.Common.Collections;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Util;
 
@@ -28,13 +27,14 @@ namespace pwiz.Skyline.Model.Crosslinking
         /// <summary>
         /// Returns the chemical formula for this fragment and none of its children.
         /// </summary>
-        public MoleculeMassOffset GetFragmentFormula(Transition transition)
+        public MoleculeMassOffset GetFragmentFormula(ComplexFragmentIon.Part part)
         {
-            if (ComplexFragmentIon.IsEmptyTransition(transition))
+            if (part.IsEmpty)
             {
                 return MoleculeMassOffset.EMPTY;
             }
 
+            var transition = part.Transition;
             var key = Tuple.Create(transition.IonType, transition.CleavageOffset);
             MoleculeMassOffset moleculeMassOffset;
             if (_fragmentedMolecules.TryGetValue(key, out moleculeMassOffset))
@@ -71,7 +71,7 @@ namespace pwiz.Skyline.Model.Crosslinking
                 {
                     continue;
                 }
-                yield return new ComplexFragmentIon(ImmutableList.Singleton(transitionDocNode.Transition), transitionDocNode.Losses);
+                yield return ComplexFragmentIon.Simple(transitionDocNode);
             }
         }
 

@@ -12,14 +12,19 @@ namespace pwiz.Skyline.Model.Crosslinking
 {
     public class ComplexFragmentIon : Immutable, IComparable<ComplexFragmentIon>
     {
-        public static readonly ComplexFragmentIon EMPTY = new ComplexFragmentIon(ImmutableList.Empty<Transition>(), null);
+        public static readonly ComplexFragmentIon EMPTY = new ComplexFragmentIon(ImmutableList.Empty<Part>(), null);
         private static CustomMolecule EMPTY_MOLECULE = new CustomMolecule(
             new TypedMass(CustomMolecule.MIN_MASS, MassType.Monoisotopic),
             new TypedMass(CustomMolecule.MIN_MASS, MassType.Average));
-        public ComplexFragmentIon(IEnumerable<Transition> transitions, TransitionLosses losses)
+        public ComplexFragmentIon(IEnumerable<Part> parts, TransitionLosses losses)
         {
-            Transitions = ImmutableList.ValueOf(transitions);
+            Parts = ImmutableList.ValueOf(parts);
             Losses = losses;
+        }
+
+        public static ComplexFragmentIon Simple(TransitionDocNode transitionDocNode)
+        {
+            return new ComplexFragmentIon(ImmutableList.Singleton(new Part(transitionDocNode.Transition, false)), transitionDocNode.Losses);
         }
 
         public ComplexFragmentIon Concat(ComplexFragmentIon child)
@@ -37,10 +42,19 @@ namespace pwiz.Skyline.Model.Crosslinking
                         newLosses.MassType);
                 }
             }
-            return new ComplexFragmentIon(Transitions.Concat(child.Transitions), newLosses);
+            return new ComplexFragmentIon(Parts.Concat(child.Parts), newLosses);
         }
 
-        public ImmutableList<Transition> Transitions { get; private set; }
+        public ImmutableList<Part> Parts { get; private set; }
+        public IEnumerable<Transition> Transitions
+        {
+            get { return Parts.Select(part => part.Transition); }
+        }
+
+        public int PartCount
+        {
+            get { return Parts.Count; }
+        }
 
         public Transition PrimaryTransition
         {
@@ -54,43 +68,39 @@ namespace pwiz.Skyline.Model.Crosslinking
             get { return Losses; }
         }
 
-        public static bool IsEmptyTransition(Transition transition)
+        public bool IsEmptyTransition(int index)
         {
-            return transition.IonType == IonType.custom;
-        }
-
-        public static Transition EmptyTransition(TransitionGroup transitionGroup)
-        {
-            return new Transition(transitionGroup, Adduct.SINGLY_PROTONATED, null, EMPTY_MOLECULE);
+            return Parts[index].IsEmpty;
         }
 
         public static ComplexFragmentIon EmptyComplexFragmentIon(TransitionGroup transitionGroup)
         {
-            return Simple(EmptyTransition(transitionGroup), null);
+            return new ComplexFragmentIon(ImmutableList.Singleton(EmptyPart(transitionGroup)), null);
         }
 
         public bool? IncludesSite(CrosslinkSite site)
         {
-            if (site.PeptideIndex >= Transitions.Count)
+            if (site.PeptideIndex >= PartCount)
             {
                 return null;
             }
-            var transition = Transitions[site.PeptideIndex];
-            if (IsEmptyTransition(transition))
+
+            if (IsEmptyTransition(site.PeptideIndex))
             {
                 return false;
             }
+            var transition = Parts[site.PeptideIndex].Transition;
             return transition.IncludesAaIndex(site.AaIndex);
         }
 
         public ComplexFragmentIon CloneTransition()
         {
-            return ChangeProp(ImClone(this), im => im.Transitions = im.Transitions.ReplaceAt(0, (Transition)Transitions[0].Copy()));
+            return ChangePrimaryTransition((Transition) Transitions.First().Copy());
         }
 
         public static ComplexFragmentIon Simple(Transition transition, TransitionLosses losses)
         {
-            return new ComplexFragmentIon(ImmutableList.Singleton(transition), losses);
+            return new ComplexFragmentIon(ImmutableList.Singleton(new Part(transition, false)), losses);
         }
 
         public bool IsMs1
@@ -105,7 +115,7 @@ namespace pwiz.Skyline.Model.Crosslinking
         {
             get
             {
-                return Transitions[0].IsPrecursor();
+                return Transitions.First().IsPrecursor();
             }
         }
 
@@ -113,7 +123,7 @@ namespace pwiz.Skyline.Model.Crosslinking
         {
             get
             {
-                return Transitions.All(IsEmptyTransition);
+                return Parts.All(part => part.IsEmpty);
             }
         }
 
@@ -121,13 +131,13 @@ namespace pwiz.Skyline.Model.Crosslinking
         {
             get
             {
-                return Transitions.Count > 0 && IsEmptyTransition(Transitions[0]);
+                return Parts.Count > 0 && Parts[0].IsEmpty;
             }
         }
 
         public bool IsCrosslinked
         {
-            get { return Transitions.Count > 1; }
+            get { return Parts.Count > 1; }
         }
 
         public string GetFragmentIonName()
@@ -160,44 +170,44 @@ namespace pwiz.Skyline.Model.Crosslinking
             // Simple case of two peptides linked together
             if (includeResidues)
             {
-                var firstTransition = Transitions[0];
-                if (!IsEmptyTransition(firstTransition) && firstTransition.IonType != IonType.precursor)
+                var firstPart = Parts.First();
+                if (!firstPart.IsEmpty && firstPart.Transition.IonType != IonType.precursor)
                 {
-                    stringBuilder.Append(firstTransition.AA);
+                    stringBuilder.Append(firstPart.Transition.AA);
                     stringBuilder.Append(@" ");
                 }
             }
 
             string strHyphen = string.Empty;
             stringBuilder.Append(@"[");
-            foreach (var transition in Transitions)
+            foreach (var part in Parts)
             {
                 stringBuilder.Append(strHyphen);
                 strHyphen = @"-";
-                if (IsEmptyTransition(transition))
+                if (part.IsEmpty)
                 {
                     stringBuilder.Append(@"*");
                 }
-                else if (transition.IonType == IonType.precursor)
+                else if (part.Transition.IonType == IonType.precursor)
                 {
                     stringBuilder.Append(@"p");
                 }
                 else
                 {
-                    stringBuilder.Append(transition.IonType);
-                    stringBuilder.Append(transition.Ordinal);
+                    stringBuilder.Append(part.Transition.IonType);
+                    stringBuilder.Append(part.Transition.Ordinal);
                 }
             }
             stringBuilder.Append(GetTransitionLossesText());
 
             stringBuilder.Append(@"]");
-            if (includeResidues && Transitions.Count > 1)
+            if (includeResidues && Parts.Count > 1)
             {
-                var lastTransition = Transitions[Transitions.Count - 1];
-                if (!IsEmptyTransition(lastTransition))
+                var lastPart = Parts[Parts.Count - 1];
+                if (!lastPart.IsEmpty)
                 {
                     stringBuilder.Append(@" ");
-                    stringBuilder.Append(lastTransition.AA);
+                    stringBuilder.Append(lastPart.Transition.AA);
                 }
             }
             return stringBuilder.ToString();
@@ -299,7 +309,8 @@ namespace pwiz.Skyline.Model.Crosslinking
 
         private ComplexFragmentIon ChangePrimaryTransition(Transition transition)
         {
-            return ChangeProp(ImClone(this), im => im.Transitions = im.Transitions.ReplaceAt(0, transition));
+            return ChangeProp(ImClone(this), im => 
+                im.Parts = im.Parts.ReplaceAt(0, new Part(transition, im.Parts[0].IsEmpty)));
         }
 
         public CrosslinkBuilder GetCrosslinkBuilder(SrmSettings settings, ExplicitMods explicitMods)
@@ -340,12 +351,12 @@ namespace pwiz.Skyline.Model.Crosslinking
                 return 1;
             }
 
-            for (int i = 0; i < Math.Min(Transitions.Count, other.Transitions.Count); i++)
+            for (int i = 0; i < Math.Min(Parts.Count, other.Parts.Count); i++)
             {
-                int result = IsEmptyTransition(Transitions[i]).CompareTo(IsEmptyTransition(other.Transitions[i]));
+                int result = Parts[i].IsEmpty.CompareTo(other.Parts[i].IsEmpty);
                 if (result == 0)
                 {
-                    result = TransitionGroup.CompareTransitionIds(Transitions[i], other.Transitions[i]);
+                    result = TransitionGroup.CompareTransitionIds(Parts[i].Transition, other.Parts[i].Transition);
                 }
 
                 if (result == 0 && i == 0)
@@ -359,8 +370,28 @@ namespace pwiz.Skyline.Model.Crosslinking
                 }
             }
 
-            return Transitions.Count.CompareTo(other.Transitions.Count);
+            return Parts.Count.CompareTo(other.Parts.Count);
         }
 
+        public class Part
+        {
+            public Part(Transition transition, bool isEmpty)
+            {
+                Transition = transition;
+                IsEmpty = isEmpty;
+            }
+            public Transition Transition { get; private set; }
+            public bool IsEmpty { get; private set; }
+        }
+
+        public static Part EmptyPart(TransitionGroup group)
+        {
+            return new Part(new Transition(group, IonType.precursor, group.Peptide.Sequence.Length - 1, 0, Adduct.SINGLY_PROTONATED), true);
+        }
+
+        public static Part TransitionPart(Transition transition)
+        {
+            return new Part(transition, false);
+        }
     }
 }

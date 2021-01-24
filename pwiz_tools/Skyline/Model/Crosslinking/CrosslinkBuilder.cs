@@ -85,9 +85,9 @@ namespace pwiz.Skyline.Model.Crosslinking
         public MoleculeMassOffset GetNeutralFormula(ComplexFragmentIon complexFragmentIon)
         {
             MoleculeMassOffset result = MoleculeMassOffset.EMPTY;
-            for (int i = 0; i < complexFragmentIon.Transitions.Count; i++)
+            for (int i = 0; i < complexFragmentIon.Parts.Count; i++)
             {
-                result = result.Plus(_peptideBuilders[i].GetFragmentFormula(complexFragmentIon.Transitions[i]));
+                result = result.Plus(_peptideBuilders[i].GetFragmentFormula(complexFragmentIon.Parts[i]));
             }
 
             foreach (var crosslink in PeptideStructure.Crosslinks)
@@ -102,7 +102,7 @@ namespace pwiz.Skyline.Model.Crosslinking
         }
 
 
-        private FragmentedMolecule _precursorMolecule;
+        //private FragmentedMolecule _precursorMolecule;
         public TypedMass GetFragmentMass(ComplexFragmentIon complexFragmentIon)
         {
             var neutralFormula = GetNeutralFormula(complexFragmentIon);

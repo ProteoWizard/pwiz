@@ -190,7 +190,7 @@ namespace pwiz.Skyline.Model
 
         public string GetFragmentIonName(CultureInfo cultureInfo, double? tolerance = null)
         {
-            if (ComplexFragmentIon.Transitions.Count > 1)
+            if (ComplexFragmentIon.Parts.Count > 1)
             {
                 return ComplexFragmentIon.GetFragmentIonName();
             }
@@ -467,7 +467,7 @@ namespace pwiz.Skyline.Model
             {
                 FragmentType = DataValues.ToIonType(Transition.IonType),
                 NotQuantitative = !ExplicitQuantitative,
-                OrphanedCrosslinkIon = ComplexFragmentIon.IsEmptyTransition(ComplexFragmentIon.Transitions[0])
+                OrphanedCrosslinkIon = ComplexFragmentIon.Parts[0].IsEmpty
             };
             if (Transition.IsCustom() && !Transition.IsPrecursor())
             {
@@ -547,14 +547,14 @@ namespace pwiz.Skyline.Model
                 transitionProto.ExplicitSLens = DataValues.ToOptional(ExplicitValues.SLens);
             }
 
-            for (int i = 1; i < ComplexFragmentIon.Transitions.Count; i++)
+            for (int i = 1; i < ComplexFragmentIon.Parts.Count; i++)
             {
-                var transition = ComplexFragmentIon.Transitions[i];
+                var transition = ComplexFragmentIon.Parts[i].Transition;
                 transitionProto.LinkedIons.Add(new SkylineDocumentProto.Types.LinkedIon()
                 {
                     IonType = DataValues.ToIonType(transition.IonType),
                     Ordinal = transition.Ordinal,
-                    Orphan = ComplexFragmentIon.IsEmptyTransition(transition)
+                    Orphan = ComplexFragmentIon.Parts[i].IsEmpty
                 });
             }
             return transitionProto;

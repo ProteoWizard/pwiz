@@ -178,7 +178,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             Transition tran = nodeTran.Transition;
             string labelPrefix;
             const string labelPrefixSpacer = " - ";
-            if (nodeTran.ComplexFragmentIon.Transitions.Count > 1)
+            if (nodeTran.ComplexFragmentIon.PartCount > 1)
             {
                 labelPrefix = nodeTran.ComplexFragmentIon.GetTargetsTreeLabel() + labelPrefixSpacer;
             }
