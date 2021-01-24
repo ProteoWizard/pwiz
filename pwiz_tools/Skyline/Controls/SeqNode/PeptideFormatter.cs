@@ -37,6 +37,8 @@ namespace pwiz.Skyline.Controls.SeqNode
         private List<Tuple<IsotopeLabelType, SequenceInfo>> _heavySequenceInfos =
             new List<Tuple<IsotopeLabelType, SequenceInfo>>();
 
+        private HashSet<int> _crosslinkedAaIndexes;
+
         public PeptideFormatter(SrmSettings srmSettings, ModifiedSequence lightModifiedSequence, IEnumerable<KeyValuePair<IsotopeLabelType, ModifiedSequence>> heavyModifiedSequences, ModFontHolder modFontHolder)
         {
             SrmSettings = srmSettings;
@@ -47,7 +49,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             }
             LightModifiedSequence = lightModifiedSequence;
             ModFontHolder = modFontHolder;
-            LinkedPeptides = ImmutableSortedList<ModificationSite, PeptideFormatter>.EMPTY;
+            LinkedPeptides = ImmutableList<PeptideFormatter>.EMPTY;
         }
 
         public static PeptideFormatter MakePeptideFormatter(SrmSettings srmSettings, PeptideDocNode peptideDocNode,
@@ -80,42 +82,34 @@ namespace pwiz.Skyline.Controls.SeqNode
             var peptideFormatter = new PeptideFormatter(srmSettings, lightModifiedSequence, heavyModifiedSequences, modFontHolder);
             if (explicitMods != null && explicitMods.HasCrosslinks)
             {
-                var linkedPeptides = new List<KeyValuePair<ModificationSite, PeptideFormatter>>();
-                // DONTCHECKIN
-                // foreach (var entry in explicitMods.Crosslinks)
-                // {
-                //     if (entry.Value.Peptide == null)
-                //     {
-                //         continue;
-                //     }
-                //
-                //     var childFormatter = MakePeptideFormatter(srmSettings, entry.Value.Peptide,
-                //             entry.Value.ExplicitMods, heavyLabelTypes, modFontHolder)
-                //         .ChangeCrosslinkedIndexAa(entry.Value.IndexAa);
-                //     linkedPeptides.Add(new KeyValuePair<ModificationSite, PeptideFormatter>(entry.Key, childFormatter));
-                // }
-                //
-                // peptideFormatter = peptideFormatter
-                //     .ChangeLinkedPeptides(ImmutableSortedList.FromValues(linkedPeptides));
+                var peptideStructure = new PeptideStructure(peptide, explicitMods);
+                peptideFormatter._crosslinkedAaIndexes = GetAaIndexes(peptideStructure, 0);
+                var linkedPeptides = new List<PeptideFormatter>();
+                for (int iPeptide = 1; iPeptide < peptideStructure.Peptides.Count; iPeptide++)
+                {
+                    var linkedPeptideFormatter = MakePeptideFormatter(srmSettings, peptideStructure.Peptides[iPeptide],
+                        peptideStructure.ExplicitModList[iPeptide], heavyLabelTypes, modFontHolder);
+                    linkedPeptideFormatter._crosslinkedAaIndexes = GetAaIndexes(peptideStructure, iPeptide);
+                    linkedPeptides.Add(linkedPeptideFormatter);
+                }
+                peptideFormatter.LinkedPeptides = ImmutableList.ValueOf(linkedPeptides);
             }
 
             return peptideFormatter;
         }
 
-        public int? CrosslinkedIndexAa { get; private set; }
-
-        public PeptideFormatter ChangeCrosslinkedIndexAa(int? index)
+        private static HashSet<int> GetAaIndexes(PeptideStructure peptideStructure, int peptideIndex)
         {
-            return ChangeProp(ImClone(this), im => im.CrosslinkedIndexAa = index);
+            return peptideStructure.Crosslinks.SelectMany(link => link.Sites)
+                .Where(site => site.PeptideIndex == peptideIndex).Select(site => site.AaIndex).ToHashSet();
         }
 
-        public ImmutableSortedList<ModificationSite, PeptideFormatter> LinkedPeptides { get; private set; }
-
-        public PeptideFormatter ChangeLinkedPeptides(
-            ImmutableSortedList<ModificationSite, PeptideFormatter> linkedPeptides)
+        public bool IsAaIndexCrosslinked(int aaIndex)
         {
-            return ChangeProp(ImClone(this), im => im.LinkedPeptides = linkedPeptides);
+            return _crosslinkedAaIndexes != null && _crosslinkedAaIndexes.Contains(aaIndex);
         }
+
+        public ImmutableList<PeptideFormatter> LinkedPeptides { get; private set; }
 
         public ModifiedSequence LightModifiedSequence { get; private set; }
 
@@ -160,9 +154,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             string strAminoAcid = UnmodifiedSequence.Substring(residue, 1);
 
             var modsAtResidue = GetModificationsAtResidue(displayModificationOption, residue).ToArray();
-            if (residue == CrosslinkedIndexAa
-                || modsAtResidue.Any(labeledMod => labeledMod.Item2.Any(mod => mod.ExplicitMod.LinkedPeptide != null))
-                || _lightSequenceInfo.LooplinkSites.Contains(residue))
+            if (IsAaIndexCrosslinked(residue))
             {
                 return new TextSequence
                 {
@@ -249,7 +241,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             }
 
             bool first = true;
-            foreach (var linkedPeptide in LinkedPeptides.Values)
+            foreach (var linkedPeptide in LinkedPeptides)
             {
                 if (!first)
                 {
