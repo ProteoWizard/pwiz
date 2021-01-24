@@ -117,6 +117,14 @@ namespace pwiz.Skyline.Model.Crosslinking
             }
         }
 
+        public bool IsOrphan
+        {
+            get
+            {
+                return Transitions.Count > 0 && IsEmptyTransition(Transitions[0]);
+            }
+        }
+
         public bool IsCrosslinked
         {
             get { return Transitions.Count > 1; }
