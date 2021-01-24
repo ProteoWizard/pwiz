@@ -486,9 +486,11 @@
     </Compile>
     <Compile Include="Model\AuditLog\ReflectorEnumerator.cs" />
     <Compile Include="Model\AuditLog\ReflectorToString.cs" />
+    <Compile Include="Model\Crosslinking\ChargedIon.cs" />
     <Compile Include="Model\Crosslinking\ComplexFragmentIonKey.cs" />
     <Compile Include="Model\Crosslinking\CrosslinkedSequences.cs" />
     <Compile Include="Model\Crosslinking\CrosslinkPeptideBuilder.cs" />
+    <Compile Include="Model\Crosslinking\FragmentId.cs" />
     <Compile Include="Model\Crosslinking\LegacyComplexFragmentIon.cs" />
     <Compile Include="Model\Crosslinking\CrosslinkBuilder.cs" />
     <Compile Include="Model\Crosslinking\ComplexFragmentIonName.cs" />
@@ -501,6 +503,7 @@
     <Compile Include="Model\Crosslinking\ModificationSite.cs" />
     <Compile Include="Model\Crosslinking\LinkedPeptide.cs" />
     <Compile Include="Model\Crosslinking\PeptideStructure.cs" />
+    <Compile Include="Model\Crosslinking\SimpleFragmentIon.cs" />
     <Compile Include="Model\Databinding\CellLocator.cs" />
     <Compile Include="Model\Databinding\Entities\ColumnCaptions.Designer.cs">
       <AutoGen>True</AutoGen>

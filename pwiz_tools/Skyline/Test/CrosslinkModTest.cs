@@ -98,12 +98,11 @@ namespace pwiz.SkylineTest
             var mainComplexFragmentIon = ComplexFragmentIon.Simple(
                 new Transition(mainTransitionGroup, IonType.precursor, mainPeptide.Length - 1, 0,
                     Adduct.SINGLY_PROTONATED), null);
-            var linkedComplexFragmentIon = ComplexFragmentIon.Simple(new Transition(
-                new TransitionGroup(linkedPeptide, Adduct.SINGLY_PROTONATED, IsotopeLabelType.light),
-                IonType.precursor, linkedPeptide.Length - 1, 0, Adduct.SINGLY_PROTONATED), null);
-            var complexFragmentIon =
-                mainComplexFragmentIon.Concat(linkedComplexFragmentIon);
-            var transition = complexFragmentIon.MakeTransitionDocNode(srmSettings, modsWithLinkedPeptide, null);
+            var linkedComplexFragmentIon = new SimpleFragmentIon(new IonFragment(IonType.precursor, 0), null);
+            var complexFragmentIon = ComplexFragmentIon.Append(mainComplexFragmentIon, linkedComplexFragmentIon);
+            var chargedIon =
+                complexFragmentIon.MakeChargedIon(mainTransitionGroup, Adduct.SINGLY_PROTONATED, modsWithLinkedPeptide);
+            var transition = chargedIon.MakeTransitionDocNode(srmSettings, modsWithLinkedPeptide, null);
             var sequenceMassCalc = new SequenceMassCalc(MassType.Monoisotopic);
             var expectedMz = sequenceMassCalc.GetPrecursorMass("A") + sequenceMassCalc.GetPrecursorMass("D") - 24 - BioMassCalc.MassProton;
             Assert.AreEqual(expectedMz, transition.Mz, .00001);
@@ -280,14 +279,18 @@ namespace pwiz.SkylineTest
                 var complexFragmentIon = ComplexFragmentIon.Simple(transition, null);
                 if (transition.IncludesAaIndex(7))
                 {
-                    complexFragmentIon = complexFragmentIon.Concat(ComplexFragmentIon.Simple(linkedTransition, null));
+                    complexFragmentIon = ComplexFragmentIon.Append(complexFragmentIon,
+                        SimpleFragmentIon.FromTransition(linkedTransition));
                 }
                 else
                 {
-                    complexFragmentIon =
-                        complexFragmentIon.Concat(ComplexFragmentIon.EmptyComplexFragmentIon(linkedTransition.Group));
+                    complexFragmentIon = ComplexFragmentIon.Append(complexFragmentIon, null);
                 }
-                var complexTransitionDocNode = complexFragmentIon.MakeTransitionDocNode(srmSettings, explicitMods, null);
+
+                var chargedIon =
+                    complexFragmentIon.MakeChargedIon(transitionGroup, Adduct.SINGLY_PROTONATED, explicitMods);
+
+                var complexTransitionDocNode = chargedIon.MakeTransitionDocNode(srmSettings, explicitMods, null);
                 Assert.AreEqual(tuple.Item4, complexTransitionDocNode.Mz, .0001, "{0}{1}{2}", tuple.Item1, tuple.Item2,
                     Transition.GetChargeIndicator(Adduct.FromChargeProtonated(tuple.Item3)));
             }
@@ -344,9 +347,9 @@ namespace pwiz.SkylineTest
             var complexFragmentIons = choices.Select(transition => transition.ComplexFragmentIon.GetName()).ToArray();
             // Make sure none of the transitions involve a cleavage in between the two ends of the looplink
             // PEpTIdE
-            var yOrdinals = complexFragmentIons.Where(ion => ion.IonTypes[0] == IonType.y).Select(ion => ion.IonOrdinals[0])
+            var yOrdinals = complexFragmentIons.Where(ion => ion.Parts[0]?.IonType == IonType.y).Select(ion => ion.Parts[0].Value.Ordinal)
                 .Distinct().ToList();
-            var bOrdinals = complexFragmentIons.Where(ion => ion.IonTypes[0] == IonType.b).Select(ion => ion.IonOrdinals[0])
+            var bOrdinals = complexFragmentIons.Where(ion => ion.Parts[0]?.IonType == IonType.b).Select(ion => ion.Parts[0].Value.Ordinal)
                 .Distinct().ToList();
             CollectionAssert.AreEquivalent(new[]{6,5,1}, yOrdinals);
             CollectionAssert.AreEquivalent(new[]{1,2,6}, bOrdinals);

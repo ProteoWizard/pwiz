@@ -636,7 +636,7 @@ namespace pwiz.Skyline.Model.Serialization
             writer.WriteAttribute(ATTR.fragment_type, transition.IonType);
             writer.WriteAttribute(ATTR.quantitative, nodeTransition.ExplicitQuantitative, true);
             WriteExplicitTransitionValuesAttributes(writer, nodeTransition.ExplicitValues);
-            if (transition.IsCustom() && !nodeTransition.ComplexFragmentIon.IsOrphan)
+            if (transition.IsCustom())
             {
                 if (!(transition.CustomIon is SettingsCustomIon))
                 {
@@ -744,7 +744,7 @@ namespace pwiz.Skyline.Model.Serialization
                 writer.WriteElementString(EL.declustering_potential, dp.Value);
             }
             WriteTransitionLosses(writer, nodeTransition.Losses);
-            WriteLinkedIons(writer, nodeTransition.ComplexFragmentIon);
+            WriteLinkedIons(writer, nodeTransition.ComplexFragmentIon.ComplexFragmentIon);
 #if false // TODO(nicksh)
             foreach (var linkedIon in nodeTransition.ComplexFragmentIon.Children)
             {
@@ -837,13 +837,12 @@ namespace pwiz.Skyline.Model.Serialization
             foreach (var part in complexFragmentIon.Parts.Skip(1))
             {
                 writer.WriteStartElement(EL.linked_fragment_ion);
-                if (!part.IsEmpty)
+                if (part.HasValue)
                 {
-                    var transition = part.Transition;
-                    writer.WriteAttribute(ATTR.fragment_type, transition.IonType);
-                    if (transition.IonType != IonType.precursor)
+                    writer.WriteAttribute(ATTR.fragment_type, part.Value.IonType);
+                    if (part.Value.IonType != IonType.precursor)
                     {
-                        writer.WriteAttribute(ATTR.fragment_ordinal, transition.Ordinal);
+                        writer.WriteAttribute(ATTR.fragment_ordinal, part.Value.Ordinal);
                     }
                 }
                 writer.WriteEndElement();

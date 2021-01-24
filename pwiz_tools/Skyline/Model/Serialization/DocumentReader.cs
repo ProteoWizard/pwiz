@@ -20,7 +20,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.Remoting.Messaging;
 using System.Text;
+using System.Threading;
 using System.Xml;
 using Google.Protobuf;
 using pwiz.Common.Chemistry;
@@ -34,6 +36,7 @@ using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
+using pwiz.Skyline.Model.V01;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -247,7 +250,7 @@ namespace pwiz.Skyline.Model.Serialization
             public int? DecoyMassShift { get; private set; }
             public TransitionLosses Losses { get; private set; }
 
-            public List<KeyValuePair<IonType, int>> LinkedFragmentIons { get; private set; }
+            public List<IonFragment?> LinkedFragmentIons { get; private set; }
             public bool OrphanedCrosslinkIon { get; private set; }
             public Annotations Annotations { get; private set; }
             public TransitionLibInfo LibInfo { get; private set; }
@@ -291,7 +294,7 @@ namespace pwiz.Skyline.Model.Serialization
             public void ReadXmlElements(XmlReader reader, out double? declaredProductMz)
             {
                 declaredProductMz = null;
-                LinkedFragmentIons = new List<KeyValuePair<IonType, int>>();
+                LinkedFragmentIons = new List<IonFragment?>();
                 if (reader.IsEmptyElement)
                 {
                     reader.Read();
@@ -404,12 +407,12 @@ namespace pwiz.Skyline.Model.Serialization
                 return new KeyValuePair<ModificationSite, ComplexFragmentIonName>(modificationSite, linkedIon);
             }
 
-            private KeyValuePair<IonType, int> ReadLinkedFragmentIon(XmlReader reader)
+            private IonFragment? ReadLinkedFragmentIon(XmlReader reader)
             {
                 var ionType = reader.GetEnumAttribute(ATTR.fragment_type, IonType.custom);
                 var ordinal = reader.GetIntAttribute(ATTR.fragment_ordinal);
                 reader.Read();
-                return new KeyValuePair<IonType, int>(ionType, ordinal);
+                return ionType == IonType.custom ? IonFragment.EMPTY : new IonFragment(ionType, ordinal);
             }
 
             private static TransitionLibInfo ReadTransitionLibInfo(XmlReader reader)
@@ -1559,30 +1562,13 @@ namespace pwiz.Skyline.Model.Serialization
             TransitionDocNode node;
             if (mods != null && mods.HasCrosslinks)
             {
-                var parts = new List<ComplexFragmentIon.Part>() {new ComplexFragmentIon.Part(transition, info.OrphanedCrosslinkIon)};
-                foreach (var linkedIon in info.LinkedFragmentIons)
-                {
-                    var linkedPeptide = crosslinkBuilder.PeptideStructure.Peptides[parts.Count];
-                    var linkedTransitionGroup = new TransitionGroup(linkedPeptide, Adduct.SINGLY_PROTONATED, group.LabelType);
-                    switch (linkedIon.Key)
-                    {
-                        case IonType.custom:
-                            parts.Add(ComplexFragmentIon.EmptyPart(linkedTransitionGroup));
-                            break;
-                        case IonType.precursor:
-                            parts.Add(new ComplexFragmentIon.Part(new Transition(linkedTransitionGroup, IonType.precursor, linkedPeptide.Sequence.Length - 1, 0, Adduct.SINGLY_PROTONATED), false));
-                            break;
-                        default:
-                            var linkedTransition = new Transition(linkedTransitionGroup, linkedIon.Key,
-                                Transition.OrdinalToOffset(linkedIon.Key, linkedIon.Value,
-                                    linkedPeptide.Sequence.Length), 0, Adduct.SINGLY_PROTONATED);
-                            parts.Add(ComplexFragmentIon.TransitionPart(linkedTransition));
-                            break;
-                    }
-                }
+                var parts = info.LinkedFragmentIons.Prepend(info.OrphanedCrosslinkIon
+                    ? IonFragment.EMPTY
+                    : IonFragment.FromTransition(transition));
                 var complexFragmentIon = new ComplexFragmentIon(parts, info.Losses);
-                node = crosslinkBuilder.MakeTransitionDocNode(complexFragmentIon, isotopeDist, info.Annotations,
-                    quantInfo, info.ExplicitValues, info.Results);
+                var chargedIon = new ChargedIon(transition, complexFragmentIon, mods);
+                node = crosslinkBuilder.MakeTransitionDocNode(chargedIon, isotopeDist, info.Annotations, quantInfo,
+                    info.ExplicitValues, info.Results);
             }
             else
             {

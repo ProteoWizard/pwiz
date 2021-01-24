@@ -8,41 +8,40 @@ namespace pwiz.Skyline.Model.Crosslinking
 {
     public class ComplexFragmentIonKey
     {
-        public ComplexFragmentIonKey(IEnumerable<IonType> types, IEnumerable<int> ordinals)
-        {
-            IonTypes = ImmutableList.ValueOf(types);
-            IonOrdinals = ImmutableList.ValueOf(ordinals);
-            if (IonTypes.Count != IonOrdinals.Count)
-            {
-                throw new ArgumentException();
-            }
 
-            IonOrdinals = ImmutableList.ValueOf(Enumerable.Range(0, IonOrdinals.Count).Select(i =>
-                IonTypes[i] == IonType.custom || IonTypes[i] == IonType.precursor ? 0 : IonOrdinals[i]));
+        public ComplexFragmentIonKey(IEnumerable<IonFragment?> parts)
+        {
+            Parts = ImmutableList.ValueOf(parts);
         }
 
-        public ImmutableList<IonType> IonTypes { get; private set; }
-        public ImmutableList<int> IonOrdinals { get; private set; }
+        public ImmutableList<IonFragment?> Parts { get; private set; }
+
+        public IEnumerable<IonType> IonTypes
+        {
+            get
+            {
+                return Parts.Where(part => null != part).Select(part => part.Value.IonType);
+            }
+        }
 
         public override string ToString()
         {
             StringBuilder stringBuilder = new StringBuilder();
             string strHyphen = string.Empty;
-            for (int i = 0; i < IonTypes.Count; i++)
+            for (int i = 0; i < Parts.Count; i++)
             {
                 stringBuilder.Append(strHyphen);
                 strHyphen = @"-";
-                switch (IonTypes[i])
+                switch (Parts[i]?.IonType)
                 {
-                    case IonType.custom:
+                    case null:
                         stringBuilder.Append(@"*");
                         break;
                     case IonType.precursor:
                         stringBuilder.Append(@"p");
                         break;
                     default:
-                        stringBuilder.Append(IonTypes[i]);
-                        stringBuilder.Append(IonOrdinals[i]);
+                        stringBuilder.Append(Parts[i]);
                         break;
                 }
             }
@@ -52,7 +51,7 @@ namespace pwiz.Skyline.Model.Crosslinking
 
         protected bool Equals(ComplexFragmentIonKey other)
         {
-            return IonTypes.Equals(other.IonTypes) && IonOrdinals.Equals(other.IonOrdinals);
+            return Parts.Equals(other.Parts);
         }
 
         public override bool Equals(object obj)
@@ -65,10 +64,7 @@ namespace pwiz.Skyline.Model.Crosslinking
 
         public override int GetHashCode()
         {
-            unchecked
-            {
-                return (IonTypes.GetHashCode() * 397) ^ IonOrdinals.GetHashCode();
-            }
+            return Parts.GetHashCode();
         }
     }
 }

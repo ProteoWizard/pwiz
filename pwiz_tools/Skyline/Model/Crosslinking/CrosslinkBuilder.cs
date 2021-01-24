@@ -52,34 +52,37 @@ namespace pwiz.Skyline.Model.Crosslinking
         public PeptideStructure PeptideStructure { get; private set; }
         public IsotopeLabelType LabelType { get; private set; }
 
-        public TransitionDocNode MakeTransitionDocNode(ComplexFragmentIon complexFragmentIon, IsotopeDistInfo isotopeDist = null)
+        public TransitionDocNode MakeTransitionDocNode(ChargedIon chargedIon, IsotopeDistInfo isotopeDist = null)
         {
-            return MakeTransitionDocNode(complexFragmentIon, isotopeDist, Annotations.EMPTY,
+            return MakeTransitionDocNode(chargedIon, isotopeDist, Annotations.EMPTY,
                 TransitionDocNode.TransitionQuantInfo.DEFAULT, ExplicitTransitionValues.EMPTY, null);
         }
 
-        public TransitionDocNode MakeTransitionDocNode(ComplexFragmentIon complexFragmentIon,
+        public TransitionDocNode MakeTransitionDocNode(TransitionGroup group, ComplexFragmentIon complexFragmentIon, Adduct adduct, IsotopeDistInfo isotopeDist = null)
+        {
+            var transition = complexFragmentIon.MakeTransition(group, adduct);
+            var chargedIon = new ChargedIon(transition, complexFragmentIon, PeptideStructure);
+            return MakeTransitionDocNode(chargedIon);
+        }
+
+        public TransitionDocNode MakeTransitionDocNode(
+            ChargedIon chargedIon,
             IsotopeDistInfo isotopeDist, 
             Annotations annotations,
             TransitionDocNode.TransitionQuantInfo transitionQuantInfo,
             ExplicitTransitionValues explicitTransitionValues,
             Results<TransitionChromInfo> results)
         {
-            var neutralFormula = GetNeutralFormula(complexFragmentIon);
+            var neutralFormula = GetNeutralFormula(chargedIon.ComplexFragmentIon);
             var productMass = GetFragmentMassFromFormula(Settings, neutralFormula);
-            if (true) // TODO(nicksh): make sure this is right
+            if (chargedIon.ComplexFragmentIon.IsMs1 && Settings.TransitionSettings.FullScan.IsHighResPrecursor)
             {
-                complexFragmentIon = complexFragmentIon.CloneTransition();
-            }
-
-            if (complexFragmentIon.IsMs1 && Settings.TransitionSettings.FullScan.IsHighResPrecursor)
-            {
-                isotopeDist = isotopeDist ?? GetPrecursorIsotopeDistInfo(complexFragmentIon.PrimaryTransition.Adduct, 0);
-                productMass = isotopeDist.GetMassI(complexFragmentIon.PrimaryTransition.MassIndex, complexFragmentIon.PrimaryTransition.DecoyMassShift);
+                isotopeDist = isotopeDist ?? GetPrecursorIsotopeDistInfo(chargedIon.Adduct, 0);
+                productMass = isotopeDist.GetMassI(chargedIon.MassIndex, chargedIon.DecoyMassShift);
                 transitionQuantInfo = transitionQuantInfo.ChangeIsotopeDistInfo(new TransitionIsotopeDistInfo(
-                    isotopeDist.GetRankI(complexFragmentIon.PrimaryTransition.MassIndex), isotopeDist.GetProportionI(complexFragmentIon.PrimaryTransition.MassIndex)));
+                    isotopeDist.GetRankI(chargedIon.MassIndex), isotopeDist.GetProportionI(chargedIon.MassIndex)));
             }
-            return new TransitionDocNode(complexFragmentIon, annotations, productMass, transitionQuantInfo, explicitTransitionValues, results);
+            return new TransitionDocNode(chargedIon, annotations, productMass, transitionQuantInfo, explicitTransitionValues, results);
         }
 
         public MoleculeMassOffset GetNeutralFormula(ComplexFragmentIon complexFragmentIon)
@@ -92,7 +95,7 @@ namespace pwiz.Skyline.Model.Crosslinking
 
             foreach (var crosslink in PeptideStructure.Crosslinks)
             {
-                if (true == complexFragmentIon.ContainsCrosslink(crosslink.Sites))
+                if (true == complexFragmentIon.ContainsCrosslink(PeptideStructure, crosslink.Sites))
                 {
                     result = result.Plus(crosslink.Crosslinker.GetMoleculeMassOffset());
                 }
@@ -186,7 +189,7 @@ namespace pwiz.Skyline.Model.Crosslinking
             double precursorMz,
             bool useFilter)
         {
-            var simpleTransitions = new List<IList<ComplexFragmentIon>>();
+            var simpleTransitions = new List<IList<SimpleFragmentIon>>();
             for (int i = 0; i < _peptideBuilders.Count; i++)
             {
                 var builder = _peptideBuilders[i];
@@ -199,7 +202,7 @@ namespace pwiz.Skyline.Model.Crosslinking
                 {
                     peptideTransitionGroup = builder.MakeTransitionGroup(transitionGroup.LabelType, Adduct.SINGLY_PROTONATED);
                 }
-                simpleTransitions.Add(_peptideBuilders[i].GetComplexFragmentIons(peptideTransitionGroup, useFilter).ToList());
+                simpleTransitions.Add(_peptideBuilders[i].GetSimpleFragmentIons(peptideTransitionGroup, useFilter).ToList());
             }
 
             return PermuteTransitions(simpleTransitions, Settings.PeptideSettings.Modifications.MaxNeutralLosses);
@@ -251,9 +254,9 @@ namespace pwiz.Skyline.Model.Crosslinking
             return ms1transitions.Concat(ms2transitions);
         }
 
-        public IEnumerable<ComplexFragmentIon> PermuteTransitions(IList<IList<ComplexFragmentIon>> startingIons, int maxFragmentationEventCount)
+        public IEnumerable<ComplexFragmentIon> PermuteTransitions(IList<IList<SimpleFragmentIon>> startingIons, int maxFragmentationEventCount)
         {
-            var result = new List<ComplexFragmentIon>() {ComplexFragmentIon.EMPTY};
+            var result = new List<ComplexFragmentIon>() {null};
             for (int iPeptide = 0; iPeptide < startingIons.Count; iPeptide++)
             {
                 var newResult = new List<ComplexFragmentIon>();
@@ -261,7 +264,7 @@ namespace pwiz.Skyline.Model.Crosslinking
                 {
                     foreach (var right in startingIons[iPeptide])
                     {
-                        var concat = left.Concat(right);
+                        var concat = ComplexFragmentIon.Append(left, right);
                         if (concat.CountFragmentationEvents() > maxFragmentationEventCount)
                         {
                             continue;
@@ -331,7 +334,7 @@ namespace pwiz.Skyline.Model.Crosslinking
                 }
                 foreach (var adduct in adducts)
                 {
-                    yield return MakeTransitionDocNode(complexFragmentIon.ChangeAdduct(adduct), isotopeDist);
+                    yield return MakeTransitionDocNode(transitionGroup, complexFragmentIon, adduct, isotopeDist);
                 }
             }
         }

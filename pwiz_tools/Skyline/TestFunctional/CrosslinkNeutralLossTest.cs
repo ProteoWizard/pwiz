@@ -111,7 +111,9 @@ AMNFS[Phospho (ST)]GSPGAVSTSPT[Phospho (ST)]QSFM[Oxidation (M)]NTLPR");
             foreach (var transitionDocNode in flatPrecursor.Transitions)
             {
                 // AMNFSGSPGAV(11)-STSPTQSFMNTLPR(14)
-                var parts = new List<Tuple<IonType, int>>();
+                
+var parts = new List<IonFragment?>();
+#if false
                 switch (transitionDocNode.Transition.IonType)
                 {
                     case IonType.precursor:
@@ -150,7 +152,8 @@ AMNFS[Phospho (ST)]GSPGAVSTSPT[Phospho (ST)]QSFM[Oxidation (M)]NTLPR");
                         }
                         break;
                 }
-                var complexFragmentIonName = new ComplexFragmentIonKey(parts.Select(p=>p.Item1), parts.Select(p=>p.Item2));
+#endif 
+                var complexFragmentIonName = new ComplexFragmentIonKey(parts);
 
                 if (transitionDocNode.Transition.IonType != IonType.precursor && transitionDocNode.Losses != null &&
                     transitionDocNode.Losses.Losses.Count > 1)
