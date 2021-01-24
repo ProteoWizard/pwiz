@@ -1206,9 +1206,13 @@ namespace pwiz.Skyline.Model.DocSettings
             return modsNew;
         }
 
+        /// <summary>
+        /// Convert from the Version 20.2 format where crosslinks were represented on the <see cref="ExplicitMod.LinkedPeptide"/> elements
+        /// instead of <see cref="Crosslinks"/>
+        /// </summary>
         public ExplicitMods FlattenCrosslinkStructure()
         {
-            if (null == StaticModifications)
+            if (null == StaticModifications || StaticModifications.All(mod=>null == mod.LinkedPeptide))
             {
                 return this;
             }
@@ -1241,9 +1245,16 @@ namespace pwiz.Skyline.Model.DocSettings
                 }
                 linkedExplicitMods.Add(explicitMods);
             }
+
+            if (!crosslinks.Any())
+            {
+                return this;
+            }
             var crosslinkStructure = new CrosslinkStructure(linkedPeptides, linkedExplicitMods, crosslinks);
-            return new ExplicitMods(Peptide, StaticModifications.Where(mod => mod.LinkedPeptide == null).ToList(),
-                _modifications.Skip(1)).ChangeCrosslinks(crosslinkStructure);
+            return new ExplicitMods(Peptide,
+                    StaticModifications.Where(mod => mod.LinkedPeptide == null).ToList(),
+                    GetHeavyModifications(), IsVariableStaticMods)
+                .ChangeCrosslinks(crosslinkStructure);
         }
 
         #region Property change methods
