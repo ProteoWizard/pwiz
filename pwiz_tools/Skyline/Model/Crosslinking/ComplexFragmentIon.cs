@@ -13,9 +13,6 @@ namespace pwiz.Skyline.Model.Crosslinking
     public class ComplexFragmentIon : Immutable, IComparable<ComplexFragmentIon>
     {
         public static readonly ComplexFragmentIon EMPTY = new ComplexFragmentIon(ImmutableList.Empty<Part>(), null);
-        private static CustomMolecule EMPTY_MOLECULE = new CustomMolecule(
-            new TypedMass(CustomMolecule.MIN_MASS, MassType.Monoisotopic),
-            new TypedMass(CustomMolecule.MIN_MASS, MassType.Average));
         public ComplexFragmentIon(IEnumerable<Part> parts, TransitionLosses losses)
         {
             Parts = ImmutableList.ValueOf(parts);
@@ -68,11 +65,6 @@ namespace pwiz.Skyline.Model.Crosslinking
             get { return Losses; }
         }
 
-        public bool IsEmptyTransition(int index)
-        {
-            return Parts[index].IsEmpty;
-        }
-
         public static ComplexFragmentIon EmptyComplexFragmentIon(TransitionGroup transitionGroup)
         {
             return new ComplexFragmentIon(ImmutableList.Singleton(EmptyPart(transitionGroup)), null);
@@ -85,7 +77,7 @@ namespace pwiz.Skyline.Model.Crosslinking
                 return null;
             }
 
-            if (IsEmptyTransition(site.PeptideIndex))
+            if (Parts[site.PeptideIndex].IsEmpty)
             {
                 return false;
             }
@@ -115,7 +107,7 @@ namespace pwiz.Skyline.Model.Crosslinking
         {
             get
             {
-                return Transitions.First().IsPrecursor();
+                return Parts.All(part => !part.IsEmpty && part.Transition.IonType == IonType.precursor);
             }
         }
 
@@ -297,14 +289,9 @@ namespace pwiz.Skyline.Model.Crosslinking
 
         public ComplexFragmentIon ChangeAdduct(Adduct adduct)
         {
-            var newCustomIon = PrimaryTransition.CustomIon;
-            if (newCustomIon != null && !Equals(adduct, newCustomIon.Adduct))
-            {
-                newCustomIon = new CustomIon(EMPTY_MOLECULE, adduct);
-            }
             return ChangePrimaryTransition(new Transition(PrimaryTransition.Group, PrimaryTransition.IonType,
                 PrimaryTransition.CleavageOffset,
-                PrimaryTransition.MassIndex, adduct, PrimaryTransition.DecoyMassShift, newCustomIon));
+                PrimaryTransition.MassIndex, adduct, PrimaryTransition.DecoyMassShift));
         }
 
         private ComplexFragmentIon ChangePrimaryTransition(Transition transition)
