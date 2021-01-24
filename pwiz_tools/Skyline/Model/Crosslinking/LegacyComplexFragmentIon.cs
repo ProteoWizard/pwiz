@@ -19,7 +19,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using JetBrains.Annotations;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
@@ -306,94 +305,6 @@ namespace pwiz.Skyline.Model.Crosslinking
             }
 
             return Children.Count.CompareTo(other.Children.Count);
-        }
-
-        /// <summary>
-        /// Returns the text that should be displayed for this in the Targets tree.
-        /// </summary>
-        private string GetLabel(bool includeResidues)
-        {
-            if (IsIonTypePrecursor)
-            {
-                return IonTypeExtension.GetLocalizedString(IonType.precursor) + GetTransitionLossesText();
-            }
-            StringBuilder stringBuilder = new StringBuilder();
-            // Simple case of two peptides linked together
-            if (CrosslinkStructure.Count == 1 && CrosslinkStructure.Values[0].CrosslinkStructure.Count == 0)
-            {
-                var child = Children.Values.FirstOrDefault();
-                if (includeResidues)
-                {
-                    if (!IsOrphan && Transition.IonType != IonType.precursor)
-                    {
-                        stringBuilder.Append(Transition.AA);
-                        stringBuilder.Append(@" ");
-                    }
-                }
-                stringBuilder.Append(@"[");
-                if (!IsOrphan)
-                {
-                    if (Transition.IonType == IonType.precursor)
-                    {
-                        stringBuilder.Append(TransitionFilter.PRECURSOR_ION_CHAR);
-                    }
-                    else
-                    {
-                        stringBuilder.Append(Transition.IonType);
-                        stringBuilder.Append(Transition.Ordinal);
-                    }
-                }
-
-                stringBuilder.Append(@"-");
-                if (child != null)
-                {
-                    if (child.Transition.IonType == IonType.precursor)
-                    {
-                        stringBuilder.Append(TransitionFilter.PRECURSOR_ION_CHAR);
-                    }
-                    else
-                    {
-                        stringBuilder.Append(child.Transition.IonType);
-                        stringBuilder.Append(child.Transition.Ordinal);
-                    }
-                }
-
-                stringBuilder.Append(GetTransitionLossesText());
-
-                stringBuilder.Append(@"]");
-                if (includeResidues)
-                {
-                    if (child != null && child.Transition.IonType != IonType.precursor)
-                    {
-                        stringBuilder.Append(@" ");
-                        stringBuilder.Append(child.Transition.AA);
-                    }
-                }
-                return stringBuilder.ToString();
-            }
-
-            string label = @"[" + GetName() + @"]";
-            return label;
-        }
-
-        public string GetFragmentIonName()
-        {
-            return GetLabel(false);
-        }
-
-        public string GetTargetsTreeLabel()
-        {
-            return GetLabel(true) + Transition.GetMassIndexText(Transition.MassIndex);
-        }
-
-        private string GetTransitionLossesText()
-        {
-            if (TransitionLosses == null)
-            {
-                return string.Empty;
-            }
-
-            return @" -" + Math.Round(TransitionLosses.Mass, 1);
         }
     }
 }

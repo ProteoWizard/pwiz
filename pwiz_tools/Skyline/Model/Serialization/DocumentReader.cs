@@ -22,7 +22,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Xml;
-using EnvDTE;
 using Google.Protobuf;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
@@ -954,7 +953,7 @@ namespace pwiz.Skyline.Model.Serialization
                     annotations = ReadTargetAnnotations(reader, AnnotationDef.AnnotationTarget.peptide);
                 if (!isCustomMolecule)
                 {
-                    mods = ReadExplicitMods(reader, peptide);
+                    mods = ReadExplicitMods(reader, peptide).FlattenCrosslinkStructure();
                     SkipImplicitModsElement(reader);
                     lookupMods = ReadLookupMods(reader, lookupSequence);
                     crosslinkStructure = ReadCrosslinkStructure(reader);

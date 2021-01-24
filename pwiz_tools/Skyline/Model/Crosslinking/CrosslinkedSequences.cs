@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Crosslinking
 {
@@ -33,15 +34,46 @@ namespace pwiz.Skyline.Model.Crosslinking
 
         public override string ToString()
         {
-            return Format(mod => mod.ToString(), ModifiedSequence.FormatFullName);
+            return Format(sequence => sequence.ToString(), ModifiedSequence.FormatFullName);
         }
 
         public string FullNames
         {
             get
             {
-                return Format(mod => mod.FullNames, ModifiedSequence.FormatFullName);
+                return Format(sequence => sequence.FullNames, ModifiedSequence.FormatFullName);
             }
+        }
+
+        public string MonoisotopicMasses
+        {
+            get
+            {
+                return Format(sequence => sequence.MonoisotopicMasses,
+                    FormatMassModificationFunc(MassType.Monoisotopic, true));
+            }
+        }
+        public string AverageMasses
+        {
+            get
+            {
+                return Format(sequence => sequence.MonoisotopicMasses,
+                    FormatMassModificationFunc(MassType.Average, true));
+            }
+        }
+
+        private static Func<ModifiedSequence.Modification, string> FormatMassModificationFunc(MassType massType, bool fullPrecision)
+        {
+            return mod =>
+            {
+                string str = ModifiedSequence.FormatMassModification(new[] {mod}, massType, fullPrecision);
+                if (string.IsNullOrEmpty(str))
+                {
+                    return string.Empty;
+                }
+
+                return str.Substring(1, str.Length - 2);
+            };
         }
 
         private string Format(Func<ModifiedSequence, string> sequenceFormatter,

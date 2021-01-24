@@ -721,36 +721,6 @@ namespace pwiz.Skyline.Model
                 return result;
             }
         }
-
-        public bool HasAnyCrosslinks(ImmutableSortedList<ModificationSite, LinkedPeptide> crosslinks)
-        {
-            return HasAnyCrosslinks(IonType, CleavageOffset, crosslinks);
-        }
-
-        public static bool HasAnyCrosslinks(IonType ionType, int cleavageOffset,
-            ImmutableSortedList<ModificationSite, LinkedPeptide> crosslinks)
-        {
-            if (crosslinks == null || crosslinks.Count == 0)
-            {
-                return false;
-            }
-            switch (ionType)
-            {
-                case IonType.precursor:
-                    return true;
-                case IonType.a:
-                case IonType.b:
-                case IonType.c:
-                    return cleavageOffset >= crosslinks.Keys[0].IndexAa;
-                case IonType.x:
-                case IonType.y:
-                case IonType.z:
-                    return cleavageOffset < crosslinks.Keys[crosslinks.Count - 1].IndexAa;
-                default:
-                    return false;
-            }
-        }
-
         public bool IncludesAaIndex(int aaIndex)
         {
             switch (IonType)
@@ -865,7 +835,7 @@ namespace pwiz.Skyline.Model
             }
             else
             {
-               CustomIonEquivalenceTestValue = null;
+                CustomIonEquivalenceTestValue = null;
             }
         }
 
@@ -877,9 +847,9 @@ namespace pwiz.Skyline.Model
         public bool Equivalent(TransitionLossKey other)
         {
             return Equals(CustomIonEquivalenceTestValue, other.CustomIonEquivalenceTestValue) &&
-                other.Transition.Equivalent(Transition) &&
-                Equals(other.Losses, Losses) &&
-                Equals(other.ComplexFragmentIonName, ComplexFragmentIonName);
+                   other.Transition.Equivalent(Transition) &&
+                   Equals(other.Losses, Losses) &&
+                   Equals(other.ComplexFragmentIonName, ComplexFragmentIonName);
         }
 
         #region object overrides

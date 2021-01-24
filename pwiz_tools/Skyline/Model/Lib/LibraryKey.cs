@@ -25,6 +25,7 @@ using System.Text;
 using Google.Protobuf;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Util;
 
@@ -662,6 +663,15 @@ namespace pwiz.Skyline.Model.Lib
                             yield return i;
                         }
                     }
+                }
+            }
+
+            public IEnumerable<CrosslinkSite> CrosslinkSites
+            {
+                get
+                {
+                    return Enumerable.Range(0, Positions.Count).SelectMany(peptideIndex =>
+                        Positions[peptideIndex].Select(aaPosition => new CrosslinkSite(peptideIndex, aaPosition - 1)));
                 }
             }
         }

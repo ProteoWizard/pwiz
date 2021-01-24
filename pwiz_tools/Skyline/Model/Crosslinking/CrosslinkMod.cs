@@ -66,5 +66,11 @@ namespace pwiz.Skyline.Model.Crosslinking
             result.Append(@"]");
             return result.ToString();
         }
+
+        public static CrosslinkModification Looplink(StaticMod crosslinker, int peptideIndex, int aaIndex1,
+            int aaIndex2)
+        {
+            return new CrosslinkModification(crosslinker, new []{new CrosslinkSite(peptideIndex, aaIndex1), new CrosslinkSite(peptideIndex, aaIndex2)});
+        }
     }
 }

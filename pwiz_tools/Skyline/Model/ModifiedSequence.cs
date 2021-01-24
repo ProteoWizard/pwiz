@@ -193,7 +193,7 @@ namespace pwiz.Skyline.Model
 
         private string Format(Func<IEnumerable<Modification>, string> modFormatter)
         {
-            return FormatSelf(modFormatter) + FormatLinkedPeptides(modFormatter);
+            return FormatSelf(modFormatter);
         }
 
         private string FormatSelf(Func<IEnumerable<Modification>, string> modFormatter)
@@ -211,94 +211,6 @@ namespace pwiz.Skyline.Model
             return result.ToString();
         }
 
-        private string FormatLinkedPeptides(Func<IEnumerable<Modification>, string> modFormatter)
-        {
-            List<Tuple<int, Modification>> linkedModifications = new List<Tuple<int, Modification>>();
-
-            StringBuilder peptideSequences = new StringBuilder();
-            StringBuilder crosslinks = new StringBuilder();
-            int totalPeptides = 1;
-            foreach (var mod in GetModifications().Where(mod => null != mod.ExplicitMod.LinkedPeptide))
-            {
-                totalPeptides += mod.ExplicitMod.LinkedPeptide.CountDescendents();
-                if (mod.LinkedPeptideSequence == null)
-                {
-                    crosslinks.Append(FormatCrosslinkMod(modFormatter, totalPeptides, mod, 0, 0));
-                }
-                else
-                {
-                    linkedModifications.Add(Tuple.Create(0, mod));
-                }
-            }
-
-            int peptideIndex = 0;
-            while (linkedModifications.Any())
-            {
-                peptideIndex++;
-                var linkedModTuple = linkedModifications[0];
-                linkedModifications.RemoveAt(0);
-                var linkedModification = linkedModTuple.Item2;
-                if (linkedModTuple.Item2.LinkedPeptideSequence != null)
-                {
-                    foreach (var mod in linkedModTuple.Item2.LinkedPeptideSequence.GetModifications()
-                        .Where(mod => null != mod.ExplicitMod.LinkedPeptide))
-                    {
-                        if (mod.LinkedPeptideSequence == null)
-                        {
-                            crosslinks.Append(FormatCrosslinkMod(modFormatter, totalPeptides, mod, peptideIndex,
-                                peptideIndex));
-                        }
-                        else
-                        {
-                            linkedModifications.Add(Tuple.Create(peptideIndex, mod));
-                        }
-                    }
-                }
-
-                peptideSequences.Append(@"-");
-                peptideSequences.Append(linkedModification.LinkedPeptideSequence.FormatSelf(modFormatter));
-                crosslinks.Append(FormatCrosslinkMod(modFormatter, totalPeptides, linkedModification,
-                    linkedModTuple.Item1, peptideIndex));
-            }
-            if (crosslinks.Length == 0)
-            {
-                Assume.AreEqual(0, peptideSequences.Length);
-                return string.Empty;
-            }
-
-            return peptideSequences + @"-" + crosslinks;
-        }
-
-        private string FormatCrosslinkMod(Func<IEnumerable<Modification>, string> modFormatter, 
-            int totalPeptideCount,
-            Modification linkedModification,
-            int peptideIndex1, int peptideIndex2)
-        {
-            Assume.IsTrue(peptideIndex1 <= peptideIndex2);
-            var strMod = modFormatter(new[] { linkedModification });
-            if (strMod.Length == 0)
-            {
-                strMod = @"[]";
-            }
-
-
-            var indexes = new List<string>(totalPeptideCount);
-            indexes.AddRange(Enumerable.Repeat(@"*", peptideIndex1));
-            if (peptideIndex1 == peptideIndex2)
-            {
-                indexes.Add((linkedModification.IndexAA + 1) + @"-" + (linkedModification.ExplicitMod.LinkedPeptide.IndexAa + 1));
-            }
-            else
-            {
-                indexes.Add((linkedModification.IndexAA + 1).ToString());
-                indexes.AddRange(Enumerable.Repeat(@"*", peptideIndex2 - peptideIndex1 - 1));
-                indexes.Add((linkedModification.ExplicitMod.LinkedPeptide.IndexAa + 1).ToString());
-            }
-            indexes.AddRange(Enumerable.Repeat(@"*", totalPeptideCount - peptideIndex2 - 1));
-            return strMod.Substring(0, strMod.Length - 1) + @"@" + string.Join(@",", indexes) +
-                   strMod.Substring(strMod.Length - 1);
-        }
-
         public IEnumerable<Modification> GetModifications()
         {
             return _explicitMods;
@@ -307,34 +219,6 @@ namespace pwiz.Skyline.Model
         public string GetUnmodifiedSequence()
         {
             return _unmodifiedSequence;
-        }
-
-        /// <summary>
-        /// Replace all of the crosslinked peptide with the mass of the crosslinker plus the mass of the linked peptide.
-        /// </summary>
-        public ModifiedSequence ReplaceCrosslinksWithMasses(SrmSettings settings, IsotopeLabelType labelType)
-        {
-            if (ExplicitMods.All(mod => null == mod.LinkedPeptideSequence))
-            {
-                return this;
-            }
-
-            var newModifications = new List<Modification>(ExplicitMods.Count);
-            foreach (var modification in ExplicitMods)
-            {
-                if (null == modification.LinkedPeptideSequence)
-                {
-                    newModifications.Add(modification);
-                    continue;
-                }
-                MoleculeMassOffset moleculeMassOffset = modification.StaticMod.GetMoleculeMassOffset();
-                moleculeMassOffset = moleculeMassOffset.Plus(modification.ExplicitMod.LinkedPeptide.GetNeutralFormula(settings, labelType));
-                var fragmentedMoleculeSettings = FragmentedMolecule.Settings.FromSrmSettings(settings);
-                moleculeMassOffset = fragmentedMoleculeSettings.ReplaceMoleculeWithMassOffset(moleculeMassOffset);
-                Assume.IsTrue(0 == moleculeMassOffset.Molecule.Count);
-                newModifications.Add(new Modification(modification.ExplicitMod, moleculeMassOffset.MonoMassOffset, moleculeMassOffset.AverageMassOffset));
-            }
-            return new ModifiedSequence(_unmodifiedSequence, newModifications, _defaultMassType);
         }
 
         public static string FormatThreeLetterCode(Modification modification)

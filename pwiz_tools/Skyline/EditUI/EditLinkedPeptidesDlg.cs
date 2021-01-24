@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using System.Web.UI.WebControls;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
@@ -356,33 +355,7 @@ namespace pwiz.Skyline.EditUI
 
         private void dataGridViewLinkedPeptides_CellContentClick(object sender, DataGridViewCellEventArgs e)
         {
-            var rowIndex = e.RowIndex;
-            if (rowIndex < 0 || rowIndex >= _peptideRows.Count)
-            {
-                return;
-            }
-
-            var peptideRow = _peptideRows[rowIndex];
-            Peptide peptide;
-            try
-            {
-                peptide = new Peptide(peptideRow.Sequence);
-            }
-            catch (Exception ex)
-            {
-                MessageDlg.ShowWithException(this, ex.Message, ex);
-                dataGridViewLinkedPeptides.CurrentCell =
-                    dataGridViewLinkedPeptides.Rows[e.RowIndex].Cells[colPeptideSequence.Index];
-                return;
-            }
-            var peptideDocNode = new PeptideDocNode(peptide, peptideRow.ExplicitMods);
-            using (var editPepModsDlg = new EditPepModsDlg(SrmSettings, peptideDocNode, false))
-            {
-                if (editPepModsDlg.ShowDialog(this) == DialogResult.OK)
-                {
-                    peptideRow.ExplicitMods = editPepModsDlg.ExplicitMods;
-                }
-            }
+            EditLinkedModifications(e.RowIndex);
         }
 
         public ExplicitMods ExplicitMods { get; private set; }
@@ -510,6 +483,89 @@ namespace pwiz.Skyline.EditUI
         private void btnOk_Click(object sender, EventArgs e)
         {
             OkDialog();
+        }
+
+        public void EditLinkedModifications(int rowIndex)
+        {
+            if (rowIndex < 0 || rowIndex >= _peptideRows.Count)
+            {
+                return;
+            }
+
+            var peptideRow = _peptideRows[rowIndex];
+            Peptide peptide;
+            try
+            {
+                peptide = new Peptide(peptideRow.Sequence);
+            }
+            catch (Exception ex)
+            {
+                MessageDlg.ShowWithException(this, ex.Message, ex);
+                dataGridViewLinkedPeptides.CurrentCell =
+                    dataGridViewLinkedPeptides.Rows[rowIndex].Cells[colPeptideSequence.Index];
+                return;
+            }
+            var peptideDocNode = new PeptideDocNode(peptide, peptideRow.ExplicitMods);
+            using (var editPepModsDlg = new EditPepModsDlg(SrmSettings, peptideDocNode, false))
+            {
+                if (editPepModsDlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    peptideRow.ExplicitMods = editPepModsDlg.ExplicitMods;
+                }
+            }
+        }
+
+        public DataGridView LinkedPeptidesGrid
+        {
+            get
+            {
+                return dataGridViewLinkedPeptides;
+            }
+        }
+
+        public DataGridViewTextBoxColumn PeptideSequenceColumn
+        {
+            get { return colPeptideSequence; }
+        }
+
+        public DataGridView CrosslinksGrid
+        {
+            get
+            {
+                return dataGridViewCrosslinks;
+            }
+        }
+
+        public DataGridViewComboBoxColumn CrosslinkerColumn
+        {
+            get
+            {
+                return colCrosslinker;
+            }
+        }
+
+        public DataGridViewComboBoxColumn GetPeptideIndexColumn(int siteIndex)
+        {
+            switch (siteIndex)
+            {
+                case 0:
+                    return colPeptide1;
+                case 1:
+                    return colPeptide2;
+            }
+            throw new ArgumentOutOfRangeException(nameof(siteIndex));
+        }
+
+        public DataGridViewComboBoxColumn GetAaIndexColumn(int siteIndex)
+        {
+            switch (siteIndex)
+            {
+                case 0:
+                    return colAminoAcid1;
+                case 1:
+                    return colAminoAcid2;
+            }
+            throw new ArgumentOutOfRangeException(nameof(siteIndex));
         }
     }
 }

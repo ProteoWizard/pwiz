@@ -197,7 +197,7 @@ namespace pwiz.SkylineTestUtil
             return dlg;
         }
 
-        protected static void RunUI([InstantHandle] Action act)
+        public static void RunUI([InstantHandle] Action act)
         {
             SkylineInvoke(() =>
             {

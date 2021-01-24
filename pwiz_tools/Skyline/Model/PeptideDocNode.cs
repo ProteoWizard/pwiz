@@ -589,7 +589,7 @@ namespace pwiz.Skyline.Model
             }
             else
             {
-                modifiedTarget = srmSettings.GetCrosslinkModifiedSequence(Peptide.Target, IsotopeLabelType.light, ExplicitMods, false);
+                modifiedTarget = srmSettings.GetCrosslinkModifiedSequence(Peptide.Target, IsotopeLabelType.light, ExplicitMods);
                 modifiedSequenceDisplay = modifiedTarget.ToString();
             }
         }

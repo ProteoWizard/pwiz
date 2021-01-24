@@ -20,7 +20,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.Chemistry;
@@ -1207,6 +1206,42 @@ namespace pwiz.Skyline.Model.DocSettings
             return modsNew;
         }
 
+        public ExplicitMods FlattenCrosslinkStructure()
+        {
+            var linkedPeptides = new List<Peptide>();
+            var linkedExplicitMods = new List<ExplicitMods>();
+            var crosslinks = new List<CrosslinkModification>();
+            var queue = new List<Tuple<int, ExplicitMod>>();
+            queue.AddRange(StaticModifications.Where(mod=>mod.LinkedPeptide != null).Select(mod=>Tuple.Create(0, mod)));
+            while (queue.Any())
+            {
+                var tuple = queue[0];
+                queue.RemoveAt(0);
+                var explicitMod = tuple.Item2;
+                var linkedPeptide = explicitMod.LinkedPeptide;
+                if (linkedPeptide.Peptide == null)
+                {
+                    crosslinks.Add(CrosslinkModification.Looplink(explicitMod.Modification, tuple.Item1, explicitMod.IndexAA, linkedPeptide.IndexAa));
+                    continue;
+                }
+
+                int peptideIndex = linkedPeptides.Count;
+                linkedPeptides.Add(linkedPeptide.Peptide);
+                var explicitMods = linkedPeptide.ExplicitMods;
+                if (explicitMods != null)
+                {
+                    queue.AddRange(linkedPeptide.ExplicitMods.StaticModifications.Where(mod=>mod.LinkedPeptide != null).Select(mod=>Tuple.Create(peptideIndex, mod)));
+                    explicitMods =
+                        explicitMods.ChangeStaticModifications(
+                            explicitMods.StaticModifications.Where(mod => mod.LinkedPeptide == null).ToList());
+                }
+                linkedExplicitMods.Add(explicitMods);
+            }
+            var crosslinkStructure = new CrosslinkStructure(linkedPeptides, linkedExplicitMods, crosslinks);
+            return new ExplicitMods(Peptide, StaticModifications.Where(mod => mod.LinkedPeptide == null).ToList(),
+                _modifications.Skip(1)).ChangeCrosslinks(crosslinkStructure);
+        }
+
         #region Property change methods
 
         public ExplicitMods ChangePeptide(Peptide prop)
@@ -1280,17 +1315,6 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         #endregion
-
-        private static ImmutableSortedList<ModificationSite, LinkedPeptide> GetLinkedPeptides(
-            IEnumerable<ExplicitMod> explicitMods)
-        {
-            if (explicitMods == null)
-            {
-                return ImmutableSortedList<ModificationSite, LinkedPeptide>.EMPTY;
-            }
-            return ImmutableSortedList.FromValues(explicitMods.Where(mod => null != mod.LinkedPeptide)
-                .Select(mod => new KeyValuePair<ModificationSite, LinkedPeptide>(mod.ModificationSite, mod.LinkedPeptide)));
-        }
     }
 
     public sealed class ExplicitMod : Immutable
@@ -1311,11 +1335,16 @@ namespace pwiz.Skyline.Model.DocSettings
         public int IndexAA { get; private set; }
         public StaticMod Modification { get; private set; }
 
-        public LinkedPeptide LinkedPeptide { get; private set; }
-
         public ModificationSite ModificationSite
         {
             get { return new ModificationSite(IndexAA, Modification.Name); }
+        }
+
+        public LinkedPeptide LinkedPeptide { get; private set; }
+
+        public ExplicitMod ChangeLinkedPeptide(LinkedPeptide linkedPeptide)
+        {
+            return ChangeProp(ImClone(this), im => im.LinkedPeptide = linkedPeptide);
         }
 
         #region Property change methods
@@ -1325,11 +1354,6 @@ namespace pwiz.Skyline.Model.DocSettings
             if (prop.IsExplicit)
                 prop = prop.ChangeExplicit(false);
             return ChangeProp(ImClone(this), (im, v) => im.Modification = v, prop);
-        }
-
-        public ExplicitMod ChangeLinkedPeptide(LinkedPeptide linkedPeptide)
-        {
-            return ChangeProp(ImClone(this), im => im.LinkedPeptide = linkedPeptide);
         }
 
         #endregion

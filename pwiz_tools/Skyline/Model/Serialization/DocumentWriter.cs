@@ -538,7 +538,7 @@ namespace pwiz.Skyline.Model.Serialization
                 if (nodePep.ExplicitMods != null && nodePep.ExplicitMods.HasCrosslinks)
                 {
                     writer.WriteAttribute(ATTR.modified_sequence, 
-                        Settings.GetCrosslinkModifiedSequence(nodePep.Target, node.TransitionGroup.LabelType, nodePep.ExplicitMods, false));
+                        Settings.GetCrosslinkModifiedSequence(nodePep.Target, node.TransitionGroup.LabelType, nodePep.ExplicitMods));
                 }
                 else
                 {
