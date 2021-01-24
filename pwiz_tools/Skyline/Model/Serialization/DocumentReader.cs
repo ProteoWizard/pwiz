@@ -953,7 +953,7 @@ namespace pwiz.Skyline.Model.Serialization
                     annotations = ReadTargetAnnotations(reader, AnnotationDef.AnnotationTarget.peptide);
                 if (!isCustomMolecule)
                 {
-                    mods = ReadExplicitMods(reader, peptide).FlattenCrosslinkStructure();
+                    mods = ReadExplicitMods(reader, peptide)?.FlattenCrosslinkStructure();
                     SkipImplicitModsElement(reader);
                     lookupMods = ReadLookupMods(reader, lookupSequence);
                     crosslinkStructure = ReadCrosslinkStructure(reader);

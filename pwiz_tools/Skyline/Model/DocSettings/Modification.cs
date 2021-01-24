@@ -1208,6 +1208,10 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public ExplicitMods FlattenCrosslinkStructure()
         {
+            if (null == StaticModifications)
+            {
+                return this;
+            }
             var linkedPeptides = new List<Peptide>();
             var linkedExplicitMods = new List<ExplicitMods>();
             var crosslinks = new List<CrosslinkModification>();

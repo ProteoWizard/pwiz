@@ -671,19 +671,32 @@ namespace pwiz.Skyline.Model
                 new TransitionQuantInfo(isotopeDistInfo, libInfo, !transitionProto.NotQuantitative);
             if (mods != null && mods.HasCrosslinks)
             {
-                throw new NotImplementedException();
-                // DONTCHECKIN
-                // LegacyComplexFragmentIon complexFragmentIon = new LegacyComplexFragmentIon(transition, losses, mods.Crosslinks, transitionProto.OrphanedCrosslinkIon);
-                // crosslinkBuilder = crosslinkBuilder ?? complexFragmentIon.GetCrosslinkBuilder(settings, mods);
-                // foreach (var linkedIon in transitionProto.LinkedIons)
-                // {
-                //     var modificationSite = new ModificationSite(linkedIon.ModificationIndex, linkedIon.ModificationName);
-                //     var linkedPeptide = mods.GetLinkedPeptide(modificationSite);
-                //     var childName = ComplexFragmentIonName.FromLinkedIonProto(linkedIon);
-                //     complexFragmentIon = complexFragmentIon.AddChild(modificationSite,
-                //         linkedPeptide.MakeComplexFragmentIon(settings, group.LabelType, childName));
-                // }
-                // transitionDocNode = crosslinkBuilder.MakeTransitionDocNode(complexFragmentIon, isotopeDist, annotations, transitionQuantInfo, explicitTransitionValues, results);
+                var parts = new List<ComplexFragmentIon.Part>();
+                if (transitionProto.OrphanedCrosslinkIon)
+                {
+                    parts.Add(ComplexFragmentIon.EmptyPart(group));
+                }
+                else
+                {
+                    parts.Add(ComplexFragmentIon.TransitionPart(transition));
+                }
+
+                foreach (var linkedIon in transitionProto.LinkedIons)
+                {
+                    var linkedPeptide = crosslinkBuilder.PeptideStructure.Peptides[parts.Count];
+                    var linkedTransitionGroup = new TransitionGroup(linkedPeptide, Adduct.SINGLY_PROTONATED, group.LabelType);
+                    if (linkedIon.Orphan)
+                    {
+                        parts.Add(ComplexFragmentIon.EmptyPart(linkedTransitionGroup));
+                    }
+                    else
+                    {
+                        var linkedIonType = DataValues.FromIonType(linkedIon.IonType);
+                        parts.Add(ComplexFragmentIon.TransitionPart(new Transition(linkedTransitionGroup, linkedIonType, Transition.OrdinalToOffset(linkedIonType, linkedIon.Ordinal, linkedPeptide.Length), 0, Adduct.SINGLY_PROTONATED)));
+                    }
+                }
+                var complexFragmentIon = new ComplexFragmentIon(parts, losses);
+                transitionDocNode = crosslinkBuilder.MakeTransitionDocNode(complexFragmentIon, isotopeDist, annotations, transitionQuantInfo, explicitTransitionValues, results);
             }
             else
             {
