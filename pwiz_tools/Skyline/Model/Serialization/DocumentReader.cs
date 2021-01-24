@@ -1051,6 +1051,10 @@ namespace pwiz.Skyline.Model.Serialization
                 StaticMod crosslinker =
                     Settings.PeptideSettings.Modifications.StaticModifications.FirstOrDefault(mod =>
                         mod.Name == crosslinkName);
+                if (crosslinker == null)
+                {
+                    throw new InvalidDataException(string.Format(@"Crosslinker {0} not found.", crosslinkName));
+                }
                 List<CrosslinkSite> sites = new List<CrosslinkSite>();
                 if (reader.IsEmptyElement)
                 {

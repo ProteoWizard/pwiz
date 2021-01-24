@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using pwiz.Common.Collections;
 
@@ -15,6 +16,9 @@ namespace pwiz.Skyline.Model.Crosslinking
             {
                 throw new ArgumentException();
             }
+
+            IonOrdinals = ImmutableList.ValueOf(Enumerable.Range(0, IonOrdinals.Count).Select(i =>
+                IonTypes[i] == IonType.custom || IonTypes[i] == IonType.precursor ? 0 : IonOrdinals[i]));
         }
 
         public ImmutableList<IonType> IonTypes { get; private set; }

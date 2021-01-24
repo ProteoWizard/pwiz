@@ -672,15 +672,8 @@ namespace pwiz.Skyline.Model
             if (mods != null && mods.HasCrosslinks)
             {
                 var parts = new List<ComplexFragmentIon.Part>();
-                if (transitionProto.OrphanedCrosslinkIon)
-                {
-                    parts.Add(ComplexFragmentIon.EmptyPart(group));
-                }
-                else
-                {
-                    parts.Add(ComplexFragmentIon.TransitionPart(transition));
-                }
 
+                parts.Add(new ComplexFragmentIon.Part(transition, transitionProto.OrphanedCrosslinkIon));
                 foreach (var linkedIon in transitionProto.LinkedIons)
                 {
                     var linkedPeptide = crosslinkBuilder.PeptideStructure.Peptides[parts.Count];

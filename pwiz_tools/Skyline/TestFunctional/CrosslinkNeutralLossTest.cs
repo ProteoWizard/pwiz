@@ -16,6 +16,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.EditUI;
@@ -108,11 +111,11 @@ AMNFS[Phospho (ST)]GSPGAVSTSPT[Phospho (ST)]QSFM[Oxidation (M)]NTLPR");
             foreach (var transitionDocNode in flatPrecursor.Transitions)
             {
                 // AMNFSGSPGAV(11)-STSPTQSFMNTLPR(14)
-                ComplexFragmentIonName complexFragmentIonName = null;
+                var parts = new List<Tuple<IonType, int>>();
                 switch (transitionDocNode.Transition.IonType)
                 {
                     case IonType.precursor:
-                        complexFragmentIonName = ComplexFragmentIonName.PRECURSOR.AddChild(crosslinkSite, ComplexFragmentIonName.PRECURSOR);
+                        parts.Add(Tuple.Create(IonType.custom, 0));
                         break;
                     case IonType.b:
                         if (transitionDocNode.Transition.Ordinal == 11)
@@ -121,12 +124,11 @@ AMNFS[Phospho (ST)]GSPGAVSTSPT[Phospho (ST)]QSFM[Oxidation (M)]NTLPR");
                         }
                         if (transitionDocNode.Transition.Ordinal <= 11)
                         {
-                            complexFragmentIonName = new ComplexFragmentIonName(IonType.b, transitionDocNode.Transition.Ordinal);
+                            parts.Add(Tuple.Create(IonType.b, transitionDocNode.Transition.Ordinal));
                         }
                         else
                         {
-                            complexFragmentIonName = ComplexFragmentIonName.PRECURSOR.AddChild(crosslinkSite,
-                                new ComplexFragmentIonName(IonType.b, transitionDocNode.Transition.Ordinal - 11));
+                            parts.Add(Tuple.Create(IonType.b, transitionDocNode.Transition.Ordinal - 11));
                         }
 
                         break;
@@ -138,17 +140,17 @@ AMNFS[Phospho (ST)]GSPGAVSTSPT[Phospho (ST)]QSFM[Oxidation (M)]NTLPR");
 
                         if (transitionDocNode.Transition.Ordinal < 14)
                         {
-                            complexFragmentIonName = ComplexFragmentIonName.ORPHAN.AddChild(crosslinkSite,
-                                new ComplexFragmentIonName(IonType.y, transitionDocNode.Transition.Ordinal));
+                            parts.Add(Tuple.Create(IonType.custom, 0));
+                            parts.Add(Tuple.Create(IonType.y, transitionDocNode.Transition.Ordinal));
                         }
                         else
                         {
-                            complexFragmentIonName = new ComplexFragmentIonName(IonType.y, transitionDocNode.Transition.Ordinal - 14)
-                                .AddChild(crosslinkSite, ComplexFragmentIonName.PRECURSOR);
+                            parts.Add(Tuple.Create(IonType.y, transitionDocNode.Transition.Ordinal - 14));
+                            parts.Add(Tuple.Create(IonType.precursor, 0));
                         }
                         break;
                 }
-                Assert.IsNotNull(complexFragmentIonName);
+                var complexFragmentIonName = new ComplexFragmentIonKey(parts.Select(p=>p.Item1), parts.Select(p=>p.Item2));
 
                 if (transitionDocNode.Transition.IonType != IonType.precursor && transitionDocNode.Losses != null &&
                     transitionDocNode.Losses.Losses.Count > 1)
