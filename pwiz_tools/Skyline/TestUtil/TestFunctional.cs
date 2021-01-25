@@ -173,7 +173,7 @@ namespace pwiz.SkylineTestUtil
             var existingDialog = FindOpenForm<TDlg>();
             if (existingDialog != null)
             {
-                var messageDlg = existingDialog as MessageDlg;
+                var messageDlg = existingDialog as AlertDlg;
                 if (messageDlg == null)
                     AssertEx.IsNull(existingDialog, typeof(TDlg) + " is already open");
                 else
@@ -492,6 +492,17 @@ namespace pwiz.SkylineTestUtil
                 }
             }
             return null;
+        }
+
+        public static IEnumerable<TDlg> FindOpenForms<TDlg>() where TDlg : Form
+        {
+            foreach (var form in OpenForms)
+            {
+                if (form is TDlg tForm && tForm.Created)
+                {
+                    yield return tForm;
+                }
+            }
         }
 
         public static Form FindOpenForm(Type formType) 
@@ -1065,7 +1076,7 @@ namespace pwiz.SkylineTestUtil
             return Path.Combine(folderPath, CoverShotName + suffix + cultureSuffix + ".png");
         }
 
-        public int PauseStartPage { get; set; }
+        public int PauseStartingPage { get; set; }
 
         public static bool IsPauseForAuditLog { get; set; }
 
@@ -1139,7 +1150,7 @@ namespace pwiz.SkylineTestUtil
                 Thread.Sleep(3 * 1000);
             else if (Program.PauseSeconds > 0)
                 Thread.Sleep(Program.PauseSeconds * 1000);
-            else if (IsPauseForScreenShots && PauseStartPage <= (pageNum ?? int.MaxValue))
+            else if (IsPauseForScreenShots && Math.Max(PauseStartingPage, Program.PauseStartingPage) <= (pageNum ?? int.MaxValue))
             {
                 if (screenshotForm == null)
                 {

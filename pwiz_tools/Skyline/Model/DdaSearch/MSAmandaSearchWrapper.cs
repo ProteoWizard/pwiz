@@ -33,6 +33,7 @@ using MSAmandaSettings = MSAmanda.InOutput.Settings;
 using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Results;
 using MSAmandaEnzyme = MSAmanda.Utils.Enzyme;
 using OperationCanceledException = System.OperationCanceledException;
 using pwiz.Skyline.Properties;
@@ -312,6 +313,12 @@ namespace pwiz.Skyline.Model.DdaSearch
                     Settings.SelectedModifications.AddRange(GenerateNewModificationsForEveryAA(item));
                 }
             }
+
+        }
+
+        public override string GetSearchResultFilepath(MsDataFileUri searchFilepath)
+        {
+            return Path.ChangeExtension(searchFilepath.GetFilePath(), @".mzid.gz");
         }
 
         private List<Modification> GenerateNewModificationsForEveryAA(StaticMod mod)
