@@ -135,13 +135,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             };
             transitionSettingsUiPage.Controls.Add(TransitionSettingsControl);
 
-            FullScanSettingsControl = new FullScanSettingsControl(this)
-            {
-                Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
-                Location = new Point(18, 50)
-            };
-            ms1FullScanSettingsPage.Controls.Add(FullScanSettingsControl);
-            FullScanSettingsControl.FullScanEnabledChanged += OnFullScanEnabledChanged; // Adjusts ion settings when full scan settings change
+            MakeFullScanSettingsControl();
 
             ImportResultsControl = new ImportResultsControl(ImportPeptideSearch, DocumentFilePath)
             {
@@ -165,6 +159,21 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             ddaSearch.Controls.Add(SearchControl);
 
             _pagesToSkip = new HashSet<Pages>();
+        }
+
+        private void MakeFullScanSettingsControl()
+        {
+            if (FullScanSettingsControl != null)
+            {
+                ms1FullScanSettingsPage.Controls.Remove(FullScanSettingsControl);
+            }
+            FullScanSettingsControl = new FullScanSettingsControl(this)
+            {
+                Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
+                Location = new Point(18, 50)
+            };
+            ms1FullScanSettingsPage.Controls.Add(FullScanSettingsControl);
+            FullScanSettingsControl.FullScanEnabledChanged += OnFullScanEnabledChanged; // Adjusts ion settings when full scan settings change
         }
 
         public SrmDocument Document
@@ -719,7 +728,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 default:
                     return;
                 case Pages.spectra_page:
-                    FullScanSettingsControl.Initialize(); // reset UI to default
+                    MakeFullScanSettingsControl(); // reset UI to default
                     break;
                 case Pages.chromatograms_page:
                     // This page doesn't modify the document, no undo needed
