@@ -167,6 +167,14 @@ namespace pwiz.Skyline.Model.Crosslinking
             return result;
         }
 
+        /// <summary>
+        /// Returns true if this ion is compatible with the set of crosslinks in the PeptideStructure.
+        /// In order to be compatible, all crosslinks must either be completely contained within this ion, or
+        /// completely excluded.
+        /// This method only considers CrosslinkSites whose PeptideIndex is less than IonType.Count.
+        /// This is to enable filtering out impossible partial ions while constructing larger ions using
+        /// <see cref="SingleFragmentIon.Prepend"/>.
+        /// </summary>
         public bool IsAllowed(PeptideStructure peptideStructure)
         {
             foreach (var crosslink in peptideStructure.Crosslinks)
@@ -179,6 +187,16 @@ namespace pwiz.Skyline.Model.Crosslinking
             return true;
         }
 
+        /// <summary>
+        /// Checks how many of the sites are attached to this fragment ion.
+        /// Possible return values:
+        /// False: None of the sites are contained in this ion
+        /// True: All of the sites are contained in this ion
+        /// Null: Some of the sites are contained in this ion, and some are not.
+        /// 
+        /// This method only considers sites whose <see cref="CrosslinkSite.PeptideIndex"/> is less than
+        /// the length of this <see cref="IonChain"/>.
+        /// </summary>
         public bool? ContainsCrosslink(PeptideStructure peptideStructure, IEnumerable<CrosslinkSite> crosslinkSites)
         {
             int countIncluded = 0;

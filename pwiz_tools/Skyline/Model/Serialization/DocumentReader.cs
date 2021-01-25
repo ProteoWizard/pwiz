@@ -1001,7 +1001,7 @@ namespace pwiz.Skyline.Model.Serialization
                 pushReader.ReadEndElement();
             }
 
-            mods = mods.RemoveOldCrosslinkMap();
+            mods = mods?.RemoveOldCrosslinkMap();
             ModifiedSequenceMods sourceKey = null;
             if (lookupSequence != null)
                 sourceKey = new ModifiedSequenceMods(lookupSequence, lookupMods);
