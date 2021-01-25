@@ -21,6 +21,7 @@ using System;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
@@ -64,6 +65,7 @@ namespace TestPerf // Tests in this namespace are skipped unless the RunPerfTest
         {
             // This data set uses negative CoV values, and also has precursors that are defined mass-only - two things we had trouble with
             const string skyFile = "ThermoNegativeFAIMSTest.sky";
+            Program.ExtraRawFileSearchFolder = TestFilesDir.PersistentFilesDir; // So we don't have to reload the raw files, which have probably moved relative to skyd file 
             RunUI(() => SkylineWindow.OpenFile(GetTestPath(skyFile)));
             var document = WaitForDocumentLoaded();
 
