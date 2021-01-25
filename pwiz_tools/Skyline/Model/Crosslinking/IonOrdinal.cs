@@ -1,7 +1,33 @@
-﻿using System;
+﻿/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2021 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
 
 namespace pwiz.Skyline.Model.Crosslinking
 {
+    /// <summary>
+    /// A <see cref="IonType"/> and an integer ordinal.
+    /// If the <see cref="Type"/> is <see cref="IonType.precursor"/>, or <see cref="IonType.custom"/>,
+    /// then <see cref="Ordinal"/> must be zero.
+    ///
+    /// This object can also represent an empty ion, which the transition fragment includes zero atoms from one
+    /// of the crosslinked peptides.
+    /// </summary>
     public struct IonOrdinal : IComparable<IonOrdinal>
     {
         private IonType _ionType;

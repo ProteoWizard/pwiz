@@ -16,17 +16,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 
 namespace pwiz.Skyline.Model.Crosslinking
 {
+    /// <summary>
+    /// Represents the way that crosslinked peptides were represented in Skyline 20.1.
+    /// Only used when reading or writing Skyline documents in the old format.
+    /// </summary>
     public class LegacyLinkedPeptide : Immutable
     {
-        public static readonly ImmutableSortedList<ModificationSite, LegacyLinkedPeptide> EMPTY_CROSSLINK_STRUCTURE 
-            = ImmutableSortedList<ModificationSite, LegacyLinkedPeptide>.EMPTY;
-
         public LegacyLinkedPeptide(Peptide peptide, int indexAa, ExplicitMods explicitMods)
         {
             Peptide = peptide;

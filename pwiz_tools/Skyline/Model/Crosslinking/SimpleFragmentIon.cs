@@ -1,33 +1,55 @@
-﻿using System.Linq;
+﻿/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2021 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 
 namespace pwiz.Skyline.Model.Crosslinking
 {
-    public class SimpleFragmentIon : Immutable
+    /// <summary>
+    /// A fragment from a single peptide in a crosslinked peptide.
+    /// The SimpleFragmentIon's from all of the single peptides in a crosslinked peptide are permuted together to
+    /// create <see cref="NeutralFragmentIon"/> objects.
+    /// </summary>
+    public class SingleFragmentIon : Immutable
     {
-        public static readonly SimpleFragmentIon EMPTY = new SimpleFragmentIon(IonOrdinal.Empty, null);
-        public static readonly SimpleFragmentIon PRECURSOR = new SimpleFragmentIon(IonOrdinal.Precursor, null);
+        public static readonly SingleFragmentIon EMPTY = new SingleFragmentIon(IonOrdinal.Empty, null);
 
-        public SimpleFragmentIon(IonOrdinal ion, TransitionLosses losses)
+        public SingleFragmentIon(IonOrdinal ion, TransitionLosses losses)
         {
             Id = ion;
             Losses = losses;
         }
 
-        public static SimpleFragmentIon FromDocNode(TransitionDocNode docNode)
+        public static SingleFragmentIon FromDocNode(TransitionDocNode docNode)
         {
             if (docNode == null)
             {
                 return null;
             }
-            return new SimpleFragmentIon(IonOrdinal.FromTransition(docNode.Transition), docNode.Losses);
+            return new SingleFragmentIon(IonOrdinal.FromTransition(docNode.Transition), docNode.Losses);
         }
 
-        public static SimpleFragmentIon FromTransition(Transition transition)
+        public static SingleFragmentIon FromTransition(Transition transition)
         {
-            return new SimpleFragmentIon(IonOrdinal.FromTransition(transition), null);
+            return new SingleFragmentIon(IonOrdinal.FromTransition(transition), null);
         }
 
         public NeutralFragmentIon Prepend(NeutralFragmentIon left)
@@ -67,16 +89,7 @@ namespace pwiz.Skyline.Model.Crosslinking
 
         public TransitionLosses Losses { get; private set; }
 
-        public SimpleFragmentIon ChangeLosses(TransitionLosses losses)
-        {
-            if (ReferenceEquals(Losses, losses))
-            {
-                return this;
-            }
-            return ChangeProp(ImClone(this), im => im.Losses = losses);
-        }
-
-        protected bool Equals(SimpleFragmentIon other)
+        protected bool Equals(SingleFragmentIon other)
         {
             return Equals(Id, other.Id);
         }
@@ -86,7 +99,7 @@ namespace pwiz.Skyline.Model.Crosslinking
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != this.GetType()) return false;
-            return Equals((SimpleFragmentIon) obj);
+            return Equals((SingleFragmentIon) obj);
         }
 
         public override int GetHashCode()

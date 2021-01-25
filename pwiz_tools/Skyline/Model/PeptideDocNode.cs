@@ -92,6 +92,8 @@ namespace pwiz.Skyline.Model
                 ModifiedTarget = Peptide.Target;
                 ModifiedSequenceDisplay = Peptide.Target.DisplayName;
             }
+
+            ExplicitMods?.VerifyNoLegacyData();
         }
 
         public override string AuditLogText
@@ -186,11 +188,6 @@ namespace pwiz.Skyline.Model
         public CrosslinkStructure CrosslinkStructure
         {
             get { return ExplicitMods?.Crosslinks ?? CrosslinkStructure.EMPTY; }
-        }
-
-        public PeptideStructure GetPeptideStructure()
-        {
-            return new PeptideStructure(Peptide, ExplicitMods);
         }
 
         public string GetCrosslinkedSequence()

@@ -1359,6 +1359,20 @@ namespace pwiz.Skyline.Model.DocSettings
 
             return ChangeProp(ImClone(this), im => im.OldCrosslinkMap = null);
         }
+
+        /// <summary>
+        /// Throws an exception if this object has any old-format crosslinks that should have been converted to the new format.
+        /// </summary>
+        public bool VerifyNoLegacyData()
+        {
+            Assume.IsNull(OldCrosslinkMap);
+            if (StaticModifications != null)
+            {
+                Assume.IsFalse(StaticModifications.Any(mod=>null != mod.LinkedPeptide));
+            }
+
+            return true;
+        }
         #endregion
     }
 

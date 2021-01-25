@@ -98,7 +98,7 @@ namespace pwiz.SkylineTest
             var mainComplexFragmentIon = NeutralFragmentIon.Simple(
                 new Transition(mainTransitionGroup, IonType.precursor, mainPeptide.Length - 1, 0,
                     Adduct.SINGLY_PROTONATED), null);
-            var linkedComplexFragmentIon = new SimpleFragmentIon(new IonOrdinal(IonType.precursor, 0), null);
+            var linkedComplexFragmentIon = new SingleFragmentIon(new IonOrdinal(IonType.precursor, 0), null);
             var complexFragmentIon = linkedComplexFragmentIon.Prepend(mainComplexFragmentIon);
             var chargedIon =
                 complexFragmentIon.MakeChargedIon(mainTransitionGroup, Adduct.SINGLY_PROTONATED, modsWithLinkedPeptide);
@@ -275,11 +275,11 @@ namespace pwiz.SkylineTest
                 var complexFragmentIon = NeutralFragmentIon.Simple(transition, null);
                 if (transition.IncludesAaIndex(7))
                 {
-                    complexFragmentIon = SimpleFragmentIon.FromTransition(linkedTransition).Prepend(complexFragmentIon);
+                    complexFragmentIon = SingleFragmentIon.FromTransition(linkedTransition).Prepend(complexFragmentIon);
                 }
                 else
                 {
-                    complexFragmentIon = SimpleFragmentIon.EMPTY.Prepend(complexFragmentIon);
+                    complexFragmentIon = SingleFragmentIon.EMPTY.Prepend(complexFragmentIon);
                 }
 
                 var chargedIon =

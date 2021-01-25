@@ -1,4 +1,22 @@
-﻿using System;
+﻿/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2021 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,6 +25,11 @@ using pwiz.Common.Collections;
 
 namespace pwiz.Skyline.Model.Crosslinking
 {
+    /// <summary>
+    /// Represents a place where a crosslinker attaches to a crosslinked peptide.
+    /// Crosslink sites are identified by a 0-based peptide index and a 0-based amino
+    /// acid index.
+    /// </summary>
     public struct CrosslinkSite : IComparable<CrosslinkSite>
     {
         public CrosslinkSite(int peptideIndex, int aaIndex) : this()
@@ -96,12 +119,6 @@ namespace pwiz.Skyline.Model.Crosslinking
         {
             return Sites.GetEnumerator();
         }
-
-        public static CrosslinkSites FromSites(IEnumerable<CrosslinkSite> sites)
-        {
-            return new CrosslinkSites(sites);
-        }
-
         public override string ToString()
         {
             StringBuilder stringBuilder = new StringBuilder();

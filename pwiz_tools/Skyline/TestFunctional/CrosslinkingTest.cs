@@ -115,9 +115,9 @@ namespace pwiz.SkylineTestFunctional
             for (int iSite = 0; iSite < sites.Length; iSite++)
             {
                 var site = sites[iSite];
-                tester.SetCellAddress(rowIndex, dlg.GetPeptideIndexColumn(iSite).Index);
+                tester.MoveToCell(rowIndex, dlg.GetPeptideIndexColumn(iSite).Index);
                 tester.SetComboBoxValueInCurrentCell(site.PeptideIndex);
-                tester.SetCellAddress(rowIndex, dlg.GetAaIndexColumn(iSite).Index);
+                tester.MoveToCell(rowIndex, dlg.GetAaIndexColumn(iSite).Index);
                 tester.SetComboBoxValueInCurrentCell(site.AaIndex);
             }
             tester.EndEdit();
