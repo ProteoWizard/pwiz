@@ -11,7 +11,7 @@ namespace pwiz.Skyline.Model.Crosslinking
 {
     public class NeutralFragmentIon : Immutable, IComparable<NeutralFragmentIon>
     {
-        public NeutralFragmentIon(IEnumerable<FragmentIonType> parts, TransitionLosses losses)
+        public NeutralFragmentIon(IEnumerable<IonOrdinal> parts, TransitionLosses losses)
         {
             IonChain = IonChain.FromIons(parts);
             Losses = losses;
@@ -19,28 +19,16 @@ namespace pwiz.Skyline.Model.Crosslinking
 
         public static NeutralFragmentIon Simple(TransitionDocNode transitionDocNode)
         {
-            return new NeutralFragmentIon(ImmutableList.Singleton(FragmentIonType.FromTransition(transitionDocNode.Transition)), transitionDocNode.Losses);
+            return new NeutralFragmentIon(ImmutableList.Singleton(IonOrdinal.FromTransition(transitionDocNode.Transition)), transitionDocNode.Losses);
         }
-
-        public Adduct Adduct { get; private set; }
 
         public IonChain IonChain { get; private set; }
 
-        public int PartCount
-        {
-            get { return IonChain.Count; }
-        }
-
         public TransitionLosses Losses { get; private set; }
-
-        public TransitionLosses TransitionLosses
-        {
-            get { return Losses; }
-        }
 
         public bool? IncludesSite(PeptideStructure peptideStructure, CrosslinkSite site)
         {
-            if (site.PeptideIndex >= PartCount)
+            if (site.PeptideIndex >= IonChain.Count)
             {
                 return null;
             }
@@ -51,7 +39,7 @@ namespace pwiz.Skyline.Model.Crosslinking
 
         public static NeutralFragmentIon Simple(Transition transition, TransitionLosses losses)
         {
-            return new NeutralFragmentIon(ImmutableList.Singleton(FragmentIonType.FromTransition(transition)), losses);
+            return new NeutralFragmentIon(ImmutableList.Singleton(IonOrdinal.FromTransition(transition)), losses);
         }
 
         public bool IsMs1
@@ -86,16 +74,10 @@ namespace pwiz.Skyline.Model.Crosslinking
             }
         }
 
-        public bool IsCrosslinked
-        {
-            get { return IonChain.Count > 1; }
-        }
-
         public IonChain GetName()
         {
             return IonChain;
         }
-
 
         /// <summary>
         /// Returns the text that should be displayed for this in the Targets tree.
@@ -137,12 +119,12 @@ namespace pwiz.Skyline.Model.Crosslinking
         }
         private string GetTransitionLossesText()
         {
-            if (TransitionLosses == null)
+            if (Losses == null)
             {
                 return string.Empty;
             }
 
-            return @" -" + Math.Round(TransitionLosses.Mass, 1);
+            return @" -" + Math.Round(Losses.Mass, 1);
         }
 
         public int CountFragmentationEvents()
@@ -228,11 +210,10 @@ namespace pwiz.Skyline.Model.Crosslinking
             for (int i = 0; i < Math.Min(IonChain.Count, other.IonChain.Count); i++)
             {
                 int result = IonChain[i].CompareTo(other.IonChain[i]);
-                if (result == 0 && i == 0)
+                if (result == 0)
                 {
-                    result = Comparer<double?>.Default.Compare(TransitionLosses?.Mass, other.TransitionLosses?.Mass);
+                    result = Comparer<double?>.Default.Compare(Losses?.Mass, other.Losses?.Mass);
                 }
-
                 if (result != 0)
                 {
                     return result;

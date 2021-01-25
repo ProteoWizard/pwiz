@@ -39,7 +39,7 @@ namespace pwiz.SkylineTestFunctional
 
                 var expectedTuples = new List<Tuple<IonChain, int, double, double>>
                 {
-                    Tuple.Create(IonChain.FromIons(FragmentIonType.Precursor, FragmentIonType.B(11)), 2, 64.0, 1156.9502)
+                    Tuple.Create(IonChain.FromIons(IonOrdinal.Precursor, IonOrdinal.B(11)), 2, 64.0, 1156.9502)
                 };
                 foreach (var tuple in expectedTuples)
                 {

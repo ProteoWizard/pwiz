@@ -54,7 +54,7 @@ namespace pwiz.Skyline.Model
                                  TransitionQuantInfo transitionQuantInfo,
                                  ExplicitTransitionValues explicitTransitionValues,
                                  Results<TransitionChromInfo> results)
-            : this(Crosslinking.ComplexFragmentIon.Simple(id, losses), annotations, losses == null ? mass : mass - losses.Mass, transitionQuantInfo, explicitTransitionValues, results)
+            : this(ComplexFragmentIon.Simple(id, losses), annotations, losses == null ? mass : mass - losses.Mass, transitionQuantInfo, explicitTransitionValues, results)
         {
         }
 
@@ -542,7 +542,7 @@ namespace pwiz.Skyline.Model
                 transitionProto.ExplicitSLens = DataValues.ToOptional(ExplicitValues.SLens);
             }
 
-            foreach (FragmentIonType part in ComplexFragmentIon.NeutralFragmentIon.IonChain.Skip(1))
+            foreach (IonOrdinal part in ComplexFragmentIon.NeutralFragmentIon.IonChain.Skip(1))
             {
                 var linkedIon = new SkylineDocumentProto.Types.LinkedIon();
                 if (part.IsEmpty)
@@ -670,10 +670,10 @@ namespace pwiz.Skyline.Model
                 new TransitionQuantInfo(isotopeDistInfo, libInfo, !transitionProto.NotQuantitative);
             if (mods != null && mods.HasCrosslinks)
             {
-                var parts = new List<FragmentIonType>();
+                var parts = new List<IonOrdinal>();
                 parts.Add(transitionProto.OrphanedCrosslinkIon
-                    ? FragmentIonType.Empty
-                    : FragmentIonType.FromTransition(transition));
+                    ? IonOrdinal.Empty
+                    : IonOrdinal.FromTransition(transition));
                 if (null != mods.OldCrosslinkMap)
                 {
                     parts.AddRange(LegacyComplexFragmentIonName.ToIonChain(mods.OldCrosslinkMap, transitionProto.LinkedIons.Select(LegacyComplexFragmentIonName.FromLinkedIonProto)));
@@ -684,11 +684,11 @@ namespace pwiz.Skyline.Model
                     {
                         if (linkedIon.Orphan)
                         {
-                            parts.Add(FragmentIonType.Empty);
+                            parts.Add(IonOrdinal.Empty);
                         }
                         else
                         {
-                            parts.Add(new FragmentIonType(DataValues.FromIonType(linkedIon.IonType), linkedIon.Ordinal));
+                            parts.Add(new IonOrdinal(DataValues.FromIonType(linkedIon.IonType), linkedIon.Ordinal));
                         }
                     }
                 }

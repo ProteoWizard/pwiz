@@ -429,7 +429,7 @@ namespace pwiz.Skyline.Model.Serialization
             writer.WriteEndElement();
         }
 
-        private void WriteLinkedPeptide(XmlWriter writer, LinkedPeptide linkedPeptide)
+        private void WriteLinkedPeptide(XmlWriter writer, LegacyLinkedPeptide linkedPeptide)
         {
             writer.WriteStartElement(EL.linked_peptide);
             writer.WriteAttribute(ATTR.index_aa, linkedPeptide.IndexAa);

@@ -7,10 +7,10 @@ namespace pwiz.Skyline.Model.Crosslinking
 {
     public class SimpleFragmentIon : Immutable
     {
-        public static readonly SimpleFragmentIon EMPTY = new SimpleFragmentIon(FragmentIonType.Empty, null);
-        public static readonly SimpleFragmentIon PRECURSOR = new SimpleFragmentIon(FragmentIonType.Precursor, null);
+        public static readonly SimpleFragmentIon EMPTY = new SimpleFragmentIon(IonOrdinal.Empty, null);
+        public static readonly SimpleFragmentIon PRECURSOR = new SimpleFragmentIon(IonOrdinal.Precursor, null);
 
-        public SimpleFragmentIon(FragmentIonType ion, TransitionLosses losses)
+        public SimpleFragmentIon(IonOrdinal ion, TransitionLosses losses)
         {
             Id = ion;
             Losses = losses;
@@ -22,12 +22,12 @@ namespace pwiz.Skyline.Model.Crosslinking
             {
                 return null;
             }
-            return new SimpleFragmentIon(FragmentIonType.FromTransition(docNode.Transition), docNode.Losses);
+            return new SimpleFragmentIon(IonOrdinal.FromTransition(docNode.Transition), docNode.Losses);
         }
 
         public static SimpleFragmentIon FromTransition(Transition transition)
         {
-            return new SimpleFragmentIon(FragmentIonType.FromTransition(transition), null);
+            return new SimpleFragmentIon(IonOrdinal.FromTransition(transition), null);
         }
 
         public NeutralFragmentIon Prepend(NeutralFragmentIon left)
@@ -53,7 +53,7 @@ namespace pwiz.Skyline.Model.Crosslinking
             return new NeutralFragmentIon(left.IonChain.Append(Id), newLosses);
         }
 
-        public FragmentIonType Id { get; private set; }
+        public IonOrdinal Id { get; private set; }
 
         public IonType? IonType
         {

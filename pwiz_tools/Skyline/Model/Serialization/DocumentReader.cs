@@ -255,7 +255,7 @@ namespace pwiz.Skyline.Model.Serialization
             public int? DecoyMassShift { get; private set; }
             public TransitionLosses Losses { get; private set; }
 
-            public List<FragmentIonType> LinkedFragmentIons { get; private set; }
+            public List<IonOrdinal> LinkedFragmentIons { get; private set; }
             public List<LegacyComplexFragmentIonName> LegacyFragmentIons { get; private set; }
             public bool OrphanedCrosslinkIon { get; private set; }
             public Annotations Annotations { get; private set; }
@@ -300,7 +300,7 @@ namespace pwiz.Skyline.Model.Serialization
             public void ReadXmlElements(XmlReader reader, out double? declaredProductMz)
             {
                 declaredProductMz = null;
-                LinkedFragmentIons = new List<FragmentIonType>();
+                LinkedFragmentIons = new List<IonOrdinal>();
                 if (reader.IsEmptyElement)
                 {
                     reader.Read();
@@ -385,16 +385,16 @@ namespace pwiz.Skyline.Model.Serialization
 
             private LegacyComplexFragmentIonName ReadLegacyLinkedFragmentIon(XmlReader reader)
             {
-                FragmentIonType fragmentIonType;
+                IonOrdinal fragmentIonType;
                 string strFragmentType = reader.GetAttribute(ATTR.fragment_type);
                 if (strFragmentType == null)
                 {
                     // blank fragment type means orphaned fragment ion
-                    fragmentIonType = FragmentIonType.Empty;
+                    fragmentIonType = IonOrdinal.Empty;
                 }
                 else
                 {
-                    fragmentIonType = new FragmentIonType(TypeSafeEnum.Parse<IonType>(strFragmentType), reader.GetIntAttribute(ATTR.fragment_ordinal));
+                    fragmentIonType = new IonOrdinal(TypeSafeEnum.Parse<IonType>(strFragmentType), reader.GetIntAttribute(ATTR.fragment_ordinal));
                 }
                     
                 var modificationSite = new ModificationSite(reader.GetIntAttribute(ATTR.index_aa),
@@ -421,12 +421,12 @@ namespace pwiz.Skyline.Model.Serialization
                 return linkedIon;
             }
 
-            private FragmentIonType ReadLinkedFragmentIon(XmlReader reader)
+            private IonOrdinal ReadLinkedFragmentIon(XmlReader reader)
             {
                 var ionType = reader.GetEnumAttribute(ATTR.fragment_type, IonType.custom);
                 var ordinal = reader.GetIntAttribute(ATTR.fragment_ordinal);
                 reader.Read();
-                return ionType == IonType.custom ? FragmentIonType.Empty : new FragmentIonType(ionType, ordinal);
+                return ionType == IonType.custom ? IonOrdinal.Empty : new IonOrdinal(ionType, ordinal);
             }
 
             private static TransitionLibInfo ReadTransitionLibInfo(XmlReader reader)
@@ -1210,7 +1210,7 @@ namespace pwiz.Skyline.Model.Serialization
             return new TypedExplicitModifications(peptide, typedMods.LabelType, listMods.ToArray());
         }
 
-        private LinkedPeptide ReadLinkedPeptide(XmlReader reader)
+        private LegacyLinkedPeptide ReadLinkedPeptide(XmlReader reader)
         {
             if (!reader.IsStartElement(EL.linked_peptide))
             {
@@ -1235,7 +1235,7 @@ namespace pwiz.Skyline.Model.Serialization
                 explicitMods = ReadExplicitMods(reader, peptide);
                 reader.ReadEndElement();
             }
-            return new LinkedPeptide(peptide, indexAa, explicitMods);
+            return new LegacyLinkedPeptide(peptide, indexAa, explicitMods);
 
         }
 
@@ -1576,7 +1576,7 @@ namespace pwiz.Skyline.Model.Serialization
             TransitionDocNode node;
             if (mods != null && mods.HasCrosslinks)
             {
-                IEnumerable<FragmentIonType> parts;
+                IEnumerable<IonOrdinal> parts;
                 if (info.LegacyFragmentIons != null)
                 {
                     parts = LegacyComplexFragmentIonName.ToIonChain(mods.OldCrosslinkMap, info.LegacyFragmentIons);
@@ -1587,8 +1587,8 @@ namespace pwiz.Skyline.Model.Serialization
                 }
 
                 parts = parts.Prepend(info.OrphanedCrosslinkIon
-                    ? FragmentIonType.Empty
-                    : FragmentIonType.FromTransition(transition));
+                    ? IonOrdinal.Empty
+                    : IonOrdinal.FromTransition(transition));
                 var complexFragmentIon = new NeutralFragmentIon(parts, info.Losses);
                 var chargedIon = new ComplexFragmentIon(transition, complexFragmentIon, mods);
                 node = crosslinkBuilder.MakeTransitionDocNode(chargedIon, isotopeDist, info.Annotations, quantInfo,

@@ -112,7 +112,7 @@ AMNFS[Phospho (ST)]GSPGAVSTSPT[Phospho (ST)]QSFM[Oxidation (M)]NTLPR");
                 switch (transitionDocNode.Transition.IonType)
                 {
                     case IonType.precursor:
-                        complexFragmentIonName = IonChain.FromIons(FragmentIonType.Precursor, FragmentIonType.Precursor);
+                        complexFragmentIonName = IonChain.FromIons(IonOrdinal.Precursor, IonOrdinal.Precursor);
                         break;
                     case IonType.b:
                         if (transitionDocNode.Transition.Ordinal == 11)
@@ -121,11 +121,11 @@ AMNFS[Phospho (ST)]GSPGAVSTSPT[Phospho (ST)]QSFM[Oxidation (M)]NTLPR");
                         }
                         if (transitionDocNode.Transition.Ordinal <= 11)
                         {
-                            complexFragmentIonName = IonChain.FromIons(FragmentIonType.B(transitionDocNode.Transition.Ordinal), FragmentIonType.Empty);
+                            complexFragmentIonName = IonChain.FromIons(IonOrdinal.B(transitionDocNode.Transition.Ordinal), IonOrdinal.Empty);
                         }
                         else
                         {
-                            complexFragmentIonName = IonChain.FromIons(FragmentIonType.Precursor, FragmentIonType.B(transitionDocNode.Transition.Ordinal - 11));
+                            complexFragmentIonName = IonChain.FromIons(IonOrdinal.Precursor, IonOrdinal.B(transitionDocNode.Transition.Ordinal - 11));
                         }
                         break;
                     case IonType.y:
@@ -137,12 +137,12 @@ AMNFS[Phospho (ST)]GSPGAVSTSPT[Phospho (ST)]QSFM[Oxidation (M)]NTLPR");
                         if (transitionDocNode.Transition.Ordinal < 14)
                         {
                             complexFragmentIonName = 
-                                IonChain.FromIons(FragmentIonType.Empty, FragmentIonType.Y(transitionDocNode.Transition.Ordinal));
+                                IonChain.FromIons(IonOrdinal.Empty, IonOrdinal.Y(transitionDocNode.Transition.Ordinal));
                         }
                         else
                         {
                             complexFragmentIonName = 
-                                IonChain.FromIons(FragmentIonType.Y(transitionDocNode.Transition.Ordinal - 14), FragmentIonType.Precursor);
+                                IonChain.FromIons(IonOrdinal.Y(transitionDocNode.Transition.Ordinal - 14), IonOrdinal.Precursor);
                         }
                         break;
                 }

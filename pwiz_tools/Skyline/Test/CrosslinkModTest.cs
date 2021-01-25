@@ -98,7 +98,7 @@ namespace pwiz.SkylineTest
             var mainComplexFragmentIon = NeutralFragmentIon.Simple(
                 new Transition(mainTransitionGroup, IonType.precursor, mainPeptide.Length - 1, 0,
                     Adduct.SINGLY_PROTONATED), null);
-            var linkedComplexFragmentIon = new SimpleFragmentIon(new FragmentIonType(IonType.precursor, 0), null);
+            var linkedComplexFragmentIon = new SimpleFragmentIon(new IonOrdinal(IonType.precursor, 0), null);
             var complexFragmentIon = linkedComplexFragmentIon.Prepend(mainComplexFragmentIon);
             var chargedIon =
                 complexFragmentIon.MakeChargedIon(mainTransitionGroup, Adduct.SINGLY_PROTONATED, modsWithLinkedPeptide);
@@ -141,11 +141,11 @@ namespace pwiz.SkylineTest
                 true).Select(transition => transition.ComplexFragmentIon.GetName()).ToList();
             var expectedFragmentIons = new[]
             {
-                IonChain.FromIons(FragmentIonType.Precursor, FragmentIonType.Precursor),
-                IonChain.FromIons(FragmentIonType.Precursor, new FragmentIonType(IonType.y, 1)),
-                IonChain.FromIons(FragmentIonType.Y(1), FragmentIonType.Empty),
-                IonChain.FromIons(FragmentIonType.B(1), FragmentIonType.Precursor),
-                IonChain.FromIons(FragmentIonType.Empty, FragmentIonType.B(1)),
+                IonChain.FromIons(IonOrdinal.Precursor, IonOrdinal.Precursor),
+                IonChain.FromIons(IonOrdinal.Precursor, new IonOrdinal(IonType.y, 1)),
+                IonChain.FromIons(IonOrdinal.Y(1), IonOrdinal.Empty),
+                IonChain.FromIons(IonOrdinal.B(1), IonOrdinal.Precursor),
+                IonChain.FromIons(IonOrdinal.Empty, IonOrdinal.B(1)),
             };
             CollectionAssert.AreEquivalent(expectedFragmentIons, oneNeutralLossChoices);
         }
@@ -189,7 +189,7 @@ namespace pwiz.SkylineTest
 
             var transitionGroup = new TransitionGroup(mainPeptide, Adduct.SINGLY_PROTONATED, IsotopeLabelType.light);
             var crosslinkerDef = new StaticMod("disulfide", "C", null, "-H2");
-            var linkedPeptide = new LinkedPeptide(new Peptide("ARSENIC"), 6, null);
+            var linkedPeptide = new LegacyLinkedPeptide(new Peptide("ARSENIC"), 6, null);
             var crosslinkMod = new ExplicitMod(3, crosslinkerDef).ChangeLinkedPeptide(linkedPeptide);
             var explicitModsWithCrosslink = new ExplicitMods(mainPeptide, new[]{crosslinkMod}, new TypedExplicitModifications[0]);
             var transitionGroupDocNode = new TransitionGroupDocNode(transitionGroup, Annotations.EMPTY, srmSettings,
@@ -237,14 +237,14 @@ namespace pwiz.SkylineTest
         public void TestIncludesAaIndex()
         {
             var peptide = new Peptide("AD");
-            var precursor = FragmentIonType.Precursor;
+            var precursor = IonOrdinal.Precursor;
             Assert.IsTrue(precursor.IncludesAaIndex(peptide, 0));
             Assert.IsTrue(precursor.IncludesAaIndex(peptide, 1));
-            var y1 = FragmentIonType.Y(1);
+            var y1 = IonOrdinal.Y(1);
             Assert.AreEqual(1, y1.Ordinal);
             Assert.IsFalse(y1.IncludesAaIndex(peptide, 0));
             Assert.IsTrue(y1.IncludesAaIndex(peptide, 1));
-            var b1 = FragmentIonType.B(1);
+            var b1 = IonOrdinal.B(1);
             Assert.AreEqual(1, b1.Ordinal);
             Assert.IsTrue(b1.IncludesAaIndex(peptide, 0));
             Assert.IsFalse(b1.IncludesAaIndex(peptide, 1));

@@ -9,8 +9,8 @@ namespace pwiz.Skyline.Model.Crosslinking
 {
     public class CrosslinkPeptideBuilder
     {
-        private IDictionary<FragmentIonType, MoleculeMassOffset> _fragmentedMolecules =
-            new Dictionary<FragmentIonType, MoleculeMassOffset>();
+        private IDictionary<IonOrdinal, MoleculeMassOffset> _fragmentedMolecules =
+            new Dictionary<IonOrdinal, MoleculeMassOffset>();
 
         public CrosslinkPeptideBuilder(SrmSettings settings, Peptide peptide, ExplicitMods explicitMods, IsotopeLabelType labelType)
         {
@@ -28,7 +28,7 @@ namespace pwiz.Skyline.Model.Crosslinking
         /// <summary>
         /// Returns the chemical formula for this fragment and none of its children.
         /// </summary>
-        public MoleculeMassOffset GetFragmentFormula(FragmentIonType part)
+        public MoleculeMassOffset GetFragmentFormula(IonOrdinal part)
         {
             if (part.IsEmpty)
             {

@@ -64,7 +64,7 @@ namespace pwiz.Skyline.Model.Crosslinking
         public static ComplexFragmentIon Simple(Transition transition, TransitionLosses losses)
         {
             return new ComplexFragmentIon(transition,
-                new NeutralFragmentIon(ImmutableList.Singleton(FragmentIonType.FromTransition(transition)), losses),
+                new NeutralFragmentIon(ImmutableList.Singleton(IonOrdinal.FromTransition(transition)), losses),
                 (PeptideStructure)null);
         }
         public string GetFragmentIonName()

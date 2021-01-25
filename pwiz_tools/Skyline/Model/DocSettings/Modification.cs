@@ -1206,80 +1206,7 @@ namespace pwiz.Skyline.Model.DocSettings
             return modsNew;
         }
 
-        /// <summary>
-        /// Convert from the Version 20.2 format where crosslinks were represented on the <see cref="ExplicitMod.LinkedPeptide"/> elements
-        /// instead of <see cref="Crosslinks"/>
-        /// </summary>
-        public ExplicitMods ConvertOldCrosslinkStructure()
-        {
-            if (null == StaticModifications || StaticModifications.All(mod=>null == mod.LinkedPeptide))
-            {
-                return this;
-            }
-            var sitePaths = new List<ImmutableList<ModificationSite>>();
-            var linkedPeptides = new List<Peptide>();
-            var linkedExplicitMods = new List<ExplicitMods>();
-            var crosslinks = new List<Crosslink>();
-            var queue = new List<Tuple<int, ExplicitMod, ImmutableList<ModificationSite>>>();
-            queue.AddRange(StaticModifications.Where(mod=>mod.LinkedPeptide != null).Select(mod=>Tuple.Create(0, mod, ImmutableList.Singleton(mod.ModificationSite))));
-            while (queue.Any())
-            {
-                var tuple = queue[0];
-                queue.RemoveAt(0);
-                var explicitMod = tuple.Item2;
-                var linkedPeptide = explicitMod.LinkedPeptide;
-                if (linkedPeptide.Peptide == null)
-                {
-                    crosslinks.Add(Crosslink.Looplink(explicitMod.Modification, tuple.Item1, explicitMod.IndexAA, linkedPeptide.IndexAa));
-                    continue;
-                }
-
-                int peptideIndex = linkedPeptides.Count + 1;
-                linkedPeptides.Add(linkedPeptide.Peptide);
-                crosslinks.Add(new Crosslink(explicitMod.Modification,
-                    new[]
-                    {
-                        new CrosslinkSite(tuple.Item1, explicitMod.IndexAA),
-                        new CrosslinkSite(peptideIndex, linkedPeptide.IndexAa)
-                    }));
-                sitePaths.Add(tuple.Item3);
-                var explicitMods = linkedPeptide.ExplicitMods;
-                if (explicitMods != null)
-                {
-                    queue.AddRange(linkedPeptide.ExplicitMods.StaticModifications.Where(mod=>mod.LinkedPeptide != null).Select(mod=>Tuple.Create(peptideIndex, mod, ImmutableList.ValueOf(tuple.Item3.Append(mod.ModificationSite)))));
-                    explicitMods =
-                        explicitMods.ChangeStaticModifications(
-                            explicitMods.StaticModifications.Where(mod => mod.LinkedPeptide == null).ToList());
-                }
-                linkedExplicitMods.Add(explicitMods);
-            }
-
-            if (!crosslinks.Any())
-            {
-                return this;
-            }
-            var crosslinkStructure = new CrosslinkStructure(linkedPeptides, linkedExplicitMods, crosslinks);
-            return new ExplicitMods(Peptide,
-                    StaticModifications.Where(mod => mod.LinkedPeptide == null).ToList(),
-                    GetHeavyModifications(), IsVariableStaticMods)
-                {
-                    OldCrosslinkMap = ImmutableList.ValueOf(sitePaths),
-                }
-                .ChangeCrosslinks(crosslinkStructure);
-        }
-
-        public ImmutableList<ImmutableList<ModificationSite>> OldCrosslinkMap { get; private set; }
-
-        public ExplicitMods RemoveOldCrosslinkMap()
-        {
-            if (OldCrosslinkMap == null)
-            {
-                return this;
-            }
-
-            return ChangeProp(ImClone(this), im => im.OldCrosslinkMap = null);
-        }
-
+        
 
         #region Property change methods
 
@@ -1357,6 +1284,82 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         #endregion
+
+        #region v20.2 crosslink format
+        /// <summary>
+        /// Convert from the Version 20.2 format where crosslinks were represented on the <see cref="ExplicitMod.LinkedPeptide"/> elements
+        /// instead of <see cref="Crosslinks"/>
+        /// </summary>
+        public ExplicitMods ConvertOldCrosslinkStructure()
+        {
+            if (null == StaticModifications || StaticModifications.All(mod => null == mod.LinkedPeptide))
+            {
+                return this;
+            }
+            var sitePaths = new List<ImmutableList<ModificationSite>>();
+            var linkedPeptides = new List<Peptide>();
+            var linkedExplicitMods = new List<ExplicitMods>();
+            var crosslinks = new List<Crosslink>();
+            var queue = new List<Tuple<int, ExplicitMod, ImmutableList<ModificationSite>>>();
+            queue.AddRange(StaticModifications.Where(mod => mod.LinkedPeptide != null).Select(mod => Tuple.Create(0, mod, ImmutableList.Singleton(mod.ModificationSite))));
+            while (queue.Any())
+            {
+                var tuple = queue[0];
+                queue.RemoveAt(0);
+                var explicitMod = tuple.Item2;
+                var linkedPeptide = explicitMod.LinkedPeptide;
+                if (linkedPeptide.Peptide == null)
+                {
+                    crosslinks.Add(Crosslink.Looplink(explicitMod.Modification, tuple.Item1, explicitMod.IndexAA, linkedPeptide.IndexAa));
+                    continue;
+                }
+
+                int peptideIndex = linkedPeptides.Count + 1;
+                linkedPeptides.Add(linkedPeptide.Peptide);
+                crosslinks.Add(new Crosslink(explicitMod.Modification,
+                    new[]
+                    {
+                        new CrosslinkSite(tuple.Item1, explicitMod.IndexAA),
+                        new CrosslinkSite(peptideIndex, linkedPeptide.IndexAa)
+                    }));
+                sitePaths.Add(tuple.Item3);
+                var explicitMods = linkedPeptide.ExplicitMods;
+                if (explicitMods != null)
+                {
+                    queue.AddRange(linkedPeptide.ExplicitMods.StaticModifications.Where(mod => mod.LinkedPeptide != null).Select(mod => Tuple.Create(peptideIndex, mod, ImmutableList.ValueOf(tuple.Item3.Append(mod.ModificationSite)))));
+                    explicitMods =
+                        explicitMods.ChangeStaticModifications(
+                            explicitMods.StaticModifications.Where(mod => mod.LinkedPeptide == null).ToList());
+                }
+                linkedExplicitMods.Add(explicitMods);
+            }
+
+            if (!crosslinks.Any())
+            {
+                return this;
+            }
+            var crosslinkStructure = new CrosslinkStructure(linkedPeptides, linkedExplicitMods, crosslinks);
+            return new ExplicitMods(Peptide,
+                    StaticModifications.Where(mod => mod.LinkedPeptide == null).ToList(),
+                    GetHeavyModifications(), IsVariableStaticMods)
+            {
+                OldCrosslinkMap = ImmutableList.ValueOf(sitePaths),
+            }
+                .ChangeCrosslinks(crosslinkStructure);
+        }
+        // Code for dealing with the way crosslinks were represented in Version 20.2
+        public ImmutableList<ImmutableList<ModificationSite>> OldCrosslinkMap { get; private set; }
+
+        public ExplicitMods RemoveOldCrosslinkMap()
+        {
+            if (OldCrosslinkMap == null)
+            {
+                return this;
+            }
+
+            return ChangeProp(ImClone(this), im => im.OldCrosslinkMap = null);
+        }
+        #endregion
     }
 
     public sealed class ExplicitMod : Immutable
@@ -1381,14 +1384,6 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             get { return new ModificationSite(IndexAA, Modification.Name); }
         }
-
-        public LinkedPeptide LinkedPeptide { get; private set; }
-
-        public ExplicitMod ChangeLinkedPeptide(LinkedPeptide linkedPeptide)
-        {
-            return ChangeProp(ImClone(this), im => im.LinkedPeptide = linkedPeptide);
-        }
-
         #region Property change methods
 
         public ExplicitMod ChangeModification(StaticMod prop)
@@ -1430,6 +1425,15 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
+        #endregion
+        #region v20.2 crosslink format
+        // Code for dealing with the way crosslinks were represented in Version 20.2
+        public LegacyLinkedPeptide LinkedPeptide { get; private set; }
+
+        public ExplicitMod ChangeLinkedPeptide(LegacyLinkedPeptide linkedPeptide)
+        {
+            return ChangeProp(ImClone(this), im => im.LinkedPeptide = linkedPeptide);
+        }
         #endregion
     }
 

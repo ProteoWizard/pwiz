@@ -5,38 +5,38 @@ using pwiz.Common.Collections;
 
 namespace pwiz.Skyline.Model.Crosslinking
 {
-    public class IonChain : IReadOnlyList<FragmentIonType>
+    public class IonChain : IReadOnlyList<IonOrdinal>
     {
-        public IonChain(IEnumerable<FragmentIonType> parts)
+        public IonChain(IEnumerable<IonOrdinal> parts)
         {
             Ions = ImmutableList.ValueOfOrEmpty(parts);
         }
 
-        public static IonChain FromIons(IEnumerable<FragmentIonType> ions)
+        public static IonChain FromIons(IEnumerable<IonOrdinal> ions)
         {
             return ions as IonChain ?? new IonChain(ions);
         }
 
-        public static IonChain FromIons(params FragmentIonType[] ions)
+        public static IonChain FromIons(params IonOrdinal[] ions)
         {
             return new IonChain(ions);
         }
 
-        public ImmutableList<FragmentIonType> Ions { get; private set; }
+        public ImmutableList<IonOrdinal> Ions { get; private set; }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
         }
 
-        public IEnumerator<FragmentIonType> GetEnumerator()
+        public IEnumerator<IonOrdinal> GetEnumerator()
         {
             return Ions.GetEnumerator();
         }
 
         public int Count => Ions.Count;
 
-        public FragmentIonType this[int index] => Ions[index];
+        public IonOrdinal this[int index] => Ions[index];
 
         public IEnumerable<IonType> IonTypes
         {

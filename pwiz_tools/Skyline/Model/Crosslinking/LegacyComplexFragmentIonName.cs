@@ -20,18 +20,18 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using NHibernate.Proxy;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Model.Serialization;
 
 namespace pwiz.Skyline.Model.Crosslinking
 {
     /// <summary>
-    /// Represents the parts of a <see cref="LegacyComplexFragmentIon"/> separated from the actual Transition and TransitionGroup objects.
+    /// Represents the way that crosslinked ions were represented in Skyline version 20.2
+    /// Instead of being a flat list, crosslinked peptides were a tree keyed by ModificationSite.
     /// </summary>
     public class LegacyComplexFragmentIonName
     {
-        public LegacyComplexFragmentIonName(ModificationSite site, FragmentIonType ionType)
+        public LegacyComplexFragmentIonName(ModificationSite site, IonOrdinal ionType)
         {
             Site = site;
             IonType = ionType;
@@ -39,10 +39,10 @@ namespace pwiz.Skyline.Model.Crosslinking
         }
 
         public ModificationSite Site { get; }
-        public FragmentIonType IonType { get; }
+        public IonOrdinal IonType { get; }
         public List<LegacyComplexFragmentIonName> Children { get; private set; }
 
-        public void FillInIons(IList<ImmutableList<ModificationSite>> sitePaths, FragmentIonType[] array)
+        public void FillInIons(IList<ImmutableList<ModificationSite>> sitePaths, IonOrdinal[] array)
         {
             var queue = new List<Tuple<ImmutableList<ModificationSite>, LegacyComplexFragmentIonName>>
                 {Tuple.Create(ImmutableList<ModificationSite>.EMPTY, this)};
@@ -72,7 +72,7 @@ namespace pwiz.Skyline.Model.Crosslinking
 
         public static IonChain ToIonChain(IList<ImmutableList<ModificationSite>> sitePaths, IEnumerable<LegacyComplexFragmentIonName> ionNames)
         {
-            var array = new FragmentIonType[sitePaths.Count];
+            var array = new IonOrdinal[sitePaths.Count];
             foreach (var ionName in ionNames)
             {
                 ionName.FillInIons(sitePaths, array);
@@ -83,7 +83,7 @@ namespace pwiz.Skyline.Model.Crosslinking
         public static LegacyComplexFragmentIonName FromLinkedIonProto(SkylineDocumentProto.Types.LinkedIon linkedIon)
         {
             var result = new LegacyComplexFragmentIonName(new ModificationSite(linkedIon.ModificationIndex, linkedIon.ModificationName), 
-                new FragmentIonType(DataValues.FromIonType(linkedIon.IonType), linkedIon.Ordinal));
+                new IonOrdinal(DataValues.FromIonType(linkedIon.IonType), linkedIon.Ordinal));
             result.Children.AddRange(linkedIon.Children.Select(FromLinkedIonProto));
             return result;
         }

@@ -2,31 +2,31 @@
 
 namespace pwiz.Skyline.Model.Crosslinking
 {
-    public struct FragmentIonType : IComparable<FragmentIonType>
+    public struct IonOrdinal : IComparable<IonOrdinal>
     {
         private IonType _ionType;
 
-        public static FragmentIonType Empty
+        public static IonOrdinal Empty
         {
-            get { return default(FragmentIonType); }
+            get { return default(IonOrdinal); }
         }
 
-        public static FragmentIonType Precursor
+        public static IonOrdinal Precursor
         {
-            get { return new FragmentIonType(IonType.precursor, 0); }
+            get { return new IonOrdinal(IonType.precursor, 0); }
         }
 
-        public static FragmentIonType Y(int ordinal)
+        public static IonOrdinal Y(int ordinal)
         {
-            return new FragmentIonType(IonType.y, ordinal);
+            return new IonOrdinal(IonType.y, ordinal);
         }
 
-        public static FragmentIonType B(int ordinal)
+        public static IonOrdinal B(int ordinal)
         {
-            return new FragmentIonType(IonType.b, ordinal);
+            return new IonOrdinal(IonType.b, ordinal);
         }
 
-        public FragmentIonType(IonType ionType, int ordinal) : this()
+        public IonOrdinal(IonType ionType, int ordinal) : this()
         {
             _ionType = ionType;
             if (_ionType != IonType.precursor && _ionType != IonType.custom)
@@ -44,7 +44,7 @@ namespace pwiz.Skyline.Model.Crosslinking
         {
             get
             {
-                return Equals(default(FragmentIonType));
+                return Equals(default(IonOrdinal));
             }
         }
 
@@ -58,9 +58,9 @@ namespace pwiz.Skyline.Model.Crosslinking
 
         public int Ordinal { get; private set; }
 
-        public static FragmentIonType FromTransition(Transition transition)
+        public static IonOrdinal FromTransition(Transition transition)
         {
-            return transition == null ? Empty : new FragmentIonType(transition.IonType, transition.Ordinal);
+            return transition == null ? Empty : new IonOrdinal(transition.IonType, transition.Ordinal);
         }
 
         public override string ToString()
@@ -127,7 +127,7 @@ namespace pwiz.Skyline.Model.Crosslinking
             }
         }
 
-        public int CompareTo(FragmentIonType ionFragment)
+        public int CompareTo(IonOrdinal ionFragment)
         {
             if (Equals(ionFragment))
             {

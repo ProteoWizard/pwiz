@@ -22,12 +22,12 @@ using pwiz.Skyline.Model.DocSettings;
 
 namespace pwiz.Skyline.Model.Crosslinking
 {
-    public class LinkedPeptide : Immutable
+    public class LegacyLinkedPeptide : Immutable
     {
-        public static readonly ImmutableSortedList<ModificationSite, LinkedPeptide> EMPTY_CROSSLINK_STRUCTURE 
-            = ImmutableSortedList<ModificationSite, LinkedPeptide>.EMPTY;
+        public static readonly ImmutableSortedList<ModificationSite, LegacyLinkedPeptide> EMPTY_CROSSLINK_STRUCTURE 
+            = ImmutableSortedList<ModificationSite, LegacyLinkedPeptide>.EMPTY;
 
-        public LinkedPeptide(Peptide peptide, int indexAa, ExplicitMods explicitMods)
+        public LegacyLinkedPeptide(Peptide peptide, int indexAa, ExplicitMods explicitMods)
         {
             Peptide = peptide;
             IndexAa = indexAa;
