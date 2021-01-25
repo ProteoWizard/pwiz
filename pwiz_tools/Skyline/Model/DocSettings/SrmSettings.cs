@@ -1318,7 +1318,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     foreach (var ion in targetIons)
                     {
                         var ims = imFiltering.GetIonMobilityInfoFromLibrary(ion);
-                        if (ims != null)
+                        if (ims != null && !dict.ContainsKey(ion)) // Beware precursors appearing more than once in document
                         {
                             dict.Add(ion, ims.ToArray());
                         }
