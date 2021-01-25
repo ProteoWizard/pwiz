@@ -100,9 +100,9 @@ ForceMzml = true;   // TODO(bspratt) remove this once we're convinced that WIFF 
 
             SetTransitionClipboardText(new[] {0, 1, 7, 8});
 
+            PasteTransitionListSkipColumnSelect();
             RunUI(() =>
             {
-                SkylineWindow.Paste();
                 SkylineWindow.CollapsePeptides();
             });
             PauseForScreenShot();
