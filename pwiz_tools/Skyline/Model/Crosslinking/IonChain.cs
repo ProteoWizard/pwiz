@@ -17,6 +17,11 @@ namespace pwiz.Skyline.Model.Crosslinking
             return ions as IonChain ?? new IonChain(ions);
         }
 
+        public static IonChain FromIons(params FragmentIonType[] ions)
+        {
+            return new IonChain(ions);
+        }
+
         public ImmutableList<FragmentIonType> Ions { get; private set; }
 
         IEnumerator IEnumerable.GetEnumerator()

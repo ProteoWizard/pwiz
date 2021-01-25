@@ -62,6 +62,7 @@ namespace pwiz.Skyline.Model.Crosslinking
 
         public IEnumerable<SimpleFragmentIon> GetSimpleFragmentIons(TransitionGroup transitionGroup, bool useFilter)
         {
+            yield return SimpleFragmentIon.EMPTY;
             var transitionGroupDocNode = MakeTransitionGroupDocNode(transitionGroup);
             foreach (var transitionDocNode in transitionGroupDocNode.TransitionGroup.GetTransitions(Settings,
                 transitionGroupDocNode, ExplicitMods, transitionGroupDocNode.PrecursorMz,

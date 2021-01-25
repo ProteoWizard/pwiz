@@ -16,6 +16,16 @@ namespace pwiz.Skyline.Model.Crosslinking
             get { return new FragmentIonType(IonType.precursor, 0); }
         }
 
+        public static FragmentIonType Y(int ordinal)
+        {
+            return new FragmentIonType(IonType.y, ordinal);
+        }
+
+        public static FragmentIonType B(int ordinal)
+        {
+            return new FragmentIonType(IonType.b, ordinal);
+        }
+
         public FragmentIonType(IonType ionType, int ordinal) : this()
         {
             _ionType = ionType;

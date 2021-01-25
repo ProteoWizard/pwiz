@@ -123,14 +123,13 @@ namespace pwiz.SkylineTest
 
             var mainPeptide = new Peptide("AD");
             var staticMod = new StaticMod(modName, null, null, "-C2");
-            var linkedPeptide = new LinkedPeptide(new Peptide("EF"), 1, null);
+            var linkedPeptide = new Peptide("EF");
             var mainTransitionGroup = new TransitionGroup(mainPeptide, Adduct.DOUBLY_PROTONATED, IsotopeLabelType.light);
             var mainTransitionGroupDocNode = new TransitionGroupDocNode(mainTransitionGroup,
                 Annotations.EMPTY, srmSettings, null, null, ExplicitTransitionGroupValues.EMPTY, null,
                 new TransitionDocNode[0], false);
-            var modsWithLinkedPeptide = new ExplicitMods(mainPeptide,
-                new[] {new ExplicitMod(0, staticMod).ChangeLinkedPeptide(linkedPeptide)},
-                new TypedExplicitModifications[0]);
+            var modsWithLinkedPeptide = new ExplicitMods(mainPeptide, null, null)
+                .ChangeCrosslinks(CrosslinkStructure.ToPeptide(linkedPeptide, null, staticMod, 0, 1));
             Assert.AreEqual(1, srmSettings.PeptideSettings.Modifications.MaxNeutralLosses);
             var oneNeutralLossChoices = mainTransitionGroupDocNode.GetTransitions(
                 srmSettings,
@@ -140,14 +139,13 @@ namespace pwiz.SkylineTest
                 null,
                 null,
                 true).Select(transition => transition.ComplexFragmentIon.GetName()).ToList();
-            var modSite = new ModificationSite(0, modName);
             var expectedFragmentIons = new[]
             {
-                LegacyComplexFragmentIonName.PRECURSOR.AddChild(modSite, LegacyComplexFragmentIonName.PRECURSOR),
-                LegacyComplexFragmentIonName.PRECURSOR.AddChild(modSite, new LegacyComplexFragmentIonName(IonType.y, 1)),
-                new LegacyComplexFragmentIonName(IonType.y, 1), 
-                new LegacyComplexFragmentIonName(IonType.b, 1).AddChild(modSite, new LegacyComplexFragmentIonName(IonType.precursor, 0)), 
-                LegacyComplexFragmentIonName.ORPHAN.AddChild(modSite, new LegacyComplexFragmentIonName(IonType.b, 1)),
+                IonChain.FromIons(FragmentIonType.Precursor, FragmentIonType.Precursor),
+                IonChain.FromIons(FragmentIonType.Precursor, new FragmentIonType(IonType.y, 1)),
+                IonChain.FromIons(FragmentIonType.Y(1), FragmentIonType.Empty),
+                IonChain.FromIons(FragmentIonType.B(1), FragmentIonType.Precursor),
+                IonChain.FromIons(FragmentIonType.Empty, FragmentIonType.B(1)),
             };
             CollectionAssert.AreEquivalent(expectedFragmentIons, oneNeutralLossChoices);
         }
