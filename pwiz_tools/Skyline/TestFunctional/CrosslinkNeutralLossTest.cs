@@ -17,8 +17,6 @@
  * limitations under the License.
  */
 
-using System;
-using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.EditUI;
@@ -111,13 +109,11 @@ AMNFS[Phospho (ST)]GSPGAVSTSPT[Phospho (ST)]QSFM[Oxidation (M)]NTLPR");
             foreach (var transitionDocNode in flatPrecursor.Transitions)
             {
                 // AMNFSGSPGAV(11)-STSPTQSFMNTLPR(14)
-                
-var parts = new List<FragmentIonType>();
-#if false
+                IonChain complexFragmentIonName = null;
                 switch (transitionDocNode.Transition.IonType)
                 {
                     case IonType.precursor:
-                        parts.Add(Tuple.Create(IonType.custom, 0));
+                        complexFragmentIonName = IonChain.FromIons(FragmentIonType.Precursor, FragmentIonType.Precursor);
                         break;
                     case IonType.b:
                         if (transitionDocNode.Transition.Ordinal == 11)
@@ -126,13 +122,12 @@ var parts = new List<FragmentIonType>();
                         }
                         if (transitionDocNode.Transition.Ordinal <= 11)
                         {
-                            parts.Add(Tuple.Create(IonType.b, transitionDocNode.Transition.Ordinal));
+                            complexFragmentIonName = IonChain.FromIons(FragmentIonType.B(transitionDocNode.Transition.Ordinal), FragmentIonType.Empty);
                         }
                         else
                         {
-                            parts.Add(Tuple.Create(IonType.b, transitionDocNode.Transition.Ordinal - 11));
+                            complexFragmentIonName = IonChain.FromIons(FragmentIonType.Precursor, FragmentIonType.B(transitionDocNode.Transition.Ordinal - 11));
                         }
-
                         break;
                     case IonType.y:
                         if (transitionDocNode.Transition.Ordinal == 14)
@@ -142,18 +137,17 @@ var parts = new List<FragmentIonType>();
 
                         if (transitionDocNode.Transition.Ordinal < 14)
                         {
-                            parts.Add(Tuple.Create(IonType.custom, 0));
-                            parts.Add(Tuple.Create(IonType.y, transitionDocNode.Transition.Ordinal));
+                            complexFragmentIonName = 
+                                IonChain.FromIons(FragmentIonType.Empty, FragmentIonType.Y(transitionDocNode.Transition.Ordinal));
                         }
                         else
                         {
-                            parts.Add(Tuple.Create(IonType.y, transitionDocNode.Transition.Ordinal - 14));
-                            parts.Add(Tuple.Create(IonType.precursor, 0));
+                            complexFragmentIonName = 
+                                IonChain.FromIons(FragmentIonType.Y(transitionDocNode.Transition.Ordinal - 14), FragmentIonType.Precursor);
                         }
                         break;
                 }
-#endif 
-                var complexFragmentIonName = new IonChain(parts);
+                Assert.IsNotNull(complexFragmentIonName);
 
                 if (transitionDocNode.Transition.IonType != IonType.precursor && transitionDocNode.Losses != null &&
                     transitionDocNode.Losses.Losses.Count > 1)

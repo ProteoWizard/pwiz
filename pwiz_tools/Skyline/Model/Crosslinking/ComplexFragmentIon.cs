@@ -9,11 +9,12 @@ namespace pwiz.Skyline.Model.Crosslinking
 {
     public class ComplexFragmentIon : Immutable, IComparable<ComplexFragmentIon>
     {
+        private PeptideStructure _peptideStructure;
         public ComplexFragmentIon(Transition primaryTransition, NeutralFragmentIon complexFragmentIon, PeptideStructure peptideStructure)
         {
             PrimaryTransition = primaryTransition;
             NeutralFragmentIon = complexFragmentIon;
-            PeptideStructure = peptideStructure;
+            _peptideStructure = peptideStructure;
         }
 
         public ComplexFragmentIon(Transition primaryTransition, NeutralFragmentIon complexFragmentIon,
@@ -22,7 +23,15 @@ namespace pwiz.Skyline.Model.Crosslinking
         }
         public Transition PrimaryTransition { get; private set; }
         public NeutralFragmentIon NeutralFragmentIon { get; private set; }
-        protected PeptideStructure PeptideStructure { get; private set; }
+
+        private PeptideStructure PeptideStructure
+        {
+            get
+            {
+                return _peptideStructure ?? new PeptideStructure(PrimaryTransition.Group.Peptide, null);
+            }
+        }
+
         public Adduct Adduct
         {
             get { return PrimaryTransition.Adduct; }
@@ -48,7 +57,7 @@ namespace pwiz.Skyline.Model.Crosslinking
         {
             get
             {
-                return PeptideStructure?.Peptides?.Count > 1;
+                return _peptideStructure?.Peptides?.Count > 1;
             }
         }
 

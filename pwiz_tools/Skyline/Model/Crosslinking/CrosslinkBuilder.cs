@@ -92,7 +92,7 @@ namespace pwiz.Skyline.Model.Crosslinking
             {
                 result = result.Plus(_peptideBuilders[i].GetFragmentFormula(complexFragmentIon.IonChain[i]));
             }
-
+            result = SubtractLosses(result, complexFragmentIon.TransitionLosses);
             foreach (var crosslink in PeptideStructure.Crosslinks)
             {
                 if (true == complexFragmentIon.ContainsCrosslink(PeptideStructure, crosslink.Sites))
