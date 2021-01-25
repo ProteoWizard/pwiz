@@ -173,7 +173,7 @@ namespace pwiz.SkylineTestUtil
             var existingDialog = FindOpenForm<TDlg>();
             if (existingDialog != null)
             {
-                var messageDlg = existingDialog as MessageDlg;
+                var messageDlg = existingDialog as AlertDlg;
                 if (messageDlg == null)
                     AssertEx.IsNull(existingDialog, typeof(TDlg) + " is already open");
                 else
@@ -492,6 +492,17 @@ namespace pwiz.SkylineTestUtil
                 }
             }
             return null;
+        }
+
+        public static IEnumerable<TDlg> FindOpenForms<TDlg>() where TDlg : Form
+        {
+            foreach (var form in OpenForms)
+            {
+                if (form is TDlg tForm && tForm.Created)
+                {
+                    yield return tForm;
+                }
+            }
         }
 
         public static Form FindOpenForm(Type formType) 

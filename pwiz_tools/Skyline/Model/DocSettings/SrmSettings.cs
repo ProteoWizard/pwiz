@@ -1336,7 +1336,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 }
 
                 return dict.Count > 0
-                    ? new LibraryIonMobilityInfo(filePath.GetFilePath(), true, dict)
+                    ? new LibraryIonMobilityInfo(filePath?.GetFilePath(), true, dict)
                     : LibraryIonMobilityInfo.EMPTY;
             }
             return null;

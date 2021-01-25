@@ -1372,7 +1372,7 @@ namespace pwiz.Skyline.Model.Lib
 
         public LibraryIonMobilityInfo(string path, bool supportMultipleConformers, LibKeyMap<IonMobilityAndCCS[]> dictLibKeyIonMobility)
         {
-            Name = path;
+            Name = path ?? string.Empty;
             SupportsMultipleConformers = supportMultipleConformers;
             _dictLibKeyIonMobility = dictLibKeyIonMobility;
         }

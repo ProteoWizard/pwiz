@@ -5209,6 +5209,9 @@ If you prefer you can choose to report anonymously.</value>
   <data name="EditCustomMoleculeDlg_OkDialog_Custom_molecules_must_have_a_mass_greater_than_or_equal_to__0__" xml:space="preserve">
     <value>Custom molecules must have a mass greater than or equal to {0}.</value>
   </data>
+  <data name="EditCustomMoleculeDlg_OkDialog_Please_specify_the_ion_mobility_units_" xml:space="preserve">
+    <value>Please specify the ion mobility units.</value>
+  </data>
   <data name="AddZipToolHelper_ShouldOverwrite_Overwriting_tool___0_" xml:space="preserve">
     <value>Overwriting tool: {0}</value>
   </data>
@@ -11155,6 +11158,10 @@ Invalid peptide sequence at position 18
   </data>
   <data name="RTScheduleGraphPane_UpdateGraph_Concurrent_Accumulations" xml:space="preserve">
     <value>Concurrent Accumulations</value>
+  </data>
+  <data name="GraphFullScan_CreateGraph_IM__0_" xml:space="preserve">
+    <value>IM={0}</value>
+    <comment>"IM" stands for "Ion Mobility" - used for displaying ion mobility in raw scan view</comment>
   </data>
   <data name="PcaPlot_UpdateGraph_Principal_Component__0_" xml:space="preserve">
     <value>Principal Component {0}</value>

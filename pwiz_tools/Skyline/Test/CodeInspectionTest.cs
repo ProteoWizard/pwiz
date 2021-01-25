@@ -75,7 +75,7 @@ namespace pwiz.SkylineTest
             // Looking for non-standard scaling in form designer
             AddTextInspection(@"*.resx", // Examine files with this mask
                 Inspection.Required,  // This is a test for things that MUST be in such files
-                Level.Warn, // Any failure is treated as a warning, and does not cause overall test failure
+                Level.Error, // Any failure is treated as an error, and overall test fails
                 null, // There are no parts of the codebase that should skip this check
                 "<data name=\"$this.AutoScaleDimensions\" type=\"System.Drawing.SizeF, System.Drawing\">", // Only worry about it when this appears in file
                 "<data name=\"$this.AutoScaleDimensions\" type=\"System.Drawing.SizeF, System.Drawing\">\n<value>6, 13</value>", // Required pattern (two lines)
