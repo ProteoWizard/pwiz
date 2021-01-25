@@ -219,54 +219,18 @@ namespace pwiz.Skyline.Controls.SeqNode
         public IEnumerable<TextSequence> GetTextSequencesForLinkedPeptides(DisplayModificationOption displayModificationOption)
         {
             var result = new List<TextSequence>();
-            if (LinkedPeptides.Count == 0)
-            {
-                return result;
-            }
-
-            result.Add(new TextSequence
-            {
-                Color = Color.Black,
-                Font = ModFontHolder.Plain,
-                Text = STR_WIDE_DASH
-            });
-            if (LinkedPeptides.Count > 1)
-            {
-                result.Add(new TextSequence
-                {
-                    Color = Color.Black,
-                    Font = ModFontHolder.Plain,
-                    Text = @"["
-                });
-            }
-
-            bool first = true;
             foreach (var linkedPeptide in LinkedPeptides)
             {
-                if (!first)
-                {
-                    result.Add(new TextSequence
-                    {
-                        Color = Color.Black,
-                        Font = ModFontHolder.Plain,
-                        Text = @","
-                    });
-                }
-
-                first = false;
-                result.AddRange(linkedPeptide.GetTextSequencesForSelfAndChildren(displayModificationOption));
-            }
-
-            if (LinkedPeptides.Count > 1)
-            {
                 result.Add(new TextSequence
                 {
                     Color = Color.Black,
                     Font = ModFontHolder.Plain,
-                    Text = @"]"
+                    Text = STR_WIDE_DASH
                 });
-            }
 
+                Assume.AreEqual(0, linkedPeptide.LinkedPeptides.Count);
+                result.AddRange(linkedPeptide.GetTextSequencesForSelfAndChildren(displayModificationOption));
+            }
             return result;
         }
 

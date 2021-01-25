@@ -94,7 +94,6 @@ AMNFS[Phospho (ST)]GSPGAVSTSPT[Phospho (ST)]QSFM[Oxidation (M)]NTLPR");
             var flatPrecursor = flatPeptide.TransitionGroups.First();
             var crosslinkedPrecursor = crosslinkedPeptide.TransitionGroups.First();
             Assert.AreEqual(flatPrecursor.PrecursorMz, crosslinkedPrecursor.PrecursorMz, DELTA);
-            ModificationSite crosslinkSite = new ModificationSite(10, crosslinkerName);
             var flatTransitionNames = flatPrecursor.Transitions.Select(tran =>
                     tran.ComplexFragmentIon.GetTargetsTreeLabel() +
                     Transition.GetChargeIndicator(tran.Transition.Adduct))

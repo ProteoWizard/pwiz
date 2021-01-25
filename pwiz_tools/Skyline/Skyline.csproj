@@ -491,7 +491,6 @@
     <Compile Include="Model\Crosslinking\CrosslinkedSequence.cs" />
     <Compile Include="Model\Crosslinking\CrosslinkPeptideBuilder.cs" />
     <Compile Include="Model\Crosslinking\FragmentIonType.cs" />
-    <Compile Include="Model\Crosslinking\LegacyComplexFragmentIon.cs" />
     <Compile Include="Model\Crosslinking\CrosslinkBuilder.cs" />
     <Compile Include="Model\Crosslinking\ComplexFragmentIonName.cs" />
     <Compile Include="Model\Crosslinking\NeutralFragmentIon.cs" />

@@ -237,19 +237,17 @@ namespace pwiz.SkylineTest
         public void TestIncludesAaIndex()
         {
             var peptide = new Peptide("AD");
-            var transitionGroup = new TransitionGroup(peptide, Adduct.SINGLY_PROTONATED, IsotopeLabelType.light);
-            var precursor =
-                new LegacyComplexFragmentIon(new Transition(transitionGroup, IonType.precursor, peptide.Length - 1, 0, Adduct.SINGLY_PROTONATED), null, LinkedPeptide.EMPTY_CROSSLINK_STRUCTURE);
-            Assert.IsTrue(precursor.IncludesAaIndex(0));
-            Assert.IsTrue(precursor.IncludesAaIndex(1));
-            var y1 = new LegacyComplexFragmentIon(new Transition(transitionGroup, IonType.y, Transition.OrdinalToOffset(IonType.y, 1, peptide.Length), 0, Adduct.SINGLY_PROTONATED), null, LinkedPeptide.EMPTY_CROSSLINK_STRUCTURE);
-            Assert.AreEqual(1, y1.Transition.Ordinal);
-            Assert.IsFalse(y1.IncludesAaIndex(0));
-            Assert.IsTrue(y1.IncludesAaIndex(1));
-            var b1 = new LegacyComplexFragmentIon(new Transition(transitionGroup, IonType.b, Transition.OrdinalToOffset(IonType.b, 1, peptide.Length), 0, Adduct.SINGLY_PROTONATED), null, LinkedPeptide.EMPTY_CROSSLINK_STRUCTURE);
-            Assert.AreEqual(1, b1.Transition.Ordinal);
-            Assert.IsTrue(b1.IncludesAaIndex(0));
-            Assert.IsFalse(b1.IncludesAaIndex(1));
+            var precursor = FragmentIonType.Precursor;
+            Assert.IsTrue(precursor.IncludesAaIndex(peptide, 0));
+            Assert.IsTrue(precursor.IncludesAaIndex(peptide, 1));
+            var y1 = FragmentIonType.Y(1);
+            Assert.AreEqual(1, y1.Ordinal);
+            Assert.IsFalse(y1.IncludesAaIndex(peptide, 0));
+            Assert.IsTrue(y1.IncludesAaIndex(peptide, 1));
+            var b1 = FragmentIonType.B(1);
+            Assert.AreEqual(1, b1.Ordinal);
+            Assert.IsTrue(b1.IncludesAaIndex(peptide, 0));
+            Assert.IsFalse(b1.IncludesAaIndex(peptide, 1));
         }
 
         [TestMethod]

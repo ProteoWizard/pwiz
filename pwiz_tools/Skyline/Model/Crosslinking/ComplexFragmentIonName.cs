@@ -18,10 +18,10 @@
  */
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Text;
+using NHibernate.Proxy;
 using pwiz.Common.Collections;
-using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Serialization;
 
 namespace pwiz.Skyline.Model.Crosslinking
@@ -29,209 +29,63 @@ namespace pwiz.Skyline.Model.Crosslinking
     /// <summary>
     /// Represents the parts of a <see cref="LegacyComplexFragmentIon"/> separated from the actual Transition and TransitionGroup objects.
     /// </summary>
-    public class LegacyComplexFragmentIonName : Immutable
+    public class LegacyComplexFragmentIonName
     {
-        public static readonly LegacyComplexFragmentIonName ORPHAN = new LegacyComplexFragmentIonName()
+        public LegacyComplexFragmentIonName(ModificationSite site, FragmentIonType ionType)
         {
-            IonType = IonType.custom,
-        };
-
-        public static readonly LegacyComplexFragmentIonName PRECURSOR
-            = new LegacyComplexFragmentIonName(IonType.precursor, 0);
-
-        public LegacyComplexFragmentIonName(IonType ionType, int ordinal) : this()
-        {
+            Site = site;
             IonType = ionType;
-            if (IonType != IonType.precursor)
+            Children = new List<LegacyComplexFragmentIonName>();
+        }
+
+        public ModificationSite Site { get; }
+        public FragmentIonType IonType { get; }
+        public List<LegacyComplexFragmentIonName> Children { get; private set; }
+
+        public void FillInIons(IList<ImmutableList<ModificationSite>> sitePaths, FragmentIonType[] array)
+        {
+            var queue = new List<Tuple<ImmutableList<ModificationSite>, LegacyComplexFragmentIonName>>
+                {Tuple.Create(ImmutableList<ModificationSite>.EMPTY, this)};
+            while (queue.Count > 0)
             {
-                Ordinal = ordinal;
-            }
-        }
-
-        private LegacyComplexFragmentIonName()
-        {
-            Children = ImmutableList<Tuple<ModificationSite, LegacyComplexFragmentIonName>>.EMPTY;
-        }
-
-        public IonType IonType { get; private set; }
-        public int Ordinal { get; private set; }
-        public ImmutableList<Tuple<ModificationSite, LegacyComplexFragmentIonName>> Children { get; private set; }
-        public bool IsOrphan
-        {
-            get { return IonType == IonType.custom; }
-        }
-
-        private static ImmutableList<Tuple<ModificationSite, LegacyComplexFragmentIonName>> ToChildList(
-            IEnumerable<Tuple<ModificationSite, LegacyComplexFragmentIonName>> children)
-        {
-            return ImmutableList.ValueOf(children.OrderBy(tuple => tuple.Item1));
-        }
-
-        public LegacyComplexFragmentIonName AddChild(ModificationSite modificationSite, LegacyComplexFragmentIonName child)
-        {
-            if (IsOrphan)
-            {
-                if (Children.Count > 0)
+                var tuple = queue[0];
+                queue.RemoveAt(0);
+                var fragmentIon = tuple.Item2;
+                var sitePath = ImmutableList.ValueOf(tuple.Item1.Append(fragmentIon.Site));
+                int index = sitePaths.IndexOf(sitePath);
+                string sitePathString = string.Join(@"/", sitePath);
+                if (index < 0)
                 {
-                    throw new InvalidOperationException();
-                }
-            }
-
-            return ChangeProp(ImClone(this),
-                im => { im.Children = ToChildList(Children.Append(Tuple.Create(modificationSite, child))); });
-        }
-
-        protected bool Equals(LegacyComplexFragmentIonName other)
-        {
-            return IonType == other.IonType && Ordinal == other.Ordinal && Children.Equals(other.Children) && IsOrphan == other.IsOrphan;
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
-            return Equals((LegacyComplexFragmentIonName) obj);
-        }
-
-        public override int GetHashCode()
-        {
-            unchecked
-            {
-                var hashCode = (int) IonType;
-                hashCode = (hashCode * 397) ^ Ordinal;
-                hashCode = (hashCode * 397) ^ Children.GetHashCode();
-                hashCode = (hashCode * 397) ^ IsOrphan.GetHashCode();
-                return hashCode;
-            }
-        }
-
-        public override string ToString()
-        {
-            if (IsOrphan && Children.Count == 0)
-            {
-                return @"-";
-            }
-
-            StringBuilder stringBuilder = new StringBuilder();
-            if (!IsOrphan)
-            {
-                if (IonType == IonType.precursor)
-                {
-                    stringBuilder.Append(@"p");
-                }
-                else
-                {
-                    stringBuilder.Append(IonType);
-                    stringBuilder.Append(Ordinal);
-                }
-            }
-
-            if (Children.Count == 1 && Children[0].Item1 == null)
-            {
-                stringBuilder.Append(@"-");
-                stringBuilder.Append(Children[0].Item2);
-            }
-            else if (Children.Count != 0)
-            {
-                stringBuilder.Append(@"-");
-                if (Children.Count != 1)
-                {
-                    stringBuilder.Append(@"[");
+                    throw new InvalidDataException(string.Format(@"Unable to find site {0}",
+                        sitePathString));
                 }
 
-                stringBuilder.Append(string.Join(@",", Children.Select(ChildToString)));
-                if (Children.Count != 1)
+                if (!array[index].IsEmpty)
                 {
-                    stringBuilder.Append(@"]");
+                    throw new InvalidDataException(string.Format(@"Duplicate ion at  {0}", sitePathString));
                 }
-            }
 
-            return stringBuilder.ToString();
+                array[index] = fragmentIon.IonType;
+                queue.AddRange(fragmentIon.Children.Select(child => Tuple.Create(sitePath, child)));
+            }
         }
 
-        private string ChildToString(Tuple<ModificationSite, LegacyComplexFragmentIonName> child)
+        public static IonChain ToIonChain(IList<ImmutableList<ModificationSite>> sitePaths, IEnumerable<LegacyComplexFragmentIonName> ionNames)
         {
-            var stringBuilder = new StringBuilder();
-            stringBuilder.Append(@"{");
-            if (child.Item1 != null)
+            var array = new FragmentIonType[sitePaths.Count];
+            foreach (var ionName in ionNames)
             {
-                stringBuilder.Append(child.Item1);
-                stringBuilder.Append(@":");
+                ionName.FillInIons(sitePaths, array);
             }
-
-            stringBuilder.Append(child.Item2);
-            stringBuilder.Append(@"}");
-            return stringBuilder.ToString();
-        }
-
-        public IEnumerable<SkylineDocumentProto.Types.LinkedIon> GetLinkedIonProtos()
-        {
-            foreach (var child in Children)
-            {
-                var proto = new SkylineDocumentProto.Types.LinkedIon()
-                {
-                    ModificationIndex = child.Item1.IndexAa,
-                    ModificationName = child.Item1.ModName
-                };
-
-                if (child.Item2.IsOrphan)
-                {
-                    proto.Orphan = true;
-                }
-                else
-                {
-                    proto.IonType = DataValues.ToIonType(child.Item2.IonType);
-                    proto.Ordinal = child.Item2.Ordinal;
-                }
-                proto.Children.AddRange(child.Item2.GetLinkedIonProtos());
-                yield return proto;
-            }
+            return IonChain.FromIons(array);
         }
 
         public static LegacyComplexFragmentIonName FromLinkedIonProto(SkylineDocumentProto.Types.LinkedIon linkedIon)
         {
-            LegacyComplexFragmentIonName child;
-            if (linkedIon.Orphan)
-            {
-                child = ORPHAN;
-            }
-            else
-            {
-                child = new LegacyComplexFragmentIonName(DataValues.FromIonType(linkedIon.IonType), linkedIon.Ordinal);
-            }
-
-            child = child.AddLinkedIonProtos(linkedIon.Children);
-            return child;
-        }
-
-        public LegacyComplexFragmentIonName AddLinkedIonProtos(IEnumerable<SkylineDocumentProto.Types.LinkedIon> linkedIons)
-        {
-            var result = this;
-            foreach (var linkedIon in linkedIons)
-            {
-                LegacyComplexFragmentIonName child;
-                if (linkedIon.Orphan)
-                {
-                    child = ORPHAN;
-                }
-                else
-                {
-                    child = new LegacyComplexFragmentIonName(DataValues.FromIonType(linkedIon.IonType), linkedIon.Ordinal);
-                }
-
-                child = child.AddLinkedIonProtos(linkedIon.Children);
-                result = result.AddChild(new ModificationSite(linkedIon.ModificationIndex, linkedIon.ModificationName),
-                    child);
-            }
-
+            var result = new LegacyComplexFragmentIonName(new ModificationSite(linkedIon.ModificationIndex, linkedIon.ModificationName), 
+                new FragmentIonType(DataValues.FromIonType(linkedIon.IonType), linkedIon.Ordinal));
+            result.Children.AddRange(linkedIon.Children.Select(FromLinkedIonProto));
             return result;
-        }
-
-
-        public IEnumerable<IonType> EnumerateIonTypes()
-        {
-            return Children.SelectMany(child => child.Item2.EnumerateIonTypes()).Prepend(IonType);
         }
     }
 }

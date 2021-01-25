@@ -810,6 +810,7 @@ namespace pwiz.Skyline.Model.Serialization
             writer.WriteEndElement();
         }
 
+#if false
         private void WriteLegacyLinkedIon(XmlWriter writer, ModificationSite modificationSite, LegacyComplexFragmentIon complexFragmentIon)
         {
             writer.WriteStartElement(EL.linked_fragment_ion);
@@ -831,6 +832,7 @@ namespace pwiz.Skyline.Model.Serialization
             }
             writer.WriteEndElement();
         }
+#endif
 
         private void WriteLinkedIons(XmlWriter writer, NeutralFragmentIon complexFragmentIon)
         {

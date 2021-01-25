@@ -1009,11 +1009,5 @@ namespace pwiz.Skyline.Model.Lib
                 transitionGroupDocNode.PrecursorMz, null, null, null, FragmentFilterObj.UseFilter).Cast<DocNode>().ToList();
             return (TransitionGroupDocNode) transitionGroupDocNode.ChangeChildren(children);
         }
-
-        public IEnumerable<IonType> GetAllIonTypes(LegacyComplexFragmentIon complexFragmentIon)
-        {
-            return new[] {complexFragmentIon.Transition.IonType}.Concat(
-                complexFragmentIon.Children.Values.SelectMany(child => GetAllIonTypes(child)));
-        }
     }
 }

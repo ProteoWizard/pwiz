@@ -22,6 +22,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using pwiz.Common.Chemistry;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.Crosslinking;
@@ -673,15 +674,22 @@ namespace pwiz.Skyline.Model
                 parts.Add(transitionProto.OrphanedCrosslinkIon
                     ? FragmentIonType.Empty
                     : FragmentIonType.FromTransition(transition));
-                foreach (var linkedIon in transitionProto.LinkedIons)
+                if (null != mods.OldCrosslinkMap)
                 {
-                    if (linkedIon.Orphan)
+                    parts.AddRange(LegacyComplexFragmentIonName.ToIonChain(mods.OldCrosslinkMap, transitionProto.LinkedIons.Select(LegacyComplexFragmentIonName.FromLinkedIonProto)));
+                }
+                else
+                {
+                    foreach (var linkedIon in transitionProto.LinkedIons)
                     {
-                        parts.Add(FragmentIonType.Empty);
-                    }
-                    else
-                    {
-                        parts.Add(new FragmentIonType(DataValues.FromIonType(linkedIon.IonType), linkedIon.Ordinal));
+                        if (linkedIon.Orphan)
+                        {
+                            parts.Add(FragmentIonType.Empty);
+                        }
+                        else
+                        {
+                            parts.Add(new FragmentIonType(DataValues.FromIonType(linkedIon.IonType), linkedIon.Ordinal));
+                        }
                     }
                 }
                 var complexFragmentIon = new NeutralFragmentIon(parts, losses);
@@ -696,7 +704,6 @@ namespace pwiz.Skyline.Model
 
             return transitionDocNode;
         }
-
 
         public IEnumerable<SkylineDocumentProto.Types.TransitionPeak> GetTransitionPeakProtos(MeasuredResults measuredResults)
         {

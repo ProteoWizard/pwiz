@@ -34,7 +34,6 @@ using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
-using pwiz.Skyline.Model.V01;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -44,7 +43,14 @@ namespace pwiz.Skyline.Model.Serialization
     {
         private readonly StringPool _stringPool = new StringPool();
         private AnnotationScrubber _annotationScrubber;
-        public DocumentFormat FormatVersion { get; private set; }
+        public DocumentFormat FormatVersion
+        {
+            get { return DocumentFormat; }
+            private set
+            {
+                DocumentFormat = value;
+            }
+        }
         public PeptideGroupDocNode[] Children { get; private set; }
 
         private readonly Dictionary<string, string> _uniqueSpecies = new Dictionary<string, string>();
@@ -240,6 +246,7 @@ namespace pwiz.Skyline.Model.Serialization
                 _documentReader = documentReader;
             }
             public SrmSettings Settings { get { return _documentReader.Settings; } }
+            public ExplicitMods ExplicitMods { get; private set; }
             public IonType IonType { get; private set; }
             public int Ordinal { get; private set; }
             public int MassIndex { get; private set; }
@@ -249,6 +256,7 @@ namespace pwiz.Skyline.Model.Serialization
             public TransitionLosses Losses { get; private set; }
 
             public List<FragmentIonType> LinkedFragmentIons { get; private set; }
+            public List<LegacyComplexFragmentIonName> LegacyFragmentIons { get; private set; }
             public bool OrphanedCrosslinkIon { get; private set; }
             public Annotations Annotations { get; private set; }
             public TransitionLibInfo LibInfo { get; private set; }
@@ -307,7 +315,15 @@ namespace pwiz.Skyline.Model.Serialization
                             Losses = ReadTransitionLosses(reader);
                         else if (reader.IsStartElement(EL.linked_fragment_ion))
                         {
-                            LinkedFragmentIons.Add(ReadLinkedFragmentIon(reader));
+                            if (_documentReader.FormatVersion < DocumentFormat.FLAT_CROSSLINKS)
+                            {
+                                LegacyFragmentIons = LegacyFragmentIons ?? new List<LegacyComplexFragmentIonName>();
+                                LegacyFragmentIons.Add(ReadLegacyLinkedFragmentIon(reader));
+                            }
+                            else
+                            {
+                                LinkedFragmentIons.Add(ReadLinkedFragmentIon(reader));
+                            }
                         }
                         else if (reader.IsStartElement(EL.transition_lib_info))
                             LibInfo = ReadTransitionLibInfo(reader);
@@ -367,22 +383,23 @@ namespace pwiz.Skyline.Model.Serialization
                 return null;
             }
 
-            private KeyValuePair<ModificationSite, LegacyComplexFragmentIonName> ReadLegacyLinkedFragmentIon(XmlReader reader)
+            private LegacyComplexFragmentIonName ReadLegacyLinkedFragmentIon(XmlReader reader)
             {
-                LegacyComplexFragmentIonName linkedIon;
+                FragmentIonType fragmentIonType;
                 string strFragmentType = reader.GetAttribute(ATTR.fragment_type);
                 if (strFragmentType == null)
                 {
                     // blank fragment type means orphaned fragment ion
-                    linkedIon = LegacyComplexFragmentIonName.ORPHAN;
+                    fragmentIonType = FragmentIonType.Empty;
                 }
                 else
                 {
-                    linkedIon = new LegacyComplexFragmentIonName(TypeSafeEnum.Parse<IonType>(strFragmentType), reader.GetIntAttribute(ATTR.fragment_ordinal));
+                    fragmentIonType = new FragmentIonType(TypeSafeEnum.Parse<IonType>(strFragmentType), reader.GetIntAttribute(ATTR.fragment_ordinal));
                 }
                     
                 var modificationSite = new ModificationSite(reader.GetIntAttribute(ATTR.index_aa),
                     reader.GetAttribute(ATTR.modification_name));
+                var linkedIon = new LegacyComplexFragmentIonName(modificationSite, fragmentIonType);
                 bool empty = reader.IsEmptyElement;
                 reader.Read();
                 if (!empty)
@@ -391,8 +408,7 @@ namespace pwiz.Skyline.Model.Serialization
                     {
                         if (reader.IsStartElement(EL.linked_fragment_ion))
                         {
-                            var child = ReadLegacyLinkedFragmentIon(reader);
-                            linkedIon = linkedIon.AddChild(child.Key, child.Value);
+                            linkedIon.Children.Add(ReadLegacyLinkedFragmentIon(reader));
                         }
                         else
                         {
@@ -402,7 +418,7 @@ namespace pwiz.Skyline.Model.Serialization
                     reader.ReadEndElement();
                 }
 
-                return new KeyValuePair<ModificationSite, LegacyComplexFragmentIonName>(modificationSite, linkedIon);
+                return linkedIon;
             }
 
             private FragmentIonType ReadLinkedFragmentIon(XmlReader reader)
@@ -938,7 +954,6 @@ namespace pwiz.Skyline.Model.Serialization
             var peptide = isCustomMolecule ?
                 new Peptide(customMolecule) :
                 new Peptide(group as FastaSequence, sequence, start, end, missedCleavages, isDecoy);
-
             if (reader.IsEmptyElement)
                 reader.Read();
             else
@@ -954,7 +969,7 @@ namespace pwiz.Skyline.Model.Serialization
                     annotations = ReadTargetAnnotations(reader, AnnotationDef.AnnotationTarget.peptide);
                 if (!isCustomMolecule)
                 {
-                    mods = ReadExplicitMods(reader, peptide)?.FlattenCrosslinkStructure();
+                    mods = ReadExplicitMods(reader, peptide)?.ConvertOldCrosslinkStructure();
                     SkipImplicitModsElement(reader);
                     lookupMods = ReadLookupMods(reader, lookupSequence);
                     crosslinkStructure = ReadCrosslinkStructure(reader);
@@ -986,6 +1001,7 @@ namespace pwiz.Skyline.Model.Serialization
                 pushReader.ReadEndElement();
             }
 
+            mods = mods.RemoveOldCrosslinkMap();
             ModifiedSequenceMods sourceKey = null;
             if (lookupSequence != null)
                 sourceKey = new ModifiedSequenceMods(lookupSequence, lookupMods);
@@ -1560,7 +1576,17 @@ namespace pwiz.Skyline.Model.Serialization
             TransitionDocNode node;
             if (mods != null && mods.HasCrosslinks)
             {
-                var parts = info.LinkedFragmentIons.Prepend(info.OrphanedCrosslinkIon
+                IEnumerable<FragmentIonType> parts;
+                if (info.LegacyFragmentIons != null)
+                {
+                    parts = LegacyComplexFragmentIonName.ToIonChain(mods.OldCrosslinkMap, info.LegacyFragmentIons);
+                }
+                else
+                {
+                    parts = info.LinkedFragmentIons;
+                }
+
+                parts = parts.Prepend(info.OrphanedCrosslinkIon
                     ? FragmentIonType.Empty
                     : FragmentIonType.FromTransition(transition));
                 var complexFragmentIon = new NeutralFragmentIon(parts, info.Losses);
