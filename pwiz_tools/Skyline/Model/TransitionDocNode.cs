@@ -541,7 +541,7 @@ namespace pwiz.Skyline.Model
                 transitionProto.ExplicitSLens = DataValues.ToOptional(ExplicitValues.SLens);
             }
 
-            foreach (FragmentIonType part in ComplexFragmentIon.NeutralFragmentIon.IonChain)
+            foreach (FragmentIonType part in ComplexFragmentIon.NeutralFragmentIon.IonChain.Skip(1))
             {
                 var linkedIon = new SkylineDocumentProto.Types.LinkedIon();
                 if (part.IsEmpty)
@@ -553,6 +553,7 @@ namespace pwiz.Skyline.Model
                     linkedIon.IonType = DataValues.ToIonType(part.Type.Value);
                     linkedIon.Ordinal = part.Ordinal;
                 }
+                transitionProto.LinkedIons.Add(linkedIon);
             }
             return transitionProto;
         }

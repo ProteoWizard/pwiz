@@ -64,7 +64,7 @@ namespace pwiz.SkylineTest
                 null, null, ExplicitTransitionGroupValues.EMPTY, null, null, false).GetNeutralFormula(srmSettings, null);
             Assert.AreEqual("C30H53N11O12S", linkedPeptideFormula.ToString());
             var crosslinkMod = new StaticMod("disulfide", null, null, "-H2");
-            var crosslink = new CrosslinkModification(crosslinkMod, new []{new CrosslinkSite(0, 3), new CrosslinkSite(1, 2)});
+            var crosslink = new Crosslink(crosslinkMod, new []{new CrosslinkSite(0, 3), new CrosslinkSite(1, 2)});
 
             var explicitModsWithCrosslink = new ExplicitMods(mainPeptide,
                 null,
@@ -143,11 +143,11 @@ namespace pwiz.SkylineTest
             var modSite = new ModificationSite(0, modName);
             var expectedFragmentIons = new[]
             {
-                ComplexFragmentIonName.PRECURSOR.AddChild(modSite, ComplexFragmentIonName.PRECURSOR),
-                ComplexFragmentIonName.PRECURSOR.AddChild(modSite, new ComplexFragmentIonName(IonType.y, 1)),
-                new ComplexFragmentIonName(IonType.y, 1), 
-                new ComplexFragmentIonName(IonType.b, 1).AddChild(modSite, new ComplexFragmentIonName(IonType.precursor, 0)), 
-                ComplexFragmentIonName.ORPHAN.AddChild(modSite, new ComplexFragmentIonName(IonType.b, 1)),
+                LegacyComplexFragmentIonName.PRECURSOR.AddChild(modSite, LegacyComplexFragmentIonName.PRECURSOR),
+                LegacyComplexFragmentIonName.PRECURSOR.AddChild(modSite, new LegacyComplexFragmentIonName(IonType.y, 1)),
+                new LegacyComplexFragmentIonName(IonType.y, 1), 
+                new LegacyComplexFragmentIonName(IonType.b, 1).AddChild(modSite, new LegacyComplexFragmentIonName(IonType.precursor, 0)), 
+                LegacyComplexFragmentIonName.ORPHAN.AddChild(modSite, new LegacyComplexFragmentIonName(IonType.b, 1)),
             };
             CollectionAssert.AreEquivalent(expectedFragmentIons, oneNeutralLossChoices);
         }
@@ -332,7 +332,7 @@ namespace pwiz.SkylineTest
                 new CrosslinkStructure(new Peptide[0], new ExplicitMods[0],
                     new[]
                     {
-                        new CrosslinkModification(crosslinkerDef,
+                        new Crosslink(crosslinkerDef,
                             new[] {new CrosslinkSite(0, 2), new CrosslinkSite(0, 5),}),
                     }));
             var transitionGroupDocNode = new TransitionGroupDocNode(transitionGroup, Annotations.EMPTY, srmSettings,

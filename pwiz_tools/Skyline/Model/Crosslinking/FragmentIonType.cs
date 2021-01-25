@@ -59,13 +59,13 @@ namespace pwiz.Skyline.Model.Crosslinking
             {
                 return @"*";
             }
-            string str = Type.ToString();
-            if (Ordinal != 0)
+
+            if (Type == IonType.precursor)
             {
-                str += Ordinal;
+                return @"p";
             }
 
-            return str;
+            return Type.ToString() + Ordinal;
         }
 
         public char? GetAminoAcid(string sequence)
