@@ -218,7 +218,10 @@ namespace SkylineBatch
             if (_configManager.ConfigsRunning().Count > 0)
             {
                 comboLogList.SelectedIndex = 0;
-                tabMain.SelectTab(tabLog);
+                RunUi(() =>
+                {
+                    tabMain.SelectTab(tabLog);
+                });
             }
         }
 

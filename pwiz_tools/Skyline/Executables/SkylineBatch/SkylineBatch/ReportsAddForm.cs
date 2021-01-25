@@ -104,7 +104,13 @@ namespace SkylineBatch
         {
             OpenFileDialog openDialog = new OpenFileDialog();
             openDialog.Filter = TextUtil.FILTER_SKYR;
-            openDialog.InitialDirectory = Path.GetDirectoryName(textReportPath.Text);
+            try
+            {
+                openDialog.InitialDirectory = Path.GetDirectoryName(textReportPath.Text);
+            }
+            catch (Exception)
+            {
+            }
             openDialog.ShowDialog();
             textReportPath.Text = openDialog.FileName;
         }
