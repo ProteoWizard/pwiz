@@ -490,7 +490,7 @@ namespace SkylineBatch
                 {
                     if (deletingLogs.Contains(_oldLogs[i].GetFileName()))
                     {
-                        File.Delete(_oldLogs[i].GetFile());
+                        _oldLogs[i].Delete();
                         _oldLogs.RemoveAt(i);
                         if (i <= SelectedLog - 1)
                             SelectedLog = SelectedLog - 1 == i ? 0 : SelectedLog - 1;

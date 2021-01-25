@@ -33,6 +33,7 @@ using SkylineBatch.Properties;
         void LogException(Exception exception, string message, params object[] args);
         string GetFile();
         string GetFileName();
+        void Delete();
         SkylineBatchLogger Archive();
         void DisplayLog();
     }
@@ -51,6 +52,8 @@ using SkylineBatch.Properties;
 
         private IMainUiControl _mainUi;
         
+        private StreamReader _streamReader;
+        private StreamWriter _streamWriter;
 
         private Queue<string> _memLogMessages;
         private const int MemLogSize = 100; // Keep the last 100 log messages in memory
@@ -84,12 +87,20 @@ using SkylineBatch.Properties;
         {
             _logBuffer = new StringBuilder();
             _memLogMessages = new Queue<string>(MemLogSize);
-
+            
             // Initialize - create blank log file if doesn't exist
-            if (File.Exists(_filePath)) return;
-            using (File.Create(_filePath))
+            if (!File.Exists(_filePath))
             {
+                using (File.Create(_filePath))
+                {
+                }
             }
+
+            var defaultBufferSize = 4096;
+            var logFileRead = File.Open(_filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            var logFileWrite = File.Open(_filePath, FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
+            _streamReader = new StreamReader(logFileRead, Encoding.Default, false, defaultBufferSize, true);
+            _streamWriter = new StreamWriter(logFileWrite, Encoding.Default, defaultBufferSize, true);
         }
 
         private void WriteToFile(string message)
@@ -113,19 +124,15 @@ using SkylineBatch.Properties;
 
                 try
                 {
-                    using (var fs = new FileStream(_filePath, FileMode.Append, FileAccess.Write, FileShare.ReadWrite))
+                    if (_logBuffer != null && _logBuffer.Length > 0)
                     {
-                        using (var writer = new StreamWriter(fs))
-                        {
-                            if (_logBuffer != null && _logBuffer.Length > 0)
-                            {
-                                // Append any log messages that were buffered while the log file was unavailable (e.g. due to network share being temporarily unavailable).
-                                writer.Write(_logBuffer.ToString());
-                                _logBuffer.Clear();
-                            }
-                            writer.WriteLine(dateAndMessage);
-                        }
+                        // Append any log messages that were buffered while the log file was unavailable (e.g. due to network share being temporarily unavailable).
+                        _streamWriter.Write(_logBuffer.ToString());
+                        _streamWriter.Flush();
+                        _logBuffer.Clear();
                     }
+                    _streamWriter.WriteLine(dateAndMessage);
+                    _streamWriter.Flush();
 
                     // Save log message in memory
                     if (_memLogMessages.Count == MemLogSize)
@@ -294,6 +301,12 @@ using SkylineBatch.Properties;
             }
         }
 
+        public void Delete()
+        {
+            CloseFileStreams();
+            File.Delete(_filePath);
+        }
+
         public SkylineBatchLogger Archive()
         {
             if (new FileInfo(_filePath).Length > 0)
@@ -301,14 +314,24 @@ using SkylineBatch.Properties;
                 var lastModified = File.GetLastWriteTime(_filePath);
                 var timestampFileName = Path.GetDirectoryName(_filePath) + "\\" + Path.GetFileNameWithoutExtension(_filePath);
                 timestampFileName += lastModified.ToString("_yyyyMMdd_HHmmss") + ".log";
+                CloseFileStreams();
+
                 File.Copy(GetFile(), timestampFileName);
-                File.Create(_filePath).Close();
+                File.Delete(_filePath);
+                Init();
                 return new SkylineBatchLogger(timestampFileName, _mainUi);
             }
 
             return null;
         }
 
+        private void CloseFileStreams()
+        {
+            _streamWriter.Close();
+            _streamWriter.BaseStream.Dispose();
+            _streamReader.Close();
+            _streamReader.BaseStream.Dispose();
+        }
 
         public string GetFile()
         {
@@ -354,31 +377,24 @@ using SkylineBatch.Properties;
                 // Read the log contents and display in the log tab.
                 var lines = new List<string>();
                 var truncated = false;
-                using (
-                    var reader =
-                        new StreamReader(new FileStream(GetFile(), FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-                    )
+                var maxDisplaySize = MaxLogSize / 20;
+                // If the log is too big don't display all of it.
+                if (_streamReader.BaseStream.Length > maxDisplaySize)
                 {
-                    var maxDisplaySize = MaxLogSize / 20;
-                    // If the log is too big don't display all of it.
-                    if (reader.BaseStream.Length > maxDisplaySize)
-                    {
-                        reader.BaseStream.Seek(-maxDisplaySize, SeekOrigin.End);
-                        truncated = true;
-                    }
-                    string line;
-                    while ((line = reader.ReadLine()) != null)
-                    {
-                        lines.Add(line);
-                    }
-
-                    if (lines.Count > MaxLogLines)
-                    {
-                        lines = lines.GetRange(lines.Count - MaxLogLines - 1, MaxLogLines);
-                        truncated = true;
-                    }
+                    _streamReader.BaseStream.Seek(-maxDisplaySize, SeekOrigin.End);
+                    truncated = true;
+                }
+                string lineText;
+                while ((lineText = _streamReader.ReadLine()) != null)
+                {
+                    lines.Add(lineText);
                 }
 
+                if (lines.Count > MaxLogLines)
+                {
+                    lines = lines.GetRange(lines.Count - MaxLogLines - 1, MaxLogLines);
+                    truncated = true;
+                }
                 if (truncated)
                 {
                     _mainUi.LogErrorToUi(string.Format(Resources.SkylineBatchLogger_DisplayLog_____Log_truncated_____Full_log_is_in__0_, GetFile()), false);
