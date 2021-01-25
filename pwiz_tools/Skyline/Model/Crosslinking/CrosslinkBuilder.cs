@@ -92,7 +92,7 @@ namespace pwiz.Skyline.Model.Crosslinking
             {
                 result = result.Plus(_peptideBuilders[i].GetFragmentFormula(complexFragmentIon.IonChain[i]));
             }
-            result = SubtractLosses(result, complexFragmentIon.TransitionLosses);
+            result = SubtractLosses(result, complexFragmentIon.Losses);
             foreach (var crosslink in PeptideStructure.Crosslinks)
             {
                 if (true == complexFragmentIon.ContainsCrosslink(PeptideStructure, crosslink.Sites))
@@ -316,9 +316,9 @@ namespace pwiz.Skyline.Model.Crosslinking
                         continue;
                     }
                     var expectedCharge = transitionGroup.PrecursorAdduct.AdductCharge;
-                    if (complexFragmentIon.TransitionLosses != null)
+                    if (complexFragmentIon.Losses != null)
                     {
-                        expectedCharge -= complexFragmentIon.TransitionLosses.TotalCharge;
+                        expectedCharge -= complexFragmentIon.Losses.TotalCharge;
                     }
 
                     if (expectedCharge <= 0)
