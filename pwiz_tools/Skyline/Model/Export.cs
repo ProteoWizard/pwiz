@@ -2355,7 +2355,7 @@ namespace pwiz.Skyline.Model
                                         staticExplicitMods,
                                         staticModsList, 
                                         new List<TypedModifications>(),
-                                        null);
+                                        null).ChangeCrosslinks(nodePep.CrosslinkStructure);
             
                 if (nodePep.ExplicitMods != null)
                 {

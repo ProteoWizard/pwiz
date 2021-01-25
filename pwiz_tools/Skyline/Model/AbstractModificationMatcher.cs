@@ -1067,7 +1067,7 @@ namespace pwiz.Skyline.Model
                 Settings.PeptideSettings.Modifications.StaticModifications,
                 DefSetStatic,
                 Settings.PeptideSettings.Modifications.GetHeavyModifications(),
-                DefSetHeavy);
+                DefSetHeavy).ChangeCrosslinks(nodePep.CrosslinkStructure);
             // If no light modifications are present, this code assumes the user wants the 
             // default global light modifications.  Unless not stringPaste, in which case the target
             // static mods must also be empty

@@ -29,7 +29,7 @@ namespace pwiz.Skyline.Model.Crosslinking
         public FragmentIonType(IonType ionType, int ordinal) : this()
         {
             _ionType = ionType;
-            if (_ionType != IonType.precursor)
+            if (_ionType != IonType.precursor && _ionType != IonType.custom)
             {
                 if (ordinal <= 0)
                 {

@@ -1305,7 +1305,8 @@ namespace pwiz.Skyline.Model.DocSettings
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             return ArrayUtil.EqualsDeep(obj._modifications, _modifications) &&
-                Equals(obj.Peptide.Target, Peptide.Target);
+                Equals(obj.Peptide.Target, Peptide.Target) &&
+                Equals(obj.Crosslinks, Crosslinks);
         }
 
         public override bool Equals(object obj)
@@ -1325,6 +1326,8 @@ namespace pwiz.Skyline.Model.DocSettings
                 {
                     result = (result*397) ^ Peptide.Target.GetHashCode();
                 }
+
+                result = (result * 397) ^ Crosslinks.GetHashCode();
                 return result;
             }
         }

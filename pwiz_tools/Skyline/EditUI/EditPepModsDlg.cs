@@ -691,8 +691,11 @@ namespace pwiz.Skyline.EditUI
             }
 
             ExplicitMods explicitMods = null;
-            if (staticMods != null || listHeavyTypedMods.Count > 0)
-                explicitMods = new ExplicitMods(peptide, staticMods, listHeavyTypedMods, isVariableStaticMods);
+            if (staticMods != null || listHeavyTypedMods.Count > 0 || !NodePeptide.CrosslinkStructure.IsEmpty)
+            {
+                explicitMods = new ExplicitMods(peptide, staticMods, listHeavyTypedMods, isVariableStaticMods)
+                    .ChangeCrosslinks(NodePeptide.CrosslinkStructure);
+            }
             Helpers.AssignIfEquals(ref explicitMods, explicitModsCurrent);
             ExplicitMods = explicitMods;
 

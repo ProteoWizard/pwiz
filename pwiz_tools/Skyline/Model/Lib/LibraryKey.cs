@@ -737,10 +737,7 @@ namespace pwiz.Skyline.Model.Lib
             {
                 int currentPeptideIndex = queue[0];
                 queue.RemoveAt(0);
-                if (!consumedPeptides.Add(currentPeptideIndex))
-                {
-                    return false;
-                }
+                consumedPeptides.Add(currentPeptideIndex);
                 for (int iCrosslink = remainingCrosslinks.Count - 1; iCrosslink >= 0; iCrosslink--)
                 {
                     var crosslinkIndexes = remainingCrosslinks[iCrosslink];

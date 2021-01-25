@@ -1121,8 +1121,8 @@ namespace pwiz.Skyline.Model
                 }
             }
 
-            if (newExplicitStaticMods != null || newExplicitHeavyMods.Count > 0)
-                return ChangeExplicitMods(new ExplicitMods(Peptide, newExplicitStaticMods, newExplicitHeavyMods, preserveVariable));
+            if (newExplicitStaticMods != null || newExplicitHeavyMods.Count > 0 || !CrosslinkStructure.IsEmpty)
+                return ChangeExplicitMods(new ExplicitMods(Peptide, newExplicitStaticMods, newExplicitHeavyMods, preserveVariable).ChangeCrosslinks(CrosslinkStructure));
             return ChangeExplicitMods(null);
         }
 

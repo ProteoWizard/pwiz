@@ -8,7 +8,6 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.EditUI

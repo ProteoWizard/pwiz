@@ -28,12 +28,21 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(EditLinkedPeptidesDlg));
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.dataGridViewLinkedPeptides = new System.Windows.Forms.DataGridView();
+            this.colPeptideSequence = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colModificationsButton = new System.Windows.Forms.DataGridViewButtonColumn();
             this.toolStripPeptides = new System.Windows.Forms.MenuStrip();
             this.btnUpPeptide = new System.Windows.Forms.ToolStripButton();
             this.btnDownPeptide = new System.Windows.Forms.ToolStripButton();
             this.btnDeletePeptide = new System.Windows.Forms.ToolStripButton();
+            this.dataGridViewCrosslinks = new pwiz.Skyline.Controls.DataGridViewEx();
+            this.colCrosslinker = new System.Windows.Forms.DataGridViewComboBoxColumn();
+            this.colPeptide1 = new System.Windows.Forms.DataGridViewComboBoxColumn();
+            this.colAminoAcid1 = new System.Windows.Forms.DataGridViewComboBoxColumn();
+            this.colPeptide2 = new System.Windows.Forms.DataGridViewComboBoxColumn();
+            this.colAminoAcid2 = new System.Windows.Forms.DataGridViewComboBoxColumn();
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.btnUpCrosslink = new System.Windows.Forms.ToolStripButton();
             this.btnDownCrosslink = new System.Windows.Forms.ToolStripButton();
@@ -42,15 +51,7 @@
             this.btnOk = new System.Windows.Forms.Button();
             this.lblTitle = new System.Windows.Forms.Label();
             this.tbxPrimaryPeptide = new System.Windows.Forms.TextBox();
-            this.colModificationsButton = new System.Windows.Forms.DataGridViewButtonColumn();
             this.dataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colPeptideSequence = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.dataGridViewCrosslinks = new pwiz.Skyline.Controls.DataGridViewEx();
-            this.colCrosslinker = new System.Windows.Forms.DataGridViewComboBoxColumn();
-            this.colPeptide1 = new System.Windows.Forms.DataGridViewComboBoxColumn();
-            this.colAminoAcid1 = new System.Windows.Forms.DataGridViewComboBoxColumn();
-            this.colPeptide2 = new System.Windows.Forms.DataGridViewComboBoxColumn();
-            this.colAminoAcid2 = new System.Windows.Forms.DataGridViewComboBoxColumn();
             this.dataGridViewTextBoxColumn2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -58,18 +59,14 @@
             this.splitContainer1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewLinkedPeptides)).BeginInit();
             this.toolStripPeptides.SuspendLayout();
-            this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewCrosslinks)).BeginInit();
+            this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
             // splitContainer1
             // 
-            this.splitContainer1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.splitContainer1.Location = new System.Drawing.Point(0, 56);
+            resources.ApplyResources(this.splitContainer1, "splitContainer1");
             this.splitContainer1.Name = "splitContainer1";
-            this.splitContainer1.Orientation = System.Windows.Forms.Orientation.Horizontal;
             // 
             // splitContainer1.Panel1
             // 
@@ -80,9 +77,6 @@
             // 
             this.splitContainer1.Panel2.Controls.Add(this.dataGridViewCrosslinks);
             this.splitContainer1.Panel2.Controls.Add(this.menuStrip1);
-            this.splitContainer1.Size = new System.Drawing.Size(675, 299);
-            this.splitContainer1.SplitterDistance = 148;
-            this.splitContainer1.TabIndex = 0;
             // 
             // dataGridViewLinkedPeptides
             // 
@@ -90,158 +84,53 @@
             this.dataGridViewLinkedPeptides.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.colPeptideSequence,
             this.colModificationsButton});
-            this.dataGridViewLinkedPeptides.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dataGridViewLinkedPeptides.Location = new System.Drawing.Point(0, 0);
+            resources.ApplyResources(this.dataGridViewLinkedPeptides, "dataGridViewLinkedPeptides");
             this.dataGridViewLinkedPeptides.Name = "dataGridViewLinkedPeptides";
-            this.dataGridViewLinkedPeptides.Size = new System.Drawing.Size(643, 148);
-            this.dataGridViewLinkedPeptides.TabIndex = 0;
             this.dataGridViewLinkedPeptides.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridViewLinkedPeptides_CellContentClick);
             this.dataGridViewLinkedPeptides.CellErrorTextNeeded += new System.Windows.Forms.DataGridViewCellErrorTextNeededEventHandler(this.dataGridViewLinkedPeptides_CellErrorTextNeeded);
-            // 
-            // toolStripPeptides
-            // 
-            this.toolStripPeptides.AutoSize = false;
-            this.toolStripPeptides.Dock = System.Windows.Forms.DockStyle.Right;
-            this.toolStripPeptides.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.btnUpPeptide,
-            this.btnDownPeptide,
-            this.btnDeletePeptide});
-            this.toolStripPeptides.Location = new System.Drawing.Point(643, 0);
-            this.toolStripPeptides.Name = "toolStripPeptides";
-            this.toolStripPeptides.Size = new System.Drawing.Size(32, 148);
-            this.toolStripPeptides.TabIndex = 1;
-            this.toolStripPeptides.Text = "menuStrip1";
-            // 
-            // btnUpPeptide
-            // 
-            this.btnUpPeptide.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.btnUpPeptide.Image = global::pwiz.Skyline.Properties.Resources.up_pro32;
-            this.btnUpPeptide.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.btnUpPeptide.Name = "btnUpPeptide";
-            this.btnUpPeptide.Size = new System.Drawing.Size(25, 20);
-            this.btnUpPeptide.Text = "Remove";
-            // 
-            // btnDownPeptide
-            // 
-            this.btnDownPeptide.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.btnDownPeptide.Image = global::pwiz.Skyline.Properties.Resources.down_pro32;
-            this.btnDownPeptide.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.btnDownPeptide.Name = "btnDownPeptide";
-            this.btnDownPeptide.Size = new System.Drawing.Size(25, 20);
-            this.btnDownPeptide.Text = "Up";
-            // 
-            // btnDeletePeptide
-            // 
-            this.btnDeletePeptide.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.btnDeletePeptide.Image = global::pwiz.Skyline.Properties.Resources.Delete;
-            this.btnDeletePeptide.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.btnDeletePeptide.Name = "btnDeletePeptide";
-            this.btnDeletePeptide.Size = new System.Drawing.Size(25, 20);
-            this.btnDeletePeptide.Text = "Down";
-            // 
-            // menuStrip1
-            // 
-            this.menuStrip1.AutoSize = false;
-            this.menuStrip1.Dock = System.Windows.Forms.DockStyle.Right;
-            this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.btnUpCrosslink,
-            this.btnDownCrosslink,
-            this.btnDeleteCrosslink});
-            this.menuStrip1.Location = new System.Drawing.Point(643, 0);
-            this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(32, 147);
-            this.menuStrip1.TabIndex = 2;
-            this.menuStrip1.Text = "menuStrip1";
-            // 
-            // btnUpCrosslink
-            // 
-            this.btnUpCrosslink.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.btnUpCrosslink.Image = global::pwiz.Skyline.Properties.Resources.up_pro32;
-            this.btnUpCrosslink.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.btnUpCrosslink.Name = "btnUpCrosslink";
-            this.btnUpCrosslink.Size = new System.Drawing.Size(25, 20);
-            this.btnUpCrosslink.Text = "Remove";
-            // 
-            // btnDownCrosslink
-            // 
-            this.btnDownCrosslink.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.btnDownCrosslink.Image = global::pwiz.Skyline.Properties.Resources.down_pro32;
-            this.btnDownCrosslink.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.btnDownCrosslink.Name = "btnDownCrosslink";
-            this.btnDownCrosslink.Size = new System.Drawing.Size(25, 20);
-            this.btnDownCrosslink.Text = "Up";
-            // 
-            // btnDeleteCrosslink
-            // 
-            this.btnDeleteCrosslink.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.btnDeleteCrosslink.Image = global::pwiz.Skyline.Properties.Resources.Delete;
-            this.btnDeleteCrosslink.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.btnDeleteCrosslink.Name = "btnDeleteCrosslink";
-            this.btnDeleteCrosslink.Size = new System.Drawing.Size(25, 20);
-            this.btnDeleteCrosslink.Text = "Down";
-            // 
-            // btnCancel
-            // 
-            this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.btnCancel.Location = new System.Drawing.Point(586, 367);
-            this.btnCancel.Name = "btnCancel";
-            this.btnCancel.Size = new System.Drawing.Size(75, 23);
-            this.btnCancel.TabIndex = 9;
-            this.btnCancel.Text = "Cancel";
-            this.btnCancel.UseVisualStyleBackColor = true;
-            // 
-            // btnOk
-            // 
-            this.btnOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnOk.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.btnOk.Location = new System.Drawing.Point(505, 367);
-            this.btnOk.Name = "btnOk";
-            this.btnOk.Size = new System.Drawing.Size(75, 23);
-            this.btnOk.TabIndex = 8;
-            this.btnOk.Text = "OK";
-            this.btnOk.UseVisualStyleBackColor = true;
-            this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
-            // 
-            // lblTitle
-            // 
-            this.lblTitle.AutoSize = true;
-            this.lblTitle.Location = new System.Drawing.Point(8, 10);
-            this.lblTitle.Name = "lblTitle";
-            this.lblTitle.Size = new System.Drawing.Size(82, 13);
-            this.lblTitle.TabIndex = 10;
-            this.lblTitle.Text = "Primary peptide:";
-            // 
-            // tbxPrimaryPeptide
-            // 
-            this.tbxPrimaryPeptide.Location = new System.Drawing.Point(11, 30);
-            this.tbxPrimaryPeptide.Name = "tbxPrimaryPeptide";
-            this.tbxPrimaryPeptide.ReadOnly = true;
-            this.tbxPrimaryPeptide.Size = new System.Drawing.Size(260, 20);
-            this.tbxPrimaryPeptide.TabIndex = 11;
-            // 
-            // colModificationsButton
-            // 
-            this.colModificationsButton.HeaderText = "";
-            this.colModificationsButton.Name = "colModificationsButton";
-            this.colModificationsButton.ReadOnly = true;
-            this.colModificationsButton.Width = 20;
-            // 
-            // dataGridViewTextBoxColumn1
-            // 
-            this.dataGridViewTextBoxColumn1.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.dataGridViewTextBoxColumn1.DataPropertyName = "Sequence";
-            this.dataGridViewTextBoxColumn1.HeaderText = "#";
-            this.dataGridViewTextBoxColumn1.Name = "dataGridViewTextBoxColumn1";
-            this.dataGridViewTextBoxColumn1.ReadOnly = true;
             // 
             // colPeptideSequence
             // 
             this.colPeptideSequence.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
             this.colPeptideSequence.DataPropertyName = "Sequence";
-            this.colPeptideSequence.HeaderText = "Peptide Sequence";
+            resources.ApplyResources(this.colPeptideSequence, "colPeptideSequence");
             this.colPeptideSequence.Name = "colPeptideSequence";
+            // 
+            // colModificationsButton
+            // 
+            resources.ApplyResources(this.colModificationsButton, "colModificationsButton");
+            this.colModificationsButton.Name = "colModificationsButton";
+            this.colModificationsButton.ReadOnly = true;
+            // 
+            // toolStripPeptides
+            // 
+            resources.ApplyResources(this.toolStripPeptides, "toolStripPeptides");
+            this.toolStripPeptides.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.btnUpPeptide,
+            this.btnDownPeptide,
+            this.btnDeletePeptide});
+            this.toolStripPeptides.Name = "toolStripPeptides";
+            // 
+            // btnUpPeptide
+            // 
+            this.btnUpPeptide.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.btnUpPeptide.Image = global::pwiz.Skyline.Properties.Resources.up_pro32;
+            resources.ApplyResources(this.btnUpPeptide, "btnUpPeptide");
+            this.btnUpPeptide.Name = "btnUpPeptide";
+            // 
+            // btnDownPeptide
+            // 
+            this.btnDownPeptide.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.btnDownPeptide.Image = global::pwiz.Skyline.Properties.Resources.down_pro32;
+            resources.ApplyResources(this.btnDownPeptide, "btnDownPeptide");
+            this.btnDownPeptide.Name = "btnDownPeptide";
+            // 
+            // btnDeletePeptide
+            // 
+            this.btnDeletePeptide.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.btnDeletePeptide.Image = global::pwiz.Skyline.Properties.Resources.Delete;
+            resources.ApplyResources(this.btnDeletePeptide, "btnDeletePeptide");
+            this.btnDeletePeptide.Name = "btnDeletePeptide";
             // 
             // dataGridViewCrosslinks
             // 
@@ -253,11 +142,8 @@
             this.colAminoAcid1,
             this.colPeptide2,
             this.colAminoAcid2});
-            this.dataGridViewCrosslinks.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dataGridViewCrosslinks.Location = new System.Drawing.Point(0, 0);
+            resources.ApplyResources(this.dataGridViewCrosslinks, "dataGridViewCrosslinks");
             this.dataGridViewCrosslinks.Name = "dataGridViewCrosslinks";
-            this.dataGridViewCrosslinks.Size = new System.Drawing.Size(643, 147);
-            this.dataGridViewCrosslinks.TabIndex = 0;
             this.dataGridViewCrosslinks.CellFormatting += new System.Windows.Forms.DataGridViewCellFormattingEventHandler(this.dataGridViewCrosslinks_CellFormatting);
             this.dataGridViewCrosslinks.DataError += new System.Windows.Forms.DataGridViewDataErrorEventHandler(this.dataGridViewCrosslinks_DataError);
             this.dataGridViewCrosslinks.EditingControlShowing += new System.Windows.Forms.DataGridViewEditingControlShowingEventHandler(this.dataGridViewCrosslinks_EditingControlShowing);
@@ -268,7 +154,7 @@
             this.colCrosslinker.DataPropertyName = "Crosslinker";
             this.colCrosslinker.DisplayStyleForCurrentCellOnly = true;
             this.colCrosslinker.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.colCrosslinker.HeaderText = "Crosslinker";
+            resources.ApplyResources(this.colCrosslinker, "colCrosslinker");
             this.colCrosslinker.Name = "colCrosslinker";
             this.colCrosslinker.Resizable = System.Windows.Forms.DataGridViewTriState.True;
             this.colCrosslinker.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
@@ -279,7 +165,7 @@
             this.colPeptide1.DataPropertyName = "PeptideIndex1";
             this.colPeptide1.DisplayStyleForCurrentCellOnly = true;
             this.colPeptide1.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.colPeptide1.HeaderText = "Peptide #1";
+            resources.ApplyResources(this.colPeptide1, "colPeptide1");
             this.colPeptide1.Name = "colPeptide1";
             this.colPeptide1.Resizable = System.Windows.Forms.DataGridViewTriState.True;
             this.colPeptide1.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
@@ -290,7 +176,7 @@
             this.colAminoAcid1.DataPropertyName = "AaIndex1";
             this.colAminoAcid1.DisplayStyleForCurrentCellOnly = true;
             this.colAminoAcid1.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.colAminoAcid1.HeaderText = "Amino Acid #1";
+            resources.ApplyResources(this.colAminoAcid1, "colAminoAcid1");
             this.colAminoAcid1.Name = "colAminoAcid1";
             this.colAminoAcid1.Resizable = System.Windows.Forms.DataGridViewTriState.True;
             this.colAminoAcid1.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
@@ -301,7 +187,7 @@
             this.colPeptide2.DataPropertyName = "PeptideIndex2";
             this.colPeptide2.DisplayStyleForCurrentCellOnly = true;
             this.colPeptide2.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.colPeptide2.HeaderText = "Peptide #2";
+            resources.ApplyResources(this.colPeptide2, "colPeptide2");
             this.colPeptide2.Name = "colPeptide2";
             this.colPeptide2.Resizable = System.Windows.Forms.DataGridViewTriState.True;
             this.colPeptide2.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
@@ -312,23 +198,85 @@
             this.colAminoAcid2.DataPropertyName = "AaIndex2";
             this.colAminoAcid2.DisplayStyleForCurrentCellOnly = true;
             this.colAminoAcid2.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.colAminoAcid2.HeaderText = "Amino Acid #2";
+            resources.ApplyResources(this.colAminoAcid2, "colAminoAcid2");
             this.colAminoAcid2.Name = "colAminoAcid2";
             this.colAminoAcid2.Resizable = System.Windows.Forms.DataGridViewTriState.True;
             this.colAminoAcid2.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
+            // 
+            // menuStrip1
+            // 
+            resources.ApplyResources(this.menuStrip1, "menuStrip1");
+            this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.btnUpCrosslink,
+            this.btnDownCrosslink,
+            this.btnDeleteCrosslink});
+            this.menuStrip1.Name = "menuStrip1";
+            // 
+            // btnUpCrosslink
+            // 
+            this.btnUpCrosslink.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.btnUpCrosslink.Image = global::pwiz.Skyline.Properties.Resources.up_pro32;
+            resources.ApplyResources(this.btnUpCrosslink, "btnUpCrosslink");
+            this.btnUpCrosslink.Name = "btnUpCrosslink";
+            // 
+            // btnDownCrosslink
+            // 
+            this.btnDownCrosslink.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.btnDownCrosslink.Image = global::pwiz.Skyline.Properties.Resources.down_pro32;
+            resources.ApplyResources(this.btnDownCrosslink, "btnDownCrosslink");
+            this.btnDownCrosslink.Name = "btnDownCrosslink";
+            // 
+            // btnDeleteCrosslink
+            // 
+            this.btnDeleteCrosslink.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.btnDeleteCrosslink.Image = global::pwiz.Skyline.Properties.Resources.Delete;
+            resources.ApplyResources(this.btnDeleteCrosslink, "btnDeleteCrosslink");
+            this.btnDeleteCrosslink.Name = "btnDeleteCrosslink";
+            // 
+            // btnCancel
+            // 
+            resources.ApplyResources(this.btnCancel, "btnCancel");
+            this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            this.btnCancel.Name = "btnCancel";
+            this.btnCancel.UseVisualStyleBackColor = true;
+            // 
+            // btnOk
+            // 
+            resources.ApplyResources(this.btnOk, "btnOk");
+            this.btnOk.Name = "btnOk";
+            this.btnOk.UseVisualStyleBackColor = true;
+            this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
+            // 
+            // lblTitle
+            // 
+            resources.ApplyResources(this.lblTitle, "lblTitle");
+            this.lblTitle.Name = "lblTitle";
+            // 
+            // tbxPrimaryPeptide
+            // 
+            resources.ApplyResources(this.tbxPrimaryPeptide, "tbxPrimaryPeptide");
+            this.tbxPrimaryPeptide.Name = "tbxPrimaryPeptide";
+            this.tbxPrimaryPeptide.ReadOnly = true;
+            // 
+            // dataGridViewTextBoxColumn1
+            // 
+            this.dataGridViewTextBoxColumn1.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.dataGridViewTextBoxColumn1.DataPropertyName = "Sequence";
+            resources.ApplyResources(this.dataGridViewTextBoxColumn1, "dataGridViewTextBoxColumn1");
+            this.dataGridViewTextBoxColumn1.Name = "dataGridViewTextBoxColumn1";
+            this.dataGridViewTextBoxColumn1.ReadOnly = true;
             // 
             // dataGridViewTextBoxColumn2
             // 
             this.dataGridViewTextBoxColumn2.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
             this.dataGridViewTextBoxColumn2.DataPropertyName = "Sequence";
-            this.dataGridViewTextBoxColumn2.HeaderText = "Peptide Sequence";
+            resources.ApplyResources(this.dataGridViewTextBoxColumn2, "dataGridViewTextBoxColumn2");
             this.dataGridViewTextBoxColumn2.Name = "dataGridViewTextBoxColumn2";
             // 
             // EditLinkedPeptidesDlg
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(673, 402);
             this.Controls.Add(this.tbxPrimaryPeptide);
             this.Controls.Add(this.lblTitle);
             this.Controls.Add(this.btnCancel);
@@ -338,8 +286,6 @@
             this.Name = "EditLinkedPeptidesDlg";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "Edit Linked Peptides";
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
@@ -347,9 +293,9 @@
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewLinkedPeptides)).EndInit();
             this.toolStripPeptides.ResumeLayout(false);
             this.toolStripPeptides.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewCrosslinks)).EndInit();
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewCrosslinks)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
