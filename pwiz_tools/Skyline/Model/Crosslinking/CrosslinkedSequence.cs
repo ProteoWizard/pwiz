@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Util;
@@ -12,7 +10,7 @@ namespace pwiz.Skyline.Model.Crosslinking
     public class CrosslinkedSequence
     {
         public CrosslinkedSequence(IEnumerable<ModifiedSequence> peptides,
-            IEnumerable<CrosslinkModification> crosslinks)
+            IEnumerable<Crosslink> crosslinks)
         {
             Peptides = ImmutableList.ValueOf(peptides);
             Crosslinks = ImmutableList.ValueOf(crosslinks);
@@ -30,7 +28,7 @@ namespace pwiz.Skyline.Model.Crosslinking
         }
 
         public ImmutableList<ModifiedSequence> Peptides { get; private set; }
-        public ImmutableList<CrosslinkModification> Crosslinks { get; private set; }
+        public ImmutableList<Crosslink> Crosslinks { get; private set; }
 
         public override string ToString()
         {

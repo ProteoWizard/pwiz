@@ -744,7 +744,7 @@ namespace pwiz.Skyline.Model.Serialization
                 writer.WriteElementString(EL.declustering_potential, dp.Value);
             }
             WriteTransitionLosses(writer, nodeTransition.Losses);
-            WriteLinkedIons(writer, nodeTransition.ComplexFragmentIon.ComplexFragmentIon);
+            WriteLinkedIons(writer, nodeTransition.ComplexFragmentIon.NeutralFragmentIon);
 #if false // TODO(nicksh)
             foreach (var linkedIon in nodeTransition.ComplexFragmentIon.Children)
             {
@@ -832,19 +832,13 @@ namespace pwiz.Skyline.Model.Serialization
             writer.WriteEndElement();
         }
 
-        private void WriteLinkedIons(XmlWriter writer, ComplexFragmentIon complexFragmentIon)
+        private void WriteLinkedIons(XmlWriter writer, NeutralFragmentIon complexFragmentIon)
         {
-            foreach (var part in complexFragmentIon.Parts.Skip(1))
+            foreach (var part in complexFragmentIon.IonChain.Skip(1))
             {
                 writer.WriteStartElement(EL.linked_fragment_ion);
-                if (part.HasValue)
-                {
-                    writer.WriteAttribute(ATTR.fragment_type, part.Value.IonType);
-                    if (part.Value.IonType != IonType.precursor)
-                    {
-                        writer.WriteAttribute(ATTR.fragment_ordinal, part.Value.Ordinal);
-                    }
-                }
+                writer.WriteAttributeNullable(ATTR.fragment_type, part.Type);
+                writer.WriteAttribute(ATTR.fragment_ordinal, part.Ordinal, 0);
                 writer.WriteEndElement();
             }
         }

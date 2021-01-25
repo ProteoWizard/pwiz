@@ -236,9 +236,9 @@ namespace pwiz.Skyline.Model.Lib
 
         public string FragmentName { get; private set; } // For small molecules
 
-        public ComplexFragmentIonKey ComplexFragmentIonName { get; private set; }
+        public IonChain ComplexFragmentIonName { get; private set; }
 
-        public MatchedFragmentIon ChangeComplexFragmentIonName(ComplexFragmentIonKey complexFragmentIonName)
+        public MatchedFragmentIon ChangeComplexFragmentIonName(IonChain complexFragmentIonName)
         {
             return ChangeProp(ImClone(this), im => im.ComplexFragmentIonName = complexFragmentIonName);
         }

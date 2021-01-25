@@ -112,7 +112,7 @@ AMNFS[Phospho (ST)]GSPGAVSTSPT[Phospho (ST)]QSFM[Oxidation (M)]NTLPR");
             {
                 // AMNFSGSPGAV(11)-STSPTQSFMNTLPR(14)
                 
-var parts = new List<FragmentIonType?>();
+var parts = new List<FragmentIonType>();
 #if false
                 switch (transitionDocNode.Transition.IonType)
                 {
@@ -153,7 +153,7 @@ var parts = new List<FragmentIonType?>();
                         break;
                 }
 #endif 
-                var complexFragmentIonName = new ComplexFragmentIonKey(parts);
+                var complexFragmentIonName = new IonChain(parts);
 
                 if (transitionDocNode.Transition.IonType != IonType.precursor && transitionDocNode.Losses != null &&
                     transitionDocNode.Losses.Losses.Count > 1)

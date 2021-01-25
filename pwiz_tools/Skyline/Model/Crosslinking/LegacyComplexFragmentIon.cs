@@ -211,16 +211,16 @@ namespace pwiz.Skyline.Model.Crosslinking
         /// <summary>
         /// Returns a ComplexFragmentIonName object representing this ComplexFragmentIon
         /// </summary>
-        public ComplexFragmentIonName GetName()
+        public LegacyComplexFragmentIonName GetName()
         {
-            ComplexFragmentIonName name;
+            LegacyComplexFragmentIonName name;
             if (IsOrphan)
             {
-                name = ComplexFragmentIonName.ORPHAN;
+                name = LegacyComplexFragmentIonName.ORPHAN;
             }
             else
             {
-                name = new ComplexFragmentIonName(Transition.IonType, Transition.Ordinal);
+                name = new LegacyComplexFragmentIonName(Transition.IonType, Transition.Ordinal);
             }
 
             foreach (var child in Children)

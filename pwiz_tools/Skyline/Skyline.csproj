@@ -486,18 +486,17 @@
     </Compile>
     <Compile Include="Model\AuditLog\ReflectorEnumerator.cs" />
     <Compile Include="Model\AuditLog\ReflectorToString.cs" />
-    <Compile Include="Model\Crosslinking\ChargedIon.cs" />
-    <Compile Include="Model\Crosslinking\ComplexFragmentIonKey.cs" />
-    <Compile Include="Model\Crosslinking\CrosslinkedSequences.cs" />
+    <Compile Include="Model\Crosslinking\ComplexFragmentIon.cs" />
+    <Compile Include="Model\Crosslinking\IonChain.cs" />
+    <Compile Include="Model\Crosslinking\CrosslinkedSequence.cs" />
     <Compile Include="Model\Crosslinking\CrosslinkPeptideBuilder.cs" />
     <Compile Include="Model\Crosslinking\FragmentIonType.cs" />
     <Compile Include="Model\Crosslinking\LegacyComplexFragmentIon.cs" />
     <Compile Include="Model\Crosslinking\CrosslinkBuilder.cs" />
     <Compile Include="Model\Crosslinking\ComplexFragmentIonName.cs" />
-    <Compile Include="Model\Crosslinking\ComplexFragmentIon.cs" />
-    <Compile Include="Model\Crosslinking\ModifiedPeptide.cs" />
-    <Compile Include="Model\Crosslinking\CrosslinkerDef.cs" />
-    <Compile Include="Model\Crosslinking\CrosslinkMod.cs" />
+    <Compile Include="Model\Crosslinking\NeutralFragmentIon.cs" />
+    <Compile Include="Model\Crosslinking\CrosslinkerSettings.cs" />
+    <Compile Include="Model\Crosslinking\Crosslink.cs" />
     <Compile Include="Model\Crosslinking\CrosslinkSequenceParser.cs" />
     <Compile Include="Model\Crosslinking\CrosslinkSite.cs" />
     <Compile Include="Model\Crosslinking\ModificationSite.cs" />

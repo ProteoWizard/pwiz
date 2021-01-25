@@ -383,7 +383,7 @@ namespace pwiz.Skyline.EditUI
                 linkedExplicitMods.Add(peptideRow.ExplicitMods);
             }
 
-            var crosslinks = new List<CrosslinkModification>();
+            var crosslinks = new List<Crosslink>();
             for (int i = 0; i < _crosslinkRows.Count; i++)
             {
                 var crosslinkRow = _crosslinkRows[i];
@@ -434,7 +434,7 @@ namespace pwiz.Skyline.EditUI
                     }
                     sites.Add(site);
                 }
-                crosslinks.Add(new CrosslinkModification(crosslinker, sites));
+                crosslinks.Add(new Crosslink(crosslinker, sites));
             }
 
             var aaIndexesByPeptideIndex = crosslinks.SelectMany(link => link.Sites).Distinct()

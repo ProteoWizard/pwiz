@@ -963,7 +963,7 @@ namespace pwiz.Skyline.Model.Lib
                     continue;
                 }
 
-                var complexFragmentIonName = predictedTransition.ComplexFragmentIon.ComplexFragmentIon.GetName();
+                var complexFragmentIonName = predictedTransition.ComplexFragmentIon.NeutralFragmentIon.GetName();
                 var ionType = DecideIonType(complexFragmentIonName);
                 string fragmentName = predictedTransition.ComplexFragmentIon.GetFragmentIonName();
                 var predictedIon = new MatchedFragmentIon(ionType, predictFragments.Count + 1,
@@ -985,7 +985,7 @@ namespace pwiz.Skyline.Model.Lib
             return new MoleculeMasses(predictDocNode.PrecursorMz, matchMasses).ChangePredictIonMasses(predictMasses);
         }
 
-        private IonType DecideIonType(ComplexFragmentIonKey complexFragmentIon)
+        private IonType DecideIonType(IonChain complexFragmentIon)
         {
             var allIonTypes = complexFragmentIon.IonTypes.ToHashSet();
             foreach (var ionType in FragmentFilterObj.IonTypesToDisplay.Prepend(IonType.precursor))

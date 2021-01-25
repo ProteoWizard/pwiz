@@ -28,27 +28,23 @@ namespace pwiz.Skyline.Model.Crosslinking
         /// <summary>
         /// Returns the chemical formula for this fragment and none of its children.
         /// </summary>
-        public MoleculeMassOffset GetFragmentFormula(FragmentIonType? part)
+        public MoleculeMassOffset GetFragmentFormula(FragmentIonType part)
         {
-            if (!part.HasValue)
+            if (part.IsEmpty)
             {
                 return MoleculeMassOffset.EMPTY;
             }
 
             MoleculeMassOffset moleculeMassOffset;
-            if (_fragmentedMolecules.TryGetValue(part.Value, out moleculeMassOffset))
+            if (_fragmentedMolecules.TryGetValue(part, out moleculeMassOffset))
             {
                 return moleculeMassOffset;
             }
 
-            var fragmentedMolecule = GetPrecursorMolecule();
-            if (part.Value.IonType != IonType.precursor)
-            {
-                fragmentedMolecule = fragmentedMolecule.ChangeFragmentIon(part.Value.IonType, part.Value.Ordinal);
-            }
+            var fragmentedMolecule = GetPrecursorMolecule().ChangeFragmentIon(part.Type.Value, part.Ordinal);
                 
             moleculeMassOffset = new MoleculeMassOffset(fragmentedMolecule.FragmentFormula, 0, 0);
-            _fragmentedMolecules.Add(part.Value, moleculeMassOffset);
+            _fragmentedMolecules.Add(part, moleculeMassOffset);
             return moleculeMassOffset;
         }
 

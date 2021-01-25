@@ -1218,7 +1218,7 @@ namespace pwiz.Skyline.Model.DocSettings
             }
             var linkedPeptides = new List<Peptide>();
             var linkedExplicitMods = new List<ExplicitMods>();
-            var crosslinks = new List<CrosslinkModification>();
+            var crosslinks = new List<Crosslink>();
             var queue = new List<Tuple<int, ExplicitMod>>();
             queue.AddRange(StaticModifications.Where(mod=>mod.LinkedPeptide != null).Select(mod=>Tuple.Create(0, mod)));
             while (queue.Any())
@@ -1229,7 +1229,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 var linkedPeptide = explicitMod.LinkedPeptide;
                 if (linkedPeptide.Peptide == null)
                 {
-                    crosslinks.Add(CrosslinkModification.Looplink(explicitMod.Modification, tuple.Item1, explicitMod.IndexAA, linkedPeptide.IndexAa));
+                    crosslinks.Add(Crosslink.Looplink(explicitMod.Modification, tuple.Item1, explicitMod.IndexAA, linkedPeptide.IndexAa));
                     continue;
                 }
 

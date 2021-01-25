@@ -697,7 +697,7 @@ namespace pwiz.Skyline.Model
 
             var peptideSequences = new List<string> {mainSequence};
             peptideSequences.AddRange(linkedPeptides.Select(pep=>pep.Sequence));
-            var crosslinks = new List<CrosslinkModification>();
+            var crosslinks = new List<Crosslink>();
             foreach (var crosslink in crosslinkLibraryKey.Crosslinks)
             {
                 var sites = crosslink.CrosslinkSites.ToList();
@@ -712,7 +712,7 @@ namespace pwiz.Skyline.Model
                 {
                     return null;
                 }
-                crosslinks.Add(new CrosslinkModification(crosslinker, sites));
+                crosslinks.Add(new Crosslink(crosslinker, sites));
             }
             return new CrosslinkStructure(linkedPeptides, linkedExplicitMods, crosslinks);
         }

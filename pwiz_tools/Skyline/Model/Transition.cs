@@ -842,7 +842,7 @@ namespace pwiz.Skyline.Model
         public Transition Transition { get; private set; }
         public TransitionLosses Losses { get; private set; }
         public string CustomIonEquivalenceTestValue { get; private set;  }
-        public ComplexFragmentIonKey ComplexFragmentIonName { get; private set; }
+        public IonChain ComplexFragmentIonName { get; private set; }
 
         public bool Equivalent(TransitionLossKey other)
         {

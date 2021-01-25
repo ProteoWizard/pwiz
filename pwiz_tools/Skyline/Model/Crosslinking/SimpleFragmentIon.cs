@@ -1,16 +1,18 @@
-﻿using pwiz.Common.SystemUtil;
+﻿using System.Linq;
+using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 
 namespace pwiz.Skyline.Model.Crosslinking
 {
     public class SimpleFragmentIon : Immutable
     {
-        public static readonly SimpleFragmentIon EMPTY = null;
+        public static readonly SimpleFragmentIon EMPTY = new SimpleFragmentIon(FragmentIonType.Empty, null);
         public static readonly SimpleFragmentIon PRECURSOR = new SimpleFragmentIon(FragmentIonType.Precursor, null);
 
         public SimpleFragmentIon(FragmentIonType ion, TransitionLosses losses)
         {
-            Id = Id;
+            Id = ion;
             Losses = losses;
         }
 
@@ -20,23 +22,42 @@ namespace pwiz.Skyline.Model.Crosslinking
             {
                 return null;
             }
-            return new SimpleFragmentIon(FragmentIonType.FromTransition(docNode.Transition).Value, docNode.Losses);
+            return new SimpleFragmentIon(FragmentIonType.FromTransition(docNode.Transition), docNode.Losses);
         }
 
         public static SimpleFragmentIon FromTransition(Transition transition)
         {
-            if (transition == null)
+            return new SimpleFragmentIon(FragmentIonType.FromTransition(transition), null);
+        }
+
+        public NeutralFragmentIon Prepend(NeutralFragmentIon left)
+        {
+            if (left == null)
             {
-                return null;
+                return new NeutralFragmentIon(ImmutableList.Singleton(Id), Losses);
             }
-            return new SimpleFragmentIon(FragmentIonType.FromTransition(transition).Value, null);
+
+            var newLosses = left.Losses;
+            if (Losses != null)
+            {
+                if (newLosses == null)
+                {
+                    newLosses = Losses;
+                }
+                else
+                {
+                    newLosses = new TransitionLosses(newLosses.Losses.Concat(Losses.Losses).ToList(),
+                        newLosses.MassType);
+                }
+            }
+            return new NeutralFragmentIon(left.IonChain.Append(Id), newLosses);
         }
 
         public FragmentIonType Id { get; private set; }
 
-        public IonType IonType
+        public IonType? IonType
         {
-            get { return Id.IonType; }
+            get { return Id.Type; }
         }
 
         public int Ordinal

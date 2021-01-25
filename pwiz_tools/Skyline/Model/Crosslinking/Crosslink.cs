@@ -1,25 +1,23 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Windows.Forms;
 using pwiz.Skyline.Model.DocSettings;
 
 namespace pwiz.Skyline.Model.Crosslinking
 {
-    public class CrosslinkModification
+    public class Crosslink
     {
-        public CrosslinkModification(StaticMod crosslinker, IEnumerable<CrosslinkSite> sites)
+        public Crosslink(StaticMod crosslinker, IEnumerable<CrosslinkSite> sites)
         {
             Crosslinker = crosslinker;
             Sites = new CrosslinkSites(sites);
         }
 
-
         public StaticMod Crosslinker { get; private set; }
 
         public CrosslinkSites Sites { get; private set; }
 
-        protected bool Equals(CrosslinkModification other)
+        protected bool Equals(Crosslink other)
         {
             return Equals(Crosslinker, other.Crosslinker) && Sites.Equals(other.Sites);
         }
@@ -29,7 +27,7 @@ namespace pwiz.Skyline.Model.Crosslinking
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != this.GetType()) return false;
-            return Equals((CrosslinkModification) obj);
+            return Equals((Crosslink) obj);
         }
 
         public override int GetHashCode()
@@ -67,10 +65,10 @@ namespace pwiz.Skyline.Model.Crosslinking
             return result.ToString();
         }
 
-        public static CrosslinkModification Looplink(StaticMod crosslinker, int peptideIndex, int aaIndex1,
+        public static Crosslink Looplink(StaticMod crosslinker, int peptideIndex, int aaIndex1,
             int aaIndex2)
         {
-            return new CrosslinkModification(crosslinker, new []{new CrosslinkSite(peptideIndex, aaIndex1), new CrosslinkSite(peptideIndex, aaIndex2)});
+            return new Crosslink(crosslinker, new []{new CrosslinkSite(peptideIndex, aaIndex1), new CrosslinkSite(peptideIndex, aaIndex2)});
         }
     }
 }

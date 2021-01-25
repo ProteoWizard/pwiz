@@ -11,8 +11,8 @@ namespace pwiz.Skyline.Model.Crosslinking
     public class CrosslinkStructure : Immutable
     {
         public static readonly CrosslinkStructure EMPTY = new CrosslinkStructure(ImmutableList<Peptide>.EMPTY,
-            ImmutableList<ExplicitMods>.EMPTY, ImmutableList<CrosslinkModification>.EMPTY);
-        public CrosslinkStructure(IEnumerable<Peptide> peptides, IEnumerable<ExplicitMods> explicitModsList, IEnumerable<CrosslinkModification> crosslinks)
+            ImmutableList<ExplicitMods>.EMPTY, ImmutableList<Crosslink>.EMPTY);
+        public CrosslinkStructure(IEnumerable<Peptide> peptides, IEnumerable<ExplicitMods> explicitModsList, IEnumerable<Crosslink> crosslinks)
         {
             LinkedPeptides = ImmutableList.ValueOf(peptides);
             if (explicitModsList == null)
@@ -34,7 +34,7 @@ namespace pwiz.Skyline.Model.Crosslinking
         {
             return new CrosslinkStructure(ImmutableList.Singleton(peptide), ImmutableList.Singleton(explicitMods),
                 ImmutableList.Singleton(
-                    new CrosslinkModification(mod,
+                    new Crosslink(mod,
                         new[] {new CrosslinkSite(0, aaIndex1), new CrosslinkSite(1, aaIndex2),})
                 ));
         }
@@ -49,7 +49,7 @@ namespace pwiz.Skyline.Model.Crosslinking
 
         public ImmutableList<Peptide> LinkedPeptides { get; private set; }
         public ImmutableList<ExplicitMods> LinkedExplicitMods { get; private set; }
-        public ImmutableList<CrosslinkModification> Crosslinks { get; private set; }
+        public ImmutableList<Crosslink> Crosslinks { get; private set; }
 
         protected bool Equals(CrosslinkStructure other)
         {
@@ -118,10 +118,10 @@ namespace pwiz.Skyline.Model.Crosslinking
                 return false;
             }
             var visitedPeptides = new HashSet<int> { 0 };
-            IReadOnlyList<CrosslinkModification> remainingCrosslinks = Crosslinks;
+            IReadOnlyList<Crosslink> remainingCrosslinks = Crosslinks;
             while (true)
             {
-                var nextQueue = new List<CrosslinkModification>();
+                var nextQueue = new List<Crosslink>();
                 foreach (var crosslink in remainingCrosslinks)
                 {
                     if (crosslink.Sites.PeptideIndexes.Any(visitedPeptides.Contains))
@@ -164,6 +164,6 @@ namespace pwiz.Skyline.Model.Crosslinking
 
         public ImmutableList<Peptide> Peptides { get; private set; }
         public ImmutableList<ExplicitMods> ExplicitModList { get; private set; }
-        public ImmutableList<CrosslinkModification> Crosslinks { get; private set; }
+        public ImmutableList<Crosslink> Crosslinks { get; private set; }
     }
 }

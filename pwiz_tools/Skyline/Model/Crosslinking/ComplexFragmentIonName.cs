@@ -29,17 +29,17 @@ namespace pwiz.Skyline.Model.Crosslinking
     /// <summary>
     /// Represents the parts of a <see cref="LegacyComplexFragmentIon"/> separated from the actual Transition and TransitionGroup objects.
     /// </summary>
-    public class ComplexFragmentIonName : Immutable
+    public class LegacyComplexFragmentIonName : Immutable
     {
-        public static readonly ComplexFragmentIonName ORPHAN = new ComplexFragmentIonName()
+        public static readonly LegacyComplexFragmentIonName ORPHAN = new LegacyComplexFragmentIonName()
         {
             IonType = IonType.custom,
         };
 
-        public static readonly ComplexFragmentIonName PRECURSOR
-            = new ComplexFragmentIonName(IonType.precursor, 0);
+        public static readonly LegacyComplexFragmentIonName PRECURSOR
+            = new LegacyComplexFragmentIonName(IonType.precursor, 0);
 
-        public ComplexFragmentIonName(IonType ionType, int ordinal) : this()
+        public LegacyComplexFragmentIonName(IonType ionType, int ordinal) : this()
         {
             IonType = ionType;
             if (IonType != IonType.precursor)
@@ -48,26 +48,26 @@ namespace pwiz.Skyline.Model.Crosslinking
             }
         }
 
-        private ComplexFragmentIonName()
+        private LegacyComplexFragmentIonName()
         {
-            Children = ImmutableList<Tuple<ModificationSite, ComplexFragmentIonName>>.EMPTY;
+            Children = ImmutableList<Tuple<ModificationSite, LegacyComplexFragmentIonName>>.EMPTY;
         }
 
         public IonType IonType { get; private set; }
         public int Ordinal { get; private set; }
-        public ImmutableList<Tuple<ModificationSite, ComplexFragmentIonName>> Children { get; private set; }
+        public ImmutableList<Tuple<ModificationSite, LegacyComplexFragmentIonName>> Children { get; private set; }
         public bool IsOrphan
         {
             get { return IonType == IonType.custom; }
         }
 
-        private static ImmutableList<Tuple<ModificationSite, ComplexFragmentIonName>> ToChildList(
-            IEnumerable<Tuple<ModificationSite, ComplexFragmentIonName>> children)
+        private static ImmutableList<Tuple<ModificationSite, LegacyComplexFragmentIonName>> ToChildList(
+            IEnumerable<Tuple<ModificationSite, LegacyComplexFragmentIonName>> children)
         {
             return ImmutableList.ValueOf(children.OrderBy(tuple => tuple.Item1));
         }
 
-        public ComplexFragmentIonName AddChild(ModificationSite modificationSite, ComplexFragmentIonName child)
+        public LegacyComplexFragmentIonName AddChild(ModificationSite modificationSite, LegacyComplexFragmentIonName child)
         {
             if (IsOrphan)
             {
@@ -81,7 +81,7 @@ namespace pwiz.Skyline.Model.Crosslinking
                 im => { im.Children = ToChildList(Children.Append(Tuple.Create(modificationSite, child))); });
         }
 
-        protected bool Equals(ComplexFragmentIonName other)
+        protected bool Equals(LegacyComplexFragmentIonName other)
         {
             return IonType == other.IonType && Ordinal == other.Ordinal && Children.Equals(other.Children) && IsOrphan == other.IsOrphan;
         }
@@ -91,7 +91,7 @@ namespace pwiz.Skyline.Model.Crosslinking
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != this.GetType()) return false;
-            return Equals((ComplexFragmentIonName) obj);
+            return Equals((LegacyComplexFragmentIonName) obj);
         }
 
         public override int GetHashCode()
@@ -150,7 +150,7 @@ namespace pwiz.Skyline.Model.Crosslinking
             return stringBuilder.ToString();
         }
 
-        private string ChildToString(Tuple<ModificationSite, ComplexFragmentIonName> child)
+        private string ChildToString(Tuple<ModificationSite, LegacyComplexFragmentIonName> child)
         {
             var stringBuilder = new StringBuilder();
             stringBuilder.Append(@"{");
@@ -189,35 +189,35 @@ namespace pwiz.Skyline.Model.Crosslinking
             }
         }
 
-        public static ComplexFragmentIonName FromLinkedIonProto(SkylineDocumentProto.Types.LinkedIon linkedIon)
+        public static LegacyComplexFragmentIonName FromLinkedIonProto(SkylineDocumentProto.Types.LinkedIon linkedIon)
         {
-            ComplexFragmentIonName child;
+            LegacyComplexFragmentIonName child;
             if (linkedIon.Orphan)
             {
                 child = ORPHAN;
             }
             else
             {
-                child = new ComplexFragmentIonName(DataValues.FromIonType(linkedIon.IonType), linkedIon.Ordinal);
+                child = new LegacyComplexFragmentIonName(DataValues.FromIonType(linkedIon.IonType), linkedIon.Ordinal);
             }
 
             child = child.AddLinkedIonProtos(linkedIon.Children);
             return child;
         }
 
-        public ComplexFragmentIonName AddLinkedIonProtos(IEnumerable<SkylineDocumentProto.Types.LinkedIon> linkedIons)
+        public LegacyComplexFragmentIonName AddLinkedIonProtos(IEnumerable<SkylineDocumentProto.Types.LinkedIon> linkedIons)
         {
             var result = this;
             foreach (var linkedIon in linkedIons)
             {
-                ComplexFragmentIonName child;
+                LegacyComplexFragmentIonName child;
                 if (linkedIon.Orphan)
                 {
                     child = ORPHAN;
                 }
                 else
                 {
-                    child = new ComplexFragmentIonName(DataValues.FromIonType(linkedIon.IonType), linkedIon.Ordinal);
+                    child = new LegacyComplexFragmentIonName(DataValues.FromIonType(linkedIon.IonType), linkedIon.Ordinal);
                 }
 
                 child = child.AddLinkedIonProtos(linkedIon.Children);

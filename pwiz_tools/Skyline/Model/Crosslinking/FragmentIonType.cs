@@ -1,13 +1,14 @@
 ﻿using System;
-using System.Windows.Forms;
 
 namespace pwiz.Skyline.Model.Crosslinking
 {
     public struct FragmentIonType : IComparable<FragmentIonType>
     {
-        public static FragmentIonType? Empty
+        private IonType _ionType;
+
+        public static FragmentIonType Empty
         {
-            get { return null; }
+            get { return default(FragmentIonType); }
         }
 
         public static FragmentIonType Precursor
@@ -17,21 +18,48 @@ namespace pwiz.Skyline.Model.Crosslinking
 
         public FragmentIonType(IonType ionType, int ordinal) : this()
         {
-            IonType = ionType;
-            Ordinal = ionType == IonType.precursor ? 0 : ordinal;
+            _ionType = ionType;
+            if (_ionType != IonType.precursor)
+            {
+                if (ordinal <= 0)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(ordinal));
+                }
+
+                Ordinal = ordinal;
+            }
         }
 
-        public IonType IonType { get; private set; }
+        public bool IsEmpty
+        {
+            get
+            {
+                return Equals(default(FragmentIonType));
+            }
+        }
+
+        public IonType? Type
+        {
+            get
+            {
+                return IsEmpty ? (IonType?) null : _ionType;
+            }
+        }
+
         public int Ordinal { get; private set; }
 
-        public static FragmentIonType? FromTransition(Transition transition)
+        public static FragmentIonType FromTransition(Transition transition)
         {
             return transition == null ? Empty : new FragmentIonType(transition.IonType, transition.Ordinal);
         }
 
         public override string ToString()
         {
-            string str = IonType.ToString();
+            if (IsEmpty)
+            {
+                return @"*";
+            }
+            string str = Type.ToString();
             if (Ordinal != 0)
             {
                 str += Ordinal;
@@ -42,12 +70,12 @@ namespace pwiz.Skyline.Model.Crosslinking
 
         public char? GetAminoAcid(string sequence)
         {
-            if (IonType == IonType.precursor)
+            if (IsEmpty || Type == IonType.precursor)
             {
                 return null;
             }
-            int offset = Transition.OrdinalToOffset(IonType, Ordinal, sequence.Length);
-            if (Transition.IsCTerminal(IonType))
+            int offset = Transition.OrdinalToOffset(Type.Value, Ordinal, sequence.Length);
+            if (Transition.IsCTerminal(Type.Value))
             {
                 return sequence[offset + 1];
             }
@@ -57,13 +85,17 @@ namespace pwiz.Skyline.Model.Crosslinking
 
         public bool IncludesAaIndex(Peptide peptide, int aaIndex)
         {
-            if (IonType == IonType.precursor)
+            if (IsEmpty)
+            {
+                return false;
+            }
+            if (Type == IonType.precursor)
             {
                 return true;
             }
 
-            int offset = Transition.OrdinalToOffset(IonType, Ordinal, peptide.Length);
-            if (Transition.IsCTerminal(IonType))
+            int offset = Transition.OrdinalToOffset(Type.Value, Ordinal, peptide.Length);
+            if (Transition.IsCTerminal(Type.Value))
             {
                 return offset < aaIndex;
             }
@@ -75,7 +107,7 @@ namespace pwiz.Skyline.Model.Crosslinking
         {
             get
             {
-                int order = (int) IonType;
+                int order = (int) Type;
                 if (order >= 0 && order < Transition.PEPTIDE_ION_TYPES_ORDERS.Length)
                 {
                     return Transition.PEPTIDE_ION_TYPES_ORDERS[order];
@@ -87,12 +119,20 @@ namespace pwiz.Skyline.Model.Crosslinking
 
         public int CompareTo(FragmentIonType ionFragment)
         {
-            int result = IonTypeOrder.CompareTo(ionFragment.IonTypeOrder);
+            if (Equals(ionFragment))
+            {
+                return 0;
+            }
+            int result = -IsEmpty.CompareTo(ionFragment.IsEmpty);
+            if (result == 0)
+            {
+                result = IonTypeOrder.CompareTo(ionFragment.IonTypeOrder);
+            }
             if (result != 0)
             {
                 return result;
             }
-            if (Transition.IsCTerminal(IonType))
+            if (Transition.IsCTerminal(Type.Value))
             {
                 return -Ordinal.CompareTo(ionFragment.Ordinal);
             }
