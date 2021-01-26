@@ -86,6 +86,7 @@ namespace SkylineBatch
         public void AddConfiguration(SkylineBatchConfig config)
         {
             _configManager.AddConfiguration(config);
+            _configManager.SelectConfig(_configManager.ConfigNamesAsObjectArray().Length - 1);
             UpdateUiConfigurations();
         }
 
@@ -122,13 +123,6 @@ namespace SkylineBatch
             configForm.ShowDialog();
         }
 
-
-        private void btnDelete_Click(object sender, EventArgs e)
-        {
-            _configManager.RemoveSelected();
-            UpdateUiConfigurations();
-        }
-
         private void listViewConfigs_MouseUp(object sender, MouseEventArgs e)
         {
             // Select configuration through _configManager
@@ -154,9 +148,10 @@ namespace SkylineBatch
             var configSelected = _configManager.HasSelectedConfig();
             btnEdit.Enabled = configSelected;
             btnCopy.Enabled = configSelected;
-            btnDelete.Enabled = configSelected;
             btnUpArrow.Enabled = configSelected && _configManager.SelectedConfig != 0;
             btnDownArrow.Enabled = configSelected && _configManager.SelectedConfig < listViewConfigs.Items.Count - 1;
+            btnDelete.Enabled = configSelected;
+            btnOpenAnalysis.Enabled = configSelected;
             btnExportConfigs.Enabled = _configManager.HasConfigs();
         }
 
@@ -172,8 +167,20 @@ namespace SkylineBatch
             UpdateUiConfigurations();
         }
 
+        private void btnDelete_Click(object sender, EventArgs e)
+        {
+            _configManager.RemoveSelected();
+            UpdateUiConfigurations();
+        }
+
+        private void btnOpenAnalysis_Click(object sender, EventArgs e)
+        {
+            var folder = _configManager.GetSelectedConfig().MainSettings.AnalysisFolderPath;
+            Process.Start("explorer.exe", "/n," + folder);
+        }
+
         #endregion
-        
+
         #region Running configurations
 
         private void btnRunOptions_Click(object sender, EventArgs e)
@@ -497,8 +504,9 @@ namespace SkylineBatch
         {
             return AlertDlg.ShowQuestion(this, message);
         }
-        
+
         #endregion
+
     }
 
 

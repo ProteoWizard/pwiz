@@ -37,9 +37,8 @@
             this.btnViewLog = new System.Windows.Forms.Button();
             this.btnRunBatch = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
+            this.btnOpenFolder = new System.Windows.Forms.Button();
             this.systray_icon = new System.Windows.Forms.NotifyIcon(this.components);
-            this.buttonApplySkylineSettings = new System.Windows.Forms.Button();
-            this.buttonFileDialogSkylineInstall = new System.Windows.Forms.Button();
             this.panelSkylineType = new System.Windows.Forms.Panel();
             this.batchRunDropDown = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.startFromStepOne = new System.Windows.Forms.ToolStripMenuItem();
@@ -64,12 +63,12 @@
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.btnUpArrow = new System.Windows.Forms.ToolStripButton();
             this.btnDownArrow = new System.Windows.Forms.ToolStripButton();
+            this.btnDelete = new System.Windows.Forms.ToolStripButton();
+            this.btnOpenAnalysis = new System.Windows.Forms.ToolStripButton();
             this.btnAddConfig = new System.Windows.Forms.Button();
             this.btnEdit = new System.Windows.Forms.Button();
             this.btnCopy = new System.Windows.Forms.Button();
-            this.btnDelete = new System.Windows.Forms.Button();
             this.tabMain = new System.Windows.Forms.TabControl();
-            this.btnOpenFolder = new System.Windows.Forms.Button();
             this.batchRunDropDown.SuspendLayout();
             this.tabLog.SuspendLayout();
             this.tabFront.SuspendLayout();
@@ -127,22 +126,18 @@
             this.btnCancel.UseVisualStyleBackColor = true;
             this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
             // 
+            // btnOpenFolder
+            // 
+            resources.ApplyResources(this.btnOpenFolder, "btnOpenFolder");
+            this.btnOpenFolder.Name = "btnOpenFolder";
+            this.toolTip_MainForm.SetToolTip(this.btnOpenFolder, resources.GetString("btnOpenFolder.ToolTip"));
+            this.btnOpenFolder.UseVisualStyleBackColor = true;
+            this.btnOpenFolder.Click += new System.EventHandler(this.btnOpenFolder_Click);
+            // 
             // systray_icon
             // 
             resources.ApplyResources(this.systray_icon, "systray_icon");
             this.systray_icon.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.systray_icon_MouseDoubleClick);
-            // 
-            // buttonApplySkylineSettings
-            // 
-            resources.ApplyResources(this.buttonApplySkylineSettings, "buttonApplySkylineSettings");
-            this.buttonApplySkylineSettings.Name = "buttonApplySkylineSettings";
-            this.buttonApplySkylineSettings.UseVisualStyleBackColor = true;
-            // 
-            // buttonFileDialogSkylineInstall
-            // 
-            resources.ApplyResources(this.buttonFileDialogSkylineInstall, "buttonFileDialogSkylineInstall");
-            this.buttonFileDialogSkylineInstall.Name = "buttonFileDialogSkylineInstall";
-            this.buttonFileDialogSkylineInstall.UseVisualStyleBackColor = true;
             // 
             // panelSkylineType
             // 
@@ -292,7 +287,6 @@
             this.panel1.Controls.Add(this.btnAddConfig);
             this.panel1.Controls.Add(this.btnEdit);
             this.panel1.Controls.Add(this.btnCopy);
-            this.panel1.Controls.Add(this.btnDelete);
             this.panel1.Name = "panel1";
             // 
             // button1
@@ -307,7 +301,9 @@
             this.toolStrip1.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
             this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.btnUpArrow,
-            this.btnDownArrow});
+            this.btnDownArrow,
+            this.btnDelete,
+            this.btnOpenAnalysis});
             this.toolStrip1.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.VerticalStackWithOverflow;
             this.toolStrip1.Name = "toolStrip1";
             // 
@@ -326,6 +322,22 @@
             this.btnDownArrow.Image = global::SkylineBatch.Properties.Resources.downarrow;
             this.btnDownArrow.Name = "btnDownArrow";
             this.btnDownArrow.Click += new System.EventHandler(this.btnDownArrow_Click);
+            // 
+            // btnDelete
+            // 
+            this.btnDelete.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            resources.ApplyResources(this.btnDelete, "btnDelete");
+            this.btnDelete.Image = global::SkylineBatch.Properties.Resources.Delete;
+            this.btnDelete.Name = "btnDelete";
+            this.btnDelete.Click += new System.EventHandler(this.btnDelete_Click);
+            // 
+            // btnOpenAnalysis
+            // 
+            this.btnOpenAnalysis.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            resources.ApplyResources(this.btnOpenAnalysis, "btnOpenAnalysis");
+            this.btnOpenAnalysis.Image = global::SkylineBatch.Properties.Resources.OpenFolder;
+            this.btnOpenAnalysis.Name = "btnOpenAnalysis";
+            this.btnOpenAnalysis.Click += new System.EventHandler(this.btnOpenAnalysis_Click);
             // 
             // btnAddConfig
             // 
@@ -348,13 +360,6 @@
             this.btnCopy.UseVisualStyleBackColor = true;
             this.btnCopy.Click += new System.EventHandler(this.btnCopy_Click);
             // 
-            // btnDelete
-            // 
-            resources.ApplyResources(this.btnDelete, "btnDelete");
-            this.btnDelete.Name = "btnDelete";
-            this.btnDelete.UseVisualStyleBackColor = true;
-            this.btnDelete.Click += new System.EventHandler(this.btnDelete_Click);
-            // 
             // tabMain
             // 
             resources.ApplyResources(this.tabMain, "tabMain");
@@ -362,14 +367,6 @@
             this.tabMain.Controls.Add(this.tabLog);
             this.tabMain.Name = "tabMain";
             this.tabMain.SelectedIndex = 0;
-            // 
-            // btnOpenFolder
-            // 
-            resources.ApplyResources(this.btnOpenFolder, "btnOpenFolder");
-            this.btnOpenFolder.Name = "btnOpenFolder";
-            this.toolTip_MainForm.SetToolTip(this.btnOpenFolder, resources.GetString("btnOpenFolder.ToolTip"));
-            this.btnOpenFolder.UseVisualStyleBackColor = true;
-            this.btnOpenFolder.Click += new System.EventHandler(this.btnOpenFolder_Click);
             // 
             // MainForm
             // 
@@ -397,8 +394,6 @@
         #endregion
         private System.Windows.Forms.ToolTip toolTip_MainForm;
         private System.Windows.Forms.NotifyIcon systray_icon;
-        private System.Windows.Forms.Button buttonApplySkylineSettings;
-        private System.Windows.Forms.Button buttonFileDialogSkylineInstall;
         private System.Windows.Forms.Panel panelSkylineType;
         private System.Windows.Forms.ContextMenuStrip batchRunDropDown;
         private System.Windows.Forms.ToolStripMenuItem startFromStepOne;
@@ -432,8 +427,9 @@
         private System.Windows.Forms.Button btnAddConfig;
         private System.Windows.Forms.Button btnEdit;
         private System.Windows.Forms.Button btnCopy;
-        private System.Windows.Forms.Button btnDelete;
         private System.Windows.Forms.TabControl tabMain;
         private System.Windows.Forms.Button btnOpenFolder;
+        private System.Windows.Forms.ToolStripButton btnDelete;
+        private System.Windows.Forms.ToolStripButton btnOpenAnalysis;
     }
 }

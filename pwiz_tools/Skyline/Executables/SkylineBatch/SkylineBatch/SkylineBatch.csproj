@@ -28,8 +28,8 @@
     <PublisherName>University of Washington</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>390</ApplicationRevision>
-    <ApplicationVersion>20.2.0.390</ApplicationVersion>
+    <ApplicationRevision>391</ApplicationRevision>
+    <ApplicationVersion>20.2.0.391</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -85,6 +85,7 @@
     </AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
+    <None Include="Resources\OpenFolder.bmp" />
     <Content Include="SkylineBatch_release.ico" />
     <Content Include="SkylineDailyRunner.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

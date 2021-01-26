@@ -654,6 +654,16 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap OpenFolder {
+            get {
+                object obj = ResourceManager.GetObject("OpenFolder", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} requires Skyline to run..
         /// </summary>
         internal static string Program_InitSkylineSettings__0__requires_Skyline_to_run_ {
