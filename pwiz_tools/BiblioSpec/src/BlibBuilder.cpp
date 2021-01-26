@@ -96,6 +96,7 @@ static vector<string> supportedTypes = {
     ".msf",
     ".pdResult",
     ".mzid",
+    ".mzid.gz",
     "msms.txt",
     "final_fragment.csv",
     ".proxl.xml",
