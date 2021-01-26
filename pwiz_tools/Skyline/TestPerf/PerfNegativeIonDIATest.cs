@@ -39,7 +39,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
         protected override void DoTest()
         {
-            TestFilesZip = "https://skyline.gs.washington.edu/perftests/PerfNegativeIonDIA.zip";
+            TestFilesZip = GetPerfTestDataURL(@"PerfNegativeIonDIA.zip");
             TestFilesPersistent = new[] { "neg.mzML", "pos.mzML" }; // list of files that we'd like to unzip alongside parent zipFile, and (re)use in place
             var testFilesDir = new TestFilesDir(TestContext, TestFilesZip, null, TestFilesPersistent);
 
