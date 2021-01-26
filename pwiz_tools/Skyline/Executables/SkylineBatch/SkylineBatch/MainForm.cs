@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.IO;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using SkylineBatch.Properties;
@@ -176,6 +177,7 @@ namespace SkylineBatch
         private void btnOpenAnalysis_Click(object sender, EventArgs e)
         {
             var folder = _configManager.GetSelectedConfig().MainSettings.AnalysisFolderPath;
+            if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
             Process.Start("explorer.exe", "/n," + folder);
         }
 
