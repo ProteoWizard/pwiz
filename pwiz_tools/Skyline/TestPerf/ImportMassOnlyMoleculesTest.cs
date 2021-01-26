@@ -33,7 +33,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         [TestMethod]
         public void TestImportMassOnlyMolecules()
         {
-            Run(@"https://skyline.gs.washington.edu/perftests/ImportMassOnlyMoleculesTest.zip");
+            Run(GetPerfTestDataURL(@"ImportMassOnlyMoleculesTest.zip"));
         }
 
         protected override void DoTest()
