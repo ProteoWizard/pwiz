@@ -2226,7 +2226,7 @@ namespace pwiz.Skyline
 
             var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(string.Empty));
             var inputs = new MassListInputs(commandArgs.TransitionListPath);
-            var docNew = _doc.ImportMassList(inputs, progressMonitor, null,
+            var docNew = _doc.ImportMassList(inputs, null, progressMonitor, null,
                 out selectPath, out irtPeptides, out librarySpectra, out errorList, out peptideGroups);
 
             // If nothing was imported (e.g. operation was canceled or zero error-free transitions) and also no errors, just return
