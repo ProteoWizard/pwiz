@@ -73,7 +73,7 @@ namespace pwiz.SkylineTestTutorial
         {
             // Set true to look at tutorial screenshots.
 //            IsPauseForScreenShots = true;
-//            PauseStartPage = 16;
+//            PauseStartingPage = 16;
 //            IsCoverShotMode = true;
             CoverShotName = "AuditLog";
 

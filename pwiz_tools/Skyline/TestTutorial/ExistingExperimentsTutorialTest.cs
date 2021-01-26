@@ -39,6 +39,7 @@ using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestTutorial
@@ -324,12 +325,18 @@ namespace pwiz.SkylineTestTutorial
                 SetExcelFileClipboardText(filePath, "Simple", 6, false);
                 clipboardSaveText = ClipboardEx.GetText();
             });
-
+            // We expect this to fail due to instrument settings rather than format issues eg "The product m/z 1519.78 is out of range for the instrument settings, in the peptide sequence YEVQGEVFTKPQLWP. Check the Instrument tab in the Transition Settings."
             {
-                var messageDlg = ShowDialog<ImportTransitionListErrorDlg>(SkylineWindow.Paste);
+                var transitionSelectdgl = ShowDialog<ImportTransitionListColumnSelectDlg>(SkylineWindow.Paste);
+                var messageDlg = ShowDialog<ImportTransitionListErrorDlg>(transitionSelectdgl.AcceptButton.PerformClick);
+                AssertEx.AreComparableStrings(TextUtil.SpaceSeparate(Resources.MassListRowReader_CalcTransitionExplanations_The_product_m_z__0__is_out_of_range_for_the_instrument_settings__in_the_peptide_sequence__1_,
+                        Resources.MassListRowReader_CalcPrecursorExplanations_Check_the_Instrument_tab_in_the_Transition_Settings),
+                    messageDlg.ErrorList[0].ErrorMessage,
+                    2);
                 RunUI(() => messageDlg.Size = new Size(838, 192));
                 PauseForScreenShot<ImportTransitionListErrorDlg>("Error message form (expected)", 19);
-                OkDialog(messageDlg, messageDlg.CancelDialog);
+                OkDialog(messageDlg, messageDlg.CancelButton.PerformClick); // Acknowledge the error but decline to proceed with import
+                RunUI(() => transitionSelectdgl.DialogResult = DialogResult.Cancel); // Cancel the import
 
                 // Restore the clipboard text after pausing
                 ClipboardEx.SetText(clipboardSaveText);
@@ -340,11 +347,8 @@ namespace pwiz.SkylineTestTutorial
                 transitionSettingsUI.InstrumentMaxMz = 1800;
                 transitionSettingsUI.OkDialog();
             });
-            RunUI(() =>
-            {
-                SkylineWindow.Paste();
-                SkylineWindow.CollapsePeptides();
-            });
+            PasteTransitionListSkipColumnSelect();
+            RunUI(SkylineWindow.CollapsePeptides);
             PauseForScreenShot("Targets tree (selected from main window)", 20);
 
             // Adjusting Modifications Manually, p. 19.

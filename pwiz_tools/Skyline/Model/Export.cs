@@ -2725,12 +2725,18 @@ namespace pwiz.Skyline.Model
                 writer.Write(FieldSeparator);
                 writer.Write(@"Dwell");
             }
-            else if (MethodType == ExportMethodType.Triggered)
+            else
             {
                 writer.Write(FieldSeparator);
                 writer.Write(@"Primary");
                 writer.Write(FieldSeparator);
                 writer.Write(@"Trigger");
+                writer.Write(FieldSeparator);
+                writer.Write(@"Threshold");
+                writer.Write(FieldSeparator);
+                writer.Write(@"Ret Time (min)");
+                writer.Write(FieldSeparator);
+                writer.Write(@"Delta Ret Time");
             }
             writer.Write(FieldSeparator);
             writer.Write(@"Fragmentor");
@@ -2738,19 +2744,26 @@ namespace pwiz.Skyline.Model
             writer.Write(@"Collision Energy");
             writer.Write(FieldSeparator);
             writer.Write(@"Cell Accelerator Voltage");
+            writer.Write(FieldSeparator);
+            writer.Write(@"Polarity");
             if (MethodType != ExportMethodType.Standard)
             {
                 writer.Write(FieldSeparator);
-                writer.Write(@"Ret Time (min)");
+                writer.Write(@"Trigger Entrance Delay (cycles)");
                 writer.Write(FieldSeparator);
-                writer.Write(@"Delta Ret Time");
-            }
-            writer.Write(FieldSeparator);
-            writer.Write(@"Ion Name");
-            if (Document.Settings.PeptideSettings.Libraries.HasLibraries)
-            {
+                writer.Write(@"Trigger Delay (cycles)");
                 writer.Write(FieldSeparator);
-                writer.Write(@"Library Rank");
+                writer.Write(@"Trigger Window");
+                writer.Write(FieldSeparator);
+                writer.Write(@"IsLogicEnabled");
+                writer.Write(FieldSeparator);
+                writer.Write(@"Trigger Logic Flag");
+                writer.Write(FieldSeparator);
+                writer.Write(@"Trigger Ratio");
+                writer.Write(FieldSeparator);
+                writer.Write(@"Trigger Ratio Window");
+                writer.Write(FieldSeparator);
+                writer.Write(@"Ignore MRM");
             }
             writer.WriteLine();
         }
@@ -2773,9 +2786,7 @@ namespace pwiz.Skyline.Model
 
             writer.Write(FieldSeparator);
             var istdTypes = Document.Settings.PeptideSettings.Modifications.InternalStandardTypes;
-            writer.Write(istdTypes.Contains(nodeTranGroup.TransitionGroup.LabelType)    // ISTD?
-                             ? @"TRUE"
-                             : @"FALSE");
+            writer.Write(BoolToString(istdTypes.Contains(nodeTranGroup.TransitionGroup.LabelType))); // ISTD?
             writer.Write(FieldSeparator);
             writer.Write(SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz).ToString(CultureInfo));
             writer.Write(FieldSeparator);
@@ -2784,41 +2795,30 @@ namespace pwiz.Skyline.Model
             writer.Write(GetProductMz(SequenceMassCalc.PersistentMZ(nodeTran.Mz), step).ToString(CultureInfo));
             writer.Write(FieldSeparator);
             writer.Write(@"Unit");   // MS2 Res
+            writer.Write(FieldSeparator);
 
             if (MethodType == ExportMethodType.Standard)
             {
-                writer.Write(FieldSeparator);
                 writer.Write(Math.Round(DwellTime, 2).ToString(CultureInfo));
             }
-            else if (MethodType == ExportMethodType.Triggered)
+            else
             {
-                writer.Write(FieldSeparator);
                 int? rank = GetRank(nodeTranGroup, nodeTranGroupPrimary, nodeTran);
-                writer.Write(rank.HasValue && rank.Value <= PrimaryTransitionCount  // Primary
-                    ? @"TRUE"
-                    : @"FALSE");
+                writer.Write(BoolToString(rank.HasValue && rank.Value <= PrimaryTransitionCount)); // Primary
                 writer.Write(FieldSeparator);
                 // Trigger must be rank 1 transition, of analyte type and minimum precursor charge
-                bool trigger = false;
-                if (IsTriggerType(nodePep, nodeTranGroup, istdTypes) && rank.HasValue && rank.Value == 1)
+                var trigger = false;
+                if (MethodType == ExportMethodType.Triggered && IsTriggerType(nodePep, nodeTranGroup, istdTypes) && rank.HasValue && rank.Value == 1)
                 {
                     int minCharge = nodePep.TransitionGroups.Select(g => Math.Abs(g.PrecursorCharge)).Min();
                     if (Math.Abs(nodeTranGroup.PrecursorCharge) == minCharge)
                         trigger = true;
                 }
-                writer.Write(trigger ? @"TRUE" : @"FALSE");
-            }
+                writer.Write(BoolToString(trigger));
+                writer.Write(FieldSeparator);
+                writer.Write(0.ToString(CultureInfo)); // Threshold
+                writer.Write(FieldSeparator);
 
-            writer.Write(FieldSeparator);
-            writer.Write(Fragmentor.ToString(CultureInfo));
-            writer.Write(FieldSeparator);
-            writer.Write(Math.Round(GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step), 1).ToString(CultureInfo));
-            writer.Write(FieldSeparator);
-            writer.Write(4);    // Cell Accelerator Voltage
-            writer.Write(FieldSeparator);
-
-            if (MethodType != ExportMethodType.Standard)
-            {
                 // Scheduling information
                 var prediction = Document.Settings.PeptideSettings.Prediction;
                 double windowRT;
@@ -2830,20 +2830,42 @@ namespace pwiz.Skyline.Model
                     writer.Write((RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT) ?? 0).ToString(CultureInfo));
                     writer.Write(FieldSeparator);
                     writer.Write(Math.Round(windowRT, 1).ToString(CultureInfo));
-                    writer.Write(FieldSeparator);
                 }
                 else
                 {
                     writer.Write(FieldSeparator);
-                    writer.Write(FieldSeparator);
                 }
             }
 
-            // Extra information not used by instrument
-            writer.WriteDsvField(nodeTran.Transition.GetFragmentIonName(CultureInfo.InvariantCulture), FieldSeparator, FieldSeparatorReplacement);
             writer.Write(FieldSeparator);
-            if (nodeTran.HasLibInfo)
-                writer.Write(nodeTran.LibInfo.Rank);
+            writer.Write(Fragmentor.ToString(CultureInfo));
+            writer.Write(FieldSeparator);
+            writer.Write(Math.Round(GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step), 1).ToString(CultureInfo));
+            writer.Write(FieldSeparator);
+            writer.Write(4);    // Cell Accelerator Voltage
+            writer.Write(FieldSeparator);
+            writer.Write(nodeTranGroup.PrecursorCharge > 0 ? @"Positive" : @"Negative"); // Polarity
+
+            if (MethodType != ExportMethodType.Standard)
+            {
+                writer.Write(FieldSeparator);
+                writer.Write(0.ToString(CultureInfo)); // Trigger Entrance Delay
+                writer.Write(FieldSeparator);
+                writer.Write(0.ToString(CultureInfo)); // Trigger Delay
+                writer.Write(FieldSeparator);
+                writer.Write(0.ToString(CultureInfo)); // Trigger Window
+                writer.Write(FieldSeparator);
+                writer.Write(BoolToString(false)); // IsLogicEnabled
+                writer.Write(FieldSeparator);
+                writer.Write(@"AND"); // Trigger Logic Flag
+                writer.Write(FieldSeparator);
+                writer.Write(1.ToString(CultureInfo)); // Trigger Ratio
+                writer.Write(FieldSeparator);
+                writer.Write(1.ToString(CultureInfo)); // Trigger Ratio Window
+                writer.Write(FieldSeparator);
+                writer.Write(BoolToString(false)); // Ignore MRM
+            }
+
             writer.WriteLine();
         }
 
@@ -2870,6 +2892,11 @@ namespace pwiz.Skyline.Model
             }
             // Otherwise, the first precursor in the list is the trigger.
             return ReferenceEquals(firstGroup, nodeTranGroup);
+        }
+
+        private static string BoolToString(bool b)
+        {
+            return b ? @"TRUE" : @"FALSE";
         }
     }
 

@@ -57,7 +57,7 @@ namespace pwiz.SkylineTestFunctional
                 mods.ChangeStaticModifications(staticMods).ChangeMaxNeutralLosses(2)));
             Assert.IsTrue(SkylineWindow.SetDocument(document, SkylineWindow.Document));
 
-            RunUI(() => SkylineWindow.Paste(TRANSITIONLIST_CSV_MODLOSS_CLIPBOARD_TEXT));
+            PasteTransitionListSkipColumnSelect(TRANSITIONLIST_CSV_MODLOSS_CLIPBOARD_TEXT);
 
             var docPaste1 = WaitForDocumentChange(document);
             AssertEx.IsDocumentState(docPaste1, null, 3, 4, 12); // revision # is hard to predict with background loaders running

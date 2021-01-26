@@ -1423,6 +1423,11 @@ public ref class SpectrumList
     /// set DataProcessing
     /// </summary>
     virtual void setDataProcessing(DataProcessing^ dp);
+
+    /// <summary>
+    /// return true if either the wrapper implementation would benefit from using multiple threads, or if the inner wrapped list would
+    /// </summary>
+    virtual bool benefitsFromWorkerThreads();
 };
 
 

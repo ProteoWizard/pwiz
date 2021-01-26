@@ -356,7 +356,7 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(40, errorList[0].LineNum);
 
             var docHighMax = document.ChangeSettings(document.Settings.ChangeTransitionInstrument(inst => inst.ChangeMaxMz(1800)));
-            var docList = docHighMax.ImportMassList(inputsPhospho, null, out pathTo);
+            var docList = docHighMax.ImportMassList(inputsPhospho, null, null, out pathTo);
 
             AssertEx.Serializable(docList);
             AssertEx.IsDocumentState(docList, 3, 68, 134, 157, 481);
@@ -377,7 +377,7 @@ namespace pwiz.SkylineTest
             
             var docMultiLos = docHighMax.ChangeSettings(docHighMax.Settings.ChangePeptideModifications(mods =>
                 mods.ChangeMaxNeutralLosses(2)));
-            docList = docMultiLos.ImportMassList(inputsMultiLoss, null, out pathTo);
+            docList = docMultiLos.ImportMassList(inputsMultiLoss, null, null, out pathTo);
 
             AssertEx.IsDocumentState(docList, 4, 4, 4, 12);
         }
