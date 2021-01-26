@@ -29,16 +29,16 @@ namespace SkylineBatch
             switch (type)
             {
                 case SkylineType.Skyline:
-                    if (skylineWebInstallation)
-                        CmdPath = Settings.Default.SkylineRunnerPath;
                     if (skylineAdminInstallation)
                         CmdPath = Settings.Default.SkylineAdminCmdPath;
+                    if (skylineWebInstallation)
+                        CmdPath = Settings.Default.SkylineRunnerPath;
                     break;
                 case SkylineType.SkylineDaily:
-                    if (skylineDailyWebInstallation)
-                        CmdPath = Settings.Default.SkylineDailyRunnerPath;
                     if (skylineDailyAdminInstallation)
                         CmdPath = Settings.Default.SkylineDailyAdminCmdPath;
+                    if (skylineDailyWebInstallation)
+                        CmdPath = Settings.Default.SkylineDailyRunnerPath;
                     break;
                 case SkylineType.Local:
                     CmdPath = Settings.Default.SkylineLocalCommandPath;
