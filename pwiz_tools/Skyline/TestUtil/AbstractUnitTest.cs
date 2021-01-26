@@ -106,6 +106,11 @@ namespace pwiz.SkylineTestUtil
             get { return ("TestPerf".Equals(GetType().Namespace)); }
         }
 
+        public static string GetPerfTestDataURL(string filename)
+        {
+            return @"https://panoramaweb.org/_webdav/MacCoss/software/%40files/perftests/" + filename;
+        }
+
         protected bool GetBoolValue(string property, bool defaultValue)
         {
             var value = TestContext.Properties[property];

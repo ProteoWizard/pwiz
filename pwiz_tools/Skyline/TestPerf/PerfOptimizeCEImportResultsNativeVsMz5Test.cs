@@ -103,7 +103,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         public void NativeVsMz5OptimzeCeImportPerformanceTest(string baseName, string skyFile)
         {
             // compare mz5 and raw import times
-            TestFilesZip = "https://skyline.gs.washington.edu/perftests/" + baseName +".zip";
+            TestFilesZip = GetPerfTestDataURL(baseName +".zip");
             TestFilesPersistent = new[] {"Native/", "Mz5/"}; // list of files (directories, in this case) that we'd like to unzip alongside parent zipFile, and (re)use in place
             _testFilesDir = new TestFilesDir(TestContext, TestFilesZip, null, TestFilesPersistent);
             _skyFile = _testFilesDir.GetTestPath(Path.Combine(baseName,skyFile));
