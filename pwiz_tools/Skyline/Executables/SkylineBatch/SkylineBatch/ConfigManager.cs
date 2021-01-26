@@ -82,8 +82,9 @@ namespace SkylineBatch
                     config.Validate();
                     _configValidation.Add(config.Name, true);
                 }
-                catch (ArgumentException)
+                catch (ArgumentException e)
                 {
+                    Program.LogInfo(e.Message);
                     _configValidation.Add(config.Name, false);
                 }
             }
@@ -208,7 +209,11 @@ namespace SkylineBatch
         {
             lock (_lock)
             {
-                CheckIfExists(config, false);
+                if (_configRunners.Keys.Contains(config.Name))
+                {
+                    throw new ArgumentException(string.Format(Resources.ConfigManager_InsertConfiguration_Configuration___0___already_exists_, config.Name) + Environment.NewLine +
+                                                Resources.ConfigManager_InsertConfiguration_Please_enter_a_unique_name_for_the_configuration_);
+                }
                 Program.LogInfo(string.Format(Resources.ConfigManager_InsertConfiguration_Adding_configuration___0___, config.Name));
                 _configList.Insert(index, config);
 
@@ -233,7 +238,13 @@ namespace SkylineBatch
                 CheckConfigSelected();
                 var oldConfig = _configList[SelectedConfig];
                 if (!string.Equals(oldConfig.Name, newConfig.Name))
-                    CheckIfExists(newConfig, false);
+                {
+                    if (_configRunners.Keys.Contains(newConfig.Name))
+                    {
+                        throw new ArgumentException(string.Format(Resources.ConfigManager_InsertConfiguration_Configuration___0___already_exists_, newConfig.Name) + Environment.NewLine +
+                                                    Resources.ConfigManager_InsertConfiguration_Please_enter_a_unique_name_for_the_configuration_);
+                    }
+                }
                 RemoveConfig(oldConfig);
                 InsertConfiguration(newConfig, SelectedConfig);
             }
@@ -272,30 +283,21 @@ namespace SkylineBatch
                     return;
                 Program.LogInfo(string.Format(Resources.ConfigManager_RemoveSelected_Removing_configuration____0__, config.Name));
                 RemoveConfig(config);
-                if (SelectedConfig == _configList.Count - 1)
+                if (SelectedConfig == _configList.Count)
                     SelectedConfig--;
             }
         }
 
         private void RemoveConfig(SkylineBatchConfig config)
         {
-            CheckIfExists(config, true);
+            if (!_configRunners.Keys.Contains(config.Name))
+            {
+                throw new ArgumentException(string.Format(Resources.ConfigManager_RemoveConfig_Cannot_delete___0____configuration_does_not_exist_, config.Name));
+            }
             _configList.Remove(config);
             _configRunners[config.Name].Cancel();
             _configRunners.Remove(config.Name);
             _configValidation.Remove(config.Name);
-        }
-
-        private void CheckIfExists(SkylineBatchConfig config, bool expectedValue)
-        {
-            bool exists = _configRunners.Keys.Contains(config.Name);
-            if (exists != expectedValue)
-            {
-                var message = expectedValue
-                        ? string.Format(Resources.ConfigManager_CheckIfExists_Error____0___does_not_exist_, config.Name)
-                        : string.Format(Resources.ConfigManager_CheckIfExists_Error____0___already_exists_, config.Name);
-                throw new ArgumentException(message);
-            }
         }
 
         #endregion
@@ -311,7 +313,7 @@ namespace SkylineBatch
             }
         }
 
-        public async void RunAll(int startStep)
+        public async Task RunAll(int startStep)
         {
             var invalidConfigNames = new List<string>();
             foreach (var config in _configList)
@@ -444,7 +446,7 @@ namespace SkylineBatch
         {
             lock (_loggerLock)
             {
-                var logDirectory = SkylineBatchLogger.LogFolder;
+                var logDirectory = SkylineBatchLogger.LOG_FOLDER;
                 var files = logDirectory != null ? new DirectoryInfo(logDirectory).GetFiles() : new FileInfo[0];
                 foreach (var file in files)
                 {

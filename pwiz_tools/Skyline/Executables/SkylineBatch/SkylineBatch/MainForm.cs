@@ -20,7 +20,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
-using System.IO;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using SkylineBatch.Properties;
@@ -208,7 +207,7 @@ namespace SkylineBatch
             {
                 if (((ToolStripMenuItem)batchRunDropDown.Items[i - 1]).Checked)
                 {
-                    _configManager.RunAll(i);
+                    _configManager.RunAll(i); // configurations run asynchronously
                     break;
                 }
             }

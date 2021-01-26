@@ -35,7 +35,7 @@ namespace SkylineBatchTest
         [TestMethod]
         public void TestValidateConfig()
         {
-            TestUtils.InitializeInstallations();
+            TestUtils.InitializeRInstallation();
             var validName = "Name";
             var invalidName = string.Empty;
             var validSkyr = TestUtils.GetTestFilePath("UniqueReport.skyr");
@@ -83,7 +83,7 @@ namespace SkylineBatchTest
 
             var validMainSettings = new MainSettings(validTemplatePath, validAnalysisFolder, validDataDir, null);
             var validReportSettings = new ReportSettings(new List<ReportInfo>());
-            var validSkylineSettings = new SkylineSettings(SkylineType.Custom, GetSkylineDir());
+            var validSkylineSettings = new SkylineSettings(SkylineType.Custom, TestUtils.GetSkylineDir());
             var validFileSettings = new FileSettings(string.Empty, string.Empty, string.Empty, false, false, true);
 
             var validatedNoName = false;
@@ -156,7 +156,7 @@ namespace SkylineBatchTest
         [TestMethod]
         public void TestReportSettingsEquals()
         {
-            TestUtils.InitializeInstallations();
+            TestUtils.InitializeRInstallation();
             var testReportInfoNoScript = new ReportInfo("Name", TestUtils.GetTestFilePath("UniqueReport.skyr"), new List<Tuple<string, string>>());
             var testReportInfoWithScript = TestUtils.GetTestReportInfo();
             Assert.IsTrue(Equals(testReportInfoNoScript,
@@ -177,7 +177,7 @@ namespace SkylineBatchTest
         [TestMethod]
         public void TestConfigEquals()
         {
-            TestUtils.InitializeInstallations();
+            TestUtils.InitializeRInstallation();
             var testConfig = TestUtils.GetTestConfig();
             Assert.IsTrue(Equals(testConfig, TestUtils.GetTestConfig()));
             Assert.IsFalse(Equals(testConfig, TestUtils.GetTestConfig("other")));
@@ -190,24 +190,6 @@ namespace SkylineBatchTest
                 testConfig.MainSettings.ReplicateNamingPattern);
             var differentMainSettings = new SkylineBatchConfig("name", DateTime.MinValue, DateTime.MinValue, differentMain, TestUtils.GetTestFileSettings(), TestUtils.GetTestReportSettings(), new SkylineSettings(SkylineType.Skyline));
             Assert.IsFalse(Equals(testConfig, differentMainSettings));
-        }
-
-        public static string GetSkylineDir()
-        {
-            return GetProjectDirectory("bin\\x64\\Release");
-        }
-
-        public static string GetProjectDirectory(string relativePath)
-        {
-            for (String directory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-                directory != null && directory.Length > 10;
-                directory = Path.GetDirectoryName(directory))
-            {
-                if (File.Exists(Path.Combine(directory, "Skyline.sln")))
-                    return Path.Combine(directory, relativePath);
-            }
-
-            return null;
         }
     }
 }

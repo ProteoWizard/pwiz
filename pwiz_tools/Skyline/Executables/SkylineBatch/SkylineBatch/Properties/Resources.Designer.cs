@@ -163,24 +163,6 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error: &quot;{0}&quot; already exists..
-        /// </summary>
-        internal static string ConfigManager_CheckIfExists_Error____0___already_exists_ {
-            get {
-                return ResourceManager.GetString("ConfigManager_CheckIfExists_Error____0___already_exists_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Error: &quot;{0}&quot; does not exist..
-        /// </summary>
-        internal static string ConfigManager_CheckIfExists_Error____0___does_not_exist_ {
-            get {
-                return ResourceManager.GetString("ConfigManager_CheckIfExists_Error____0___does_not_exist_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Could not save configurations to:.
         /// </summary>
         internal static string ConfigManager_ExportConfigs_Could_not_save_configurations_to_ {
@@ -279,6 +261,34 @@ namespace SkylineBatch.Properties {
         internal static string ConfigManager_InsertConfiguration_Adding_configuration___0___ {
             get {
                 return ResourceManager.GetString("ConfigManager_InsertConfiguration_Adding_configuration___0___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Configuration &quot;{0}&quot; already exists..
+        /// </summary>
+        internal static string ConfigManager_InsertConfiguration_Configuration___0___already_exists_ {
+            get {
+                return ResourceManager.GetString("ConfigManager_InsertConfiguration_Configuration___0___already_exists_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please enter a unique name for the configuration..
+        /// </summary>
+        internal static string ConfigManager_InsertConfiguration_Please_enter_a_unique_name_for_the_configuration_ {
+            get {
+                return ResourceManager.GetString("ConfigManager_InsertConfiguration_Please_enter_a_unique_name_for_the_configuratio" +
+                        "n_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot delete &quot;{0}&quot;: configuration does not exist..
+        /// </summary>
+        internal static string ConfigManager_RemoveConfig_Cannot_delete___0____configuration_does_not_exist_ {
+            get {
+                return ResourceManager.GetString("ConfigManager_RemoveConfig_Cannot_delete___0____configuration_does_not_exist_", resourceCulture);
             }
         }
         

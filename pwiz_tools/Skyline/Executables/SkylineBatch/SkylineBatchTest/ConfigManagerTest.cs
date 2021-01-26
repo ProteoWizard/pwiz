@@ -79,14 +79,14 @@ namespace SkylineBatchTest
                 Assert.AreEqual("There is no configuration at index: 3", e.Message);
             }
             Assert.IsTrue(!selectedIndexAboveRange, "Expected index out of range exception");
+            testConfigManager.GetSelectedLogger().Delete();
         }
 
         [TestMethod]
         public void TestAddInsertConfig()
         {
             TestUtils.ClearSavedConfigurations();
-            TestUtils.InitializeInstallations();
-            var testConfigManager = new ConfigManager(new SkylineBatchLogger(TestUtils.GetTestFilePath("TestLog.log")));
+            var testConfigManager = new ConfigManager(TestUtils.GetTestLogger());
             Assert.IsTrue(!testConfigManager.HasConfigs());
             var addedConfig = TestUtils.GetTestConfig("one");
             testConfigManager.AddConfiguration(addedConfig);
@@ -106,24 +106,25 @@ namespace SkylineBatchTest
             }
             catch (ArgumentException e)
             {
-                Assert.AreEqual("Error: \"one\" already exists.", e.Message);
+                Assert.AreEqual("Configuration \"one\" already exists.\r\nPlease enter a unique name for the configuration.", e.Message);
             }
             Assert.IsTrue(!addedDuplicateConfig, "Expected exception for duplicate configuration added.");
             Assert.IsTrue(testConfigManager.ConfigListEquals(threeConfigs));
+            testConfigManager.GetSelectedLogger().Delete();
         }
 
         [TestMethod]
         public void TestRemoveConfig()
         {
             TestUtils.ClearSavedConfigurations();
-            TestUtils.InitializeInstallations();
             var configManager = TestUtils.GetTestConfigManager();
             configManager.SelectConfig(0);
             configManager.RemoveSelected();
-            Assert.IsTrue(configManager.SelectedConfig == -1);
+            Assert.IsTrue(configManager.SelectedConfig == 0);
             var oneRemoved = TestUtils.ConfigListFromNames(new List<string> { "two", "three" });
             Assert.IsTrue(configManager.ConfigListEquals(oneRemoved));
 
+            configManager.DeselectConfig();
             var removedNonexistantConfig = false;
             try
             {
@@ -136,13 +137,13 @@ namespace SkylineBatchTest
             }
             Assert.IsTrue(!removedNonexistantConfig, "Expected exception for nonexistent configuration removed.");
             Assert.IsTrue(configManager.ConfigListEquals(oneRemoved));
+            configManager.GetSelectedLogger().Delete();
         }
 
         [TestMethod]
         public void TestMoveConfig()
         {
             TestUtils.ClearSavedConfigurations();
-            TestUtils.InitializeInstallations();
             var configManager = TestUtils.GetTestConfigManager();
             configManager.SelectConfig(0);
             configManager.MoveSelectedConfig(false);
@@ -153,13 +154,13 @@ namespace SkylineBatchTest
             configManager.MoveSelectedConfig(true);
             var expectedMovedBackward = TestUtils.ConfigListFromNames(new List<string> { "two", "three", "one" });
             Assert.IsTrue(configManager.ConfigListEquals(expectedMovedBackward));
+            configManager.GetSelectedLogger().Delete();
         }
 
         [TestMethod]
         public void TestReplaceConfig()
         {
             TestUtils.ClearSavedConfigurations();
-            TestUtils.InitializeInstallations();
             var configManager = TestUtils.GetTestConfigManager();
             configManager.SelectConfig(0);
             configManager.ReplaceSelectedConfig(TestUtils.GetTestConfig("oneReplaced"));
@@ -175,10 +176,11 @@ namespace SkylineBatchTest
             }
             catch (ArgumentException e)
             {
-                Assert.AreEqual("Error: \"oneReplaced\" already exists.", e.Message);
+                Assert.AreEqual("Configuration \"oneReplaced\" already exists.\r\nPlease enter a unique name for the configuration.", e.Message);
             }
             Assert.IsTrue(!replacedWithDuplicate, "Expected exception for duplicate config.");
             Assert.IsTrue(configManager.ConfigListEquals(expectedOneReplaced));
+            configManager.GetSelectedLogger().Delete();
         }
 
 
@@ -193,7 +195,6 @@ namespace SkylineBatchTest
         public void TestImportExport()
         {
             TestUtils.ClearSavedConfigurations();
-            TestUtils.InitializeInstallations();
             var configsXmlPath = TestUtils.GetTestFilePath("configs.xml");
             var configManager = TestUtils.GetTestConfigManager();
             configManager.ExportConfigs(configsXmlPath, new [] {0,1,2});
@@ -215,7 +216,7 @@ namespace SkylineBatchTest
             configManager.Import(TestUtils.GetTestFilePath("configs.xml"));
             Assert.IsTrue(configManager.ConfigListEquals(testingConfigs));
 
-
+            configManager.GetSelectedLogger().Delete();
             File.Delete(configsXmlPath);
         }
 
@@ -223,90 +224,17 @@ namespace SkylineBatchTest
         public void TestCloseReopenConfigs()
         {
             TestUtils.ClearSavedConfigurations();
-            TestUtils.InitializeInstallations();
             var configManager = TestUtils.GetTestConfigManager();
             configManager.AddConfiguration(TestUtils.GetTestConfig("four"));
             var testingConfigs = TestUtils.ConfigListFromNames(new List<string> { "one", "two", "three", "four" });
             configManager.Close();
-            var testConfigManager = new ConfigManager(new SkylineBatchLogger(TestUtils.GetTestFilePath("TestLog.log")));
+            configManager.GetSelectedLogger().Delete();
+            var testConfigManager = new ConfigManager(TestUtils.GetTestLogger());
             Assert.IsTrue(testConfigManager.ConfigListEquals(testingConfigs));
+            testConfigManager.GetSelectedLogger().Delete();
         }
 
         #endregion
-
-        #region Managing Logs
-
-        [TestMethod]
-        public void TestMultipleOldLogs()
-        {
-            var testConfigManager = new ConfigManager(new SkylineBatchLogger(TestUtils.GetTestFilePath("OldLogs\\TestLog.log")));
-            Assert.IsTrue(testConfigManager.HasOldLogs());
-            Assert.IsTrue(testConfigManager.GetOldLogFiles().Length == 3);
-        }
-
-        [TestMethod]
-        public void TestDeleteOldLog()
-        {
-            var testConfigManager = new ConfigManager(new SkylineBatchLogger(TestUtils.GetTestFilePath("OldLogs\\TestLog.log")));
-            testConfigManager.SelectLog(3);
-            var deletingLogFullName = TestUtils.GetTestFilePath("OldLogs\\TestLog_20201110_094940.log");
-            var filesAfterDelete = DeleteLogs(testConfigManager, new List<string> { deletingLogFullName });
-            var oldLogsAfterDelete = testConfigManager.GetOldLogFiles();
-
-            Assert.IsTrue(testConfigManager.SelectedLog == 2);
-            Assert.IsTrue(filesAfterDelete.Count == 3); // count includes old logs and current log
-            Assert.IsFalse(filesAfterDelete.Contains(deletingLogFullName));
-            Assert.IsTrue(oldLogsAfterDelete.Length == 2);
-            Assert.IsFalse(oldLogsAfterDelete.Contains(Path.GetFileName(deletingLogFullName)));
-        }
-
-        [TestMethod]
-        public void TestDeleteAllOldLogs()
-        {
-            var currentLogFullName = TestUtils.GetTestFilePath("OldLogs\\TestLog.log");
-            var testConfigManager = new ConfigManager(new SkylineBatchLogger(currentLogFullName));
-            var allOldLogs = TestUtils.GetAllLogFiles(Path.GetDirectoryName(currentLogFullName));
-            allOldLogs.Remove(currentLogFullName);
-
-
-            testConfigManager.SelectLog(3);
-            
-            var filesAfterDelete = DeleteLogs(testConfigManager, allOldLogs);
-            var allLogsAfterDelete = testConfigManager.GetAllLogFiles();
-
-            Assert.IsTrue(testConfigManager.SelectedLog == 0);
-            Assert.IsTrue(filesAfterDelete.Count == 1); // count includes old logs and current log
-            Assert.IsTrue(filesAfterDelete.Contains(currentLogFullName));
-            Assert.IsTrue(allLogsAfterDelete.Length == 1);
-            Assert.IsTrue(allLogsAfterDelete.Contains(Path.GetFileName(currentLogFullName)));
-        }
-
-
-        
-        private List<string> DeleteLogs(ConfigManager testConfigManager, List<string> logsToDelete)
-        {
-            var deletingLogsAsObjectArray = new object[logsToDelete.Count];
-            for (int i = 0; i < logsToDelete.Count; i++)
-            {
-                var logFileName = Path.GetFileName(logsToDelete[i]);
-                File.Copy(logsToDelete[i], TestUtils.GetTestFilePath(logFileName), true);
-                deletingLogsAsObjectArray[i] = logFileName;
-            }
-            testConfigManager.DeleteLogs(deletingLogsAsObjectArray);
-            var filesAfterDelete = TestUtils.GetAllLogFiles(Path.GetDirectoryName(logsToDelete[0]) + "\\");
-            foreach (var log in logsToDelete)
-            {
-                var logFileName = Path.GetFileName(log);
-                File.Copy(TestUtils.GetTestFilePath(logFileName), log, true);
-                File.Delete(TestUtils.GetTestFilePath(logFileName));
-            }
-
-            return filesAfterDelete;
-        }
-
-
-        #endregion
-
 
     }
 }

@@ -18,6 +18,7 @@
 
 
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -30,31 +31,32 @@ namespace SkylineBatchTest
     public class ConfigRunnerTest
     {
         [TestMethod]
-        public async Task TestExecuteCommandLine()
+        public async Task TestExecuteSkylineCmd()
         {
-           TestUtils.InitializeInstallations();
-           var testRunner = new ConfigRunner(TestUtils.GetTestConfig(), new SkylineBatchLogger(TestUtils.GetTestFilePath("testLog.log")));
+           var logger = TestUtils.GetTestLogger();
+           var testRunner = new ConfigRunner(TestUtils.GetTestConfig(), logger);
+           var config = testRunner.Config;
            Assert.IsTrue(testRunner.IsStopped());
-            var singleCommand = new List<string>
-               {"echo command success  > " + TestUtils.GetTestFilePath("cmdTest.txt")};
-           await testRunner.ExecuteCommandLine(singleCommand);
-           Assert.IsTrue(File.Exists(TestUtils.GetTestFilePath("cmdTest.txt")));
-           Assert.IsTrue(testRunner.IsCompleted());
-           var multipleCommands = new List<string>
-               {"cd " + TestUtils.GetTestFilePath(string.Empty), "del cmdTest.txt"};
-           await testRunner.ExecuteCommandLine(multipleCommands);
-           Assert.IsFalse(File.Exists(TestUtils.GetTestFilePath("cmdTest.txt")));
-           Assert.IsTrue(testRunner.IsCompleted());
+           var singleCommand = string.Format("--in=\"{0}\" --out=\"{1}\"", config.MainSettings.TemplateFilePath,
+               TestUtils.GetTestFilePath("Copy.sky"));
+            testRunner.ChangeStatus(ConfigRunner.RunnerStatus.Running);
+           await testRunner.ExecuteProcess(config.SkylineSettings.CmdPath, singleCommand);
+           logger.Delete();
+           Assert.IsTrue(testRunner.IsRunning(), "Expected no errors or cancellations.");
+           Assert.IsTrue(File.Exists(TestUtils.GetTestFilePath("Copy.sky")));
+           File.Delete(TestUtils.GetTestFilePath("Copy.sky"));
         }
 
         [TestMethod]
         public async Task TestRunFromStepFour()
         {
-            TestUtils.InitializeInstallations();
-            var testRunner = TestUtils.GetTestConfigRunner();
+            TestUtils.InitializeRInstallation();
+            var logger = TestUtils.GetTestLogger();
+            var testRunner = new ConfigRunner(TestUtils.GetTestConfig(), logger);
             Assert.IsTrue(testRunner.IsStopped());
             await testRunner.Run(4);
-            Assert.IsTrue(testRunner.IsCompleted());
+            logger.Delete();
+            Assert.IsTrue(testRunner.IsCompleted(), "Expected runner to have status \"Completed\" but was: " + testRunner.GetStatus());
         }
 
         // CONSIDER: add tests for configRunner.run

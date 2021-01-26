@@ -18,94 +18,14 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SkylineBatch;
+using SkylineBatch.Properties;
 
 namespace SkylineBatchTest
 {
-    class TestLogger: ISkylineBatchLogger
-    {
-        private readonly StringBuilder _log = new StringBuilder();
-        private readonly  StringBuilder _programLog = new StringBuilder();
-
-
-
-
-
-        public void Log(string message, object[] args)
-        {
-            AddToLog(message, args);
-        }
-
-        public void LogError(string message, object[] args)
-        {
-            AddToLog(message, args);
-        }
-
-        public void LogProgramError(string message, params object[] args)
-        {
-            AddToProgramLog(message, args);
-        }
-
-        public void LogException(Exception exception, string message, params object[] args)
-        {
-            AddToLog(message, args);
-        }
-
-        public string GetFile()
-        {
-            throw new NotImplementedException();
-        }
-
-        public string GetFileName()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void DisableUiLogging()
-        {
-            throw new NotImplementedException();
-        }
-
-        public SkylineBatchLogger Archive()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void LogToUi(IMainUiControl mainUi)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void DisplayLog()
-        {
-            throw new NotImplementedException();
-        }
-
-        private void AddToLog(string message, params object[] args)
-        {
-            _log.Append(string.Format(message, args)).AppendLine();
-            System.Diagnostics.Debug.WriteLine(message, args);
-        }
-
-        private void AddToProgramLog(string message, params object[] args)
-        {
-            _programLog.Append(string.Format(message, args)).AppendLine();
-        }
-
-        public string GetLog()
-        {
-            return _log.ToString();
-        }
-
-        public void Clear()
-        {
-            _log.Clear();
-        }
-    }
-
-
     public class TestUtils
     {
         public static string GetTestFilePath(string fileName)
@@ -144,14 +64,20 @@ namespace SkylineBatchTest
                 new List<Tuple<string, string>> {new Tuple<string, string>(GetTestFilePath("testScript.r"), "4.0.3")});
         }
 
+        public static SkylineSettings GetTestSkylineSettings()
+        {
+            return new SkylineSettings(SkylineType.Custom, GetSkylineDir());
+        }
+
         public static SkylineBatchConfig GetTestConfig(string name = "name")
         {
-            return new SkylineBatchConfig(name, DateTime.MinValue, DateTime.MinValue, GetTestMainSettings(), GetTestFileSettings(), GetTestReportSettings(), new SkylineSettings(SkylineType.Custom, "C:\\Program Files\\Skyline"));
+            return new SkylineBatchConfig(name, DateTime.MinValue, DateTime.MinValue, GetTestMainSettings(), GetTestFileSettings(), 
+                GetTestReportSettings(), GetTestSkylineSettings());
         }
 
         public static ConfigRunner GetTestConfigRunner(string configName = "name")
         {
-            return new ConfigRunner(GetTestConfig(configName), new SkylineBatchLogger(GetTestFilePath("TestLog.log")));
+            return new ConfigRunner(GetTestConfig(configName), GetTestLogger());
         }
 
         public static List<SkylineBatchConfig> ConfigListFromNames(List<string> names)
@@ -166,7 +92,7 @@ namespace SkylineBatchTest
 
         public static ConfigManager GetTestConfigManager()
         {
-            var testConfigManager = new ConfigManager(new SkylineBatchLogger(GetTestFilePath("TestLog.log")));
+            var testConfigManager = new ConfigManager(GetTestLogger());
             while (testConfigManager.HasConfigs())
             {
                 testConfigManager.SelectConfig(0);
@@ -178,26 +104,51 @@ namespace SkylineBatchTest
             return testConfigManager;
         }
 
-        public static void InitializeInstallations()
+        public static string GetSkylineDir()
         {
-            Assert.IsTrue(Installations.FindRDirectory());
-            Assert.IsTrue(Installations.FindSkyline());
+            return GetProjectDirectory("bin\\x64\\Release");
         }
 
-            public static void ClearSavedConfigurations()
+        public static string GetProjectDirectory(string relativePath)
         {
-            var testConfigManager = new ConfigManager(new SkylineBatchLogger(TestUtils.GetTestFilePath("TestLog.log")));
+            for (String directory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                directory != null && directory.Length > 10;
+                directory = Path.GetDirectoryName(directory))
+            {
+                if (File.Exists(Path.Combine(directory, "Skyline.sln")))
+                    return Path.Combine(directory, relativePath);
+            }
+
+            return null;
+        }
+
+        public static SkylineBatchLogger GetTestLogger(string logFolder = "")
+        {
+            SkylineBatchLogger.LOG_FOLDER = string.IsNullOrEmpty(logFolder) ? GetTestFilePath("OldLogs") : logFolder;
+            return new SkylineBatchLogger("TestLog" + DateTime.Now.ToString("_HHmmssfff") + ".log");
+        }
+
+        public static void InitializeRInstallation()
+        {
+            Assert.IsTrue(Installations.FindRDirectory());
+        }
+
+        public static void ClearSavedConfigurations()
+        {
+            var logger = GetTestLogger();
+            var testConfigManager = new ConfigManager(logger);
             while (testConfigManager.HasConfigs())
             {
                 testConfigManager.SelectConfig(0);
                 testConfigManager.RemoveSelected();
             }
             testConfigManager.Close();
+            logger.Delete();
         }
 
         public static List<string> GetAllLogFiles(string directory = null)
         {
-            directory = directory == null ? GetTestFilePath(string.Empty) : directory;
+            directory = directory == null ? GetTestFilePath("OldLogs\\TestTinyLog") : directory;
             var files = Directory.GetFiles(directory);
             var logFiles = new List<string>();
             foreach (var fullName in files)
@@ -208,12 +159,6 @@ namespace SkylineBatchTest
             }
             return logFiles;
         }
-
-        public static void DeleteAllLogFiles()
-        {
-            var logFiles = GetAllLogFiles();
-            foreach (var file in logFiles)
-                File.Delete(file);
-        }
+        
     }
 }

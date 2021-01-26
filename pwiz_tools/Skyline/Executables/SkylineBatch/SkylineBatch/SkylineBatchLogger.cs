@@ -40,6 +40,8 @@ using SkylineBatch.Properties;
 
     public class SkylineBatchLogger : ISkylineBatchLogger
     {
+        public static string LOG_FOLDER;
+
         public const long MaxLogSize = 10 * 1024 * 1024; // 10MB
         private const int MaxBackups = 5;
         public const int MaxLogLines = 5000;
@@ -62,26 +64,20 @@ using SkylineBatch.Properties;
 
         public SkylineBatchLogger(string logFileName, IMainUiControl mainUi = null)
         {
-            _filePath = Path.Combine(LogFolder, logFileName);
-            _mainUi = mainUi;
-            Init();
-        }
-
-        public static string LogFolder
-        {
-            get
+            if (LOG_FOLDER == null)
             {
                 var roamingFolder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
                 var localFolder = Path.Combine(Path.GetDirectoryName(roamingFolder), "local");
-                var logFolder = Path.Combine(localFolder, Program.AppName());
-                if (!Directory.Exists(logFolder))
+                LOG_FOLDER = Path.Combine(localFolder, Program.AppName());
+                if (!Directory.Exists(LOG_FOLDER))
                 {
-                    Directory.CreateDirectory(logFolder);
+                    Directory.CreateDirectory(LOG_FOLDER);
                 }
-
-                return logFolder;
             }
-        } 
+            _filePath = Path.Combine(LOG_FOLDER, logFileName);
+            _mainUi = mainUi;
+            Init();
+        }
 
         public void Init()
         {
@@ -311,6 +307,7 @@ using SkylineBatch.Properties;
         {
             if (new FileInfo(_filePath).Length > 0)
             {
+                if (string.IsNullOrEmpty(LOG_FOLDER)) LOG_FOLDER = Path.GetDirectoryName(_filePath);
                 var lastModified = File.GetLastWriteTime(_filePath);
                 var timestampFileName = Path.GetDirectoryName(_filePath) + "\\" + Path.GetFileNameWithoutExtension(_filePath);
                 timestampFileName += lastModified.ToString("_yyyyMMdd_HHmmss") + ".log";
