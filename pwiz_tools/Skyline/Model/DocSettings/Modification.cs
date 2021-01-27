@@ -1056,6 +1056,11 @@ namespace pwiz.Skyline.Model.DocSettings
             get; private set;
         }
 
+        public PeptideStructure GetPeptideStructure()
+        {
+            return new PeptideStructure(Peptide, this);
+        }
+
         public ExplicitMods ChangeCrosslinks(CrosslinkStructure crosslinks)
         {
             return ChangeProp(ImClone(this), im => im.Crosslinks = crosslinks);

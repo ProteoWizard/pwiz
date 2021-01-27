@@ -16,15 +16,16 @@ namespace pwiz.Skyline.EditUI
     {
         private BindingList<PeptideRow> _peptideRows;
         private BindingList<CrosslinkRow> _crosslinkRows;
-        private PeptideDocNode _originalPeptideDocNode;
+        private PeptideStructure _originalPeptideStructure;
         private IDictionary<string, StaticMod> _crosslinkers;
-        public EditLinkedPeptidesDlg(SrmSettings settings, PeptideDocNode peptide)
+        private Tuple<DataGridView, int, DataGridViewColumn> _pendingFocus;
+        public EditLinkedPeptidesDlg(SrmSettings settings, PeptideStructure peptideStructure)
         {
             InitializeComponent();
             SrmSettings = settings;
             _peptideRows = new BindingList<PeptideRow>();
             _crosslinkRows = new BindingList<CrosslinkRow>();
-            SetPeptide(peptide);
+            SetPeptide(peptideStructure);
             _peptideRows.ListChanged += PeptideRows_OnListChanged;
             dataGridViewLinkedPeptides.AutoGenerateColumns = false;
             dataGridViewLinkedPeptides.DataSource = _peptideRows;
@@ -55,25 +56,24 @@ namespace pwiz.Skyline.EditUI
             UpdateComboBoxes();
         }
 
-        public void SetPeptide(PeptideDocNode peptideDocNode)
+        public void SetPeptide(PeptideStructure peptideStructure)
         {
-            _originalPeptideDocNode = peptideDocNode;
+            _originalPeptideStructure = peptideStructure;
             _peptideRows.Clear();
             _crosslinkRows.Clear();
-            tbxPrimaryPeptide.Text = peptideDocNode.Peptide.Sequence;
-            var crosslinkStructure = peptideDocNode.CrosslinkStructure;
-            for (int i = 0; i < crosslinkStructure.LinkedPeptides.Count; i++)
+            tbxPrimaryPeptide.Text = peptideStructure.Peptides[0].Sequence;
+            for (int i = 1; i < peptideStructure.Peptides.Count; i++)
             {
                 _peptideRows.Add(new PeptideRow()
                 {
-                    Sequence = crosslinkStructure.LinkedPeptides[i].Sequence,
-                    ExplicitMods = crosslinkStructure.LinkedExplicitMods[i]
+                    Sequence = peptideStructure.Peptides[i].Sequence,
+                    ExplicitMods = peptideStructure.ExplicitModList[i]
                 });
             }
 
-            for (int i = 0; i < crosslinkStructure.Crosslinks.Count; i++)
+            for (int i = 0; i < peptideStructure.Crosslinks.Count; i++)
             {
-                var crosslink = crosslinkStructure.Crosslinks[i];
+                var crosslink = peptideStructure.Crosslinks[i];
                 if (crosslink.Sites.Count != 2)
                 {
                     continue;
@@ -89,6 +89,55 @@ namespace pwiz.Skyline.EditUI
             }
         }
 
+        protected override void OnLoad(EventArgs e)
+        {
+            base.OnLoad(e);
+            if (_pendingFocus != null)
+            {
+                SetGridFocus(_pendingFocus.Item1, _pendingFocus.Item2, _pendingFocus.Item3);
+                _pendingFocus = null;
+            }
+        }
+
+        public void SelectCrosslink(StaticMod crosslinker, int peptideIndex, int aaIndex)
+        {
+            for (int i = 0; i < _crosslinkRows.Count; i++)
+            {
+                var crosslinkRow = _crosslinkRows[i];
+                if (crosslinkRow.PeptideIndex1 == peptideIndex && crosslinkRow.AaIndex1 == aaIndex)
+                {
+                    SetGridFocus(dataGridViewCrosslinks, i, colAminoAcid1);
+                }
+                else if (crosslinkRow.PeptideIndex2 == peptideIndex && crosslinkRow.AaIndex2 == aaIndex)
+                {
+                    SetGridFocus(dataGridViewCrosslinks, i, colAminoAcid2);
+                }
+                else
+                {
+                    continue;
+                }
+
+                if (crosslinker != null)
+                {
+                    crosslinkRow.Crosslinker = crosslinker.Name;
+                }
+                return;
+            }
+            var newCrosslinkRow = new CrosslinkRow
+            {
+                Crosslinker =  crosslinker?.Name,
+                PeptideIndex1 = peptideIndex,
+                AaIndex1 = aaIndex
+            };
+            if (IsSinglePeptide())
+            {
+                newCrosslinkRow.PeptideIndex1 = 0;
+            }
+            _crosslinkRows.Add(newCrosslinkRow);
+            SetGridFocus(dataGridViewCrosslinks, _crosslinkRows.Count - 1,
+                IsSinglePeptide() ? colAminoAcid2 : colPeptide2);
+        }
+
         public SrmSettings SrmSettings { get; private set; }
 
         private void UpdateComboBoxes()
@@ -97,11 +146,12 @@ namespace pwiz.Skyline.EditUI
             var longestSequence = peptideSequences .Max(sequence => sequence?.Length ?? 0);
             var peptideChoices = Enumerable.Range(0, peptideSequences.Count).Select(i => new KeyValuePair<string, int>(
                 (i + 1) + @":" + peptideSequences[i],
-                i)).ToList();
+                i)).Prepend(new KeyValuePair<string, int>(string.Empty, -1)).ToList();
             ReplaceDropdownItems(colPeptide1, peptideChoices);
             ReplaceDropdownItems(colPeptide2, peptideChoices);
+            colPeptide1.Visible = colPeptide2.Visible = peptideSequences.Count > 1;
 
-            var aaChoices= Enumerable.Range(0, longestSequence)
+            var aaChoices= Enumerable.Range(-1, longestSequence)
                 .Select(i => MakeAaIndexOption(null, i)).ToList();
             ReplaceDropdownItems(colAminoAcid1, aaChoices);
             ReplaceDropdownItems(colAminoAcid2, aaChoices);
@@ -109,9 +159,18 @@ namespace pwiz.Skyline.EditUI
 
         public IList<string> GetPeptideSequences()
         {
-            var list = new List<string> {_originalPeptideDocNode.Peptide.Sequence};
+            var list = new List<string> {_originalPeptideStructure.Peptides[0].Sequence};
             list.AddRange(_peptideRows.Select(row => row.Sequence ?? string.Empty));
+            while (string.IsNullOrEmpty(list[list.Count - 1]))
+            {
+                list.RemoveAt(list.Count - 1);
+            }
             return list;
+        }
+
+        public bool IsSinglePeptide()
+        {
+            return _peptideRows.All(row => string.IsNullOrEmpty(row.Sequence));
         }
 
         private void ReplaceDropdownItems<TValue>(DataGridViewComboBoxColumn column,
@@ -138,6 +197,13 @@ namespace pwiz.Skyline.EditUI
 
         public class CrosslinkRow
         {
+            public CrosslinkRow()
+            {
+                PeptideIndex1 = -1;
+                PeptideIndex2 = -1;
+                AaIndex1 = -1;
+                AaIndex2 = -1;
+            }
             public string Crosslinker { get; set; }
             public int PeptideIndex1 { get; set; }
             public int AaIndex1 { get; set; }
@@ -228,14 +294,22 @@ namespace pwiz.Skyline.EditUI
 
                 var peptideList = GetPeptideSequences();
                 string peptideSequence = null;
-                if (peptideIndex >= 0 && peptideIndex < peptideList.Count)
+                if (peptideList.Count == 1)
+                {
+                    peptideSequence = peptideList[0];
+                }
+                else if (peptideIndex >= 0 && peptideIndex < peptideList.Count)
                 {
                     peptideSequence = peptideList[peptideIndex];
                 }
 
-                if (peptideSequence != null)
+                var items = new List<KeyValuePair<string, int>>();
+                if (peptideSequence == null)
                 {
-                    var items = new List<KeyValuePair<string, int>>();
+                    items.Add(MakeAaIndexOption(null, -1));
+                }
+                else
+                {
                     for (int aaIndex = 0; aaIndex < peptideSequence.Length; aaIndex++)
                     {
                         char aa = peptideSequence[aaIndex];
@@ -246,17 +320,18 @@ namespace pwiz.Skyline.EditUI
 
                         items.Add(MakeAaIndexOption(peptideSequence, aaIndex));
                     }
-
-                    int selectedIndex = IndexOfValue(items, chosenAaIndex);
-                    if (selectedIndex < 0)
-                    {
-                        items.Insert(0, MakeAaIndexOption(peptideSequence, chosenAaIndex));
-                        selectedIndex = 0;
-                    }
-                    comboBoxControl.Items.Clear();
-                    comboBoxControl.Items.AddRange(items.Cast<object>().ToArray());
-                    comboBoxControl.SelectedIndex = selectedIndex;
                 }
+
+
+                int selectedIndex = IndexOfValue(items, chosenAaIndex);
+                if (selectedIndex < 0)
+                {
+                    items.Insert(0, MakeAaIndexOption(peptideSequence, chosenAaIndex));
+                    selectedIndex = 0;
+                }
+                comboBoxControl.Items.Clear();
+                comboBoxControl.Items.AddRange(items.Cast<object>().ToArray());
+                comboBoxControl.SelectedIndex = selectedIndex;
             }
         }
 
@@ -308,7 +383,11 @@ namespace pwiz.Skyline.EditUI
         public static KeyValuePair<string, int> MakeAaIndexOption(string peptideSequence, int aaIndex)
         {
             string displayText;
-            if (peptideSequence == null || peptideSequence.Length <= aaIndex)
+            if (aaIndex == -1)
+            {
+                displayText = "";
+            }
+            else if (peptideSequence == null || peptideSequence.Length <= aaIndex)
             {
                 displayText = @"<" + (aaIndex + 1) + @">";
             }
@@ -342,7 +421,11 @@ namespace pwiz.Skyline.EditUI
                     aaIndex = crosslinkRow.AaIndex2;
                 }
                 string peptideSequence = null;
-                if (peptideIndex >= 0 && peptideIndex < peptideSequences.Count)
+                if (peptideSequences.Count == 1)
+                {
+                    peptideSequence = peptideSequences[0];
+                }
+                else if (peptideIndex >= 0 && peptideIndex < peptideSequences.Count)
                 {
                     peptideSequence = peptideSequences[peptideIndex];
                 }
@@ -382,6 +465,7 @@ namespace pwiz.Skyline.EditUI
                 linkedExplicitMods.Add(peptideRow.ExplicitMods);
             }
 
+            bool singlePeptide = linkedPeptides.Count == 0;
             var crosslinks = new List<Crosslink>();
             for (int i = 0; i < _crosslinkRows.Count; i++)
             {
@@ -402,29 +486,30 @@ namespace pwiz.Skyline.EditUI
 
                 var siteTuples = new[]
                 {
-                    Tuple.Create(new CrosslinkSite(crosslinkRow.PeptideIndex1, crosslinkRow.AaIndex1), colPeptide1, colAminoAcid1),
-                    Tuple.Create(new CrosslinkSite(crosslinkRow.PeptideIndex2, crosslinkRow.AaIndex2), colPeptide2, colAminoAcid2)
+                    Tuple.Create(new KeyValuePair<int, int>(crosslinkRow.PeptideIndex1, crosslinkRow.AaIndex1), colPeptide1, colAminoAcid1),
+                    Tuple.Create(new KeyValuePair<int, int>(crosslinkRow.PeptideIndex2, crosslinkRow.AaIndex2), colPeptide2, colAminoAcid2)
                 };
 
                 var sites = new List<CrosslinkSite>();
                 foreach (var siteTuple in siteTuples)
                 {
-                    var site = siteTuple.Item1;
-                    if (site.PeptideIndex < 0 || site.PeptideIndex >= peptideSequences.Count)
+                    int peptideIndex = singlePeptide ? 0 : siteTuple.Item1.Key;
+                    if (peptideIndex < 0 || peptideIndex >= peptideSequences.Count)
                     {
                         MessageDlg.Show(this, "This peptide is not valid.");
                         SetGridFocus(dataGridViewCrosslinks, i, siteTuple.Item2);
                         return;
                     }
 
-                    var peptideSequence = peptideSequences[site.PeptideIndex];
-                    if (site.AaIndex < 0 || site.AaIndex >= peptideSequence.Length)
+                    var peptideSequence = peptideSequences[peptideIndex];
+                    int aaIndex = siteTuple.Item1.Value;
+                    if (aaIndex < 0 || aaIndex >= peptideSequence.Length)
                     {
                         MessageDlg.Show(this, "This is not a valid amino acid position in this peptide.");
                         SetGridFocus(dataGridViewCrosslinks, i, siteTuple.Item3);
                         return;
                     }
-
+                    var site = new CrosslinkSite(peptideIndex, aaIndex);
                     if (sites.Contains(site))
                     {
                         MessageDlg.Show(this, "Both ends of this crosslink cannot be the same.");
@@ -453,8 +538,8 @@ namespace pwiz.Skyline.EditUI
                 return;
             }
 
-            var mainPeptide = _originalPeptideDocNode.Peptide;
-            var mainExplicitMods = _originalPeptideDocNode.ExplicitMods;
+            var mainPeptide = _originalPeptideStructure.Peptides[0];
+            var mainExplicitMods = _originalPeptideStructure.ExplicitModList[0];
             if (mainExplicitMods == null)
             {
                 mainExplicitMods = GetDefaultExplicitMods(mainPeptide, aaIndexesByPeptideIndex[0].ToHashSet());
@@ -466,8 +551,15 @@ namespace pwiz.Skyline.EditUI
 
         public void SetGridFocus(DataGridView dataGridView, int rowIndex, DataGridViewColumn column)
         {
-            dataGridView.CurrentCell = dataGridView.Rows[rowIndex].Cells[column.Index];
-            dataGridView.Focus();
+            if (IsHandleCreated)
+            {
+                dataGridView.CurrentCell = dataGridView.Rows[rowIndex].Cells[column.Index];
+                dataGridView.Focus();
+            }
+            else
+            {
+                _pendingFocus = Tuple.Create(dataGridView, rowIndex, column);
+            }
         }
 
         public ExplicitMods GetDefaultExplicitMods(Peptide peptide, ICollection<int> crosslinkedAaIndexes)

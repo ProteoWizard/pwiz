@@ -128,116 +128,32 @@
   <data name="splitContainer1.Orientation" type="System.Windows.Forms.Orientation, System.Windows.Forms">
     <value>Horizontal</value>
   </data>
-  <metadata name="colPeptideSequence.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <data name="colPeptideSequence.HeaderText" xml:space="preserve">
-    <value>Peptide Sequence</value>
-  </data>
-  <metadata name="colModificationsButton.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <data name="colModificationsButton.HeaderText" xml:space="preserve">
-    <value />
-  </data>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="colModificationsButton.Width" type="System.Int32, mscorlib">
-    <value>20</value>
+  <data name="lblCrosslinks.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
   </data>
-  <data name="dataGridViewLinkedPeptides.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Fill</value>
+  <data name="lblCrosslinks.Location" type="System.Drawing.Point, System.Drawing">
+    <value>12, 5</value>
   </data>
-  <data name="dataGridViewLinkedPeptides.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 0</value>
+  <data name="lblCrosslinks.Size" type="System.Drawing.Size, System.Drawing">
+    <value>57, 13</value>
   </data>
-  <data name="dataGridViewLinkedPeptides.Size" type="System.Drawing.Size, System.Drawing">
-    <value>643, 148</value>
-  </data>
-  <data name="dataGridViewLinkedPeptides.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;dataGridViewLinkedPeptides.Name" xml:space="preserve">
-    <value>dataGridViewLinkedPeptides</value>
-  </data>
-  <data name="&gt;&gt;dataGridViewLinkedPeptides.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridView, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;dataGridViewLinkedPeptides.Parent" xml:space="preserve">
-    <value>splitContainer1.Panel1</value>
-  </data>
-  <data name="&gt;&gt;dataGridViewLinkedPeptides.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <metadata name="toolStripPeptides.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
-  </metadata>
-  <data name="toolStripPeptides.AutoSize" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
-  <data name="toolStripPeptides.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Right</value>
-  </data>
-  <data name="btnUpPeptide.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
-    <value>Magenta</value>
-  </data>
-  <data name="btnUpPeptide.Size" type="System.Drawing.Size, System.Drawing">
-    <value>25, 20</value>
-  </data>
-  <data name="btnUpPeptide.Text" xml:space="preserve">
-    <value>Remove</value>
-  </data>
-  <data name="btnDownPeptide.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
-    <value>Magenta</value>
-  </data>
-  <data name="btnDownPeptide.Size" type="System.Drawing.Size, System.Drawing">
-    <value>25, 20</value>
-  </data>
-  <data name="btnDownPeptide.Text" xml:space="preserve">
-    <value>Up</value>
-  </data>
-  <data name="btnDeletePeptide.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
-    <value>Magenta</value>
-  </data>
-  <data name="btnDeletePeptide.Size" type="System.Drawing.Size, System.Drawing">
-    <value>25, 20</value>
-  </data>
-  <data name="btnDeletePeptide.Text" xml:space="preserve">
-    <value>Down</value>
-  </data>
-  <data name="toolStripPeptides.Location" type="System.Drawing.Point, System.Drawing">
-    <value>643, 0</value>
-  </data>
-  <data name="toolStripPeptides.Size" type="System.Drawing.Size, System.Drawing">
-    <value>32, 148</value>
-  </data>
-  <data name="toolStripPeptides.TabIndex" type="System.Int32, mscorlib">
+  <data name="lblCrosslinks.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
-  <data name="toolStripPeptides.Text" xml:space="preserve">
-    <value>menuStrip1</value>
+  <data name="lblCrosslinks.Text" xml:space="preserve">
+    <value>Crosslinks:</value>
   </data>
-  <data name="&gt;&gt;toolStripPeptides.Name" xml:space="preserve">
-    <value>toolStripPeptides</value>
+  <data name="&gt;&gt;lblCrosslinks.Name" xml:space="preserve">
+    <value>lblCrosslinks</value>
   </data>
-  <data name="&gt;&gt;toolStripPeptides.Type" xml:space="preserve">
-    <value>System.Windows.Forms.MenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="&gt;&gt;lblCrosslinks.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;toolStripPeptides.Parent" xml:space="preserve">
+  <data name="&gt;&gt;lblCrosslinks.Parent" xml:space="preserve">
     <value>splitContainer1.Panel1</value>
   </data>
-  <data name="&gt;&gt;toolStripPeptides.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;splitContainer1.Panel1.Name" xml:space="preserve">
-    <value>splitContainer1.Panel1</value>
-  </data>
-  <data name="&gt;&gt;splitContainer1.Panel1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;splitContainer1.Panel1.Parent" xml:space="preserve">
-    <value>splitContainer1</value>
-  </data>
-  <data name="&gt;&gt;splitContainer1.Panel1.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;lblCrosslinks.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="colCrosslinker.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
@@ -270,14 +186,11 @@
   <data name="colAminoAcid2.HeaderText" xml:space="preserve">
     <value>Amino Acid #2</value>
   </data>
-  <data name="dataGridViewCrosslinks.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Fill</value>
-  </data>
   <data name="dataGridViewCrosslinks.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 0</value>
+    <value>15, 21</value>
   </data>
   <data name="dataGridViewCrosslinks.Size" type="System.Drawing.Size, System.Drawing">
-    <value>643, 147</value>
+    <value>703, 130</value>
   </data>
   <data name="dataGridViewCrosslinks.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -289,69 +202,87 @@
     <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline-daily, Version=20.2.1.390, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;dataGridViewCrosslinks.Parent" xml:space="preserve">
-    <value>splitContainer1.Panel2</value>
+    <value>splitContainer1.Panel1</value>
   </data>
   <data name="&gt;&gt;dataGridViewCrosslinks.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;splitContainer1.Panel1.Name" xml:space="preserve">
+    <value>splitContainer1.Panel1</value>
+  </data>
+  <data name="&gt;&gt;splitContainer1.Panel1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;splitContainer1.Panel1.Parent" xml:space="preserve">
+    <value>splitContainer1</value>
+  </data>
+  <data name="&gt;&gt;splitContainer1.Panel1.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <metadata name="menuStrip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>132, 17</value>
-  </metadata>
-  <data name="menuStrip1.AutoSize" type="System.Boolean, mscorlib">
-    <value>False</value>
+  <data name="lblLinkedPeptides.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
   </data>
-  <data name="menuStrip1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Right</value>
+  <data name="lblLinkedPeptides.Location" type="System.Drawing.Point, System.Drawing">
+    <value>12, 13</value>
   </data>
-  <data name="btnUpCrosslink.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
-    <value>Magenta</value>
+  <data name="lblLinkedPeptides.Size" type="System.Drawing.Size, System.Drawing">
+    <value>86, 13</value>
   </data>
-  <data name="btnUpCrosslink.Size" type="System.Drawing.Size, System.Drawing">
-    <value>25, 20</value>
+  <data name="lblLinkedPeptides.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
   </data>
-  <data name="btnUpCrosslink.Text" xml:space="preserve">
-    <value>Remove</value>
+  <data name="lblLinkedPeptides.Text" xml:space="preserve">
+    <value>Linked Peptides:</value>
   </data>
-  <data name="btnDownCrosslink.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
-    <value>Magenta</value>
+  <data name="&gt;&gt;lblLinkedPeptides.Name" xml:space="preserve">
+    <value>lblLinkedPeptides</value>
   </data>
-  <data name="btnDownCrosslink.Size" type="System.Drawing.Size, System.Drawing">
-    <value>25, 20</value>
+  <data name="&gt;&gt;lblLinkedPeptides.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="btnDownCrosslink.Text" xml:space="preserve">
-    <value>Up</value>
-  </data>
-  <data name="btnDeleteCrosslink.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
-    <value>Magenta</value>
-  </data>
-  <data name="btnDeleteCrosslink.Size" type="System.Drawing.Size, System.Drawing">
-    <value>25, 20</value>
-  </data>
-  <data name="btnDeleteCrosslink.Text" xml:space="preserve">
-    <value>Down</value>
-  </data>
-  <data name="menuStrip1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>643, 0</value>
-  </data>
-  <data name="menuStrip1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>32, 147</value>
-  </data>
-  <data name="menuStrip1.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
-  <data name="menuStrip1.Text" xml:space="preserve">
-    <value>menuStrip1</value>
-  </data>
-  <data name="&gt;&gt;menuStrip1.Name" xml:space="preserve">
-    <value>menuStrip1</value>
-  </data>
-  <data name="&gt;&gt;menuStrip1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.MenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;menuStrip1.Parent" xml:space="preserve">
+  <data name="&gt;&gt;lblLinkedPeptides.Parent" xml:space="preserve">
     <value>splitContainer1.Panel2</value>
   </data>
-  <data name="&gt;&gt;menuStrip1.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;lblLinkedPeptides.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="dataGridViewLinkedPeptides.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
+  </data>
+  <metadata name="colPeptideSequence.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="colPeptideSequence.HeaderText" xml:space="preserve">
+    <value>Peptide Sequence</value>
+  </data>
+  <metadata name="colModificationsButton.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="colModificationsButton.HeaderText" xml:space="preserve">
+    <value />
+  </data>
+  <data name="colModificationsButton.Width" type="System.Int32, mscorlib">
+    <value>20</value>
+  </data>
+  <data name="dataGridViewLinkedPeptides.Location" type="System.Drawing.Point, System.Drawing">
+    <value>12, 29</value>
+  </data>
+  <data name="dataGridViewLinkedPeptides.Size" type="System.Drawing.Size, System.Drawing">
+    <value>706, 115</value>
+  </data>
+  <data name="dataGridViewLinkedPeptides.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewLinkedPeptides.Name" xml:space="preserve">
+    <value>dataGridViewLinkedPeptides</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewLinkedPeptides.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridView, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewLinkedPeptides.Parent" xml:space="preserve">
+    <value>splitContainer1.Panel2</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewLinkedPeptides.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="&gt;&gt;splitContainer1.Panel2.Name" xml:space="preserve">
@@ -367,7 +298,7 @@
     <value>1</value>
   </data>
   <data name="splitContainer1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>675, 299</value>
+    <value>732, 299</value>
   </data>
   <data name="splitContainer1.SplitterDistance" type="System.Int32, mscorlib">
     <value>148</value>
@@ -394,7 +325,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>586, 367</value>
+    <value>643, 367</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -424,7 +355,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnOk.Location" type="System.Drawing.Point, System.Drawing">
-    <value>505, 367</value>
+    <value>562, 367</value>
   </data>
   <data name="btnOk.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -508,13 +439,25 @@
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>673, 402</value>
+    <value>730, 402</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
     <value>Edit Linked Peptides</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn1.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn1</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn2.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn2</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;colPeptideSequence.Name" xml:space="preserve">
     <value>colPeptideSequence</value>
@@ -527,24 +470,6 @@
   </data>
   <data name="&gt;&gt;colModificationsButton.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewButtonColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnUpPeptide.Name" xml:space="preserve">
-    <value>btnUpPeptide</value>
-  </data>
-  <data name="&gt;&gt;btnUpPeptide.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnDownPeptide.Name" xml:space="preserve">
-    <value>btnDownPeptide</value>
-  </data>
-  <data name="&gt;&gt;btnDownPeptide.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnDeletePeptide.Name" xml:space="preserve">
-    <value>btnDeletePeptide</value>
-  </data>
-  <data name="&gt;&gt;btnDeletePeptide.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;colCrosslinker.Name" xml:space="preserve">
     <value>colCrosslinker</value>
@@ -575,36 +500,6 @@
   </data>
   <data name="&gt;&gt;colAminoAcid2.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewComboBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnUpCrosslink.Name" xml:space="preserve">
-    <value>btnUpCrosslink</value>
-  </data>
-  <data name="&gt;&gt;btnUpCrosslink.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnDownCrosslink.Name" xml:space="preserve">
-    <value>btnDownCrosslink</value>
-  </data>
-  <data name="&gt;&gt;btnDownCrosslink.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnDeleteCrosslink.Name" xml:space="preserve">
-    <value>btnDeleteCrosslink</value>
-  </data>
-  <data name="&gt;&gt;btnDeleteCrosslink.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;dataGridViewTextBoxColumn1.Name" xml:space="preserve">
-    <value>dataGridViewTextBoxColumn1</value>
-  </data>
-  <data name="&gt;&gt;dataGridViewTextBoxColumn1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;dataGridViewTextBoxColumn2.Name" xml:space="preserve">
-    <value>dataGridViewTextBoxColumn2</value>
-  </data>
-  <data name="&gt;&gt;dataGridViewTextBoxColumn2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>EditLinkedPeptidesDlg</value>

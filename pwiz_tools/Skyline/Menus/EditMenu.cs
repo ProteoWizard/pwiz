@@ -1486,6 +1486,7 @@ namespace pwiz.Skyline.Menus
 
         public void EditCrosslinks()
         {
+#if false
             var nodePepTree = SequenceTree.GetNodeOfType<PeptideTreeNode>();
             if (nodePepTree == null)
             {
@@ -1520,9 +1521,10 @@ namespace pwiz.Skyline.Menus
                         docPair,
                         AuditLogEntry.GetNodeName(docPair.OldDoc, peptideDocNode)));
             }
+#endif
         }
 
-        #endregion
+#endregion
 
         private void manageUniquePeptidesMenuItem_Click(object sender, EventArgs e)
         {

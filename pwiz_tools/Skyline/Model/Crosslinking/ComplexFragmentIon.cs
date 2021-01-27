@@ -106,11 +106,15 @@ namespace pwiz.Skyline.Model.Crosslinking
 
         public CrosslinkBuilder GetCrosslinkBuilder(SrmSettings settings)
         {
-            return new CrosslinkBuilder(settings, PeptideStructure, PrimaryTransition.Group.LabelType);
+            return GetCrosslinkBuilder(settings, null);
+        }
+
+        private CrosslinkBuilder GetCrosslinkBuilder(SrmSettings settings, ExplicitMods explicitMods)
+        {
+            return new CrosslinkBuilder(settings, explicitMods?.GetPeptideStructure() ?? PeptideStructure, PrimaryTransition.Group.LabelType);
         }
         public TypedMass GetFragmentMass(SrmSettings settings, ExplicitMods explicitMods)
         {
-            Assume.AreEqual(explicitMods, this);
             return GetCrosslinkBuilder(settings).GetFragmentMass(NeutralFragmentIon);
         }
         public TransitionDocNode MakeTransitionDocNode(SrmSettings settings, ExplicitMods explicitMods, IsotopeDistInfo isotopeDist)
@@ -134,8 +138,8 @@ namespace pwiz.Skyline.Model.Crosslinking
             ExplicitTransitionValues explicitTransitionValues,
             Results<TransitionChromInfo> results)
         {
-            VerifySameExplicitMods(explicitMods);
-            return GetCrosslinkBuilder(settings).MakeTransitionDocNode(this, isotopeDist, annotations, transitionQuantInfo, explicitTransitionValues, results);
+            return GetCrosslinkBuilder(settings, explicitMods).MakeTransitionDocNode(
+                this, isotopeDist, annotations, transitionQuantInfo, explicitTransitionValues, results);
         }
 
         public int CompareTo(ComplexFragmentIon other)
