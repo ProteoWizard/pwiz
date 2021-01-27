@@ -17,11 +17,8 @@
  */
 
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
-using System.Management;
 using System.Threading.Tasks;
 using SkylineBatch.Properties;
 
@@ -99,6 +96,7 @@ namespace SkylineBatch
             }
 
             ChangeStatus(RunnerStatus.Running);
+            var startTime = DateTime.Now;
 
             var skylineRunner = Config.SkylineSettings.CmdPath;
             var templateFullName = Config.MainSettings.TemplateFilePath;
@@ -161,6 +159,10 @@ namespace SkylineBatch
 
             // Runner is still running if no errors or cancellations
             if (IsRunning()) ChangeStatus(RunnerStatus.Completed);
+            var endTime = DateTime.Now;
+            var delta = endTime - startTime;
+            var timeString = delta.Hours > 0 ? delta.ToString(@"hh\:mm\:ss") : delta.ToString(@"mm\:ss");
+            _logger.Log(string.Format("Runtime: {0}", timeString));
             LogToUi(string.Format(Resources.ConfigRunner_Run_________________________________0____1_________________________________, Config.Name, GetStatus()));
         
         }

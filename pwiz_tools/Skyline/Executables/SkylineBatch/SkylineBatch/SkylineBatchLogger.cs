@@ -61,6 +61,7 @@ using SkylineBatch.Properties;
         private const int MemLogSize = 100; // Keep the last 100 log messages in memory
         private StringBuilder _logBuffer; // To be used when the log file is unavailable for writing
         private const int LogBufferSize = 10240;
+        private const int StreamReaderDefaultBufferSize = 4096;
 
         public SkylineBatchLogger(string logFileName, IMainUiControl mainUi = null)
         {
@@ -92,11 +93,12 @@ using SkylineBatch.Properties;
                 }
             }
 
-            var defaultBufferSize = 4096;
             var logFileRead = File.Open(_filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
             var logFileWrite = File.Open(_filePath, FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
-            _streamReader = new StreamReader(logFileRead, Encoding.Default, false, defaultBufferSize, true);
-            _streamWriter = new StreamWriter(logFileWrite, Encoding.Default, defaultBufferSize, true);
+            // these need to be kept open while the program is running so log files can't be deleted outside of Skyline Batch
+            _streamReader = new StreamReader(logFileRead, Encoding.Default, false, 
+                StreamReaderDefaultBufferSize, true);
+            _streamWriter = new StreamWriter(logFileWrite, Encoding.Default, StreamReaderDefaultBufferSize, true);
         }
 
         private void WriteToFile(string message)
@@ -371,6 +373,13 @@ using SkylineBatch.Properties;
                     return;
                 }
 
+                // Reset the stream reader to start from the beginning of the file
+                _streamReader.Close();
+                _streamReader.BaseStream.Dispose();
+                var logFileRead = File.Open(_filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                _streamReader = new StreamReader(logFileRead, Encoding.Default, false, 
+                    StreamReaderDefaultBufferSize, true);
+                
                 // Read the log contents and display in the log tab.
                 var lines = new List<string>();
                 var truncated = false;

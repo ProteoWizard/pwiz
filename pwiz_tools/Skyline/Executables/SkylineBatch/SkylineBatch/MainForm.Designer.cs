@@ -213,6 +213,7 @@
             // 
             this.tabFront.BackColor = System.Drawing.Color.Transparent;
             this.tabFront.Controls.Add(this.listViewConfigs);
+            this.tabFront.Controls.Add(this.btnViewLog);
             this.tabFront.Controls.Add(this.labelSavedConfigurations);
             this.tabFront.Controls.Add(this.panel2);
             this.tabFront.Controls.Add(this.panel1);
@@ -280,7 +281,6 @@
             // 
             resources.ApplyResources(this.panel1, "panel1");
             this.panel1.Controls.Add(this.button1);
-            this.panel1.Controls.Add(this.btnViewLog);
             this.panel1.Controls.Add(this.toolStrip1);
             this.panel1.Controls.Add(this.btnImportConfigs);
             this.panel1.Controls.Add(this.btnExportConfigs);
