@@ -26,7 +26,6 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
-using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
@@ -272,8 +271,8 @@ namespace pwiz.SkylineTest
             var linkedPeptide = new Peptide("LVNELTEFAKTCVADESHAGCEK");
             var transitionGroup = new TransitionGroup(peptide, Adduct.QUADRUPLY_PROTONATED, IsotopeLabelType.light);
             var crosslinker = new StaticMod("linker", "K", null, "C8H10O2");
-            var explicitMods = new ExplicitMods(peptide, null, null).ChangeCrosslinkStructure(
-                CrosslinkStructure.ToPeptide(linkedPeptide, null, crosslinker, 7, 9));
+            var explicitMods = new ExplicitMods(peptide, GetImplicitMods(srmSettings, peptide).StaticModifications, null)
+                .ChangeCrosslinkStructure(CrosslinkStructure.ToPeptide(linkedPeptide, GetImplicitMods(srmSettings, linkedPeptide), crosslinker, 7, 9));
             var linkedTransition =
                 new Transition(new TransitionGroup(linkedPeptide, Adduct.SINGLY_PROTONATED, IsotopeLabelType.light),
                     IonType.precursor, linkedPeptide.Length - 1, 0, Adduct.SINGLY_PROTONATED);
@@ -303,6 +302,12 @@ namespace pwiz.SkylineTest
                 Assert.AreEqual(tuple.Item4, complexTransitionDocNode.Mz, .0001, "{0}{1}{2}", tuple.Item1, tuple.Item2,
                     Transition.GetChargeIndicator(Adduct.FromChargeProtonated(tuple.Item3)));
             }
+        }
+
+        private ExplicitMods GetImplicitMods(SrmSettings settings, Peptide peptide)
+        {
+            var peptideModifications = settings.PeptideSettings.Modifications;
+            return new ExplicitMods(new PeptideDocNode(peptide), peptideModifications.StaticModifications, Settings.Default.StaticModList, peptideModifications.GetHeavyModifications(), Settings.Default.HeavyModList);
         }
 
         [TestMethod]

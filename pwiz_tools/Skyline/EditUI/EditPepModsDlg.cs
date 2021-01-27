@@ -739,7 +739,7 @@ namespace pwiz.Skyline.EditUI
             bool isVariableStaticMods = false;
             var staticMods =  GetExplicitMods(_listComboStatic, StaticList);
             staticMods = staticMods.Where(mod=>null == mod.Modification.CrosslinkerSettings).ToList();
-            if (ArrayUtil.EqualsDeep(staticMods, implicitMods.StaticModifications))
+            if (ArrayUtil.EqualsDeep(staticMods, implicitMods.StaticModifications) && !CrosslinkStructure.HasCrosslinks)
             {
                 if (!NodePeptide.HasVariableMods)
                     staticMods = null;  // Use implicit modifications                
@@ -791,7 +791,7 @@ namespace pwiz.Skyline.EditUI
         public void OkDialog()
         {
             ExplicitMods = GetCurrentExplicitMods();
-            if (!ExplicitMods.CrosslinkStructure.IsConnected())
+            if (ExplicitMods != null && !ExplicitMods.CrosslinkStructure.IsConnected())
             {
                 MessageDlg.Show(this, "One or more of the crossliked peptides are no longer attached to this peptide. ");
                 ShowEditLinkedPeptidesDlg(null, null);
