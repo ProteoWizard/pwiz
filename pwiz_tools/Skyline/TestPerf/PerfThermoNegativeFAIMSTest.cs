@@ -50,7 +50,7 @@ namespace TestPerf // Tests in this namespace are skipped unless the RunPerfTest
         [TestMethod]
         public void TestThermoNegativeFAIMS()
         {
-            TestFilesZip = @"https://skyline.gs.washington.edu/perftests/PerfThermoNegativeFAIMS.zip";
+            TestFilesZip = GetPerfTestDataURL(@"PerfThermoNegativeFAIMS.zip");
             TestFilesPersistent = new[] { "02142020_Lumos_FAIMS_1_0-10_004.raw", "02142020_Lumos_FAIMS_1_-50-40_002.raw" }; // list of files that we'd like to unzip alongside parent zipFile, and (re)use in place
             RunFunctionalTest();
         }

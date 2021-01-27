@@ -49,7 +49,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         {
             // RunPerfTests = true; // Uncomment this to force test to run in IDE
             Log.AddMemoryAppender();
-            TestFilesZip = "https://skyline.gs.washington.edu/perftests/PerfImportBrukerDiaPasef_v2.zip";
+            TestFilesZip = GetPerfTestDataURL(@"PerfImportBrukerDiaPasef_v2.zip");
             TestFilesPersistent = new[] { ".d" }; // List of file basenames that we'd like to unzip alongside parent zipFile, and (re)use in place
 
             MsDataFileImpl.PerfUtilFactory.IssueDummyPerfUtils = false; // Turn on performance measurement

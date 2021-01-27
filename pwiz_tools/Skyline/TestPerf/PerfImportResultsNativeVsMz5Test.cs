@@ -277,7 +277,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 for (var loop = 0; loop < _loopcount + 1; loop++) // one extra initial loop for warmup
                 {
                     // compare mz5 and raw import times
-                    TestFilesZip = "https://skyline.gs.washington.edu/perftests/" + zipFile;
+                    TestFilesZip = GetPerfTestDataURL(zipFile);
                     var mz5File = Path.ChangeExtension(rawFile, "mz5");
                     TestFilesPersistent = new[] { rawFile, mz5File }; // list of files that we'd like to unzip alongside parent zipFile, and (re)use in place
                     _testFilesDir = new TestFilesDir(TestContext, TestFilesZip, null, TestFilesPersistent);
