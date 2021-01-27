@@ -21,6 +21,7 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.EditUI;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.SettingsUI;
@@ -77,11 +78,14 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.SelectedPath = SkylineWindow.Document.GetPathTo(1, 0);
             });
             {
-                var editLinkedPeptidesDialog = ShowDialog<EditLinkedPeptidesDlg>(SkylineWindow.EditMenu.EditCrosslinks);
+                var editPepModsDlg = ShowDialog<EditPepModsDlg>(SkylineWindow.ModifyPeptide);
+                var editLinkedPeptidesDialog = ShowDialog<EditLinkedPeptidesDlg>(()=>editPepModsDlg.SetModification(6, IsotopeLabelType.light, crosslinkerName));
                 var peptidesTester = new GridTester(editLinkedPeptidesDialog.LinkedPeptidesGrid);
                 peptidesTester.SetCellValue(0, editLinkedPeptidesDialog.PeptideSequenceColumn, "CASIQKFGER");
+                peptidesTester.MoveToCell(1, 0);
                 SetCrosslinker(editLinkedPeptidesDialog, 0, crosslinkerName, new CrosslinkSite(0, 6), new CrosslinkSite(1, 5));
                 OkDialog(editLinkedPeptidesDialog, editLinkedPeptidesDialog.OkDialog);
+                OkDialog(editPepModsDlg, editPepModsDlg.OkDialog);
             }
             RunUI(()=>SkylineWindow.ShowGraphSpectrum(true));
             WaitForGraphs();
