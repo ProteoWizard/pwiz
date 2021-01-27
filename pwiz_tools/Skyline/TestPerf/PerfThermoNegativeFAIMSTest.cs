@@ -21,6 +21,7 @@ using System;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
@@ -49,7 +50,7 @@ namespace TestPerf // Tests in this namespace are skipped unless the RunPerfTest
         [TestMethod]
         public void TestThermoNegativeFAIMS()
         {
-            TestFilesZip = @"https://skyline.gs.washington.edu/perftests/PerfThermoNegativeFAIMS.zip";
+            TestFilesZip = GetPerfTestDataURL(@"PerfThermoNegativeFAIMS.zip");
             TestFilesPersistent = new[] { "02142020_Lumos_FAIMS_1_0-10_004.raw", "02142020_Lumos_FAIMS_1_-50-40_002.raw" }; // list of files that we'd like to unzip alongside parent zipFile, and (re)use in place
             RunFunctionalTest();
         }
@@ -64,6 +65,7 @@ namespace TestPerf // Tests in this namespace are skipped unless the RunPerfTest
         {
             // This data set uses negative CoV values, and also has precursors that are defined mass-only - two things we had trouble with
             const string skyFile = "ThermoNegativeFAIMSTest.sky";
+            Program.ExtraRawFileSearchFolder = TestFilesDir.PersistentFilesDir; // So we don't have to reload the raw files, which have probably moved relative to skyd file 
             RunUI(() => SkylineWindow.OpenFile(GetTestPath(skyFile)));
             var document = WaitForDocumentLoaded();
 

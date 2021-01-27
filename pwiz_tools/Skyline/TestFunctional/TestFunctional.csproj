@@ -295,6 +295,7 @@
     <Compile Include="NonLinearRegressionTest.cs" />
     <Compile Include="OrderByReplicateAnnotationTest.cs" />
     <Compile Include="PasteMoleculesTest.cs" />
+    <Compile Include="PasteTransitionListTest.cs" />
     <Compile Include="PeakScoringModelTest.cs" />
     <Compile Include="PivotEditorTest.cs" />
     <Compile Include="PolarityMismatchTest.cs" />
@@ -494,6 +495,7 @@
     <None Include="OptimizeTest.zip" />
     <None Include="OrderByReplicateAnnotationTest.zip" />
     <None Include="PasteMoleculeTest.zip" />
+    <None Include="PasteTransitionListTest.zip" />
     <None Include="PeakBoundaryCompareTest.zip" />
     <None Include="PeakScoringModelTest.zip" />
     <None Include="PivotEditorTest.zip" />

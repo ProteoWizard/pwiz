@@ -47,7 +47,7 @@ namespace TestPerf
 
             TestFilesZipPaths = new[]
             {
-                @"https://skyline.ms/perftests/DriftTimePredictorSmallMoleculesTest.zip",
+                GetPerfTestDataURL(@"DriftTimePredictorSmallMoleculesTest.zip"),
             };
 
             TestFilesPersistent = new[] { SULFA_MIX };

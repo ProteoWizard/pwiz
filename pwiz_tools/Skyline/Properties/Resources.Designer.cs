@@ -15397,6 +15397,115 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Decoy.
+        /// </summary>
+        public static string ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Decoy {
+            get {
+                return ResourceManager.GetString("ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Decoy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Fragment Name.
+        /// </summary>
+        public static string ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Fragment_Name {
+            get {
+                return ResourceManager.GetString("ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Fragment_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ignore Column.
+        /// </summary>
+        public static string ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column {
+            get {
+                return ResourceManager.GetString("ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to iRT.
+        /// </summary>
+        public static string ImportTransitionListColumnSelectDlg_PopulateComboBoxes_iRT {
+            get {
+                return ResourceManager.GetString("ImportTransitionListColumnSelectDlg_PopulateComboBoxes_iRT", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Label Type.
+        /// </summary>
+        public static string ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type {
+            get {
+                return ResourceManager.GetString("ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Library Intensity.
+        /// </summary>
+        public static string ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Library_Intensity {
+            get {
+                return ResourceManager.GetString("ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Library_Intensity", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Peptide Modified Sequence.
+        /// </summary>
+        public static string ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence {
+            get {
+                return ResourceManager.GetString("ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Precursor Charge.
+        /// </summary>
+        public static string ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge {
+            get {
+                return ResourceManager.GetString("ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Precursor m/z.
+        /// </summary>
+        public static string ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z {
+            get {
+                return ResourceManager.GetString("ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Product m/z.
+        /// </summary>
+        public static string ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z {
+            get {
+                return ResourceManager.GetString("ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Protein Name.
+        /// </summary>
+        public static string ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name {
+            get {
+                return ResourceManager.GetString("ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A transition contained an error..
+        /// </summary>
+        public static string ImportTransitionListErrorDlg_ImportTransitionListErrorDlg_A_transition_contained_an_error_ {
+            get {
+                return ResourceManager.GetString("ImportTransitionListErrorDlg_ImportTransitionListErrorDlg_A_transition_contained_" +
+                        "an_error_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to A transition contained an error. Skip this transition and import the rest?.
         /// </summary>
         public static string ImportTransitionListErrorDlg_ImportTransitionListErrorDlg_A_transition_contained_an_error__Skip_this_transition_and_import_the_rest_ {
@@ -15425,6 +15534,16 @@ namespace pwiz.Skyline.Properties {
                 return ResourceManager.GetString("ImportTransitionListErrorDlg_ImportTransitionListErrorDlg_The_imported_transition" +
                         "_contains_an_error__Please_check_the_transition_list_and_the_Skyline_settings_an" +
                         "d_try_importing_again_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This transition list cannot be imported as it does not provide values for:.
+        /// </summary>
+        public static string ImportTransitionListErrorDlg_ImportTransitionListErrorDlg_This_transition_list_cannot_be_imported_as_it_does_not_provide_values_for_ {
+            get {
+                return ResourceManager.GetString("ImportTransitionListErrorDlg_ImportTransitionListErrorDlg_This_transition_list_ca" +
+                        "nnot_be_imported_as_it_does_not_provide_values_for_", resourceCulture);
             }
         }
         
@@ -17708,6 +17827,15 @@ namespace pwiz.Skyline.Properties {
         public static string MassListRowReader_NextRow_Isotope_labeled_entry_found_without_matching_settings_ {
             get {
                 return ResourceManager.GetString("MassListRowReader_NextRow_Isotope_labeled_entry_found_without_matching_settings_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No peptide modified sequence column specified.
+        /// </summary>
+        public static string MassListRowReader_NextRow_No_peptide_sequence_column_specified {
+            get {
+                return ResourceManager.GetString("MassListRowReader_NextRow_No_peptide_sequence_column_specified", resourceCulture);
             }
         }
         
@@ -27164,6 +27292,15 @@ namespace pwiz.Skyline.Properties {
         public static string SkylineWindow_ImportFiles_Importing__0__ {
             get {
                 return ResourceManager.GetString("SkylineWindow_ImportFiles_Importing__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} transitions contained errors..
+        /// </summary>
+        public static string SkylineWindow_ImportMassList__0__transitions_contained_errors_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ImportMassList__0__transitions_contained_errors_", resourceCulture);
             }
         }
         
