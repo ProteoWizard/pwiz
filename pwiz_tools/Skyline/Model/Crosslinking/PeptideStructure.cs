@@ -29,12 +29,12 @@ namespace pwiz.Skyline.Model.Crosslinking
     {
         public PeptideStructure(Peptide peptide, ExplicitMods explicitMods)
         {
-            var crosslinkStructure = explicitMods?.Crosslinks ?? CrosslinkStructure.EMPTY;
+            var crosslinkStructure = explicitMods?.CrosslinkStructure ?? CrosslinkStructure.EMPTY;
             Peptides = ImmutableList.ValueOf(crosslinkStructure.LinkedPeptides.Prepend(peptide));
             ExplicitModList =
                 ImmutableList.ValueOf(
                     crosslinkStructure.LinkedExplicitMods.Prepend(
-                        explicitMods?.ChangeCrosslinks(CrosslinkStructure.EMPTY)));
+                        explicitMods?.ChangeCrosslinkStructure(CrosslinkStructure.EMPTY)));
             Crosslinks = crosslinkStructure.Crosslinks;
         }
 

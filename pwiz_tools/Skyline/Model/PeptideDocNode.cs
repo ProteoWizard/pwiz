@@ -187,7 +187,7 @@ namespace pwiz.Skyline.Model
 
         public CrosslinkStructure CrosslinkStructure
         {
-            get { return ExplicitMods?.Crosslinks ?? CrosslinkStructure.EMPTY; }
+            get { return ExplicitMods?.CrosslinkStructure ?? CrosslinkStructure.EMPTY; }
         }
 
         public string GetCrosslinkedSequence()
@@ -1119,7 +1119,7 @@ namespace pwiz.Skyline.Model
             }
 
             if (newExplicitStaticMods != null || newExplicitHeavyMods.Count > 0 || !CrosslinkStructure.IsEmpty)
-                return ChangeExplicitMods(new ExplicitMods(Peptide, newExplicitStaticMods, newExplicitHeavyMods, preserveVariable).ChangeCrosslinks(CrosslinkStructure));
+                return ChangeExplicitMods(new ExplicitMods(Peptide, newExplicitStaticMods, newExplicitHeavyMods, preserveVariable).ChangeCrosslinkStructure(CrosslinkStructure));
             return ChangeExplicitMods(null);
         }
 

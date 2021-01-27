@@ -665,7 +665,7 @@ namespace pwiz.Skyline.Model
             }
 
             var newMods = new ExplicitMods(mainPeptide.Peptide, staticMods,
-                mainPeptide.ExplicitMods?.GetHeavyModifications()).ChangeCrosslinks(crosslinkStructure);
+                mainPeptide.ExplicitMods?.GetHeavyModifications()).ChangeCrosslinkStructure(crosslinkStructure);
             var crosslinkedPeptide = mainPeptide.ChangeExplicitMods(newMods).ChangeSettings(Settings, diff ?? SrmSettingsDiff.ALL);
             if (!crosslinkLibraryKey.Adduct.IsEmpty)
             {
@@ -1066,7 +1066,7 @@ namespace pwiz.Skyline.Model
                 Settings.PeptideSettings.Modifications.StaticModifications,
                 DefSetStatic,
                 Settings.PeptideSettings.Modifications.GetHeavyModifications(),
-                DefSetHeavy).ChangeCrosslinks(nodePep.CrosslinkStructure);
+                DefSetHeavy).ChangeCrosslinkStructure(nodePep.CrosslinkStructure);
             // If no light modifications are present, this code assumes the user wants the 
             // default global light modifications.  Unless not stringPaste, in which case the target
             // static mods must also be empty

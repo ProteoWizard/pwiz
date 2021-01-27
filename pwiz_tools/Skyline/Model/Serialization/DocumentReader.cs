@@ -976,7 +976,7 @@ namespace pwiz.Skyline.Model.Serialization
                     if (crosslinkStructure != null && !crosslinkStructure.IsEmpty)
                     {
                         mods = mods ?? new ExplicitMods(peptide, null, null);
-                        mods = mods.ChangeCrosslinks(crosslinkStructure);
+                        mods = mods.ChangeCrosslinkStructure(crosslinkStructure);
                     }
                 }
                 results = ReadPeptideResults(reader);

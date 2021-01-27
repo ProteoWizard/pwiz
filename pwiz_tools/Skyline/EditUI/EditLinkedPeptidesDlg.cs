@@ -2,13 +2,18 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices.WindowsRuntime;
+using System.Security.AccessControl;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.EditUI
 {
@@ -304,7 +309,7 @@ namespace pwiz.Skyline.EditUI
                 }
 
                 var items = new List<KeyValuePair<string, int>>();
-                if (peptideSequence == null)
+                if (peptideSequence == null || crosslinker == null)
                 {
                     items.Add(MakeAaIndexOption(null, -1));
                 }
@@ -313,7 +318,7 @@ namespace pwiz.Skyline.EditUI
                     for (int aaIndex = 0; aaIndex < peptideSequence.Length; aaIndex++)
                     {
                         char aa = peptideSequence[aaIndex];
-                        if (!string.IsNullOrEmpty(crosslinker?.AAs) && !crosslinker.AAs.Contains(aa))
+                        if (!string.IsNullOrEmpty(crosslinker.AAs) && !crosslinker.AAs.Contains(aa))
                         {
                             continue;
                         }
@@ -465,60 +470,23 @@ namespace pwiz.Skyline.EditUI
                 linkedExplicitMods.Add(peptideRow.ExplicitMods);
             }
 
-            bool singlePeptide = linkedPeptides.Count == 0;
             var crosslinks = new List<Crosslink>();
+            var allSites = new HashSet<CrosslinkSite>();
             for (int i = 0; i < _crosslinkRows.Count; i++)
             {
-                var crosslinkRow = _crosslinkRows[i];
-                if (crosslinkRow.Crosslinker == null)
+                List<ColumnMessage> errors = new List<ColumnMessage>();
+                var crosslink = MakeCrosslink(allSites, _crosslinkRows[i], errors);
+                if (errors.Count > 0)
                 {
-                    continue;
-                }
-
-                StaticMod crosslinker;
-                _crosslinkers.TryGetValue(crosslinkRow.Crosslinker, out crosslinker);
-                if (crosslinker == null)
-                {
-                    MessageDlg.Show(this, string.Format(Resources.MessageBoxHelper_ValidateNameTextBox__0__cannot_be_empty, colCrosslinker.HeaderText));
-                    SetGridFocus(dataGridViewCrosslinks, i, colCrosslinker);
+                    MessageDlg.Show(this, errors[0].Message);
+                    SetGridFocus(dataGridViewCrosslinks, i, errors[0].Column);
                     return;
                 }
 
-                var siteTuples = new[]
+                if (crosslink != null)
                 {
-                    Tuple.Create(new KeyValuePair<int, int>(crosslinkRow.PeptideIndex1, crosslinkRow.AaIndex1), colPeptide1, colAminoAcid1),
-                    Tuple.Create(new KeyValuePair<int, int>(crosslinkRow.PeptideIndex2, crosslinkRow.AaIndex2), colPeptide2, colAminoAcid2)
-                };
-
-                var sites = new List<CrosslinkSite>();
-                foreach (var siteTuple in siteTuples)
-                {
-                    int peptideIndex = singlePeptide ? 0 : siteTuple.Item1.Key;
-                    if (peptideIndex < 0 || peptideIndex >= peptideSequences.Count)
-                    {
-                        MessageDlg.Show(this, "This peptide is not valid.");
-                        SetGridFocus(dataGridViewCrosslinks, i, siteTuple.Item2);
-                        return;
-                    }
-
-                    var peptideSequence = peptideSequences[peptideIndex];
-                    int aaIndex = siteTuple.Item1.Value;
-                    if (aaIndex < 0 || aaIndex >= peptideSequence.Length)
-                    {
-                        MessageDlg.Show(this, "This is not a valid amino acid position in this peptide.");
-                        SetGridFocus(dataGridViewCrosslinks, i, siteTuple.Item3);
-                        return;
-                    }
-                    var site = new CrosslinkSite(peptideIndex, aaIndex);
-                    if (sites.Contains(site))
-                    {
-                        MessageDlg.Show(this, "Both ends of this crosslink cannot be the same.");
-                        SetGridFocus(dataGridViewCrosslinks, i, siteTuple.Item3);
-                        return;
-                    }
-                    sites.Add(site);
+                    crosslinks.Add(crosslink);
                 }
-                crosslinks.Add(new Crosslink(crosslinker, sites));
             }
 
             var aaIndexesByPeptideIndex = crosslinks.SelectMany(link => link.Sites).Distinct()
@@ -545,9 +513,51 @@ namespace pwiz.Skyline.EditUI
                 mainExplicitMods = GetDefaultExplicitMods(mainPeptide, aaIndexesByPeptideIndex[0].ToHashSet());
             }
 
-            ExplicitMods = mainExplicitMods.ChangeCrosslinks(crosslinkStructure);
+            ExplicitMods = RemoveModificationsOnCrosslinks(mainExplicitMods.ChangeCrosslinkStructure(crosslinkStructure));
             DialogResult = DialogResult.OK;
         }
+
+        private ExplicitMods RemoveModificationsOnCrosslinks(ExplicitMods explicitMods)
+        {
+            var originalCrosslinkSites =
+                _originalPeptideStructure.Crosslinks.SelectMany(link => link.Sites).ToHashSet();
+            var newCrosslinkSites = explicitMods.CrosslinkStructure.Crosslinks.SelectMany(link => link.Sites)
+                .Except(originalCrosslinkSites).ToHashSet();
+            explicitMods = RemoveStaticModsFromSites(explicitMods, 0, newCrosslinkSites);
+            var peptideStructure = explicitMods.GetPeptideStructure();
+            var newLinkedExplicitMods = new List<ExplicitMods>();
+            for (int peptideIndex = 1; peptideIndex < peptideStructure.Peptides.Count; peptideIndex++)
+            {
+                newLinkedExplicitMods.Add(RemoveStaticModsFromSites(peptideStructure.ExplicitModList[peptideIndex], peptideIndex, newCrosslinkSites));
+            }
+
+            if (!ArrayUtil.ReferencesEqual(explicitMods.CrosslinkStructure.LinkedExplicitMods, newLinkedExplicitMods))
+            {
+                explicitMods = explicitMods.ChangeCrosslinkStructure(new CrosslinkStructure(explicitMods.CrosslinkStructure.LinkedPeptides,
+                    newLinkedExplicitMods, explicitMods.CrosslinkStructure.Crosslinks));
+            }
+
+            return explicitMods;
+        }
+
+        private static ExplicitMods RemoveStaticModsFromSites(ExplicitMods explicitMods, int peptideIndex,
+            HashSet<CrosslinkSite> sites)
+        {
+            if (explicitMods?.StaticModifications == null)
+            {
+                return explicitMods;
+            }
+
+            var newStaticMods = explicitMods.StaticModifications.Where(mod => !sites.Contains(new CrosslinkSite(peptideIndex, mod.IndexAA))).ToList();
+            if (newStaticMods.Count == explicitMods.StaticModifications.Count)
+            {
+                return explicitMods;
+            }
+
+            return explicitMods.ChangeStaticModifications(newStaticMods);
+        }
+
+        
 
         public void SetGridFocus(DataGridView dataGridView, int rowIndex, DataGridViewColumn column)
         {
@@ -658,5 +668,103 @@ namespace pwiz.Skyline.EditUI
             }
             throw new ArgumentOutOfRangeException(nameof(siteIndex));
         }
+
+        private void dataGridViewCrosslinks_CellErrorTextNeeded(object sender, DataGridViewCellErrorTextNeededEventArgs e)
+        {
+            if (e.RowIndex < 0 || e.RowIndex >= _crosslinkRows.Count)
+            {
+                return;
+            }
+
+            List<ColumnMessage> errors = new List<ColumnMessage>();
+            MakeCrosslink(new HashSet<CrosslinkSite>(), _crosslinkRows[e.RowIndex], errors);
+            var errorMessage = errors.FirstOrDefault(columnMessage => columnMessage.Column.Index == e.ColumnIndex).Message;
+            e.ErrorText = errorMessage;
+        }
+
+        public Crosslink MakeCrosslink(HashSet<CrosslinkSite> allSites, CrosslinkRow crosslinkRow, List<ColumnMessage> errors)
+        {
+            StaticMod crosslinker = null;
+            if (string.IsNullOrEmpty(crosslinkRow.Crosslinker))
+            {
+                return null;
+            }
+            _crosslinkers.TryGetValue(crosslinkRow.Crosslinker, out crosslinker);
+            if (crosslinker == null)
+            {
+                errors.Add(new ColumnMessage(colCrosslinker, "Invalid crosslinker"));
+            }
+
+            var siteTuples = new[]
+            {
+                Tuple.Create(new KeyValuePair<int, int>(crosslinkRow.PeptideIndex1, crosslinkRow.AaIndex1), colPeptide1, colAminoAcid1),
+                Tuple.Create(new KeyValuePair<int, int>(crosslinkRow.PeptideIndex2, crosslinkRow.AaIndex2), colPeptide2, colAminoAcid2)
+            };
+
+            var peptideSequences = GetPeptideSequences();
+            bool singlePeptide = peptideSequences.Count == 1;
+            var sites = new List<CrosslinkSite>();
+            foreach (var siteTuple in siteTuples)
+            {
+                int peptideIndex = singlePeptide ? 0 : siteTuple.Item1.Key;
+                if (peptideIndex < 0 || peptideIndex >= peptideSequences.Count)
+                {
+                    errors.Add(new ColumnMessage(siteTuple.Item2, "This peptide is not valid."));
+                    continue;
+                }
+
+                var peptideSequence = peptideSequences[peptideIndex];
+                int aaIndex = siteTuple.Item1.Value;
+                if (aaIndex < 0)
+                {
+                    errors.Add(new ColumnMessage(siteTuple.Item3, "This amino acid position cannot be blank."));
+                    continue;
+                }
+                if (aaIndex >= peptideSequence.Length)
+                {
+                    errors.Add(new ColumnMessage(siteTuple.Item3, "This is not a valid amino acid position in this peptide."));
+                    continue;
+                }
+
+                if (crosslinker != null && !crosslinker.IsApplicableCrosslink(peptideSequence, aaIndex))
+                {
+                    errors.Add(new ColumnMessage(siteTuple.Item3, string.Format("The crosslinker {0} cannot attach to this amino acid position.", crosslinker.Name)));
+                }
+
+                if (errors.Count == 0)
+                {
+                    var site = new CrosslinkSite(peptideIndex, aaIndex);
+                    if (sites.Contains(site))
+                    {
+                        errors.Add(new ColumnMessage(siteTuple.Item3, "Both ends of this crosslink cannot be the same."));
+                    }
+                    sites.Add(site);
+                    if (!allSites.Add(site))
+                    {
+                        errors.Add(new ColumnMessage(siteTuple.Item3, "This amino acid position in this peptide is already being used by another crosslink."));
+                    }
+                }
+            }
+
+            if (errors.Count == 0 && crosslinker != null && sites.Count == 2)
+            {
+                return new Crosslink(crosslinker, sites);
+            }
+
+            return null;
+        }
+
+        public struct ColumnMessage
+        {
+            public ColumnMessage(DataGridViewColumn column, string message)
+            {
+                Column = column;
+                Message = message;
+            }
+
+            public DataGridViewColumn Column { get; }
+            public string Message { get; }
+        }
     }
+
 }

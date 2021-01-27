@@ -128,7 +128,7 @@ namespace pwiz.Skyline.Model.Crosslinking
             {
                 return;
             }
-            Assume.AreEqual(PeptideStructure.Crosslinks, explicitMods.Crosslinks);
+            Assume.AreEqual(PeptideStructure.Crosslinks, explicitMods.CrosslinkStructure);
         }
 
         public TransitionDocNode MakeTransitionDocNode(SrmSettings settings, ExplicitMods explicitMods,

@@ -1517,7 +1517,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 DeclareExplicitMods(mods, explicitStaticMods, explicitMods);
                 if (typedMods.LabelType.IsLight)
                 {
-                    DeclareExplicitCrosslinks(mods, explicitStaticMods, nodePep.ExplicitMods.Crosslinks);
+                    DeclareExplicitCrosslinks(mods, explicitStaticMods, nodePep.ExplicitMods.CrosslinkStructure);
                 }
             }
 

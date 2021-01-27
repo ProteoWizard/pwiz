@@ -841,7 +841,7 @@ namespace pwiz.Skyline.Model
             }
             IPrecursorMassCalc massCalc = settings.GetPrecursorCalc(LabelType, mods);
             MoleculeMassOffset moleculeMassOffset = new MoleculeMassOffset(Molecule.Parse(massCalc.GetMolecularFormula(Peptide.Sequence)), 0, 0);
-            moleculeMassOffset = moleculeMassOffset.Plus((mods?.Crosslinks ?? CrosslinkStructure.EMPTY)
+            moleculeMassOffset = moleculeMassOffset.Plus((mods?.CrosslinkStructure ?? CrosslinkStructure.EMPTY)
                 .GetNeutralFormula(settings, LabelType));
             
             return moleculeMassOffset;

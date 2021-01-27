@@ -23,6 +23,7 @@ using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Crosslinking
 {
@@ -44,6 +45,11 @@ namespace pwiz.Skyline.Model.Crosslinking
             else
             {
                 LinkedExplicitMods = ImmutableList.ValueOf(explicitModsList);
+            }
+
+            if (LinkedExplicitMods.Count != LinkedPeptides.Count)
+            {
+                throw new ArgumentException(@"Peptide count does not match");
             }
             if (LinkedExplicitMods.Any(mod => mod != null && mod.HasCrosslinks))
             {
@@ -134,50 +140,79 @@ namespace pwiz.Skyline.Model.Crosslinking
 
         public bool IsConnected()
         {
-            var allPeptideIndexes = Crosslinks.SelectMany(link => link.Sites.PeptideIndexes).ToHashSet();
-            if (allPeptideIndexes.Count == 0)
-            {
-                return false;
-            }
+            var connectedPeptideIndexes = ConnectedPeptideIndexes();
+            return Enumerable.Range(1, LinkedPeptides.Count).All(connectedPeptideIndexes.Contains);
+        }
 
-            if (allPeptideIndexes.Count != allPeptideIndexes.Max() + 1)
-            {
-                return false;
-            }
-
-            if (allPeptideIndexes.Min() != 0)
-            {
-                return false;
-            }
-            var visitedPeptides = new HashSet<int> { 0 };
-            IReadOnlyList<Crosslink> remainingCrosslinks = Crosslinks;
+        private HashSet<int> ConnectedPeptideIndexes()
+        {
+            var connectedPeptides = new HashSet<int>{0};
+            IList<Crosslink> crosslinks = Crosslinks;
             while (true)
             {
-                var nextQueue = new List<Crosslink>();
-                foreach (var crosslink in remainingCrosslinks)
+                var nextCrosslinks = new List<Crosslink>();
+                foreach (var crosslink in crosslinks)
                 {
-                    if (crosslink.Sites.PeptideIndexes.Any(visitedPeptides.Contains))
+                    if (crosslink.Sites.PeptideIndexes.Any(connectedPeptides.Contains))
                     {
-                        visitedPeptides.UnionWith(crosslink.Sites.PeptideIndexes);
+                        connectedPeptides.UnionWith(crosslink.Sites.PeptideIndexes);
                     }
                     else
                     {
-                        nextQueue.Add(crosslink);
+                        nextCrosslinks.Add(crosslink);
                     }
                 }
 
-                if (nextQueue.Count == 0)
+                if (nextCrosslinks.Count == crosslinks.Count)
                 {
-                    return true;
+                    return connectedPeptides;
                 }
 
-                if (nextQueue.Count == remainingCrosslinks.Count)
-                {
-                    return false;
-                }
-
-                remainingCrosslinks = nextQueue;
+                crosslinks = nextCrosslinks;
             }
+        }
+
+        public CrosslinkStructure RemoveCrosslinksAtSite(CrosslinkSite site)
+        {
+            return new CrosslinkStructure(LinkedPeptides, LinkedExplicitMods, Crosslinks.Where(link=>!link.Sites.Contains(site)));
+        }
+
+        public CrosslinkStructure RemoveDisconnectedPeptides()
+        {
+            int totalPeptideCount = LinkedPeptides.Count + 1;
+            var retainedPeptideIndexes = ConnectedPeptideIndexes().OrderBy(i => i).ToList();
+            var newIndexMap = new int?[totalPeptideCount];
+            for (int newPeptideIndex = 0; newPeptideIndex < retainedPeptideIndexes.Count; newPeptideIndex++)
+            {
+                newIndexMap[retainedPeptideIndexes[newPeptideIndex]] = newPeptideIndex;
+            }
+
+            var newCrosslinks = new List<Crosslink>();
+            foreach (var crosslink in Crosslinks)
+            {
+                var newSites = ImmutableList.ValueOf(crosslink.Sites.Sites
+                    .Where(site => newIndexMap[site.PeptideIndex].HasValue).Select(site =>
+                        new CrosslinkSite(newIndexMap[site.PeptideIndex].Value, site.AaIndex)));
+                if (newSites.Count == 0)
+                {
+                    continue;
+                }
+                Assume.AreEqual(newSites.Count, crosslink.Sites.Count);
+                newCrosslinks.Add(new Crosslink(crosslink.Crosslinker, newSites));
+            }
+
+            var newLinkedPeptides = new List<Peptide>();
+            var newExplicitModsList = new List<ExplicitMods>();
+            for (int i = 0; i < LinkedPeptides.Count; i++)
+            {
+                if (!newIndexMap[i].HasValue)
+                {
+                    continue;
+                }
+                newLinkedPeptides.Add(LinkedPeptides[i]);
+                newExplicitModsList.Add(LinkedExplicitMods[i]);
+            }
+            return new CrosslinkStructure(newLinkedPeptides, newExplicitModsList, newCrosslinks);
         }
     }
 }

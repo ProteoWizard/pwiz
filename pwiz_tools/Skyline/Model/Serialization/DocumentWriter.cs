@@ -278,7 +278,7 @@ namespace pwiz.Skyline.Model.Serialization
                 WriteExplicitMods(writer, node.Peptide.Target.Sequence, node.ExplicitMods);
                 WriteImplicitMods(writer, node);
                 WriteLookupMods(writer, node);
-                WriteCrosslinkStructure(writer, node.ExplicitMods?.Crosslinks);
+                WriteCrosslinkStructure(writer, node.ExplicitMods?.CrosslinkStructure);
             }
             if (node.HasResults)
             {

@@ -97,8 +97,8 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.Document.Peptides.Where(peptide => peptide.Peptide.Sequence == "HAVSEGTKAVTKYTSAK").ToList();
             Assert.AreEqual(1, peptides.Count);
             Assert.AreNotEqual(null, peptides[0].ExplicitMods);
-            Assert.AreEqual(1, peptides[0].ExplicitMods.Crosslinks.Crosslinks.Count);
-            Assert.AreEqual(0, peptides[0].ExplicitMods.Crosslinks.LinkedPeptides.Count);
+            Assert.AreEqual(1, peptides[0].ExplicitMods.CrosslinkStructure.Crosslinks.Count);
+            Assert.AreEqual(0, peptides[0].ExplicitMods.CrosslinkStructure.LinkedPeptides.Count);
         }
     }
 }

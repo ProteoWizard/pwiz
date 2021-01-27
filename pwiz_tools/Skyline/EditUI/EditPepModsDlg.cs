@@ -22,7 +22,9 @@ using System.Drawing;
 using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Web.WebSockets;
 using System.Windows.Forms;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Crosslinking;
@@ -265,7 +267,7 @@ namespace pwiz.Skyline.EditUI
 
         public CrosslinkStructure CrosslinkStructure
         {
-            get { return ExplicitMods?.Crosslinks ?? CrosslinkStructure.EMPTY; }
+            get { return ExplicitMods?.CrosslinkStructure ?? CrosslinkStructure.EMPTY; }
         }
 
         public bool AllowCopy { get; private set; }
@@ -357,7 +359,6 @@ namespace pwiz.Skyline.EditUI
                 listDocMods = DocSettings.PeptideSettings.Modifications.GetModifications(labelType);
             }
             string seq = NodePeptide.Peptide.Target.Sequence;
-            char aa = seq[indexAA];
             int iSelected = -1;
             string explicitName = null;
             var listExplicitMods = ExplicitMods?.GetModifications(labelType);
@@ -366,13 +367,19 @@ namespace pwiz.Skyline.EditUI
                 int indexMod = listExplicitMods.IndexOf(mod => mod.IndexAA == indexAA);
                 if (indexMod != -1)
                     explicitName = listExplicitMods[indexMod].Modification.Name;
+                if (explicitName == null)
+                {
+                    explicitName = ExplicitMods.CrosslinkStructure.Crosslinks
+                        .FirstOrDefault(crosslink => crosslink.Sites.Contains(new CrosslinkSite(0, indexAA)))
+                        ?.Crosslinker.Name;
+                }
             }
 
             List<string> listItems = new List<string> {string.Empty};
             bool hasModOptions = false;
             foreach (StaticMod mod in listSettingsMods)
             {
-                if (!mod.IsMod(aa, indexAA, seq.Length))
+                if (!mod.IsApplicableMod(seq, indexAA) && !mod.IsApplicableCrosslink(seq, indexAA))
                     continue;
                 listItems.Add(mod.Name);
                 hasModOptions = true;
@@ -392,7 +399,7 @@ namespace pwiz.Skyline.EditUI
                     // If the modification is present in the document, then it should be selected by default.
                     StaticMod modCurrent = mod;
                     if (listDocMods != null && listDocMods.IndexOf(modDoc =>
-                            !modDoc.IsExplicit && Equals(modDoc.Name, modCurrent.Name)) != -1)
+                        !modDoc.IsExplicit && Equals(modDoc.Name, modCurrent.Name)) != -1)
                         iSelected = listItems.Count - 1;
                 }
             }
@@ -482,7 +489,6 @@ namespace pwiz.Skyline.EditUI
         public void comboMod_SelectedIndexChangedEvent(object sender, EventArgs e)
         {
             ComboBox combo = (ComboBox) sender;
-            ExplicitMods modsExp = ExplicitMods;
             int indexAA;
             IsotopeLabelType labelType;
             if (combo.Name.StartsWith(PREFIX_HEAVY_NAME))
@@ -552,7 +558,6 @@ namespace pwiz.Skyline.EditUI
                 : _listListSelectedIndexHeavy[_listLabelTypeHeavy.IndexOf(labelType)];
             int selectedIndexLast = listSelectedIndex[indexAA];
             var listSettingsMods = GetSettingsModsList(labelType);
-            var listExplicitMods = ExplicitMods?.GetModifications(labelType);
             var combo = GetComboBox(labelType, indexAA);
             if (AddItemSelected(combo))
             {
@@ -732,7 +737,8 @@ namespace pwiz.Skyline.EditUI
             // the document implicit modifications.
             TypedExplicitModifications staticTypedMods = null;
             bool isVariableStaticMods = false;
-            var staticMods = GetExplicitMods(_listComboStatic, StaticList);
+            var staticMods =  GetExplicitMods(_listComboStatic, StaticList);
+            staticMods = staticMods.Where(mod=>null == mod.Modification.CrosslinkerSettings).ToList();
             if (ArrayUtil.EqualsDeep(staticMods, implicitMods.StaticModifications))
             {
                 if (!NodePeptide.HasVariableMods)
@@ -771,7 +777,7 @@ namespace pwiz.Skyline.EditUI
             if (staticMods != null || listHeavyTypedMods.Count > 0 || !CrosslinkStructure.IsEmpty)
             {
                 explicitMods = new ExplicitMods(peptide, staticMods, listHeavyTypedMods, isVariableStaticMods)
-                    .ChangeCrosslinks(CrosslinkStructure);
+                    .ChangeCrosslinkStructure(CrosslinkStructure);
             }
 
             if (Equals(explicitMods, explicitModsCurrent))
@@ -785,6 +791,11 @@ namespace pwiz.Skyline.EditUI
         public void OkDialog()
         {
             ExplicitMods = GetCurrentExplicitMods();
+            if (!ExplicitMods.CrosslinkStructure.IsConnected())
+            {
+                MessageDlg.Show(this, "One or more of the crossliked peptides are no longer attached to this peptide. ");
+                ShowEditLinkedPeptidesDlg(null, null);
+            }
 
             DialogResult = DialogResult.OK;
             Close();            
@@ -801,18 +812,29 @@ namespace pwiz.Skyline.EditUI
             {
                 return;
             }
-            using (var editLinkedPeptidesDlg = new EditLinkedPeptidesDlg(DocSettings,
-                new PeptideStructure(NodePeptide.Peptide, GetCurrentExplicitMods())))
+            ShowEditLinkedPeptidesDlg(mod, indexAA);
+        }
+        public void ShowEditLinkedPeptidesDlg(StaticMod mod, int? indexAa) {
+
+            using (var editLinkedPeptidesDlg = new EditLinkedPeptidesDlg(DocSettings, new PeptideStructure(NodePeptide.Peptide, GetCurrentExplicitMods())))
             {
-                editLinkedPeptidesDlg.SelectCrosslink(mod, 0, indexAA);
+                if (indexAa.HasValue)
+                {
+                    editLinkedPeptidesDlg.SelectCrosslink(mod, 0, indexAa.Value);
+                }
                 if (editLinkedPeptidesDlg.ShowDialog(this) == DialogResult.OK)
                 {
                     ExplicitMods = editLinkedPeptidesDlg.ExplicitMods;
-                    for (int i = 0; i < SequenceLength; i++)
-                    {
-                        UpdateComboItems(IsotopeLabelType.light, i, true);
-                    }
+                    UpdateComboBoxes(IsotopeLabelType.light);
                 }
+            }
+        }
+
+        private void UpdateComboBoxes(IsotopeLabelType labelType)
+        {
+            for (int i = 0; i < SequenceLength; i++)
+            {
+                UpdateComboItems(IsotopeLabelType.light, i, true);
             }
         }
 
@@ -855,6 +877,34 @@ namespace pwiz.Skyline.EditUI
 
         private bool EnsureLinkedPeptide(StaticMod staticMod, int indexAA)
         {
+            if (staticMod.CrosslinkerSettings == null)
+            {
+                var newCrosslinkStructure = CrosslinkStructure.RemoveCrosslinksAtSite(new CrosslinkSite(0, indexAA));
+                if (Equals(newCrosslinkStructure, CrosslinkStructure))
+                {
+                    return true;
+                }
+
+                if (newCrosslinkStructure.IsConnected())
+                {
+                    ChangeCrosslinkStructure(newCrosslinkStructure);
+                    return true;
+                }
+
+                switch (MultiButtonMsgDlg.Show(this,
+                    "Removing the crosslink on this amino acid will result in a crosslinked peptide no longer being connected. Would you like to edit the crosslinks now or discard the disconnected peptides?",
+                    "Edit Crosslinks", "Discard", true))
+                {
+                    case DialogResult.Cancel:
+                        return false;
+                    case DialogResult.Yes:
+                        ShowEditLinkedPeptidesDlg(null, null);
+                        return true;
+                    case DialogResult.No:
+                        ChangeCrosslinkStructure(newCrosslinkStructure.RemoveDisconnectedPeptides());
+                        return true;
+                }
+            }
             if (HasAppropriateLinkedPeptide(staticMod, indexAA))
             {
                 return true;
@@ -863,20 +913,26 @@ namespace pwiz.Skyline.EditUI
             return HasAppropriateLinkedPeptide(staticMod, indexAA);
         }
 
+        private void ChangeCrosslinkStructure(CrosslinkStructure newCrosslinkStructure)
+        {
+            ExplicitMods = GetCurrentExplicitMods().ChangeCrosslinkStructure(newCrosslinkStructure);
+            UpdateComboBoxes(IsotopeLabelType.light);
+        }
+
         private bool HasAppropriateLinkedPeptide(StaticMod staticMod, int indexAA)
         {
-            if (staticMod?.CrosslinkerSettings == null)
+            var crosslink = FindCrosslinkAtAminoAcid(indexAA);
+            if (crosslink == null)
+            {
+                return staticMod.CrosslinkerSettings == null;
+            }
+
+            if (Equals(crosslink.Crosslinker.Name, staticMod.Name))
             {
                 return true;
             }
 
-            var crosslink = FindCrosslinkAtAminoAcid(indexAA);
-            if (crosslink == null)
-            {
-                return false;
-            }
-
-            return Equals(crosslink.Crosslinker, staticMod);
+            return false;
         }
     }
 }
