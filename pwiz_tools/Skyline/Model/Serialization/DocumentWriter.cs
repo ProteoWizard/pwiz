@@ -24,6 +24,7 @@ using System.Text;
 using System.Xml;
 using Google.Protobuf;
 using pwiz.Common.Chemistry;
+using pwiz.Common.Collections;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
@@ -273,12 +274,28 @@ namespace pwiz.Skyline.Model.Serialization
             WriteAnnotations(writer, node.Annotations);
             if (!isCustomIon)
             {
+                var explicitMods = node.ExplicitMods;
+                if (DocumentFormat < DocumentFormat.FLAT_CROSSLINKS)
+                {
+                    if (explicitMods != null)
+                    {
+                        try
+                        {
+                            explicitMods = new LegacyCrosslinkConverter(Settings, explicitMods)
+                                .ConvertToLegacyFormat(new Dictionary<int, ImmutableList<ModificationSite>>());
+                        }
+                        catch (Exception ex)
+                        {
+                            throw new NotSupportedException(string.Format("Unable to convert crosslinks in {0} to document format {1}.", node.ModifiedSequenceDisplay, DocumentFormat), ex);
+                        }
+                    }
+                }
                 // CONSIDER(bspratt) the code as written actually can use static isotope
                 // label modifications, and this if clause could be removed - but Brendan wants proof of demand for this first
-                WriteExplicitMods(writer, node.Peptide.Target.Sequence, node.ExplicitMods);
+                WriteExplicitMods(writer, node.Peptide.Target.Sequence, explicitMods);
                 WriteImplicitMods(writer, node);
                 WriteLookupMods(writer, node);
-                WriteCrosslinkStructure(writer, node.ExplicitMods?.CrosslinkStructure);
+                WriteCrosslinkStructure(writer, explicitMods?.CrosslinkStructure);
             }
             if (node.HasResults)
             {
@@ -744,13 +761,26 @@ namespace pwiz.Skyline.Model.Serialization
                 writer.WriteElementString(EL.declustering_potential, dp.Value);
             }
             WriteTransitionLosses(writer, nodeTransition.Losses);
-            WriteLinkedIons(writer, nodeTransition.ComplexFragmentIon.NeutralFragmentIon);
-#if false // TODO(nicksh)
-            foreach (var linkedIon in nodeTransition.ComplexFragmentIon.Children)
+            if (!nodePep.CrosslinkStructure.IsEmpty)
             {
-                WriteLinkedIon(writer, linkedIon.Key, linkedIon.Value);
+                if (DocumentFormat < DocumentFormat.FLAT_CROSSLINKS)
+                {
+                    var sitePathMap = new Dictionary<int, ImmutableList<ModificationSite>>();
+                    var legacyConverter = new LegacyCrosslinkConverter(Settings, nodePep.ExplicitMods);
+                    legacyConverter.ConvertToLegacyFormat(sitePathMap);
+                    var ionChain = nodeTransition.ComplexFragmentIon.NeutralFragmentIon.IonChain;
+                    var linkedIons = new Dictionary<ImmutableList<ModificationSite>, IonOrdinal>();
+                    for (int i = 0; i < ionChain.Count; i++)
+                    {
+                        linkedIons.Add(sitePathMap[i], ionChain[i]);
+                    }
+                    WriteLegacyLinkedIons(writer, ImmutableList<ModificationSite>.EMPTY, linkedIons);
+                }
+                else
+                {
+                    WriteLinkedIons(writer, nodeTransition.ComplexFragmentIon.NeutralFragmentIon);
+                }
             }
-#endif
             if (nodeTransition.HasLibInfo)
             {
                 writer.WriteStartElement(EL.transition_lib_info);
@@ -810,29 +840,35 @@ namespace pwiz.Skyline.Model.Serialization
             writer.WriteEndElement();
         }
 
-#if false
-        private void WriteLegacyLinkedIon(XmlWriter writer, ModificationSite modificationSite, LegacyComplexFragmentIon complexFragmentIon)
+        private void WriteLegacyLinkedIons(XmlWriter writer, ImmutableList<ModificationSite> sitePath, IDictionary<ImmutableList<ModificationSite>, IonOrdinal> linkedIons)
         {
-            writer.WriteStartElement(EL.linked_fragment_ion);
-            if (!complexFragmentIon.IsOrphan)
+            foreach (var entry in linkedIons)
             {
-                // blank fragment type means orphaned fragment ion
-                writer.WriteAttribute(ATTR.fragment_type, complexFragmentIon.Transition.IonType);
+                if (entry.Key.Count != sitePath.Count + 1)
+                {
+                    continue;
+                }
+
+                if (!sitePath.SequenceEqual(entry.Key.Take(sitePath.Count)))
+                {
+                    continue;
+                }
+
+                writer.WriteStartElement(EL.linked_fragment_ion);
+                var ionOrdinal = entry.Value;
+                if (!ionOrdinal.IsEmpty)
+                {
+                    // blank fragment type means orphaned fragment ion
+                    writer.WriteAttribute(ATTR.fragment_type, ionOrdinal.Type);
+                }
+
+                writer.WriteAttribute(ATTR.fragment_ordinal, ionOrdinal.Ordinal, 0);
+                writer.WriteAttribute(ATTR.index_aa, entry.Key.Last().IndexAa);
+                writer.WriteAttribute(ATTR.modification_name, entry.Key.Last().ModName);
+                WriteLegacyLinkedIons(writer, entry.Key, linkedIons);
+                writer.WriteEndElement();
             }
-            if (complexFragmentIon.Transition.IonType != IonType.precursor)
-            {
-                writer.WriteAttribute(ATTR.fragment_ordinal, complexFragmentIon.Transition.Ordinal);
-            }
-            writer.WriteAttribute(ATTR.index_aa, modificationSite.IndexAa);
-            writer.WriteAttribute(ATTR.modification_name, modificationSite.ModName);
-            WriteTransitionLosses(writer, complexFragmentIon.TransitionLosses);
-            foreach (var child in complexFragmentIon.Children)
-            {
-                WriteLegacyLinkedIon(writer, child.Key, child.Value);
-            }
-            writer.WriteEndElement();
         }
-#endif
 
         private void WriteLinkedIons(XmlWriter writer, NeutralFragmentIon complexFragmentIon)
         {

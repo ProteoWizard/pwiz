@@ -35,21 +35,30 @@ namespace pwiz.Skyline.Model.Crosslinking
     {
         public static readonly CrosslinkStructure EMPTY = new CrosslinkStructure(ImmutableList<Peptide>.EMPTY,
             ImmutableList<ExplicitMods>.EMPTY, ImmutableList<Crosslink>.EMPTY);
+
+        public CrosslinkStructure(ICollection<Peptide> peptides, IEnumerable<Crosslink> crosslinks)
+            : this(peptides, peptides.Select(peptide => new ExplicitMods(peptide, new ExplicitMod[0], null)),
+                crosslinks)
+        {
+
+        }
         public CrosslinkStructure(IEnumerable<Peptide> peptides, IEnumerable<ExplicitMods> explicitModsList, IEnumerable<Crosslink> crosslinks)
         {
             LinkedPeptides = ImmutableList.ValueOf(peptides);
             if (explicitModsList == null)
             {
-                LinkedExplicitMods = ImmutableList.ValueOf(new ExplicitMods[LinkedPeptides.Count]);
+                explicitModsList = LinkedPeptides.Select(MakeEmptyExplicitMods);
             }
-            else
-            {
-                LinkedExplicitMods = ImmutableList.ValueOf(explicitModsList);
-            }
-
+            LinkedExplicitMods = ImmutableList.ValueOf(explicitModsList);
             if (LinkedExplicitMods.Count != LinkedPeptides.Count)
             {
                 throw new ArgumentException(@"Peptide count does not match");
+            }
+
+            if (LinkedExplicitMods.Contains(null))
+            {
+                LinkedExplicitMods = ImmutableList.ValueOf(Enumerable.Range(0, LinkedPeptides.Count)
+                    .Select(i => LinkedExplicitMods[i] ?? MakeEmptyExplicitMods(LinkedPeptides[i])));
             }
             if (LinkedExplicitMods.Any(mod => mod != null && mod.HasCrosslinks))
             {
@@ -213,6 +222,11 @@ namespace pwiz.Skyline.Model.Crosslinking
                 newExplicitModsList.Add(LinkedExplicitMods[i]);
             }
             return new CrosslinkStructure(newLinkedPeptides, newExplicitModsList, newCrosslinks);
+        }
+
+        public static ExplicitMods MakeEmptyExplicitMods(Peptide peptide)
+        {
+            return new ExplicitMods(peptide, ImmutableList.Empty<ExplicitMod>(), null);
         }
     }
 }

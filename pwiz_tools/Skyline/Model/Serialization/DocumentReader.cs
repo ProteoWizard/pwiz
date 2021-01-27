@@ -969,7 +969,7 @@ namespace pwiz.Skyline.Model.Serialization
                     annotations = ReadTargetAnnotations(reader, AnnotationDef.AnnotationTarget.peptide);
                 if (!isCustomMolecule)
                 {
-                    mods = ReadExplicitMods(reader, peptide)?.ConvertOldCrosslinkStructure();
+                    mods = ReadExplicitMods(reader, peptide)?.ConvertFromLegacyCrosslinkStructure();
                     SkipImplicitModsElement(reader);
                     lookupMods = ReadLookupMods(reader, lookupSequence);
                     crosslinkStructure = ReadCrosslinkStructure(reader);
@@ -1001,7 +1001,7 @@ namespace pwiz.Skyline.Model.Serialization
                 pushReader.ReadEndElement();
             }
 
-            mods = mods?.RemoveOldCrosslinkMap();
+            mods = mods?.RemoveLegacyCrosslinkMap();
             ModifiedSequenceMods sourceKey = null;
             if (lookupSequence != null)
                 sourceKey = new ModifiedSequenceMods(lookupSequence, lookupMods);
@@ -1579,7 +1579,7 @@ namespace pwiz.Skyline.Model.Serialization
                 IEnumerable<IonOrdinal> parts;
                 if (info.LegacyFragmentIons != null)
                 {
-                    parts = LegacyComplexFragmentIonName.ToIonChain(mods.OldCrosslinkMap, info.LegacyFragmentIons);
+                    parts = LegacyComplexFragmentIonName.ToIonChain(mods.LegacyCrosslinkMap, info.LegacyFragmentIons);
                 }
                 else
                 {

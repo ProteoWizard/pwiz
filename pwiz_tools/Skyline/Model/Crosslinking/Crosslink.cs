@@ -30,6 +30,10 @@ namespace pwiz.Skyline.Model.Crosslinking
     {
         public Crosslink(StaticMod crosslinker, IEnumerable<CrosslinkSite> sites)
         {
+            if (crosslinker.IsExplicit)
+            {
+                crosslinker = crosslinker.ChangeExplicit(false);
+            }
             Crosslinker = crosslinker;
             Sites = new CrosslinkSites(sites);
         }
@@ -67,7 +71,7 @@ namespace pwiz.Skyline.Model.Crosslinking
             var aaIndexesByPeptide = Sites.ToLookup(site => site.PeptideIndex, site=>site.AaIndex);
             var maxPeptideIndex = aaIndexesByPeptide.Max(grouping => grouping.Key);
             string strComma = string.Empty;
-            for (int iPeptide = 0; iPeptide < maxPeptideIndex; iPeptide++)
+            for (int iPeptide = 0; iPeptide <= maxPeptideIndex; iPeptide++)
             {
                 result.Append(strComma);
                 strComma = @",";

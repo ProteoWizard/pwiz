@@ -17,13 +17,16 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
+using pwiz.Common.Collections;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
@@ -68,7 +71,7 @@ namespace pwiz.SkylineTest
 
             var explicitModsWithCrosslink = new ExplicitMods(mainPeptide,
                 null,
-                new TypedExplicitModifications[0]).ChangeCrosslinkStructure(new CrosslinkStructure(new []{linkedPeptide}, new ExplicitMods[1], new[]{crosslink}));
+                new TypedExplicitModifications[0]).ChangeCrosslinkStructure(new CrosslinkStructure(new []{linkedPeptide}, new[]{crosslink}));
             var crosslinkedFormula =
                 mainTransitionGroupDocNode.GetNeutralFormula(srmSettings, explicitModsWithCrosslink);
             
@@ -148,6 +151,15 @@ namespace pwiz.SkylineTest
                 IonChain.FromIons(IonOrdinal.Empty, IonOrdinal.B(1)),
             };
             CollectionAssert.AreEquivalent(expectedFragmentIons, oneNeutralLossChoices);
+
+            var legacySiteMap = new Dictionary<int, ImmutableList<ModificationSite>>();
+            var legacyExplicitMods =
+                new LegacyCrosslinkConverter(srmSettings, modsWithLinkedPeptide).ConvertToLegacyFormat(
+                    legacySiteMap);
+            Assert.IsNotNull(legacyExplicitMods);
+            Assert.AreEqual(2, legacySiteMap.Count);
+            Assert.AreEqual(ImmutableList.Empty<ModificationSite>(), legacySiteMap[0]);
+            Assert.AreEqual(ImmutableList.Singleton(new ModificationSite(0, modName)), legacySiteMap[1]);
         }
 
         [TestMethod]
@@ -227,7 +239,9 @@ namespace pwiz.SkylineTest
             Assert.AreNotEqual(0, peptideDocNode.TransitionCount);
             var peptideGroupDocNode = new PeptideGroupDocNode(new PeptideGroup(), Annotations.EMPTY, "Peptides", null, new []{peptideDocNode});
             var srmDocument = (SrmDocument) new SrmDocument(settings).ChangeChildren(new[] {peptideGroupDocNode});
+            VerifyLegacyFormatSupported(srmDocument);
             AssertEx.Serializable(srmDocument);
+            AssertEx.Serializable(srmDocument, string.Empty, SkylineVersion.V20_2);
             string docXML = null;
             AssertEx.RoundTrip(srmDocument, ref docXML);
             Assert.IsNotNull(docXML);
@@ -325,7 +339,7 @@ namespace pwiz.SkylineTest
             var transitionGroup = new TransitionGroup(peptide, Adduct.SINGLY_PROTONATED, IsotopeLabelType.light);
             var crosslinkerDef = new StaticMod("dss", null, null, "C8H10O2");
             var explicitModsWithCrosslink = new ExplicitMods(peptide, null, null).ChangeCrosslinkStructure(
-                new CrosslinkStructure(new Peptide[0], new ExplicitMods[0],
+                new CrosslinkStructure(new Peptide[0],
                     new[]
                     {
                         new Crosslink(crosslinkerDef,
@@ -371,6 +385,24 @@ namespace pwiz.SkylineTest
             Assert.IsNotNull(peptideDocNode);
             Assert.IsNotNull(peptideDocNode.ExplicitMods);
             Assert.AreEqual(0, peptideDocNode.ExplicitMods.CrosslinkStructure.LinkedPeptides.Count);
+        }
+
+        public static void VerifyLegacyFormatSupported(SrmDocument document)
+        {
+            foreach (var peptide in document.Peptides)
+            {
+                if (peptide.ExplicitMods == null || !peptide.ExplicitMods.HasCrosslinks)
+                {
+                    continue;
+                }
+
+                var legacyExplicitMods =
+                    new LegacyCrosslinkConverter(document.Settings, peptide.ExplicitMods).ConvertToLegacyFormat(
+                        new Dictionary<int, ImmutableList<ModificationSite>>());
+                    
+                var roundTripExplicitMods = legacyExplicitMods.ConvertFromLegacyCrosslinkStructure();
+                AssertEx.AreEqual(peptide.ExplicitMods.CrosslinkStructure, roundTripExplicitMods.CrosslinkStructure);
+            }
         }
     }
 }

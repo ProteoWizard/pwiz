@@ -27,6 +27,7 @@ using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Crosslinking;
+using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -1083,7 +1084,14 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public ExplicitMods ChangeCrosslinkStructure(CrosslinkStructure crosslinks)
         {
-            return ChangeProp(ImClone(this), im => im.CrosslinkStructure = crosslinks);
+            crosslinks = crosslinks ?? CrosslinkStructure.EMPTY;
+            ExplicitMods explicitMods = this;
+            if (crosslinks.HasCrosslinks && explicitMods.StaticModifications == null)
+            {
+                explicitMods = new ExplicitMods(explicitMods.Peptide, ImmutableList.Empty<ExplicitMod>(), explicitMods.GetHeavyModifications());
+            }
+
+            return ChangeProp(ImClone(explicitMods), im => im.CrosslinkStructure = crosslinks);
         }
 
         public bool HasCrosslinks
@@ -1315,7 +1323,7 @@ namespace pwiz.Skyline.Model.DocSettings
         /// Convert from the Version 20.2 format where crosslinks were represented on the <see cref="ExplicitMod.LinkedPeptide"/> elements
         /// instead of <see cref="CrosslinkStructure"/>
         /// </summary>
-        public ExplicitMods ConvertOldCrosslinkStructure()
+        public ExplicitMods ConvertFromLegacyCrosslinkStructure()
         {
             if (null == StaticModifications || StaticModifications.All(mod => null == mod.LinkedPeptide))
             {
@@ -1367,22 +1375,22 @@ namespace pwiz.Skyline.Model.DocSettings
             return new ExplicitMods(Peptide,
                     StaticModifications.Where(mod => mod.LinkedPeptide == null).ToList(),
                     GetHeavyModifications(), IsVariableStaticMods)
-            {
-                OldCrosslinkMap = ImmutableList.ValueOf(sitePaths),
-            }
+                {
+                    LegacyCrosslinkMap = ImmutableList.ValueOf(sitePaths),
+                }
                 .ChangeCrosslinkStructure(crosslinkStructure);
         }
         // Code for dealing with the way crosslinks were represented in Version 20.2
-        public ImmutableList<ImmutableList<ModificationSite>> OldCrosslinkMap { get; private set; }
+        public ImmutableList<ImmutableList<ModificationSite>> LegacyCrosslinkMap { get; private set; }
 
-        public ExplicitMods RemoveOldCrosslinkMap()
+        public ExplicitMods RemoveLegacyCrosslinkMap()
         {
-            if (OldCrosslinkMap == null)
+            if (LegacyCrosslinkMap == null)
             {
                 return this;
             }
 
-            return ChangeProp(ImClone(this), im => im.OldCrosslinkMap = null);
+            return ChangeProp(ImClone(this), im => im.LegacyCrosslinkMap = null);
         }
 
         /// <summary>
@@ -1390,7 +1398,7 @@ namespace pwiz.Skyline.Model.DocSettings
         /// </summary>
         public bool VerifyNoLegacyData()
         {
-            Assume.IsNull(OldCrosslinkMap);
+            Assume.IsNull(LegacyCrosslinkMap);
             if (StaticModifications != null)
             {
                 Assume.IsFalse(StaticModifications.Any(mod=>null != mod.LinkedPeptide));

@@ -673,9 +673,9 @@ namespace pwiz.Skyline.Model
                 parts.Add(transitionProto.OrphanedCrosslinkIon
                     ? IonOrdinal.Empty
                     : IonOrdinal.FromTransition(transition));
-                if (null != mods.OldCrosslinkMap)
+                if (null != mods.LegacyCrosslinkMap)
                 {
-                    parts.AddRange(LegacyComplexFragmentIonName.ToIonChain(mods.OldCrosslinkMap, transitionProto.LinkedIons.Select(LegacyComplexFragmentIonName.FromLinkedIonProto)));
+                    parts.AddRange(LegacyComplexFragmentIonName.ToIonChain(mods.LegacyCrosslinkMap, transitionProto.LinkedIons.Select(LegacyComplexFragmentIonName.FromLinkedIonProto)));
                 }
                 else
                 {
