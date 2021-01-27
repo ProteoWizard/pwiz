@@ -1479,52 +1479,7 @@ namespace pwiz.Skyline.Menus
                 }
             }
         }
-        private void editCrosslinksMenuItem_Click(object sender, EventArgs e)
-        {
-            EditCrosslinks();
-        }
-
-        public void EditCrosslinks()
-        {
-#if false
-            var nodePepTree = SequenceTree.GetNodeOfType<PeptideTreeNode>();
-            if (nodePepTree == null)
-            {
-                return;
-            }
-
-            var peptideDocNode = nodePepTree.DocNode;
-            var srmSettings = DocumentUI.Settings;
-            if (!peptideDocNode.CrosslinkStructure.HasCrosslinks &&
-                !EditLinkedPeptidesDlg.AvailableCrosslinkers(srmSettings).Any())
-            {
-                MessageDlg.Show(this, "You must define a crosslinker modification in Peptide Settings in order to add crosslinks to a peptide.");
-                return;
-            }
-
-            using (var editLinkedPeptidesDlg = new EditLinkedPeptidesDlg(srmSettings, peptideDocNode))
-            {
-                if (editLinkedPeptidesDlg.ShowDialog(this)== DialogResult.Cancel)
-                {
-                    return;
-                }
-                var listStaticMods = Settings.Default.StaticModList;
-                var listHeavyMods = Settings.Default.HeavyModList;
-                ModifyDocument(
-                    string.Format(Resources.SkylineWindow_ModifyPeptide_Modify__0__, nodePepTree.Text),
-                    doc =>
-                        doc.ChangePeptideMods(nodePepTree.Path,
-                            editLinkedPeptidesDlg.ExplicitMods,
-                            false,
-                            listStaticMods,
-                            listHeavyMods), docPair => AuditLogEntry.DiffDocNodes(MessageType.modified,
-                        docPair,
-                        AuditLogEntry.GetNodeName(docPair.OldDoc, peptideDocNode)));
-            }
-#endif
-        }
-
-#endregion
+        #endregion
 
         private void manageUniquePeptidesMenuItem_Click(object sender, EventArgs e)
         {

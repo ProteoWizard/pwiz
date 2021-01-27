@@ -76,7 +76,6 @@
             this.manageUniquePeptidesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator30 = new System.Windows.Forms.ToolStripSeparator();
             this.manageResultsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.editCrosslinksMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -112,7 +111,6 @@
             this.toolStripSeparator5,
             this.setStandardTypeMenuItem,
             this.modifyPeptideMenuItem,
-            this.editCrosslinksMenuItem,
             this.manageUniquePeptidesMenuItem,
             this.toolStripSeparator30,
             this.manageResultsMenuItem});
@@ -214,6 +212,7 @@
             this.removePeakToolStripMenuItem});
             this.integrationToolStripMenuItem.Name = "integrationToolStripMenuItem";
             resources.ApplyResources(this.integrationToolStripMenuItem, "integrationToolStripMenuItem");
+            this.applyPeakAllToolStripMenuItem.Click += new System.EventHandler(this.applyPeakAllMenuItem_Click);
             // 
             // applyPeakAllToolStripMenuItem
             // 
@@ -387,6 +386,7 @@
             this.irtStandardMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
             resources.ApplyResources(this.irtStandardMenuItem, "irtStandardMenuItem");
             this.irtStandardMenuItem.Name = "irtStandardMenuItem";
+            this.irtStandardMenuItem.Name = "irtStandardMenuItem";
             // 
             // modifyPeptideMenuItem
             // 
@@ -410,12 +410,6 @@
             this.manageResultsMenuItem.Name = "manageResultsMenuItem";
             resources.ApplyResources(this.manageResultsMenuItem, "manageResultsMenuItem");
             this.manageResultsMenuItem.Click += new System.EventHandler(this.manageResultsMenuItem_Click);
-            // 
-            // editCrosslinksMenuItem
-            // 
-            this.editCrosslinksMenuItem.Name = "editCrosslinksMenuItem";
-            resources.ApplyResources(this.editCrosslinksMenuItem, "editCrosslinksMenuItem");
-            this.editCrosslinksMenuItem.Click += new System.EventHandler(this.editCrosslinksMenuItem_Click);
             // 
             // EditMenu
             // 
@@ -479,6 +473,5 @@
         private System.Windows.Forms.ToolStripMenuItem manageUniquePeptidesMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator30;
         private System.Windows.Forms.ToolStripMenuItem manageResultsMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem editCrosslinksMenuItem;
     }
 }
