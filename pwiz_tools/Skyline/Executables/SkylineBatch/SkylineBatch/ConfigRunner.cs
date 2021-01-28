@@ -106,12 +106,11 @@ namespace SkylineBatch
             var addDecoys = Config.FileSettings.AddDecoys;
             var shuffleDecoys = Config.FileSettings.ShuffleDecoys;
             var trainMProfit = Config.FileSettings.TrainMProphet;
-            var newSkylineFileName = Config.MainSettings.GetNewTemplatePath();
+            var newSkylineFileName = Config.MainSettings.GetResultsFilePath();
             var dataDir = Config.MainSettings.DataFolderPath;
             var namingPattern = Config.MainSettings.ReplicateNamingPattern;
 
-            if (!Directory.Exists(Config.MainSettings.AnalysisFolderPath))
-                Directory.CreateDirectory(Config.MainSettings.AnalysisFolderPath);
+            Config.MainSettings.CreateAnalysisFolderIfNonexistent();
 
             // STEP 1: open skyline file and save copy to analysis folder
             var firstStep = string.Format("--in=\"{0}\" ", templateFullName);

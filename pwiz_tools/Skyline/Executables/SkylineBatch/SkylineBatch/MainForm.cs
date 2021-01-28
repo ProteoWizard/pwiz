@@ -153,6 +153,8 @@ namespace SkylineBatch
             btnDownArrow.Enabled = configSelected && _configManager.SelectedConfig < listViewConfigs.Items.Count - 1;
             btnDelete.Enabled = configSelected;
             btnOpenAnalysis.Enabled = configSelected;
+            btnOpenTemplate.Enabled = configSelected;
+            btnOpenResults.Enabled = configSelected;
             btnExportConfigs.Enabled = _configManager.HasConfigs();
         }
 
@@ -176,9 +178,50 @@ namespace SkylineBatch
 
         private void btnOpenAnalysis_Click(object sender, EventArgs e)
         {
-            var folder = _configManager.GetSelectedConfig().MainSettings.AnalysisFolderPath;
-            if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
+            var config = _configManager.GetSelectedConfig();
+            if (!_configManager.IsSelectedConfigValid())
+            {
+                DisplayError(Resources.MainForm_btnOpenAnalysis_Click_Cannot_open_the_analysis_folder_of_an_invalid_configuration_ + Environment.NewLine +
+                             string.Format(Resources.MainForm_btnOpenTemplate_Click_Please_fix___0___and_try_again_, config.Name));
+                return;
+            }
+            config.MainSettings.CreateAnalysisFolderIfNonexistent();
+            var folder = config.MainSettings.AnalysisFolderPath;
             Process.Start("explorer.exe", "/n," + folder);
+        }
+
+        private void btnOpenTemplate_Click(object sender, EventArgs e)
+        {
+            var config = _configManager.GetSelectedConfig();
+            if (!_configManager.IsSelectedConfigValid())
+            {
+                DisplayError(Resources.MainForm_btnOpenTemplate_Click_Cannot_open_the_Skyline_template_file_of_an_invalid_configuration_ + Environment.NewLine +
+                             string.Format(Resources.MainForm_btnOpenTemplate_Click_Please_fix___0___and_try_again_, config.Name));
+                return;
+            }
+            // Open template file
+            var template = config.MainSettings.TemplateFilePath;
+            Process.Start(template);
+        }
+
+        private void btnOpenResults_Click(object sender, EventArgs e)
+        {
+            var config = _configManager.GetSelectedConfig();
+            if (!_configManager.IsSelectedConfigValid())
+            {
+                DisplayError(Resources.MainForm_btnOpenResults_Click_Cannot_open_the_Skyline_results_file_of_an_invalid_configuration_ + Environment.NewLine +
+                             string.Format(Resources.MainForm_btnOpenTemplate_Click_Please_fix___0___and_try_again_, config.Name));
+                return;
+            }
+            var resultsFile = config.MainSettings.GetResultsFilePath();
+            if (!File.Exists(resultsFile))
+            {
+                DisplayError(Resources.MainForm_btnOpenResults_Click_The_Skyline_results_file_for_this_configuration_has_not_been_generated_yet_ + Environment.NewLine +
+                             string.Format(Resources.MainForm_btnOpenResults_Click_Please_run___0___from_step_one_and_try_again_, config.Name));
+                return;
+            }
+            // Open results file
+            Process.Start(resultsFile);
         }
 
         #endregion

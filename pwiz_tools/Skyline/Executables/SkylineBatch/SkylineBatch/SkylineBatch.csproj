@@ -86,6 +86,8 @@
   </PropertyGroup>
   <ItemGroup>
     <None Include="Resources\OpenFolder.bmp" />
+    <None Include="Resources\SkylineData.ico" />
+    <None Include="Resources\SkylineDoc.ico" />
     <Content Include="SkylineBatch_release.ico" />
     <Content Include="SkylineDailyRunner.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

@@ -627,6 +627,64 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cannot open the analysis folder of an invalid configuration..
+        /// </summary>
+        internal static string MainForm_btnOpenAnalysis_Click_Cannot_open_the_analysis_folder_of_an_invalid_configuration_ {
+            get {
+                return ResourceManager.GetString("MainForm_btnOpenAnalysis_Click_Cannot_open_the_analysis_folder_of_an_invalid_conf" +
+                        "iguration_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot open the Skyline results file of an invalid configuration..
+        /// </summary>
+        internal static string MainForm_btnOpenResults_Click_Cannot_open_the_Skyline_results_file_of_an_invalid_configuration_ {
+            get {
+                return ResourceManager.GetString("MainForm_btnOpenResults_Click_Cannot_open_the_Skyline_results_file_of_an_invalid_" +
+                        "configuration_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please run &quot;{0}&quot; from step 1 and try again..
+        /// </summary>
+        internal static string MainForm_btnOpenResults_Click_Please_run___0___from_step_one_and_try_again_ {
+            get {
+                return ResourceManager.GetString("MainForm_btnOpenResults_Click_Please_run___0___from_step_one_and_try_again_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The Skyline results file for this configuration has not been generated yet..
+        /// </summary>
+        internal static string MainForm_btnOpenResults_Click_The_Skyline_results_file_for_this_configuration_has_not_been_generated_yet_ {
+            get {
+                return ResourceManager.GetString("MainForm_btnOpenResults_Click_The_Skyline_results_file_for_this_configuration_has" +
+                        "_not_been_generated_yet_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot open the Skyline template file of an invalid configuration..
+        /// </summary>
+        internal static string MainForm_btnOpenTemplate_Click_Cannot_open_the_Skyline_template_file_of_an_invalid_configuration_ {
+            get {
+                return ResourceManager.GetString("MainForm_btnOpenTemplate_Click_Cannot_open_the_Skyline_template_file_of_an_invali" +
+                        "d_configuration_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please fix &quot;{0}&quot; and try again..
+        /// </summary>
+        internal static string MainForm_btnOpenTemplate_Click_Please_fix___0___and_try_again_ {
+            get {
+                return ResourceManager.GetString("MainForm_btnOpenTemplate_Click_Please_fix___0___and_try_again_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Loading configurations from saved settings..
         /// </summary>
         internal static string MainForm_MainForm_Loading_configurations_from_saved_settings_ {
@@ -1029,6 +1087,26 @@ namespace SkylineBatch.Properties {
         internal static string SkylineBatchLogger_WriteToFile_Exception_stack_trace__ {
             get {
                 return ResourceManager.GetString("SkylineBatchLogger_WriteToFile_Exception_stack_trace__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap SkylineData {
+            get {
+                object obj = ResourceManager.GetObject("SkylineData", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap SkylineDoc {
+            get {
+                object obj = ResourceManager.GetObject("SkylineDoc", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
             }
         }
         

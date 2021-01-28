@@ -200,6 +200,15 @@ namespace SkylineBatch
             }
         }
 
+        public bool IsSelectedConfigValid()
+        {
+            lock (_lock)
+            {
+                CheckConfigSelected();
+                return _configValidation[_configList[SelectedConfig].Name];
+            }
+        }
+
         public void AddConfiguration(SkylineBatchConfig config)
         {
             InsertConfiguration(config, _configList.Count);

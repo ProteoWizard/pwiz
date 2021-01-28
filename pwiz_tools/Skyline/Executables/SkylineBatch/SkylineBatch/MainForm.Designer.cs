@@ -65,6 +65,8 @@
             this.btnDownArrow = new System.Windows.Forms.ToolStripButton();
             this.btnDelete = new System.Windows.Forms.ToolStripButton();
             this.btnOpenAnalysis = new System.Windows.Forms.ToolStripButton();
+            this.btnOpenTemplate = new System.Windows.Forms.ToolStripButton();
+            this.btnOpenResults = new System.Windows.Forms.ToolStripButton();
             this.btnAddConfig = new System.Windows.Forms.Button();
             this.btnEdit = new System.Windows.Forms.Button();
             this.btnCopy = new System.Windows.Forms.Button();
@@ -303,7 +305,9 @@
             this.btnUpArrow,
             this.btnDownArrow,
             this.btnDelete,
-            this.btnOpenAnalysis});
+            this.btnOpenAnalysis,
+            this.btnOpenTemplate,
+            this.btnOpenResults});
             this.toolStrip1.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.VerticalStackWithOverflow;
             this.toolStrip1.Name = "toolStrip1";
             // 
@@ -338,6 +342,22 @@
             this.btnOpenAnalysis.Image = global::SkylineBatch.Properties.Resources.OpenFolder;
             this.btnOpenAnalysis.Name = "btnOpenAnalysis";
             this.btnOpenAnalysis.Click += new System.EventHandler(this.btnOpenAnalysis_Click);
+            // 
+            // btnOpenTemplate
+            // 
+            this.btnOpenTemplate.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.btnOpenTemplate.Image = global::SkylineBatch.Properties.Resources.SkylineDoc;
+            resources.ApplyResources(this.btnOpenTemplate, "btnOpenTemplate");
+            this.btnOpenTemplate.Name = "btnOpenTemplate";
+            this.btnOpenTemplate.Click += new System.EventHandler(this.btnOpenTemplate_Click);
+            // 
+            // btnOpenResults
+            // 
+            this.btnOpenResults.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.btnOpenResults.Image = global::SkylineBatch.Properties.Resources.SkylineData;
+            resources.ApplyResources(this.btnOpenResults, "btnOpenResults");
+            this.btnOpenResults.Name = "btnOpenResults";
+            this.btnOpenResults.Click += new System.EventHandler(this.btnOpenResults_Click);
             // 
             // btnAddConfig
             // 
@@ -431,5 +451,7 @@
         private System.Windows.Forms.Button btnOpenFolder;
         private System.Windows.Forms.ToolStripButton btnDelete;
         private System.Windows.Forms.ToolStripButton btnOpenAnalysis;
+        private System.Windows.Forms.ToolStripButton btnOpenTemplate;
+        private System.Windows.Forms.ToolStripButton btnOpenResults;
     }
 }

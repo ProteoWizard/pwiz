@@ -50,9 +50,14 @@ namespace SkylineBatch
 
         public readonly string ReplicateNamingPattern;
 
-        public string GetNewTemplatePath()
+        public string GetResultsFilePath()
         {
             return Path.Combine(AnalysisFolderPath, Path.GetFileName(TemplateFilePath));
+        }
+
+        public void CreateAnalysisFolderIfNonexistent()
+        {
+            if(!Directory.Exists(AnalysisFolderPath)) Directory.CreateDirectory(AnalysisFolderPath);
         }
 
         public override string ToString()

@@ -164,7 +164,10 @@ namespace SkylineBatch
         private void OpenFolder(TextBox textbox)
         {
             var dialog = new FolderBrowserDialog();
-            dialog.SelectedPath = textbox.Text;
+            var initialPath = textbox.Text;
+            while (!Directory.Exists(initialPath) && !string.IsNullOrEmpty(initialPath))
+                initialPath = Path.GetDirectoryName(initialPath);
+            dialog.SelectedPath = initialPath;
             DialogResult result = dialog.ShowDialog();
             if (result == DialogResult.OK)
             {
