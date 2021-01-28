@@ -71,7 +71,7 @@ namespace SkylineBatchTest
 
         public static SkylineBatchConfig GetTestConfig(string name = "name")
         {
-            return new SkylineBatchConfig(name, DateTime.MinValue, DateTime.MinValue, GetTestMainSettings(), GetTestFileSettings(), 
+            return new SkylineBatchConfig(name, true, DateTime.MinValue, GetTestMainSettings(), GetTestFileSettings(), 
                 GetTestReportSettings(), GetTestSkylineSettings());
         }
 

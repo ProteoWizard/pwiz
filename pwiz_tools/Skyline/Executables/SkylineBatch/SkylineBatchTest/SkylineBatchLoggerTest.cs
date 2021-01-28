@@ -77,11 +77,11 @@ namespace SkylineBatchTest
             Assert.IsTrue(testConfigManager.HasOldLogs() == false, "Expected no old logs.");
 
             // Run and cancel three times creates two old logs
-            await testConfigManager.RunAll(4);
+            await testConfigManager.RunAllEnabled(4);
             testConfigManager.CancelRunners();
-            await testConfigManager.RunAll(4);
+            await testConfigManager.RunAllEnabled(4);
             testConfigManager.CancelRunners();
-            await testConfigManager.RunAll(4);
+            await testConfigManager.RunAllEnabled(4);
             testConfigManager.CancelRunners();
 
             var hasOldLogs = testConfigManager.HasOldLogs();

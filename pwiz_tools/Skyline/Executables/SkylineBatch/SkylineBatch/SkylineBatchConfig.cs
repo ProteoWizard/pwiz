@@ -34,7 +34,7 @@ namespace SkylineBatch
         // script that will copy the skyline file, import data, export reports, and run r scripts.
 
         
-        public SkylineBatchConfig(string name, DateTime created, DateTime modified, MainSettings mainSettings, 
+        public SkylineBatchConfig(string name, bool enabled, DateTime modified, MainSettings mainSettings, 
             FileSettings fileSettings, ReportSettings reportSettings, SkylineSettings skylineSettings)
         {
             if (string.IsNullOrEmpty(name))
@@ -43,7 +43,7 @@ namespace SkylineBatch
                                             Resources.SkylineBatchConfig_SkylineBatchConfig_Please_enter_a_name_);
             }
             Name = name;
-            Created = created;
+            Enabled = enabled;
             Modified = modified;
             MainSettings = mainSettings;
             FileSettings = fileSettings;
@@ -52,8 +52,6 @@ namespace SkylineBatch
         }
 
         public readonly string Name;
-
-        public readonly DateTime Created;
 
         public readonly DateTime Modified;
 
@@ -65,6 +63,8 @@ namespace SkylineBatch
 
         public readonly SkylineSettings SkylineSettings;
 
+        public bool Enabled;
+
         public bool UsesSkyline => SkylineSettings.Type == SkylineType.Skyline;
 
         public bool UsesSkylineDaily => SkylineSettings.Type == SkylineType.SkylineDaily;
@@ -74,7 +74,7 @@ namespace SkylineBatch
         private enum Attr
         {
             Name,
-            Created,
+            Enabled,
             Modified
         }
         
@@ -88,9 +88,8 @@ namespace SkylineBatch
         public static SkylineBatchConfig ReadXml(XmlReader reader)
         {
             var name = reader.GetAttribute(Attr.Name);
-            DateTime created;
+            var enabled = reader.GetBoolAttribute(Attr.Enabled);
             DateTime modified;
-            DateTime.TryParse(reader.GetAttribute(Attr.Created), out created);
             DateTime.TryParse(reader.GetAttribute(Attr.Modified), out modified);
 
             do
@@ -137,14 +136,14 @@ namespace SkylineBatch
             if (exceptionMessage != null)
                 throw new ArgumentException(exceptionMessage);
 
-            return new SkylineBatchConfig(name, created, modified, mainSettings, fileSettings, reportSettings, skylineSettings);
+            return new SkylineBatchConfig(name, enabled, modified, mainSettings, fileSettings, reportSettings, skylineSettings);
         }
 
         public void WriteXml(XmlWriter writer)
         {
             writer.WriteStartElement("skylinebatch_config");
             writer.WriteAttribute(Attr.Name, Name);
-            writer.WriteAttributeIfString(Attr.Created, Created.ToShortDateString() + " " + Created.ToShortTimeString());
+            writer.WriteAttribute(Attr.Enabled, Enabled);
             writer.WriteAttributeIfString(Attr.Modified, Modified.ToShortDateString() + " " + Modified.ToShortTimeString());
             MainSettings.WriteXml(writer);
             FileSettings.WriteXml(writer);
@@ -168,7 +167,7 @@ namespace SkylineBatch
             var mainSettingsReplaced = MainSettings.TryPathReplace(oldRoot, newRoot, out MainSettings pathReplacedMainSettings);
             var reportSettingsReplaced =
                 ReportSettings.TryPathReplace(oldRoot, newRoot, out ReportSettings pathReplacedReportSettings);
-            replacedPathConfig = new SkylineBatchConfig(Name, Created, DateTime.Now, pathReplacedMainSettings, FileSettings, pathReplacedReportSettings, SkylineSettings);
+            replacedPathConfig = new SkylineBatchConfig(Name, Enabled, DateTime.Now, pathReplacedMainSettings, FileSettings, pathReplacedReportSettings, SkylineSettings);
             return mainSettingsReplaced || reportSettingsReplaced;
         }
 
@@ -176,7 +175,7 @@ namespace SkylineBatch
         {
             var sb = new StringBuilder();
             sb.Append("Name: ").AppendLine(Name);
-            sb.Append("Created: ").Append(Created.ToShortDateString()).AppendLine(Created.ToShortTimeString());
+            sb.Append("Enabled: ").Append(Enabled);
             sb.Append("Modified: ").Append(Modified.ToShortDateString()).AppendLine(Modified.ToShortTimeString());
             sb.AppendLine(string.Empty).AppendLine("Main Settings");
             sb.Append(MainSettings);
@@ -202,7 +201,7 @@ namespace SkylineBatch
 
         public override int GetHashCode()
         {
-            return Name.GetHashCode() + Created.GetHashCode() + Modified.GetHashCode() +
+            return Name.GetHashCode() + Modified.GetHashCode() +
                    MainSettings.GetHashCode() + ReportSettings.GetHashCode();
         }
 

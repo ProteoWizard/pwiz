@@ -37,9 +37,9 @@ namespace SkylineBatch
         // Running configurations cannot be replaced, and will be opened in a read only mode.
         
         private readonly IMainUiControl _mainControl;
+        private readonly bool _initialEnabled;
         private readonly bool _isBusy;
         private readonly ConfigAction _action;
-        private readonly DateTime _initialCreated;
         private readonly List<ReportInfo> _newReportList;
         private readonly bool _canEditSkylineSettings;
 
@@ -49,10 +49,10 @@ namespace SkylineBatch
         {
             InitializeComponent();
             _action = action;
-            _initialCreated = config != null ? config.Created : DateTime.MinValue;
             _newReportList = new List<ReportInfo>();
 
             _mainControl = mainControl;
+            _initialEnabled = config.Enabled;
             _isBusy = isBusy;
 
             _canEditSkylineSettings = !Installations.HasLocalSkylineCmd;
@@ -309,12 +309,12 @@ namespace SkylineBatch
         private SkylineBatchConfig GetConfigFromUi()
         {
             var name = textConfigName.Text;
+            var enabled = _action == ConfigAction.Edit ? _initialEnabled : true;
             var mainSettings = GetMainSettingsFromUi();
             var fileSettings = GetFileSettingsFromUi();
             var reportSettings = new ReportSettings(_newReportList);
             var skylineSettings = GetSkylineSettingsFromUi();
-            var created = _action == ConfigAction.Edit ? _initialCreated : DateTime.Now;
-            return new SkylineBatchConfig(name, created, DateTime.Now, mainSettings, fileSettings, reportSettings, skylineSettings);
+            return new SkylineBatchConfig(name, enabled, DateTime.Now, mainSettings, fileSettings, reportSettings, skylineSettings);
         }
 
         private void Save()

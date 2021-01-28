@@ -79,7 +79,7 @@ namespace SkylineBatch
         private void btnNewConfig_Click(object sender, EventArgs e)
         {
             Program.LogInfo(Resources.MainForm_btnNewConfig_Click_Creating_a_new_configuration_);
-            var initialConfigValues =_configManager.GetLastCreated();
+            var initialConfigValues =_configManager.GetLastModified();
             var configForm = new SkylineBatchConfigForm(this, initialConfigValues, ConfigAction.Add, false);
             configForm.ShowDialog();
         }
@@ -124,6 +124,17 @@ namespace SkylineBatch
             configForm.ShowDialog();
         }
 
+        private void listViewConfigs_ItemCheck(object sender, ItemCheckEventArgs e)
+        {
+            if (!_loaded) return;
+            var success = _configManager.CheckConfigAtIndex(e.Index, out string errorMessage);
+            if (!success)
+            {
+                e.NewValue = e.CurrentValue;
+                DisplayError(errorMessage);
+            }
+        }
+
         private void listViewConfigs_MouseUp(object sender, MouseEventArgs e)
         {
             // Select configuration through _configManager
@@ -137,7 +148,7 @@ namespace SkylineBatch
             _configManager.SelectConfig(index);
         }
         
-        private void listViewConfigs_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
+        private void listViewConfigs_PreventItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
         {
             // Disable automatic item selection - selected configuration set through _configManager
             //      Automatic selection disables red text, can't see invalid configurations
@@ -259,7 +270,7 @@ namespace SkylineBatch
             {
                 if (((ToolStripMenuItem)batchRunDropDown.Items[i - 1]).Checked)
                 {
-                    _configManager.RunAll(i); // configurations run asynchronously
+                    _configManager.RunAllEnabled(i); // configurations run asynchronously
                     break;
                 }
             }
@@ -293,9 +304,11 @@ namespace SkylineBatch
             {
                 Program.LogInfo("Updating configurations");
                 listViewConfigs.Items.Clear();
+                listViewConfigs.ItemCheck -= listViewConfigs_ItemCheck;
                 var listViewItems = _configManager.ConfigsListViewItems();
                 foreach (var lvi in listViewItems)
                     listViewConfigs.Items.Add(lvi);
+                listViewConfigs.ItemCheck += listViewConfigs_ItemCheck;
                 UpdateLabelVisibility();
                 UpdateButtonsEnabled();
             });
@@ -554,7 +567,32 @@ namespace SkylineBatch
 
     }
 
+    // ListView that prevents a double click from toggling checkbox
+    class MyListView : ListView
+    {
+        private bool checkFromDoubleClick = false;
 
+        protected override void OnItemCheck(ItemCheckEventArgs ice)
+        {
+            if (this.checkFromDoubleClick)
+            {
+                ice.NewValue = ice.CurrentValue;
+                this.checkFromDoubleClick = false;
+            }
+            else
+                base.OnItemCheck(ice);
+        }
+
+        protected override void OnMouseDown(MouseEventArgs e)
+        {
+            // Is this a double-click?
+            if ((e.Button == MouseButtons.Left) && (e.Clicks > 1))
+            {
+                this.checkFromDoubleClick = true;
+            }
+            base.OnMouseDown(e);
+        }
+    }
 
     public interface IMainUiControl
     {

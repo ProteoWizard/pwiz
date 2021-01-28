@@ -154,6 +154,24 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cannot disable &quot;{0}&quot; while it has status: {1}.
+        /// </summary>
+        internal static string ConfigManager_CheckConfigAtIndex_Cannot_disable___0___while_it_has_status___1_ {
+            get {
+                return ResourceManager.GetString("ConfigManager_CheckConfigAtIndex_Cannot_disable___0___while_it_has_status___1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please wait until &quot;{0}&quot; has finished running..
+        /// </summary>
+        internal static string ConfigManager_CheckConfigAtIndex_Please_wait_until___0___has_finished_running_ {
+            get {
+                return ResourceManager.GetString("ConfigManager_CheckConfigAtIndex_Please_wait_until___0___has_finished_running_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to There is no configuration selected..
         /// </summary>
         internal static string ConfigManager_CheckConfigSelected_There_is_no_configuration_selected_ {
@@ -681,6 +699,15 @@ namespace SkylineBatch.Properties {
         internal static string MainForm_btnOpenTemplate_Click_Please_fix___0___and_try_again_ {
             get {
                 return ResourceManager.GetString("MainForm_btnOpenTemplate_Click_Please_fix___0___and_try_again_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot enable &quot;{0}&quot; while it is invalid..
+        /// </summary>
+        internal static string MainForm_listViewConfigs_ItemCheck_Cannot_enable___0___while_it_is_invalid_ {
+            get {
+                return ResourceManager.GetString("MainForm_listViewConfigs_ItemCheck_Cannot_enable___0___while_it_is_invalid_", resourceCulture);
             }
         }
         
