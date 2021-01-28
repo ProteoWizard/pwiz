@@ -873,7 +873,7 @@ namespace pwiz.Skyline.Model
                                                 TransitionDocNode nodeTran,
                                                 int step)
         {
-            writer.Write(SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz).ToString(CultureInfo));
+            writer.Write(GetPrecursorMz(SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz), step).ToString(CultureInfo));
             writer.Write(FieldSeparator);
             writer.Write(GetProductMz(SequenceMassCalc.PersistentMZ(nodeTran.Mz), step).ToString(CultureInfo));
             writer.Write(FieldSeparator);
@@ -1362,7 +1362,7 @@ namespace pwiz.Skyline.Model
                              ? @"ISTD"
                              : String.Empty);
             writer.Write(FieldSeparator);
-            writer.Write(SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz).ToString(CultureInfo));
+            writer.Write(GetPrecursorMz(SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz), step).ToString(CultureInfo));
             writer.Write(FieldSeparator);
             // Shimadzu cannot handle product mass shifting, so the product m/z step is always 0
             // The collision energy will be changed, however, and ProteoWizard has access to that
@@ -1728,7 +1728,7 @@ namespace pwiz.Skyline.Model
             writer.Write(nodePepGroup.TransitionCount);
             writer.Write(FieldSeparator);
             // Q1 First Mass
-            writer.Write(SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz).ToString(CultureInfo));
+            writer.Write(GetPrecursorMz(SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz), step).ToString(CultureInfo));
             writer.Write(FieldSeparator);
             // Q1 Last Mass
             writer.Write(FieldSeparator);
@@ -2075,7 +2075,7 @@ namespace pwiz.Skyline.Model
                                                 int step)
         {
             OptimizeStepIndex = step;
-            string q1 = SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz).ToString(CultureInfo);
+            string q1 = GetPrecursorMz(SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz), step).ToString(CultureInfo);
             string q3 = GetProductMz(SequenceMassCalc.PersistentMZ(nodeTran.Mz), step).ToString(CultureInfo);
 
             double? predictedRT;
@@ -2788,7 +2788,7 @@ namespace pwiz.Skyline.Model
             var istdTypes = Document.Settings.PeptideSettings.Modifications.InternalStandardTypes;
             writer.Write(BoolToString(istdTypes.Contains(nodeTranGroup.TransitionGroup.LabelType))); // ISTD?
             writer.Write(FieldSeparator);
-            writer.Write(SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz).ToString(CultureInfo));
+            writer.Write(GetPrecursorMz(SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz), step).ToString(CultureInfo));
             writer.Write(FieldSeparator);
             writer.Write(@"Unit");   // MS1 Res
             writer.Write(FieldSeparator);
@@ -2972,7 +2972,7 @@ namespace pwiz.Skyline.Model
                                                 TransitionDocNode nodeTran,
                                                 int step)
         {
-            string precursorMz = SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz).ToString(CultureInfo);
+            string precursorMz = GetPrecursorMz(SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz), step).ToString(CultureInfo);
             string z = nodeTranGroup.TransitionGroup.PrecursorCharge.ToString(CultureInfo); // CONSIDER(bspratt): Is charge all that's interesting, or are we implying protonation
             string retentionTime = @"0";
             string deltaRetentionTime = string.Empty;
@@ -3080,7 +3080,7 @@ namespace pwiz.Skyline.Model
                 }
             }
 
-            double precursorMz = SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz);
+            double precursorMz = GetPrecursorMz(SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz), step);
             writer.Write(precursorMz.ToString(CultureInfo));
             writer.Write(FieldSeparator);
             writer.Write(precursorMz.ToString(CultureInfo));
@@ -3493,7 +3493,7 @@ namespace pwiz.Skyline.Model
                                                 TransitionDocNode nodeTran,
                                                 int step)
         {
-            string precursorMz = SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz).ToString(CultureInfo);
+            string precursorMz = GetPrecursorMz(SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz), step).ToString(CultureInfo);
 
             string start = string.Empty;
             string end = string.Empty;
@@ -3586,7 +3586,7 @@ namespace pwiz.Skyline.Model
                                                 TransitionDocNode nodeTran,
                                                 int step)
         {
-            string precursorMz = SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz).ToString(CultureInfo);
+            string precursorMz = GetPrecursorMz(SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz), step).ToString(CultureInfo);
 
             string start = string.Empty;
             string end = string.Empty;
@@ -3768,7 +3768,7 @@ namespace pwiz.Skyline.Model
             writer.WriteDsvField(compound, FieldSeparator, FieldSeparatorReplacement);
 
             writer.Write(FieldSeparator);
-            writer.Write(SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz).ToString(CultureInfo));
+            writer.Write(GetPrecursorMz(SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz), step).ToString(CultureInfo));
             writer.Write(FieldSeparator);
 
             if (MethodType == ExportMethodType.Standard)
@@ -3944,7 +3944,7 @@ namespace pwiz.Skyline.Model
             writer.Write(rtEnd.ToString(RETENTION_TIME_FORMAT, CultureInfo));
             writer.Write(FieldSeparator);
             // Set Mass
-            writer.Write(nodeTranGroup.PrecursorMz.ToString(MASS_FORMAT, CultureInfo));
+            writer.Write(GetPrecursorMz(nodeTranGroup.PrecursorMz, step).ToString(MASS_FORMAT, CultureInfo));
             writer.Write(FieldSeparator);
             // Mass Fragments 1-6
             for (int i = 0; i < 6; i++)

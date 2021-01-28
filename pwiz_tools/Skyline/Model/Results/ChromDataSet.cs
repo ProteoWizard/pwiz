@@ -858,7 +858,7 @@ namespace pwiz.Skyline.Model.Results
             for (int i = 0; i < _listChromData.Count; i++)
             {
                 if (i < _listChromData.Count - 1 &&
-                    ChromatogramInfo.IsOptimizationSpacing(_listChromData[i].Key.Product, _listChromData[i + 1].Key.Product))
+                    ChromatogramInfo.IsOptimizationSpacingProduct(_listChromData[i].Key.Product, _listChromData[i + 1].Key.Product))
                 {
                     // CONSIDER: This is no longer possible, since IsOptimizationSpacing checked for order
                     //           optimization spacing could happen at a boundary changing between ion types
