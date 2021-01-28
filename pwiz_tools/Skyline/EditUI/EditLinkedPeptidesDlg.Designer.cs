@@ -31,22 +31,22 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(EditLinkedPeptidesDlg));
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
-            this.lblCrosslinks = new System.Windows.Forms.Label();
-            this.lblLinkedPeptides = new System.Windows.Forms.Label();
             this.dataGridViewLinkedPeptides = new System.Windows.Forms.DataGridView();
-            this.colModificationsButton = new System.Windows.Forms.DataGridViewButtonColumn();
-            this.btnCancel = new System.Windows.Forms.Button();
-            this.btnOk = new System.Windows.Forms.Button();
-            this.lblTitle = new System.Windows.Forms.Label();
-            this.tbxPrimaryPeptide = new System.Windows.Forms.TextBox();
-            this.dataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colPeptideSequence = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colModificationsButton = new System.Windows.Forms.DataGridViewButtonColumn();
+            this.lblLinkedPeptides = new System.Windows.Forms.Label();
+            this.lblCrosslinks = new System.Windows.Forms.Label();
             this.dataGridViewCrosslinks = new pwiz.Skyline.Controls.DataGridViewEx();
             this.colCrosslinker = new System.Windows.Forms.DataGridViewComboBoxColumn();
             this.colPeptide1 = new System.Windows.Forms.DataGridViewComboBoxColumn();
             this.colAminoAcid1 = new System.Windows.Forms.DataGridViewComboBoxColumn();
             this.colPeptide2 = new System.Windows.Forms.DataGridViewComboBoxColumn();
             this.colAminoAcid2 = new System.Windows.Forms.DataGridViewComboBoxColumn();
+            this.btnCancel = new System.Windows.Forms.Button();
+            this.btnOk = new System.Windows.Forms.Button();
+            this.lblTitle = new System.Windows.Forms.Label();
+            this.tbxPrimaryPeptide = new System.Windows.Forms.TextBox();
+            this.dataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dataGridViewTextBoxColumn2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -71,16 +71,6 @@
             this.splitContainer1.Panel2.Controls.Add(this.lblCrosslinks);
             this.splitContainer1.Panel2.Controls.Add(this.dataGridViewCrosslinks);
             // 
-            // lblCrosslinks
-            // 
-            resources.ApplyResources(this.lblCrosslinks, "lblCrosslinks");
-            this.lblCrosslinks.Name = "lblCrosslinks";
-            // 
-            // lblLinkedPeptides
-            // 
-            resources.ApplyResources(this.lblLinkedPeptides, "lblLinkedPeptides");
-            this.lblLinkedPeptides.Name = "lblLinkedPeptides";
-            // 
             // dataGridViewLinkedPeptides
             // 
             resources.ApplyResources(this.dataGridViewLinkedPeptides, "dataGridViewLinkedPeptides");
@@ -93,6 +83,13 @@
             this.dataGridViewLinkedPeptides.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridViewLinkedPeptides_CellEndEdit);
             this.dataGridViewLinkedPeptides.CellErrorTextNeeded += new System.Windows.Forms.DataGridViewCellErrorTextNeededEventHandler(this.dataGridViewLinkedPeptides_CellErrorTextNeeded);
             // 
+            // colPeptideSequence
+            // 
+            this.colPeptideSequence.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.colPeptideSequence.DataPropertyName = "Sequence";
+            resources.ApplyResources(this.colPeptideSequence, "colPeptideSequence");
+            this.colPeptideSequence.Name = "colPeptideSequence";
+            // 
             // colModificationsButton
             // 
             this.colModificationsButton.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
@@ -103,45 +100,15 @@
             this.colModificationsButton.Name = "colModificationsButton";
             this.colModificationsButton.ReadOnly = true;
             // 
-            // btnCancel
+            // lblLinkedPeptides
             // 
-            resources.ApplyResources(this.btnCancel, "btnCancel");
-            this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Name = "btnCancel";
-            this.btnCancel.UseVisualStyleBackColor = true;
+            resources.ApplyResources(this.lblLinkedPeptides, "lblLinkedPeptides");
+            this.lblLinkedPeptides.Name = "lblLinkedPeptides";
             // 
-            // btnOk
+            // lblCrosslinks
             // 
-            resources.ApplyResources(this.btnOk, "btnOk");
-            this.btnOk.Name = "btnOk";
-            this.btnOk.UseVisualStyleBackColor = true;
-            this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
-            // 
-            // lblTitle
-            // 
-            resources.ApplyResources(this.lblTitle, "lblTitle");
-            this.lblTitle.Name = "lblTitle";
-            // 
-            // tbxPrimaryPeptide
-            // 
-            resources.ApplyResources(this.tbxPrimaryPeptide, "tbxPrimaryPeptide");
-            this.tbxPrimaryPeptide.Name = "tbxPrimaryPeptide";
-            this.tbxPrimaryPeptide.ReadOnly = true;
-            // 
-            // dataGridViewTextBoxColumn1
-            // 
-            this.dataGridViewTextBoxColumn1.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.dataGridViewTextBoxColumn1.DataPropertyName = "Sequence";
-            resources.ApplyResources(this.dataGridViewTextBoxColumn1, "dataGridViewTextBoxColumn1");
-            this.dataGridViewTextBoxColumn1.Name = "dataGridViewTextBoxColumn1";
-            this.dataGridViewTextBoxColumn1.ReadOnly = true;
-            // 
-            // colPeptideSequence
-            // 
-            this.colPeptideSequence.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.colPeptideSequence.DataPropertyName = "Sequence";
-            resources.ApplyResources(this.colPeptideSequence, "colPeptideSequence");
-            this.colPeptideSequence.Name = "colPeptideSequence";
+            resources.ApplyResources(this.lblCrosslinks, "lblCrosslinks");
+            this.lblCrosslinks.Name = "lblCrosslinks";
             // 
             // dataGridViewCrosslinks
             // 
@@ -216,6 +183,39 @@
             this.colAminoAcid2.Resizable = System.Windows.Forms.DataGridViewTriState.True;
             this.colAminoAcid2.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
             // 
+            // btnCancel
+            // 
+            resources.ApplyResources(this.btnCancel, "btnCancel");
+            this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            this.btnCancel.Name = "btnCancel";
+            this.btnCancel.UseVisualStyleBackColor = true;
+            // 
+            // btnOk
+            // 
+            resources.ApplyResources(this.btnOk, "btnOk");
+            this.btnOk.Name = "btnOk";
+            this.btnOk.UseVisualStyleBackColor = true;
+            this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
+            // 
+            // lblTitle
+            // 
+            resources.ApplyResources(this.lblTitle, "lblTitle");
+            this.lblTitle.Name = "lblTitle";
+            // 
+            // tbxPrimaryPeptide
+            // 
+            resources.ApplyResources(this.tbxPrimaryPeptide, "tbxPrimaryPeptide");
+            this.tbxPrimaryPeptide.Name = "tbxPrimaryPeptide";
+            this.tbxPrimaryPeptide.ReadOnly = true;
+            // 
+            // dataGridViewTextBoxColumn1
+            // 
+            this.dataGridViewTextBoxColumn1.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.dataGridViewTextBoxColumn1.DataPropertyName = "Sequence";
+            resources.ApplyResources(this.dataGridViewTextBoxColumn1, "dataGridViewTextBoxColumn1");
+            this.dataGridViewTextBoxColumn1.Name = "dataGridViewTextBoxColumn1";
+            this.dataGridViewTextBoxColumn1.ReadOnly = true;
+            // 
             // dataGridViewTextBoxColumn2
             // 
             this.dataGridViewTextBoxColumn2.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
@@ -232,6 +232,8 @@
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnOk);
             this.Controls.Add(this.splitContainer1);
+            this.MaximizeBox = false;
+            this.MinimizeBox = false;
             this.Name = "EditLinkedPeptidesDlg";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;

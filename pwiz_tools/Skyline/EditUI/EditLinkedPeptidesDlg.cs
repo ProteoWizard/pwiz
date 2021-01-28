@@ -1,4 +1,22 @@
-﻿using System;
+﻿/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2021 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -486,7 +504,7 @@ namespace pwiz.Skyline.EditUI
             var crosslinkStructure = new CrosslinkStructure(linkedPeptides, linkedExplicitMods, crosslinks);
             if (!crosslinkStructure.IsConnected())
             {
-                MessageDlg.Show(this, "Some peptides are not connected.");
+                MessageDlg.Show(this, Resources.EditLinkedPeptidesDlg_OkDialog_Some_crosslinked_peptides_are_not_connected_);
                 return;
             }
 
@@ -670,7 +688,7 @@ namespace pwiz.Skyline.EditUI
             _crosslinkers.TryGetValue(crosslinkRow.Crosslinker, out crosslinker);
             if (crosslinker == null)
             {
-                errors.Add(new ColumnMessage(colCrosslinker, "Invalid crosslinker"));
+                errors.Add(new ColumnMessage(colCrosslinker, Resources.EditLinkedPeptidesDlg_MakeCrosslink_Invalid_crosslinker));
             }
 
             var siteTuples = new[]
@@ -687,7 +705,7 @@ namespace pwiz.Skyline.EditUI
                 int peptideIndex = singlePeptide ? 0 : siteTuple.Item1.Key;
                 if (peptideIndex < 0 || peptideIndex >= peptideSequences.Count)
                 {
-                    errors.Add(new ColumnMessage(siteTuple.Item2, "This peptide is not valid."));
+                    errors.Add(new ColumnMessage(siteTuple.Item2, Resources.EditLinkedPeptidesDlg_MakeCrosslink_This_peptide_is_not_valid_));
                     continue;
                 }
 
@@ -695,18 +713,18 @@ namespace pwiz.Skyline.EditUI
                 int aaIndex = siteTuple.Item1.Value;
                 if (aaIndex < 0)
                 {
-                    errors.Add(new ColumnMessage(siteTuple.Item3, "This amino acid position cannot be blank."));
+                    errors.Add(new ColumnMessage(siteTuple.Item3, Resources.EditLinkedPeptidesDlg_MakeCrosslink_This_amino_acid_position_cannot_be_blank_));
                     continue;
                 }
                 if (aaIndex >= peptideSequence.Length)
                 {
-                    errors.Add(new ColumnMessage(siteTuple.Item3, "This is not a valid amino acid position in this peptide."));
+                    errors.Add(new ColumnMessage(siteTuple.Item3, Resources.EditLinkedPeptidesDlg_MakeCrosslink_This_is_not_a_valid_amino_acid_position_in_this_peptide_));
                     continue;
                 }
 
                 if (crosslinker != null && !crosslinker.IsApplicableCrosslink(peptideSequence, aaIndex))
                 {
-                    errors.Add(new ColumnMessage(siteTuple.Item3, string.Format("The crosslinker {0} cannot attach to this amino acid position.", crosslinker.Name)));
+                    errors.Add(new ColumnMessage(siteTuple.Item3, string.Format(Resources.EditLinkedPeptidesDlg_MakeCrosslink_The_crosslinker___0___cannot_attach_to_this_amino_acid_position_, crosslinker.Name)));
                 }
 
                 if (errors.Count == 0)
@@ -714,12 +732,12 @@ namespace pwiz.Skyline.EditUI
                     var site = new CrosslinkSite(peptideIndex, aaIndex);
                     if (sites.Contains(site))
                     {
-                        errors.Add(new ColumnMessage(siteTuple.Item3, "Both ends of this crosslink cannot be the same."));
+                        errors.Add(new ColumnMessage(siteTuple.Item3, Resources.EditLinkedPeptidesDlg_MakeCrosslink_Both_ends_of_this_crosslink_cannot_be_the_same_));
                     }
                     sites.Add(site);
                     if (!allSites.Add(site))
                     {
-                        errors.Add(new ColumnMessage(siteTuple.Item3, "This amino acid position in this peptide is already being used by another crosslink."));
+                        errors.Add(new ColumnMessage(siteTuple.Item3, Resources.EditLinkedPeptidesDlg_MakeCrosslink_This_amino_acid_position_in_this_peptide_is_already_being_used_by_another_crosslink_));
                     }
                 }
             }
