@@ -2,16 +2,13 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
+using System.Drawing;
 using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using System.Security.AccessControl;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -24,6 +21,7 @@ namespace pwiz.Skyline.EditUI
         private PeptideStructure _originalPeptideStructure;
         private IDictionary<string, StaticMod> _crosslinkers;
         private Tuple<DataGridView, int, DataGridViewColumn> _pendingFocus;
+        private Dictionary<Point, string> _crosslinkerErrors;
         public EditLinkedPeptidesDlg(SrmSettings settings, PeptideStructure peptideStructure)
         {
             InitializeComponent();
@@ -139,8 +137,14 @@ namespace pwiz.Skyline.EditUI
                 newCrosslinkRow.PeptideIndex1 = 0;
             }
             _crosslinkRows.Add(newCrosslinkRow);
-            SetGridFocus(dataGridViewCrosslinks, _crosslinkRows.Count - 1,
-                IsSinglePeptide() ? colAminoAcid2 : colPeptide2);
+            if (IsSinglePeptide())
+            {
+                SetGridFocus(dataGridViewLinkedPeptides, 0, colPeptideSequence);
+            }
+            else
+            {
+                SetGridFocus(dataGridViewCrosslinks, _crosslinkRows.Count - 1, colPeptide2);
+            }
         }
 
         public SrmSettings SrmSettings { get; private set; }
@@ -345,26 +349,6 @@ namespace pwiz.Skyline.EditUI
         private void dataGridViewCrosslinks_DataError(object sender, DataGridViewDataErrorEventArgs e)
         {
             MessageDlg.ShowWithException(this, e.Exception.Message, e.Exception);
-        }
-
-        private void ReplaceItems<TValue>(ComboBox comboBox, IEnumerable<KeyValuePair<string, TValue>> newItems)
-        {
-            var oldSelectedItem = comboBox.SelectedItem as KeyValuePair<string, TValue>?;
-            comboBox.Items.Clear();
-            comboBox.Items.AddRange(newItems.Cast<object>().ToArray());
-            if (oldSelectedItem != null)
-            {
-                var newSelectedIndex = IndexOfValue(comboBox.Items, oldSelectedItem.Value.Value);
-                if (newSelectedIndex >= 0)
-                {
-                    comboBox.SelectedIndex = newSelectedIndex;
-                }
-                else
-                {
-                    comboBox.Items.Insert(0, oldSelectedItem);
-                    comboBox.SelectedIndex = 0;
-                }
-            }
         }
 
         private int IndexOfValue<TValue>(IEnumerable enumerable, TValue value)
@@ -671,14 +655,8 @@ namespace pwiz.Skyline.EditUI
 
         private void dataGridViewCrosslinks_CellErrorTextNeeded(object sender, DataGridViewCellErrorTextNeededEventArgs e)
         {
-            if (e.RowIndex < 0 || e.RowIndex >= _crosslinkRows.Count)
-            {
-                return;
-            }
-
-            List<ColumnMessage> errors = new List<ColumnMessage>();
-            MakeCrosslink(new HashSet<CrosslinkSite>(), _crosslinkRows[e.RowIndex], errors);
-            var errorMessage = errors.FirstOrDefault(columnMessage => columnMessage.Column.Index == e.ColumnIndex).Message;
+            string errorMessage = null;
+            _crosslinkerErrors?.TryGetValue(new Point(e.RowIndex, e.ColumnIndex), out errorMessage);
             e.ErrorText = errorMessage;
         }
 
@@ -765,6 +743,45 @@ namespace pwiz.Skyline.EditUI
             public DataGridViewColumn Column { get; }
             public string Message { get; }
         }
-    }
 
+        private void UpdateCrosslinkerErrors()
+        {
+            var newErrors = new Dictionary<Point, string>();
+            var allSites = new HashSet<CrosslinkSite>();
+            for (int iRow = 0; iRow < _crosslinkRows.Count; iRow++)
+            {
+                var errors = new List<ColumnMessage>();
+                MakeCrosslink(allSites, _crosslinkRows[iRow], errors);
+                foreach (var error in errors)
+                {
+                    Point cellAddress = new Point(iRow, error.Column.Index);
+                    if (!newErrors.ContainsKey(cellAddress))
+                    {
+                        newErrors.Add(cellAddress, error.Message);
+                    }
+                }
+            }
+
+            if (_crosslinkerErrors != null)
+            {
+                if (_crosslinkerErrors.Count == newErrors.Count && !_crosslinkerErrors.Except(newErrors).Any())
+                {
+                    return;
+                }
+            }
+
+            _crosslinkerErrors = newErrors;
+            dataGridViewCrosslinks.Invalidate();
+        }
+
+        private void dataGridViewCrosslinks_CellEndEdit(object sender, DataGridViewCellEventArgs e)
+        {
+            UpdateCrosslinkerErrors();
+        }
+
+        private void dataGridViewLinkedPeptides_CellEndEdit(object sender, DataGridViewCellEventArgs e)
+        {
+            UpdateCrosslinkerErrors();
+        }
+    }
 }
