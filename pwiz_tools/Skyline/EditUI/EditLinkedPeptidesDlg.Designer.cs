@@ -82,6 +82,7 @@
             this.dataGridViewLinkedPeptides.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridViewLinkedPeptides_CellContentClick);
             this.dataGridViewLinkedPeptides.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridViewLinkedPeptides_CellEndEdit);
             this.dataGridViewLinkedPeptides.CellErrorTextNeeded += new System.Windows.Forms.DataGridViewCellErrorTextNeededEventHandler(this.dataGridViewLinkedPeptides_CellErrorTextNeeded);
+            this.dataGridViewLinkedPeptides.CellToolTipTextNeeded += new System.Windows.Forms.DataGridViewCellToolTipTextNeededEventHandler(this.dataGridViewLinkedPeptides_CellToolTipTextNeeded);
             // 
             // colPeptideSequence
             // 
@@ -112,6 +113,7 @@
             // 
             // dataGridViewCrosslinks
             // 
+            resources.ApplyResources(this.dataGridViewCrosslinks, "dataGridViewCrosslinks");
             this.dataGridViewCrosslinks.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
             this.dataGridViewCrosslinks.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataGridViewCrosslinks.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
@@ -120,7 +122,6 @@
             this.colAminoAcid1,
             this.colPeptide2,
             this.colAminoAcid2});
-            resources.ApplyResources(this.dataGridViewCrosslinks, "dataGridViewCrosslinks");
             this.dataGridViewCrosslinks.Name = "dataGridViewCrosslinks";
             this.dataGridViewCrosslinks.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridViewCrosslinks_CellEndEdit);
             this.dataGridViewCrosslinks.CellErrorTextNeeded += new System.Windows.Forms.DataGridViewCellErrorTextNeededEventHandler(this.dataGridViewCrosslinks_CellErrorTextNeeded);

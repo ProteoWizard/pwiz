@@ -801,5 +801,13 @@ namespace pwiz.Skyline.EditUI
         {
             UpdateCrosslinkerErrors();
         }
+
+        private void dataGridViewLinkedPeptides_CellToolTipTextNeeded(object sender, DataGridViewCellToolTipTextNeededEventArgs e)
+        {
+            if (e.ColumnIndex == colModificationsButton.Index)
+            {
+                e.ToolTipText = "Edit Modifications";
+            }
+        }
     }
 }

@@ -154,7 +154,7 @@
     <value>706, 115</value>
   </data>
   <data name="dataGridViewLinkedPeptides.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
+    <value>1</value>
   </data>
   <data name="&gt;&gt;dataGridViewLinkedPeptides.Name" xml:space="preserve">
     <value>dataGridViewLinkedPeptides</value>
@@ -181,7 +181,7 @@
     <value>86, 13</value>
   </data>
   <data name="lblLinkedPeptides.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
+    <value>0</value>
   </data>
   <data name="lblLinkedPeptides.Text" xml:space="preserve">
     <value>Linked Peptides:</value>
@@ -223,7 +223,7 @@
     <value>57, 13</value>
   </data>
   <data name="lblCrosslinks.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
+    <value>0</value>
   </data>
   <data name="lblCrosslinks.Text" xml:space="preserve">
     <value>Crosslinks:</value>
@@ -239,6 +239,9 @@
   </data>
   <data name="&gt;&gt;lblCrosslinks.ZOrder" xml:space="preserve">
     <value>0</value>
+  </data>
+  <data name="dataGridViewCrosslinks.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
   </data>
   <metadata name="colCrosslinker.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -277,7 +280,7 @@
     <value>706, 115</value>
   </data>
   <data name="dataGridViewCrosslinks.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
+    <value>1</value>
   </data>
   <data name="&gt;&gt;dataGridViewCrosslinks.Name" xml:space="preserve">
     <value>dataGridViewCrosslinks</value>
@@ -310,7 +313,7 @@
     <value>148</value>
   </data>
   <data name="splitContainer1.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
+    <value>2</value>
   </data>
   <data name="&gt;&gt;splitContainer1.Name" xml:space="preserve">
     <value>splitContainer1</value>
@@ -337,7 +340,7 @@
     <value>75, 23</value>
   </data>
   <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
+    <value>4</value>
   </data>
   <data name="btnCancel.Text" xml:space="preserve">
     <value>Cancel</value>
@@ -367,7 +370,7 @@
     <value>75, 23</value>
   </data>
   <data name="btnOk.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
+    <value>3</value>
   </data>
   <data name="btnOk.Text" xml:space="preserve">
     <value>OK</value>
@@ -397,7 +400,7 @@
     <value>82, 13</value>
   </data>
   <data name="lblTitle.TabIndex" type="System.Int32, mscorlib">
-    <value>10</value>
+    <value>0</value>
   </data>
   <data name="lblTitle.Text" xml:space="preserve">
     <value>Primary peptide:</value>
@@ -421,7 +424,7 @@
     <value>260, 20</value>
   </data>
   <data name="tbxPrimaryPeptide.TabIndex" type="System.Int32, mscorlib">
-    <value>11</value>
+    <value>1</value>
   </data>
   <data name="&gt;&gt;tbxPrimaryPeptide.Name" xml:space="preserve">
     <value>tbxPrimaryPeptide</value>
