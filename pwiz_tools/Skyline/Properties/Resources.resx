@@ -11304,4 +11304,7 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
     <value>Unable to convert crosslinks in {0} to document format {1}.</value>
     <comment>{0} is a peptide sequence, and {1} is a version number (e.g. 20.2)</comment>
   </data>
+  <data name="EditLinkedPeptidesDlg_dataGridViewLinkedPeptides_CellToolTipTextNeeded_Edit_Modifications" xml:space="preserve">
+    <value>Edit Modifications</value>
+  </data>
 </root>

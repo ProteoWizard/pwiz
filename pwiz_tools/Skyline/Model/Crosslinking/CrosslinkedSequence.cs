@@ -28,9 +28,10 @@ namespace pwiz.Skyline.Model.Crosslinking
     /// <summary>
     /// A list of <see cref="ModifiedSequence"/> joined together with crosslinkers.
     /// </summary>
-    public class CrosslinkedSequence
+    public class CrosslinkedSequence : ProteomicSequence
     {
-        public CrosslinkedSequence(IEnumerable<ModifiedSequence> peptides,
+
+        public CrosslinkedSequence(IEnumerable<ProteomicSequence> peptides,
             IEnumerable<Crosslink> crosslinks)
         {
             Peptides = ImmutableList.ValueOf(peptides);
@@ -48,23 +49,23 @@ namespace pwiz.Skyline.Model.Crosslinking
             return new CrosslinkedSequence(modifiedSequences, peptideStructure.Crosslinks);
         }
 
-        public ImmutableList<ModifiedSequence> Peptides { get; private set; }
+        public ImmutableList<ProteomicSequence> Peptides { get; private set; }
         public ImmutableList<Crosslink> Crosslinks { get; private set; }
 
         public override string ToString()
         {
-            return Format(sequence => sequence.ToString(), ModifiedSequence.FormatFullName);
+            return FormatDefault();
         }
 
-        public string FullNames
+        public override string FullNames
         {
             get
             {
-                return Format(sequence => sequence.FullNames, ModifiedSequence.FormatFullName);
+                return Format(sequence => sequence.FullNames, FormatFullName);
             }
         }
 
-        public string MonoisotopicMasses
+        public override string MonoisotopicMasses
         {
             get
             {
@@ -72,7 +73,7 @@ namespace pwiz.Skyline.Model.Crosslinking
                     FormatMassModificationFunc(MassType.Monoisotopic, true));
             }
         }
-        public string AverageMasses
+        public override string AverageMasses
         {
             get
             {
@@ -81,11 +82,30 @@ namespace pwiz.Skyline.Model.Crosslinking
             }
         }
 
-        private static Func<ModifiedSequence.Modification, string> FormatMassModificationFunc(MassType massType, bool fullPrecision)
+        public override string ThreeLetterCodes
+        {
+            get { return Format(sequence => sequence.ThreeLetterCodes, FormatThreeLetterCode); }
+        }
+
+        public override string UnimodIds
+        {
+            get
+            {
+                // Consider(nicksh): Should the crosslinker be formatted with the unimod id as well?
+                return Format(sequence => sequence.UnimodIds, FormatFullName);
+            }
+        }
+
+        public override string FormatDefault()
+        {
+            return Format(sequence => sequence.FormatDefault(), FormatFullName);
+        }
+
+        private static Func<Modification, string> FormatMassModificationFunc(MassType massType, bool fullPrecision)
         {
             return mod =>
             {
-                string str = ModifiedSequence.FormatMassModification(new[] {mod}, massType, fullPrecision);
+                string str = FormatMassModification(new[] {mod}, massType, fullPrecision);
                 if (string.IsNullOrEmpty(str))
                 {
                     return string.Empty;
@@ -95,8 +115,8 @@ namespace pwiz.Skyline.Model.Crosslinking
             };
         }
 
-        private string Format(Func<ModifiedSequence, string> sequenceFormatter,
-            Func<ModifiedSequence.Modification, string> modificationFormatter)
+        private string Format(Func<ProteomicSequence, string> sequenceFormatter,
+            Func<Modification, string> modificationFormatter)
         {
             StringBuilder stringBuilder = new StringBuilder();
             string strHyphen = string.Empty;
@@ -111,7 +131,7 @@ namespace pwiz.Skyline.Model.Crosslinking
             {
                 stringBuilder.Append(@"[");
                 var staticMod = crosslink.Crosslinker;
-                var modification = new ModifiedSequence.Modification(new ExplicitMod(-1, staticMod),
+                var modification = new Modification(new ExplicitMod(-1, staticMod),
                     staticMod.MonoisotopicMass ?? 0, staticMod.AverageMass ?? 0);
                 stringBuilder.Append(modificationFormatter(modification));
                 stringBuilder.Append(@"@");

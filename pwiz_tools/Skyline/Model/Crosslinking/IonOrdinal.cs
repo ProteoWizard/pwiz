@@ -159,7 +159,7 @@ namespace pwiz.Skyline.Model.Crosslinking
             {
                 return 0;
             }
-            int result = -IsEmpty.CompareTo(ionFragment.IsEmpty);
+            int result = IsEmpty.CompareTo(ionFragment.IsEmpty);
             if (result == 0)
             {
                 result = IonTypeOrder.CompareTo(ionFragment.IonTypeOrder);

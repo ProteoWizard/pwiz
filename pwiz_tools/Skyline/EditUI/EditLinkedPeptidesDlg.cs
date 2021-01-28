@@ -806,7 +806,7 @@ namespace pwiz.Skyline.EditUI
         {
             if (e.ColumnIndex == colModificationsButton.Index)
             {
-                e.ToolTipText = "Edit Modifications";
+                e.ToolTipText = Resources.EditLinkedPeptidesDlg_dataGridViewLinkedPeptides_CellToolTipTextNeeded_Edit_Modifications;
             }
         }
     }
