@@ -704,15 +704,23 @@ namespace SkylineBatch
                 throw new ArgumentException(Resources.ConfigManager_ExportConfigs_Could_not_save_configurations_to_ + Environment.NewLine +
                                             filePath + Environment.NewLine +
                                             Resources.ConfigManager_ExportConfigs_Please_provide_a_path_to_a_file_inside_an_existing_folder_);
-            var savingConfigs = new ConfigList();
-            foreach(int index in indiciesToSave)
-                savingConfigs.Add(_configList[index]);
-            var tempSettings = new Settings();
-            tempSettings.ConfigList = savingConfigs;
-            tempSettings.Save();
-            var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal);
-            config.SaveAs(filePath);
-            Settings.Default.Save();
+
+            using (var file = File.Create(filePath))
+            {
+                using (var streamWriter = new StreamWriter(file))
+                {
+                    XmlWriterSettings settings = new XmlWriterSettings();
+                    settings.Indent = true;
+                    settings.NewLineChars = Environment.NewLine;
+                    using (XmlWriter writer = XmlWriter.Create(streamWriter, settings))
+                    {
+                        writer.WriteStartElement("ConfigList");
+                        foreach (int index in indiciesToSave)
+                            _configList[index].WriteXml(writer);
+                        writer.WriteEndElement();
+                    }
+                }
+            }
         }
 
         public void AddRootReplacement(string oldRoot, string newRoot)
