@@ -73,7 +73,7 @@ namespace SkylineBatch
         private void btnBrowse_Click(object sender, EventArgs e)
         {
             var initialDirectory = _lastUsedPath;
-            while (!Directory.Exists(initialDirectory) || initialDirectory == string.Empty)
+            while (!Directory.Exists(initialDirectory) && !string.IsNullOrEmpty(initialDirectory))
                 initialDirectory = Path.GetDirectoryName(initialDirectory);
             
             if (_folder)
