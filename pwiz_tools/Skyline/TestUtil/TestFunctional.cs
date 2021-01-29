@@ -1524,6 +1524,22 @@ namespace pwiz.SkylineTestUtil
             if (Equals(expected, actual))
                 return;
 
+            if (ForceMzml)
+            {
+                // If the only difference is in the mention of a raw file extension, ignore that
+                var extMzml = @".mzml";
+                var actualParts = actual.ToLowerInvariant().Split(new[] {extMzml}, StringSplitOptions.None);
+                if (actualParts.Length > 1)
+                {
+                    var index = expected.IndexOf(actualParts[1], StringComparison.InvariantCultureIgnoreCase);
+                    var extExpected = expected.Substring(actualParts[0].Length, index - actualParts[0].Length);
+                    if (expected.Replace(extExpected, extMzml).Equals(actual, StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        return;
+                    }
+                }
+            }
+
             // They are not equal. So, report an intelligible error and potentially copy
             // a new expected file to the project if in record mode.
             if (!IsRecordAuditLogForTutorials)

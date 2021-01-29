@@ -9,7 +9,7 @@ Summary   : 已添加谱图库“TestDdaTutorial”
 All Info  :
 已添加谱图库“TestDdaTutorial”
 建立谱图库 > 截止值 是 "0.95"
-建立谱图库 > 搜索文件 : 包含 "QE_140221_01_UPS1_100fmolspiked.mzid"
+建立谱图库 > 搜索文件 : 包含 "QE_140221_01_UPS1_100fmolspiked.mzid.gz"
 建立谱图库 > iRT 标准肽段 是 无
 建立谱图库 > 包含不明确匹配项 是 假
 建立谱图库 > 文档肽段筛选器 是 假
@@ -17,7 +17,7 @@ All Info  :
 Extra Info: 截止值 = "0.95",
 搜索文件 = 
 [
-    "QE_140221_01_UPS1_100fmolspiked.mzid"
+    "QE_140221_01_UPS1_100fmolspiked.mzid.gz"
 ],
 iRT 标准肽段 = 无,
 包含不明确匹配项 = 假,
