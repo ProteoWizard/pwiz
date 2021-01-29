@@ -121,6 +121,7 @@ struct PWIZ_API_DECL RawData
           Info(Reader),
           ChromatogramReader(Reader),
           PeakPicker(rawpath, ilr),
+          workingDriftTimeFunctionIndex_(-1),
           rawpath_(rawpath),
           numSpectra_(0),
           hasProfile_(false),
@@ -188,7 +189,18 @@ struct PWIZ_API_DECL RawData
 
     double GetDriftTime(int functionIndex, int driftBin) const
     {
-        return Info.GetDriftTime(functionIndex, driftBin);
+        if (workingDriftTimeFunctionIndex_ < 0)
+        {
+            // according to a MassLynx SDK developer, all functions will return the same drift time for a given scan number,
+            // and we've found some files that will throw errors when asking for drift time from functions not listed in _extern.inf,
+            // so we just try all functions once until we find one that works, then use that one all the time (no matter what functionIndex is passed in)
+            for (int function : functionIndexList)
+            {
+                try { Info.GetDriftTime(function, driftBin); workingDriftTimeFunctionIndex_ = function; break; }
+                catch (...) {}
+            }
+        }
+        return Info.GetDriftTime(workingDriftTimeFunctionIndex_, driftBin);
     }
 
     bool HasCcsCalibration() const
@@ -367,6 +379,7 @@ struct PWIZ_API_DECL RawData
     MassLynxLockMassProcessor LockMass;
     mutable MassLynxRawProcessorWithProgress PeakPicker;
     mutable boost::shared_ptr<RawData> centroidRaw_;
+    mutable int workingDriftTimeFunctionIndex_;
 
     string rawpath_, empty_;
     vector<int> functionIndexList;
