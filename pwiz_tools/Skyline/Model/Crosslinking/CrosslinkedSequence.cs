@@ -30,7 +30,6 @@ namespace pwiz.Skyline.Model.Crosslinking
     /// </summary>
     public class CrosslinkedSequence : ProteomicSequence
     {
-
         public CrosslinkedSequence(IEnumerable<ProteomicSequence> peptides,
             IEnumerable<Crosslink> crosslinks)
         {
@@ -61,7 +60,7 @@ namespace pwiz.Skyline.Model.Crosslinking
         {
             get
             {
-                return Format(sequence => sequence.FullNames, FormatFullName);
+                return Format(sequence => sequence.FullNames, ModifiedSequence.FormatFullName);
             }
         }
 
@@ -84,7 +83,7 @@ namespace pwiz.Skyline.Model.Crosslinking
 
         public override string ThreeLetterCodes
         {
-            get { return Format(sequence => sequence.ThreeLetterCodes, FormatThreeLetterCode); }
+            get { return Format(sequence => sequence.ThreeLetterCodes, ModifiedSequence.FormatThreeLetterCode); }
         }
 
         public override string UnimodIds
@@ -92,20 +91,20 @@ namespace pwiz.Skyline.Model.Crosslinking
             get
             {
                 // Consider(nicksh): Should the crosslinker be formatted with the unimod id as well?
-                return Format(sequence => sequence.UnimodIds, FormatFullName);
+                return Format(sequence => sequence.UnimodIds, ModifiedSequence.FormatFullName);
             }
         }
 
         public override string FormatDefault()
         {
-            return Format(sequence => sequence.FormatDefault(), FormatFullName);
+            return Format(sequence => sequence.FormatDefault(), ModifiedSequence.FormatFullName);
         }
 
-        private static Func<Modification, string> FormatMassModificationFunc(MassType massType, bool fullPrecision)
+        private static Func<ModifiedSequence.Modification, string> FormatMassModificationFunc(MassType massType, bool fullPrecision)
         {
             return mod =>
             {
-                string str = FormatMassModification(new[] {mod}, massType, fullPrecision);
+                string str = ModifiedSequence.FormatMassModification(new[] {mod}, massType, fullPrecision);
                 if (string.IsNullOrEmpty(str))
                 {
                     return string.Empty;
@@ -116,7 +115,7 @@ namespace pwiz.Skyline.Model.Crosslinking
         }
 
         private string Format(Func<ProteomicSequence, string> sequenceFormatter,
-            Func<Modification, string> modificationFormatter)
+            Func<ModifiedSequence.Modification, string> modificationFormatter)
         {
             StringBuilder stringBuilder = new StringBuilder();
             string strHyphen = string.Empty;
@@ -131,7 +130,7 @@ namespace pwiz.Skyline.Model.Crosslinking
             {
                 stringBuilder.Append(@"[");
                 var staticMod = crosslink.Crosslinker;
-                var modification = new Modification(new ExplicitMod(-1, staticMod),
+                var modification = new ModifiedSequence.Modification(new ExplicitMod(-1, staticMod),
                     staticMod.MonoisotopicMass ?? 0, staticMod.AverageMass ?? 0);
                 stringBuilder.Append(modificationFormatter(modification));
                 stringBuilder.Append(@"@");

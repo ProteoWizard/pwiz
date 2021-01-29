@@ -683,7 +683,7 @@ namespace pwiz.Skyline.Model.Prosit.Models
                 }
 
                 var unmodSeq = seq.ToString();
-                var mods = explicitMods.Select(mod => ProteomicSequence.MakeModification(unmodSeq, mod));
+                var mods = explicitMods.Select(mod => ModifiedSequence.MakeModification(unmodSeq, mod));
                 result[i] = new ModifiedSequence(seq.ToString(), mods, MassType.Monoisotopic);
                 seq.Clear();
             }
