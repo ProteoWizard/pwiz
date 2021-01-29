@@ -563,6 +563,11 @@ namespace SkylineBatch
             return AlertDlg.ShowQuestion(this, message);
         }
 
+        public DialogResult DisplayLargeQuestion(string message)
+        {
+            return AlertDlg.ShowLargeQuestion(this, message);
+        }
+
         #endregion
 
     }
@@ -613,5 +618,6 @@ namespace SkylineBatch
         void DisplayInfo(string message);
         void DisplayErrorWithException(string message, Exception exception);
         DialogResult DisplayQuestion(string message);
+        DialogResult DisplayLargeQuestion(string message);
     }
 }

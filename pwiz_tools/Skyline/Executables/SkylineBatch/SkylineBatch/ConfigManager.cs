@@ -365,19 +365,42 @@ namespace SkylineBatch
                              Resources.ConfigManager_RunAll_Please_wait_until_the_current_run_is_finished_);
                 return;
             }
-            UpdateIsRunning(true);
-
-            lock (_loggerLock)
-            {
-                var oldLogger = _logger.Archive();
-                if (oldLogger != null)
-                    _oldLogs.Insert(0, oldLogger);
-                UpdateUiLogs();
-            }
 
             string nextConfig;
             lock (_lock)
             {
+                // Check if files will be overwritten by run
+                var overwriteInfo = "";
+                if (startStep == 1) overwriteInfo = Resources.ConfigManager_RunAllEnabled_results_files;
+                if (startStep == 2) overwriteInfo = Resources.ConfigManager_RunAllEnabled_chromatagram_files;
+                if (startStep == 3) overwriteInfo = Resources.ConfigManager_RunAllEnabled_exported_reports;
+                if (startStep == 4) overwriteInfo = Resources.ConfigManager_RunAllEnabled_R_script_outputs;
+                var overwriteMessage = new StringBuilder();
+                overwriteMessage.Append(string.Format(
+                    Resources.ConfigManager_RunAllEnabled_Running_the_enabled_configurations_from_step__0__would_overwrite_the_following__1__,
+                    startStep, overwriteInfo)).AppendLine().AppendLine();
+                var showOverwriteMessage = false;
+
+                foreach (var config in _configList)
+                {
+                    if (!config.Enabled) continue;
+                    var tab = "      ";
+                    var configurationHeader = tab + string.Format(Resources.ConfigManager_RunAllEnabled_Configuration___0___, config.Name)  + Environment.NewLine;
+                    var willOverwrite = config.MainSettings.RunWillOverwrite(startStep, configurationHeader, out StringBuilder message);
+                    if (willOverwrite)
+                    {
+                        overwriteMessage.Append(message).AppendLine();
+                        showOverwriteMessage = true;
+                    }
+                }
+                // Ask if run should start if files will be overwritten
+                overwriteMessage.Append(Resources.ConfigManager_RunAllEnabled_Do_you_want_to_continue_);
+                if (showOverwriteMessage)
+                {
+                    if (DisplayLargeQuestion(overwriteMessage.ToString()) != DialogResult.OK)
+                        return;
+                }
+                // Checks if there are enabled configs and starts them waiting
                 var hasEnabledConfigs = false;
                 foreach (var runner in _configRunners.Values)
                 {
@@ -387,15 +410,24 @@ namespace SkylineBatch
                         hasEnabledConfigs = true;
                     }
                 }
-
                 if (!hasEnabledConfigs)
                 {
-                    DisplayError("There are no enabled configurations to run." + Environment.NewLine +
-                                 "Please check the checkbox next to one or more configurations.");
+                    DisplayError(Resources.ConfigManager_RunAllEnabled_There_are_no_enabled_configurations_to_run_ + Environment.NewLine +
+                                 Resources.ConfigManager_RunAllEnabled_Please_check_the_checkbox_next_to_one_or_more_configurations_);
                     return;
                 }
 
                 nextConfig = GetNextWaitingConfig();
+            }
+
+            UpdateIsRunning(true);
+
+            lock (_loggerLock)
+            {
+                var oldLogger = _logger.Archive();
+                if (oldLogger != null)
+                    _oldLogs.Insert(0, oldLogger);
+                UpdateUiLogs();
             }
 
             while (!string.IsNullOrEmpty(nextConfig))
@@ -559,6 +591,13 @@ namespace SkylineBatch
             if (!_runningUi)
                 return DialogResult.Yes;
             return _uiControl.DisplayQuestion(message);
+        }
+
+        private DialogResult DisplayLargeQuestion(string message)
+        {
+            if (!_runningUi)
+                return DialogResult.Yes;
+            return _uiControl.DisplayLargeQuestion(message);
         }
 
         private void UpdateUiLogs()

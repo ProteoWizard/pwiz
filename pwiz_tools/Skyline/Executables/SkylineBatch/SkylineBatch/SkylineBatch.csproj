@@ -28,8 +28,8 @@
     <PublisherName>University of Washington</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>393</ApplicationRevision>
-    <ApplicationVersion>20.2.0.393</ApplicationVersion>
+    <ApplicationRevision>395</ApplicationRevision>
+    <ApplicationVersion>20.2.0.395</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>

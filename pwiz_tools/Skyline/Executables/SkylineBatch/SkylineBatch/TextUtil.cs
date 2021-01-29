@@ -16,7 +16,9 @@ namespace SkylineBatch
         public const string EXT_XML = ".xml";
         public const string EXT_SKY = ".sky";
         public const string EXT_SKYR = ".skyr";
+        public const string EXT_SKYD = ".skyd";
         public const string EXT_R = ".R";
+        public const string EXT_CSV = ".csv";
 
 
         public static string FILTER_XML

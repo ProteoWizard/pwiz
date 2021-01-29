@@ -17,6 +17,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Xml;
@@ -126,6 +127,71 @@ namespace SkylineBatch
                 TextUtil.TryReplaceStart(oldRoot, newRoot, DataFolderPath, out string replacedDataPath);
             pathReplacedMainSettings = new MainSettings(replacedTemplatePath, replacedAnalysisPath, replacedDataPath, ReplicateNamingPattern);
             return templateReplaced || analysisReplaced || dataReplaced;
+        }
+
+        public bool RunWillOverwrite(int startStep, string configHeader, out StringBuilder message)
+        {
+            var tab = "      ";
+            message = new StringBuilder(configHeader);
+            var analysisFolderName = Path.GetFileName(AnalysisFolderPath);
+            switch (startStep)
+            {
+                case 1:
+                    var resultsFile = GetResultsFilePath();
+                    var resultsFileIdentifyer = Path.Combine(analysisFolderName, Path.GetFileName(resultsFile));
+                    if (File.Exists(resultsFile) && new FileInfo(TemplateFilePath).Length != new FileInfo(resultsFile).Length)
+                    {
+                        message.Append(tab + tab)
+                            .Append(resultsFileIdentifyer)
+                            .AppendLine();
+                        return true;
+                    }
+                    break;
+                case 2:
+                    var templateSkyds = GetFilesInFolder(Path.GetDirectoryName(TemplateFilePath), TextUtil.EXT_SKYD);
+                    var resultsSkyds = GetFilesInFolder(AnalysisFolderPath, TextUtil.EXT_SKYD);
+                    var templateSkydSize = templateSkyds.Count == 0 ? 0 : new FileInfo(templateSkyds[0]).Length;
+                    var resultsSkydSize = resultsSkyds.Count == 0 ? 0 : new FileInfo(resultsSkyds[0]).Length;
+                    if (templateSkydSize < resultsSkydSize)
+                    {
+                        message.Append(tab + tab)
+                            .Append(string.Format(Path.Combine(analysisFolderName, Path.GetFileName(resultsSkyds[0]))))
+                            .AppendLine();
+                        return true;
+                    }
+                    break;
+                case 3:
+                    var reportFiles = GetFilesInFolder(AnalysisFolderPath, TextUtil.EXT_CSV);
+                    if (reportFiles.Count > 0)
+                    {
+                        foreach (var reportCsv in reportFiles)
+                        {
+                            message.Append(tab + tab).Append(Path.GetFileName(reportCsv)).AppendLine();
+                        }
+                        return true;
+                    }
+                    break;
+                case 4:
+                    // pass
+                    break;
+                default:
+                    throw new Exception(startStep + " is not a valid start step.");
+            }
+            return false;
+        }
+
+
+        private List<string> GetFilesInFolder(string folder, string fileType)
+        {
+            var filesWithType = new List<string>();
+            var allFiles = new DirectoryInfo(folder).GetFiles();
+            foreach (var file in allFiles)
+            {
+                if (file.Name.EndsWith(fileType))
+                    filesWithType.Add(file.FullName);
+            }
+
+            return filesWithType;
         }
 
         #region Read/Write XML

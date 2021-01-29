@@ -393,6 +393,89 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to chromatagram files.
+        /// </summary>
+        internal static string ConfigManager_RunAllEnabled_chromatagram_files {
+            get {
+                return ResourceManager.GetString("ConfigManager_RunAllEnabled_chromatagram_files", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Configuration &quot;{0}&quot; .
+        /// </summary>
+        internal static string ConfigManager_RunAllEnabled_Configuration___0___ {
+            get {
+                return ResourceManager.GetString("ConfigManager_RunAllEnabled_Configuration___0___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Do you want to continue?.
+        /// </summary>
+        internal static string ConfigManager_RunAllEnabled_Do_you_want_to_continue_ {
+            get {
+                return ResourceManager.GetString("ConfigManager_RunAllEnabled_Do_you_want_to_continue_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to exported reports.
+        /// </summary>
+        internal static string ConfigManager_RunAllEnabled_exported_reports {
+            get {
+                return ResourceManager.GetString("ConfigManager_RunAllEnabled_exported_reports", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please check the checkbox next to one or more configurations..
+        /// </summary>
+        internal static string ConfigManager_RunAllEnabled_Please_check_the_checkbox_next_to_one_or_more_configurations_ {
+            get {
+                return ResourceManager.GetString("ConfigManager_RunAllEnabled_Please_check_the_checkbox_next_to_one_or_more_configu" +
+                        "rations_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to R script outputs.
+        /// </summary>
+        internal static string ConfigManager_RunAllEnabled_R_script_outputs {
+            get {
+                return ResourceManager.GetString("ConfigManager_RunAllEnabled_R_script_outputs", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to results files.
+        /// </summary>
+        internal static string ConfigManager_RunAllEnabled_results_files {
+            get {
+                return ResourceManager.GetString("ConfigManager_RunAllEnabled_results_files", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Running the enabled configurations from step {0} would overwrite the following {1}:.
+        /// </summary>
+        internal static string ConfigManager_RunAllEnabled_Running_the_enabled_configurations_from_step__0__would_overwrite_the_following__1__ {
+            get {
+                return ResourceManager.GetString("ConfigManager_RunAllEnabled_Running_the_enabled_configurations_from_step__0__woul" +
+                        "d_overwrite_the_following__1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There are no enabled configurations to run..
+        /// </summary>
+        internal static string ConfigManager_RunAllEnabled_There_are_no_enabled_configurations_to_run_ {
+            get {
+                return ResourceManager.GetString("ConfigManager_RunAllEnabled_There_are_no_enabled_configurations_to_run_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to There is no configuration at index: {0}.
         /// </summary>
         internal static string ConfigManager_SelectConfig_There_is_no_configuration_at_index___0_ {

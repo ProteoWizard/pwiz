@@ -50,6 +50,10 @@
             this.comboLogList = new System.Windows.Forms.ComboBox();
             this.textBoxLog = new System.Windows.Forms.RichTextBox();
             this.tabFront = new System.Windows.Forms.TabPage();
+            this.listViewConfigs = new SkylineBatch.MyListView();
+            this.listViewConfigName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.listViewModified = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.listViewStatus = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.labelSavedConfigurations = new System.Windows.Forms.Label();
             this.panel2 = new System.Windows.Forms.Panel();
             this.btnRunOptions = new System.Windows.Forms.Button();
@@ -67,10 +71,6 @@
             this.btnEdit = new System.Windows.Forms.Button();
             this.btnCopy = new System.Windows.Forms.Button();
             this.tabMain = new System.Windows.Forms.TabControl();
-            this.listViewConfigs = new SkylineBatch.MyListView();
-            this.listViewConfigName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.listViewModified = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.listViewStatus = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.batchRunDropDown.SuspendLayout();
             this.tabLog.SuspendLayout();
             this.tabFront.SuspendLayout();
@@ -222,6 +222,38 @@
             resources.ApplyResources(this.tabFront, "tabFront");
             this.tabFront.Name = "tabFront";
             // 
+            // listViewConfigs
+            // 
+            resources.ApplyResources(this.listViewConfigs, "listViewConfigs");
+            this.listViewConfigs.CheckBoxes = true;
+            this.listViewConfigs.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.listViewConfigName,
+            this.listViewModified,
+            this.listViewStatus});
+            this.listViewConfigs.FullRowSelect = true;
+            this.listViewConfigs.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
+            this.listViewConfigs.HideSelection = false;
+            this.listViewConfigs.MultiSelect = false;
+            this.listViewConfigs.Name = "listViewConfigs";
+            this.listViewConfigs.UseCompatibleStateImageBehavior = false;
+            this.listViewConfigs.View = System.Windows.Forms.View.Details;
+            this.listViewConfigs.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.listViewConfigs_ItemCheck);
+            this.listViewConfigs.ItemSelectionChanged += new System.Windows.Forms.ListViewItemSelectionChangedEventHandler(this.listViewConfigs_PreventItemSelectionChanged);
+            this.listViewConfigs.DoubleClick += new System.EventHandler(this.HandleEditEvent);
+            this.listViewConfigs.MouseUp += new System.Windows.Forms.MouseEventHandler(this.listViewConfigs_MouseUp);
+            // 
+            // listViewConfigName
+            // 
+            resources.ApplyResources(this.listViewConfigName, "listViewConfigName");
+            // 
+            // listViewModified
+            // 
+            resources.ApplyResources(this.listViewModified, "listViewModified");
+            // 
+            // listViewStatus
+            // 
+            resources.ApplyResources(this.listViewStatus, "listViewStatus");
+            // 
             // labelSavedConfigurations
             // 
             resources.ApplyResources(this.labelSavedConfigurations, "labelSavedConfigurations");
@@ -275,9 +307,9 @@
             this.btnUpArrow,
             this.btnDownArrow,
             this.btnDelete,
-            this.btnOpenAnalysis,
             this.btnOpenTemplate,
-            this.btnOpenResults});
+            this.btnOpenResults,
+            this.btnOpenAnalysis});
             this.toolStrip1.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.VerticalStackWithOverflow;
             this.toolStrip1.Name = "toolStrip1";
             // 
@@ -357,38 +389,6 @@
             this.tabMain.Controls.Add(this.tabLog);
             this.tabMain.Name = "tabMain";
             this.tabMain.SelectedIndex = 0;
-            // 
-            // listViewConfigs
-            // 
-            resources.ApplyResources(this.listViewConfigs, "listViewConfigs");
-            this.listViewConfigs.CheckBoxes = true;
-            this.listViewConfigs.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.listViewConfigName,
-            this.listViewModified,
-            this.listViewStatus});
-            this.listViewConfigs.FullRowSelect = true;
-            this.listViewConfigs.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
-            this.listViewConfigs.HideSelection = false;
-            this.listViewConfigs.MultiSelect = false;
-            this.listViewConfigs.Name = "listViewConfigs";
-            this.listViewConfigs.UseCompatibleStateImageBehavior = false;
-            this.listViewConfigs.View = System.Windows.Forms.View.Details;
-            this.listViewConfigs.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.listViewConfigs_ItemCheck);
-            this.listViewConfigs.ItemSelectionChanged += new System.Windows.Forms.ListViewItemSelectionChangedEventHandler(this.listViewConfigs_PreventItemSelectionChanged);
-            this.listViewConfigs.DoubleClick += new System.EventHandler(this.HandleEditEvent);
-            this.listViewConfigs.MouseUp += new System.Windows.Forms.MouseEventHandler(this.listViewConfigs_MouseUp);
-            // 
-            // listViewConfigName
-            // 
-            resources.ApplyResources(this.listViewConfigName, "listViewConfigName");
-            // 
-            // listViewModified
-            // 
-            resources.ApplyResources(this.listViewModified, "listViewModified");
-            // 
-            // listViewStatus
-            // 
-            resources.ApplyResources(this.listViewStatus, "listViewStatus");
             // 
             // MainForm
             // 

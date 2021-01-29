@@ -38,7 +38,7 @@ namespace SkylineBatch
         private string _message;
         private string _detailMessage;
 
-        private AlertDlg(string message, Image icon)
+        private AlertDlg(string message, Image icon, bool fitToText = false)
         {
             InitializeComponent();
             _originalFormHeight = Height;
@@ -47,6 +47,10 @@ namespace SkylineBatch
             btnMoreInfo.Parent.Controls.Remove(btnMoreInfo);
             Text = Program.AppName();
             pictureBox1.Image = icon;
+            if (fitToText)
+            {
+                Paint += FitWidthToMessage;
+            }
         }
 
         public static void ShowWarning(IWin32Window parent, string message)
@@ -64,6 +68,12 @@ namespace SkylineBatch
         public static DialogResult ShowQuestion(IWin32Window parent, string message)
         {
             return Show(parent, message, SystemIcons.Question.ToBitmap(), MessageBoxButtons.YesNo);
+        }
+
+        public static DialogResult ShowLargeQuestion(IWin32Window parent, string message)
+        {
+            var questionDlg = new AlertDlg(message, SystemIcons.Question.ToBitmap(), true);
+            return questionDlg.ShowAndDispose(parent, MessageBoxButtons.OKCancel);
         }
 
         private static DialogResult Show(IWin32Window parent, string message, Image icon, MessageBoxButtons messageBoxButtons)
@@ -106,6 +116,18 @@ namespace SkylineBatch
                 splitContainer.Panel2Collapsed = false;
                 splitContainer.SplitterDistance = panel1Height;
             }
+        }
+
+        public void FitWidthToMessage(object sender, PaintEventArgs e)
+        {
+            var messageStart = labelMessage.Location.X;
+            var padding = 30;
+            string measureString = labelMessage.Text;
+            SizeF stringSize = new SizeF();
+            stringSize = e.Graphics.MeasureString(measureString, labelMessage.Font);
+            Width = messageStart + padding + (int)stringSize.Width;
+            labelMessage.MaximumSize = new Size((int)stringSize.Width, 0);
+            Paint -= FitWidthToMessage;
         }
 
         private void AddMessageBoxButtons(MessageBoxButtons messageBoxButtons) 
