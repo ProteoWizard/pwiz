@@ -963,7 +963,7 @@ namespace pwiz.Skyline.Model.Lib
                     continue;
                 }
 
-                var complexFragmentIonName = predictedTransition.ComplexFragmentIon.GetName();
+                var complexFragmentIonName = predictedTransition.ComplexFragmentIon.NeutralFragmentIon.GetName();
                 var ionType = DecideIonType(complexFragmentIonName);
                 string fragmentName = predictedTransition.ComplexFragmentIon.GetFragmentIonName();
                 var predictedIon = new MatchedFragmentIon(ionType, predictFragments.Count + 1,
@@ -985,9 +985,9 @@ namespace pwiz.Skyline.Model.Lib
             return new MoleculeMasses(predictDocNode.PrecursorMz, matchMasses).ChangePredictIonMasses(predictMasses);
         }
 
-        private IonType DecideIonType(ComplexFragmentIonName complexFragmentIon)
+        private IonType DecideIonType(IonChain complexFragmentIon)
         {
-            var allIonTypes = complexFragmentIon.EnumerateIonTypes().ToHashSet();
+            var allIonTypes = complexFragmentIon.IonTypes.ToHashSet();
             foreach (var ionType in FragmentFilterObj.IonTypesToDisplay.Prepend(IonType.precursor))
             {
                 allIonTypes.Remove(ionType);
@@ -1008,12 +1008,6 @@ namespace pwiz.Skyline.Model.Lib
             var children = transitionGroupDocNode.GetTransitions(settings, TargetInfoObj.LookupMods,
                 transitionGroupDocNode.PrecursorMz, null, null, null, FragmentFilterObj.UseFilter).Cast<DocNode>().ToList();
             return (TransitionGroupDocNode) transitionGroupDocNode.ChangeChildren(children);
-        }
-
-        public IEnumerable<IonType> GetAllIonTypes(ComplexFragmentIon complexFragmentIon)
-        {
-            return new[] {complexFragmentIon.Transition.IonType}.Concat(
-                complexFragmentIon.Children.Values.SelectMany(child => GetAllIonTypes(child)));
         }
     }
 }

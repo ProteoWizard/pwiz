@@ -16,6 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.EditUI;
@@ -93,7 +94,6 @@ AMNFS[Phospho (ST)]GSPGAVSTSPT[Phospho (ST)]QSFM[Oxidation (M)]NTLPR");
             var flatPrecursor = flatPeptide.TransitionGroups.First();
             var crosslinkedPrecursor = crosslinkedPeptide.TransitionGroups.First();
             Assert.AreEqual(flatPrecursor.PrecursorMz, crosslinkedPrecursor.PrecursorMz, DELTA);
-            ModificationSite crosslinkSite = new ModificationSite(10, crosslinkerName);
             var flatTransitionNames = flatPrecursor.Transitions.Select(tran =>
                     tran.ComplexFragmentIon.GetTargetsTreeLabel() +
                     Transition.GetChargeIndicator(tran.Transition.Adduct))
@@ -108,11 +108,11 @@ AMNFS[Phospho (ST)]GSPGAVSTSPT[Phospho (ST)]QSFM[Oxidation (M)]NTLPR");
             foreach (var transitionDocNode in flatPrecursor.Transitions)
             {
                 // AMNFSGSPGAV(11)-STSPTQSFMNTLPR(14)
-                ComplexFragmentIonName complexFragmentIonName = null;
+                IonChain complexFragmentIonName = null;
                 switch (transitionDocNode.Transition.IonType)
                 {
                     case IonType.precursor:
-                        complexFragmentIonName = ComplexFragmentIonName.PRECURSOR.AddChild(crosslinkSite, ComplexFragmentIonName.PRECURSOR);
+                        complexFragmentIonName = IonChain.FromIons(IonOrdinal.Precursor, IonOrdinal.Precursor);
                         break;
                     case IonType.b:
                         if (transitionDocNode.Transition.Ordinal == 11)
@@ -121,14 +121,12 @@ AMNFS[Phospho (ST)]GSPGAVSTSPT[Phospho (ST)]QSFM[Oxidation (M)]NTLPR");
                         }
                         if (transitionDocNode.Transition.Ordinal <= 11)
                         {
-                            complexFragmentIonName = new ComplexFragmentIonName(IonType.b, transitionDocNode.Transition.Ordinal);
+                            complexFragmentIonName = IonChain.FromIons(IonOrdinal.B(transitionDocNode.Transition.Ordinal), IonOrdinal.Empty);
                         }
                         else
                         {
-                            complexFragmentIonName = ComplexFragmentIonName.PRECURSOR.AddChild(crosslinkSite,
-                                new ComplexFragmentIonName(IonType.b, transitionDocNode.Transition.Ordinal - 11));
+                            complexFragmentIonName = IonChain.FromIons(IonOrdinal.Precursor, IonOrdinal.B(transitionDocNode.Transition.Ordinal - 11));
                         }
-
                         break;
                     case IonType.y:
                         if (transitionDocNode.Transition.Ordinal == 14)
@@ -138,13 +136,13 @@ AMNFS[Phospho (ST)]GSPGAVSTSPT[Phospho (ST)]QSFM[Oxidation (M)]NTLPR");
 
                         if (transitionDocNode.Transition.Ordinal < 14)
                         {
-                            complexFragmentIonName = ComplexFragmentIonName.ORPHAN.AddChild(crosslinkSite,
-                                new ComplexFragmentIonName(IonType.y, transitionDocNode.Transition.Ordinal));
+                            complexFragmentIonName = 
+                                IonChain.FromIons(IonOrdinal.Empty, IonOrdinal.Y(transitionDocNode.Transition.Ordinal));
                         }
                         else
                         {
-                            complexFragmentIonName = new ComplexFragmentIonName(IonType.y, transitionDocNode.Transition.Ordinal - 14)
-                                .AddChild(crosslinkSite, ComplexFragmentIonName.PRECURSOR);
+                            complexFragmentIonName = 
+                                IonChain.FromIons(IonOrdinal.Y(transitionDocNode.Transition.Ordinal - 14), IonOrdinal.Precursor);
                         }
                         break;
                 }
