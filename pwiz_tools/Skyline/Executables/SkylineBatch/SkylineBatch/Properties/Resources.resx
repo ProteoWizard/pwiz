@@ -505,4 +505,31 @@ with:
   <data name="ConfigManager_CheckConfigAtIndex_Cannot_disable___0___while_it_has_status___1_" xml:space="preserve">
     <value>Cannot disable "{0}" while it has status: {1}</value>
   </data>
+  <data name="ConfigManager_RunAllEnabled_chromatagram_files" xml:space="preserve">
+    <value>chromatagram files</value>
+  </data>
+  <data name="ConfigManager_RunAllEnabled_Configuration___0___" xml:space="preserve">
+    <value>Configuration "{0}"</value>
+  </data>
+  <data name="ConfigManager_RunAllEnabled_Do_you_want_to_continue_" xml:space="preserve">
+    <value>Do you want to continue?</value>
+  </data>
+  <data name="ConfigManager_RunAllEnabled_exported_reports" xml:space="preserve">
+    <value>exported reports</value>
+  </data>
+  <data name="ConfigManager_RunAllEnabled_Please_check_the_checkbox_next_to_one_or_more_configurations_" xml:space="preserve">
+    <value>Please check the checkbox next to one or more configurations.</value>
+  </data>
+  <data name="ConfigManager_RunAllEnabled_results_files" xml:space="preserve">
+    <value>results files</value>
+  </data>
+  <data name="ConfigManager_RunAllEnabled_Running_the_enabled_configurations_from_step__0__would_overwrite_the_following__1__" xml:space="preserve">
+    <value>Running the enabled configurations from step {0} would overwrite the following {1}:</value>
+  </data>
+  <data name="ConfigManager_RunAllEnabled_R_script_outputs" xml:space="preserve">
+    <value>R script outputs</value>
+  </data>
+  <data name="ConfigManager_RunAllEnabled_There_are_no_enabled_configurations_to_run_" xml:space="preserve">
+    <value>There are no enabled configurations to run.</value>
+  </data>
 </root>

@@ -402,7 +402,7 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Configuration &quot;{0}&quot; .
+        ///   Looks up a localized string similar to Configuration &quot;{0}&quot;.
         /// </summary>
         internal static string ConfigManager_RunAllEnabled_Configuration___0___ {
             get {
