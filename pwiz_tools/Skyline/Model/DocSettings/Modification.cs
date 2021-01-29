@@ -1071,6 +1071,7 @@ namespace pwiz.Skyline.Model.DocSettings
             get { return GetModifications(IsotopeLabelType.heavy); }
         }
 
+        [TrackChildren(defaultValues:typeof(CrosslinkStructure.DefaultValuesEmpty))]
         public CrosslinkStructure CrosslinkStructure
         {
             get; private set;

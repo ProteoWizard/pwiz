@@ -90,12 +90,15 @@ namespace pwiz.Skyline.Model.Crosslinking
         /// never try indexing into this list using a <see cref="CrosslinkSite.PeptideIndex"/>.
         /// The class <see cref="PeptideStructure"/> is designed to work better with crosslink sites.
         /// </summary>
+        [TrackChildren]
         public ImmutableList<Peptide> LinkedPeptides { get; private set; }
         /// <summary>
         /// The modifications on each of the LinkedPeptides.
         /// LinkedPeptides.Count is always equal to LinkedExplicitMods.Count
         /// </summary>
+        [TrackChildren]
         public ImmutableList<ExplicitMods> LinkedExplicitMods { get; private set; }
+        [TrackChildren]
         public ImmutableList<Crosslink> Crosslinks { get; private set; }
 
         protected bool Equals(CrosslinkStructure other)
@@ -227,6 +230,17 @@ namespace pwiz.Skyline.Model.Crosslinking
         public static ExplicitMods MakeEmptyExplicitMods(Peptide peptide)
         {
             return new ExplicitMods(peptide, ImmutableList.Empty<ExplicitMod>(), null);
+        }
+
+        public class DefaultValuesEmpty : DefaultValues
+        {
+            protected override IEnumerable<object> _values
+            {
+                get
+                {
+                    yield return EMPTY;
+                }
+            }
         }
     }
 }
