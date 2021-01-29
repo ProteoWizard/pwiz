@@ -1041,6 +1041,10 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public Peptide Peptide { get; private set; }
 
+        /// <summary>
+        /// True if the static (i.e. light) modifications were not chosen by the user, but
+        /// were put there by Skyline permuting the Document's variable modifications.
+        /// </summary>
         public bool IsVariableStaticMods { get; private set; }
 
         public bool HasNeutralLosses { get { return StaticModifications != null && StaticModifications.Any(mod => mod.Modification.HasLoss); } }

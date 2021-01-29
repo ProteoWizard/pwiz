@@ -119,6 +119,15 @@ namespace pwiz.Skyline.Model.Crosslinking
         {
             return Sites.GetEnumerator();
         }
+        /// <summary>
+        /// Returns a string representation of the crosslinked sites as used in BiblioSpec libraries:
+        /// A comma separated list of the 1-based amino acid positions that the crosslink links to
+        /// on each of the peptides.
+        /// If there are no crosslinked sites on a particular peptide, then there will be a "*" in
+        /// the comma separated list.
+        /// If there are more than one sites on a particular peptide, then the numbers will be
+        /// separated by hyphens.
+        /// </summary>
         public override string ToString()
         {
             StringBuilder stringBuilder = new StringBuilder();

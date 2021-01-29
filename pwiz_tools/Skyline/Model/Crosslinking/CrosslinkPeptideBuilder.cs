@@ -45,7 +45,7 @@ namespace pwiz.Skyline.Model.Crosslinking
         public IsotopeLabelType LabelType { get; }
 
         /// <summary>
-        /// Returns the chemical formula for this fragment and none of its children.
+        /// Returns the chemical formula for the fragment
         /// </summary>
         public MoleculeMassOffset GetFragmentFormula(IonOrdinal part)
         {
