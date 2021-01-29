@@ -274,8 +274,6 @@ namespace SkylineBatch
                     break;
                 }
             }
-            if (_configManager.HasConfigs())
-                btnCancel.Enabled = true;
             // update ui log and switch to log tab
             if (_configManager.ConfigsRunning().Count > 0)
             {
