@@ -162,6 +162,7 @@
     <Compile Include="AssociateProteinVariantTest.cs" />
     <Compile Include="BlibMoleculeListsTest.cs" />
     <Compile Include="ClusteredHeatMapTest.cs" />
+    <Compile Include="ComplexCrosslinkTest.cs" />
     <Compile Include="CrosslinkChromatogramTest.cs" />
     <Compile Include="CrosslinkingTest.cs" />
     <Compile Include="CrosslinkNeutralLossTest.cs" />

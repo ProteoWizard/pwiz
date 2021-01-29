@@ -23,6 +23,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.Collections;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Crosslinking;
@@ -236,6 +237,15 @@ namespace pwiz.Skyline.EditUI
             public int AaIndex1 { get; set; }
             public int PeptideIndex2 { get; set; }
             public int AaIndex2 { get; set; }
+
+            public IReadOnlyList<KeyValuePair<int, int>> ListSites()
+            {
+                return ImmutableList.ValueOf(new[]
+                {
+                    new KeyValuePair<int, int>(PeptideIndex1, AaIndex1),
+                    new KeyValuePair<int, int>(PeptideIndex2, AaIndex2)
+                });
+            }
         }
 
         private void dataGridViewLinkedPeptides_CellErrorTextNeeded(object sender, DataGridViewCellErrorTextNeededEventArgs e)
@@ -608,12 +618,47 @@ namespace pwiz.Skyline.EditUI
                     dataGridViewLinkedPeptides.Rows[rowIndex].Cells[colPeptideSequence.Index];
                 return;
             }
-            var peptideDocNode = new PeptideDocNode(peptide, peptideRow.ExplicitMods);
+
+            int peptideIndex = rowIndex + 1;
+            var crosslinkedSites = new Dictionary<int, StaticMod>();
+            foreach (var row in _crosslinkRows)
+            {
+                StaticMod crosslinker;
+                if (string.IsNullOrEmpty(row.Crosslinker) || !_crosslinkers.TryGetValue(row.Crosslinker, out crosslinker))
+                {
+                    continue;
+                }
+
+                foreach (var siteKvp in row.ListSites().Where(kvp=>kvp.Key == peptideIndex))
+                {
+                    int aaIndex = siteKvp.Value;
+                    if (crosslinkedSites.ContainsKey(aaIndex) || !crosslinker.IsApplicableCrosslink(peptide.Sequence, aaIndex))
+                    {
+                        continue;
+                    }
+                    crosslinkedSites.Add(aaIndex, crosslinker);
+                }
+            }
+
+            var explicitMods = peptideRow.ExplicitMods;
+            if (explicitMods == null)
+            {
+                explicitMods = GetDefaultExplicitMods(peptide, crosslinkedSites.Keys);
+            }
+
+            explicitMods = explicitMods.ChangeStaticModifications((explicitMods.StaticModifications ?? new ExplicitMod[0])
+                .Where(mod => !crosslinkedSites.ContainsKey(mod.IndexAA)).ToList());
+            explicitMods = explicitMods.ChangeCrosslinkStructure(new CrosslinkStructure(new Peptide[0],
+                crosslinkedSites.Select(kvp =>
+                    new Crosslink(kvp.Value, ImmutableList.Singleton(new CrosslinkSite(0, kvp.Key))))));
+
+
+            var peptideDocNode = new PeptideDocNode(peptide, explicitMods);
             using (var editPepModsDlg = new EditPepModsDlg(SrmSettings, peptideDocNode, false))
             {
                 if (editPepModsDlg.ShowDialog(this) == DialogResult.OK)
                 {
-                    peptideRow.ExplicitMods = editPepModsDlg.ExplicitMods;
+                    peptideRow.ExplicitMods = editPepModsDlg.ExplicitMods.ChangeCrosslinkStructure(null);
                 }
             }
         }

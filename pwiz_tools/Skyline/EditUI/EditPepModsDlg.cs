@@ -175,7 +175,8 @@ namespace pwiz.Skyline.EditUI
                         Top = top - 1,
                         Size = btnEditLinkLast.Size,
                         TabIndex = btnEditLinkLast.TabIndex + controlsPerRow,
-                        Image = btnEditLinkLast.Image
+                        Image = btnEditLinkLast.Image,
+                        Enabled = AllowEditCrosslinks
                     });
                     foreach (var labelType in _listLabelTypeHeavy)
                     {
@@ -271,6 +272,8 @@ namespace pwiz.Skyline.EditUI
 
         public bool AllowCopy { get; private set; }
 
+        public bool AllowEditCrosslinks { get { return AllowCopy; } }
+
         /// <summary>
         /// True if a copy of the currently selected peptide should be
         /// made, with the explicit modifications applied.
@@ -361,6 +364,7 @@ namespace pwiz.Skyline.EditUI
             int iSelected = -1;
             string explicitName = null;
             var listExplicitMods = ExplicitMods?.GetModifications(labelType);
+            bool crosslinkSelected = false;
             if (listExplicitMods != null)
             {
                 int indexMod = listExplicitMods.IndexOf(mod => mod.IndexAA == indexAA);
@@ -371,6 +375,10 @@ namespace pwiz.Skyline.EditUI
                     explicitName = ExplicitMods.CrosslinkStructure.Crosslinks
                         .FirstOrDefault(crosslink => crosslink.Sites.Contains(new CrosslinkSite(0, indexAA)))
                         ?.Crosslinker.Name;
+                    if (explicitName != null)
+                    {
+                        crosslinkSelected = true;
+                    }
                 }
             }
 
@@ -421,6 +429,7 @@ namespace pwiz.Skyline.EditUI
             }
             if (select)
                 combo.SelectedIndex = iSelected;
+            combo.Enabled = AllowEditCrosslinks || !crosslinkSelected;
             return iSelected;
         }
 

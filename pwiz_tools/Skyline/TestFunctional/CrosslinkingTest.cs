@@ -111,7 +111,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(()=>SkylineWindow.SaveDocument());
         }
 
-        private void SetCrosslinker(EditLinkedPeptidesDlg dlg, int rowIndex, string crosslinker, CrosslinkSite site1, CrosslinkSite site2)
+        public static void SetCrosslinker(EditLinkedPeptidesDlg dlg, int rowIndex, string crosslinker, CrosslinkSite site1, CrosslinkSite site2)
         {
             var tester = new GridTester(dlg.CrosslinksGrid);
             tester.SetCellValue(rowIndex, dlg.CrosslinkerColumn, crosslinker);
