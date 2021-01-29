@@ -199,6 +199,8 @@ struct PWIZ_API_DECL RawData
                 try { Info.GetDriftTime(function, driftBin); workingDriftTimeFunctionIndex_ = function; break; }
                 catch (...) {}
             }
+            if (workingDriftTimeFunctionIndex_ < 0)
+                throw std::runtime_error("[MassLynxRaw::GetDriftTime] error requesting drift time from all functions");
         }
         return Info.GetDriftTime(workingDriftTimeFunctionIndex_, driftBin);
     }
