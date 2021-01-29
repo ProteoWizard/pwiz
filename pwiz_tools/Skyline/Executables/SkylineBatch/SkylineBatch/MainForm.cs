@@ -40,6 +40,7 @@ namespace SkylineBatch
 
             _skylineBatchLogger = new SkylineBatchLogger(Program.AppName() + ".log", this);
             btnRunOptions.Text = char.ConvertFromUtf32(0x2BC6);
+            toolStrip1.Items.Insert(3,new ToolStripSeparator());
 
             Program.LogInfo(Resources.MainForm_MainForm_Loading_configurations_from_saved_settings_);
             _configManager = new ConfigManager(_skylineBatchLogger, this);
