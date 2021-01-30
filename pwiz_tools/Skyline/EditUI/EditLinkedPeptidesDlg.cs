@@ -171,7 +171,8 @@ namespace pwiz.Skyline.EditUI
         private void UpdateComboBoxes()
         {
             var peptideSequences = GetPeptideSequences();
-            var longestSequence = peptideSequences .Max(sequence => sequence?.Length ?? 0);
+            var longestPeptideSequence = peptideSequences.Max(sequence=>sequence?.Length ?? 0);
+            
             var peptideChoices = Enumerable.Range(0, peptideSequences.Count).Select(i => new KeyValuePair<string, int>(
                 (i + 1) + @":" + peptideSequences[i],
                 i)).Prepend(new KeyValuePair<string, int>(string.Empty, -1)).ToList();
@@ -179,8 +180,10 @@ namespace pwiz.Skyline.EditUI
             ReplaceDropdownItems(colPeptide2, peptideChoices);
             colPeptide1.Visible = colPeptide2.Visible = peptideSequences.Count > 1;
 
-            var aaChoices= Enumerable.Range(-1, longestSequence)
-                .Select(i => MakeAaIndexOption(null, i)).ToList();
+            var aaChoices = Enumerable.Range(0, longestPeptideSequence)
+                .Concat(_crosslinkRows.SelectMany(row => row.ListSites().Select(site => site.Value))).Append(-1)
+                .Distinct().OrderBy(aaIndex => aaIndex)
+                .Select(i=>MakeAaIndexOption(null, i)).ToList();
             ReplaceDropdownItems(colAminoAcid1, aaChoices);
             ReplaceDropdownItems(colAminoAcid2, aaChoices);
         }

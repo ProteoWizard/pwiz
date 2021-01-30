@@ -441,7 +441,7 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         [Track(defaultValues:typeof(DefaultValuesFalse))]
-        bool IsCrosslinker
+        public bool IsCrosslinker
         {
             get { return null != CrosslinkerSettings; }
         }

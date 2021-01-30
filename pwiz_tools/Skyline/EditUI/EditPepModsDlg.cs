@@ -314,7 +314,6 @@ namespace pwiz.Skyline.EditUI
 
         private void InitModificationCombo(IsotopeLabelType type, int indexAA)
         {
-            var modsExp = NodePeptide.ExplicitMods;
             ComboBox combo = GetComboBox(type, indexAA);
             combo.DropDownStyle = ComboBoxStyle.DropDownList;
             combo.FormattingEnabled = true;
@@ -401,10 +400,10 @@ namespace pwiz.Skyline.EditUI
                 // If it is not explicitly modified, or no modification was found in the
                 // explicit set, and using the implicit modifications is allowed (variable mods)
                 // check the implicit modifications for an applicable mod
-                if (listExplicitMods == null || (selectEither && iSelected == -1))
+                if ((listExplicitMods == null || selectEither && iSelected == -1) && !mod.IsCrosslinker)
                 {
-                    // If the modification is present in the document, then it should be selected by default.
                     StaticMod modCurrent = mod;
+                    // If the modification is present in the document, then it should be selected by default.
                     if (listDocMods != null && listDocMods.IndexOf(modDoc =>
                         !modDoc.IsExplicit && Equals(modDoc.Name, modCurrent.Name)) != -1)
                         iSelected = listItems.Count - 1;
@@ -622,9 +621,10 @@ namespace pwiz.Skyline.EditUI
             }
             else
             {
-                string modName = (string) combo.SelectedItem;
+                string modName = (string)combo.SelectedItem;
                 StaticMod staticMod;
-                if (!string.IsNullOrEmpty(modName) && listSettingsMods.TryGetValue(modName, out staticMod))
+                if (labelType.IsLight && !string.IsNullOrEmpty(modName) &&
+                    listSettingsMods.TryGetValue(modName, out staticMod))
                 {
                     if (!EnsureLinkedPeptide(staticMod, indexAA))
                     {
@@ -885,6 +885,11 @@ namespace pwiz.Skyline.EditUI
 
         private bool EnsureLinkedPeptide(StaticMod staticMod, int indexAA)
         {
+            if (!IsHandleCreated)
+            {
+                // Combo boxes are still be constructed and added to the form.
+                return true;
+            }
             if (staticMod.CrosslinkerSettings == null)
             {
                 var newCrosslinkStructure = CrosslinkStructure.RemoveCrosslinksAtSite(new CrosslinkSite(0, indexAA));
