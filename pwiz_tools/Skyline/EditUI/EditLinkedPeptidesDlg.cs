@@ -457,7 +457,10 @@ namespace pwiz.Skyline.EditUI
 
         private void dataGridViewLinkedPeptides_CellContentClick(object sender, DataGridViewCellEventArgs e)
         {
-            EditLinkedModifications(e.RowIndex);
+            if (e.ColumnIndex == colModificationsButton.Index)
+            {
+                EditLinkedModifications(e.RowIndex);
+            }
         }
 
         public ExplicitMods ExplicitMods { get; private set; }
