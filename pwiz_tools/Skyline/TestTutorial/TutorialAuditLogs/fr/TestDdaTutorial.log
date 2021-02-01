@@ -9,7 +9,7 @@ Summary   : Added spectral library "TestDdaTutorial"
 All Info  :
 Added spectral library "TestDdaTutorial"
 Build Spectral Library > Cut-off score is "0,95"
-Build Spectral Library > Search files : contains "QE_140221_01_UPS1_100fmolspiked.mzid"
+Build Spectral Library > Search files : contains "QE_140221_01_UPS1_100fmolspiked.mzid.gz"
 Build Spectral Library > iRT standard peptides is None
 Build Spectral Library > Include ambiguous matches is False
 Build Spectral Library > Filter for document peptides is False
@@ -17,7 +17,7 @@ Build Spectral Library > Workflow is "DDA with MS1 filtering"
 Extra Info: Cut-off score = "0,95",
 Search files = 
 [
-    "QE_140221_01_UPS1_100fmolspiked.mzid"
+    "QE_140221_01_UPS1_100fmolspiked.mzid.gz"
 ],
 iRT standard peptides = None,
 Include ambiguous matches = False,
