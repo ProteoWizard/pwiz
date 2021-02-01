@@ -85,7 +85,7 @@
 # Preliminary Filters and Cleaning:
 
 df <- df.input %>%
-  filter(Is.Decoy == FALSE) %>% # filter out Decoys (which are used for training algorithm in Skyline)
+  filter(Is.Decoy == "False") %>% # filter out Decoys (which are used for training algorithm in Skyline)
   filter(!Protein=="Biognosys|iRT-Kit_WR_fusion") %>% # filter out Biognosys rows, since these are spiked in to the sample for Quality Control
   filter(! Fragment.Ion=="precursor [M-1]") %>% # filter out [M-1] precursor observations (since these cause an issue with building Matrix A in the FBC step)
   mutate_at(vars(Timepoint), list(~as.numeric(.))) %>% # convert Timepoint variable to numeric

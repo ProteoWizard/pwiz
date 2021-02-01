@@ -14,14 +14,16 @@ invisible(lapply(packages, library, character.only = TRUE)) # add imported packa
 # START CODE FOR RUNNING IN RSTUDIO (comment out if running from TurnoveR)
 #------------------------------------------------------------------------------------
 
-# 
+
 # filepath <<- "C:/Users/alimarsh/Documents/Turnover/Data/report.csv"
 # tool.dir <<- "C:\\Users\\alimarsh\\Documents\\Turnover\\Skyline-Protein-Turnover"
 # diet.enrichment <- as.numeric ("0.999999") # Leucine percent enrichment in diet
 # min.avg.turnover.score <<- as.numeric ("0")
 # min.isotope.dot.product <<- as.numeric ("0")
 # folder.name <- "Data"
+# Reference.Cohort <- "OCR"
 # Detection.Qvalue.threshold <- as.numeric ("1")
+# Has.Q.Values <- TRUE
 # 
 # setwd("C:/Users/alimarsh/Documents/Turnover/Data")
 
@@ -36,12 +38,13 @@ invisible(lapply(packages, library, character.only = TRUE)) # add imported packa
 #------------------------------------------------------------------------------------
 # START CODE FOR RUNNING FROM TURNOVER (comment out if running from RSTUDIO)
 #------------------------------------------------------------------------------------
-
-#------------------------------------------------------------------------------------
-# LOAD ARGUMENTS FROM SKYLINE #
+# 
+# #------------------------------------------------------------------------------------
+# # LOAD ARGUMENTS FROM SKYLINE #
 
 arguments <- commandArgs(trailingOnly=TRUE)
-#arguments <- c("C:\\Users\\alimarsh\\Documents\\Turnover\\Data\\generated.csv", "C:\\Users\\alimarsh\\Documents\\Turnover\\Skyline-Protein-Turnover", "100", "0", "0", "Data", "1") 99 0 0 Data OCR 1 1
+#arguments <- c("C:\\Users\\alimarsh\\AppData\\Local\\Temp\\TurnoveR_Protein_Turnover_Report.csv", "C:\\Branches\\Skylinework20210127_Protein_turnover_tool_updates\\ProteoWizard\\pwiz\\pwiz_tools\\Skyline\\bin\\x64\\Debug\\Tools\\Tool", "99", "0", "0", "Data", "OCR", "1", "1")
+#arguments <- c("C:\\Users\\alimarsh\\Documents\\Turnover\\Data\\generated.csv", "C:\\Users\\alimarsh\\Documents\\Turnover\\Skyline-Protein-Turnover", "100", "0", "0", "Data", "OCR", "1", "1")
 cat(length (arguments))
 if ( length (arguments) != 9)
   # expected arguments not present -- error
@@ -54,9 +57,9 @@ for (i in 1:9) {
   # remove any embedded quotation marks
   arg <- gsub ("['\'\"]", "", arg)
   #report file is brought in as an argument, this is specified in TestArgsCollector.properties
-
+  
   #TODO put [arg] back for all
-  if (i==1) filepath <<- "C:/Users/alimarsh/Documents/Turnover/Data/report.csv" #arg
+  if (i==1) filepath <<- arg
   if (i==2) tool.dir <<- arg
   if (i==3) diet.enrichment <- as.numeric (arg) / 100 # Leucine percent enrichment in diet
   if (i==4) min.avg.turnover.score <<- as.numeric (arg)
