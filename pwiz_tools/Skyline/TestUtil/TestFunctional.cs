@@ -33,6 +33,7 @@ using Excel;
 using JetBrains.Annotations;
 // using Microsoft.Diagnostics.Runtime; only needed for stack dump logic, which is currently disabled
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Collections;
 using pwiz.Common.Controls;
 using pwiz.Common.Database;
 using pwiz.Common.DataBinding;
@@ -197,7 +198,21 @@ namespace pwiz.SkylineTestUtil
             return dlg;
         }
 
-        protected static void RunUI([InstantHandle] Action act)
+        /// <summary>
+        /// Brings up a dialog where the Type might be the same as a form which is already open.
+        /// </summary>
+        protected static TDlg ShowNestedDlg<TDlg>([InstantHandle] Action act) where TDlg : Form
+        {
+            var existingDialogs = FormUtil.OpenForms.OfType<TDlg>().ToHashSet(new IdentityEqualityComparer<TDlg>());
+            SkylineBeginInvoke(act);
+            TDlg result = null;
+            WaitForCondition(() => null != (result =
+                FormUtil.OpenForms.OfType<TDlg>().FirstOrDefault(form => !existingDialogs.Contains(form))));
+            return result;
+        }
+
+
+        public static void RunUI([InstantHandle] Action act)
         {
             SkylineInvoke(() =>
             {
@@ -1508,6 +1523,22 @@ namespace pwiz.SkylineTestUtil
             var actual = ReadTextWithNormalizedLineEndings(recordedFile);
             if (Equals(expected, actual))
                 return;
+
+            if (ForceMzml)
+            {
+                // If the only difference is in the mention of a raw file extension, ignore that
+                var extMzml = @".mzml";
+                var actualParts = actual.ToLowerInvariant().Split(new[] {extMzml}, StringSplitOptions.None);
+                if (actualParts.Length > 1)
+                {
+                    var index = expected.IndexOf(actualParts[1], StringComparison.InvariantCultureIgnoreCase);
+                    var extExpected = expected.Substring(actualParts[0].Length, index - actualParts[0].Length);
+                    if (expected.Replace(extExpected, extMzml).Equals(actual, StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        return;
+                    }
+                }
+            }
 
             // They are not equal. So, report an intelligible error and potentially copy
             // a new expected file to the project if in record mode.
