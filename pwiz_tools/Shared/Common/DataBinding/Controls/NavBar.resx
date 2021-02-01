@@ -364,9 +364,11 @@
   <data name="navBarButtonCluster.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAABsSURBVDhPrY2xDcAwCAQZIE2q7L+hNyB+hCPrXFgKPoni
-        QX/YGR73bzp+mY9RvlvzMXGfUK4LWFiEE8oU1gVcUJjdQJkP6oK8BcoUssAHBwRcoEBh/gqUDwgmlJfC
-        5kFdwEW6AuWtsC74jdkLo/zP3pzMKfAAAAAASUVORK5CYII=
+        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAADfSURBVDhPY6AaeJgV9B+GdzDowfHv5d1wfPv+PTiGakMA
+        ig1AVoiM/57bA8eHr/+CY6g2BMCmGYSJNuD15eP/YRjZqffuIfDCI//hGKoNASg2AFnh4mP/4RjZ2dm9
+        7+EYqg0BKDZg35Uf/2E4q+cDHIMUV8388L9u9gf8XsBlQC1Q49Ltr/7PWff4/+Zzf3AbgGy6Y9hVOE4q
+        vv2/ruvC/6LaY/87F7/9n9T6Coyh2hAAlwEgXNhw939Z273/6Z0QzVgNQHY2TBEII4sjWwLVhgDICvEZ
+        sPgoDgPIAwwMAAqnE2U1A0VYAAAAAElFTkSuQmCC
 </value>
   </data>
   <data name="navBarButtonCluster.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">

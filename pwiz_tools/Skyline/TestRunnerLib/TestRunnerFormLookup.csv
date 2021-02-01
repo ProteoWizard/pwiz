@@ -61,7 +61,7 @@ EditIsolationSchemeDlg,TestCalculateIsolationWindows
 EditIsotopeEnrichmentDlg,TestEditDialogs
 EditLabelTypeListDlg,TestExplicitMultiType
 EditLibraryDlg,TestRetentionTimeAlignment
-EditLinkedPeptideDlg,TestCrosslinking
+EditLinkedPeptidesDlg,TestCrosslinking
 EditListDlg`2,TestEditStaticMod
 EditMeasuredIonDlg,TestEditDialogs
 EditNoteDlg,TestEditNote
@@ -219,3 +219,4 @@ ViewLibraryDlg,TestFullScanId
 VolcanoPlotPropertiesDlg,TestGroupComparisonVolcanoPlot
 VolcanoPlotFormattingDlg,TestVolcanoPlotFormatting
 DetectionToolbarProperties, TestDetectionsPlot
+ImportTransitionListColumnSelectDlg,ExistingExperimentsTutorialTest

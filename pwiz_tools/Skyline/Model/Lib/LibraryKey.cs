@@ -25,6 +25,7 @@ using System.Text;
 using Google.Protobuf;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Util;
 
@@ -664,6 +665,15 @@ namespace pwiz.Skyline.Model.Lib
                     }
                 }
             }
+
+            public IEnumerable<CrosslinkSite> CrosslinkSites
+            {
+                get
+                {
+                    return Enumerable.Range(0, Positions.Count).SelectMany(peptideIndex =>
+                        Positions[peptideIndex].Select(aaPosition => new CrosslinkSite(peptideIndex, aaPosition - 1)));
+                }
+            }
         }
 
         public static ImmutableList<ImmutableList<int>> MakePositions(IEnumerable<IEnumerable<int>> positions)
@@ -727,10 +737,7 @@ namespace pwiz.Skyline.Model.Lib
             {
                 int currentPeptideIndex = queue[0];
                 queue.RemoveAt(0);
-                if (!consumedPeptides.Add(currentPeptideIndex))
-                {
-                    return false;
-                }
+                consumedPeptides.Add(currentPeptideIndex);
                 for (int iCrosslink = remainingCrosslinks.Count - 1; iCrosslink >= 0; iCrosslink--)
                 {
                     var crosslinkIndexes = remainingCrosslinks[iCrosslink];

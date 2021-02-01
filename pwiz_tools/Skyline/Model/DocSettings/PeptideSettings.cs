@@ -27,6 +27,7 @@ using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.ChromLib;
@@ -1514,11 +1515,39 @@ namespace pwiz.Skyline.Model.DocSettings
                 if (explicitMods == null)
                     continue;
                 DeclareExplicitMods(mods, explicitStaticMods, explicitMods);
+                if (typedMods.LabelType.IsLight)
+                {
+                    DeclareExplicitCrosslinks(mods, explicitStaticMods, nodePep.ExplicitMods.CrosslinkStructure);
+                }
             }
 
             if (ArrayUtil.EqualsDeep(mods, typedMods.Modifications))
                 return typedMods;
             return new TypedModifications(typedMods.LabelType, mods);
+        }
+
+        private static void DeclareExplicitCrosslinks(IList<StaticMod> mods,
+            IDictionary<string, StaticMod> explicitStaticMods,
+            CrosslinkStructure crosslinkStructure)
+        {
+            // Enumerate all modifications user has made explicitly
+            foreach (var crosslink in crosslinkStructure.Crosslinks)
+            {
+                string modName = crosslink.Crosslinker.Name;
+                // If the current modification cannot be found in the document static mods
+                if (mods.IndexOf(modStatic => Equals(modName, modStatic.Name)) == -1)
+                {
+                    StaticMod modStatic;
+                    // Try to get the desired modification from available global modifications
+                    if (!explicitStaticMods.TryGetValue(modName, out modStatic))
+                        // Otherwise, remove this modification if it is no longer available
+                        continue;
+                    // Make sure it is marked explicit
+                    if (!modStatic.IsUserSet)
+                        modStatic = modStatic.ChangeExplicit(true);
+                    mods.Add(modStatic);
+                }
+            }
         }
 
         private static IList<StaticMod> SplitModTypes(IEnumerable<StaticMod> mods,
