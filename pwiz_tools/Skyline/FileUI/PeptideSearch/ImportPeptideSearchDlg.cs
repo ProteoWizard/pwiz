@@ -135,13 +135,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             };
             transitionSettingsUiPage.Controls.Add(TransitionSettingsControl);
 
-            FullScanSettingsControl = new FullScanSettingsControl(this)
-            {
-                Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
-                Location = new Point(18, 50)
-            };
-            ms1FullScanSettingsPage.Controls.Add(FullScanSettingsControl);
-            FullScanSettingsControl.FullScanEnabledChanged += OnFullScanEnabledChanged; // Adjusts ion settings when full scan settings change
+            MakeFullScanSettingsControl();
 
             ImportResultsControl = new ImportResultsControl(ImportPeptideSearch, DocumentFilePath)
             {
@@ -165,6 +159,21 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             ddaSearch.Controls.Add(SearchControl);
 
             _pagesToSkip = new HashSet<Pages>();
+        }
+
+        private void MakeFullScanSettingsControl()
+        {
+            if (FullScanSettingsControl != null)
+            {
+                ms1FullScanSettingsPage.Controls.Remove(FullScanSettingsControl);
+            }
+            FullScanSettingsControl = new FullScanSettingsControl(this)
+            {
+                Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
+                Location = new Point(18, 50)
+            };
+            ms1FullScanSettingsPage.Controls.Add(FullScanSettingsControl);
+            FullScanSettingsControl.FullScanEnabledChanged += OnFullScanEnabledChanged; // Adjusts ion settings when full scan settings change
         }
 
         public SrmDocument Document
@@ -444,12 +453,22 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                             : Resources.ImportPeptideSearchDlg_NextPage_Import_FASTA__required_;
 
                         // The next page is going to be the chromatograms page.
-                        var oldImportResultsControl = (ImportResultsControl) ImportResultsControl;
+                        var oldImportResultsControl = (Control) ImportResultsControl;
 
                         if (WorkflowType != Workflow.dia || HasPeakBoundaries)
                         {
-                            oldImportResultsControl.InitializeChromatogramsPage(Document);
+                            if (!(ImportResultsControl is ImportResultsControl))
+                            {
+                                ImportResultsControl = new ImportResultsControl(ImportPeptideSearch, DocumentFilePath)
+                                {
+                                    Anchor = oldImportResultsControl.Anchor,
+                                    Location = oldImportResultsControl.Location
+                                };
+                                getChromatogramsPage.Controls.Remove(oldImportResultsControl);
+                                getChromatogramsPage.Controls.Add((Control) ImportResultsControl);
+                            }
 
+                            ((ImportResultsControl) ImportResultsControl).InitializeChromatogramsPage(Document);
                             if (WorkflowType == Workflow.dda)
                             {
                                 _pagesToSkip.Add(Pages.transition_settings_page);
@@ -458,13 +477,16 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         else
                         {
                             // DIA workflow, replace old ImportResultsControl
-                            ImportResultsControl = new ImportResultsDIAControl(this)
+                            if (!(ImportResultsControl is ImportResultsDIAControl))
                             {
-                                Anchor = oldImportResultsControl.Anchor,
-                                Location = oldImportResultsControl.Location
-                            };
-                            getChromatogramsPage.Controls.Remove(oldImportResultsControl);
-                            getChromatogramsPage.Controls.Add((Control) ImportResultsControl);
+                                ImportResultsControl = new ImportResultsDIAControl(this)
+                                {
+                                    Anchor = oldImportResultsControl.Anchor,
+                                    Location = oldImportResultsControl.Location
+                                };
+                                getChromatogramsPage.Controls.Remove(oldImportResultsControl);
+                                getChromatogramsPage.Controls.Add((Control) ImportResultsControl);
+                            }
                         }
 
                         if (!BuildPepSearchLibControl.PerformDDASearch)
@@ -702,7 +724,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 default:
                     return;
                 case Pages.spectra_page:
-                    FullScanSettingsControl.Initialize(); // reset UI to default
+                    MakeFullScanSettingsControl(); // reset UI to default
                     break;
                 case Pages.chromatograms_page:
                     // This page doesn't modify the document, no undo needed
