@@ -3,7 +3,7 @@
 #Schilling Lab, Buck Institute for Research on Aging
 #Novato, California, USA
 #March, 2020
-#updated: September 18, 2020
+#updated: September 30, 2020
 
 # PROTEIN TURNOVER ANALYSIS
 # STEP 5
@@ -17,26 +17,50 @@
 
 
 
-cat("\n---------------------------------------------------------------------------------------")
-cat(" STEP 4 STARTED ")
-cat("---------------------------------------------------------------------------------------\n\n")
+#------------------------------------------------------------------------------------
+# START CODE FOR RUNNING IN RSTUDIO (comment out if running from TurnoveR)
+#------------------------------------------------------------------------------------
 
-
+# 
+# #------------------------------------------------------------------------------------
+# #set working directory
+# #setwd("/Volumes/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts") # VPN mac
+# setwd("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts") # VPN windows
+# #------------------------------------------------------------------------------------
+# 
+# 
+# #------------------------------------------------------------------------------------
+# # PACKAGES #
+# packages = c("tidyr", "dplyr", "reshape2", "seqinr", "ggplot2", "coefplot", "plyr")
+# 
+# package.check <- lapply(packages, FUN = function(x) {
+#   if (!require(x, character.only = TRUE)) {
+#     install.packages(x, dependencies = TRUE)
+#     library(x, character.only = TRUE)
+#   }
+# })
+# #------------------------------------------------------------------------------------
+# 
+# 
+# #------------------------------------------------------------------------------------
+# # LOAD DATA #
+# 
+# # single leucine data set (1 leucine)
+# data.s <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts/Step0_Data_Output_Skyline_singleleucine_peps_test.csv", stringsAsFactors = F) #VPN
+# 
+# # multiple leucine data set (2,3,4 leucines)
+# data.m <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts/Step0_Data_Output_Skyline_multileucine_peps_test.csv", stringsAsFactors = F) #VPN
+# 
+# # medians of x-intercepts by cohort from step 3
+# df.x.int.medians <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts/Table_step3_xintercepts.csv", stringsAsFactors = F) #VPN
+# #------------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------------
-# LOAD DATA #
-
-
-# single leucine data set (1 leucine)
-data.s <- read.csv(paste(getwd(), "Step0_Data_Output_Skyline_singleleucine_peps_test.csv", sep ="/"), stringsAsFactors = F) #VPN
-# multiple leucine data set (2,3,4 leucines)
-data.m <- read.csv(paste(getwd(), "Step0_Data_Output_Skyline_multileucine_peps_test.csv", sep ="/"), stringsAsFactors = F) #VPN
-
-
-
-# medians of x-intercepts by cohort from step 3
-df.x.int.medians <- read.csv(paste(getwd(), "Table_step3_xintercepts.csv", sep ="/"), stringsAsFactors = F) #VPN
+# END CODE FOR RUNNING IN RSTUDIO
 #------------------------------------------------------------------------------------
+
+
+
 
 
 #------------------------------------------------------------------------------------

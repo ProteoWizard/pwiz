@@ -21,21 +21,45 @@
 
 
 
-cat("\n---------------------------------------------------------------------------------------")
-cat(" STEP 2 STARTED ")
-cat("---------------------------------------------------------------------------------------\n\n")
+#------------------------------------------------------------------------------------
+# START CODE FOR RUNNING IN RSTUDIO (comment out if running from TurnoveR)
+#------------------------------------------------------------------------------------
 
+# 
+# # set working directory
+# #setwd("/Volumes/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts/")
+# setwd("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts/") #VPN
+# 
+# 
+# #------------------------------------------------------------------------------------
+# # PACKAGES #
+# packages = c("dplyr", "reshape2", "seqinr", "ggplot2", "coefplot", "plyr")
+# 
+# package.check <- lapply(packages, FUN = function(x) {
+#   if (!require(x, character.only = TRUE)) {
+#     install.packages(x, dependencies = TRUE)
+#     library(x, character.only = TRUE)
+#   }
+# })
+# #------------------------------------------------------------------------------------
+# 
+# #------------------------------------------------------------------------------------
+# # LOAD DATA #
+# 
+# # single leucine data set (1 leucine)
+# data.s <- read.csv("/Volumes/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts/Step0_Data_Output_Skyline_singleleucine_peps_test.csv", stringsAsFactors = F) # mac
+# # data.s <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts/Step0_Data_Output_Skyline_singleleucine_peps_test.csv", stringsAsFactors = F) # windows
+# 
+# # multiple leucine data set (2,3,4 leucines)
+# data.m <- read.csv("/Volumes/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts/Step0_Data_Output_Skyline_multileucine_peps_test.csv", stringsAsFactors = F) # mac
+# # data.m <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts/Step0_Data_Output_Skyline_multileucine_peps_test.csv", stringsAsFactors = F) # windows
+# #------------------------------------------------------------------------------------
 
 
 #------------------------------------------------------------------------------------
-# LOAD DATA #
-
-# single leucine data set (1 leucine)
-data.s <- read.csv(paste(getwd(), "Step0_Data_Output_Skyline_singleleucine_peps_test.csv", sep ="/"), stringsAsFactors = F) #VPN
-
-# multiple leucine data set (2,3,4 leucines)
-data.m <- read.csv(paste(getwd(), "Step0_Data_Output_Skyline_multileucine_peps_test.csv", sep ="/"), stringsAsFactors = F) #VPN
+# END CODE FOR RUNNING IN RSTUDIO
 #------------------------------------------------------------------------------------
+
 
 
 #------------------------------------------------------------------------------------
@@ -93,10 +117,11 @@ df.model.output <- data.frame(matrix(nrow = length(cohorts)*length(prots), ncol 
 names(df.model.output) <- col.names
 
 #Initiate PDF
-pdf(file="Turnover_step3_plots.pdf")
+pdf(file="Turnover_step2_plots.pdf")
 par(mfrow=c(2,3))
 
-row.index <- -1 # start w/ negative 1 so that when we add 2 in the first iteration we really start with 1
+row.index <- -1 # start w/ negative 1 so that when we add 2 at the top of the first iteration we are really starting with 1
+# revise row.index to start with 1, and increment it accordingly at the end of the very end of iteration ## TO DO
 for(i in 1:length(unique(df$Protein.Accession)) ){
   print(i)
   
@@ -109,6 +134,27 @@ for(i in 1:length(unique(df$Protein.Accession)) ){
   # split data by cohort
   data.ko <- subset(data_loop, Cohort == "OCR") # calorie restriction
   data.wt <- subset(data_loop, Cohort == "OCon") # control (aka WildType 'WT')
+  
+  ## 
+  # added 1/22/21 - work in progress
+  # split data by cohort
+  X <- split(df, df$Cohort)
+  
+  # use lapply to convert each list in X to a data frame
+  Y <- lapply(seq_along(X), function(x) as.data.frame(X[[x]])) 
+  
+  # use list2env to assign each list to an object in the global environment
+  names(Y) <- LETTERS[1:length(cohorts)] # assign names using (the appropriate number of) capitalized letters
+  list2env(Y, envir = .GlobalEnv) # creates objects in the global environment
+  
+  # need to find a way to go through each object and assign similar objects for fit
+  # think about this a bit!
+  
+  for(j in names(Y)){
+    print(j)
+  }
+  ##
+  
   
   # subset Time and Percent.Newly.Synthesized to fit with model
   fit.ko <- subset(data.ko, select = c("Timepoint", "Perc.New.Synth"))
@@ -288,8 +334,6 @@ for(i in 1:length(unique(df$Protein.Accession)) ){
   }
 } # end for; protein level
 
-# timestamp
-#mtext(date(), side=1, line=4, adj=0) # side (1=bottom, 2=left, 3=top, 4=right)
 graphics.off()
 #------------------------------------------------------------------------------------
 
@@ -305,12 +349,12 @@ df.model.output <- df.model.output %>%
 
 
 #------------------------------------------------------------------------------------
-# write out df frame 
+# write out output from model 
 
 df.model.output <- df.model.output %>%
   na.omit() # drop rows with NA
 
-write.csv(df.model.output, file = "Table_step3_output_date.csv", row.names = FALSE)
+write.csv(df.model.output, file = "Table_step2_output_date.csv", row.names = FALSE)
 #------------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------------
@@ -322,7 +366,7 @@ write.csv(df.model.output, file = "Table_step3_output_date.csv", row.names = FAL
 df.filtered <- subset(df.model.output, b<0 &  X.Intercept<min(time) & X.Intercept>0 & Pvalue.a<0.05 & Pvalue.b<0.05)
 
 # write out filtered df frame
-write.csv( df.filtered, file = "Table_step3_output_filtered.csv", row.names = FALSE)
+write.csv( df.filtered, file = "Table_step2_output_filtered.csv", row.names = FALSE)
 #------------------------------------------------------------------------------------
 
 
@@ -338,9 +382,7 @@ for(i in 1:length(cohorts)){
 } # end for 
 
 # write out medians
-write.csv(df.x.int.medians, file = "Table_step3_xintercepts.csv", row.names = FALSE)
+write.csv(df.x.int.medians, file = "Table_step2_xintercepts.csv", row.names = FALSE)
 #------------------------------------------------------------------------------------
 
 
-
-## END STEP 3 SCRIPT ##
