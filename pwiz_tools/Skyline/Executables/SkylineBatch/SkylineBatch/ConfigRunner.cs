@@ -160,10 +160,9 @@ namespace SkylineBatch
             if (IsRunning()) ChangeStatus(RunnerStatus.Completed);
             var endTime = DateTime.Now;
             var delta = endTime - startTime;
-            var timeString = delta.Hours > 0 ? delta.ToString(@"hh\:mm\:ss") : delta.ToString(@"mm\:ss");
-            _logger.Log(string.Format("Runtime: {0}", timeString));
+            var timeString = delta.Hours > 0 ? delta.ToString(@"hh\:mm\:ss") : string.Format("{0} minutes", delta.ToString(@"mm\:ss"));
             LogToUi(string.Format(Resources.ConfigRunner_Run_________________________________0____1_________________________________, Config.Name, GetStatus()));
-        
+            LogToUi(string.Format(Resources.ConfigRunner_Run_________________________________0____1_________________________________, "Runtime", timeString));
         }
         
         public async Task ExecuteProcess(string exeFile, string arguments)
