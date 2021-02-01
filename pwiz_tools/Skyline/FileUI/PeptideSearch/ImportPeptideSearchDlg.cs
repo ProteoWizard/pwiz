@@ -620,6 +620,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     btnNext.Enabled = false;
                     btnCancel.Enabled = false;
                     btnBack.Enabled = false;
+                    ControlBox = false;
                     SearchControl.RunSearch();
                     break;
 
@@ -635,15 +636,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         ImportPeptideSearch.SearchFilenames[i] = outFilePath;
                     }
                     BuildPepSearchLibControl.AddSearchFiles(ImportPeptideSearch.SearchFilenames);
-                    ImportPeptideSearch.SearchEngine.Dispose();
 
                     if (!BuildPeptideSearchLibrary(eCancel2))
-                    {
-                        // Page shows error
-                        if (eCancel2.Cancel)
-                            return;
-                        CloseWizard(DialogResult.Cancel);
-                    }
+                        return;
 
                     //load proteins after search
                     if (!ImportFastaControl.ImportFasta(ImportPeptideSearch.IrtStandard))
@@ -704,6 +699,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             btnCancel.Enabled = true;
             btnBack.Enabled = true;
+            ControlBox = true;
             if (success)
                 btnNext.Enabled = true;
         }
@@ -1063,9 +1059,19 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public void CloseWizard(DialogResult result)
         {
+            DialogResult = result;
+        }
+
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
             // Close file handles to the peptide search library
             ImportPeptideSearch.ClosePeptideSearchLibraryStreams(Document);
-            DialogResult = result;
+
+            // Cancel and dispose DDA SearchEngine
+            SearchControl?.Cancel();
+            ImportPeptideSearch.SearchEngine?.Dispose();
+
+            base.OnFormClosing(e);
         }
 
         private void BuildPepSearchLibForm_OnInputFilesChanged(object sender,

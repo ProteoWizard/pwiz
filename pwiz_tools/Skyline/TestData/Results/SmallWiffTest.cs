@@ -263,7 +263,7 @@ namespace pwiz.SkylineTestData.Results
                 FormatProvider = CultureInfo.InvariantCulture,
                 Separator = TextUtil.SEPARATOR_CSV
             };
-            doc = doc.ImportMassList(inputs, null, out selectPath);
+            doc = doc.ImportMassList(inputs, null, null, out selectPath);
 
             AssertEx.IsDocumentState(doc, 2, 9, 9, 18, 54);
             return doc;

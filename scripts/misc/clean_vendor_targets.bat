@@ -8,9 +8,9 @@ pushd %PWIZ_ROOT%
 
 echo Cleaning project of vendor-related files...
 IF EXIST build-nt-x86\msvc-release rmdir /s /q build-nt-x86\msvc-release
-IF EXIST build-nt-x86\msvc-release-x64 rmdir /s /q build-nt-x86\msvc-release-x64
+IF EXIST build-nt-x86\msvc-release-x86_64 rmdir /s /q build-nt-x86\msvc-release-x86_64
 IF EXIST build-nt-x86\msvc-debug rmdir /s /q build-nt-x86\msvc-debug
-IF EXIST build-nt-x86\msvc-debug-x64 rmdir /s /q build-nt-x86\msvc-debug-x64
+IF EXIST build-nt-x86\msvc-debug-x86_64 rmdir /s /q build-nt-x86\msvc-debug-x86_64
 IF EXIST build-nt-x86\gcc-release rmdir /s /q build-nt-x86\gcc-release
 IF EXIST build-nt-x86\gcc-debug rmdir /s /q build-nt-x86\gcc-debug
 IF EXIST build-nt-x86\pwiz\data\vendor_readers rmdir /s /q build-nt-x86\pwiz\data\vendor_readers

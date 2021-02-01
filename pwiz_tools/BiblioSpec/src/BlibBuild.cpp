@@ -158,7 +158,8 @@ int main(int argc, char* argv[])
                     MSFReader msfReader(builder, result_file, progress_cptr);
 
                     success = msfReader.parseFile();
-                } else if (has_extension(result_file, ".mzid")) {
+                } else if (has_extension(result_file, ".mzid") ||
+                           has_extension(result_file, ".mzid.gz")) {
                     MzIdentMLReader mzidReader(builder, result_file, progress_cptr);
                     success = mzidReader.parseFile();
 

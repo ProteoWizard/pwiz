@@ -54,9 +54,14 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             _ionMobilityFiltering = documentContainer.Document.Settings.TransitionSettings.IonMobilityFiltering;
 
             var imsWindowCalc = _ionMobilityFiltering.FilterWindowWidthCalculator;
+            var hasLibIMS = _ionMobilityFiltering.IonMobilityLibrary != null && !_ionMobilityFiltering.IonMobilityLibrary.IsNone;
 
+            var useSpectralLibraryIonMobilityValues = defaultState ?? _ionMobilityFiltering.UseSpectralLibraryIonMobilityValues;
+            var hasIonMobilityFiltering = useSpectralLibraryIonMobilityValues || hasLibIMS;
+
+            // Resolving power is most commonly used window size type, give that a reasonable starting value if none provided
             var resolvingPower = imsWindowCalc?.ResolvingPower ?? 0;
-            if ((defaultState ?? _ionMobilityFiltering.UseSpectralLibraryIonMobilityValues) && resolvingPower == 0)
+            if (hasIonMobilityFiltering && resolvingPower == 0)
             {
                 resolvingPower = 30; // Arbitrarily chosen non-zero value
             }
@@ -77,11 +82,10 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             UpdateIonMobilityFilterWindowWidthControls();
 
             _driverIonMobilityLib = new SettingsListComboDriver<IonMobilityLibrary>(comboIonMobilityLibrary, Settings.Default.IonMobilityLibraryList);
-            var hasLib = _ionMobilityFiltering.IonMobilityLibrary != null && !_ionMobilityFiltering.IonMobilityLibrary.IsNone;
             var libName = (_ionMobilityFiltering.IonMobilityLibrary == null ? null : _ionMobilityFiltering.IonMobilityLibrary.Name);
             _driverIonMobilityLib.LoadList(libName);
 
-            cbUseSpectralLibraryIonMobilities.Checked = defaultState ?? (_ionMobilityFiltering.UseSpectralLibraryIonMobilityValues || hasLib);
+            cbUseSpectralLibraryIonMobilities.Checked = useSpectralLibraryIonMobilityValues;
 
         }
 
