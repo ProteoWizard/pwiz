@@ -18,6 +18,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using AutoQC;
 
@@ -161,9 +162,9 @@ namespace AutoQCTest
         [TestMethod]
         public void TestMainSettingsEquals()
         {
-            var testMainSettings = TestUtils.GetTestMainSettings("test");
-            Assert.IsTrue(Equals(testMainSettings, TestUtils.GetTestMainSettings("test")));
-            var differentMainSettings = TestUtils.GetTestMainSettings("test2");
+            var testMainSettings = TestUtils.GetTestMainSettings();
+            Assert.IsTrue(Equals(testMainSettings, TestUtils.GetTestMainSettings()));
+            var differentMainSettings = TestUtils.GetTestMainSettings("includeSubfolders", "true");
             Assert.IsFalse(Equals(testMainSettings, null));
             Assert.IsFalse(Equals(testMainSettings, differentMainSettings));
         }
@@ -188,12 +189,13 @@ namespace AutoQCTest
             Assert.IsTrue(Equals(testConfig, TestUtils.GetTestConfig("Config")));
             Assert.IsFalse(Equals(testConfig, TestUtils.GetTestConfig("other")));
 
-            var differentMainSettings = new AutoQcConfig("Config", false, DateTime.MinValue, DateTime.MinValue, TestUtils.GetTestMainSettings("other"), TestUtils.GetTestPanoramaSettings(), TestUtils.GetTestSkylineSettings());
+            var differentMainSettings = new AutoQcConfig("Config", false, DateTime.MinValue, DateTime.MinValue, 
+                TestUtils.GetTestMainSettings("includeSubfolders", "true"), TestUtils.GetTestPanoramaSettings(), TestUtils.GetTestSkylineSettings());
             Assert.IsFalse(Equals(testConfig, differentMainSettings));
 
             var publishingPanorama = new PanoramaSettings(true, "https://panoramaweb.org/", "bad@email.edu",
                 "BadPassword", "badfolder");
-            var differentPanoramaSettings = new AutoQcConfig("Config", false, DateTime.MinValue, DateTime.MinValue, TestUtils.GetTestMainSettings("Config"), publishingPanorama, TestUtils.GetTestSkylineSettings());
+            var differentPanoramaSettings = new AutoQcConfig("Config", false, DateTime.MinValue, DateTime.MinValue, TestUtils.GetTestMainSettings(), publishingPanorama, TestUtils.GetTestSkylineSettings());
             Assert.IsFalse(Equals(testConfig, differentPanoramaSettings));
         }
 

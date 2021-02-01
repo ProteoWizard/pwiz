@@ -134,9 +134,9 @@ namespace AutoQCTest
 
             var configCreatedManager = TestUtils.GetTestConfigManager(new List<AutoQcConfig>()
             {
-                new AutoQcConfig("middle", false, DateTime.Now, DateTime.MinValue, TestUtils.GetTestMainSettings("middle"), TestUtils.GetTestPanoramaSettings(false), TestUtils.GetTestSkylineSettings()),
-                new AutoQcConfig("last", false, DateTime.MaxValue, DateTime.MinValue, TestUtils.GetTestMainSettings("middle"), TestUtils.GetTestPanoramaSettings(false), TestUtils.GetTestSkylineSettings()),
-                new AutoQcConfig("first", false, DateTime.MinValue, DateTime.MinValue, TestUtils.GetTestMainSettings("middle"), TestUtils.GetTestPanoramaSettings(false), TestUtils.GetTestSkylineSettings())
+                new AutoQcConfig("middle", false, DateTime.Now, DateTime.MinValue, TestUtils.GetTestMainSettings(), TestUtils.GetTestPanoramaSettings(false), TestUtils.GetTestSkylineSettings()),
+                new AutoQcConfig("last", false, DateTime.MaxValue, DateTime.MinValue, TestUtils.GetTestMainSettings(), TestUtils.GetTestPanoramaSettings(false), TestUtils.GetTestSkylineSettings()),
+                new AutoQcConfig("first", false, DateTime.MinValue, DateTime.MinValue, TestUtils.GetTestMainSettings(), TestUtils.GetTestPanoramaSettings(false), TestUtils.GetTestSkylineSettings())
             });
             configCreatedManager.SortByValue(2);
             Assert.IsTrue(configCreatedManager.ConfigOrderEquals(new[] { "last", "middle", "first" }));
@@ -146,7 +146,7 @@ namespace AutoQCTest
 
             var configUserManager = TestUtils.GetTestConfigManager(new List<AutoQcConfig>()
             {
-                new AutoQcConfig("noUser", false, DateTime.Now, DateTime.MinValue, TestUtils.GetTestMainSettings("noUser"), TestUtils.GetTestPanoramaSettings(false), TestUtils.GetTestSkylineSettings()),
+                new AutoQcConfig("noUser", false, DateTime.Now, DateTime.MinValue, TestUtils.GetTestMainSettings(), TestUtils.GetTestPanoramaSettings(false), TestUtils.GetTestSkylineSettings()),
                 TestUtils.GetTestConfig("User"),
             });
             configUserManager.SortByValue(1);

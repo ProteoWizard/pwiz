@@ -97,11 +97,27 @@ namespace AutoQC
         private void HandleEditEvent(object sender, EventArgs e)
         {
             var configRunner = configManager.GetSelectedConfigRunner();
+            var config = configRunner.Config;
+            try
+            {
+                config.MainSettings.ValidateSettings();
+                config.SkylineSettings.Validate();
+            }
+            catch (ArgumentException)
+            {
+                if (configRunner.IsRunning()) throw new Exception("Invalid config cannot be running.");
+                var validateConfigForm = new InvalidConfigSetupForm(config, this);
+                validateConfigForm.ShowDialog();
+                if (validateConfigForm.DialogResult != DialogResult.OK)
+                    return;
+                config = validateConfigForm.ValidConfig;
+            }
+
             // can edit if config is not busy running, otherwise is view only
             Program.LogInfo(string.Format("{0} configuration \"{1}\"",
                 (!configRunner.IsRunning() ? "Editing" : "Viewing"),
                 configRunner.GetConfigName()));
-            var configForm = new AutoQcConfigForm(this, configRunner.Config, ConfigAction.Edit, configRunner.IsBusy());
+            var configForm = new AutoQcConfigForm(this, config, ConfigAction.Edit, configRunner.IsBusy());
             configForm.ShowDialog();
         }
 
@@ -109,6 +125,7 @@ namespace AutoQC
         {
             configManager.ReplaceSelectedConfig(newVersion);
             UpdateUiConfigurations();
+            UpdateUiLoggers();
         }
 
         private void btnCopy_Click(object sender, EventArgs e)
@@ -160,13 +177,20 @@ namespace AutoQC
 
         private void listViewConfigs_SelectedIndexChanged(object sender, EventArgs e)
         {
-            var newSelection = listViewConfigs.SelectedItems.Count > 0 ? listViewConfigs.SelectedIndices[0] : -1;
-            if (newSelection == configManager.SelectedConfig)
+            listViewConfigs.SelectedIndices.Clear();
+        }
+
+        private void listViewConfigs_MouseUp(object sender, MouseEventArgs e)
+        {
+            // Select configuration through _configManager
+            var index = listViewConfigs.GetItemAt(e.X, e.Y) != null ? listViewConfigs.GetItemAt(e.X, e.Y).Index : -1;
+
+            if (index < 0)
+            {
+                configManager.DeselectConfig();
                 return;
-            configManager.DeselectConfig();
-            if (newSelection >= 0)
-                configManager.SelectConfig(newSelection);
-            UpdateButtonsEnabled();
+            }
+            configManager.SelectConfig(index);
         }
 
         public void UpdateButtonsEnabled()
@@ -208,6 +232,7 @@ namespace AutoQC
                 if (configManager.SelectedConfig >= 0)
                     listViewConfigs.Items[configManager.SelectedConfig].Selected = true;
                 UpdateLabelVisibility();
+                UpdateButtonsEnabled();
             });
         }
 

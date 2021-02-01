@@ -272,6 +272,33 @@ namespace AutoQC.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Could not find path to the {0}..
+        /// </summary>
+        internal static string FilePathControl_Could_not_find_path_to_the__0___ {
+            get {
+                return ResourceManager.GetString("FilePathControl_Could_not_find_path_to_the__0___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Open File.
+        /// </summary>
+        internal static string FilePathControl_Open_File {
+            get {
+                return ResourceManager.GetString("FilePathControl_Open_File", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select Folder.
+        /// </summary>
+        internal static string FilePathControl_Select_Folder {
+            get {
+                return ResourceManager.GetString("FilePathControl_Select_Folder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Select the {0} installation directory.
         /// </summary>
         internal static string FindSkylineForm_btnBrowse_Click_Select_the__0__installation_directory {

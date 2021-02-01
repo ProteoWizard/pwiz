@@ -18,7 +18,7 @@
                 <value>
                     <ConfigList>
                         <autoqc_config name="Bad" created="1/19/2021 10:44 AM" modified="1/19/2021 10:44 AM">
-                            <main_settings skyline_file_path="I_DONT_EXIST.sky"
+                            <main_settings skyline_file_path="C:\Users\alimarsh\Documents\AutoQC\AliI_DONT_EXIST.sky"
                                 folder_to_watch="C:\Users\alimarsh\Documents\AutoQC\Ali" file_filter_type="All"
                                 results_window="31" instrument_type="Thermo" acquisition_time="75" />
                             <panorama_settings />

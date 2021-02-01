@@ -81,11 +81,20 @@
     <Content Include="AutoQCStarter.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <EmbeddedResource Include="FilePathControl.resx">
+      <DependentUpon>FilePathControl.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FindSkylineForm.resx">
       <DependentUpon>FindSkylineForm.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="InvalidConfigSetupForm.resx">
+      <DependentUpon>InvalidConfigSetupForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="ShareConfigsForm.resx">
       <DependentUpon>ShareConfigsForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SkylineTypeControl.resx">
+      <DependentUpon>SkylineTypeControl.cs</DependentUpon>
     </EmbeddedResource>
     <None Include="Resources\Copy.bmp" />
     <Content Include="SkylineDailyRunner.exe">
@@ -120,11 +129,23 @@
     <Compile Include="AutoQcConfig.cs" />
     <Compile Include="AutoQcLogger.cs" />
     <Compile Include="ConfigManager.cs" />
+    <Compile Include="FilePathControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FilePathControl.Designer.cs">
+      <DependentUpon>FilePathControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="FindSkylineForm.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="FindSkylineForm.Designer.cs">
       <DependentUpon>FindSkylineForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="InvalidConfigSetupForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="InvalidConfigSetupForm.Designer.cs">
+      <DependentUpon>InvalidConfigSetupForm.cs</DependentUpon>
     </Compile>
     <Compile Include="ShareConfigsForm.cs">
       <SubType>Form</SubType>
@@ -134,6 +155,12 @@
     </Compile>
     <Compile Include="Installations.cs" />
     <Compile Include="SkylineSettings.cs" />
+    <Compile Include="SkylineTypeControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="SkylineTypeControl.Designer.cs">
+      <DependentUpon>SkylineTypeControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="StartupManager.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
@@ -176,11 +203,7 @@
     <Reference Include="log4net">
       <HintPath>..\..\..\..\Shared\Lib\log4net.dll</HintPath>
     </Reference>
-    <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\Shared\Lib\Newtonsoft.Json.dll</HintPath>
-      <EmbedInteropTypes>False</EmbedInteropTypes>
-    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL" />
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Configuration.Install" />

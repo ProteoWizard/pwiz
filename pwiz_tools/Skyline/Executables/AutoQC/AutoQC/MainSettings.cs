@@ -109,24 +109,10 @@ namespace AutoQC
         public void ValidateSettings()
         {
             // Path to the Skyline file.
-            if (string.IsNullOrWhiteSpace(SkylineFilePath))
-            {
-                throw new ArgumentException("Please specify path to a Skyline file.");
-            }
-            if (!File.Exists(SkylineFilePath))
-            {
-                throw new ArgumentException(string.Format("Skyline file {0} does not exist.", SkylineFilePath));
-            }
+            ValidateSkylineFile(SkylineFilePath);
 
             // Path to the folder to monitor for mass spec. results files
-            if (string.IsNullOrWhiteSpace(FolderToWatch))
-            {
-                throw new ArgumentException("Please specify path to a folder where mass spec. files will be written.");
-            }
-            if (!Directory.Exists(FolderToWatch))
-            {
-                throw new ArgumentException(string.Format("Folder to watch: {0} does not exist.", FolderToWatch));
-            }
+            ValidateFolderToWatch(FolderToWatch);
 
             // File filter
             if (!(QcFileFilter is AllFileFilter))
@@ -160,6 +146,30 @@ namespace AutoQC
             if (AcquisitionTime < 0)
             {
                 throw new ArgumentException("\"Expected acquisition time\" cannot be less than 0 minutes.");
+            }
+        }
+
+        public static void ValidateSkylineFile(string skylineFile)
+        {
+            if (string.IsNullOrWhiteSpace(skylineFile))
+            {
+                throw new ArgumentException("Please specify path to a Skyline file.");
+            }
+            if (!File.Exists(skylineFile))
+            {
+                throw new ArgumentException(string.Format("Skyline file {0} does not exist.", skylineFile));
+            }
+        }
+
+        public static void ValidateFolderToWatch(string folderToWatch)
+        {
+            if(string.IsNullOrWhiteSpace(folderToWatch))
+            {
+                throw new ArgumentException("Please specify path to a folder where mass spec. files will be written.");
+            }
+            if (!Directory.Exists(folderToWatch))
+            {
+                throw new ArgumentException(string.Format("Folder to watch: {0} does not exist.", folderToWatch));
             }
         }
 

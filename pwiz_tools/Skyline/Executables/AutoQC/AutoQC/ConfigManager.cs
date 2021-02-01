@@ -19,6 +19,7 @@ namespace AutoQC
 
         private List<AutoQcConfig> _configList; // the list of configurations. Every config must have a runner in configRunners
         private readonly Dictionary<string, ConfigRunner> _configRunners; // dictionary mapping from config name to that config's runner
+        private readonly Dictionary<string, bool> _configsValidated; // dictionary mapping from config name to if the configuration is valid
 
         //private readonly IAutoQcLogger _logger; // the current logger - always logs to AutoQc.log
         private readonly List<IAutoQcLogger> _loggers; // list of archived loggers, from most recent to least recent
@@ -38,6 +39,7 @@ namespace AutoQC
             _uiControl = uiControl;
             _runningUi = uiControl != null;
             _configRunners = new Dictionary<string, ConfigRunner>();
+            _configsValidated = new Dictionary<string, bool>();
             _loggers = new List<IAutoQcLogger>();
             LoadConfigList();
         }
@@ -73,6 +75,16 @@ namespace AutoQC
                 _loggers.Add(newLogger);
                 _configList.Add(config);
                 _configRunners.Add(config.Name, newRunner);
+                var isValid = true;
+                try
+                {
+                    config.Validate();
+                }
+                catch (ArgumentException)
+                {
+                    isValid = false;
+                }
+                _configsValidated.Add(config.Name, isValid);
             }
         }
 
@@ -121,14 +133,19 @@ namespace AutoQC
                 lvi.SubItems.Add(config.Created.ToShortDateString());
                 lvi.SubItems.Add(configRunner.GetDisplayStatus());
                 lvi.SubItems[runnerStatusIndex].ForeColor = configRunner.GetDisplayColor();
-                try
-                {
-                    config.Validate();
-                }
-                catch (ArgumentException)
-                {
+
+                if (!_configsValidated[config.Name])
                     lvi.ForeColor = Color.Red;
+
+                if (SelectedConfig >= 0 && _configList[SelectedConfig].Name.Equals(lvi.Text))
+                {
+                    lvi.BackColor = Color.LightGray;
+                    foreach (ListViewItem.ListViewSubItem subitem in lvi.SubItems)
+                    {
+                        subitem.BackColor = Color.LightGray;
+                    }
                 }
+
                 listViewConfigs.Add(lvi);
             }
             return listViewConfigs;
@@ -148,12 +165,20 @@ namespace AutoQC
         {
             if (newIndex < 0 || newIndex >= _configList.Count)
                 throw new IndexOutOfRangeException("No configuration at index: " + newIndex);
-            SelectedConfig = newIndex;
+            if (SelectedConfig != newIndex)
+            {
+                SelectedConfig = newIndex;
+                _uiControl?.UpdateUiConfigurations();
+            }
         }
 
         public void DeselectConfig()
         {
-            SelectedConfig = -1;
+            if (SelectedConfig != -1)
+            {
+                SelectedConfig = -1;
+                _uiControl?.UpdateUiConfigurations();
+            }
         }
 
         private void CheckConfigSelected()
@@ -190,6 +215,16 @@ namespace AutoQC
             _loggers.Add(newLogger);
             var newRunner = new ConfigRunner(config, newLogger, _uiControl);
             _configRunners.Add(config.Name, newRunner);
+            var isValid = true;
+            try
+            {
+                config.Validate();
+            }
+            catch (ArgumentException)
+            {
+                isValid = false;
+            }
+            _configsValidated.Add(config.Name, isValid);
 
         }
 
@@ -255,6 +290,7 @@ namespace AutoQC
             _configList.Remove(config);
             _configRunners[config.Name].Stop();
             _configRunners.Remove(config.Name);
+            _configsValidated.Remove(config.Name);
             RemoveLogger(config.Name);
         }
 

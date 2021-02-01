@@ -38,14 +38,15 @@ namespace AutoQCTest
             return newFolder;
         }
 
-        public static MainSettings GetTestMainSettings(string configName) => GetTestMainSettings(configName, null, null);
+        public static MainSettings GetTestMainSettings() => GetTestMainSettings(string.Empty, string.Empty);
         
 
-        public static MainSettings GetTestMainSettings(string configName, string changedVariable, string value)
+        public static MainSettings GetTestMainSettings(string changedVariable, string value)
         {
             var skylineFilePath = GetTestFilePath("QEP_2015_0424_RJ.sky");
-            var folderToWatch = CreateTestFolder(configName);
+            var folderToWatch = changedVariable.Equals("folderToWatch")? GetTestFilePath(value) : GetTestFilePath("Config");
 
+            var includeSubfolders = changedVariable.Equals("includeSubfolders") && value.Equals("true");
             var fileFilter = MainSettings.GetDefaultQcFileFilter();
             var resultsWindow = MainSettings.GetDefaultResultsWindow();
             var removeResults = MainSettings.GetDefaultRemoveResults();
@@ -53,7 +54,7 @@ namespace AutoQCTest
             var instrumentType = MainSettings.GetDefaultInstrumentType();
             
             
-            return new MainSettings(skylineFilePath, folderToWatch, false, fileFilter, removeResults, resultsWindow, instrumentType, acquisitionTime);
+            return new MainSettings(skylineFilePath, folderToWatch, includeSubfolders, fileFilter, removeResults, resultsWindow, instrumentType, acquisitionTime);
         }
 
         public static PanoramaSettings GetTestPanoramaSettings(bool publishToPanorama = true)
@@ -61,7 +62,7 @@ namespace AutoQCTest
             var panoramaServerUrl = publishToPanorama ? "https://panoramaweb.org/" : "";
             var panoramaUserEmail = publishToPanorama ? "skyline_tester@proteinms.net" : "";
             var panoramaPassword = publishToPanorama ? "lclcmsms" : "";
-            var panoramaFolder = publishToPanorama ? "/SkylineTest/AutoQcTest" : "";
+            var panoramaFolder = publishToPanorama ? "/SkylineTest" : "";
 
             return new PanoramaSettings(publishToPanorama, panoramaServerUrl, panoramaUserEmail, panoramaPassword, panoramaFolder);
         }
@@ -74,7 +75,7 @@ namespace AutoQCTest
         public static AutoQcConfig GetTestConfig(string name)
         {
             //return GetTestConfig(name, null, null);
-            return new AutoQcConfig(name, false, DateTime.MinValue, DateTime.MinValue, GetTestMainSettings(name), GetTestPanoramaSettings(), GetTestSkylineSettings());
+            return new AutoQcConfig(name, false, DateTime.MinValue, DateTime.MinValue, GetTestMainSettings(), GetTestPanoramaSettings(), GetTestSkylineSettings());
         } 
 
         /*public static AutoQcConfig GetTestConfig(string name)

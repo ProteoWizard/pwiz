@@ -354,4 +354,13 @@
   <data name="ConfigManager_Please_edit_configuration__0__and_try_again_" xml:space="preserve">
     <value>Invalid Configuration: Please edit configuration "{0}" and try again.</value>
   </data>
+  <data name="FilePathControl_Could_not_find_path_to_the__0___" xml:space="preserve">
+    <value>Could not find path to the {0}.</value>
+  </data>
+  <data name="FilePathControl_Open_File" xml:space="preserve">
+    <value>Open File</value>
+  </data>
+  <data name="FilePathControl_Select_Folder" xml:space="preserve">
+    <value>Select Folder</value>
+  </data>
 </root>
