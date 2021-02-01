@@ -41,12 +41,12 @@ invisible(lapply(packages, library, character.only = TRUE)) # add imported packa
 # LOAD ARGUMENTS FROM SKYLINE #
 
 arguments <- commandArgs(trailingOnly=TRUE)
-#arguments <- c("C:\\Users\\alimarsh\\Documents\\Turnover\\Data\\generated.csv", "C:\\Users\\alimarsh\\Documents\\Turnover\\Skyline-Protein-Turnover", "100", "0", "0", "Data", "1")
+#arguments <- c("C:\\Users\\alimarsh\\Documents\\Turnover\\Data\\generated.csv", "C:\\Users\\alimarsh\\Documents\\Turnover\\Skyline-Protein-Turnover", "100", "0", "0", "Data", "1") 99 0 0 Data OCR 1 1
 cat(length (arguments))
-if ( length (arguments) != 7)
+if ( length (arguments) != 9)
   # expected arguments not present -- error
   stop ("USAGE: R --slave --no-save --args '<textbox><textbox><textbox><textbox>'")
-for (i in 1:7) {
+for (i in 1:9) {
   arg <- arguments [i]
   # remove leading and trailing blanks
   arg <- gsub ("^ *", "", arg)
@@ -62,7 +62,9 @@ for (i in 1:7) {
   if (i==4) min.avg.turnover.score <<- as.numeric (arg)
   if (i==5) min.isotope.dot.product <<- as.numeric (arg)
   if (i==6) folder.name <- arg
-  if (i==7) Detection.Qvalue.threshold <- as.numeric (arg)
+  if (i==7) Reference.Cohort <- arg
+  if (i==8) Detection.Qvalue.threshold <- as.numeric (arg)
+  if (i==9) Has.Q.Values <- ifelse(arg=="1", TRUE, FALSE)
 }
 
 dir.create(file.path(getwd(), folder.name), showWarnings = FALSE) # Create folder for script output
@@ -113,7 +115,7 @@ if (is.null(df.input$Replicate.Name)) {
 
 #------------------------------------------------------------------------------------
 # RUN STEP 1 #
-source(paste(tool.dir, "Step1_turnover_process_skyline_0915_2020_v1.R", sep="\\"))
+source(paste(tool.dir, "Step1_turnover_process_skyline_0915_2020_v1.R", sep="/"))
 #------------------------------------------------------------------------------------
 
 
@@ -156,7 +158,7 @@ source(paste(tool.dir, "Step4_turnover_statistics_skyline_0918_2020_v1.R", sep="
 
 
 cat("\n---------------------------------------------------------------------------------------")
-cat(" ALL COMPLETED ")
+cat(" COMPLETED ")
 cat("---------------------------------------------------------------------------------------\n\n")
 cat("Output at: ")
 cat(getwd())

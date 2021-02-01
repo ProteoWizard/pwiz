@@ -213,7 +213,11 @@ namespace ProteinTurnoverArgCollector
             Arguments[(int) ArgumentIndices.average_turnover] = textAverageTurnover.Text;
             Arguments[(int) ArgumentIndices.IDP] = textIDP.Text;
             Arguments[(int) ArgumentIndices.folder_name] = textFolderName.Text;
+            Arguments[(int) ArgumentIndices.reference_group] = comboReference.GetItemText(comboReference.SelectedItem);
             Arguments[(int) ArgumentIndices.Q_value] = textQValue.Text;
+            Arguments[(int) ArgumentIndices.has_Q_values] = DEFINED_Q_VALUES != DefinedValues.None
+                ? Constants.TRUE_STRING
+                : Constants.FALSE_STRING;
         }
     }
 
