@@ -84,6 +84,12 @@ namespace TestRunner
         // These tests are allowed to fail the total memory leak threshold, and extra iterations are not done to stabilize a spiky total memory distribution
         public static string[] MutedTotalMemoryLeakTestNames = { "TestMs1Tutorial", "TestGroupedStudiesTutorialDraft" };
 
+        // These tests are allowed to fail the total handle leak threshold, and extra iterations are not done to stabilize a spiky total handle distribution
+        public static string[] MutedTotalHandleLeakTestNames = { };
+
+        // These tests are allowed to fail the user/GDI handle leak threshold, and extra iterations are not done to stabilize a spiky handle distribution
+        public static string[] MutedUserGdiHandleLeakTestNames = { };
+
         private static int GetLeakCheckIterations(TestInfo test)
         {
             return LeakCheckIterationsOverrideByTestName.ContainsKey(test.TestMethod.Name)
@@ -120,8 +126,8 @@ namespace TestRunner
                 return (TotalMemory < leakThresholds.TotalMemory || MutedTotalMemoryLeakTestNames.Contains(testName)) &&
                        HeapMemory < leakThresholds.HeapMemory &&
                        ManagedMemory < leakThresholds.ManagedMemory &&
-                       TotalHandles < leakThresholds.TotalHandles &&
-                       UserGdiHandles < leakThresholds.UserGdiHandles;
+                       (TotalHandles < leakThresholds.TotalHandles || MutedTotalHandleLeakTestNames.Contains(testName)) &&
+                       (UserGdiHandles < leakThresholds.UserGdiHandles || MutedUserGdiHandleLeakTestNames.Contains(testName));
             }
 
             public static LeakTracking MeanDeltas(List<LeakTracking> values)
@@ -151,9 +157,9 @@ namespace TestRunner
                     return string.Format("!!! {0} LEAKED {1:0.#} Heap bytes\r\n", testName, HeapMemory);
                 if (TotalMemory >= leakThresholds.TotalMemory && !MutedTotalMemoryLeakTestNames.Contains(testName))
                     return string.Format("!!! {0} LEAKED {1:0.#} bytes\r\n", testName, TotalMemory);
-                if (UserGdiHandles >= leakThresholds.UserGdiHandles)
+                if (UserGdiHandles >= leakThresholds.UserGdiHandles && !MutedUserGdiHandleLeakTestNames.Contains(testName))
                     return string.Format("!!! {0} HANDLE-LEAKED {1:0.#} User+GDI\r\n", testName, UserGdiHandles);
-                if (TotalHandles >= leakThresholds.TotalHandles)
+                if (TotalHandles >= leakThresholds.TotalHandles && !MutedTotalHandleLeakTestNames.Contains(testName))
                     return string.Format("!!! {0} HANDLE-LEAKED {1:0.#} Total\r\n", testName, TotalHandles);
                 return null;
             }
