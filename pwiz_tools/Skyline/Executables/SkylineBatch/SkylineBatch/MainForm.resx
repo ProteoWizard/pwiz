@@ -160,7 +160,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnExportConfigs.Location" type="System.Drawing.Point, System.Drawing">
-    <value>34, 121</value>
+    <value>39, 121</value>
   </data>
   <data name="btnExportConfigs.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -193,7 +193,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnImportConfigs.Location" type="System.Drawing.Point, System.Drawing">
-    <value>34, 94</value>
+    <value>39, 94</value>
   </data>
   <data name="btnImportConfigs.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -229,7 +229,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnViewLog.Location" type="System.Drawing.Point, System.Drawing">
-    <value>544, 416</value>
+    <value>533, 416</value>
   </data>
   <data name="btnViewLog.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -951,7 +951,7 @@
     <value>Configuration</value>
   </data>
   <data name="listViewConfigName.Width" type="System.Int32, mscorlib">
-    <value>300</value>
+    <value>294</value>
   </data>
   <data name="listViewModified.Text" xml:space="preserve">
     <value>Modified</value>
@@ -972,7 +972,7 @@
     <value>2, 2, 2, 2</value>
   </data>
   <data name="listViewConfigs.Size" type="System.Drawing.Size, System.Drawing">
-    <value>475, 337</value>
+    <value>464, 337</value>
   </data>
   <data name="listViewConfigs.TabIndex" type="System.Int32, mscorlib">
     <value>16</value>
@@ -1161,7 +1161,7 @@
     <value>Magenta</value>
   </data>
   <data name="btnUpArrow.Size" type="System.Drawing.Size, System.Drawing">
-    <value>30, 20</value>
+    <value>22, 20</value>
   </data>
   <data name="btnUpArrow.Text" xml:space="preserve">
     <value>toolStripButton1</value>
@@ -1179,7 +1179,7 @@
     <value>Magenta</value>
   </data>
   <data name="btnDownArrow.Size" type="System.Drawing.Size, System.Drawing">
-    <value>30, 20</value>
+    <value>22, 20</value>
   </data>
   <data name="btnDownArrow.Text" xml:space="preserve">
     <value>toolStripButton2</value>
@@ -1194,7 +1194,7 @@
     <value>Magenta</value>
   </data>
   <data name="btnDelete.Size" type="System.Drawing.Size, System.Drawing">
-    <value>30, 20</value>
+    <value>22, 20</value>
   </data>
   <data name="btnDelete.Text" xml:space="preserve">
     <value>toolStripButton1</value>
@@ -1209,7 +1209,7 @@
     <value>Magenta</value>
   </data>
   <data name="btnOpenTemplate.Size" type="System.Drawing.Size, System.Drawing">
-    <value>30, 20</value>
+    <value>22, 20</value>
   </data>
   <data name="btnOpenTemplate.Text" xml:space="preserve">
     <value>Open Template File</value>
@@ -1221,7 +1221,7 @@
     <value>Magenta</value>
   </data>
   <data name="btnOpenResults.Size" type="System.Drawing.Size, System.Drawing">
-    <value>30, 20</value>
+    <value>22, 20</value>
   </data>
   <data name="btnOpenResults.Text" xml:space="preserve">
     <value>Open Results File</value>
@@ -1233,7 +1233,7 @@
     <value>Magenta</value>
   </data>
   <data name="btnOpenAnalysis.Size" type="System.Drawing.Size, System.Drawing">
-    <value>30, 20</value>
+    <value>22, 20</value>
   </data>
   <data name="btnOpenAnalysis.Text" xml:space="preserve">
     <value>toolStripButton1</value>
@@ -1242,10 +1242,10 @@
     <value>Open Folder</value>
   </data>
   <data name="toolStrip1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>-2, 13</value>
+    <value>6, 13</value>
   </data>
   <data name="toolStrip1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>32, 159</value>
+    <value>24, 140</value>
   </data>
   <data name="toolStrip1.TabIndex" type="System.Int32, mscorlib">
     <value>14</value>
@@ -1269,7 +1269,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnAddConfig.Location" type="System.Drawing.Point, System.Drawing">
-    <value>34, 13</value>
+    <value>39, 13</value>
   </data>
   <data name="btnAddConfig.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -1299,7 +1299,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnEdit.Location" type="System.Drawing.Point, System.Drawing">
-    <value>34, 40</value>
+    <value>39, 40</value>
   </data>
   <data name="btnEdit.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -1329,7 +1329,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnCopy.Location" type="System.Drawing.Point, System.Drawing">
-    <value>34, 67</value>
+    <value>39, 67</value>
   </data>
   <data name="btnCopy.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -1356,7 +1356,7 @@
     <value>6</value>
   </data>
   <data name="panel1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>510, 31</value>
+    <value>499, 31</value>
   </data>
   <data name="panel1.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -1389,7 +1389,7 @@
     <value>2, 2, 2, 2</value>
   </data>
   <data name="tabFront.Size" type="System.Drawing.Size, System.Drawing">
-    <value>641, 455</value>
+    <value>630, 455</value>
   </data>
   <data name="tabFront.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1419,7 +1419,7 @@
     <value>2, 2, 2, 2</value>
   </data>
   <data name="tabMain.Size" type="System.Drawing.Size, System.Drawing">
-    <value>649, 481</value>
+    <value>638, 481</value>
   </data>
   <data name="tabMain.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1942,12 +1942,6 @@
   <data name="&gt;&gt;btnDelete.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnOpenAnalysis.Name" xml:space="preserve">
-    <value>btnOpenAnalysis</value>
-  </data>
-  <data name="&gt;&gt;btnOpenAnalysis.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;btnOpenTemplate.Name" xml:space="preserve">
     <value>btnOpenTemplate</value>
   </data>
@@ -1958,6 +1952,12 @@
     <value>btnOpenResults</value>
   </data>
   <data name="&gt;&gt;btnOpenResults.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnOpenAnalysis.Name" xml:space="preserve">
+    <value>btnOpenAnalysis</value>
+  </data>
+  <data name="&gt;&gt;btnOpenAnalysis.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">

@@ -188,6 +188,10 @@ namespace SkylineBatch
             UpdateUiConfigurations();
         }
 
+        #endregion
+
+        #region Open File/Folder
+
         private void btnOpenAnalysis_Click(object sender, EventArgs e)
         {
             var config = _configManager.GetSelectedConfig();
@@ -237,7 +241,7 @@ namespace SkylineBatch
         }
 
         #endregion
-
+        
         #region Running configurations
 
         private void btnRunOptions_Click(object sender, EventArgs e)

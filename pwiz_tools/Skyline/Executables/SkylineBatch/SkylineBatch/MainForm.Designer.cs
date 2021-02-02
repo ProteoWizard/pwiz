@@ -64,9 +64,9 @@
             this.btnUpArrow = new System.Windows.Forms.ToolStripButton();
             this.btnDownArrow = new System.Windows.Forms.ToolStripButton();
             this.btnDelete = new System.Windows.Forms.ToolStripButton();
-            this.btnOpenAnalysis = new System.Windows.Forms.ToolStripButton();
             this.btnOpenTemplate = new System.Windows.Forms.ToolStripButton();
             this.btnOpenResults = new System.Windows.Forms.ToolStripButton();
+            this.btnOpenAnalysis = new System.Windows.Forms.ToolStripButton();
             this.btnAddConfig = new System.Windows.Forms.Button();
             this.btnEdit = new System.Windows.Forms.Button();
             this.btnCopy = new System.Windows.Forms.Button();
@@ -337,14 +337,6 @@
             this.btnDelete.Name = "btnDelete";
             this.btnDelete.Click += new System.EventHandler(this.btnDelete_Click);
             // 
-            // btnOpenAnalysis
-            // 
-            this.btnOpenAnalysis.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            resources.ApplyResources(this.btnOpenAnalysis, "btnOpenAnalysis");
-            this.btnOpenAnalysis.Image = global::SkylineBatch.Properties.Resources.OpenFolder;
-            this.btnOpenAnalysis.Name = "btnOpenAnalysis";
-            this.btnOpenAnalysis.Click += new System.EventHandler(this.btnOpenAnalysis_Click);
-            // 
             // btnOpenTemplate
             // 
             this.btnOpenTemplate.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
@@ -360,6 +352,14 @@
             this.btnOpenResults.Image = global::SkylineBatch.Properties.Resources.SkylineData;
             this.btnOpenResults.Name = "btnOpenResults";
             this.btnOpenResults.Click += new System.EventHandler(this.btnOpenResults_Click);
+            // 
+            // btnOpenAnalysis
+            // 
+            this.btnOpenAnalysis.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            resources.ApplyResources(this.btnOpenAnalysis, "btnOpenAnalysis");
+            this.btnOpenAnalysis.Image = global::SkylineBatch.Properties.Resources.OpenFolder;
+            this.btnOpenAnalysis.Name = "btnOpenAnalysis";
+            this.btnOpenAnalysis.Click += new System.EventHandler(this.btnOpenAnalysis_Click);
             // 
             // btnAddConfig
             // 
