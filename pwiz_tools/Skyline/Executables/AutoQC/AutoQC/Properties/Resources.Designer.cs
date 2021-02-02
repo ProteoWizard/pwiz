@@ -61,6 +61,16 @@ namespace AutoQC.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap add {
+            get {
+                object obj = ResourceManager.GetObject("add", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Abort.
         /// </summary>
         internal static string AlertDlg_GetDefaultButtonText_Abort {
@@ -268,6 +278,16 @@ namespace AutoQC.Properties {
         internal static string ConfigManager_SaveConfigs_Save_configuration_error {
             get {
                 return ResourceManager.GetString("ConfigManager_SaveConfigs_Save_configuration_error", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap Delete {
+            get {
+                object obj = ResourceManager.GetObject("Delete", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
             }
         }
         
@@ -694,6 +714,26 @@ namespace AutoQC.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap OpenFolder {
+            get {
+                object obj = ResourceManager.GetObject("OpenFolder", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap Panorama {
+            get {
+                object obj = ResourceManager.GetObject("Panorama", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} requires {1} or {2} to be installed on the computer..
         /// </summary>
         internal static string Program_InitSkylineSettings__0__requires__1__or__2__to_be_installed_on_the_computer_ {
@@ -774,6 +814,26 @@ namespace AutoQC.Properties {
         internal static string Program_Main_Unable_to_update__0__shortcut___Error_was___1_ {
             get {
                 return ResourceManager.GetString("Program_Main_Unable_to_update__0__shortcut___Error_was___1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap SkylineData {
+            get {
+                object obj = ResourceManager.GetObject("SkylineData", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap SkylineDoc {
+            get {
+                object obj = ResourceManager.GetObject("SkylineDoc", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
             }
         }
         

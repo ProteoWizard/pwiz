@@ -60,7 +60,7 @@ namespace AutoQC
         private async Task<SkylineSettings> FixInvalidSkylineSettings()
         {
             var skylineTypeControl = new SkylineTypeControl(_invalidConfig.UsesSkyline, _invalidConfig.UsesSkylineDaily, _invalidConfig.UsesCustomSkylinePath, _invalidConfig.SkylineSettings.CmdPath);
-            return (SkylineSettings)await GetValidVariable(_invalidConfig.SkylineSettings, "Invalid Skyline Installation", skylineTypeControl);
+            return (SkylineSettings)await GetValidVariable(_invalidConfig.SkylineSettings, skylineTypeControl);
         }
 
 
@@ -78,7 +78,7 @@ namespace AutoQC
             var path = _replaceRoot ? invalidPath.Replace(_oldRoot, _newRoot) : invalidPath;
 
             var folderControl = new FilePathControl(variableName, path, folder, validator);
-            path = (string) await GetValidVariable(path, "Invalid Path", folderControl, false);
+            path = (string) await GetValidVariable(path, folderControl, false);
 
             // the first time a path is changed, ask if user wants all path roots replaced
             if (string.IsNullOrEmpty(_oldRoot))
@@ -95,7 +95,7 @@ namespace AutoQC
         }
 
 
-        private async Task<object> GetValidVariable(object initialVariable, string errorTitle, IValidatorControl control, bool removeControl = true)
+        private async Task<object> GetValidVariable(object initialVariable, IValidatorControl control, bool removeControl = true)
         {
             var variable = initialVariable;
             if (control.IsValid(out string errorMessage)) return variable;
@@ -107,7 +107,7 @@ namespace AutoQC
                 await btnNext;
                 valid = control.IsValid(out errorMessage);
                 if (!valid)
-                    _mainControl.DisplayError(errorTitle, errorMessage);
+                    _mainControl.DisplayError(errorMessage);
             }
 
             if (removeControl) RemoveControl((UserControl)control);

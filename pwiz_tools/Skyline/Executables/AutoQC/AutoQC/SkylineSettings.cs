@@ -29,13 +29,13 @@ namespace AutoQC
                 case SkylineType.Skyline:
                     if (skylineWebInstallation)
                         CmdPath = Settings.Default.SkylineRunnerPath;
-                    if (skylineAdminInstallation)
+                    else if (skylineAdminInstallation)
                         CmdPath = Settings.Default.SkylineAdminCmdPath;
                     break;
                 case SkylineType.SkylineDaily:
                     if (skylineDailyWebInstallation)
                         CmdPath = Settings.Default.SkylineDailyRunnerPath;
-                    if (skylineDailyAdminInstallation)
+                    else if (skylineDailyAdminInstallation)
                         CmdPath = Settings.Default.SkylineDailyAdminCmdPath;
                     break;
                 case SkylineType.Custom:

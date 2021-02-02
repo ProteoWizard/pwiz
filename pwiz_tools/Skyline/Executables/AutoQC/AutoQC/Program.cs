@@ -114,8 +114,7 @@ namespace AutoQC
                     if (eventArgs.Error != null)
                     {
                         LogError($"Unable to update {AUTO_QC_STARTER} shortcut.", eventArgs.Error);
-                        form.DisplayError(string.Format(Resources.Program_Main__0__Update_Error, AUTO_QC_STARTER),
-                            string.Format(Resources.Program_Main_Unable_to_update__0__shortcut___Error_was___1_,
+                        form.DisplayError(string.Format(Resources.Program_Main_Unable_to_update__0__shortcut___Error_was___1_,
                                 AUTO_QC_STARTER, eventArgs.Error));
                     }
                 };

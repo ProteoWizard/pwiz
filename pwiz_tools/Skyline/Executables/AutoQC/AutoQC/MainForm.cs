@@ -23,6 +23,7 @@ using System.Drawing;
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Web;
 using AutoQC.Properties;
 
 namespace AutoQC
@@ -30,7 +31,7 @@ namespace AutoQC
     public partial class MainForm : Form, IMainUiControl
     {
 
-        private ConfigManager configManager;
+        private ConfigManager _configManager;
 
         // Flag that gets set to true in the "Shown" event handler. 
         // ItemCheck and ItemChecked events on the listview are ignored until then.
@@ -42,9 +43,8 @@ namespace AutoQC
             InitializeComponent();
 
             Program.LogInfo("Loading configurations from saved settings.");
-            configManager = new ConfigManager(this);
+            _configManager = new ConfigManager(this);
 
-            UpdateButtonsEnabled();
             UpdateUiConfigurations();
             UpdateUiLoggers();
             UpdateSettingsTab();
@@ -53,7 +53,7 @@ namespace AutoQC
             {
                 _loaded = true;
                 if (Settings.Default.KeepAutoQcRunning)
-                    configManager.RunEnabled();
+                    _configManager.RunEnabled();
             });
 
         }
@@ -78,7 +78,7 @@ namespace AutoQC
         #region Configuration list
 
 
-        private void btnNewConfig_Click(object sender, EventArgs e)
+        private void btnAdd_Click(object sender, EventArgs e)
         {
             Program.LogInfo("Creating new configuration");
             //var configForm = new AutoQcConfigForm(this);
@@ -89,14 +89,14 @@ namespace AutoQC
 
         public void AddConfiguration(AutoQcConfig config)
         {
-            configManager.AddConfiguration(config);
+            _configManager.AddConfiguration(config);
             UpdateUiConfigurations();
             UpdateUiLoggers();
         }
 
         private void HandleEditEvent(object sender, EventArgs e)
         {
-            var configRunner = configManager.GetSelectedConfigRunner();
+            var configRunner = _configManager.GetSelectedConfigRunner();
             var config = configRunner.Config;
             try
             {
@@ -123,21 +123,21 @@ namespace AutoQC
 
         public void EditSelectedConfiguration(AutoQcConfig newVersion)
         {
-            configManager.ReplaceSelectedConfig(newVersion);
+            _configManager.ReplaceSelectedConfig(newVersion);
             UpdateUiConfigurations();
             UpdateUiLoggers();
         }
 
         private void btnCopy_Click(object sender, EventArgs e)
         {
-            Program.LogInfo(string.Format("Copying configuration \"{0}\"", configManager.GetSelectedConfig().Name));
-            var configForm = new AutoQcConfigForm(this, configManager.GetSelectedConfig(), ConfigAction.Copy, false);
+            Program.LogInfo(string.Format("Copying configuration \"{0}\"", _configManager.GetSelectedConfig().Name));
+            var configForm = new AutoQcConfigForm(this, _configManager.GetSelectedConfig(), ConfigAction.Copy, false);
             configForm.ShowDialog();
         }
 
         private void btnDelete_Click(object sender, EventArgs e)
         {
-            configManager.RemoveSelected();
+            _configManager.RemoveSelected();
             UpdateUiConfigurations();
             UpdateUiLoggers();
         }
@@ -150,29 +150,27 @@ namespace AutoQC
                 return;
 
             var filePath = dialog.FileName;
-            configManager.Import(filePath);
+            _configManager.Import(filePath);
             UpdateUiConfigurations();
             UpdateUiLoggers();
         }
 
         private void btnExport_Click(object sender, EventArgs e)
         {
-            var shareForm = new ShareConfigsForm(this, configManager);
+            var shareForm = new ShareConfigsForm(this, _configManager);
             shareForm.ShowDialog();
         }
 
         private void btnRun_MouseClick(object sender, MouseEventArgs e)
         {
-            configManager.UpdateSelectedEnabled(true);
+            _configManager.UpdateSelectedEnabled(true);
             UpdateUiConfigurations();
-            UpdateButtonsEnabled();
         }
 
         private void btnStop_MouseClick(object sender, MouseEventArgs e)
         {
-            configManager.UpdateSelectedEnabled(false);
+            _configManager.UpdateSelectedEnabled(false);
             UpdateUiConfigurations();
-            UpdateButtonsEnabled();
         }
 
         private void listViewConfigs_SelectedIndexChanged(object sender, EventArgs e)
@@ -187,37 +185,70 @@ namespace AutoQC
 
             if (index < 0)
             {
-                configManager.DeselectConfig();
+                _configManager.DeselectConfig();
                 return;
             }
-            configManager.SelectConfig(index);
-        }
-
-        public void UpdateButtonsEnabled()
-        {
-            RunUi(() =>
-            {
-                var configSelected = configManager.HasSelectedConfig();
-                btnEdit.Enabled = configSelected;
-                btnCopy.Enabled = configSelected;
-                btnDelete.Enabled = configSelected;
-                btnViewLog.Enabled = configSelected;
-                
-                btnRun.Enabled = configSelected && configManager.GetSelectedConfigRunner().CanStart();
-                btnStop.Enabled = configSelected && configManager.GetSelectedConfigRunner().CanStop();
-            });
-
+            _configManager.SelectConfig(index);
         }
 
         private void listViewConfigs_ColumnClick(object sender, ColumnClickEventArgs e)
         {
-            configManager.SortByValue(e.Column);
+            _configManager.SortByValue(e.Column);
             UpdateUiConfigurations();
         }
 
         #endregion
 
+        #region Open File/Folder
+        
 
+        private void btnOpenResults_Click(object sender, EventArgs e)
+        {
+            var config = _configManager.GetSelectedConfig();
+            if (!_configManager.IsSelectedConfigValid())
+            {
+                DisplayError("Cannot open the Skyline file of an invalid configuration." + Environment.NewLine +
+                             string.Format("Please fix {0} and try again.", config.Name));
+                return;
+            }
+            // Open template file
+            var file = config.MainSettings.SkylineFilePath;
+            Process.Start(file);
+        }
+
+        private void btnOpenPanoramaFolder_Click(object sender, EventArgs e)
+        {
+            var config = _configManager.GetSelectedConfig();
+            if (!_configManager.IsSelectedConfigValid())
+            {
+                DisplayError("Cannot open the Panorama folder of an invalid configuration." + Environment.NewLine +
+                             string.Format("Please fix {0} and try again.", config.Name));
+                return;
+            }
+            
+            var uri = new Uri(config.PanoramaSettings.PanoramaServerUri + config.PanoramaSettings.PanoramaFolder);
+            var username = HttpUtility.UrlEncode(config.PanoramaSettings.PanoramaUserEmail);
+            var password = HttpUtility.UrlEncode(config.PanoramaSettings.PanoramaPassword);
+
+            var uriWithCred = new UriBuilder(uri) { UserName = username, Password = password }.Uri;
+            Process.Start(uriWithCred.AbsoluteUri);
+        }
+
+        private void btnOpenResultsFolder_Click(object sender, EventArgs e)
+        {
+            var config = _configManager.GetSelectedConfig();
+            if (!_configManager.IsSelectedConfigValid())
+            {
+                DisplayError("Cannot open the results folder of an invalid configuration." + Environment.NewLine +
+                             string.Format("Please fix {0} and try again.", config.Name));
+                return;
+            }
+            var folder = config.MainSettings.FolderToWatch;
+            Process.Start("explorer.exe", "/n," + folder);
+        }
+
+        #endregion
+        
         #region Update UI
 
         public void UpdateUiConfigurations()
@@ -226,14 +257,35 @@ namespace AutoQC
             {
                 Program.LogInfo("Updating configurations");
                 listViewConfigs.Items.Clear();
-                var listViewItems = configManager.ConfigsListViewItems();
+                var listViewItems = _configManager.ConfigsListViewItems();
                 foreach (var lvi in listViewItems)
                     listViewConfigs.Items.Add(lvi);
-                if (configManager.SelectedConfig >= 0)
-                    listViewConfigs.Items[configManager.SelectedConfig].Selected = true;
+                if (_configManager.SelectedConfig >= 0)
+                    listViewConfigs.Items[_configManager.SelectedConfig].Selected = true;
                 UpdateLabelVisibility();
                 UpdateButtonsEnabled();
             });
+        }
+
+        public void UpdateButtonsEnabled()
+        {
+            RunUi(() =>
+            {
+                var configSelected = _configManager.HasSelectedConfig();
+                var config = configSelected ? _configManager.GetSelectedConfig() : null;
+                btnDelete.Enabled = configSelected;
+                btnOpenResults.Enabled = configSelected;
+                btnOpenPanoramaFolder.Enabled = configSelected && config.PanoramaSettings.PublishToPanorama;
+                btnOpenResultsFolder.Enabled = configSelected;
+
+                btnEdit.Enabled = configSelected;
+                btnCopy.Enabled = configSelected;
+                btnViewLog.Enabled = configSelected;
+
+                btnRun.Enabled = configSelected && _configManager.GetSelectedConfigRunner().CanStart();
+                btnStop.Enabled = configSelected && _configManager.GetSelectedConfigRunner().CanStop();
+            });
+
         }
 
         public void UpdateUiLoggers()
@@ -242,30 +294,29 @@ namespace AutoQC
             {
                 Program.LogInfo("Updating loggers");
                 comboConfigs.Items.Clear();
-                comboConfigs.Items.AddRange(configManager.GetLogList());
-                comboConfigs.SelectedIndex = configManager.SelectedLog;
+                comboConfigs.Items.AddRange(_configManager.GetLogList());
+                comboConfigs.SelectedIndex = _configManager.SelectedLog;
             });
         }
 
         private void UpdateLabelVisibility()
         {
             lblNoConfigs.Hide();
-            if (!configManager.HasConfigs())
+            if (!_configManager.HasConfigs())
             {
                 lblNoConfigs.Show();
             }
         }
 
         #endregion
-
-
+        
         #region Logging
 
         private void btnViewLog_Click(object sender, EventArgs e)
         {
-            if (configManager.HasSelectedConfig())
+            if (_configManager.HasSelectedConfig())
             {
-                configManager.SelectLogOfSelectedConfig();
+                _configManager.SelectLogOfSelectedConfig();
                 UpdateUiLoggers();
                 SwitchLogger();
             }
@@ -274,8 +325,8 @@ namespace AutoQC
 
         private void comboConfigs_SelectedIndexChanged(object sender, EventArgs e)
         {
-            configManager.SelectLog(comboConfigs.SelectedIndex);
-            if (configManager.SelectedLog >= 0)
+            _configManager.SelectLog(comboConfigs.SelectedIndex);
+            if (_configManager.SelectedLog >= 0)
                 btnOpenFolder.Enabled = true;
             SwitchLogger();
         }
@@ -284,7 +335,7 @@ namespace AutoQC
         {
             textBoxLog.Clear();
 
-            var logger = configManager.GetSelectedLogger();
+            var logger = _configManager.GetSelectedLogger();
             try
             {
                 await Task.Run(() =>
@@ -295,7 +346,7 @@ namespace AutoQC
             }
             catch (Exception ex)
             {
-                DisplayErrorWithException(Resources.MainForm_ViewLog_Error_Reading_Log, ex.Message, ex);
+                DisplayErrorWithException(Resources.MainForm_ViewLog_Error_Reading_Log + Environment.NewLine + ex.Message, ex);
             }
 
             ScrollToLogEnd();
@@ -309,13 +360,12 @@ namespace AutoQC
 
         private void btnOpenFolder_Click(object sender, EventArgs e)
         {
-            var logger = configManager.GetSelectedLogger();
+            var logger = _configManager.GetSelectedLogger();
             if (!File.Exists(logger.GetFile()))
             {
                 if (!Directory.Exists(logger.GetDirectory()))
                 {
-                    var err = string.Format(Resources.MainForm_btnOpenFolder_Click_Directory_does_not_exist___0_, logger.GetFile());
-                    DisplayError(Resources.MainForm_btnOpenFolder_Click_Directory_Not_Found, err);
+                    DisplayError(string.Format(Resources.MainForm_btnOpenFolder_Click_Directory_does_not_exist___0_, logger.GetFile()));
                     return;
                 }
                 Process.Start(logger.GetDirectory());
@@ -330,7 +380,7 @@ namespace AutoQC
         {
             RunUi(() =>
             {
-                if (!configManager.LoggerIsDisplayed(name))
+                if (!_configManager.LoggerIsDisplayed(name))
                     return;
                 if (trim)
                 {
@@ -354,8 +404,8 @@ namespace AutoQC
             {
                 var unTruncated = textBoxLog.Text;
                 var startIndex = textBoxLog.GetFirstCharIndexFromLine(numLines - AutoQcLogger.MAX_LOG_LINES);
-                var message = (configManager.GetSelectedLogger() != null)
-                    ? string.Format(AutoQcLogger.LogTruncatedMessage, configManager.GetSelectedLogger().GetFile())
+                var message = (_configManager.GetSelectedLogger() != null)
+                    ? string.Format(AutoQcLogger.LogTruncatedMessage, _configManager.GetSelectedLogger().GetFile())
                     : Resources.MainForm_ViewLog_Log_Truncated;
                 message += Environment.NewLine;
                 textBoxLog.Text = message + unTruncated.Substring(startIndex);
@@ -369,7 +419,7 @@ namespace AutoQC
         {
             RunUi(() =>
             {
-                if (!configManager.LoggerIsDisplayed(name))
+                if (!_configManager.LoggerIsDisplayed(name))
                     return;
                 if (trim)
                 {
@@ -389,7 +439,7 @@ namespace AutoQC
         {
             RunUi(() =>
             {
-                if (!configManager.LoggerIsDisplayed(name))
+                if (!_configManager.LoggerIsDisplayed(name))
                     return;
                 foreach (var line in lines)
                 {
@@ -403,7 +453,7 @@ namespace AutoQC
         {
             RunUi(() =>
             {
-                if (!configManager.LoggerIsDisplayed(name))
+                if (!_configManager.LoggerIsDisplayed(name))
                     return;
                 var selectionStart = textBoxLog.SelectionStart;
                 foreach (var line in lines)
@@ -420,7 +470,6 @@ namespace AutoQC
 
 
         #endregion
-
 
         #region Settings Tab
 
@@ -441,7 +490,7 @@ namespace AutoQC
             var enable = cb_keepRunning.Checked;
             try
             {
-                configManager.ChangeKeepRunningState(enable);
+                _configManager.ChangeKeepRunningState(enable);
             }
             catch (Exception ex)
             {
@@ -450,8 +499,8 @@ namespace AutoQC
                 // ReSharper disable once LocalizableElement
                 Program.LogError($"Error {(enable ? "enabling" : "disabling")} \"Keep AutoQC Loader running\"", ex);
 
-                DisplayErrorWithException(Resources.MainForm_cb_keepRunning_CheckedChanged_Error_Changing_Settings,
-                    TextUtil.LineSeparate(
+                DisplayErrorWithException(TextUtil.LineSeparate(
+                        Resources.MainForm_cb_keepRunning_CheckedChanged_Error_Changing_Settings,
                         $"{err},{ex.Message},{(ex.InnerException != null ? ex.InnerException.StackTrace : ex.StackTrace)}"),
                     ex);
 
@@ -473,11 +522,7 @@ namespace AutoQC
             Settings.Default.Save();
         }
 
-
         #endregion
-
-        
-
 
         #region Form event handlers and errors
 
@@ -501,40 +546,37 @@ namespace AutoQC
 
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            configManager.Close();
+            _configManager.Close();
         }
 
-        public void DisplayError(string title, string message)
+        public void DisplayError(string message)
         {
-            RunUi(() => { AlertDlg.ShowError(this, message, title); });
+            RunUi(() => { AlertDlg.ShowError(this, message, "REMOVE"); });
         }
 
-        public void DisplayWarning(string title, string message)
+        public void DisplayWarning(string message)
         {
-            RunUi(() => { AlertDlg.ShowWarning(this, message, title); });
+            RunUi(() => { AlertDlg.ShowWarning(this, message, "REMOVE"); });
         }
 
-        public void DisplayInfo(string title, string message)
+        public void DisplayInfo(string message)
         {
-            RunUi(() => { AlertDlg.ShowInfo(this, message, title); });
+            RunUi(() => { AlertDlg.ShowInfo(this, message, "REMOVE"); });
         }
 
-        public void DisplayErrorWithException(string title, string message, Exception exception)
+        public void DisplayErrorWithException(string message, Exception exception)
         {
-            RunUi(() => { AlertDlg.ShowErrorWithException(this, message, title, exception); });
+            RunUi(() => { AlertDlg.ShowErrorWithException(this, message, "REMOVE", exception); });
         }
 
-        public DialogResult DisplayQuestion(string title, string message)
+        public DialogResult DisplayQuestion(string message)
         {
-            return AlertDlg.ShowQuestion(this, message, title);
+            return AlertDlg.ShowQuestion(this, message, "REMOVE");
         }
-
-
-
 
         #endregion
+        
     }
-
 
     class MyListView : ListView
     {
@@ -551,8 +593,6 @@ namespace AutoQC
         }
     }
 
-
-
     public interface IMainUiControl
     {
         void AddConfiguration(AutoQcConfig config);
@@ -566,12 +606,11 @@ namespace AutoQC
         void LogLinesToUi(string name, List<string> lines);
         void LogErrorLinesToUi(string name, List<string> lines);
 
-        void DisplayError(string title, string message);
-        void DisplayWarning(string title, string message);
-        void DisplayInfo(string title, string message);
-        void DisplayErrorWithException(string title, string message, Exception exception);
-        DialogResult DisplayQuestion(string title, string message);
-
+        void DisplayError(string message);
+        void DisplayWarning(string message);
+        void DisplayInfo(string message);
+        void DisplayErrorWithException(string message, Exception exception);
+        DialogResult DisplayQuestion(string message);
 
     }
 }

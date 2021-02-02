@@ -9,7 +9,6 @@ using AutoQC;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Rootobject_1 = Rootobject;
 
 
 namespace AutoQCTest

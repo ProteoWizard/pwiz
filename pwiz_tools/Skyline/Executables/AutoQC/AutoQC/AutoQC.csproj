@@ -97,6 +97,12 @@
       <DependentUpon>SkylineTypeControl.cs</DependentUpon>
     </EmbeddedResource>
     <None Include="Resources\Copy.bmp" />
+    <None Include="Resources\add.bmp" />
+    <None Include="Resources\Delete.bmp" />
+    <None Include="Resources\OpenFolder.bmp" />
+    <None Include="Resources\SkylineData.ico" />
+    <None Include="Resources\SkylineDoc.ico" />
+    <None Include="Resources\Panorama.bmp" />
     <Content Include="SkylineDailyRunner.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -212,6 +218,7 @@
     <Reference Include="System.Drawing" />
     <Reference Include="System.Management" />
     <Reference Include="System.Security" />
+    <Reference Include="System.Web" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
   </ItemGroup>

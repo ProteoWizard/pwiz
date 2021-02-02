@@ -31,10 +31,8 @@
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.btnEdit = new System.Windows.Forms.Button();
-            this.btnDelete = new System.Windows.Forms.Button();
             this.btnCopy = new System.Windows.Forms.Button();
             this.lblNoConfigs = new System.Windows.Forms.Label();
-            this.btnNewConfig = new System.Windows.Forms.Button();
             this.labelSavedConfigurations = new System.Windows.Forms.Label();
             this.btnViewLog = new System.Windows.Forms.Button();
             this.tabMain = new System.Windows.Forms.TabControl();
@@ -45,6 +43,12 @@
             this.columnCreated = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnStatus = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.panel1 = new System.Windows.Forms.Panel();
+            this.toolStrip = new System.Windows.Forms.ToolStrip();
+            this.btnAdd = new System.Windows.Forms.ToolStripButton();
+            this.btnDelete = new System.Windows.Forms.ToolStripButton();
+            this.btnOpenResults = new System.Windows.Forms.ToolStripButton();
+            this.btnOpenPanoramaFolder = new System.Windows.Forms.ToolStripButton();
+            this.btnOpenResultsFolder = new System.Windows.Forms.ToolStripButton();
             this.btnImportConfigs = new System.Windows.Forms.Button();
             this.btnExportConfigs = new System.Windows.Forms.Button();
             this.panel2 = new System.Windows.Forms.Panel();
@@ -64,6 +68,7 @@
             this.tabMain.SuspendLayout();
             this.tabFront.SuspendLayout();
             this.panel1.SuspendLayout();
+            this.toolStrip.SuspendLayout();
             this.panel2.SuspendLayout();
             this.tabLog.SuspendLayout();
             this.tabSettings.SuspendLayout();
@@ -77,13 +82,6 @@
             this.btnEdit.UseVisualStyleBackColor = true;
             this.btnEdit.Click += new System.EventHandler(this.HandleEditEvent);
             // 
-            // btnDelete
-            // 
-            resources.ApplyResources(this.btnDelete, "btnDelete");
-            this.btnDelete.Name = "btnDelete";
-            this.btnDelete.UseVisualStyleBackColor = true;
-            this.btnDelete.Click += new System.EventHandler(this.btnDelete_Click);
-            // 
             // btnCopy
             // 
             resources.ApplyResources(this.btnCopy, "btnCopy");
@@ -96,13 +94,6 @@
             resources.ApplyResources(this.lblNoConfigs, "lblNoConfigs");
             this.lblNoConfigs.ForeColor = System.Drawing.Color.Blue;
             this.lblNoConfigs.Name = "lblNoConfigs";
-            // 
-            // btnNewConfig
-            // 
-            resources.ApplyResources(this.btnNewConfig, "btnNewConfig");
-            this.btnNewConfig.Name = "btnNewConfig";
-            this.btnNewConfig.UseVisualStyleBackColor = true;
-            this.btnNewConfig.Click += new System.EventHandler(this.btnNewConfig_Click);
             // 
             // labelSavedConfigurations
             // 
@@ -173,14 +164,66 @@
             // panel1
             // 
             resources.ApplyResources(this.panel1, "panel1");
+            this.panel1.Controls.Add(this.toolStrip);
             this.panel1.Controls.Add(this.btnImportConfigs);
-            this.panel1.Controls.Add(this.btnNewConfig);
             this.panel1.Controls.Add(this.btnExportConfigs);
-            this.panel1.Controls.Add(this.btnViewLog);
             this.panel1.Controls.Add(this.btnEdit);
             this.panel1.Controls.Add(this.btnCopy);
-            this.panel1.Controls.Add(this.btnDelete);
             this.panel1.Name = "panel1";
+            // 
+            // toolStrip
+            // 
+            this.toolStrip.BackColor = System.Drawing.SystemColors.Control;
+            resources.ApplyResources(this.toolStrip, "toolStrip");
+            this.toolStrip.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
+            this.toolStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.btnAdd,
+            this.btnDelete,
+            this.btnOpenResults,
+            this.btnOpenPanoramaFolder,
+            this.btnOpenResultsFolder});
+            this.toolStrip.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.VerticalStackWithOverflow;
+            this.toolStrip.Name = "toolStrip";
+            // 
+            // btnAdd
+            // 
+            this.btnAdd.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.btnAdd.Image = global::AutoQC.Properties.Resources.add;
+            resources.ApplyResources(this.btnAdd, "btnAdd");
+            this.btnAdd.Name = "btnAdd";
+            this.btnAdd.Click += new System.EventHandler(this.btnAdd_Click);
+            // 
+            // btnDelete
+            // 
+            this.btnDelete.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            resources.ApplyResources(this.btnDelete, "btnDelete");
+            this.btnDelete.Image = global::AutoQC.Properties.Resources.Delete;
+            this.btnDelete.Name = "btnDelete";
+            this.btnDelete.Click += new System.EventHandler(this.btnDelete_Click);
+            // 
+            // btnOpenResults
+            // 
+            this.btnOpenResults.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            resources.ApplyResources(this.btnOpenResults, "btnOpenResults");
+            this.btnOpenResults.Image = global::AutoQC.Properties.Resources.SkylineData;
+            this.btnOpenResults.Name = "btnOpenResults";
+            this.btnOpenResults.Click += new System.EventHandler(this.btnOpenResults_Click);
+            // 
+            // btnOpenPanoramaFolder
+            // 
+            this.btnOpenPanoramaFolder.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            resources.ApplyResources(this.btnOpenPanoramaFolder, "btnOpenPanoramaFolder");
+            this.btnOpenPanoramaFolder.Image = global::AutoQC.Properties.Resources.Panorama;
+            this.btnOpenPanoramaFolder.Name = "btnOpenPanoramaFolder";
+            this.btnOpenPanoramaFolder.Click += new System.EventHandler(this.btnOpenPanoramaFolder_Click);
+            // 
+            // btnOpenResultsFolder
+            // 
+            this.btnOpenResultsFolder.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            resources.ApplyResources(this.btnOpenResultsFolder, "btnOpenResultsFolder");
+            this.btnOpenResultsFolder.Image = global::AutoQC.Properties.Resources.OpenFolder;
+            this.btnOpenResultsFolder.Name = "btnOpenResultsFolder";
+            this.btnOpenResultsFolder.Click += new System.EventHandler(this.btnOpenResultsFolder_Click);
             // 
             // btnImportConfigs
             // 
@@ -203,6 +246,7 @@
             resources.ApplyResources(this.panel2, "panel2");
             this.panel2.Controls.Add(this.btnStop);
             this.panel2.Controls.Add(this.btnRun);
+            this.panel2.Controls.Add(this.btnViewLog);
             this.panel2.Controls.Add(this.lblNoConfigs);
             this.panel2.Name = "panel2";
             // 
@@ -301,6 +345,9 @@
             this.tabFront.ResumeLayout(false);
             this.tabFront.PerformLayout();
             this.panel1.ResumeLayout(false);
+            this.panel1.PerformLayout();
+            this.toolStrip.ResumeLayout(false);
+            this.toolStrip.PerformLayout();
             this.panel2.ResumeLayout(false);
             this.panel2.PerformLayout();
             this.tabLog.ResumeLayout(false);
@@ -315,10 +362,8 @@
         #endregion
 
         private System.Windows.Forms.Button btnEdit;
-        private System.Windows.Forms.Button btnDelete;
         private System.Windows.Forms.Button btnCopy;
         private System.Windows.Forms.Label lblNoConfigs;
-        private System.Windows.Forms.Button btnNewConfig;
         private System.Windows.Forms.Label labelSavedConfigurations;
         private System.Windows.Forms.Button btnViewLog;
         private System.Windows.Forms.TabControl tabMain;
@@ -345,5 +390,11 @@
         private System.Windows.Forms.ColumnHeader columnUser;
         private System.Windows.Forms.ColumnHeader columnCreated;
         private System.Windows.Forms.ColumnHeader columnStatus;
+        private System.Windows.Forms.ToolStrip toolStrip;
+        private System.Windows.Forms.ToolStripButton btnAdd;
+        private System.Windows.Forms.ToolStripButton btnDelete;
+        private System.Windows.Forms.ToolStripButton btnOpenResults;
+        private System.Windows.Forms.ToolStripButton btnOpenResultsFolder;
+        private System.Windows.Forms.ToolStripButton btnOpenPanoramaFolder;
     }
 }

@@ -195,6 +195,11 @@ namespace AutoQC
             return _configList[SelectedConfig];
         }
 
+        public bool IsSelectedConfigValid()
+        {
+            return _configsValidated[GetSelectedConfig().Name];
+        }
+
         public AutoQcConfig GetConfigAt(int index)
         {
             return _configList[index];
@@ -267,12 +272,11 @@ namespace AutoQC
                             Resources.MainForm_btnDelete_Click_Please_wait_for_the_configuration___0___to_stop_and_try_again_,
                             configRunner.GetConfigName());
                 }
-                DisplayWarning(Resources.MainForm_btnDelete_Click_Cannot_Delete, message);
+                DisplayWarning(Resources.MainForm_btnDelete_Click_Cannot_Delete + Environment.NewLine + message);
                 return;
             }
 
-            var doDelete = DisplayQuestion(Resources.MainForm_btnDelete_Click_Confirm_Delete,
-                    string.Format(Resources.MainForm_btnDelete_Click_Are_you_sure_you_want_to_delete_configuration___0___, configRunner.GetConfigName()));
+            var doDelete = DisplayQuestion(string.Format(Resources.MainForm_btnDelete_Click_Are_you_sure_you_want_to_delete_configuration___0___, configRunner.GetConfigName()));
 
 
             if (doDelete != DialogResult.Yes)
@@ -458,7 +462,7 @@ namespace AutoQC
             }
             catch (ArgumentException)
             {
-                DisplayError(Resources.ConfigManager_Run_Error,
+                DisplayError(Resources.ConfigManager_Run_Error + Environment.NewLine +
                     string.Format(Resources.ConfigManager_Please_edit_configuration__0__and_try_again_, selectedConfig.Name));
                 return;
             }
@@ -468,14 +472,13 @@ namespace AutoQC
                 var message = string.Format(Resources.MainForm_listViewConfigs_ItemCheck_Configuration_is__0___Please_wait_,
                     configRunner.IsStarting() ? Resources.MainForm_listViewConfigs_ItemCheck_starting : Resources.MainForm_listViewConfigs_ItemCheck_stopping);
 
-                DisplayWarning(Resources.MainForm_listViewConfigs_ItemCheck_Please_Wait, message);
+                DisplayWarning(Resources.MainForm_listViewConfigs_ItemCheck_Please_Wait + Environment.NewLine + message);
                 return;
             }
 
             if (!newIsEnabled)
             {
-                var doChange = DisplayQuestion(Resources.MainForm_listViewConfigs_ItemCheck_Confirm_Stop,
-                        string.Format(
+                var doChange = DisplayQuestion(string.Format(
                             Resources
                                 .MainForm_listViewConfigs_ItemCheck_Are_you_sure_you_want_to_stop_configuration___0___,
                             configRunner.GetConfigName()));
@@ -503,7 +506,8 @@ namespace AutoQC
             catch (Exception e)
             {
                 var title = string.Format(Resources.MainForm_StartConfigRunner_Error_Starting_Configuration___0__, configRunner.Config.Name);
-                DisplayErrorWithException(title, e.Message, e);
+                DisplayErrorWithException(string.Format(Resources.MainForm_StartConfigRunner_Error_Starting_Configuration___0__, configRunner.Config.Name) + Environment.NewLine +
+                                          e.Message, e);
                 // ReSharper disable once LocalizableElement
                 Program.LogError(string.Format("Error Starting Configuration \"{0}\"", configRunner.Config.Name), e);
             }
@@ -629,15 +633,13 @@ namespace AutoQC
             }
             catch (Exception)
             {
-                DisplayError(Resources.MainForm_btnImport_Click_Import_Configurations_Error, 
-                    string.Format(Resources.MainForm_btnImport_Click_Could_not_import_configurations_from_file__0_, filePath));
+                DisplayError(string.Format(Resources.MainForm_btnImport_Click_Could_not_import_configurations_from_file__0_, filePath));
                 return;
             }
 
             if (readConfigs.Count == 0)
             {
-                DisplayError(Resources.MainForm_btnImport_Click_Import_Configurations_Error,
-                    string.Format(Resources.MainForm_btnImport_Click_No_configurations_were_found_in_file__0__, filePath));
+                DisplayError(string.Format(Resources.MainForm_btnImport_Click_No_configurations_were_found_in_file__0__, filePath));
                 return;
             }
 
@@ -676,7 +678,7 @@ namespace AutoQC
                     message.Append(error).Append(Environment.NewLine);
                 }
             }
-            DisplayInfo(Resources.MainForm_btnImport_Click_Import_Configurations, message.ToString());
+            DisplayInfo(message.ToString());
         }
 
         public object[] GetConfigNames()
@@ -706,39 +708,39 @@ namespace AutoQC
 
         #region UI Control
 
-        private void DisplayError(string title, string message)
+        private void DisplayError(string message)
         {
             if (!_runningUi)
                 return;
-            _uiControl.DisplayError(title, message);
+            _uiControl.DisplayError(message);
         }
 
-        private void DisplayErrorWithException(string title, string message, Exception ex)
+        private void DisplayErrorWithException(string message, Exception ex)
         {
             if (!_runningUi)
                 return;
-            _uiControl.DisplayErrorWithException(title, message, ex);
+            _uiControl.DisplayErrorWithException(message, ex);
         }
 
-        private void DisplayWarning(string title, string message)
+        private void DisplayWarning(string message)
         {
             if (!_runningUi)
                 return;
-            _uiControl.DisplayWarning(title, message);
+            _uiControl.DisplayWarning(message);
         }
 
-        private void DisplayInfo(string title, string message)
+        private void DisplayInfo(string message)
         {
             if (!_runningUi)
                 return;
-            _uiControl.DisplayInfo(title, message);
+            _uiControl.DisplayInfo(message);
         }
 
-        private DialogResult DisplayQuestion(string title, string message)
+        private DialogResult DisplayQuestion(string message)
         {
             if (!_runningUi)
                 return DialogResult.Yes;
-            return _uiControl.DisplayQuestion(title, message);
+            return _uiControl.DisplayQuestion(message);
         }
 
 

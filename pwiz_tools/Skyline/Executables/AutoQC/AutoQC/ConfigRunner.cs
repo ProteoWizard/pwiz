@@ -272,7 +272,7 @@ namespace AutoQC
 
                 err.AppendLine().AppendLine().Append(x.Message);
                 if (_uiControl != null)
-                    _uiControl.DisplayError("Configuration Validation Error", err.ToString());
+                    _uiControl.DisplayError("Configuration Validation Error:" + Environment.NewLine + err);
             }
             catch (FileWatcherException x)
             {
@@ -284,7 +284,7 @@ namespace AutoQC
 
                 err.AppendLine().AppendLine().Append(x.Message);
                 if (_uiControl != null)
-                    _uiControl.DisplayError("File Watcher Error", err.ToString());   
+                    _uiControl.DisplayError("File Watcher Error" + Environment.NewLine + err.ToString());   
             }
             catch (Exception x)
             {

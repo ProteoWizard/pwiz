@@ -358,7 +358,8 @@ namespace AutoQC
 
         private void ShowErrorDialog(string message)
         {
-            _mainControl.DisplayError(Resources.AutoQcConfigForm_ShowErrorDialog_Configuration_Validation_Error, message);
+            _mainControl.DisplayError(Resources.AutoQcConfigForm_ShowErrorDialog_Configuration_Validation_Error + Environment.NewLine + 
+                                      message);
         }
 
         private void btnOkConfig_Click(object sender, EventArgs e)
