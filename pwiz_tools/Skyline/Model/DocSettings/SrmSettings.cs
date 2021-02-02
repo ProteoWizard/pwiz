@@ -396,22 +396,19 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             if (mods != null && mods.HasCrosslinks)
             {
-                return GetCrosslinkModifiedSequence(seq, labelType, mods, false);
+                return GetCrosslinkModifiedSequence(seq, labelType, mods);
             }
             return GetPrecursorCalc(labelType, mods).GetModifiedSequence(seq, format, useExplicitModsOnly);
         }
 
-        public Target GetCrosslinkModifiedSequence(Target seq, IsotopeLabelType labelType, ExplicitMods mods,
-            bool replaceCrosslinksWithMasses)
+        public Target GetCrosslinkModifiedSequence(Target seq, IsotopeLabelType labelType, ExplicitMods mods)
         {
-            var modifiedSequence = ModifiedSequence.GetModifiedSequence(this, seq.Sequence, mods, labelType);
-            if (replaceCrosslinksWithMasses)
-            {
-                modifiedSequence = modifiedSequence.ReplaceCrosslinksWithMasses(this, labelType);
-            }
+            var peptideStructure = new PeptideStructure(new Peptide(seq), mods);
+            var crosslinkModifiedSequence =
+                CrosslinkedSequence.GetCrosslinkedSequence(this, peptideStructure, labelType);
             string strModifiedSequence = TransitionSettings.Prediction.PrecursorMassType.IsMonoisotopic()
-                ? modifiedSequence.MonoisotopicMasses
-                : modifiedSequence.AverageMasses;
+                ? crosslinkModifiedSequence.MonoisotopicMasses
+                : crosslinkModifiedSequence.AverageMasses;
             return new Target(strModifiedSequence);
         }
 
@@ -609,12 +606,12 @@ namespace pwiz.Skyline.Model.DocSettings
             SequenceMassCalc calc = new SequenceMassCalc(type);
             // Add implicit modifications to the mass calculator
             calc.AddStaticModifications(from mod in staticMods
-                                        where !mod.IsExplicit
+                                        where !mod.IsExplicit && null == mod.CrosslinkerSettings
                                         select mod);
             if (heavyMods != null)
             {
                 calc.AddHeavyModifications(from mod in heavyMods
-                                           where !mod.IsExplicit
+                                           where !mod.IsExplicit && null == mod.CrosslinkerSettings
                                            select mod);
             }
             return calc;
@@ -1235,11 +1232,11 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             if (mods != null && mods.HasCrosslinks)
             {
-                yield return new TypedSequence(GetCrosslinkModifiedSequence(sequence, IsotopeLabelType.light, mods, false), IsotopeLabelType.light, adduct);
+                yield return new TypedSequence(GetCrosslinkModifiedSequence(sequence, IsotopeLabelType.light, mods), IsotopeLabelType.light, adduct);
 
                 foreach (var labelTypeHeavy in GetHeavyLabelTypes(mods))
                 {
-                    yield return new TypedSequence(GetCrosslinkModifiedSequence(sequence, labelTypeHeavy, mods, false), labelTypeHeavy, adduct);
+                    yield return new TypedSequence(GetCrosslinkModifiedSequence(sequence, labelTypeHeavy, mods), labelTypeHeavy, adduct);
                 }
             }
             else if (adduct.IsProteomic || (assumeProteomicWhenEmpty && adduct.IsEmpty))

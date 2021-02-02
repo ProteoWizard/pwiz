@@ -121,11 +121,11 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         [InvariantDisplayName("PeptideModifiedSequence")]
         [ChildDisplayName("PeptideModifiedSequence{0}")]
         [Hidden(InUiMode = UiModes.SMALL_MOLECULES)]
-        public ModifiedSequence ModifiedSequence
+        public ProteomicSequence ModifiedSequence
         {
             get
             {
-                return ModifiedSequence.GetModifiedSequence(SrmDocument.Settings, DocNode, IsotopeLabelType.light);
+                return ProteomicSequence.GetProteomicSequence(SrmDocument.Settings, DocNode, IsotopeLabelType.light);
             }
         }
 

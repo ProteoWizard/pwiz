@@ -22,7 +22,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
-using pwiz.Common.Collections;
 using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
@@ -653,8 +652,8 @@ namespace pwiz.Skyline.Model
                 return null;
             }
 
-            var crosslinks = MakeCrosslinkMods(crosslinkLibraryKey, ImmutableList.Singleton(0));
-            if (crosslinks == null)
+            var crosslinkStructure = MakeCrosslinkStructure(mainPeptide.Peptide.Sequence, crosslinkLibraryKey);
+            if (crosslinkStructure == null)
             {
                 return null;
             }
@@ -664,9 +663,9 @@ namespace pwiz.Skyline.Model
             {
                 staticMods.AddRange(mainPeptide.ExplicitMods.StaticModifications);
             }
-            staticMods.AddRange(crosslinks);
+
             var newMods = new ExplicitMods(mainPeptide.Peptide, staticMods,
-                mainPeptide.ExplicitMods?.GetHeavyModifications());
+                mainPeptide.ExplicitMods?.GetHeavyModifications()).ChangeCrosslinkStructure(crosslinkStructure);
             var crosslinkedPeptide = mainPeptide.ChangeExplicitMods(newMods).ChangeSettings(Settings, diff ?? SrmSettingsDiff.ALL);
             if (!crosslinkLibraryKey.Adduct.IsEmpty)
             {
@@ -680,92 +679,41 @@ namespace pwiz.Skyline.Model
             return crosslinkedPeptide;
         }
 
-        private LinkedPeptide MakeLinkedPeptide(CrosslinkLibraryKey crosslinkLibraryKey, CrosslinkLibraryKey.Crosslink crosslink, IList<int> peptideIndexes)
+        public CrosslinkStructure MakeCrosslinkStructure(string mainSequence, CrosslinkLibraryKey crosslinkLibraryKey)
         {
-            int peptideIndex = peptideIndexes[peptideIndexes.Count - 1];
-            var peptideLibraryKey = crosslinkLibraryKey.PeptideLibraryKeys[peptideIndex];
-            var indexAa = crosslink.AaIndexes[peptideIndex].First();
-            var peptide = MakePeptideDocNode(peptideLibraryKey);
-            if (peptide == null)
+            var linkedPeptides = new List<Peptide>();
+            var linkedExplicitMods = new List<ExplicitMods>();
+            for (int i = 1; i < crosslinkLibraryKey.PeptideLibraryKeys.Count; i++)
             {
-                return null;
-            }
-
-            var crosslinks = MakeCrosslinkMods(crosslinkLibraryKey, peptideIndexes);
-            if (crosslinks.Any())
-            {
-                var explicitMods = new List<ExplicitMod>();
-                if (peptide.ExplicitMods?.StaticModifications != null)
+                var peptideDocNode = MakePeptideDocNode(crosslinkLibraryKey.PeptideLibraryKeys[i]);
+                if (peptideDocNode == null)
                 {
-                    explicitMods.AddRange(peptide.ExplicitMods.StaticModifications);
+                    return null;
                 }
-                explicitMods.AddRange(crosslinks);
-                peptide = peptide.ChangeExplicitMods(new ExplicitMods(peptide.Peptide, explicitMods, null));
+                linkedPeptides.Add(peptideDocNode.Peptide);
+                linkedExplicitMods.Add(peptideDocNode.ExplicitMods ?? new ExplicitMods(peptideDocNode.Peptide, null, null));
             }
 
-            return new LinkedPeptide(peptide.Peptide, indexAa, peptide.ExplicitMods);
-        }
-
-        public IList<ExplicitMod> MakeCrosslinkMods(CrosslinkLibraryKey crosslinkLibraryKey, IList<int> peptideIndexes)
-        {
-            int thisPeptideIndex = peptideIndexes[peptideIndexes.Count - 1];
-            string thisPeptideSequence = crosslinkLibraryKey.PeptideLibraryKeys[thisPeptideIndex].UnmodifiedSequence;
-            List<ExplicitMod> explicitMods = new List<ExplicitMod>();
-            // Deal with any looplinks
+            var peptideSequences = new List<string> {mainSequence};
+            peptideSequences.AddRange(linkedPeptides.Select(pep=>pep.Sequence));
+            var crosslinks = new List<Crosslink>();
             foreach (var crosslink in crosslinkLibraryKey.Crosslinks)
             {
-                if (!crosslink.PeptideIndexesWithLinks.SequenceEqual(ImmutableList.Singleton(thisPeptideIndex)))
-                {
-                    continue;
-                }
-
-                var aaIndexes = crosslink.AaIndexes[thisPeptideIndex].ToList();
-                if (aaIndexes.Count != 2)
-                {
-                    return null;
-                }
-                var crosslinkMod = FindCrosslinkMod(crosslink.Name, thisPeptideSequence, aaIndexes[0], thisPeptideSequence, aaIndexes[1]);
-                if (crosslinkMod == null)
+                var sites = crosslink.CrosslinkSites.ToList();
+                if (sites.Count != 2)
                 {
                     return null;
                 }
 
-                explicitMods.Add(new ExplicitMod(aaIndexes[0], crosslinkMod)
-                    .ChangeLinkedPeptide(new LinkedPeptide(null, aaIndexes[1], null)));
-            }
-
-            for (int iPeptide = 0; iPeptide < crosslinkLibraryKey.PeptideLibraryKeys.Count; iPeptide++)
-            {
-                if (peptideIndexes.Contains(iPeptide))
+                var crosslinker = FindCrosslinkMod(crosslink.Name, peptideSequences[sites[0].PeptideIndex],
+                    sites[0].AaIndex, peptideSequences[sites[1].PeptideIndex], sites[1].AaIndex);
+                if (crosslinker == null)
                 {
-                    continue;
+                    return null;
                 }
-
-                foreach (var crosslink in crosslinkLibraryKey.Crosslinks)
-                {
-                    if (!crosslink.Positions[thisPeptideIndex].Any() || !crosslink.Positions[iPeptide].Any())
-                    {
-                        continue;
-                    }
-
-                    var crosslinkMod = FindCrosslinkMod(crosslink.Name,
-                        thisPeptideSequence,
-                        crosslink.AaIndexes[thisPeptideIndex].First(),
-                        crosslinkLibraryKey.PeptideLibraryKeys[iPeptide].UnmodifiedSequence,
-                        crosslink.AaIndexes[iPeptide].First());
-                    if (crosslinkMod == null)
-                    {
-                        return null;
-                    }
-                    var linkedPeptide = MakeLinkedPeptide(crosslinkLibraryKey, crosslink,
-                        ImmutableList.ValueOf(peptideIndexes.Append(iPeptide)));
-                    var explicitMod = new ExplicitMod(crosslink.AaIndexes[thisPeptideIndex].First(), crosslinkMod)
-                        .ChangeLinkedPeptide(linkedPeptide);
-                    explicitMods.Add(explicitMod);
-                }
+                crosslinks.Add(new Crosslink(crosslinker, sites));
             }
-
-            return explicitMods;
+            return new CrosslinkStructure(linkedPeptides, linkedExplicitMods, crosslinks);
         }
 
         private StaticMod FindCrosslinkMod(string crosslinkName, string sequence1, int indexAa1, String sequence2,
@@ -1118,7 +1066,7 @@ namespace pwiz.Skyline.Model
                 Settings.PeptideSettings.Modifications.StaticModifications,
                 DefSetStatic,
                 Settings.PeptideSettings.Modifications.GetHeavyModifications(),
-                DefSetHeavy);
+                DefSetHeavy).ChangeCrosslinkStructure(nodePep.CrosslinkStructure);
             // If no light modifications are present, this code assumes the user wants the 
             // default global light modifications.  Unless not stringPaste, in which case the target
             // static mods must also be empty
