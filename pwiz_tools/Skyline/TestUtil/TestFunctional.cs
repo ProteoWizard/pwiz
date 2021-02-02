@@ -2048,8 +2048,9 @@ namespace pwiz.SkylineTestUtil
         {
             if (expectColumnSelectDialog)
             {
-                var transitionSelectdgl = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
-                OkDialog(transitionSelectdgl, () => transitionSelectdgl.AcceptButton.PerformClick());
+                var columnSelectDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
+                WaitForConditionUI(() => columnSelectDlg.WindowShown); // Avoids possible race condition in code coverage tests
+                OkDialog(columnSelectDlg, () => columnSelectDlg.AcceptButton.PerformClick());
             }
             else
             {
@@ -2061,21 +2062,14 @@ namespace pwiz.SkylineTestUtil
         {
             if (expectColumnSelectDialog)
             {
-                var transitionSelectdgl = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste(text));
-                OkDialog(transitionSelectdgl, () => transitionSelectdgl.AcceptButton.PerformClick());
+                var columnSelectDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste(text));
+                WaitForConditionUI(() => columnSelectDlg.WindowShown); // Avoids possible race condition in code coverage tests
+                OkDialog(columnSelectDlg, () => columnSelectDlg.AcceptButton.PerformClick());
             }
             else
             {
                 RunUI(() => SkylineWindow.Paste(text));
             }
-        }
-
-        public static void ImportTransitionListSkipColumnSelectOnUI(string csvPath)
-        {
-            SkylineBeginInvoke(()=> SkylineWindow.ImportMassList(csvPath));
-            ImportTransitionListColumnSelectDlg dlg = WaitForOpenForm<ImportTransitionListColumnSelectDlg>();
-            dlg.AcceptButton.PerformClick();
-            WaitForClosedForm(dlg);
         }
 
         #region Modification helpers

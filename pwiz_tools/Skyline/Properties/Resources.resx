@@ -11248,4 +11248,10 @@ Invalid peptide sequence at position 18
     <value>The file appears to be corrupted and cannot be read.
 It is recommended that you delete this file so that Skyline can create a new file by again extracting chromatograms from the raw data files.</value>
   </data>
+  <data name="ImportTransitionListColumnSelectDlg_DisplayData_This_column_is_labeled_with_the_header___0___in_the_input_text__Use_the_dropdown_control_to_assign_its_meaning_for_import_" xml:space="preserve">
+    <value>This column is labeled with the header '{0}' in the input text. Use the dropdown control to assign its meaning for import.</value>
+  </data>
+  <data name="ImportTransitionListColumnSelectDlg_DisplayData_The_input_text_did_not_appear_to_contain_column_headers__Use_the_dropdown_control_to_assign_column_meanings_for_import_" xml:space="preserve">
+    <value>The input text did not appear to contain column headers. Use the dropdown control to assign column meanings for import.</value>
+  </data>
 </root>
