@@ -78,6 +78,9 @@ namespace pwiz.Skyline.Model.Serialization
             public const string results_data = "results_data";
             public const string linked_peptide = "linked_peptide";
             public const string linked_fragment_ion = "linked_fragment_ion";
+            public const string crosslinks = "crosslinks";
+            public const string crosslink = "crosslink";
+            public const string site = "site";
             // ReSharper restore LocalizableElement
         }
 
@@ -173,6 +176,7 @@ namespace pwiz.Skyline.Model.Serialization
             public const string quantitative = "quantitative";
             public const string precursor_concentration = "precursor_concentration";
             public const string attribute_group_id = "attribute_group_id";
+            public const string peptide_index = "peptide_index";
 
             // Results
             public const string replicate = "replicate";
