@@ -44,7 +44,7 @@
             this.btnNext.Name = "btnNext";
             this.btnNext.UseVisualStyleBackColor = true;
             // 
-            // FixInvalidConfigForm
+            // InvalidConfigSetupForm
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -52,7 +52,7 @@
             this.Controls.Add(this.panel1);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
-            this.Name = "FixInvalidConfigForm";
+            this.Name = "InvalidConfigSetupForm";
             this.ShowInTaskbar = false;
             this.ResumeLayout(false);
 

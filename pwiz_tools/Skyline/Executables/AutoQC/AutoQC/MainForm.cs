@@ -87,13 +87,6 @@ namespace AutoQC
             configForm.ShowDialog();
         }
 
-        public void AddConfiguration(AutoQcConfig config)
-        {
-            _configManager.AddConfiguration(config);
-            UpdateUiConfigurations();
-            UpdateUiLoggers();
-        }
-
         private void HandleEditEvent(object sender, EventArgs e)
         {
             var configRunner = _configManager.GetSelectedConfigRunner();
@@ -121,9 +114,23 @@ namespace AutoQC
             configForm.ShowDialog();
         }
 
-        public void EditSelectedConfiguration(AutoQcConfig newVersion)
+        public void TryExecuteOperation(ConfigAction operation, AutoQcConfig config)
         {
-            _configManager.ReplaceSelectedConfig(newVersion);
+            var existingIndex = _configManager.GetConfigIndex(config.Name);
+            var error = operation != ConfigAction.Edit && existingIndex >= 0 ||
+                        operation == ConfigAction.Edit && existingIndex != _configManager.SelectedConfig;
+            if (error)
+            {
+                throw new ArgumentException(string.Format("Cannot add \"{0}\" because there is another configuration with the same name.", config.Name) + Environment.NewLine +
+                             "Please choose a unique name.");
+            }
+
+            config.Validate();
+
+            if (operation == ConfigAction.Edit)
+                _configManager.ReplaceSelectedConfig(config);
+            else
+                _configManager.AddConfiguration(config);
             UpdateUiConfigurations();
             UpdateUiLoggers();
         }
@@ -173,16 +180,17 @@ namespace AutoQC
             UpdateUiConfigurations();
         }
 
-        private void listViewConfigs_SelectedIndexChanged(object sender, EventArgs e)
+        private void listViewConfigs_PreventItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
         {
+            // Disable automatic item selection - selected configuration set through _configManager
+            //      Automatic selection disables red text, can't see invalid configurations
             listViewConfigs.SelectedIndices.Clear();
         }
 
-        private void listViewConfigs_MouseUp(object sender, MouseEventArgs e)
+        private void listViewConfigs_MouseDown(object sender, MouseEventArgs e)
         {
             // Select configuration through _configManager
             var index = listViewConfigs.GetItemAt(e.X, e.Y) != null ? listViewConfigs.GetItemAt(e.X, e.Y).Index : -1;
-
             if (index < 0)
             {
                 _configManager.DeselectConfig();
@@ -260,8 +268,6 @@ namespace AutoQC
                 var listViewItems = _configManager.ConfigsListViewItems();
                 foreach (var lvi in listViewItems)
                     listViewConfigs.Items.Add(lvi);
-                if (_configManager.SelectedConfig >= 0)
-                    listViewConfigs.Items[_configManager.SelectedConfig].Selected = true;
                 UpdateLabelVisibility();
                 UpdateButtonsEnabled();
             });
@@ -551,31 +557,30 @@ namespace AutoQC
 
         public void DisplayError(string message)
         {
-            RunUi(() => { AlertDlg.ShowError(this, message, "REMOVE"); });
+            RunUi(() => { AlertDlg.ShowError(this, message); });
         }
 
         public void DisplayWarning(string message)
         {
-            RunUi(() => { AlertDlg.ShowWarning(this, message, "REMOVE"); });
+            RunUi(() => { AlertDlg.ShowWarning(this, message); });
         }
 
         public void DisplayInfo(string message)
         {
-            RunUi(() => { AlertDlg.ShowInfo(this, message, "REMOVE"); });
+            RunUi(() => { AlertDlg.ShowInfo(this, message); });
         }
 
         public void DisplayErrorWithException(string message, Exception exception)
         {
-            RunUi(() => { AlertDlg.ShowErrorWithException(this, message, "REMOVE", exception); });
+            RunUi(() => { AlertDlg.ShowErrorWithException(this, message, exception); });
         }
 
         public DialogResult DisplayQuestion(string message)
         {
-            return AlertDlg.ShowQuestion(this, message, "REMOVE");
+            return AlertDlg.ShowQuestion(this, message);
         }
 
         #endregion
-        
     }
 
     class MyListView : ListView
@@ -595,8 +600,7 @@ namespace AutoQC
 
     public interface IMainUiControl
     {
-        void AddConfiguration(AutoQcConfig config);
-        void EditSelectedConfiguration(AutoQcConfig newVersion);
+        void TryExecuteOperation(ConfigAction operation, AutoQcConfig config);
         void UpdateUiConfigurations();
 
         void UpdateButtonsEnabled();

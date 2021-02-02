@@ -87,7 +87,7 @@ namespace AutoQC
                 return;
             }
 
-            if (_action == ConfigAction.Edit)
+            if (_action != ConfigAction.Add)
                 textConfigName.Text = config.Name;
 
             SetInitialMainSettings(config.MainSettings);
@@ -333,16 +333,12 @@ namespace AutoQC
             {
                 //throws ArgumentException if any fields are invalid
                 var newConfig = GetConfigFromUi();
-                newConfig.Validate();
                 //throws ArgumentException if config has a duplicate name
-                if (_action == ConfigAction.Edit)
-                    _mainControl.EditSelectedConfiguration(newConfig);
-                else
-                    _mainControl.AddConfiguration(newConfig);
+                _mainControl.TryExecuteOperation(_action, newConfig);
             }
             catch (ArgumentException e)
             {
-                ShowErrorDialog(e.Message);
+                _mainControl.DisplayError(e.Message);
                 return;
             }
 
@@ -352,15 +348,6 @@ namespace AutoQC
 
         #endregion
 
-
-
-        
-
-        private void ShowErrorDialog(string message)
-        {
-            _mainControl.DisplayError(Resources.AutoQcConfigForm_ShowErrorDialog_Configuration_Validation_Error + Environment.NewLine + 
-                                      message);
-        }
 
         private void btnOkConfig_Click(object sender, EventArgs e)
         {

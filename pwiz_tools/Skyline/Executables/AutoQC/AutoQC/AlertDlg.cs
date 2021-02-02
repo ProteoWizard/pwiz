@@ -38,41 +38,41 @@ namespace AutoQC
         private string _message;
         private string _detailMessage;
 
-        private AlertDlg(string message, string title, Image icon)
+        private AlertDlg(string message, Image icon)
         {
             InitializeComponent();
             _originalFormHeight = Height;
             _originalMessageHeight = labelMessage.Height;
             Message = message;
             btnMoreInfo.Parent.Controls.Remove(btnMoreInfo);
-            Text = title;
+            Text = Program.AppName;
             pictureBox1.Image = icon;
         }
 
-        public static void ShowWarning(IWin32Window parent, string message, string title)
+        public static void ShowWarning(IWin32Window parent, string message)
         {
-            Show(parent, message, title, SystemIcons.Warning.ToBitmap(), MessageBoxButtons.OK);
+            Show(parent, message, SystemIcons.Warning.ToBitmap(), MessageBoxButtons.OK);
         }
-        public static void ShowError(IWin32Window parent, string message, string title)
+        public static void ShowError(IWin32Window parent, string message)
         {
-            Show(parent, message, title, SystemIcons.Error.ToBitmap(), MessageBoxButtons.OK);
+            Show(parent, message, SystemIcons.Error.ToBitmap(), MessageBoxButtons.OK);
         }
-        public static void ShowInfo(IWin32Window parent, string message, string title)
+        public static void ShowInfo(IWin32Window parent, string message)
         {
-            Show(parent, message, title, SystemIcons.Information.ToBitmap(), MessageBoxButtons.OK);
+            Show(parent, message, SystemIcons.Information.ToBitmap(), MessageBoxButtons.OK);
         }
-        public static DialogResult ShowQuestion(IWin32Window parent, string message, string title)
+        public static DialogResult ShowQuestion(IWin32Window parent, string message)
         {
-            return Show(parent, message, title, SystemIcons.Question.ToBitmap(), MessageBoxButtons.YesNo);
+            return Show(parent, message, SystemIcons.Question.ToBitmap(), MessageBoxButtons.YesNo);
         }
 
-        private static DialogResult Show(IWin32Window parent, string message, string title, Image icon, MessageBoxButtons messageBoxButtons)
+        private static DialogResult Show(IWin32Window parent, string message, Image icon, MessageBoxButtons messageBoxButtons)
         {
-            return new AlertDlg(message, title, icon).ShowAndDispose(parent, messageBoxButtons);
+            return new AlertDlg(message, icon).ShowAndDispose(parent, messageBoxButtons);
         }
-        public static void ShowErrorWithException(IWin32Window parent, string message, string title, Exception exception)
+        public static void ShowErrorWithException(IWin32Window parent, string message, Exception exception)
         {
-            new AlertDlg(message, title, SystemIcons.Error.ToBitmap()) { Exception = exception }.ShowAndDispose(parent, MessageBoxButtons.OK);
+            new AlertDlg(message,SystemIcons.Error.ToBitmap()) { Exception = exception }.ShowAndDispose(parent, MessageBoxButtons.OK);
         }
 
         private string Message

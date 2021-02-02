@@ -139,10 +139,10 @@ namespace AutoQC
 
                 if (SelectedConfig >= 0 && _configList[SelectedConfig].Name.Equals(lvi.Text))
                 {
-                    lvi.BackColor = Color.LightGray;
-                    foreach (ListViewItem.ListViewSubItem subitem in lvi.SubItems)
+                    lvi.BackColor = Color.LightSteelBlue;
+                   foreach (ListViewItem.ListViewSubItem subitem in lvi.SubItems)
                     {
-                        subitem.BackColor = Color.LightGray;
+                        subitem.BackColor = Color.LightSteelBlue;
                     }
                 }
 
@@ -200,9 +200,14 @@ namespace AutoQC
             return _configsValidated[GetSelectedConfig().Name];
         }
 
-        public AutoQcConfig GetConfigAt(int index)
+        public int GetConfigIndex(string name)
         {
-            return _configList[index];
+            for(int i = 0; i < _configList.Count; i++)
+            {
+                if (_configList[i].Name.Equals(name))
+                    return i;
+            }
+            return -1;
         }
 
         public void AddConfiguration(AutoQcConfig config)

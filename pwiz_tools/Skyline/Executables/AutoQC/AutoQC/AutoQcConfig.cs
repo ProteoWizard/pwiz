@@ -148,9 +148,9 @@ namespace AutoQC
             }
 
             MainSettings.ValidateSettings();
-            PanoramaSettings.ValidateSettings();
             SkylineSettings.Validate();
-           
+            PanoramaSettings.ValidateSettings();
+
         }
 
         public virtual ProcessInfo RunBefore(ImportContext importContext)

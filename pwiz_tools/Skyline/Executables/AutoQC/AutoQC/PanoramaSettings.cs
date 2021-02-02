@@ -38,7 +38,7 @@ namespace AutoQC
         public readonly string PanoramaPassword;
         public readonly string PanoramaFolder;
 
-        public readonly Uri PanoramaServerUri;
+        public Uri PanoramaServerUri;
 
         public PanoramaSettings()
         {
@@ -69,7 +69,7 @@ namespace AutoQC
                 }
             }
 
-            var panoramaClient = new WebPanoramaClient(PanoramaServerUri);
+            /*var panoramaClient = new WebPanoramaClient(PanoramaServerUri);
             try
             {
                 PanoramaUtil.VerifyServerInformation(panoramaClient, PanoramaUserEmail, PanoramaPassword);
@@ -79,7 +79,7 @@ namespace AutoQC
             catch (Exception)
             {
                 // ignored
-            }
+            }*/
         }
 
         public virtual bool IsSelected()
