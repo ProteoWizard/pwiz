@@ -160,7 +160,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnExportConfigs.Location" type="System.Drawing.Point, System.Drawing">
-    <value>39, 121</value>
+    <value>26, 108</value>
   </data>
   <data name="btnExportConfigs.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -193,7 +193,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnImportConfigs.Location" type="System.Drawing.Point, System.Drawing">
-    <value>39, 94</value>
+    <value>26, 81</value>
   </data>
   <data name="btnImportConfigs.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -924,7 +924,7 @@
     <value>2, 2, 2, 2</value>
   </data>
   <data name="tabLog.Size" type="System.Drawing.Size, System.Drawing">
-    <value>641, 455</value>
+    <value>630, 455</value>
   </data>
   <data name="tabLog.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -963,7 +963,7 @@
     <value>Status</value>
   </data>
   <data name="listViewStatus.Width" type="System.Int32, mscorlib">
-    <value>82</value>
+    <value>99</value>
   </data>
   <data name="listViewConfigs.Location" type="System.Drawing.Point, System.Drawing">
     <value>36, 44</value>
@@ -972,7 +972,7 @@
     <value>2, 2, 2, 2</value>
   </data>
   <data name="listViewConfigs.Size" type="System.Drawing.Size, System.Drawing">
-    <value>464, 337</value>
+    <value>479, 337</value>
   </data>
   <data name="listViewConfigs.TabIndex" type="System.Int32, mscorlib">
     <value>16</value>
@@ -1145,11 +1145,8 @@
   <metadata name="toolStrip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>448, 17</value>
   </metadata>
-  <data name="toolStrip1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Right</value>
-  </data>
   <data name="toolStrip1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>None</value>
+    <value>Left</value>
   </data>
   <data name="btnUpArrow.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -1161,7 +1158,7 @@
     <value>Magenta</value>
   </data>
   <data name="btnUpArrow.Size" type="System.Drawing.Size, System.Drawing">
-    <value>22, 20</value>
+    <value>21, 20</value>
   </data>
   <data name="btnUpArrow.Text" xml:space="preserve">
     <value>toolStripButton1</value>
@@ -1179,7 +1176,7 @@
     <value>Magenta</value>
   </data>
   <data name="btnDownArrow.Size" type="System.Drawing.Size, System.Drawing">
-    <value>22, 20</value>
+    <value>21, 20</value>
   </data>
   <data name="btnDownArrow.Text" xml:space="preserve">
     <value>toolStripButton2</value>
@@ -1194,7 +1191,7 @@
     <value>Magenta</value>
   </data>
   <data name="btnDelete.Size" type="System.Drawing.Size, System.Drawing">
-    <value>22, 20</value>
+    <value>21, 20</value>
   </data>
   <data name="btnDelete.Text" xml:space="preserve">
     <value>toolStripButton1</value>
@@ -1209,7 +1206,7 @@
     <value>Magenta</value>
   </data>
   <data name="btnOpenTemplate.Size" type="System.Drawing.Size, System.Drawing">
-    <value>22, 20</value>
+    <value>21, 20</value>
   </data>
   <data name="btnOpenTemplate.Text" xml:space="preserve">
     <value>Open Template File</value>
@@ -1221,7 +1218,7 @@
     <value>Magenta</value>
   </data>
   <data name="btnOpenResults.Size" type="System.Drawing.Size, System.Drawing">
-    <value>22, 20</value>
+    <value>21, 20</value>
   </data>
   <data name="btnOpenResults.Text" xml:space="preserve">
     <value>Open Results File</value>
@@ -1233,7 +1230,7 @@
     <value>Magenta</value>
   </data>
   <data name="btnOpenAnalysis.Size" type="System.Drawing.Size, System.Drawing">
-    <value>22, 20</value>
+    <value>21, 20</value>
   </data>
   <data name="btnOpenAnalysis.Text" xml:space="preserve">
     <value>toolStripButton1</value>
@@ -1242,10 +1239,10 @@
     <value>Open Folder</value>
   </data>
   <data name="toolStrip1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 13</value>
+    <value>0, 0</value>
   </data>
   <data name="toolStrip1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>24, 140</value>
+    <value>24, 337</value>
   </data>
   <data name="toolStrip1.TabIndex" type="System.Int32, mscorlib">
     <value>14</value>
@@ -1269,7 +1266,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnAddConfig.Location" type="System.Drawing.Point, System.Drawing">
-    <value>39, 13</value>
+    <value>26, 0</value>
   </data>
   <data name="btnAddConfig.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -1299,7 +1296,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnEdit.Location" type="System.Drawing.Point, System.Drawing">
-    <value>39, 40</value>
+    <value>26, 27</value>
   </data>
   <data name="btnEdit.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -1329,7 +1326,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnCopy.Location" type="System.Drawing.Point, System.Drawing">
-    <value>39, 67</value>
+    <value>26, 54</value>
   </data>
   <data name="btnCopy.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -1356,13 +1353,13 @@
     <value>6</value>
   </data>
   <data name="panel1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>499, 31</value>
+    <value>519, 44</value>
   </data>
   <data name="panel1.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
   </data>
   <data name="panel1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>124, 350</value>
+    <value>104, 337</value>
   </data>
   <data name="panel1.TabIndex" type="System.Int32, mscorlib">
     <value>14</value>

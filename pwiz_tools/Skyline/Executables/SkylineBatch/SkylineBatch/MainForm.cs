@@ -33,6 +33,8 @@ namespace SkylineBatch
         private readonly ConfigManager _configManager;
         private readonly ISkylineBatchLogger _skylineBatchLogger;
         private bool _loaded;
+        private double[] _listViewColumnWidths;
+        private bool _resizing;
 
         public MainForm()
         {
@@ -41,6 +43,13 @@ namespace SkylineBatch
             _skylineBatchLogger = new SkylineBatchLogger(Program.AppName() + ".log", this);
             btnRunOptions.Text = char.ConvertFromUtf32(0x2BC6);
             toolStrip1.Items.Insert(3,new ToolStripSeparator());
+            _listViewColumnWidths = new[]
+            {
+                (double)listViewConfigName.Width/listViewConfigs.Width,
+                (double)listViewModified.Width/listViewConfigs.Width,
+                (double)listViewStatus.Width/listViewConfigs.Width,
+            };
+            listViewConfigs.ColumnWidthChanged += listViewConfigs_ColumnWidthChanged;
 
             Program.LogInfo(Resources.MainForm_MainForm_Loading_configurations_from_saved_settings_);
             _configManager = new ConfigManager(_skylineBatchLogger, this);
@@ -524,11 +533,40 @@ namespace SkylineBatch
                 textBoxLog.SelectionColor = Color.Red;
             });
         }
-        
+
         #endregion
-        
+
         #region Mainform event handlers and errors
 
+        private void listViewConfigs_Resize(object sender, EventArgs e)
+        {
+            ResizeListViewColumns();
+        }
+
+        private void ResizeListViewColumns()
+        {
+            _resizing = true;
+            var listViewWidth = listViewConfigs.Width;
+            listViewConfigName.Width = (int)Math.Floor(listViewWidth * _listViewColumnWidths[0]);
+            listViewModified.Width = (int)Math.Floor(listViewWidth * _listViewColumnWidths[1]);
+            listViewStatus.Width = -2;
+            _resizing = false;
+        }
+
+        private void listViewConfigs_ColumnWidthChanged(object sender, ColumnWidthChangedEventArgs e)
+        {
+            if (_resizing) return;
+
+            var listViewWidth = listViewConfigs.Width - 10;
+            _listViewColumnWidths = new[]
+            {
+                (double)listViewConfigName.Width/listViewWidth,
+                (double)listViewModified.Width/listViewWidth,
+                1 - (double)listViewConfigName.Width/listViewWidth - (double)listViewModified.Width/listViewWidth
+            };
+
+            ResizeListViewColumns();
+        }
         private void systray_icon_MouseDoubleClick(object sender, MouseEventArgs e)
         {
             Show();

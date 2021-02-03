@@ -327,7 +327,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>23</value>
   </data>
   <data name="radioShuffleDecoys.Text" xml:space="preserve">
-    <value>Shuffle</value>
+    <value>S&amp;huffle</value>
   </data>
   <data name="radioShuffleDecoys.ToolTip" xml:space="preserve">
     <value>Uses the ‑‑decoys‑add&lt;shuffle&gt; command.
@@ -361,7 +361,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>22</value>
   </data>
   <data name="radioReverseDecoys.Text" xml:space="preserve">
-    <value>Reverse</value>
+    <value>R&amp;everse</value>
   </data>
   <data name="radioReverseDecoys.ToolTip" xml:space="preserve">
     <value>Uses the ‑‑decoys‑add&lt;reverse&gt; command.
@@ -392,7 +392,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>21</value>
   </data>
   <data name="checkBoxDecoys.Text" xml:space="preserve">
-    <value>Add decoys</value>
+    <value>&amp;Add decoys</value>
   </data>
   <data name="checkBoxDecoys.ToolTip" xml:space="preserve">
     <value>Uses the ‑‑decoys‑add command.
@@ -518,6 +518,37 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   </data>
   <data name="&gt;&gt;textMsMsResolvingPower.ZOrder" xml:space="preserve">
     <value>2</value>
+  </data>
+  <data name="checkBoxMProphet.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="checkBoxMProphet.Location" type="System.Drawing.Point, System.Drawing">
+    <value>10, 232</value>
+  </data>
+  <data name="checkBoxMProphet.Size" type="System.Drawing.Size, System.Drawing">
+    <value>149, 17</value>
+  </data>
+  <data name="checkBoxMProphet.TabIndex" type="System.Int32, mscorlib">
+    <value>26</value>
+  </data>
+  <data name="checkBoxMProphet.Text" xml:space="preserve">
+    <value>&amp;Generate mProphet model</value>
+  </data>
+  <data name="checkBoxMProphet.ToolTip" xml:space="preserve">
+    <value>Adds the commands: --reintegrate-model-name --reintegrate-create-model --reintegrate-overwrite-peaks
+See Help &gt;Documentation &gt;Command Line in Skyline.</value>
+  </data>
+  <data name="&gt;&gt;checkBoxMProphet.Name" xml:space="preserve">
+    <value>checkBoxMProphet</value>
+  </data>
+  <data name="&gt;&gt;checkBoxMProphet.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;checkBoxMProphet.Parent" xml:space="preserve">
+    <value>tabSettings</value>
+  </data>
+  <data name="&gt;&gt;checkBoxMProphet.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
   <data name="splitContainer1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
@@ -811,7 +842,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>3, 3, 3, 3</value>
   </data>
   <data name="tabFiles.Size" type="System.Drawing.Size, System.Drawing">
-    <value>445, 387</value>
+    <value>445, 388</value>
   </data>
   <data name="tabFiles.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -829,37 +860,6 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>tabsConfig</value>
   </data>
   <data name="&gt;&gt;tabFiles.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="checkBoxMProphet.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="checkBoxMProphet.Location" type="System.Drawing.Point, System.Drawing">
-    <value>10, 232</value>
-  </data>
-  <data name="checkBoxMProphet.Size" type="System.Drawing.Size, System.Drawing">
-    <value>149, 17</value>
-  </data>
-  <data name="checkBoxMProphet.TabIndex" type="System.Int32, mscorlib">
-    <value>26</value>
-  </data>
-  <data name="checkBoxMProphet.Text" xml:space="preserve">
-    <value>Generate mProphet model</value>
-  </data>
-  <data name="checkBoxMProphet.ToolTip" xml:space="preserve">
-    <value>Adds the commands: --reintegrate-model-name --reintegrate-create-model --reintegrate-overwrite-peaks
-See Help &gt;Documentation &gt;Command Line in Skyline.</value>
-  </data>
-  <data name="&gt;&gt;checkBoxMProphet.Name" xml:space="preserve">
-    <value>checkBoxMProphet</value>
-  </data>
-  <data name="&gt;&gt;checkBoxMProphet.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;checkBoxMProphet.Parent" xml:space="preserve">
-    <value>tabSettings</value>
-  </data>
-  <data name="&gt;&gt;checkBoxMProphet.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="label6.AutoSize" type="System.Boolean, mscorlib">
@@ -899,7 +899,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>3, 3, 3, 3</value>
   </data>
   <data name="tabSettings.Size" type="System.Drawing.Size, System.Drawing">
-    <value>445, 387</value>
+    <value>445, 388</value>
   </data>
   <data name="tabSettings.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -1031,7 +1031,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>2, 2, 2, 2</value>
   </data>
   <data name="gridReportSettings.Size" type="System.Drawing.Size, System.Drawing">
-    <value>415, 378</value>
+    <value>415, 380</value>
   </data>
   <data name="gridReportSettings.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1058,7 +1058,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>2, 2, 2, 2</value>
   </data>
   <data name="tabReports.Size" type="System.Drawing.Size, System.Drawing">
-    <value>445, 386</value>
+    <value>445, 388</value>
   </data>
   <data name="tabReports.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -1085,7 +1085,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>8, 6</value>
   </data>
   <data name="panelSkylineSettings.Size" type="System.Drawing.Size, System.Drawing">
-    <value>438, 381</value>
+    <value>438, 383</value>
   </data>
   <data name="panelSkylineSettings.TabIndex" type="System.Int32, mscorlib">
     <value>24</value>
@@ -1109,7 +1109,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>3, 3, 3, 3</value>
   </data>
   <data name="tabSkyline.Size" type="System.Drawing.Size, System.Drawing">
-    <value>445, 386</value>
+    <value>445, 388</value>
   </data>
   <data name="tabSkyline.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -1139,7 +1139,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>2, 2, 2, 2</value>
   </data>
   <data name="tabsConfig.Size" type="System.Drawing.Size, System.Drawing">
-    <value>453, 413</value>
+    <value>453, 414</value>
   </data>
   <data name="tabsConfig.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1172,7 +1172,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>Bottom, Right</value>
   </data>
   <data name="btnCancelConfig.Location" type="System.Drawing.Point, System.Drawing">
-    <value>367, 11</value>
+    <value>367, 10</value>
   </data>
   <data name="btnCancelConfig.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -1205,7 +1205,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>Microsoft Sans Serif, 9pt</value>
   </data>
   <data name="btnSaveConfig.Location" type="System.Drawing.Point, System.Drawing">
-    <value>288, 11</value>
+    <value>288, 10</value>
   </data>
   <data name="btnSaveConfig.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -1269,7 +1269,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>NoControl</value>
   </data>
   <data name="btnOkConfig.Location" type="System.Drawing.Point, System.Drawing">
-    <value>367, 11</value>
+    <value>367, 10</value>
   </data>
   <data name="btnOkConfig.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -1311,7 +1311,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>2, 2, 2, 2</value>
   </data>
   <data name="groupBox1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>453, 42</value>
+    <value>453, 41</value>
   </data>
   <data name="groupBox1.TabIndex" type="System.Int32, mscorlib">
     <value>100</value>
@@ -1344,7 +1344,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>453, 458</value>
   </data>
   <data name="splitContainer1.SplitterDistance" type="System.Int32, mscorlib">
-    <value>413</value>
+    <value>414</value>
   </data>
   <data name="splitContainer1.SplitterWidth" type="System.Int32, mscorlib">
     <value>3</value>
@@ -1372,7 +1372,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
         AAEAAAD/////AQAAAAAAAAAMAgAAAFdTeXN0ZW0uV2luZG93cy5Gb3JtcywgVmVyc2lvbj00LjAuMC4w
         LCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODkFAQAAACZTeXN0
         ZW0uV2luZG93cy5Gb3Jtcy5JbWFnZUxpc3RTdHJlYW1lcgEAAAAERGF0YQcCAgAAAAkDAAAADwMAAACw
-        CgAAAk1TRnQBSQFMAgEBAgEAATABAQEwAQEBHgEAAR4BAAT/AQkBAAj/AUIBTQE2AQQGAAE2AQQCAAEo
+        CgAAAk1TRnQBSQFMAgEBAgEAATgBAQE4AQEBHgEAAR4BAAT/AQkBAAj/AUIBTQE2AQQGAAE2AQQCAAEo
         AwABeAMAAR4DAAEBAQABCAUAARABDhgAAYACAAGAAwACgAEAAYADAAGAAQABgAEAAoACAAPAAQABwAHc
         AcABAAHwAcoBpgEAATMFAAEzAQABMwEAATMBAAIzAgADFgEAAxwBAAMiAQADKQEAA1UBAANNAQADQgEA
         AzkBAAGAAXwB/wEAAlAB/wEAAZMBAAHWAQAB/wHsAcwBAAHGAdYB7wEAAdYC5wEAAZABqQGtAgAB/wEz

@@ -47,6 +47,7 @@
             this.textRetentionTime = new System.Windows.Forms.TextBox();
             this.label9 = new System.Windows.Forms.Label();
             this.textMsMsResolvingPower = new System.Windows.Forms.TextBox();
+            this.checkBoxMProphet = new System.Windows.Forms.CheckBox();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.tabsConfig = new System.Windows.Forms.TabControl();
             this.tabFiles = new System.Windows.Forms.TabPage();
@@ -60,7 +61,6 @@
             this.btnSkylineFilePath = new System.Windows.Forms.Button();
             this.label2 = new System.Windows.Forms.Label();
             this.tabSettings = new System.Windows.Forms.TabPage();
-            this.checkBoxMProphet = new System.Windows.Forms.CheckBox();
             this.label6 = new System.Windows.Forms.Label();
             this.tabReports = new System.Windows.Forms.TabPage();
             this.toolBar = new System.Windows.Forms.ToolStrip();
@@ -74,8 +74,8 @@
             this.tabSkyline = new System.Windows.Forms.TabPage();
             this.panelSkylineSettings = new System.Windows.Forms.Panel();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.btnSaveConfig = new System.Windows.Forms.Button();
             this.btnCancelConfig = new System.Windows.Forms.Button();
+            this.btnSaveConfig = new System.Windows.Forms.Button();
             this.lblConfigRunning = new System.Windows.Forms.Label();
             this.btnOkConfig = new System.Windows.Forms.Button();
             this.imageListToolbarIcons = new System.Windows.Forms.ImageList(this.components);
@@ -179,6 +179,13 @@
             resources.ApplyResources(this.textMsMsResolvingPower, "textMsMsResolvingPower");
             this.textMsMsResolvingPower.Name = "textMsMsResolvingPower";
             this.toolTip1.SetToolTip(this.textMsMsResolvingPower, resources.GetString("textMsMsResolvingPower.ToolTip"));
+            // 
+            // checkBoxMProphet
+            // 
+            resources.ApplyResources(this.checkBoxMProphet, "checkBoxMProphet");
+            this.checkBoxMProphet.Name = "checkBoxMProphet";
+            this.toolTip1.SetToolTip(this.checkBoxMProphet, resources.GetString("checkBoxMProphet.ToolTip"));
+            this.checkBoxMProphet.UseVisualStyleBackColor = true;
             // 
             // splitContainer1
             // 
@@ -290,13 +297,6 @@
             this.tabSettings.Controls.Add(this.textRetentionTime);
             resources.ApplyResources(this.tabSettings, "tabSettings");
             this.tabSettings.Name = "tabSettings";
-            // 
-            // checkBoxMProphet
-            // 
-            resources.ApplyResources(this.checkBoxMProphet, "checkBoxMProphet");
-            this.checkBoxMProphet.Name = "checkBoxMProphet";
-            this.toolTip1.SetToolTip(this.checkBoxMProphet, resources.GetString("checkBoxMProphet.ToolTip"));
-            this.checkBoxMProphet.UseVisualStyleBackColor = true;
             // 
             // label6
             // 
@@ -430,19 +430,19 @@
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.TabStop = false;
             // 
-            // btnSaveConfig
-            // 
-            resources.ApplyResources(this.btnSaveConfig, "btnSaveConfig");
-            this.btnSaveConfig.Name = "btnSaveConfig";
-            this.btnSaveConfig.UseVisualStyleBackColor = true;
-            this.btnSaveConfig.Click += new System.EventHandler(this.btnSaveConfig_Click);
-            // 
             // btnCancelConfig
             // 
             resources.ApplyResources(this.btnCancelConfig, "btnCancelConfig");
             this.btnCancelConfig.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.btnCancelConfig.Name = "btnCancelConfig";
             this.btnCancelConfig.UseVisualStyleBackColor = true;
+            // 
+            // btnSaveConfig
+            // 
+            resources.ApplyResources(this.btnSaveConfig, "btnSaveConfig");
+            this.btnSaveConfig.Name = "btnSaveConfig";
+            this.btnSaveConfig.UseVisualStyleBackColor = true;
+            this.btnSaveConfig.Click += new System.EventHandler(this.btnSaveConfig_Click);
             // 
             // lblConfigRunning
             // 
