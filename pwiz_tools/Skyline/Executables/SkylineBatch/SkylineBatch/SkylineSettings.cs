@@ -12,10 +12,11 @@ namespace SkylineBatch
         Local,
         Custom
     }
-
-
+    
     public class SkylineSettings
     {
+        // The skyline installation to use when a configuration is run
+
         public SkylineSettings(SkylineType type, string folderPath = "")
         {
             Type = type;
@@ -30,13 +31,13 @@ namespace SkylineBatch
                 case SkylineType.Skyline:
                     if (skylineWebInstallation)
                         CmdPath = Settings.Default.SkylineRunnerPath;
-                    if (skylineAdminInstallation)
+                    else if (skylineAdminInstallation)
                         CmdPath = Settings.Default.SkylineAdminCmdPath;
                     break;
                 case SkylineType.SkylineDaily:
                     if (skylineDailyWebInstallation)
                         CmdPath = Settings.Default.SkylineDailyRunnerPath;
-                    if (skylineDailyAdminInstallation)
+                    else if (skylineDailyAdminInstallation)
                         CmdPath = Settings.Default.SkylineDailyAdminCmdPath;
                     break;
                 case SkylineType.Local:
@@ -48,6 +49,9 @@ namespace SkylineBatch
             }
         }
 
+        public readonly SkylineType Type; // The type of skyline installation
+        public readonly string CmdPath; // the path to a SkylineCmd or SkylineRunner
+
         public void Validate()
         {
             if (!File.Exists(CmdPath))
@@ -55,30 +59,26 @@ namespace SkylineBatch
                 switch (Type)
                 {
                     case SkylineType.Skyline:
-                        throw new ArgumentException(Resources.SkylineSettings_Unable_to_find_Skyline_installation_);
+                        throw new ArgumentException(Resources.SkylineSettings_Validate_Could_not_find_a_Skyline_installation_on_this_computer_ + Environment.NewLine +
+                                                    Resources.SkylineSettings_Validate_Please_try_a_different_Skyline_option_);
                     case SkylineType.SkylineDaily:
-                        throw new ArgumentException(Resources.SkylineSettings_Unable_to_find_Skyline_Daily_installation_);
+                        throw new ArgumentException(Resources.SkylineSettings_Validate_Could_not_find_a_Skyline_daily_installation_on_this_computer_ + Environment.NewLine +
+                              Resources.SkylineSettings_Validate_Please_try_a_different_Skyline_option_); 
                     case SkylineType.Local:
-                        throw new ArgumentException(Resources.SkylineSettings_Unable_to_find_local_Skyline_installation_);
+                        throw new ArgumentException(string.Format(Resources.SkylineSettings_Validate_Could_not_find__0__at_this_location___1_, Installations.SkylineCmdExe, CmdPath));
                     case SkylineType.Custom:
-                        throw new ArgumentException(string.Format(Resources.SkylineSettings_Unable_to_find_Skyline_installation_at__0__, CmdPath));
+                        throw new ArgumentException(string.Format(Resources.SkylineSettings_Validate_Could_not_find_a_Skyline_installation_at_this_location___0_, Path.GetDirectoryName(CmdPath)) + Environment.NewLine +
+                                                    string.Format(Resources.SkylineSettings_Validate_Please_select_a_folder_containing__0__, Installations.SkylineCmdExe));
                 }
             }
         }
-
-        public readonly SkylineType Type;
-
-        public readonly string CmdPath;
-
-
+        
         private enum Attr
         {
             Type,
             CmdPath,
         }
-
         
-
         public static SkylineSettings ReadXml(XmlReader reader)
         {
             var type = Enum.Parse(typeof(SkylineType), reader.GetAttribute(Attr.Type), false);
@@ -109,7 +109,6 @@ namespace SkylineBatch
 
         public override int GetHashCode()
         {
-
             return Type.GetHashCode();
         }
     }
