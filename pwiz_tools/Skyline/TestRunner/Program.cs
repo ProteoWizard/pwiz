@@ -1010,7 +1010,7 @@ namespace TestRunner
             {
                 _runTests = runTests;
                 _doneSignal = new AutoResetEvent(false);
-                _bw = new BackgroundWorker();
+                _bw = new BackgroundWorker {WorkerSupportsCancellation = true};
                 _bw.DoWork += ListenForDebugger;
                 _bw.RunWorkerAsync(runTests);
             }
