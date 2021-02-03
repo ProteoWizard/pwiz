@@ -119,14 +119,9 @@ namespace AutoQC
         /// <summary>
         /// Returns the buttons on the button bar from LEFT to RIGHT.
         /// </summary>
-        private IEnumerable<Button> VisibleButtons
-        {
-            get
-            {
-                // return the buttons in reverse order because buttonPanel is a right-to-left FlowPanel.
-                return buttonPanel.Controls.OfType<Button>().Reverse();
-            }
-        }
+        private IEnumerable<Button> VisibleButtons =>
+            // return the buttons in reverse order because buttonPanel is a right-to-left FlowPanel.
+            buttonPanel.Controls.OfType<Button>().Reverse();
 
         public void ClickButton(DialogResult dialogResult)
         {
@@ -271,10 +266,7 @@ namespace AutoQC
 
         public string DetailMessage
         {
-            get
-            {
-                return _detailMessage;
-            }
+            get => _detailMessage;
             set
             {
                 _detailMessage = value;
@@ -322,8 +314,8 @@ namespace AutoQC
         /// </summary>
         public sealed override string Text
         {
-            get { return base.Text; }
-            set { base.Text = value; }
+            get => base.Text;
+            set => base.Text = value;
         }
 
     }

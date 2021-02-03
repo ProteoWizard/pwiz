@@ -30,7 +30,7 @@ namespace AutoQCTest
     [TestClass]
     public class ConfigManagerTest
     {
-        
+
         #region ConfigList Operations
 
         [TestMethod]
@@ -49,31 +49,36 @@ namespace AutoQCTest
                 testConfigManager.DeselectConfig();
                 Assert.IsTrue(testConfigManager.SelectedConfig == -1);
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                Assert.Fail("Expected to successfully select configurations within range");
+                Assert.Fail("Expected to successfully select configurations within range. Threw exception: " + e.Message);
             }
 
+            var selectedNegativeIndex = false;
             try
             {
                 testConfigManager.SelectConfig(-1);
-                Assert.Fail("Expected index out of range exception");
+                selectedNegativeIndex = true;
             }
             catch (IndexOutOfRangeException e)
             {
-                Assert.AreEqual(e.Message, "No configuration at index: -1");
+                Assert.AreEqual("There is no configuration at index: -1", e.Message);
             }
+            Assert.IsTrue(!selectedNegativeIndex, "Expected index out of range exception");
+
+            var selectedIndexAboveRange = false;
             try
             {
                 testConfigManager.SelectConfig(3);
-                Assert.Fail("Expected index out of range exception");
+                selectedIndexAboveRange = true;
             }
             catch (IndexOutOfRangeException e)
             {
-                Assert.AreEqual(e.Message, "No configuration at index: 3");
+                Assert.AreEqual("There is no configuration at index: 3", e.Message);
             }
+            Assert.IsTrue(!selectedIndexAboveRange, "Expected index out of range exception");
         }
-        
+
         [TestMethod]
         public void TestAddInsertConfig()
         {
@@ -82,46 +87,53 @@ namespace AutoQCTest
             Assert.IsTrue(!testConfigManager.HasConfigs());
             var addedConfig = TestUtils.GetTestConfig("one");
             testConfigManager.AddConfiguration(addedConfig);
-            Assert.IsTrue(testConfigManager.ConfigOrderEquals(new[] { "one" }));
+            var oneConfig = TestUtils.ConfigListFromNames(new [] { "one" });
+            Assert.IsTrue(testConfigManager.ConfigListEquals(oneConfig));
+
             testConfigManager.AddConfiguration(TestUtils.GetTestConfig("two"));
             testConfigManager.AddConfiguration(TestUtils.GetTestConfig("three"));
             var threeConfigs = TestUtils.ConfigListFromNames(new[] { "one", "two", "three" });
             Assert.IsTrue(testConfigManager.ConfigListEquals(threeConfigs));
 
+            var addedDuplicateConfig = false;
             try
             {
                 testConfigManager.AddConfiguration(addedConfig);
-                Assert.Fail("Expected exception for duplicate configuration added.");
+                addedDuplicateConfig = true;
             }
             catch (ArgumentException e)
             {
-                Assert.AreEqual(e.Message, "Configuration \"one\" already exists.");
+                Assert.AreEqual("Configuration \"one\" already exists.\r\nPlease enter a unique name for the configuration.", e.Message);
             }
             Assert.IsTrue(testConfigManager.ConfigListEquals(threeConfigs));
         }
-        
+
         [TestMethod]
         public void TestRemoveConfig()
         {
             TestUtils.ClearSavedConfigurations();
             var configManager = TestUtils.GetTestConfigManager();
-            configManager.SelectConfig(2);
+            configManager.SelectConfig(0);
             configManager.RemoveSelected();
-            Assert.AreEqual(1, configManager.SelectedConfig);
-            Assert.IsTrue(configManager.ConfigOrderEquals(new[] { "one", "two" }));
+            Assert.AreEqual(0, configManager.SelectedConfig);
+            var oneRemoved = TestUtils.ConfigListFromNames(new [] { "two", "three" });
+            Assert.IsTrue(configManager.ConfigListEquals(oneRemoved));
+
             configManager.DeselectConfig();
+            var removedNonexistantConfig = false;
             try
             {
                 configManager.RemoveSelected();
-                Assert.Fail("Expected exception for nonexistent configuration removed.");
+                removedNonexistantConfig = true;
             }
             catch (IndexOutOfRangeException e)
             {
-                Assert.AreEqual("No configuration selected.", e.Message);
+                Assert.AreEqual("There is no configuration selected.", e.Message);
             }
-            Assert.IsTrue(configManager.ConfigOrderEquals(new[] { "one", "two" }));
+            Assert.IsTrue(!removedNonexistantConfig, "Expected exception for nonexistent configuration removed.");
+            Assert.IsTrue(configManager.ConfigListEquals(oneRemoved));
         }
-        
+
         [TestMethod]
         public void TestSortConfigs()
         {
@@ -165,18 +177,22 @@ namespace AutoQCTest
             var configManager = TestUtils.GetTestConfigManager();
             configManager.SelectConfig(0);
             configManager.ReplaceSelectedConfig(TestUtils.GetTestConfig("oneReplaced"));
-            Assert.IsTrue(configManager.ConfigOrderEquals(new[] { "oneReplaced", "two", "three" }));
+            //Assert.IsTrue(configManager.ConfigOrderEquals(new[] { "oneReplaced", "two", "three" }));
+            var expectedOneReplaced = TestUtils.ConfigListFromNames(new [] { "oneReplaced", "two", "three" });
+            Assert.IsTrue(configManager.ConfigListEquals(expectedOneReplaced));
 
+            var replacedWithDuplicate = false;
             try
             {
                 configManager.SelectConfig(1);
                 configManager.ReplaceSelectedConfig(TestUtils.GetTestConfig("oneReplaced"));
-                Assert.Fail("Expected exception for duplicate config.");
+                replacedWithDuplicate = true;
             }
             catch (ArgumentException e)
             {
-                Assert.AreEqual(e.Message, "Configuration \"oneReplaced\" already exists.");
+                Assert.AreEqual("Configuration \"oneReplaced\" already exists.\r\nPlease enter a unique name for the configuration.", e.Message);
             }
+            Assert.IsTrue(!replacedWithDuplicate, "Expected exception for duplicate config.");
             Assert.IsTrue(configManager.ConfigOrderEquals(new[] { "oneReplaced", "two", "three" }));
         }
 
@@ -222,10 +238,9 @@ namespace AutoQCTest
             configManager.Import(TestUtils.GetTestFilePath("configs.xml"));
             Assert.IsTrue(configManager.ConfigListEquals(testingConfigs));
 
-
             File.Delete(configsXmlPath);
         }
-        
+
         [TestMethod]
         public void TestCloseReopenConfigs()
         {
@@ -237,14 +252,8 @@ namespace AutoQCTest
             var testConfigManager = new ConfigManager();
             Assert.IsTrue(testConfigManager.ConfigListEquals(testingConfigs));
         }
-        
-        #endregion
-
-        #region Logs
-        
 
         #endregion
 
-        
     }
 }
