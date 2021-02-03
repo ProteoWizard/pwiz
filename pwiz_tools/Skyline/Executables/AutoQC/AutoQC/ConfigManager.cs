@@ -164,11 +164,8 @@ namespace AutoQC
             {
                 if (newIndex < 0 || newIndex >= _configList.Count)
                     throw new IndexOutOfRangeException(string.Format("There is no configuration at index: {0}", newIndex));
-                if (SelectedConfig != newIndex)
-                {
-                    SelectedConfig = newIndex;
-                    _uiControl?.UpdateUiConfigurations();
-                }
+                SelectedConfig = newIndex;
+                _uiControl?.UpdateUiConfigurations();
             }
         }
 

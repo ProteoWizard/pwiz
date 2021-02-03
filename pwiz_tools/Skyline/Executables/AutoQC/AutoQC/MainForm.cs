@@ -31,16 +31,27 @@ namespace AutoQC
     public partial class MainForm : Form, IMainUiControl
     {
 
-        private ConfigManager _configManager;
+        private readonly ConfigManager _configManager;
 
         // Flag that gets set to true in the "Shown" event handler. 
         // ItemCheck and ItemChecked events on the listview are ignored until then.
         private bool _loaded;
-        
+        private double[] _listViewColumnWidths;
+        private bool _resizing;
 
         public MainForm()
         {
             InitializeComponent();
+
+            toolStrip.Items.Insert(2,new ToolStripSeparator());
+            _listViewColumnWidths = new[]
+            {
+                (double)columnName.Width/listViewConfigs.Width,
+                (double)columnUser.Width/listViewConfigs.Width,
+                (double)columnCreated.Width/listViewConfigs.Width,
+                (double)columnStatus.Width/listViewConfigs.Width,
+            };
+            listViewConfigs.ColumnWidthChanged += listViewConfigs_ColumnWidthChanged;
 
             Program.LogInfo("Loading configurations from saved settings.");
             _configManager = new ConfigManager(this);
@@ -77,13 +88,10 @@ namespace AutoQC
 
         #region Configuration list
 
-
         private void btnAdd_Click(object sender, EventArgs e)
         {
-            Program.LogInfo("Creating new configuration");
-            //var configForm = new AutoQcConfigForm(this);
+            Program.LogInfo("Creating a new configuration");
             var configForm = new AutoQcConfigForm(this, null, ConfigAction.Add, false);
-            configForm.StartPosition = FormStartPosition.CenterParent;
             configForm.ShowDialog();
         }
 
@@ -98,18 +106,13 @@ namespace AutoQC
             }
             catch (ArgumentException)
             {
-                if (configRunner.IsRunning()) throw new Exception("Invalid config cannot be running.");
+                if (configRunner.IsRunning()) throw new Exception("Invalid configuration cannot be running.");
                 var validateConfigForm = new InvalidConfigSetupForm(config, this);
                 validateConfigForm.ShowDialog();
                 if (validateConfigForm.DialogResult != DialogResult.OK)
                     return;
                 config = validateConfigForm.ValidConfig;
             }
-
-            // can edit if config is not busy running, otherwise is view only
-            Program.LogInfo(string.Format("{0} configuration \"{1}\"",
-                (!configRunner.IsRunning() ? "Editing" : "Viewing"),
-                configRunner.GetConfigName()));
             var configForm = new AutoQcConfigForm(this, config, ConfigAction.Edit, configRunner.IsBusy());
             configForm.ShowDialog();
         }
@@ -117,16 +120,14 @@ namespace AutoQC
         public void TryExecuteOperation(ConfigAction operation, AutoQcConfig config)
         {
             var existingIndex = _configManager.GetConfigIndex(config.Name);
-            var error = operation != ConfigAction.Edit && existingIndex >= 0 ||
+            var duplicateName = operation != ConfigAction.Edit && existingIndex >= 0 ||
                         operation == ConfigAction.Edit && existingIndex != _configManager.SelectedConfig;
-            if (error)
+            if (duplicateName)
             {
                 throw new ArgumentException(string.Format("Cannot add \"{0}\" because there is another configuration with the same name.", config.Name) + Environment.NewLine +
                              "Please choose a unique name.");
             }
-
             config.Validate();
-
             if (operation == ConfigAction.Edit)
                 _configManager.ReplaceSelectedConfig(config);
             else
@@ -140,7 +141,6 @@ namespace AutoQC
 
         private void btnCopy_Click(object sender, EventArgs e)
         {
-            Program.LogInfo(string.Format("Copying configuration \"{0}\"", _configManager.GetSelectedConfig().Name));
             var configForm = new AutoQcConfigForm(this, _configManager.GetSelectedConfig(), ConfigAction.Copy, false);
             configForm.ShowDialog();
         }
@@ -193,13 +193,15 @@ namespace AutoQC
         private void listViewConfigs_MouseDown(object sender, MouseEventArgs e)
         {
             // Select configuration through _configManager
-            var index = listViewConfigs.GetItemAt(e.X, e.Y) != null ? listViewConfigs.GetItemAt(e.X, e.Y).Index : -1;
-            if (index < 0)
+            var item = listViewConfigs.GetItemAt(e.X, e.Y);
+            if (item == null)
             {
                 _configManager.DeselectConfig();
-                return;
             }
-            _configManager.SelectConfig(index);
+            else
+            {
+                _configManager.SelectConfig(item.Index);
+            }
         }
 
         private void listViewConfigs_ColumnClick(object sender, ColumnClickEventArgs e)
@@ -219,10 +221,10 @@ namespace AutoQC
             if (!_configManager.IsSelectedConfigValid())
             {
                 DisplayError("Cannot open the Skyline file of an invalid configuration." + Environment.NewLine +
-                             string.Format("Please fix {0} and try again.", config.Name));
+                             string.Format("Please fix \"{0}\" and try again.", config.Name));
                 return;
             }
-            // Open template file
+            // Open skyline file
             var file = config.MainSettings.SkylineFilePath;
             Process.Start(file);
         }
@@ -395,6 +397,7 @@ namespace AutoQC
                 {
                     TrimDisplayedLog();
                 }
+                
                 textBoxLog.AppendText(text);
                 textBoxLog.AppendText(Environment.NewLine);
 
@@ -402,7 +405,6 @@ namespace AutoQC
 
                 ScrollToLogEnd();
             });
-
         }
 
         private void TrimDisplayedLog()
@@ -534,6 +536,35 @@ namespace AutoQC
         #endregion
 
         #region Form event handlers and errors
+
+        private void listViewConfigs_Resize(object sender, EventArgs e)
+        {
+            ResizeListViewColumns();
+        }
+
+        private void ResizeListViewColumns()
+        {
+            _resizing = true;
+            var listViewWidth = listViewConfigs.Width;
+            columnName.Width = (int)Math.Floor(listViewWidth * _listViewColumnWidths[0]);
+            columnUser.Width = (int)Math.Floor(listViewWidth * _listViewColumnWidths[1]);
+            columnCreated.Width = (int)Math.Floor(listViewWidth * _listViewColumnWidths[2]);
+            columnStatus.Width = -2;
+            _resizing = false;
+        }
+
+        private void listViewConfigs_ColumnWidthChanged(object sender, ColumnWidthChangedEventArgs e)
+        {
+            if (_resizing) return;
+            _listViewColumnWidths = new[]
+            {
+                (double)columnName.Width/listViewConfigs.Width,
+                (double)columnUser.Width/listViewConfigs.Width,
+                (double)columnCreated.Width/listViewConfigs.Width,
+                1 - (columnName.Width + columnUser.Width + columnCreated.Width) / listViewConfigs.Width,
+            };
+            ResizeListViewColumns();
+        }
 
         private void systray_icon_MouseDoubleClick(object sender, MouseEventArgs e)
         {
