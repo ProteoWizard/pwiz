@@ -290,7 +290,8 @@ namespace AutoQC
             // remove config
             Program.LogInfo(string.Format("Removing configuration \"{0}\"", config.Name));
             RemoveConfig(config);
-            DeselectConfig();
+            if (SelectedConfig == _configList.Count)
+                SelectedConfig--;
         }
 
         private void RemoveConfig(AutoQcConfig config)
@@ -510,7 +511,6 @@ namespace AutoQC
             }
             catch (Exception e)
             {
-                var title = string.Format(Resources.MainForm_StartConfigRunner_Error_Starting_Configuration___0__, configRunner.Config.Name);
                 DisplayErrorWithException(string.Format(Resources.MainForm_StartConfigRunner_Error_Starting_Configuration___0__, configRunner.Config.Name) + Environment.NewLine +
                                           e.Message, e);
                 // ReSharper disable once LocalizableElement
@@ -696,15 +696,43 @@ namespace AutoQC
 
         public void ExportConfigs(string filePath, int[] indiciesToSave)
         {
-            var savingConfigs = new ConfigList();
-            foreach (int index in indiciesToSave)
-                savingConfigs.Add(_configList[index]);
-            var tempSettings = new Settings();
-            tempSettings.ConfigList = savingConfigs;
-            tempSettings.Save();
-            var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal);
-            config.SaveAs(filePath);
-            Settings.Default.Save();
+
+            var directory = Path.GetDirectoryName(filePath) ?? string.Empty;
+            // Exception if no configurations are selected to export
+            if (indiciesToSave.Length == 0)
+            {
+                throw new ArgumentException("There are no configurations selected." + Environment.NewLine +
+                                            "Please select the configurations you would like to share.");
+            }
+            try
+            {
+                directory = Path.GetDirectoryName(filePath);
+            }
+            catch (ArgumentException)
+            {
+            }
+            // Exception if file folder does not exist
+            if (!Directory.Exists(directory))
+                throw new ArgumentException("Could not save configurations to:" + Environment.NewLine +
+                                            filePath + Environment.NewLine +
+                                            "Please provide a path to a file inside an existing folder.");
+
+            using (var file = File.Create(filePath))
+            {
+                using (var streamWriter = new StreamWriter(file))
+                {
+                    XmlWriterSettings settings = new XmlWriterSettings();
+                    settings.Indent = true;
+                    settings.NewLineChars = Environment.NewLine;
+                    using (XmlWriter writer = XmlWriter.Create(streamWriter, settings))
+                    {
+                        writer.WriteStartElement("ConfigList");
+                        foreach (int index in indiciesToSave)
+                            _configList[index].WriteXml(writer);
+                        writer.WriteEndElement();
+                    }
+                }
+            }
         }
 
 

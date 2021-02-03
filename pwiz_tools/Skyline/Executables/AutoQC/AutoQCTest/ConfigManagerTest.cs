@@ -105,11 +105,11 @@ namespace AutoQCTest
         {
             TestUtils.ClearSavedConfigurations();
             var configManager = TestUtils.GetTestConfigManager();
-            configManager.SelectConfig(0);
+            configManager.SelectConfig(2);
             configManager.RemoveSelected();
-            Assert.IsTrue(configManager.SelectedConfig == -1);
-            Assert.IsTrue(configManager.ConfigOrderEquals(new[] { "two", "three" }));
-
+            Assert.AreEqual(1, configManager.SelectedConfig);
+            Assert.IsTrue(configManager.ConfigOrderEquals(new[] { "one", "two" }));
+            configManager.DeselectConfig();
             try
             {
                 configManager.RemoveSelected();
@@ -119,7 +119,7 @@ namespace AutoQCTest
             {
                 Assert.AreEqual("No configuration selected.", e.Message);
             }
-            Assert.IsTrue(configManager.ConfigOrderEquals(new[] { "two", "three" }));
+            Assert.IsTrue(configManager.ConfigOrderEquals(new[] { "one", "two" }));
         }
         
         [TestMethod]

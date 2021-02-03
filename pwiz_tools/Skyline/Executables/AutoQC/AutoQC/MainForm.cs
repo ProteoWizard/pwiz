@@ -130,7 +130,10 @@ namespace AutoQC
             if (operation == ConfigAction.Edit)
                 _configManager.ReplaceSelectedConfig(config);
             else
+            {
                 _configManager.AddConfiguration(config);
+                _configManager.SelectConfig(_configManager.GetConfigIndex(config.Name));
+            }
             UpdateUiConfigurations();
             UpdateUiLoggers();
         }
