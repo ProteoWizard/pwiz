@@ -49,7 +49,7 @@ namespace AutoQC
         private void btnBrowse_Click(object sender, EventArgs e)
         {
             var initialDirectory = textFilePath.Text;
-            while (!Directory.Exists(initialDirectory) || initialDirectory == "")
+            while (!Directory.Exists(initialDirectory) || initialDirectory == string.Empty)
                 initialDirectory = Path.GetDirectoryName(initialDirectory);
             
             if (_folder)

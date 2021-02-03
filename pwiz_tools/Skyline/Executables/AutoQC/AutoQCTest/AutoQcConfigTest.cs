@@ -107,15 +107,15 @@ namespace AutoQCTest
         {
             TestInvalidPanoramaSettings(new PanoramaSettings(true, "https://fake_panoramaweb.org/", "testEmail", "testPassword", "testFolder"), 
                 "The server https://fake_panoramaweb.org/ does not exist");
-            TestInvalidPanoramaSettings(new PanoramaSettings(true, "", "testEmail", "testPassword", "testFolder"),
+            TestInvalidPanoramaSettings(new PanoramaSettings(true, string.Empty, "testEmail", "testPassword", "testFolder"),
                 "Please specify a Panorama server URL.");
             TestInvalidPanoramaSettings(new PanoramaSettings(true, "https://panoramaweb.org/", "bad_email@bad.bad", "testPassword", "testFolder"),
                 "The username and password could not be authenticated with the panorama server");
-            TestInvalidPanoramaSettings(new PanoramaSettings(true, "https://panoramaweb.org/", "", "testPassword", "testFolder"),
+            TestInvalidPanoramaSettings(new PanoramaSettings(true, "https://panoramaweb.org/", string.Empty, "testPassword", "testFolder"),
                 "Please specify a Panorama login email.");
             TestInvalidPanoramaSettings(new PanoramaSettings(true, "https://panoramaweb.org/", "testEmail", "not_the_password", "testFolder"),
                 "The username and password could not be authenticated with the panorama server");
-            TestInvalidPanoramaSettings(new PanoramaSettings(true, "https://panoramaweb.org/", "testEmail", "", "testFolder"),
+            TestInvalidPanoramaSettings(new PanoramaSettings(true, "https://panoramaweb.org/", "testEmail", string.Empty, "testFolder"),
                 "Please specify a Panorama user password.");
             TestInvalidPanoramaSettings(new PanoramaSettings(true, "https://panoramaweb.org/", "testEmail", "testPassword", ""),
                 "Please specify a folder on the Panorama server.");
@@ -150,7 +150,7 @@ namespace AutoQCTest
         [TestMethod]
         public void TestGetLastArchivalDate()
         {
-            var mainSettings = new MainSettings(@"C:\Dummy\path\Test_file.sky", "", false, null, true,
+            var mainSettings = new MainSettings(@"C:\Dummy\path\Test_file.sky", string.Empty, false, null, true,
                 MainSettings.ACCUM_TIME_WINDOW.ToString(), "Thermo", MainSettings.ACQUISITION_TIME.ToString());
             var fsUtil = new TestFileSystemUtil();
 

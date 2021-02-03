@@ -808,7 +808,7 @@ namespace AutoQC
 
         public string ListConfigNames()
         {
-            var names = "";
+            var names = string.Empty;
             foreach (var config in _configList)
             {
                 names += config.Name + "  ";

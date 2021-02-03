@@ -243,7 +243,7 @@ namespace AutoQC
                 line = string.Format(line, args);
             }
 
-            var exStr = ex != null ? ex.ToString() : "";
+            var exStr = ex != null ? ex.ToString() : string.Empty;
             if (_mainUi != null)
             {
                 line = GetDate() + line;

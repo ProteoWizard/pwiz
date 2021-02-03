@@ -183,7 +183,7 @@ namespace AutoQC
             // Input Skyline file
             args.Append(string.Format(" --in=\"{0}\"", SkylineFilePath));
 
-            string importOnOrAfter = "";
+            string importOnOrAfter = string.Empty;
             if (importContext.ImportExisting)
             {
                 // We are importing existing files in the folder.  The import-on-or-after is determined

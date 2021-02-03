@@ -146,7 +146,7 @@ namespace AutoQC
                 return string.Empty;
             }
 
-            var passwdArg = toPrint ? "" : string.Format("--panorama-password=\"{0}\"", PanoramaPassword);
+            var passwdArg = toPrint ? string.Empty : string.Format("--panorama-password=\"{0}\"", PanoramaPassword);
             var uploadArgs = string.Format(
                     " --panorama-server=\"{0}\" --panorama-folder=\"{1}\" --panorama-username=\"{2}\" {3}",
                     PanoramaServerUrl,

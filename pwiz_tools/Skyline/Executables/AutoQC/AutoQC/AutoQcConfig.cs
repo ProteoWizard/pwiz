@@ -201,11 +201,11 @@ namespace AutoQC
             sb.Append("Panorama User: ").AppendLine(User);
             sb.Append("Created: ").Append(Created.ToShortDateString()).Append(" ").AppendLine(Created.ToShortTimeString());
             sb.Append("Modified: ").Append(Modified.ToShortDateString()).Append(" ").AppendLine(Modified.ToShortTimeString());
-            sb.AppendLine("").AppendLine("Main Settings");
+            sb.AppendLine().AppendLine("Main Settings");
             sb.Append(MainSettings);
-            sb.AppendLine("").AppendLine("Panorama Settings");
+            sb.AppendLine().AppendLine("Panorama Settings");
             sb.Append(PanoramaSettings);
-            sb.AppendLine("").AppendLine("Skyline Settings");
+            sb.AppendLine().AppendLine("Skyline Settings");
             sb.Append(SkylineSettings);
             return sb.ToString();
         }

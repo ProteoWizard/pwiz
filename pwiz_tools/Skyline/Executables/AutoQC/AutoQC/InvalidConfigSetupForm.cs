@@ -128,8 +128,8 @@ namespace AutoQC
             var newPathFolders = newPath.Split('\\');
             var maxValidFiles = 0;
 
-            _oldRoot = "";
-            _newRoot = "";
+            _oldRoot = string.Empty;
+            _newRoot = string.Empty;
 
             var matchingEndFolders = 1;
             while (matchingEndFolders < Math.Min(oldPathFolders.Length, newPathFolders.Length))
