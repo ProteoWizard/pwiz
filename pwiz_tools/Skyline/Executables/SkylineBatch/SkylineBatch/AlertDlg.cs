@@ -38,41 +38,51 @@ namespace SkylineBatch
         private string _message;
         private string _detailMessage;
 
-        private AlertDlg(string message, string title, Image icon)
+        private AlertDlg(string message, Image icon, bool fitToText = false)
         {
             InitializeComponent();
             _originalFormHeight = Height;
             _originalMessageHeight = labelMessage.Height;
             Message = message;
             btnMoreInfo.Parent.Controls.Remove(btnMoreInfo);
-            Text = title;
+            Text = Program.AppName();
             pictureBox1.Image = icon;
+            if (fitToText)
+            {
+                Paint += FitWidthToMessage;
+            }
         }
 
-        public static void ShowWarning(IWin32Window parent, string message, string title)
+        public static void ShowWarning(IWin32Window parent, string message)
         {
-            Show(parent, message, title, SystemIcons.Warning.ToBitmap(), MessageBoxButtons.OK);
+            Show(parent, message, SystemIcons.Warning.ToBitmap(), MessageBoxButtons.OK);
         }
-        public static void ShowError(IWin32Window parent, string message, string title)
+        public static void ShowError(IWin32Window parent, string message)
         {
-            Show(parent, message, title, SystemIcons.Error.ToBitmap(), MessageBoxButtons.OK);
+            Show(parent, message, SystemIcons.Error.ToBitmap(), MessageBoxButtons.OK);
         }
-        public static void ShowInfo(IWin32Window parent, string message, string title)
+        public static void ShowInfo(IWin32Window parent, string message)
         {
-            Show(parent, message, title, SystemIcons.Information.ToBitmap(), MessageBoxButtons.OK);
+            Show(parent, message, SystemIcons.Information.ToBitmap(), MessageBoxButtons.OK);
         }
-        public static DialogResult ShowQuestion(IWin32Window parent, string message, string title)
+        public static DialogResult ShowQuestion(IWin32Window parent, string message)
         {
-            return Show(parent, message, title, SystemIcons.Question.ToBitmap(), MessageBoxButtons.YesNo);
+            return Show(parent, message, SystemIcons.Question.ToBitmap(), MessageBoxButtons.YesNo);
         }
 
-        private static DialogResult Show(IWin32Window parent, string message, string title, Image icon, MessageBoxButtons messageBoxButtons)
+        public static DialogResult ShowLargeQuestion(IWin32Window parent, string message)
         {
-            return new AlertDlg(message, title, icon).ShowAndDispose(parent, messageBoxButtons);
+            var questionDlg = new AlertDlg(message, SystemIcons.Question.ToBitmap(), true);
+            return questionDlg.ShowAndDispose(parent, MessageBoxButtons.OKCancel);
         }
-        public static void ShowErrorWithException(IWin32Window parent, string message, string title, Exception exception)
+
+        private static DialogResult Show(IWin32Window parent, string message, Image icon, MessageBoxButtons messageBoxButtons)
         {
-            new AlertDlg(message, title, SystemIcons.Error.ToBitmap()) { Exception = exception }.ShowAndDispose(parent, MessageBoxButtons.OK);
+            return new AlertDlg(message, icon).ShowAndDispose(parent, messageBoxButtons);
+        }
+        public static void ShowErrorWithException(IWin32Window parent, string message, Exception exception)
+        {
+            new AlertDlg(message, SystemIcons.Error.ToBitmap()) { Exception = exception }.ShowAndDispose(parent, MessageBoxButtons.OK);
         }
 
         private string Message
@@ -108,6 +118,18 @@ namespace SkylineBatch
             }
         }
 
+        public void FitWidthToMessage(object sender, PaintEventArgs e)
+        {
+            var messageStart = labelMessage.Location.X;
+            var padding = 30;
+            string measureString = labelMessage.Text;
+            SizeF stringSize = new SizeF();
+            stringSize = e.Graphics.MeasureString(measureString, labelMessage.Font);
+            Width = messageStart + padding + (int)stringSize.Width;
+            labelMessage.MaximumSize = new Size((int)stringSize.Width, 0);
+            Paint -= FitWidthToMessage;
+        }
+
         private void AddMessageBoxButtons(MessageBoxButtons messageBoxButtons) 
         {
             foreach (var dialogResult in GetDialogResults(messageBoxButtons).Reverse())
@@ -119,14 +141,9 @@ namespace SkylineBatch
         /// <summary>
         /// Returns the buttons on the button bar from LEFT to RIGHT.
         /// </summary>
-        private IEnumerable<Button> VisibleButtons
-        {
-            get
-            {
-                // return the buttons in reverse order because buttonPanel is a right-to-left FlowPanel.
-                return buttonPanel.Controls.OfType<Button>().Reverse();
-            }
-        }
+        private IEnumerable<Button> VisibleButtons =>
+            // return the buttons in reverse order because buttonPanel is a right-to-left FlowPanel.
+            buttonPanel.Controls.OfType<Button>().Reverse();
 
         public void ClickButton(DialogResult dialogResult)
         {
@@ -271,10 +288,7 @@ namespace SkylineBatch
 
         public string DetailMessage
         {
-            get
-            {
-                return _detailMessage;
-            }
+            get => _detailMessage;
             set
             {
                 _detailMessage = value;
@@ -322,8 +336,8 @@ namespace SkylineBatch
         /// </summary>
         public sealed override string Text
         {
-            get { return base.Text; }
-            set { base.Text = value; }
+            get => base.Text;
+            set => base.Text = value;
         }
     }
 }
