@@ -44,7 +44,9 @@ namespace SkylineNightly
 
         private string _testerLog;
         private FileStream _fileStream;
-        private DateTime _lastReportedHang;
+        private bool _isHang;
+        private bool _hangNotificationSent;
+        private bool _debuggerAttached;
         private readonly byte[] _buffer;
         private readonly StringBuilder _builder;
         private string _logTail;
@@ -60,12 +62,14 @@ namespace SkylineNightly
             _testerLog = null;
             _lock = new object();
             _fileStream = null;
-            _lastReportedHang = new DateTime();
+            _isHang = false;
+            _hangNotificationSent = false;
+            _debuggerAttached = false;
             _buffer = new byte[8192];
             _builder = new StringBuilder();
             _logTail = "";
             _logChecker = new Timer(10000); // check log file every 10 seconds
-            _logChecker.Elapsed += IntervalElapsed;
+            _logChecker.Elapsed += CheckLog;
         }
 
         public void Start()
@@ -88,25 +92,38 @@ namespace SkylineNightly
         private int HangThreshold => _runMode != Nightly.RunMode.perf && _runMode != Nightly.RunMode.release_perf && _runMode != Nightly.RunMode.integration_perf ? 60 : 90;
         private string RunModeName => Enum.GetName(typeof(Nightly.RunMode), _runMode);
 
-        public bool ExtendNightlyEndTime
+        public bool IsHang
         {
             get
             {
-                try
+                lock (_lock)
                 {
-                    return File.GetLastWriteTime(_testerLog).Equals(_lastReportedHang);
-                }
-                catch
-                {
-                    return false;
+                    return _isHang;
                 }
             }
         }
 
-        private void IntervalElapsed(object source, ElapsedEventArgs e)
+        public bool IsDebugger
+        {
+            get
+            {
+                if (_debuggerAttached)
+                    return true;
+
+                CheckLog(null, null);
+                lock (_lock)
+                {
+                    return _debuggerAttached;
+                }
+            }
+        }
+
+        private void CheckLog(object source, ElapsedEventArgs e)
         {
             if (!Monitor.TryEnter(_lock))
                 return;
+
+            var signalTime = e?.SignalTime ?? DateTime.Now;
 
             try
             {
@@ -122,18 +139,20 @@ namespace SkylineNightly
                 if (HangThreshold > 0)
                 {
                     var lastWrite = File.GetLastWriteTime(_testerLog);
-                    if (lastWrite.AddMinutes(HangThreshold) <= e.SignalTime)
+                    _isHang = lastWrite.AddMinutes(HangThreshold) <= signalTime;
+                    if (_isHang)
                     {
-                        if (lastWrite > _lastReportedHang)
+                        if (!_hangNotificationSent)
                         {
-                            _lastReportedHang = lastWrite;
+                            _hangNotificationSent = true;
+
                             Log("Hang detected, posting to " + Nightly.LABKEY_EMAIL_NOTIFICATION_URL);
                             var message = new StringBuilder();
                             message.AppendFormat("{0} ({1})", Environment.MachineName, RunModeName);
                             message.AppendLine();
                             message.AppendLine("Hang detected");
                             message.AppendLine();
-                            message.AppendFormat("Current time: {0} {1}" + Environment.NewLine, e.SignalTime.ToShortDateString(), e.SignalTime.ToShortTimeString());
+                            message.AppendFormat("Current time: {0} {1}" + Environment.NewLine, signalTime.ToShortDateString(), signalTime.ToShortTimeString());
                             message.AppendFormat("Log last modified: {0} {1}" + Environment.NewLine, lastWrite.ToShortDateString(), lastWrite.ToShortTimeString());
                             message.AppendLine();
                             message.AppendLine("----------------------------------------");
@@ -173,6 +192,10 @@ namespace SkylineNightly
                 foreach (var line in s.Substring(0, lastBreak).Split(new[] {"\r", "\n", "\r\n"}, StringSplitOptions.None))
                 {
                     // process lines
+                    if (!_debuggerAttached && line.Contains("#!!!!! DEBUGGING STARTED !!!!!"))
+                    {
+                        _debuggerAttached = true;
+                    }
                 }
             }
             catch
