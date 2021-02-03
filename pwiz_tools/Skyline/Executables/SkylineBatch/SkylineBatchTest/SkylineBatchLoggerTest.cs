@@ -16,8 +16,10 @@
  * limitations under the License.
  */
 
- 
+using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SkylineBatch;
 
@@ -29,27 +31,77 @@ namespace SkylineBatchTest
         [TestMethod]
         public void TestTinyLog()
         {
-            TestUtils.DeleteAllLogFiles();
-            var logFile = TestUtils.GetTestFilePath("testLog.log");
-            var logger = new SkylineBatchLogger(logFile);
+            var logFolder = TestUtils.GetTestFilePath("OldLogs\\TestTinyLog");
+            if (!Directory.Exists(logFolder)) Directory.CreateDirectory(logFolder);
+
+            var logger = TestUtils.GetTestLogger(logFolder);
+            var logFile = logger.GetFile();
             Assert.IsTrue(File.Exists(logFile));
             var fileInfo = new FileInfo(logFile);
 
             var createdFileLength = fileInfo.Length;
 
             logger.Log("Test line 1");
-            logger.Archive();
-            var fileLengthAfterArchive = fileInfo.Length;
+            var textLength = new FileInfo(logger.GetFile()).Length;
+
+            var oldLogger = logger.Archive();
+            var fileLengthAfterArchive = new FileInfo(logger.GetFile()).Length;
             var logFilesAfterArchive = TestUtils.GetAllLogFiles();
-            var archivedFileLength = new FileInfo(logFilesAfterArchive[1]).Length;
-            TestUtils.DeleteAllLogFiles();
-            
-            Assert.IsTrue(createdFileLength == 0);
-            Assert.IsTrue(fileLengthAfterArchive == 0);
-            Assert.IsTrue(logFilesAfterArchive.Count == 2);
-            
-            Assert.IsTrue(archivedFileLength > 0);
+            var archivedFileLength = logFilesAfterArchive.Count > 1 ? new FileInfo(logFilesAfterArchive[1]).Length : -1;
+            logger.Delete();
+            oldLogger.Delete();
+            Directory.Delete(logFolder);
+
+            Assert.AreEqual(0, createdFileLength, "Expected new log to not have text.");
+            Assert.AreEqual(0, fileLengthAfterArchive, "Expected log to have no text after it was archived to new file.");
+            Assert.AreEqual(2, logFilesAfterArchive.Count, $"Expected a log file and an archived file. Found {logFilesAfterArchive.Count} file(s) instead.");
+            Assert.AreEqual(textLength, archivedFileLength, "Expected archived file to have text.");
         }
+
+
+
+
+        [TestMethod]
+        public async Task TestMultipleLogs()
+        {
+            TestUtils.ClearSavedConfigurations();
+            TestUtils.InitializeRInstallation();
+
+            var logFolder = TestUtils.GetTestFilePath("MultipleLogsTest");
+            if (Directory.Exists(logFolder)) Directory.Delete(logFolder);
+            Directory.CreateDirectory(logFolder);
+
+            SkylineBatchLogger.LOG_FOLDER = logFolder;
+            var testConfigManager = new ConfigManager(new SkylineBatchLogger("testLog.log"));
+            testConfigManager.AddConfiguration(TestUtils.GetTestConfig());
+            Assert.IsTrue(testConfigManager.HasOldLogs() == false, "Expected no old logs.");
+
+            // Run and cancel three times creates two old logs
+            await testConfigManager.RunAllEnabled(4);
+            testConfigManager.CancelRunners();
+            await testConfigManager.RunAllEnabled(4);
+            testConfigManager.CancelRunners();
+            await testConfigManager.RunAllEnabled(4);
+            testConfigManager.CancelRunners();
+
+            var hasOldLogs = testConfigManager.HasOldLogs();
+            var numberOldLogs = testConfigManager.GetOldLogFiles().Length;
+
+            testConfigManager.DeleteLogs(testConfigManager.GetOldLogFiles());
+            testConfigManager.GetSelectedLogger().Delete();
+
+            var hasOldLogsAfterDelete = testConfigManager.HasOldLogs();
+            var numberOldLogsAfterDelete = testConfigManager.GetOldLogFiles().Length;
+            Directory.Delete(logFolder);
+
+
+            Assert.AreEqual(2, numberOldLogs, $"Expected 2 old logs but got {numberOldLogs}");
+            Assert.AreEqual(true, hasOldLogs, "Expected old logs.");
+            
+            Assert.AreEqual(0, numberOldLogsAfterDelete, $"Expected 0 old logs but got {numberOldLogs}");
+            Assert.AreEqual(false, hasOldLogsAfterDelete, "Expected no old logs after deletion.");
+        }
+
     }
 }
 
