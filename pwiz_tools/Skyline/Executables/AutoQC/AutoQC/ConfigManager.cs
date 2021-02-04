@@ -81,7 +81,6 @@ namespace AutoQC
                     _configValidation.Add(config.Name, false);
                 }
             }
-
         }
 
         public void Close()
@@ -163,7 +162,7 @@ namespace AutoQC
             lock (_lock)
             {
                 if (newIndex < 0 || newIndex >= _configList.Count)
-                    throw new IndexOutOfRangeException(string.Format("There is no configuration at index: {0}", newIndex));
+                    throw new IndexOutOfRangeException(string.Format(Resources.ConfigManager_SelectConfig_There_is_no_configuration_at_index___0_, newIndex));
                 SelectedConfig = newIndex;
                 _uiControl?.UpdateUiConfigurations();
             }
@@ -185,7 +184,7 @@ namespace AutoQC
         {
             if (SelectedConfig < 0)
             {
-                throw new IndexOutOfRangeException("There is no configuration selected.");
+                throw new IndexOutOfRangeException(Resources.ConfigManager_AssertConfigSelected_There_is_no_configuration_selected_);
             }
         }
 
@@ -230,10 +229,10 @@ namespace AutoQC
             {
                 if (_configRunners.Keys.Contains(config.Name))
                 {
-                    throw new ArgumentException(string.Format("Configuration \"{0}\" already exists.", config.Name) + Environment.NewLine +
-                                                "Please enter a unique name for the configuration.");
+                    throw new ArgumentException(string.Format(Resources.ConfigManager_InsertConfiguration_Configuration___0___already_exists_, config.Name) + Environment.NewLine +
+                                                Resources.ConfigManager_InsertConfiguration_Please_enter_a_unique_name_for_the_configuration_);
                 }
-                Program.LogInfo(string.Format("Adding configuration \"{0}\"", config.Name));
+                Program.LogInfo(string.Format(Resources.ConfigManager_InsertConfiguration_Adding_configuration___0__, config.Name));
                 _configList.Insert(index, config);
 
                 var newLogger = new AutoQcLogger(config, _uiControl, oldLogger);
@@ -262,8 +261,8 @@ namespace AutoQC
                 {
                     if (_configRunners.Keys.Contains(newConfig.Name))
                     {
-                        throw new ArgumentException(string.Format("Configuration \"{0}\" already exists.", newConfig.Name) + Environment.NewLine +
-                                                    "Please enter a unique name for the configuration.");
+                        throw new ArgumentException(string.Format(Resources.ConfigManager_InsertConfiguration_Configuration___0___already_exists_, newConfig.Name) + Environment.NewLine +
+                                                    Resources.ConfigManager_InsertConfiguration_Please_enter_a_unique_name_for_the_configuration_);
                     }
                 }
                 var oldLogger = GetLogger(oldConfig.Name);
@@ -296,7 +295,7 @@ namespace AutoQC
                                 Resources.MainForm_btnDelete_Click_Please_wait_for_the_configuration___0___to_stop_and_try_again_,
                                 configRunner.GetConfigName());
                     }
-                    DisplayWarning(Resources.MainForm_btnDelete_Click_Cannot_Delete + Environment.NewLine + message);
+                    DisplayWarning(message);
                     return;
                 }
 
@@ -305,7 +304,7 @@ namespace AutoQC
                     return;
 
                 // remove config
-                Program.LogInfo(string.Format("Removing configuration \"{0}\"", config.Name));
+                Program.LogInfo(string.Format(Resources.ConfigManager_RemoveSelected_Removing_configuration___0__, config.Name));
                 RemoveConfig(config);
                 if (SelectedConfig == _configList.Count)
                     SelectedConfig--;
@@ -316,7 +315,7 @@ namespace AutoQC
         {
             if (!_configRunners.Keys.Contains(config.Name))
             {
-                throw new ArgumentException(string.Format("Cannot delete \"{0}\" because the configuration does not exist.", config.Name));
+                throw new ArgumentException(string.Format(Resources.ConfigManager_RemoveConfig_Cannot_delete___0___because_the_configuration_does_not_exist_, config.Name));
             }
             _configList.Remove(config);
             _configRunners[config.Name].Stop();
@@ -481,25 +480,24 @@ namespace AutoQC
                 }
                 catch (ArgumentException)
                 {
-                    DisplayError(Resources.ConfigManager_Run_Error + Environment.NewLine +
-                                 string.Format(Resources.ConfigManager_Please_edit_configuration__0__and_try_again_, selectedConfig.Name));
+                    DisplayError(string.Format(Resources.ConfigManager_UpdateSelectedEnabled_Cannot_run___0___while_it_is_invalid_, selectedConfig.Name) + Environment.NewLine +
+                                 string.Format(Resources.ConfigManager_UpdateSelectedEnabled_Please_edit___0___and_try_again_, selectedConfig.Name));
                     return;
                 }
                 var configRunner = GetSelectedConfigRunner();
                 if (configRunner.IsStarting() || configRunner.IsStopping())
                 {
-                    var message = string.Format(Resources.MainForm_listViewConfigs_ItemCheck_Configuration_is__0___Please_wait_,
-                        configRunner.IsStarting() ? Resources.MainForm_listViewConfigs_ItemCheck_starting : Resources.MainForm_listViewConfigs_ItemCheck_stopping);
+                    var message = string.Format(Resources.ConfigManager_UpdateSelectedEnabled_Cannot_stop_a_configuration_that_is__0___Please_wait_until_the_configuration_has_finished__0__,
+                        configRunner.IsStarting() ? Resources.ConfigManager_UpdateSelectedEnabled_starting : Resources.ConfigManager_UpdateSelectedEnabled_stopping);
 
-                    DisplayWarning(Resources.MainForm_listViewConfigs_ItemCheck_Please_Wait + Environment.NewLine + message);
+                    DisplayWarning(message);
                     return;
                 }
 
                 if (!newIsEnabled)
                 {
                     var doChange = DisplayQuestion(string.Format(
-                        Resources
-                            .MainForm_listViewConfigs_ItemCheck_Are_you_sure_you_want_to_stop_configuration___0___,
+                        Resources.ConfigManager_UpdateSelectedEnabled_Are_you_sure_you_want_to_stop_configuration__0__,
                         configRunner.GetConfigName()));
 
                     if (doChange == DialogResult.Yes)
@@ -518,17 +516,17 @@ namespace AutoQC
         {
             config.IsEnabled = true;
             var configRunner = _configRunners[config.Name];
-            Program.LogInfo(string.Format("Starting configuration {0}", config.Name));
+            Program.LogInfo(string.Format(Resources.ConfigManager_StartConfig_Starting_configuration___0__, config.Name));
             try
             {
                 configRunner.Start();
             }
             catch (Exception e)
             {
-                DisplayErrorWithException(string.Format(Resources.MainForm_StartConfigRunner_Error_Starting_Configuration___0__, configRunner.Config.Name) + Environment.NewLine +
+                DisplayErrorWithException(string.Format(Resources.ConfigManager_StartConfig_Error_starting_configuration__0__, configRunner.Config.Name) + Environment.NewLine +
                                           e.Message, e);
                 // ReSharper disable once LocalizableElement
-                Program.LogError(string.Format("Error Starting Configuration \"{0}\"", configRunner.Config.Name), e);
+                Program.LogError(string.Format(Resources.ConfigManager_StartConfig_Error_starting_configuration___0__, configRunner.Config.Name), e);
             }
         }
 
@@ -617,6 +615,16 @@ namespace AutoQC
         {
             var readConfigs = new List<AutoQcConfig>();
             var readXmlErrors = new List<string>();
+            var fileName = filePath;
+            try
+            {
+                fileName = Path.GetFileName(filePath);
+            }
+            catch (Exception)
+            {
+                // ignored
+            }
+
             try
             {
                 using (var stream = new FileStream(filePath, FileMode.Open))
@@ -654,13 +662,13 @@ namespace AutoQC
             }
             catch (Exception e)
             {
-                DisplayError(string.Format("An error occurred while importing configurations from {0}:", filePath) + Environment.NewLine +
+                DisplayError(string.Format(Resources.ConfigManager_Import_An_error_occurred_while_importing_configurations_from__0__, fileName) + Environment.NewLine +
                              e.Message);
                 return;
             }
             if (readConfigs.Count == 0 && readXmlErrors.Count == 0)
             {
-                DisplayWarning(string.Format(Resources.MainForm_btnImport_Click_No_configurations_were_found_in_file__0__, filePath));
+                DisplayWarning(string.Format(Resources.ConfigManager_Import_No_configurations_were_found_in__0_, fileName));
                 return;
             }
 
@@ -679,24 +687,24 @@ namespace AutoQC
                 AddConfiguration(config);
                 numAdded++;
             }
-            var message = new StringBuilder(Resources.MainForm_btnImport_Click_Number_of_configurations_imported__);
+            var message = new StringBuilder(Resources.ConfigManager_Import_Number_of_configurations_imported__);
             message.Append(numAdded).Append(Environment.NewLine);
             if (duplicateConfigs.Count > 0)
             {
-                var duplicateMessage = new StringBuilder(Resources.MainForm_btnImport_Click_The_following_configurations_already_exist_and_were_not_imported_)
+                var duplicateMessage = new StringBuilder(Resources.ConfigManager_Import_The_following_configurations_already_exist_and_were_not_imported_)
                     .Append(Environment.NewLine);
                 foreach (var name in duplicateConfigs)
                 {
                     duplicateMessage.Append("\"").Append(name).Append("\"").Append(Environment.NewLine);
                 }
 
-                duplicateMessage.Append("Please remove the configurations you would like to import.");
+                duplicateMessage.Append(Resources.ConfigManager_Import_Please_remove_the_configurations_you_would_like_to_import_);
                 message.Append(duplicateMessage);
                 DisplayError(duplicateMessage.ToString());
             }
             if (readXmlErrors.Count > 0)
             {
-                var errorMessage = new StringBuilder("Configurations with errors that could not be imported:")
+                var errorMessage = new StringBuilder(Resources.ConfigManager_Import_Configurations_with_errors_that_could_not_be_imported_)
                     .Append(Environment.NewLine);
                 foreach (var error in readXmlErrors)
                 {
@@ -727,8 +735,8 @@ namespace AutoQC
                 // Exception if no configurations are selected to export
                 if (indiciesToSave.Length == 0)
                 {
-                    throw new ArgumentException("There are no configurations selected." + Environment.NewLine +
-                                                "Please select the configurations you would like to share.");
+                    throw new ArgumentException(Resources.ConfigManager_ExportConfigs_There_are_no_configurations_selected_ + Environment.NewLine +
+                                                Resources.ConfigManager_ExportConfigs_Please_select_the_configurations_you_would_like_to_share_);
                 }
                 try
                 {
@@ -739,9 +747,9 @@ namespace AutoQC
                 }
                 // Exception if file folder does not exist
                 if (!Directory.Exists(directory))
-                    throw new ArgumentException("Could not save configurations to:" + Environment.NewLine +
+                    throw new ArgumentException(Resources.ConfigManager_ExportConfigs_Could_not_save_configurations_to_ + Environment.NewLine +
                                                 filePath + Environment.NewLine +
-                                                "Please provide a path to a file inside an existing folder.");
+                                                Resources.ConfigManager_ExportConfigs_Please_provide_a_path_to_a_file_inside_an_existing_folder_);
 
                 using (var file = File.Create(filePath))
                 {
@@ -830,17 +838,6 @@ namespace AutoQC
             }
 
             return true;
-        }
-
-        public string ListConfigNames()
-        {
-            var names = string.Empty;
-            foreach (var config in _configList)
-            {
-                names += config.Name + "  ";
-            }
-
-            return names;
         }
 
         #endregion

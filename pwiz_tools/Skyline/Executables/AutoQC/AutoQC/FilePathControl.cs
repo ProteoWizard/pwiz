@@ -7,27 +7,52 @@ namespace AutoQC
 {
     public partial class FilePathControl : UserControl, IValidatorControl
     {
-        private string _path;
-        private readonly bool _folder;
-        private readonly string _type;
+        // A control used by the InvalidConfigSetupForm to correct invalid file/folder paths
 
-        private readonly Validator _pathValidator;
+        // Implements IValidatorControl:
+        //    - GetVariable() returns the current path (_path)
+        //    - IsValid() uses the pathValidator to determine if _path is valid
 
-        public FilePathControl(string variableName, string invalidPath, bool folder, Validator pathValidator)
+        private string _path; // the current path displayed in the textFilePath TextBox
+        private string _lastUsedPath; // the last path the user navigated to in a open File or open folder dialog
+        private readonly bool _folder; // if the desired path is a folder path (true) or a file path (false)
+        private readonly string _filter; // the filter to use in a OpenFileDialog. Has no impact when _folder == true.
+
+        private readonly Validator _pathValidator; // the validator to use on the path. Throws an ArgumentException if the path is invalid.
+
+        public FilePathControl(string variableName, string invalidPath, string lastInputPath, bool folder, Validator pathValidator)
         {
-            _path = invalidPath;
             InitializeComponent();
-
-
+            _path = invalidPath;
+            _lastUsedPath = lastInputPath ?? invalidPath;
             _pathValidator = pathValidator;
             _folder = folder;
-            if (!folder && invalidPath.Contains("."))
+            if (!folder)
             {
-                var suffix = invalidPath.Substring(invalidPath.LastIndexOf(".", StringComparison.Ordinal));
-                _type = $"{suffix.Substring(1).ToUpper()}|*{suffix}|All files|*.*";
+                var suffix = invalidPath.Contains(".") ?
+                    invalidPath.Substring(invalidPath.LastIndexOf(".", StringComparison.Ordinal)) :
+                    string.Empty;
+                switch (suffix)
+                {
+                    case TextUtil.EXT_R:
+                        _filter = TextUtil.FILTER_R;
+                        break;
+                    case TextUtil.EXT_SKY:
+                        _filter = TextUtil.FILTER_SKY;
+                        break;
+                    case TextUtil.EXT_SKYR:
+                        _filter = TextUtil.FILTER_SKYR;
+                        break;
+                    default:
+                        _filter = TextUtil.FILTER_ALL;
+                        break;
+                }
             }
-            label1.Text = string.Format(Resources.FilePathControl_Could_not_find_path_to_the__0___, variableName);
+            
+            label1.Text = string.Format(Resources.FilePathControl_FilePathControl_Could_not_find_the__0__, variableName);
+            label2.Text = string.Format(Resources.FilePathControl_FilePathControl_Please_correct_the__0__to_continue_, variableName);
             textFilePath.Text = _path;
+            textFilePath.TextChanged += textFilePath_TextChanged;
         }
 
         public object GetVariable() => _path;
@@ -39,7 +64,8 @@ namespace AutoQC
             {
                 _pathValidator(_path);
                 return true;
-            } catch (ArgumentException e)
+            }
+            catch (ArgumentException e)
             {
                 errorMessage = e.Message;
                 return false;
@@ -48,39 +74,35 @@ namespace AutoQC
 
         private void btnBrowse_Click(object sender, EventArgs e)
         {
-            var initialDirectory = textFilePath.Text;
-            while (!Directory.Exists(initialDirectory) || initialDirectory == string.Empty)
+            var initialDirectory = _lastUsedPath;
+            while (!Directory.Exists(initialDirectory) && !string.IsNullOrEmpty(initialDirectory))
                 initialDirectory = Path.GetDirectoryName(initialDirectory);
-            
+
             if (_folder)
             {
                 using (FolderBrowserDialog dlg = new FolderBrowserDialog
                 {
-                    Description = Resources.FilePathControl_Select_Folder,
-                    ShowNewFolderButton = false,
                     SelectedPath = initialDirectory
                 })
                 {
-                    if (dlg.ShowDialog(this) != DialogResult.OK)
-                        return;
-
-                    textFilePath.Text = dlg.SelectedPath;
+                    if (dlg.ShowDialog(this) == DialogResult.OK)
+                        textFilePath.Text = dlg.SelectedPath;
                 }
-                return;
             }
-
-            OpenFileDialog openDialog = new OpenFileDialog();
-            if (!string.IsNullOrEmpty(_type))
-                openDialog.Filter = _type;
-            openDialog.Title = Resources.FilePathControl_Open_File;
-            openDialog.InitialDirectory = initialDirectory;
-            if (openDialog.ShowDialog() == DialogResult.OK)
-                textFilePath.Text = openDialog.FileName;
+            else
+            {
+                OpenFileDialog openDialog = new OpenFileDialog();
+                openDialog.Filter = _filter;
+                openDialog.InitialDirectory = initialDirectory;
+                if (openDialog.ShowDialog() == DialogResult.OK)
+                    textFilePath.Text = openDialog.FileName;
+            }
         }
 
         private void textFilePath_TextChanged(object sender, EventArgs e)
         {
             _path = textFilePath.Text;
+            _lastUsedPath = textFilePath.Text;
         }
     }
 }

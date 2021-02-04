@@ -16,7 +16,8 @@ namespace AutoQC
         {
             if (string.IsNullOrEmpty(name))
             {
-                throw new ArgumentException(Resources.AutoQcConfig_Please_enter_a_name_for_the_configuration_);
+                throw new ArgumentException(string.Format(Resources.AutoQcConfig_AutoQcConfig___0___is_not_a_valid_name_for_the_configuration_, name) + Environment.NewLine +
+                                            Resources.AutoQcConfig_AutoQcConfig_Please_enter_a_name_);
             }
             Name = name;
             IsEnabled = isEnabled;

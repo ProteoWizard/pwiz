@@ -21,6 +21,7 @@ using System.Collections.Specialized;
 using System.Dynamic;
 using System.Net;
 using System.Text;
+using AutoQC.Properties;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -67,32 +68,32 @@ namespace AutoQC
         public static void VerifyServerInformation(IPanoramaClient panoramaClient, string username, string password)
         {
             if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
-                throw new ArgumentException("Username and password cannot be null");
+                throw new ArgumentException(Resources.PanoramaUtil_VerifyServerInformation_Username_and_password_cannot_be_null__Please_enter_a_username_and_password_);
 
             var uriServer = panoramaClient.ServerUri;
 
             switch (panoramaClient.GetServerState())
             {
                 case ServerState.missing:
-                    throw new PanoramaServerException(string.Format("The server {0} does not exist", uriServer.AbsoluteUri));
+                    throw new PanoramaServerException(string.Format(Resources.PanoramaUtil_VerifyServerInformation_The_server__0__does_not_exist_, uriServer.AbsoluteUri));
                 case ServerState.unknown:
-                    throw new PanoramaServerException(string.Format("Unknown error connecting to the server {0}", uriServer.AbsoluteUri));
+                    throw new PanoramaServerException(string.Format(Resources.PanoramaUtil_VerifyServerInformation_Unknown_error_connecting_to_the_server__0__, uriServer.AbsoluteUri));
             }
 
             switch (panoramaClient.IsValidUser(username, password))
             {
                 case UserState.nonvalid:
-                    throw new PanoramaServerException("The username and password could not be authenticated with the panorama server");
+                    throw new PanoramaServerException(Resources.PanoramaUtil_VerifyServerInformation_The_username_and_password_could_not_be_authenticated_with_the_panorama_server__Please_try_again_);
                 case UserState.unknown:
-                    throw new PanoramaServerException(string.Format("Unknown error validating user on server {0}", uriServer.AbsoluteUri));
+                    throw new PanoramaServerException(string.Format(Resources.PanoramaUtil_VerifyServerInformation_Unknown_error_validating_user_on_server__0__, uriServer.AbsoluteUri));
             }
 
             switch (panoramaClient.IsPanorama())
             {
                 case PanoramaState.other:
-                    throw new PanoramaServerException(string.Format("The server {0} is not a Panorama server", uriServer.AbsoluteUri));
+                    throw new PanoramaServerException(string.Format(Resources.PanoramaUtil_VerifyServerInformation_The_server__0__is_not_a_Panorama_server_, uriServer.AbsoluteUri));
                 case PanoramaState.unknown:
-                    throw new PanoramaServerException(string.Format("Unknown error while checking if server {0} is a Panorama server", uriServer.AbsoluteUri));
+                    throw new PanoramaServerException(string.Format(Resources.PanoramaUtil_VerifyServerInformation_Unknown_error_while_checking_if_server__0__is_a_Panorama_server_, uriServer.AbsoluteUri));
             }
         }
 

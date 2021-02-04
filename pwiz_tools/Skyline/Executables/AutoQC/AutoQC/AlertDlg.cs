@@ -32,7 +32,7 @@ namespace AutoQC
     /// </summary>
     public partial class AlertDlg : Form
     {
-        private const int MAX_HEIGHT = 500;
+        private const int MaxHeight = 500;
         private readonly int _originalFormHeight;
         private readonly int _originalMessageHeight;
         private string _message;
@@ -83,7 +83,7 @@ namespace AutoQC
                 labelMessage.Text = TruncateMessage(_message);
                 int formGrowth = Math.Max(labelMessage.Height - _originalMessageHeight * 3, 0);
                 formGrowth = Math.Max(formGrowth, 0);
-                formGrowth = Math.Min(formGrowth, MAX_HEIGHT);
+                formGrowth = Math.Min(formGrowth, MaxHeight);
                 Height = _originalFormHeight + formGrowth;
             }
         }
@@ -289,7 +289,7 @@ namespace AutoQC
             }
         }
 
-        private const int MAX_MESSAGE_LENGTH = 50000;
+        private const int MaxMessageLength = 50000;
         /// <summary>
         /// Labels have difficulty displaying text longer than 50,000 characters, and SetWindowText
         /// replaces strings longer than 520,000 characters with the empty string.
@@ -301,11 +301,11 @@ namespace AutoQC
             {
                 return string.Empty;
             }
-            if (message.Length < MAX_MESSAGE_LENGTH)
+            if (message.Length < MaxMessageLength)
             {
                 return message;
             }
-            return TextUtil.LineSeparate(message.Substring(0, MAX_MESSAGE_LENGTH),
+            return TextUtil.LineSeparate(message.Substring(0, MaxMessageLength),
                 Resources.AlertDlg_TruncateMessage_Message_truncated__Press_Ctrl_C_to_copy_entire_message_to_the_clipboard_);
         }
 

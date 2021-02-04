@@ -8,10 +8,10 @@ namespace AutoQC
 {
     public interface IAutoQcLogger
     {
-        void Log(string message, params object[] args);
-        void LogError(string message, params object[] args);
-        void LogProgramError(string message, params object[] args);
-        void LogException(Exception exception, string message, params object[] args);
+        void Log(string message);
+        void LogError(string message);
+        void LogProgramError(string message);
+        void LogException(Exception exception, string message);
         string GetFile();
 
         string GetDirectory();
@@ -215,12 +215,12 @@ namespace AutoQC
 
         #region [Logging methods; Implementation of IAutoQcLogger interface]
 
-        public void Log(string line, params object[] args)
+        public void Log(string line)
         {
-            if (args != null && args.Length > 0)
+            /*if (args != null && args.Length > 0)
             {
                 line = string.Format(line, args);
-            }
+            }*/
 
             if (line.Equals(_lastMessage))
             {
@@ -236,13 +236,8 @@ namespace AutoQC
             WriteToFile(line);
         }
 
-        public void LogException(Exception ex, string line, params object[] args)
+        public void LogException(Exception ex, string line)
         {
-            if (args != null && args.Length > 0)
-            {
-                line = string.Format(line, args);
-            }
-
             var exStr = ex != null ? ex.ToString() : string.Empty;
             if (_mainUi != null)
             {
@@ -255,13 +250,8 @@ namespace AutoQC
             LogErrorToFile(string.Format("{0}\n{1}", line, exStr));
         }
 
-        public void LogError(string line, params object[] args)
+        public void LogError(string line)
         {
-            if (args != null && args.Length > 0)
-            {
-                line = string.Format(line, args);
-            }
-
             if (_mainUi != null)
             {
                 _mainUi.LogErrorToUi(_configName, GetDate() + line);
@@ -270,13 +260,8 @@ namespace AutoQC
             LogErrorToFile(line);
         }
 
-        public void LogProgramError(string line, params object[] args)
+        public void LogProgramError(string line)
         {
-            if (args != null && args.Length > 0)
-            {
-                line = string.Format(line, args);
-            }
-
             Program.LogError(line);
 
             if (_mainUi != null)

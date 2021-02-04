@@ -105,6 +105,7 @@ namespace AutoQCTest
             {
                 Assert.AreEqual("Configuration \"one\" already exists.\r\nPlease enter a unique name for the configuration.", e.Message);
             }
+            Assert.IsTrue(!addedDuplicateConfig, "Expected exception to be thrown when duplicate config added.");
             Assert.IsTrue(testConfigManager.ConfigListEquals(threeConfigs));
         }
 
@@ -166,10 +167,7 @@ namespace AutoQCTest
             configUserManager.SortByValue(1);
             Assert.IsTrue(configUserManager.ConfigOrderEquals(new[] { "noUser", "User" }));
         }
-        
-        private string DateToString(DateTime time) => $"{time.ToShortDateString()} {time.ToShortTimeString()}";
 
-        
         [TestMethod]
         public void TestReplaceConfig()
         {

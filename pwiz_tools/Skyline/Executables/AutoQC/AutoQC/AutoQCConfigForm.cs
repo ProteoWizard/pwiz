@@ -47,7 +47,6 @@ namespace AutoQC
             _initialCreated = config?.Created ?? DateTime.MinValue;
             _mainControl = mainControl;
 
-
             // Initialize file filter combobox
             var filterOptions = new object[]
             {
@@ -105,16 +104,14 @@ namespace AutoQC
                 ((CheckBox)parentControl).Enabled = false;
             if (parentControl is ComboBox)
                 ((ComboBox)parentControl).Enabled = false;
-            if (parentControl is ButtonBase && parentControl.Text != @"OK")
-                ((ButtonBase)parentControl).Enabled = false;
+            if (parentControl is ButtonBase buttonBase && !buttonBase.Text.Equals(btnOkConfig.Text))
+                buttonBase.Enabled = false;
             
             foreach (Control control in parentControl.Controls)
             {
                 DisableUserInputs(control);
             }
         }
-
-
 
         #region Main settings
 
@@ -159,7 +156,7 @@ namespace AutoQC
 
         private void btnSkylineFilePath_Click(object sender, EventArgs e)
         {
-            OpenFile(Resources.AutoQcConfigForm_btnSkylineFilePath_Click_Skyline_Files___sky____sky_All_Files__________, textSkylinePath);
+            OpenFile(TextUtil.FILTER_SKY, textSkylinePath);
         }
 
         private void OpenFile(string filter, TextBox textbox)
@@ -175,7 +172,6 @@ namespace AutoQC
         {
             using (var dialog = new FolderBrowserDialog())
             {
-                dialog.Description = Resources.AutoQcConfigForm_btnFolderToWatch_Click_Directory_where_the_instrument_will_write_QC_files_;
                 if (dialog.ShowDialog(this) == DialogResult.OK)
                 {
                     textFolderToWatchPath.Text = dialog.SelectedPath;
@@ -205,13 +201,9 @@ namespace AutoQC
             labelDays.Enabled = checkBoxRemoveResults.Checked;
         }
 
-
-
         #endregion
 
-
         #region Panorama settings
-
 
         private void SetInitialPanoramaSettings(PanoramaSettings panoramaSettings)
         {
@@ -243,9 +235,7 @@ namespace AutoQC
         {
             groupBoxPanorama.Enabled = cbPublishToPanorama.Checked;
         }
-
-
-
+        
         #endregion
 
         #region Skyline Settings
@@ -287,9 +277,6 @@ namespace AutoQC
         {
             using (var folderBrowserDlg = new FolderBrowserDialog())
             {
-                folderBrowserDlg.Description =
-                    string.Format(Resources.FindSkylineForm_btnBrowse_Click_Select_the__0__installation_directory,
-                        Installations.Skyline);
                 folderBrowserDlg.ShowNewFolderButton = false;
                 folderBrowserDlg.SelectedPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
                 if (folderBrowserDlg.ShowDialog() == DialogResult.OK)
@@ -345,13 +332,11 @@ namespace AutoQC
             Close();
         }
 
-
-        #endregion
-
-
         private void btnOkConfig_Click(object sender, EventArgs e)
         {
             Close();
         }
+
+        #endregion
     }
 }

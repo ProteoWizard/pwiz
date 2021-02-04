@@ -45,22 +45,22 @@ namespace AutoQCTest
             var badSkylinePath = TestUtils.GetTestFilePath("NotReal.sky");
             TestInvalidMainSettings(new MainSettings(badSkylinePath, folderToWatch, false, fileFilter, false, 
                 resultsWindow, instrumentType, acquisitionTime),
-                $"Skyline file {badSkylinePath} does not exist.");
+                $"The Skyline file {badSkylinePath} does not exist.\r\nPlease enter a path to an existing file.");
 
             var badFolderPath = TestUtils.GetTestFilePath("NotReal");
             TestInvalidMainSettings(new MainSettings(skylinePath, badFolderPath, false, fileFilter, false,
                     resultsWindow, instrumentType, acquisitionTime),
-                $"Folder to watch: {badFolderPath} does not exist.");
+                $"The folder to watch: {badFolderPath} does not exist.\r\nPlease enter a path to an existing folder.");
 
             var smallResultsWindow = "30";
             TestInvalidMainSettings(new MainSettings(skylinePath, folderToWatch, false, fileFilter, false,
                     smallResultsWindow, instrumentType, acquisitionTime),
-                "\"Results time window\" cannot be less than 31 days.");
+                "\"Results time window\" cannot be less than 31 days.\r\nPlease enter a value larger than 31.");
 
             var negativeAcquisitionTime = "-1";
             TestInvalidMainSettings(new MainSettings(skylinePath, folderToWatch, false, fileFilter, false,
                     resultsWindow, instrumentType, negativeAcquisitionTime),
-                "\"Expected acquisition time\" cannot be less than 0 minutes.");
+                "\"Expected acquisition time\" cannot be less than 0 minutes.\r\nPlease enter a value larger than 0.");
 
             var nonNumberAcquisitionTime = "aaa";
             try
@@ -71,7 +71,7 @@ namespace AutoQCTest
             }
             catch (ArgumentException e)
             {
-                Assert.AreEqual($"Invalid value for \"Acquisition Time\": {nonNumberAcquisitionTime}.", e.Message);
+                Assert.AreEqual($"Invalid value for acquisition time: {nonNumberAcquisitionTime}", e.Message);
             }
 
             var testValidMainSettings = new MainSettings(TestUtils.GetTestFilePath("EmptyTemplate.sky"),
@@ -106,19 +106,19 @@ namespace AutoQCTest
         public void TestValidatePanoramaSettings()
         {
             TestInvalidPanoramaSettings(new PanoramaSettings(true, "https://fake_panoramaweb.org/", "testEmail", "testPassword", "testFolder"), 
-                "The server https://fake_panoramaweb.org/ does not exist");
+                "The server https://fake_panoramaweb.org/ does not exist.");
             TestInvalidPanoramaSettings(new PanoramaSettings(true, string.Empty, "testEmail", "testPassword", "testFolder"),
-                "Please specify a Panorama server URL.");
+                "The Panorama server Url cannot be empty. Please specify a Panorama server Url.");
             TestInvalidPanoramaSettings(new PanoramaSettings(true, "https://panoramaweb.org/", "bad_email@bad.bad", "testPassword", "testFolder"),
-                "The username and password could not be authenticated with the panorama server");
+                "The username and password could not be authenticated with the panorama server. Please try again.");
             TestInvalidPanoramaSettings(new PanoramaSettings(true, "https://panoramaweb.org/", string.Empty, "testPassword", "testFolder"),
-                "Please specify a Panorama login email.");
+                "The Panorama login email cannot be empty. Please specify a Panorama login email.");
             TestInvalidPanoramaSettings(new PanoramaSettings(true, "https://panoramaweb.org/", "testEmail", "not_the_password", "testFolder"),
-                "The username and password could not be authenticated with the panorama server");
+                "The username and password could not be authenticated with the panorama server. Please try again.");
             TestInvalidPanoramaSettings(new PanoramaSettings(true, "https://panoramaweb.org/", "testEmail", string.Empty, "testFolder"),
-                "Please specify a Panorama user password.");
+                "The Panorama user password cannot be empty. Please specify a Panorama user password.");
             TestInvalidPanoramaSettings(new PanoramaSettings(true, "https://panoramaweb.org/", "testEmail", "testPassword", ""),
-                "Please specify a folder on the Panorama server.");
+                "The folder on the Panorama server cannot be empty. Please specify a folder on the Panorama server.");
 
             var noPublishToPanorama = new PanoramaSettings();
             var validPanoramaSettings = TestUtils.GetTestPanoramaSettings();

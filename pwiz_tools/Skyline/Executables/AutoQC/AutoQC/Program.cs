@@ -76,7 +76,7 @@ namespace AutoQC
                 {
                     MessageBox.Show(
                         string.Format(Resources.Program_Main_Another_instance_of__0__is_already_running_, AppName),
-                        string.Format(Resources.Program_Main__0__Error, AppName), MessageBoxButtons.OK,
+                        AppName, MessageBoxButtons.OK,
                         MessageBoxIcon.Error);
                     return;
                 }

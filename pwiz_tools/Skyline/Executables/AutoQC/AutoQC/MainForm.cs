@@ -53,7 +53,7 @@ namespace AutoQC
             };
             listViewConfigs.ColumnWidthChanged += listViewConfigs_ColumnWidthChanged;
 
-            Program.LogInfo("Loading configurations from saved settings.");
+            Program.LogInfo(Resources.MainForm_MainForm_Loading_configurations_from_saved_settings_);
             _configManager = new ConfigManager(this);
 
             UpdateUiConfigurations();
@@ -107,7 +107,7 @@ namespace AutoQC
             catch (ArgumentException)
             {
                 if (configRunner.IsRunning()) throw new Exception("Invalid configuration cannot be running.");
-                var validateConfigForm = new InvalidConfigSetupForm(config, this);
+                var validateConfigForm = new InvalidConfigSetupForm(config, _configManager, this);
                 validateConfigForm.ShowDialog();
                 if (validateConfigForm.DialogResult != DialogResult.OK)
                     return;
@@ -124,8 +124,8 @@ namespace AutoQC
                         operation == ConfigAction.Edit && existingIndex != _configManager.SelectedConfig;
             if (duplicateName)
             {
-                throw new ArgumentException(string.Format("Cannot add \"{0}\" because there is another configuration with the same name.", config.Name) + Environment.NewLine +
-                             "Please choose a unique name.");
+                throw new ArgumentException(string.Format(Resources.MainForm_TryExecuteOperation_Cannot_add___0___because_there_is_another_configuration_with_the_same_name_, config.Name) + Environment.NewLine +
+                             Resources.MainForm_TryExecuteOperation_Please_choose_a_unique_name_);
             }
             config.Validate();
             if (operation == ConfigAction.Edit)
@@ -155,7 +155,7 @@ namespace AutoQC
         private void btnImport_Click(object sender, EventArgs e)
         {
             var dialog = new OpenFileDialog();
-            dialog.Filter = Resources.XML_file_extension;
+            dialog.Filter = TextUtil.FILTER_XML;
             if (dialog.ShowDialog(this) != DialogResult.OK)
                 return;
 
@@ -220,8 +220,8 @@ namespace AutoQC
             var config = _configManager.GetSelectedConfig();
             if (!_configManager.IsSelectedConfigValid())
             {
-                DisplayError("Cannot open the Skyline file of an invalid configuration." + Environment.NewLine +
-                             string.Format("Please fix \"{0}\" and try again.", config.Name));
+                DisplayError(Resources.MainForm_btnOpenResults_Click_Cannot_open_the_Skyline_file_of_an_invalid_configuration_ + Environment.NewLine +
+                             string.Format(Resources.MainForm_btnOpenResults_Click_Please_fix___0___and_try_again_, config.Name));
                 return;
             }
             // Open skyline file
@@ -234,8 +234,8 @@ namespace AutoQC
             var config = _configManager.GetSelectedConfig();
             if (!_configManager.IsSelectedConfigValid())
             {
-                DisplayError("Cannot open the Panorama folder of an invalid configuration." + Environment.NewLine +
-                             string.Format("Please fix {0} and try again.", config.Name));
+                DisplayError(Resources.MainForm_btnOpenPanoramaFolder_Click_Cannot_open_the_Panorama_folder_of_an_invalid_configuration_ + Environment.NewLine +
+                             string.Format(Resources.MainForm_btnOpenResults_Click_Please_fix___0___and_try_again_, config.Name));
                 return;
             }
             
@@ -252,8 +252,8 @@ namespace AutoQC
             var config = _configManager.GetSelectedConfig();
             if (!_configManager.IsSelectedConfigValid())
             {
-                DisplayError("Cannot open the results folder of an invalid configuration." + Environment.NewLine +
-                             string.Format("Please fix {0} and try again.", config.Name));
+                DisplayError(Resources.MainForm_btnOpenResultsFolder_Click_Cannot_open_the_results_folder_of_an_invalid_configuration_ + Environment.NewLine +
+                             string.Format(Resources.MainForm_btnOpenResults_Click_Please_fix___0___and_try_again_, config.Name));
                 return;
             }
             var folder = config.MainSettings.FolderToWatch;
@@ -268,7 +268,6 @@ namespace AutoQC
         {
             RunUi(() =>
             {
-                Program.LogInfo("Updating configurations");
                 listViewConfigs.Items.Clear();
                 var listViewItems = _configManager.ConfigsListViewItems();
                 foreach (var lvi in listViewItems)
@@ -303,7 +302,6 @@ namespace AutoQC
         {
             RunUi(() =>
             {
-                Program.LogInfo("Updating loggers");
                 comboConfigs.Items.Clear();
                 comboConfigs.Items.AddRange(_configManager.GetLogList());
                 comboConfigs.SelectedIndex = _configManager.SelectedLog;
@@ -357,7 +355,7 @@ namespace AutoQC
             }
             catch (Exception ex)
             {
-                DisplayErrorWithException(Resources.MainForm_ViewLog_Error_Reading_Log + Environment.NewLine + ex.Message, ex);
+                DisplayErrorWithException(Resources.MainForm_SwitchLogger_Error_reading_log_ + Environment.NewLine + ex.Message, ex);
             }
 
             ScrollToLogEnd();
@@ -376,7 +374,7 @@ namespace AutoQC
             {
                 if (!Directory.Exists(logger.GetDirectory()))
                 {
-                    DisplayError(string.Format(Resources.MainForm_btnOpenFolder_Click_Directory_does_not_exist___0_, logger.GetFile()));
+                    DisplayError(string.Format(Resources.MainForm_btnOpenFolder_Click_File_location_does_not_exist___0_, logger.GetFile()));
                     return;
                 }
                 Process.Start(logger.GetDirectory());
@@ -511,7 +509,6 @@ namespace AutoQC
                 Program.LogError($"Error {(enable ? "enabling" : "disabling")} \"Keep AutoQC Loader running\"", ex);
 
                 DisplayErrorWithException(TextUtil.LineSeparate(
-                        Resources.MainForm_cb_keepRunning_CheckedChanged_Error_Changing_Settings,
                         $"{err},{ex.Message},{(ex.InnerException != null ? ex.InnerException.StackTrace : ex.StackTrace)}"),
                     ex);
 

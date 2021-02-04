@@ -1,30 +1,36 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using AutoQC.Properties;
 
 namespace AutoQC
 {
-    
     public partial class InvalidConfigSetupForm : Form
     {
+        // The Configuration Setup Manager Form
+        // Allows users to correct file paths, R versions, and Skyline types of an invalid configuration.
+
         private readonly AutoQcConfig _invalidConfig;
+        private readonly ConfigManager _configManager;
         private readonly IMainUiControl _mainControl;
 
-        private bool _replaceRoot;
+        private string _lastInputPath; // the last user-entered file or folder path
         private string _oldRoot;
         private string _newRoot;
 
+        private bool _askedAboutRootReplacement; // if the user has been asked about replacing path roots for this configuration
 
-        public InvalidConfigSetupForm(AutoQcConfig invalidConfig, IMainUiControl mainControl)
+        public InvalidConfigSetupForm(AutoQcConfig invalidConfig, ConfigManager configManager, IMainUiControl mainControl)
         {
             InitializeComponent();
-
             _invalidConfig = invalidConfig;
+            _configManager = configManager;
             _mainControl = mainControl;
-            _replaceRoot = false;
-
+            _oldRoot = string.Empty;
+            _newRoot = string.Empty; 
             CreateValidConfig();
         }
 
@@ -33,160 +39,136 @@ namespace AutoQC
 
         private async void CreateValidConfig()
         {
+            // get valid settings
             var validMainSettings = await FixInvalidMainSettings();
+            var validPanoramaSettings = FixInvalidPanoramaSettings();
             var validSkylineSettings = await FixInvalidSkylineSettings();
-
-
+            // create valid configuration
             ValidConfig = new AutoQcConfig(_invalidConfig.Name, _invalidConfig.IsEnabled, _invalidConfig.Created, DateTime.Now, 
-                validMainSettings, _invalidConfig.PanoramaSettings, validSkylineSettings);
+                validMainSettings, validPanoramaSettings, validSkylineSettings);
+            // save invalid configuration
+            _configManager.ReplaceSelectedConfig(ValidConfig);
+            _mainControl.UpdateUiConfigurations();
             DialogResult = DialogResult.OK;
             Close();
         }
-
 
         #region Fix Configuration Settings
 
         private async Task<MainSettings> FixInvalidMainSettings()
         {
             var mainSettings = _invalidConfig.MainSettings;
-            var validTemplateFilePath = await GetValidPath("skyline file", mainSettings.SkylineFilePath, false, MainSettings.ValidateSkylineFile);
-            var validFolderToWatch = await GetValidPath("analysis folder", mainSettings.FolderToWatch, true, MainSettings.ValidateFolderToWatch);
-
-            return new MainSettings(validTemplateFilePath, validFolderToWatch, mainSettings.IncludeSubfolders, mainSettings.QcFileFilter, 
-                mainSettings.RemoveResults, mainSettings.ResultsWindow.ToString(), mainSettings.InstrumentType, mainSettings.AcquisitionTime.ToString());
+            var validSkylinePath = await GetValidPath("Skyline file",
+                mainSettings.SkylineFilePath, false, MainSettings.ValidateSkylineFile);
+            var validFolderToWatch = await GetValidPath("folder to watch",
+                mainSettings.SkylineFilePath, false, MainSettings.ValidateFolderToWatch);
+            return new MainSettings(validSkylinePath, validFolderToWatch, mainSettings.IncludeSubfolders, mainSettings.QcFileFilter, mainSettings.RemoveResults, 
+                mainSettings.ResultsWindow.ToString(), mainSettings.InstrumentType, mainSettings.AcquisitionTime.ToString());
         }
 
-        
+        private PanoramaSettings FixInvalidPanoramaSettings()
+        {
+            var panoramaSettings = _invalidConfig.PanoramaSettings;
+            try
+            {
+                panoramaSettings.ValidateSettings();
+                return panoramaSettings;
+            }
+            catch (ArgumentException)
+            {
+                return new PanoramaSettings(false, panoramaSettings.PanoramaServerUrl, panoramaSettings.PanoramaUserEmail, 
+                    panoramaSettings.PanoramaPassword, panoramaSettings.PanoramaFolder, panoramaSettings.PanoramaServerUri);
+            }
+        }
+
+
+
+
         private async Task<SkylineSettings> FixInvalidSkylineSettings()
         {
             var skylineTypeControl = new SkylineTypeControl(_invalidConfig.UsesSkyline, _invalidConfig.UsesSkylineDaily, _invalidConfig.UsesCustomSkylinePath, _invalidConfig.SkylineSettings.CmdPath);
-            return (SkylineSettings)await GetValidVariable(_invalidConfig.SkylineSettings, skylineTypeControl);
+            return (SkylineSettings)await GetValidVariable(skylineTypeControl);
         }
 
-
         #endregion
-
-
-
-
 
         #region Get Valid Variables
 
         private async Task<string> GetValidPath(string variableName, string invalidPath, bool folder, Validator validator)
         {
-            // replace path root
-            var path = _replaceRoot ? invalidPath.Replace(_oldRoot, _newRoot) : invalidPath;
+            TextUtil.TryReplaceStart(_oldRoot, _newRoot, invalidPath, out string path);
 
-            var folderControl = new FilePathControl(variableName, path, folder, validator);
-            path = (string) await GetValidVariable(path, folderControl, false);
+            var folderControl = new FilePathControl(variableName, path, _lastInputPath, folder, validator);
+            path = (string)await GetValidVariable(folderControl, false);
 
-            // the first time a path is changed, ask if user wants all path roots replaced
-            if (string.IsNullOrEmpty(_oldRoot))
-            {
-                GetBestRoot(invalidPath, path);
+            if (path.Equals(invalidPath))
+                return path;
+            _lastInputPath = path;
 
-                if (!string.IsNullOrEmpty(_oldRoot))
-                    _replaceRoot = AlertDlg.ShowQuestion(this, "Would you like to use this root for all paths?" + Environment.NewLine +
-                                                           _newRoot) == DialogResult.Yes;
-            }
+            GetNewRoot(invalidPath, path);
+
             RemoveControl(folderControl);
-            
             return path;
         }
+        
 
-
-        private async Task<object> GetValidVariable(object initialVariable, IValidatorControl control, bool removeControl = true)
+        private async Task<object> GetValidVariable(IValidatorControl control, bool removeControl = true)
         {
-            var variable = initialVariable;
-            if (control.IsValid(out string errorMessage)) return variable;
-            AddControl((UserControl)control);
-
+            // return existing variable if it is valid
+            if (control.IsValid(out string errorMessage))
+                return control.GetVariable();
+            // display the control to get user input for invalid variable
             var valid = false;
+            AddControl((UserControl)control);
             while (!valid)
             {
                 await btnNext;
                 valid = control.IsValid(out errorMessage);
                 if (!valid)
-                    _mainControl.DisplayError(errorMessage);
+                    AlertDlg.ShowError(this, errorMessage);
             }
-
+            // remove the control and return the valid variable
             if (removeControl) RemoveControl((UserControl)control);
             return control.GetVariable();
         }
 
         #endregion
 
-
-
-
-
         #region Find Path Root
 
-        private void GetBestRoot(string oldPath, string newPath)
+        private void GetNewRoot(string oldPath, string newPath)
         {
             var oldPathFolders = oldPath.Split('\\');
             var newPathFolders = newPath.Split('\\');
-            var maxValidFiles = 0;
+            string oldRoot = string.Empty;
+            string newRoot = string.Empty;
 
-            _oldRoot = string.Empty;
-            _newRoot = string.Empty;
-
-            var matchingEndFolders = 1;
-            while (matchingEndFolders < Math.Min(oldPathFolders.Length, newPathFolders.Length))
+            var matchingEndFolders = 2;
+            while (matchingEndFolders <= Math.Min(oldPathFolders.Length, newPathFolders.Length))
             {
-                // If path ends do not match we cannot replace root
+                // If path folders do not match we cannot replace root
                 if (!oldPathFolders[oldPathFolders.Length - matchingEndFolders]
                     .Equals(newPathFolders[newPathFolders.Length - matchingEndFolders]))
-                    return;
+                    break;
 
-                var testOldRoot = string.Join("\\", oldPathFolders.Take(oldPathFolders.Length - matchingEndFolders).ToArray());
-                var testNewRoot = string.Join("\\", newPathFolders.Take(newPathFolders.Length - matchingEndFolders).ToArray());
-                var validFiles = GetValidPathNumber(testOldRoot, testNewRoot);
-                if (validFiles > maxValidFiles)
-                {
-                    _oldRoot = testOldRoot;
-                    _newRoot = testNewRoot;
-                    maxValidFiles = validFiles;
-                }
-
+                oldRoot = string.Join("\\", oldPathFolders.Take(oldPathFolders.Length - matchingEndFolders).ToArray());
+                newRoot = string.Join("\\", newPathFolders.Take(newPathFolders.Length - matchingEndFolders).ToArray());
                 matchingEndFolders++;
             }
-        }
-
-
-        private int GetValidPathNumber(string oldRoot, string newRoot)
-        {
-            int validFiles = 0;
-
-            if (ValidPath(_invalidConfig.MainSettings.SkylineFilePath, oldRoot, newRoot, MainSettings.ValidateSkylineFile))
-                validFiles++;
-            if (ValidPath(_invalidConfig.MainSettings.FolderToWatch, oldRoot, newRoot, MainSettings.ValidateFolderToWatch))
-                validFiles++;
-
-            return validFiles;
-        }
-
-        private bool ValidPath(string path, string oldRoot, string newRoot, Validator validator)
-        {
-            if (!path.Contains(oldRoot)) return false;
-            var replacedRoot = path.Replace(oldRoot, newRoot);
-
-            try
+            // the first time a path is changed, ask if user wants all path roots replaced
+            if (!_askedAboutRootReplacement && oldRoot.Length > 0 && !Directory.Exists(oldRoot))
             {
-                validator(replacedRoot);
-                return true;
-            }
-            catch (ArgumentException)
-            {
-                return false;
+                var replaceRoot = AlertDlg.ShowQuestion(this, string.Format(Resources.InvalidConfigSetupForm_GetValidPath_Would_you_like_to_replace__0__with__1___, oldRoot, newRoot)) == DialogResult.Yes;
+                _askedAboutRootReplacement = true;
+                if (replaceRoot)
+                {
+                    _oldRoot = oldRoot;
+                    _newRoot = newRoot;
+                }
             }
         }
 
         #endregion
-
-
-
-
 
         private void AddControl(UserControl control)
         {
@@ -200,14 +182,11 @@ namespace AutoQC
             control.Hide();
             panel1.Controls.Remove(control);
         }
-        
-
     }
-
 
     // Validates a string variable, throws ArgumentException if invalid
     public delegate void Validator(string variable);
-    
+
     // UserControl interface to validate value of an input
     public interface IValidatorControl
     {
@@ -217,12 +196,7 @@ namespace AutoQC
         bool IsValid(out string errorMessage);
     }
 
-
-
     // Class that lets you wait for button click (ex: "await btnNext")
-
-
-
     public static class ButtonAwaiterExtensions
     {
         public static ButtonAwaiter GetAwaiter(this Button button)
@@ -234,8 +208,6 @@ namespace AutoQC
         }
     }
 
-
-
     public class ButtonAwaiter : INotifyCompletion
     {
 
@@ -243,12 +215,11 @@ namespace AutoQC
         {
             get { return false; }
         }
-        
+
         public void GetResult()
         {
-
         }
-        
+
         public Button Button { get; set; }
 
         public void OnCompleted(Action continuation)

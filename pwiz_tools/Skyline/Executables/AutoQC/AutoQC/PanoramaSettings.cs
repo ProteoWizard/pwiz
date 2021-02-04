@@ -23,6 +23,7 @@ using System.Threading;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
+using AutoQC.Properties;
 
 namespace AutoQC
 {
@@ -65,7 +66,7 @@ namespace AutoQC
                 }
                 catch (UriFormatException)
                 {
-                    Program.LogError("Panorama server name is invalid.");
+                    Program.LogError(Resources.PanoramaSettings_PanoramaSettings_Panorama_server_name_is_invalid__Please_enter_a_different_Panorama_server_name_);
                 }
             }
 
@@ -98,21 +99,25 @@ namespace AutoQC
 
             if (string.IsNullOrWhiteSpace(PanoramaServerUrl))
             {
-                throw new ArgumentException("Please specify a Panorama server URL.");
+                throw new ArgumentException(string.Format(Resources.PanoramaSettings_ValidateSettings_The__0__cannot_be_empty__Please_specify_a__0__, 
+                    Resources.PanoramaSettings_ValidateSettings_Panorama_server_Url));
             }
 
             if (string.IsNullOrWhiteSpace(PanoramaUserEmail))
             {
-                throw new ArgumentException("Please specify a Panorama login email.");
+                throw new ArgumentException(string.Format(Resources.PanoramaSettings_ValidateSettings_The__0__cannot_be_empty__Please_specify_a__0__, 
+                    Resources.PanoramaSettings_ValidateSettings_Panorama_login_email));
             }
             if (string.IsNullOrWhiteSpace(PanoramaPassword))
             {
-                throw new ArgumentException("Please specify a Panorama user password.");
+                throw new ArgumentException(string.Format(Resources.PanoramaSettings_ValidateSettings_The__0__cannot_be_empty__Please_specify_a__0__, 
+                    Resources.PanoramaSettings_ValidateSettings_Panorama_user_password));
             }
             
             if (string.IsNullOrWhiteSpace(PanoramaFolder))
             {
-                throw new ArgumentException("Please specify a folder on the Panorama server.");
+                throw new ArgumentException(string.Format(Resources.PanoramaSettings_ValidateSettings_The__0__cannot_be_empty__Please_specify_a__0__, 
+                    Resources.PanoramaSettings_ValidateSettings_folder_on_the_Panorama_server));
             }
 
             var panoramaClient = new WebPanoramaClient(PanoramaServerUri);
@@ -335,7 +340,7 @@ namespace AutoQC
 
                 if (success && _status != 1)
                 {
-                    _logger.Log("Successfully pinged Panorama server.");
+                    _logger.Log(Resources.PanoramaPinger_PingPanoramaServer_Successfully_pinged_Panorama_server_);
                     _status = 1;
                 }
                 if (!success && _status != 2)
@@ -349,7 +354,7 @@ namespace AutoQC
             {
                 if (_status != 2)
                 {
-                    _logger.LogException(ex, "Error pinging Panorama server " + panoramaServerUri);
+                    _logger.LogException(ex, Resources.PanoramaPinger_PingPanoramaServer_Error_pinging_Panorama_server_ + panoramaServerUri);
                     _status = 2;
                 }
             }

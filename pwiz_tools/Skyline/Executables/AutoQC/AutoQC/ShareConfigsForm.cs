@@ -27,7 +27,7 @@ namespace AutoQC
 
         private void btnBrowse_Click(object sender, EventArgs e)
         {
-            var dialog = new SaveFileDialog { Title = Resources.MainForm_btnExport_Click_Save_configurations___, Filter = Resources.XML_file_extension, FileName = textFileName.Text };
+            var dialog = new SaveFileDialog { Filter = TextUtil.FILTER_XML, FileName = textFileName.Text };
             if (dialog.ShowDialog(this) != DialogResult.OK)
                 return;
 
