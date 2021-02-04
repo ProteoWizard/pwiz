@@ -15557,6 +15557,28 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The input text did not appear to contain column headers. Use the dropdown control to assign column meanings for import..
+        /// </summary>
+        public static string ImportTransitionListColumnSelectDlg_DisplayData_The_input_text_did_not_appear_to_contain_column_headers__Use_the_dropdown_control_to_assign_column_meanings_for_import_ {
+            get {
+                return ResourceManager.GetString("ImportTransitionListColumnSelectDlg_DisplayData_The_input_text_did_not_appear_to_" +
+                        "contain_column_headers__Use_the_dropdown_control_to_assign_column_meanings_for_i" +
+                        "mport_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This column is labeled with the header &apos;{0}&apos; in the input text. Use the dropdown control to assign its meaning for import..
+        /// </summary>
+        public static string ImportTransitionListColumnSelectDlg_DisplayData_This_column_is_labeled_with_the_header___0___in_the_input_text__Use_the_dropdown_control_to_assign_its_meaning_for_import_ {
+            get {
+                return ResourceManager.GetString("ImportTransitionListColumnSelectDlg_DisplayData_This_column_is_labeled_with_the_h" +
+                        "eader___0___in_the_input_text__Use_the_dropdown_control_to_assign_its_meaning_fo" +
+                        "r_import_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Decoy.
         /// </summary>
         public static string ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Decoy {

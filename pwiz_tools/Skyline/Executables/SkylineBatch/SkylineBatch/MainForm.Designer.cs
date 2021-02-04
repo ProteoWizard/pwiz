@@ -37,9 +37,8 @@
             this.btnViewLog = new System.Windows.Forms.Button();
             this.btnRunBatch = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
+            this.btnOpenFolder = new System.Windows.Forms.Button();
             this.systray_icon = new System.Windows.Forms.NotifyIcon(this.components);
-            this.buttonApplySkylineSettings = new System.Windows.Forms.Button();
-            this.buttonFileDialogSkylineInstall = new System.Windows.Forms.Button();
             this.panelSkylineType = new System.Windows.Forms.Panel();
             this.batchRunDropDown = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.startFromStepOne = new System.Windows.Forms.ToolStripMenuItem();
@@ -51,9 +50,9 @@
             this.comboLogList = new System.Windows.Forms.ComboBox();
             this.textBoxLog = new System.Windows.Forms.RichTextBox();
             this.tabFront = new System.Windows.Forms.TabPage();
-            this.listViewConfigs = new System.Windows.Forms.ListView();
+            this.listViewConfigs = new SkylineBatch.MyListView();
             this.listViewConfigName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.listViewCreated = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.listViewModified = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.listViewStatus = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.labelSavedConfigurations = new System.Windows.Forms.Label();
             this.panel2 = new System.Windows.Forms.Panel();
@@ -64,10 +63,13 @@
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.btnUpArrow = new System.Windows.Forms.ToolStripButton();
             this.btnDownArrow = new System.Windows.Forms.ToolStripButton();
+            this.btnDelete = new System.Windows.Forms.ToolStripButton();
+            this.btnOpenTemplate = new System.Windows.Forms.ToolStripButton();
+            this.btnOpenResults = new System.Windows.Forms.ToolStripButton();
+            this.btnOpenAnalysis = new System.Windows.Forms.ToolStripButton();
             this.btnAddConfig = new System.Windows.Forms.Button();
             this.btnEdit = new System.Windows.Forms.Button();
             this.btnCopy = new System.Windows.Forms.Button();
-            this.btnDelete = new System.Windows.Forms.Button();
             this.tabMain = new System.Windows.Forms.TabControl();
             this.batchRunDropDown.SuspendLayout();
             this.tabLog.SuspendLayout();
@@ -126,22 +128,18 @@
             this.btnCancel.UseVisualStyleBackColor = true;
             this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
             // 
+            // btnOpenFolder
+            // 
+            resources.ApplyResources(this.btnOpenFolder, "btnOpenFolder");
+            this.btnOpenFolder.Name = "btnOpenFolder";
+            this.toolTip_MainForm.SetToolTip(this.btnOpenFolder, resources.GetString("btnOpenFolder.ToolTip"));
+            this.btnOpenFolder.UseVisualStyleBackColor = true;
+            this.btnOpenFolder.Click += new System.EventHandler(this.btnOpenFolder_Click);
+            // 
             // systray_icon
             // 
             resources.ApplyResources(this.systray_icon, "systray_icon");
             this.systray_icon.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.systray_icon_MouseDoubleClick);
-            // 
-            // buttonApplySkylineSettings
-            // 
-            resources.ApplyResources(this.buttonApplySkylineSettings, "buttonApplySkylineSettings");
-            this.buttonApplySkylineSettings.Name = "buttonApplySkylineSettings";
-            this.buttonApplySkylineSettings.UseVisualStyleBackColor = true;
-            // 
-            // buttonFileDialogSkylineInstall
-            // 
-            resources.ApplyResources(this.buttonFileDialogSkylineInstall, "buttonFileDialogSkylineInstall");
-            this.buttonFileDialogSkylineInstall.Name = "buttonFileDialogSkylineInstall";
-            this.buttonFileDialogSkylineInstall.UseVisualStyleBackColor = true;
             // 
             // panelSkylineType
             // 
@@ -186,6 +184,7 @@
             // tabLog
             // 
             this.tabLog.BackColor = System.Drawing.Color.Transparent;
+            this.tabLog.Controls.Add(this.btnOpenFolder);
             this.tabLog.Controls.Add(this.btnDeleteLogs);
             this.tabLog.Controls.Add(this.label1);
             this.tabLog.Controls.Add(this.comboLogList);
@@ -216,6 +215,7 @@
             // 
             this.tabFront.BackColor = System.Drawing.Color.Transparent;
             this.tabFront.Controls.Add(this.listViewConfigs);
+            this.tabFront.Controls.Add(this.btnViewLog);
             this.tabFront.Controls.Add(this.labelSavedConfigurations);
             this.tabFront.Controls.Add(this.panel2);
             this.tabFront.Controls.Add(this.panel1);
@@ -225,26 +225,32 @@
             // listViewConfigs
             // 
             resources.ApplyResources(this.listViewConfigs, "listViewConfigs");
+            this.listViewConfigs.CheckBoxes = true;
             this.listViewConfigs.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.listViewConfigName,
-            this.listViewCreated,
+            this.listViewModified,
             this.listViewStatus});
             this.listViewConfigs.FullRowSelect = true;
+            this.listViewConfigs.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
             this.listViewConfigs.HideSelection = false;
             this.listViewConfigs.MultiSelect = false;
             this.listViewConfigs.Name = "listViewConfigs";
+            this.listViewConfigs.Scrollable = false;
             this.listViewConfigs.UseCompatibleStateImageBehavior = false;
             this.listViewConfigs.View = System.Windows.Forms.View.Details;
-            this.listViewConfigs.SelectedIndexChanged += new System.EventHandler(this.listViewConfigs_SelectedIndexChanged);
+            this.listViewConfigs.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.listViewConfigs_ItemCheck);
+            this.listViewConfigs.ItemSelectionChanged += new System.Windows.Forms.ListViewItemSelectionChangedEventHandler(this.listViewConfigs_PreventItemSelectionChanged);
             this.listViewConfigs.DoubleClick += new System.EventHandler(this.HandleEditEvent);
+            this.listViewConfigs.MouseUp += new System.Windows.Forms.MouseEventHandler(this.listViewConfigs_MouseUp);
+            this.listViewConfigs.Resize += new System.EventHandler(this.listViewConfigs_Resize);
             // 
             // listViewConfigName
             // 
             resources.ApplyResources(this.listViewConfigName, "listViewConfigName");
             // 
-            // listViewCreated
+            // listViewModified
             // 
-            resources.ApplyResources(this.listViewCreated, "listViewCreated");
+            resources.ApplyResources(this.listViewModified, "listViewModified");
             // 
             // listViewStatus
             // 
@@ -281,14 +287,12 @@
             // 
             resources.ApplyResources(this.panel1, "panel1");
             this.panel1.Controls.Add(this.button1);
-            this.panel1.Controls.Add(this.btnViewLog);
             this.panel1.Controls.Add(this.toolStrip1);
             this.panel1.Controls.Add(this.btnImportConfigs);
             this.panel1.Controls.Add(this.btnExportConfigs);
             this.panel1.Controls.Add(this.btnAddConfig);
             this.panel1.Controls.Add(this.btnEdit);
             this.panel1.Controls.Add(this.btnCopy);
-            this.panel1.Controls.Add(this.btnDelete);
             this.panel1.Name = "panel1";
             // 
             // button1
@@ -299,11 +303,16 @@
             // 
             // toolStrip1
             // 
+            this.toolStrip1.BackColor = System.Drawing.SystemColors.Control;
             resources.ApplyResources(this.toolStrip1, "toolStrip1");
             this.toolStrip1.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
             this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.btnUpArrow,
-            this.btnDownArrow});
+            this.btnDownArrow,
+            this.btnDelete,
+            this.btnOpenTemplate,
+            this.btnOpenResults,
+            this.btnOpenAnalysis});
             this.toolStrip1.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.VerticalStackWithOverflow;
             this.toolStrip1.Name = "toolStrip1";
             // 
@@ -322,6 +331,38 @@
             this.btnDownArrow.Image = global::SkylineBatch.Properties.Resources.downarrow;
             this.btnDownArrow.Name = "btnDownArrow";
             this.btnDownArrow.Click += new System.EventHandler(this.btnDownArrow_Click);
+            // 
+            // btnDelete
+            // 
+            this.btnDelete.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            resources.ApplyResources(this.btnDelete, "btnDelete");
+            this.btnDelete.Image = global::SkylineBatch.Properties.Resources.Delete;
+            this.btnDelete.Name = "btnDelete";
+            this.btnDelete.Click += new System.EventHandler(this.btnDelete_Click);
+            // 
+            // btnOpenTemplate
+            // 
+            this.btnOpenTemplate.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            resources.ApplyResources(this.btnOpenTemplate, "btnOpenTemplate");
+            this.btnOpenTemplate.Image = global::SkylineBatch.Properties.Resources.SkylineDoc;
+            this.btnOpenTemplate.Name = "btnOpenTemplate";
+            this.btnOpenTemplate.Click += new System.EventHandler(this.btnOpenTemplate_Click);
+            // 
+            // btnOpenResults
+            // 
+            this.btnOpenResults.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            resources.ApplyResources(this.btnOpenResults, "btnOpenResults");
+            this.btnOpenResults.Image = global::SkylineBatch.Properties.Resources.SkylineData;
+            this.btnOpenResults.Name = "btnOpenResults";
+            this.btnOpenResults.Click += new System.EventHandler(this.btnOpenResults_Click);
+            // 
+            // btnOpenAnalysis
+            // 
+            this.btnOpenAnalysis.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            resources.ApplyResources(this.btnOpenAnalysis, "btnOpenAnalysis");
+            this.btnOpenAnalysis.Image = global::SkylineBatch.Properties.Resources.OpenFolder;
+            this.btnOpenAnalysis.Name = "btnOpenAnalysis";
+            this.btnOpenAnalysis.Click += new System.EventHandler(this.btnOpenAnalysis_Click);
             // 
             // btnAddConfig
             // 
@@ -343,13 +384,6 @@
             this.btnCopy.Name = "btnCopy";
             this.btnCopy.UseVisualStyleBackColor = true;
             this.btnCopy.Click += new System.EventHandler(this.btnCopy_Click);
-            // 
-            // btnDelete
-            // 
-            resources.ApplyResources(this.btnDelete, "btnDelete");
-            this.btnDelete.Name = "btnDelete";
-            this.btnDelete.UseVisualStyleBackColor = true;
-            this.btnDelete.Click += new System.EventHandler(this.btnDelete_Click);
             // 
             // tabMain
             // 
@@ -385,8 +419,6 @@
         #endregion
         private System.Windows.Forms.ToolTip toolTip_MainForm;
         private System.Windows.Forms.NotifyIcon systray_icon;
-        private System.Windows.Forms.Button buttonApplySkylineSettings;
-        private System.Windows.Forms.Button buttonFileDialogSkylineInstall;
         private System.Windows.Forms.Panel panelSkylineType;
         private System.Windows.Forms.ContextMenuStrip batchRunDropDown;
         private System.Windows.Forms.ToolStripMenuItem startFromStepOne;
@@ -399,10 +431,6 @@
         private System.Windows.Forms.ComboBox comboLogList;
         private System.Windows.Forms.RichTextBox textBoxLog;
         private System.Windows.Forms.TabPage tabFront;
-        private System.Windows.Forms.ListView listViewConfigs;
-        private System.Windows.Forms.ColumnHeader listViewConfigName;
-        private System.Windows.Forms.ColumnHeader listViewCreated;
-        private System.Windows.Forms.ColumnHeader listViewStatus;
         private System.Windows.Forms.Label labelSavedConfigurations;
         private System.Windows.Forms.Panel panel2;
         private System.Windows.Forms.Button btnRunOptions;
@@ -420,7 +448,15 @@
         private System.Windows.Forms.Button btnAddConfig;
         private System.Windows.Forms.Button btnEdit;
         private System.Windows.Forms.Button btnCopy;
-        private System.Windows.Forms.Button btnDelete;
         private System.Windows.Forms.TabControl tabMain;
+        private System.Windows.Forms.Button btnOpenFolder;
+        private System.Windows.Forms.ToolStripButton btnDelete;
+        private System.Windows.Forms.ToolStripButton btnOpenAnalysis;
+        private System.Windows.Forms.ToolStripButton btnOpenTemplate;
+        private System.Windows.Forms.ToolStripButton btnOpenResults;
+        private MyListView listViewConfigs;
+        private System.Windows.Forms.ColumnHeader listViewConfigName;
+        private System.Windows.Forms.ColumnHeader listViewModified;
+        private System.Windows.Forms.ColumnHeader listViewStatus;
     }
 }

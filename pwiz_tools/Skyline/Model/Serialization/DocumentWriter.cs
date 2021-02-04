@@ -278,7 +278,7 @@ namespace pwiz.Skyline.Model.Serialization
                 var explicitMods = node.ExplicitMods;
                 if (DocumentFormat < DocumentFormat.FLAT_CROSSLINKS)
                 {
-                    if (explicitMods != null)
+                    if (explicitMods != null && explicitMods.HasCrosslinks)
                     {
                         try
                         {
