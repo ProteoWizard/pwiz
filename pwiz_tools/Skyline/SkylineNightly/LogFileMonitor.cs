@@ -123,10 +123,10 @@ namespace SkylineNightly
             if (!Monitor.TryEnter(_lock))
                 return;
 
-            var signalTime = e?.SignalTime ?? DateTime.Now;
-
             try
             {
+                var signalTime = e?.SignalTime ?? DateTime.Now;
+
                 if (_fileStream == null)
                 {
                     var log = Nightly.GetLatestLog(_logDir);
