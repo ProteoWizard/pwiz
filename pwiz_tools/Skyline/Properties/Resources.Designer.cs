@@ -15760,6 +15760,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error on line {0}: {1}.
+        /// </summary>
+        public static string InsertSmallMoleculeTransitionList_InsertSmallMoleculeTransitionList_Error_on_line__0__1_ {
+            get {
+                return ResourceManager.GetString("InsertSmallMoleculeTransitionList_InsertSmallMoleculeTransitionList_Error_on_line" +
+                        "__0__1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unexpected line in instrument config: {0}.
         /// </summary>
         public static string InstrumentInfoUtil_ReadInstrumentConfig_Unexpected_line_in_instrument_config__0__ {
@@ -29513,6 +29523,16 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders" +
                         "_RT__min_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Inconsistent molecule description.
+        /// </summary>
+        public static string SmallMoleculeTransitionListReader_GetMoleculeTransitionGroup_Inconsistent_molecule_description {
+            get {
+                return ResourceManager.GetString("SmallMoleculeTransitionListReader_GetMoleculeTransitionGroup_Inconsistent_molecul" +
+                        "e_description", resourceCulture);
             }
         }
         

@@ -1765,7 +1765,16 @@ namespace pwiz.Skyline.Model
 
             var customIon = moleculeInfo.ToCustomMolecule();
             var isotopeLabelType = moleculeInfo.IsotopeLabelType ?? IsotopeLabelType.light;
-            Assume.IsTrue(Equals(pep.CustomMolecule.PrimaryEquivalenceKey, customIon.PrimaryEquivalenceKey));  // TODO(bspratt) error handling here
+            if (!Equals(pep.CustomMolecule.PrimaryEquivalenceKey, customIon.PrimaryEquivalenceKey))
+            {
+                ShowTransitionError(new PasteError
+                {
+                    Column = -1, 
+                    Line = row.Index,
+                    Message = Resources.SmallMoleculeTransitionListReader_GetMoleculeTransitionGroup_Inconsistent_molecule_description
+                });
+                return null;
+            }
             var adduct = moleculeInfo.Adduct;
             if (!Equals(pep.CustomMolecule.MonoisotopicMass, customIon.MonoisotopicMass) && !adduct.HasIsotopeLabels)
             {
@@ -1969,12 +1978,22 @@ namespace pwiz.Skyline.Model
 
         public override void ShowTransitionError(PasteError error)
         {
-            throw new LineColNumberedIoException(
-                string.Format(
-                    Resources
-                        .InsertSmallMoleculeTransitionList_InsertSmallMoleculeTransitionList_Error_on_line__0___column_1____2_,
-                    error.Line + 1, error.Column + 1, error.Message),
+            if (error.Column >= 0)
+            {
+                throw new LineColNumberedIoException(
+                    string.Format(
+                        Resources.InsertSmallMoleculeTransitionList_InsertSmallMoleculeTransitionList_Error_on_line__0___column_1____2_,
+                        error.Line + 1, error.Column + 1, error.Message),
                     error.Line + 1, error.Column + 1);
+            }
+            else
+            {
+                throw new LineColNumberedIoException(
+                    string.Format(
+                        Resources.InsertSmallMoleculeTransitionList_InsertSmallMoleculeTransitionList_Error_on_line__0__1_,
+                        error.Line + 1, error.Message),
+                    error.Line + 1, error.Column);
+            }
         }
 
         public override int ColumnIndex(string columnName)
