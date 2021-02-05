@@ -729,7 +729,12 @@ int SpectrumImpl::getMSLevel() const
     try {return spectrumInfo->MSLevel == 0 ? 1 : spectrumInfo->MSLevel;} CATCH_AND_FORWARD
 }
 
-bool SpectrumImpl::getHasIsolationInfo() const { return selectedMz != 0; }
+bool SpectrumImpl::getHasIsolationInfo() const
+{
+    return ((ExperimentType)experiment->msExperiment->Details->ExperimentType == Product ||
+            (ExperimentType)experiment->msExperiment->Details->ExperimentType == Precursor) &&
+           experiment->msExperiment->Details->MassRangeInfo->Length > 0;
+}
 
 void SpectrumImpl::getIsolationInfo(double& centerMz, double& lowerLimit, double& upperLimit, double& collisionEnergy) const
 {

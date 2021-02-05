@@ -841,14 +841,9 @@ namespace pwiz.Skyline.Model
             }
             IPrecursorMassCalc massCalc = settings.GetPrecursorCalc(LabelType, mods);
             MoleculeMassOffset moleculeMassOffset = new MoleculeMassOffset(Molecule.Parse(massCalc.GetMolecularFormula(Peptide.Sequence)), 0, 0);
-            if (mods != null)
-            {
-                foreach (var crosslink in mods.Crosslinks)
-                {
-                    moleculeMassOffset = moleculeMassOffset.Plus(crosslink.Value.GetNeutralFormula(settings, LabelType));
-                }
-            }
-
+            moleculeMassOffset = moleculeMassOffset.Plus((mods?.CrosslinkStructure ?? CrosslinkStructure.EMPTY)
+                .GetNeutralFormula(settings, LabelType));
+            
             return moleculeMassOffset;
         }
 
@@ -1105,17 +1100,14 @@ namespace pwiz.Skyline.Model
         public IEnumerable<TransitionDocNode> GetTransitions(SrmSettings settings, ExplicitMods mods, double precursorMz,
             IsotopeDistInfo isotopeDist, SpectrumHeaderInfo libInfo, Dictionary<double, LibraryRankedSpectrumInfo.RankedMI> transitionRanks, bool useFilter)
         {
-            SrmSettings simpleFilterSettings = settings;
-            bool hasCrosslinks = mods != null && mods.HasCrosslinks;
-            var simpleTransitions = TransitionGroup.GetTransitions(simpleFilterSettings, this, mods, precursorMz, isotopeDist, libInfo, transitionRanks,
-                useFilter, !hasCrosslinks);
-            if (!hasCrosslinks)
+            if (mods == null || !mods.HasCrosslinks)
             {
-                return simpleTransitions;
+                return TransitionGroup.GetTransitions(settings, this, mods, precursorMz, isotopeDist, libInfo, transitionRanks,
+                    useFilter, true);
             }
             var crosslinkBuilder = new CrosslinkBuilder(settings, TransitionGroup.Peptide, mods, LabelType);
-            return crosslinkBuilder.GetComplexTransitions(TransitionGroup, precursorMz, isotopeDist, transitionRanks,
-                simpleTransitions, useFilter);
+            return crosslinkBuilder.GetTransitionDocNodes(TransitionGroup, precursorMz, isotopeDist, transitionRanks,
+                useFilter);
         }
 
         public DocNode EnsureChildren(PeptideDocNode parent, ExplicitMods mods, SrmSettings settings)
