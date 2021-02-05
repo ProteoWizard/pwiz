@@ -8,18 +8,14 @@ namespace AutoQC
 {
     public interface IAutoQcLogger
     {
-        void Log(string message);
-        void LogError(string message);
-        void LogProgramError(string message);
-        void LogException(Exception exception, string message);
+        void Log(string message, params object[] args);
+        void LogError(string message, params object[] args);
+        void LogProgramError(string message, params object[] args);
+        void LogException(Exception exception, string message, params object[] args);
         string GetFile();
-
-        string GetDirectory();
         void DisableUiLogging();
         void LogToUi(IMainUiControl mainUi);
         void DisplayLog();
-
-        string GetConfigName();
     }
 
     public class AutoQcLogger : IAutoQcLogger
@@ -42,28 +38,11 @@ namespace AutoQC
         private const int MEM_LOG_SIZE = 100; // Keep the last 100 log messages in memory
         private StringBuilder _logBuffer; // To be used when the log file is unavailable for writing
         private const int LOG_BUFFER_SIZE = 10240;
-        
 
-        public AutoQcLogger(AutoQcConfig config, IMainUiControl mainUi, IAutoQcLogger oldLogger = null)
+        public AutoQcLogger(string filePath, string configName)
         {
-            var skylineFileDir = Path.GetDirectoryName(config.MainSettings.SkylineFilePath);
-            var defaultFileFolder = Path.Combine(skylineFileDir, GetSafeName(config.Name));
-            if (!Directory.Exists(defaultFileFolder))
-                Directory.CreateDirectory(defaultFileFolder);
-            var defaultFilePath = Path.Combine(defaultFileFolder, "AutoQC.log");
-            _filePath = oldLogger != null ? oldLogger.GetFile() : defaultFilePath;
-            _configName = config.Name;
-            _mainUi = mainUi;
-            Init();
-        }
-
-        private static string GetSafeName(string name)
-        {
-            var invalidChars = new List<char>();
-            invalidChars.AddRange(Path.GetInvalidFileNameChars());
-            invalidChars.AddRange(Path.GetInvalidPathChars());
-            var safeName = string.Join("_", name.Split(invalidChars.ToArray()));
-            return safeName; // .TrimStart('.').TrimEnd('.');
+            _filePath = filePath;
+            _configName = configName;
         }
 
         public void Init()
@@ -76,11 +55,6 @@ namespace AutoQC
             using (File.Create(_filePath))
             {
             } 
-        }
-
-        public string GetConfigName()
-        {
-            return _configName;
         }
 
         private void WriteToFile(string message)
@@ -215,12 +189,12 @@ namespace AutoQC
 
         #region [Logging methods; Implementation of IAutoQcLogger interface]
 
-        public void Log(string line)
+        public void Log(string line, params object[] args)
         {
-            /*if (args != null && args.Length > 0)
+            if (args != null && args.Length > 0)
             {
                 line = string.Format(line, args);
-            }*/
+            }
 
             if (line.Equals(_lastMessage))
             {
@@ -230,54 +204,64 @@ namespace AutoQC
 
             if (_mainUi != null)
             {
-                _mainUi.LogToUi(_configName, GetDate() + line);
+                _mainUi.LogToUi(GetDate() + line);
             }
 
             WriteToFile(line);
         }
 
-        public void LogException(Exception ex, string line)
+        public void LogException(Exception ex, string line, params object[] args)
         {
-            var exStr = ex != null ? ex.ToString() : string.Empty;
+            if (args != null && args.Length > 0)
+            {
+                line = string.Format(line, args);
+            }
+
+            var exStr = ex != null ? ex.ToString() : "";
             if (_mainUi != null)
             {
                 line = GetDate() + line;
 
-                _mainUi.LogErrorLinesToUi(_configName,
+                _mainUi.LogErrorLinesToUi(
                         new List<string> {line, exStr});
             }
 
             LogErrorToFile(string.Format("{0}\n{1}", line, exStr));
         }
 
-        public void LogError(string line)
+        public void LogError(string line, params object[] args)
         {
+            if (args != null && args.Length > 0)
+            {
+                line = string.Format(line, args);
+            }
+
             if (_mainUi != null)
             {
-                _mainUi.LogErrorToUi(_configName, GetDate() + line);
+                _mainUi.LogErrorToUi(GetDate() + line);
             }
 
             LogErrorToFile(line);
         }
 
-        public void LogProgramError(string line)
+        public void LogProgramError(string line, params object[] args)
         {
+            if (args != null && args.Length > 0)
+            {
+                line = string.Format(line, args);
+            }
+
             Program.LogError(line);
 
             if (_mainUi != null)
             {
-                _mainUi.LogErrorToUi(_configName, GetDate() + line);
+                _mainUi.LogErrorToUi(GetDate() + line);
             }
         }
 
         public string GetFile()
         {
             return _filePath;
-        }
-
-        public string GetDirectory()
-        {
-            return Path.GetDirectoryName(_filePath);
         }
 
         public void DisableUiLogging()
@@ -297,21 +281,21 @@ namespace AutoQC
                 if (!File.Exists(_filePath))
                 {
                     // If the log file is not accessible, display the contents of the in memory buffer and anything saved in the log buffer
-                    _mainUi.LogErrorToUi(_configName, $"Could not read the log file: {_filePath}. File does not exist", false, false);
+                    _mainUi.LogErrorToUi($"Could not read the log file: {_filePath}. File does not exist", false, false);
                     if (_memLogMessages != null && _memLogMessages.Count > 0)
                     {
-                        _mainUi.LogErrorToUi(_configName, $"Displaying last {_memLogMessages.Count} saved log messages", false, false);
+                        _mainUi.LogErrorToUi($"Displaying last {_memLogMessages.Count} saved log messages", false, false);
                         string[] arr = _memLogMessages.ToArray();
                         foreach (var s in arr)
                         {
-                            _mainUi.LogToUi(_configName, s, false, false);
+                            _mainUi.LogToUi(s, false, false);
                         }
                     }
                     
                     if (_logBuffer != null &&_logBuffer.Length > 0)
                     {
-                        _mainUi.LogErrorToUi(_configName, $"Displaying messages since log file became unavailable", false, false);
-                        _mainUi.LogToUi(_configName, _logBuffer.ToString(), false, false);
+                        _mainUi.LogErrorToUi($"Displaying messages since log file became unavailable", false, false);
+                        _mainUi.LogToUi(_logBuffer.ToString(), false, false);
                     }
                     return;
                 }
@@ -346,7 +330,7 @@ namespace AutoQC
 
                 if (truncated)
                 {
-                    _mainUi.LogErrorToUi(_configName, string.Format(LogTruncatedMessage, GetFile()), false);  
+                    _mainUi.LogErrorToUi(string.Format(LogTruncatedMessage, GetFile()), false);  
                 }
 
                 var toLog = new List<string>();
@@ -359,7 +343,7 @@ namespace AutoQC
                     {
                         if (!lastLineErr && toLog.Count > 0)
                         {
-                            _mainUi.LogLinesToUi(_configName, toLog);
+                            _mainUi.LogLinesToUi(toLog);
                             toLog.Clear();
                         }
                         lastLineErr = true;
@@ -369,7 +353,7 @@ namespace AutoQC
                     {
                         if (lastLineErr && toLog.Count > 0)
                         {
-                            _mainUi.LogErrorLinesToUi(_configName, toLog);
+                            _mainUi.LogErrorLinesToUi(toLog);
                             toLog.Clear();   
                         }
                         lastLineErr = false;
@@ -380,11 +364,11 @@ namespace AutoQC
                 {
                     if (lastLineErr)
                     {
-                        _mainUi.LogErrorLinesToUi(_configName, toLog);  
+                        _mainUi.LogErrorLinesToUi(toLog);  
                     }
                     else
                     {
-                        _mainUi.LogLinesToUi(_configName, toLog);   
+                        _mainUi.LogLinesToUi(toLog);   
                     }
                 }
             }

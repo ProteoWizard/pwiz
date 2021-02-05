@@ -22,5 +22,29 @@ namespace AutoQC.Properties {
                 return defaultInstance;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string SkylineInstallDir {
+            get {
+                return ((string)(this["SkylineInstallDir"]));
+            }
+            set {
+                this["SkylineInstallDir"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string SkylineType {
+            get {
+                return ((string)(this["SkylineType"]));
+            }
+            set {
+                this["SkylineType"] = value;
+            }
+        }
     }
 }

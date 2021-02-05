@@ -8,7 +8,7 @@ namespace AutoQC
 {
     internal class StartupManager
     {
-        private const string AUTOQCSTARTER = Program.AUTO_QC_STARTER;
+        private const string AUTOQCSTARTER = Program.AutoQcStarter;
         private static readonly string AUTOQCSTARTEREXE = Program.AutoQcStarterExe;
 
         public static void EnableKeepRunning()

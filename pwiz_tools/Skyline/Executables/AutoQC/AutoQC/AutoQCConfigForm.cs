@@ -17,130 +17,169 @@
  */
 
 using System;
-using System.IO;
 using System.Windows.Forms;
 using AutoQC.Properties;
-using SharedAutoQcBatch;
 
 namespace AutoQC
 {
-    public enum ConfigAction
-    {
-        Add, Edit, Copy
-    }
-
     public partial class AutoQcConfigForm : Form
     {
-        // Allows a user to create a new configuration and add it to the list of configurations,
-        // or replace an existing configuration.
-        // Currently running configurations cannot be replaced, and will be opened in a read only mode.
-
-
         private readonly IMainUiControl _mainControl;
-        private readonly ConfigAction _action;
-        private readonly DateTime _initialCreated;
+        private readonly AutoQcConfig _config;
 
-        public AutoQcConfigForm(IMainUiControl mainControl, AutoQcConfig config, ConfigAction action, bool isBusy)
+        public AutoQcConfigForm(IMainUiControl mainControl) : this(AutoQcConfig.GetDefault(), null, mainControl)
         {
-            InitializeComponent();
-            
-            _action = action;
-            _initialCreated = config?.Created ?? DateTime.MinValue;
+        }
+
+        public AutoQcConfigForm(AutoQcConfig config, ConfigRunner configRunner, IMainUiControl mainControl)
+        {
             _mainControl = mainControl;
+            _config = config;
+            InitializeComponent();
 
             // Initialize file filter combobox
             var filterOptions = new object[]
             {
-                AllFileFilter.FilterName, 
-                StartsWithFilter.FilterName, 
-                EndsWithFilter.FilterName, 
-                ContainsFilter.FilterName,
-                RegexFilter.FilterName
+                AllFileFilter.NAME, 
+                StartsWithFilter.NAME, 
+                EndsWithFilter.NAME, 
+                ContainsFilter.NAME,
+                RegexFilter.NAME
             };
             comboBoxFileFilter.Items.AddRange(filterOptions);
 
-            InitInputFieldsFromConfig(config);
+            textConfigName.Text = _config.Name;
+            SetUIMainSettings(_config.MainSettings);
+            SetUIPanoramaSettings(_config.PanoramaSettings);
 
-            lblConfigRunning.Hide();
-
-            if (isBusy)
+            if (configRunner != null && configRunner.IsBusy())
             {
                 lblConfigRunning.Show();
-                btnSaveConfig.Hide(); // save and cancel buttons are replaced with OK button
+                btnSaveConfig.Hide();
                 btnCancelConfig.Hide();
                 btnOkConfig.Show();
-                AcceptButton = btnOkConfig;
-                DisableUserInputs();
             }
-
-            ActiveControl = textConfigName;
+            else
+            {
+                lblConfigRunning.Hide();
+                btnSaveConfig.Show();
+                btnCancelConfig.Show();
+                btnOkConfig.Hide();
+            } 
         }
 
-
-        private void InitInputFieldsFromConfig(AutoQcConfig config)
+        private void Save()
         {
-            InitSkylineTab();
-            if (config == null)
+            AutoQcConfig newConfig;
+            try
             {
-                SetDefaultMainSettings();
-                SetDefaultPanoramaSettings();
+                newConfig = GetConfigFromUi();
+            }
+            catch (ArgumentException e)
+            {
+                ShowErrorDialog(e.Message);
                 return;
             }
 
-            if (_action != ConfigAction.Add)
-                textConfigName.Text = config.Name;
+            if (!ValidateConfigName(newConfig) || !ValidateConfig(newConfig))
+                return;
 
-            SetInitialMainSettings(config.MainSettings);
-            SetInitialPanoramaSettings(config.PanoramaSettings);
-            SetInitialSkylineSettings(config);
-        }
-
-        public void DisableUserInputs(Control parentControl = null)
-        {
-            if (parentControl == null) parentControl = Controls[0];
-
-            if (parentControl is TextBoxBase)
-                ((TextBoxBase)parentControl).ReadOnly = true;
-            if (parentControl is CheckBox)
-                ((CheckBox)parentControl).Enabled = false;
-            if (parentControl is ComboBox)
-                ((ComboBox)parentControl).Enabled = false;
-            if (parentControl is ButtonBase buttonBase && !buttonBase.Text.Equals(btnOkConfig.Text))
-                buttonBase.Enabled = false;
-            
-            foreach (Control control in parentControl.Controls)
+            if (string.IsNullOrEmpty(_config.Name))
             {
-                DisableUserInputs(control);
+                // If the original configuration that we started with does not have a name,
+                // it means this is a brand new configuration
+                newConfig.Created = DateTime.Now;
+                newConfig.Modified = DateTime.Now;
+
+                _mainControl.AddConfiguration(newConfig);     
             }
+
+            else if (!newConfig.Equals(_config))
+            {
+                // If the original configuration has a name it means the user is editing an existing configuration
+                // and some changes have been made.
+                newConfig.Created = _config.Created;
+                newConfig.Modified = DateTime.Now;
+
+                _mainControl.UpdateConfiguration(_config, newConfig);
+            }
+
+            Close();      
         }
 
-        #region Main settings
-
-        private void SetInitialMainSettings(MainSettings mainSettings)
+        private bool ValidateConfigName(AutoQcConfig newConfig)
         {
-            textSkylinePath.Text = mainSettings.SkylineFilePath;
-            textFolderToWatchPath.Text = mainSettings.FolderToWatch;
-            includeSubfoldersCb.Checked = mainSettings.IncludeSubfolders;
-            textQCFilePattern.Text = mainSettings.QcFileFilter.Pattern;
-            comboBoxFileFilter.SelectedItem = mainSettings.QcFileFilter.Name();
-            textResultsTimeWindow.Text = mainSettings.ResultsWindow.ToString();
-            checkBoxRemoveResults.Checked = mainSettings.RemoveResults;
-            textAquisitionTime.Text = mainSettings.AcquisitionTime.ToString();
-            comboBoxInstrumentType.SelectedItem = mainSettings.InstrumentType;
-            comboBoxInstrumentType.SelectedIndex = comboBoxInstrumentType.FindStringExact(mainSettings.InstrumentType);
+            if (string.IsNullOrEmpty(_config.Name) || !_config.Name.Equals(newConfig.Name))
+            {
+                // Make sure that the configuration name is unique.
+                if (!IsUniqueConfigName(newConfig))
+                {
+                    ShowErrorDialog(Resources.AutoQcConfigForm_ValidateConfigName_A_configuration_with_this_name_already_exists_);
+                    return false;    
+                }
+            }
+            return true;
         }
 
-        private void SetDefaultMainSettings()
+        private bool IsUniqueConfigName(AutoQcConfig newConfig)
         {
-            comboBoxFileFilter.SelectedItem = MainSettings.GetDefaultQcFileFilter().Name();
-            textResultsTimeWindow.Text = MainSettings.GetDefaultResultsWindow();
-            checkBoxRemoveResults.Checked = MainSettings.GetDefaultRemoveResults();
-            textAquisitionTime.Text = MainSettings.GetDefaultAcquisitionTime();
-            comboBoxInstrumentType.SelectedItem = MainSettings.GetDefaultInstrumentType();
-            comboBoxInstrumentType.SelectedIndex = comboBoxInstrumentType.FindStringExact(MainSettings.GetDefaultInstrumentType());
+            // Make sure that the configuration name is unique
+            var savedConfig = _mainControl.GetConfig(newConfig.Name);
+            if (savedConfig != null && !ReferenceEquals(newConfig, savedConfig))
+            {
+                return false;
+            }
+            return true;
         }
 
-        private MainSettings GetMainSettingsFromUi()
+        private bool ValidateConfig(AutoQcConfig newConfig)
+        {
+            try
+            {
+                newConfig.Validate();
+            }
+            catch (ArgumentException e)
+            {
+                ShowErrorDialog(e.Message);
+                return false;   
+            }
+
+            return true;
+        }
+
+        private void ShowErrorDialog(string message)
+        {
+            _mainControl.DisplayError(Resources.AutoQcConfigForm_ShowErrorDialog_Configuration_Validation_Error, message);
+        }
+
+        private AutoQcConfig GetConfigFromUi()
+        {
+            AutoQcConfig config  = new AutoQcConfig();
+            config.Name = textConfigName.Text;
+            config.MainSettings = GetMainSettingsFromUI();
+            config.PanoramaSettings = GetPanoramaSettingsFromUI();
+            config.User = config.PanoramaSettings.PanoramaUserEmail;
+            return config;
+        }
+
+        private void SetUIMainSettings(MainSettings mainSettings)
+        {
+            RunUI(() =>
+            {
+                textSkylinePath.Text = mainSettings.SkylineFilePath;
+                textFolderToWatchPath.Text = mainSettings.FolderToWatch;
+                includeSubfoldersCb.Checked = mainSettings.IncludeSubfolders;
+                textQCFilePattern.Text = mainSettings.QcFileFilter.Pattern;
+                comboBoxFileFilter.SelectedItem = mainSettings.QcFileFilter.Name();
+                textResultsTimeWindow.Text = mainSettings.ResultsWindow.ToString();
+                checkBoxRemoveResults.Checked = mainSettings.RemoveResults;
+                textAquisitionTime.Text = mainSettings.AcquisitionTime.ToString();
+                comboBoxInstrumentType.SelectedItem = mainSettings.InstrumentType;
+                comboBoxInstrumentType.SelectedIndex = comboBoxInstrumentType.FindStringExact(mainSettings.InstrumentType);
+            });
+        }
+
+        private MainSettings GetMainSettingsFromUI()
         {
             var skylineFilePath = textSkylinePath.Text;
             var folderToWatch = textFolderToWatchPath.Text;
@@ -148,16 +187,65 @@ namespace AutoQC
             var qcFileFilter = FileFilter.GetFileFilter(comboBoxFileFilter.SelectedItem.ToString(),
                 textQCFilePattern.Text);
             var removeResults = checkBoxRemoveResults.Checked;
-            var resultsWindow = textResultsTimeWindow.Text;
+            var resultsWindow = ValidateIntTextField(textResultsTimeWindow.Text,
+                Resources.AutoQcConfigForm_GetMainSettingsFromUI_Results_Window);
             var instrumentType = comboBoxInstrumentType.SelectedItem.ToString();
-            var acquisitionTime = textAquisitionTime.Text;
-            var mainSettings = new MainSettings(skylineFilePath, folderToWatch, includeSubfolders, qcFileFilter, removeResults, resultsWindow, instrumentType, acquisitionTime);
-            return mainSettings;
+            var acquisitionTime = ValidateIntTextField(textAquisitionTime.Text,
+                Resources.AutoQcConfigForm_GetMainSettingsFromUI_Acquisition_Time);
+            return new MainSettings(skylineFilePath, folderToWatch, includeSubfolders, qcFileFilter, removeResults, resultsWindow, instrumentType, acquisitionTime);
         }
 
-        private void btnSkylineFilePath_Click(object sender, EventArgs e)
+        private int ValidateIntTextField(string textToParse, string fieldName)
         {
-            OpenFile(TextUtil.FILTER_SKY, textSkylinePath);
+            int parsedInt;
+            if (!Int32.TryParse(textToParse, out parsedInt))
+            {
+                throw new ArgumentException(string.Format(
+                    Resources.AutoQcConfigForm_ValidateIntTextField_Invalid_value_for___0_____1__, fieldName,
+                    textToParse));
+            }
+            return parsedInt;
+        }
+
+        private void SetUIPanoramaSettings(PanoramaSettings panoramaSettings)
+        {
+            RunUI(() =>
+            {
+                textPanoramaUrl.Text = panoramaSettings.PanoramaServerUrl;
+                textPanoramaEmail.Text = panoramaSettings.PanoramaUserEmail;
+                textPanoramaPasswd.Text = panoramaSettings.PanoramaPassword;
+                textPanoramaFolder.Text = panoramaSettings.PanoramaFolder;
+                cbPublishToPanorama.Checked = panoramaSettings.PublishToPanorama;
+                groupBoxPanorama.Enabled = panoramaSettings.PublishToPanorama;
+            });
+        }
+
+        private PanoramaSettings GetPanoramaSettingsFromUI()
+        {
+            if (cbPublishToPanorama.Checked)
+            {
+                return new PanoramaSettings(cbPublishToPanorama.Checked, textPanoramaUrl.Text, textPanoramaFolder.Text, textPanoramaEmail.Text, textPanoramaPasswd.Text);
+            }
+
+            return new PanoramaSettings();
+        }
+
+        public void RunUI(Action action)
+        {
+            if (InvokeRequired)
+            {
+                try
+                {
+                    Invoke(action);
+                }
+                catch (ObjectDisposedException)
+                {
+                }
+            }
+            else
+            {
+                action();
+            }
         }
 
         private void OpenFile(string filter, TextBox textbox)
@@ -169,10 +257,18 @@ namespace AutoQC
             }
         }
 
+        #region [UI event handlers]
+       
+        private void btnSkylineFilePath_Click(object sender, EventArgs e)
+        {
+            OpenFile(Resources.AutoQcConfigForm_btnSkylineFilePath_Click_Skyline_Files___sky____sky_All_Files__________, textSkylinePath);
+        }
+
         private void btnFolderToWatch_Click(object sender, EventArgs e)
         {
             using (var dialog = new FolderBrowserDialog())
             {
+                dialog.Description = Resources.AutoQcConfigForm_btnFolderToWatch_Click_Directory_where_the_instrument_will_write_QC_files_;
                 if (dialog.ShowDialog(this) == DialogResult.OK)
                 {
                     textFolderToWatchPath.Text = dialog.SelectedPath;
@@ -180,10 +276,25 @@ namespace AutoQC
             }
         }
 
+        private void cbPublishToPanorama_CheckedChanged(object sender, EventArgs e)
+        {
+            groupBoxPanorama.Enabled = cbPublishToPanorama.Checked;
+        }
+
+        private void btnSaveConfig_Click(object sender, EventArgs e)
+        {
+            Save();
+        }
+
+        private void btnOkConfig_Click(object sender, EventArgs e)
+        {
+            this.Close();
+        }
+
         private void comboBoxFileFilter_SelectedIndexChanged(object sender, EventArgs e)
         {
             var selectedItem = comboBoxFileFilter.SelectedItem;
-            if (selectedItem.Equals(AllFileFilter.FilterName))
+            if (selectedItem.Equals(AllFileFilter.NAME))
             {
                 textQCFilePattern.Hide();
                 labelQcFilePattern.Hide();
@@ -195,149 +306,13 @@ namespace AutoQC
             }
         }
 
+        #endregion
+
         private void checkBoxRemoveResults_CheckedChanged(object sender, EventArgs e)
         {
             textResultsTimeWindow.Enabled = checkBoxRemoveResults.Checked;
             labelAccumulationTimeWindow.Enabled = checkBoxRemoveResults.Checked;
             labelDays.Enabled = checkBoxRemoveResults.Checked;
         }
-
-        #endregion
-
-        #region Panorama settings
-
-        private void SetInitialPanoramaSettings(PanoramaSettings panoramaSettings)
-        {
-            textPanoramaUrl.Text = panoramaSettings.PanoramaServerUrl;
-            textPanoramaEmail.Text = panoramaSettings.PanoramaUserEmail;
-            textPanoramaPasswd.Text = panoramaSettings.PanoramaPassword;
-            textPanoramaFolder.Text = panoramaSettings.PanoramaFolder;
-            cbPublishToPanorama.Checked = panoramaSettings.PublishToPanorama;
-            groupBoxPanorama.Enabled = panoramaSettings.PublishToPanorama;
-        }
-
-        private void SetDefaultPanoramaSettings()
-        {
-            cbPublishToPanorama.Checked = PanoramaSettings.GetDefaultPublishToPanorama();
-            groupBoxPanorama.Enabled = PanoramaSettings.GetDefaultPublishToPanorama();
-        }
-
-        private PanoramaSettings GetPanoramaSettingsFromUi()
-        {
-            if (!cbPublishToPanorama.Checked)
-            {
-                return new PanoramaSettings();
-            }
-
-            return new PanoramaSettings(cbPublishToPanorama.Checked, textPanoramaUrl.Text, textPanoramaEmail.Text, textPanoramaPasswd.Text, textPanoramaFolder.Text);
-        }
-
-        private void cbPublishToPanorama_CheckedChanged(object sender, EventArgs e)
-        {
-            groupBoxPanorama.Enabled = cbPublishToPanorama.Checked;
-        }
-        
-        #endregion
-
-        #region Skyline Settings
-
-        private void InitSkylineTab()
-        {
-            radioButtonSkyline.Enabled = SkylineInstallations.HasSkyline;
-            radioButtonSkylineDaily.Enabled = SkylineInstallations.HasSkylineDaily;
-            //if (!string.IsNullOrEmpty(Settings.Default.SkylineCustomCmdPath))
-            //    textSkylineInstallationPath.Text = Path.GetDirectoryName(Settings.Default.SkylineCustomCmdPath);
-
-            radioButtonSpecifySkylinePath.Checked = true;
-            radioButtonSkylineDaily.Checked = radioButtonSkylineDaily.Enabled;
-            radioButtonSkyline.Checked = radioButtonSkyline.Enabled;
-        }
-
-        private void SetInitialSkylineSettings(AutoQcConfig config)
-        {
-            radioButtonSkyline.Checked = config.UsesSkyline;
-            radioButtonSkylineDaily.Checked = config.UsesSkylineDaily;
-            radioButtonSpecifySkylinePath.Checked = config.UsesCustomSkylinePath;
-            if (config.UsesCustomSkylinePath)
-            {
-                textSkylineInstallationPath.Text = Path.GetDirectoryName(config.SkylineSettings.CmdPath);
-            }
-        }
-
-        private SkylineSettings GetSkylineSettingsFromUi()
-        {
-            var skylineType = SkylineType.Custom;
-            if (radioButtonSkyline.Checked)
-                skylineType = SkylineType.Skyline;
-            if (radioButtonSkylineDaily.Checked)
-                skylineType = SkylineType.SkylineDaily;
-            return new SkylineSettings(skylineType, textSkylineInstallationPath.Text);
-        }
-
-        private void btnBrowse_Click(object sender, EventArgs e)
-        {
-            using (var folderBrowserDlg = new FolderBrowserDialog())
-            {
-                folderBrowserDlg.ShowNewFolderButton = false;
-                folderBrowserDlg.SelectedPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
-                if (folderBrowserDlg.ShowDialog() == DialogResult.OK)
-                {
-                    textSkylineInstallationPath.Text = folderBrowserDlg.SelectedPath;
-                }
-            }
-        }
-
-        private void radioButtonSpecifySkylinePath_CheckedChanged(object sender, EventArgs e)
-        {
-            textSkylineInstallationPath.Enabled = radioButtonSpecifySkylinePath.Checked;
-            btnBrowse.Enabled = radioButtonSpecifySkylinePath.Checked;
-        }
-
-
-        #endregion
-
-
-        #region Save config
-
-        private void btnSaveConfig_Click(object sender, EventArgs e)
-        {
-            Save();
-        }
-
-        private AutoQcConfig GetConfigFromUi()
-        {
-            //AutoQcConfig config  = new AutoQcConfig();
-            var name = textConfigName.Text;
-            var mainSettings = GetMainSettingsFromUi();
-            var panoramaSettings = GetPanoramaSettingsFromUi();
-            var skylineSettings = GetSkylineSettingsFromUi();
-            var created = _action == ConfigAction.Edit ? _initialCreated : DateTime.Now;
-            return new AutoQcConfig(name, false, created, DateTime.Now, mainSettings, panoramaSettings, skylineSettings);
-        }
-
-        private void Save()
-        {
-            try
-            {
-                //throws ArgumentException if any fields are invalid
-                var newConfig = GetConfigFromUi();
-                //throws ArgumentException if config has a duplicate name
-                _mainControl.TryExecuteOperation(_action, newConfig);
-            }
-            catch (ArgumentException e)
-            {
-                _mainControl.DisplayError(e.Message);
-                return;
-            }
-
-            Close();
-        }
-
-        private void btnOkConfig_Click(object sender, EventArgs e)
-        {
-            Close();
-        }
-
-        #endregion
     }
 }

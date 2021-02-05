@@ -18,18 +18,12 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Dynamic;
 using System.Net;
 using System.Text;
-using AutoQC.Properties;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace AutoQC
 {
-
-    public enum FolderOperationStatus { OK, notpanorama, nopermission, notfound, alreadyexists, error }
-
     public class PanoramaUtil
     {
         public const string PANORAMA_WEB = "https://panoramaweb.org/"; // Not L10N
@@ -67,33 +61,30 @@ namespace AutoQC
 
         public static void VerifyServerInformation(IPanoramaClient panoramaClient, string username, string password)
         {
-            if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
-                throw new ArgumentException(Resources.PanoramaUtil_VerifyServerInformation_Username_and_password_cannot_be_null__Please_enter_a_username_and_password_);
-
             var uriServer = panoramaClient.ServerUri;
 
             switch (panoramaClient.GetServerState())
             {
                 case ServerState.missing:
-                    throw new PanoramaServerException(string.Format(Resources.PanoramaUtil_VerifyServerInformation_The_server__0__does_not_exist_, uriServer.AbsoluteUri));
+                    throw new PanoramaServerException(string.Format("The server {0} does not exist", uriServer.AbsoluteUri));
                 case ServerState.unknown:
-                    throw new PanoramaServerException(string.Format(Resources.PanoramaUtil_VerifyServerInformation_Unknown_error_connecting_to_the_server__0__, uriServer.AbsoluteUri));
+                    throw new PanoramaServerException(string.Format("Unknown error connecting to the server {0}", uriServer.AbsoluteUri));
             }
 
             switch (panoramaClient.IsValidUser(username, password))
             {
                 case UserState.nonvalid:
-                    throw new PanoramaServerException(Resources.PanoramaUtil_VerifyServerInformation_The_username_and_password_could_not_be_authenticated_with_the_panorama_server__Please_try_again_);
+                    throw new PanoramaServerException("The username and password could not be authenticated with the panorama server");
                 case UserState.unknown:
-                    throw new PanoramaServerException(string.Format(Resources.PanoramaUtil_VerifyServerInformation_Unknown_error_validating_user_on_server__0__, uriServer.AbsoluteUri));
+                    throw new PanoramaServerException(string.Format("Unknown error validating user on server {0}", uriServer.AbsoluteUri));
             }
 
             switch (panoramaClient.IsPanorama())
             {
                 case PanoramaState.other:
-                    throw new PanoramaServerException(string.Format(Resources.PanoramaUtil_VerifyServerInformation_The_server__0__is_not_a_Panorama_server_, uriServer.AbsoluteUri));
+                    throw new PanoramaServerException(string.Format("The server {0} is not a Panorama server", uriServer.AbsoluteUri));
                 case PanoramaState.unknown:
-                    throw new PanoramaServerException(string.Format(Resources.PanoramaUtil_VerifyServerInformation_Unknown_error_while_checking_if_server__0__is_a_Panorama_server_, uriServer.AbsoluteUri));
+                    throw new PanoramaServerException(string.Format("Unknown error while checking if server {0} is a Panorama server", uriServer.AbsoluteUri));
             }
         }
 
@@ -262,17 +253,6 @@ namespace AutoQC
                     return true;
             }
             return false;
-        }
-
-        public static Uri CallNewInterface(Uri serverUri, string controller, string folderPath, string method,
-            string query,
-            bool isApi = false)
-        {
-            string apiString = isApi ? @"api" : @"view";
-            string queryString = string.IsNullOrEmpty(query) ? "" : @"?" + query;
-            string path = $@"{folderPath}/{controller}-{method}.{apiString}{queryString}";
-
-            return new Uri(serverUri, path);
         }
 
     }
@@ -521,7 +501,7 @@ namespace AutoQC
 
                 using (var webClient = new WebClientWithCredentials(ServerUri, username, password))
                 {
-                    webClient.Post(uri, "");
+                    webClient.Post(uri, null);
                 }
             }
             catch (WebException ex)
@@ -534,96 +514,6 @@ namespace AutoQC
                 else throw;
             }
             return true;
-        }
-
-        public FolderOperationStatus CreateFolder(string folderPath, string folderName, string username, string password)
-        {
-
-            if (IsValidFolder($@"{folderPath}/{folderName}", username, password) == FolderState.valid)
-                return FolderOperationStatus.alreadyexists;        //cannot create a folder with the same name
-            var parentFolderStatus = IsValidFolder(folderPath, username, password);
-            switch (parentFolderStatus)
-            {
-                case FolderState.nopermission:
-                    return FolderOperationStatus.nopermission;
-                case FolderState.notfound:
-                    return FolderOperationStatus.notfound;
-                case FolderState.notpanorama:
-                    return FolderOperationStatus.notpanorama;
-            }
-
-            //Create JSON body for the request
-            Dictionary<string, string> requestData = new Dictionary<string, string>();
-            requestData[@"name"] = folderName;
-            requestData[@"title"] = folderName;
-            requestData[@"description"] = folderName;
-            requestData[@"type"] = @"normal";
-            requestData[@"folderType"] = @"Targeted MS";
-            string createRequest = JsonConvert.SerializeObject(requestData);
-
-            try
-            {
-                using (var webClient = new WebClientWithCredentials(ServerUri, username, password))
-                {
-                    Uri requestUri = PanoramaUtil.CallNewInterface(ServerUri, @"core", folderPath, @"createContainer", "", true);
-                    JObject result = webClient.Post(requestUri, createRequest);
-                    return FolderOperationStatus.OK;
-                }
-            }
-            catch (WebException ex)
-            {
-                var response = ex.Response as HttpWebResponse;
-                if (response != null && response.StatusCode != HttpStatusCode.OK)
-                {
-                    return FolderOperationStatus.error;
-                }
-                else throw;
-            }
-        }
-
-
-        public string DownloadString(Uri queryUri, string username, string password)
-        {
-            string data = null;
-
-            using (var webClient = new WebClientWithCredentials(ServerUri, username, password))
-            {
-                data = webClient.DownloadString(queryUri);
-            }
-            return data;
-        }
-
-        public FolderOperationStatus DeleteFolder(string folderPath, string username, string password)
-        {
-            var parentFolderStatus = IsValidFolder(folderPath, username, password);
-            switch (parentFolderStatus)
-            {
-                case FolderState.nopermission:
-                    return FolderOperationStatus.nopermission;
-                case FolderState.notfound:
-                    return FolderOperationStatus.notfound;
-                case FolderState.notpanorama:
-                    return FolderOperationStatus.notpanorama;
-            }
-
-            try
-            {
-                using (var webClient = new WebClientWithCredentials(ServerUri, username, password))
-                {
-                    Uri requestUri = PanoramaUtil.CallNewInterface(ServerUri, @"core", folderPath, @"deleteContainer", "", true);
-                    JObject result = webClient.Post(requestUri, "");
-                    return FolderOperationStatus.OK;
-                }
-            }
-            catch (WebException ex)
-            {
-                var response = ex.Response as HttpWebResponse;
-                if (response != null && response.StatusCode != HttpStatusCode.OK)
-                {
-                    return FolderOperationStatus.error;
-                }
-                else throw;
-            }
         }
     }
 
@@ -677,18 +567,6 @@ namespace AutoQC
             }
             var responseBytes = UploadValues(uri, PanoramaUtil.FORM_POST, postData);
             var response = Encoding.UTF8.GetString(responseBytes);
-            return JObject.Parse(response);
-        }
-
-        public JObject Post(Uri uri, string postData)
-        {
-            if (string.IsNullOrEmpty(_csrfToken))
-            {
-                // After this the client should have the X-LABKEY-CSRF token 
-                DownloadString(new Uri(_serverUri, PanoramaUtil.ENSURE_LOGIN_PATH));
-            }
-            Headers.Add(HttpRequestHeader.ContentType, "application/json");
-            var response = UploadString(uri, PanoramaUtil.FORM_POST, postData);
             return JObject.Parse(response);
         }
 

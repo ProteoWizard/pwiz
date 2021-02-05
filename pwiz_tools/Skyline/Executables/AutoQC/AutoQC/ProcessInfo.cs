@@ -18,7 +18,6 @@
 using System;
 using System.Diagnostics;
 using System.IO;
-using AutoQC.Properties;
 
 namespace AutoQC
 {
@@ -79,7 +78,7 @@ namespace AutoQC
         {
             _procInfo = processInfo;
 
-            Log(string.Format(Resources.ProcessRunner_RunProcess_Running__0__with_args__, _procInfo.ExeName));
+            Log("Running {0} with args: ", _procInfo.ExeName);
             Log(_procInfo.ArgsToPrint);
 
             while (true)
@@ -91,33 +90,33 @@ namespace AutoQC
                 }
                 catch (Exception e)
                 {
-                    LogException(e, string.Format(Resources.ProcessRunner_RunProcess_There_was_an_exception_running_the_process__0_, _procInfo.ExeName));
+                    LogException(e, "There was an exception running the process {0}", _procInfo.ExeName);
                     return ProcStatus.Error;
                 }
 
                 if (exitCode != 0)
                 {
-                    LogError(string.Format(Resources.ProcessRunner_RunProcess__0__exited_with_error_code__1__, _procInfo.ExeName, exitCode));
+                    LogError("{0} exited with error code {1}.", _procInfo.ExeName, exitCode);
                     return ProcStatus.Error;
                 }
 
                 if (_errorLogged)
                 {
-                    LogError(string.Format(Resources.ProcessRunner_RunProcess__0__exited_with_code__1___Error_reported_, _procInfo.ExeName, exitCode));
+                    LogError("{0} exited with code {1}. Error reported.", _procInfo.ExeName, exitCode);
                     return ProcStatus.Error;
                 }
                 if (_documentImportFailed)
                 {
-                    LogError(string.Format(Resources.ProcessRunner_RunProcess__0__exited_with_code__1___Skyline_document_import_failed_, _procInfo.ExeName, exitCode));
+                    LogError("{0} exited with code {1}. Skyline document import failed.", _procInfo.ExeName, exitCode);
                     return ProcStatus.DocImportError;
                 }
                 if (_panoramaUploadFailed)
                 {
-                    LogError(string.Format(Resources.ProcessRunner_RunProcess__0__exited_with_code__1___Panorama_upload_failed_, _procInfo.ExeName, exitCode));
+                    LogError("{0} exited with code {1}. Panorama upload failed.", _procInfo.ExeName, exitCode);
                     return ProcStatus.PanoramaUploadError;
                 }
 
-                Log(string.Format(Resources.ProcessRunner_RunProcess__0__exited_successfully_, _procInfo.ExeName));
+                Log("{0} exited successfully.", _procInfo.ExeName);
                 return ProcStatus.Success;
             }
         }
@@ -187,19 +186,19 @@ namespace AutoQC
             return true;
         }
 
-        private void Log(string message)
+        private void Log(string message, params object[] args)
         {
-            _logger.Log(message);
+            _logger.Log(message, args);
         }
 
-        private void LogError(string message)
+        private void LogError(string message, params object[] args)
         {
-            _logger.LogError(message);
+            _logger.LogError(message, args);
         }
 
-        private void LogException(Exception e, string message)
+        private void LogException(Exception e, string message, params object[] args)
         {
-            _logger.LogException(e, message);
+            _logger.LogException(e, message, args);
         }
 
         protected ProcessInfo GetProcessInfo()
@@ -217,7 +216,7 @@ namespace AutoQC
                 }
                 catch (Exception e)
                 {
-                    LogException(e, string.Format("Error killing process {0}", _procInfo.ExeName));
+                    LogException(e, "Error killing process {0}", _procInfo.ExeName);
                 }
             }
         }

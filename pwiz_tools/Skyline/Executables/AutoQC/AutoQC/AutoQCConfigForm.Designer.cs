@@ -1,6 +1,4 @@
-﻿using System.Globalization;
-
-namespace AutoQC
+﻿namespace AutoQC
 {
     partial class AutoQcConfigForm
     {
@@ -69,17 +67,11 @@ namespace AutoQC
             this.lblPanoramaPasswd = new System.Windows.Forms.Label();
             this.lblPanoramaEmail = new System.Windows.Forms.Label();
             this.textPanoramaEmail = new System.Windows.Forms.TextBox();
-            this.tabSkylineSettings = new System.Windows.Forms.TabPage();
-            this.textSkylineInstallationPath = new System.Windows.Forms.TextBox();
-            this.radioButtonSkylineDaily = new System.Windows.Forms.RadioButton();
-            this.radioButtonSpecifySkylinePath = new System.Windows.Forms.RadioButton();
-            this.radioButtonSkyline = new System.Windows.Forms.RadioButton();
-            this.btnBrowse = new System.Windows.Forms.Button();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.btnOkConfig = new System.Windows.Forms.Button();
             this.lblConfigRunning = new System.Windows.Forms.Label();
             this.btnCancelConfig = new System.Windows.Forms.Button();
             this.btnSaveConfig = new System.Windows.Forms.Button();
-            this.btnOkConfig = new System.Windows.Forms.Button();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -90,7 +82,6 @@ namespace AutoQC
             this.groupBoxMain.SuspendLayout();
             this.tabPanoramaSettings.SuspendLayout();
             this.groupBoxPanorama.SuspendLayout();
-            this.tabSkylineSettings.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -111,7 +102,6 @@ namespace AutoQC
             // 
             this.tabControl.Controls.Add(this.tabSettings);
             this.tabControl.Controls.Add(this.tabPanoramaSettings);
-            this.tabControl.Controls.Add(this.tabSkylineSettings);
             resources.ApplyResources(this.tabControl, "tabControl");
             this.tabControl.Name = "tabControl";
             this.tabControl.SelectedIndex = 0;
@@ -137,7 +127,6 @@ namespace AutoQC
             // 
             // groupBoxMain
             // 
-            resources.ApplyResources(this.groupBoxMain, "groupBoxMain");
             this.groupBoxMain.Controls.Add(this.checkBoxRemoveResults);
             this.groupBoxMain.Controls.Add(this.labelQcFilePattern);
             this.groupBoxMain.Controls.Add(this.comboBoxFileFilter);
@@ -158,6 +147,7 @@ namespace AutoQC
             this.groupBoxMain.Controls.Add(this.textFolderToWatchPath);
             this.groupBoxMain.Controls.Add(this.btnSkylineFilePath);
             this.groupBoxMain.Controls.Add(this.textSkylinePath);
+            resources.ApplyResources(this.groupBoxMain, "groupBoxMain");
             this.groupBoxMain.Name = "groupBoxMain";
             this.groupBoxMain.TabStop = false;
             // 
@@ -306,7 +296,6 @@ namespace AutoQC
             // 
             // groupBoxPanorama
             // 
-            resources.ApplyResources(this.groupBoxPanorama, "groupBoxPanorama");
             this.groupBoxPanorama.Controls.Add(this.labelPanoramaFolder);
             this.groupBoxPanorama.Controls.Add(this.textPanoramaFolder);
             this.groupBoxPanorama.Controls.Add(this.lblPanoramaUrl);
@@ -315,6 +304,7 @@ namespace AutoQC
             this.groupBoxPanorama.Controls.Add(this.lblPanoramaPasswd);
             this.groupBoxPanorama.Controls.Add(this.lblPanoramaEmail);
             this.groupBoxPanorama.Controls.Add(this.textPanoramaEmail);
+            resources.ApplyResources(this.groupBoxPanorama, "groupBoxPanorama");
             this.groupBoxPanorama.Name = "groupBoxPanorama";
             this.groupBoxPanorama.TabStop = false;
             // 
@@ -359,61 +349,23 @@ namespace AutoQC
             resources.ApplyResources(this.textPanoramaEmail, "textPanoramaEmail");
             this.textPanoramaEmail.Name = "textPanoramaEmail";
             // 
-            // tabSkylineSettings
-            // 
-            this.tabSkylineSettings.BackColor = System.Drawing.Color.WhiteSmoke;
-            this.tabSkylineSettings.Controls.Add(this.textSkylineInstallationPath);
-            this.tabSkylineSettings.Controls.Add(this.radioButtonSkylineDaily);
-            this.tabSkylineSettings.Controls.Add(this.radioButtonSpecifySkylinePath);
-            this.tabSkylineSettings.Controls.Add(this.radioButtonSkyline);
-            this.tabSkylineSettings.Controls.Add(this.btnBrowse);
-            resources.ApplyResources(this.tabSkylineSettings, "tabSkylineSettings");
-            this.tabSkylineSettings.Name = "tabSkylineSettings";
-            // 
-            // textSkylineInstallationPath
-            // 
-            resources.ApplyResources(this.textSkylineInstallationPath, "textSkylineInstallationPath");
-            this.textSkylineInstallationPath.Name = "textSkylineInstallationPath";
-            // 
-            // radioButtonSkylineDaily
-            // 
-            resources.ApplyResources(this.radioButtonSkylineDaily, "radioButtonSkylineDaily");
-            this.radioButtonSkylineDaily.Name = "radioButtonSkylineDaily";
-            this.radioButtonSkylineDaily.TabStop = true;
-            this.radioButtonSkylineDaily.UseVisualStyleBackColor = true;
-            // 
-            // radioButtonSpecifySkylinePath
-            // 
-            resources.ApplyResources(this.radioButtonSpecifySkylinePath, "radioButtonSpecifySkylinePath");
-            this.radioButtonSpecifySkylinePath.Name = "radioButtonSpecifySkylinePath";
-            this.radioButtonSpecifySkylinePath.TabStop = true;
-            this.radioButtonSpecifySkylinePath.UseVisualStyleBackColor = true;
-            this.radioButtonSpecifySkylinePath.CheckedChanged += new System.EventHandler(this.radioButtonSpecifySkylinePath_CheckedChanged);
-            // 
-            // radioButtonSkyline
-            // 
-            resources.ApplyResources(this.radioButtonSkyline, "radioButtonSkyline");
-            this.radioButtonSkyline.Name = "radioButtonSkyline";
-            this.radioButtonSkyline.TabStop = true;
-            this.radioButtonSkyline.UseVisualStyleBackColor = true;
-            // 
-            // btnBrowse
-            // 
-            resources.ApplyResources(this.btnBrowse, "btnBrowse");
-            this.btnBrowse.Name = "btnBrowse";
-            this.btnBrowse.UseVisualStyleBackColor = true;
-            this.btnBrowse.Click += new System.EventHandler(this.btnBrowse_Click);
-            // 
             // groupBox1
             // 
             this.groupBox1.BackColor = System.Drawing.SystemColors.ControlLight;
+            this.groupBox1.Controls.Add(this.btnOkConfig);
             this.groupBox1.Controls.Add(this.lblConfigRunning);
             this.groupBox1.Controls.Add(this.btnCancelConfig);
             this.groupBox1.Controls.Add(this.btnSaveConfig);
-            this.groupBox1.Controls.Add(this.btnOkConfig);
             resources.ApplyResources(this.groupBox1, "groupBox1");
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.TabStop = false;
+            // 
+            // btnOkConfig
+            // 
+            resources.ApplyResources(this.btnOkConfig, "btnOkConfig");
+            this.btnOkConfig.Name = "btnOkConfig";
+            this.btnOkConfig.UseVisualStyleBackColor = true;
+            this.btnOkConfig.Click += new System.EventHandler(this.btnOkConfig_Click);
             // 
             // lblConfigRunning
             // 
@@ -423,8 +375,8 @@ namespace AutoQC
             // 
             // btnCancelConfig
             // 
-            resources.ApplyResources(this.btnCancelConfig, "btnCancelConfig");
             this.btnCancelConfig.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            resources.ApplyResources(this.btnCancelConfig, "btnCancelConfig");
             this.btnCancelConfig.Name = "btnCancelConfig";
             this.btnCancelConfig.UseVisualStyleBackColor = true;
             // 
@@ -435,24 +387,16 @@ namespace AutoQC
             this.btnSaveConfig.UseVisualStyleBackColor = true;
             this.btnSaveConfig.Click += new System.EventHandler(this.btnSaveConfig_Click);
             // 
-            // btnOkConfig
-            // 
-            resources.ApplyResources(this.btnOkConfig, "btnOkConfig");
-            this.btnOkConfig.Name = "btnOkConfig";
-            this.btnOkConfig.UseVisualStyleBackColor = true;
-            this.btnOkConfig.Click += new System.EventHandler(this.btnOkConfig_Click);
-            // 
             // AutoQcConfigForm
             // 
-            this.AcceptButton = this.btnSaveConfig;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancelConfig;
             this.Controls.Add(this.splitContainer1);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "AutoQcConfigForm";
-            this.ShowInTaskbar = false;
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
@@ -466,8 +410,6 @@ namespace AutoQC
             this.tabPanoramaSettings.PerformLayout();
             this.groupBoxPanorama.ResumeLayout(false);
             this.groupBoxPanorama.PerformLayout();
-            this.tabSkylineSettings.ResumeLayout(false);
-            this.tabSkylineSettings.PerformLayout();
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             this.ResumeLayout(false);
@@ -486,6 +428,7 @@ namespace AutoQC
         private System.Windows.Forms.TextBox textQCFilePattern;
         private System.Windows.Forms.Label labelMinutes;
         private System.Windows.Forms.Label labelAquisitionTime;
+        private System.Windows.Forms.TextBox textAquisitionTime;
         private System.Windows.Forms.Label labelDays;
         private System.Windows.Forms.TextBox textResultsTimeWindow;
         private System.Windows.Forms.Label labelAccumulationTimeWindow;
@@ -518,12 +461,5 @@ namespace AutoQC
         private System.Windows.Forms.Label labelQcFilePattern;
         private System.Windows.Forms.Button btnOkConfig;
         private System.Windows.Forms.CheckBox checkBoxRemoveResults;
-        private System.Windows.Forms.TextBox textAquisitionTime;
-        private System.Windows.Forms.TabPage tabSkylineSettings;
-        private System.Windows.Forms.TextBox textSkylineInstallationPath;
-        private System.Windows.Forms.RadioButton radioButtonSkylineDaily;
-        private System.Windows.Forms.RadioButton radioButtonSpecifySkylinePath;
-        private System.Windows.Forms.RadioButton radioButtonSkyline;
-        private System.Windows.Forms.Button btnBrowse;
     }
 }

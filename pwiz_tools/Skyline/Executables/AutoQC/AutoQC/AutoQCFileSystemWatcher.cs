@@ -22,7 +22,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Threading;
-using AutoQC.Properties;
 
 namespace AutoQC
 {
@@ -168,11 +167,11 @@ namespace AutoQC
         {
             if (_cancelled)
             {
-                _logger.Log(Resources.AutoQCFileSystemWatcher_Restart_FileSystemWatcher_cancelled_);
+                _logger.Log("FileSystemWatcher cancelled. ");
                 return;
             }
 
-            _logger.Log(Resources.AutoQCFileSystemWatcher_Restart_Re_initializing_FileSystemWatcher___);
+            _logger.Log("Re-initializing FileSystemWatcher...");
 
             var filter = _fileWatcher.Filter;
             var path = _fileWatcher.Path;
@@ -187,7 +186,7 @@ namespace AutoQC
             // _fileWatcher.InternalBufferSize = 64 * 1024;
             _fileWatcher.IncludeSubdirectories = _includeSubfolders;
 
-            _logger.Log(string.Format(Resources.AutoQCFileSystemWatcher_Restart_Getting_raw_data_added_since__0__, _lastFileEvent));
+            _logger.Log(string.Format("Getting raw data added since {0}.", _lastFileEvent));
 
             var files = GetExistingFiles();
 
@@ -207,7 +206,7 @@ namespace AutoQC
                     continue;
                 }
 
-                _logger.Log(string.Format(Resources.AutoQCFileSystemWatcher_Restart_Adding__0__, fileInfo.Name));
+                _logger.Log("Adding {0}.", fileInfo.Name);
                 _dataFiles.Enqueue(file);
             }
             _logger.Log("Done");
@@ -243,7 +242,7 @@ namespace AutoQC
             if ((_dataInDirectories && Directory.Exists(path))
                 || (!_dataInDirectories && File.Exists(path)))
             {
-                _logger.Log(string.Format(Resources.AutoQCFileSystemWatcher_FileAdded__0__added_to_directory_, e.Name));
+                _logger.Log("{0} added to directory.", e.Name);
                 _dataFiles.Enqueue(e.FullPath);   
             }
         }
@@ -251,7 +250,7 @@ namespace AutoQC
         private void OnFileWatcherError(ErrorEventArgs e)
         {
             var folder = _fileWatcher != null ? _fileWatcher.Path : "UNKNOWN";
-            _logger.LogException(e.GetException(), string.Format(Resources.AutoQCFileSystemWatcher_OnFileWatcherError_There_was_an_error_watching_the_folder__0__, folder));
+            _logger.LogException(e.GetException(), "There was an error watching the folder {0}.", folder);
             _fileWatcherError = e;
         }
 
@@ -288,18 +287,18 @@ namespace AutoQC
 
                 if (counter % 10 == 0)
                 {
-                    _logger.Log(string.Format(Resources.AutoQCFileSystemWatcher_WaitForFileReady__0__is_being_acquired__Waiting___, Path.GetFileName(filePath)));
+                    _logger.Log("{0} is being acquired. Waiting...", Path.GetFileName(filePath));
                 }
                 counter++;
                 // Wait for 60 seconds.
                 Thread.Sleep(WAIT_60SEC);
                 if (_cancelled)
                 {
-                    _logger.Log(Resources.AutoQCFileSystemWatcher_Restart_FileSystemWatcher_cancelled_);
+                    _logger.Log("FileSystemWatcher cancelled. ");
                     return;
                 }
             }
-            _logger.Log(string.Format(Resources.AutoQCFileSystemWatcher_WaitForFileReady__0__is_ready, Path.GetFileName(filePath)));
+            _logger.Log("{0} is ready", Path.GetFileName(filePath));
         }
 
         public string GetFile()
@@ -365,7 +364,7 @@ namespace AutoQC
                 // it means another config watching a folder on the same mapped drive re-mapped the drive.
                 if (Directory.Exists(_fileWatcher.Path))
                 {
-                    Program.LogInfo(string.Format(Resources.AutoQCFileSystemWatcher_CheckDrive_Restarting_file_watcher_for_configuration___0___, _configName));
+                    Program.LogInfo(string.Format("Restarting file watcher for configuration \"{0}\".", _configName));
                     RestartFileWatcher();
                 }
                 else
@@ -410,7 +409,7 @@ namespace AutoQC
 
             if (reconnected)
             {
-                Program.LogInfo(string.Format(Resources.AutoQCFileSystemWatcher_TryConnect_Re_connected_drive__0__for_configuration___1_____Restarting_file_watcher_, _driveInfo,
+                Program.LogInfo(string.Format("Re-connected drive {0} for configuration \"{1}\".  Restarting file watcher.", _driveInfo,
                     _configName));
                 RestartFileWatcher();
             }
@@ -438,7 +437,7 @@ namespace AutoQC
 
             while (true)
             {
-                _logger.LogError(string.Format(Resources.AutoQCFileSystemWatcher_WaitForNetworkPath_Watched_folder_is_not_available___0___Waiting___, _driveInfo.Path));
+                _logger.LogError("Watched folder is not available: {0}. Waiting...", _driveInfo.Path);
 
                 // keep trying every 1 minute for a hour or until the network share is available again. 
                 Thread.Sleep(TimeSpan.FromMinutes(1));
@@ -454,7 +453,7 @@ namespace AutoQC
                 }
                 else
                 {
-                    _logger.Log(string.Format(Resources.AutoQCFileSystemWatcher_WaitForNetworkPath_Watched_folder_is_available___0__, _driveInfo.Path));
+                    _logger.Log("Watched folder is available: {0}.", _driveInfo.Path);
 
                     if (_configRunner.IsDisconnected())
                     {
@@ -547,7 +546,7 @@ namespace AutoQC
             }
             else
             {
-                _logger.Log(string.Format(Resources.AutoQCFileSystemWatcher_AddToReimportQueue_File_already_exists_in_re_import_queue___0_, file.FilePath));
+                _logger.Log("File already exists in re-import queue: " + file.FilePath);
             }
         }
 

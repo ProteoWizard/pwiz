@@ -96,12 +96,7 @@ namespace AutoQC.Properties
             var list = new List<AutoQcConfig>();
             while (reader.IsStartElement())
             {
-                // only add valid configs to the list
-                try
-                {
-                    list.Add(AutoQcConfig.ReadXml(reader));
-                }
-                catch (ArgumentException) { }
+                list.Add(reader.Deserialize(new AutoQcConfig()));
                 reader.Read();
             }
 
