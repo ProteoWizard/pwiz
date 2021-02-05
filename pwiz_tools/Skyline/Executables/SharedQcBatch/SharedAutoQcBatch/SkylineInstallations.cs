@@ -21,12 +21,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.Win32;
-using SkylineBatch.Properties;
+using SharedAutoQcBatch.Properties;
 
-namespace SkylineBatch
+namespace SharedAutoQcBatch
 {
 
-    public class Installations
+    public class SkylineInstallations
     {
         // Finds and saves information about the computer's Skyline and R installation locations
 
@@ -35,7 +35,6 @@ namespace SkylineBatch
         public const string SkylineDaily = "Skyline-daily";
         public const string SkylineRunnerExe = "SkylineRunner.exe";
         public const string SkylineDailyRunnerExe = "SkylineDailyRunner.exe";
-        private const string RegistryLocationR = @"SOFTWARE\R-core\R\";
 
         public static bool HasLocalSkylineCmd => !string.IsNullOrEmpty(Settings.Default.SkylineLocalCommandPath);
 
@@ -44,8 +43,6 @@ namespace SkylineBatch
         public static bool HasSkyline => !string.IsNullOrEmpty(Settings.Default.SkylineAdminCmdPath) || !string.IsNullOrEmpty(Settings.Default.SkylineRunnerPath);
 
         public static bool HasSkylineDaily => !string.IsNullOrEmpty(Settings.Default.SkylineDailyAdminCmdPath) || !string.IsNullOrEmpty(Settings.Default.SkylineDailyRunnerPath);
-
-        public static string RLocation => Settings.Default.RDir ?? "C:\\Program Files\\R";
 
         #region Skyline
 
@@ -108,57 +105,6 @@ namespace SkylineBatch
                                            File.Exists(Path.Combine(skylineDailyPath, SkylineCmdExe));
             Settings.Default.SkylineDailyAdminCmdPath =
                 adminInstallSkylineDaily ? Path.Combine(skylineDailyPath, SkylineCmdExe) : null;
-        }
-
-        #endregion
-        
-        #region R
-
-        public static bool FindRDirectory()
-        {
-            if (string.IsNullOrWhiteSpace(Settings.Default.RDir))
-            {
-                RegistryKey rKey = null;
-                try
-                {
-                    rKey = Registry.LocalMachine.OpenSubKey(RegistryLocationR);
-                }
-                catch (Exception)
-                {
-                    // ignored
-                }
-                if (rKey == null)
-                    return false;
-                var latestRPath = rKey.GetValue(@"InstallPath") as string;
-                Settings.Default.RDir = Path.GetDirectoryName(latestRPath);
-            }
-
-            InitRscriptExeList();
-            return Settings.Default.RVersions.Count > 0;
-        }
-
-        private static void InitRscriptExeList()
-        {
-            var rPaths = new Dictionary<string, string>();
-            if (string.IsNullOrWhiteSpace(Settings.Default.RDir))
-            {
-                return;
-            }
-            var rVersions = Directory.GetDirectories(Settings.Default.RDir);
-            foreach (var rVersion in rVersions)
-            {
-                var folderName = Path.GetFileName(rVersion);
-                if (folderName.StartsWith("R-"))
-                {
-                    var rScriptPath = rVersion + "\\bin\\Rscript.exe";
-                    if (File.Exists(rScriptPath))
-                    {
-                        rPaths.Add(folderName.Substring(2), rScriptPath);
-                    }
-                }
-
-            }
-            Settings.Default.RVersions = rPaths;
         }
 
         #endregion

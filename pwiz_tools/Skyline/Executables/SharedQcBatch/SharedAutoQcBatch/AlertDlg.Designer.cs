@@ -1,4 +1,4 @@
-﻿namespace SkylineBatch
+﻿namespace SharedAutoQcBatch
 {
     partial class AlertDlg
     {

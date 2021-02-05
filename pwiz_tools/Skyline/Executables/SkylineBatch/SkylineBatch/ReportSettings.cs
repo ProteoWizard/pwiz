@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Xml;
 using System.IO;
+using SharedAutoQcBatch;
 using SkylineBatch.Properties;
 
 
@@ -168,54 +169,35 @@ namespace SkylineBatch
                 throw new ArgumentException(Resources.ReportInfo_Validate_Report_must_have_name_ + Environment.NewLine +
                                             Resources.ReportInfo_Validate_Please_enter_a_name_for_this_report_);
             }
-            ValidateReportPath(ReportPath, Name);
+            
+            ValidateReportPath(ReportPath);
             foreach (var pathAndVersion in RScripts)
             {
-                ValidateRScriptPath(pathAndVersion.Item1, Name);
-                ValidateRVersion(pathAndVersion.Item2, Name);
+                ValidateRScriptPath(pathAndVersion.Item1);
+                ValidateRVersion(pathAndVersion.Item2);
             }
         }
 
-        public static void ValidateReportPath(string reportPath, string name = "")
+        public static void ValidateReportPath(string reportPath)
         {
             if (!File.Exists(reportPath))
-            {
-                var errorMessage = !string.IsNullOrEmpty(name)
-                    ? string.Format(Resources.ReportInfo_Validate_Report__0__, name) + Environment.NewLine
-                    : string.Empty;
-                errorMessage += string.Format(Resources.ReportInfo_ValidateReportPath_Report_path__0__is_not_a_valid_path_, reportPath) + Environment.NewLine +
-                                Resources.ReportInfo_Validate_Please_enter_a_path_to_an_existing_file_;
-                throw new ArgumentException(errorMessage);
-            }
+                throw new ArgumentException(string.Format(Resources.ReportInfo_ValidateReportPath_Report_path__0__is_not_a_valid_path_, reportPath) + Environment.NewLine +
+                                            Resources.ReportInfo_Validate_Please_enter_a_path_to_an_existing_file_);
         }
 
-        public static void ValidateRScriptPath(string rScriptPath, string name = "")
+        public static void ValidateRScriptPath(string rScriptPath)
         {
             if (!File.Exists(rScriptPath))
-            {
-                var errorMessage = !string.IsNullOrEmpty(name)
-                    ? string.Format(Resources.ReportInfo_Validate_Report__0__, name) + Environment.NewLine
-                    : string.Empty;
-                errorMessage +=
-                    string.Format(Resources.ReportInfo_ValidateRScriptPath_R_script_path__0__is_not_a_valid_path_,
-                        rScriptPath) + Environment.NewLine +
-                    Resources.ReportInfo_Validate_Please_enter_a_path_to_an_existing_file_;
-                throw new ArgumentException(errorMessage);
-            }
+                throw new ArgumentException(string.Format(Resources.ReportInfo_ValidateRScriptPath_R_script_path__0__is_not_a_valid_path_,
+                                                rScriptPath) + Environment.NewLine +
+                                            Resources.ReportInfo_Validate_Please_enter_a_path_to_an_existing_file_);
         }
 
-        public static void ValidateRVersion(string rVersion, string name = "")
+        public static void ValidateRVersion(string rVersion)
         {
             if (!Settings.Default.RVersions.ContainsKey(rVersion))
-            {
-                var errorMessage = !string.IsNullOrEmpty(name)
-                    ? string.Format(Resources.ReportInfo_Validate_Report__0__, name) + Environment.NewLine
-                    : string.Empty;
-                errorMessage +=
-                    string.Format(Resources.ReportInfo_ValidateRVersion_R_version__0__is_not_installed_on_this_computer_, rVersion) + Environment.NewLine +
-                    Resources.ReportInfo_ValidateRVersion_Please_choose_a_different_version_of_R_;
-                throw new ArgumentException(errorMessage);
-            }
+                throw new ArgumentException(string.Format(Resources.ReportInfo_ValidateRVersion_R_version__0__is_not_installed_on_this_computer_, rVersion) + Environment.NewLine +
+                                            Resources.ReportInfo_ValidateRVersion_Please_choose_a_different_version_of_R_);
         }
 
         public bool TryPathReplace(string oldRoot, string newRoot, out ReportInfo pathReplacedReportInfo)

@@ -681,7 +681,7 @@ namespace SkylineBatch
 
                 var addingConfig = RunRootReplacement(config);
                 addingConfig.Enabled = false;
-                AddConfiguration(RunRootReplacement(addingConfig));
+                AddConfiguration(addingConfig);
                 numAdded++;
             }
             var message = new StringBuilder(Resources.ConfigManager_Import_Number_of_configurations_imported_);

@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
+using SharedAutoQcBatch;
 using SkylineBatch.Properties;
 
 namespace SkylineBatch
@@ -56,7 +57,7 @@ namespace SkylineBatch
             {
                 // Prevent user from adding R script if R is not installed
                 _uiControl.DisplayError(Resources.ReportsAddForm_btnAddRScript_Click_Could_not_find_any_R_Installations_in__ + Environment.NewLine + 
-                                                                    Installations.RLocation + Environment.NewLine +
+                                                                    RInstallations.RLocation + Environment.NewLine +
                                                                     Environment.NewLine +
                                                                     Resources.ReportsAddForm_btnAddRScript_Click_Please_install_R_before_adding_R_scripts_to_this_configuration_);
                 return;

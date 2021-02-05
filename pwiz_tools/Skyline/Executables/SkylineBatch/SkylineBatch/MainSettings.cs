@@ -22,6 +22,7 @@ using System.IO;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
+using SharedAutoQcBatch;
 using SkylineBatch.Properties;
 
 namespace SkylineBatch
@@ -78,7 +79,7 @@ namespace SkylineBatch
             ValidateAnalysisFolder(AnalysisFolderPath);
         }
 
-        public static void ValidateSkylineFile(string skylineFile, string name = "")
+        public static void ValidateSkylineFile(string skylineFile)
         {
             CheckIfEmptyPath(skylineFile, "Skyline file");
             if (!File.Exists(skylineFile))
@@ -88,7 +89,7 @@ namespace SkylineBatch
             }
         }
 
-        public static void ValidateAnalysisFolder(string analysisFolder, string name = "")
+        public static void ValidateAnalysisFolder(string analysisFolder)
         {
             CheckIfEmptyPath(analysisFolder, "analysis folder");
             var analysisFolderDirectory = Path.GetDirectoryName(analysisFolder);
@@ -99,7 +100,7 @@ namespace SkylineBatch
             }
         }
 
-        public static void ValidateDataFolder(string dataFolder, string name = "")
+        public static void ValidateDataFolder(string dataFolder)
         {
             CheckIfEmptyPath(dataFolder, "data folder");
             if (!Directory.Exists(dataFolder))

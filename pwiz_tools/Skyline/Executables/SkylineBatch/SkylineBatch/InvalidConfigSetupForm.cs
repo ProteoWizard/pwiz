@@ -5,6 +5,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using SharedAutoQcBatch;
 using SkylineBatch.Properties;
 
 namespace SkylineBatch
@@ -214,19 +215,7 @@ namespace SkylineBatch
             panel1.Controls.Remove(control);
         }
     }
-    
-    // Validates a string variable, throws ArgumentException if invalid
-    public delegate void Validator(string variable, string name = "");
-    
-    // UserControl interface to validate value of an input
-    public interface IValidatorControl
-    {
-        object GetVariable();
 
-        // Uses Validator to determine if variable is valid
-        bool IsValid(out string errorMessage);
-    }
-    
     // Class that lets you wait for button click (ex: "await btnNext")
     public static class ButtonAwaiterExtensions
     {

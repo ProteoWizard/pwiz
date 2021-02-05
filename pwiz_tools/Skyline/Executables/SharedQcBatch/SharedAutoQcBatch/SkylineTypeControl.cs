@@ -1,9 +1,10 @@
 ﻿using System;
 using System.IO;
 using System.Windows.Forms;
-using SkylineBatch.Properties;
+using SharedAutoQcBatch;
+using SharedAutoQcBatch.Properties;
 
-namespace SkylineBatch
+namespace SharedAutoQcBatch
 {
     public partial class SkylineTypeControl : UserControl, IValidatorControl
     {
@@ -17,8 +18,8 @@ namespace SkylineBatch
         {
             InitializeComponent();
 
-            radioButtonSkyline.Enabled = Installations.HasSkyline;
-            radioButtonSkylineDaily.Enabled = Installations.HasSkylineDaily;
+            radioButtonSkyline.Enabled = SkylineInstallations.HasSkyline;
+            radioButtonSkylineDaily.Enabled = SkylineInstallations.HasSkylineDaily;
 
             radioButtonSkyline.Checked = skyline;
             radioButtonSkylineDaily.Checked = skylineDaily;

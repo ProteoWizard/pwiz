@@ -20,6 +20,7 @@ using System;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
+using SharedAutoQcBatch;
 using SkylineBatch.Properties;
 
 namespace SkylineBatch

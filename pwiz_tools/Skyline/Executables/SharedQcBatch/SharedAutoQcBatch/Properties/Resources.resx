@@ -1,0 +1,177 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AlertDlg_GetDefaultButtonText_OK" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="AlertDlg_GetDefaultButtonText_Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="AlertDlg_TruncateMessage_Message_truncated__Press_Ctrl_C_to_copy_entire_message_to_the_clipboard_" xml:space="preserve">
+    <value>Message truncated. Press Ctrl+C to copy entire message to the clipboard.</value>
+  </data>
+  <data name="AlertDlg_GetDefaultButtonText_Yes" xml:space="preserve">
+    <value>Yes</value>
+  </data>
+  <data name="AlertDlg_GetDefaultButtonText_No" xml:space="preserve">
+    <value>No</value>
+  </data>
+  <data name="AlertDlg_GetDefaultButtonText_Abort" xml:space="preserve">
+    <value>Abort</value>
+  </data>
+  <data name="AlertDlg_GetDefaultButtonText_Retry" xml:space="preserve">
+    <value>Retry</value>
+  </data>
+  <data name="AlertDlg_GetDefaultButtonText_Ignore" xml:space="preserve">
+    <value>Ignore</value>
+  </data>
+  <data name="TextUtil_FILTER_XML_XML_Files" xml:space="preserve">
+    <value>XML Files</value>
+  </data>
+  <data name="TextUtil_FILTER_SKY_Skyline_Files" xml:space="preserve">
+    <value>Skyline Files</value>
+  </data>
+  <data name="TextUtil_FILTER_SKYR_Skyline_Reports" xml:space="preserve">
+    <value>Skyline Reports</value>
+  </data>
+  <data name="TextUtil_FILTER_R_R_Files" xml:space="preserve">
+    <value>R Files</value>
+  </data>
+  <data name="TextUtil_FILTER_ALL_All_Files" xml:space="preserve">
+    <value>All Files</value>
+  </data>
+  <data name="SkylineSettings_Validate_Could_not_find_a_Skyline_daily_installation_on_this_computer_" xml:space="preserve">
+    <value>Could not find a Skyline-daily installation on this computer.</value>
+  </data>
+  <data name="SkylineSettings_Validate_Could_not_find_a_Skyline_installation_at_this_location___0_" xml:space="preserve">
+    <value>Could not find a Skyline installation at this location: {0}</value>
+  </data>
+  <data name="SkylineSettings_Validate_Could_not_find_a_Skyline_installation_on_this_computer_" xml:space="preserve">
+    <value>Could not find a Skyline installation on this computer.</value>
+  </data>
+  <data name="SkylineSettings_Validate_Could_not_find__0__at_this_location___1_" xml:space="preserve">
+    <value>Could not find {0} at this location: {1}</value>
+  </data>
+  <data name="SkylineSettings_Validate_Please_select_a_folder_containing__0__" xml:space="preserve">
+    <value>Please select a folder containing {0}.</value>
+  </data>
+  <data name="SkylineSettings_Validate_Please_try_a_different_Skyline_option_" xml:space="preserve">
+    <value>Please try a different Skyline option.</value>
+  </data>
+</root>

@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Windows.Forms;
+using SharedAutoQcBatch;
 using SkylineBatch.Properties;
 
 namespace SkylineBatch
@@ -55,7 +56,7 @@ namespace SkylineBatch
             _initialEnabled = config.Enabled;
             _isBusy = isBusy;
 
-            _canEditSkylineSettings = !Installations.HasLocalSkylineCmd;
+            _canEditSkylineSettings = !SkylineInstallations.HasLocalSkylineCmd;
             if (!_canEditSkylineSettings)
                 tabsConfig.TabPages[2].Hide();
             

@@ -1,9 +1,9 @@
 ﻿using System;
 using System.IO;
 using System.Xml;
-using SkylineBatch.Properties;
+using SharedAutoQcBatch.Properties;
 
-namespace SkylineBatch
+namespace SharedAutoQcBatch
 {
     public enum SkylineType
     {
@@ -44,7 +44,7 @@ namespace SkylineBatch
                     CmdPath = Settings.Default.SkylineLocalCommandPath;
                     break;
                 case SkylineType.Custom:
-                    CmdPath = Path.Combine(folderPath, Installations.SkylineCmdExe);
+                    CmdPath = Path.Combine(folderPath, SkylineInstallations.SkylineCmdExe);
                     break;
             }
         }
@@ -65,10 +65,10 @@ namespace SkylineBatch
                         throw new ArgumentException(Resources.SkylineSettings_Validate_Could_not_find_a_Skyline_daily_installation_on_this_computer_ + Environment.NewLine +
                               Resources.SkylineSettings_Validate_Please_try_a_different_Skyline_option_); 
                     case SkylineType.Local:
-                        throw new ArgumentException(string.Format(Resources.SkylineSettings_Validate_Could_not_find__0__at_this_location___1_, Installations.SkylineCmdExe, CmdPath));
+                        throw new ArgumentException(string.Format(Resources.SkylineSettings_Validate_Could_not_find__0__at_this_location___1_, SkylineInstallations.SkylineCmdExe, CmdPath));
                     case SkylineType.Custom:
                         throw new ArgumentException(string.Format(Resources.SkylineSettings_Validate_Could_not_find_a_Skyline_installation_at_this_location___0_, Path.GetDirectoryName(CmdPath)) + Environment.NewLine +
-                                                    string.Format(Resources.SkylineSettings_Validate_Please_select_a_folder_containing__0__, Installations.SkylineCmdExe));
+                                                    string.Format(Resources.SkylineSettings_Validate_Please_select_a_folder_containing__0__, SkylineInstallations.SkylineCmdExe));
                 }
             }
         }

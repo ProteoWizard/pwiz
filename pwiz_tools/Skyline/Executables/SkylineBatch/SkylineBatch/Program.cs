@@ -30,6 +30,7 @@ using log4net.Appender;
 using log4net.Config;
 using log4net.Repository.Hierarchy;
 using SkylineBatch.Properties;
+using SharedAutoQcBatch;
 
 namespace SkylineBatch
 {
@@ -89,7 +90,7 @@ namespace SkylineBatch
                 }
                 
                 if (!InitSkylineSettings()) return;
-                Installations.FindRDirectory();
+                RInstallations.FindRDirectory();
                 
                 var form = new MainForm();
                 // CurrentDeployment is null if it isn't network deployed.
@@ -105,7 +106,7 @@ namespace SkylineBatch
         
         private static bool InitSkylineSettings()
         {
-            if (Installations.FindSkyline())
+            if (SkylineInstallations.FindSkyline())
                 return true;
 
             var form = new FindSkylineForm();

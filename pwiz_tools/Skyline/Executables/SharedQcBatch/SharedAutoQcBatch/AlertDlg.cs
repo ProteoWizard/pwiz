@@ -21,10 +21,10 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
-using SkylineBatch.Properties;
+using SharedAutoQcBatch.Properties;
 
 
-namespace SkylineBatch
+namespace SharedAutoQcBatch
 {
     /// <summary>
     /// Use for a <see cref="MessageBox"/> substitute that can be
@@ -45,7 +45,7 @@ namespace SkylineBatch
             _originalMessageHeight = labelMessage.Height;
             Message = message;
             btnMoreInfo.Parent.Controls.Remove(btnMoreInfo);
-            Text = Program.AppName();
+            Text = Program.AppName;
             pictureBox1.Image = icon;
             if (fitToText)
             {
@@ -122,8 +122,8 @@ namespace SkylineBatch
         {
             var messageStart = labelMessage.Location.X;
             var padding = 30;
-            string measureString = labelMessage.Text;
-            SizeF stringSize = new SizeF();
+            var measureString = labelMessage.Text;
+            var stringSize = new SizeF();
             stringSize = e.Graphics.MeasureString(measureString, labelMessage.Font);
             Width = messageStart + padding + (int)stringSize.Width;
             labelMessage.MaximumSize = new Size((int)stringSize.Width, 0);

@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using SharedAutoQcBatch;
 using SkylineBatch;
 
 namespace SkylineBatchTest
@@ -42,8 +43,8 @@ namespace SkylineBatchTest
             var invalidSkyr = "invalidPath.skyr";
             var validRScripts = new List<Tuple<string,string>>();
             var invalidRscripts = new List<Tuple<string, string>>{new Tuple<string, string>("invalidPath.r", "1.2.3")};
-            TestValidateReportSettings(validName, invalidSkyr, validRScripts, "Report Name:\r\nReport path invalidPath.skyr is not a valid path.\r\nPlease enter a path to an existing file.");
-            TestValidateReportSettings(validName, validSkyr, invalidRscripts, "Report Name:\r\nR script path invalidPath.r is not a valid path.\r\nPlease enter a path to an existing file.");
+            TestValidateReportSettings(validName, invalidSkyr, validRScripts, "Report path invalidPath.skyr is not a valid path.\r\nPlease enter a path to an existing file.");
+            TestValidateReportSettings(validName, validSkyr, invalidRscripts, "R script path invalidPath.r is not a valid path.\r\nPlease enter a path to an existing file.");
             TestValidateReportSettings(invalidName, validSkyr, validRScripts, "Report must have name.");
             try
             {

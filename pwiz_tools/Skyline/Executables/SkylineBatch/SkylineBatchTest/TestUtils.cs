@@ -23,6 +23,7 @@ using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SkylineBatch;
 using SkylineBatch.Properties;
+using SharedAutoQcBatch;
 
 namespace SkylineBatchTest
 {
@@ -130,7 +131,7 @@ namespace SkylineBatchTest
 
         public static void InitializeRInstallation()
         {
-            Assert.IsTrue(Installations.FindRDirectory());
+            Assert.IsTrue(RInstallations.FindRDirectory());
         }
 
         public static void ClearSavedConfigurations()

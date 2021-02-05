@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Serialization;
 
-namespace SkylineBatch
+namespace SharedAutoQcBatch
 {
     /// <summary>
     /// A set of extension functions on <see cref="XmlWriter"/> and

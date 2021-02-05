@@ -1,15 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data.OleDb;
-using System.Globalization;
-using System.IO;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Text;
-using System.Text.RegularExpressions;
-using SkylineBatch.Properties;
+using SharedAutoQcBatch.Properties;
 
-namespace SkylineBatch
+namespace SharedAutoQcBatch
 {
     public static class TextUtil
     {
@@ -23,27 +17,27 @@ namespace SkylineBatch
 
         public static string FILTER_XML
         {
-            get { return FileDialogFilter(Resources.TextUtil_FileDialogFilter_XML_Files, EXT_XML); }
+            get { return FileDialogFilter(Resources.TextUtil_FILTER_XML_XML_Files, EXT_XML); }
         }
 
         public static string FILTER_SKY
         {
-            get { return FileDialogFilter(Resources.TextUtil_FileDialogFilter_Skyline_Files, EXT_SKY); }
+            get { return FileDialogFilter(Resources.TextUtil_FILTER_SKY_Skyline_Files, EXT_SKY); }
         }
 
         public static string FILTER_SKYR
         {
-            get { return FileDialogFilter(Resources.TextUtil_FileDialogFilter_Skyline_Reports, EXT_SKYR); }
+            get { return FileDialogFilter(Resources.TextUtil_FILTER_SKYR_Skyline_Reports, EXT_SKYR); }
         }
 
         public static string FILTER_R
         {
-            get { return FileDialogFilter(Resources.TextUtil_FileDialogFilter_R_Files, EXT_R); }
+            get { return FileDialogFilter(Resources.TextUtil_FILTER_R_R_Files, EXT_R); }
         }
 
         public static string FILTER_ALL
         {
-            get { return FileDialogFilter(Resources.TextUtil_FileDialogFilter_All_Files, @".*"); ; }
+            get { return FileDialogFilter(Resources.TextUtil_FILTER_ALL_All_Files, @".*"); ; }
         }
 
 
