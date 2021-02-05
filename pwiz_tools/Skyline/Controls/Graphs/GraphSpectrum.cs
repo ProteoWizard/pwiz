@@ -36,6 +36,7 @@ using pwiz.Skyline.Model.Prosit;
 using pwiz.Skyline.Model.Prosit.Models;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Crawdad;
+using pwiz.Skyline.Model.Themes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -847,7 +848,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     if (IonMatches(selection.Transition.Transition, chromData))
                     {
-                        color = ChromGraphItem.ColorSelected;
+                        color = ColorScheme.ChromGraphItemSelected;
                     }
                 }
 
