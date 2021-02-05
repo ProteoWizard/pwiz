@@ -33,6 +33,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="log4net">
+      <HintPath>..\..\..\..\Shared\Lib\log4net.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -52,13 +55,18 @@
     <Compile Include="AlertDlg.Designer.cs">
       <DependentUpon>AlertDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="ConfigManager.cs" />
     <Compile Include="FindSkylineForm.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="FindSkylineForm.Designer.cs">
       <DependentUpon>FindSkylineForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Interfaces.cs" />
     <Compile Include="IValidatorControl.cs" />
+    <Compile Include="ProgramLog.cs" />
+    <Compile Include="Settings.cs" />
+    <Compile Include="Logger.cs" />
     <Compile Include="SkylineInstallations.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -101,6 +109,9 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <WCFMetadata Include="Connected Services\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -1,16 +1,23 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Configuration;
+using System.Deployment.Application;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
+using System.Net;
+using System.Threading;
 using System.Windows.Forms;
+using log4net;
+using log4net.Appender;
+using log4net.Config;
+using log4net.Repository.Hierarchy;
+using SharedAutoQcBatch.Properties;
 
 namespace SharedAutoQcBatch
 {
     public static class Program
     {
-
-        //public static string AppName { get; private set; }
+        public static string LOG_NAME;
 
         /// <summary>
         /// The main entry point for the application.

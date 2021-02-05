@@ -21,26 +21,15 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using SkylineBatch.Properties;
+using SharedAutoQcBatch;
+using SharedAutoQcBatch.Properties;
 
- namespace SkylineBatch
+ namespace SharedAutoQcBatch
 {
-    public interface ISkylineBatchLogger
-    {
-        void Log(string message, params object[] args);
-        void LogError(string message, params object[] args);
-        void LogProgramError(string message, params object[] args);
-        void LogException(Exception exception, string message, params object[] args);
-        string GetFile();
-        string GetFileName();
-        void Delete();
-        SkylineBatchLogger Archive();
-        void DisplayLog();
-    }
 
-    public class SkylineBatchLogger : ISkylineBatchLogger
+    public class Logger
     {
-        public static string LOG_FOLDER;
+        //public static string LOG_FOLDER;
 
         public const long MaxLogSize = 10 * 1024 * 1024; // 10MB
         private const int MaxBackups = 5;
@@ -63,19 +52,23 @@ using SkylineBatch.Properties;
         private const int LogBufferSize = 10240;
         private const int StreamReaderDefaultBufferSize = 4096;
 
-        public SkylineBatchLogger(string logFileName, IMainUiControl mainUi = null)
+        public Logger(string logFileName, string logFolder, IMainUiControl mainUi = null)
         {
-            if (LOG_FOLDER == null)
+            /*if (LOG_FOLDER == null)
             {
                 var roamingFolder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
                 var localFolder = Path.Combine(Path.GetDirectoryName(roamingFolder), "local");
-                LOG_FOLDER = Path.Combine(localFolder, Program.AppName());
+                LOG_FOLDER = Path.Combine(localFolder, Program.AppName);
                 if (!Directory.Exists(LOG_FOLDER))
                 {
                     Directory.CreateDirectory(LOG_FOLDER);
                 }
+            }*/
+            if (!Directory.Exists(logFolder))
+            {
+                Directory.CreateDirectory(logFolder);
             }
-            _filePath = Path.Combine(LOG_FOLDER, logFileName);
+            _filePath = Path.Combine(logFolder, logFileName);
             _mainUi = mainUi;
             Init();
         }
@@ -113,9 +106,9 @@ using SkylineBatch.Properties;
                 }
                 catch (Exception e)
                 {
-                    var err = new StringBuilder(Resources.SkylineBatchLogger_WriteToFile_Error_occurred_while_trying_to_backup_log_file__).AppendLine(_filePath);
-                    err.AppendLine(Resources.SkylineBatchLogger_WriteToFile_Exception_stack_trace__);
-                    Program.LogError(err.ToString(), e);
+                    var err = new StringBuilder(Resources.Logger_WriteToFile_Error_occurred_while_trying_to_backup_log_file__).AppendLine(_filePath);
+                    err.AppendLine(Resources.Logger_WriteToFile_Exception_stack_trace__);
+                    ProgramLog.LogError(err.ToString(), e);
                 }
 
                 var dateAndMessage = GetDate() + message;
@@ -147,18 +140,18 @@ using SkylineBatch.Properties;
                     var fileNotFound = e.GetType().IsAssignableFrom(typeof(FileNotFoundException));
                     if (!fileNotFound)
                     {
-                        WriteToBuffer(string.Format(Resources.SkylineBatchLogger_WriteToFile_ERROR_writing_to_the_log_file___0___Check_program_log_for_details___1_, e.Message, Program.GetProgramLogFilePath()));
+                        WriteToBuffer(string.Format(Resources.Logger_WriteToFile_ERROR_writing_to_the_log_file___0___Check_program_log_for_details___1_, e.Message, ProgramLog.GetProgramLogFilePath()));
                     }
 
-                    Program.LogError(string.Format(Resources.SkylineBatchLogger_WriteToFile_Error_occurred_writing_to_log_file___0___Attempted_to_write_, _filePath));
-                    Program.LogError(message);
+                    ProgramLog.LogError(string.Format(Resources.Logger_WriteToFile_Error_occurred_writing_to_log_file___0___Attempted_to_write_, _filePath));
+                    ProgramLog.LogError(message);
                     if (!fileNotFound)
                     {
-                        Program.LogError(Resources.SkylineBatchLogger_WriteToFile_Exception_stack_trace_, e);
+                        ProgramLog.LogError(Resources.Logger_WriteToFile_Exception_stack_trace_, e);
                     }
                     else
                     {
-                        Program.LogError(string.Format(Resources.SkylineBatchLogger_WriteToFile_Error_message_was__0__, e.Message));
+                        ProgramLog.LogError(string.Format(Resources.Logger_WriteToFile_Error_message_was__0__, e.Message));
                     }
                 }
             }
@@ -174,7 +167,7 @@ using SkylineBatch.Properties;
 
             if (_logBuffer.Length > LogBufferSize)
             {
-                _logBuffer.AppendLine(Resources.SkylineBatchLogger_WriteToBuffer_____LOG_BUFFER_IS_FULL____);
+                _logBuffer.AppendLine(Resources.Logger_WriteToBuffer_____LOG_BUFFER_IS_FULL____);
             }
         }
 
@@ -222,7 +215,7 @@ using SkylineBatch.Properties;
 
         private void LogErrorToFile(string message)
         {
-            message = string.Format(Resources.SkylineBatchLogger_LogErrorToFile_ERROR___0_, message);
+            message = string.Format(Resources.Logger_LogErrorToFile_ERROR___0_, message);
             WriteToFile(message);
         }
 
@@ -291,7 +284,7 @@ using SkylineBatch.Properties;
                 line = string.Format(line, args);
             }
 
-            Program.LogError(line);
+            ProgramLog.LogError(line);
 
             if (_mainUi != null)
             {
@@ -305,11 +298,10 @@ using SkylineBatch.Properties;
             File.Delete(_filePath);
         }
 
-        public SkylineBatchLogger Archive()
+        public Logger Archive()
         {
             if (new FileInfo(_filePath).Length > 0)
             {
-                if (string.IsNullOrEmpty(LOG_FOLDER)) LOG_FOLDER = Path.GetDirectoryName(_filePath);
                 var lastModified = File.GetLastWriteTime(_filePath);
                 var timestampFileName = Path.GetDirectoryName(_filePath) + "\\" + Path.GetFileNameWithoutExtension(_filePath);
                 timestampFileName += lastModified.ToString("_yyyyMMdd_HHmmss") + ".log";
@@ -318,7 +310,7 @@ using SkylineBatch.Properties;
                 File.Copy(GetFile(), timestampFileName);
                 File.Delete(_filePath);
                 Init();
-                return new SkylineBatchLogger(timestampFileName, _mainUi);
+                return new Logger(timestampFileName, Path.GetDirectoryName(_filePath), _mainUi);
             }
 
             return null;
@@ -354,10 +346,10 @@ using SkylineBatch.Properties;
                 if (!File.Exists(_filePath))
                 {
                     // If the log file is not accessible, display the contents of the in memory buffer and anything saved in the log buffer
-                    _mainUi.LogErrorToUi(string.Format(Resources.SkylineBatchLogger_DisplayLog_Could_not_read_the_log_file___0___File_does_not_exist_, _filePath), false, false);
+                    _mainUi.LogErrorToUi(string.Format(Resources.Logger_DisplayLog_Could_not_read_the_log_file___0___File_does_not_exist_, _filePath), false, false);
                     if (_memLogMessages != null && _memLogMessages.Count > 0)
                     {
-                        _mainUi.LogErrorToUi(string.Format(Resources.SkylineBatchLogger_DisplayLog_Displaying_last__0__saved_log_messages_, _memLogMessages.Count), false, false);
+                        _mainUi.LogErrorToUi(string.Format(Resources.Logger_DisplayLog_Displaying_last__0__saved_log_messages_, _memLogMessages.Count), false, false);
                         string[] arr = _memLogMessages.ToArray();
                         foreach (var s in arr)
                         {
@@ -367,7 +359,7 @@ using SkylineBatch.Properties;
 
                     if (_logBuffer != null && _logBuffer.Length > 0)
                     {
-                        _mainUi.LogErrorToUi(Resources.SkylineBatchLogger_DisplayLog_Displaying_messages_since_log_file_became_unavailable_, false, false);
+                        _mainUi.LogErrorToUi(Resources.Logger_DisplayLog_Displaying_messages_since_log_file_became_unavailable_, false, false);
                         _mainUi.LogToUi(_logBuffer.ToString(), false, false);
                     }
                     return;
@@ -403,7 +395,7 @@ using SkylineBatch.Properties;
                 }
                 if (truncated)
                 {
-                    _mainUi.LogErrorToUi(string.Format(Resources.SkylineBatchLogger_DisplayLog_____Log_truncated_____Full_log_is_in__0_, GetFile()), false);
+                    _mainUi.LogErrorToUi(string.Format(Resources.Logger_DisplayLog_____Log_truncated_____Full_log_is_in__0_, GetFile()), false);
                 }
 
                 var toLog = new List<string>();

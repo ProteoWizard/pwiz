@@ -32,21 +32,7 @@ namespace SkylineBatch.Properties
     internal sealed partial class Settings
     {
 
-        [UserScopedSetting]
-        public ConfigList ConfigList
-        {
-            get
-            {
-                var list = (ConfigList) this["ConfigList"]; // Not L10N
-                if (list == null)
-                {
-                    list = new ConfigList();
-                    ConfigList = list;
-                }
-                return list;
-            }
-            set => this["ConfigList"] = value; // Not L10N
-        }
+        
         
         [ApplicationScopedSetting]
         public Dictionary<string,string> RVersions
@@ -65,63 +51,5 @@ namespace SkylineBatch.Properties
         }
     }
 
-    public class ConfigList : Collection<SkylineBatchConfig>, IXmlSerializable
-    {
-        #region IXmlSerializable Members
-
-        public XmlSchema GetSchema()
-        {
-            return null;
-        }
-
-        public void ReadXml(XmlReader reader)
-        {
-            var isEmpty = reader.IsEmptyElement;
-
-            // Read past the property element
-            reader.Read();
-
-            // For an empty list in Settings.Default
-            if (isEmpty)
-            {
-                return;
-            }
-
-            // Read list items
-            var list = new List<SkylineBatchConfig>();
-            var message = new StringBuilder();
-            while (reader.IsStartElement())
-            {
-                try
-                {
-                    list.Add(SkylineBatchConfig.ReadXml(reader));
-                }
-                catch (ArgumentException e)
-                {
-                    message.Append(e.Message + Environment.NewLine);
-                }
-                
-                reader.Read();
-            }
-
-            Clear();
-            foreach (var config in list)
-            {
-                Add(config);
-            }
-
-            if (message.Length > 0)
-                MessageBox.Show(message.ToString(), @"Load Configurations Error", MessageBoxButtons.OK);
-        }
-
-        public void WriteXml(XmlWriter writer)
-        {
-            foreach (var config in this)
-            {
-                config.WriteXml(writer);
-            }
-        }
-
-        #endregion // IXmlSerializable Members  
-    }
+    
 }

@@ -22,6 +22,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using SharedAutoQcBatch;
 using SkylineBatch;
 
 namespace SkylineBatchTest
@@ -39,7 +40,7 @@ namespace SkylineBatchTest
            Assert.IsTrue(testRunner.IsStopped());
            var singleCommand = string.Format("--in=\"{0}\" --out=\"{1}\"", config.MainSettings.TemplateFilePath,
                TestUtils.GetTestFilePath("Copy.sky"));
-            testRunner.ChangeStatus(ConfigRunner.RunnerStatus.Running);
+            testRunner.ChangeStatus(RunnerStatus.Running);
            await testRunner.ExecuteProcess(config.SkylineSettings.CmdPath, singleCommand);
            logger.Delete();
            Assert.IsTrue(testRunner.IsRunning(), "Expected no errors or cancellations.");
