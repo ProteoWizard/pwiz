@@ -19,6 +19,9 @@
 using System;
 using System.IO;
 using System.Security.Cryptography;
+using System.Xml;
+using pwiz.Skyline.Model.Serialization;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.AuditLog
 {
@@ -90,26 +93,41 @@ namespace pwiz.Skyline.Model.AuditLog
     public class HashingStream : Stream
     {
         private readonly Stream _inner;
-        private readonly SHA1CryptoServiceProvider _sha1;
+        private readonly HashAlgorithm _sha;
         private readonly BlockHash _blockHash;
 
-        public HashingStream(Stream inner)
+        public HashingStream(Stream inner, DocumentFormat docFormat)
         {
             _inner = inner;
-            _sha1 = new SHA1CryptoServiceProvider();
-            _blockHash = new BlockHash(_sha1);
+            _sha = docFormat.GetHashAlgorithm();
+            _blockHash = new BlockHash(_sha);
         }
 
-        public static Stream CreateWriteStream(string path)
+        public HashingStream(Stream inner) : this(inner, DocumentFormat.CURRENT){}
+
+        public static Stream CreateWriteStream(string path, DocumentFormat docFormat)
         {
             return new HashingStream(new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.Read, 4096,
-                FileOptions.SequentialScan));
+                FileOptions.SequentialScan), docFormat);
         }
 
-        public static Stream CreateReadStream(string path)
+        //This method peeks the document version number from the file 
+        // and select correct hashing algorithm version
+        public static Stream CreateSrmDocumentReadStream(string path)
         {
+            DocumentFormat docFormat = DocumentFormat.VERSION_0_1;
+            using(var stream = new FileStream(path, FileMode.Open, FileAccess.Read))
+            {
+                var xmlReader = XmlReader.Create(stream,
+                    new XmlReaderSettings() {IgnoreWhitespace = true});
+                xmlReader.MoveToContent();
+                double formatVersionNumber = xmlReader.GetDoubleAttribute(DocumentSerializer.ATTR.format_version);
+                if (formatVersionNumber != 0)
+                    docFormat = new DocumentFormat(formatVersionNumber);
+                xmlReader.Close();
+            }
             return new HashingStream(new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, 4096,
-                FileOptions.SequentialScan));
+                FileOptions.SequentialScan), docFormat);
         }
 
         public override int Read(byte[] buffer, int offset, int count)
@@ -151,12 +169,6 @@ namespace pwiz.Skyline.Model.AuditLog
             return Hash;
         }
 
-        public byte[] DoneBytes()
-        {
-            _blockHash.FinalizeHashBytes();
-            return HashBytes;
-        }
-
         protected override void Dispose(bool disposing)
         {
             base.Dispose(disposing);
@@ -164,7 +176,7 @@ namespace pwiz.Skyline.Model.AuditLog
             if (disposing)
             {
                 _inner.Dispose();
-                _sha1.Dispose();
+                _sha.Dispose();
             }
         }
 

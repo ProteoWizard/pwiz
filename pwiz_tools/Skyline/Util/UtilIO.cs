@@ -1035,7 +1035,7 @@ namespace pwiz.Skyline.Util
         private long _charsRead;
 
         public HashingStreamReaderWithProgress(string path, IProgressMonitor progressMonitor)
-            : base(HashingStream.CreateReadStream(path), Encoding.UTF8)
+            : base(HashingStream.CreateSrmDocumentReadStream(path), Encoding.UTF8)
         {
             _progressMonitor = progressMonitor;
             _status = new ProgressStatus(Path.GetFileName(path));

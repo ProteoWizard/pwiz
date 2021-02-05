@@ -19,6 +19,7 @@
 using System;
 using System.Diagnostics.Contracts;
 using System.Globalization;
+using System.Security.Cryptography;
 
 namespace pwiz.Skyline.Model.Serialization
 {
@@ -117,6 +118,13 @@ namespace pwiz.Skyline.Model.Serialization
         public static bool operator >=(DocumentFormat left, DocumentFormat right)
         {
             return left.CompareTo(right) >= 0;
+        }
+
+        public HashAlgorithm GetHashAlgorithm() {
+            if (this >= DocumentFormat.SEQUENTIAL_LOG_HASH)
+                return new SHA512CryptoServiceProvider();
+            else
+                return new SHA1CryptoServiceProvider();
         }
 
         public override string ToString()
