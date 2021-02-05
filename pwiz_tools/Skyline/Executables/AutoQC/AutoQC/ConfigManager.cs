@@ -251,6 +251,22 @@ namespace AutoQC
             }
         }
 
+        public AutoQcConfig GetLastModified()
+        {
+            lock (_lock)
+            {
+                if (!HasConfigs())
+                    return null;
+                var lastModified = _configList[0];
+                foreach (var config in _configList)
+                {
+                    if (config.Modified > lastModified.Modified)
+                        lastModified = config;
+                }
+                return lastModified;
+            }
+        }
+
         public void ReplaceSelectedConfig(AutoQcConfig newConfig)
         {
             lock (_lock)

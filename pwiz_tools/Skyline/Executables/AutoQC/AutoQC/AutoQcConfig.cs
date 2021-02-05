@@ -21,7 +21,6 @@ namespace AutoQC
             }
             Name = name;
             IsEnabled = isEnabled;
-            User = panoramaSettings.PanoramaUserEmail;
             Created = created;
             Modified = modified;
             MainSettings = mainSettings;
@@ -33,8 +32,6 @@ namespace AutoQC
 
         public bool IsEnabled;
 
-        public readonly string User;
-
         public readonly DateTime Created;
 
         public readonly DateTime Modified;
@@ -45,6 +42,8 @@ namespace AutoQC
 
         public readonly SkylineSettings SkylineSettings;
 
+        public string User => PanoramaSettings.PublishToPanorama ? PanoramaSettings.PanoramaUserEmail : string.Empty;
+        
         public bool UsesSkyline => SkylineSettings.Type == SkylineType.Skyline;
 
         public bool UsesSkylineDaily => SkylineSettings.Type == SkylineType.SkylineDaily;
@@ -130,7 +129,6 @@ namespace AutoQC
             writer.WriteStartElement("autoqc_config");
             writer.WriteAttribute(Attr.name, Name);
             writer.WriteAttribute(Attr.is_enabled, IsEnabled);
-            writer.WriteAttributeIfString(Attr.user, User);
             writer.WriteAttributeIfString(Attr.created, Created.ToShortDateString() + " " + Created.ToShortTimeString());
             writer.WriteAttributeIfString(Attr.modified, Modified.ToShortDateString() + " " + Modified.ToShortTimeString());
             MainSettings.WriteXml(writer);
@@ -199,7 +197,6 @@ namespace AutoQC
             var sb = new StringBuilder();
             sb.Append("Name: ").AppendLine(Name);
             sb.Append("Enabled: ").AppendLine(IsEnabled.ToString());
-            sb.Append("Panorama User: ").AppendLine(User);
             sb.Append("Created: ").Append(Created.ToShortDateString()).Append(" ").AppendLine(Created.ToShortTimeString());
             sb.Append("Modified: ").Append(Modified.ToShortDateString()).Append(" ").AppendLine(Modified.ToShortTimeString());
             sb.AppendLine().AppendLine("Main Settings");

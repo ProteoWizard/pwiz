@@ -87,9 +87,11 @@ namespace AutoQC
             }
 
             if (_action != ConfigAction.Add)
+            {
                 textConfigName.Text = config.Name;
+                SetInitialMainSettings(config.MainSettings);
+            }
 
-            SetInitialMainSettings(config.MainSettings);
             SetInitialPanoramaSettings(config.PanoramaSettings);
             SetInitialSkylineSettings(config);
         }
@@ -223,11 +225,6 @@ namespace AutoQC
 
         private PanoramaSettings GetPanoramaSettingsFromUi()
         {
-            if (!cbPublishToPanorama.Checked)
-            {
-                return new PanoramaSettings();
-            }
-
             return new PanoramaSettings(cbPublishToPanorama.Checked, textPanoramaUrl.Text, textPanoramaEmail.Text, textPanoramaPasswd.Text, textPanoramaFolder.Text);
         }
 

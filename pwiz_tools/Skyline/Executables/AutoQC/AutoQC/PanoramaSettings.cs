@@ -245,14 +245,11 @@ namespace AutoQC
         public void WriteXml(XmlWriter writer)
         {
             writer.WriteStartElement("panorama_settings");
-            if (PublishToPanorama)
-            {
-                writer.WriteAttribute(Attr.publish_to_panorama, PublishToPanorama);
-                writer.WriteAttributeIfString(Attr.panorama_server_url, PanoramaServerUrl);
-                writer.WriteAttributeIfString(Attr.panorama_user_email, PanoramaUserEmail);
-                writer.WriteAttributeIfString(Attr.panorama_user_password, EncryptPassword(PanoramaPassword));
-                writer.WriteAttributeIfString(Attr.panorama_folder, PanoramaFolder);
-            }
+            writer.WriteAttribute(Attr.publish_to_panorama, PublishToPanorama);
+            writer.WriteAttributeIfString(Attr.panorama_server_url, PanoramaServerUrl);
+            writer.WriteAttributeIfString(Attr.panorama_user_email, PanoramaUserEmail);
+            writer.WriteAttributeIfString(Attr.panorama_user_password, EncryptPassword(PanoramaPassword));
+            writer.WriteAttributeIfString(Attr.panorama_folder, PanoramaFolder);
             writer.WriteEndElement();
         }
         #endregion

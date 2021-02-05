@@ -91,7 +91,7 @@ namespace AutoQC
         private void btnAdd_Click(object sender, EventArgs e)
         {
             Program.LogInfo("Creating a new configuration");
-            var configForm = new AutoQcConfigForm(this, null, ConfigAction.Add, false);
+            var configForm = new AutoQcConfigForm(this, _configManager.GetLastModified(), ConfigAction.Add, false);
             configForm.ShowDialog();
         }
 
@@ -99,18 +99,11 @@ namespace AutoQC
         {
             var configRunner = _configManager.GetSelectedConfigRunner();
             var config = configRunner.Config;
-            try
-            {
-                config.MainSettings.ValidateSettings();
-                config.SkylineSettings.Validate();
-                config.PanoramaSettings.ValidateSettings();
-            }
-            catch (ArgumentException)
+            if (!_configManager.IsSelectedConfigValid())
             {
                 if (configRunner.IsRunning()) throw new Exception("Invalid configuration cannot be running.");
                 var validateConfigForm = new InvalidConfigSetupForm(config, _configManager, this);
-                validateConfigForm.ShowDialog();
-                if (validateConfigForm.DialogResult != DialogResult.OK)
+                if (validateConfigForm.ShowDialog() != DialogResult.OK)
                     return;
                 config = validateConfigForm.ValidConfig;
             }
