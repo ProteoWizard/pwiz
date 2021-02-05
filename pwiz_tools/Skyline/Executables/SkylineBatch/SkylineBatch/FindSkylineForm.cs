@@ -1,13 +1,15 @@
 ﻿using System;
-using System.IO;
 using System.Windows.Forms;
 using SkylineBatch.Properties;
 
 namespace SkylineBatch
 {
-    public partial class FindSkyline : Form
+    public partial class FindSkylineForm : Form
     {
-        public FindSkyline()
+        // The dialog that appears if Skyline Batch was unable to find a Skyline Installation when first started
+        // User must enter a path to a valid skyline installation to continue
+
+        public FindSkylineForm()
         {
             InitializeComponent();
         }
@@ -16,9 +18,6 @@ namespace SkylineBatch
         {
             using (var folderBrowserDlg = new FolderBrowserDialog())
             {
-                folderBrowserDlg.Description =
-                    string.Format(Resources.FindSkylineForm_btnBrowse_Click_Select_the__0__installation_directory,
-                        Installations.Skyline);
                 folderBrowserDlg.ShowNewFolderButton = false;
                 folderBrowserDlg.SelectedPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
                 if (folderBrowserDlg.ShowDialog() == DialogResult.OK)
@@ -30,17 +29,19 @@ namespace SkylineBatch
 
         private void btnOk_Click(object sender, EventArgs e)
         {
-            var cmdPath = Path.Combine(textSkylineInstallPath.Text, Installations.SkylineCmdExe);
-            if (File.Exists(cmdPath))
+            var skylineSettings = new SkylineSettings(SkylineType.Custom, textSkylineInstallPath.Text);
+            try
             {
-                Settings.Default.SkylineCustomCmdPath = cmdPath;
-                DialogResult = DialogResult.OK;
-                Close();
+                skylineSettings.Validate();
+            }
+            catch (ArgumentException ex)
+            {
+                AlertDlg.ShowError(this, ex.Message);
                 return;
             }
-            MessageBox.Show(string.Format(Resources.FindSkyline_btnOkClick_No_SkylineCmd_exe_file_in__0__, textSkylineInstallPath.Text),
-                Resources.FindSkyline_btnOkClick_Not_a_valid_Skyline_installation___, MessageBoxButtons.OK, MessageBoxIcon.Error);
-
+            Settings.Default.SkylineCustomCmdPath = skylineSettings.CmdPath;
+            DialogResult = DialogResult.OK;
+            Close();
         }
     }
 }
