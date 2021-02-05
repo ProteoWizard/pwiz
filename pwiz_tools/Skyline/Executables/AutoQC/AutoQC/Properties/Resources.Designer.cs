@@ -912,16 +912,6 @@ namespace AutoQC.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cannot open the results folder of an invalid configuration..
-        /// </summary>
-        internal static string MainForm_btnOpenResultsFolder_Click_Cannot_open_the_results_folder_of_an_invalid_configuration_ {
-            get {
-                return ResourceManager.GetString("MainForm_btnOpenResultsFolder_Click_Cannot_open_the_results_folder_of_an_invalid_" +
-                        "configuration_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Error disabling. Keep {0} running..
         /// </summary>
         internal static string MainForm_cb_keepRunning_CheckedChanged_Error_disabling__Keep__0__running_ {
@@ -963,6 +953,26 @@ namespace AutoQC.Properties {
         internal static string MainForm_SwitchLogger_Error_reading_log_ {
             get {
                 return ResourceManager.GetString("MainForm_SwitchLogger_Error_reading_log_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot open the folder to watch of an invalid configuration..
+        /// </summary>
+        internal static string MainForm_toolStripFolderToWatch_Click_Cannot_open_the_folder_to_watch_of_an_invalid_configuration_ {
+            get {
+                return ResourceManager.GetString("MainForm_toolStripFolderToWatch_Click_Cannot_open_the_folder_to_watch_of_an_inval" +
+                        "id_configuration_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot open the log folder of an invalid configuration..
+        /// </summary>
+        internal static string MainForm_toolStripLogFolder_Click_Cannot_open_the_log_folder_of_an_invalid_configuration_ {
+            get {
+                return ResourceManager.GetString("MainForm_toolStripLogFolder_Click_Cannot_open_the_log_folder_of_an_invalid_config" +
+                        "uration_", resourceCulture);
             }
         }
         

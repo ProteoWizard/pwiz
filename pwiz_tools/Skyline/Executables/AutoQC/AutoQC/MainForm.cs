@@ -241,12 +241,17 @@ namespace AutoQC
             Process.Start(uriWithCred.AbsoluteUri);
         }
 
-        private void btnOpenResultsFolder_Click(object sender, EventArgs e)
+        private void btnOpenFolder_Click(object sender, EventArgs e)
+        {
+            openFolderMenuStrip.Show(toolStrip, new Point(0, btnOpenFolder.Height * toolStrip.Items.Count));
+        }
+
+        private void toolStripFolderToWatch_Click(object sender, EventArgs e)
         {
             var config = _configManager.GetSelectedConfig();
             if (!_configManager.IsSelectedConfigValid())
             {
-                DisplayError(Resources.MainForm_btnOpenResultsFolder_Click_Cannot_open_the_results_folder_of_an_invalid_configuration_ + Environment.NewLine +
+                DisplayError(Resources.MainForm_toolStripFolderToWatch_Click_Cannot_open_the_folder_to_watch_of_an_invalid_configuration_ + Environment.NewLine +
                              string.Format(Resources.MainForm_btnOpenResults_Click_Please_fix___0___and_try_again_, config.Name));
                 return;
             }
@@ -254,8 +259,23 @@ namespace AutoQC
             Process.Start("explorer.exe", "/n," + folder);
         }
 
+        private void toolStripLogFolder_Click(object sender, EventArgs e)
+        {
+            var config = _configManager.GetSelectedConfig();
+            if (!_configManager.IsSelectedConfigValid())
+            {
+                DisplayError(Resources.MainForm_toolStripLogFolder_Click_Cannot_open_the_log_folder_of_an_invalid_configuration_ + Environment.NewLine +
+                             string.Format(Resources.MainForm_btnOpenResults_Click_Please_fix___0___and_try_again_, config.Name));
+                return;
+            }
+
+            var logger = _configManager.GetLogger(config.Name);
+            var folder = Path.GetDirectoryName(logger.GetFile());
+            Process.Start("explorer.exe", "/n," + folder);
+        }
+
         #endregion
-        
+
         #region Update UI
 
         public void UpdateUiConfigurations()
@@ -280,7 +300,7 @@ namespace AutoQC
                 btnDelete.Enabled = configSelected;
                 btnOpenResults.Enabled = configSelected;
                 btnOpenPanoramaFolder.Enabled = configSelected && config.PanoramaSettings.PublishToPanorama;
-                btnOpenResultsFolder.Enabled = configSelected;
+                btnOpenFolder.Enabled = configSelected;
 
                 btnEdit.Enabled = configSelected;
                 btnCopy.Enabled = configSelected;
@@ -330,7 +350,7 @@ namespace AutoQC
         {
             _configManager.SelectLog(comboConfigs.SelectedIndex);
             if (_configManager.SelectedLog >= 0)
-                btnOpenFolder.Enabled = true;
+                btnOpenLogFolder.Enabled = true;
             SwitchLogger();
         }
 
@@ -361,7 +381,7 @@ namespace AutoQC
             textBoxLog.ScrollToCaret();
         }
 
-        private void btnOpenFolder_Click(object sender, EventArgs e)
+        private void btnOpenLogFolder_Click(object sender, EventArgs e)
         {
             var logger = _configManager.GetSelectedLogger();
             if (!File.Exists(logger.GetFile()))

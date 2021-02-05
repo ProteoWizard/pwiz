@@ -48,14 +48,14 @@
             this.btnDelete = new System.Windows.Forms.ToolStripButton();
             this.btnOpenResults = new System.Windows.Forms.ToolStripButton();
             this.btnOpenPanoramaFolder = new System.Windows.Forms.ToolStripButton();
-            this.btnOpenResultsFolder = new System.Windows.Forms.ToolStripButton();
+            this.btnOpenFolder = new System.Windows.Forms.ToolStripButton();
             this.btnImportConfigs = new System.Windows.Forms.Button();
             this.btnExportConfigs = new System.Windows.Forms.Button();
             this.panel2 = new System.Windows.Forms.Panel();
             this.btnStop = new System.Windows.Forms.Button();
             this.btnRun = new System.Windows.Forms.Button();
             this.tabLog = new System.Windows.Forms.TabPage();
-            this.btnOpenFolder = new System.Windows.Forms.Button();
+            this.btnOpenLogFolder = new System.Windows.Forms.Button();
             this.lblConfigSelect = new System.Windows.Forms.Label();
             this.textBoxLog = new System.Windows.Forms.RichTextBox();
             this.comboConfigs = new System.Windows.Forms.ComboBox();
@@ -65,6 +65,9 @@
             this.cb_keepRunning = new System.Windows.Forms.CheckBox();
             this.toolTip_MainForm = new System.Windows.Forms.ToolTip(this.components);
             this.systray_icon = new System.Windows.Forms.NotifyIcon(this.components);
+            this.openFolderMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.toolStripFolderToWatch = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripLogFolder = new System.Windows.Forms.ToolStripMenuItem();
             this.tabMain.SuspendLayout();
             this.tabFront.SuspendLayout();
             this.panel1.SuspendLayout();
@@ -73,6 +76,7 @@
             this.tabLog.SuspendLayout();
             this.tabSettings.SuspendLayout();
             this.groupBoxAutoQcSettings.SuspendLayout();
+            this.openFolderMenuStrip.SuspendLayout();
             this.SuspendLayout();
             // 
             // btnEdit
@@ -183,7 +187,7 @@
             this.btnDelete,
             this.btnOpenResults,
             this.btnOpenPanoramaFolder,
-            this.btnOpenResultsFolder});
+            this.btnOpenFolder});
             this.toolStrip.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.VerticalStackWithOverflow;
             this.toolStrip.Name = "toolStrip";
             // 
@@ -219,13 +223,13 @@
             this.btnOpenPanoramaFolder.Name = "btnOpenPanoramaFolder";
             this.btnOpenPanoramaFolder.Click += new System.EventHandler(this.btnOpenPanoramaFolder_Click);
             // 
-            // btnOpenResultsFolder
+            // btnOpenFolder
             // 
-            this.btnOpenResultsFolder.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            resources.ApplyResources(this.btnOpenResultsFolder, "btnOpenResultsFolder");
-            this.btnOpenResultsFolder.Image = global::AutoQC.Properties.Resources.OpenFolder;
-            this.btnOpenResultsFolder.Name = "btnOpenResultsFolder";
-            this.btnOpenResultsFolder.Click += new System.EventHandler(this.btnOpenResultsFolder_Click);
+            this.btnOpenFolder.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            resources.ApplyResources(this.btnOpenFolder, "btnOpenFolder");
+            this.btnOpenFolder.Image = global::AutoQC.Properties.Resources.OpenFolder;
+            this.btnOpenFolder.Name = "btnOpenFolder";
+            this.btnOpenFolder.Click += new System.EventHandler(this.btnOpenFolder_Click);
             // 
             // btnImportConfigs
             // 
@@ -269,19 +273,19 @@
             // tabLog
             // 
             this.tabLog.BackColor = System.Drawing.Color.Transparent;
-            this.tabLog.Controls.Add(this.btnOpenFolder);
+            this.tabLog.Controls.Add(this.btnOpenLogFolder);
             this.tabLog.Controls.Add(this.lblConfigSelect);
             this.tabLog.Controls.Add(this.textBoxLog);
             this.tabLog.Controls.Add(this.comboConfigs);
             resources.ApplyResources(this.tabLog, "tabLog");
             this.tabLog.Name = "tabLog";
             // 
-            // btnOpenFolder
+            // btnOpenLogFolder
             // 
-            resources.ApplyResources(this.btnOpenFolder, "btnOpenFolder");
-            this.btnOpenFolder.Name = "btnOpenFolder";
-            this.btnOpenFolder.UseVisualStyleBackColor = true;
-            this.btnOpenFolder.Click += new System.EventHandler(this.btnOpenFolder_Click);
+            resources.ApplyResources(this.btnOpenLogFolder, "btnOpenLogFolder");
+            this.btnOpenLogFolder.Name = "btnOpenLogFolder";
+            this.btnOpenLogFolder.UseVisualStyleBackColor = true;
+            this.btnOpenLogFolder.Click += new System.EventHandler(this.btnOpenLogFolder_Click);
             // 
             // lblConfigSelect
             // 
@@ -335,6 +339,30 @@
             resources.ApplyResources(this.systray_icon, "systray_icon");
             this.systray_icon.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.systray_icon_MouseDoubleClick);
             // 
+            // openFolderMenuStrip
+            // 
+            this.openFolderMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripFolderToWatch,
+            this.toolStripLogFolder});
+            this.openFolderMenuStrip.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.Table;
+            this.openFolderMenuStrip.Name = "openFolderMenuStrip";
+            this.openFolderMenuStrip.ShowImageMargin = false;
+            resources.ApplyResources(this.openFolderMenuStrip, "openFolderMenuStrip");
+            // 
+            // toolStripFolderToWatch
+            // 
+            this.toolStripFolderToWatch.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.toolStripFolderToWatch.Name = "toolStripFolderToWatch";
+            resources.ApplyResources(this.toolStripFolderToWatch, "toolStripFolderToWatch");
+            this.toolStripFolderToWatch.Click += new System.EventHandler(this.toolStripFolderToWatch_Click);
+            // 
+            // toolStripLogFolder
+            // 
+            this.toolStripLogFolder.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.toolStripLogFolder.Name = "toolStripLogFolder";
+            resources.ApplyResources(this.toolStripLogFolder, "toolStripLogFolder");
+            this.toolStripLogFolder.Click += new System.EventHandler(this.toolStripLogFolder_Click);
+            // 
             // MainForm
             // 
             resources.ApplyResources(this, "$this");
@@ -357,6 +385,7 @@
             this.tabSettings.ResumeLayout(false);
             this.groupBoxAutoQcSettings.ResumeLayout(false);
             this.groupBoxAutoQcSettings.PerformLayout();
+            this.openFolderMenuStrip.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -374,7 +403,7 @@
         private System.Windows.Forms.Label lblConfigSelect;
         private System.Windows.Forms.RichTextBox textBoxLog;
         private System.Windows.Forms.ComboBox comboConfigs;
-        private System.Windows.Forms.Button btnOpenFolder;
+        private System.Windows.Forms.Button btnOpenLogFolder;
         private System.Windows.Forms.Button btnImportConfigs;
         private System.Windows.Forms.Button btnExportConfigs;
         private System.Windows.Forms.ToolTip toolTip_MainForm;
@@ -396,7 +425,10 @@
         private System.Windows.Forms.ToolStripButton btnAdd;
         private System.Windows.Forms.ToolStripButton btnDelete;
         private System.Windows.Forms.ToolStripButton btnOpenResults;
-        private System.Windows.Forms.ToolStripButton btnOpenResultsFolder;
+        private System.Windows.Forms.ToolStripButton btnOpenFolder;
         private System.Windows.Forms.ToolStripButton btnOpenPanoramaFolder;
+        private System.Windows.Forms.ContextMenuStrip openFolderMenuStrip;
+        private System.Windows.Forms.ToolStripMenuItem toolStripFolderToWatch;
+        private System.Windows.Forms.ToolStripMenuItem toolStripLogFolder;
     }
 }

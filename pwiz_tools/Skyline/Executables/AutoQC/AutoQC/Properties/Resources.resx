@@ -436,9 +436,6 @@ with:
   <data name="MainForm_btnOpenPanoramaFolder_Click_Cannot_open_the_Panorama_folder_of_an_invalid_configuration_" xml:space="preserve">
     <value>Cannot open the Panorama folder of an invalid configuration.</value>
   </data>
-  <data name="MainForm_btnOpenResultsFolder_Click_Cannot_open_the_results_folder_of_an_invalid_configuration_" xml:space="preserve">
-    <value>Cannot open the results folder of an invalid configuration.</value>
-  </data>
   <data name="MainForm_SwitchLogger_Error_reading_log_" xml:space="preserve">
     <value>Error reading log:</value>
   </data>
@@ -585,5 +582,11 @@ with:
   </data>
   <data name="PanoramaUtil_VerifyServerInformation_Unknown_error_while_checking_if_server__0__is_a_Panorama_server_" xml:space="preserve">
     <value>Unknown error while checking if server {0} is a Panorama server.</value>
+  </data>
+  <data name="MainForm_toolStripFolderToWatch_Click_Cannot_open_the_folder_to_watch_of_an_invalid_configuration_" xml:space="preserve">
+    <value>Cannot open the folder to watch of an invalid configuration.</value>
+  </data>
+  <data name="MainForm_toolStripLogFolder_Click_Cannot_open_the_log_folder_of_an_invalid_configuration_" xml:space="preserve">
+    <value>Cannot open the log folder of an invalid configuration.</value>
   </data>
 </root>
