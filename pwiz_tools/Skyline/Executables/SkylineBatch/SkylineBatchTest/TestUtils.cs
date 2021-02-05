@@ -81,9 +81,9 @@ namespace SkylineBatchTest
             return new ConfigRunner(GetTestConfig(configName), GetTestLogger());
         }
 
-        public static List<SkylineBatchConfig> ConfigListFromNames(List<string> names)
+        public static List<IConfig> ConfigListFromNames(List<string> names)
         {
-            var configList = new List<SkylineBatchConfig>();
+            var configList = new List<IConfig>();
             foreach (var name in names)
             {
                 configList.Add(GetTestConfig(name));
@@ -91,9 +91,9 @@ namespace SkylineBatchTest
             return configList;
         }
 
-        public static ConfigManager GetTestConfigManager()
+        public static SkylineBatchConfigManager GetTestConfigManager()
         {
-            var testConfigManager = new ConfigManager(GetTestLogger());
+            var testConfigManager = new SkylineBatchConfigManager(GetTestLogger());
             while (testConfigManager.HasConfigs())
             {
                 testConfigManager.SelectConfig(0);
@@ -123,10 +123,10 @@ namespace SkylineBatchTest
             return null;
         }
 
-        public static SkylineBatchLogger GetTestLogger(string logFolder = "")
+        public static Logger GetTestLogger(string logFolder = "")
         {
-            SkylineBatchLogger.LOG_FOLDER = string.IsNullOrEmpty(logFolder) ? GetTestFilePath("OldLogs") : logFolder;
-            return new SkylineBatchLogger("TestLog" + DateTime.Now.ToString("_HHmmssfff") + ".log");
+            logFolder = string.IsNullOrEmpty(logFolder) ? GetTestFilePath("OldLogs") : logFolder;
+            return new Logger("TestLog" + DateTime.Now.ToString("_HHmmssfff") + ".log", logFolder);
         }
 
         public static void InitializeRInstallation()
@@ -137,7 +137,7 @@ namespace SkylineBatchTest
         public static void ClearSavedConfigurations()
         {
             var logger = GetTestLogger();
-            var testConfigManager = new ConfigManager(logger);
+            var testConfigManager = new SkylineBatchConfigManager(logger);
             while (testConfigManager.HasConfigs())
             {
                 testConfigManager.SelectConfig(0);

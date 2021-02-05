@@ -18,33 +18,28 @@
 
 using System;
 using System.Diagnostics;
-using System.IO;
 using System.Threading.Tasks;
+using SharedAutoQcBatch;
 using SkylineBatch.Properties;
 
 namespace SkylineBatch
 {
-    public class ConfigRunner
+    public class ConfigRunner : IConfigRunner
     {
 
+        public static ConfigRunner StaticConstructor(IConfig config, Logger logger, IMainUiControl uiControl = null)
+        {
+            return new ConfigRunner((SkylineBatchConfig)config, logger, uiControl);
+        }
+
         private readonly IMainUiControl _uiControl;
-        private readonly ISkylineBatchLogger _logger;
+        private readonly Logger _logger;
 
         private readonly object _lock = new object();
         private RunnerStatus _runnerStatus;
 
-        public enum RunnerStatus
-        {
-            Waiting,
-            Running,
-            Cancelling,
-            Cancelled,
-            Stopped,
-            Completed,
-            Error
-        }
 
-        public ConfigRunner(SkylineBatchConfig config, ISkylineBatchLogger logger, IMainUiControl uiControl = null)
+        public ConfigRunner(SkylineBatchConfig config, Logger logger, IMainUiControl uiControl = null)
         {
             _runnerStatus = RunnerStatus.Stopped;
             Config = config;
@@ -53,6 +48,11 @@ namespace SkylineBatch
         }
         
         public SkylineBatchConfig Config { get; }
+
+        public IConfig GetConfig()
+        {
+            return Config;
+        }
 
         public RunnerStatus GetStatus()
         {

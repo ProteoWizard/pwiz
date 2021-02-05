@@ -228,7 +228,7 @@ namespace SkylineBatch
 
         private void btnAddReport_Click(object sender, EventArgs e)
         {
-            Program.LogInfo(Resources.SkylineBatchConfigForm_btnAddReport_Click_Creating_new_report_);
+            ProgramLog.LogInfo(Resources.SkylineBatchConfigForm_btnAddReport_Click_Creating_new_report_);
             ShowAddReportDialog(_newReportList.Count);
         }
 
@@ -252,7 +252,7 @@ namespace SkylineBatch
 
         private void btnEditReport_Click(object sender, EventArgs e)
         {
-            Program.LogInfo(Resources.SkylineBatchConfigForm_btnEditReport_Click_Editing_report_);
+            ProgramLog.LogInfo(Resources.SkylineBatchConfigForm_btnEditReport_Click_Editing_report_);
             var indexSelected = gridReportSettings.SelectedRows[0].Index;
             var editingReport = _newReportList.Count > indexSelected ? _newReportList[indexSelected] : null;
             ShowAddReportDialog(indexSelected, editingReport);

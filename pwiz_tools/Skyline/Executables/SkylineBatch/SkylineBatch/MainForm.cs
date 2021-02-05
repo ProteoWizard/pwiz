@@ -31,8 +31,8 @@ namespace SkylineBatch
     public partial class MainForm : Form, IMainUiControl
     {
 
-        private readonly ConfigManager _configManager;
-        private readonly ISkylineBatchLogger _skylineBatchLogger;
+        private readonly SkylineBatchConfigManager _configManager;
+        private readonly Logger _skylineBatchLogger;
         private bool _loaded;
         private double[] _listViewColumnWidths;
         private bool _resizing;
@@ -41,7 +41,10 @@ namespace SkylineBatch
         {
             InitializeComponent();
 
-            _skylineBatchLogger = new SkylineBatchLogger(Program.AppName() + ".log", this);
+            var roamingFolder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            var localFolder = Path.Combine(Path.GetDirectoryName(roamingFolder), "local");
+            var logFolder= Path.Combine(localFolder, Program.AppName());
+            _skylineBatchLogger = new Logger(Program.AppName() + ".log", logFolder, this);
             btnRunOptions.Text = char.ConvertFromUtf32(0x2BC6);
             toolStrip1.Items.Insert(3,new ToolStripSeparator());
             _listViewColumnWidths = new[]
@@ -52,8 +55,8 @@ namespace SkylineBatch
             };
             listViewConfigs.ColumnWidthChanged += listViewConfigs_ColumnWidthChanged;
 
-            Program.LogInfo(Resources.MainForm_MainForm_Loading_configurations_from_saved_settings_);
-            _configManager = new ConfigManager(_skylineBatchLogger, this);
+            ProgramLog.LogInfo(Resources.MainForm_MainForm_Loading_configurations_from_saved_settings_);
+            _configManager = new SkylineBatchConfigManager(_skylineBatchLogger, this);
 
             UpdateUiConfigurations();
             UpdateLabelVisibility();
@@ -89,13 +92,13 @@ namespace SkylineBatch
         
         private void btnNewConfig_Click(object sender, EventArgs e)
         {
-            Program.LogInfo(Resources.MainForm_btnNewConfig_Click_Creating_a_new_configuration_);
-            var initialConfigValues =_configManager.GetLastModified();
+            ProgramLog.LogInfo(Resources.MainForm_btnNewConfig_Click_Creating_a_new_configuration_);
+            var initialConfigValues = (SkylineBatchConfig)_configManager.GetLastModified();
             var configForm = new SkylineBatchConfigForm(this, initialConfigValues, ConfigAction.Add, false);
             configForm.ShowDialog();
         }
 
-        public void AddConfiguration(SkylineBatchConfig config)
+        public void AddConfiguration(IConfig config)
         {
             _configManager.AddConfiguration(config);
             _configManager.SelectConfig(_configManager.ConfigNamesAsObjectArray().Length - 1);
@@ -105,7 +108,7 @@ namespace SkylineBatch
         private void HandleEditEvent(object sender, EventArgs e)
         {
             var configRunner = _configManager.GetSelectedConfigRunner();
-            var config = configRunner.Config;
+            var config = (SkylineBatchConfig)configRunner.GetConfig();
             try
             {
                 config.Validate();
@@ -123,7 +126,7 @@ namespace SkylineBatch
             configForm.ShowDialog();
         }
 
-        public void EditSelectedConfiguration(SkylineBatchConfig newVersion)
+        public void EditSelectedConfiguration(IConfig newVersion)
         {
             _configManager.ReplaceSelectedConfig(newVersion);
             UpdateUiConfigurations();
@@ -315,7 +318,7 @@ namespace SkylineBatch
         {
             RunUi(() =>
             {
-                Program.LogInfo("Updating configurations");
+                ProgramLog.LogInfo("Updating configurations");
                 listViewConfigs.Items.Clear();
                 listViewConfigs.ItemCheck -= listViewConfigs_ItemCheck;
                 var listViewItems = _configManager.ConfigsListViewItems();
@@ -333,7 +336,7 @@ namespace SkylineBatch
         {
             RunUi(() =>
             {
-                Program.LogInfo("Updating log files");
+                ProgramLog.LogInfo("Updating log files");
                 comboLogList.Items.Clear();
                 comboLogList.Items.AddRange(_configManager.GetAllLogFiles());
                 comboLogList.SelectedIndex = _configManager.SelectedLog;
@@ -473,13 +476,13 @@ namespace SkylineBatch
         private void TrimDisplayedLog()
         {
             var numLines = textBoxLog.Lines.Length;
-            const int buffer = SkylineBatchLogger.MaxLogLines / 10;
-            if (numLines > SkylineBatchLogger.MaxLogLines + buffer)
+            const int buffer = Logger.MaxLogLines / 10;
+            if (numLines > Logger.MaxLogLines + buffer)
             {
                 var unTruncated = textBoxLog.Text;
-                var startIndex = textBoxLog.GetFirstCharIndexFromLine(numLines - SkylineBatchLogger.MaxLogLines);
+                var startIndex = textBoxLog.GetFirstCharIndexFromLine(numLines - Logger.MaxLogLines);
                 var message = (_skylineBatchLogger != null)
-                    ? string.Format(Resources.SkylineBatchLogger_DisplayLog_____Log_truncated_____Full_log_is_in__0_, _skylineBatchLogger.GetFile())
+                    ? string.Format(Resources.Logger_DisplayLog_____Log_truncated_____Full_log_is_in__0_, _skylineBatchLogger.GetFile())
                     : Resources.MainForm_TrimDisplayedLog_____Log_truncated____;
                 message += Environment.NewLine;
                 textBoxLog.Text = message + unTruncated.Substring(startIndex);
@@ -639,27 +642,5 @@ namespace SkylineBatch
             }
             base.OnMouseDown(e);
         }
-    }
-
-    public interface IMainUiControl
-    {
-        void AddConfiguration(SkylineBatchConfig config);
-        void EditSelectedConfiguration(SkylineBatchConfig newVersion);
-        void UpdateUiConfigurations();
-
-        void UpdateUiLogFiles();
-        void UpdateRunningButtons(bool isRunning);
-        
-        void LogToUi(string text, bool scrollToEnd = true, bool trim = true);
-        void LogErrorToUi(string text, bool scrollToEnd = true, bool trim = true);
-        void LogLinesToUi(List<string> lines);
-        void LogErrorLinesToUi(List<string> lines);
-
-        void DisplayError(string message);
-        void DisplayWarning(string message);
-        void DisplayInfo(string message);
-        void DisplayErrorWithException(string message, Exception exception);
-        DialogResult DisplayQuestion(string message);
-        DialogResult DisplayLargeQuestion(string message);
     }
 }

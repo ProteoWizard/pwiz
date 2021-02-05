@@ -86,7 +86,7 @@ namespace SkylineBatchTest
         public void TestAddInsertConfig()
         {
             TestUtils.ClearSavedConfigurations();
-            var testConfigManager = new ConfigManager(TestUtils.GetTestLogger());
+            var testConfigManager = new SkylineBatchConfigManager(TestUtils.GetTestLogger());
             Assert.IsTrue(!testConfigManager.HasConfigs());
             var addedConfig = TestUtils.GetTestConfig("one");
             testConfigManager.AddConfiguration(addedConfig);
@@ -229,7 +229,7 @@ namespace SkylineBatchTest
             var testingConfigs = TestUtils.ConfigListFromNames(new List<string> { "one", "two", "three", "four" });
             configManager.Close();
             configManager.GetSelectedLogger().Delete();
-            var testConfigManager = new ConfigManager(TestUtils.GetTestLogger());
+            var testConfigManager = new SkylineBatchConfigManager(TestUtils.GetTestLogger());
             Assert.IsTrue(testConfigManager.ConfigListEquals(testingConfigs));
             testConfigManager.GetSelectedLogger().Delete();
         }

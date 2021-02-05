@@ -174,4 +174,97 @@
   <data name="SkylineSettings_Validate_Please_try_a_different_Skyline_option_" xml:space="preserve">
     <value>Please try a different Skyline option.</value>
   </data>
+  <data name="ConfigManager_CheckConfigSelected_There_is_no_configuration_selected_" xml:space="preserve">
+    <value>There is no configuration selected.</value>
+  </data>
+  <data name="ConfigManager_ExportConfigs_Could_not_save_configurations_to_" xml:space="preserve">
+    <value>Could not save configurations to:</value>
+  </data>
+  <data name="ConfigManager_ExportConfigs_Please_provide_a_path_to_a_file_inside_an_existing_folder_" xml:space="preserve">
+    <value>Please provide a path to a file inside an existing folder.</value>
+  </data>
+  <data name="ConfigManager_ExportConfigs_Please_select_a_configuration_to_share_" xml:space="preserve">
+    <value>Please select a configuration to share.</value>
+  </data>
+  <data name="ConfigManager_ExportConfigs_There_is_no_configuration_selected_" xml:space="preserve">
+    <value>There is no configuration selected.</value>
+  </data>
+  <data name="ConfigManager_Import_An_error_occurred_while_importing_configurations_from__0__" xml:space="preserve">
+    <value>An error occurred while importing configurations from {0}:</value>
+  </data>
+  <data name="ConfigManager_Import_No_configurations_were_found_in__0__" xml:space="preserve">
+    <value>No configurations were found in {0}.</value>
+  </data>
+  <data name="ConfigManager_Import_Number_of_configurations_imported_" xml:space="preserve">
+    <value>Number of configurations imported:</value>
+  </data>
+  <data name="ConfigManager_Import_Number_of_configurations_with_errors_that_could_not_be_imported_" xml:space="preserve">
+    <value>Number of configurations with errors that could not be imported:</value>
+  </data>
+  <data name="ConfigManager_Import_Please_remove_the_configurations_you_would_like_to_import_" xml:space="preserve">
+    <value>Please remove the configurations you would like to import.</value>
+  </data>
+  <data name="ConfigManager_Import_These_configurations_already_exist_and_could_not_be_imported_" xml:space="preserve">
+    <value>These configurations already exist and could not be imported:</value>
+  </data>
+  <data name="ConfigManager_InsertConfiguration_Adding_configuration___0___" xml:space="preserve">
+    <value>Adding configuration "{0}".</value>
+  </data>
+  <data name="ConfigManager_InsertConfiguration_Configuration___0___already_exists_" xml:space="preserve">
+    <value>Configuration "{0}" already exists.</value>
+  </data>
+  <data name="ConfigManager_InsertConfiguration_Please_enter_a_unique_name_for_the_configuration_" xml:space="preserve">
+    <value>Please enter a unique name for the configuration.</value>
+  </data>
+  <data name="ConfigManager_RemoveConfig_Cannot_delete___0____configuration_does_not_exist_" xml:space="preserve">
+    <value>Cannot delete "{0}": configuration does not exist.</value>
+  </data>
+  <data name="ConfigManager_RemoveSelected_Are_you_sure_you_want_to_delete___0___" xml:space="preserve">
+    <value>Are you sure you want to delete "{0}"?</value>
+  </data>
+  <data name="ConfigManager_RemoveSelected_Removing_configuration____0__" xml:space="preserve">
+    <value>Removing configuration: "{0}"</value>
+  </data>
+  <data name="ConfigManager_RemoveSelected___0___is_still_running__Please_stop_the_current_run_before_deleting___0___" xml:space="preserve">
+    <value>"{0}" is still running. Please stop the current run before deleting "{0}".</value>
+  </data>
+  <data name="ConfigManager_SelectConfig_There_is_no_configuration_at_index___0_" xml:space="preserve">
+    <value>There is no configuration at index: {0}</value>
+  </data>
+  <data name="Logger_DisplayLog_Could_not_read_the_log_file___0___File_does_not_exist_" xml:space="preserve">
+    <value>Could not read the log file: {0}. File does not exist.</value>
+  </data>
+  <data name="Logger_DisplayLog_Displaying_last__0__saved_log_messages_" xml:space="preserve">
+    <value>Displaying last {0} saved log messages.</value>
+  </data>
+  <data name="Logger_DisplayLog_Displaying_messages_since_log_file_became_unavailable_" xml:space="preserve">
+    <value>Displaying messages since log file became unavailable.</value>
+  </data>
+  <data name="Logger_DisplayLog_____Log_truncated_____Full_log_is_in__0_" xml:space="preserve">
+    <value>... Log truncated ... Full log is in {0}</value>
+  </data>
+  <data name="Logger_LogErrorToFile_ERROR___0_" xml:space="preserve">
+    <value>ERROR: {0}</value>
+  </data>
+  <data name="Logger_WriteToBuffer_____LOG_BUFFER_IS_FULL____" xml:space="preserve">
+    <value>!!! LOG BUFFER IS FULL !!!</value>
+  </data>
+  <data name="Logger_WriteToFile_Error_message_was__0__" xml:space="preserve">
+    <value>Error message was {0}.</value>
+  </data>
+  <data name="Logger_WriteToFile_Error_occurred_while_trying_to_backup_log_file__" xml:space="preserve">
+    <value>Error occurred while trying to backup log file:</value>
+  </data>
+  <data name="Logger_WriteToFile_Error_occurred_writing_to_log_file___0___Attempted_to_write_" xml:space="preserve">
+    <value>Error occurred writing to log file: {0}. Attempted to write:</value>
+  </data>
+  <data name="Logger_WriteToFile_ERROR_writing_to_the_log_file___0___Check_program_log_for_details___1_" xml:space="preserve">
+    <value>ERROR writing to the log file: {0}. Check program log for details: {1}</value>
+  </data>
+  <data name="Logger_WriteToFile_Exception_stack_trace_" xml:space="preserve">
+    <value>Exception stack trace:</value>
+  </data>
+  <data name="Logger_WriteToFile_Exception_stack_trace__" xml:space="preserve">
+    <value>Exception stack trace: </value>
+  </data>
 </root>

@@ -123,7 +123,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ConfigManager.cs" />
+    <Compile Include="SkylineBatchConfigManager.cs" />
     <Compile Include="FilePathControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -184,7 +184,6 @@
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
     <Compile Include="Program.cs" />
-    <Compile Include="SkylineBatchLogger.cs" />
     <Compile Include="RInstallations.cs" />
     <Compile Include="LogForm.cs">
       <SubType>Form</SubType>

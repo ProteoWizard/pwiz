@@ -130,14 +130,8 @@
   <data name="SkylineBatchConfigForm_btnAddReport_Click_Creating_new_report_" xml:space="preserve">
     <value>Creating new report.</value>
   </data>
-  <data name="ConfigManager_ExportConfigs_Please_select_a_configuration_to_share_" xml:space="preserve">
-    <value>Please select a configuration to share.</value>
-  </data>
   <data name="ConfigManager_RunAll_Please_edit___0___to_enable_running_" xml:space="preserve">
     <value>Please edit "{0}" to enable running.</value>
-  </data>
-  <data name="SkylineBatchLogger_WriteToFile_Error_message_was__0__" xml:space="preserve">
-    <value>Error message was {0}.</value>
   </data>
   <data name="TextUtil_FileDialogFilter_All_Files" xml:space="preserve">
     <value>All Files</value>
@@ -147,9 +141,6 @@
   </data>
   <data name="SkylineBatchConfig_SkylineBatchConfig_Please_enter_a_name_" xml:space="preserve">
     <value>Please enter a name.</value>
-  </data>
-  <data name="ConfigManager_Import_These_configurations_already_exist_and_could_not_be_imported_" xml:space="preserve">
-    <value>These configurations already exist and could not be imported:</value>
   </data>
   <data name="TextUtil_FileDialogFilter_Skyline_Reports" xml:space="preserve">
     <value>Skyline Reports</value>
@@ -166,26 +157,8 @@
   <data name="RVersionControl_RVersionControl_Select_an_R_version_for__0__" xml:space="preserve">
     <value>Select an R version for {0}:</value>
   </data>
-  <data name="SkylineBatchLogger_WriteToFile_ERROR_writing_to_the_log_file___0___Check_program_log_for_details___1_" xml:space="preserve">
-    <value>ERROR writing to the log file: {0}. Check program log for details: {1}</value>
-  </data>
-  <data name="ConfigManager_RemoveSelected_Are_you_sure_you_want_to_delete___0___" xml:space="preserve">
-    <value>Are you sure you want to delete "{0}"?</value>
-  </data>
-  <data name="ConfigManager_ExportConfigs_Please_provide_a_path_to_a_file_inside_an_existing_folder_" xml:space="preserve">
-    <value>Please provide a path to a file inside an existing folder.</value>
-  </data>
-  <data name="SkylineBatchLogger_LogErrorToFile_ERROR___0_" xml:space="preserve">
-    <value>ERROR: {0}</value>
-  </data>
-  <data name="ConfigManager_Import_Number_of_configurations_with_errors_that_could_not_be_imported_" xml:space="preserve">
-    <value>Number of configurations with errors that could not be imported:</value>
-  </data>
   <data name="ReportInfo_Validate_Report_must_have_name_" xml:space="preserve">
     <value>Report must have name.</value>
-  </data>
-  <data name="ConfigManager_RemoveSelected_Removing_configuration____0__" xml:space="preserve">
-    <value>Removing configuration: "{0}"</value>
   </data>
   <data name="ConfigManager_SelectLog_No_log_at_index__" xml:space="preserve">
     <value>No log at index: </value>
@@ -193,44 +166,23 @@
   <data name="ReportInfo_ValidateRVersion_R_version__0__is_not_installed_on_this_computer_" xml:space="preserve">
     <value>R version {0} is not installed on this computer.</value>
   </data>
-  <data name="SkylineBatchLogger_WriteToFile_Exception_stack_trace__" xml:space="preserve">
-    <value>Exception stack trace: </value>
-  </data>
   <data name="MainForm_btnNewConfig_Click_Creating_a_new_configuration_" xml:space="preserve">
     <value>Creating a new configuration.</value>
   </data>
   <data name="Program_Main_Another_instance_of__0__is_already_running_" xml:space="preserve">
     <value>Another instance of {0} is already running.</value>
   </data>
-  <data name="ConfigManager_InsertConfiguration_Configuration___0___already_exists_" xml:space="preserve">
-    <value>Configuration "{0}" already exists.</value>
-  </data>
-  <data name="ConfigManager_InsertConfiguration_Please_enter_a_unique_name_for_the_configuration_" xml:space="preserve">
-    <value>Please enter a unique name for the configuration.</value>
-  </data>
   <data name="ReportInfo_ValidateRVersion_Please_choose_a_different_version_of_R_" xml:space="preserve">
     <value>Please choose a different version of R.</value>
   </data>
-  <data name="ConfigManager_Import_No_configurations_were_found_in__0__" xml:space="preserve">
-    <value>No configurations were found in {0}.</value>
-  </data>
-  <data name="SkylineBatchLogger_WriteToBuffer_____LOG_BUFFER_IS_FULL____" xml:space="preserve">
-    <value>!!! LOG BUFFER IS FULL !!!</value>
-  </data>
   <data name="Program_Main__0__encountered_an_unexpected_error" xml:space="preserve">
     <value>{0} encountered an unexpected error</value>
-  </data>
-  <data name="ConfigManager_Import_Number_of_configurations_imported_" xml:space="preserve">
-    <value>Number of configurations imported:</value>
   </data>
   <data name="Comment" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Comment.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="Program_InitSkylineSettings_Please_install_Skyline_to_start__0__" xml:space="preserve">
     <value>Please install Skyline to start {0}.</value>
-  </data>
-  <data name="ConfigManager_InsertConfiguration_Adding_configuration___0___" xml:space="preserve">
-    <value>Adding configuration "{0}".</value>
   </data>
   <data name="Program_Main_Saved_configurations_were_found_in___0_" xml:space="preserve">
     <value>Saved configurations were found in: {0}</value>
@@ -256,17 +208,8 @@
   <data name="ReportInfo_Validate_Please_enter_a_name_for_this_report_" xml:space="preserve">
     <value>Please enter a name for this report.</value>
   </data>
-  <data name="ConfigManager_SelectConfig_There_is_no_configuration_at_index___0_" xml:space="preserve">
-    <value>There is no configuration at index: {0}</value>
-  </data>
-  <data name="SkylineBatchLogger_WriteToFile_Exception_stack_trace_" xml:space="preserve">
-    <value>Exception stack trace:</value>
-  </data>
   <data name="Program_Main_Error_details_may_be_found_in_the_SkylineBatchProgram_log_file_in_this_directory____0_" xml:space="preserve">
     <value>Error details may be found in the SkylineBatchProgram.log file in this directory : {0}</value>
-  </data>
-  <data name="ConfigManager_RemoveSelected___0___is_still_running__Please_stop_the_current_run_before_deleting___0___" xml:space="preserve">
-    <value>"{0}" is still running. Please stop the current run before deleting "{0}".</value>
   </data>
   <data name="ConfigRunner_Run________________________________Starting_Configuration___0_________________________________" xml:space="preserve">
     <value>------------------------------ Starting Configuration: {0} -------------------------------</value>
@@ -276,9 +219,6 @@
   </data>
   <data name="TextUtil_FileDialogFilter_R_Files" xml:space="preserve">
     <value>R Files</value>
-  </data>
-  <data name="ConfigManager_RemoveConfig_Cannot_delete___0____configuration_does_not_exist_" xml:space="preserve">
-    <value>Cannot delete "{0}": configuration does not exist.</value>
   </data>
   <data name="add" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\add.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -292,14 +232,8 @@
   <data name="MainSettings_ValidateAnalysisFolder_The_analysis_folder__0__does_not_exist_" xml:space="preserve">
     <value>The analysis folder {0} does not exist.</value>
   </data>
-  <data name="ConfigManager_Import_An_error_occurred_while_importing_configurations_from__0__" xml:space="preserve">
-    <value>An error occurred while importing configurations from {0}:</value>
-  </data>
   <data name="RVersionControl_RVersionControl_R_version__0__not_found_" xml:space="preserve">
     <value>R version {0} not found.</value>
-  </data>
-  <data name="SkylineBatchLogger_DisplayLog_Displaying_messages_since_log_file_became_unavailable_" xml:space="preserve">
-    <value>Displaying messages since log file became unavailable.</value>
   </data>
   <data name="ConfigRunner_ExecuteCommandLine_Process_terminated_" xml:space="preserve">
     <value>Process terminated.</value>
@@ -312,12 +246,6 @@
   </data>
   <data name="ConfigManager_RunAll_Cannot_run_while_the_following_configurations_have_errors_" xml:space="preserve">
     <value>Cannot run while the following configurations have errors:</value>
-  </data>
-  <data name="ConfigManager_ExportConfigs_There_is_no_configuration_selected_" xml:space="preserve">
-    <value>There is no configuration selected.</value>
-  </data>
-  <data name="ConfigManager_CheckConfigSelected_There_is_no_configuration_selected_" xml:space="preserve">
-    <value>There is no configuration selected.</value>
   </data>
   <data name="InvalidConfigSetupForm_FixInvalidReportSettings__0__report" xml:space="preserve">
     <value>{0} report</value>
@@ -340,12 +268,6 @@
   <data name="ConfigRunner_KillProcessChildren_Killing__0__processes_spawned_by_the_process_with_Id___1_" xml:space="preserve">
     <value>Killing {0} processes spawned by the process with Id: {1}</value>
   </data>
-  <data name="ConfigManager_Import_Please_remove_the_configurations_you_would_like_to_import_" xml:space="preserve">
-    <value>Please remove the configurations you would like to import.</value>
-  </data>
-  <data name="SkylineBatchLogger_DisplayLog_Displaying_last__0__saved_log_messages_" xml:space="preserve">
-    <value>Displaying last {0} saved log messages.</value>
-  </data>
   <data name="RVersionControl_RVersionControl_Could_not_find_any_R_installations_on_this_computer_" xml:space="preserve">
     <value>Could not find any R installations on this computer.</value>
   </data>
@@ -367,12 +289,6 @@
   <data name="ReportsAddForm_btnAddRScript_Click_Could_not_find_any_R_Installations_in__" xml:space="preserve">
     <value>Could not find any R Installations in: </value>
   </data>
-  <data name="SkylineBatchLogger_WriteToFile_Error_occurred_writing_to_log_file___0___Attempted_to_write_" xml:space="preserve">
-    <value>Error occurred writing to log file: {0}. Attempted to write:</value>
-  </data>
-  <data name="SkylineBatchLogger_WriteToFile_Error_occurred_while_trying_to_backup_log_file__" xml:space="preserve">
-    <value>Error occurred while trying to backup log file: </value>
-  </data>
   <data name="ReportInfo_Validate_Report__0__" xml:space="preserve">
     <value>Report {0}:</value>
   </data>
@@ -391,9 +307,6 @@
   <data name="ConfigManager_RunAll_Please_edit_these_configurations_to_enable_running_" xml:space="preserve">
     <value>Please edit these configurations to enable running.</value>
   </data>
-  <data name="ConfigManager_ExportConfigs_Could_not_save_configurations_to_" xml:space="preserve">
-    <value>Could not save configurations to:</value>
-  </data>
   <data name="Program_InitSkylineSettings__0__requires_Skyline_to_run_" xml:space="preserve">
     <value>{0} requires Skyline to run.</value>
   </data>
@@ -411,12 +324,6 @@
 {0}
 with:
 {1}?</value>
-  </data>
-  <data name="SkylineBatchLogger_DisplayLog_____Log_truncated_____Full_log_is_in__0_" xml:space="preserve">
-    <value>... Log truncated ... Full log is in {0}</value>
-  </data>
-  <data name="SkylineBatchLogger_DisplayLog_Could_not_read_the_log_file___0___File_does_not_exist_" xml:space="preserve">
-    <value>Could not read the log file: {0}. File does not exist.</value>
   </data>
   <data name="uparrow" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\uparrow.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -489,5 +396,8 @@ with:
   </data>
   <data name="ConfigManager_RunAllEnabled_There_are_no_enabled_configurations_to_run_" xml:space="preserve">
     <value>There are no enabled configurations to run.</value>
+  </data>
+  <data name="Logger_DisplayLog_____Log_truncated_____Full_log_is_in__0_" xml:space="preserve">
+    <value>... Log truncated ... Full log is in {0}</value>
   </data>
 </root>

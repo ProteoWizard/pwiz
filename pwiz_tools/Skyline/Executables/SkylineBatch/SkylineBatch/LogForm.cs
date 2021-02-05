@@ -19,6 +19,7 @@
 
 using System;
 using System.Windows.Forms;
+using SharedAutoQcBatch;
 
 namespace SkylineBatch
 {
@@ -27,8 +28,8 @@ namespace SkylineBatch
         // Delete Logs Form
         // User selects logs to delete using checkboxes
 
-        private readonly ConfigManager _configManager;
-        public LogForm(ConfigManager configManager)
+        private readonly SkylineBatchConfigManager _configManager;
+        public LogForm(SkylineBatchConfigManager configManager)
         {
             InitializeComponent();
             _configManager = configManager;

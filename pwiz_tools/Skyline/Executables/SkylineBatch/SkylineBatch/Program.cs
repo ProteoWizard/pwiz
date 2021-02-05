@@ -42,6 +42,9 @@ namespace SkylineBatch
         [STAThread]
         public static void Main(string[] args)
         {
+            SharedAutoQcBatch.Properties.ConfigList.importer = SkylineBatchConfig.ReadXml;
+            SharedAutoQcBatch.Program.LOG_NAME = "SkylineBatchProgram.log";
+
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
@@ -82,7 +85,7 @@ namespace SkylineBatch
                 try
                 {
                     var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal);
-                    LogInfo(string.Format(Resources.Program_Main_Saved_configurations_were_found_in___0_, config.FilePath));
+                    ProgramLog.LogInfo(string.Format(Resources.Program_Main_Saved_configurations_were_found_in___0_, config.FilePath));
                 }
                 catch (Exception)
                 {
@@ -117,43 +120,6 @@ namespace SkylineBatch
             MessageBox.Show(string.Format(Resources.Program_InitSkylineSettings__0__requires_Skyline_to_run_, AppName()) + Environment.NewLine +
                 string.Format(Resources.Program_InitSkylineSettings_Please_install_Skyline_to_start__0__, AppName()), AppName(), MessageBoxButtons.OK, MessageBoxIcon.Error);
             return false;
-        }
-
-        public static void LogError(string message)
-        {
-            Log.Error(message);
-        }
-
-        public static void LogError(string configName, string message)
-        {
-            Log.Error(string.Format("{0}: {1}", configName, message));
-        }
-
-        public static void LogError(string message, Exception e)
-        {
-            Log.Error(message, e);
-        }
-
-        public static void LogError(string configName, string message, Exception e)
-        {
-            LogError(string.Format("{0}: {1}", configName, message), e);
-        }
-
-        public static void LogInfo(string message)
-        {
-            Log.Info(message);
-        }
-
-        public static string GetProgramLogFilePath()
-        {
-            var repository = ((Hierarchy) LogManager.GetRepository());
-            FileAppender rootAppender = null;
-            if (repository != null)
-            {
-                rootAppender = repository.Root.Appenders.OfType<FileAppender>()
-                    .FirstOrDefault();
-            }
-            return rootAppender != null ? rootAppender.File : string.Empty;
         }
 
         public static string Version()
