@@ -3217,16 +3217,8 @@ namespace pwiz.Skyline.Model
             {
                 var predictedRT = prediction.PredictRetentionTime(Document, nodePep, nodeTranGroup,
                     SchedulingReplicateIndex, SchedulingAlgorithm, false, out var windowRT);
-                if (predictedRT.HasValue)
-                {
-                    target.time_in_seconds_begin = (predictedRT.Value - windowRT / 2) * 60;
-                    target.time_in_seconds_end = (predictedRT.Value + windowRT / 2) * 60;
-                }
-                else
-                {
-                    target.time_in_seconds_begin = 0;
-                    target.time_in_seconds_end = 0;
-                }
+                target.time_in_seconds_begin = (predictedRT - windowRT / 2) * 60 ?? 0;
+                target.time_in_seconds_end = (predictedRT + windowRT / 2) * 60 ?? 0;
             }
             target.time_in_seconds = (target.time_in_seconds_begin + target.time_in_seconds_end) / 2;
 
