@@ -563,33 +563,33 @@ Undo Redo : 已从 11 文件导入结果
 Summary   : 已从 11 文件导入结果
 All Info  :
 已从 11 文件导入结果
-导入结果设置 > 文件名称 : 包含 "ruthhu_R201217_plasma_revision_A01.mzML"
-导入结果设置 > 文件名称 : 包含 "ruthhu_R201217_plasma_revision_A03.mzML"
-导入结果设置 > 文件名称 : 包含 "ruthhu_R201217_plasma_revision_A04.mzML"
-导入结果设置 > 文件名称 : 包含 "ruthhu_R201217_plasma_revision_A05.mzML"
-导入结果设置 > 文件名称 : 包含 "ruthhu_R201217_plasma_revision_A06.mzML"
-导入结果设置 > 文件名称 : 包含 "ruthhu_R201217_plasma_revision_A07.mzML"
-导入结果设置 > 文件名称 : 包含 "ruthhu_R201217_plasma_revision_A08.mzML"
-导入结果设置 > 文件名称 : 包含 "ruthhu_R201217_plasma_revision_A09.mzML"
-导入结果设置 > 文件名称 : 包含 "ruthhu_R201217_plasma_revision_A10.mzML"
-导入结果设置 > 文件名称 : 包含 "ruthhu_R201217_plasma_revision_A11.mzML"
-导入结果设置 > 文件名称 : 包含 "ruthhu_R201217_plasma_revision_A12.mzML"
+导入结果设置 > 文件名称 : 包含 "ruthhu_R201217_plasma_revision_A01.wiff"
+导入结果设置 > 文件名称 : 包含 "ruthhu_R201217_plasma_revision_A03.wiff"
+导入结果设置 > 文件名称 : 包含 "ruthhu_R201217_plasma_revision_A04.wiff"
+导入结果设置 > 文件名称 : 包含 "ruthhu_R201217_plasma_revision_A05.wiff"
+导入结果设置 > 文件名称 : 包含 "ruthhu_R201217_plasma_revision_A06.wiff"
+导入结果设置 > 文件名称 : 包含 "ruthhu_R201217_plasma_revision_A07.wiff"
+导入结果设置 > 文件名称 : 包含 "ruthhu_R201217_plasma_revision_A08.wiff"
+导入结果设置 > 文件名称 : 包含 "ruthhu_R201217_plasma_revision_A09.wiff"
+导入结果设置 > 文件名称 : 包含 "ruthhu_R201217_plasma_revision_A10.wiff"
+导入结果设置 > 文件名称 : 包含 "ruthhu_R201217_plasma_revision_A11.wiff"
+导入结果设置 > 文件名称 : 包含 "ruthhu_R201217_plasma_revision_A12.wiff"
 导入结果设置 > 在文件中添加单次注射重复测定 是 真
 导入结果设置 > 要同步导入的文件 是 "许多个"
 导入结果设置 > 已删除前缀 是 "ruthhu_R201217_plasma_revision_A"
 Extra Info: 文件名称 = 
 [
-    "ruthhu_R201217_plasma_revision_A01.mzML",
-    "ruthhu_R201217_plasma_revision_A03.mzML",
-    "ruthhu_R201217_plasma_revision_A04.mzML",
-    "ruthhu_R201217_plasma_revision_A05.mzML",
-    "ruthhu_R201217_plasma_revision_A06.mzML",
-    "ruthhu_R201217_plasma_revision_A07.mzML",
-    "ruthhu_R201217_plasma_revision_A08.mzML",
-    "ruthhu_R201217_plasma_revision_A09.mzML",
-    "ruthhu_R201217_plasma_revision_A10.mzML",
-    "ruthhu_R201217_plasma_revision_A11.mzML",
-    "ruthhu_R201217_plasma_revision_A12.mzML"
+    "ruthhu_R201217_plasma_revision_A01.wiff",
+    "ruthhu_R201217_plasma_revision_A03.wiff",
+    "ruthhu_R201217_plasma_revision_A04.wiff",
+    "ruthhu_R201217_plasma_revision_A05.wiff",
+    "ruthhu_R201217_plasma_revision_A06.wiff",
+    "ruthhu_R201217_plasma_revision_A07.wiff",
+    "ruthhu_R201217_plasma_revision_A08.wiff",
+    "ruthhu_R201217_plasma_revision_A09.wiff",
+    "ruthhu_R201217_plasma_revision_A10.wiff",
+    "ruthhu_R201217_plasma_revision_A11.wiff",
+    "ruthhu_R201217_plasma_revision_A12.wiff"
 ],
 在文件中添加单次注射重复测定 = 真,
 要同步导入的文件 = "许多个",
@@ -599,27 +599,27 @@ Undo Redo : 已从 8 文件导入结果
 Summary   : 已从 8 文件导入结果
 All Info  :
 已从 8 文件导入结果
-导入结果设置 > 文件名称 : 包含 "ruthhu_R201203_plasma_revision_F05.mzML"
-导入结果设置 > 文件名称 : 包含 "ruthhu_R201203_plasma_revision_F06.mzML"
-导入结果设置 > 文件名称 : 包含 "ruthhu_R201203_plasma_revision_F07.mzML"
-导入结果设置 > 文件名称 : 包含 "ruthhu_R201203_plasma_revision_F08.mzML"
-导入结果设置 > 文件名称 : 包含 "ruthhu_R201203_plasma_revision_F09.mzML"
-导入结果设置 > 文件名称 : 包含 "ruthhu_R201203_plasma_revision_F10.mzML"
-导入结果设置 > 文件名称 : 包含 "ruthhu_R201203_plasma_revision_F11.mzML"
-导入结果设置 > 文件名称 : 包含 "ruthhu_R201203_plasma_revision_F12.mzML"
+导入结果设置 > 文件名称 : 包含 "ruthhu_R201203_plasma_revision_F05.wiff"
+导入结果设置 > 文件名称 : 包含 "ruthhu_R201203_plasma_revision_F06.wiff"
+导入结果设置 > 文件名称 : 包含 "ruthhu_R201203_plasma_revision_F07.wiff"
+导入结果设置 > 文件名称 : 包含 "ruthhu_R201203_plasma_revision_F08.wiff"
+导入结果设置 > 文件名称 : 包含 "ruthhu_R201203_plasma_revision_F09.wiff"
+导入结果设置 > 文件名称 : 包含 "ruthhu_R201203_plasma_revision_F10.wiff"
+导入结果设置 > 文件名称 : 包含 "ruthhu_R201203_plasma_revision_F11.wiff"
+导入结果设置 > 文件名称 : 包含 "ruthhu_R201203_plasma_revision_F12.wiff"
 导入结果设置 > 在文件中添加单次注射重复测定 是 真
 导入结果设置 > 要同步导入的文件 是 "许多个"
 导入结果设置 > 已删除前缀 是 "ruthhu_R201203_plasma_revision_F"
 Extra Info: 文件名称 = 
 [
-    "ruthhu_R201203_plasma_revision_F05.mzML",
-    "ruthhu_R201203_plasma_revision_F06.mzML",
-    "ruthhu_R201203_plasma_revision_F07.mzML",
-    "ruthhu_R201203_plasma_revision_F08.mzML",
-    "ruthhu_R201203_plasma_revision_F09.mzML",
-    "ruthhu_R201203_plasma_revision_F10.mzML",
-    "ruthhu_R201203_plasma_revision_F11.mzML",
-    "ruthhu_R201203_plasma_revision_F12.mzML"
+    "ruthhu_R201203_plasma_revision_F05.wiff",
+    "ruthhu_R201203_plasma_revision_F06.wiff",
+    "ruthhu_R201203_plasma_revision_F07.wiff",
+    "ruthhu_R201203_plasma_revision_F08.wiff",
+    "ruthhu_R201203_plasma_revision_F09.wiff",
+    "ruthhu_R201203_plasma_revision_F10.wiff",
+    "ruthhu_R201203_plasma_revision_F11.wiff",
+    "ruthhu_R201203_plasma_revision_F12.wiff"
 ],
 在文件中添加单次注射重复测定 = 真,
 要同步导入的文件 = "许多个",

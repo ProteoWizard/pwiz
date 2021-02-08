@@ -105,12 +105,12 @@ namespace pwiz.SkylineTestFunctional
             AssertEx.Serializable(SkylineWindow.Document);
         }
 
-        private void SetCellAddress(DataGridView grid, int irow, int icol)
+        public static void SetCellAddress(DataGridView grid, int irow, int icol)
         {
             RunUI(()=>grid.CurrentCell = grid.Rows[irow].Cells[icol]);
         }
 
-        private void SetCellValue(DataGridView grid, int irow, int icol, object value)
+        public static void SetCellValue(DataGridView grid, int irow, int icol, object value)
         {
             SetCellAddress(grid, irow, icol);
             RunUI(()=>
@@ -119,7 +119,7 @@ namespace pwiz.SkylineTestFunctional
             });
         }
 
-        private void SetCurrentCellValue(DataGridView grid, object value)
+        public static void SetCurrentCellValue(DataGridView grid, object value)
         {
             IDataGridViewEditingControl editingControl = null;
             DataGridViewEditingControlShowingEventHandler onEditingControlShowing =

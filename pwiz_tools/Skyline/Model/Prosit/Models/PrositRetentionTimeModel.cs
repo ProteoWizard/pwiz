@@ -102,7 +102,7 @@ namespace pwiz.Skyline.Model.Prosit.Models
         public override PrositRTInput.PrositPeptideInput CreatePrositInputRow(SrmSettings settings, PeptideDocNodeWrapper skylineInput,
             out PrositException exception)
         {
-            var sequence = PrositHelpers.EncodeSequence(settings, (PeptideDocNode) skylineInput, IsotopeLabelType.light, out exception);
+            var sequence = PrositHelpers.EncodeSequence(settings, skylineInput, IsotopeLabelType.light, out exception);
             if (sequence == null)
                 return null;
 

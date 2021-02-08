@@ -698,6 +698,12 @@ namespace pwiz.Skyline.Model.Results
                 raw = new RawData(CacheFormat.EMPTY);
                 return 0;
             }
+
+            if (cacheHeader.IsCorrupted(stream.Length))
+            {
+                throw new InvalidDataException(Resources.ChromatogramCache_LoadStructs_FileCorrupted);
+            }
+
             var formatVersion = cacheHeader.formatVersion;
             CacheFormat cacheFormat = CacheFormat.FromCacheHeader(cacheHeader);
             raw = new RawData(cacheFormat);

@@ -132,7 +132,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public void Cancel()
         {
-            cancelToken.Cancel();
+            cancelToken?.Cancel();
             btnCancel.Enabled = false;
         }
 

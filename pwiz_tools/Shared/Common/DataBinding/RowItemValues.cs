@@ -52,6 +52,14 @@ namespace pwiz.Common.DataBinding
                 ImmutableList.Empty<PivotKey>(), ImmutableList.Empty<DataPropertyDescriptor>());
         }
 
+        public bool IsEmpty
+        {
+            get
+            {
+                return ColumnDescriptors.Count == 0 && DataPropertyDescriptors.Count == 0;
+            }
+        }
+
         public static RowItemValues FromDataGridView(Type propertyType, BoundDataGridView dataGridView)
         {
             if (dataGridView == null)
@@ -169,6 +177,41 @@ namespace pwiz.Common.DataBinding
 
             return dataGridView.SelectedRows.Cast<DataGridViewRow>()
                 .Select(row => (RowItem) bindingSource[row.Index]);
+        }
+
+        /// <summary>
+        /// Returns a RowItemValues representing the values for a particular pivoted column along with that column's ancestors,
+        /// plus the non-pivoted other columns.
+        /// </summary>
+        public static RowItemValues ForColumn(Type propertyType, IEnumerable<DataPropertyDescriptor> headers, IEnumerable<DataPropertyDescriptor> otherPropertyDescriptors)
+        {
+            var headerColumns = headers.OfType<ColumnPropertyDescriptor>().ToList();
+            if (!headerColumns.Any())
+            {
+                return Empty(propertyType);
+            }
+
+            var pivotKeys = ImmutableList.Singleton(headerColumns.First().PivotKey);
+            var pivotPropertyPath = pivotKeys[0]?.Last.Key ?? PropertyPath.Root;
+            var columnDescriptors = new List<ColumnDescriptor>();
+
+            foreach (var columnDescriptor in ColumnDescriptorsWithType(propertyType, headerColumns))
+            {
+                if (!columnDescriptor.PropertyPath.StartsWith(pivotPropertyPath))
+                {
+                    break;
+                }
+                columnDescriptors.Add(columnDescriptor);
+            }
+
+            var dataPropertyDescriptors = otherPropertyDescriptors.OfType<ColumnPropertyDescriptor>()
+                .Where(p => null == p.PivotKey && propertyType.IsAssignableFrom(p.PropertyType))
+                .Cast<DataPropertyDescriptor>().ToList();
+            if (columnDescriptors.Count == 0 && dataPropertyDescriptors.Count == 0)
+            {
+                return Empty(propertyType);
+            }
+            return new RowItemValues(propertyType, columnDescriptors, pivotKeys, dataPropertyDescriptors);
         }
     }
 }

@@ -30,7 +30,6 @@ using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model
@@ -165,7 +164,7 @@ namespace pwiz.Skyline.Model
                 libSpec.FilePath);
             var predictor = new RetentionTimeRegression(
                 Helpers.GetUniqueName(libSpec.Name, Settings.Default.RetentionTimeList.Select(rt => rt.Name).ToArray()),
-                calc, null, null, EditRTDlg.DEFAULT_RT_WINDOW, new List<MeasuredRetentionTime>());
+                calc, null, null, DEFAULT_RT_WINDOW, new List<MeasuredRetentionTime>());
             Settings.Default.RTScoreCalculatorList.Add(calc);
             Settings.Default.RetentionTimeList.Add(predictor);
             return doc.ChangeSettings(
@@ -546,6 +545,8 @@ namespace pwiz.Skyline.Model
             public bool HasExactMatch { get { return ExactMatch != null; } }
             public bool HasAlternateMatch { get { return AlternateMatch != null; } }
         }
+
+        public const double DEFAULT_RT_WINDOW = 10.0;
     }
 
     public class ImportPeptideSearchManager : BackgroundLoader, IFeatureScoreProvider

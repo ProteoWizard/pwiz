@@ -59,7 +59,7 @@ namespace pwiz.SkylineTestFunctional
             });
             var calibrationForm = ShowDialog<CalibrationForm>(()=>SkylineWindow.ShowCalibrationForm());
             Assert.IsNotNull(calibrationForm);
-            var results = new List<Tuple<FiguresOfMeritOptions, ModifiedSequence, FiguresOfMerit>>();
+            var results = new List<Tuple<FiguresOfMeritOptions, ProteomicSequence, FiguresOfMerit>>();
             int count = 0;
             foreach (var options in EnumerateFiguresOfMeritOptions().OrderBy(x=>random.Next()).Take(10))
             {

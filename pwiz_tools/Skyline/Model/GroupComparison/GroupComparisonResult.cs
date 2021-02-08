@@ -16,21 +16,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System.Collections.Generic;
+using pwiz.Common.Collections;
 using pwiz.Common.DataAnalysis;
 
 namespace pwiz.Skyline.Model.GroupComparison
 {
     public class GroupComparisonResult
     {
-        public GroupComparisonResult(GroupComparisonSelector selector, int replicateCount, LinearFitResult linearFitResult)
+        public GroupComparisonResult(GroupComparisonSelector selector, int replicateCount, LinearFitResult linearFitResult, IEnumerable<GroupComparer.RunAbundance> runAbundances)
         {
             Selector = selector;
             LinearFitResult = linearFitResult;
             ReplicateCount = replicateCount;
+            RunAbundances = ImmutableList.ValueOf(runAbundances);
         }
 
         public GroupComparisonSelector Selector { get; private set; }
         public int ReplicateCount { get; private set; }
         public LinearFitResult LinearFitResult { get; private set; }
+        public ImmutableList<GroupComparer.RunAbundance> RunAbundances { get; private set; }
     }
 }

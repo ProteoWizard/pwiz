@@ -161,6 +161,8 @@
     <Compile Include="AddAllPeptidesWithModificationsTest.cs" />
     <Compile Include="AssociateProteinVariantTest.cs" />
     <Compile Include="BlibMoleculeListsTest.cs" />
+    <Compile Include="ClusteredHeatMapTest.cs" />
+    <Compile Include="ComplexCrosslinkTest.cs" />
     <Compile Include="CrosslinkChromatogramTest.cs" />
     <Compile Include="CrosslinkingTest.cs" />
     <Compile Include="CrosslinkNeutralLossTest.cs" />
@@ -171,6 +173,8 @@
     <Compile Include="GroupComparisonRefineTest.cs" />
     <Compile Include="InvalidPeptideRankIdTest.cs" />
     <Compile Include="InvalidPeptidesInLibraryTest.cs" />
+    <Compile Include="LegacyCrosslinkTest.cs" />
+    <Compile Include="ListClusteringTest.cs" />
     <Compile Include="LongWaitDlgResizeTest.cs" />
     <Compile Include="MetadataRuleTest.cs" />
     <Compile Include="ModificationPermuterTest.cs" />
@@ -292,6 +296,7 @@
     <Compile Include="NonLinearRegressionTest.cs" />
     <Compile Include="OrderByReplicateAnnotationTest.cs" />
     <Compile Include="PasteMoleculesTest.cs" />
+    <Compile Include="PasteTransitionListTest.cs" />
     <Compile Include="PeakScoringModelTest.cs" />
     <Compile Include="PivotEditorTest.cs" />
     <Compile Include="PolarityMismatchTest.cs" />
@@ -450,6 +455,7 @@
     <None Include="FullScanIdTest.zip" />
     <None Include="GroupComparisonPivotEditorTest.zip" />
     <None Include="GroupComparisonTest.zip" />
+    <None Include="ClusteredHeatMapTest.zip" />
     <None Include="HighPrecModsTest.zip" />
     <None Include="HighReplicateCountTest.zip" />
     <None Include="ImportAnnotationsTest.zip" />
@@ -467,6 +473,7 @@
     <None Include="IonMobilityTest.zip" />
     <None Include="IrtTest.zip" />
     <None Include="LabelPeakPickingTest.zip" />
+    <None Include="LegacyCrosslinkTest.zip" />
     <None Include="LibraryBuildShareTest.zip" />
     <None Include="LibraryBuildTest.zip" />
     <None Include="LibraryExplorerSpeedTest.zip" />
@@ -489,6 +496,7 @@
     <None Include="OptimizeTest.zip" />
     <None Include="OrderByReplicateAnnotationTest.zip" />
     <None Include="PasteMoleculeTest.zip" />
+    <None Include="PasteTransitionListTest.zip" />
     <None Include="PeakBoundaryCompareTest.zip" />
     <None Include="PeakScoringModelTest.zip" />
     <None Include="PivotEditorTest.zip" />

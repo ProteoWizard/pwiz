@@ -328,8 +328,10 @@ namespace pwiz.Skyline.Controls.Graphs
                     var id = parts.Length < 4
                         ? _msDataFileScanHelper.MsDataSpectra[0].Id
                         : string.Format(@"{0}.{1}-{0}.{2}", parts[1], parts[2], parts[3]);
+                    var ionMobility = _msDataFileScanHelper.MsDataSpectra[0].IonMobility;
                     GraphPane.Title.Text = TextUtil.SpaceSeparate(GraphPane.Title.Text,
-                        Resources.GraphFullScan_CreateGraph_Scan_Number_, id);
+                        Resources.GraphFullScan_CreateGraph_Scan_Number_, id,
+                        ionMobility.HasValue ? string.Format(Resources.GraphFullScan_CreateGraph_IM__0_, ionMobility) : string.Empty);
                 }
             }
 
@@ -604,8 +606,10 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public void OnDocumentUIChanged(object sender, DocumentChangedEventArgs e)
         {
-            // If document changed, close file.
-            if (e.DocumentPrevious == null || !ReferenceEquals(DocumentUI.Id, e.DocumentPrevious.Id))
+            // If document changed, reload scan.
+            // Also reload if ion mobility is in use (as implied by visibility of related controls), as changes to
+            // the IM library don't cause a document ID change (similar to spectral libraries, its contents exist outside of Skyline)
+            if (e.DocumentPrevious == null || !ReferenceEquals(DocumentUI.Id, e.DocumentPrevious.Id) || spectrumBtn.Visible)
             {
                 _msDataFileScanHelper.ScanProvider.SetScanProvider(null);
 

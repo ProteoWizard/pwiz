@@ -24,6 +24,7 @@
 #include "MSData.hpp"
 #include "pwiz/data/msdata/SpectrumListBase.hpp"
 #include "pwiz/data/msdata/ChromatogramListBase.hpp"
+#include "../analysis/spectrum_processing.hpp"
 
 
 using System::Exception;
@@ -739,6 +740,15 @@ void SpectrumList::setDataProcessing(DataProcessing^ dp)
 {
     b::SpectrumListBase* sl = dynamic_cast<b::SpectrumListBase*>((*base_).get());
     if (sl) sl->setDataProcessingPtr(CLI_TO_NATIVE_SHARED_PTR(b::DataProcessingPtr, dp));
+}
+
+bool SpectrumList::benefitsFromWorkerThreads()
+{
+    auto slAsWrapper = boost::dynamic_pointer_cast<b::SpectrumListWrapper>(*base_);
+    if (slAsWrapper != nullptr)
+        return slAsWrapper->benefitsFromWorkerThreads();
+    else
+        return false;
 }
 
 

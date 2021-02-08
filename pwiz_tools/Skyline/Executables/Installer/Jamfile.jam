@@ -29,34 +29,25 @@ rule setup_templates ( targets + : sources * : properties * )
 {
     local .version = "$(SKYLINE_YEAR).$(SKYLINE_ORDINAL).$(SKYLINE_BRANCH).$(SKYLINE_DOY)" ;
     VERSION on $(targets) = $(.version) ;
-    
-    local .target_name ;
-    if --official in [ modules.peek : ARGV ]
-    {
-        .target_name = "Skyline" ;
-    }
-    else
-    {
-        .target_name = "Skyline-daily" ;
-    }
-    TARGET_NAME on $(targets) = $(.target_name) ;
+
+    TARGET_NAME on $(targets) = $(SKYLINE_TARGETNAME) ;
 
     local address-model = [ feature.get-values <address-model> : $(properties) ] ;
 
     if $(address-model) = 64
     {
-        ARTIFACT_NAME on $(targets) = $(.target_name)-$(.version)-x86_64 ;
+        ARTIFACT_NAME on $(targets) = $(SKYLINE_TARGETNAME)-$(.version)-x86_64 ;
         SKYLINE_BUILD_PATH on $(targets) = "$(SKYLINE_PATH)\\bin\\x64\\Release" ;
         ARCH on $(targets) = x64 ;
     }
     else
     {
-        ARTIFACT_NAME on $(targets) = $(.target_name)-$(.version)-x86 ;
+        ARTIFACT_NAME on $(targets) = $(SKYLINE_TARGETNAME)-$(.version)-x86 ;
         SKYLINE_BUILD_PATH on $(targets) = "$(SKYLINE_PATH)\\bin\\x86\\Release" ;
         ARCH on $(targets) = x86 ;
     }
 
-    INSTALL_PATH on $(targets) = "%LocalAppData%\\Programs\\$(.target_name)" ;
+    INSTALL_PATH on $(targets) = "%LocalAppData%\\Programs\\$(SKYLINE_TARGETNAME)" ;
 
     ADDRESS_MODEL on $(targets) = $(address-model:E=32) ;
     LOCATION on $(targets) = [ path.native [ feature.get-values <location> : $(properties) ]  ] ;

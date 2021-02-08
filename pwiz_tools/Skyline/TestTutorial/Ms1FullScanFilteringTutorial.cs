@@ -60,7 +60,7 @@ namespace pwiz.SkylineTestTutorial
             // Set true to look at tutorial screenshots.
 //            IsPauseForScreenShots = true;
 //            IsCoverShotMode = true;
-//            PauseStartPage = 30;
+//            PauseStartingPage = 30;
             CoverShotName = "MS1Filtering";
 
             LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/MS1Filtering-20_1.pdf";

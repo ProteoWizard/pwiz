@@ -34,6 +34,7 @@ ChooseIrtStandardPeptidesDlg,TestAssayLibraryImport
 ChooseSchedulingReplicatesDlg,TestRetentionTimeFilter
 ChromatogramRTThresholdDlg,TestEditDialogs
 ChromChartPropertyDlg,TestPeakPickingTutorial
+ClusteringEditor,TestListClustering
 ColumnChooser,TestStandardTypeWithOldReports
 ComparePeakPickingDlg,TestPeakBoundaryCompare
 ConfigureToolsDlg,TestQuasarTutorial
@@ -60,7 +61,7 @@ EditIsolationSchemeDlg,TestCalculateIsolationWindows
 EditIsotopeEnrichmentDlg,TestEditDialogs
 EditLabelTypeListDlg,TestExplicitMultiType
 EditLibraryDlg,TestRetentionTimeAlignment
-EditLinkedPeptideDlg,TestCrosslinking
+EditLinkedPeptidesDlg,TestCrosslinking
 EditListDlg`2,TestEditStaticMod
 EditMeasuredIonDlg,TestEditDialogs
 EditNoteDlg,TestEditNote
@@ -99,6 +100,7 @@ GraphSpectrum,TestMs1Tutorial
 GraphSummary.AreaGraphView,*
 GraphSummary.RTGraphView,*
 GraphSummary.DetectionsGraphView,TODO (RitaCh)
+HierarchicalClusterGraph,TestClusteredHeatMap
 ImmediateWindow,ImmediateWindowTestMethod
 ImportDocResultsDlg,TestImportDoc
 ImportIonMobilityFromSpectralLibraryDlg,TestIonMobility
@@ -144,6 +146,7 @@ PasteDlg.TransitionListTab,TestExistingExperimentsTutorial
 PasteFilteredPeptidesDlg,TestLibraryBuild
 PasteTypeDlg,TestExplicitMultiType
 PathChooserDlg,TestStartPageShowPathChooser
+PcaPlot,TestClusteredHeatMap
 PeptideSettingsUI.DigestionTab,TestMethodEditTutorial
 PeptideSettingsUI.FilterTab,TestEditDialogs
 PeptideSettingsUI.LibraryTab,TestMethodEditTutorial
@@ -216,3 +219,4 @@ ViewLibraryDlg,TestFullScanId
 VolcanoPlotPropertiesDlg,TestGroupComparisonVolcanoPlot
 VolcanoPlotFormattingDlg,TestVolcanoPlotFormatting
 DetectionToolbarProperties, TestDetectionsPlot
+ImportTransitionListColumnSelectDlg,ExistingExperimentsTutorialTest

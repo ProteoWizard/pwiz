@@ -1580,4 +1580,28 @@
   <data name="QuantificationSettings_SimpleRatios">
     <value>Simple ratios</value>
   </data>
+  <data name="ViewLayout_ClusterSpec">
+    <value>Clustering specification</value>
+  </data>
+  <data name="ClusteringSpec_Values">
+    <value>Values</value>
+  </data>
+  <data name="ClusteringSpec_DistanceMetric">
+    <value>Distance Metric</value>
+  </data>
+  <data name="ValueSpec_ColumnRef">
+    <value>Column reference</value>
+  </data>
+  <data name="ExplicitMods_CrosslinkStructure">
+    <value>Crosslink structure</value>
+  </data>
+  <data name="CrosslinkStructure_LinkedPeptides">
+    <value>Linked peptides</value>
+  </data>
+  <data name="CrosslinkStructure_LinkedExplicitMods">
+    <value>Linked explicit modifications</value>
+  </data>
+  <data name="CrosslinkStructure_Crosslinks">
+    <value>Crosslinks</value>
+  </data>
 </root>

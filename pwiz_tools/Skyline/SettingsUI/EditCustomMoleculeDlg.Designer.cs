@@ -62,7 +62,6 @@
             this.comboIsotopeLabelType = new System.Windows.Forms.ComboBox();
             this.labelPrecursorCollisionEnergy = new System.Windows.Forms.Label();
             this.textBoxPrecursorCollisionEnergy = new System.Windows.Forms.TextBox();
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.groupBoxOptionalValues.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -77,6 +76,7 @@
             resources.ApplyResources(this.textIonMobility, "textIonMobility");
             this.textIonMobility.Name = "textIonMobility";
             this.toolTip1.SetToolTip(this.textIonMobility, resources.GetString("textIonMobility.ToolTip"));
+            this.textIonMobility.TextChanged += new System.EventHandler(this.textIonMobility_TextChanged);
             // 
             // textIonMobilityHighEnergyOffset
             // 
@@ -293,7 +293,6 @@
             this.MinimizeBox = false;
             this.Name = "EditCustomMoleculeDlg";
             this.ShowInTaskbar = false;
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             this.groupBoxOptionalValues.ResumeLayout(false);
             this.groupBoxOptionalValues.PerformLayout();
             this.ResumeLayout(false);

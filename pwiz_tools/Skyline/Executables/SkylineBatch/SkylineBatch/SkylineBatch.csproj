@@ -13,7 +13,7 @@
     <FileAlignment>512</FileAlignment>
     <IsWebBootstrapper>true</IsWebBootstrapper>
     <TargetFrameworkProfile />
-    <PublishUrl>Z:\labkey\static\software\SkylineBatch\</PublishUrl>
+    <PublishUrl>Z:\labkey\static\software\SkylineBatch-test\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Web</InstallFrom>
     <UpdateEnabled>true</UpdateEnabled>
@@ -23,13 +23,13 @@
     <UpdatePeriodically>false</UpdatePeriodically>
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>false</MapFileExtensions>
-    <InstallUrl>http://skyline.gs.washington.edu/software/SkylineBatch/</InstallUrl>
+    <InstallUrl>http://skyline.gs.washington.edu/software/SkylineBatch-test/</InstallUrl>
     <ProductName>Skyline Batch</ProductName>
     <PublisherName>University of Washington</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>353</ApplicationRevision>
-    <ApplicationVersion>20.2.0.353</ApplicationVersion>
+    <ApplicationRevision>398</ApplicationRevision>
+    <ApplicationVersion>20.2.0.398</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -85,18 +85,34 @@
     </AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
+    <None Include="Resources\OpenFolder.bmp" />
+    <None Include="Resources\SkylineData.ico" />
+    <None Include="Resources\SkylineDoc.ico" />
     <Content Include="SkylineBatch_release.ico" />
-    <Content Include="SkylineDailyRunner.exe" />
-    <Content Include="SkylineRunner.exe" />
+    <Content Include="SkylineDailyRunner.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="SkylineRunner.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <EmbeddedResource Include="AlertDlg.resx">
       <DependentUpon>AlertDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="FindSkyline.resx">
-      <DependentUpon>FindSkyline.cs</DependentUpon>
+    <EmbeddedResource Include="FilePathControl.resx">
+      <DependentUpon>FilePathControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FindSkylineForm.resx">
+      <DependentUpon>FindSkylineForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="InvalidConfigSetupForm.resx">
+      <DependentUpon>InvalidConfigSetupForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="LogForm.resx">
       <DependentUpon>LogForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SkylineTypeControl.resx">
+      <DependentUpon>SkylineTypeControl.cs</DependentUpon>
     </EmbeddedResource>
     <None Include="Resources\Comment.bmp" />
     <Content Include="Resources\add.bmp" />
@@ -124,11 +140,30 @@
       <DependentUpon>AlertDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="ConfigManager.cs" />
-    <Compile Include="FindSkyline.cs">
+    <Compile Include="FilePathControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FilePathControl.Designer.cs">
+      <DependentUpon>FilePathControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FileSettings.cs" />
+    <Compile Include="FindSkylineForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="FindSkyline.Designer.cs">
-      <DependentUpon>FindSkyline.cs</DependentUpon>
+    <Compile Include="FindSkylineForm.Designer.cs">
+      <DependentUpon>FindSkylineForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="InvalidConfigSetupForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="InvalidConfigSetupForm.Designer.cs">
+      <DependentUpon>InvalidConfigSetupForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="RVersionControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="RVersionControl.Designer.cs">
+      <DependentUpon>RVersionControl.cs</DependentUpon>
     </Compile>
     <Compile Include="SkylineSettings.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
@@ -180,6 +215,12 @@
     <Compile Include="LogForm.Designer.cs">
       <DependentUpon>LogForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="SkylineTypeControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="SkylineTypeControl.Designer.cs">
+      <DependentUpon>SkylineTypeControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="TextUtil.cs" />
     <Compile Include="XMLUtil.cs" />
   </ItemGroup>
@@ -212,6 +253,9 @@
     <EmbeddedResource Include="MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="RVersionControl.resx">
+      <DependentUpon>RVersionControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ShareConfigsForm.resx">
       <DependentUpon>ShareConfigsForm.cs</DependentUpon>

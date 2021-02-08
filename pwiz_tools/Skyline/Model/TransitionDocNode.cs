@@ -53,14 +53,14 @@ namespace pwiz.Skyline.Model
                                  TransitionQuantInfo transitionQuantInfo,
                                  ExplicitTransitionValues explicitTransitionValues,
                                  Results<TransitionChromInfo> results)
-            : this(new ComplexFragmentIon(id, losses, null), annotations, losses == null ? mass : mass - losses.Mass, transitionQuantInfo, explicitTransitionValues, results)
+            : this(ComplexFragmentIon.Simple(id, losses), annotations, losses == null ? mass : mass - losses.Mass, transitionQuantInfo, explicitTransitionValues, results)
         {
         }
 
         public TransitionDocNode(ComplexFragmentIon complexFragmentIon, Annotations annotations, TypedMass mass,
             TransitionQuantInfo transitionQuantInfo,
             ExplicitTransitionValues explicitTransitionValues,
-            Results<TransitionChromInfo> results) : base(complexFragmentIon.Transition, annotations)
+            Results<TransitionChromInfo> results) : base(complexFragmentIon.PrimaryTransition, annotations)
         {
             ComplexFragmentIon = complexFragmentIon;
             Mz = Transition.IsCustom() ?
@@ -83,12 +83,6 @@ namespace pwiz.Skyline.Model
         public CustomIon CustomIon { get { return Transition.CustomIon; } }
 
         public ComplexFragmentIon ComplexFragmentIon { get; private set; }
-
-        public TransitionDocNode ChangeComplexFragmentIon(ComplexFragmentIon complexFragmentIon)
-        {
-            Assume.IsTrue(ReferenceEquals(Transition, complexFragmentIon.Transition));
-            return ChangeProp(ImClone(this), im => im.ComplexFragmentIon = complexFragmentIon);
-        }
 
         [TrackChildren]
         public ExplicitTransitionValues ExplicitValues { get; private set; }
@@ -114,7 +108,7 @@ namespace pwiz.Skyline.Model
 
         public TransitionLosses Losses
         {
-            get { return ComplexFragmentIon.TransitionLosses; }
+            get { return ComplexFragmentIon.Losses; }
         }
 
         public bool HasLoss { get { return Losses != null; } }
@@ -190,7 +184,7 @@ namespace pwiz.Skyline.Model
 
         public string GetFragmentIonName(CultureInfo cultureInfo, double? tolerance = null)
         {
-            if (ComplexFragmentIon.CrosslinkStructure.Count != 0)
+            if (ComplexFragmentIon.IsCrosslinked)
             {
                 return ComplexFragmentIon.GetFragmentIonName();
             }
@@ -546,8 +540,21 @@ namespace pwiz.Skyline.Model
                 transitionProto.ExplicitIonMobilityHighEnergyOffset = DataValues.ToOptional(ExplicitValues.IonMobilityHighEnergyOffset);
                 transitionProto.ExplicitSLens = DataValues.ToOptional(ExplicitValues.SLens);
             }
-            transitionProto.LinkedIons.AddRange(ComplexFragmentIon.GetName().GetLinkedIonProtos());
 
+            foreach (IonOrdinal part in ComplexFragmentIon.NeutralFragmentIon.IonChain.Skip(1))
+            {
+                var linkedIon = new SkylineDocumentProto.Types.LinkedIon();
+                if (part.IsEmpty)
+                {
+                    linkedIon.Orphan = true;
+                }
+                else
+                {
+                    linkedIon.IonType = DataValues.ToIonType(part.Type.Value);
+                    linkedIon.Ordinal = part.Ordinal;
+                }
+                transitionProto.LinkedIons.Add(linkedIon);
+            }
             return transitionProto;
         }
 
@@ -662,17 +669,31 @@ namespace pwiz.Skyline.Model
                 new TransitionQuantInfo(isotopeDistInfo, libInfo, !transitionProto.NotQuantitative);
             if (mods != null && mods.HasCrosslinks)
             {
-                ComplexFragmentIon complexFragmentIon = new ComplexFragmentIon(transition, losses, mods.Crosslinks, transitionProto.OrphanedCrosslinkIon);
-                crosslinkBuilder = crosslinkBuilder ?? complexFragmentIon.GetCrosslinkBuilder(settings, mods);
-                foreach (var linkedIon in transitionProto.LinkedIons)
+                var parts = new List<IonOrdinal>();
+                parts.Add(transitionProto.OrphanedCrosslinkIon
+                    ? IonOrdinal.Empty
+                    : IonOrdinal.FromTransition(transition));
+                if (null != mods.LegacyCrosslinkMap)
                 {
-                    var modificationSite = new ModificationSite(linkedIon.ModificationIndex, linkedIon.ModificationName);
-                    var linkedPeptide = mods.GetLinkedPeptide(modificationSite);
-                    var childName = ComplexFragmentIonName.FromLinkedIonProto(linkedIon);
-                    complexFragmentIon = complexFragmentIon.AddChild(modificationSite,
-                        linkedPeptide.MakeComplexFragmentIon(settings, group.LabelType, childName));
+                    parts.AddRange(LegacyComplexFragmentIonName.ToIonChain(mods.LegacyCrosslinkMap, transitionProto.LinkedIons.Select(LegacyComplexFragmentIonName.FromLinkedIonProto)));
                 }
-                transitionDocNode = crosslinkBuilder.MakeTransitionDocNode(complexFragmentIon, isotopeDist, annotations, transitionQuantInfo, explicitTransitionValues, results);
+                else
+                {
+                    foreach (var linkedIon in transitionProto.LinkedIons)
+                    {
+                        if (linkedIon.Orphan)
+                        {
+                            parts.Add(IonOrdinal.Empty);
+                        }
+                        else
+                        {
+                            parts.Add(new IonOrdinal(DataValues.FromIonType(linkedIon.IonType), linkedIon.Ordinal));
+                        }
+                    }
+                }
+                var complexFragmentIon = new NeutralFragmentIon(parts, losses);
+                var chargedIon = new ComplexFragmentIon(transition, complexFragmentIon, mods);
+                transitionDocNode = crosslinkBuilder.MakeTransitionDocNode(chargedIon, isotopeDist, annotations, transitionQuantInfo, explicitTransitionValues, results);
             }
             else
             {
@@ -682,7 +703,6 @@ namespace pwiz.Skyline.Model
 
             return transitionDocNode;
         }
-
 
         public IEnumerable<SkylineDocumentProto.Types.TransitionPeak> GetTransitionPeakProtos(MeasuredResults measuredResults)
         {
@@ -962,8 +982,8 @@ namespace pwiz.Skyline.Model
             private bool _notQuantitative;
             public static TransitionQuantInfo GetTransitionQuantInfo(ComplexFragmentIon complexFragmentIon, IsotopeDistInfo isotopeDist, TypedMass massH, IDictionary<double, LibraryRankedSpectrumInfo.RankedMI> ranks)
             {
-                var transitionIsotopeDistInfo = complexFragmentIon.IsMs1 ? GetIsotopeDistInfo(complexFragmentIon.Transition, complexFragmentIon.TransitionLosses, isotopeDist) : null;
-                return GetLibTransitionQuantInfo(complexFragmentIon.Transition, complexFragmentIon.TransitionLosses, massH, ranks).ChangeIsotopeDistInfo(transitionIsotopeDistInfo);
+                var transitionIsotopeDistInfo = complexFragmentIon.IsMs1 ? GetIsotopeDistInfo(complexFragmentIon.PrimaryTransition, complexFragmentIon.Losses, isotopeDist) : null;
+                return GetLibTransitionQuantInfo(complexFragmentIon.PrimaryTransition, complexFragmentIon.Losses, massH, ranks).ChangeIsotopeDistInfo(transitionIsotopeDistInfo);
             }
 
             public static TransitionQuantInfo GetLibTransitionQuantInfo(Transition transition, TransitionLosses losses, TypedMass massH,

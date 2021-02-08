@@ -255,9 +255,10 @@ namespace pwiz.Skyline.EditUI
         private void SetCurrentCellForPasteError(DataGridView gridView, PasteError pasteError, int? columnIndex = null)
         {
             ShowError(pasteError);
-            if (gridView.Rows[pasteError.Line].Cells[columnIndex ?? pasteError.Column].Visible)
+            var errColumn = columnIndex ?? pasteError.Column;
+            if (errColumn >= 0 && gridView.Rows[pasteError.Line].Cells[errColumn].Visible)
             {
-                gridView.CurrentCell = gridView.Rows[pasteError.Line].Cells[columnIndex ?? pasteError.Column];
+                gridView.CurrentCell = gridView.Rows[pasteError.Line].Cells[errColumn];
             }
             else
             {
@@ -724,19 +725,16 @@ namespace pwiz.Skyline.EditUI
                 IEnumerable<PeptideGroupDocNode> peptideGroupDocNodes;
                 try
                 {
-                    List<TransitionImportErrorInfo> errorList;
-                    List<MeasuredRetentionTime> irtPeptides;
-                    List<SpectrumMzInfo> librarySpectra;
+                    List<TransitionImportErrorInfo> errorList = new List<TransitionImportErrorInfo>();
+                    List<MeasuredRetentionTime> irtPeptides = new List<MeasuredRetentionTime>();
+                    List<SpectrumMzInfo> librarySpectra = new List<SpectrumMzInfo>();
                     var inputs = new MassListInputs(sbTransitionList.ToString(), LocalizationHelper.CurrentCulture, TRANSITION_LIST_SEPARATOR);
                     var importer = new MassListImporter(document, inputs);
-                    // TODO: support long-wait broker
-                    peptideGroupDocNodes = importer.Import(null,
-                        inputs.InputFilename,
-                        TRANSITION_LIST_COL_INDICES,
-                        dictNameSeq,
-                        out irtPeptides,
-                        out librarySpectra,
-                        out errorList);
+                    // TODO: support long-wait broker        
+                    if (importer.PreImport(null, TRANSITION_LIST_COL_INDICES))
+                        peptideGroupDocNodes = importer.DoImport(null, dictNameSeq, irtPeptides, librarySpectra, errorList);
+                    else
+                        peptideGroupDocNodes = new PeptideGroupDocNode[0];
                     if (errorList.Any())
                     {
                         var firstError = errorList[0];
@@ -1943,14 +1941,6 @@ namespace pwiz.Skyline.EditUI
         protein_list,
         peptide_list,
         transition_list,
-    }
-
-    public class PasteError
-    {
-        public String Message { get; set; }
-        public int Line { get; set; }
-        public int Column { get; set; }
-        public int Length { get; set; }
     }
 
     public class ImportFastaHelper

@@ -349,6 +349,24 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Distance Metric.
+        /// </summary>
+        public static string ClusteringSpec_DistanceMetric {
+            get {
+                return ResourceManager.GetString("ClusteringSpec_DistanceMetric", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Values.
+        /// </summary>
+        public static string ClusteringSpec_Values {
+            get {
+                return ResourceManager.GetString("ClusteringSpec_Values", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Regression parameters.
         /// </summary>
         public static string CollisionEnergyRegression_Conversions {
@@ -444,6 +462,33 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string CompensationVoltageParameters_StepSize {
             get {
                 return ResourceManager.GetString("CompensationVoltageParameters_StepSize", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Crosslinks.
+        /// </summary>
+        public static string CrosslinkStructure_Crosslinks {
+            get {
+                return ResourceManager.GetString("CrosslinkStructure_Crosslinks", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Linked explicit modifications.
+        /// </summary>
+        public static string CrosslinkStructure_LinkedExplicitMods {
+            get {
+                return ResourceManager.GetString("CrosslinkStructure_LinkedExplicitMods", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Linked peptides.
+        /// </summary>
+        public static string CrosslinkStructure_LinkedPeptides {
+            get {
+                return ResourceManager.GetString("CrosslinkStructure_LinkedPeptides", resourceCulture);
             }
         }
         
@@ -795,6 +840,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string ExplicitMod_Modification {
             get {
                 return ResourceManager.GetString("ExplicitMod_Modification", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Crosslink structure.
+        /// </summary>
+        public static string ExplicitMods_CrosslinkStructure {
+            get {
+                return ResourceManager.GetString("ExplicitMods_CrosslinkStructure", resourceCulture);
             }
         }
         
@@ -4363,11 +4417,29 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Column reference.
+        /// </summary>
+        public static string ValueSpec_ColumnRef {
+            get {
+                return ResourceManager.GetString("ValueSpec_ColumnRef", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Layouts.
         /// </summary>
         public static string View_Layouts {
             get {
                 return ResourceManager.GetString("View_Layouts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Clustering specification.
+        /// </summary>
+        public static string ViewLayout_ClusterSpec {
+            get {
+                return ResourceManager.GetString("ViewLayout_ClusterSpec", resourceCulture);
             }
         }
         

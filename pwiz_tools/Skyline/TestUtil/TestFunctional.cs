@@ -33,6 +33,7 @@ using Excel;
 using JetBrains.Annotations;
 // using Microsoft.Diagnostics.Runtime; only needed for stack dump logic, which is currently disabled
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Collections;
 using pwiz.Common.Controls;
 using pwiz.Common.Database;
 using pwiz.Common.DataBinding;
@@ -173,7 +174,7 @@ namespace pwiz.SkylineTestUtil
             var existingDialog = FindOpenForm<TDlg>();
             if (existingDialog != null)
             {
-                var messageDlg = existingDialog as MessageDlg;
+                var messageDlg = existingDialog as AlertDlg;
                 if (messageDlg == null)
                     AssertEx.IsNull(existingDialog, typeof(TDlg) + " is already open");
                 else
@@ -197,7 +198,21 @@ namespace pwiz.SkylineTestUtil
             return dlg;
         }
 
-        protected static void RunUI([InstantHandle] Action act)
+        /// <summary>
+        /// Brings up a dialog where the Type might be the same as a form which is already open.
+        /// </summary>
+        protected static TDlg ShowNestedDlg<TDlg>([InstantHandle] Action act) where TDlg : Form
+        {
+            var existingDialogs = FormUtil.OpenForms.OfType<TDlg>().ToHashSet(new IdentityEqualityComparer<TDlg>());
+            SkylineBeginInvoke(act);
+            TDlg result = null;
+            WaitForCondition(() => null != (result =
+                FormUtil.OpenForms.OfType<TDlg>().FirstOrDefault(form => !existingDialogs.Contains(form))));
+            return result;
+        }
+
+
+        public static void RunUI([InstantHandle] Action act)
         {
             SkylineInvoke(() =>
             {
@@ -492,6 +507,17 @@ namespace pwiz.SkylineTestUtil
                 }
             }
             return null;
+        }
+
+        public static IEnumerable<TDlg> FindOpenForms<TDlg>() where TDlg : Form
+        {
+            foreach (var form in OpenForms)
+            {
+                if (form is TDlg tForm && tForm.Created)
+                {
+                    yield return tForm;
+                }
+            }
         }
 
         public static Form FindOpenForm(Type formType) 
@@ -1008,6 +1034,17 @@ namespace pwiz.SkylineTestUtil
             if (!Program.SkylineOffscreen)
                 PauseAndContinueForm.Show(description);
         }
+        
+        // Pause a test's UI thread by posting a simple MessageBox.
+        // Doesn't allow for UI manipulation, but can be handy for 
+        // debugging multiline RunUI() statements.
+        public static void PauseTestUI(string description = null)
+        {
+            if (!Program.SkylineOffscreen)
+                MessageBox.Show(description ?? string.Empty, @"Test paused on UI thread",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+        }
 
         /// <summary>
         /// If true, calls to PauseForScreenShot used in the tutorial tests will pause
@@ -1065,7 +1102,7 @@ namespace pwiz.SkylineTestUtil
             return Path.Combine(folderPath, CoverShotName + suffix + cultureSuffix + ".png");
         }
 
-        public int PauseStartPage { get; set; }
+        public int PauseStartingPage { get; set; }
 
         public static bool IsPauseForAuditLog { get; set; }
 
@@ -1139,7 +1176,7 @@ namespace pwiz.SkylineTestUtil
                 Thread.Sleep(3 * 1000);
             else if (Program.PauseSeconds > 0)
                 Thread.Sleep(Program.PauseSeconds * 1000);
-            else if (IsPauseForScreenShots && PauseStartPage <= (pageNum ?? int.MaxValue))
+            else if (IsPauseForScreenShots && Math.Max(PauseStartingPage, Program.PauseStartingPage) <= (pageNum ?? int.MaxValue))
             {
                 if (screenshotForm == null)
                 {
@@ -1486,6 +1523,22 @@ namespace pwiz.SkylineTestUtil
             var actual = ReadTextWithNormalizedLineEndings(recordedFile);
             if (Equals(expected, actual))
                 return;
+
+            if (ForceMzml)
+            {
+                // If the only difference is in the mention of a raw file extension, ignore that
+                var extMzml = @".mzml";
+                var actualParts = actual.ToLowerInvariant().Split(new[] {extMzml}, StringSplitOptions.None);
+                if (actualParts.Length > 1)
+                {
+                    var index = expected.IndexOf(actualParts[1], StringComparison.InvariantCultureIgnoreCase);
+                    var extExpected = expected.Substring(actualParts[0].Length, index - actualParts[0].Length);
+                    if (expected.Replace(extExpected, extMzml).Equals(actual, StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        return;
+                    }
+                }
+            }
 
             // They are not equal. So, report an intelligible error and potentially copy
             // a new expected file to the project if in record mode.
@@ -1967,6 +2020,71 @@ namespace pwiz.SkylineTestUtil
         public static void WaitForBackgroundProteomeLoaderCompleted()
         {
             WaitForCondition(() => BackgroundProteomeManager.DocumentHasLoadedBackgroundProteomeOrNone(SkylineWindow.Document, true)); 
+        }
+
+        public static void ImportAssayLibrarySkipColumnSelect(string csvPath, List<string> errorList = null)
+        {
+            ImportAssayLibraryOrTransitionList(csvPath, true, errorList);
+        }
+
+        private static void ImportAssayLibraryOrTransitionList(string csvPath, bool isAssayLibrary, ICollection<string> errorList, bool proceedWithErrors = true)
+        {
+            var transitionSelectdgl = isAssayLibrary ?
+                ShowDialog<ImportTransitionListColumnSelectDlg>(() =>  SkylineWindow.ImportAssayLibrary(csvPath)) :
+                ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.ImportMassList(csvPath));
+            if (errorList != null)
+            {
+                // We're expecting errors, collect them then move on
+                RunUI(() => transitionSelectdgl.AcceptButton.PerformClick());
+                var errDlg = WaitForOpenForm<ImportTransitionListErrorDlg>();
+                errorList.Clear();
+                foreach (var err in errDlg.ErrorList)
+                {
+                    errorList.Add(err.ErrorMessage);
+                }
+                OkDialog(errDlg, () => errDlg.DialogResult = proceedWithErrors ? DialogResult.OK : DialogResult.Cancel); // Closes the error dialog, and the import dialog too if we're accepting errors
+                if (!proceedWithErrors)
+                {
+                    OkDialog(transitionSelectdgl, () => transitionSelectdgl.CancelButton.PerformClick()); // Canceling the error dialog drops us back into the import dialog
+                }
+            }
+            else
+            {
+                OkDialog(transitionSelectdgl, () => transitionSelectdgl.AcceptButton.PerformClick());
+            }
+        }
+
+        public static void ImportTransitionListSkipColumnSelect(string csvPath, ICollection<string> errorList = null, bool proceedWithErrors = true)
+        {
+            ImportAssayLibraryOrTransitionList(csvPath, false, errorList, proceedWithErrors);
+        }
+
+        public static void PasteTransitionListSkipColumnSelect(bool expectColumnSelectDialog = true)
+        {
+            if (expectColumnSelectDialog)
+            {
+                var columnSelectDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
+                WaitForConditionUI(() => columnSelectDlg.WindowShown); // Avoids possible race condition in code coverage tests
+                OkDialog(columnSelectDlg, () => columnSelectDlg.AcceptButton.PerformClick());
+            }
+            else
+            {
+                RunUI(SkylineWindow.Paste);
+            }
+        }
+
+        public static void PasteTransitionListSkipColumnSelect(string text, bool expectColumnSelectDialog = true)
+        {
+            if (expectColumnSelectDialog)
+            {
+                var columnSelectDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste(text));
+                WaitForConditionUI(() => columnSelectDlg.WindowShown); // Avoids possible race condition in code coverage tests
+                OkDialog(columnSelectDlg, () => columnSelectDlg.AcceptButton.PerformClick());
+            }
+            else
+            {
+                RunUI(() => SkylineWindow.Paste(text));
+            }
         }
 
         #region Modification helpers

@@ -741,7 +741,7 @@ namespace pwiz.SkylineTestUtil
             IdentityPath pathAdded;
             var inputs = new MassListInputs(DuplicateAndReverseLines(transitionList, exporter.HasHeaders),
                 CultureInfo.InvariantCulture, TextUtil.SEPARATOR_CSV);
-            docImport = docImport.ImportMassList(inputs, IdentityPath.ROOT, out pathAdded);
+            docImport = docImport.ImportMassList(inputs, null, IdentityPath.ROOT, out pathAdded);
 
             IsDocumentState(docImport, 1,
                                      docExport.MoleculeGroupCount,
