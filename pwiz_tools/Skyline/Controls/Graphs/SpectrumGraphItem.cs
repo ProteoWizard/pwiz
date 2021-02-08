@@ -67,7 +67,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 sequence = transitionGroupDocNode.CustomMolecule.DisplayName;
             }
-            else if (peptideDocNode?.ExplicitMods != null && peptideDocNode.ExplicitMods.Crosslinks.Count != 0)
+            else if (peptideDocNode.CrosslinkStructure.HasCrosslinks)
             {
                 sequence = peptideDocNode.GetCrosslinkedSequence();
             }

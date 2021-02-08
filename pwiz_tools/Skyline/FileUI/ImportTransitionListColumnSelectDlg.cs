@@ -17,12 +17,6 @@
  * limitations under the License.
  */
 
-using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -30,6 +24,12 @@ using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Windows.Forms;
 
 namespace pwiz.Skyline.FileUI
 {
@@ -37,6 +37,8 @@ namespace pwiz.Skyline.FileUI
     {
         public MassListImporter Importer { get; set; }
         public List<ComboBox> ComboBoxes { get; private set; }
+
+        public bool WindowShown { get; private set; }
 
         // These are only for error checking
         private readonly SrmDocument _docCurrent;
@@ -95,10 +97,19 @@ namespace pwiz.Skyline.FileUI
             {
                 for (var i = 0; i < numColumns; i++)
                 {
-                    // Put quotes around the user column names
-                    dataGrid.Columns[i].HeaderText = @"""" + headers[i] + @"""";
+                    dataGrid.Columns[i].HeaderText = headers[i];
+                    dataGrid.Columns[i].ToolTipText =
+                        string.Format(Resources.ImportTransitionListColumnSelectDlg_DisplayData_This_column_is_labeled_with_the_header___0___in_the_input_text__Use_the_dropdown_control_to_assign_its_meaning_for_import_, headers[i]);
                 }
                 dataGrid.ColumnHeadersVisible = true;
+            }
+            else
+            {
+                for (var i = 0; i < numColumns; i++)
+                {
+                    dataGrid.Columns[i].ToolTipText =
+                        string.Format(Resources.ImportTransitionListColumnSelectDlg_DisplayData_The_input_text_did_not_appear_to_contain_column_headers__Use_the_dropdown_control_to_assign_column_meanings_for_import_);
+                }
             }
 
             dataGrid.ScrollBars = dataGrid.Rows.Count * dataGrid.Rows[0].Height + dataGrid.ColumnHeadersHeight + SystemInformation.HorizontalScrollBarHeight > dataGrid.Height 
@@ -214,6 +225,7 @@ namespace pwiz.Skyline.FileUI
             if (comboBoxIndex < 0 || comboBoxIndex >= ComboBoxes.Count)
                 return;
             ComboBoxes[comboBoxIndex].Text = text;
+            SetColumnColor(ComboBoxes[comboBoxIndex]);
         }
 
         // Ensures two combo boxes do not have the same value. Usually newSelectedIndex will be zero, because that is IgnoreColumn.
@@ -224,6 +236,28 @@ namespace pwiz.Skyline.FileUI
             ComboBoxes[indexOfPreviousComboBox].SelectedIndex = newSelectedIndex;
         }
 
+        private void SetColumnColor(ComboBox comboBox)
+        {
+            var comboBoxIndex = ComboBoxes.IndexOf(comboBox);
+            // Grey out any ignored column
+            var foreColor = Equals(comboBox.Text, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column)
+                ? SystemColors.GrayText
+                : dataGrid.ForeColor;
+            dataGrid.Columns[comboBoxIndex].DefaultCellStyle.ForeColor = foreColor;
+        }
+
+        private void OnColumnsShown(object sender, EventArgs e)
+        {
+            foreach (var comboBox in ComboBoxes)
+            {
+                SetColumnColor(comboBox);
+            }
+
+            WindowShown = true;
+        }
+
+
+
         private bool comboBoxChanged;
         // Callback for when a combo box is changed. We use it to update the index of the PeptideColumnIndices and preventing combo boxes from overlapping.
         private void ComboChanged(object sender, EventArgs e)  // CONSIDER(bspratt) no charge state columns? (Seems to be because Skyline infers these and is confused when given explicit values)
@@ -232,6 +266,9 @@ namespace pwiz.Skyline.FileUI
             var comboBoxIndex = ComboBoxes.IndexOf(comboBox);
             var columns = Importer.RowReader.Indices;
             comboBoxChanged = true;
+
+            // Grey out any ignored column
+            SetColumnColor(comboBox);
 
             if (comboBox.Text == Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Decoy)
             {

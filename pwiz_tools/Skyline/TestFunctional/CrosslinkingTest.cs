@@ -16,11 +16,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.SettingsUI;
 using pwiz.SkylineTestUtil;
@@ -75,19 +77,16 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.Paste("LCVLHEKTPVSEK");
                 SkylineWindow.SelectedPath = SkylineWindow.Document.GetPathTo(1, 0);
             });
-
-            var modifyPeptideDlg = ShowDialog<EditPepModsDlg>(SkylineWindow.ModifyPeptide);
-            var editCrosslinkModDlg = ShowDialog<EditLinkedPeptideDlg>(() =>
             {
-                modifyPeptideDlg.SelectModification(IsotopeLabelType.light, 6, crosslinkerName);
-            });
-            RunUI(() =>
-            {
-                editCrosslinkModDlg.PeptideSequence = "CASIQKFGER";
-                editCrosslinkModDlg.AttachmentOrdinal = 6;
-            });
-            OkDialog(editCrosslinkModDlg, editCrosslinkModDlg.OkDialog);
-            OkDialog(modifyPeptideDlg, modifyPeptideDlg.OkDialog);
+                var editPepModsDlg = ShowDialog<EditPepModsDlg>(SkylineWindow.ModifyPeptide);
+                var editLinkedPeptidesDialog = ShowDialog<EditLinkedPeptidesDlg>(()=>editPepModsDlg.SetModification(6, IsotopeLabelType.light, crosslinkerName));
+                var peptidesTester = new GridTester(editLinkedPeptidesDialog.LinkedPeptidesGrid);
+                peptidesTester.SetCellValue(0, editLinkedPeptidesDialog.PeptideSequenceColumn, "CASIQKFGER");
+                peptidesTester.MoveToCell(1, 0);
+                SetCrosslinker(editLinkedPeptidesDialog, 0, crosslinkerName, new CrosslinkSite(0, 6), new CrosslinkSite(1, 5));
+                OkDialog(editLinkedPeptidesDialog, editLinkedPeptidesDialog.OkDialog);
+                OkDialog(editPepModsDlg, editPepModsDlg.OkDialog);
+            }
             RunUI(()=>SkylineWindow.ShowGraphSpectrum(true));
             WaitForGraphs();
             var graphSpectrum = FindOpenForm<GraphSpectrum>();
@@ -110,6 +109,22 @@ namespace pwiz.SkylineTestFunctional
             availableSpectra = graphSpectrum.AvailableSpectra.ToList();
             Assert.AreEqual(1, availableSpectra.Count);
             RunUI(()=>SkylineWindow.SaveDocument());
+        }
+
+        public static void SetCrosslinker(EditLinkedPeptidesDlg dlg, int rowIndex, string crosslinker, CrosslinkSite site1, CrosslinkSite site2)
+        {
+            var tester = new GridTester(dlg.CrosslinksGrid);
+            tester.SetCellValue(rowIndex, dlg.CrosslinkerColumn, crosslinker);
+            var sites = new[] {site1, site2};
+            for (int iSite = 0; iSite < sites.Length; iSite++)
+            {
+                var site = sites[iSite];
+                tester.MoveToCell(rowIndex, dlg.GetPeptideIndexColumn(iSite).Index);
+                tester.SetComboBoxValueInCurrentCell(site.PeptideIndex);
+                tester.MoveToCell(rowIndex, dlg.GetAaIndexColumn(iSite).Index);
+                tester.SetComboBoxValueInCurrentCell(site.AaIndex);
+            }
+            tester.EndEdit();
         }
     }
 }

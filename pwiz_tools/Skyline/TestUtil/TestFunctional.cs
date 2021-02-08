@@ -33,6 +33,7 @@ using Excel;
 using JetBrains.Annotations;
 // using Microsoft.Diagnostics.Runtime; only needed for stack dump logic, which is currently disabled
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Collections;
 using pwiz.Common.Controls;
 using pwiz.Common.Database;
 using pwiz.Common.DataBinding;
@@ -197,7 +198,21 @@ namespace pwiz.SkylineTestUtil
             return dlg;
         }
 
-        protected static void RunUI([InstantHandle] Action act)
+        /// <summary>
+        /// Brings up a dialog where the Type might be the same as a form which is already open.
+        /// </summary>
+        protected static TDlg ShowNestedDlg<TDlg>([InstantHandle] Action act) where TDlg : Form
+        {
+            var existingDialogs = FormUtil.OpenForms.OfType<TDlg>().ToHashSet(new IdentityEqualityComparer<TDlg>());
+            SkylineBeginInvoke(act);
+            TDlg result = null;
+            WaitForCondition(() => null != (result =
+                FormUtil.OpenForms.OfType<TDlg>().FirstOrDefault(form => !existingDialogs.Contains(form))));
+            return result;
+        }
+
+
+        public static void RunUI([InstantHandle] Action act)
         {
             SkylineInvoke(() =>
             {
@@ -2048,8 +2063,9 @@ namespace pwiz.SkylineTestUtil
         {
             if (expectColumnSelectDialog)
             {
-                var transitionSelectdgl = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
-                OkDialog(transitionSelectdgl, () => transitionSelectdgl.AcceptButton.PerformClick());
+                var columnSelectDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
+                WaitForConditionUI(() => columnSelectDlg.WindowShown); // Avoids possible race condition in code coverage tests
+                OkDialog(columnSelectDlg, () => columnSelectDlg.AcceptButton.PerformClick());
             }
             else
             {
@@ -2061,21 +2077,14 @@ namespace pwiz.SkylineTestUtil
         {
             if (expectColumnSelectDialog)
             {
-                var transitionSelectdgl = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste(text));
-                OkDialog(transitionSelectdgl, () => transitionSelectdgl.AcceptButton.PerformClick());
+                var columnSelectDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste(text));
+                WaitForConditionUI(() => columnSelectDlg.WindowShown); // Avoids possible race condition in code coverage tests
+                OkDialog(columnSelectDlg, () => columnSelectDlg.AcceptButton.PerformClick());
             }
             else
             {
                 RunUI(() => SkylineWindow.Paste(text));
             }
-        }
-
-        public static void ImportTransitionListSkipColumnSelectOnUI(string csvPath)
-        {
-            SkylineBeginInvoke(()=> SkylineWindow.ImportMassList(csvPath));
-            ImportTransitionListColumnSelectDlg dlg = WaitForOpenForm<ImportTransitionListColumnSelectDlg>();
-            dlg.AcceptButton.PerformClick();
-            WaitForClosedForm(dlg);
         }
 
         #region Modification helpers
