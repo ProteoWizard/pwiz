@@ -164,7 +164,7 @@ namespace AutoQC
                 return null;
             }
 
-            return Directory.GetDirectoryRoot(path).Replace(Path.DirectorySeparatorChar.ToString(), "");
+            return Directory.GetDirectoryRoot(path).Replace(Path.DirectorySeparatorChar.ToString(), string.Empty);
         }
     }
 }
