@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using AutoQC.Properties;
+using SharedBatch;
 
 namespace AutoQC
 {
@@ -182,18 +183,6 @@ namespace AutoQC
             control.Hide();
             panel1.Controls.Remove(control);
         }
-    }
-
-    // Validates a string variable, throws ArgumentException if invalid
-    public delegate void Validator(string variable);
-
-    // UserControl interface to validate value of an input
-    public interface IValidatorControl
-    {
-        object GetVariable();
-
-        // Uses Validator to determine if variable is valid
-        bool IsValid(out string errorMessage);
     }
 
     // Class that lets you wait for button click (ex: "await btnNext")

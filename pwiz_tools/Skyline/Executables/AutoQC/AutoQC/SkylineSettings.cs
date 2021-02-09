@@ -2,6 +2,7 @@
 using System.IO;
 using System.Xml;
 using AutoQC.Properties;
+using SharedBatch;
 
 namespace AutoQC
 {
@@ -39,7 +40,7 @@ namespace AutoQC
                         CmdPath = Settings.Default.SkylineDailyAdminCmdPath;
                     break;
                 case SkylineType.Custom:
-                    CmdPath = Path.Combine(folderPath, Installations.SkylineCmdExe);
+                    CmdPath = Path.Combine(folderPath, SkylineInstallations.SkylineCmdExe);
                     break;
             }
         }

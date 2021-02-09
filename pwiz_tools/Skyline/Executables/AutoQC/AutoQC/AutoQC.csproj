@@ -93,9 +93,6 @@
     <EmbeddedResource Include="ShareConfigsForm.resx">
       <DependentUpon>ShareConfigsForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="SkylineTypeControl.resx">
-      <DependentUpon>SkylineTypeControl.cs</DependentUpon>
-    </EmbeddedResource>
     <None Include="Resources\Copy.bmp" />
     <None Include="Resources\add.bmp" />
     <None Include="Resources\Delete.bmp" />
@@ -159,14 +156,7 @@
     <Compile Include="ShareConfigsForm.Designer.cs">
       <DependentUpon>ShareConfigsForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Installations.cs" />
     <Compile Include="SkylineSettings.cs" />
-    <Compile Include="SkylineTypeControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="SkylineTypeControl.Designer.cs">
-      <DependentUpon>SkylineTypeControl.cs</DependentUpon>
-    </Compile>
     <Compile Include="StartupManager.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>

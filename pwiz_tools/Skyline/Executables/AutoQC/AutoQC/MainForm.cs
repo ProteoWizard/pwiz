@@ -566,11 +566,6 @@ namespace AutoQC
             _resizing = false;
         }
 
-        private int GetColumnWidthFromPercent(double percent)
-        {
-            return (int)Math.Floor(percent * listViewConfigs.Width);
-        }
-
         private void listViewConfigs_ColumnWidthChanged(object sender, ColumnWidthChangedEventArgs e)
         {
             if (_resizing) return;

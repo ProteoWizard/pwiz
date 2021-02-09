@@ -29,6 +29,7 @@ using log4net;
 using log4net.Appender;
 using log4net.Config;
 using log4net.Repository.Hierarchy;
+using SharedBatch;
 
 namespace AutoQC
 {
@@ -129,7 +130,7 @@ namespace AutoQC
 
         private static bool InitSkylineSettings()
         {
-            if (Installations.FindSkyline())
+            if (SkylineInstallations.FindSkyline())
                 return true;
 
             var skylineForm = new FindSkylineForm();

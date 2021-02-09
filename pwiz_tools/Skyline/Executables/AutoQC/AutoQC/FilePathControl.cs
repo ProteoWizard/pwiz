@@ -2,6 +2,7 @@
 using System.IO;
 using System.Windows.Forms;
 using AutoQC.Properties;
+using SharedBatch;
 
 namespace AutoQC
 {

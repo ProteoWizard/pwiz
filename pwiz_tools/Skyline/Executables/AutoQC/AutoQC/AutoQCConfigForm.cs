@@ -20,6 +20,7 @@ using System;
 using System.IO;
 using System.Windows.Forms;
 using AutoQC.Properties;
+using SharedBatch;
 
 namespace AutoQC
 {
@@ -239,8 +240,8 @@ namespace AutoQC
 
         private void InitSkylineTab()
         {
-            radioButtonSkyline.Enabled = Installations.HasSkyline;
-            radioButtonSkylineDaily.Enabled = Installations.HasSkylineDaily;
+            radioButtonSkyline.Enabled = SkylineInstallations.HasSkyline;
+            radioButtonSkylineDaily.Enabled = SkylineInstallations.HasSkylineDaily;
             if (!string.IsNullOrEmpty(Settings.Default.SkylineCustomCmdPath))
                 textSkylineInstallationPath.Text = Path.GetDirectoryName(Settings.Default.SkylineCustomCmdPath);
 
