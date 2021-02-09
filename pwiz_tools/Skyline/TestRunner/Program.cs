@@ -88,7 +88,7 @@ namespace TestRunner
         public static string[] MutedTotalHandleLeakTestNames = { "TestDdaSearch" };
 
         // These tests are allowed to fail the user/GDI handle leak threshold, and extra iterations are not done to stabilize a spiky handle distribution
-        public static string[] MutedUserGdiHandleLeakTestNames = { };
+        public static string[] MutedUserGdiHandleLeakTestNames = { "TestDdaSearch" };
 
         private static int GetLeakCheckIterations(TestInfo test)
         {
