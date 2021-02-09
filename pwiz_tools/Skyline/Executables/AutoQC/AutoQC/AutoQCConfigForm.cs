@@ -79,20 +79,14 @@ namespace AutoQC
         private void InitInputFieldsFromConfig(AutoQcConfig config)
         {
             InitSkylineTab();
-            if (config == null)
+            SetInitialPanoramaSettings(config);
+            if (_action == ConfigAction.Add)
             {
                 SetDefaultMainSettings();
-                SetDefaultPanoramaSettings();
                 return;
             }
-
-            if (_action != ConfigAction.Add)
-            {
-                textConfigName.Text = config.Name;
-                SetInitialMainSettings(config.MainSettings);
-            }
-
-            SetInitialPanoramaSettings(config.PanoramaSettings);
+            textConfigName.Text = config.Name;
+            SetInitialMainSettings(config.MainSettings);
             SetInitialSkylineSettings(config);
         }
 
@@ -207,8 +201,14 @@ namespace AutoQC
 
         #region Panorama settings
 
-        private void SetInitialPanoramaSettings(PanoramaSettings panoramaSettings)
+        private void SetInitialPanoramaSettings(AutoQcConfig config)
         {
+            if (config == null)
+            {
+                SetDefaultPanoramaSettings();
+                return;
+            }
+            var panoramaSettings = config.PanoramaSettings;
             textPanoramaUrl.Text = panoramaSettings.PanoramaServerUrl;
             textPanoramaEmail.Text = panoramaSettings.PanoramaUserEmail;
             textPanoramaPasswd.Text = panoramaSettings.PanoramaPassword;
