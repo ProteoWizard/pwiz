@@ -328,7 +328,6 @@ namespace pwiz.Skyline
                             document = (SrmDocument) ser.Deserialize(reader);
                             skylineDocumentHash = hashingStreamReader.Stream.Done();
                         }
-
                         try
                         {
                             document = document.ReadAuditLog(path, skylineDocumentHash, ()=>AskForLogEntry(parentWindow));

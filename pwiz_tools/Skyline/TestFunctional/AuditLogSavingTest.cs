@@ -47,22 +47,9 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => auditLogForm.EnableAuditLogging(true));
 
             // Test that initial hash is correct
-            var expectedHash = BlockHash.SafeToBase64(new byte[]
-            {
-                0xFE, 0x0F, 0x0C, 0x54,
-                0xA0, 0x77, 0xE5, 0x8F,
-                0x77, 0xDC, 0x8B, 0xEE,
-                0x44, 0xB6, 0x65, 0x6D,
-                0x98, 0x31, 0xAA, 0x35
-            });
+            var expectedHash = @"/g8MVKB35Y933IvuRLZlbZgxqjU=";
             var actualHash = GetDocumentHash();
             Assert.AreEqual(expectedHash, actualHash);
-
-            // Test that the hash is the same as if the document was simply read and hashed
-            // The document is really small (<20KB) so it's fine to read it all into memory
-            var bytes = File.ReadAllBytes(SkylineWindow.DocumentFilePath);
-            var hash = Hash(bytes);
-            Assert.AreEqual(expectedHash, hash);
 
             // Make sure that there's an entry describing 1) number of nodes and 2) settings changes from default settings
             Assert.AreEqual(1, SkylineWindow.Document.AuditLog.AuditLogEntries.Count);
@@ -72,7 +59,6 @@ namespace pwiz.SkylineTestFunctional
 
             // Modify and save the document so that the audit log gets saved
             ChangeSettings(settings => settings.ChangePeptideFilter(filter => filter.ChangeExcludeNTermAAs(3))); // Change from 2 to 3
-
             RunUI(() => SkylineWindow.SaveDocument());
 
             RecordNewestEntry();
@@ -83,8 +69,20 @@ namespace pwiz.SkylineTestFunctional
             // Also validate an old document
             AssertEx.ValidateAuditLogAgainstSchema(File.ReadAllText(TestFilesDir.GetTestPath("old_rat_plasma.skyl")));
 
-            // Modify document outside of skyline
             var docPath = SkylineWindow.DocumentFilePath;
+
+            //share the file using an old Skyline version to and re-open to make sure
+            //that old hashes save and validate correctly.
+            RunUI( () =>
+            {
+                var sharedDocPath = SkylineWindow.DocumentFilePath + ".zip";
+                SkylineWindow.ShareDocument(sharedDocPath,
+                    new ShareType(true, SkylineVersion.V19_1));
+                SkylineWindow.NewDocument(true);
+                SkylineWindow.OpenSharedFile(sharedDocPath, SkylineWindow);
+            });
+
+            // Modify document outside of skyline
             RunUI(() => SkylineWindow.NewDocument(true));
 
             // Audit logging should be enabled since the previous settings will be used

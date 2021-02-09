@@ -114,10 +114,10 @@ namespace pwiz.Skyline.Model.AuditLog
 
         public DocumentFormat? FormatVersion { get; private set; }
 
-        private static byte[] CalculateRootHash(IEnumerable<Hash> hashes)
+        private static byte[] CalculateRootHash(IEnumerable<Hash> hashes, DocumentFormat docFormat)
         {
             // Calculate root hash
-            using (var sha1 = new SHA1CryptoServiceProvider())
+            using (var sha1 = docFormat.GetHashAlgorithm())
             {
                 var blockHash = new BlockHash(sha1);
                 hashes.ForEach(h => blockHash.ProcessBytes(Encoding.UTF8.GetBytes(h.HashString)));
@@ -188,7 +188,7 @@ namespace pwiz.Skyline.Model.AuditLog
             }
 
             hashes.Reverse();
-            Hash rootHash = CalculateRootHash(hashes);
+            Hash rootHash = CalculateRootHash(hashes, documentFormat);
             return ChangeProp(ImClone(this), im =>
             {
                 im.FormatVersion = documentFormat;
@@ -362,7 +362,7 @@ namespace pwiz.Skyline.Model.AuditLog
                 }
                 hashes.Add(entry.Hash);
             }
-            Hash expectedRootHash = CalculateRootHash(hashes);
+            Hash expectedRootHash = CalculateRootHash(hashes, FormatVersion.Value);
             if (entriesWithIncorrectHash.Count > 0 || !HashesEqual(RootHash, expectedRootHash))
             {
                 throw new AuditLogException(
@@ -1343,11 +1343,8 @@ namespace pwiz.Skyline.Model.AuditLog
             foreach (var allInfo in _allInfoNoUndoRedo)
                 writer.WriteElement(EL.all_info, allInfo);
 
-            if (!string.IsNullOrEmpty(ExtraInfo) && LogMessage.ExpansionToken.EnumerateTokens(ExtraInfo).Any())
-            {
-                EnExtraInfo = null;
+            if(!string.IsNullOrEmpty(EnExtraInfo) || !string.IsNullOrEmpty(ExtraInfo) && LogMessage.ExpansionToken.EnumerateTokens(ExtraInfo).Any())
                 writer.WriteElementString(EL.en_extra_info, EnExtraInfo);
-            }
 
             if (Hash != null)
                 writer.WriteElementString(EL.hash, Hash);
@@ -1461,8 +1458,7 @@ namespace pwiz.Skyline.Model.AuditLog
         {
             if (User == null || UndoRedo == null || Summary == null || _allInfoNoUndoRedo == null)
                 return null;
-
-            using (var sha1 = new SHA1CryptoServiceProvider())
+            using (HashAlgorithm sha = docFormat.GetHashAlgorithm())
             {
                 var enc = Encoding.UTF8;
                 var encodedBytes = new List<byte[]>(7+_allInfoNoUndoRedo.Count());
@@ -1485,7 +1481,7 @@ namespace pwiz.Skyline.Model.AuditLog
                 }
 
                 // Avoid heap thrash performance issue by carefully allocating hash buffer size
-                var blockHash = new BlockHash(sha1, encodedBytes.Sum(b => b.Length)); 
+                var blockHash = new BlockHash(sha, encodedBytes.Sum(b => b.Length)); 
                 encodedBytes.ForEach(b => blockHash.ProcessBytes(b));
 
                 return blockHash.FinalizeHashBytes();

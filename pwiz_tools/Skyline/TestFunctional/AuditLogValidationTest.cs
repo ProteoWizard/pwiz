@@ -43,11 +43,14 @@ namespace pwiz.SkylineTestFunctional
         {
             // Testing scenarios:
             // - valid audit log file - opens cleanly
-            var documentFile = TestFilesDir.GetTestPath(@"AuditLogValidationTest/MethodEditClean.sky");
-            WaitForCondition(() => File.Exists(documentFile));
-
-            RunUI(() => SkylineWindow.OpenFile(documentFile)); // Should execute without any problems
-
+            foreach (var fileName in new[] { @"AuditLogValidationTest/MethodEditClean.sky", @"AuditLogValidationTest/MethodEditClean-SHA512.sky" })
+            {
+                var documentFile = TestFilesDir.GetTestPath(fileName);
+                WaitForCondition(() => File.Exists(documentFile));
+                RunUI(() => SkylineWindow.OpenFile(documentFile)); // Should execute without any problems
+                WaitForDocumentLoaded();
+            }
+            
             // - audit log with modified content - expect message dialog to appear
             // - audit log with modified entry hashes - expect exception
             foreach (string fileName in new[] { @"AuditLogValidationTest/MethodEditContentMod.sky", @"AuditLogValidationTest/MethodEditEntryHashMod.sky" })
