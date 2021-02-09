@@ -254,7 +254,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 bool incomplete;
                 if (allowMissingTransitions)
                 {
-                    incomplete = true;
+                    incomplete = false;
                 }
                 else
                 {

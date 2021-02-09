@@ -668,20 +668,24 @@ namespace pwiz.SkylineTestUtil
             where TObj : class
         {
             XmlSerializer ser = new XmlSerializer(typeof(TObj));
-            StringBuilder sb = new StringBuilder();
-            using (XmlTextWriter writer = new XmlTextWriter(new StringWriter(sb)))
+            using (var memStream = new MemoryStream())
             {
+                XmlTextWriter writer = new XmlTextWriter(memStream, Encoding.UTF8);
                 writer.Formatting = Formatting.Indented;
 
                 try
                 {
                     ser.Serialize(writer, target);
+                    memStream.Seek(0, SeekOrigin.Begin);
+                    string xmlString = string.Empty;
+                    using (var reader = new StreamReader(memStream))
+                        xmlString = reader.ReadToEnd();
+
                     if (String.IsNullOrEmpty(expected))
-                        expected = sb.ToString();
+                        expected = xmlString;
                     else
-                        NoDiff(expected, sb.ToString());
-                    var s = sb.ToString();
-                    using (TextReader reader = new StringReader(s))
+                        NoDiff(expected, xmlString);
+                    using (TextReader reader = new StringReader(xmlString))
                     {
                         TObj copy = (TObj)ser.Deserialize(reader);
                         return copy;
