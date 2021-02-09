@@ -1,10 +1,9 @@
 ﻿using System;
 using System.IO;
 using System.Windows.Forms;
-using SharedAutoQcBatch;
-using SharedAutoQcBatch.Properties;
+using SharedBatch.Properties;
 
-namespace SharedAutoQcBatch
+namespace SharedBatch
 {
     public partial class SkylineTypeControl : UserControl, IValidatorControl
     {

@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkylineBatch", "SkylineBatc
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkylineBatchTest", "SkylineBatchTest\SkylineBatchTest.csproj", "{415D56D0-D83D-45D2-A833-E2D7E46E7A69}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharedAutoQcBatch", "..\SharedQcBatch\SharedAutoQcBatch\SharedAutoQcBatch.csproj", "{8DC37752-C356-446F-A1EE-6AA6D8A23B6F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharedBatch", "..\SharedQcBatch\SharedAutoQcBatch\SharedBatch.csproj", "{8DC37752-C356-446F-A1EE-6AA6D8A23B6F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -25,9 +25,9 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using System.Xml;
-using SharedAutoQcBatch.Properties;
+using SharedBatch.Properties;
 
-namespace SharedAutoQcBatch
+namespace SharedBatch
 {
     public delegate IConfig Importer(XmlReader reader);
 

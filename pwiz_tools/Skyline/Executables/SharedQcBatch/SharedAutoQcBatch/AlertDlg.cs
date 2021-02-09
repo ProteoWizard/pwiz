@@ -21,10 +21,10 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
-using SharedAutoQcBatch.Properties;
+using SharedBatch.Properties;
 
 
-namespace SharedAutoQcBatch
+namespace SharedBatch
 {
     /// <summary>
     /// Use for a <see cref="MessageBox"/> substitute that can be

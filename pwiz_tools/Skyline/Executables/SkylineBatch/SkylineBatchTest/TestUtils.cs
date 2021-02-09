@@ -22,8 +22,7 @@ using System.Reflection;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SkylineBatch;
-using SkylineBatch.Properties;
-using SharedAutoQcBatch;
+using SharedBatch;
 
 namespace SkylineBatchTest
 {

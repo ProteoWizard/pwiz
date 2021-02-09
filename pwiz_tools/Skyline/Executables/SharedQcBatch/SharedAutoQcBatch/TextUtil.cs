@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using SharedAutoQcBatch.Properties;
+using SharedBatch.Properties;
 
-namespace SharedAutoQcBatch
+namespace SharedBatch
 {
     public static class TextUtil
     {

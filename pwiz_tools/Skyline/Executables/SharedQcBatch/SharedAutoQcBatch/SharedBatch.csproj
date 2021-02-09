@@ -6,8 +6,8 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{8DC37752-C356-446F-A1EE-6AA6D8A23B6F}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <RootNamespace>SharedAutoQcBatch</RootNamespace>
-    <AssemblyName>SharedAutoQcBatch</AssemblyName>
+    <RootNamespace>SharedBatch</RootNamespace>
+    <AssemblyName>SharedBatch</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -64,6 +64,7 @@
     </Compile>
     <Compile Include="Interfaces.cs" />
     <Compile Include="IValidatorControl.cs" />
+    <Compile Include="MainFormUtils.cs" />
     <Compile Include="ProgramLog.cs" />
     <Compile Include="Settings.cs" />
     <Compile Include="Logger.cs" />

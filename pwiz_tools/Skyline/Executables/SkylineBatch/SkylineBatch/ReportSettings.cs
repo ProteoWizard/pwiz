@@ -22,7 +22,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Xml;
 using System.IO;
-using SharedAutoQcBatch;
+using SharedBatch;
 using SkylineBatch.Properties;
 
 

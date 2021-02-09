@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SharedAutoQcBatch
+namespace SharedBatch
 {
     // Validates a string variable, throws ArgumentException if invalid
     public delegate void Validator(string variable);

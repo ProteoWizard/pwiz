@@ -1,9 +1,9 @@
 ﻿using System;
 using System.IO;
 using System.Xml;
-using SharedAutoQcBatch.Properties;
+using SharedBatch.Properties;
 
-namespace SharedAutoQcBatch
+namespace SharedBatch
 {
     public enum SkylineType
     {

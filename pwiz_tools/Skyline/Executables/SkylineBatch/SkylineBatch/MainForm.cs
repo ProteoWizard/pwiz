@@ -23,7 +23,7 @@ using System.Drawing;
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using SharedAutoQcBatch;
+using SharedBatch;
 using SkylineBatch.Properties;
 
 namespace SkylineBatch
@@ -34,7 +34,7 @@ namespace SkylineBatch
         private readonly SkylineBatchConfigManager _configManager;
         private readonly Logger _skylineBatchLogger;
         private bool _loaded;
-        private double[] _listViewColumnWidths;
+        private ColumnWidthCalculator _listViewColumnWidths;
         private bool _resizing;
 
         public MainForm()
@@ -47,12 +47,12 @@ namespace SkylineBatch
             _skylineBatchLogger = new Logger(Program.AppName() + ".log", logFolder, this);
             btnRunOptions.Text = char.ConvertFromUtf32(0x2BC6);
             toolStrip1.Items.Insert(3,new ToolStripSeparator());
-            _listViewColumnWidths = new[]
+            _listViewColumnWidths = new ColumnWidthCalculator(new []
             {
-                (double)listViewConfigName.Width/listViewConfigs.Width,
-                (double)listViewModified.Width/listViewConfigs.Width,
-                (double)listViewStatus.Width/listViewConfigs.Width,
-            };
+                listViewConfigName.Width,
+                listViewModified.Width,
+                listViewStatus.Width
+            });
             listViewConfigs.ColumnWidthChanged += listViewConfigs_ColumnWidthChanged;
 
             ProgramLog.LogInfo(Resources.MainForm_MainForm_Loading_configurations_from_saved_settings_);
@@ -544,15 +544,15 @@ namespace SkylineBatch
 
         private void listViewConfigs_Resize(object sender, EventArgs e)
         {
-            ResizeListViewColumns();
+            _listViewColumnWidths.ListViewContainerResize(listViewConfigs.Width);
+            UpdateListViewColumns();
         }
 
-        private void ResizeListViewColumns()
+        private void UpdateListViewColumns()
         {
             _resizing = true;
-            var listViewWidth = listViewConfigs.Width;
-            listViewConfigName.Width = (int)Math.Floor(listViewWidth * _listViewColumnWidths[0]);
-            listViewModified.Width = (int)Math.Floor(listViewWidth * _listViewColumnWidths[1]);
+            listViewConfigName.Width = _listViewColumnWidths.Get(0);
+            listViewModified.Width = _listViewColumnWidths.Get(1);
             listViewStatus.Width = -2;
             _resizing = false;
         }
@@ -560,16 +560,13 @@ namespace SkylineBatch
         private void listViewConfigs_ColumnWidthChanged(object sender, ColumnWidthChangedEventArgs e)
         {
             if (_resizing) return;
-
-            var listViewWidth = listViewConfigs.Width - 10;
-            _listViewColumnWidths = new[]
+            _listViewColumnWidths.WidthsChangedByUser(new []
             {
-                (double)listViewConfigName.Width/listViewWidth,
-                (double)listViewModified.Width/listViewWidth,
-                1 - (double)listViewConfigName.Width/listViewWidth - (double)listViewModified.Width/listViewWidth
-            };
-
-            ResizeListViewColumns();
+                listViewConfigName.Width,
+                listViewModified.Width,
+                listViewStatus.Width
+            });
+            UpdateListViewColumns();
         }
         private void systray_icon_MouseDoubleClick(object sender, MouseEventArgs e)
         {

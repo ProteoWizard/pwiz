@@ -1,4 +1,4 @@
-﻿namespace SharedAutoQcBatch
+﻿namespace SharedBatch
 {
     partial class AlertDlg
     {

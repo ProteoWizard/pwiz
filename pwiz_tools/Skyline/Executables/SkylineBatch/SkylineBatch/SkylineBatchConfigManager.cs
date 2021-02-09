@@ -26,7 +26,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml;
-using SharedAutoQcBatch;
+using SharedBatch;
 using SkylineBatch.Properties;
 
 namespace SkylineBatch

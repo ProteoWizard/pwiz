@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Windows.Forms;
 using System.Xml;
 
-namespace SharedAutoQcBatch
+namespace SharedBatch
 {
 
     public delegate IConfigRunner CreateRunner(IConfig config, Logger logger, IMainUiControl uiControl = null);

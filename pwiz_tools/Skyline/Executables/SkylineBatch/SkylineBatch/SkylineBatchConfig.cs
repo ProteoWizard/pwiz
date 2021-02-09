@@ -23,7 +23,7 @@ using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using SkylineBatch.Properties;
-using SharedAutoQcBatch;
+using SharedBatch;
 
 namespace SkylineBatch
 {

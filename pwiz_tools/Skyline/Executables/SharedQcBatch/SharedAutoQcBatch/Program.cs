@@ -11,9 +11,9 @@ using log4net;
 using log4net.Appender;
 using log4net.Config;
 using log4net.Repository.Hierarchy;
-using SharedAutoQcBatch.Properties;
+using SharedBatch.Properties;
 
-namespace SharedAutoQcBatch
+namespace SharedBatch
 {
     public static class Program
     {

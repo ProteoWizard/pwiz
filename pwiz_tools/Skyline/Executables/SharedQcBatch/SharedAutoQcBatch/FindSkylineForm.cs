@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Windows.Forms;
-using SharedAutoQcBatch.Properties;
+using SharedBatch.Properties;
 
-namespace SharedAutoQcBatch
+namespace SharedBatch
 {
     public partial class FindSkylineForm : Form
     {

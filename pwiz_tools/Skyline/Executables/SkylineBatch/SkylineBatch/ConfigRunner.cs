@@ -19,7 +19,7 @@
 using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
-using SharedAutoQcBatch;
+using SharedBatch;
 using SkylineBatch.Properties;
 
 namespace SkylineBatch

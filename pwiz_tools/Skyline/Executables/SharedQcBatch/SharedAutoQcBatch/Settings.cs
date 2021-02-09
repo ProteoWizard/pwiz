@@ -27,7 +27,7 @@ using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 
-namespace SharedAutoQcBatch.Properties
+namespace SharedBatch.Properties
 {
     internal sealed partial class Settings
     {

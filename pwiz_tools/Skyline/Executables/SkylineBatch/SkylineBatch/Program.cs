@@ -30,7 +30,7 @@ using log4net.Appender;
 using log4net.Config;
 using log4net.Repository.Hierarchy;
 using SkylineBatch.Properties;
-using SharedAutoQcBatch;
+using SharedBatch;
 
 namespace SkylineBatch
 {
@@ -42,8 +42,8 @@ namespace SkylineBatch
         [STAThread]
         public static void Main(string[] args)
         {
-            SharedAutoQcBatch.Properties.ConfigList.importer = SkylineBatchConfig.ReadXml;
-            SharedAutoQcBatch.Program.LOG_NAME = "SkylineBatchProgram.log";
+            SharedBatch.Properties.ConfigList.importer = SkylineBatchConfig.ReadXml;
+            SharedBatch.Program.LOG_NAME = "SkylineBatchProgram.log";
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);

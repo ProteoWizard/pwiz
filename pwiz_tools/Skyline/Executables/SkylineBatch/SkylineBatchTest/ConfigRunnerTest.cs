@@ -22,7 +22,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using SharedAutoQcBatch;
+using SharedBatch;
 using SkylineBatch;
 
 namespace SkylineBatchTest

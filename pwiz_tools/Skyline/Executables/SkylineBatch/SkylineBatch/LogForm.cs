@@ -19,7 +19,7 @@
 
 using System;
 using System.Windows.Forms;
-using SharedAutoQcBatch;
+using SharedBatch;
 
 namespace SkylineBatch
 {

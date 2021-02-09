@@ -7,7 +7,7 @@ using log4net;
 using log4net.Appender;
 using log4net.Repository.Hierarchy;
 
-namespace SharedAutoQcBatch
+namespace SharedBatch
 {
     public class ProgramLog
     {
