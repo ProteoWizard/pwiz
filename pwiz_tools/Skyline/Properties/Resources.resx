@@ -8606,6 +8606,9 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   <data name="InsertSmallMoleculeTransitionList_InsertSmallMoleculeTransitionList_Error_on_line__0___column_1____2_" xml:space="preserve">
     <value>Error on line {0}, column{1}: {2}</value>
   </data>
+  <data name="InsertSmallMoleculeTransitionList_InsertSmallMoleculeTransitionList_Error_on_line__0__1_" xml:space="preserve">
+    <value>Error on line {0}: {1}</value>
+  </data>
   <data name="SmallMoleculeTransitionListReader_SmallMoleculeTransitionListReader_" xml:space="preserve">
     <value>Error reading molecule column headers, did not recognize:
 {0}
@@ -11312,5 +11315,8 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
   </data>
   <data name="EditLinkedPeptidesDlg_dataGridViewLinkedPeptides_CellToolTipTextNeeded_Edit_Modifications" xml:space="preserve">
     <value>Edit Modifications</value>
+  </data>
+  <data name="SmallMoleculeTransitionListReader_GetMoleculeTransitionGroup_Inconsistent_molecule_description" xml:space="preserve">
+    <value>Inconsistent molecule description</value>
   </data>
 </root>
