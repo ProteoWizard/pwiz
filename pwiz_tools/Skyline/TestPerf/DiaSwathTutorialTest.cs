@@ -63,14 +63,20 @@ namespace TestPerf
         private class InstrumentSpecificValues
         {
             public string InstrumentTypeName;
+            public string ZipFileName = null;
+            public string DiaFilesExtension;
             public string[] DiaFiles;
+            public string[] SearchFiles;
             public int LibraryPeptideCount;
+            public int ExpectedIrtPeptideCount;
+            public IrtStandard IrtStandard;
             public double IrtSlope;
             public double IrtIntercept;
             public bool HasAmbiguousMatches;
             public string IsolationSchemeName;
             public string IsolationSchemeFile;
             public char IsolationSchemeFileSeparator;
+            public string ExamplePeptide;
         }
 
         private class AnalysisValues
@@ -105,6 +111,7 @@ namespace TestPerf
             get { return _instrumentValues.InstrumentTypeName; }
         }
         private string RootName { get; set; }
+        private string ZipFileName => _instrumentValues.ZipFileName ?? RootName;
 
         [TestMethod]
         [Timeout(int.MaxValue)] // These can take a long time
@@ -174,6 +181,7 @@ namespace TestPerf
             SetInstrumentType(new InstrumentSpecificValues
             {
                 InstrumentTypeName = "TTOF",
+                DiaFilesExtension = DataSourceUtil.EXT_MZML,
                 DiaFiles = new[]
                 {
                     "collinsb_I180316_001_SW-A.mzML",
@@ -183,13 +191,20 @@ namespace TestPerf
                     "collinsb_I180316_005_SW-A.mzML",
                     "collinsb_I180316_006_SW-B.mzML",
                 },
+                SearchFiles = new[]
+                {
+                    "DDA_search\\interact.pep.xml"
+                },
                 LibraryPeptideCount = 18600,
+                ExpectedIrtPeptideCount = 11,
+                IrtStandard = IrtStandard.BIOGNOSYS_11,
                 IrtSlope = 2.9257,
                 IrtIntercept = -68.8503,
                 HasAmbiguousMatches = true,
                 IsolationSchemeName = "ETH TTOF (64 variable)",
                 IsolationSchemeFile = "64_variable_windows.csv",
                 IsolationSchemeFileSeparator = TextUtil.SEPARATOR_CSV,
+                ExamplePeptide = "LPQVEGTGGDVQPSQDLVR"
             });
 
             RunTest();
@@ -264,6 +279,7 @@ namespace TestPerf
             SetInstrumentType(new InstrumentSpecificValues
             {
                 InstrumentTypeName = "QE",
+                DiaFilesExtension = DataSourceUtil.EXT_MZML,
                 DiaFiles = new[]
                 {
                     "collinsb_X1803_171-A.mzML",
@@ -273,13 +289,157 @@ namespace TestPerf
                     "collinsb_X1803_175-A.mzML",
                     "collinsb_X1803_176-B.mzML",
                 },
+                SearchFiles = new[]
+                {
+                    "DDA_search\\interact.pep.xml"
+                },
                 LibraryPeptideCount = 15855,
+                ExpectedIrtPeptideCount = 11,
+                IrtStandard = IrtStandard.BIOGNOSYS_11,
                 IrtSlope = 2.624,
                 IrtIntercept = -48.003,
                 HasAmbiguousMatches = false,
                 IsolationSchemeName = "ETH QE (18 variable)",
                 IsolationSchemeFile = "QE_DIA_18var.tsv",
                 IsolationSchemeFileSeparator = TextUtil.SEPARATOR_TSV,
+                ExamplePeptide = "LPQVEGTGGDVQPSQDLVR"
+            });
+
+            RunTest();
+        }
+
+        [TestMethod]
+        [Timeout(int.MaxValue)] // These can take a long time
+        public void TestDiaPasefTutorial()
+        {
+            _analysisValues = new AnalysisValues
+            {
+                KeepPrecursors = false,
+                IrtFilterText = "standard",
+                ChromatogramClickPoint = new PointF(10.79F, 3800.0F),
+                TargetCounts = new[] { 14, 79, 87, 522 },
+                FinalTargetCounts = new[] { 12, 79, 87, 522 },
+                ScoringModelCoefficients = "-0.1079|-0.9792|5.5405|7.2922|-0.1106|0.5586|0.7712|-0.3184",
+                MassErrorStats = new[]
+                {
+                    new[] {3.7, 2.4},
+                    new[] {3.8, 2.1},
+                    new[] {3.6, 2.2},
+                    new[] {3.3, 3.4},
+                    new[] {3.9, 2.3},
+                    new[] {4, 2.1},
+                    new[] {3.6, 2.3},
+                },
+                DiffPeptideCounts = new[] { 44, 7, 8, 14 },
+                UnpolishedProteins = 9
+            };
+
+            if (!IsCoverShotMode)
+                TestPasefSmallData();
+        }
+
+        private void TestPasefSmallData()
+        {
+            SetInstrumentType(new InstrumentSpecificValues
+            {
+                InstrumentTypeName = "PASEF",
+                ZipFileName = "DIA-PASEF-small",
+                DiaFilesExtension = DataSourceUtil.EXT_AGILENT_BRUKER_RAW,
+                DiaFiles = new[]
+                {
+                    "A210331_bcc_1180_lfqbA_17min_dia_200ng.d",
+                    "A210331_bcc_1181_lfqbB_17min_dia_200ng.d",
+                    "A210331_bcc_1182_lfqbA_17min_dia_200ng.d",
+                    "A210331_bcc_1183_lfqbB_17min_dia_200ng.d",
+                    "A210331_bcc_1184_lfqbA_17min_dia_200ng.d",
+                    "A210331_bcc_1185_lfqbB_17min_dia_200ng.d",
+                },
+                SearchFiles = new[]
+                {
+                    "DDA_search\\out\\interact.pep.xml",
+                },
+                IrtStandard = IrtStandard.CIRT_SHORT,
+                LibraryPeptideCount = 6028,
+                ExpectedIrtPeptideCount = 15,
+                IrtSlope = 8.765,
+                IrtIntercept = -54.858,
+                HasAmbiguousMatches = false,
+                IsolationSchemeName = "diaPASEF (24 fixed)",
+                IsolationSchemeFile = "diaPASEF_24fix.csv",
+                IsolationSchemeFileSeparator = TextUtil.SEPARATOR_TSV,
+                ExamplePeptide = "LPQVEGTGGDVQPSQDLVR"
+            });
+
+            RunTest();
+        }
+
+        [TestMethod]
+        [Timeout(int.MaxValue)] // These can take a long time
+        public void TestDiaPasefFullDataset()
+        {
+            if (Program.SkylineOffscreen)
+                return; // skip during Nightly
+
+            _analysisValues = new AnalysisValues
+            {
+                KeepPrecursors = false,
+                IsWholeProteome = true,
+                IrtFilterText = "standard",
+                MinPeptidesPerProtein = 2,
+                RemoveDuplicates = true,
+                ChromatogramClickPoint = new PointF(10.79F, 3800.0F),
+                TargetCounts = new[] { 4972, 37484, 39050, 234300 },
+                FinalTargetCounts = new[] { 2705, 27399, 28551, 171306 },
+                ScoringModelCoefficients = "-0.2611|-0.8884|4.3052|3.6345|-0.0942|0.7884|0.3939|-0.1217",
+                MassErrorStats = new[]
+                {
+                    new[] {3.3, 3.3},
+                    new[] {3.3, 3.1},
+                    new[] {3.2, 3.3},
+                    new[] {3.4, 3.2},
+                    new[] {3.2, 3.3},
+                    new[] {3.5, 3.2},
+                    new[] {3.3, 3.4},
+                },
+                DiffPeptideCounts = new[] { 12505, 8455, 2220, 1815 },
+                UnpolishedProteins = 2224,
+                PolishedProteins = 2686,
+            };
+
+            if (!IsCoverShotMode)
+                TestPasefFullData();
+        }
+
+        private void TestPasefFullData()
+        {
+            SetInstrumentType(new InstrumentSpecificValues
+            {
+                InstrumentTypeName = "PASEF",
+                ZipFileName = "DIA-PASEF-full",
+                DiaFilesExtension = DataSourceUtil.EXT_AGILENT_BRUKER_RAW,
+                DiaFiles = new[]
+                {
+                    "A210331_bcc_1180_lfqbA_17min_dia_200ng.d",
+                    "A210331_bcc_1181_lfqbB_17min_dia_200ng.d",
+                    "A210331_bcc_1182_lfqbA_17min_dia_200ng.d",
+                    "A210331_bcc_1183_lfqbB_17min_dia_200ng.d",
+                    "A210331_bcc_1184_lfqbA_17min_dia_200ng.d",
+                    "A210331_bcc_1185_lfqbB_17min_dia_200ng.d",
+                },
+                SearchFiles = new[]
+                {
+                    "DDA_search\\out\\interact.pep.xml",
+                },
+                IrtStandard = IrtStandard.CIRT_SHORT,
+                LibraryPeptideCount = 22111,
+                ExpectedIrtPeptideCount = 15,
+                IrtSlope = 8.621,
+                IrtIntercept = -51.543,
+                HasAmbiguousMatches = false,
+                IsolationSchemeName = "diaPASEF (24 fixed)",
+                IsolationSchemeFile = "diaPASEF_24fix.csv",
+                IsolationSchemeFileSeparator = TextUtil.SEPARATOR_TSV,
+                ExamplePeptide = "LPQVEGTGGDVQPSQDLVR"
             });
 
             RunTest();
@@ -290,17 +450,18 @@ namespace TestPerf
             _instrumentValues = instrumentValues;
 
             RootName = "DIA-" + InstrumentTypeName;
+
             const string pdfFormat = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/{0}-20_1.pdf";
             // const string pdfFormat = "file:///C:/proj/branches/work/pwiz_tools/Skyline/Documentation/Tutorials/{0}-20_1.pdf";
             LinkPdf = string.Format(pdfFormat, RootName);
 
             TestFilesZipPaths = new[]
             {
-                string.Format(@"http://skyline.ms/tutorials/{0}.zip", RootName),
+                string.Format(@"http://skyline.ms/tutorials/{0}.zip", ZipFileName),
                 string.Format(@"TestPerf\DiaSwath{0}Views.zip", InstrumentTypeName)
             };
 
-            TestFilesPersistent = new[] { Path.Combine(RootName, "DDA_search"), Path.Combine(RootName, "DIA") };
+            TestFilesPersistent = new[] { Path.Combine(ZipFileName, "DDA_search"), Path.Combine(ZipFileName, "DIA") };
         }
 
         private void RunTest()
@@ -322,7 +483,7 @@ namespace TestPerf
 
         private string GetTestPath(string path)
         {
-            return TestFilesDirs[0].GetTestPath(Path.Combine(RootName, path));
+            return TestFilesDirs[0].GetTestPath(Path.Combine(ZipFileName, path));
         }
 
         /// <summary>
@@ -343,6 +504,10 @@ namespace TestPerf
             string documentFile = TestContext.GetTestPath(documentBaseName + SrmDocument.EXT);
             RunUI(() => SkylineWindow.SaveDocument(documentFile));
 
+            //var peptideSettingsDlg = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+            //RunUI(() => peptideSettingsDlg.Prediction.MeasuredRTWindow = 3);
+            //OkDialog(peptideSettingsDlg, peptideSettingsDlg.OkDialog);
+
             // Launch the wizard
             var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowImportPeptideSearchDlg);
 
@@ -351,10 +516,7 @@ namespace TestPerf
             // We're on the "Build Spectral Library" page of the wizard.
             // Add the test xml file to the search files list and try to 
             // build the document library.
-            string[] searchFiles =
-            {
-                GetTestPath("DDA_search\\interact.pep.xml"),
-            };
+            string[] searchFiles = _instrumentValues.SearchFiles.Select(o => GetTestPath(o)).ToArray();
             foreach (var searchFile in searchFiles)
                 Assert.IsTrue(File.Exists(searchFile), string.Format("File {0} does not exist.", searchFile));
 
@@ -362,7 +524,7 @@ namespace TestPerf
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
                 importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(searchFiles);
-                importPeptideSearchDlg.BuildPepSearchLibControl.IrtStandards = IrtStandard.BIOGNOSYS_11;
+                importPeptideSearchDlg.BuildPepSearchLibControl.IrtStandards = _instrumentValues.IrtStandard;
                 importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = ImportPeptideSearchDlg.Workflow.dia;
                 // Check default settings shown in the tutorial
                 Assert.AreEqual(0.95, importPeptideSearchDlg.BuildPepSearchLibControl.CutOffScore);
@@ -371,26 +533,50 @@ namespace TestPerf
             PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Import Peptide Search - Build Spectral Library populated page", 4);
 
             WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
-            var addIrtDlg = ShowDialog<AddIrtPeptidesDlg>(() => importPeptideSearchDlg.ClickNextButton());
+
+            AddIrtPeptidesDlg addIrtPeptidesDlg;
+            if (_instrumentValues.IrtStandard.Equals(IrtStandard.AUTO) ||
+                _instrumentValues.IrtStandard.Equals(IrtStandard.CIRT_SHORT) ||
+                _instrumentValues.IrtStandard.Equals(IrtStandard.CIRT))
+            {
+                var addIrtStandardsDlg = ShowDialog<AddIrtStandardsDlg>(() => importPeptideSearchDlg.ClickNextButton());
+                RunUI(() => addIrtStandardsDlg.StandardCount = _instrumentValues.ExpectedIrtPeptideCount);
+                PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Import Peptide Search - Select number of CiRT peptides", 5);
+                addIrtPeptidesDlg = ShowDialog<AddIrtPeptidesDlg>(addIrtStandardsDlg.OkDialog);
+            }
+            else
+                addIrtPeptidesDlg = ShowDialog<AddIrtPeptidesDlg>(() => importPeptideSearchDlg.ClickNextButton());
+
             RunUI(() =>
             {
                 // Check values shown in the tutorial
-                Assert.AreEqual(1, addIrtDlg.RunsConvertedCount);
-                var row = addIrtDlg.GetRow(0);
-                Assert.AreEqual(11, row.Cells[1].Value);
-                Assert.AreEqual(_instrumentValues.LibraryPeptideCount, addIrtDlg.PeptidesCount);
-                var regressionLine = new RegressionLine(_instrumentValues.IrtSlope, _instrumentValues.IrtIntercept);
-                Assert.AreEqual(regressionLine.DisplayEquation, row.Cells[2].Value);
-                Assert.AreEqual(1.0, double.Parse(row.Cells[3].Value.ToString()));
+                Assert.AreEqual(1, addIrtPeptidesDlg.RunsConvertedCount);
+                var row = addIrtPeptidesDlg.GetRow(0);
+                if (IsRecordMode)
+                {
+                    Console.WriteLine();
+                    Console.WriteLine($"LibraryPeptideCount = {addIrtPeptidesDlg.PeptidesCount},");
+                    Console.WriteLine($"ExpectedIrtPeptideCount = {row.Cells[1].Value},");
+                    Console.WriteLine(ParseIrtProperties(row.Cells[2].Value.ToString()));
+                }
+                else
+                {
+                    Assert.AreEqual(_instrumentValues.ExpectedIrtPeptideCount, row.Cells[1].Value);
+                    Assert.AreEqual(_instrumentValues.LibraryPeptideCount, addIrtPeptidesDlg.PeptidesCount);
+                    var regressionLine = new RegressionLine(_instrumentValues.IrtSlope, _instrumentValues.IrtIntercept);
+                    Assert.AreEqual(regressionLine.DisplayEquation, row.Cells[2].Value);
+                    //Assert.AreEqual(1.0, double.Parse(row.Cells[3].Value.ToString()));
+                }
+
                 Assert.AreEqual(Resources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_Success, row.Cells[4].Value);
             });
             PauseForScreenShot("Add iRT peptides form", 5);
 
-            var irtGraph = ShowDialog<GraphRegression>(() => addIrtDlg.ShowRegression(0));
+            var irtGraph = ShowDialog<GraphRegression>(() => addIrtPeptidesDlg.ShowRegression(0));
             PauseForScreenShot("iRT regression graph", 5);
 
             OkDialog(irtGraph, irtGraph.CloseDialog);
-            var recalibrateMessage = ShowDialog<MultiButtonMsgDlg>(addIrtDlg.OkDialog);
+            var recalibrateMessage = ShowDialog<MultiButtonMsgDlg>(addIrtPeptidesDlg.OkDialog);
             RunUI(() => Assert.AreEqual(TextUtil.LineSeparate(Resources.LibraryGridViewDriver_AddToLibrary_Do_you_want_to_recalibrate_the_iRT_standard_values_relative_to_the_peptides_being_added_,
                 Resources.LibraryGridViewDriver_AddToLibrary_This_can_improve_retention_time_alignment_under_stable_chromatographic_conditions_), recalibrateMessage.Message));
             if (!_instrumentValues.HasAmbiguousMatches)
@@ -418,7 +604,7 @@ namespace TestPerf
             var openDataFiles = ShowDialog<OpenDataSourceDialog>(() => importResults.Browse(diaDir));
             RunUI(() =>
             {
-                openDataFiles.SelectAllFileType(ExtensionTestContext.ExtMzml);
+                openDataFiles.SelectAllFileType(_instrumentValues.DiaFilesExtension);
                 foreach (var selectedFile in openDataFiles.SelectedFiles)
                     Assert.IsTrue(DiaFiles.Contains(selectedFile));
             });
@@ -508,14 +694,19 @@ namespace TestPerf
 
             RunUI(() =>
             {
-                Assert.IsTrue(isolationScheme.SpecifyMargin);
+                bool hasMargin = windowFields[0].Length == 3;
+                if (hasMargin)
+                    Assert.IsTrue(isolationScheme.SpecifyMargin);
+                else
+                    Assert.IsFalse(isolationScheme.SpecifyMargin);
                 int schemeRow = 0;
                 foreach (var isolationWindow in isolationScheme.GetIsolationWindows())
                 {
                     var fields = windowFields[schemeRow++];
                     Assert.AreEqual(double.Parse(fields[0], CultureInfo.InvariantCulture), isolationWindow.MethodStart, 0.01);
                     Assert.AreEqual(double.Parse(fields[1], CultureInfo.InvariantCulture), isolationWindow.MethodEnd, 0.01);
-                    Assert.AreEqual(double.Parse(fields[2], CultureInfo.InvariantCulture), isolationWindow.StartMargin ?? 0, 0.01);
+                    if (hasMargin)
+                        Assert.AreEqual(double.Parse(fields[2], CultureInfo.InvariantCulture), isolationWindow.StartMargin ?? 0, 0.01);
                 }
             });
             PauseForScreenShot("Isolation scheme", 9);
@@ -546,6 +737,9 @@ namespace TestPerf
             });
             PauseForScreenShot<ImportPeptideSearchDlg.FastaPage>("Import Peptide Search - Import FASTA page", 12);
 
+            if (IsRecordMode)
+                Console.WriteLine();
+
             var peptidesPerProteinDlg = ShowDialog<PeptidesPerProteinDlg>(() => importPeptideSearchDlg.ClickNextButton());
             WaitForCondition(() => peptidesPerProteinDlg.DocumentFinalCalculated);
             RunUI(() =>
@@ -569,7 +763,7 @@ namespace TestPerf
 
             OkDialog(peptidesPerProteinDlg, peptidesPerProteinDlg.OkDialog);
             PauseForScreenShot<AllChromatogramsGraph>("Loading chromatograms window", 13, 30*1000); // 30 second timeout to avoid getting stuck
-            WaitForDocumentChangeLoaded(doc, 8 * 60 * 1000); // 10 minutes
+            WaitForDocumentChangeLoaded(doc, 20 * 60 * 1000); // 20 minutes
 
             var peakScoringModelDlg = WaitForOpenForm<EditPeakScoringModelDlg>();
             ValidateCoefficients(peakScoringModelDlg, _analysisValues.ScoringModelCoefficients);
@@ -659,21 +853,26 @@ namespace TestPerf
             WaitForGraphs();
             PauseForScreenShot("Manual review window layout with protein selected", 19);
 
-            FindNode("LPQVEGTGGDVQPSQDLVR");
+            FindNode(_instrumentValues.ExamplePeptide);
             WaitForGraphs();
             PauseForScreenShot("Manual review window layout with peptide selected", 20);
 
             FindNode("_HUMAN");
             WaitForGraphs();
-            FindNode("LPQVEGTGGDVQPSQDLVR");
+            FindNode(_instrumentValues.ExamplePeptide);
             RunUI(SkylineWindow.AutoZoomBestPeak);
             WaitForGraphs();
             PauseForScreenShot("Snip just one chromatogram pane", 21);
 
-            ClickChromatogram(SkylineWindow.Document.MeasuredResults.Chromatograms[0].Name,
-                _analysisValues.ChromatogramClickPoint.X,
-                _analysisValues.ChromatogramClickPoint.Y);
-            PauseForScreenShot<GraphFullScan>("Full-Scan graph window - zoomed", 21);
+            if (!IsRecordMode)
+            {
+                ClickChromatogram(SkylineWindow.Document.MeasuredResults.Chromatograms[0].Name,
+                    _analysisValues.ChromatogramClickPoint.X,
+                    _analysisValues.ChromatogramClickPoint.Y);
+                PauseForScreenShot<GraphFullScan>("Full-Scan graph window - zoomed", 21);
+            }
+            else
+                PauseTest("Click on and record appropriate ChromatogramClickPoint");
             
             RunUI(() => SkylineWindow.GraphFullScan.ZoomToSelection(false));
             WaitForGraphs();
@@ -795,7 +994,7 @@ namespace TestPerf
 
                 OkDialog(formattingDlg, formattingDlg.OkDialog);
                 WaitForConditionUI(() => volcanoPlot.CurveList.Count == 8 &&
-                                         volcanoPlot.CurveList[7].Points.Count == 11); // iRTs
+                                         volcanoPlot.CurveList[7].Points.Count == _instrumentValues.ExpectedIrtPeptideCount); // iRTs
                 for (int i = 1; i < 4; i++)
                 {
                     RunUI(() =>
@@ -832,7 +1031,7 @@ namespace TestPerf
                         RunUI(() => Assert.AreEqual(_analysisValues.DiffPeptideCounts[i], volcanoPlot.CurveList[7 - i].Points.Count));
                 }
                 var barGraph = WaitForOpenForm<FoldChangeBarGraph>();
-                const int volcanoBarDelta = 11 - 1; // iRTs - selected peptide
+                int volcanoBarDelta = _instrumentValues.ExpectedIrtPeptideCount - 1; // iRTs - selected peptide
                 if (!IsRecordMode)
                     WaitForBarGraphPoints(barGraph, _analysisValues.DiffPeptideCounts[0] - volcanoBarDelta);
 
@@ -1037,7 +1236,7 @@ namespace TestPerf
             }
             else
             {
-                WaitForConditionUI(() => lowerBoundCount.Value < GetBarCount(barGraph) && GetBarCount(barGraph) < barCount,
+                WaitForConditionUI(() => lowerBoundCount.Value < GetBarCount(barGraph) && GetBarCount(barGraph) <= barCount,
                     () => string.Format("Expecting < {0} bars, actual {1} bars", barCount, GetBarCount(barGraph)));
             }
         }

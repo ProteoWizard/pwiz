@@ -349,16 +349,6 @@ namespace TestPerf
         /// </summary>
         private bool IsRecordMode { get { return false; } }
 
-        private string ParseIrtProperties(string irtFormula, CultureInfo cultureInfo = null)
-        {
-            var decimalSeparator = (cultureInfo ?? CultureInfo.CurrentCulture).NumberFormat.NumberDecimalSeparator;
-            var match = Regex.Match(irtFormula, $@"iRT = (?<slope>\d+{decimalSeparator}\d+) \* [^+-]+? (?<sign>[+-]) (?<intercept>\d+{decimalSeparator}\d+)");
-            Assert.IsTrue(match.Success);
-            string slope = match.Groups["slope"].Value, intercept = match.Groups["intercept"].Value, sign = match.Groups["sign"].Value;
-            if (sign == "+") sign = string.Empty;
-            return $"IrtSlope = {slope},\r\nIrtIntercept = {sign}{intercept},\r\n";
-        }
-
         protected override void DoTest()
         {
             Assert.AreEqual("IrtSlope = 3.005,\r\nIrtIntercept = -67.173,\r\n", ParseIrtProperties("iRT = 3.005 * Measured RT - 67.173", CultureInfo.InvariantCulture));

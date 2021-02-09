@@ -2060,9 +2060,6 @@
   <data name="CommandLine_ImportSearch_Adding_1_modification_" xml:space="preserve">
     <value>1修飾を追加中。</value>
   </data>
-  <data name="IncompleteStandardException_ERROR_The_calculator__0__requires_all_of_its_standard_peptides_in_order_to_determine_a_regression_" xml:space="preserve">
-    <value>カルキュレータ{0}には、回帰を決定するためにすべての標準ペプチドが必要です。</value>
-  </data>
   <data name="ResultsGrid_ResultsGrid_Opt_Collision_Energy" xml:space="preserve">
     <value>最適衝突エネルギー</value>
   </data>
