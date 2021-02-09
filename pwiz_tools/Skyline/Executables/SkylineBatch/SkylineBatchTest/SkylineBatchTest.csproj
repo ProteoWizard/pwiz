@@ -63,7 +63,7 @@
     <Compile Include="ConfigManagerThreadingTest.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\SharedQcBatch\SharedAutoQcBatch\SharedBatch.csproj">
+    <ProjectReference Include="..\..\SharedBatch\SharedBatch\SharedBatch.csproj">
       <Project>{8dc37752-c356-446f-a1ee-6aa6d8a23b6f}</Project>
       <Name>SharedBatch</Name>
     </ProjectReference>
