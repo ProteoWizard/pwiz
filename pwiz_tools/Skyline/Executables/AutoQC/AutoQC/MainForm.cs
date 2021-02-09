@@ -25,6 +25,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Web;
 using AutoQC.Properties;
+using SharedBatch;
 
 namespace AutoQC
 {
@@ -36,7 +37,7 @@ namespace AutoQC
         // Flag that gets set to true in the "Shown" event handler. 
         // ItemCheck and ItemChecked events on the listview are ignored until then.
         private bool _loaded;
-        private double[] _listViewColumnWidths;
+        private ColumnWidthCalculator _listViewColumnWidths;
         private bool _resizing;
 
         public MainForm()
@@ -44,13 +45,13 @@ namespace AutoQC
             InitializeComponent();
 
             toolStrip.Items.Insert(2,new ToolStripSeparator());
-            _listViewColumnWidths = new[]
+            _listViewColumnWidths = new ColumnWidthCalculator(new []
             {
-                (double)columnName.Width/listViewConfigs.Width,
-                (double)columnUser.Width/listViewConfigs.Width,
-                (double)columnCreated.Width/listViewConfigs.Width,
-                (double)columnStatus.Width/listViewConfigs.Width,
-            };
+                columnName.Width,
+                columnUser.Width,
+                columnCreated.Width,
+                columnStatus.Width
+            });
             listViewConfigs.ColumnWidthChanged += listViewConfigs_ColumnWidthChanged;
 
             Program.LogInfo(Resources.MainForm_MainForm_Loading_configurations_from_saved_settings_);
@@ -550,16 +551,17 @@ namespace AutoQC
 
         private void listViewConfigs_Resize(object sender, EventArgs e)
         {
-            ResizeListViewColumns();
+            _listViewColumnWidths.ListViewContainerResize(listViewConfigs.Width);
+            UpdateListViewColumns();
         }
 
-        private void ResizeListViewColumns()
+        private void UpdateListViewColumns()
         {
             // keeps the same column width ratios when the form is resized
             _resizing = true;
-            columnName.Width = GetColumnWidthFromPercent(_listViewColumnWidths[0]);
-            columnUser.Width = GetColumnWidthFromPercent(_listViewColumnWidths[1]);
-            columnCreated.Width = GetColumnWidthFromPercent(_listViewColumnWidths[2]);
+            columnName.Width = _listViewColumnWidths.Get(0);
+            columnUser.Width = _listViewColumnWidths.Get(1);
+            columnCreated.Width = _listViewColumnWidths.Get(2);
             columnStatus.Width = -2;
             _resizing = false;
         }
@@ -572,32 +574,14 @@ namespace AutoQC
         private void listViewConfigs_ColumnWidthChanged(object sender, ColumnWidthChangedEventArgs e)
         {
             if (_resizing) return;
-
-            // this code is only reached if a user is dragging the column partitions to change widths
-            _resizing = true;
-            var columnWidthSum = columnName.Width + columnUser.Width + columnCreated.Width + columnStatus.Width;
-            if (columnWidthSum - columnStatus.Width <= listViewConfigs.Width) // don't change ratios if it will make the status column go off screen
+            _listViewColumnWidths.WidthsChangedByUser(new[]
             {
-                // move column partition to where user dragged it
-                var oldColumnWidths = (double[])_listViewColumnWidths.Clone();
-                if (GetColumnWidthFromPercent(oldColumnWidths[0]) != columnName.Width)
-                    columnUser.Width += GetColumnWidthFromPercent(oldColumnWidths[0]) - columnName.Width;
-                else if (GetColumnWidthFromPercent(oldColumnWidths[1]) != columnUser.Width)
-                    columnCreated.Width += GetColumnWidthFromPercent(oldColumnWidths[1]) - columnUser.Width;
-                else if (GetColumnWidthFromPercent(oldColumnWidths[2]) != columnCreated.Width)
-                    columnStatus.Width += GetColumnWidthFromPercent(oldColumnWidths[2]) - columnCreated.Width;
-                
-                // update column size ratios
-                _listViewColumnWidths = new[]
-                {
-                    (double)columnName.Width/columnWidthSum,
-                    (double)columnUser.Width/columnWidthSum,
-                    (double)columnCreated.Width/columnWidthSum,
-                    1 - (columnName.Width + columnUser.Width + columnCreated.Width) / columnWidthSum,
-                };
-            }
-           
-            ResizeListViewColumns();
+                columnName.Width,
+                columnUser.Width,
+                columnCreated.Width,
+                columnStatus.Width
+            });
+            UpdateListViewColumns();
         }
 
         private void systray_icon_MouseDoubleClick(object sender, MouseEventArgs e)

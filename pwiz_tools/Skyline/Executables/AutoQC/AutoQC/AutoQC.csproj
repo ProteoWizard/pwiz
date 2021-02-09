@@ -270,7 +270,12 @@
       <Install>false</Install>
     </BootstrapperPackage>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="..\..\SharedBatch\SharedBatch\SharedBatch.csproj">
+      <Project>{8DC37752-C356-446F-A1EE-6AA6D8A23B6F}</Project>
+      <Name>SharedBatch</Name>
+    </ProjectReference>
+  </ItemGroup>
   <ItemGroup>
     <COMReference Include="IWshRuntimeLibrary">
       <Guid>{F935DC20-1CF0-11D0-ADB9-00C04FD58A0B}</Guid>
