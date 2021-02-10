@@ -55,6 +55,9 @@
 # # df.x.int.medians <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts/Table_step3_xintercepts.csv", stringsAsFactors = F) # PC
 # df.x.int.medians <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Cameron_development/Step2/Table_step2_xintercepts_0208_2021_v1.csv", stringsAsFactors = F) # PC - cameron_development
 # #------------------------------------------------------------------------------------
+# 
+# # reference cohort
+# reference.cohort <- "OCon" # this should be assigned by the user # TO DO
 
 
 #------------------------------------------------------------------------------------
@@ -95,9 +98,6 @@ df <- df %>%
 
 # cohorts
 cohorts <- unique(df$Cohort)
-
-# reference cohort
-reference.cohort <- "OCon" # this should be assigned by the user # TO DO
 
 # make a cohort vector for looping through all comparisons
 cohorts.loop <- cohorts[!cohorts==reference.cohort] # keep all cohorts except for the reference cohort

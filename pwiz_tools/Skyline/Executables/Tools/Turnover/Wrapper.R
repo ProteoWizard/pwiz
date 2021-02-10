@@ -16,7 +16,7 @@ invisible(lapply(packages, library, character.only = TRUE)) # add imported packa
 
 
 # filepath <<- "C:/Users/alimarsh/Documents/Turnover/Data/report.csv"
-# tool.dir <<- "C:\\Branches\\Skylinework20210127_Protein_turnover_tool_updates\\ProteoWizard\\pwiz\\pwiz_tools\\Skyline\\Executables\\Tools\\Turnover"
+# tool.dir <<- "C:\\Users\\alimarsh\\Documents\\Turnover\\Skyline-Protein-Turnover"
 # diet.enrichment <- as.numeric ("0.999999") # Leucine percent enrichment in diet
 # min.avg.turnover.score <<- as.numeric ("0")
 # min.isotope.dot.product <<- as.numeric ("0")
