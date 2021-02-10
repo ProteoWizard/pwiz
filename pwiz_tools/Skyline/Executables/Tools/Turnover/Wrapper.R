@@ -16,12 +16,12 @@ invisible(lapply(packages, library, character.only = TRUE)) # add imported packa
 
 
 # filepath <<- "C:/Users/alimarsh/Documents/Turnover/Data/report.csv"
-# tool.dir <<- "C:\\Users\\alimarsh\\Documents\\Turnover\\Skyline-Protein-Turnover"
+# tool.dir <<- "C:\\Branches\\Skylinework20210127_Protein_turnover_tool_updates\\ProteoWizard\\pwiz\\pwiz_tools\\Skyline\\Executables\\Tools\\Turnover"
 # diet.enrichment <- as.numeric ("0.999999") # Leucine percent enrichment in diet
 # min.avg.turnover.score <<- as.numeric ("0")
 # min.isotope.dot.product <<- as.numeric ("0")
 # folder.name <- "Data"
-# Reference.Cohort <- "OCR"
+# reference.cohort <- "OCR"
 # Detection.Qvalue.threshold <- as.numeric ("1")
 # Has.Q.Values <- TRUE
 # 
@@ -38,9 +38,9 @@ invisible(lapply(packages, library, character.only = TRUE)) # add imported packa
 #------------------------------------------------------------------------------------
 # START CODE FOR RUNNING FROM TURNOVER (comment out if running from RSTUDIO)
 #------------------------------------------------------------------------------------
-# 
-# #------------------------------------------------------------------------------------
-# # LOAD ARGUMENTS FROM SKYLINE #
+
+#------------------------------------------------------------------------------------
+# LOAD ARGUMENTS FROM SKYLINE #
 
 arguments <- commandArgs(trailingOnly=TRUE)
 #arguments <- c("C:\\Users\\alimarsh\\AppData\\Local\\Temp\\TurnoveR_Protein_Turnover_Report.csv", "C:\\Branches\\Skylinework20210127_Protein_turnover_tool_updates\\ProteoWizard\\pwiz\\pwiz_tools\\Skyline\\bin\\x64\\Debug\\Tools\\Tool", "99", "0", "0", "Data", "OCR", "1", "1")
@@ -65,7 +65,7 @@ for (i in 1:9) {
   if (i==4) min.avg.turnover.score <<- as.numeric (arg)
   if (i==5) min.isotope.dot.product <<- as.numeric (arg)
   if (i==6) folder.name <- arg
-  if (i==7) Reference.Cohort <- arg
+  if (i==7) reference.cohort <- arg
   if (i==8) Detection.Qvalue.threshold <- as.numeric (arg)
   if (i==9) Has.Q.Values <- ifelse(arg=="1", TRUE, FALSE)
 }
@@ -142,7 +142,7 @@ source(paste(tool.dir, "Step2_turnover_fit_skyline_0918_2020_v1.R", sep="/"))
 data.s <- data.s.holder
 data.m <- data.m.holder
 # medians of x-intercepts by cohort from step 3
-df.x.int.medians <- read.csv(paste(getwd(),"/Table_step2_xintercepts.csv", sep=""), stringsAsFactors = F)
+df.x.int.medians <- read.csv(paste(getwd(),"/Table_step2_xintercepts_date.csv", sep=""), stringsAsFactors = F)
 
 source(paste(tool.dir, "Step3_turnover_slope_skyline_0915_2020_v1.R", sep="/"))
 #------------------------------------------------------------------------------------
@@ -153,7 +153,7 @@ source(paste(tool.dir, "Step3_turnover_slope_skyline_0915_2020_v1.R", sep="/"))
 data.s <- data.s.holder
 data.m <- data.m.holder
 # medians of x-intercepts by cohort from step 3
-df.x.int.medians <- read.csv(paste(getwd(),"/Table_step2_xintercepts.csv", sep=""), stringsAsFactors = F)
+df.x.int.medians <- read.csv(paste(getwd(),"/Table_step2_xintercepts_date.csv", sep=""), stringsAsFactors = F)
 
 source(paste(tool.dir, "Step4_turnover_statistics_skyline_0918_2020_v1.R", sep="/"))
 #------------------------------------------------------------------------------------

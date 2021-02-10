@@ -3,18 +3,17 @@
 #Schilling Lab, Buck Institute for Research on Aging
 #Novato, California, USA
 #March, 2020
-#updated: September 30, 2020
+#updated: February 09, 2021
 
 # PROTEIN TURNOVER ANALYSIS
-# STEP 5
-# TURNOVER STATISTICS AND 
-# DESCRIPTION: Linear model of log(Percent.Newly.Synthesized) by timepoints and cohorts and their interaction
-# OUTPUT: PDF of plots of Percent Newly Synthesized vs. Time, and Data table with statistics
+# STEP 4:
+# Linear model of log(Percent.Newly.Synthesized) by timepoints and cohorts and their interaction
+#
+# OUTPUT:
+# i. Data table with statistics
+# ii. PDF of linear regression plots: Percent Newly Synthesized vs. Time
 
-######################
-#### Begin Program ###
-######################
-
+### Begin Script Step 4 ###
 
 
 #------------------------------------------------------------------------------------
@@ -23,9 +22,9 @@
 
 # 
 # #------------------------------------------------------------------------------------
-# #set working directory
-# #setwd("/Volumes/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts") # VPN mac
-# setwd("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts") # VPN windows
+# # set working directory
+# #setwd("/Volumes/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Cameron_development/Step4") # MAC
+# setwd("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Cameron_development/Step4") # PC
 # #------------------------------------------------------------------------------------
 # 
 # 
@@ -43,270 +42,183 @@
 # 
 # 
 # #------------------------------------------------------------------------------------
-# # LOAD DATA #
+# # LOAD DATA
 # 
 # # single leucine data set (1 leucine)
-# data.s <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts/Step0_Data_Output_Skyline_singleleucine_peps_test.csv", stringsAsFactors = F) #VPN
+# data.s <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts/Step0_Data_Output_Skyline_singleleucine_peps_test.csv", stringsAsFactors = F) # WINDOWS
 # 
 # # multiple leucine data set (2,3,4 leucines)
-# data.m <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts/Step0_Data_Output_Skyline_multileucine_peps_test.csv", stringsAsFactors = F) #VPN
+# data.m <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts/Step0_Data_Output_Skyline_multileucine_peps_test.csv", stringsAsFactors = F) # WINDOWS
 # 
 # # medians of x-intercepts by cohort from step 3
-# df.x.int.medians <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts/Table_step3_xintercepts.csv", stringsAsFactors = F) #VPN
+# # df.x.int.medians <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts/Table_step3_xintercepts.csv", stringsAsFactors = F) # WINDOWS
+# df.x.int.medians <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Cameron_development/Step2/Table_step2_xintercepts_0208_2021_v1.csv", stringsAsFactors = F) # WINDOWS - cameron_development
 # #------------------------------------------------------------------------------------
+# 
+# 
+# # reference cohort
+# reference.cohort <- "OCon" # this should be assigned by the user # TO DO
 
 #------------------------------------------------------------------------------------
 # END CODE FOR RUNNING IN RSTUDIO
 #------------------------------------------------------------------------------------
 
 
-
-
-
 #------------------------------------------------------------------------------------
 # Combine Single Leucine and Multiple Leucine data sets together for modeling
 
 df <- data.m %>%
-  bind_rows(data.s) %>% # retains all columns; fills missing columns in with NA
-  filter(Perc.New.Synth>0) %>% # retain data with positive values of percent newly synthesized
-  mutate_at(vars(Perc.New.Synth), list(~.*100)) # scale percent newly synthesized by 100 - we will be taking the log of this later
+  bind_rows(data.s) %>% # combine data; retains all columns, fills missing columns in with NA
+  filter(Perc.New.Synth>0) # filter out data with negative percent newly synthesized value
 #------------------------------------------------------------------------------------
 
 
 #------------------------------------------------------------------------------------
-# PREP FOR MODEL #
-# vectors for looping through, and plotting
+# PREP FOR MODEL 
 
-# Cohorts
+# cohorts
 cohorts <- unique(df$Cohort)
 
-# Proteins
+# make a cohort vector for looping through all comparisons
+cohorts.loop <- cohorts[!cohorts==reference.cohort] # keep all cohorts except for the reference cohort
+
+# proteins
 prots <- unique(df$Protein.Accession)
 
-# Genes
+# genes
 genes <- unique(df$Protein.Gene)
 
 # time points
 time <- sort(unique(df$Timepoint))
-
-# peptides
-peps <- unique(df$Modified.Peptide.Seq)
 #------------------------------------------------------------------------------------
 
 
 #------------------------------------------------------------------------------------
-# LINEAR MODELLING #
-
-# vector of cohorts
-cohorts <- sort(unique(df$Cohort), decreasing = TRUE) 
-# number of combinations
-no.comparisons <- choose(length(cohorts), 2) # pairwise; choosing 2 from number of cohorts
-
-# create modified time by subtracting the median x-intercept time (shifting left toward the origin)
-# unless x-intercepts are negative, then modified.time is same as time
-for(i in 1:length(cohorts)){
-  if(all(df.x.int.medians[1,]>0, df.x.int.medians[1,]<min(time))){ # if all median x-intercepts are positive and less than minimum timepoint, then modify timepoints by translating left by respective median x-intercept
-    df$Modified.Time[ df$Cohort == cohorts[i] ] <- df[df$Cohort == cohorts[i], "Timepoint"] - df.x.int.medians[1, colnames(df.x.int.medians)== cohorts[i] ] # translate left
+# create modified time 
+# by subtracting the median x-intercept time (shifting left toward the origin)
+# unless x-intercepts are negative, then modified.time is simply the same as time
+for(i in cohorts){
+  if(all(df.x.int.medians %>% pull(Median.x.intercept)>0, df.x.int.medians %>% pull(Median.x.intercept)<min(time))){ # check if all median x-intercepts are positive and less than minimum timepoint
+    df$Modified.Time[df$Cohort==i] <- df %>% filter(Cohort==i) %>% pull(Timepoint) - df.x.int.medians %>% filter(Cohort==i) %>% pull(Median.x.intercept) # modify timepoints by translating left by respective median x-intercept
   } else { 
-    df$Modified.Time[ df$Cohort == cohorts[i] ] <- df[df$Cohort == cohorts[i], "Timepoint"] # do not modify
+    df$Modified.Time[df$Cohort==i] <- df %>% filter(Cohort==i) %>% pull(Timepoint) # else do not modify
   }
 } # end for
+#------------------------------------------------------------------------------------
 
+
+#------------------------------------------------------------------------------------
+# LINEAR MODELLING
 
 # initialize data frame to write out results from linear model 
-# first figure out your column names since the number of columns is built into the
-# row size = number of comparisons * number of proteins (hopefully the same proteins for each comparison group)
-# col size = number of names in col.names
+# first figure out column names since the number of columns is built into col size
 col.names <- c("Protein.Accession", "Gene", "Comparison", "No.Peptides", "No.Points", "Interaction" , "Std.Error",  "t.value", "Unadj.P", "Qvalue", "DF",
                "Slope.Numerator", "Slope.Denominator", "Half.Life.Numerator", "Half.Life.Denominator")
-
-df.model.output <- data.frame(matrix(nrow = no.comparisons*length(prots), ncol = length(col.names)))
+df.model.output <- data.frame(matrix(nrow = length(cohorts.loop)*length(prots), ncol = length(col.names)))
 names(df.model.output) <- col.names
 
-#Initiate PDF
-pdf(file="Turnover_step5_plots.pdf") 
-par(mfrow=c(2,3))
+# Loop
+row.index <- 1 # counter
+for(i in prots){
+  
+  # subset data for protein 
+  data.protein.loop <- subset(df, Protein.Accession == i) 
+  
+  # subset data from reference cohort - do this prior to the cohorts loop below
+  data.ref <- subset(data.protein.loop, Cohort==reference.cohort) # ref refers to the user defined reference cohort
+  
+  # loop through cohorts - in order to generate each comparison to the reference cohort
+  for(j in cohorts.loop){
+    
+    # subset data for variable cohort and reference cohort; for use in combined linear model
+    data.cohort.loop <- subset(data.protein.loop, Cohort == j | Cohort == reference.cohort )
+    
+    # subset data for variable cohort
+    data.var <- subset(data.protein.loop, Cohort==j) # var refers to the variable cohorts, which to compare against the user defined reference cohort
+    
+    # create name of comparison
+    comparison <- paste(j, "vs", reference.cohort, sep=" ") # variable cohort vs reference cohort
+  
+    # write out comparison name
+    df.model.output[row.index, colnames(df.model.output)=="Comparison"] <- comparison
+    
+    # write out Protein.Accession
+    df.model.output[row.index, colnames(df.model.output)=="Protein.Accession"] <- i 
+    
+    # write out Gene name
+    df.model.output[row.index, colnames(df.model.output)=="Gene"] <- data.protein.loop %>% pull(Protein.Gene) %>% unique() 
+    
+    # write out number of unique peptides
+    df.model.output[row.index, colnames(df.model.output)=="No.Peptides"] <- data.cohort.loop %>% pull(Modified.Peptide.Seq) %>% unique() %>% length()
+    
+    # write out number of data points
+    df.model.output[row.index, colnames(df.model.output)=="No.Points"] <- nrow(data.cohort.loop)
 
-# LOOP 
-row.index <- 0 # counter
+    # LINEAR MODEL #
+    if( nrow(data.cohort.loop) >= 1.5*length(time) ){ # quick assessment: if the number of data points is greater than length of time points then the model should hopefully converge
+      tryCatch(
+        expr={ 
+          # Model
+          # model <- lm( formula = log(Perc.New.Synth) ~ Cohort*Modified.Time, data = data.cohort.loop)
+          model <- lm(log(1-Perc.New.Synth) ~ 0 + Cohort*Modified.Time, data = data.cohort.loop %>% filter(Perc.New.Synth<1)) # this model matches the model used in step 3
+          
+          # # p.value rounded; for use in plot legend
+          # p.value <- summary(model)$coef[3,4] %>% round(., digits=4) # pvalue of iteraction term
+          
+          # write out statistics from combined model
+          df.model.output[row.index, c(6:8)] <- summary(model)$coef[3, 1:3] %>% round(., digits=4) # model statistics: estimate, standard error, t value
+          df.model.output[row.index, 9] <- summary(model)$coef[3, 4] # p-value from combined linear model; not rounded, so we can sort by this variable
+          df.model.output[row.index, colnames(df.model.output)=="DF"] <- summary(model)$df[2] # degrees of freedom
 
-for(j in 1:(length(cohorts)-1)){
-  for(k in 1:(length(cohorts)-j)){
-    for(i in seq_along(prots)){
-      # increase counter
-      row.index <- row.index + 1
+          # model reference cohort against its timepoints
+          model.ref <- lm( log(1-Perc.New.Synth) ~ 0 + Modified.Time, data = data.ref %>% filter(Perc.New.Synth<1)) # this model matches the model used in step 3
+          # model variable cohort against its timepoints
+          model.var <- lm( log(1-Perc.New.Synth) ~ 0 + Modified.Time, data = data.var %>% filter(Perc.New.Synth<1)) # this model matches the model used in step 3
+          
+          # write out slopes and half-lives from individual linear models
+          # variable cohort
+          df.model.output[row.index, "Slope.Numerator"] <- -summary(model.var)$coef[1] %>% round(., digits=4) # slope of linear model
+          df.model.output[row.index, "Half.Life.Numerator"] <- -log(2)/summary(model.var)$coef[1] %>% round(., digits=4) # half life
+          # reference cohort
+          df.model.output[row.index, "Slope.Denominator"] <- -summary(model.ref)$coef[1] %>% round(., digits=4) # slope of linear model
+          df.model.output[row.index, "Half.Life.Denominator"] <- -log(2)/summary(model.ref)$coef[1] %>% round(., digits=4) # half life
+        },
+        error=function(e){
+          message("Caught an error!")
+          print(e)
+        },
+        warning=function(w){
+          message("Caught a warning!")
+          print(w)
+        },
+        finally={
+          message("All done, quitting.")
+        }
+      ) # end tryCatch
       
-      print(c(j,k,i, row.index))
-      
-      # create name of comparison
-      pairname <- paste(cohorts[j], "vs", cohorts[j+k], sep=" ") # Cohort A vs. Cohort B
-      # write pairname out
-      df.model.output[row.index, colnames(df.model.output)=="Comparison"] <- pairname
-      
-      # subset data for given protein
-      data_loop <- subset(df, Protein.Accession == prots[i] & (Cohort == cohorts[j] | Cohort == cohorts[j+k]) )
-      
-      # write out Protein.Accession
-      df.model.output[row.index, colnames(df.model.output)=="Protein.Accession"] <- prots[i]
-      
-      # write out Gene name
-      df.model.output[row.index, colnames(df.model.output)=="Gene"] <- ifelse(length(unique(data_loop[ ,"Protein.Gene"]))==0, NA, unique(data_loop[ ,"Protein.Gene"]))
-      
-      # calculate number of peptides for given protein
-      no.peps <- length(unique(data_loop$Modified.Peptide.Seq))
-      # write out number of peptides
-      df.model.output[row.index, colnames(df.model.output)=="No.Peptides"] <- no.peps
-      
-      # calculate number of data points, which is the number of rows in data_loop
-      no.points <- nrow(data_loop)
-      df.model.output[row.index, colnames(df.model.output)=="No.Points"] <- no.points
-      
-      
-      # LINEAR MODEL #
-      # if there are at least 1.5 times as many data points as there are time points then do linear model (should be enough data to model)
-      if( no.points >= 1.5*length(time) ){
-        tryCatch(
-          expr={ 
-            #### Model #### 
-            model <- lm( formula = log(Perc.New.Synth) ~ Cohort*Modified.Time, data = data_loop)
-
-            # write out statistics:
-            # model results: estimate, std. error, t value, unadj. P 
-            df.model.output[row.index, c(6:9)] <- round(summary(model)$coef[3, 1:4], 4) # model results
-
-            p.value <- round(summary(model)$coef[3,4], 4) # p-value of iteraction term
-            
-            # degrees of freedom
-            df.model.output[row.index, colnames(df.model.output)=="DF"] <- summary(model)$df[2] # fixed element
-            
-            
-            #### Model ####
-            # model cohort "j" against its timepoints; results used for confidence interval
-            fit.j <- data_loop %>%
-              filter(Cohort==cohorts[j]) %>%
-              select(c(Modified.Time, Perc.New.Synth)) %>% 
-              arrange(Modified.Time)
-            
-            mod.time.j <- select(fit.j, Modified.Time)
-            
-            modelj <- lm( log(fit.j$Perc.New.Synth) ~ fit.j$Modified.Time)
-            
-            
-            #### Model ####
-            # model cohort "j+k" against its time points; results used for confidence interval
-            fit.k <- data_loop %>%
-              filter(Cohort==cohorts[j+k]) %>%
-              select(c(Modified.Time, Perc.New.Synth)) %>% 
-              arrange(Modified.Time)
-            
-            mod.time.k <- select(fit.k, Modified.Time)
-            
-            modelk <- lm( log(fit.k$Perc.New.Synth) ~ fit.k$Modified.Time)
-            
-            
-            # add slopes from modelj and modelk to df
-            # numerator is modelj
-            df.model.output[row.index, "Slope.Numerator"] <- round( coef(modelj)[2], 4)
-            # denominator is modelk
-            df.model.output[row.index, "Slope.Denominator"] <- round( coef(modelk)[2], 4)
-            # half lifes of slopes
-            df.model.output[row.index, "Half.Life.Numerator"] <- round( log(2)/coef(modelj)[2], 4)
-            df.model.output[row.index, "Half.Life.Denominator"] <- round( log(2)/coef(modelk)[2], 4)
-      
-            
-            ########
-            # PLOT #
-            
-            # main title = Gene Name + Cohort j vs. Cohort j+k
-            main_title <- paste( unique(data_loop$Protein.Gene), unique(data_loop$Protein.Accession), sep = " ")
-            
-            # make x and y for easy plotting
-            x <- data_loop$Modified.Time
-            y <- data_loop$Perc.New.Synth
-            # initialize empty plot
-            plot(x, log(y), type = "n", xlim = c(0, max(time)), ylim = c(0,5), main = main_title, 
-                 xlab = "Time (Days)", ylab = "Log Percent Newly Synthesized")
-            
-            # plot Data Points
-            # cohort j 
-            with(fit.j, points(Modified.Time, log(Perc.New.Synth), pch=20, col = "blue"))
-            # cohort j+k
-            with(fit.k, points(Modified.Time, log(Perc.New.Synth), pch=20, col = "red"))
-            
-            # predicted values and confidence intervals from the linear model of cohort j
-            yhatj <- predict(modelj, newdata = mod.time.j, interval = c("confidence"), level = 0.95, type = c("response")) %>%
-              unique()
-            
-            # predicted values and confidence intervals from the linear model of cohort j+k
-            yhatk <- predict(modelk, newdata = mod.time.k, interval = c("confidence"), level = 0.95, type = c("response") ) %>%
-              unique()
-            
-            # plot predicted lines and Confidence Intervals
-            # cohort j
-            matplot(unique(mod.time.j), yhatj, type="l", add=TRUE, col = "blue", lty = c(1,2,2))
-            # cohort j+k
-            matplot(unique(mod.time.k), yhatk, type="l", add=TRUE, col = "red", lty = c(1,2,2))
-            
-
-            # legend
-            # p value from model
-            #leg <- paste("Interaction p =", interaction_p, sep = " ")
-            leg_pval <- paste("p =", p.value, sep = " ")
-            # peptides present in this data, used for legend
-            leg_peps <- unique(peps[peps %in% data_loop$Modified.Peptide.Seq])
-            leg2 <- paste("Peptide:", leg_peps , sep = " ")
-            
-            # these legends look good on a matrix plot (2 rows by 3 columns) PDF:
-            legend("top", inset = 0.01, legend = c(cohorts[j], cohorts[j+k]), ncol = 2, cex = 0.8, lty = 1, col = c("blue", "red") )
-            legend("top", inset = 0.11, legend = leg_pval, cex = 0.6 )
-            #legend("top", inset = 0.19, legend = leg_peps, cex = 0.5) # legend for peptides ... but when there are so many it is messy
-            
-            # END PLOT #
-            ############
-          },
-          error=function(e){
-            message("Caught an error!")
-            print(e)
-          },
-          warning=function(w){
-            message("Caught a warning!")
-            print(w)
-          },
-          finally={
-            message("All done, quitting.")
-          }
-        ) # end tryCatch
-        
-      } else{ # otherwise there will not be enough data points to run the model ... then write out NA's and continue looping
-        df.model.output[row.index, c(6:9)] <- NA
-        df.model.output[row.index, colnames(df.model.output)=="DF"] <- NA
-        
-      }
-      ################
-    } # end for; protein level
+    } else{ # otherwise there may not be enough data points to run the model, then write out NA and continue looping
+      df.model.output[row.index, c(6:9)] <- NA
+      df.model.output[row.index, colnames(df.model.output)=="DF"] <- NA
+    } # end else
+    # increment row.index counter before iterating through cohort loop
+    row.index <- row.index + 1
   } # end for; cohort level
-} # end for; cohort level
-
-graphics.off()
+} # end for; protein level
 #------------------------------------------------------------------------------------
 
 
 #------------------------------------------------------------------------------------
-# Clean Up output data frame
-
+# clean model output
 df.model.output <- df.model.output %>%
-  select(-Qvalue) %>%  # Qvalue is not working ... remove it
+  select(-Qvalue) %>%  # Qvalue package is not working, remove Qvalue variable
   arrange(Unadj.P) # arrange best Pvalue top down
 #------------------------------------------------------------------------------------
 
 
 #------------------------------------------------------------------------------------
-# writing out data frame
-write.csv(df.model.output, file = "Table_step5_output.csv", row.names = FALSE)
+# write out model output
+write.csv(df.model.output, file = "Table_step4_output_date.csv", row.names = FALSE)
 #------------------------------------------------------------------------------------
 
 
-
-#######
-# END #
-#######
+# END 

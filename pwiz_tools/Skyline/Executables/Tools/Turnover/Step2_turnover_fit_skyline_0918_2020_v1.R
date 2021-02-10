@@ -3,36 +3,36 @@
 #Schilling Lab, Buck Institute for Research on Aging
 #Novato, California, USA
 #March, 2020
-#updated: September 28, 2020
+#updated: February 09, 2021
 
 # PROTEIN TURNOVER ANALYSIS
-# STEP 3:
+# STEP 2:
 # NON LINEAR FIT OF TURNOVER 
 # CALCULATE X-INTERCEPTS
 #
 # OUTPUT: 
-# PDF of regression plots (both cohorts in the same plot) 
-# output data table of statistics and average x-intercepts by cohort
+# i. PDF of non-linear regression plots: Percent Newly Synthesized vs. Time
+# ii. Data table of non-linear model statistics
+# iii. Average x-intercepts by cohort
 
 
-######################
-#### Begin Program ###
-######################
-
+### Begin Script Step 2 ###
 
 
 #------------------------------------------------------------------------------------
 # START CODE FOR RUNNING IN RSTUDIO (comment out if running from TurnoveR)
 #------------------------------------------------------------------------------------
-
-# 
-# # set working directory
-# #setwd("/Volumes/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts/")
-# setwd("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts/") #VPN
 # 
 # 
 # #------------------------------------------------------------------------------------
-# # PACKAGES #
+# # set working directory
+# #setwd("/Volumes/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Cameron_development/")
+# setwd("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Cameron_development/") #VPN
+# #------------------------------------------------------------------------------------
+# 
+# 
+# #------------------------------------------------------------------------------------
+# # PACKAGES
 # packages = c("dplyr", "reshape2", "seqinr", "ggplot2", "coefplot", "plyr")
 # 
 # package.check <- lapply(packages, FUN = function(x) {
@@ -43,18 +43,21 @@
 # })
 # #------------------------------------------------------------------------------------
 # 
+# 
 # #------------------------------------------------------------------------------------
-# # LOAD DATA #
+# # LOAD DATA
 # 
 # # single leucine data set (1 leucine)
-# data.s <- read.csv("/Volumes/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts/Step0_Data_Output_Skyline_singleleucine_peps_test.csv", stringsAsFactors = F) # mac
-# # data.s <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts/Step0_Data_Output_Skyline_singleleucine_peps_test.csv", stringsAsFactors = F) # windows
+# # data.s <- read.csv("/Volumes/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts/Step0_Data_Output_Skyline_singleleucine_peps_test.csv", stringsAsFactors = F) # MAC
+# data.s <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts/Step0_Data_Output_Skyline_singleleucine_peps_test.csv", stringsAsFactors = F) # PC
 # 
 # # multiple leucine data set (2,3,4 leucines)
-# data.m <- read.csv("/Volumes/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts/Step0_Data_Output_Skyline_multileucine_peps_test.csv", stringsAsFactors = F) # mac
-# # data.m <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts/Step0_Data_Output_Skyline_multileucine_peps_test.csv", stringsAsFactors = F) # windows
+# # data.m <- read.csv("/Volumes/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts/Step0_Data_Output_Skyline_multileucine_peps_test.csv", stringsAsFactors = F) # MAC
+# data.m <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts/Step0_Data_Output_Skyline_multileucine_peps_test.csv", stringsAsFactors = F) # PC
 # #------------------------------------------------------------------------------------
-
+# 
+# # reference cohort
+# reference.cohort <- "OCon" # this should be assigned by the user # TO DO
 
 #------------------------------------------------------------------------------------
 # END CODE FOR RUNNING IN RSTUDIO
@@ -63,7 +66,7 @@
 
 
 #------------------------------------------------------------------------------------
-# FILTER #
+# FILTER
 
 # filter multiple leucine data set by average turnover score
 # between [0,1) where 1 is most stringent
@@ -74,10 +77,9 @@ data.m <- data.m %>%
   filter(Avg.Turnover.Score>ATS.threshold) 
 #------------------------------------------------------------------------------------
 
-  
+
 #------------------------------------------------------------------------------------
 # Combine Single Leucine and Multiple Leucine data sets together for modeling
-
 df <- data.m %>%
   bind_rows(data.s) # retains all columns; fills missing columns in with NA
 #------------------------------------------------------------------------------------
@@ -85,19 +87,21 @@ df <- data.m %>%
 
 #------------------------------------------------------------------------------------
 # Remove observations with negative percent.new.synthesized values
-
 df <- df %>%
   filter(Perc.New.Synth>0)
 #------------------------------------------------------------------------------------
 
 
 #------------------------------------------------------------------------------------
-# PREP FOR MODEL #
+# PREP FOR MODEL
 
-# Cohorts
+# cohorts
 cohorts <- unique(df$Cohort)
 
-# Proteins
+# make a cohort vector for looping through all comparisons
+cohorts.loop <- cohorts[!cohorts==reference.cohort] # keep all cohorts except for the reference cohort
+  
+# proteins
 prots <- unique(df$Protein.Accession)
 
 # time points
@@ -106,237 +110,205 @@ time <- sort(unique(df$Timepoint))
 
 
 #------------------------------------------------------------------------------------
-# NLS MODEL #
+# NLS MODEL
 
 # initialize data frame to write out results from nonlinear model 
 # first figure out your column names since the number of columns is built off that
 # row size = (number of cohorts) * (number of proteins) ... per cohort, which is hopefully constant
 # col size = number of names in col.names
 col.names <- c("Protein.Accession", "Gene", "Cohort", "No.Peptides", "No.Points", "a", "Pvalue.a", "b", "Pvalue.b", "Qvalue", "Res.Std.Error", "X.Intercept")
-df.model.output <- data.frame(matrix(nrow = length(cohorts)*length(prots), ncol = length(col.names)))
+df.model.output <- data.frame(matrix(nrow = 2*length(cohorts.loop)*length(prots), ncol = length(col.names)))
 names(df.model.output) <- col.names
 
 #Initiate PDF
-pdf(file="Turnover_step2_plots.pdf")
+pdf(file="Turnover_step2_plots_date.pdf")
 par(mfrow=c(2,3))
 
-row.index <- -1 # start w/ negative 1 so that when we add 2 at the top of the first iteration we are really starting with 1
-# revise row.index to start with 1, and increment it accordingly at the end of the very end of iteration ## TO DO
-for(i in 1:length(unique(df$Protein.Accession)) ){
+row.index <- 1 
+for(i in seq_along(unique(df$Protein.Accession))){
   print(i)
   
-  # increase row.index counter by 2 each cycle, since we are writing out data for both cohorts (WT and KO) during each iteration
-  row.index <- row.index + 2
-  
   # subset combined data for cohort and protein 
-  data_loop <- subset(df, Protein.Accession == prots[i]) 
+  data.protein.loop <- subset(df, Protein.Accession == prots[i]) 
   
-  # split data by cohort
-  data.ko <- subset(data_loop, Cohort == "OCR") # calorie restriction
-  data.wt <- subset(data_loop, Cohort == "OCon") # control (aka WildType 'WT')
+  # subset reference data - do this before cohorts loop below
+  data.ref <- subset(data.protein.loop, Cohort==reference.cohort) # ref will always be the user defined reference cohort
+  # subset variables Time and Percent.Newly.Synthesized to fit with model
+  fit.ref <- subset(data.ref, select = c("Timepoint", "Perc.New.Synth")) %>% 
+    dplyr::rename(x=Timepoint, y=Perc.New.Synth) %>% # rename to x and y for simiplicity in model
+    dplyr::arrange(x) # ascending order by time.point
   
-  ## 
-  # added 1/22/21 - work in progress
-  # split data by cohort
-  X <- split(df, df$Cohort)
-  
-  # use lapply to convert each list in X to a data frame
-  Y <- lapply(seq_along(X), function(x) as.data.frame(X[[x]])) 
-  
-  # use list2env to assign each list to an object in the global environment
-  names(Y) <- LETTERS[1:length(cohorts)] # assign names using (the appropriate number of) capitalized letters
-  list2env(Y, envir = .GlobalEnv) # creates objects in the global environment
-  
-  # need to find a way to go through each object and assign similar objects for fit
-  # think about this a bit!
-  
-  for(j in names(Y)){
-    print(j)
-  }
-  ##
-  
-  
-  # subset Time and Percent.Newly.Synthesized to fit with model
-  fit.ko <- subset(data.ko, select = c("Timepoint", "Perc.New.Synth"))
-  fit.wt <- subset(data.wt, select = c("Timepoint", "Perc.New.Synth"))
-  
-  
-  # rename to x and y for simiplicity in model
-  colnames(fit.ko) <- c("x", "y")
-  colnames(fit.wt) <- c("x", "y")
-  
-  # order fit by time.point from small to larger time
-  fit.ko <- arrange(fit.ko, x)
-  fit.wt <- arrange(fit.wt, x)
-  
-  # ADD median x-intercept for this specific cohort to the data that will be modeled
-  #fit <- rbind( c(df.x.int.medians[1, colnames(df.x.int.medians) == cohorts[j] ], 0), fit)
-  
-  # calculate number of data points
-  no.points.ko <- dim(fit.ko)[1]
-  no.points.wt <- dim(fit.wt)[1]
-  
-  if(no.points.ko > length(time) & no.points.wt > length(time) ){ # if number of data points for each cohort is greater than length of time points then the model should be okay (hopefully it will converge)
-    tryCatch(
-      expr={
-        # MODEL:
-        
-        # first set m.ko and m.wt (models) to NA, so the ones from the previous iteration aren't plotted when the model does not successfully run on the current iteration
-        m.ko <- NA
-        m.wt <- NA
-        
-        # linearizing nls first to get starting values
-        fm0.ko <- nls(log(y) ~ log(I(1-a*exp(b*x))), data = fit.ko, start = c(a = 1, b = -0.5)) # a=1 goes through origin, and b is the rate of change of the exponential, which is used in half-live calculation
-        m.ko <- nls( y ~ I(1-a*exp(b*x)), data = fit.ko, start=coef(fm0.ko), trace = T ) # model with starting values
-        
-        # linearizing nls first to get starting values
-        fm0.wt <- nls(log(y) ~ log(I(1-a*exp(b*x))), data = fit.wt, start = c(a = 1, b = -0.5)) # a=1 goes through origin, and b is the rate of change of the exponential, which is used in half-live calculation
-        m.wt <- nls( y ~ I(1-a*exp(b*x)), data = fit.wt, start=coef(fm0.ko), trace = T ) # model with starting values
-        
-        
-        # WRITE results out to df.model.output
-        
-        #KO:
-        # protein
-        df.model.output[row.index, "Protein.Accession"] <- prots[i]
-        
-        # gene
-        df.model.output[row.index, "Gene"] <- unique(data.ko[, "Protein.Gene"])
-        
-        # cohort
-        df.model.output[ row.index, "Cohort"] <- unique(data.ko[, "Cohort"])
-        
-        # number of peptides
-        df.model.output[row.index, "No.Peptides"] <- length(unique(data.ko$Modified.Peptide.Seq))
-        
-        # number of points
-        df.model.output[row.index, "No.Points"] <- no.points.ko
-        
-        # a
-        df.model.output[row.index, "a"] <- round( summary(m.ko)$coef["a", "Estimate"], 4)
-        
-        # p-value for a
-        df.model.output[row.index, "Pvalue.a"] <- round( summary(m.ko)$coefficients["a", "Pr(>|t|)"], 4)
-        
-        # b
-        df.model.output[row.index, "b"] <- round( summary(m.ko)$coef["b", "Estimate"], 4)
-        
-        # p-value for b
-        df.model.output[row.index, "Pvalue.b"] <- round( summary(m.ko)$coefficients["b", "Pr(>|t|)"], 4)
-        
-        # residual standard error
-        df.model.output[row.index, "Res.Std.Error"] <- round( summary(m.ko)$sigma, 4)
-        
-        # calculate and write out x-intercept
-        df.model.output[row.index, "X.Intercept"] <- (1/summary(m.ko)$coef["b", "Estimate"])*log(1/summary(m.ko)$coef["a", "Estimate"]) # x intercept: x=ln(1/a)*b
-        
-        
-        # WT:
-        # protein
-        df.model.output[row.index +1, "Protein.Accession"] <- prots[i]
-        
-        # gene
-        df.model.output[row.index +1, "Gene"] <- unique(data.wt[, "Protein.Gene"])
-        
-        # cohort
-        df.model.output[ row.index +1, "Cohort"] <- unique(data.wt[, "Cohort"])
-        
-        # number of peptides
-        df.model.output[row.index +1, "No.Peptides"] <- length(unique(data.wt$Modified.Peptide.Seq))
-        
-        # number of points
-        df.model.output[row.index +1, "No.Points"] <- no.points.wt
-        
-        # a
-        df.model.output[row.index +1, "a"] <- round( summary(m.wt)$coef["a", "Estimate"], 4)
-        
-        # p-value for a
-        df.model.output[row.index +1, "Pvalue.a"] <- round( summary(m.wt)$coefficients["a", "Pr(>|t|)"], 4)
-        
-        # b
-        df.model.output[row.index +1, "b"] <- round( summary(m.wt)$coef["b", "Estimate"], 4)
-        
-        # p-value for b
-        df.model.output[row.index +1, "Pvalue.b"] <- round( summary(m.wt)$coefficients["b", "Pr(>|t|)"], 4)
-        
-        # residual standard error
-        df.model.output[row.index +1, "Res.Std.Error"] <- round( summary(m.wt)$sigma, 4)
-        
-        # calculate and write out x-intercept
-        df.model.output[row.index +1, "X.Intercept"] <- (1/summary(m.wt)$coef["b", "Estimate"])*log(1/summary(m.wt)$coef["a", "Estimate"]) # x intercept: x=ln(1/a)*b
-        
-        
-        # PLOTTING
-        # plot (x,y) points
-        plot(fit.ko, xlab = "Time (Days)", ylab = "Percent Newly Synthesized", xlim = c(0, max(time)), ylim = c(0,1), main=paste(unique(data.wt[, "Protein.Accession"]), unique(data.wt[, "Protein.Gene"])), pch=2, col="blue") # KO blue triangles
-        points(fit.wt, pch=1, col="red") # WT red circles
-        ## add colored data points where multi-leucine peptides are present in data
-        ##with(subset(data.ko, Number.Leucine>1), points(Timepoint, Percent.Label, pch=2, col="blue")) # KO : Blue where multi-leucine peptides are present
-        ##with(subset(data.wt, Number.Leucine>1), points(Timepoint, Percent.Label, pch=1, col="red")) # WT : Red where multi-leucine peptides are present
-        # plot nls model
-        #xg <- seq(from = 0, to = max(fit.ko$x), length = 3*max(fit.ko$x)) # create vector of inputs for predict function to use for graphing below - use in both KO and WT model curves
-        xg <- seq(from = 0, to = max(time), length = 3*max(time)) # create vector of inputs for predict function to use for graphing below - use in both KO and WT model curves
-        lines(xg, predict(m.ko, list(x = xg)), col = "blue") # KO model is blue
-        lines(xg, predict(m.wt, list(x = xg)), col = "red") # WT model is red
-        # legend
-        legend("top", inset = 0.01, legend = c(unique(data.ko[, "Cohort"]), unique(data.wt[, "Cohort"])), ncol = 2, cex = 0.8, lty = 1, col = c("blue", "red")) # these legends look good on a matrix plot (2 rows by 3 columns) PDF
-      },
-      error=function(e){
-        message("Caught an error!")
-        print(e)
-      },
-      warning=function(w){
-        message("Caught a warning!")
-        print(w)
-      },
-      finally={
-        message("All done, quitting.")
-      }
-    ) # end tryCatch
-  } else {
-    print("skip") # else if the there are not enough data points then the model will probably not converge ... print "skip", write out some basic information and continue looping
+  # loop through cohorts 
+  for(j in cohorts.loop){
     
+    # subset variable cohort data
+    data.var <- subset(data.protein.loop, Cohort==j)
     
-    # Write out basic information from the loop - even though it was not modeled:
-    # KO:
-    # protein
-    df.model.output[row.index, "Protein.Accession"] <- prots[i] # Protein
+    # subset variables Time and Percent.Newly.Synthesized to fit with model
+    fit.var <- subset(data.var, select = c("Timepoint", "Perc.New.Synth")) %>%
+      dplyr::rename(x=Timepoint, y=Perc.New.Synth) %>% # rename to x and y for simiplicity in model
+      dplyr::arrange(x) # ascending order by time.point
     
-    # gene
-    df.model.output[row.index, "Gene"] <- ifelse(length(unique(data.ko[, "Protein.Gene"]))==0, NA, unique(data.ko[, "Protein.Gene"])) # Gene
-    
-    # cohort
-    df.model.output[ row.index, "Cohort"] <- ifelse(length(unique(data.ko[, "Cohort"]))==0, NA, unique(data.ko[, "Cohort"])) # KO Cohort
-    
-    # number of peptides
-    df.model.output[row.index, "No.Peptides"] <- ifelse(length(unique(data.ko[, "Cohort"]))==0, NA, length(unique(data.ko$Modified.Peptide.Seq))) # number of Modified.Peptide.Seq in KO
-    
-    # number of points
-    df.model.output[row.index, "No.Points"] <- ifelse(length(unique(data.ko[, "Cohort"]))==0, NA, no.points.ko) # Number of points in KO
-    
-    
-    # WT:
-    # protein
-    df.model.output[row.index +1, "Protein.Accession"] <- prots[i] # Protein
-    
-    # gene
-    df.model.output[row.index +1, "Gene"] <- ifelse(length(unique(data.wt[, "Protein.Gene"]))==0, NA, unique(data.wt[, "Protein.Gene"])) # Gene
-    
-    # cohort
-    df.model.output[ row.index +1, "Cohort"] <- ifelse(length(unique(data.wt[, "Cohort"]))==0, NA, unique(data.wt[, "Cohort"])) # WT Cohort
-    
-    # number of peptides
-    df.model.output[row.index +1, "No.Peptides"] <- ifelse(length(unique(data.wt[, "Cohort"]))==0, NA, length(unique(data.wt$Modified.Peptide.Seq))) # number of Modified.Peptide.Seq in WT
-    
-    # number of points
-    df.model.output[row.index +1, "No.Points"] <-  ifelse(length(unique(data.wt[, "Cohort"]))==0, NA, no.points.wt) # Number of points in WT
-    
-  }
+    if( nrow(fit.ref)>length(time) & nrow(fit.var)>length(time) ){ # quick assessment: if the number of data points for each cohort is greater than length of time points then the model should hopefully converge
+      tryCatch(
+        expr={
+          # MODEL:
+          
+          # first set models to NA, so the ones from the previous iteration aren't plotted when the model does not successfully run on the current iteration
+          m.ref <- NA
+          m.var <- NA
+          
+          # linearizing nls first to get starting values
+          fm0.ref <- nls(log(y) ~ log(I(1-a*exp(b*x))), data = fit.ref, start = c(a = 1, b = -0.5)) # a=1 goes through origin, and b is the rate of change of the exponential, which is used in half-life calculation
+          m.ref <- nls( y ~ I(1-a*exp(b*x)), data = fit.ref, start=coef(fm0.ref), trace = T ) # model with starting values
+          
+          # linearizing nls first to get starting values
+          fm0.var <- nls(log(y) ~ log(I(1-a*exp(b*x))), data = fit.var, start = c(a = 1, b = -0.5)) # a=1 goes through origin, and b is the rate of change of the exponential, which is used in half-life calculation
+          m.var <- nls( y ~ I(1-a*exp(b*x)), data = fit.var, start=coef(fm0.var), trace = T ) # model with starting values
+          
+          # write out model results 
+          
+          # REFERENCE COHORT:
+          # protein
+          df.model.output[row.index, "Protein.Accession"] <- prots[i]
+
+          # gene
+          df.model.output[row.index, "Gene"] <- data.ref %>% pull(Protein.Gene) %>% unique()
+
+          # cohort
+          df.model.output[row.index, "Cohort"] <- data.ref %>% pull(Cohort) %>% unique()
+
+          # number of unique peptides
+          df.model.output[row.index, "No.Peptides"] <- data.ref %>% pull(Modified.Peptide.Seq) %>% unique() %>% length()
+
+          # number of data points
+          df.model.output[row.index, "No.Points"] <- nrow(data.ref)
+
+          # parameter a
+          df.model.output[row.index, "a"] <- summary(m.ref)$coef["a", "Estimate"] %>% round(., digits=4)
+
+          # p-value for parameter a
+          df.model.output[row.index, "Pvalue.a"] <- summary(m.ref)$coef["a", "Pr(>|t|)"] #%>% round(., digits=4)
+
+          # parameter b
+          df.model.output[row.index, "b"] <- summary(m.ref)$coef["b", "Estimate"] %>% round(., digits=4)
+
+          # p-value for parameter b
+          df.model.output[row.index, "Pvalue.b"] <- summary(m.ref)$coef["b", "Pr(>|t|)"] #%>% round(., digits=4)
+
+          # residual standard error
+          df.model.output[row.index, "Res.Std.Error"] <- summary(m.ref)$sigma %>% round(., digits=4)
+
+          # calculate and write out x-intercept
+          df.model.output[row.index, "X.Intercept"] <- (1/summary(m.ref)$coef["b", "Estimate"])*log(1/summary(m.ref)$coef["a", "Estimate"]) # x intercept: x=ln(1/a)*b
+          
+          
+          # VARIABLE COHORT:
+          # protein
+          df.model.output[row.index+1, "Protein.Accession"] <- prots[i]
+          
+          # gene
+          df.model.output[row.index+1, "Gene"] <- data.var %>% pull(Protein.Gene) %>% unique()
+          
+          # cohort
+          df.model.output[row.index+1, "Cohort"] <- data.var %>% pull(Cohort) %>% unique()
+          
+          # number of unique peptides
+          df.model.output[row.index+1, "No.Peptides"] <- data.var %>% pull(Modified.Peptide.Seq) %>% unique() %>% length()
+          
+          # number of data points
+          df.model.output[row.index+1, "No.Points"] <- nrow(data.var)
+          
+          # parameter a
+          df.model.output[row.index+1, "a"] <- summary(m.var)$coef["a", "Estimate"] %>% round(., digits=4)
+          
+          # p-value for parameter a
+          df.model.output[row.index+1, "Pvalue.a"] <- summary(m.var)$coef["a", "Pr(>|t|)"] #%>% round(., digits=4)
+          
+          # parameter b
+          df.model.output[row.index+1, "b"] <- summary(m.var)$coef["b", "Estimate"] %>% round(., digits=4)
+          
+          # p-value for parameter b
+          df.model.output[row.index+1, "Pvalue.b"] <- summary(m.var)$coef["b", "Pr(>|t|)"] #%>% round(., digits=4)
+          
+          # residual standard error
+          df.model.output[row.index+1, "Res.Std.Error"] <- summary(m.var)$sigma %>% round(., digits=4)
+          
+          # calculate and write out x-intercept
+          df.model.output[row.index+1, "X.Intercept"] <- (1/summary(m.var)$coef["b", "Estimate"])*log(1/summary(m.var)$coef["a", "Estimate"]) # x intercept: x=ln(1/a)*b
+          
+          
+          # PLOT
+          color.ref <- "blue" # set reference cohort color to blue
+          color.var <- "red" # set variable cohort color to red
+          # plot (x,y) data points
+          plot(fit.ref, xlab = "Time (Days)", ylab = "Percent Newly Synthesized", xlim = c(0, max(time)), ylim = c(0,1), main=paste(unique(data.var[, "Protein.Accession"]), unique(data.var[, "Protein.Gene"])), pch=2, col=color.ref) # blue triangles
+          points(fit.var, pch=1, col=color.var) # variable cohort data points are red circles
+          # plot model curves
+          xg <- seq(from = 0, to = max(time), length = 3*max(time)) # create vector of inputs for predict function to use for graphing below - used for generating model curves
+          lines(xg, predict(m.ref, list(x = xg)), col = color.ref) # reference cohort model is blue curve
+          lines(xg, predict(m.var, list(x = xg)), col = color.var) # variable cohort model is red curve
+          # legend
+          legend("top", inset = 0.01, legend = c(unique(data.ref[, "Cohort"]), unique(data.var[, "Cohort"])), ncol = 2, cex = 0.8, lty = 1, col = c(color.ref, color.var)) # these legends look good on a matrix plot (2 rows by 3 columns) PDF
+        },
+        error=function(e){
+          message("Caught an error!")
+          print(e)
+        },
+        warning=function(w){
+          message("Caught a warning!")
+          print(w)
+        },
+        finally={
+          message("All done, quitting.")
+        }
+      ) # end tryCatch
+    } else {
+      print("skip") # else if the there are not enough data points then the model will probably not converge ... print "skip", write out some basic information and continue looping
+      
+      # Write out basic information from the loop - even though it was not modeled:
+      
+      # Reference cohort:
+      # protein
+      df.model.output[row.index, "Protein.Accession"] <- prots[i] # protein
+      
+      # gene
+      df.model.output[row.index, "Gene"] <- ifelse(length(unique(data.ref[, "Protein.Gene"]))==0, NA, unique(data.ref[, "Protein.Gene"])) # gene
+      
+      # cohort
+      df.model.output[ row.index, "Cohort"] <- ifelse(length(unique(data.ref[, "Cohort"]))==0, NA, unique(data.ref[, "Cohort"])) # reference cohort
+      
+      # number of peptides
+      df.model.output[row.index, "No.Peptides"] <- ifelse(length(unique(data.ref[, "Cohort"]))==0, NA, length(unique(data.ref$Modified.Peptide.Seq))) # number of peptides in reference cohort
+      
+      # number of points
+      df.model.output[row.index, "No.Points"] <- ifelse(length(unique(data.ref[, "Cohort"]))==0, NA, no.points.a) # number of points reference cohort
+      
+      
+      # Variable cohort:
+      # protein
+      df.model.output[row.index +1, "Protein.Accession"] <- prots[i] # Protein
+      
+      # gene
+      df.model.output[row.index +1, "Gene"] <- ifelse(length(unique(data.var[, "Protein.Gene"]))==0, NA, unique(data.var[, "Protein.Gene"])) # gene
+      
+      # cohort
+      df.model.output[ row.index +1, "Cohort"] <- ifelse(length(unique(data.var[, "Cohort"]))==0, NA, unique(data.var[, "Cohort"])) # variable cohort
+      
+      # number of peptides
+      df.model.output[row.index +1, "No.Peptides"] <- ifelse(length(unique(data.var[, "Cohort"]))==0, NA, length(unique(data.var$Modified.Peptide.Seq))) # number of Modified.Peptide.Seq in variable cohort
+      
+      # number of points
+      df.model.output[row.index +1, "No.Points"] <-  ifelse(length(unique(data.var[, "Cohort"]))==0, NA, no.points.b) # number of points in variable cohort
+      
+    } # end trycatch
+    # increase row.index counter by 2 each cycle, since we are writing out data for two cohorts during each iteration of j through cohorts.loop
+    row.index <- row.index + 2
+  } # end for; cohort level
 } # end for; protein level
 
 graphics.off()
 #------------------------------------------------------------------------------------
-
 
 
 #------------------------------------------------------------------------------------
@@ -349,13 +321,15 @@ df.model.output <- df.model.output %>%
 
 
 #------------------------------------------------------------------------------------
-# write out output from model 
+# write out model output
 
 df.model.output <- df.model.output %>%
-  na.omit() # drop rows with NA
-
+  na.omit() %>% # drop rows with NA
+  unique() # get rid of duplicated rows from modeling the reference cohort multiple times
+  
 write.csv(df.model.output, file = "Table_step2_output_date.csv", row.names = FALSE)
 #------------------------------------------------------------------------------------
+
 
 #------------------------------------------------------------------------------------
 # Filter output
@@ -363,26 +337,23 @@ write.csv(df.model.output, file = "Table_step2_output_date.csv", row.names = FAL
 # rate of change < 0
 # x-intercept > 0
 # x-intercept < minimum of time points
-df.filtered <- subset(df.model.output, b<0 &  X.Intercept<min(time) & X.Intercept>0 & Pvalue.a<0.05 & Pvalue.b<0.05)
+df.model.output.filtered <- df.model.output %>%
+  filter(b<0 &  X.Intercept<min(time) & X.Intercept>0 & Pvalue.a<0.05 & Pvalue.b<0.05)
 
-# write out filtered df frame
-write.csv( df.filtered, file = "Table_step2_output_filtered.csv", row.names = FALSE)
+# write out filtered output
+write.csv(df.model.output.filtered, file = "Table_step2_output_filtered_date.csv", row.names = FALSE)
 #------------------------------------------------------------------------------------
 
 
 #------------------------------------------------------------------------------------
-# Calculate median of x-intercepts for each cohort group
-# initiate df for storing medians of x.intercepts
-df.x.int.medians <- data.frame(matrix(nrow = 1, ncol = length(cohorts) ))
-colnames(df.x.int.medians) <- cohorts
-for(i in 1:length(cohorts)){
-  dat_loop <- subset(df.model.output, Cohort == cohorts[i] )
-  median <- median(dat_loop$X.Intercept)
-  df.x.int.medians[ 1, colnames(df.x.int.medians) == cohorts[i] ] <- median
-} # end for 
+# Calculate median x-intercepts for each cohort group
+df.x.int.medians <- df.model.output %>%
+  dplyr::group_by(Cohort) %>%
+  dplyr::summarise(Median.x.intercept=median(X.Intercept))
 
-# write out medians
-write.csv(df.x.int.medians, file = "Table_step2_xintercepts.csv", row.names = FALSE)
+# write out median
+write.csv(df.x.int.medians, file = "Table_step2_xintercepts_date.csv", row.names = FALSE)
 #------------------------------------------------------------------------------------
 
 
+# END
