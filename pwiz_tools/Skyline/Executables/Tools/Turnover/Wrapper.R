@@ -57,7 +57,7 @@ for (i in 1:9) {
   # remove any embedded quotation marks
   arg <- gsub ("['\'\"]", "", arg)
   #report file is brought in as an argument, this is specified in TestArgsCollector.properties
-  
+
   #TODO put [arg] back for all
   if (i==1) filepath <<- arg
   if (i==2) tool.dir <<- arg
@@ -72,7 +72,6 @@ for (i in 1:9) {
 
 dir.create(file.path(getwd(), folder.name), showWarnings = FALSE) # Create folder for script output
 setwd(file.path(getwd(), folder.name))
-
 
 
 #------------------------------------------------------------------------------------
@@ -131,7 +130,7 @@ data.s.holder <- read.csv(paste(getwd(),"/Step1_Data_Output_Skyline_singleleucin
 data.m.holder <- read.csv(paste(getwd(),"/Step1_Data_Output_Skyline_multileucine_peps_date.csv", sep=""), stringsAsFactors = F)
 data.s <- data.s.holder
 data.m <- data.m.holder
-source(paste(tool.dir, "Step2_turnover_fit_skyline_0918_2020_v1.R", sep="/"))
+source(paste(tool.dir, "Step2_turnover_fit_skyline_0208_2021_v2.R", sep="/"))
 
 #------------------------------------------------------------------------------------
 
@@ -144,7 +143,7 @@ data.m <- data.m.holder
 # medians of x-intercepts by cohort from step 3
 df.x.int.medians <- read.csv(paste(getwd(),"/Table_step2_xintercepts_date.csv", sep=""), stringsAsFactors = F)
 
-source(paste(tool.dir, "Step3_turnover_slope_skyline_0915_2020_v1.R", sep="/"))
+source(paste(tool.dir, "Step3_turnover_slope_skyline_0208_2021_v2.R", sep="/"))
 #------------------------------------------------------------------------------------
 
 
@@ -155,7 +154,7 @@ data.m <- data.m.holder
 # medians of x-intercepts by cohort from step 3
 df.x.int.medians <- read.csv(paste(getwd(),"/Table_step2_xintercepts_date.csv", sep=""), stringsAsFactors = F)
 
-source(paste(tool.dir, "Step4_turnover_statistics_skyline_0918_2020_v1.R", sep="/"))
+source(paste(tool.dir, "Step4_turnover_statistics_skyline_0208_2021_v2.R", sep="/"))
 #------------------------------------------------------------------------------------
 
 
