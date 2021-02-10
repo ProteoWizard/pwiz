@@ -343,6 +343,9 @@
       <DependentUpon>AuditLogExtraInfoForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Controls\Clustering\ClusteredHeatMapItem.cs" />
+    <Compile Include="Controls\Clustering\DataboundGraph.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Controls\Clustering\HierarchicalClusterGraph.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -728,6 +731,7 @@
     <Compile Include="FileUI\PeptideSearch\DDASearchControl.Designer.cs">
       <DependentUpon>DDASearchControl.cs</DependentUpon>
     </Compile>
+    <Compile Include="Util\FormGroup.cs" />
     <Compile Include="Util\UiModes.cs" />
     <Compile Include="ToolsUI\ColorGrid.cs">
       <SubType>UserControl</SubType>

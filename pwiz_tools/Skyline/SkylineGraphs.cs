@@ -503,6 +503,7 @@ namespace pwiz.Skyline
 
             type = DetectionsGraphController.GraphType;
             _listGraphDetections.ToList().ForEach(DestroyGraphDetections);
+            DetectionsGraphController.GraphType = type;
 
             FormUtil.OpenForms.OfType<FoldChangeForm>().ForEach(f => f.Close());
 
@@ -678,11 +679,13 @@ namespace pwiz.Skyline
                         return GetGraphChrom(name) ?? CreateGraphChrom(name);
                 }
             }
+
             var foldChangeForm = FoldChangeForm.RestoreFoldChangeForm(this, persistentString);
             if (null != foldChangeForm)
             {
                 return foldChangeForm;
             }
+
             if (Equals(persistentString, typeof(GraphFullScan).ToString()))
             {
                 return _graphFullScan ?? CreateGraphFullScan();

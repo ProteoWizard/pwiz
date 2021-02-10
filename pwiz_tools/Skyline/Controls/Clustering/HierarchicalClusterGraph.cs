@@ -30,7 +30,7 @@ using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Clustering
 {
-    public partial class HierarchicalClusterGraph : DockableFormEx
+    public partial class HierarchicalClusterGraph : DataboundGraph
     {
         private ClusterGraphResults _graphResults;
         private DendrogramScale _rowDendrogramScale;
@@ -75,38 +75,6 @@ namespace pwiz.Skyline.Controls.Clustering
                 IsRepeatRemovalAllowed = true
             };
         }
-
-        public SkylineWindow SkylineWindow { get; set; }
-
-        protected override void OnHandleCreated(EventArgs e)
-        {
-            base.OnHandleCreated(e);
-            if (SkylineWindow != null)
-            {
-                SkylineWindow.SequenceTree.AfterSelect += SequenceTree_OnAfterSelect;
-                SkylineWindow.ComboResults.SelectedIndexChanged += ComboResults_OnSelectedIndexChanged;
-            }
-        }
-
-        protected override void OnHandleDestroyed(EventArgs e)
-        {
-            if (SkylineWindow != null)
-            {
-                SkylineWindow.SequenceTree.AfterSelect -= SequenceTree_OnAfterSelect;
-                SkylineWindow.ComboResults.SelectedIndexChanged -= ComboResults_OnSelectedIndexChanged;
-            }
-            base.OnHandleDestroyed(e);
-        }
-        private void ComboResults_OnSelectedIndexChanged(object sender, EventArgs e)
-        {
-            UpdateSelection();
-        }
-
-        private void SequenceTree_OnAfterSelect(object sender, TreeViewEventArgs e)
-        {
-            UpdateSelection();
-        }
-
 
         public ClusterGraphResults GraphResults
         {
@@ -182,7 +150,7 @@ namespace pwiz.Skyline.Controls.Clustering
             };
         }
 
-        public void UpdateSelection()
+        public override void UpdateSelection()
         {
             if (!ShowSelection)
             {

@@ -41,6 +41,11 @@ namespace pwiz.Skyline.Controls.Databinding
             Dispose();
         }
 
+        public new string GetPersistentString()
+        {
+            return base.GetPersistentString();
+        }
+
         #region Methods exposed for testing
         public BindingListSource BindingListSource { get { return databoundGridControl.BindingListSource; } }
         public BoundDataGridViewEx DataGridView { get { return databoundGridControl.DataGridView; } }

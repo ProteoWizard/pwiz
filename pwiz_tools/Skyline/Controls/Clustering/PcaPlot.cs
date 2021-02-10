@@ -34,7 +34,7 @@ using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Clustering
 {
-    public partial class PcaPlot : Form
+    public partial class PcaPlot : DataboundGraph
     {
         private List<Tuple<string, PivotedProperties.SeriesGroup>> _datasetOptions;
         private bool _inUpdateControls;

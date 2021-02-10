@@ -751,12 +751,22 @@ namespace pwiz.Skyline.Controls.Databinding
                 }
             }
             var graphResults = new ClusterGraphResults(clusteredResults.RowDendrogramData?.DendrogramData, rowHeaders, columnGroups, points);
-            var heatMapGraph = new HierarchicalClusterGraph()
+            var formGroup = FormGroup.FromControl(this);
+            var heatMap = formGroup.SiblingForms.OfType<HierarchicalClusterGraph>()
+                .FirstOrDefault(graph => ReferenceEquals(this, graph.DataboundGridControl));
+            if (heatMap != null)
+            {
+                heatMap.GraphResults = graphResults;
+                heatMap.Activate();
+                return true;
+            }
+            var heatMapGraph = new HierarchicalClusterGraph
             {
                 SkylineWindow = DataSchemaSkylineWindow,
-                GraphResults = graphResults
+                GraphResults = graphResults,
+                DataboundGridControl = this
             };
-            heatMapGraph.Show(FormUtil.FindTopLevelOwner(this));
+            formGroup.ShowSibling(heatMapGraph);
             return true;
         }
 
@@ -964,13 +974,22 @@ namespace pwiz.Skyline.Controls.Databinding
 
         public void ShowPcaPlot()
         {
+            var formGroup = FormGroup.FromControl(this);
             var resultsTuple = GetClusteredResults();
-            var pcaPlot = new PcaPlot()
+            var pcaPlot = formGroup.SiblingForms.OfType<PcaPlot>()
+                .FirstOrDefault(form => ReferenceEquals(form.DataboundGridControl, this));
+            if (pcaPlot != null)
+            {
+                pcaPlot.SetData(resultsTuple.Item1, resultsTuple.Item3);
+                pcaPlot.Activate();
+                return;
+            }
+            pcaPlot = new PcaPlot
             {
                 SkylineWindow = DataSchemaSkylineWindow
             };
             pcaPlot.SetData(resultsTuple.Item1, resultsTuple.Item3);
-            pcaPlot.Show(FormUtil.FindTopLevelOwner(this));
+            formGroup.ShowSibling(pcaPlot);
         }
     }
 }
