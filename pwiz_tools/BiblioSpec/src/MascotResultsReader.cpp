@@ -339,7 +339,7 @@ void MascotResultsReader::parseMods(PSM* psm, string modstr,
     if( modstr.at(last_mod_pos+1) == 'X' ){
         addErrorTolerantMod(psm, readableModStr, psm->unmodSeq.length()+1);
     } else {
-        addVarMod(psm, modstr.at(last_mod_pos), psm->unmodSeq.length()+1);
+        addVarMod(psm, modstr.at(last_mod_pos+1), psm->unmodSeq.length()+1);
     }
 
     // for static mods look up each residue in the staticMods collection
