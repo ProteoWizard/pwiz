@@ -318,7 +318,7 @@ blib-test-build mse-mobility-v15 : -o : output/mse-mobility-from-v15.blib : mse-
 
 # Test building with Mascot .dat files, contingent on Mascot support (FIXME: these tests are broken on Linux)
 
-blib-test-build mascot : --unicode -o : output/mascot.blib : mascot.check : $(TEST_INPUTS_PATH)/F027319.dat : <conditional>@mascot-installed <toolset>gcc:<build>no ;
+blib-test-build mascot : --unicode -o : output/mascot.blib : mascot.check : $(TEST_INPUTS_PATH)/F027319-trim.dat : <conditional>@mascot-installed <toolset>gcc:<build>no ;
 blib-test-build mascot-15N : -o : output/mascot-15N.blib : mascot-15N.check : $(TEST_INPUTS_PATH)/F027752.dat : <conditional>@mascot-installed <toolset>gcc:<build>no ;
 blib-test-build mascot-distiller-and-title : -o : output/mascot-distiller-1.blib : mascot-distiller-1.check : $(TEST_INPUTS_PATH)/F007401.dat : <conditional>@mascot-installed <toolset>gcc:<build>no ;
 blib-test-build mascot-distiller-from-file : --unicode -o : output/mascot-distiller-2.blib : mascot-distiller-2.check : $(TEST_INPUTS_PATH)/F007401b.dat : <conditional>@mascot-installed <toolset>gcc:<build>no ;
