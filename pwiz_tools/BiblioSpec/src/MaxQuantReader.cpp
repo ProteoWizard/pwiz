@@ -869,7 +869,13 @@ void MaxQuantReader::addLabelModsToVector(vector<SeqMod>& v, const string& rawFi
                                    "raw file '%s'.",
                                    labelingState, labels->labelingStates.size(), rawFile.c_str());
     }
-    const vector<const MaxQuantModification*>& labelMods = labels->labelingStates[labelingState].mods;
+
+    const auto& labelState = labels->labelingStates[labelingState];
+    const auto& labelMods = labelState.mods;
+    const auto& modsAnyNTerm = labelState.modsByPosition.find(MaxQuantModification::ANY_N_TERM)->second;
+    const auto& modsAnyCTerm = labelState.modsByPosition.find(MaxQuantModification::ANY_C_TERM)->second;
+
+    for (const auto& mod : modsAnyNTerm) { if (mod->sites.empty()) v.emplace_back(1, mod->massDelta); }
 
     // iterate over sequence
     for (int i = 0; i < (int)sequence.length(); i++)
@@ -878,6 +884,8 @@ void MaxQuantReader::addLabelModsToVector(vector<SeqMod>& v, const string& rawFi
         vector<SeqMod> sequenceLabelMods = getFixedMods(sequence[i], i + 1, labelMods);
         v.insert(v.end(), sequenceLabelMods.begin(), sequenceLabelMods.end());
     }
+
+    for (const auto& mod : modsAnyCTerm) { if (mod->sites.empty()) v.emplace_back(sequence.length(), mod->massDelta); }
 }
 
 /**
