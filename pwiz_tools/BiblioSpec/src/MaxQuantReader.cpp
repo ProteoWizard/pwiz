@@ -751,7 +751,6 @@ void MaxQuantReader::addFixedMods(vector<SeqMod>& v, const string& sequence, con
     // iterate over sequence
     for (int i = 0; i < (int)sequence.length(); i++)
     {
-        // check for label mods
         boost::range::insert(v, v.end(), getFixedMods(sequence[i], i + 1, modsAnywhere));
         if (i == 0)
             boost::range::insert(v, v.end(), getFixedMods(sequence[i], i + 1, modsAnyNTerm));
