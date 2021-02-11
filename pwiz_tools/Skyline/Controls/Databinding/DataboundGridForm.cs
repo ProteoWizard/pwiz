@@ -21,13 +21,14 @@ using System;
 using System.Windows.Forms;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
+using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Util;
 
 // This code is associated with the DocumentGrid.
 
 namespace pwiz.Skyline.Controls.Databinding
 {
-    public partial class DataboundGridForm : DockableFormEx
+    public partial class DataboundGridForm : DockableFormEx, IDataboundGridForm
     {
         public DataboundGridForm()
         {
@@ -41,9 +42,14 @@ namespace pwiz.Skyline.Controls.Databinding
             Dispose();
         }
 
-        public new string GetPersistentString()
+        string IDataboundGridForm.GetPersistentString()
         {
-            return base.GetPersistentString();
+            return GetPersistentString();
+        }
+
+        DataboundGridControl IDataboundGridForm.GetDataboundGridControl()
+        {
+            return DataboundGridControl;
         }
 
         #region Methods exposed for testing

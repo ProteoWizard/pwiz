@@ -24,6 +24,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataAnalysis.Clustering;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.DataBinding.Controls.Editor;
+using pwiz.Skyline.Controls.Clustering;
 using pwiz.Skyline.Controls.Lists;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -124,8 +125,24 @@ namespace pwiz.SkylineTestFunctional
                     new[] {PersistedViews.MainGroup.Id.ViewName(reportName)};
                 documentSettingsDlg.OkDialog();
             });
-            RunUI(()=>SkylineWindow.SaveDocument(Path.Combine(TestContext.TestDir, "ListClusteringTest.sky")));
+            string skylineDocumentPath = Path.Combine(TestContext.TestDir, "ListClusteringTest.sky");
+            RunUI(()=>SkylineWindow.SaveDocument(Path.Combine(TestContext.TestDir, skylineDocumentPath)));
             AssertEx.Serializable(SkylineWindow.Document);
+            RunUI(()=>listGrid.DataboundGridControl.ShowHeatMap());
+            var heatMap = WaitForOpenForm<HierarchicalClusterGraph>();
+            Assert.IsNotNull(heatMap);
+            RunUI(()=>SkylineWindow.SaveDocument(skylineDocumentPath));
+            RunUI(()=>
+            {
+                SkylineWindow.NewDocument();
+                SkylineWindow.OpenFile(skylineDocumentPath);
+            });
+            listGrid = FindOpenForm<ListGridForm>();
+            Assert.IsNotNull(listGrid);
+            heatMap = FindOpenForm<HierarchicalClusterGraph>();
+            Assert.IsNotNull(heatMap);
+            Assert.AreSame(listGrid.DataboundGridControl, heatMap.DataboundGridControl);
+
             OkDialog(listGrid, listGrid.Close);
         }
 

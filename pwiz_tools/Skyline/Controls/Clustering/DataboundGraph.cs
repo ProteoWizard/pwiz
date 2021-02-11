@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Skyline.Controls.Databinding;
@@ -13,6 +14,11 @@ namespace pwiz.Skyline.Controls.Clustering
         private SkylineWindow _skylineWindow;
         private bool _updateSelectionPending;
 
+        public string OwnerPersistedString
+        {
+            get; set;
+        }
+        
         public BindingListSource BindingListSource
         {
             get { return _bindingListSource; }
@@ -49,6 +55,8 @@ namespace pwiz.Skyline.Controls.Clustering
                 if (DataboundGridControl != null)
                 {
                     DataboundGridControl.Disposed += DataboundGridControl_OnDisposed;
+                    OwnerPersistedString =
+                        (DataboundGridControl.FindForm() as IDataboundGridForm)?.GetPersistentString();
                 }
 
                 BindingListSource = DataboundGridControl?.BindingListSource;
@@ -130,16 +138,63 @@ namespace pwiz.Skyline.Controls.Clustering
         {
         }
 
+        public virtual bool RefreshData()
+        {
+            return true;
+        }
+
         protected override string GetPersistentString()
         {
-            string persistentString = base.GetPersistentString();
-            var ownerForm = DataboundGridControl.FindForm() as DataboundGridForm;
-            if (ownerForm != null)
+            return GetType() + @"|" + OwnerPersistedString;
+        }
+
+        protected override void OnShown(EventArgs e)
+        {
+            if (DataboundGridControl == null && !string.IsNullOrEmpty(OwnerPersistedString))
             {
-                persistentString += @"|" + Uri.EscapeDataString(ownerForm.GetPersistentString());
+                BeginInvoke(new Action(AttachToOwner));
+            }
+        }
+
+        protected void AttachToOwner()
+        {
+            var formGroup = new FormGroup(this);
+            var ownerForm = formGroup.SiblingForms.OfType<IDataboundGridForm>()
+                .FirstOrDefault(form => form.GetPersistentString() == OwnerPersistedString);
+            if (ownerForm == null)
+            {
+                Close();
+                return;
             }
 
-            return persistentString;
+            DataboundGridControl = ownerForm.GetDataboundGridControl();
+        }
+
+        public static DataboundGraph RestoreDataboundGraph(SkylineWindow skylineWindow, string persistentString)
+        {
+            DataboundGraph databoundGraph = null;
+            int ichPipe = persistentString.IndexOf('|');
+            if (ichPipe < 0)
+            {
+                return null;
+            }
+
+            string className = persistentString.Substring(ichPipe);
+            if (className == typeof(HierarchicalClusterGraph).ToString())
+            {
+                databoundGraph = new HierarchicalClusterGraph();
+            }
+            else if (className == typeof(PcaPlot).ToString())
+            {
+                databoundGraph = new HierarchicalClusterGraph();
+            }
+            else
+            {
+                return null;
+            }
+            databoundGraph.SkylineWindow = skylineWindow;
+            databoundGraph.OwnerPersistedString = persistentString.Substring(ichPipe + 1);
+            return databoundGraph;
         }
     }
 }

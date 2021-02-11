@@ -665,10 +665,36 @@ namespace pwiz.Skyline.Controls.Databinding
 
         public bool ShowHeatMap()
         {
+            var formGroup = FormGroup.FromControl(this);
+            var heatMap = formGroup.SiblingForms.OfType<HierarchicalClusterGraph>()
+                .FirstOrDefault(graph => ReferenceEquals(this, graph.DataboundGridControl));
+            if (heatMap != null)
+            {
+                if (heatMap.RefreshData())
+                {
+                    heatMap.Activate();
+                }
+                return true;
+            }
+            var heatMapGraph = new HierarchicalClusterGraph
+            {
+                SkylineWindow = DataSchemaSkylineWindow,
+                DataboundGridControl = this
+            };
+            if (!heatMapGraph.RefreshData())
+            {
+                return false;
+            }
+            formGroup.ShowSibling(heatMapGraph);
+            return true;
+        }
+
+        public ClusterGraphResults GetHeatMapData()
+        {
             Tuple<Clusterer, ClusteredReportResults, ReportColorScheme> resultsTuple = GetClusteredResults();
             if (resultsTuple == null)
             {
-                return false;
+                return null;
             }
 
             var clusteredResults = resultsTuple.Item2;
@@ -750,24 +776,7 @@ namespace pwiz.Skyline.Controls.Databinding
                     }
                 }
             }
-            var graphResults = new ClusterGraphResults(clusteredResults.RowDendrogramData?.DendrogramData, rowHeaders, columnGroups, points);
-            var formGroup = FormGroup.FromControl(this);
-            var heatMap = formGroup.SiblingForms.OfType<HierarchicalClusterGraph>()
-                .FirstOrDefault(graph => ReferenceEquals(this, graph.DataboundGridControl));
-            if (heatMap != null)
-            {
-                heatMap.GraphResults = graphResults;
-                heatMap.Activate();
-                return true;
-            }
-            var heatMapGraph = new HierarchicalClusterGraph
-            {
-                SkylineWindow = DataSchemaSkylineWindow,
-                GraphResults = graphResults,
-                DataboundGridControl = this
-            };
-            formGroup.ShowSibling(heatMapGraph);
-            return true;
+            return new ClusterGraphResults(clusteredResults.RowDendrogramData?.DendrogramData, rowHeaders, columnGroups, points);
         }
 
         public Tuple<Clusterer, ClusteredReportResults, ReportColorScheme> GetClusteredResults()
@@ -975,20 +984,25 @@ namespace pwiz.Skyline.Controls.Databinding
         public void ShowPcaPlot()
         {
             var formGroup = FormGroup.FromControl(this);
-            var resultsTuple = GetClusteredResults();
             var pcaPlot = formGroup.SiblingForms.OfType<PcaPlot>()
                 .FirstOrDefault(form => ReferenceEquals(form.DataboundGridControl, this));
             if (pcaPlot != null)
             {
-                pcaPlot.SetData(resultsTuple.Item1, resultsTuple.Item3);
-                pcaPlot.Activate();
+                if (pcaPlot.RefreshData())
+                {
+                    pcaPlot.Activate();
+                }
                 return;
             }
             pcaPlot = new PcaPlot
             {
-                SkylineWindow = DataSchemaSkylineWindow
+                SkylineWindow = DataSchemaSkylineWindow,
+                DataboundGridControl = this
             };
-            pcaPlot.SetData(resultsTuple.Item1, resultsTuple.Item3);
+            if (!pcaPlot.RefreshData())
+            {
+                return;
+            }
             formGroup.ShowSibling(pcaPlot);
         }
     }

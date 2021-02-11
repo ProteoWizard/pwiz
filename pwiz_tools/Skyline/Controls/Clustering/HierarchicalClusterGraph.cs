@@ -358,5 +358,17 @@ namespace pwiz.Skyline.Controls.Clustering
         {
             SkylineWindow?.SelectPathAndReplicate(point?.IdentityPath, point?.ReplicateName);
         }
+
+        public override bool RefreshData()
+        {
+            var data = DataboundGridControl?.GetHeatMapData();
+            if (data == null)
+            {
+                return false;
+            }
+
+            GraphResults = data;
+            return true;
+        }
     }
 }

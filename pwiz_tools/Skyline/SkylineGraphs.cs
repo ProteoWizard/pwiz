@@ -40,6 +40,7 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.AuditLog;
+using pwiz.Skyline.Controls.Clustering;
 using pwiz.Skyline.Controls.Graphs.Calibration;
 using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Model.AuditLog;
@@ -680,10 +681,11 @@ namespace pwiz.Skyline
                 }
             }
 
-            var foldChangeForm = FoldChangeForm.RestoreFoldChangeForm(this, persistentString);
-            if (null != foldChangeForm)
+            var databoundForm = (IDockableForm) FoldChangeForm.RestoreFoldChangeForm(this, persistentString)
+                                ?? DataboundGraph.RestoreDataboundGraph(this, persistentString);
+            if (null != databoundForm)
             {
-                return foldChangeForm;
+                return databoundForm;
             }
 
             if (Equals(persistentString, typeof(GraphFullScan).ToString()))

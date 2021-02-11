@@ -26,7 +26,7 @@ using pwiz.Skyline.Model.GroupComparison;
 
 namespace pwiz.Skyline.Controls.GroupComparison
 {
-    public partial class FoldChangeGrid : FoldChangeForm
+    public partial class FoldChangeGrid : FoldChangeForm, IDataboundGridForm
     {
         public FoldChangeGrid()
         {
@@ -102,5 +102,15 @@ namespace pwiz.Skyline.Controls.GroupComparison
         }
 
         public DataboundGridControl DataboundGridControl { get { return databoundGridControl; } }
+
+        string IDataboundGridForm.GetPersistentString()
+        {
+            return GetPersistentString();
+        }
+
+        DataboundGridControl IDataboundGridForm.GetDataboundGridControl()
+        {
+            return DataboundGridControl;
+        }
     }
 }

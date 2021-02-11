@@ -28,6 +28,7 @@ using pwiz.Common.DataBinding.Clustering;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
+using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
 using ZedGraph;
@@ -420,6 +421,17 @@ namespace pwiz.Skyline.Controls.Clustering
             }
 
             sender.Cursor = Cursors.Hand;
+            return true;
+        }
+
+        public override bool RefreshData()
+        {
+            var clusteredResultsTuple = DataboundGridControl?.GetClusteredResults();
+            if (clusteredResultsTuple == null)
+            {
+                return false;
+            }
+            SetData(clusteredResultsTuple.Item1, clusteredResultsTuple.Item3);
             return true;
         }
     }
