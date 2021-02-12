@@ -153,7 +153,10 @@ namespace SkylineBatch
 
         public List<ListViewItem> ConfigsListViewItems()
         {
-            return ConfigsListViewItems(_configRunners);
+            lock (_lock)
+            {
+                return ConfigsListViewItems(_configRunners);
+            }
         }
 
         public bool CheckConfigAtIndex(int index, out string errorMessage)
