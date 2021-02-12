@@ -21,7 +21,6 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using MathNet.Numerics.Statistics;
-using pwiz.Common.DataAnalysis;
 
 namespace pwiz.Skyline.Model.RetentionTimes
 {

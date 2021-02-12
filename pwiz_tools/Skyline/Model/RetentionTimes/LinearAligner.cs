@@ -19,7 +19,6 @@
 
 using System;
 using System.Threading;
-using pwiz.Common.DataAnalysis;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Util;
 
