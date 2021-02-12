@@ -89,12 +89,6 @@
     <None Include="Resources\SkylineData.ico" />
     <None Include="Resources\SkylineDoc.ico" />
     <Content Include="SkylineBatch_release.ico" />
-    <Content Include="SkylineDailyRunner.exe">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="SkylineRunner.exe">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <EmbeddedResource Include="FilePathControl.resx">
       <DependentUpon>FilePathControl.cs</DependentUpon>
     </EmbeddedResource>

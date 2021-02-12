@@ -219,14 +219,8 @@
   <data name="ConfigManager_RemoveConfig_Cannot_delete___0____configuration_does_not_exist_" xml:space="preserve">
     <value>Cannot delete "{0}": configuration does not exist.</value>
   </data>
-  <data name="ConfigManager_RemoveSelected_Are_you_sure_you_want_to_delete___0___" xml:space="preserve">
-    <value>Are you sure you want to delete "{0}"?</value>
-  </data>
   <data name="ConfigManager_RemoveSelected_Removing_configuration____0__" xml:space="preserve">
     <value>Removing configuration: "{0}"</value>
-  </data>
-  <data name="ConfigManager_RemoveSelected___0___is_still_running__Please_stop_the_current_run_before_deleting___0___" xml:space="preserve">
-    <value>"{0}" is still running. Please stop the current run before deleting "{0}".</value>
   </data>
   <data name="ConfigManager_SelectConfig_There_is_no_configuration_at_index___0_" xml:space="preserve">
     <value>There is no configuration at index: {0}</value>
@@ -266,5 +260,8 @@
   </data>
   <data name="Logger_WriteToFile_Exception_stack_trace__" xml:space="preserve">
     <value>Exception stack trace: </value>
+  </data>
+  <data name="ConfigManager_RemoveSelected_Are_you_sure_you_want_to_delete___0___" xml:space="preserve">
+    <value>Are you sure you want to delete "{0}"?</value>
   </data>
 </root>

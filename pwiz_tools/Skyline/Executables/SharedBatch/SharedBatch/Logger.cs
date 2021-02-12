@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.Versioning;
 using System.Text;
 using SharedBatch.Properties;
 
@@ -33,10 +34,13 @@ using SharedBatch.Properties;
         public const long MaxLogSize = 10 * 1024 * 1024; // 10MB
         private const int MaxBackups = 5;
         public const int MaxLogLines = 5000;
-        
+        public static string LogTruncatedMessage = Resources.Logger_DisplayLog_____Log_truncated_____Full_log_is_in__0_;
+
+
         private string _lastMessage = string.Empty; // To avoid logging duplicate messages.
 
         private readonly string _filePath;
+        public readonly string Name;
 
         private readonly object _lock = new object();
 
@@ -50,28 +54,21 @@ using SharedBatch.Properties;
         private StringBuilder _logBuffer; // To be used when the log file is unavailable for writing
         private const int LogBufferSize = 10240;
         private const int StreamReaderDefaultBufferSize = 4096;
-
-        public Logger(string logFileName, string logFolder, IMainUiControl mainUi = null)
+        
+        public Logger(string logFilePath, string logName, IMainUiControl mainUi = null)
         {
-            /*if (LOG_FOLDER == null)
-            {
-                var roamingFolder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-                var localFolder = Path.Combine(Path.GetDirectoryName(roamingFolder), "local");
-                LOG_FOLDER = Path.Combine(localFolder, Program.AppName);
-                if (!Directory.Exists(LOG_FOLDER))
-                {
-                    Directory.CreateDirectory(LOG_FOLDER);
-                }
-            }*/
+            var logFolder = Path.GetDirectoryName(logFilePath);
             if (!Directory.Exists(logFolder))
             {
                 Directory.CreateDirectory(logFolder);
             }
-            _filePath = Path.Combine(logFolder, logFileName);
+
+            _filePath = logFilePath;
             _mainUi = mainUi;
+            Name = logName;
             Init();
         }
-
+        
         public void Init()
         {
             _logBuffer = new StringBuilder();
@@ -91,6 +88,11 @@ using SharedBatch.Properties;
             _streamReader = new StreamReader(logFileRead, Encoding.Default, false, 
                 StreamReaderDefaultBufferSize, true);
             _streamWriter = new StreamWriter(logFileWrite, Encoding.Default, StreamReaderDefaultBufferSize, true);
+        }
+
+        public string GetDirectory()
+        {
+            return Path.GetDirectoryName(_filePath);
         }
 
         private void WriteToFile(string message)
@@ -236,7 +238,7 @@ using SharedBatch.Properties;
 
             if (_mainUi != null)
             {
-                _mainUi.LogToUi(GetDate() + line);
+                _mainUi.LogToUi(Name, GetDate() + line);
             }
 
             WriteToFile(line);
@@ -254,7 +256,7 @@ using SharedBatch.Properties;
             {
                 line = GetDate() + line;
 
-                _mainUi.LogErrorLinesToUi(
+                _mainUi.LogErrorLinesToUi(Name,
                         new List<string> { line, exStr });
             }
 
@@ -270,7 +272,7 @@ using SharedBatch.Properties;
 
             if (_mainUi != null)
             {
-                _mainUi.LogErrorToUi(GetDate() + line);
+                _mainUi.LogErrorToUi(Name,GetDate() + line);
             }
 
             LogErrorToFile(line);
@@ -287,7 +289,7 @@ using SharedBatch.Properties;
 
             if (_mainUi != null)
             {
-                _mainUi.LogErrorToUi(GetDate() + line);
+                _mainUi.LogErrorToUi(Name, GetDate() + line);
             }
         }
 
@@ -309,10 +311,16 @@ using SharedBatch.Properties;
                 File.Copy(GetFile(), timestampFileName);
                 File.Delete(_filePath);
                 Init();
-                return new Logger(timestampFileName, Path.GetDirectoryName(_filePath), _mainUi);
+                var newFilePath = Path.Combine(Path.GetDirectoryName(_filePath), timestampFileName);
+                return new Logger(newFilePath, timestampFileName, _mainUi);
             }
 
             return null;
+        }
+
+        public void LogToUi(IMainUiControl mainUi)
+        {
+            _mainUi = mainUi;
         }
 
         private void CloseFileStreams()
@@ -345,21 +353,21 @@ using SharedBatch.Properties;
                 if (!File.Exists(_filePath))
                 {
                     // If the log file is not accessible, display the contents of the in memory buffer and anything saved in the log buffer
-                    _mainUi.LogErrorToUi(string.Format(Resources.Logger_DisplayLog_Could_not_read_the_log_file___0___File_does_not_exist_, _filePath), false, false);
+                    _mainUi.LogErrorToUi(_filePath, string.Format(Resources.Logger_DisplayLog_Could_not_read_the_log_file___0___File_does_not_exist_, _filePath), false, false);
                     if (_memLogMessages != null && _memLogMessages.Count > 0)
                     {
-                        _mainUi.LogErrorToUi(string.Format(Resources.Logger_DisplayLog_Displaying_last__0__saved_log_messages_, _memLogMessages.Count), false, false);
+                        _mainUi.LogErrorToUi(_filePath, string.Format(Resources.Logger_DisplayLog_Displaying_last__0__saved_log_messages_, _memLogMessages.Count), false, false);
                         string[] arr = _memLogMessages.ToArray();
                         foreach (var s in arr)
                         {
-                            _mainUi.LogToUi(s, false, false);
+                            _mainUi.LogToUi(_filePath,s, false, false);
                         }
                     }
 
                     if (_logBuffer != null && _logBuffer.Length > 0)
                     {
-                        _mainUi.LogErrorToUi(Resources.Logger_DisplayLog_Displaying_messages_since_log_file_became_unavailable_, false, false);
-                        _mainUi.LogToUi(_logBuffer.ToString(), false, false);
+                        _mainUi.LogErrorToUi(_filePath, Resources.Logger_DisplayLog_Displaying_messages_since_log_file_became_unavailable_, false, false);
+                        _mainUi.LogToUi(_filePath, _logBuffer.ToString(), false, false);
                     }
                     return;
                 }
@@ -394,7 +402,7 @@ using SharedBatch.Properties;
                 }
                 if (truncated)
                 {
-                    _mainUi.LogErrorToUi(string.Format(Resources.Logger_DisplayLog_____Log_truncated_____Full_log_is_in__0_, GetFile()), false);
+                    _mainUi.LogErrorToUi(_filePath, string.Format(Resources.Logger_DisplayLog_____Log_truncated_____Full_log_is_in__0_, GetFile()), false);
                 }
 
                 var toLog = new List<string>();
@@ -408,7 +416,7 @@ using SharedBatch.Properties;
                     {
                         if (!lastLineErr && toLog.Count > 0)
                         {
-                            _mainUi.LogLinesToUi(toLog);
+                            _mainUi.LogLinesToUi(_filePath, toLog);
                             toLog.Clear();
                         }
                         lastLineErr = true;
@@ -418,7 +426,7 @@ using SharedBatch.Properties;
                     {
                         if (lastLineErr && toLog.Count > 0)
                         {
-                            _mainUi.LogErrorLinesToUi(toLog);
+                            _mainUi.LogErrorLinesToUi(_filePath, toLog);
                             toLog.Clear();
                         }
                         lastLineErr = false;
@@ -429,11 +437,11 @@ using SharedBatch.Properties;
                 {
                     if (lastLineErr)
                     {
-                        _mainUi.LogErrorLinesToUi(toLog);
+                        _mainUi.LogErrorLinesToUi(_filePath, toLog);
                     }
                     else
                     {
-                        _mainUi.LogLinesToUi(toLog);
+                        _mainUi.LogLinesToUi(_filePath, toLog);
                     }
                 }
             }

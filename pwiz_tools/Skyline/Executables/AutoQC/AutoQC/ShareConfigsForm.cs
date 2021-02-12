@@ -1,28 +1,21 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using AutoQC.Properties;
+using SharedBatch;
 
 namespace AutoQC
 {
     public partial class ShareConfigsForm : Form
     {
-        private readonly ConfigManager _configManager;
+        private readonly AutoQcConfigManager _configManager;
         private readonly IMainUiControl _uiControl;
 
 
-        public ShareConfigsForm(IMainUiControl uiControl, ConfigManager configManager)
+        public ShareConfigsForm(IMainUiControl uiControl, AutoQcConfigManager configManager)
         {
             InitializeComponent();
             _uiControl = uiControl;
             _configManager = configManager;
-            checkedSaveConfigs.Items.AddRange(_configManager.GetConfigNames());
+            checkedSaveConfigs.Items.AddRange(_configManager.ConfigNamesAsObjectArray());
         }
 
         private void btnBrowse_Click(object sender, EventArgs e)

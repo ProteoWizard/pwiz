@@ -100,19 +100,9 @@
     <None Include="Resources\SkylineData.ico" />
     <None Include="Resources\SkylineDoc.ico" />
     <None Include="Resources\Panorama.bmp" />
-    <Content Include="SkylineDailyRunner.exe">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="SkylineRunner.exe">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <None Include="App.config">
       <SubType>Designer</SubType>
     </None>
-    <EmbeddedResource Include="AlertDlg.resx">
-      <DependentUpon>AlertDlg.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
     <EmbeddedResource Include="AutoQC-daily.ico" />
     <Content Include="FileAcquisitionTime.skyr">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -123,15 +113,8 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AlertDlg.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="AlertDlg.Designer.cs">
-      <DependentUpon>AlertDlg.cs</DependentUpon>
-    </Compile>
     <Compile Include="AutoQcConfig.cs" />
-    <Compile Include="AutoQcLogger.cs" />
-    <Compile Include="ConfigManager.cs" />
+    <Compile Include="AutoQcConfigManager.cs" />
     <Compile Include="FilePathControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -156,7 +139,6 @@
     <Compile Include="ShareConfigsForm.Designer.cs">
       <DependentUpon>ShareConfigsForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="SkylineSettings.cs" />
     <Compile Include="StartupManager.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
@@ -192,7 +174,6 @@
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
     <Compile Include="Program.cs" />
-    <Compile Include="TextUtil.cs" />
     <Compile Include="XmlUtil.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -32,7 +32,7 @@ namespace AutoQC
     public partial class MainForm : Form, IMainUiControl
     {
 
-        private readonly ConfigManager _configManager;
+        private readonly AutoQcConfigManager _configManager;
 
         // Flag that gets set to true in the "Shown" event handler. 
         // ItemCheck and ItemChecked events on the listview are ignored until then.
@@ -55,10 +55,10 @@ namespace AutoQC
             listViewConfigs.ColumnWidthChanged += listViewConfigs_ColumnWidthChanged;
 
             Program.LogInfo(Resources.MainForm_MainForm_Loading_configurations_from_saved_settings_);
-            _configManager = new ConfigManager(this);
+            _configManager = new AutoQcConfigManager(this);
 
             UpdateUiConfigurations();
-            UpdateUiLoggers();
+            UpdateUiLogFiles();
             UpdateSettingsTab();
 
             Shown += ((sender, args) =>
@@ -92,7 +92,7 @@ namespace AutoQC
         private void btnAdd_Click(object sender, EventArgs e)
         {
             Program.LogInfo("Creating a new configuration");
-            var configForm = new AutoQcConfigForm(this, _configManager.GetLastModified(), ConfigAction.Add, false);
+            var configForm = new AutoQcConfigForm(this, (AutoQcConfig)_configManager.GetLastModified(), ConfigAction.Add, false);
             configForm.ShowDialog();
         }
 
@@ -112,14 +112,14 @@ namespace AutoQC
             configForm.ShowDialog();
         }
 
-        public void TryExecuteOperation(ConfigAction operation, AutoQcConfig config)
+        public void TryExecuteOperation(ConfigAction operation, IConfig config)
         {
-            var existingIndex = _configManager.GetConfigIndex(config.Name);
+            var existingIndex = _configManager.GetConfigIndex(config.GetName());
             var duplicateName = operation != ConfigAction.Edit && existingIndex >= 0 ||
                         operation == ConfigAction.Edit && existingIndex != _configManager.SelectedConfig;
             if (duplicateName)
             {
-                throw new ArgumentException(string.Format(Resources.MainForm_TryExecuteOperation_Cannot_add___0___because_there_is_another_configuration_with_the_same_name_, config.Name) + Environment.NewLine +
+                throw new ArgumentException(string.Format(Resources.MainForm_TryExecuteOperation_Cannot_add___0___because_there_is_another_configuration_with_the_same_name_, config.GetName()) + Environment.NewLine +
                              Resources.MainForm_TryExecuteOperation_Please_choose_a_unique_name_);
             }
             config.Validate();
@@ -127,11 +127,11 @@ namespace AutoQC
                 _configManager.ReplaceSelectedConfig(config);
             else
             {
-                _configManager.AddConfiguration(config);
-                _configManager.SelectConfig(_configManager.GetConfigIndex(config.Name));
+                _configManager.AddConfiguration((AutoQcConfig)config);
+                _configManager.SelectConfig(_configManager.GetConfigIndex(config.GetName()));
             }
             UpdateUiConfigurations();
-            UpdateUiLoggers();
+            UpdateUiLogFiles();
         }
 
         private void btnCopy_Click(object sender, EventArgs e)
@@ -144,7 +144,7 @@ namespace AutoQC
         {
             _configManager.RemoveSelected();
             UpdateUiConfigurations();
-            UpdateUiLoggers();
+            UpdateUiLogFiles();
         }
 
         private void btnImport_Click(object sender, EventArgs e)
@@ -157,7 +157,7 @@ namespace AutoQC
             var filePath = dialog.FileName;
             _configManager.Import(filePath);
             UpdateUiConfigurations();
-            UpdateUiLoggers();
+            UpdateUiLogFiles();
         }
 
         private void btnExport_Click(object sender, EventArgs e)
@@ -307,13 +307,19 @@ namespace AutoQC
                 btnCopy.Enabled = configSelected;
                 btnViewLog.Enabled = configSelected;
 
-                btnRun.Enabled = configSelected && _configManager.GetSelectedConfigRunner().CanStart();
-                btnStop.Enabled = configSelected && _configManager.GetSelectedConfigRunner().CanStop();
+                var canStart = configSelected && _configManager.GetSelectedConfigRunner().CanStart();
+                var canStop = configSelected && _configManager.GetSelectedConfigRunner().CanStop();
+                UpdateRunningButtons(canStart, canStop);
             });
-
         }
 
-        public void UpdateUiLoggers()
+        public void UpdateRunningButtons(bool canStart, bool canStop)
+        {
+            btnRun.Enabled = canStart;
+            btnStop.Enabled = canStop;
+        }
+
+        public void UpdateUiLogFiles()
         {
             RunUi(() =>
             {
@@ -341,7 +347,7 @@ namespace AutoQC
             if (_configManager.HasSelectedConfig())
             {
                 _configManager.SelectLogOfSelectedConfig();
-                UpdateUiLoggers();
+                UpdateUiLogFiles();
                 SwitchLogger();
             }
             tabMain.SelectTab(tabLog);
@@ -423,13 +429,13 @@ namespace AutoQC
         private void TrimDisplayedLog()
         {
             var numLines = textBoxLog.Lines.Length;
-            const int buffer = AutoQcLogger.MAX_LOG_LINES / 10;
-            if (numLines > AutoQcLogger.MAX_LOG_LINES + buffer)
+            const int buffer = Logger.MaxLogLines / 10;
+            if (numLines > Logger.MaxLogLines + buffer)
             {
                 var unTruncated = textBoxLog.Text;
-                var startIndex = textBoxLog.GetFirstCharIndexFromLine(numLines - AutoQcLogger.MAX_LOG_LINES);
+                var startIndex = textBoxLog.GetFirstCharIndexFromLine(numLines - Logger.MaxLogLines);
                 var message = (_configManager.GetSelectedLogger() != null)
-                    ? string.Format(AutoQcLogger.LogTruncatedMessage, _configManager.GetSelectedLogger().GetFile())
+                    ? string.Format(Logger.LogTruncatedMessage, _configManager.GetSelectedLogger().GetFile())
                     : Resources.MainForm_ViewLog_Log_Truncated;
                 message += Environment.NewLine;
                 textBoxLog.Text = message + unTruncated.Substring(startIndex);
@@ -489,9 +495,6 @@ namespace AutoQC
                 textBoxLog.SelectionColor = Color.Red;
             });
         }
-
-
-
 
         #endregion
 
@@ -627,6 +630,11 @@ namespace AutoQC
             return AlertDlg.ShowQuestion(this, message);
         }
 
+        public DialogResult DisplayLargeQuestion(string message)
+        {
+            return AlertDlg.ShowLargeQuestion(this, message);
+        }
+
         #endregion
     }
 
@@ -645,23 +653,4 @@ namespace AutoQC
         }
     }
 
-    public interface IMainUiControl
-    {
-        void TryExecuteOperation(ConfigAction operation, AutoQcConfig config);
-        void UpdateUiConfigurations();
-
-        void UpdateButtonsEnabled();
-
-        void LogToUi(string name, string text, bool scrollToEnd = true, bool trim = true);
-        void LogErrorToUi(string name, string text, bool scrollToEnd = true, bool trim = true);
-        void LogLinesToUi(string name, List<string> lines);
-        void LogErrorLinesToUi(string name, List<string> lines);
-
-        void DisplayError(string message);
-        void DisplayWarning(string message);
-        void DisplayInfo(string message);
-        void DisplayErrorWithException(string message, Exception exception);
-        DialogResult DisplayQuestion(string message);
-
-    }
 }

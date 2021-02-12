@@ -9,6 +9,7 @@ using AutoQC;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using SharedBatch;
 
 
 namespace AutoQCTest
@@ -49,7 +50,7 @@ namespace AutoQCTest
                 TestUtils.GetTestMainSettings("folderToWatch", "PanoramaTestConfig"),
                 new PanoramaSettings(true, SERVER_URL, PANORAMA_USER_NAME, PANORAMA_PASSWORD, $"{PANORAMA_FOLDER_PATH}/{uniqueFolderName}"), 
                 TestUtils.GetTestSkylineSettings());
-            var runner = new ConfigRunner(config, new AutoQcLogger(config, null));
+            var runner = new ConfigRunner(config, TestUtils.GetTestLogger(config));
             Assert.IsTrue(runner.CanStart());
             runner.Start();
 

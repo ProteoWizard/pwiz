@@ -43,8 +43,8 @@ namespace SkylineBatch
 
             var roamingFolder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
             var localFolder = Path.Combine(Path.GetDirectoryName(roamingFolder), "local");
-            var logFolder= Path.Combine(localFolder, Program.AppName());
-            _skylineBatchLogger = new Logger(Program.AppName() + ".log", logFolder, this);
+            var logPath= Path.Combine(localFolder, Program.AppName(), Program.AppName() + TextUtil.EXT_LOG);
+            _skylineBatchLogger = new Logger(logPath, Program.AppName() + TextUtil.EXT_LOG, true, this);
             btnRunOptions.Text = char.ConvertFromUtf32(0x2BC6);
             toolStrip1.Items.Insert(3,new ToolStripSeparator());
             _listViewColumnWidths = new ColumnWidthCalculator(new []
@@ -98,12 +98,34 @@ namespace SkylineBatch
             configForm.ShowDialog();
         }
 
-        public void AddConfiguration(IConfig config)
+        public void TryExecuteOperation(ConfigAction operation, IConfig config)
+        {
+            var existingIndex = _configManager.GetConfigIndex(config.GetName());
+            var duplicateName = operation != ConfigAction.Edit && existingIndex >= 0 ||
+                                operation == ConfigAction.Edit && existingIndex != _configManager.SelectedConfig;
+            if (duplicateName)
+            {
+                throw new ArgumentException(string.Format(Resources.MainForm_TryExecuteOperation_Cannot_add___0___because_there_is_another_configuration_with_the_same_name_, config.GetName()) + Environment.NewLine +
+                                            Resources.MainForm_TryExecuteOperation_Please_choose_a_unique_name_);
+            }
+            config.Validate();
+            if (operation == ConfigAction.Edit)
+                _configManager.ReplaceSelectedConfig(config);
+            else
+            {
+                _configManager.AddConfiguration((SkylineBatchConfig)config);
+                _configManager.SelectConfig(_configManager.GetConfigIndex(config.GetName()));
+            }
+            UpdateUiConfigurations();
+            UpdateUiLogFiles();
+        }
+
+        /*public void AddConfiguration(IConfig config)
         {
             _configManager.AddConfiguration(config);
             _configManager.SelectConfig(_configManager.ConfigNamesAsObjectArray().Length - 1);
             UpdateUiConfigurations();
-        }
+        }*/
 
         private void HandleEditEvent(object sender, EventArgs e)
         {
@@ -126,11 +148,11 @@ namespace SkylineBatch
             configForm.ShowDialog();
         }
 
-        public void EditSelectedConfiguration(IConfig newVersion)
+        /*public void EditSelectedConfiguration(IConfig newVersion)
         {
             _configManager.ReplaceSelectedConfig(newVersion);
             UpdateUiConfigurations();
-        }
+        }*/
 
         private void btnCopy_Click(object sender, EventArgs e)
         {
@@ -345,13 +367,13 @@ namespace SkylineBatch
 
         }
 
-        public void UpdateRunningButtons(bool isRunning)
+        public void UpdateRunningButtons(bool canStart, bool canStop)
         {
             RunUi(() =>
             {
-                btnRunBatch.Enabled = !isRunning;
+                btnRunBatch.Enabled = canStart;
                 btnRunOptions.Enabled = btnRunBatch.Enabled;
-                btnCancel.Enabled = isRunning;
+                btnCancel.Enabled = canStop;
             });
         }
 
@@ -448,14 +470,14 @@ namespace SkylineBatch
             Process.Start("explorer.exe", arg);
         }
 
-        public void LogToUi(string text, bool scrollToEnd, bool trim)
+        public void LogToUi(string name, string text, bool scrollToEnd, bool trim)
         {
             RunUi(() =>
             {
                 if (comboLogList.SelectedIndex != 0) return; // don't log if old log is displayed
                 if (text.Contains("Fatal error: ") || text.Contains("Error: "))
                 {
-                    LogErrorToUi(text, scrollToEnd, trim);
+                    LogErrorToUi(name, text, scrollToEnd, trim);
                     return;
                 }
 
@@ -492,7 +514,7 @@ namespace SkylineBatch
             }
         }
 
-        public void LogErrorToUi(string text, bool scrollToEnd, bool trim)
+        public void LogErrorToUi(string name, string text, bool scrollToEnd, bool trim)
         {
             RunUi(() =>
             {
@@ -510,7 +532,7 @@ namespace SkylineBatch
             });
         }
 
-        public void LogLinesToUi(List<string> lines)
+        public void LogLinesToUi(string name, List<string> lines)
         {
             RunUi(() =>
             {
@@ -522,7 +544,7 @@ namespace SkylineBatch
             });
         }
 
-        public void LogErrorLinesToUi(List<string> lines)
+        public void LogErrorLinesToUi(string name, List<string> lines)
         {
             RunUi(() =>
             {

@@ -26,11 +26,6 @@ using SkylineBatch.Properties;
 
 namespace SkylineBatch
 {
-    public enum ConfigAction
-    {
-        Add, Edit, Copy
-    }
-
     public partial class SkylineBatchConfigForm : Form
     {
         // Allows a user to create a new configuration and add it to the list of configurations,
@@ -324,12 +319,8 @@ namespace SkylineBatch
             {
                 //throws ArgumentException if any fields are invalid
                 var newConfig = GetConfigFromUi();
-                newConfig.Validate();
                 //throws ArgumentException if config has a duplicate name
-                if (_action == ConfigAction.Edit)
-                    _mainControl.EditSelectedConfiguration(newConfig);
-                else
-                    _mainControl.AddConfiguration(newConfig);
+                _mainControl.TryExecuteOperation(_action, newConfig);
             }
             catch (ArgumentException e)
             {

@@ -77,8 +77,6 @@ namespace SkylineBatch
 
         public DateTime GetModified()  { return Modified; }
 
-        public CreateRunner GetRunnerCreator() { return ConfigRunner.StaticConstructor; }
-
         public ListViewItem AsListViewItem(IConfigRunner runner)
         {
             var lvi = new ListViewItem(Name);

@@ -99,6 +99,16 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &quot;{0}&quot; is still running. Please stop the current run before deleting &quot;{0}&quot;..
+        /// </summary>
+        internal static string ConfigManager_RemoveSelected___0___is_still_running__Please_stop_the_current_run_before_deleting___0___ {
+            get {
+                return ResourceManager.GetString("ConfigManager_RemoveSelected___0___is_still_running__Please_stop_the_current_run_" +
+                        "before_deleting___0___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cannot run configurations while &quot;{0}&quot; has an error..
         /// </summary>
         internal static string ConfigManager_RunAll_Cannot_run_configurations_while___0___has_an_error_ {
@@ -573,6 +583,25 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cannot add &quot;{0}&quot; because ther is another configuration with the same name..
+        /// </summary>
+        internal static string MainForm_TryExecuteOperation_Cannot_add___0___because_there_is_another_configuration_with_the_same_name_ {
+            get {
+                return ResourceManager.GetString("MainForm_TryExecuteOperation_Cannot_add___0___because_there_is_another_configurat" +
+                        "ion_with_the_same_name_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please choose a unique name..
+        /// </summary>
+        internal static string MainForm_TryExecuteOperation_Please_choose_a_unique_name_ {
+            get {
+                return ResourceManager.GetString("MainForm_TryExecuteOperation_Please_choose_a_unique_name_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The analysis folder {0} does not exist..
         /// </summary>
         internal static string MainSettings_ValidateAnalysisFolder_The_analysis_folder__0__does_not_exist_ {
@@ -865,51 +894,6 @@ namespace SkylineBatch.Properties {
             get {
                 object obj = ResourceManager.GetObject("SkylineDoc", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to All Files.
-        /// </summary>
-        internal static string TextUtil_FileDialogFilter_All_Files {
-            get {
-                return ResourceManager.GetString("TextUtil_FileDialogFilter_All_Files", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to R Files.
-        /// </summary>
-        internal static string TextUtil_FileDialogFilter_R_Files {
-            get {
-                return ResourceManager.GetString("TextUtil_FileDialogFilter_R_Files", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Skyline Files.
-        /// </summary>
-        internal static string TextUtil_FileDialogFilter_Skyline_Files {
-            get {
-                return ResourceManager.GetString("TextUtil_FileDialogFilter_Skyline_Files", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Skyline Reports.
-        /// </summary>
-        internal static string TextUtil_FileDialogFilter_Skyline_Reports {
-            get {
-                return ResourceManager.GetString("TextUtil_FileDialogFilter_Skyline_Reports", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to XML files.
-        /// </summary>
-        internal static string TextUtil_FileDialogFilter_XML_Files {
-            get {
-                return ResourceManager.GetString("TextUtil_FileDialogFilter_XML_Files", resourceCulture);
             }
         }
         

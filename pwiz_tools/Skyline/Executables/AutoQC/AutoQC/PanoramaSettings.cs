@@ -24,6 +24,7 @@ using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using AutoQC.Properties;
+using SharedBatch;
 
 namespace AutoQC
 {
@@ -311,11 +312,11 @@ namespace AutoQC
     public class PanoramaPinger
     {
         private readonly PanoramaSettings _panoramaSettings;
-        private readonly IAutoQcLogger _logger;
+        private readonly Logger _logger;
         private short _status; //1 = success; 2 = fail
         private Timer _timer;
 
-        public PanoramaPinger(PanoramaSettings panoramaSettings, IAutoQcLogger logger)
+        public PanoramaPinger(PanoramaSettings panoramaSettings, Logger logger)
         {
             _panoramaSettings = panoramaSettings;
             _logger = logger;

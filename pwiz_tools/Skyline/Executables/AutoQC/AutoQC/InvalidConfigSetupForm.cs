@@ -15,7 +15,7 @@ namespace AutoQC
         // Allows users to correct file paths, R versions, and Skyline types of an invalid configuration.
 
         private readonly AutoQcConfig _invalidConfig;
-        private readonly ConfigManager _configManager;
+        private readonly AutoQcConfigManager _configManager;
         private readonly IMainUiControl _mainControl;
 
         private string _lastInputPath; // the last user-entered file or folder path
@@ -24,7 +24,7 @@ namespace AutoQC
 
         private bool _askedAboutRootReplacement; // if the user has been asked about replacing path roots for this configuration
 
-        public InvalidConfigSetupForm(AutoQcConfig invalidConfig, ConfigManager configManager, IMainUiControl mainControl)
+        public InvalidConfigSetupForm(AutoQcConfig invalidConfig, AutoQcConfigManager configManager, IMainUiControl mainControl)
         {
             InitializeComponent();
             _invalidConfig = invalidConfig;

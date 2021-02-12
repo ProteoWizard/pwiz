@@ -1,14 +1,17 @@
 ﻿using System;
+using System.Drawing;
 using System.Text;
+using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using AutoQC.Properties;
+using SharedBatch;
 
 namespace AutoQC
 {
     [XmlRoot("autoqc_config")]
-    public class AutoQcConfig
+    public class AutoQcConfig : IConfig
     {
 
         public AutoQcConfig(string name, bool isEnabled, DateTime created, DateTime modified,
@@ -41,6 +44,28 @@ namespace AutoQC
         public readonly PanoramaSettings PanoramaSettings;
 
         public readonly SkylineSettings SkylineSettings;
+
+        public string GetName() { return Name; }
+
+        public DateTime GetModified() { return Modified; }
+
+        public bool TryPathReplace(string oldRoot, string newRoot, out IConfig replacedConfig)
+        {
+            replacedConfig = this;
+            return false;
+        }
+
+        public ListViewItem AsListViewItem(IConfigRunner runner)
+        {
+            var lvi = new ListViewItem(Name);
+            var runnerStatusIndex = 2;
+            lvi.UseItemStyleForSubItems = false; // So that we can change the color for sub-items.
+            lvi.SubItems.Add(User);
+            lvi.SubItems.Add(Created.ToShortDateString());
+            lvi.SubItems.Add(runner.GetDisplayStatus());
+            lvi.SubItems[runnerStatusIndex].ForeColor = runner.GetDisplayColor();
+            return lvi;
+        }
 
         public string User => PanoramaSettings.PublishToPanorama ? PanoramaSettings.PanoramaUserEmail : string.Empty;
         

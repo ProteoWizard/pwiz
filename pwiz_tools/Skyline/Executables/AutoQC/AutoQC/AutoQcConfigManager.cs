@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.SqlTypes;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -7,44 +8,49 @@ using System.Text;
 using System.Windows.Forms;
 using System.Xml;
 using AutoQC.Properties;
+using SharedBatch;
 
 namespace AutoQC
 {
-    public class ConfigManager
+    public class AutoQcConfigManager : ConfigManager
     {
         // Handles all modification to configs, the config list, configRunners, and log files
         // The UI should reflect the configs, runners, and log files from this class
 
 
-        private List<AutoQcConfig> _configList; // the list of configurations. Every config must have a runner in configRunners
-        private readonly Dictionary<string, ConfigRunner> _configRunners; // dictionary mapping from config name to that config's runner
-        private readonly Dictionary<string, bool> _configValidation; // dictionary mapping from config name to if that config is valid
+        //private List<AutoQcConfig> _configList; // the list of configurations. Every config must have a runner in configRunners
+        private readonly Dictionary<string, IConfigRunner> _configRunners; // dictionary mapping from config name to that config's runner
+        /*private readonly Dictionary<string, bool> _configValidation; // dictionary mapping from config name to if that config is valid
 
         private readonly List<IAutoQcLogger> _loggers; // list of archived loggers, from most recent to least recent
 
         private readonly bool _runningUi; // if the UI is displayed (false when testing)
-        private readonly IMainUiControl _uiControl; // null if no UI displayed
+        private readonly IMainUiControl _uiControl; // null if no UI displayed*/
 
         private readonly object _lock = new object(); // lock required for any mutator or getter method on _configList, _configRunners, or SelectedConfig
 
         private int _sortedColumn; // column index the configurations were last sorted by
 
-        public ConfigManager(IMainUiControl uiControl = null)
+        public AutoQcConfigManager(IMainUiControl uiControl = null)
         {
-            SelectedConfig = -1;
+            //SelectedConfig = -1;
             SelectedLog = -1;
             _sortedColumn = -1;
+            //_uiControl = uiControl;
+            //_runningUi = uiControl != null;
+            _configRunners = new Dictionary<string, IConfigRunner>();
+            //_configValidation = new Dictionary<string, bool>();
+            //_configList = new List<AutoQcConfig>();
+            //_loggers = new List<IAutoQcLogger>();
             _uiControl = uiControl;
             _runningUi = uiControl != null;
-            _configRunners = new Dictionary<string, ConfigRunner>();
-            _configValidation = new Dictionary<string, bool>();
-            _configList = new List<AutoQcConfig>();
-            _loggers = new List<IAutoQcLogger>();
             LoadConfigList();
+
+            Init();
         }
 
-        public int SelectedConfig { get; private set; } // index of the selected configuration
-        public int SelectedLog { get; private set; } // index of the selected log
+        //public int SelectedConfig { get; private set; } // index of the selected configuration
+        //public int SelectedLog { get; private set; } // index of the selected log
 
         public enum SortColumn
         {
@@ -54,8 +60,21 @@ namespace AutoQC
             RunnerStatus
         }
 
-        private void LoadConfigList()
+        private new void LoadConfigList()
         {
+            base.LoadConfigList();
+            foreach (AutoQcConfig config in _configList)
+            {
+                if (config.IsEnabled && !Settings.Default.KeepAutoQcRunning)
+                {
+                    // If the config was running last time AutoQC Loader was running (and properties saved), but we are not 
+                    // automatically starting configs on startup, change its IsEnabled state
+                    config.IsEnabled = false;
+                }
+                AddConfigLoggerAndRunner(config);
+            }
+
+            /*
             foreach (var config in Settings.Default.ConfigList)
             {
                 if (config.IsEnabled && !Settings.Default.KeepAutoQcRunning)
@@ -65,8 +84,13 @@ namespace AutoQC
                     config.IsEnabled = false;
                 }
 
-                var logger = new AutoQcLogger(config, _uiControl);
-                _loggers.Add(logger);
+                /*var skylineFileDir = Path.GetDirectoryName(config.MainSettings.SkylineFilePath);
+                var defaultFileFolder = Path.Combine(skylineFileDir, TextUtil.GetSafeName(config.Name));
+                if (!Directory.Exists(defaultFileFolder))
+                    Directory.CreateDirectory(defaultFileFolder);* /
+
+                var logger = Logger.GetLoggerFromConfig(config, Path.GetDirectoryName(config.MainSettings.SkylineFilePath), _uiControl);
+                _logList.Add(logger);
                 _configList.Add(config);
                 var runner = new ConfigRunner(config, logger, _uiControl);
                 _configRunners.Add(config.Name, runner);
@@ -80,24 +104,45 @@ namespace AutoQC
                     Program.LogInfo(e.Message);
                     _configValidation.Add(config.Name, false);
                 }
-            }
+            }*/
         }
 
-        public void Close()
+
+        private void AddConfigLoggerAndRunner(IConfig iConfig)
         {
-            SaveConfigList();
-            StopRunners();
+            var config = (AutoQcConfig) iConfig;
+            if (_configRunners.ContainsKey(config.Name))
+                throw new Exception("Config runner already exists.");
+
+            var directory = Path.GetDirectoryName(config.MainSettings.SkylineFilePath);
+            var logFile = Path.Combine(directory, TextUtil.GetSafeName(config.GetName()), "AutoQC.log");
+
+            var logger = new Logger(logFile, config.Name, _uiControl);
+                //Logger.GetLoggerFromConfig(config, Path.GetDirectoryName(config.MainSettings.SkylineFilePath), _uiControl);
+            _logList.Add(logger);
+            var runner = new ConfigRunner(config, logger, _uiControl);
+            _configRunners.Add(config.Name, runner);
         }
 
-        private void SaveConfigList()
+        private void AddConfigLoggerAndRunner(List<IConfig> configs)
         {
-            var updatedConfigs = new ConfigList();
-            foreach (var config in _configList)
+            foreach(var config in configs)
+                AddConfigLoggerAndRunner(config);
+        }
+
+        private void RemoveConfigLoggerAndRunner(AutoQcConfig config)
+        {
+            if (!_configRunners.ContainsKey(config.Name))
+                throw new Exception("Config runner does not exist.");
+            int i = 0;
+            while (i < _logList.Count)
             {
-                updatedConfigs.Add(config);
+                if (_logList[i].Name.Equals(config.Name)) break;
+                i++;
             }
-            Settings.Default.ConfigList = updatedConfigs;
-            Settings.Default.Save();
+            _logList.RemoveAt(i);
+            if (SelectedLog == _logList.Count) SelectLog(_logList.Count - 1);
+            _configRunners.Remove(config.Name);
         }
 
         public void ChangeKeepRunningState(bool enable)
@@ -114,186 +159,21 @@ namespace AutoQC
 
         #region Configs
 
+        public new AutoQcConfig GetSelectedConfig()
+        {
+            return (AutoQcConfig)base.GetSelectedConfig();
+        }
+
         public List<ListViewItem> ConfigsListViewItems()
         {
-            lock (_lock)
-            {
-                var listViewConfigs = new List<ListViewItem>();
-                var runnerStatusIndex = 3; // index of the status column in listViewConfigs
-                foreach (var config in _configList)
-                {
-                    var lvi = new ListViewItem(config.Name);
-                    var configRunner = _configRunners[config.Name];
-                    lvi.UseItemStyleForSubItems = false; // So that we can change the color for sub-items.
-                    lvi.SubItems.Add(config.User);
-                    lvi.SubItems.Add(config.Created.ToShortDateString());
-                    lvi.SubItems.Add(configRunner.GetDisplayStatus());
-                    lvi.SubItems[runnerStatusIndex].ForeColor = configRunner.GetDisplayColor();
-                    if (!_configValidation[config.Name])
-                        lvi.ForeColor = Color.Red;
-                    if (HasSelectedConfig() && _configList[SelectedConfig].Name.Equals(lvi.Text))
-                    {
-                        lvi.BackColor = Color.LightSteelBlue;
-                        foreach (ListViewItem.ListViewSubItem subitem in lvi.SubItems)
-                            subitem.BackColor = Color.LightSteelBlue;
-                    }
-
-                    listViewConfigs.Add(lvi);
-                }
-                return listViewConfigs;
-            }
-        }
-
-        public bool HasConfigs()
-        {
-            lock (_lock)
-            {
-                return _configList.Count > 0;
-            }
-        }
-
-        public bool HasSelectedConfig()
-        {
-            return SelectedConfig >= 0;
-        }
-
-        public void SelectConfig(int newIndex)
-        {
-            lock (_lock)
-            {
-                if (newIndex < 0 || newIndex >= _configList.Count)
-                    throw new IndexOutOfRangeException(string.Format(Resources.ConfigManager_SelectConfig_There_is_no_configuration_at_index___0_, newIndex));
-                SelectedConfig = newIndex;
-                _uiControl?.UpdateUiConfigurations();
-            }
-        }
-
-        public void DeselectConfig()
-        {
-            lock (_lock)
-            {
-                if (SelectedConfig != -1)
-                {
-                    SelectedConfig = -1;
-                    _uiControl?.UpdateUiConfigurations();
-                }
-            }
-        }
-
-        private void AssertConfigSelected()
-        {
-            if (SelectedConfig < 0)
-            {
-                throw new IndexOutOfRangeException(Resources.ConfigManager_AssertConfigSelected_There_is_no_configuration_selected_);
-            }
-        }
-
-        public AutoQcConfig GetSelectedConfig()
-        {
-            lock (_lock)
-            {
-                AssertConfigSelected();
-                return _configList[SelectedConfig];
-            }
-        }
-
-        public bool IsSelectedConfigValid()
-        {
-            lock (_lock)
-            {
-                return _configValidation[GetSelectedConfig().Name];
-            }
-        }
-
-        public int GetConfigIndex(string name)
-        {
-            lock (_lock)
-            {
-                for (int i = 0; i < _configList.Count; i++)
-                {
-                    if (_configList[i].Name.Equals(name))
-                        return i;
-                }
-                return -1;
-            }
-        }
-
-        public void AddConfiguration(AutoQcConfig config)
-        {
-            InsertConfiguration(config, _configList.Count);
-        }
-
-        private void InsertConfiguration(AutoQcConfig config, int index, IAutoQcLogger oldLogger = null)
-        {
-            lock (_lock)
-            {
-                if (_configRunners.Keys.Contains(config.Name))
-                {
-                    throw new ArgumentException(string.Format(Resources.ConfigManager_InsertConfiguration_Configuration___0___already_exists_, config.Name) + Environment.NewLine +
-                                                Resources.ConfigManager_InsertConfiguration_Please_enter_a_unique_name_for_the_configuration_);
-                }
-                Program.LogInfo(string.Format(Resources.ConfigManager_InsertConfiguration_Adding_configuration___0__, config.Name));
-                _configList.Insert(index, config);
-
-                var newLogger = new AutoQcLogger(config, _uiControl, oldLogger);
-                _loggers.Add(newLogger);
-                var newRunner = new ConfigRunner(config, newLogger, _uiControl);
-                _configRunners.Add(config.Name, newRunner);
-                try
-                {
-                    config.Validate();
-                    _configValidation.Add(config.Name, true);
-                }
-                catch (ArgumentException)
-                {
-                    _configValidation.Add(config.Name, false);
-                }
-            }
-        }
-
-        public AutoQcConfig GetLastModified()
-        {
-            lock (_lock)
-            {
-                if (!HasConfigs())
-                    return null;
-                var lastModified = _configList[0];
-                foreach (var config in _configList)
-                {
-                    if (config.Modified > lastModified.Modified)
-                        lastModified = config;
-                }
-                return lastModified;
-            }
-        }
-
-        public void ReplaceSelectedConfig(AutoQcConfig newConfig)
-        {
-            lock (_lock)
-            {
-                AssertConfigSelected();
-                var oldConfig = _configList[SelectedConfig];
-                if (!string.Equals(oldConfig.Name, newConfig.Name))
-                {
-                    if (_configRunners.Keys.Contains(newConfig.Name))
-                    {
-                        throw new ArgumentException(string.Format(Resources.ConfigManager_InsertConfiguration_Configuration___0___already_exists_, newConfig.Name) + Environment.NewLine +
-                                                    Resources.ConfigManager_InsertConfiguration_Please_enter_a_unique_name_for_the_configuration_);
-                    }
-                }
-                var oldLogger = GetLogger(oldConfig.Name);
-                RemoveConfig(oldConfig);
-                InsertConfiguration(newConfig, SelectedConfig, oldLogger);
-            }
+            return ConfigsListViewItems(_configRunners);
         }
 
         public void RemoveSelected()
         {
             lock (_lock)
             {
-                AssertConfigSelected();
                 var configRunner = GetSelectedConfigRunner();
-                var config = configRunner.Config;
                 if (configRunner.IsBusy())
                 {
                     string message = null;
@@ -314,30 +194,29 @@ namespace AutoQC
                     DisplayWarning(message);
                     return;
                 }
-
-                var doDelete = DisplayQuestion(string.Format(Resources.MainForm_btnDelete_Click_Are_you_sure_you_want_to_delete_configuration___0___, configRunner.GetConfigName()));
-                if (doDelete != DialogResult.Yes)
-                    return;
-
                 // remove config
-                Program.LogInfo(string.Format(Resources.ConfigManager_RemoveSelected_Removing_configuration___0__, config.Name));
-                RemoveConfig(config);
-                if (SelectedConfig == _configList.Count)
-                    SelectedConfig--;
+                RemoveConfigLoggerAndRunner(GetSelectedConfig());
+                base.RemoveSelected();
             }
         }
 
-        private void RemoveConfig(AutoQcConfig config)
+        public void AddConfiguration(AutoQcConfig config)
         {
-            if (!_configRunners.Keys.Contains(config.Name))
-            {
-                throw new ArgumentException(string.Format(Resources.ConfigManager_RemoveConfig_Cannot_delete___0___because_the_configuration_does_not_exist_, config.Name));
-            }
-            _configList.Remove(config);
-            _configRunners[config.Name].Stop();
-            _configRunners.Remove(config.Name);
-            _configValidation.Remove(config.Name);
-            RemoveLogger(config.Name);
+            InsertConfiguration(config, _configList.Count);
+        }
+
+        public void InsertConfiguration(AutoQcConfig config, int index)
+        {
+            base.InsertConfiguration(config, index);
+            AddConfigLoggerAndRunner(config);
+        }
+
+        public new void ReplaceSelectedConfig(IConfig newConfig)
+        {
+            var oldConfig = GetSelectedConfig();
+            base.ReplaceSelectedConfig(newConfig);
+            RemoveConfigLoggerAndRunner(oldConfig);
+            AddConfigLoggerAndRunner(newConfig);
         }
 
         #endregion
@@ -356,7 +235,7 @@ namespace AutoQC
                     case (int)SortColumn.Name:
                         var nameTuples = new List<Tuple<string, int>>();
                         for (int i = 0; i < _configList.Count; i++)
-                            nameTuples.Add(new Tuple<string, int>(_configList[i].Name, i));
+                            nameTuples.Add(new Tuple<string, int>(((AutoQcConfig)_configList[i]).Name, i));
                         nameTuples.Sort((a, b) => String.Compare(a.Item1, b.Item1, StringComparison.Ordinal));
                         newIndexOrder = nameTuples.Select(t => t.Item2).ToList();
                         break;
@@ -364,7 +243,7 @@ namespace AutoQC
                     case (int)SortColumn.User:
                         var userTuples = new List<Tuple<string, int>>();
                         for (int i = 0; i < _configList.Count; i++)
-                            userTuples.Add(new Tuple<string, int>(_configList[i].User, i));
+                            userTuples.Add(new Tuple<string, int>(((AutoQcConfig)_configList[i]).User, i));
                         userTuples.Sort((((a, b) =>
                         {
                             if (string.IsNullOrEmpty(a.Item1) && string.IsNullOrEmpty(a.Item1)) return 1;
@@ -377,15 +256,15 @@ namespace AutoQC
                     case (int)SortColumn.Created:
                         var createdTuples = new List<Tuple<DateTime, int>>();
                         for (int i = 0; i < _configList.Count; i++)
-                            createdTuples.Add(new Tuple<DateTime, int>(_configList[i].Created, i));
+                            createdTuples.Add(new Tuple<DateTime, int>(((AutoQcConfig)_configList[i]).Created, i));
                         createdTuples.Sort((a, b) => b.Item1.CompareTo(a.Item1));
                         newIndexOrder = createdTuples.Select(t => t.Item2).ToList();
                         break;
 
                     case (int)SortColumn.RunnerStatus:
-                        var statusTuples = new List<Tuple<ConfigRunner.RunnerStatus, int>>();
+                        var statusTuples = new List<Tuple<RunnerStatus, int>>();
                         for (int i = 0; i < _configList.Count; i++)
-                            statusTuples.Add(new Tuple<ConfigRunner.RunnerStatus, int>(_configRunners[_configList[i].Name].GetStatus(), i));
+                            statusTuples.Add(new Tuple<RunnerStatus, int>(_configRunners[_configList[i].GetName()].GetStatus(), i));
                         statusTuples.Sort((a, b) => a.Item1.CompareTo(b.Item1));
                         newIndexOrder = statusTuples.Select(t => t.Item2).ToList();
                         break;
@@ -411,7 +290,7 @@ namespace AutoQC
             {
                 _configList.Add(configListHolder[index]);
             }
-            SelectConfigFromName(selectedName);
+            if (selectedName != null) SelectConfig(GetConfigIndex(selectedName));
         }
 
         private bool IsSorted(List<int> list)
@@ -428,15 +307,7 @@ namespace AutoQC
 
         private void SelectConfigFromName(string name)
         {
-            lock (_lock)
-            {
-                DeselectConfig();
-                for (int i = 0; i < _configList.Count; i++)
-                {
-                    if (_configList[i].Name.Equals(name))
-                        SelectConfig(i);
-                }
-            }
+            SelectConfig(GetConfigIndex(name));
         }
 
         private AutoQcConfig[] CutConfigList()
@@ -453,7 +324,7 @@ namespace AutoQC
             var configListHolder = CutConfigList();
             foreach (var config in configListHolder)
                 _configList.Insert(0, config);
-            SelectConfigFromName(selectedName);
+            if (selectedName != null) SelectConfig(GetConfigIndex(selectedName));
         }
 
 
@@ -464,17 +335,14 @@ namespace AutoQC
 
         public ConfigRunner GetSelectedConfigRunner()
         {
-            lock (_lock)
-            {
-                return _configRunners[GetSelectedConfig().Name];
-            }
+            return (ConfigRunner)_configRunners[GetSelectedConfig().GetName()];
         }
 
         public void RunEnabled()
         {
             lock (_lock)
             {
-                foreach (var config in _configList)
+                foreach (AutoQcConfig config in _configList)
                 {
                     if (!config.IsEnabled)
                         continue;
@@ -535,14 +403,14 @@ namespace AutoQC
             Program.LogInfo(string.Format(Resources.ConfigManager_StartConfig_Starting_configuration___0__, config.Name));
             try
             {
-                configRunner.Start();
+                ((ConfigRunner)configRunner).Start();
             }
             catch (Exception e)
             {
-                DisplayErrorWithException(string.Format(Resources.ConfigManager_StartConfig_Error_starting_configuration__0__, configRunner.Config.Name) + Environment.NewLine +
+                DisplayErrorWithException(string.Format(Resources.ConfigManager_StartConfig_Error_starting_configuration__0__, configRunner.GetConfig().GetName()) + Environment.NewLine +
                                           e.Message, e);
                 // ReSharper disable once LocalizableElement
-                Program.LogError(string.Format(Resources.ConfigManager_StartConfig_Error_starting_configuration___0__, configRunner.Config.Name), e);
+                Program.LogError(string.Format(Resources.ConfigManager_StartConfig_Error_starting_configuration___0__, configRunner.GetConfig().GetName()), e);
             }
         }
 
@@ -550,7 +418,7 @@ namespace AutoQC
         {
             foreach (var configRunner in _configRunners.Values)
             {
-                configRunner.Stop();
+                ((ConfigRunner)configRunner).Stop();
             }
         }
 
@@ -561,7 +429,7 @@ namespace AutoQC
 
         public void SelectLog(int selected)
         {
-            if (selected < 0 || selected > _loggers.Count)
+            if (selected < 0 || selected > _logList.Count)
                 throw new IndexOutOfRangeException("No log at index: " + selected);
             if (SelectedLog >= 0)
                 GetSelectedLogger().DisableUiLogging();
@@ -577,50 +445,26 @@ namespace AutoQC
             }
         }
 
-        public IAutoQcLogger GetSelectedLogger()
+        public Logger GetSelectedLogger()
         {
-            return _loggers[SelectedLog];
+            return _logList[SelectedLog];
         }
 
-        public bool LoggerIsDisplayed(string name)
+        public Logger GetLogger(string name)
         {
-            if (SelectedLog < 0)
-                return false;
-            return GetSelectedLogger().GetConfigName().Equals(name);
-        }
-
-        public IAutoQcLogger GetLogger(string name)
-        {
-            return _loggers[GetLoggerIndex(name)];
+            return _logList[GetLoggerIndex(name)];
         }
 
         private int GetLoggerIndex(string name)
         {
-            for (int i = 0; i < _loggers.Count; i++)
+            for (int i = 0; i < _logList.Count; i++)
             {
-                if (_loggers[i].GetConfigName().Equals(name))
+                if (_logList[i].Name.Equals(name))
                     return i;
             }
             return -1;
         }
 
-        private void RemoveLogger(string name)
-        {
-            int index = GetLoggerIndex(name);
-            _loggers.RemoveAt(index);
-            if (SelectedLog >= index)
-            {
-                SelectedLog--;
-            }
-        }
-
-        public object[] GetLogList()
-        {
-            var logNames = new object[_loggers.Count];
-            for (int i = 0; i < _loggers.Count; i++)
-                logNames[i] = _loggers[i].GetConfigName();
-            return logNames;
-        }
 
         #endregion
 
@@ -629,7 +473,9 @@ namespace AutoQC
 
         public void Import(string filePath)
         {
-            var readConfigs = new List<AutoQcConfig>();
+            var addedConfigs = ImportFrom(filePath, AutoQcConfig.ReadXml);
+            AddConfigLoggerAndRunner(addedConfigs);
+            /*var readConfigs = new List<AutoQcConfig>();
             var readXmlErrors = new List<string>();
             var fileName = filePath;
             try
@@ -729,19 +575,9 @@ namespace AutoQC
                 message.Append(errorMessage);
                 DisplayError(errorMessage.ToString());
             }
-            Program.LogInfo(message.ToString());
+            Program.LogInfo(message.ToString());*/
         }
 
-        public object[] GetConfigNames()
-        {
-            lock (_lock)
-            {
-                var names = new object[_configList.Count];
-                for (int i = 0; i < _configList.Count; i++)
-                    names[i] = _configList[i].Name;
-                return names;
-            }
-        }
 
         public void ExportConfigs(string filePath, int[] indiciesToSave)
         {
@@ -787,49 +623,7 @@ namespace AutoQC
         }
 
         #endregion
-
-
-        #region UI Control
-
-        private void DisplayError(string message)
-        {
-            if (!_runningUi)
-                return;
-            _uiControl.DisplayError(message);
-        }
-
-        private void DisplayErrorWithException(string message, Exception ex)
-        {
-            if (!_runningUi)
-                return;
-            _uiControl.DisplayErrorWithException(message, ex);
-        }
-
-        private void DisplayWarning(string message)
-        {
-            if (!_runningUi)
-                return;
-            _uiControl.DisplayWarning(message);
-        }
-
-        private void DisplayInfo(string message)
-        {
-            if (!_runningUi)
-                return;
-            _uiControl.DisplayInfo(message);
-        }
-
-        private DialogResult DisplayQuestion(string message)
-        {
-            if (!_runningUi)
-                return DialogResult.Yes;
-            return _uiControl.DisplayQuestion(message);
-        }
-
-
-        #endregion
-
-
+        
         #region Tests
 
         public bool ConfigListEquals(List<AutoQcConfig> otherConfigs)
@@ -850,7 +644,7 @@ namespace AutoQC
 
             for (int i = 0; i < _configList.Count; i++)
             {
-                if (!Equals(configNames[i], _configList[i].Name)) return false;
+                if (!Equals(configNames[i], _configList[i].GetName())) return false;
             }
 
             return true;

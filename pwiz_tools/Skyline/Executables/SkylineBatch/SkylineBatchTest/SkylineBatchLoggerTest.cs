@@ -70,7 +70,7 @@ namespace SkylineBatchTest
             if (Directory.Exists(logFolder)) Directory.Delete(logFolder);
             Directory.CreateDirectory(logFolder);
             
-            var testConfigManager = new SkylineBatchConfigManager(new Logger("testLog.log", logFolder));
+            var testConfigManager = new SkylineBatchConfigManager(new Logger(Path.Combine(logFolder, "testLog.log"), "testLog.log", true));
             testConfigManager.AddConfiguration(TestUtils.GetTestConfig());
             Assert.IsTrue(testConfigManager.HasOldLogs() == false, "Expected no old logs.");
 

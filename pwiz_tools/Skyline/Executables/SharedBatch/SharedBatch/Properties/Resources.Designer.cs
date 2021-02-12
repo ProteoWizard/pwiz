@@ -273,16 +273,6 @@ namespace SharedBatch.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &quot;{0}&quot; is still running. Please stop the current run before deleting &quot;{0}&quot;..
-        /// </summary>
-        internal static string ConfigManager_RemoveSelected___0___is_still_running__Please_stop_the_current_run_before_deleting___0___ {
-            get {
-                return ResourceManager.GetString("ConfigManager_RemoveSelected___0___is_still_running__Please_stop_the_current_run_" +
-                        "before_deleting___0___", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Are you sure you want to delete &quot;{0}&quot;?.
         /// </summary>
         internal static string ConfigManager_RemoveSelected_Are_you_sure_you_want_to_delete___0___ {

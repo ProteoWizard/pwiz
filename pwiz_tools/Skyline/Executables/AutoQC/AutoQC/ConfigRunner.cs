@@ -27,6 +27,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using AutoQC.Properties;
+using SharedBatch;
 
 namespace AutoQC
 {
@@ -39,7 +40,7 @@ namespace AutoQC
         private AutoQCFileSystemWatcher _fileWatcher;
 
         private readonly IMainUiControl _uiControl;
-        private IAutoQcLogger _logger;
+        private Logger _logger;
         private ProcessRunner _processRunner;
 
         public AutoQcConfig Config { get; }
@@ -56,17 +57,7 @@ namespace AutoQC
         // This flag is set if a document failed to upload to Panorama for any reason.
         private bool _panoramaUploadError;
 
-        public enum RunnerStatus
-        {
-            Starting,
-            Running,
-            Disconnected,
-            Stopping,
-            Stopped,
-            Error
-        }
-
-        public ConfigRunner(AutoQcConfig config, IAutoQcLogger logger, IMainUiControl uiControl = null)
+        public ConfigRunner(AutoQcConfig config, Logger logger, IMainUiControl uiControl = null)
         {
             _runnerStatus = RunnerStatus.Stopped;
 
@@ -76,6 +67,11 @@ namespace AutoQC
 
             _uiControl = uiControl;
             
+        }
+
+        public IConfig GetConfig()
+        {
+            return Config;
         }
 
         public RunnerStatus GetStatus()
@@ -120,7 +116,7 @@ namespace AutoQC
             return Config.Created;
         }
 
-        public IAutoQcLogger GetLogger()
+        public Logger GetLogger()
         {
             return _logger;
         }
@@ -190,7 +186,6 @@ namespace AutoQC
                 if (_uiControl != null)
                 {
                     _uiControl.UpdateUiConfigurations();
-                    _uiControl.UpdateButtonsEnabled();
                 }
             }
         }
@@ -557,6 +552,11 @@ namespace AutoQC
             return !docImportFailed;
         }
 
+        public void Cancel()
+        {
+            Stop();
+        }
+
         public void Stop()
         {
             if (_runnerStatus == RunnerStatus.Stopped)
@@ -587,7 +587,7 @@ namespace AutoQC
             });
         }
 
-        public bool IsIntegrateAllChecked(IAutoQcLogger logger, MainSettings mainSettings)
+        public bool IsIntegrateAllChecked(Logger logger, MainSettings mainSettings)
         {
             try
             {
@@ -635,7 +635,7 @@ namespace AutoQC
             return false;
         }
 
-        public bool ReadLastAcquiredFileDate(IAutoQcLogger logger, IProcessControl processControl)
+        public bool ReadLastAcquiredFileDate(Logger logger, IProcessControl processControl)
         {
             logger.Log(Resources.ConfigRunner_ReadLastAcquiredFileDate_Getting_the_acquisition_date_on_the_newest_file_imported_into_the_Skyline_document_);
             var exeDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
@@ -688,7 +688,7 @@ namespace AutoQC
             return true;
         }
 
-        private static DateTime GetLastAcquiredFileDate(string reportFile, IAutoQcLogger logger)
+        private static DateTime GetLastAcquiredFileDate(string reportFile, Logger logger)
         {
             var lastAcq = new DateTime();
 
@@ -852,14 +852,6 @@ namespace AutoQC
         IEnumerable<ProcessInfo> GetProcessInfos(ImportContext importContext);
         ProcStatus RunProcess(ProcessInfo processInfo);
         void StopProcess();
-    }
-
-    public interface IConfigRunner
-    {
-        void ChangeStatus(ConfigRunner.RunnerStatus status);
-        bool IsRunning();
-        bool IsStopped();
-        bool IsDisconnected();
     }
 
     public enum ProcStatus

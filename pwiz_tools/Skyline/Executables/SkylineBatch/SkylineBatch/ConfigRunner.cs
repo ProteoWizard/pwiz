@@ -18,6 +18,7 @@
 
 using System;
 using System.Diagnostics;
+using System.Drawing;
 using System.Threading.Tasks;
 using SharedBatch;
 using SkylineBatch.Properties;
@@ -26,12 +27,6 @@ namespace SkylineBatch
 {
     public class ConfigRunner : IConfigRunner
     {
-
-        public static ConfigRunner StaticConstructor(IConfig config, Logger logger, IMainUiControl uiControl = null)
-        {
-            return new ConfigRunner((SkylineBatchConfig)config, logger, uiControl);
-        }
-
         private readonly IMainUiControl _uiControl;
         private readonly Logger _logger;
 
@@ -52,6 +47,11 @@ namespace SkylineBatch
         public IConfig GetConfig()
         {
             return Config;
+        }
+
+        public Color GetDisplayColor()
+        {
+            return Color.Black;
         }
 
         public RunnerStatus GetStatus()

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using SharedBatch.Properties;
@@ -9,10 +10,12 @@ namespace SharedBatch
     {
         public const string EXT_XML = ".xml";
         public const string EXT_SKY = ".sky";
+        public const string EXT_SKY_ZIP = ".sky.zip";
         public const string EXT_SKYR = ".skyr";
         public const string EXT_SKYD = ".skyd";
         public const string EXT_R = ".R";
         public const string EXT_CSV = ".csv";
+        public const string EXT_LOG = ".log";
 
 
         public static string FILTER_XML
@@ -50,6 +53,15 @@ namespace SharedBatch
             if (!originalString.Substring(0, oldText.Length).Equals(oldText)) return false;
             replacedString = newText + originalString.Substring(oldText.Length);
             return true;
+        }
+
+        public static string GetSafeName(string name)
+        {
+            var invalidChars = new List<char>();
+            invalidChars.AddRange(Path.GetInvalidFileNameChars());
+            invalidChars.AddRange(Path.GetInvalidPathChars());
+            var safeName = string.Join("_", name.Split(invalidChars.ToArray()));
+            return safeName; // .TrimStart('.').TrimEnd('.');
         }
 
 

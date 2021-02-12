@@ -83,7 +83,7 @@ namespace AutoQCTest
         public void TestAddInsertConfig()
         {
             TestUtils.ClearSavedConfigurations();
-            var testConfigManager = new ConfigManager();
+            var testConfigManager = new AutoQcConfigManager();
             Assert.IsTrue(!testConfigManager.HasConfigs());
             var addedConfig = TestUtils.GetTestConfig("one");
             testConfigManager.AddConfiguration(addedConfig);
@@ -247,7 +247,7 @@ namespace AutoQCTest
             configManager.AddConfiguration(TestUtils.GetTestConfig("four"));
             var testingConfigs = TestUtils.ConfigListFromNames(new [] { "one", "two", "three", "four" });
             configManager.Close();
-            var testConfigManager = new ConfigManager();
+            var testConfigManager = new AutoQcConfigManager();
             Assert.IsTrue(testConfigManager.ConfigListEquals(testingConfigs));
         }
 

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Management;
 using System.Text;
 using System.Runtime.InteropServices;
+using SharedBatch;
 
 namespace AutoQC
 {
@@ -12,7 +13,7 @@ namespace AutoQC
     {
         private static readonly object LOCK = new object();
 
-        public static bool EnsureDrive(DriveInfo driveInfo, IAutoQcLogger logger, out bool reconnected, string configName)
+        public static bool EnsureDrive(DriveInfo driveInfo, Logger logger, out bool reconnected, string configName)
         {
             // Do we need a lock here? Don't want two configurations, on the same mapped (disconnected) drive, 
             // to try to re-map the drive.

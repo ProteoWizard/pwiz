@@ -24,11 +24,6 @@ using SharedBatch;
 
 namespace AutoQC
 {
-    public enum ConfigAction
-    {
-        Add, Edit, Copy
-    }
-
     public partial class AutoQcConfigForm : Form
     {
         // Allows a user to create a new configuration and add it to the list of configurations,

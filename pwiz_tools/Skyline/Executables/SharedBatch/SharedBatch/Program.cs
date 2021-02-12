@@ -27,6 +27,7 @@ namespace SharedBatch
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
+
         }
 
         public static string AppName

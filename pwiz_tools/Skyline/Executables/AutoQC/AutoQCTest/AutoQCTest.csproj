@@ -67,6 +67,10 @@
     <Folder Include="Test\" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\SharedBatch\SharedBatch\SharedBatch.csproj">
+      <Project>{8DC37752-C356-446F-A1EE-6AA6D8A23B6F}</Project>
+      <Name>SharedBatch</Name>
+    </ProjectReference>
     <ProjectReference Include="..\AutoQCStarter\AutoQCStarter.csproj">
       <Project>{296123d9-c4d5-4bd7-818e-02283762a636}</Project>
       <Name>AutoQCStarter</Name>

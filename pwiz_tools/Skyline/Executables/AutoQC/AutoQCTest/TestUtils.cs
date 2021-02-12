@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using AutoQC;
+using SharedBatch;
 
 namespace AutoQCTest
 {
@@ -92,7 +93,13 @@ namespace AutoQCTest
         public static ConfigRunner GetTestConfigRunner(string configName = "Config")
         {
             var testConfig = GetTestConfig(configName);
-            return new ConfigRunner(testConfig, new AutoQcLogger(testConfig, null));
+            return new ConfigRunner(testConfig, GetTestLogger(testConfig));
+        }
+
+        public static Logger GetTestLogger(AutoQcConfig config)
+        {
+            var logFile = GetTestFilePath("TestLogs\\AutoQC.log");
+            return new Logger(logFile, config.Name);
         }
 
         public static List<AutoQcConfig> ConfigListFromNames(string[] names)
@@ -105,9 +112,9 @@ namespace AutoQCTest
             return configList;
         }
 
-        public static ConfigManager GetTestConfigManager(List<AutoQcConfig> configs = null)
+        public static AutoQcConfigManager GetTestConfigManager(List<AutoQcConfig> configs = null)
         {
-            var testConfigManager = new ConfigManager();
+            var testConfigManager = new AutoQcConfigManager();
             while (testConfigManager.HasConfigs())
             {
                 testConfigManager.SelectConfig(0);
@@ -132,7 +139,7 @@ namespace AutoQCTest
 
         public static void ClearSavedConfigurations()
         {
-            var testConfigManager = new ConfigManager();
+            var testConfigManager = new AutoQcConfigManager();
             while (testConfigManager.HasConfigs())
             {
                 testConfigManager.SelectConfig(0);
@@ -155,173 +162,7 @@ namespace AutoQCTest
             return logFiles;
         }
     }
-    /*class TestLogger: IAutoQcLogger
-    {
-        private readonly StringBuilder log = new StringBuilder();
-        private readonly  StringBuilder _programLog = new StringBuilder();
-
-        public void Log(string message, object[] args)
-        {
-            AddToLog(message, args);
-        }
-
-        public void LogError(string message, object[] args)
-        {
-            AddToLog(message, args);
-        }
-
-        public void LogProgramError(string message, params object[] args)
-        {
-            AddToProgramLog(message, args);
-        }
-
-        public void LogException(Exception exception, string message, params object[] args)
-        {
-            AddToLog(message, args);
-        }
-
-        public string GetFile()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void DisableUiLogging()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void LogToUi(IMainUiControl mainUi)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void DisplayLog()
-        {
-            throw new NotImplementedException();
-        }
-
-        private void AddToLog(string message, params object[] args)
-        {
-            log.Append(string.Format(message, args)).AppendLine();
-            System.Diagnostics.Debug.WriteLine(message, args);
-        }
-
-        private void AddToProgramLog(string message, params object[] args)
-        {
-            _programLog.Append(string.Format(message, args)).AppendLine();
-        }
-
-        public string GetLog()
-        {
-            return log.ToString();
-        }
-
-        public void Clear()
-        {
-            log.Clear();
-        }
-    }*/
-
-    /*class TestAppControl : IMainUiControl
-    {
-        private MainSettings _mainSettings = new MainSettings();
-        private PanoramaSettings _panoramaSettings = new PanoramaSettings();
-
-        public bool Waiting { get; set; }
-        public bool Stopped { get; set; }
-
-        private ConfigRunner.RunnerStatus _runnerStatus;
-
-        public void SetWaiting()
-        {
-            Waiting = true;
-        }
-
-        public void SetStopped()
-        {
-            Stopped = true;
-        }
-
-        public void SetUIMainSettings(MainSettings mainSettings)
-        {
-            _mainSettings = mainSettings;
-        }
-
-        public MainSettings GetUIMainSettings()
-        {
-            return _mainSettings;
-        }
-
-        public void SetUIPanoramaSettings(PanoramaSettings panoramaSettings)
-        {
-            _panoramaSettings = panoramaSettings;
-        }
-
-        public PanoramaSettings GetUIPanoramaSettings()
-        {
-            return _panoramaSettings;
-        }
-
-        public void DisablePanoramaSettings()
-        {
-            throw new NotImplementedException();
-        }
-
-        #region Implementation of IMainUiControl
-
-        public void ChangeConfigUiStatus(ConfigRunner configRunner)
-        {
-            _runnerStatus = configRunner.GetStatus();
-        }
-
-        public void AddConfiguration(AutoQcConfig config)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void UpdateConfiguration(AutoQcConfig oldConfig, AutoQcConfig newConfig)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void UpdatePanoramaServerUrl(AutoQcConfig config)
-        {
-            throw new NotImplementedException();
-        }
-
-        public AutoQcConfig GetConfig(string name)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void LogToUi(string text, bool scrollToEnd = true, bool trim = false)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void LogErrorToUi(string text, bool scrollToEnd = true, bool trim = false)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void LogLinesToUi(List<string> lines)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void LogErrorLinesToUi(List<string> lines)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void DisplayError(string title, string message)
-        {
-            throw new NotImplementedException();
-        }
-
-        #endregion
-    }*/
-
+    
     class TestImportContext : ImportContext
     {
         public DateTime OldestFileDate;

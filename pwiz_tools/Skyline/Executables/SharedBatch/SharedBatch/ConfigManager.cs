@@ -37,8 +37,7 @@ namespace SharedBatch
         // The UI should reflect the configs, runners, and log files from this class
 
         protected readonly List<IConfig> _configList; // the list of configurations. Every config must have a runner in configRunners
-        protected readonly Dictionary<string, IConfigRunner> _configRunners; // dictionary mapping from config name to that config's runner
-        private readonly Dictionary<string, bool> _configValidation; // dictionary mapping from config name to if that config is valid
+        protected readonly Dictionary<string, bool> _configValidation; // dictionary mapping from config name to if that config is valid
 
         protected Logger _currentLogger; // the current logger - always logs to SkylineBatch.log
         protected List<Logger> _logList; // list of archived loggers, from most recent to least recent
@@ -46,8 +45,8 @@ namespace SharedBatch
         protected bool _runningUi; // if the UI is displayed (false when testing)
         protected IMainUiControl _uiControl; // null if no UI displayed
 
-        private readonly object _lock = new object(); // lock required for any mutator or getter method on _configList, _configRunners, or SelectedConfig
-        private readonly object _loggerLock = new object(); // lock required for any mutator or getter method on _logger, _oldLogs or SelectedLog
+        protected readonly object _lock = new object(); // lock required for any mutator or getter method on _configList, _configRunners, or SelectedConfig
+        protected readonly object _loggerLock = new object(); // lock required for any mutator or getter method on _logger, _oldLogs or SelectedLog
 
         public Dictionary<string, string> RootReplacement;
         
@@ -57,24 +56,20 @@ namespace SharedBatch
             SelectedConfig = -1;
             SelectedLog = 0;
             _logList = new List<Logger>();
-            //_currentLogger = logger;
-            _configRunners = new Dictionary<string, IConfigRunner>();
-            _configValidation = new Dictionary<string, bool>();
             _configList = new List<IConfig>();
+            //_currentLogger = logger;
+            _configValidation = new Dictionary<string, bool>();
             RootReplacement = new Dictionary<string, string>();
         }
 
         public void Init()
         {
-            //_oldLogs = new List<ILogger>();
-            //LoadOldLogs();
             AssertAllInitialized();
-            LoadConfigList();
         }
 
         protected void AssertAllInitialized()
         {
-            if (_configList == null || _configRunners == null || _configValidation == null || _currentLogger == null ||
+            if (_configList == null || _configValidation == null || 
                 _logList == null || _lock == null || _loggerLock == null || RootReplacement == null)
                 throw new NullReferenceException("Not all Config Manager variables have been initialized.");
         }
@@ -82,13 +77,11 @@ namespace SharedBatch
         public int SelectedConfig { get; private set; } // index of the selected configuration
         public int SelectedLog { get; protected set; } // index of the selected log. index 0 corresponds to _logger, any index > 0 corresponds to oldLogs[index - 1]
         
-        private void LoadConfigList()
+        protected void LoadConfigList()
         {
             foreach (var config in Settings.Default.ConfigList)
             {
                 _configList.Add(config);
-                var runner = config.GetRunnerCreator()(config, _currentLogger, _uiControl);
-                _configRunners.Add(config.GetName(), runner);
                 try
                 {
                     config.Validate();
@@ -105,7 +98,6 @@ namespace SharedBatch
         public void Close()
         {
             SaveConfigList();
-            CancelRunners();
         }
 
         private void SaveConfigList()
@@ -122,17 +114,14 @@ namespace SharedBatch
 
         #region Configs
 
-        public List<ListViewItem> ConfigsListViewItems()
+        protected List<ListViewItem> ConfigsListViewItems(Dictionary<string, IConfigRunner> configRunners)
         {
             lock (_lock)
             {
                 var listViewConfigs = new List<ListViewItem>();
                 foreach (var config in _configList)
                 {
-                    var lvi = config.AsListViewItem(_configRunners[config.GetName()]);
-                    /*lvi.Checked = config.Enabled;
-                    lvi.SubItems.Add(config.Modified.ToShortDateString());
-                    lvi.SubItems.Add(_configRunners[config.Name].GetDisplayStatus());*/
+                    var lvi = config.AsListViewItem(configRunners[config.GetName()]);
                     if (!_configValidation[config.GetName()])
                         lvi.ForeColor = Color.Red;
                     if (HasSelectedConfig() && _configList[SelectedConfig].GetName().Equals(config.GetName()))
@@ -192,14 +181,17 @@ namespace SharedBatch
             }
         }
 
-        public IConfig Get(int index)
+        public int GetConfigIndex(string name)
         {
-            return _configList[index];
-        }
-
-        public int Count()
-        {
-            return _configList.Count;
+            lock (_lock)
+            {
+                for (int i = 0; i < _configList.Count; i++)
+                {
+                    if (_configList[i].GetName().Equals(name))
+                        return i;
+                }
+                return -1;
+            }
         }
 
         public IConfig GetSelectedConfig()
@@ -272,16 +264,11 @@ namespace SharedBatch
             }
         }
 
-        public void AddConfiguration(IConfig config)
-        {
-            InsertConfiguration(config, _configList.Count);
-        }
-
-        public void InsertConfiguration(IConfig config, int index)
+        protected void InsertConfiguration(IConfig config, int index)
         {
             lock (_lock)
             {
-                if (_configRunners.Keys.Contains(config.GetName()))
+                if (_configValidation.Keys.Contains(config.GetName()))
                 {
                     throw new ArgumentException(string.Format(Resources.ConfigManager_InsertConfiguration_Configuration___0___already_exists_, config.GetName()) + Environment.NewLine +
                                                 Resources.ConfigManager_InsertConfiguration_Please_enter_a_unique_name_for_the_configuration_);
@@ -289,8 +276,6 @@ namespace SharedBatch
                 //Program.LogInfo(string.Format(Resources.ConfigManager_InsertConfiguration_Adding_configuration___0___, config.GetName()));
                 _configList.Insert(index, config);
                 
-                var newRunner = config.GetRunnerCreator()(config, _currentLogger, _uiControl);
-                _configRunners.Add(config.GetName(), newRunner);
                 try
                 {
                     config.Validate();
@@ -303,7 +288,7 @@ namespace SharedBatch
             }
         }
 
-        public void ReplaceSelectedConfig(IConfig newConfig)
+        protected void ReplaceSelectedConfig(IConfig newConfig)
         {
             lock (_lock)
             {
@@ -311,7 +296,7 @@ namespace SharedBatch
                 var oldConfig = _configList[SelectedConfig];
                 if (!string.Equals(oldConfig.GetName(), newConfig.GetName()))
                 {
-                    if (_configRunners.Keys.Contains(newConfig.GetName()))
+                    if (_configValidation.Keys.Contains(newConfig.GetName()))
                     {
                         throw new ArgumentException(string.Format(Resources.ConfigManager_InsertConfiguration_Configuration___0___already_exists_, newConfig.GetName()) + Environment.NewLine +
                                                     Resources.ConfigManager_InsertConfiguration_Please_enter_a_unique_name_for_the_configuration_);
@@ -339,18 +324,10 @@ namespace SharedBatch
             lock (_lock)
             {
                 AssertConfigSelected();
-                var configRunner = GetSelectedConfigRunner();
-                var config = configRunner.GetConfig();
-                if (configRunner.IsBusy())
-                {
-                    DisplayWarning(string.Format(
-                        Resources.ConfigManager_RemoveSelected___0___is_still_running__Please_stop_the_current_run_before_deleting___0___, 
-                        configRunner.GetConfigName()));
-                    return;
-                }
+                var config = GetSelectedConfig();
                 var doDelete = DisplayQuestion( 
                     string.Format(Resources.ConfigManager_RemoveSelected_Are_you_sure_you_want_to_delete___0___,
-                        configRunner.GetConfigName()));
+                        config.GetName()));
                 if (doDelete != DialogResult.Yes)
                     return;
                 //Program.LogInfo(string.Format(Resources.ConfigManager_RemoveSelected_Removing_configuration____0__, config.Name));
@@ -362,153 +339,12 @@ namespace SharedBatch
 
         private void RemoveConfig(IConfig config)
         {
-            if (!_configRunners.Keys.Contains(config.GetName()))
+            if (!_configValidation.Keys.Contains(config.GetName()))
             {
                 throw new ArgumentException(string.Format(Resources.ConfigManager_RemoveConfig_Cannot_delete___0____configuration_does_not_exist_, config.GetName()));
             }
             _configList.Remove(config);
-            //_configRunners[config.Name].Cancel();
-            _configRunners.Remove(config.GetName());
             _configValidation.Remove(config.GetName());
-        }
-
-        #endregion
-        
-        #region Run Configs
-
-        public IConfigRunner GetSelectedConfigRunner()
-        {
-            lock (_lock)
-            {
-                AssertConfigSelected();
-                return _configRunners[_configList[SelectedConfig].GetName()];
-            }
-        }
-
-        /*public async Task RunAllEnabled(int startStep)
-        {
-
-            var configsRunning = ConfigsRunning();
-            if (configsRunning.Count > 0)
-            {
-                DisplayError(Resources.ConfigManager_RunAll_Cannot_run_while_the_following_configurations_are_running_ + Environment.NewLine +
-                             string.Join(Environment.NewLine, configsRunning) + Environment.NewLine +
-                             Resources.ConfigManager_RunAll_Please_wait_until_the_current_run_is_finished_);
-                return;
-            }
-
-            string nextConfig;
-            lock (_lock)
-            {
-                // Check if files will be overwritten by run
-                var overwriteInfo = "";
-                if (startStep == 1) overwriteInfo = Resources.ConfigManager_RunAllEnabled_results_files;
-                if (startStep == 2) overwriteInfo = Resources.ConfigManager_RunAllEnabled_chromatagram_files;
-                if (startStep == 3) overwriteInfo = Resources.ConfigManager_RunAllEnabled_exported_reports;
-                if (startStep == 4) overwriteInfo = Resources.ConfigManager_RunAllEnabled_R_script_outputs;
-                var overwriteMessage = new StringBuilder();
-                overwriteMessage.Append(string.Format(
-                    Resources.ConfigManager_RunAllEnabled_Running_the_enabled_configurations_from_step__0__would_overwrite_the_following__1__,
-                    startStep, overwriteInfo)).AppendLine().AppendLine();
-                var showOverwriteMessage = false;
-
-                foreach (var config in _configList)
-                {
-                    if (!config.Enabled) continue;
-                    var tab = "      ";
-                    var configurationHeader = tab + string.Format(Resources.ConfigManager_RunAllEnabled_Configuration___0___, config.Name)  + Environment.NewLine;
-                    var willOverwrite = config.MainSettings.RunWillOverwrite(startStep, configurationHeader, out StringBuilder message);
-                    if (willOverwrite)
-                    {
-                        overwriteMessage.Append(message).AppendLine();
-                        showOverwriteMessage = true;
-                    }
-                }
-                // Ask if run should start if files will be overwritten
-                overwriteMessage.Append(Resources.ConfigManager_RunAllEnabled_Do_you_want_to_continue_);
-                if (showOverwriteMessage)
-                {
-                    if (DisplayLargeQuestion(overwriteMessage.ToString()) != DialogResult.OK)
-                        return;
-                }
-                // Checks if there are enabled configs and starts them waiting
-                var hasEnabledConfigs = false;
-                foreach (var runner in _configRunners.Values)
-                {
-                    if (runner.Config.Enabled)
-                    {
-                        runner.ChangeStatus(ConfigRunner.RunnerStatus.Waiting);
-                        hasEnabledConfigs = true;
-                    }
-                }
-                if (!hasEnabledConfigs)
-                {
-                    DisplayError(Resources.ConfigManager_RunAllEnabled_There_are_no_enabled_configurations_to_run_ + Environment.NewLine +
-                                 Resources.ConfigManager_RunAllEnabled_Please_check_the_checkbox_next_to_one_or_more_configurations_);
-                    return;
-                }
-
-                nextConfig = GetNextWaitingConfig();
-            }
-
-            UpdateIsRunning(true);
-
-            lock (_loggerLock)
-            {
-                var oldLogger = _logger.Archive();
-                if (oldLogger != null)
-                    _oldLogs.Insert(0, oldLogger);
-                UpdateUiLogs();
-            }
-
-            while (!string.IsNullOrEmpty(nextConfig))
-            {
-                await _configRunners[nextConfig].Run(startStep);
-                nextConfig = GetNextWaitingConfig();
-            }
-
-            while (ConfigsRunning().Count > 0)
-                await Task.Delay(3000);
-            UpdateIsRunning(false);
-        }
-
-        private string GetNextWaitingConfig()
-        {
-            lock (_lock)
-            {
-                foreach (var config in _configList)
-                {
-                    if (_configRunners[config.GetName()].IsWaiting())
-                    {
-                        return config.GetName();
-                    }
-                }
-                return null;
-            }
-        }
-
-        public List<string> ConfigsRunning()
-        {
-            lock (_lock)
-            {
-                var configsRunning = new List<string>();
-                foreach (var runner in _configRunners.Values)
-                {
-                    if (runner.IsBusy())
-                        configsRunning.Add(runner.GetConfigName());
-                }
-                return configsRunning;
-            }
-        }*/
-
-        public void CancelRunners()
-        {
-             lock (_lock){
-                foreach (var configRunner in _configRunners.Values)
-                {
-                    configRunner.Cancel();
-                }
-             }
         }
 
         #endregion
@@ -520,6 +356,13 @@ namespace SharedBatch
             if (!_runningUi)
                 return;
             _uiControl.DisplayError(message);
+        }
+
+        protected void DisplayErrorWithException(string message, Exception ex)
+        {
+            if (!_runningUi)
+                return;
+            _uiControl.DisplayErrorWithException(message, ex);
         }
 
         protected void DisplayWarning(string message)
@@ -550,20 +393,21 @@ namespace SharedBatch
             _uiControl.UpdateUiLogFiles();
         }
 
-        protected void UpdateIsRunning(bool isRunning)
+        protected void UpdateIsRunning(bool canStart, bool canStop)
         {
             if (!_runningUi)
                 return;
-            _uiControl.UpdateRunningButtons(isRunning);
+            _uiControl.UpdateRunningButtons(canStart, canStop);
         }
         
         #endregion
 
         #region Import/Export
 
-        protected void ImportFrom(string filePath, Importer importer)
+        protected List<IConfig> ImportFrom(string filePath, Importer importer)
         {
             var readConfigs = new List<IConfig>();
+            var addedConfigs = new List<IConfig>();
             var readXmlErrors = new List<string>();
             try
             {
@@ -604,12 +448,12 @@ namespace SharedBatch
             {
                 DisplayError(string.Format(Resources.ConfigManager_Import_An_error_occurred_while_importing_configurations_from__0__, filePath) + Environment.NewLine +
                              e.Message);
-                return;
+                return addedConfigs;
             }
             if (readConfigs.Count == 0 && readXmlErrors.Count == 0)
             {
                 DisplayWarning(string.Format(Resources.ConfigManager_Import_No_configurations_were_found_in__0__, filePath));
-                return;
+                return addedConfigs;
             }
 
             var duplicateConfigs = new List<string>();
@@ -617,14 +461,15 @@ namespace SharedBatch
             foreach (IConfig config in readConfigs)
             {
                 // Make sure that the configuration name is unique
-                if (_configRunners.Keys.Contains(config.GetName()))
+                if (_configValidation.Keys.Contains(config.GetName()))
                 {
                     duplicateConfigs.Add(config.GetName());
                     continue;
                 }
 
                 var addingConfig = RunRootReplacement(config);
-                AddConfiguration(addingConfig);
+                addedConfigs.Add(addingConfig);
+                InsertConfiguration(addingConfig, _configList.Count);
                 numAdded++;
             }
             var message = new StringBuilder(Resources.ConfigManager_Import_Number_of_configurations_imported_);
@@ -653,6 +498,8 @@ namespace SharedBatch
                 message.Append(errorMessage);
                 DisplayError(errorMessage.ToString());
             }
+
+            return addedConfigs;
             //Program.LogInfo(message.ToString());
         }
         
@@ -738,6 +585,26 @@ namespace SharedBatch
 
         #endregion
 
+        public Logger GetSelectedLogger()
+        {
+            return _logList[SelectedLog];
+        }
+
+        public bool LoggerIsDisplayed(string name)
+        {
+            if (SelectedLog < 0)
+                return false;
+            return GetSelectedLogger().Name.Equals(name);
+        }
+
+        public object[] GetLogList()
+        {
+            var logNames = new object[_logList.Count];
+            for (int i = 0; i < _logList.Count; i++)
+                logNames[i] = _logList[i].Name;
+            return logNames;
+        }
+
         public void AddRootReplacement(string oldRoot, string newRoot)
         {
             RootReplacement.Add(oldRoot, newRoot);
@@ -769,20 +636,6 @@ namespace SharedBatch
             }
             return config;
         }
-
-
-        /*public IEnumerator<IConfig> GetEnumerator()
-        {
-            return _configList.GetEnumerator();
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return this.GetEnumerator();
-        }*/
-
-
-
     }
 }
 

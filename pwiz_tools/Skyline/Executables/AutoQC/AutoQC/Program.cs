@@ -44,6 +44,9 @@ namespace AutoQC
         [STAThread]
         public static void Main(string[] args)
         {
+            SharedBatch.Properties.ConfigList.importer = AutoQcConfig.ReadXml;
+            SharedBatch.Program.LOG_NAME = "AutoQCProgram.log";
+
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);

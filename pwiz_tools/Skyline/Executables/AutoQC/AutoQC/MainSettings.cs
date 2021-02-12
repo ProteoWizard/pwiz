@@ -27,6 +27,7 @@ using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using AutoQC.Properties;
+using SharedBatch;
 
 namespace AutoQC
 {

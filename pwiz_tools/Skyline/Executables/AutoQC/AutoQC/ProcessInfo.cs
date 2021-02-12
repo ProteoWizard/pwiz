@@ -19,6 +19,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using AutoQC.Properties;
+using SharedBatch;
 
 namespace AutoQC
 {
@@ -42,7 +43,7 @@ namespace AutoQC
     public class ProcessRunner
     {
         private ProcessInfo _procInfo;
-        private readonly IAutoQcLogger _logger;
+        private readonly Logger _logger;
 
         private Process _process;
 
@@ -50,7 +51,7 @@ namespace AutoQC
         private bool _panoramaUploadFailed;
         private bool _errorLogged;
 
-        public ProcessRunner(IAutoQcLogger logger)
+        public ProcessRunner(Logger logger)
         {
             _logger = logger;
         }

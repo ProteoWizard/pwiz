@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Windows.Forms;
 using System.Xml;
 
@@ -15,8 +16,6 @@ namespace SharedBatch
 
         DateTime GetModified();
 
-        CreateRunner GetRunnerCreator();
-
         bool TryPathReplace(string oldRoot, string newRoot, out IConfig replaced);
 
         void WriteXml(XmlWriter writer);
@@ -28,11 +27,14 @@ namespace SharedBatch
     public enum RunnerStatus
     {
         Waiting,
+        Starting,
         Running,
         Cancelling,
         Cancelled,
+        Stopping,
         Stopped,
         Completed,
+        Disconnected,
         Error
     }
     public interface IConfigRunner
@@ -43,9 +45,12 @@ namespace SharedBatch
 
         RunnerStatus GetStatus();
 
+        string GetDisplayStatus();
+
+        Color GetDisplayColor();
+
         bool IsBusy();
         bool IsRunning();
-        bool IsWaiting();
         void Cancel();
     }
 
@@ -64,19 +69,24 @@ namespace SharedBatch
         void DisplayLog();
     }*/
 
+    public enum ConfigAction
+    {
+        Add, Edit, Copy
+    }
+
+
     public interface IMainUiControl
     {
-        void AddConfiguration(IConfig config);
-        void EditSelectedConfiguration(IConfig newVersion);
+        void TryExecuteOperation(ConfigAction action, IConfig config);
+        //void EditSelectedConfiguration(IConfig newVersion);
         void UpdateUiConfigurations();
-
         void UpdateUiLogFiles();
-        void UpdateRunningButtons(bool isRunning);
+        void UpdateRunningButtons(bool canStart, bool canStop);
 
-        void LogToUi(string text, bool scrollToEnd = true, bool trim = true);
-        void LogErrorToUi(string text, bool scrollToEnd = true, bool trim = true);
-        void LogLinesToUi(List<string> lines);
-        void LogErrorLinesToUi(List<string> lines);
+        void LogToUi(string filePath, string text, bool scrollToEnd = true, bool trim = true);
+        void LogErrorToUi(string filePath, string text, bool scrollToEnd = true, bool trim = true);
+        void LogLinesToUi(string filePath, List<string> lines);
+        void LogErrorLinesToUi(string filePath, List<string> lines);
 
         void DisplayError(string message);
         void DisplayWarning(string message);
