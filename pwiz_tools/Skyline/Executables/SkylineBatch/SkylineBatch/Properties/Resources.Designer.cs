@@ -498,22 +498,11 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cannot open the analysis folder of an invalid configuration..
+        ///   Looks up a localized string similar to analysis folder.
         /// </summary>
-        internal static string MainForm_btnOpenAnalysis_Click_Cannot_open_the_analysis_folder_of_an_invalid_configuration_ {
+        internal static string MainForm_btnOpenAnalysis_Click_analysis_folder {
             get {
-                return ResourceManager.GetString("MainForm_btnOpenAnalysis_Click_Cannot_open_the_analysis_folder_of_an_invalid_conf" +
-                        "iguration_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Cannot open the Skyline results file of an invalid configuration..
-        /// </summary>
-        internal static string MainForm_btnOpenResults_Click_Cannot_open_the_Skyline_results_file_of_an_invalid_configuration_ {
-            get {
-                return ResourceManager.GetString("MainForm_btnOpenResults_Click_Cannot_open_the_Skyline_results_file_of_an_invalid_" +
-                        "configuration_", resourceCulture);
+                return ResourceManager.GetString("MainForm_btnOpenAnalysis_Click_analysis_folder", resourceCulture);
             }
         }
         
@@ -523,6 +512,15 @@ namespace SkylineBatch.Properties {
         internal static string MainForm_btnOpenResults_Click_Please_run___0___from_step_one_and_try_again_ {
             get {
                 return ResourceManager.GetString("MainForm_btnOpenResults_Click_Please_run___0___from_step_one_and_try_again_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Skyline results file.
+        /// </summary>
+        internal static string MainForm_btnOpenResults_Click_Skyline_results_file {
+            get {
+                return ResourceManager.GetString("MainForm_btnOpenResults_Click_Skyline_results_file", resourceCulture);
             }
         }
         
@@ -537,21 +535,11 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cannot open the Skyline template file of an invalid configuration..
+        ///   Looks up a localized string similar to Skyline template file.
         /// </summary>
-        internal static string MainForm_btnOpenTemplate_Click_Cannot_open_the_Skyline_template_file_of_an_invalid_configuration_ {
+        internal static string MainForm_btnOpenTemplate_Click_Skyline_template_file {
             get {
-                return ResourceManager.GetString("MainForm_btnOpenTemplate_Click_Cannot_open_the_Skyline_template_file_of_an_invali" +
-                        "d_configuration_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Please fix &quot;{0}&quot; and try again..
-        /// </summary>
-        internal static string MainForm_btnOpenTemplate_Click_Please_fix___0___and_try_again_ {
-            get {
-                return ResourceManager.GetString("MainForm_btnOpenTemplate_Click_Please_fix___0___and_try_again_", resourceCulture);
+                return ResourceManager.GetString("MainForm_btnOpenTemplate_Click_Skyline_template_file", resourceCulture);
             }
         }
         

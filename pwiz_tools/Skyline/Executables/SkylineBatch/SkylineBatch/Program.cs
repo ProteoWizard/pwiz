@@ -42,7 +42,6 @@ namespace SkylineBatch
         [STAThread]
         public static void Main(string[] args)
         {
-            SharedBatch.Properties.ConfigList.importer = SkylineBatchConfig.ReadXml;
             SharedBatch.Program.LOG_NAME = "SkylineBatchProgram.log";
 
             Application.EnableVisualStyles();

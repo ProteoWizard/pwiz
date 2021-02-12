@@ -205,21 +205,6 @@
   <data name="AutoQcConfig_AutoQcConfig_Please_enter_a_name_" xml:space="preserve">
     <value>Please enter a name.</value>
   </data>
-  <data name="TextUtil_FILTER_XML_XML_Files" xml:space="preserve">
-    <value>XML Files</value>
-  </data>
-  <data name="TextUtil_FILTER_SKY_Skyline_Files" xml:space="preserve">
-    <value>Skyline Files</value>
-  </data>
-  <data name="TextUtil_FILTER_SKYR_Skyline_Reports" xml:space="preserve">
-    <value>Skyline Reports</value>
-  </data>
-  <data name="TextUtil_FILTER_R_R_Files" xml:space="preserve">
-    <value>R Files</value>
-  </data>
-  <data name="TextUtil_FILTER_ALL_All_Files" xml:space="preserve">
-    <value>All Files</value>
-  </data>
   <data name="AutoQCFileSystemWatcher_Restart_FileSystemWatcher_cancelled_" xml:space="preserve">
     <value>FileSystemWatcher cancelled.</value>
   </data>
@@ -427,15 +412,6 @@ with:
   <data name="MainForm_TryExecuteOperation_Please_choose_a_unique_name_" xml:space="preserve">
     <value>Please choose a unique name.</value>
   </data>
-  <data name="MainForm_btnOpenResults_Click_Cannot_open_the_Skyline_file_of_an_invalid_configuration_" xml:space="preserve">
-    <value>Cannot open the Skyline file of an invalid configuration.</value>
-  </data>
-  <data name="MainForm_btnOpenResults_Click_Please_fix___0___and_try_again_" xml:space="preserve">
-    <value>Please fix "{0}" and try again.</value>
-  </data>
-  <data name="MainForm_btnOpenPanoramaFolder_Click_Cannot_open_the_Panorama_folder_of_an_invalid_configuration_" xml:space="preserve">
-    <value>Cannot open the Panorama folder of an invalid configuration.</value>
-  </data>
   <data name="MainForm_SwitchLogger_Error_reading_log_" xml:space="preserve">
     <value>Error reading log:</value>
   </data>
@@ -583,10 +559,19 @@ with:
   <data name="PanoramaUtil_VerifyServerInformation_Unknown_error_while_checking_if_server__0__is_a_Panorama_server_" xml:space="preserve">
     <value>Unknown error while checking if server {0} is a Panorama server.</value>
   </data>
-  <data name="MainForm_toolStripFolderToWatch_Click_Cannot_open_the_folder_to_watch_of_an_invalid_configuration_" xml:space="preserve">
-    <value>Cannot open the folder to watch of an invalid configuration.</value>
-  </data>
   <data name="MainForm_toolStripLogFolder_Click_Cannot_open_the_log_folder_of_an_invalid_configuration_" xml:space="preserve">
     <value>Cannot open the log folder of an invalid configuration.</value>
+  </data>
+  <data name="MainForm_btnOpenResults_Click_Skyline_file" xml:space="preserve">
+    <value>Skyline file</value>
+  </data>
+  <data name="MainForm_btnOpenPanoramaFolder_Click_Panorama_folder" xml:space="preserve">
+    <value>Panorama folder</value>
+  </data>
+  <data name="MainForm_toolStripFolderToWatch_Click_folder_to_watch" xml:space="preserve">
+    <value>folder to watch</value>
+  </data>
+  <data name="MainForm_toolStripLogFolder_Click_log_folder" xml:space="preserve">
+    <value>log folder</value>
   </data>
 </root>

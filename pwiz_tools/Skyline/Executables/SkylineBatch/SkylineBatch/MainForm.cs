@@ -40,7 +40,7 @@ namespace SkylineBatch
         public MainForm()
         {
             InitializeComponent();
-
+            SharedBatch.Program.ConfigurationImporter = SkylineBatchConfig.ReadXml;
             var roamingFolder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
             var localFolder = Path.Combine(Path.GetDirectoryName(roamingFolder), "local");
             var logPath= Path.Combine(localFolder, Program.AppName(), Program.AppName() + TextUtil.EXT_LOG);
@@ -230,49 +230,36 @@ namespace SkylineBatch
         private void btnOpenAnalysis_Click(object sender, EventArgs e)
         {
             var config = _configManager.GetSelectedConfig();
-            if (!_configManager.IsSelectedConfigValid())
-            {
-                DisplayError(Resources.MainForm_btnOpenAnalysis_Click_Cannot_open_the_analysis_folder_of_an_invalid_configuration_ + Environment.NewLine +
-                             string.Format(Resources.MainForm_btnOpenTemplate_Click_Please_fix___0___and_try_again_, config.Name));
-                return;
-            }
-            config.MainSettings.CreateAnalysisFolderIfNonexistent();
-            var folder = config.MainSettings.AnalysisFolderPath;
-            Process.Start("explorer.exe", "/n," + folder);
+            MainFormUtils.OpenFileExplorer(config.Name, _configManager.IsSelectedConfigValid(),
+                Resources.MainForm_btnOpenAnalysis_Click_analysis_folder,
+                config.MainSettings.AnalysisFolderPath, this);
         }
 
         private void btnOpenTemplate_Click(object sender, EventArgs e)
         {
             var config = _configManager.GetSelectedConfig();
-            if (!_configManager.IsSelectedConfigValid())
+            if (MainFormUtils.CanOpen(config.Name, _configManager.IsSelectedConfigValid(),
+                Resources.MainForm_btnOpenTemplate_Click_Skyline_template_file, this))
             {
-                DisplayError(Resources.MainForm_btnOpenTemplate_Click_Cannot_open_the_Skyline_template_file_of_an_invalid_configuration_ + Environment.NewLine +
-                             string.Format(Resources.MainForm_btnOpenTemplate_Click_Please_fix___0___and_try_again_, config.Name));
-                return;
+                Process.Start(config.MainSettings.TemplateFilePath);
             }
-            // Open template file
-            var template = config.MainSettings.TemplateFilePath;
-            Process.Start(template);
         }
 
         private void btnOpenResults_Click(object sender, EventArgs e)
         {
             var config = _configManager.GetSelectedConfig();
-            if (!_configManager.IsSelectedConfigValid())
-            {
-                DisplayError(Resources.MainForm_btnOpenResults_Click_Cannot_open_the_Skyline_results_file_of_an_invalid_configuration_ + Environment.NewLine +
-                             string.Format(Resources.MainForm_btnOpenTemplate_Click_Please_fix___0___and_try_again_, config.Name));
-                return;
-            }
             var resultsFile = config.MainSettings.GetResultsFilePath();
-            if (!File.Exists(resultsFile))
+
+            if (MainFormUtils.CanOpen(config.Name, _configManager.IsSelectedConfigValid(),
+                Resources.MainForm_btnOpenResults_Click_Skyline_results_file, this))
             {
-                DisplayError(Resources.MainForm_btnOpenResults_Click_The_Skyline_results_file_for_this_configuration_has_not_been_generated_yet_ + Environment.NewLine +
-                             string.Format(Resources.MainForm_btnOpenResults_Click_Please_run___0___from_step_one_and_try_again_, config.Name));
-                return;
+                if (File.Exists(resultsFile)) Process.Start(resultsFile);
+                else
+                {
+                    DisplayError(Resources.MainForm_btnOpenResults_Click_The_Skyline_results_file_for_this_configuration_has_not_been_generated_yet_ + Environment.NewLine +
+                                 string.Format(Resources.MainForm_btnOpenResults_Click_Please_run___0___from_step_one_and_try_again_, config.Name));
+                }
             }
-            // Open results file
-            Process.Start(resultsFile);
         }
 
         #endregion

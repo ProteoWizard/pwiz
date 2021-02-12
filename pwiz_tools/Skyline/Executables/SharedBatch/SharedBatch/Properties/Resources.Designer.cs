@@ -409,6 +409,24 @@ namespace SharedBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cannot open the {0} of an invalid configuration..
+        /// </summary>
+        internal static string MainFormUtils_OpenFileExplorer_Cannot_open_the__0__of_an_invalid_configuration_ {
+            get {
+                return ResourceManager.GetString("MainFormUtils_OpenFileExplorer_Cannot_open_the__0__of_an_invalid_configuration_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please fix &quot;{0}&quot; and try again..
+        /// </summary>
+        internal static string MainFormUtils_OpenFileExplorer_Please_fix___0___and_try_again_ {
+            get {
+                return ResourceManager.GetString("MainFormUtils_OpenFileExplorer_Please_fix___0___and_try_again_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Could not find {0} at this location: {1}.
         /// </summary>
         internal static string SkylineSettings_Validate_Could_not_find__0__at_this_location___1_ {

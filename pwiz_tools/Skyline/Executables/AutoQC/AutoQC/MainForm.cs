@@ -44,6 +44,7 @@ namespace AutoQC
         {
             InitializeComponent();
 
+            SharedBatch.Program.ConfigurationImporter = AutoQcConfig.ReadXml;
             toolStrip.Items.Insert(2,new ToolStripSeparator());
             _listViewColumnWidths = new ColumnWidthCalculator(new []
             {
@@ -213,33 +214,22 @@ namespace AutoQC
         private void btnOpenResults_Click(object sender, EventArgs e)
         {
             var config = _configManager.GetSelectedConfig();
-            if (!_configManager.IsSelectedConfigValid())
+            if (MainFormUtils.CanOpen(config.Name, _configManager.IsSelectedConfigValid(), 
+                Resources.MainForm_btnOpenResults_Click_Skyline_file, this))
             {
-                DisplayError(Resources.MainForm_btnOpenResults_Click_Cannot_open_the_Skyline_file_of_an_invalid_configuration_ + Environment.NewLine +
-                             string.Format(Resources.MainForm_btnOpenResults_Click_Please_fix___0___and_try_again_, config.Name));
-                return;
+                Process.Start(config.MainSettings.SkylineFilePath);
             }
-            // Open skyline file
-            var file = config.MainSettings.SkylineFilePath;
-            Process.Start(file);
         }
 
         private void btnOpenPanoramaFolder_Click(object sender, EventArgs e)
         {
             var config = _configManager.GetSelectedConfig();
-            if (!_configManager.IsSelectedConfigValid())
+            if (MainFormUtils.CanOpen(config.Name, _configManager.IsSelectedConfigValid(), 
+                Resources.MainForm_btnOpenPanoramaFolder_Click_Panorama_folder, this))
             {
-                DisplayError(Resources.MainForm_btnOpenPanoramaFolder_Click_Cannot_open_the_Panorama_folder_of_an_invalid_configuration_ + Environment.NewLine +
-                             string.Format(Resources.MainForm_btnOpenResults_Click_Please_fix___0___and_try_again_, config.Name));
-                return;
+                var uri = new Uri(config.PanoramaSettings.PanoramaServerUri + config.PanoramaSettings.PanoramaFolder);
+                Process.Start(uri.AbsoluteUri);
             }
-            
-            var uri = new Uri(config.PanoramaSettings.PanoramaServerUri + config.PanoramaSettings.PanoramaFolder);
-            var username = HttpUtility.UrlEncode(config.PanoramaSettings.PanoramaUserEmail);
-            var password = HttpUtility.UrlEncode(config.PanoramaSettings.PanoramaPassword);
-
-            var uriWithCred = new UriBuilder(uri) { UserName = username, Password = password }.Uri;
-            Process.Start(uriWithCred.AbsoluteUri);
         }
 
         private void btnOpenFolder_Click(object sender, EventArgs e)
@@ -250,29 +240,18 @@ namespace AutoQC
         private void toolStripFolderToWatch_Click(object sender, EventArgs e)
         {
             var config = _configManager.GetSelectedConfig();
-            if (!_configManager.IsSelectedConfigValid())
-            {
-                DisplayError(Resources.MainForm_toolStripFolderToWatch_Click_Cannot_open_the_folder_to_watch_of_an_invalid_configuration_ + Environment.NewLine +
-                             string.Format(Resources.MainForm_btnOpenResults_Click_Please_fix___0___and_try_again_, config.Name));
-                return;
-            }
-            var folder = config.MainSettings.FolderToWatch;
-            Process.Start("explorer.exe", "/n," + folder);
+            MainFormUtils.OpenFileExplorer(config.Name, _configManager.IsSelectedConfigValid(), 
+                Resources.MainForm_toolStripFolderToWatch_Click_folder_to_watch,
+                config.MainSettings.FolderToWatch, this);
         }
 
         private void toolStripLogFolder_Click(object sender, EventArgs e)
         {
             var config = _configManager.GetSelectedConfig();
-            if (!_configManager.IsSelectedConfigValid())
-            {
-                DisplayError(Resources.MainForm_toolStripLogFolder_Click_Cannot_open_the_log_folder_of_an_invalid_configuration_ + Environment.NewLine +
-                             string.Format(Resources.MainForm_btnOpenResults_Click_Please_fix___0___and_try_again_, config.Name));
-                return;
-            }
-
             var logger = _configManager.GetLogger(config.Name);
-            var folder = Path.GetDirectoryName(logger.GetFile());
-            Process.Start("explorer.exe", "/n," + folder);
+            MainFormUtils.OpenFileExplorer(config.Name, _configManager.IsSelectedConfigValid(),
+                Resources.MainForm_toolStripLogFolder_Click_log_folder,
+                logger.GetDirectory(), this);
         }
 
         #endregion

@@ -67,9 +67,6 @@ namespace SharedBatch.Properties
 
     public class ConfigList : Collection<IConfig>, IXmlSerializable
     {
-
-        public static Importer importer;
-
         #region IXmlSerializable Members
 
         public XmlSchema GetSchema()
@@ -79,9 +76,10 @@ namespace SharedBatch.Properties
 
         public void ReadXml(XmlReader reader)
         {
-            if (importer == null) 
-                throw new NullReferenceException("ConfigList importer must be assigned before configurations are read");
-
+            if (Program.ConfigurationImporter == null)
+            {
+                throw new Exception("Must specify Program.ConfigurationImporter before configurations are loaded.");
+            }
 
             var isEmpty = reader.IsEmptyElement;
 
@@ -101,7 +99,7 @@ namespace SharedBatch.Properties
             {
                 try
                 {
-                    list.Add(importer(reader));
+                    list.Add(Program.ConfigurationImporter(reader));
                 }
                 catch (ArgumentException e)
                 {
