@@ -211,7 +211,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     dataRow.TargetTimes, dataRow.SourceTimes,
                     DocumentRetentionTimes.REFINEMENT_THRESHHOLD,
                     RegressionMethodRT.linear,
-                    new CustomCancellationToken(cancellationToken));
+                    cancellationToken);
 
                 if (!cancellationToken.IsCancellationRequested)
                 {

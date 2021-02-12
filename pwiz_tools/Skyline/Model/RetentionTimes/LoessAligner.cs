@@ -19,6 +19,7 @@
 
 using System;
 using System.Linq;
+using System.Threading;
 using pwiz.Common.DataAnalysis;
 
 namespace pwiz.Skyline.Model.RetentionTimes
@@ -55,7 +56,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
             _robustIters = robustIters;
         }
 
-        public override void Train(double[] xArr, double[] yArr, CustomCancellationToken token) 
+        public override void Train(double[] xArr, double[] yArr, CancellationToken token) 
         {
             //Calculate lowess
             Array.Sort(xArr, yArr);

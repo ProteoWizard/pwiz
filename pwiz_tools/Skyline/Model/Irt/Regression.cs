@@ -20,7 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using pwiz.Common.DataAnalysis;
+using System.Threading;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.RetentionTimes;
@@ -217,20 +217,20 @@ namespace pwiz.Skyline.Model.Irt
             _linearFit = new RegressionLine();
             _xMin = double.MinValue;
             _loess = null;
-            _token = null;
+            _token = default(CancellationToken);
             XValues = new double[0];
             YValues = new double[0];
             IrtIndependent = irtIndependent;
         }
 
-        public LoessRegression(double[] x, double[] y, bool irtIndependent = false, CustomCancellationToken token = null)
+        public LoessRegression(double[] x, double[] y, bool irtIndependent = false, CancellationToken token = default(CancellationToken))
         {
             _linearFit = new RegressionLine(x, y);
             _xMin = x.Min();
             _xMax = x.Max();
             _loess = new LoessAligner(0.4);
             _token = token;
-            _loess.Train(x, y, _token ?? CustomCancellationToken.NONE);
+            _loess.Train(x, y, _token);
             XValues = x;
             YValues = y;
         }
@@ -249,11 +249,11 @@ namespace pwiz.Skyline.Model.Irt
         private readonly double _xMin;
         private readonly double _xMax;
         private readonly LoessAligner _loess;
-        private readonly CustomCancellationToken _token;
+        private readonly CancellationToken _token;
 
         public IIrtRegression ChangePoints(double[] x, double[] y)
         {
-            return new LoessRegression(x, y, IrtIndependent, this is LoessRegression loess ? loess._token : null);
+            return new LoessRegression(x, y, IrtIndependent, _token);
         }
         public double[] XValues { get; }
         public double[] YValues { get; }
