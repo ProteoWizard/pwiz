@@ -44,17 +44,22 @@ namespace pwiz.Skyline.Controls.Graphs
         };
         private PointF _barLocation;
         private float _barWidth;
-        private readonly SummaryGraphPane _parent;
-        
-        public SummaryGraphPane Parent => _parent;
+
+        public ZedGraphControl GraphControl { get; private set; }
+        public GraphPane GraphPane {get;private set; }
         public bool IsDisposed { get; private set; }
 
-        public PaneProgressBar(SummaryGraphPane parent)
+        public PaneProgressBar(SummaryGraphPane parent) : this(parent.GraphSummary.GraphControl, parent)
+        {
+        }
+
+        public PaneProgressBar(ZedGraphControl graphControl, GraphPane parent)
         {
             SizeF _titleSize;
-            _parent = parent;
+            GraphPane = parent;
+            GraphControl = graphControl;
             var scaleFactor = parent.CalcScaleFactor();
-            using (var g = parent.GraphSummary.CreateGraphics())
+            using (var g = GraphControl.CreateGraphics())
             {
                 _titleSize = parent.Title.FontSpec.BoundingBox(g, @" ", scaleFactor);
             }
@@ -79,19 +84,19 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public void Dispose()
         {
-            _parent.GraphObjList.Remove(_left);
-            _parent.GraphObjList.Remove(_right);
+            GraphPane.GraphObjList.Remove(_left);
+            GraphPane.GraphObjList.Remove(_right);
             IsDisposed = true;
         }
 
         private void DrawBar(int progress)
         {
-            if (_parent.GraphObjList.FirstOrDefault((obj) => ReferenceEquals(obj, _left)) == null)
-                _parent.GraphObjList.Add(_left);
-            if (_parent.GraphObjList.FirstOrDefault((obj) => ReferenceEquals(obj, _right)) == null)
-                _parent.GraphObjList.Add(_right);
+            if (GraphPane.GraphObjList.FirstOrDefault((obj) => ReferenceEquals(obj, _left)) == null)
+                GraphPane.GraphObjList.Add(_left);
+            if (GraphPane.GraphObjList.FirstOrDefault((obj) => ReferenceEquals(obj, _right)) == null)
+                GraphPane.GraphObjList.Add(_right);
 
-            var len1 = _barWidth * progress / 100 / _parent.Rect.Width;
+            var len1 = _barWidth * progress / 100 / GraphPane.Rect.Width;
 
             _left.Location.X = _barLocation.X;
             _left.Location.Y = _barLocation.Y;
@@ -99,33 +104,33 @@ namespace pwiz.Skyline.Controls.Graphs
             _left.Location.Height = 0;
             _right.Location.X = _barLocation.X + len1;
             _right.Location.Y = _barLocation.Y;
-            _right.Location.Width = _barWidth / _parent.Rect.Width - len1;
+            _right.Location.Width = _barWidth / GraphPane.Rect.Width - len1;
             _right.Location.Height = 0;
 
             //CONSIDER: Update the progress bar rectangle only
             //  instead of the whole control
-            _parent.GraphSummary.GraphControl.Invalidate();
-            _parent.GraphSummary.GraphControl.Update();
+            GraphControl.Invalidate();
+            GraphControl.Update();
         }
 
         //Thread-safe method to update the progress bar
         public void UpdateProgress(int progress)
         {
-            var graph = _parent.GraphSummary.GraphControl;
+            var graph = GraphControl;
             graph.Invoke((Action) (() => { this.UpdateProgressUI(progress); }));
         }
 
         //must be called on the UI thread
         public void UpdateProgressUI(int progress)
         {
-            var graph = _parent.GraphSummary.GraphControl;
+            var graph = GraphControl;
             if (graph != null && !graph.IsDisposed && graph.IsHandleCreated)
                 graph.Invoke((Action) (() => { this.DrawBar(progress); }));
         }
 
         bool IProgressBar.IsDisposed()
         {
-            var graph = _parent.GraphSummary.GraphControl;
+            var graph = GraphControl;
             return IsDisposed || graph == null || !graph.IsHandleCreated || graph.IsDisposed;
         }
 
@@ -136,7 +141,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         void IProgressBar.UIInvoke(Action act)
         {
-            var graph = _parent.GraphSummary.GraphControl;
+            var graph = GraphControl;
             graph.Invoke(act);
         }
     }

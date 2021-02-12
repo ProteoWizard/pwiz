@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.Controls.Clustering;
@@ -38,12 +39,14 @@ namespace pwiz.Skyline.Controls.Clustering
         private bool _showSelection = true;
         private AxisLabelScaler _xAxisLabelScaler;
         private AxisLabelScaler _yAxisLabelScaler;
+        private readonly Calculator _calculator;
+
         public HierarchicalClusterGraph()
         {
             InitializeComponent();
             InitializeDendrograms();
+            _calculator = new Calculator(this);
             var graphPane = zedGraphControl1.GraphPane;
-            graphPane.Title.IsVisible = false;
             graphPane.XAxis.Title.IsVisible = false;
             graphPane.YAxis.Title.IsVisible = false;
             graphPane.Legend.IsVisible = false;
@@ -107,6 +110,18 @@ namespace pwiz.Skyline.Controls.Clustering
             UpdateSelection();
         }
 
+        public ClusterInput ClusterInput
+        {
+            get
+            {
+                return _calculator.Input;
+            }
+            set
+            {
+                _calculator.Input = value;
+            }
+        }
+
 
         public ClusterGraphResults GraphResults
         {
@@ -134,6 +149,7 @@ namespace pwiz.Skyline.Controls.Clustering
 
         public void UpdateGraph()
         {
+            zedGraphControl1.GraphPane.Title.IsVisible = false;
             zedGraphControl1.GraphPane.CurveList.Clear();
 
             var dataSet = GraphResults;
@@ -389,6 +405,26 @@ namespace pwiz.Skyline.Controls.Clustering
         private void SelectPoint(ClusterGraphResults.Point point)
         {
             SkylineWindow?.SelectPathAndReplicate(point?.IdentityPath, point?.ReplicateName);
+        }
+
+        private class Calculator : GraphDataCalculator<ClusterInput, ClusterGraphResults>
+        {
+            public Calculator(HierarchicalClusterGraph hierarchicalClusterGraph) : base(hierarchicalClusterGraph.zedGraphControl1)
+            {
+                HierarchicalClusterGraph = hierarchicalClusterGraph;
+            }
+
+            public HierarchicalClusterGraph HierarchicalClusterGraph { get; }
+
+            protected override ClusterGraphResults ComputeOutput(ClusterInput input, CancellationToken cancellationToken)
+            {
+                return input.GetClusterGraphResults(cancellationToken, UpdateProgressAction(cancellationToken));
+            }
+
+            protected override void SetOutput(ClusterGraphResults output)
+            {
+                HierarchicalClusterGraph.GraphResults = output;
+            }
         }
     }
 }

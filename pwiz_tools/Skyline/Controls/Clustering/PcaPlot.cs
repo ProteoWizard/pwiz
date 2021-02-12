@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.DataAnalysis.Clustering;
@@ -29,23 +30,38 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Clustering
 {
-    public partial class PcaPlot : Form
+    public partial class PcaPlot : DockableFormEx
     {
         private List<Tuple<string, PivotedProperties.SeriesGroup>> _datasetOptions;
         private bool _inUpdateControls;
         private static readonly Color MISSING_COLOR = Color.Black;
+        private readonly Calculator _calculator;
         public PcaPlot()
         {
             InitializeComponent();
+            _calculator = new Calculator(this);
             Localizer = SkylineDataSchema.GetLocalizedSchemaLocalizer();
         }
 
         public SkylineWindow SkylineWindow { get; set; }
+
+        public ClusterInput ClusterInput
+        {
+            get
+            {
+                return _calculator.Input;
+            }
+            set
+            {
+                _calculator.Input = value;
+            }
+        }
 
         public Clusterer Clusterer { get; private set; }
 
@@ -421,6 +437,30 @@ namespace pwiz.Skyline.Controls.Clustering
 
             sender.Cursor = Cursors.Hand;
             return true;
+        }
+
+        private class Calculator : GraphDataCalculator<ClusterInput, Tuple<Clusterer, ReportColorScheme>>
+        {
+            public Calculator(PcaPlot pcaPlot) : base(pcaPlot.zedGraphControl1)
+            {
+                PcaPlot = pcaPlot;
+            }
+
+            public PcaPlot PcaPlot
+            {
+                get;
+            }
+
+            protected override Tuple<Clusterer, ReportColorScheme> ComputeOutput(ClusterInput input, CancellationToken cancellationToken)
+            {
+                var resultsTuple = input.GetClusterResultsTuple(cancellationToken, progressValue=>UpdateProgress(cancellationToken, progressValue));
+                return Tuple.Create(resultsTuple.Item1, resultsTuple.Item3);
+            }
+
+            protected override void SetOutput(Tuple<Clusterer, ReportColorScheme> output)
+            {
+                PcaPlot.SetData(output.Item1, output.Item2);
+            }
         }
     }
 }
