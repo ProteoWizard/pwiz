@@ -217,7 +217,7 @@ namespace AutoQC
             if (MainFormUtils.CanOpen(config.Name, _configManager.IsSelectedConfigValid(), 
                 Resources.MainForm_btnOpenResults_Click_Skyline_file, this))
             {
-                Process.Start(config.MainSettings.SkylineFilePath);
+                SkylineInstallations.OpenSkylineFile(config.MainSettings.SkylineFilePath, config.SkylineSettings);
             }
         }
 

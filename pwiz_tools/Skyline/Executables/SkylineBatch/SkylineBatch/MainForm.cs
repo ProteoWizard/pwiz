@@ -241,7 +241,7 @@ namespace SkylineBatch
             if (MainFormUtils.CanOpen(config.Name, _configManager.IsSelectedConfigValid(),
                 Resources.MainForm_btnOpenTemplate_Click_Skyline_template_file, this))
             {
-                Process.Start(config.MainSettings.TemplateFilePath);
+                SkylineInstallations.OpenSkylineFile(config.MainSettings.TemplateFilePath, config.SkylineSettings);
             }
         }
 
@@ -253,7 +253,8 @@ namespace SkylineBatch
             if (MainFormUtils.CanOpen(config.Name, _configManager.IsSelectedConfigValid(),
                 Resources.MainForm_btnOpenResults_Click_Skyline_results_file, this))
             {
-                if (File.Exists(resultsFile)) Process.Start(resultsFile);
+                if (File.Exists(resultsFile))
+                    SkylineInstallations.OpenSkylineFile(resultsFile, config.SkylineSettings);
                 else
                 {
                     DisplayError(Resources.MainForm_btnOpenResults_Click_The_Skyline_results_file_for_this_configuration_has_not_been_generated_yet_ + Environment.NewLine +

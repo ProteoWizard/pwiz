@@ -17,10 +17,9 @@
  */
  
 using System;
-using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using Microsoft.Win32;
 using SharedBatch.Properties;
 
 namespace SharedBatch
@@ -106,6 +105,31 @@ namespace SharedBatch
             Settings.Default.SkylineDailyAdminCmdPath =
                 adminInstallSkylineDaily ? Path.Combine(skylineDailyPath, SkylineCmdExe) : null;
         }
+
+        public static void OpenSkylineFile(string filePath, SkylineSettings skylineSettings)
+        {
+            var hasSkylineExe = skylineSettings.CmdPath.EndsWith(SkylineCmdExe, StringComparison.CurrentCultureIgnoreCase);
+            string skylinePath;
+            if (hasSkylineExe)
+            {
+                skylinePath = Path.Combine(Path.GetDirectoryName(skylineSettings.CmdPath), "Skyline.exe");
+                if (!File.Exists(skylinePath))
+                    skylinePath = Path.Combine(Path.GetDirectoryName(skylineSettings.CmdPath), "Skyline-daily.exe");
+            }
+            else if (skylineSettings.Type == SkylineType.Skyline)
+            {
+                var possiblePaths = ListPossibleSkylineShortcutPaths(Skyline);
+                skylinePath = possiblePaths.FirstOrDefault(File.Exists);
+            } else
+            {
+                var possiblePaths = ListPossibleSkylineShortcutPaths(SkylineDaily);
+                skylinePath = possiblePaths.FirstOrDefault(File.Exists);
+            }
+
+            var args = hasSkylineExe ? $"--opendoc \"{filePath}\"" : $"\"{filePath}\"";
+            Process.Start(skylinePath, args);
+        }
+
 
         #endregion
     }

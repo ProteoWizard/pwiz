@@ -388,4 +388,7 @@ with:
   <data name="MainForm_btnOpenResults_Click_Skyline_results_file" xml:space="preserve">
     <value>Skyline results file</value>
   </data>
+  <data name="MainForm_btnOpenTemplate_Click_Skyline_template_file" xml:space="preserve">
+    <value>Skyline template file</value>
+  </data>
 </root>
