@@ -1024,27 +1024,22 @@ namespace pwiz.Skyline.Controls.Graphs
                 var variableOrigPeptides = _originalTimes;
 
                 //Throws DatabaseNotConnectedException
-                if (_regressionAll == null)
-                {
-                    _regressionRefined = null;
-                }
-                else
-                {
-                    _regressionRefined = _regressionAll.FindThreshold(threshold,
-                        precision,
-                        0,
-                        variableTargetPeptides.Length,
-                        standardPeptides,
-                        variableTargetPeptides,
-                        variableOrigPeptides,
-                        _statisticsAll,
-                        _calculator,
-                        _regressionMethod,
-                        _scoreCache,
-                        cancellationToken,
-                        ref _statisticsRefined,
-                        ref _outlierIndexes);
-                }
+                _regressionRefined = (_regressionAll == null
+                                          ? null
+                                          : _regressionAll.FindThreshold(threshold,
+                                                                         precision,
+                                                                         0,
+                                                                         variableTargetPeptides.Length,
+                                                                         standardPeptides,
+                                                                         variableTargetPeptides,
+                                                                         variableOrigPeptides,
+                                                                         _statisticsAll,
+                                                                         _calculator,
+                                                                         _regressionMethod,
+                                                                         _scoreCache,
+                                                                         cancellationToken, 
+                                                                         ref _statisticsRefined,
+                                                                         ref _outlierIndexes));
 
                 if (ReferenceEquals(_regressionRefined, _regressionAll))
                     return null;
