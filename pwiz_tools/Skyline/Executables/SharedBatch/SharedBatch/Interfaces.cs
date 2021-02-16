@@ -7,23 +7,36 @@ using System.Xml;
 namespace SharedBatch
 {
 
-    public delegate IConfigRunner CreateRunner(IConfig config, Logger logger, IMainUiControl uiControl = null);
+    // Interface for a configuration that will appear in the list of configurations
     public interface IConfig
     {
+        // Throws an ArgumentException if the configuration does not have enough
+        // information to run, or if the information is not applicable to this computer
+        // (ie: incorrect file paths)
         void Validate();
 
+        // Returns the name of the configuration
         string GetName();
 
+        // Returns the last time the configuration was modified
         DateTime GetModified();
 
+        // Tries to replace oldRoot with newRoot for all the file paths in the configuration.
+        // Returns false if oldRoot is not present in all the file paths, or if the replaced paths do not exist.
+        // 
+        // IConfig replaced -> the new configuration with the replaced file paths iff TryPathReplace returns true,
+        //                      otherwise replaced is the same as the current configuration (this)
         bool TryPathReplace(string oldRoot, string newRoot, out IConfig replaced);
 
+        // Writes the configuration as xml
         void WriteXml(XmlWriter writer);
 
+        // Returns a listViewItem displaying information about the configuration for the UI
         ListViewItem AsListViewItem(IConfigRunner runner);
     }
 
-
+    // Possible status' the ConfigRunner may have. A ConfigRunner does not need to use every status, 
+    // only ones that are applicable
     public enum RunnerStatus
     {
         Waiting,
@@ -37,6 +50,7 @@ namespace SharedBatch
         Disconnected,
         Error
     }
+
     public interface IConfigRunner
     {
         string GetConfigName();
@@ -54,27 +68,13 @@ namespace SharedBatch
         void Cancel();
     }
 
-    /*public interface ILogger
-    {
-        void Log(string message, params object[] args);
-        /*void LogError(string message, params object[] args);
-        void LogProgramError(string message, params object[] args);
-        void LogException(Exception exception, string message, params object[] args);* /
-        string GetFile();
-        string GetFileName();
-        void Delete();
-        //ILogger Archive();
-
-
-        void DisplayLog();
-    }*/
-
+    // Possible actions a user is taking when opening a configuration in the edit configuration form 
     public enum ConfigAction
     {
         Add, Edit, Copy
     }
 
-
+    // Interface to control parts of the MainForm user interface programatically
     public interface IMainUiControl
     {
         void TryExecuteOperation(ConfigAction action, IConfig config);

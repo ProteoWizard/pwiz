@@ -43,7 +43,7 @@ namespace AutoQC
         {
             InitializeComponent();
             
-            toolStrip.Items.Insert(2,new ToolStripSeparator());
+            toolStrip.Items.Insert(1,new ToolStripSeparator());
             _listViewColumnWidths = new ColumnWidthCalculator(new []
             {
                 columnName.Width,

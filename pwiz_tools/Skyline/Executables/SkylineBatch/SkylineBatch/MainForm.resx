@@ -223,13 +223,13 @@
     <value>2</value>
   </data>
   <data name="btnViewLog.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Right</value>
+    <value>Top, Right</value>
   </data>
   <data name="btnViewLog.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
   <data name="btnViewLog.Location" type="System.Drawing.Point, System.Drawing">
-    <value>533, 416</value>
+    <value>538, 22</value>
   </data>
   <data name="btnViewLog.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -253,7 +253,7 @@
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnViewLog.Parent" xml:space="preserve">
-    <value>tabFront</value>
+    <value>panel2</value>
   </data>
   <data name="&gt;&gt;btnViewLog.ZOrder" xml:space="preserve">
     <value>1</value>
@@ -262,7 +262,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnRunBatch.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 25</value>
+    <value>0, 22</value>
   </data>
   <data name="btnRunBatch.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -289,7 +289,7 @@
     <value>panel2</value>
   </data>
   <data name="&gt;&gt;btnRunBatch.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>4</value>
   </data>
   <data name="btnCancel.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -298,7 +298,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>195, 25</value>
+    <value>195, 22</value>
   </data>
   <data name="btnCancel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -325,7 +325,7 @@
     <value>panel2</value>
   </data>
   <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>2</value>
   </data>
   <data name="btnOpenFolder.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
@@ -794,6 +794,15 @@
   <metadata name="batchRunDropDown.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>285, 17</value>
   </metadata>
+  <data name="batchRunDropDown.Size" type="System.Drawing.Size, System.Drawing">
+    <value>253, 92</value>
+  </data>
+  <data name="&gt;&gt;batchRunDropDown.Name" xml:space="preserve">
+    <value>batchRunDropDown</value>
+  </data>
+  <data name="&gt;&gt;batchRunDropDown.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="startFromStepOne.Size" type="System.Drawing.Size, System.Drawing">
     <value>252, 22</value>
   </data>
@@ -818,14 +827,71 @@
   <data name="startFromStepFour.Text" xml:space="preserve">
     <value>Run from step 4: run R scripts</value>
   </data>
-  <data name="batchRunDropDown.Size" type="System.Drawing.Size, System.Drawing">
-    <value>253, 92</value>
+  <data name="&gt;&gt;label1.Name" xml:space="preserve">
+    <value>label1</value>
   </data>
-  <data name="&gt;&gt;batchRunDropDown.Name" xml:space="preserve">
-    <value>batchRunDropDown</value>
+  <data name="&gt;&gt;label1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;batchRunDropDown.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
+    <value>tabLog</value>
+  </data>
+  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="&gt;&gt;comboLogList.Name" xml:space="preserve">
+    <value>comboLogList</value>
+  </data>
+  <data name="&gt;&gt;comboLogList.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboLogList.Parent" xml:space="preserve">
+    <value>tabLog</value>
+  </data>
+  <data name="&gt;&gt;comboLogList.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="&gt;&gt;textBoxLog.Name" xml:space="preserve">
+    <value>textBoxLog</value>
+  </data>
+  <data name="&gt;&gt;textBoxLog.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RichTextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textBoxLog.Parent" xml:space="preserve">
+    <value>tabLog</value>
+  </data>
+  <data name="&gt;&gt;textBoxLog.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="tabLog.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="tabLog.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="tabLog.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="tabLog.Size" type="System.Drawing.Size, System.Drawing">
+    <value>630, 455</value>
+  </data>
+  <data name="tabLog.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="tabLog.Text" xml:space="preserve">
+    <value>Log</value>
+  </data>
+  <data name="&gt;&gt;tabLog.Name" xml:space="preserve">
+    <value>tabLog</value>
+  </data>
+  <data name="&gt;&gt;tabLog.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabLog.Parent" xml:space="preserve">
+    <value>tabMain</value>
+  </data>
+  <data name="&gt;&gt;tabLog.ZOrder" xml:space="preserve">
+    <value>1</value>
   </data>
   <data name="label1.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -914,65 +980,17 @@
   <data name="&gt;&gt;textBoxLog.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
-  <data name="tabLog.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 22</value>
-  </data>
-  <data name="tabLog.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
-  </data>
-  <data name="tabLog.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
-  </data>
-  <data name="tabLog.Size" type="System.Drawing.Size, System.Drawing">
-    <value>630, 455</value>
-  </data>
-  <data name="tabLog.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="tabLog.Text" xml:space="preserve">
-    <value>Log</value>
-  </data>
-  <data name="&gt;&gt;tabLog.Name" xml:space="preserve">
-    <value>tabLog</value>
-  </data>
-  <data name="&gt;&gt;tabLog.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;tabLog.Parent" xml:space="preserve">
-    <value>tabMain</value>
-  </data>
-  <data name="&gt;&gt;tabLog.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
   <data name="listViewConfigs.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
-  <data name="listViewConfigName.Text" xml:space="preserve">
-    <value>Configuration</value>
-  </data>
-  <data name="listViewConfigName.Width" type="System.Int32, mscorlib">
-    <value>294</value>
-  </data>
-  <data name="listViewModified.Text" xml:space="preserve">
-    <value>Modified</value>
-  </data>
-  <data name="listViewModified.Width" type="System.Int32, mscorlib">
-    <value>82</value>
-  </data>
-  <data name="listViewStatus.Text" xml:space="preserve">
-    <value>Status</value>
-  </data>
-  <data name="listViewStatus.Width" type="System.Int32, mscorlib">
-    <value>99</value>
-  </data>
   <data name="listViewConfigs.Location" type="System.Drawing.Point, System.Drawing">
-    <value>36, 44</value>
+    <value>7, 24</value>
   </data>
   <data name="listViewConfigs.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
   </data>
   <data name="listViewConfigs.Size" type="System.Drawing.Size, System.Drawing">
-    <value>479, 337</value>
+    <value>510, 381</value>
   </data>
   <data name="listViewConfigs.TabIndex" type="System.Int32, mscorlib">
     <value>16</value>
@@ -996,7 +1014,7 @@
     <value>NoControl</value>
   </data>
   <data name="labelSavedConfigurations.Location" type="System.Drawing.Point, System.Drawing">
-    <value>35, 28</value>
+    <value>4, 9</value>
   </data>
   <data name="labelSavedConfigurations.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 0, 2, 0</value>
@@ -1020,25 +1038,10 @@
     <value>tabFront</value>
   </data>
   <data name="&gt;&gt;labelSavedConfigurations.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>1</value>
   </data>
   <data name="panel2.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Left</value>
-  </data>
-  <data name="btnRunOptions.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="btnRunOptions.Location" type="System.Drawing.Point, System.Drawing">
-    <value>172, 25</value>
-  </data>
-  <data name="btnRunOptions.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
-  </data>
-  <data name="btnRunOptions.Size" type="System.Drawing.Size, System.Drawing">
-    <value>19, 23</value>
-  </data>
-  <data name="btnRunOptions.TabIndex" type="System.Int32, mscorlib">
-    <value>12</value>
+    <value>Bottom, Left, Right</value>
   </data>
   <data name="&gt;&gt;btnRunOptions.Name" xml:space="preserve">
     <value>btnRunOptions</value>
@@ -1052,30 +1055,6 @@
   <data name="&gt;&gt;btnRunOptions.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="lblNoConfigs.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="lblNoConfigs.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Microsoft Sans Serif, 9.75pt</value>
-  </data>
-  <data name="lblNoConfigs.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="lblNoConfigs.Location" type="System.Drawing.Point, System.Drawing">
-    <value>-3, 0</value>
-  </data>
-  <data name="lblNoConfigs.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 0, 2, 0</value>
-  </data>
-  <data name="lblNoConfigs.Size" type="System.Drawing.Size, System.Drawing">
-    <value>509, 16</value>
-  </data>
-  <data name="lblNoConfigs.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
-  </data>
-  <data name="lblNoConfigs.Text" xml:space="preserve">
-    <value>There are no saved configurations. Click the add button to create a new configuration.</value>
-  </data>
   <data name="&gt;&gt;lblNoConfigs.Name" xml:space="preserve">
     <value>lblNoConfigs</value>
   </data>
@@ -1086,16 +1065,16 @@
     <value>panel2</value>
   </data>
   <data name="&gt;&gt;lblNoConfigs.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="panel2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>36, 391</value>
+    <value>7, 403</value>
   </data>
   <data name="panel2.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
   </data>
   <data name="panel2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>598, 56</value>
+    <value>621, 48</value>
   </data>
   <data name="panel2.TabIndex" type="System.Int32, mscorlib">
     <value>15</value>
@@ -1110,7 +1089,7 @@
     <value>tabFront</value>
   </data>
   <data name="&gt;&gt;panel2.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>2</value>
   </data>
   <data name="panel1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -1148,101 +1127,11 @@
   <data name="toolStrip1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Left</value>
   </data>
-  <data name="btnUpArrow.Enabled" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
-  <data name="btnUpArrow.ImageScaling" type="System.Windows.Forms.ToolStripItemImageScaling, System.Windows.Forms">
-    <value>None</value>
-  </data>
-  <data name="btnUpArrow.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
-    <value>Magenta</value>
-  </data>
-  <data name="btnUpArrow.Size" type="System.Drawing.Size, System.Drawing">
-    <value>21, 20</value>
-  </data>
-  <data name="btnUpArrow.Text" xml:space="preserve">
-    <value>toolStripButton1</value>
-  </data>
-  <data name="btnUpArrow.ToolTipText" xml:space="preserve">
-    <value>Move Up</value>
-  </data>
-  <data name="btnDownArrow.Enabled" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
-  <data name="btnDownArrow.ImageScaling" type="System.Windows.Forms.ToolStripItemImageScaling, System.Windows.Forms">
-    <value>None</value>
-  </data>
-  <data name="btnDownArrow.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
-    <value>Magenta</value>
-  </data>
-  <data name="btnDownArrow.Size" type="System.Drawing.Size, System.Drawing">
-    <value>21, 20</value>
-  </data>
-  <data name="btnDownArrow.Text" xml:space="preserve">
-    <value>toolStripButton2</value>
-  </data>
-  <data name="btnDownArrow.ToolTipText" xml:space="preserve">
-    <value>Move Down</value>
-  </data>
-  <data name="btnDelete.Enabled" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
-  <data name="btnDelete.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
-    <value>Magenta</value>
-  </data>
-  <data name="btnDelete.Size" type="System.Drawing.Size, System.Drawing">
-    <value>21, 20</value>
-  </data>
-  <data name="btnDelete.Text" xml:space="preserve">
-    <value>toolStripButton1</value>
-  </data>
-  <data name="btnDelete.ToolTipText" xml:space="preserve">
-    <value>Delete</value>
-  </data>
-  <data name="btnOpenTemplate.Enabled" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
-  <data name="btnOpenTemplate.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
-    <value>Magenta</value>
-  </data>
-  <data name="btnOpenTemplate.Size" type="System.Drawing.Size, System.Drawing">
-    <value>21, 20</value>
-  </data>
-  <data name="btnOpenTemplate.Text" xml:space="preserve">
-    <value>Open Template File</value>
-  </data>
-  <data name="btnOpenResults.Enabled" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
-  <data name="btnOpenResults.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
-    <value>Magenta</value>
-  </data>
-  <data name="btnOpenResults.Size" type="System.Drawing.Size, System.Drawing">
-    <value>21, 20</value>
-  </data>
-  <data name="btnOpenResults.Text" xml:space="preserve">
-    <value>Open Results File</value>
-  </data>
-  <data name="btnOpenAnalysis.Enabled" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
-  <data name="btnOpenAnalysis.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
-    <value>Magenta</value>
-  </data>
-  <data name="btnOpenAnalysis.Size" type="System.Drawing.Size, System.Drawing">
-    <value>21, 20</value>
-  </data>
-  <data name="btnOpenAnalysis.Text" xml:space="preserve">
-    <value>toolStripButton1</value>
-  </data>
-  <data name="btnOpenAnalysis.ToolTipText" xml:space="preserve">
-    <value>Open Folder</value>
-  </data>
   <data name="toolStrip1.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 0</value>
   </data>
   <data name="toolStrip1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>24, 337</value>
+    <value>24, 381</value>
   </data>
   <data name="toolStrip1.TabIndex" type="System.Int32, mscorlib">
     <value>14</value>
@@ -1353,13 +1242,13 @@
     <value>6</value>
   </data>
   <data name="panel1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>519, 44</value>
+    <value>519, 24</value>
   </data>
   <data name="panel1.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
   </data>
   <data name="panel1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>104, 337</value>
+    <value>104, 381</value>
   </data>
   <data name="panel1.TabIndex" type="System.Int32, mscorlib">
     <value>14</value>
@@ -1374,7 +1263,7 @@
     <value>tabFront</value>
   </data>
   <data name="&gt;&gt;panel1.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>3</value>
   </data>
   <data name="tabFront.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
@@ -1405,6 +1294,177 @@
   </data>
   <data name="&gt;&gt;tabFront.ZOrder" xml:space="preserve">
     <value>0</value>
+  </data>
+  <data name="listViewConfigName.Text" xml:space="preserve">
+    <value>Configuration</value>
+  </data>
+  <data name="listViewConfigName.Width" type="System.Int32, mscorlib">
+    <value>294</value>
+  </data>
+  <data name="listViewModified.Text" xml:space="preserve">
+    <value>Modified</value>
+  </data>
+  <data name="listViewModified.Width" type="System.Int32, mscorlib">
+    <value>82</value>
+  </data>
+  <data name="listViewStatus.Text" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="listViewStatus.Width" type="System.Int32, mscorlib">
+    <value>99</value>
+  </data>
+  <data name="btnRunOptions.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="btnRunOptions.Location" type="System.Drawing.Point, System.Drawing">
+    <value>172, 22</value>
+  </data>
+  <data name="btnRunOptions.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="btnRunOptions.Size" type="System.Drawing.Size, System.Drawing">
+    <value>19, 23</value>
+  </data>
+  <data name="btnRunOptions.TabIndex" type="System.Int32, mscorlib">
+    <value>12</value>
+  </data>
+  <data name="&gt;&gt;btnRunOptions.Name" xml:space="preserve">
+    <value>btnRunOptions</value>
+  </data>
+  <data name="&gt;&gt;btnRunOptions.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnRunOptions.Parent" xml:space="preserve">
+    <value>panel2</value>
+  </data>
+  <data name="&gt;&gt;btnRunOptions.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="lblNoConfigs.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblNoConfigs.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Microsoft Sans Serif, 9.75pt</value>
+  </data>
+  <data name="lblNoConfigs.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="lblNoConfigs.Location" type="System.Drawing.Point, System.Drawing">
+    <value>-3, 4</value>
+  </data>
+  <data name="lblNoConfigs.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 0, 2, 0</value>
+  </data>
+  <data name="lblNoConfigs.Size" type="System.Drawing.Size, System.Drawing">
+    <value>509, 16</value>
+  </data>
+  <data name="lblNoConfigs.TabIndex" type="System.Int32, mscorlib">
+    <value>9</value>
+  </data>
+  <data name="lblNoConfigs.Text" xml:space="preserve">
+    <value>There are no saved configurations. Click the add button to create a new configuration.</value>
+  </data>
+  <data name="&gt;&gt;lblNoConfigs.Name" xml:space="preserve">
+    <value>lblNoConfigs</value>
+  </data>
+  <data name="&gt;&gt;lblNoConfigs.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblNoConfigs.Parent" xml:space="preserve">
+    <value>panel2</value>
+  </data>
+  <data name="&gt;&gt;lblNoConfigs.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="btnUpArrow.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="btnUpArrow.ImageScaling" type="System.Windows.Forms.ToolStripItemImageScaling, System.Windows.Forms">
+    <value>None</value>
+  </data>
+  <data name="btnUpArrow.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
+  </data>
+  <data name="btnUpArrow.Size" type="System.Drawing.Size, System.Drawing">
+    <value>21, 20</value>
+  </data>
+  <data name="btnUpArrow.Text" xml:space="preserve">
+    <value>toolStripButton1</value>
+  </data>
+  <data name="btnUpArrow.ToolTipText" xml:space="preserve">
+    <value>Move Up</value>
+  </data>
+  <data name="btnDownArrow.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="btnDownArrow.ImageScaling" type="System.Windows.Forms.ToolStripItemImageScaling, System.Windows.Forms">
+    <value>None</value>
+  </data>
+  <data name="btnDownArrow.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
+  </data>
+  <data name="btnDownArrow.Size" type="System.Drawing.Size, System.Drawing">
+    <value>21, 20</value>
+  </data>
+  <data name="btnDownArrow.Text" xml:space="preserve">
+    <value>toolStripButton2</value>
+  </data>
+  <data name="btnDownArrow.ToolTipText" xml:space="preserve">
+    <value>Move Down</value>
+  </data>
+  <data name="btnDelete.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="btnDelete.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
+  </data>
+  <data name="btnDelete.Size" type="System.Drawing.Size, System.Drawing">
+    <value>21, 20</value>
+  </data>
+  <data name="btnDelete.Text" xml:space="preserve">
+    <value>toolStripButton1</value>
+  </data>
+  <data name="btnDelete.ToolTipText" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="btnOpenTemplate.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="btnOpenTemplate.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
+  </data>
+  <data name="btnOpenTemplate.Size" type="System.Drawing.Size, System.Drawing">
+    <value>21, 20</value>
+  </data>
+  <data name="btnOpenTemplate.Text" xml:space="preserve">
+    <value>Open Template File</value>
+  </data>
+  <data name="btnOpenResults.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="btnOpenResults.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
+  </data>
+  <data name="btnOpenResults.Size" type="System.Drawing.Size, System.Drawing">
+    <value>21, 20</value>
+  </data>
+  <data name="btnOpenResults.Text" xml:space="preserve">
+    <value>Open Results File</value>
+  </data>
+  <data name="btnOpenAnalysis.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="btnOpenAnalysis.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
+  </data>
+  <data name="btnOpenAnalysis.Size" type="System.Drawing.Size, System.Drawing">
+    <value>21, 20</value>
+  </data>
+  <data name="btnOpenAnalysis.Text" xml:space="preserve">
+    <value>toolStripButton1</value>
+  </data>
+  <data name="btnOpenAnalysis.ToolTipText" xml:space="preserve">
+    <value>Open Folder</value>
   </data>
   <data name="tabMain.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>

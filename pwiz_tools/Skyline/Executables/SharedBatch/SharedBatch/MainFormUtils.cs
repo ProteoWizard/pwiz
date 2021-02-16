@@ -52,7 +52,7 @@ namespace SharedBatch
         {
             for (int i = 0; i < _columnWidths.Length - 1; i++)
             {
-                _columnWidths[i] = Math.Max(10, (int) Math.Floor(((double) _columnWidths[i] / _listViewWidth) * newWidth));
+                _columnWidths[i] = (int) Math.Round(((double) _columnWidths[i] / _listViewWidth) * newWidth);
             }
             _columnWidths[_columnWidths.Length - 1] = 0;
             _columnWidths[_columnWidths.Length - 1] = newWidth - _columnWidths.Sum();

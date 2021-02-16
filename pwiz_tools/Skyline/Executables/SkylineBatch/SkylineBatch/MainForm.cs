@@ -53,7 +53,6 @@ namespace SkylineBatch
                 listViewStatus.Width
             });
             listViewConfigs.ColumnWidthChanged += listViewConfigs_ColumnWidthChanged;
-
             ProgramLog.LogInfo(Resources.MainForm_MainForm_Loading_configurations_from_saved_settings_);
             _configManager = new SkylineBatchConfigManager(_skylineBatchLogger, this);
 
@@ -119,13 +118,6 @@ namespace SkylineBatch
             UpdateUiLogFiles();
         }
 
-        /*public void AddConfiguration(IConfig config)
-        {
-            _configManager.AddConfiguration(config);
-            _configManager.SelectConfig(_configManager.ConfigNamesAsObjectArray().Length - 1);
-            UpdateUiConfigurations();
-        }*/
-
         private void HandleEditEvent(object sender, EventArgs e)
         {
             var configRunner = _configManager.GetSelectedConfigRunner();
@@ -146,12 +138,6 @@ namespace SkylineBatch
             var configForm = new SkylineBatchConfigForm(this, config, ConfigAction.Edit, configRunner.IsBusy());
             configForm.ShowDialog();
         }
-
-        /*public void EditSelectedConfiguration(IConfig newVersion)
-        {
-            _configManager.ReplaceSelectedConfig(newVersion);
-            UpdateUiConfigurations();
-        }*/
 
         private void btnCopy_Click(object sender, EventArgs e)
         {
@@ -620,7 +606,6 @@ namespace SkylineBatch
         }
 
         #endregion
-
     }
 
     // ListView that prevents a double click from toggling checkbox
