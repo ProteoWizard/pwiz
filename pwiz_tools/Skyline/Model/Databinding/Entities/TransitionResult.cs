@@ -85,6 +85,17 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         [Format(NullValue = TextUtil.EXCEL_NA)]
         public int? PointsAcrossPeak { get { return ChromInfo.PointsAcrossPeak; } }
 
+        [Format(Formats.RETENTION_TIME, NullValue = TextUtil.EXCEL_NA)]
+        public double? AverageCycleTime
+        {
+            get
+            {
+                return StartTime.HasValue && EndTime.HasValue && PointsAcrossPeak.HasValue
+                    ? (EndTime.Value - StartTime.Value) * 60 / PointsAcrossPeak.Value
+                    : (double?) null;
+            }
+        }
+
         public bool Coeluting { get { return !ChromInfo.IsForcedIntegration; } }
 
         [Format(Formats.RETENTION_TIME, NullValue = TextUtil.EXCEL_NA)]

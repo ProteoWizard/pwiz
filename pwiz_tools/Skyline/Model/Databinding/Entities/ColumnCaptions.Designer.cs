@@ -241,6 +241,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Average Cycle Time.
+        /// </summary>
+        public static string AverageCycleTime {
+            get {
+                return ResourceManager.GetString("AverageCycleTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Average Mass Error PPM.
         /// </summary>
         public static string AverageMassErrorPPM {
