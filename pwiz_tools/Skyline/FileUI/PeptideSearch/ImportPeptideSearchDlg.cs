@@ -547,19 +547,26 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         var anyResults = ImportResultsControl.FoundResultsFiles.Any();
                         if (!anyResults)
                         {
-                            if (MessageBox.Show(this,
+                            using (var dlg = new MultiButtonMsgDlg(
                                 Resources.ImportPeptideSearchDlg_NextPage_No_results_files_were_specified__Are_you_sure_you_want_to_continue__Continuing_will_create_a_template_document_with_no_imported_results_,
-                                Program.Name, MessageBoxButtons.OKCancel) == DialogResult.Cancel)
+                                MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false))
                             {
-                                return;
+                                if (dlg.ShowDialog(this) == DialogResult.No)
+                                {
+                                    return;
+                                }
                             }
                         }
                         else if (ImportResultsControl.ResultsFilesMissing)
                         {
-                            if (MessageBox.Show(this, Resources.ImportPeptideSearchDlg_NextPage_Some_results_files_are_still_missing__Are_you_sure_you_want_to_continue_,
-                                Program.Name, MessageBoxButtons.OKCancel) == DialogResult.Cancel)
+                            using (var dlg = new MultiButtonMsgDlg(
+                                Resources.ImportPeptideSearchDlg_NextPage_Some_results_files_are_still_missing__Are_you_sure_you_want_to_continue_,
+                                MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false))
                             {
-                                return;
+                                if (dlg.ShowDialog(this) == DialogResult.No)
+                                {
+                                    return;
+                                }
                             }
                         }
 

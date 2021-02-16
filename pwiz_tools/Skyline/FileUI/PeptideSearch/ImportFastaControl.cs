@@ -306,13 +306,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public bool ImportFasta(IrtStandard irtStandard)
         {
-            if (!IsImportingResults && AutoTrain)
-            {
-                MessageDlg.Show(WizardForm,
-                    Resources.ImportFastaControl_ImportFasta_Cannot_automatically_train_mProphet_model_since_no_results_files_are_being_imported__Uncheck_this_option_in_order_to_continue_);
-                return false;
-            }
-
             var settings = DocumentContainer.Document.Settings;
             var peptideSettings = settings.PeptideSettings;
             int missedCleavages = MaxMissedCleavages;
@@ -492,6 +485,16 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             cbAutoTrain.Enabled = decoys;
             if (!decoys)
             {
+                cbAutoTrain.Checked = false;
+            }
+        }
+
+        private void cbAutoTrain_CheckedChanged(object sender, EventArgs e)
+        {
+            if (!IsImportingResults && cbAutoTrain.Checked)
+            {
+                MessageDlg.Show(WizardForm,
+                    Resources.ImportFastaControl_cbAutoTrain_CheckedChanged_Cannot_automatically_train_mProphet_model_since_no_results_files_are_being_imported__Continue_without_automatically_training_an_mProphet_model__or_go_back_and_add_at_least_one_results_file_);
                 cbAutoTrain.Checked = false;
             }
         }

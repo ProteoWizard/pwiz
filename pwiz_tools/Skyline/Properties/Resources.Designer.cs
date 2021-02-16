@@ -14856,6 +14856,17 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cannot automatically train mProphet model since no results files are being imported. Continue without automatically training an mProphet model, or go back and add at least one results file..
+        /// </summary>
+        public static string ImportFastaControl_cbAutoTrain_CheckedChanged_Cannot_automatically_train_mProphet_model_since_no_results_files_are_being_imported__Continue_without_automatically_training_an_mProphet_model__or_go_back_and_add_at_least_one_results_file_ {
+            get {
+                return ResourceManager.GetString("ImportFastaControl_cbAutoTrain_CheckedChanged_Cannot_automatically_train_mProphet" +
+                        "_model_since_no_results_files_are_being_imported__Continue_without_automatically" +
+                        "_training_an_mProphet_model__or_go_back_and_add_at_least_one_results_file_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed reading the file {0}..
         /// </summary>
         public static string ImportFastaControl_GetFastaFileContent_Failed_reading_the_file__0__ {
@@ -14871,16 +14882,6 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("ImportFastaControl_ImportFasta_A_maximum_of_one_decoy_per_target_may_be_generated" +
                         "_when_using_reversed_decoys_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Cannot automatically train mProphet model since no results files are being imported. Uncheck this option in order to continue..
-        /// </summary>
-        public static string ImportFastaControl_ImportFasta_Cannot_automatically_train_mProphet_model_since_no_results_files_are_being_imported__Uncheck_this_option_in_order_to_continue_ {
-            get {
-                return ResourceManager.GetString("ImportFastaControl_ImportFasta_Cannot_automatically_train_mProphet_model_since_no" +
-                        "_results_files_are_being_imported__Uncheck_this_option_in_order_to_continue_", resourceCulture);
             }
         }
         

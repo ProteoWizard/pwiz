@@ -11322,7 +11322,7 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
   <data name="ImportPeptideSearchDlg_NextPage_No_results_files_were_specified__Are_you_sure_you_want_to_continue__Continuing_will_create_a_template_document_with_no_imported_results_" xml:space="preserve">
     <value>No results files were specified. Are you sure you want to continue? Continuing will create a template document with no imported results.</value>
   </data>
-  <data name="ImportFastaControl_ImportFasta_Cannot_automatically_train_mProphet_model_since_no_results_files_are_being_imported__Uncheck_this_option_in_order_to_continue_" xml:space="preserve">
-    <value>Cannot automatically train mProphet model since no results files are being imported. Uncheck this option in order to continue.</value>
+  <data name="ImportFastaControl_cbAutoTrain_CheckedChanged_Cannot_automatically_train_mProphet_model_since_no_results_files_are_being_imported__Continue_without_automatically_training_an_mProphet_model__or_go_back_and_add_at_least_one_results_file_" xml:space="preserve">
+    <value>Cannot automatically train mProphet model since no results files are being imported. Continue without automatically training an mProphet model, or go back and add at least one results file.</value>
   </data>
 </root>
