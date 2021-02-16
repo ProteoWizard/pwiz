@@ -255,9 +255,10 @@ namespace pwiz.Skyline.EditUI
         private void SetCurrentCellForPasteError(DataGridView gridView, PasteError pasteError, int? columnIndex = null)
         {
             ShowError(pasteError);
-            if (gridView.Rows[pasteError.Line].Cells[columnIndex ?? pasteError.Column].Visible)
+            var errColumn = columnIndex ?? pasteError.Column;
+            if (errColumn >= 0 && gridView.Rows[pasteError.Line].Cells[errColumn].Visible)
             {
-                gridView.CurrentCell = gridView.Rows[pasteError.Line].Cells[columnIndex ?? pasteError.Column];
+                gridView.CurrentCell = gridView.Rows[pasteError.Line].Cells[errColumn];
             }
             else
             {

@@ -976,6 +976,33 @@
               </xs:sequence>
             </xs:complexType>
           </xs:element>
+          <xs:element name="crosslinks" minOccurs="0">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element name="linked_peptide" minOccurs="0" maxOccurs="unbounded">
+                  <xs:complexType>
+                    <xs:sequence>
+                      <xs:element name="explicit_modifications" type="explicit_modifications_type" minOccurs="0" />
+                    </xs:sequence>
+                    <xs:attribute name="sequence" type="xs:string" />
+                  </xs:complexType>
+                </xs:element>
+                <xs:element name="crosslink" minOccurs="1" maxOccurs="unbounded">
+                  <xs:complexType>
+                    <xs:sequence>
+                      <xs:element name="site" minOccurs="2" maxOccurs="unbounded">
+                        <xs:complexType>
+                          <xs:attribute name="peptide_index" type="xs:nonNegativeInteger" />
+                          <xs:attribute name="index_aa" type="xs:nonNegativeInteger" />
+                        </xs:complexType>
+                      </xs:element>
+                    </xs:sequence>
+                    <xs:attribute name="modification_name" type="xs:string"/>
+                  </xs:complexType>
+                </xs:element>
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
           <xs:element name="peptide_results" minOccurs="0" maxOccurs="1">
             <xs:complexType>
               <xs:sequence>
@@ -1058,12 +1085,9 @@
   <xs:complexType name="linked_fragment_ion_type">
     <xs:sequence>
       <xs:element name="losses" type="transition_losses_type" minOccurs="0" maxOccurs="unbounded" />
-      <xs:element name="linked_fragment_ion" type="linked_fragment_ion_type" minOccurs="0"/>
     </xs:sequence>
     <xs:attribute name="fragment_type" type="fragment_type" use="optional"/>
     <xs:attribute name="fragment_ordinal" />
-    <xs:attribute name="index_aa" type="xs:nonNegativeInteger" use="required"/>
-    <xs:attribute name="modification_name" type="xs:string" use="required"/>
   </xs:complexType>
 
   <!-- ================================================================== -->
@@ -1623,17 +1647,6 @@
     </xs:simpleContent>
   </xs:complexType>
   <xs:complexType name="modification_type">
-    <xs:sequence>
-      <xs:element name="linked_peptide" minOccurs="0" maxOccurs="1">
-        <xs:complexType>
-          <xs:sequence>
-            <xs:element name="explicit_modifications" type="explicit_modifications_type" minOccurs="0"/>
-          </xs:sequence>
-          <xs:attribute name="sequence" type="xs:string" />
-          <xs:attribute name="index_aa" type="xs:integer" />
-        </xs:complexType>
-      </xs:element>
-    </xs:sequence>
     <xs:attribute name="index_aa" type="xs:nonNegativeInteger" use="required"/>
     <xs:attribute name="modification_name" type="xs:string" use="required"/>
     <xs:attribute name="mass_diff" type="xs:double" use="optional"/>

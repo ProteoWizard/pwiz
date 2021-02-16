@@ -21,7 +21,7 @@ using AutoQC;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace AutoQCTest
-{
+{/*
     [TestClass]
     public class MainSettingsTest
     {
@@ -186,5 +186,5 @@ namespace AutoQCTest
             }
         }
 
-    }
+    }*/
 }

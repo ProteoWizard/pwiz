@@ -423,6 +423,9 @@
   <data name="ViewSpecList_Views" xml:space="preserve">
     <value>Reports</value>
   </data>
+  <data name="ViewSpecList_ViewLayouts" xml:space="preserve">
+    <value>Layouts</value>
+  </data>
   <data name="PivotSpec_ColumnHeaders" xml:space="preserve">
     <value>Column headers</value>
   </data>
@@ -1591,5 +1594,17 @@
   </data>
   <data name="ValueSpec_ColumnRef">
     <value>Column reference</value>
+  </data>
+  <data name="ExplicitMods_CrosslinkStructure">
+    <value>Crosslink structure</value>
+  </data>
+  <data name="CrosslinkStructure_LinkedPeptides">
+    <value>Linked peptides</value>
+  </data>
+  <data name="CrosslinkStructure_LinkedExplicitMods">
+    <value>Linked explicit modifications</value>
+  </data>
+  <data name="CrosslinkStructure_Crosslinks">
+    <value>Crosslinks</value>
   </data>
 </root>

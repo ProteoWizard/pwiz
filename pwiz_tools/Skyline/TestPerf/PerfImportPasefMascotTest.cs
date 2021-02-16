@@ -160,7 +160,10 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             {
                 RunUI(() => importPeptideSearchDlg.ClickNextButtonNoCheck());
             }
+
             // Modifications are already set up, so that page should get skipped.
+            RunUI(() => AssertEx.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.full_scan_settings_page));
+
             RunUI(() => importPeptideSearchDlg.FullScanSettingsControl.PrecursorCharges = new []{2,3,4,5});
             RunUI(() => importPeptideSearchDlg.FullScanSettingsControl.PrecursorMassAnalyzer = FullScanMassAnalyzerType.tof);
             RunUI(() => importPeptideSearchDlg.FullScanSettingsControl.IonMobilityFiltering.SetUseSpectralLibraryIonMobilities(true));

@@ -10,7 +10,7 @@ REM Set "CURRENT_VERSION" to the folder found under "Application Files"
 FOR /D %%G IN ("Application Files\*") DO SET CURRENT_VERSION=%%G
 ECHO Signing .exe, .exe.manifest and .application in %3\"%CURRENT_VERSION%"
 pushd "%CURRENT_VERSION%"
-signtool sign /t http://timestamp.verisign.com/scripts/timstamp.dll /v /f %1 /p %2 %4.exe
+signtool sign /tr http://timestamp.digicert.com /v /f %1 /p %2 %4.exe
 mage -update %4.exe.manifest -CertFile %1 -pwd %2
 popd
 ECHO Signing .application in root of publish folder
