@@ -61,11 +61,11 @@ namespace pwiz.SkylineTest
         {
             VerifySupported("YGPPCPPCPAPEFLGGPSVFLFPPKPK-YGPPCPPCPAPEFLGGPSVFLFPPKPK-[-2.01565@5,5]", true);
             // Two crosslinks between the same pair of peptides
-            VerifySupported("YGPPCPPCPAPEFLGGPSVFLFPPKPK-YGPPCPPCPAPEFLGGPSVFLFPPKPK-[-2.01565@5,5][-2.01565@8,8]", false);
+            VerifySupported("YGPPCPPCPAPEFLGGPSVFLFPPKPK-YGPPCPPCPAPEFLGGPSVFLFPPKPK-[-2.01565@5,5][-2.01565@8,8]", true);
             VerifySupported("YGPPCPPCPAPEFLGGPSVFLFPPKPK-YGPPCPPCPAPEFLGGPSVFLFPPKPK-[-2.01565@8-5,*][-2.01565@5,5]", true);
             VerifySupported("PEPTIDEA-PEPTIDEB-PEPTIDEC-[-2@2,2,*][-2@*,2,3]", true);
             // Crosslinks forming a ring that cannot be represented as a tree
-            VerifySupported("PEPTIDEA-PEPTIDEB-PEPTIDEC-[-2@2,2,*][-2@2,*,3][-2@*,2,3]", false);
+            VerifySupported("PEPTIDEA-PEPTIDEB-PEPTIDEC-[-2@2,2,*][-2@2,*,3][-2@*,2,3]", true);
             VerifySupported("PEPTIDEA-PEPTIDEB-PEPTIDEC-[-2@2,2,*][-2@2,*,3]", true);
             // One peptide that is not connected to the rest of the peptides.
             VerifySupported("PEPTIDEA-PEPTIDEB-PEPTIDEC-[-2@2,*,3]", false);

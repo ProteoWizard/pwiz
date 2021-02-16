@@ -273,7 +273,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             if (nodePep.Peptide.IsCustomMolecule)
                 listTextSequences.Add(CreatePlainTextSequence(label, fonts));
             // If no modifications, use a single plain text sequence
-            else if (!heavyMods && !listTypeSequences[0].Text.Contains(@"[")) // For identifying modifications
+            else if (!heavyMods && !listTypeSequences[0].Text.Contains(@"[") && !nodePep.CrosslinkStructure.HasCrosslinks) // For identifying modifications
                 listTextSequences.Add(CreatePlainTextSequence(label, fonts));
             else
             {

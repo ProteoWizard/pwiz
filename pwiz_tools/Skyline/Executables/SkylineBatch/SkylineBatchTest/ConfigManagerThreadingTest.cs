@@ -14,7 +14,6 @@ namespace SkylineBatchTest
         [TestMethod]
         public void TestThreadingAdd()
         {
-            TestUtils.InitializeInstallations();
             for (int i = 0; i < 100; i++)
                 ThreadingAdd();
         }
@@ -37,16 +36,15 @@ namespace SkylineBatchTest
             });
             
             StartTestingThreads(threadStart, 15);
-
+            configManager.GetSelectedLogger().Delete();
             Assert.AreEqual("one  two  three  new  ", configManager.ListConfigNames());
             Assert.IsTrue(firstThreadException != null, "Should have failed to add the second time, since no index selected");
-            Assert.AreEqual("Failed operation \"Add\": Configuration \"new\" already exists.", firstThreadException.Message);
+            Assert.AreEqual("Configuration \"new\" already exists.\r\nPlease enter a unique name for the configuration.", firstThreadException.Message);
         }
 
         [TestMethod]
         public void TestThreadingMove()
         {
-            TestUtils.InitializeInstallations();
             for (int i = 0; i < 100; i++)
                 ThreadingMove();
         }
@@ -70,17 +68,17 @@ namespace SkylineBatchTest
             });
             
             StartTestingThreads(threadStart, 2);
+            configManager.GetSelectedLogger().Delete();
 
             Assert.AreEqual("three  one  two  ", configManager.ListConfigNames());
             Assert.AreEqual(0, configManager.SelectedConfig);
-            var exceptionMessage = firstThreadException == null ? "" : firstThreadException.Message;
+            var exceptionMessage = firstThreadException == null ? string.Empty : firstThreadException.Message;
             Assert.IsTrue(firstThreadException == null, "Unexpected Exception: " + exceptionMessage);
         }
 
         [TestMethod]
         public void TestThreadingRemove()
         {
-            TestUtils.InitializeInstallations();
             for (int i = 0; i < 100; i++)
             {
                 ThreadingRemove();
@@ -90,7 +88,7 @@ namespace SkylineBatchTest
         public void ThreadingRemove()
         {
             var configManager = TestUtils.GetTestConfigManager();
-            configManager.SelectConfig(0);
+            configManager.SelectConfig(2);
             Exception firstThreadException = null;
 
             var threadStart = new ThreadStart(() =>
@@ -104,19 +102,17 @@ namespace SkylineBatchTest
                     firstThreadException = firstThreadException ?? e;
                 }
             });
-
             StartTestingThreads(threadStart, 2);
+            configManager.GetSelectedLogger().Delete();
 
-            Assert.AreEqual("two  three  ", configManager.ListConfigNames());
-            Assert.IsTrue(firstThreadException != null, "Should have failed to remove the second time, since no index selected");
-            Assert.AreEqual("No configuration selected.", firstThreadException.Message);
+            Assert.AreEqual("one  ", configManager.ListConfigNames());
+            Assert.IsTrue(firstThreadException == null, "Should have removed configuration at 0 index twice with no exceptions.");
         }
 
 
         [TestMethod]
         public void TestThreadingReplace()
         {
-            TestUtils.InitializeInstallations();
             for (int i = 0; i < 100; i++)
             {
                 ThreadingReplace();
@@ -145,11 +141,12 @@ namespace SkylineBatchTest
             });
 
             StartTestingThreads(threadStart, 15);
+            configManager.GetSelectedLogger().Delete();
 
             var expectedConfigLists = new List<string> {"new  two  three  ", "one  new  three  ", "one  two  new  "};
             Assert.IsTrue(expectedConfigLists.Contains(configManager.ListConfigNames()), "Unexpected config list: " + configManager.ListConfigNames());
             if (firstThreadException != null)
-                Assert.AreEqual("Failed operation \"Replace\": Configuration \"new\" already exists.", firstThreadException.Message); // possible no exception thrown if random index was always same number
+                Assert.AreEqual("Configuration \"new\" already exists.\r\nPlease enter a unique name for the configuration.", firstThreadException.Message); // possible no exception thrown if random index was always same number
             
         }
 

@@ -126,13 +126,13 @@
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="textAnalysisPath.Location" type="System.Drawing.Point, System.Drawing">
-    <value>22, 118</value>
+    <value>10, 118</value>
   </data>
   <data name="textAnalysisPath.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
   </data>
   <data name="textAnalysisPath.Size" type="System.Drawing.Size, System.Drawing">
-    <value>385, 20</value>
+    <value>392, 20</value>
   </data>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="textAnalysisPath.TabIndex" type="System.Int32, mscorlib">
@@ -148,7 +148,7 @@
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textAnalysisPath.Parent" xml:space="preserve">
-    <value>tabSettings</value>
+    <value>tabFiles</value>
   </data>
   <data name="&gt;&gt;textAnalysisPath.ZOrder" xml:space="preserve">
     <value>7</value>
@@ -157,13 +157,13 @@
     <value>Top, Left, Right</value>
   </data>
   <data name="textSkylinePath.Location" type="System.Drawing.Point, System.Drawing">
-    <value>22, 74</value>
+    <value>10, 74</value>
   </data>
   <data name="textSkylinePath.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
   </data>
   <data name="textSkylinePath.Size" type="System.Drawing.Size, System.Drawing">
-    <value>385, 20</value>
+    <value>392, 20</value>
   </data>
   <data name="textSkylinePath.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -178,7 +178,7 @@
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textSkylinePath.Parent" xml:space="preserve">
-    <value>tabSettings</value>
+    <value>tabFiles</value>
   </data>
   <data name="&gt;&gt;textSkylinePath.ZOrder" xml:space="preserve">
     <value>12</value>
@@ -187,13 +187,13 @@
     <value>Top, Left, Right</value>
   </data>
   <data name="textDataPath.Location" type="System.Drawing.Point, System.Drawing">
-    <value>22, 162</value>
+    <value>10, 162</value>
   </data>
   <data name="textDataPath.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
   </data>
   <data name="textDataPath.Size" type="System.Drawing.Size, System.Drawing">
-    <value>385, 20</value>
+    <value>392, 20</value>
   </data>
   <data name="textDataPath.TabIndex" type="System.Int32, mscorlib">
     <value>9</value>
@@ -208,7 +208,7 @@
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textDataPath.Parent" xml:space="preserve">
-    <value>tabSettings</value>
+    <value>tabFiles</value>
   </data>
   <data name="&gt;&gt;textDataPath.ZOrder" xml:space="preserve">
     <value>6</value>
@@ -220,7 +220,7 @@
     <value>27, 18</value>
   </data>
   <data name="linkLabelRegex.Location" type="System.Drawing.Point, System.Drawing">
-    <value>22, 192</value>
+    <value>10, 192</value>
   </data>
   <data name="linkLabelRegex.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 0, 2, 0</value>
@@ -244,10 +244,311 @@
     <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;linkLabelRegex.Parent" xml:space="preserve">
-    <value>tabSettings</value>
+    <value>tabFiles</value>
   </data>
   <data name="&gt;&gt;linkLabelRegex.ZOrder" xml:space="preserve">
     <value>1</value>
+  </data>
+  <data name="label5.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label5.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 13</value>
+  </data>
+  <data name="label5.Size" type="System.Drawing.Size, System.Drawing">
+    <value>134, 13</value>
+  </data>
+  <data name="label5.TabIndex" type="System.Int32, mscorlib">
+    <value>18</value>
+  </data>
+  <data name="label5.Text" xml:space="preserve">
+    <value>&amp;MS1 filtering res/accuracy:</value>
+  </data>
+  <data name="label5.ToolTip" xml:space="preserve">
+    <value>Value for ‑‑full‑scan‑precursor‑res
+See Help &gt;Documentation &gt;Command Line in Skyline.</value>
+  </data>
+  <data name="&gt;&gt;label5.Name" xml:space="preserve">
+    <value>label5</value>
+  </data>
+  <data name="&gt;&gt;label5.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label5.Parent" xml:space="preserve">
+    <value>tabSettings</value>
+  </data>
+  <data name="&gt;&gt;label5.ZOrder" xml:space="preserve">
+    <value>7</value>
+  </data>
+  <data name="label4.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label4.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 110</value>
+  </data>
+  <data name="label4.Size" type="System.Drawing.Size, System.Drawing">
+    <value>114, 13</value>
+  </data>
+  <data name="label4.TabIndex" type="System.Int32, mscorlib">
+    <value>17</value>
+  </data>
+  <data name="label4.Text" xml:space="preserve">
+    <value>&amp;Retention time filtering:</value>
+  </data>
+  <data name="label4.ToolTip" xml:space="preserve">
+    <value>Value for ‑‑full‑scan‑rt‑filter‑tolerance
+See Help &gt;Documentation &gt;Command Line in Skyline.</value>
+  </data>
+  <data name="&gt;&gt;label4.Name" xml:space="preserve">
+    <value>label4</value>
+  </data>
+  <data name="&gt;&gt;label4.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label4.Parent" xml:space="preserve">
+    <value>tabSettings</value>
+  </data>
+  <data name="&gt;&gt;label4.ZOrder" xml:space="preserve">
+    <value>8</value>
+  </data>
+  <data name="radioShuffleDecoys.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="radioShuffleDecoys.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="radioShuffleDecoys.Location" type="System.Drawing.Point, System.Drawing">
+    <value>19, 208</value>
+  </data>
+  <data name="radioShuffleDecoys.Size" type="System.Drawing.Size, System.Drawing">
+    <value>58, 17</value>
+  </data>
+  <data name="radioShuffleDecoys.TabIndex" type="System.Int32, mscorlib">
+    <value>23</value>
+  </data>
+  <data name="radioShuffleDecoys.Text" xml:space="preserve">
+    <value>S&amp;huffle</value>
+  </data>
+  <data name="radioShuffleDecoys.ToolTip" xml:space="preserve">
+    <value>Uses the ‑‑decoys‑add&lt;shuffle&gt; command.
+See Help &gt;Documentation &gt;Command Line in Skyline.</value>
+  </data>
+  <data name="&gt;&gt;radioShuffleDecoys.Name" xml:space="preserve">
+    <value>radioShuffleDecoys</value>
+  </data>
+  <data name="&gt;&gt;radioShuffleDecoys.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;radioShuffleDecoys.Parent" xml:space="preserve">
+    <value>tabSettings</value>
+  </data>
+  <data name="&gt;&gt;radioShuffleDecoys.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="radioReverseDecoys.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="radioReverseDecoys.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="radioReverseDecoys.Location" type="System.Drawing.Point, System.Drawing">
+    <value>19, 185</value>
+  </data>
+  <data name="radioReverseDecoys.Size" type="System.Drawing.Size, System.Drawing">
+    <value>65, 17</value>
+  </data>
+  <data name="radioReverseDecoys.TabIndex" type="System.Int32, mscorlib">
+    <value>22</value>
+  </data>
+  <data name="radioReverseDecoys.Text" xml:space="preserve">
+    <value>R&amp;everse</value>
+  </data>
+  <data name="radioReverseDecoys.ToolTip" xml:space="preserve">
+    <value>Uses the ‑‑decoys‑add&lt;reverse&gt; command.
+See Help &gt;Documentation &gt;Command Line in Skyline.</value>
+  </data>
+  <data name="&gt;&gt;radioReverseDecoys.Name" xml:space="preserve">
+    <value>radioReverseDecoys</value>
+  </data>
+  <data name="&gt;&gt;radioReverseDecoys.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;radioReverseDecoys.Parent" xml:space="preserve">
+    <value>tabSettings</value>
+  </data>
+  <data name="&gt;&gt;radioReverseDecoys.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="checkBoxDecoys.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="checkBoxDecoys.Location" type="System.Drawing.Point, System.Drawing">
+    <value>10, 162</value>
+  </data>
+  <data name="checkBoxDecoys.Size" type="System.Drawing.Size, System.Drawing">
+    <value>82, 17</value>
+  </data>
+  <data name="checkBoxDecoys.TabIndex" type="System.Int32, mscorlib">
+    <value>21</value>
+  </data>
+  <data name="checkBoxDecoys.Text" xml:space="preserve">
+    <value>&amp;Add decoys</value>
+  </data>
+  <data name="checkBoxDecoys.ToolTip" xml:space="preserve">
+    <value>Uses the ‑‑decoys‑add command.
+See Help &gt;Documentation &gt;Command Line in Skyline.</value>
+  </data>
+  <data name="&gt;&gt;checkBoxDecoys.Name" xml:space="preserve">
+    <value>checkBoxDecoys</value>
+  </data>
+  <data name="&gt;&gt;checkBoxDecoys.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;checkBoxDecoys.Parent" xml:space="preserve">
+    <value>tabSettings</value>
+  </data>
+  <data name="&gt;&gt;checkBoxDecoys.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="textMsOneResolvingPower.Location" type="System.Drawing.Point, System.Drawing">
+    <value>9, 29</value>
+  </data>
+  <data name="textMsOneResolvingPower.Size" type="System.Drawing.Size, System.Drawing">
+    <value>143, 20</value>
+  </data>
+  <data name="textMsOneResolvingPower.TabIndex" type="System.Int32, mscorlib">
+    <value>16</value>
+  </data>
+  <data name="textMsOneResolvingPower.ToolTip" xml:space="preserve">
+    <value>Value for ‑‑full‑scan‑precursor‑res
+See Help &gt;Documentation &gt;Command Line in Skyline.</value>
+  </data>
+  <data name="&gt;&gt;textMsOneResolvingPower.Name" xml:space="preserve">
+    <value>textMsOneResolvingPower</value>
+  </data>
+  <data name="&gt;&gt;textMsOneResolvingPower.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textMsOneResolvingPower.Parent" xml:space="preserve">
+    <value>tabSettings</value>
+  </data>
+  <data name="&gt;&gt;textMsOneResolvingPower.ZOrder" xml:space="preserve">
+    <value>9</value>
+  </data>
+  <data name="textRetentionTime.Location" type="System.Drawing.Point, System.Drawing">
+    <value>9, 126</value>
+  </data>
+  <data name="textRetentionTime.Size" type="System.Drawing.Size, System.Drawing">
+    <value>143, 20</value>
+  </data>
+  <data name="textRetentionTime.TabIndex" type="System.Int32, mscorlib">
+    <value>14</value>
+  </data>
+  <data name="textRetentionTime.ToolTip" xml:space="preserve">
+    <value>Value for ‑‑full‑scan‑rt‑filter‑tolerance
+See Help &gt;Documentation &gt;Command Line in Skyline.</value>
+  </data>
+  <data name="&gt;&gt;textRetentionTime.Name" xml:space="preserve">
+    <value>textRetentionTime</value>
+  </data>
+  <data name="&gt;&gt;textRetentionTime.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textRetentionTime.Parent" xml:space="preserve">
+    <value>tabSettings</value>
+  </data>
+  <data name="&gt;&gt;textRetentionTime.ZOrder" xml:space="preserve">
+    <value>10</value>
+  </data>
+  <data name="label9.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label9.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="label9.Location" type="System.Drawing.Point, System.Drawing">
+    <value>7, 61</value>
+  </data>
+  <data name="label9.Size" type="System.Drawing.Size, System.Drawing">
+    <value>145, 13</value>
+  </data>
+  <data name="label9.TabIndex" type="System.Int32, mscorlib">
+    <value>25</value>
+  </data>
+  <data name="label9.Text" xml:space="preserve">
+    <value>M&amp;s/Ms filtering res/accuracy:</value>
+  </data>
+  <data name="label9.ToolTip" xml:space="preserve">
+    <value>Value for ‑‑full‑scan‑product‑res
+See Help &gt;Documentation &gt;Command Line in Skyline.</value>
+  </data>
+  <data name="&gt;&gt;label9.Name" xml:space="preserve">
+    <value>label9</value>
+  </data>
+  <data name="&gt;&gt;label9.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label9.Parent" xml:space="preserve">
+    <value>tabSettings</value>
+  </data>
+  <data name="&gt;&gt;label9.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="textMsMsResolvingPower.Location" type="System.Drawing.Point, System.Drawing">
+    <value>9, 77</value>
+  </data>
+  <data name="textMsMsResolvingPower.Size" type="System.Drawing.Size, System.Drawing">
+    <value>143, 20</value>
+  </data>
+  <data name="textMsMsResolvingPower.TabIndex" type="System.Int32, mscorlib">
+    <value>24</value>
+  </data>
+  <data name="textMsMsResolvingPower.ToolTip" xml:space="preserve">
+    <value>Value for ‑‑full‑scan‑product‑res
+See Help &gt;Documentation &gt;Command Line in Skyline.</value>
+  </data>
+  <data name="&gt;&gt;textMsMsResolvingPower.Name" xml:space="preserve">
+    <value>textMsMsResolvingPower</value>
+  </data>
+  <data name="&gt;&gt;textMsMsResolvingPower.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textMsMsResolvingPower.Parent" xml:space="preserve">
+    <value>tabSettings</value>
+  </data>
+  <data name="&gt;&gt;textMsMsResolvingPower.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="checkBoxMProphet.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="checkBoxMProphet.Location" type="System.Drawing.Point, System.Drawing">
+    <value>10, 232</value>
+  </data>
+  <data name="checkBoxMProphet.Size" type="System.Drawing.Size, System.Drawing">
+    <value>149, 17</value>
+  </data>
+  <data name="checkBoxMProphet.TabIndex" type="System.Int32, mscorlib">
+    <value>26</value>
+  </data>
+  <data name="checkBoxMProphet.Text" xml:space="preserve">
+    <value>&amp;Generate mProphet model</value>
+  </data>
+  <data name="checkBoxMProphet.ToolTip" xml:space="preserve">
+    <value>Adds the commands: --reintegrate-model-name --reintegrate-create-model --reintegrate-overwrite-peaks
+See Help &gt;Documentation &gt;Command Line in Skyline.</value>
+  </data>
+  <data name="&gt;&gt;checkBoxMProphet.Name" xml:space="preserve">
+    <value>checkBoxMProphet</value>
+  </data>
+  <data name="&gt;&gt;checkBoxMProphet.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;checkBoxMProphet.Parent" xml:space="preserve">
+    <value>tabSettings</value>
+  </data>
+  <data name="&gt;&gt;checkBoxMProphet.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
   <data name="splitContainer1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
@@ -265,10 +566,10 @@
     <value>Horizontal</value>
   </data>
   <data name="textNamingPattern.Location" type="System.Drawing.Point, System.Drawing">
-    <value>22, 207</value>
+    <value>10, 206</value>
   </data>
   <data name="textNamingPattern.Size" type="System.Drawing.Size, System.Drawing">
-    <value>143, 20</value>
+    <value>155, 20</value>
   </data>
   <data name="textNamingPattern.TabIndex" type="System.Int32, mscorlib">
     <value>12</value>
@@ -280,7 +581,7 @@
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textNamingPattern.Parent" xml:space="preserve">
-    <value>tabSettings</value>
+    <value>tabFiles</value>
   </data>
   <data name="&gt;&gt;textNamingPattern.ZOrder" xml:space="preserve">
     <value>0</value>
@@ -289,13 +590,13 @@
     <value>Top, Left, Right</value>
   </data>
   <data name="textConfigName.Location" type="System.Drawing.Point, System.Drawing">
-    <value>22, 27</value>
+    <value>10, 27</value>
   </data>
   <data name="textConfigName.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
   </data>
   <data name="textConfigName.Size" type="System.Drawing.Size, System.Drawing">
-    <value>385, 20</value>
+    <value>392, 20</value>
   </data>
   <data name="textConfigName.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -307,7 +608,7 @@
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textConfigName.Parent" xml:space="preserve">
-    <value>tabSettings</value>
+    <value>tabFiles</value>
   </data>
   <data name="&gt;&gt;textConfigName.ZOrder" xml:space="preserve">
     <value>2</value>
@@ -319,7 +620,7 @@
     <value>Microsoft Sans Serif, 8.25pt, style=Bold</value>
   </data>
   <data name="labelConfigName.Location" type="System.Drawing.Point, System.Drawing">
-    <value>19, 12</value>
+    <value>7, 12</value>
   </data>
   <data name="labelConfigName.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 0, 2, 0</value>
@@ -340,7 +641,7 @@
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;labelConfigName.Parent" xml:space="preserve">
-    <value>tabSettings</value>
+    <value>tabFiles</value>
   </data>
   <data name="&gt;&gt;labelConfigName.ZOrder" xml:space="preserve">
     <value>3</value>
@@ -352,7 +653,7 @@
     <value>Microsoft Sans Serif, 9pt</value>
   </data>
   <data name="label3.Location" type="System.Drawing.Point, System.Drawing">
-    <value>19, 145</value>
+    <value>7, 145</value>
   </data>
   <data name="label3.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 0, 2, 0</value>
@@ -373,7 +674,7 @@
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label3.Parent" xml:space="preserve">
-    <value>tabSettings</value>
+    <value>tabFiles</value>
   </data>
   <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
     <value>4</value>
@@ -382,7 +683,7 @@
     <value>Top, Right</value>
   </data>
   <data name="btnDataPath.Location" type="System.Drawing.Point, System.Drawing">
-    <value>411, 160</value>
+    <value>406, 160</value>
   </data>
   <data name="btnDataPath.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -403,7 +704,7 @@
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnDataPath.Parent" xml:space="preserve">
-    <value>tabSettings</value>
+    <value>tabFiles</value>
   </data>
   <data name="&gt;&gt;btnDataPath.ZOrder" xml:space="preserve">
     <value>5</value>
@@ -415,7 +716,7 @@
     <value>Microsoft Sans Serif, 9pt</value>
   </data>
   <data name="label1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>19, 57</value>
+    <value>7, 57</value>
   </data>
   <data name="label1.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 0, 2, 0</value>
@@ -436,7 +737,7 @@
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label1.Parent" xml:space="preserve">
-    <value>tabSettings</value>
+    <value>tabFiles</value>
   </data>
   <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
     <value>8</value>
@@ -445,7 +746,7 @@
     <value>Top, Right</value>
   </data>
   <data name="btnAnalysisPath.Location" type="System.Drawing.Point, System.Drawing">
-    <value>411, 116</value>
+    <value>406, 116</value>
   </data>
   <data name="btnAnalysisPath.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -466,7 +767,7 @@
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnAnalysisPath.Parent" xml:space="preserve">
-    <value>tabSettings</value>
+    <value>tabFiles</value>
   </data>
   <data name="&gt;&gt;btnAnalysisPath.ZOrder" xml:space="preserve">
     <value>9</value>
@@ -475,7 +776,7 @@
     <value>Top, Right</value>
   </data>
   <data name="btnSkylineFilePath.Location" type="System.Drawing.Point, System.Drawing">
-    <value>411, 72</value>
+    <value>406, 72</value>
   </data>
   <data name="btnSkylineFilePath.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -496,7 +797,7 @@
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnSkylineFilePath.Parent" xml:space="preserve">
-    <value>tabSettings</value>
+    <value>tabFiles</value>
   </data>
   <data name="&gt;&gt;btnSkylineFilePath.ZOrder" xml:space="preserve">
     <value>10</value>
@@ -508,7 +809,7 @@
     <value>Microsoft Sans Serif, 9pt</value>
   </data>
   <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>19, 101</value>
+    <value>7, 101</value>
   </data>
   <data name="label2.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 0, 2, 0</value>
@@ -529,10 +830,67 @@
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label2.Parent" xml:space="preserve">
-    <value>tabSettings</value>
+    <value>tabFiles</value>
   </data>
   <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
     <value>11</value>
+  </data>
+  <data name="tabFiles.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="tabFiles.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="tabFiles.Size" type="System.Drawing.Size, System.Drawing">
+    <value>445, 388</value>
+  </data>
+  <data name="tabFiles.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="tabFiles.Text" xml:space="preserve">
+    <value>Files</value>
+  </data>
+  <data name="&gt;&gt;tabFiles.Name" xml:space="preserve">
+    <value>tabFiles</value>
+  </data>
+  <data name="&gt;&gt;tabFiles.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabFiles.Parent" xml:space="preserve">
+    <value>tabsConfig</value>
+  </data>
+  <data name="&gt;&gt;tabFiles.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="label6.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label6.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="label6.Location" type="System.Drawing.Point, System.Drawing">
+    <value>157, 129</value>
+  </data>
+  <data name="label6.Size" type="System.Drawing.Size, System.Drawing">
+    <value>43, 13</value>
+  </data>
+  <data name="label6.TabIndex" type="System.Int32, mscorlib">
+    <value>19</value>
+  </data>
+  <data name="label6.Text" xml:space="preserve">
+    <value>min +/- </value>
+  </data>
+  <data name="&gt;&gt;label6.Name" xml:space="preserve">
+    <value>label6</value>
+  </data>
+  <data name="&gt;&gt;label6.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label6.Parent" xml:space="preserve">
+    <value>tabSettings</value>
+  </data>
+  <data name="&gt;&gt;label6.ZOrder" xml:space="preserve">
+    <value>6</value>
   </data>
   <data name="tabSettings.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
@@ -541,10 +899,10 @@
     <value>3, 3, 3, 3</value>
   </data>
   <data name="tabSettings.Size" type="System.Drawing.Size, System.Drawing">
-    <value>445, 376</value>
+    <value>445, 388</value>
   </data>
   <data name="tabSettings.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
+    <value>4</value>
   </data>
   <data name="tabSettings.Text" xml:space="preserve">
     <value>Settings</value>
@@ -559,7 +917,7 @@
     <value>tabsConfig</value>
   </data>
   <data name="&gt;&gt;tabSettings.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>1</value>
   </data>
   <metadata name="toolBar.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>288, 17</value>
@@ -673,7 +1031,7 @@
     <value>2, 2, 2, 2</value>
   </data>
   <data name="gridReportSettings.Size" type="System.Drawing.Size, System.Drawing">
-    <value>415, 368</value>
+    <value>415, 380</value>
   </data>
   <data name="gridReportSettings.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -700,7 +1058,7 @@
     <value>2, 2, 2, 2</value>
   </data>
   <data name="tabReports.Size" type="System.Drawing.Size, System.Drawing">
-    <value>445, 375</value>
+    <value>445, 388</value>
   </data>
   <data name="tabReports.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -718,184 +1076,31 @@
     <value>tabsConfig</value>
   </data>
   <data name="&gt;&gt;tabReports.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="textSkylineInstallationPath.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Left, Right</value>
-  </data>
-  <data name="textSkylineInstallationPath.Enabled" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
-  <data name="textSkylineInstallationPath.Location" type="System.Drawing.Point, System.Drawing">
-    <value>29, 72</value>
-  </data>
-  <data name="textSkylineInstallationPath.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
-  </data>
-  <data name="textSkylineInstallationPath.Size" type="System.Drawing.Size, System.Drawing">
-    <value>375, 20</value>
-  </data>
-  <data name="textSkylineInstallationPath.TabIndex" type="System.Int32, mscorlib">
-    <value>19</value>
-  </data>
-  <data name="textSkylineInstallationPath.Text" xml:space="preserve">
-    <value>C:\Program Files\Skyline</value>
-  </data>
-  <data name="&gt;&gt;textSkylineInstallationPath.Name" xml:space="preserve">
-    <value>textSkylineInstallationPath</value>
-  </data>
-  <data name="&gt;&gt;textSkylineInstallationPath.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textSkylineInstallationPath.Parent" xml:space="preserve">
-    <value>tabSkyline</value>
-  </data>
-  <data name="&gt;&gt;textSkylineInstallationPath.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="radioButtonSkylineDaily.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="radioButtonSkylineDaily.CheckAlign" type="System.Drawing.ContentAlignment, System.Drawing">
-    <value>TopLeft</value>
-  </data>
-  <data name="radioButtonSkylineDaily.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="radioButtonSkylineDaily.Location" type="System.Drawing.Point, System.Drawing">
-    <value>11, 30</value>
-  </data>
-  <data name="radioButtonSkylineDaily.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
-  </data>
-  <data name="radioButtonSkylineDaily.Size" type="System.Drawing.Size, System.Drawing">
-    <value>105, 17</value>
-  </data>
-  <data name="radioButtonSkylineDaily.TabIndex" type="System.Int32, mscorlib">
-    <value>23</value>
-  </data>
-  <data name="radioButtonSkylineDaily.Text" xml:space="preserve">
-    <value>Use Skyline-&amp;daily</value>
-  </data>
-  <data name="&gt;&gt;radioButtonSkylineDaily.Name" xml:space="preserve">
-    <value>radioButtonSkylineDaily</value>
-  </data>
-  <data name="&gt;&gt;radioButtonSkylineDaily.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;radioButtonSkylineDaily.Parent" xml:space="preserve">
-    <value>tabSkyline</value>
-  </data>
-  <data name="&gt;&gt;radioButtonSkylineDaily.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="radioButtonSpecifySkylinePath.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="radioButtonSpecifySkylinePath.CheckAlign" type="System.Drawing.ContentAlignment, System.Drawing">
-    <value>BottomLeft</value>
-  </data>
-  <data name="radioButtonSpecifySkylinePath.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="radioButtonSpecifySkylinePath.Location" type="System.Drawing.Point, System.Drawing">
-    <value>11, 51</value>
-  </data>
-  <data name="radioButtonSpecifySkylinePath.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
-  </data>
-  <data name="radioButtonSpecifySkylinePath.Size" type="System.Drawing.Size, System.Drawing">
-    <value>192, 17</value>
-  </data>
-  <data name="radioButtonSpecifySkylinePath.TabIndex" type="System.Int32, mscorlib">
-    <value>21</value>
-  </data>
-  <data name="radioButtonSpecifySkylinePath.Text" xml:space="preserve">
-    <value>&amp;Specify Skyline installation directory</value>
-  </data>
-  <data name="&gt;&gt;radioButtonSpecifySkylinePath.Name" xml:space="preserve">
-    <value>radioButtonSpecifySkylinePath</value>
-  </data>
-  <data name="&gt;&gt;radioButtonSpecifySkylinePath.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;radioButtonSpecifySkylinePath.Parent" xml:space="preserve">
-    <value>tabSkyline</value>
-  </data>
-  <data name="&gt;&gt;radioButtonSpecifySkylinePath.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
-  <data name="radioButtonSkyline.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
+  <data name="panelSkylineSettings.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
   </data>
-  <data name="radioButtonSkyline.CheckAlign" type="System.Drawing.ContentAlignment, System.Drawing">
-    <value>TopLeft</value>
+  <data name="panelSkylineSettings.Location" type="System.Drawing.Point, System.Drawing">
+    <value>8, 6</value>
   </data>
-  <data name="radioButtonSkyline.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
+  <data name="panelSkylineSettings.Size" type="System.Drawing.Size, System.Drawing">
+    <value>438, 383</value>
   </data>
-  <data name="radioButtonSkyline.Location" type="System.Drawing.Point, System.Drawing">
-    <value>11, 9</value>
+  <data name="panelSkylineSettings.TabIndex" type="System.Int32, mscorlib">
+    <value>24</value>
   </data>
-  <data name="radioButtonSkyline.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
+  <data name="&gt;&gt;panelSkylineSettings.Name" xml:space="preserve">
+    <value>panelSkylineSettings</value>
   </data>
-  <data name="radioButtonSkyline.Size" type="System.Drawing.Size, System.Drawing">
-    <value>81, 17</value>
+  <data name="&gt;&gt;panelSkylineSettings.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="radioButtonSkyline.TabIndex" type="System.Int32, mscorlib">
-    <value>20</value>
-  </data>
-  <data name="radioButtonSkyline.Text" xml:space="preserve">
-    <value>&amp;Use Skyline</value>
-  </data>
-  <data name="&gt;&gt;radioButtonSkyline.Name" xml:space="preserve">
-    <value>radioButtonSkyline</value>
-  </data>
-  <data name="&gt;&gt;radioButtonSkyline.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;radioButtonSkyline.Parent" xml:space="preserve">
+  <data name="&gt;&gt;panelSkylineSettings.Parent" xml:space="preserve">
     <value>tabSkyline</value>
   </data>
-  <data name="&gt;&gt;radioButtonSkyline.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="btnBrowse.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Right</value>
-  </data>
-  <data name="btnBrowse.Enabled" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
-  <data name="btnBrowse.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="btnBrowse.Location" type="System.Drawing.Point, System.Drawing">
-    <value>408, 70</value>
-  </data>
-  <data name="btnBrowse.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
-  </data>
-  <data name="btnBrowse.Size" type="System.Drawing.Size, System.Drawing">
-    <value>32, 23</value>
-  </data>
-  <data name="btnBrowse.TabIndex" type="System.Int32, mscorlib">
-    <value>22</value>
-  </data>
-  <data name="btnBrowse.Text" xml:space="preserve">
-    <value>...</value>
-  </data>
-  <data name="&gt;&gt;btnBrowse.Name" xml:space="preserve">
-    <value>btnBrowse</value>
-  </data>
-  <data name="&gt;&gt;btnBrowse.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnBrowse.Parent" xml:space="preserve">
-    <value>tabSkyline</value>
-  </data>
-  <data name="&gt;&gt;btnBrowse.ZOrder" xml:space="preserve">
-    <value>4</value>
+  <data name="&gt;&gt;panelSkylineSettings.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
   <data name="tabSkyline.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
@@ -904,7 +1109,7 @@
     <value>3, 3, 3, 3</value>
   </data>
   <data name="tabSkyline.Size" type="System.Drawing.Size, System.Drawing">
-    <value>445, 375</value>
+    <value>445, 388</value>
   </data>
   <data name="tabSkyline.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -922,7 +1127,7 @@
     <value>tabsConfig</value>
   </data>
   <data name="&gt;&gt;tabSkyline.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="tabsConfig.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
@@ -934,7 +1139,7 @@
     <value>2, 2, 2, 2</value>
   </data>
   <data name="tabsConfig.Size" type="System.Drawing.Size, System.Drawing">
-    <value>453, 402</value>
+    <value>453, 414</value>
   </data>
   <data name="tabsConfig.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -963,44 +1168,11 @@
   <data name="&gt;&gt;splitContainer1.Panel1.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="btnSaveConfig.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Right</value>
-  </data>
-  <data name="btnSaveConfig.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Microsoft Sans Serif, 9pt</value>
-  </data>
-  <data name="btnSaveConfig.Location" type="System.Drawing.Point, System.Drawing">
-    <value>295, 15</value>
-  </data>
-  <data name="btnSaveConfig.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
-  </data>
-  <data name="btnSaveConfig.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
-  </data>
-  <data name="btnSaveConfig.TabIndex" type="System.Int32, mscorlib">
-    <value>14</value>
-  </data>
-  <data name="btnSaveConfig.Text" xml:space="preserve">
-    <value>Save</value>
-  </data>
-  <data name="&gt;&gt;btnSaveConfig.Name" xml:space="preserve">
-    <value>btnSaveConfig</value>
-  </data>
-  <data name="&gt;&gt;btnSaveConfig.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnSaveConfig.Parent" xml:space="preserve">
-    <value>groupBox1</value>
-  </data>
-  <data name="&gt;&gt;btnSaveConfig.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
   <data name="btnCancelConfig.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
   </data>
   <data name="btnCancelConfig.Location" type="System.Drawing.Point, System.Drawing">
-    <value>374, 15</value>
+    <value>367, 10</value>
   </data>
   <data name="btnCancelConfig.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -1024,13 +1196,46 @@
     <value>groupBox1</value>
   </data>
   <data name="&gt;&gt;btnCancelConfig.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="btnSaveConfig.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Right</value>
+  </data>
+  <data name="btnSaveConfig.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Microsoft Sans Serif, 9pt</value>
+  </data>
+  <data name="btnSaveConfig.Location" type="System.Drawing.Point, System.Drawing">
+    <value>288, 10</value>
+  </data>
+  <data name="btnSaveConfig.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="btnSaveConfig.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="btnSaveConfig.TabIndex" type="System.Int32, mscorlib">
+    <value>14</value>
+  </data>
+  <data name="btnSaveConfig.Text" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="&gt;&gt;btnSaveConfig.Name" xml:space="preserve">
+    <value>btnSaveConfig</value>
+  </data>
+  <data name="&gt;&gt;btnSaveConfig.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnSaveConfig.Parent" xml:space="preserve">
+    <value>groupBox1</value>
+  </data>
+  <data name="&gt;&gt;btnSaveConfig.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="lblConfigRunning.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="lblConfigRunning.Location" type="System.Drawing.Point, System.Drawing">
-    <value>20, 23</value>
+    <value>11, 17</value>
   </data>
   <data name="lblConfigRunning.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 0, 2, 0</value>
@@ -1064,7 +1269,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnOkConfig.Location" type="System.Drawing.Point, System.Drawing">
-    <value>374, 15</value>
+    <value>367, 10</value>
   </data>
   <data name="btnOkConfig.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -1106,7 +1311,7 @@
     <value>2, 2, 2, 2</value>
   </data>
   <data name="groupBox1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>453, 53</value>
+    <value>453, 41</value>
   </data>
   <data name="groupBox1.TabIndex" type="System.Int32, mscorlib">
     <value>100</value>
@@ -1139,7 +1344,7 @@
     <value>453, 458</value>
   </data>
   <data name="splitContainer1.SplitterDistance" type="System.Int32, mscorlib">
-    <value>402</value>
+    <value>414</value>
   </data>
   <data name="splitContainer1.SplitterWidth" type="System.Int32, mscorlib">
     <value>3</value>
@@ -1167,7 +1372,7 @@
         AAEAAAD/////AQAAAAAAAAAMAgAAAFdTeXN0ZW0uV2luZG93cy5Gb3JtcywgVmVyc2lvbj00LjAuMC4w
         LCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODkFAQAAACZTeXN0
         ZW0uV2luZG93cy5Gb3Jtcy5JbWFnZUxpc3RTdHJlYW1lcgEAAAAERGF0YQcCAgAAAAkDAAAADwMAAACw
-        CgAAAk1TRnQBSQFMAgEBAgEAAdgBAAHYAQABHgEAAR4BAAT/AQkBAAj/AUIBTQE2AQQGAAE2AQQCAAEo
+        CgAAAk1TRnQBSQFMAgEBAgEAATgBAQE4AQEBHgEAAR4BAAT/AQkBAAj/AUIBTQE2AQQGAAE2AQQCAAEo
         AwABeAMAAR4DAAEBAQABCAUAARABDhgAAYACAAGAAwACgAEAAYADAAGAAQABgAEAAoACAAPAAQABwAHc
         AcABAAHwAcoBpgEAATMFAAEzAQABMwEAATMBAAIzAgADFgEAAxwBAAMiAQADKQEAA1UBAANNAQADQgEA
         AzkBAAGAAXwB/wEAAlAB/wEAAZMBAAHWAQAB/wHsAcwBAAHGAdYB7wEAAdYC5wEAAZABqQGtAgAB/wEz

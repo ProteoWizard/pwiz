@@ -26,24 +26,60 @@ namespace AutoQC.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string SkylineInstallDir {
+        public string SkylineDailyRunnerPath {
             get {
-                return ((string)(this["SkylineInstallDir"]));
+                return ((string)(this["SkylineDailyRunnerPath"]));
             }
             set {
-                this["SkylineInstallDir"] = value;
+                this["SkylineDailyRunnerPath"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string SkylineType {
+        public string SkylineRunnerPath {
             get {
-                return ((string)(this["SkylineType"]));
+                return ((string)(this["SkylineRunnerPath"]));
             }
             set {
-                this["SkylineType"] = value;
+                this["SkylineRunnerPath"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string SkylineAdminCmdPath {
+            get {
+                return ((string)(this["SkylineAdminCmdPath"]));
+            }
+            set {
+                this["SkylineAdminCmdPath"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string SkylineDailyAdminCmdPath {
+            get {
+                return ((string)(this["SkylineDailyAdminCmdPath"]));
+            }
+            set {
+                this["SkylineDailyAdminCmdPath"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string SkylineCustomCmdPath {
+            get {
+                return ((string)(this["SkylineCustomCmdPath"]));
+            }
+            set {
+                this["SkylineCustomCmdPath"] = value;
             }
         }
     }

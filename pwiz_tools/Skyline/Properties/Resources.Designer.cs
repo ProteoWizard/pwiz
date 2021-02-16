@@ -9028,6 +9028,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unable to convert crosslinks in {0} to document format {1}..
+        /// </summary>
+        public static string DocumentWriter_WritePeptideXml_Unable_to_convert_crosslinks_in__0__to_document_format__1__ {
+            get {
+                return ResourceManager.GetString("DocumentWriter_WritePeptideXml_Unable_to_convert_crosslinks_in__0__to_document_fo" +
+                        "rmat__1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         public static System.Drawing.Bitmap down_pro32 {
@@ -10464,6 +10474,92 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Edit Modifications.
+        /// </summary>
+        public static string EditLinkedPeptidesDlg_dataGridViewLinkedPeptides_CellToolTipTextNeeded_Edit_Modifications {
+            get {
+                return ResourceManager.GetString("EditLinkedPeptidesDlg_dataGridViewLinkedPeptides_CellToolTipTextNeeded_Edit_Modif" +
+                        "ications", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Both ends of this crosslink cannot be the same..
+        /// </summary>
+        public static string EditLinkedPeptidesDlg_MakeCrosslink_Both_ends_of_this_crosslink_cannot_be_the_same_ {
+            get {
+                return ResourceManager.GetString("EditLinkedPeptidesDlg_MakeCrosslink_Both_ends_of_this_crosslink_cannot_be_the_sam" +
+                        "e_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid crosslinker.
+        /// </summary>
+        public static string EditLinkedPeptidesDlg_MakeCrosslink_Invalid_crosslinker {
+            get {
+                return ResourceManager.GetString("EditLinkedPeptidesDlg_MakeCrosslink_Invalid_crosslinker", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The crosslinker &apos;{0}&apos; cannot attach to this amino acid position..
+        /// </summary>
+        public static string EditLinkedPeptidesDlg_MakeCrosslink_The_crosslinker___0___cannot_attach_to_this_amino_acid_position_ {
+            get {
+                return ResourceManager.GetString("EditLinkedPeptidesDlg_MakeCrosslink_The_crosslinker___0___cannot_attach_to_this_a" +
+                        "mino_acid_position_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This amino acid position cannot be blank..
+        /// </summary>
+        public static string EditLinkedPeptidesDlg_MakeCrosslink_This_amino_acid_position_cannot_be_blank_ {
+            get {
+                return ResourceManager.GetString("EditLinkedPeptidesDlg_MakeCrosslink_This_amino_acid_position_cannot_be_blank_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This amino acid position in this peptide is already being used by another crosslink..
+        /// </summary>
+        public static string EditLinkedPeptidesDlg_MakeCrosslink_This_amino_acid_position_in_this_peptide_is_already_being_used_by_another_crosslink_ {
+            get {
+                return ResourceManager.GetString("EditLinkedPeptidesDlg_MakeCrosslink_This_amino_acid_position_in_this_peptide_is_a" +
+                        "lready_being_used_by_another_crosslink_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This is not a valid amino acid position in this peptide..
+        /// </summary>
+        public static string EditLinkedPeptidesDlg_MakeCrosslink_This_is_not_a_valid_amino_acid_position_in_this_peptide_ {
+            get {
+                return ResourceManager.GetString("EditLinkedPeptidesDlg_MakeCrosslink_This_is_not_a_valid_amino_acid_position_in_th" +
+                        "is_peptide_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This peptide is not valid..
+        /// </summary>
+        public static string EditLinkedPeptidesDlg_MakeCrosslink_This_peptide_is_not_valid_ {
+            get {
+                return ResourceManager.GetString("EditLinkedPeptidesDlg_MakeCrosslink_This_peptide_is_not_valid_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Some crosslinked peptides are not connected..
+        /// </summary>
+        public static string EditLinkedPeptidesDlg_OkDialog_Some_crosslinked_peptides_are_not_connected_ {
+            get {
+                return ResourceManager.GetString("EditLinkedPeptidesDlg_OkDialog_Some_crosslinked_peptides_are_not_connected_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to This will reset the list to its default values. Continue?.
         /// </summary>
         public static string EditListDlg_btnReset_Click_This_will_reset_the_list_to_its_default_values_Continue {
@@ -11049,11 +11145,75 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Discard.
+        /// </summary>
+        public static string EditPepModsDlg_EnsureLinkedPeptide_ButtonText_Discard {
+            get {
+                return ResourceManager.GetString("EditPepModsDlg_EnsureLinkedPeptide_ButtonText_Discard", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Edit Crosslinks.
+        /// </summary>
+        public static string EditPepModsDlg_EnsureLinkedPeptide_ButtonText_Edit_Crosslinks {
+            get {
+                return ResourceManager.GetString("EditPepModsDlg_EnsureLinkedPeptide_ButtonText_Edit_Crosslinks", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Removing the crosslink on this amino acid will result in a crosslinked peptide no longer being connected. Would you like to edit the crosslinks now or discard the disconnected peptides?.
+        /// </summary>
+        public static string EditPepModsDlg_EnsureLinkedPeptide_Discard_or_edit_disconnected_crosslinks {
+            get {
+                return ResourceManager.GetString("EditPepModsDlg_EnsureLinkedPeptide_Discard_or_edit_disconnected_crosslinks", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Isotope {0}:.
         /// </summary>
         public static string EditPepModsDlg_GetIsotopeLabelText_Isotope__0__ {
             get {
                 return ResourceManager.GetString("EditPepModsDlg_GetIsotopeLabelText_Isotope__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Crosslink to {0}: {1} [{2}].
+        /// </summary>
+        public static string EditPepModsDlg_GetTooltip_Crosslink_to__0____1____2__ {
+            get {
+                return ResourceManager.GetString("EditPepModsDlg_GetTooltip_Crosslink_to__0____1____2__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid crosslink: {0}.
+        /// </summary>
+        public static string EditPepModsDlg_GetTooltip_Invalid_crosslink___0_ {
+            get {
+                return ResourceManager.GetString("EditPepModsDlg_GetTooltip_Invalid_crosslink___0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Looplink: {0} [{1}].
+        /// </summary>
+        public static string EditPepModsDlg_GetTooltip_Looplink___0____1__ {
+            get {
+                return ResourceManager.GetString("EditPepModsDlg_GetTooltip_Looplink___0____1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to One or more of the crosslinked peptides are no longer attached to this peptide. .
+        /// </summary>
+        public static string EditPepModsDlg_OkDialog_One_or_more_of_the_crosslinked_peptides_are_no_longer_attached_to_this_peptide__ {
+            get {
+                return ResourceManager.GetString("EditPepModsDlg_OkDialog_One_or_more_of_the_crosslinked_peptides_are_no_longer_att" +
+                        "ached_to_this_peptide__", resourceCulture);
             }
         }
         
@@ -15397,6 +15557,28 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The input text did not appear to contain column headers. Use the dropdown control to assign column meanings for import..
+        /// </summary>
+        public static string ImportTransitionListColumnSelectDlg_DisplayData_The_input_text_did_not_appear_to_contain_column_headers__Use_the_dropdown_control_to_assign_column_meanings_for_import_ {
+            get {
+                return ResourceManager.GetString("ImportTransitionListColumnSelectDlg_DisplayData_The_input_text_did_not_appear_to_" +
+                        "contain_column_headers__Use_the_dropdown_control_to_assign_column_meanings_for_i" +
+                        "mport_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This column is labeled with the header &apos;{0}&apos; in the input text. Use the dropdown control to assign its meaning for import..
+        /// </summary>
+        public static string ImportTransitionListColumnSelectDlg_DisplayData_This_column_is_labeled_with_the_header___0___in_the_input_text__Use_the_dropdown_control_to_assign_its_meaning_for_import_ {
+            get {
+                return ResourceManager.GetString("ImportTransitionListColumnSelectDlg_DisplayData_This_column_is_labeled_with_the_h" +
+                        "eader___0___in_the_input_text__Use_the_dropdown_control_to_assign_its_meaning_fo" +
+                        "r_import_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Decoy.
         /// </summary>
         public static string ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Decoy {
@@ -15574,6 +15756,16 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("InsertSmallMoleculeTransitionList_InsertSmallMoleculeTransitionList_Error_on_line" +
                         "__0___column_1____2_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error on line {0}: {1}.
+        /// </summary>
+        public static string InsertSmallMoleculeTransitionList_InsertSmallMoleculeTransitionList_Error_on_line__0__1_ {
+            get {
+                return ResourceManager.GetString("InsertSmallMoleculeTransitionList_InsertSmallMoleculeTransitionList_Error_on_line" +
+                        "__0__1_", resourceCulture);
             }
         }
         
@@ -29331,6 +29523,16 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders" +
                         "_RT__min_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Inconsistent molecule description.
+        /// </summary>
+        public static string SmallMoleculeTransitionListReader_GetMoleculeTransitionGroup_Inconsistent_molecule_description {
+            get {
+                return ResourceManager.GetString("SmallMoleculeTransitionListReader_GetMoleculeTransitionGroup_Inconsistent_molecul" +
+                        "e_description", resourceCulture);
             }
         }
         
