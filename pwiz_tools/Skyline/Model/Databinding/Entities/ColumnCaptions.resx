@@ -819,8 +819,8 @@
   <data name="PointsAcrossPeak">
     <value>Points Across Peak</value>
   </data>
-  <data name="AverageCycleTime">
-    <value>Average Cycle Time</value>
+  <data name="CycleTimeAcrossPeak">
+    <value>Cycle Time Across Peak</value>
   </data>
   <data name="Precursor">
     <value>Precursor</value>
