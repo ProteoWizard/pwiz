@@ -74,7 +74,7 @@ class MascotResultsReader : public BuildParser{
   int getVarModIndex(const char c);
   void addVarMod(PSM* psm, char varLookUpChar, int aaPosition);
   void addStaticModToTable(char aa, double deltaMass);
-  void addStaticMods(PSM* psm, char staticLookupChar, int aaPosition, bool checkExisting);
+  void addStaticMods(PSM* psm, char staticLookupChar, int aaPosition);
   void addErrorTolerantMod(PSM* psm, string readableModStr, int aaPosition);
   int findMaxRankingPeptideToAdd(int specId);
   void getDistillerRawFiles(const ms_searchparams* searchparams, vector<string>& v);

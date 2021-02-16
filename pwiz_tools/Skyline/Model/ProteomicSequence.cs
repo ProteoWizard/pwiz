@@ -30,6 +30,10 @@ namespace pwiz.Skyline.Model
         public static ProteomicSequence GetProteomicSequence(SrmSettings settings, Peptide peptide,
             ExplicitMods explicitMods, IsotopeLabelType labelType)
         {
+            if (peptide.IsCustomMolecule)
+            {
+                return null;
+            }
             if (explicitMods == null || !explicitMods.HasCrosslinks)
             {
                 return ModifiedSequence.GetModifiedSequence(settings, peptide.Sequence, explicitMods, labelType);

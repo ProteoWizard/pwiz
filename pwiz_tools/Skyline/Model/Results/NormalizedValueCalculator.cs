@@ -392,6 +392,12 @@ namespace pwiz.Skyline.Model.Results
                 return true;
             }
 
+            if (Equals(normalizationMethod, NormalizationMethod.TIC))
+            {
+                denominator = Document.Settings.GetTicNormalizationDenominator(fileInfo.ResultsIndex, fileId);
+                return denominator.HasValue;
+            }
+
             if (normalizationMethod is NormalizationMethod.RatioToSurrogate ratioToSurrogate)
             {
                 denominator = fileInfo.GetSurrogateStandardArea(ratioToSurrogate);
