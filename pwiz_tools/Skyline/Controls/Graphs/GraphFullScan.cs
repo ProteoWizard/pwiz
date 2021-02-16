@@ -21,8 +21,8 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
-using System.Threading;
 using System.Windows.Forms;
+using EnvDTE;
 using pwiz.Common.Chemistry;
 using pwiz.MSGraph;
 using pwiz.ProteowizardWrapper;
@@ -34,6 +34,7 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using ZedGraph;
+using Thread = System.Threading.Thread;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
@@ -51,6 +52,10 @@ namespace pwiz.Skyline.Controls.Graphs
         private bool _zoomXAxis;
         private bool _zoomYAxis;
         private readonly MsDataFileScanHelper _msDataFileScanHelper;
+
+        public enum TransitionColorScheme { product   /*Based on chromatogram color*/,  ionSeries}
+
+        private TransitionColorScheme _colorScheme = TransitionColorScheme.ionSeries;
 
         public GraphFullScan(IDocumentUIContainer documentUIContainer)
         {
@@ -139,6 +144,25 @@ namespace pwiz.Skyline.Controls.Graphs
         private MSGraphPane GraphPane
         {
             get { return (MSGraphPane) graphControl.MasterPane[0]; }
+        }
+
+        private Color GetTransitionColor(TransitionFullScanInfo t)
+        {
+            Color itemColor;
+            switch (_colorScheme)
+            {
+                case TransitionColorScheme.product:
+                    itemColor = t.Color;
+                    break;
+                case TransitionColorScheme.ionSeries:
+                    itemColor = IonTypeExtension.GetTypeColor((t.Id as Transition)?.IonType);
+                    break;
+                default:
+                    itemColor = IonTypeExtension.GetTypeColor(IonType.custom);
+                    break;
+            }
+
+            return itemColor;
         }
 
         public void ShowSpectrum(IScanProvider scanProvider, int transitionIndex, int scanIndex)
@@ -275,8 +299,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 var transition = _msDataFileScanHelper.ScanProvider.Transitions[i];
                 if (transition.Source != _msDataFileScanHelper.Source)
                     continue;
-                var color1 = Blend(transition.Color, Color.White, 0.60);
-                var color2 = Blend(transition.Color, Color.White, 0.95);
+                var color1 = Blend(GetTransitionColor(transition), Color.White, 0.60);
+                var color2 = Blend(GetTransitionColor(transition), Color.White, 0.95);
                 var extractionBox = new BoxObj(
                     transition.ProductMz - transition.ExtractionWidth.Value / 2,
                     0.0,
@@ -484,7 +508,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 var transition = _msDataFileScanHelper.ScanProvider.Transitions[i];
                 if (transition.Source != _msDataFileScanHelper.Source)
                     continue;
-                var item = new SpectrumItem(pointLists[i], transition.Color, _msDataFileScanHelper.ScanProvider.Transitions[i].Name, 2);
+                var item = new SpectrumItem(pointLists[i], GetTransitionColor(transition), _msDataFileScanHelper.ScanProvider.Transitions[i].Name, 2);
                 var curveItem = _graphHelper.GraphControl.AddGraphItem(GraphPane, item, false);
                 curveItem.Label.IsVisible = false;
             }
