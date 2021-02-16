@@ -170,6 +170,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public bool RequirePrecursorTransition { private get; set; }
 
+        public bool IsImportingResults { private get; set; }
+
         public bool DecoyGenerationEnabled
         {
             get { return panelDecoys.Visible; }
@@ -304,6 +306,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public bool ImportFasta(IrtStandard irtStandard)
         {
+            if (!IsImportingResults && AutoTrain)
+            {
+                MessageDlg.Show(WizardForm,
+                    Resources.ImportFastaControl_ImportFasta_Cannot_automatically_train_mProphet_model_since_no_results_files_are_being_imported__Uncheck_this_option_in_order_to_continue_);
+                return false;
+            }
+
             var settings = DocumentContainer.Document.Settings;
             var peptideSettings = settings.PeptideSettings;
             int missedCleavages = MaxMissedCleavages;

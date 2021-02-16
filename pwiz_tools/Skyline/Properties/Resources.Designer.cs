@@ -14875,6 +14875,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cannot automatically train mProphet model since no results files are being imported. Uncheck this option in order to continue..
+        /// </summary>
+        public static string ImportFastaControl_ImportFasta_Cannot_automatically_train_mProphet_model_since_no_results_files_are_being_imported__Uncheck_this_option_in_order_to_continue_ {
+            get {
+                return ResourceManager.GetString("ImportFastaControl_ImportFasta_Cannot_automatically_train_mProphet_model_since_no" +
+                        "_results_files_are_being_imported__Uncheck_this_option_in_order_to_continue_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cannot automatically train mProphet model without decoys, but decoy options resulted in no decoys being generated. Please increase number of decoys per target, or disable automatic training of mProphet model..
         /// </summary>
         public static string ImportFastaControl_ImportFasta_Cannot_automatically_train_mProphet_model_without_decoys__but_decoy_options_resulted_in_no_decoys_being_generated__Please_increase_number_of_decoys_per_target__or_disable_automatic_training_of_mProphet_model_ {
@@ -15188,6 +15198,17 @@ namespace pwiz.Skyline.Properties {
         public static string ImportPeptideSearchDlg_NextPage_Import_FASTA__required_ {
             get {
                 return ResourceManager.GetString("ImportPeptideSearchDlg_NextPage_Import_FASTA__required_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No results files were specified. Are you sure you want to continue? Continuing will create a template document with no imported results..
+        /// </summary>
+        public static string ImportPeptideSearchDlg_NextPage_No_results_files_were_specified__Are_you_sure_you_want_to_continue__Continuing_will_create_a_template_document_with_no_imported_results_ {
+            get {
+                return ResourceManager.GetString("ImportPeptideSearchDlg_NextPage_No_results_files_were_specified__Are_you_sure_you" +
+                        "_want_to_continue__Continuing_will_create_a_template_document_with_no_imported_r" +
+                        "esults_", resourceCulture);
             }
         }
         
