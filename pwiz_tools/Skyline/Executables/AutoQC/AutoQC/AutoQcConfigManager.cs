@@ -33,6 +33,7 @@ namespace AutoQC
 
         public AutoQcConfigManager(IMainUiControl uiControl = null)
         {
+            importer = AutoQcConfig.ReadXml;
             //SelectedConfig = -1;
             SelectedLog = -1;
             _sortedColumn = -1;
@@ -400,7 +401,7 @@ namespace AutoQC
         {
             config.IsEnabled = true;
             var configRunner = _configRunners[config.Name];
-            Program.LogInfo(string.Format(Resources.ConfigManager_StartConfig_Starting_configuration___0__, config.Name));
+            ProgramLog.LogInfo(string.Format(Resources.ConfigManager_StartConfig_Starting_configuration___0__, config.Name));
             try
             {
                 ((ConfigRunner)configRunner).Start();
@@ -410,7 +411,7 @@ namespace AutoQC
                 DisplayErrorWithException(string.Format(Resources.ConfigManager_StartConfig_Error_starting_configuration__0__, configRunner.GetConfig().GetName()) + Environment.NewLine +
                                           e.Message, e);
                 // ReSharper disable once LocalizableElement
-                Program.LogError(string.Format(Resources.ConfigManager_StartConfig_Error_starting_configuration___0__, configRunner.GetConfig().GetName()), e);
+                ProgramLog.LogError(string.Format(Resources.ConfigManager_StartConfig_Error_starting_configuration___0__, configRunner.GetConfig().GetName()), e);
             }
         }
 

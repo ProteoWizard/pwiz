@@ -36,6 +36,8 @@ namespace SharedBatch
         // Handles all modification to configs, the config list, configRunners, and log files
         // The UI should reflect the configs, runners, and log files from this class
 
+        protected Importer importer;
+
         protected readonly List<IConfig> _configList; // the list of configurations. Every config must have a runner in configRunners
         protected readonly Dictionary<string, bool> _configValidation; // dictionary mapping from config name to if that config is valid
 
@@ -69,7 +71,7 @@ namespace SharedBatch
 
         protected void AssertAllInitialized()
         {
-            if (_configList == null || _configValidation == null || 
+            if (importer == null || _configList == null || _configValidation == null || 
                 _logList == null || _lock == null || _loggerLock == null || RootReplacement == null)
                 throw new NullReferenceException("Not all Config Manager variables have been initialized.");
         }
@@ -79,6 +81,7 @@ namespace SharedBatch
         
         protected void LoadConfigList()
         {
+            ConfigList.Importer = importer;
             foreach (var config in Settings.Default.ConfigList)
             {
                 _configList.Add(config);

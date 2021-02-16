@@ -42,8 +42,7 @@ namespace AutoQC
         public MainForm()
         {
             InitializeComponent();
-
-            SharedBatch.Program.ConfigurationImporter = AutoQcConfig.ReadXml;
+            
             toolStrip.Items.Insert(2,new ToolStripSeparator());
             _listViewColumnWidths = new ColumnWidthCalculator(new []
             {
@@ -54,7 +53,7 @@ namespace AutoQC
             });
             listViewConfigs.ColumnWidthChanged += listViewConfigs_ColumnWidthChanged;
 
-            Program.LogInfo(Resources.MainForm_MainForm_Loading_configurations_from_saved_settings_);
+            ProgramLog.LogInfo(Resources.MainForm_MainForm_Loading_configurations_from_saved_settings_);
             _configManager = new AutoQcConfigManager(this);
 
             UpdateUiConfigurations();
@@ -91,7 +90,7 @@ namespace AutoQC
 
         private void btnAdd_Click(object sender, EventArgs e)
         {
-            Program.LogInfo("Creating a new configuration");
+            ProgramLog.LogInfo("Creating a new configuration");
             var configForm = new AutoQcConfigForm(this, (AutoQcConfig)_configManager.GetLastModified(), ConfigAction.Add, false);
             configForm.ShowDialog();
         }
@@ -502,7 +501,7 @@ namespace AutoQC
                 var err = enable ? string.Format(Resources.MainForm_cb_keepRunning_CheckedChanged_Error_enabling__Keep__0__running_, Program.AppName)
                     : string.Format(Resources.MainForm_cb_keepRunning_CheckedChanged_Error_disabling__Keep__0__running_, Program.AppName);
                 // ReSharper disable once LocalizableElement
-                Program.LogError($"Error {(enable ? "enabling" : "disabling")} \"Keep AutoQC Loader running\"", ex);
+                ProgramLog.LogError($"Error {(enable ? "enabling" : "disabling")} \"Keep AutoQC Loader running\"", ex);
 
                 DisplayErrorWithException(TextUtil.LineSeparate(
                         $"{err},{ex.Message},{(ex.InnerException != null ? ex.InnerException.StackTrace : ex.StackTrace)}"),

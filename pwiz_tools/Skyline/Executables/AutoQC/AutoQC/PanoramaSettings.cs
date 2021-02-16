@@ -67,7 +67,7 @@ namespace AutoQC
                 }
                 catch (UriFormatException)
                 {
-                    Program.LogError(Resources.PanoramaSettings_PanoramaSettings_Panorama_server_name_is_invalid__Please_enter_a_different_Panorama_server_name_);
+                    ProgramLog.LogError(Resources.PanoramaSettings_PanoramaSettings_Panorama_server_name_is_invalid__Please_enter_a_different_Panorama_server_name_);
                 }
             }
 
@@ -190,7 +190,7 @@ namespace AutoQC
             }
             catch (Exception e)
             {
-                Program.LogError("Error encrypting password. ", e);
+                ProgramLog.LogError("Error encrypting password. ", e);
   
             }
             return string.Empty;
@@ -211,7 +211,7 @@ namespace AutoQC
             }
             catch (Exception e)
             {              
-                Program.LogError("Error decrypting password. ", e);
+                ProgramLog.LogError("Error decrypting password. ", e);
             }
             return string.Empty;
         }

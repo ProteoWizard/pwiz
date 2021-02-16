@@ -14,41 +14,36 @@ namespace SharedBatch
 
         private static ILog Log;
 
-        private static void Init()
+        public static void Init(string logName)
         {
             if (Log == null)
             {
-                Log = LogManager.GetLogger(Program.LOG_NAME);
+                Log = LogManager.GetLogger(logName);
             }
         }
 
         public static void LogError(string message)
         {
-            Init();
             Log.Error(message);
         }
 
         public static void LogError(string configName, string message)
         {
-            Init();
             Log.Error(string.Format("{0}: {1}", configName, message));
         }
 
         public static void LogError(string message, Exception e)
         {
-            Init();
             Log.Error(message, e);
         }
 
         public static void LogError(string configName, string message, Exception e)
         {
-            Init();
             LogError(string.Format("{0}: {1}", configName, message), e);
         }
 
         public static void LogInfo(string message)
         {
-            Init();
             Log.Info(message);
         }
 

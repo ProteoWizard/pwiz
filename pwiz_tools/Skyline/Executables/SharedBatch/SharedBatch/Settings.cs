@@ -69,6 +69,8 @@ namespace SharedBatch.Properties
     {
         #region IXmlSerializable Members
 
+        public static Importer Importer;
+
         public XmlSchema GetSchema()
         {
             return null;
@@ -76,9 +78,9 @@ namespace SharedBatch.Properties
 
         public void ReadXml(XmlReader reader)
         {
-            if (Program.ConfigurationImporter == null)
+            if (Importer == null)
             {
-                throw new Exception("Must specify Program.ConfigurationImporter before configurations are loaded.");
+                throw new Exception("Must specify Importer before configurations are loaded.");
             }
 
             var isEmpty = reader.IsEmptyElement;
@@ -99,7 +101,7 @@ namespace SharedBatch.Properties
             {
                 try
                 {
-                    list.Add(Program.ConfigurationImporter(reader));
+                    list.Add(Importer(reader));
                 }
                 catch (ArgumentException e)
                 {

@@ -21,14 +21,11 @@ using System;
 using System.Configuration;
 using System.Deployment.Application;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Windows.Forms;
 using log4net;
-using log4net.Appender;
 using log4net.Config;
-using log4net.Repository.Hierarchy;
 using SkylineBatch.Properties;
 using SharedBatch;
 
@@ -36,26 +33,23 @@ namespace SkylineBatch
 {
     class Program
     {
-        private static readonly ILog Log = LogManager.GetLogger("SkylineBatch");
         private static string _version;
         
         [STAThread]
         public static void Main(string[] args)
         {
-            SharedBatch.Program.LOG_NAME = "SkylineBatchProgram.log";
-            SharedBatch.Program.Initialize(AppName(), "SkylineBatchProgram.log", SkylineBatchConfig.ReadXml);
-
+            ProgramLog.Init("SkylineBatch");
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
             // Handle exceptions on the UI thread.
-            Application.ThreadException += ((sender, e) => Log.Error(e.Exception));
+            Application.ThreadException += ((sender, e) => ProgramLog.LogError(e.Exception.Message, e.Exception));
             // Handle exceptions on the non-UI thread.
             AppDomain.CurrentDomain.UnhandledException += ((sender, e) =>
             {
                 try
                 {
-                    Log.Error(Resources.Program_Main_An_unexpected_error_occured_during_initialization_, (Exception)e.ExceptionObject);
+                    ProgramLog.LogError(Resources.Program_Main_An_unexpected_error_occured_during_initialization_, (Exception)e.ExceptionObject);
                     MessageBox.Show(Resources.Program_Main_An_unexpected_error_occured_during_initialization_ + Environment.NewLine +
                                     string.Format(Resources.Program_Main_Error_details_may_be_found_in_the_file__0_,
                                         Path.Combine(Path.GetDirectoryName(Application.ExecutablePath) ?? string.Empty, "SkylineBatchProgram.log")) + Environment.NewLine +

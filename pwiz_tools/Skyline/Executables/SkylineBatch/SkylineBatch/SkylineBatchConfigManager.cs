@@ -53,6 +53,7 @@ namespace SkylineBatch
 
         public SkylineBatchConfigManager(Logger logger, IMainUiControl uiControl = null)
         {
+            importer = SkylineBatchConfig.ReadXml;
             SelectedLog = 0;
             _currentLogger = logger;
             _configRunners = new Dictionary<string, IConfigRunner>();

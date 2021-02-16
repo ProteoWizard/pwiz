@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using AutoQC;
+using SharedBatch;
 
 namespace AutoQCTest
 {
@@ -105,6 +106,7 @@ namespace AutoQCTest
         [TestMethod]
         public void TestValidatePanoramaSettings()
         {
+            ProgramLog.Init("TestLog");
             TestInvalidPanoramaSettings(new PanoramaSettings(true, "https://fake_panoramaweb.org/", "testEmail", "testPassword", "testFolder"), 
                 "The server https://fake_panoramaweb.org/ does not exist.");
             TestInvalidPanoramaSettings(new PanoramaSettings(true, string.Empty, "testEmail", "testPassword", "testFolder"),

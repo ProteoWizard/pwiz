@@ -40,7 +40,6 @@ namespace SkylineBatch
         public MainForm()
         {
             InitializeComponent();
-            SharedBatch.Program.ConfigurationImporter = SkylineBatchConfig.ReadXml;
             var roamingFolder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
             var localFolder = Path.Combine(Path.GetDirectoryName(roamingFolder), "local");
             var logPath= Path.Combine(localFolder, Program.AppName(), Program.AppName() + TextUtil.EXT_LOG);

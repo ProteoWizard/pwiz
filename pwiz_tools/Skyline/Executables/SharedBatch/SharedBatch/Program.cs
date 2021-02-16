@@ -17,8 +17,7 @@ namespace SharedBatch
 {
     public static class Program
     {
-        public static string LOG_NAME;
-        public static Importer ConfigurationImporter;
+
 
         /// <summary>
         /// The main entry point for the application.
@@ -28,12 +27,6 @@ namespace SharedBatch
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-        }
-
-        public static void Initialize(string appName, string logName, Importer importer)
-        {
-            LOG_NAME = logName;
-            ConfigurationImporter = importer;
         }
     }
 }
