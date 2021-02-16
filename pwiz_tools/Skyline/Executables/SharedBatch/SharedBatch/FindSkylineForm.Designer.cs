@@ -29,31 +29,30 @@
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FindSkylineForm));
-            this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
+            this.label1 = new System.Windows.Forms.Label();
             this.textSkylineInstallPath = new System.Windows.Forms.TextBox();
             this.btnBrowse = new System.Windows.Forms.Button();
             this.btnOk = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(12, 33);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(196, 13);
-            this.label1.TabIndex = 0;
-            this.label1.Text = "&Please specify Skyline installation folder:";
-            // 
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(12, 9);
+            this.label2.Location = new System.Drawing.Point(12, 33);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(459, 13);
-            this.label2.TabIndex = 1;
-            this.label2.Text = "Skyline Batch requires Skyline to run, but did not find an administrative or web-" +
-    "based installation.";
+            this.label2.Size = new System.Drawing.Size(196, 13);
+            this.label2.TabIndex = 0;
+            this.label2.Text = "&Please specify Skyline installation folder:";
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(12, 9);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(35, 13);
+            this.label1.TabIndex = 1;
+            this.label1.Text = "label1";
             // 
             // textSkylineInstallPath
             // 
@@ -92,7 +91,7 @@
             this.btnOk.UseVisualStyleBackColor = true;
             this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
             // 
-            // FindSkyline
+            // FindSkylineForm
             // 
             this.AcceptButton = this.btnOk;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -101,14 +100,14 @@
             this.Controls.Add(this.btnOk);
             this.Controls.Add(this.btnBrowse);
             this.Controls.Add(this.textSkylineInstallPath);
-            this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
+            this.Controls.Add(this.label2);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.MinimumSize = new System.Drawing.Size(505, 152);
-            this.Name = "FindSkyline";
-            this.Text = "Specify Skyline Installation";
+            this.Name = "FindSkylineForm";
+            this.Text = "AppName";
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -116,8 +115,8 @@
 
         #endregion
 
-        private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Label label1;
         private System.Windows.Forms.TextBox textSkylineInstallPath;
         private System.Windows.Forms.Button btnBrowse;
         private System.Windows.Forms.Button btnOk;

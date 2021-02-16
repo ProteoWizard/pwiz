@@ -333,7 +333,7 @@ namespace SkylineBatch
 
         private void ShowErrorDialog(string message)
         {
-            AlertDlg.ShowError(this, message);
+            AlertDlg.ShowError(this, Program.AppName(), message);
         }
         
         #endregion

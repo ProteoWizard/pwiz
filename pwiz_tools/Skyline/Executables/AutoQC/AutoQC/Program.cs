@@ -134,13 +134,14 @@ namespace AutoQC
         {
             if (SkylineInstallations.FindSkyline())
                 return true;
-
-            var skylineForm = new FindSkylineForm();
+            var baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            var skylineForm = new FindSkylineForm(AppName, Path.Combine(baseDirectory, "AutoQC_release.ico"));
             Application.Run(skylineForm);
 
             if (skylineForm.DialogResult != DialogResult.OK)
             {
-                MessageBox.Show($@"{AppName} requires Skyline to run.", $@"{AppName} Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(string.Format(Resources.Program_InitSkylineSettings__0__requires_Skyline_to_run_, AppName) + Environment.NewLine +
+                    string.Format(Resources.Program_InitSkylineSettings_Please_install_Skyline_to_run__0__, AppName), AppName, MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return false;
             }
             

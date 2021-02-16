@@ -23,7 +23,6 @@ using System.Drawing;
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Web;
 using AutoQC.Properties;
 using SharedBatch;
 
@@ -586,32 +585,32 @@ namespace AutoQC
 
         public void DisplayError(string message)
         {
-            RunUi(() => { AlertDlg.ShowError(this, message); });
+            RunUi(() => { AlertDlg.ShowError(this, Program.AppName, message); });
         }
 
         public void DisplayWarning(string message)
         {
-            RunUi(() => { AlertDlg.ShowWarning(this, message); });
+            RunUi(() => { AlertDlg.ShowWarning(this, Program.AppName, message); });
         }
 
         public void DisplayInfo(string message)
         {
-            RunUi(() => { AlertDlg.ShowInfo(this, message); });
+            RunUi(() => { AlertDlg.ShowInfo(this, Program.AppName, message); });
         }
 
         public void DisplayErrorWithException(string message, Exception exception)
         {
-            RunUi(() => { AlertDlg.ShowErrorWithException(this, message, exception); });
+            RunUi(() => { AlertDlg.ShowErrorWithException(this, Program.AppName, message, exception); });
         }
 
         public DialogResult DisplayQuestion(string message)
         {
-            return AlertDlg.ShowQuestion(this, message);
+            return AlertDlg.ShowQuestion(this, Program.AppName, message);
         }
 
         public DialogResult DisplayLargeQuestion(string message)
         {
-            return AlertDlg.ShowLargeQuestion(this, message);
+            return AlertDlg.ShowLargeQuestion(this, Program.AppName, message);
         }
 
         #endregion

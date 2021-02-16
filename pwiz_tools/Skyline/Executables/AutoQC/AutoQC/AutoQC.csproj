@@ -84,9 +84,6 @@
     <EmbeddedResource Include="FilePathControl.resx">
       <DependentUpon>FilePathControl.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="FindSkylineForm.resx">
-      <DependentUpon>FindSkylineForm.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="InvalidConfigSetupForm.resx">
       <DependentUpon>InvalidConfigSetupForm.cs</DependentUpon>
     </EmbeddedResource>
@@ -104,6 +101,9 @@
       <SubType>Designer</SubType>
     </None>
     <EmbeddedResource Include="AutoQC-daily.ico" />
+    <Content Include="AutoQC_release.ico">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="FileAcquisitionTime.skyr">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -120,12 +120,6 @@
     </Compile>
     <Compile Include="FilePathControl.Designer.cs">
       <DependentUpon>FilePathControl.cs</DependentUpon>
-    </Compile>
-    <Compile Include="FindSkylineForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="FindSkylineForm.Designer.cs">
-      <DependentUpon>FindSkylineForm.cs</DependentUpon>
     </Compile>
     <Compile Include="InvalidConfigSetupForm.cs">
       <SubType>Form</SubType>

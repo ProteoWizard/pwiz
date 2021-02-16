@@ -88,7 +88,9 @@
     <None Include="Resources\OpenFolder.bmp" />
     <None Include="Resources\SkylineData.ico" />
     <None Include="Resources\SkylineDoc.ico" />
-    <Content Include="SkylineBatch_release.ico" />
+    <Content Include="SkylineBatch_release.ico">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <EmbeddedResource Include="FilePathControl.resx">
       <DependentUpon>FilePathControl.cs</DependentUpon>
     </EmbeddedResource>

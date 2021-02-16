@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 using System.Windows.Forms;
 using SharedBatch.Properties;
 
@@ -6,12 +7,15 @@ namespace SharedBatch
 {
     public partial class FindSkylineForm : Form
     {
-        // The dialog that appears if Skyline Batch was unable to find a Skyline Installation when first started
+        // The dialog that appears if the program was unable to find a Skyline Installation when first started
         // User must enter a path to a valid skyline installation to continue
 
-        public FindSkylineForm()
+        public FindSkylineForm(string appName, string iconPath)
         {
             InitializeComponent();
+            Text = appName;
+            Icon = Icon.ExtractAssociatedIcon(iconPath);
+            label1.Text = string.Format(Resources.FindSkylineForm_FindSkylineForm__0__requires_Skyline_to_run__but_did_not_find_an_administrative_or_web_based_installation_, appName);
         }
 
         private void btnBrowse_Click(object sender, EventArgs e)
@@ -36,7 +40,7 @@ namespace SharedBatch
             }
             catch (ArgumentException ex)
             {
-                AlertDlg.ShowError(this, ex.Message);
+                AlertDlg.ShowError(this, Text, ex.Message);
                 return;
             }
             Settings.Default.SkylineCustomCmdPath = skylineSettings.CmdPath;

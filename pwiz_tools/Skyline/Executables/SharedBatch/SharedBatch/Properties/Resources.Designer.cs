@@ -300,6 +300,16 @@ namespace SharedBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} requires Skyline to run, but did not find an administrative or web-based installation..
+        /// </summary>
+        internal static string FindSkylineForm_FindSkylineForm__0__requires_Skyline_to_run__but_did_not_find_an_administrative_or_web_based_installation_ {
+            get {
+                return ResourceManager.GetString("FindSkylineForm_FindSkylineForm__0__requires_Skyline_to_run__but_did_not_find_an_" +
+                        "administrative_or_web_based_installation_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to ... Log truncated ... Full log is in {0}.
         /// </summary>
         internal static string Logger_DisplayLog_____Log_truncated_____Full_log_is_in__0_ {

@@ -28,17 +28,12 @@ namespace SharedBatch
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-
         }
 
-        public static string AppName
+        public static void Initialize(string appName, string logName, Importer importer)
         {
-            get
-            {
-                var appNameAndVersion = Process.GetCurrentProcess().MainWindowTitle;
-                return appNameAndVersion.Substring(0, appNameAndVersion.LastIndexOf(' '));
-            }
+            LOG_NAME = logName;
+            ConfigurationImporter = importer;
         }
-
     }
 }

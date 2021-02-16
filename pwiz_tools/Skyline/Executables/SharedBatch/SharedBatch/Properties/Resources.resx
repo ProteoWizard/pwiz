@@ -270,4 +270,7 @@
   <data name="MainFormUtils_OpenFileExplorer_Please_fix___0___and_try_again_" xml:space="preserve">
     <value>Please fix "{0}" and try again.</value>
   </data>
+  <data name="FindSkylineForm_FindSkylineForm__0__requires_Skyline_to_run__but_did_not_find_an_administrative_or_web_based_installation_" xml:space="preserve">
+    <value>{0} requires Skyline to run, but did not find an administrative or web-based installation.</value>
+  </data>
 </root>

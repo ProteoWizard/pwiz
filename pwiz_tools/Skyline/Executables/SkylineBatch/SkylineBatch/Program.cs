@@ -43,6 +43,7 @@ namespace SkylineBatch
         public static void Main(string[] args)
         {
             SharedBatch.Program.LOG_NAME = "SkylineBatchProgram.log";
+            SharedBatch.Program.Initialize(AppName(), "SkylineBatchProgram.log", SkylineBatchConfig.ReadXml);
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
@@ -111,7 +112,8 @@ namespace SkylineBatch
             if (SkylineInstallations.FindSkyline())
                 return true;
 
-            var form = new FindSkylineForm();
+            var baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            var form = new FindSkylineForm(AppName(), Path.Combine(baseDirectory, "SkylineBatch_release.ico"));
             Application.Run(form);
             if (form.DialogResult == DialogResult.OK)
                 return true;

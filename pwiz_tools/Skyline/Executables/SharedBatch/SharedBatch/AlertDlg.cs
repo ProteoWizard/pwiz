@@ -38,14 +38,14 @@ namespace SharedBatch
         private string _message;
         private string _detailMessage;
 
-        private AlertDlg(string message, Image icon, bool fitToText = false)
+        private AlertDlg(string appName, string message, Image icon, bool fitToText = false)
         {
             InitializeComponent();
             _originalFormHeight = Height;
             _originalMessageHeight = labelMessage.Height;
             Message = message;
             btnMoreInfo.Parent.Controls.Remove(btnMoreInfo);
-            Text = Program.AppName;
+            Text = appName;
             pictureBox1.Image = icon;
             if (fitToText)
             {
@@ -53,36 +53,36 @@ namespace SharedBatch
             }
         }
 
-        public static void ShowWarning(IWin32Window parent, string message)
+        public static void ShowWarning(IWin32Window parent, string appName, string message)
         {
-            Show(parent, message, SystemIcons.Warning.ToBitmap(), MessageBoxButtons.OK);
+            Show(parent, appName, message, SystemIcons.Warning.ToBitmap(), MessageBoxButtons.OK);
         }
-        public static void ShowError(IWin32Window parent, string message)
+        public static void ShowError(IWin32Window parent, string appName, string message)
         {
-            Show(parent, message, SystemIcons.Error.ToBitmap(), MessageBoxButtons.OK);
+            Show(parent, appName, message, SystemIcons.Error.ToBitmap(), MessageBoxButtons.OK);
         }
-        public static void ShowInfo(IWin32Window parent, string message)
+        public static void ShowInfo(IWin32Window parent, string appName, string message)
         {
-            Show(parent, message, SystemIcons.Information.ToBitmap(), MessageBoxButtons.OK);
+            Show(parent, appName, message, SystemIcons.Information.ToBitmap(), MessageBoxButtons.OK);
         }
-        public static DialogResult ShowQuestion(IWin32Window parent, string message)
+        public static DialogResult ShowQuestion(IWin32Window parent, string appName, string message)
         {
-            return Show(parent, message, SystemIcons.Question.ToBitmap(), MessageBoxButtons.YesNo);
+            return Show(parent, appName, message, SystemIcons.Question.ToBitmap(), MessageBoxButtons.YesNo);
         }
 
-        public static DialogResult ShowLargeQuestion(IWin32Window parent, string message)
+        public static DialogResult ShowLargeQuestion(IWin32Window parent, string appName, string message)
         {
-            var questionDlg = new AlertDlg(message, SystemIcons.Question.ToBitmap(), true);
+            var questionDlg = new AlertDlg(appName, message, SystemIcons.Question.ToBitmap(), true);
             return questionDlg.ShowAndDispose(parent, MessageBoxButtons.OKCancel);
         }
 
-        private static DialogResult Show(IWin32Window parent, string message, Image icon, MessageBoxButtons messageBoxButtons)
+        private static DialogResult Show(IWin32Window parent, string appName, string message, Image icon, MessageBoxButtons messageBoxButtons)
         {
-            return new AlertDlg(message, icon).ShowAndDispose(parent, messageBoxButtons);
+            return new AlertDlg(appName, message, icon).ShowAndDispose(parent, messageBoxButtons);
         }
-        public static void ShowErrorWithException(IWin32Window parent, string message, Exception exception)
+        public static void ShowErrorWithException(IWin32Window parent, string appName, string message, Exception exception)
         {
-            new AlertDlg(message, SystemIcons.Error.ToBitmap()) { Exception = exception }.ShowAndDispose(parent, MessageBoxButtons.OK);
+            new AlertDlg(appName, message, SystemIcons.Error.ToBitmap()) { Exception = exception }.ShowAndDispose(parent, MessageBoxButtons.OK);
         }
 
         private string Message

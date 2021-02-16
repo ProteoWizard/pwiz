@@ -1366,6 +1366,24 @@ namespace AutoQC.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} requires Skyline to run..
+        /// </summary>
+        internal static string Program_InitSkylineSettings__0__requires_Skyline_to_run_ {
+            get {
+                return ResourceManager.GetString("Program_InitSkylineSettings__0__requires_Skyline_to_run_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please install Skyline to run {0}..
+        /// </summary>
+        internal static string Program_InitSkylineSettings_Please_install_Skyline_to_run__0__ {
+            get {
+                return ResourceManager.GetString("Program_InitSkylineSettings_Please_install_Skyline_to_run__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Another instance of {0} is already running..
         /// </summary>
         internal static string Program_Main_Another_instance_of__0__is_already_running_ {

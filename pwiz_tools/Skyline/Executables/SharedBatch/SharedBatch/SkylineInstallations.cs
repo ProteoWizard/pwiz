@@ -29,6 +29,8 @@ namespace SharedBatch
     {
         // Finds and saves information about the computer's Skyline and R installation locations
 
+        public const string SkylineExe = "Skyline.exe";
+        public const string SkylineDailyExe = "Skyline-daily.exe";
         public const string SkylineCmdExe = "SkylineCmd.exe";
         public const string Skyline = "Skyline";
         public const string SkylineDaily = "Skyline-daily";
@@ -106,15 +108,16 @@ namespace SharedBatch
                 adminInstallSkylineDaily ? Path.Combine(skylineDailyPath, SkylineCmdExe) : null;
         }
 
+        // Opens a Skyline file using the Skyline installation selected in SkylineSettings
         public static void OpenSkylineFile(string filePath, SkylineSettings skylineSettings)
         {
             var hasSkylineExe = skylineSettings.CmdPath.EndsWith(SkylineCmdExe, StringComparison.CurrentCultureIgnoreCase);
             string skylinePath;
             if (hasSkylineExe)
             {
-                skylinePath = Path.Combine(Path.GetDirectoryName(skylineSettings.CmdPath), "Skyline.exe");
+                skylinePath = Path.Combine(Path.GetDirectoryName(skylineSettings.CmdPath), SkylineExe);
                 if (!File.Exists(skylinePath))
-                    skylinePath = Path.Combine(Path.GetDirectoryName(skylineSettings.CmdPath), "Skyline-daily.exe");
+                    skylinePath = Path.Combine(Path.GetDirectoryName(skylineSettings.CmdPath), SkylineDailyExe);
             }
             else if (skylineSettings.Type == SkylineType.Skyline)
             {
@@ -126,7 +129,7 @@ namespace SharedBatch
                 skylinePath = possiblePaths.FirstOrDefault(File.Exists);
             }
 
-            var args = hasSkylineExe ? $"--opendoc \"{filePath}\"" : $"\"{filePath}\"";
+            var args = hasSkylineExe ? $"--opendoc \"{filePath}\"" : $"\"{filePath}\""; // only use --opendoc for .exe
             Process.Start(skylinePath, args);
         }
 
