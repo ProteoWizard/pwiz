@@ -953,7 +953,8 @@ namespace pwiz.Skyline.SettingsUI
 
                 ProductMassAnalyzer = PrecursorMassAnalyzer;
 
-                if (workflow == ImportPeptideSearchDlg.Workflow.dia && Settings.Default.IsolationSchemeList.Count > 1 &&
+                // If there is no isolation scheme set, select the 2nd item if it exists.
+                if (workflow == ImportPeptideSearchDlg.Workflow.dia && Settings.Default.IsolationSchemeList.Count >= 2 &&
                     settings.TransitionSettings.FullScan.IsolationScheme == null)
                 {
                     comboIsolationScheme.SelectedIndex = 1;
