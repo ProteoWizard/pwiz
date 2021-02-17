@@ -40,6 +40,7 @@ namespace SkylineBatch
         private readonly bool _canEditSkylineSettings;
 
         private SkylineTypeControl _skylineTypeControl;
+        private string _lastEnteredPath;
 
         public SkylineBatchConfigForm(IMainUiControl mainControl, SkylineBatchConfig config, ConfigAction action, bool isBusy)
         {
@@ -76,7 +77,7 @@ namespace SkylineBatch
             InitSkylineTab(config);
             if (config == null)
                 return;
-
+            _lastEnteredPath = config.MainSettings.TemplateFilePath;
             textConfigName.Text = _action == ConfigAction.Add ? string.Empty : config.Name;
             textConfigName.TextChanged += textConfigName_TextChanged;
             // Initialize UI input values using config
@@ -142,9 +143,12 @@ namespace SkylineBatch
         {
             OpenFileDialog openDialog = new OpenFileDialog();
             openDialog.Filter = TextUtil.FILTER_SKY;
-            openDialog.InitialDirectory = Path.GetDirectoryName(textSkylinePath.Text);
-            if (openDialog.ShowDialog()== DialogResult.OK)
+            openDialog.InitialDirectory = TextUtil.GetInitialDirectory(textSkylinePath.Text, _lastEnteredPath);
+            if (openDialog.ShowDialog() == DialogResult.OK)
+            {
                 textSkylinePath.Text = openDialog.FileName;
+                _lastEnteredPath = openDialog.FileName;
+            }
         }
 
         private void btnAnalysisFilePath_Click(object sender, EventArgs e)
@@ -160,14 +164,13 @@ namespace SkylineBatch
         private void OpenFolder(TextBox textbox)
         {
             var dialog = new FolderBrowserDialog();
-            var initialPath = textbox.Text;
-            while (!Directory.Exists(initialPath) && !string.IsNullOrEmpty(initialPath))
-                initialPath = Path.GetDirectoryName(initialPath);
+            var initialPath = TextUtil.GetInitialDirectory(textbox.Text, _lastEnteredPath);
             dialog.SelectedPath = initialPath;
             DialogResult result = dialog.ShowDialog();
             if (result == DialogResult.OK)
             {
                 textbox.Text = dialog.SelectedPath;
+                _lastEnteredPath = dialog.SelectedPath;
             }
         }
 

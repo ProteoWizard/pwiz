@@ -36,6 +36,7 @@ namespace AutoQC
         private readonly DateTime _initialCreated;
 
         private SkylineTypeControl _skylineTypeControl;
+        private string _lastEnteredPath;
 
         public AutoQcConfigForm(IMainUiControl mainControl, AutoQcConfig config, ConfigAction action, bool isBusy)
         {
@@ -76,6 +77,7 @@ namespace AutoQC
 
         private void InitInputFieldsFromConfig(AutoQcConfig config)
         {
+            if (config != null) _lastEnteredPath = config.MainSettings.SkylineFilePath;
             InitSkylineTab(config);
             SetInitialPanoramaSettings(config);
             if (_action == ConfigAction.Add)
@@ -149,26 +151,26 @@ namespace AutoQC
 
         private void btnSkylineFilePath_Click(object sender, EventArgs e)
         {
-            OpenFile(TextUtil.FILTER_SKY, textSkylinePath);
-        }
-
-        private void OpenFile(string filter, TextBox textbox)
-        {
-            var dialog = new OpenFileDialog { Filter = filter };
+            var dialog = new OpenFileDialog
+            {
+                Filter = TextUtil.FILTER_SKY,
+                InitialDirectory = TextUtil.GetInitialDirectory(textSkylinePath.Text, _lastEnteredPath)
+            };
             if (dialog.ShowDialog(this) == DialogResult.OK)
             {
-                textbox.Text = dialog.FileName;
+                textSkylinePath.Text = dialog.FileName;
+                _lastEnteredPath = dialog.FileName;
             }
         }
-
+        
         private void btnFolderToWatch_Click(object sender, EventArgs e)
         {
-            using (var dialog = new FolderBrowserDialog())
+            var dialog = new FolderBrowserDialog();
+            dialog.SelectedPath = TextUtil.GetInitialDirectory(textFolderToWatchPath.Text, _lastEnteredPath);
+            if (dialog.ShowDialog(this) == DialogResult.OK)
             {
-                if (dialog.ShowDialog(this) == DialogResult.OK)
-                {
-                    textFolderToWatchPath.Text = dialog.SelectedPath;
-                }
+                textFolderToWatchPath.Text = dialog.SelectedPath;
+                _lastEnteredPath = dialog.SelectedPath;
             }
         }
 

@@ -63,7 +63,7 @@ namespace SkylineBatch
                 return;
             }
 
-            var fileNames = OpenRScript(Path.GetDirectoryName(textReportPath.Text), true);
+            var fileNames = OpenRScript(textReportPath.Text, true);
             foreach (var fileName in fileNames)
             {
                 dataGridScripts.Rows.Add(fileName, rVersionsDropDown.Items[rVersionsDropDown.Items.Count - 1].AccessibilityObject.Name);
@@ -75,19 +75,19 @@ namespace SkylineBatch
             if (e.ColumnIndex != 0 || string.IsNullOrEmpty((string)dataGridScripts.SelectedCells[0].Value))
                 return;
             var selectedCell = dataGridScripts.SelectedCells[0];
-            var fileNames = OpenRScript(Path.GetDirectoryName((string)selectedCell.Value), false);
+            var fileNames = OpenRScript((string)selectedCell.Value, false);
             if (fileNames.Length > 0)
             {
                 selectedCell.Value = fileNames[0];
             }
         }
 
-        private string[] OpenRScript(string initialDirectory, bool allowMultiSelect)
+        private string[] OpenRScript(string path, bool allowMultiSelect)
         {
             var openDialog = new OpenFileDialog();
             openDialog.Filter = TextUtil.FILTER_R;
             openDialog.Multiselect = allowMultiSelect;
-            openDialog.InitialDirectory = Path.GetDirectoryName(initialDirectory);
+            openDialog.InitialDirectory = TextUtil.GetInitialDirectory(path);
             if (openDialog.ShowDialog() != DialogResult.OK)
                 return new string[]{};
             return openDialog.FileNames;
@@ -105,13 +105,7 @@ namespace SkylineBatch
         {
             OpenFileDialog openDialog = new OpenFileDialog();
             openDialog.Filter = TextUtil.FILTER_SKYR;
-            try
-            {
-                openDialog.InitialDirectory = Path.GetDirectoryName(textReportPath.Text);
-            }
-            catch (Exception)
-            {
-            }
+            openDialog.InitialDirectory = TextUtil.GetInitialDirectory(textReportPath.Text);
             openDialog.ShowDialog();
             textReportPath.Text = openDialog.FileName;
         }

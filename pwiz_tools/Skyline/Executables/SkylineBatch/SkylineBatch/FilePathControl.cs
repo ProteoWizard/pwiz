@@ -73,16 +73,12 @@ namespace SkylineBatch
 
         private void btnBrowse_Click(object sender, EventArgs e)
         {
-            var initialDirectory = _lastUsedPath;
-            while (!Directory.Exists(initialDirectory) && !string.IsNullOrEmpty(initialDirectory))
-                initialDirectory = Path.GetDirectoryName(initialDirectory);
-            
             if (_folder)
             {
                 using (FolderBrowserDialog dlg = new FolderBrowserDialog
                 {
-                    SelectedPath = initialDirectory
-                })
+                    SelectedPath = TextUtil.GetInitialDirectory(_lastUsedPath)
+            })
                 {
                     if (dlg.ShowDialog(this) == DialogResult.OK)
                         textFilePath.Text = dlg.SelectedPath;
@@ -92,7 +88,7 @@ namespace SkylineBatch
             {
                 OpenFileDialog openDialog = new OpenFileDialog();
                 openDialog.Filter = _filter;
-                openDialog.InitialDirectory = initialDirectory;
+                openDialog.InitialDirectory = TextUtil.GetInitialDirectory(_lastUsedPath);
                 if (openDialog.ShowDialog() == DialogResult.OK)
                     textFilePath.Text = openDialog.FileName;
             }

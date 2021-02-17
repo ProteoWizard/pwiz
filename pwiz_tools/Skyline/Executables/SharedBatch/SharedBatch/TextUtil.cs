@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -53,6 +54,26 @@ namespace SharedBatch
             if (!originalString.Substring(0, oldText.Length).Equals(oldText)) return false;
             replacedString = newText + originalString.Substring(oldText.Length);
             return true;
+        }
+
+        // Find an existing initial directory to use in a file/folder browser dialog, can be null (dialog will use a default)
+        public static string GetInitialDirectory(string directory, string lastEnteredPath = "")
+        {
+            if (Directory.Exists(directory))
+                return directory;
+
+            string directoryName;
+            try
+            {
+                directoryName = Path.GetDirectoryName(directory);
+            }
+            catch (Exception) 
+            {
+                if (!string.IsNullOrEmpty(lastEnteredPath))
+                    return GetInitialDirectory(lastEnteredPath);
+                return null;
+            }
+            return GetInitialDirectory(directoryName);
         }
 
         public static string GetSafeName(string name)
