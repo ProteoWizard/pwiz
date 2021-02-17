@@ -10,11 +10,11 @@ namespace SharedBatch
         // The dialog that appears if the program was unable to find a Skyline Installation when first started
         // User must enter a path to a valid skyline installation to continue
 
-        public FindSkylineForm(string appName, string iconPath)
+        public FindSkylineForm(string appName, Icon icon)
         {
             InitializeComponent();
             Text = appName;
-            Icon = Icon.ExtractAssociatedIcon(iconPath);
+            Icon = icon;
             label1.Text = string.Format(Resources.FindSkylineForm_FindSkylineForm__0__requires_Skyline_to_run__but_did_not_find_an_administrative_or_web_based_installation_, appName);
         }
 

@@ -35,6 +35,8 @@ namespace AutoQC
         private readonly ConfigAction _action;
         private readonly DateTime _initialCreated;
 
+        private SkylineTypeControl _skylineTypeControl;
+
         public AutoQcConfigForm(IMainUiControl mainControl, AutoQcConfig config, ConfigAction action, bool isBusy)
         {
             InitializeComponent();
@@ -74,7 +76,7 @@ namespace AutoQC
 
         private void InitInputFieldsFromConfig(AutoQcConfig config)
         {
-            InitSkylineTab();
+            InitSkylineTab(config);
             SetInitialPanoramaSettings(config);
             if (_action == ConfigAction.Add)
             {
@@ -83,7 +85,6 @@ namespace AutoQC
             }
             textConfigName.Text = config.Name;
             SetInitialMainSettings(config.MainSettings);
-            SetInitialSkylineSettings(config);
         }
 
         public void DisableUserInputs(Control parentControl = null)
@@ -233,58 +234,22 @@ namespace AutoQC
 
         #region Skyline Settings
 
-        private void InitSkylineTab()
+        private void InitSkylineTab(AutoQcConfig config)
         {
-            radioButtonSkyline.Enabled = SkylineInstallations.HasSkyline;
-            radioButtonSkylineDaily.Enabled = SkylineInstallations.HasSkylineDaily;
-            if (!string.IsNullOrEmpty(Settings.Default.SkylineCustomCmdPath))
-                textSkylineInstallationPath.Text = Path.GetDirectoryName(Settings.Default.SkylineCustomCmdPath);
+            if (config != null)
+                _skylineTypeControl = new SkylineTypeControl(config.UsesSkyline, config.UsesSkylineDaily, config.UsesCustomSkylinePath, config.SkylineSettings.CmdPath);
+            else
+                _skylineTypeControl = new SkylineTypeControl();
 
-            radioButtonSpecifySkylinePath.Checked = true;
-            radioButtonSkylineDaily.Checked = radioButtonSkylineDaily.Enabled;
-            radioButtonSkyline.Checked = radioButtonSkyline.Enabled;
-        }
-
-        private void SetInitialSkylineSettings(AutoQcConfig config)
-        {
-            radioButtonSkyline.Checked = config.UsesSkyline;
-            radioButtonSkylineDaily.Checked = config.UsesSkylineDaily;
-            radioButtonSpecifySkylinePath.Checked = config.UsesCustomSkylinePath;
-            if (config.UsesCustomSkylinePath)
-            {
-                textSkylineInstallationPath.Text = Path.GetDirectoryName(config.SkylineSettings.CmdPath);
-            }
+            _skylineTypeControl.Dock = DockStyle.Fill;
+            _skylineTypeControl.Show();
+            panelSkylineSettings.Controls.Add(_skylineTypeControl);
         }
 
         private SkylineSettings GetSkylineSettingsFromUi()
         {
-            var skylineType = SkylineType.Custom;
-            if (radioButtonSkyline.Checked)
-                skylineType = SkylineType.Skyline;
-            if (radioButtonSkylineDaily.Checked)
-                skylineType = SkylineType.SkylineDaily;
-            return new SkylineSettings(skylineType, textSkylineInstallationPath.Text);
+            return new SkylineSettings(_skylineTypeControl.Type, _skylineTypeControl.CommandPath);
         }
-
-        private void btnBrowse_Click(object sender, EventArgs e)
-        {
-            using (var folderBrowserDlg = new FolderBrowserDialog())
-            {
-                folderBrowserDlg.ShowNewFolderButton = false;
-                folderBrowserDlg.SelectedPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
-                if (folderBrowserDlg.ShowDialog() == DialogResult.OK)
-                {
-                    textSkylineInstallationPath.Text = folderBrowserDlg.SelectedPath;
-                }
-            }
-        }
-
-        private void radioButtonSpecifySkylinePath_CheckedChanged(object sender, EventArgs e)
-        {
-            textSkylineInstallationPath.Enabled = radioButtonSpecifySkylinePath.Checked;
-            btnBrowse.Enabled = radioButtonSpecifySkylinePath.Checked;
-        }
-
 
         #endregion
 
@@ -298,7 +263,6 @@ namespace AutoQC
 
         private AutoQcConfig GetConfigFromUi()
         {
-            //AutoQcConfig config  = new AutoQcConfig();
             var name = textConfigName.Text;
             var mainSettings = GetMainSettingsFromUi();
             var panoramaSettings = GetPanoramaSettingsFromUi();

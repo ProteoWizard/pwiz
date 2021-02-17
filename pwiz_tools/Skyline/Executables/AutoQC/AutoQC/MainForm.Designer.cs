@@ -314,9 +314,9 @@
             // 
             // groupBoxAutoQcSettings
             // 
+            resources.ApplyResources(this.groupBoxAutoQcSettings, "groupBoxAutoQcSettings");
             this.groupBoxAutoQcSettings.Controls.Add(this.cb_minimizeToSysTray);
             this.groupBoxAutoQcSettings.Controls.Add(this.cb_keepRunning);
-            resources.ApplyResources(this.groupBoxAutoQcSettings, "groupBoxAutoQcSettings");
             this.groupBoxAutoQcSettings.Name = "groupBoxAutoQcSettings";
             this.groupBoxAutoQcSettings.TabStop = false;
             // 

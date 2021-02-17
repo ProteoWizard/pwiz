@@ -20,6 +20,7 @@
 using System;
 using System.Configuration;
 using System.Deployment.Application;
+using System.Drawing;
 using System.IO;
 using System.Net;
 using System.Threading;
@@ -105,9 +106,8 @@ namespace SkylineBatch
         {
             if (SkylineInstallations.FindSkyline())
                 return true;
-
-            var baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
-            var form = new FindSkylineForm(AppName(), Path.Combine(baseDirectory, "SkylineBatch_release.ico"));
+            
+            var form = new FindSkylineForm(AppName(), Icon());
             Application.Run(form);
             if (form.DialogResult == DialogResult.OK)
                 return true;
@@ -125,6 +125,13 @@ namespace SkylineBatch
         public static string AppName()
         {
             return "Skyline Batch";
+        }
+
+        public static Icon Icon()
+        {
+            var baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            var iconPath = Path.Combine(baseDirectory, "SkylineBatch_release.ico");
+            return System.Drawing.Icon.ExtractAssociatedIcon(iconPath);
         }
 
         private static void InitializeSecurityProtocol()

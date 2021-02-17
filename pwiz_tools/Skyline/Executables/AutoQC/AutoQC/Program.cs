@@ -19,6 +19,7 @@ using System;
 using System.ComponentModel;
 using System.Configuration;
 using System.Deployment.Application;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -132,8 +133,7 @@ namespace AutoQC
         {
             if (SkylineInstallations.FindSkyline())
                 return true;
-            var baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
-            var skylineForm = new FindSkylineForm(AppName, Path.Combine(baseDirectory, "AutoQC_release.ico"));
+            var skylineForm = new FindSkylineForm(AppName, Icon());
             Application.Run(skylineForm);
 
             if (skylineForm.DialogResult != DialogResult.OK)
@@ -207,6 +207,14 @@ namespace AutoQC
         }
 
         public static string AppName => "AutoQC Loader";
+
+        public static Icon Icon()
+        {
+            var baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            var iconPath = Path.Combine(baseDirectory, "AutoQC_release.ico");
+            var icon =  System.Drawing.Icon.ExtractAssociatedIcon(iconPath);
+            return new Icon(icon, 16, 16);
+        }
 
         private static void InitializeSecurityProtocol()
         {

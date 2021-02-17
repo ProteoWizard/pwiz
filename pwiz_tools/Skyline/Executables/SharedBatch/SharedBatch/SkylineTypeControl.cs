@@ -33,6 +33,22 @@ namespace SharedBatch
             }
         }
 
+        public SkylineTypeControl()
+        {
+            InitializeComponent();
+
+            radioButtonSkyline.Enabled = SkylineInstallations.HasSkyline;
+            radioButtonSkylineDaily.Enabled = SkylineInstallations.HasSkylineDaily;
+
+            radioButtonSpecifySkylinePath.Checked = true;
+            radioButtonSkyline.Checked = radioButtonSkyline.Enabled;
+            radioButtonSkylineDaily.Checked = radioButtonSkylineDaily.Enabled;
+            if (!string.IsNullOrEmpty(Settings.Default.SkylineCustomCmdPath))
+            {
+                textSkylineInstallationPath.Text = Path.GetDirectoryName(Settings.Default.SkylineCustomCmdPath);
+            }
+        }
+
         public SkylineType Type
         {
             get

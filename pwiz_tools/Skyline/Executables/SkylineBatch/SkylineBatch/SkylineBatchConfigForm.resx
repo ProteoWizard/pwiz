@@ -842,7 +842,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>3, 3, 3, 3</value>
   </data>
   <data name="tabFiles.Size" type="System.Drawing.Size, System.Drawing">
-    <value>445, 388</value>
+    <value>445, 389</value>
   </data>
   <data name="tabFiles.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -1085,7 +1085,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>8, 6</value>
   </data>
   <data name="panelSkylineSettings.Size" type="System.Drawing.Size, System.Drawing">
-    <value>438, 383</value>
+    <value>438, 384</value>
   </data>
   <data name="panelSkylineSettings.TabIndex" type="System.Int32, mscorlib">
     <value>24</value>
@@ -1109,7 +1109,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>3, 3, 3, 3</value>
   </data>
   <data name="tabSkyline.Size" type="System.Drawing.Size, System.Drawing">
-    <value>445, 388</value>
+    <value>445, 389</value>
   </data>
   <data name="tabSkyline.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -1139,7 +1139,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>2, 2, 2, 2</value>
   </data>
   <data name="tabsConfig.Size" type="System.Drawing.Size, System.Drawing">
-    <value>453, 414</value>
+    <value>453, 415</value>
   </data>
   <data name="tabsConfig.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1172,7 +1172,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>Bottom, Right</value>
   </data>
   <data name="btnCancelConfig.Location" type="System.Drawing.Point, System.Drawing">
-    <value>367, 10</value>
+    <value>367, 9</value>
   </data>
   <data name="btnCancelConfig.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -1205,7 +1205,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>Microsoft Sans Serif, 9pt</value>
   </data>
   <data name="btnSaveConfig.Location" type="System.Drawing.Point, System.Drawing">
-    <value>288, 10</value>
+    <value>288, 9</value>
   </data>
   <data name="btnSaveConfig.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -1269,7 +1269,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>NoControl</value>
   </data>
   <data name="btnOkConfig.Location" type="System.Drawing.Point, System.Drawing">
-    <value>367, 10</value>
+    <value>367, 9</value>
   </data>
   <data name="btnOkConfig.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -1311,7 +1311,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>2, 2, 2, 2</value>
   </data>
   <data name="groupBox1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>453, 41</value>
+    <value>453, 40</value>
   </data>
   <data name="groupBox1.TabIndex" type="System.Int32, mscorlib">
     <value>100</value>
@@ -1344,7 +1344,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>453, 458</value>
   </data>
   <data name="splitContainer1.SplitterDistance" type="System.Int32, mscorlib">
-    <value>414</value>
+    <value>415</value>
   </data>
   <data name="splitContainer1.SplitterWidth" type="System.Int32, mscorlib">
     <value>3</value>
@@ -1372,7 +1372,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
         AAEAAAD/////AQAAAAAAAAAMAgAAAFdTeXN0ZW0uV2luZG93cy5Gb3JtcywgVmVyc2lvbj00LjAuMC4w
         LCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODkFAQAAACZTeXN0
         ZW0uV2luZG93cy5Gb3Jtcy5JbWFnZUxpc3RTdHJlYW1lcgEAAAAERGF0YQcCAgAAAAkDAAAADwMAAACw
-        CgAAAk1TRnQBSQFMAgEBAgEAATgBAQE4AQEBHgEAAR4BAAT/AQkBAAj/AUIBTQE2AQQGAAE2AQQCAAEo
+        CgAAAk1TRnQBSQFMAgEBAgEAAUABAQFAAQEBHgEAAR4BAAT/AQkBAAj/AUIBTQE2AQQGAAE2AQQCAAEo
         AwABeAMAAR4DAAEBAQABCAUAARABDhgAAYACAAGAAwACgAEAAYADAAGAAQABgAEAAoACAAPAAQABwAHc
         AcABAAHwAcoBpgEAATMFAAEzAQABMwEAATMBAAIzAgADFgEAAxwBAAMiAQADKQEAA1UBAANNAQADQgEA
         AzkBAAGAAXwB/wEAAlAB/wEAAZMBAAHWAQAB/wHsAcwBAAHGAdYB7wEAAdYC5wEAAZABqQGtAgAB/wEz

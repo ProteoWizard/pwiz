@@ -161,7 +161,7 @@ namespace AutoQC
 
         private void btnExport_Click(object sender, EventArgs e)
         {
-            var shareForm = new ShareConfigsForm(this, _configManager);
+            var shareForm = new ShareConfigsForm(this, _configManager, Program.Icon());
             shareForm.ShowDialog();
         }
 

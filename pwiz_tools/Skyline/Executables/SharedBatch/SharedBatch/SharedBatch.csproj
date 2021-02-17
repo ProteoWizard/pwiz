@@ -68,6 +68,12 @@
     <Compile Include="ProgramLog.cs" />
     <Compile Include="Settings.cs" />
     <Compile Include="Logger.cs" />
+    <Compile Include="ShareConfigsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ShareConfigsForm.Designer.cs">
+      <DependentUpon>ShareConfigsForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="SkylineInstallations.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -97,6 +103,10 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
+    <EmbeddedResource Include="ShareConfigsForm.resx">
+      <DependentUpon>ShareConfigsForm.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="SkylineTypeControl.resx">
       <DependentUpon>SkylineTypeControl.cs</DependentUpon>
     </EmbeddedResource>
