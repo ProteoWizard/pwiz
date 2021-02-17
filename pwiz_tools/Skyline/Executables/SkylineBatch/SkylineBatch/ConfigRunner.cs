@@ -158,6 +158,16 @@ namespace SkylineBatch
                 }
             }
 
+            // Print commands to log
+            using (var reader = new StreamReader(commandFile))
+            {
+                while (!reader.EndOfStream)
+                {
+                    _logger.Log(reader.ReadLine());
+                }
+                _logger.Log(string.Empty); // empty line between commands and output
+            }
+
             var command = string.Format("--batch-commands={0}", commandFile);
             await ExecuteProcess(skylineRunner, command);
             File.Delete(commandFile);
