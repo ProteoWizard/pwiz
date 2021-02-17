@@ -638,6 +638,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cycle time (in seconds) across the integrated peak..
+        /// </summary>
+        public static string CycleTimeAcrossPeak {
+            get {
+                return ResourceManager.GetString("CycleTimeAcrossPeak", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Declustering Potential for the precursor ion according to
         ///instrument/vendor specific default declustering potential equation within Skyline.
         /// </summary>
