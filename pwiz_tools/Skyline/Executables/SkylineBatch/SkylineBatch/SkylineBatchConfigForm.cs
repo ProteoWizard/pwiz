@@ -52,7 +52,7 @@ namespace SkylineBatch
             _newReportList = new List<ReportInfo>();
 
             _mainControl = mainControl;
-            _initialEnabled = config.Enabled;
+            _initialEnabled = config?.Enabled ?? false;
             _isBusy = isBusy;
 
             _canEditSkylineSettings = !Installations.HasLocalSkylineCmd;
@@ -77,6 +77,8 @@ namespace SkylineBatch
 
         private void InitInputFieldsFromConfig(SkylineBatchConfig config)
         {
+            SetInitialSkylineSettings(config);
+
             if (config == null)
                 return;
 
@@ -86,7 +88,6 @@ namespace SkylineBatch
             SetInitialMainSettings(config);
             SetInitialFileSettings(config);
             SetInitialReportSettings(config);
-            SetInitialSkylineSettings(config);
         }
 
         public void DisableUserInputs(Control parentControl = null)
@@ -282,8 +283,11 @@ namespace SkylineBatch
         private void SetInitialSkylineSettings(SkylineBatchConfig config)
         {
             if (!_canEditSkylineSettings) return;
+            if (config != null)
+                _skylineTypeControl = new SkylineTypeControl(config.UsesSkyline, config.UsesSkylineDaily, config.UsesCustomSkylinePath, config.SkylineSettings.CmdPath);
+            else
+                _skylineTypeControl = new SkylineTypeControl(false, false, true, "C:\\Program Files\\Skyline");
 
-            _skylineTypeControl = new SkylineTypeControl(config.UsesSkyline, config.UsesSkylineDaily, config.UsesCustomSkylinePath, config.SkylineSettings.CmdPath);
             _skylineTypeControl.Dock = DockStyle.Fill;
             _skylineTypeControl.Show();
             panelSkylineSettings.Controls.Add(_skylineTypeControl);
