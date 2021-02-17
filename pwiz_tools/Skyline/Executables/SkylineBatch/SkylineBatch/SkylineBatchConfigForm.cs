@@ -52,7 +52,8 @@ namespace SkylineBatch
             _newReportList = new List<ReportInfo>();
 
             _mainControl = mainControl;
-            _initialEnabled = config?.Enabled ?? false;
+            if (config != null) 
+                _initialEnabled = config.Enabled;
             _isBusy = isBusy;
 
             _canEditSkylineSettings = !Installations.HasLocalSkylineCmd;
@@ -151,9 +152,9 @@ namespace SkylineBatch
             {
                 openDialog.InitialDirectory = Path.GetDirectoryName(textSkylinePath.Text);
             }
-            catch (ArgumentException)
+            catch (Exception)
             {
-                // pass
+                // Pass: Exception is thrown if the string is empty or an incorrectly formatted file path
             }
             if (openDialog.ShowDialog()== DialogResult.OK)
                 textSkylinePath.Text = openDialog.FileName;
@@ -293,7 +294,7 @@ namespace SkylineBatch
             if (config != null)
                 _skylineTypeControl = new SkylineTypeControl(config.UsesSkyline, config.UsesSkylineDaily, config.UsesCustomSkylinePath, config.SkylineSettings.CmdPath);
             else
-                _skylineTypeControl = new SkylineTypeControl(false, false, true, "C:\\Program Files\\Skyline");
+                _skylineTypeControl = new SkylineTypeControl();
 
             _skylineTypeControl.Dock = DockStyle.Fill;
             _skylineTypeControl.Show();

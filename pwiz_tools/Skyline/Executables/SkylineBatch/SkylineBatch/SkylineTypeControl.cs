@@ -33,6 +33,25 @@ namespace SkylineBatch
             }
         }
 
+        public SkylineTypeControl()
+        {
+            InitializeComponent();
+
+            radioButtonSkyline.Enabled = Installations.HasSkyline;
+            radioButtonSkylineDaily.Enabled = Installations.HasSkylineDaily;
+            
+            // Chooses the first enabled option between Skyline, Skyline-daily, and custom path
+            radioButtonSpecifySkylinePath.Checked = true;
+            radioButtonSkyline.Checked = radioButtonSkyline.Enabled;
+            radioButtonSkylineDaily.Checked = radioButtonSkylineDaily.Enabled;
+
+            // Custom path set to saved value, defaults to C:\Program Files\Skyline if none saved
+            if (!string.IsNullOrEmpty(Settings.Default.SkylineCustomCmdPath))
+            {
+                textSkylineInstallationPath.Text = Path.GetDirectoryName(Settings.Default.SkylineCustomCmdPath);
+            }
+        }
+
         public SkylineType Type
         {
             get
