@@ -62,7 +62,10 @@ namespace SkylineBatch
                 return;
             }
 
-            var fileNames = OpenRScript(Path.GetDirectoryName(textReportPath.Text), true);
+            var initialDirectory = !string.IsNullOrEmpty(textReportPath.Text)
+                ? Path.GetDirectoryName(textReportPath.Text)
+                : string.Empty;
+            var fileNames = OpenRScript(initialDirectory, true);
             foreach (var fileName in fileNames)
             {
                 dataGridScripts.Rows.Add(fileName, rVersionsDropDown.Items[rVersionsDropDown.Items.Count - 1].AccessibilityObject.Name);
