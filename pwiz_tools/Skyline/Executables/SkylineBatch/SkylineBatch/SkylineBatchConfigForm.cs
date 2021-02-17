@@ -154,7 +154,7 @@ namespace SkylineBatch
             }
             catch (Exception)
             {
-                // Pass: Exception is thrown if the string is empty or an incorrectly formatted file path
+                // Accept the default directory
             }
             if (openDialog.ShowDialog()== DialogResult.OK)
                 textSkylinePath.Text = openDialog.FileName;
@@ -294,8 +294,10 @@ namespace SkylineBatch
             if (config != null)
                 _skylineTypeControl = new SkylineTypeControl(config.UsesSkyline, config.UsesSkylineDaily, config.UsesCustomSkylinePath, config.SkylineSettings.CmdPath);
             else
+            {
+                // Default to the first existing Skyline installation (Skyline, Skyline-daily, custom path)
                 _skylineTypeControl = new SkylineTypeControl();
-
+            }
             _skylineTypeControl.Dock = DockStyle.Fill;
             _skylineTypeControl.Show();
             panelSkylineSettings.Controls.Add(_skylineTypeControl);
