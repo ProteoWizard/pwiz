@@ -571,7 +571,7 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cannot add &quot;{0}&quot; because ther is another configuration with the same name..
+        ///   Looks up a localized string similar to Cannot add &quot;{0}&quot; because there is another configuration with the same name..
         /// </summary>
         internal static string MainForm_TryExecuteOperation_Cannot_add___0___because_there_is_another_configuration_with_the_same_name_ {
             get {

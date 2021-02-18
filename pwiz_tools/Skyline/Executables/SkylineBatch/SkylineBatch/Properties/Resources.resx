@@ -374,7 +374,7 @@ with:
     <value>... Log truncated ... Full log is in {0}</value>
   </data>
   <data name="MainForm_TryExecuteOperation_Cannot_add___0___because_there_is_another_configuration_with_the_same_name_" xml:space="preserve">
-    <value>Cannot add "{0}" because ther is another configuration with the same name.</value>
+    <value>Cannot add "{0}" because there is another configuration with the same name.</value>
   </data>
   <data name="MainForm_TryExecuteOperation_Please_choose_a_unique_name_" xml:space="preserve">
     <value>Please choose a unique name.</value>

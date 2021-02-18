@@ -50,6 +50,7 @@ namespace SharedBatch
 
         public void ListViewContainerResize(int newWidth)
         {
+            if (newWidth == 0) return;
             for (int i = 0; i < _columnWidths.Length - 1; i++)
             {
                 _columnWidths[i] = (int) Math.Round(((double) _columnWidths[i] / _listViewWidth) * newWidth);

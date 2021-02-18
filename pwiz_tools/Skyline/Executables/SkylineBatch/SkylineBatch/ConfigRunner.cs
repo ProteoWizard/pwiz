@@ -151,6 +151,9 @@ namespace SkylineBatch
                 {
                     foreach (var report in Config.ReportSettings.Reports)
                     {
+                        // TODO (Ali): ask how to add multiple reports without reopening
+                        writer.WriteLine();
+                        writer.Write("--in=\"{0}\" ", newSkylineFileName);
                         var newReportPath = Config.MainSettings.AnalysisFolderPath + "\\" + report.Name + ".csv";
                         writer.Write("--report-add=\"{0}\" --report-conflict-resolution=overwrite ", report.ReportPath);
                         writer.Write("--report-name=\"{0}\" --report-file=\"{1}\" --report-invariant ", report.Name, newReportPath);
@@ -168,7 +171,7 @@ namespace SkylineBatch
                 _logger.Log(string.Empty); // empty line between commands and output
             }
 
-            var command = string.Format("--batch-commands={0}", commandFile);
+            var command = string.Format("--batch-commands=\"{0}\"", commandFile);
             await ExecuteProcess(skylineRunner, command);
             File.Delete(commandFile);
 

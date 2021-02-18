@@ -79,6 +79,7 @@
             this.lblConfigRunning = new System.Windows.Forms.Label();
             this.btnOkConfig = new System.Windows.Forms.Button();
             this.imageListToolbarIcons = new System.Windows.Forms.ImageList(this.components);
+            this.checkBoxFilesGenerated = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -214,6 +215,7 @@
             // tabFiles
             // 
             this.tabFiles.BackColor = System.Drawing.Color.WhiteSmoke;
+            this.tabFiles.Controls.Add(this.checkBoxFilesGenerated);
             this.tabFiles.Controls.Add(this.textNamingPattern);
             this.tabFiles.Controls.Add(this.linkLabelRegex);
             this.tabFiles.Controls.Add(this.textConfigName);
@@ -464,6 +466,12 @@
             this.imageListToolbarIcons.Images.SetKeyName(0, "AddedIcon.ico");
             this.imageListToolbarIcons.Images.SetKeyName(1, "DeletedIcon.ico");
             // 
+            // checkBoxFilesGenerated
+            // 
+            resources.ApplyResources(this.checkBoxFilesGenerated, "checkBoxFilesGenerated");
+            this.checkBoxFilesGenerated.Name = "checkBoxFilesGenerated";
+            this.checkBoxFilesGenerated.UseVisualStyleBackColor = true;
+            // 
             // SkylineBatchConfigForm
             // 
             this.AcceptButton = this.btnSaveConfig;
@@ -544,5 +552,6 @@
         private System.Windows.Forms.Label label9;
         private System.Windows.Forms.TextBox textMsMsResolvingPower;
         private System.Windows.Forms.CheckBox checkBoxMProphet;
+        private System.Windows.Forms.CheckBox checkBoxFilesGenerated;
     }
 }
