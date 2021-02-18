@@ -125,12 +125,7 @@ namespace pwiz.Skyline.Controls.Clustering
 
         public ClusterGraphResults GraphResults
         {
-            get { return _graphResults; }
-            set
-            {
-                _graphResults = value;
-                UpdateGraph();
-            }
+            get { return _calculator.Results; }
         }
 
         public void InitializeDendrograms()
@@ -409,21 +404,21 @@ namespace pwiz.Skyline.Controls.Clustering
 
         private class Calculator : GraphDataCalculator<ClusterInput, ClusterGraphResults>
         {
-            public Calculator(HierarchicalClusterGraph hierarchicalClusterGraph) : base(hierarchicalClusterGraph.zedGraphControl1)
+            public Calculator(HierarchicalClusterGraph hierarchicalClusterGraph) : base(CancellationToken.None, hierarchicalClusterGraph.zedGraphControl1)
             {
                 HierarchicalClusterGraph = hierarchicalClusterGraph;
             }
 
             public HierarchicalClusterGraph HierarchicalClusterGraph { get; }
 
-            protected override ClusterGraphResults ComputeOutput(ClusterInput input, CancellationToken cancellationToken)
+            protected override ClusterGraphResults CalculateResults(ClusterInput input, CancellationToken cancellationToken)
             {
                 return input.GetClusterGraphResults(cancellationToken, UpdateProgressAction(cancellationToken));
             }
 
-            protected override void SetOutput(ClusterGraphResults output)
+            protected override void ResultsAvailable()
             {
-                HierarchicalClusterGraph.GraphResults = output;
+                HierarchicalClusterGraph.UpdateGraph();
             }
         }
     }

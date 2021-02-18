@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Threading;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using ZedGraph;
 
-namespace pwiz.Skyline.Controls.Clustering
+namespace pwiz.Skyline.Controls.Graphs
 {
     /// <summary>
     /// Manages running a job on a background thread to calculate results that will eventually be displayed in a ZedGraphControl.
@@ -14,17 +13,20 @@ namespace pwiz.Skyline.Controls.Clustering
     /// Displays a PaneProgressBar in the graph while the background task is running. 
     /// </summary>
     /// <typeparam name="TInput">The input data which is fed to the background task. When the input data changes, the background task is restarted.</typeparam>
-    /// <typeparam name="TOutput">The data which gets calculated by the background task</typeparam>
-    public abstract class GraphDataCalculator<TInput, TOutput>
+    /// <typeparam name="TResults">The data which gets calculated by the background task</typeparam>
+    public abstract class GraphDataCalculator<TInput, TResults>
     {
         private TInput _input;
         private Tuple<CancellationTokenSource, PaneProgressBar> _progressTuple;
 
 
-        public GraphDataCalculator(ZedGraphControl zedGraphControl)
+        public GraphDataCalculator(CancellationToken parentCancellationToken, ZedGraphControl zedGraphControl)
         {
+            ParentCancellationToken = parentCancellationToken;
             ZedGraphControl = zedGraphControl;
         }
+
+        public CancellationToken ParentCancellationToken { get; }
 
         public ZedGraphControl ZedGraphControl { get; private set; }
 
@@ -54,21 +56,29 @@ namespace pwiz.Skyline.Controls.Clustering
             }
         }
 
+        public TResults Results { get; private set; }
+
         public void RestartCalculatorTask()
         {
+            if (ParentCancellationToken.IsCancellationRequested)
+            {
+                return;
+            }
             if (_progressTuple != null)
             {
                 _progressTuple.Item1.Cancel();
                 _progressTuple.Item2.Dispose();
                 _progressTuple = null;
             }
+
+            Results = default(TResults);
             var input = _input;
             if (Equals(input, default(TInput)))
             {
                 return;
             }
 
-            var cancellationTokenSource = new CancellationTokenSource();
+            var cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(ParentCancellationToken);
             GraphPane.Title.IsVisible = true;
             GraphPane.Title.Text = LoadingMessage;
             var paneProgressBar = new PaneProgressBar(ZedGraphControl, GraphPane);
@@ -77,44 +87,24 @@ namespace pwiz.Skyline.Controls.Clustering
             var cancellationToken = cancellationTokenSource.Token;
             ActionUtil.RunAsync(() =>
             {
-                var output = ComputeOutput(input, cancellationToken);
-                if (cancellationToken.IsCancellationRequested || Equals(output, default(TOutput)))
+                var results = CalculateResults(input, cancellationToken);
+                if (Equals(results, default(TResults)))
                 {
                     return;
                 }
-
-                CommonActionUtil.SafeBeginInvoke(ZedGraphControl, () =>
-                {
-                    if (cancellationToken.IsCancellationRequested)
-                    {
-                        return;
-                    }
+                BeginInvoke(cancellationToken, ()=> {
                     Assume.IsTrue(ReferenceEquals(_progressTuple.Item1, cancellationTokenSource));
                     _progressTuple.Item2.Dispose();
                     _progressTuple = null;
-                    SetOutput(output);
+                    Results = results;
+                    ResultsAvailable();
                 });
-            });
+            }, "Calculator: " + GetType().Name);
         }
 
         public void UpdateProgress(CancellationToken cancellationToken, int progressValue)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
-                // If the task has been cancelled, then we must ignore the progress update
-                // since the PaneProgressBar that it was associated with was already destroyed
-                return;
-            }
-
-            CommonActionUtil.SafeBeginInvoke(ZedGraphControl, () =>
-            {
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    return;
-                }
-
-                _progressTuple?.Item2.UpdateProgressUI(progressValue);
-            });
+            BeginInvoke(cancellationToken, ()=> _progressTuple?.Item2.UpdateProgressUI(progressValue));
         }
 
         protected Action<int> UpdateProgressAction(CancellationToken cancellationToken)
@@ -122,8 +112,24 @@ namespace pwiz.Skyline.Controls.Clustering
             return progressValue => UpdateProgress(cancellationToken, progressValue);
         }
 
-        protected abstract TOutput ComputeOutput(TInput input, CancellationToken cancellationToken);
+        protected abstract TResults CalculateResults(TInput input, CancellationToken cancellationToken);
 
-        protected abstract void SetOutput(TOutput output);
+        protected abstract void ResultsAvailable();
+
+        protected void BeginInvoke(CancellationToken cancellationToken, Action action)
+        {
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return;
+            }
+
+            CommonActionUtil.SafeBeginInvoke(ZedGraphControl, ()=>
+            {
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    action();
+                }
+            });
+        }
     }
 }

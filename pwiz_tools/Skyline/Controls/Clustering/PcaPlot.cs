@@ -27,6 +27,7 @@ using pwiz.Common.DataAnalysis.Clustering;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Clustering;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Properties;
@@ -63,18 +64,23 @@ namespace pwiz.Skyline.Controls.Clustering
             }
         }
 
-        public Clusterer Clusterer { get; private set; }
+        public Clusterer Clusterer
+        {
+            get
+            {
+                return _calculator.Results.Item1;
+            }
+        }
 
-        public ReportColorScheme ColorScheme { get; private set; }
+        public ReportColorScheme ColorScheme
+        {
+            get
+            {
+                return _calculator.Results.Item2;
+            }
+        }
 
         public DataSchemaLocalizer Localizer { get; }
-
-        public void SetData(Clusterer clusterer, ReportColorScheme colorScheme)
-        {
-            Clusterer = clusterer;
-            ColorScheme = colorScheme;
-            UpdateControls();
-        }
 
         public void UpdateControls()
         {
@@ -441,7 +447,7 @@ namespace pwiz.Skyline.Controls.Clustering
 
         private class Calculator : GraphDataCalculator<ClusterInput, Tuple<Clusterer, ReportColorScheme>>
         {
-            public Calculator(PcaPlot pcaPlot) : base(pcaPlot.zedGraphControl1)
+            public Calculator(PcaPlot pcaPlot) : base(CancellationToken.None, pcaPlot.zedGraphControl1)
             {
                 PcaPlot = pcaPlot;
             }
@@ -451,15 +457,15 @@ namespace pwiz.Skyline.Controls.Clustering
                 get;
             }
 
-            protected override Tuple<Clusterer, ReportColorScheme> ComputeOutput(ClusterInput input, CancellationToken cancellationToken)
+            protected override Tuple<Clusterer, ReportColorScheme> CalculateResults(ClusterInput input, CancellationToken cancellationToken)
             {
                 var resultsTuple = input.GetClusterResultsTuple(cancellationToken, progressValue=>UpdateProgress(cancellationToken, progressValue));
                 return Tuple.Create(resultsTuple.Item1, resultsTuple.Item3);
             }
 
-            protected override void SetOutput(Tuple<Clusterer, ReportColorScheme> output)
+            protected override void ResultsAvailable()
             {
-                PcaPlot.SetData(output.Item1, output.Item2);
+                PcaPlot.UpdateControls();
             }
         }
     }
