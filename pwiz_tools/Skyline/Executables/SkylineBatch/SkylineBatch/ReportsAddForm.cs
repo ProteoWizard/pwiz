@@ -89,7 +89,14 @@ namespace SkylineBatch
             var openDialog = new OpenFileDialog();
             openDialog.Filter = TextUtil.FILTER_R;
             openDialog.Multiselect = allowMultiSelect;
-            openDialog.InitialDirectory = Path.GetDirectoryName(initialDirectory);
+            try
+            {
+                openDialog.InitialDirectory = initialDirectory;
+            }
+            catch (Exception)
+            {
+                // Use default path
+            }
             if (openDialog.ShowDialog() != DialogResult.OK)
                 return new string[]{};
             return openDialog.FileNames;
