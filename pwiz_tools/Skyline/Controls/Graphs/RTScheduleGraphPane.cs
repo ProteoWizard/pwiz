@@ -95,14 +95,10 @@ namespace pwiz.Skyline.Controls.Graphs
             var results = _dataCalculator.Results;
             if (results == null || !Equals(_dataCalculator.Input, inputData ))
             {
-                if (!Equals(inputData, _dataCalculator.Input))
-                {
-                    _dataCalculator.Input = inputData;
-                }
+                _dataCalculator.Input = inputData;
                 return;
             }
 
-            Title.IsVisible = false;
             var brukerTemplate = inputData.BrukerTemplateFile;
             var document = inputData.Document;
             // TODO: Make it possible to see transition scheduling when full-scan enabled.

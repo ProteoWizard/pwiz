@@ -35,14 +35,6 @@ namespace pwiz.Skyline.Controls.Graphs
             get { return ZedGraphControl.GraphPane; }
         }
 
-        public virtual string LoadingMessage
-        {
-            get
-            {
-                return "Calculating...";
-            }
-        }
-
         public TInput Input
         {
             get
@@ -51,6 +43,10 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             set
             {
+                if (Equals(Input, value))
+                {
+                    return;
+                }
                 _input = value;
                 RestartCalculatorTask();
             }
@@ -60,10 +56,6 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public void RestartCalculatorTask()
         {
-            if (ParentCancellationToken.IsCancellationRequested)
-            {
-                return;
-            }
             if (_progressTuple != null)
             {
                 _progressTuple.Item1.Cancel();
@@ -77,10 +69,11 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 return;
             }
-
+            if (ParentCancellationToken.IsCancellationRequested)
+            {
+                return;
+            }
             var cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(ParentCancellationToken);
-            GraphPane.Title.IsVisible = true;
-            GraphPane.Title.Text = LoadingMessage;
             var paneProgressBar = new PaneProgressBar(ZedGraphControl, GraphPane);
             paneProgressBar.UpdateProgressUI(0);
             _progressTuple = Tuple.Create(cancellationTokenSource, paneProgressBar);
@@ -99,7 +92,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     Results = results;
                     ResultsAvailable();
                 });
-            }, "Calculator: " + GetType().Name);
+            });
         }
 
         public void UpdateProgress(CancellationToken cancellationToken, int progressValue)

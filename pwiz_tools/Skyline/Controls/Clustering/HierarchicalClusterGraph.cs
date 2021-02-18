@@ -33,7 +33,6 @@ namespace pwiz.Skyline.Controls.Clustering
 {
     public partial class HierarchicalClusterGraph : DockableFormEx
     {
-        private ClusterGraphResults _graphResults;
         private DendrogramScale _rowDendrogramScale;
         private DendrogramScale _columnDendrogramScale;
         private bool _showSelection = true;
@@ -47,6 +46,7 @@ namespace pwiz.Skyline.Controls.Clustering
             InitializeDendrograms();
             _calculator = new Calculator(this);
             var graphPane = zedGraphControl1.GraphPane;
+            graphPane.Title.Text = Resources.RTLinearRegressionGraphPane_UpdateGraph_Calculating___;
             graphPane.XAxis.Title.IsVisible = false;
             graphPane.YAxis.Title.IsVisible = false;
             graphPane.Legend.IsVisible = false;
@@ -392,8 +392,8 @@ namespace pwiz.Skyline.Controls.Clustering
             }
 
             var columnIndex = (int)Math.Round(x - 1);
-            var rowIndex = (int)Math.Round(_graphResults.RowCount - y);
-            return _graphResults.Points.FirstOrDefault(p =>
+            var rowIndex = (int)Math.Round(GraphResults.RowCount - y);
+            return GraphResults.Points.FirstOrDefault(p =>
                 p.ColumnIndex == columnIndex && p.RowIndex == rowIndex);
         }
 
