@@ -84,7 +84,7 @@ namespace SkylineBatch
             CheckIfEmptyPath(skylineFile, Resources.MainSettings_ValidateSkylineFile_Skyline_file);
             if (!File.Exists(skylineFile))
             {
-                throw new ArgumentException(string.Format(Resources.MainSettings_ValidateSkylineFile_The_skyline_template_file__0__does_not_exist_, skylineFile) + Environment.NewLine +
+                throw new ArgumentException(string.Format(Resources.MainSettings_ValidateSkylineFile_The_Skyline_template_file__0__does_not_exist_, skylineFile) + Environment.NewLine +
                                             Resources.MainSettings_ValidateSkylineFile_Please_provide_a_valid_file_);
             }
         }
