@@ -71,6 +71,16 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Notice: For faster Skyline Batch runs, use Skyline version {0} or higher..
+        /// </summary>
+        internal static string CommandWriter_Start_Notice__For_faster_Skyline_Batch_runs__use_Skyline_version__0__or_higher_ {
+            get {
+                return ResourceManager.GetString("CommandWriter_Start_Notice__For_faster_Skyline_Batch_runs__use_Skyline_version__0" +
+                        "__or_higher_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         internal static System.Drawing.Bitmap Comment {
@@ -590,11 +600,83 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Please specify a path to {0}.
+        /// </summary>
+        internal static string MainSettings_CheckIfEmptyPath_Please_specify_a_path_to__0_ {
+            get {
+                return ResourceManager.GetString("MainSettings_CheckIfEmptyPath_Please_specify_a_path_to__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to analysis folder.
+        /// </summary>
+        internal static string MainSettings_ValidateAnalysisFolder_analysis_folder {
+            get {
+                return ResourceManager.GetString("MainSettings_ValidateAnalysisFolder_analysis_folder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please provide a valid folder..
+        /// </summary>
+        internal static string MainSettings_ValidateAnalysisFolder_Please_provide_a_valid_folder_ {
+            get {
+                return ResourceManager.GetString("MainSettings_ValidateAnalysisFolder_Please_provide_a_valid_folder_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The analysis folder {0} does not exist..
         /// </summary>
         internal static string MainSettings_ValidateAnalysisFolder_The_analysis_folder__0__does_not_exist_ {
             get {
                 return ResourceManager.GetString("MainSettings_ValidateAnalysisFolder_The_analysis_folder__0__does_not_exist_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to data folder.
+        /// </summary>
+        internal static string MainSettings_ValidateDataFolder_data_folder {
+            get {
+                return ResourceManager.GetString("MainSettings_ValidateDataFolder_data_folder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The data folder {0} does not exist..
+        /// </summary>
+        internal static string MainSettings_ValidateDataFolder_The_data_folder__0__does_not_exist_ {
+            get {
+                return ResourceManager.GetString("MainSettings_ValidateDataFolder_The_data_folder__0__does_not_exist_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please provide a valid file..
+        /// </summary>
+        internal static string MainSettings_ValidateSkylineFile_Please_provide_a_valid_file_ {
+            get {
+                return ResourceManager.GetString("MainSettings_ValidateSkylineFile_Please_provide_a_valid_file_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Skyline file.
+        /// </summary>
+        internal static string MainSettings_ValidateSkylineFile_Skyline_file {
+            get {
+                return ResourceManager.GetString("MainSettings_ValidateSkylineFile_Skyline_file", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The skyline template file {0} does not exist..
+        /// </summary>
+        internal static string MainSettings_ValidateSkylineFile_The_skyline_template_file__0__does_not_exist_ {
+            get {
+                return ResourceManager.GetString("MainSettings_ValidateSkylineFile_The_skyline_template_file__0__does_not_exist_", resourceCulture);
             }
         }
         

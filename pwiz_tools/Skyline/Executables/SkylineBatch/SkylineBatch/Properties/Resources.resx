@@ -214,9 +214,6 @@
   <data name="ReportInfo_ValidateRScriptPath_R_script_path__0__is_not_a_valid_path_" xml:space="preserve">
     <value>R script path {0} is not a valid path.</value>
   </data>
-  <data name="MainSettings_ValidateAnalysisFolder_The_analysis_folder__0__does_not_exist_" xml:space="preserve">
-    <value>The analysis folder {0} does not exist.</value>
-  </data>
   <data name="RVersionControl_RVersionControl_R_version__0__not_found_" xml:space="preserve">
     <value>R version {0} not found.</value>
   </data>
@@ -390,5 +387,26 @@ with:
   </data>
   <data name="MainForm_btnOpenTemplate_Click_Skyline_template_file" xml:space="preserve">
     <value>Skyline template file</value>
+  </data>
+  <data name="CommandWriter_Start_Notice__For_faster_Skyline_Batch_runs__use_Skyline_version__0__or_higher_" xml:space="preserve">
+    <value>Notice: For faster Skyline Batch runs, use Skyline version {0} or higher.</value>
+  </data>
+  <data name="MainSettings_ValidateSkylineFile_The_skyline_template_file__0__does_not_exist_" xml:space="preserve">
+    <value>The skyline template file {0} does not exist.</value>
+  </data>
+  <data name="MainSettings_ValidateSkylineFile_Please_provide_a_valid_file_" xml:space="preserve">
+    <value>Please provide a valid file.</value>
+  </data>
+  <data name="MainSettings_ValidateAnalysisFolder_Please_provide_a_valid_folder_" xml:space="preserve">
+    <value>Please provide a valid folder.</value>
+  </data>
+  <data name="MainSettings_CheckIfEmptyPath_Please_specify_a_path_to__0_" xml:space="preserve">
+    <value>Please specify a path to {0}</value>
+  </data>
+  <data name="MainSettings_ValidateAnalysisFolder_The_analysis_folder__0__does_not_exist_" xml:space="preserve">
+    <value>The analysis folder {0} does not exist.</value>
+  </data>
+  <data name="MainSettings_ValidateDataFolder_The_data_folder__0__does_not_exist_" xml:space="preserve">
+    <value>The data folder {0} does not exist.</value>
   </data>
 </root>

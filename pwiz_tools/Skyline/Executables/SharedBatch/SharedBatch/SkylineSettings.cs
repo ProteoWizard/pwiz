@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
+using System.Threading.Tasks;
+using System.Windows.Forms;
 using System.Xml;
 using SharedBatch.Properties;
 
@@ -92,6 +95,56 @@ namespace SharedBatch
             writer.WriteAttributeIfString(Attr.Type, Type.ToString());
             writer.WriteAttributeIfString(Attr.CmdPath, CmdPath);
             writer.WriteEndElement();
+        }
+
+        public async Task<int[]> GetVersion()
+        {
+            var output = "";
+            Process cmd = new Process();
+            cmd.StartInfo.FileName = CmdPath;
+            cmd.StartInfo.Arguments = "--version";
+            cmd.StartInfo.RedirectStandardInput = true;
+            cmd.StartInfo.RedirectStandardOutput = true;
+            cmd.StartInfo.UseShellExecute = false;
+            cmd.StartInfo.CreateNoWindow = true;
+            cmd.EnableRaisingEvents = true;
+            cmd.OutputDataReceived += (s, e) =>
+            {
+                if (e.Data != null && string.IsNullOrEmpty(output))
+                {
+                    output += e.Data;
+                }
+            };
+            cmd.Start();
+            cmd.BeginOutputReadLine();
+            cmd.WaitForExit();
+            
+            var versionString = output.Split(' ');
+            int i = 0;
+            while (i < versionString.Length && !Int32.TryParse(versionString[i].Substring(0,1), out int result)) i++;
+            if (i == versionString.Length) throw new Exception("No parsable Skyline version found.");
+            return ParseVersionFromString(versionString[i]);
+        }
+
+        private int[] ParseVersionFromString(string stringVersion)
+        {
+            var versionArray = stringVersion.Split('.');
+            if (versionArray.Length != 4) throw new Exception("Error parsing Skyline version.");
+            var versionNumbers = new int[versionArray.Length];
+            for (int i = 0; i < versionArray.Length; i++)
+                versionNumbers[i] = Int32.Parse(versionArray[i]);
+            return versionNumbers;
+        }
+
+        public async Task<bool> HigherVersion(string versionCutoff)
+        {
+            var cutoff = ParseVersionFromString(versionCutoff);
+            var version = await GetVersion();
+            for (int i = 0; i < cutoff.Length; i++)
+            {
+                if (version[i] < cutoff[i]) return false;
+            }
+            return true;
         }
 
         protected bool Equals(SkylineSettings other)

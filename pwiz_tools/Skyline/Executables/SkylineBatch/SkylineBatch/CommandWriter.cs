@@ -1,0 +1,82 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Data.Odbc;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using SharedBatch;
+using SkylineBatch.Properties;
+
+namespace SkylineBatch
+{
+    class CommandWriter
+    {
+        private const string ALLOW_NEWLINE_SAVE_VERSION = "20.2.1.415";
+
+        private StreamWriter _writer;
+        private readonly string _commandFile;
+        private readonly SkylineSettings _skylineSettings;
+        private bool _multiLine; // If the skyline version does not support --save on a new line (true for versions before 20.2.1.415)
+        private readonly string _newSkyFileName;
+        private readonly Logger _logger;
+
+        private bool _reopenFile; // If the skyline file needs to be reopened with --in (true if _multiLine is false and a line has ended)
+
+        public CommandWriter(Logger logger, SkylineSettings skylineSettings, string newSkyFileName)
+        {
+            _commandFile = Path.GetTempFileName();
+            _skylineSettings = skylineSettings;
+            _newSkyFileName = newSkyFileName;
+            _logger = logger;
+        }
+
+        public async void Start()
+        {
+            _writer = new StreamWriter(_commandFile);
+            _multiLine = await _skylineSettings.HigherVersion(ALLOW_NEWLINE_SAVE_VERSION);
+            if (!_multiLine)
+            {
+                _logger.Log(string.Empty);
+                _logger.Log(string.Format(Resources.CommandWriter_Start_Notice__For_faster_Skyline_Batch_runs__use_Skyline_version__0__or_higher_, ALLOW_NEWLINE_SAVE_VERSION));
+                _logger.Log(string.Empty);
+            }
+
+        }
+
+        public void Write(string command, string arg)
+        {
+            Write(command, new object []{arg});
+        }
+
+        public void Write(string command, object[] args = null)
+        {
+            if (args != null)
+                command = string.Format(command, args);
+            _logger.Log(command);
+            if (_reopenFile)
+            {
+                _reopenFile = false;
+                Write("--in=\"{0}\"", _newSkyFileName);
+            }
+            if (_multiLine) _writer.WriteLine(command);
+            else _writer.Write(command + " ");
+        }
+
+        public void EndCommandGroup()
+        {
+            if (!_multiLine)
+            {
+                _writer.WriteLine();
+                _reopenFile = true;
+            }
+        }
+
+        public string ReturnCommandFile()
+        {
+            _writer.Close();
+            return _commandFile;
+        }
+
+    }
+}

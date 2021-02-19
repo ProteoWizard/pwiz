@@ -48,6 +48,7 @@
             this.label9 = new System.Windows.Forms.Label();
             this.textMsMsResolvingPower = new System.Windows.Forms.TextBox();
             this.checkBoxMProphet = new System.Windows.Forms.CheckBox();
+            this.checkBoxRefine = new System.Windows.Forms.CheckBox();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.tabsConfig = new System.Windows.Forms.TabControl();
             this.tabFiles = new System.Windows.Forms.TabPage();
@@ -79,7 +80,6 @@
             this.lblConfigRunning = new System.Windows.Forms.Label();
             this.btnOkConfig = new System.Windows.Forms.Button();
             this.imageListToolbarIcons = new System.Windows.Forms.ImageList(this.components);
-            this.checkBoxFilesGenerated = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -188,6 +188,13 @@
             this.toolTip1.SetToolTip(this.checkBoxMProphet, resources.GetString("checkBoxMProphet.ToolTip"));
             this.checkBoxMProphet.UseVisualStyleBackColor = true;
             // 
+            // checkBoxRefine
+            // 
+            resources.ApplyResources(this.checkBoxRefine, "checkBoxRefine");
+            this.checkBoxRefine.Name = "checkBoxRefine";
+            this.toolTip1.SetToolTip(this.checkBoxRefine, resources.GetString("checkBoxRefine.ToolTip"));
+            this.checkBoxRefine.UseVisualStyleBackColor = true;
+            // 
             // splitContainer1
             // 
             resources.ApplyResources(this.splitContainer1, "splitContainer1");
@@ -215,7 +222,6 @@
             // tabFiles
             // 
             this.tabFiles.BackColor = System.Drawing.Color.WhiteSmoke;
-            this.tabFiles.Controls.Add(this.checkBoxFilesGenerated);
             this.tabFiles.Controls.Add(this.textNamingPattern);
             this.tabFiles.Controls.Add(this.linkLabelRegex);
             this.tabFiles.Controls.Add(this.textConfigName);
@@ -286,6 +292,7 @@
             // tabSettings
             // 
             this.tabSettings.BackColor = System.Drawing.Color.WhiteSmoke;
+            this.tabSettings.Controls.Add(this.checkBoxRefine);
             this.tabSettings.Controls.Add(this.checkBoxMProphet);
             this.tabSettings.Controls.Add(this.label9);
             this.tabSettings.Controls.Add(this.textMsMsResolvingPower);
@@ -466,12 +473,6 @@
             this.imageListToolbarIcons.Images.SetKeyName(0, "AddedIcon.ico");
             this.imageListToolbarIcons.Images.SetKeyName(1, "DeletedIcon.ico");
             // 
-            // checkBoxFilesGenerated
-            // 
-            resources.ApplyResources(this.checkBoxFilesGenerated, "checkBoxFilesGenerated");
-            this.checkBoxFilesGenerated.Name = "checkBoxFilesGenerated";
-            this.checkBoxFilesGenerated.UseVisualStyleBackColor = true;
-            // 
             // SkylineBatchConfigForm
             // 
             this.AcceptButton = this.btnSaveConfig;
@@ -552,6 +553,6 @@
         private System.Windows.Forms.Label label9;
         private System.Windows.Forms.TextBox textMsMsResolvingPower;
         private System.Windows.Forms.CheckBox checkBoxMProphet;
-        private System.Windows.Forms.CheckBox checkBoxFilesGenerated;
+        private System.Windows.Forms.CheckBox checkBoxRefine;
     }
 }

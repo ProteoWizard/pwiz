@@ -119,6 +119,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CommandWriter.cs" />
     <Compile Include="SkylineBatchConfigManager.cs" />
     <Compile Include="FilePathControl.cs">
       <SubType>UserControl</SubType>
