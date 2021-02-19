@@ -218,11 +218,23 @@ namespace pwiz.Common.DataAnalysis.Clustering
                 rowResults = new ClusterResults<TRow, TColumn>(this, null, null);
             }
 
+            return rowResults.DataSet.PerformClusteringOnColumns(progressHandler, rowResults.RowDendrogram);
+        }
+
+        private ClusterResults<TRow, TColumn> PerformClusteringOnColumns(ProgressHandler progressHandler, DendrogramData rowDendrogram)
+        {
+            int iStep = 0;
+            int stepCount = DataFrameGroups.Count;
+            if (rowDendrogram != null)
+            {
+                iStep++;
+                stepCount++;
+            }
             var clusteredDataFrames = new List<ImmutableList<DataFrame>>();
             var dendrogramDatas = new List<DendrogramData>();
-            foreach (var dataFrameGroup in rowResults.DataSet.DataFrameGroups)
+            foreach (var dataFrameGroup in DataFrameGroups)
             {
-                var tuple = rowResults.DataSet.ClusterDataFrameGroup(dataFrameGroup);
+                var tuple = ClusterDataFrameGroup(dataFrameGroup);
                 clusteredDataFrames.Add(tuple.Item1);
                 dendrogramDatas.Add(tuple.Item2);
                 iStep++;
@@ -230,7 +242,7 @@ namespace pwiz.Common.DataAnalysis.Clustering
             }
 
             var newDataSet = new ClusterDataSet<TRow, TColumn>(RowLabels, clusteredDataFrames);
-            return new ClusterResults<TRow, TColumn>(newDataSet, rowResults.RowDendrogram, ImmutableList.ValueOf(dendrogramDatas));
+            return new ClusterResults<TRow, TColumn>(newDataSet, rowDendrogram, ImmutableList.ValueOf(dendrogramDatas));
         }
 
         public IEnumerable<PcaResults<TColumn>> PerformPcaOnColumnGroups(int maxLevels)
@@ -343,18 +355,6 @@ namespace pwiz.Common.DataAnalysis.Clustering
         public static IEnumerable<T> Reorder<T>(IList<T> list, IList<int> newOrder)
         {
             return Enumerable.Range(0, list.Count).OrderBy(i => newOrder[i]).Select(i => list[i]);
-        }
-
-        private static IProgressStatus SetPercentComplete(IProgressMonitor progressMonitor,
-            IProgressStatus progressStatus, int stepNumber, int stepCount)
-        {
-            progressStatus = progressStatus.ChangePercentComplete(stepNumber * 100 / stepCount);
-            if (progressMonitor.UpdateProgress(progressStatus) == UpdateProgressResponse.cancel)
-            {
-                throw new OperationCanceledException();
-            }
-
-            return progressStatus;
         }
     }
 }
