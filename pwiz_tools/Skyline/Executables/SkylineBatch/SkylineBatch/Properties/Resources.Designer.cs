@@ -672,11 +672,11 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The skyline template file {0} does not exist..
+        ///   Looks up a localized string similar to The Skyline template file {0} does not exist..
         /// </summary>
-        internal static string MainSettings_ValidateSkylineFile_The_skyline_template_file__0__does_not_exist_ {
+        internal static string MainSettings_ValidateSkylineFile_The_Skyline_template_file__0__does_not_exist_ {
             get {
-                return ResourceManager.GetString("MainSettings_ValidateSkylineFile_The_skyline_template_file__0__does_not_exist_", resourceCulture);
+                return ResourceManager.GetString("MainSettings_ValidateSkylineFile_The_Skyline_template_file__0__does_not_exist_", resourceCulture);
             }
         }
         

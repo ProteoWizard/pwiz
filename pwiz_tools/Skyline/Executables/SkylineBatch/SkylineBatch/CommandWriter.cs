@@ -17,11 +17,11 @@ namespace SkylineBatch
         private StreamWriter _writer;
         private readonly string _commandFile;
         private readonly SkylineSettings _skylineSettings;
-        private bool _multiLine; // If the skyline version does not support --save on a new line (true for versions before 20.2.1.415)
+        private bool _multiLine; // If the Skyline version does not support --save on a new line (true for versions before 20.2.1.415)
         private readonly string _newSkyFileName;
         private readonly Logger _logger;
 
-        private bool _reopenFile; // If the skyline file needs to be reopened with --in (true if _multiLine is false and a line has ended)
+        private bool _reopenFile; // If the Skyline file needs to be reopened with --in (true if _multiLine is false and a line has ended)
 
         public CommandWriter(Logger logger, SkylineSettings skylineSettings, string newSkyFileName)
         {
