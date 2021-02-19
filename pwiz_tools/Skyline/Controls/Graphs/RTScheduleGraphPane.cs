@@ -99,7 +99,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 return;
             }
 
-            var brukerTemplate = inputData.BrukerTemplateFile;
+            var brukerTemplate = inputData.BrukerTemplateFileValue;
             var document = inputData.Document;
             // TODO: Make it possible to see transition scheduling when full-scan enabled.
             if (string.IsNullOrEmpty(brukerTemplate))
@@ -184,8 +184,8 @@ namespace pwiz.Skyline.Controls.Graphs
                     Document = !graphPane._exportMethodDlg ? graphPane.GraphSummary.DocumentUIContainer.DocumentUI : Program.MainWindow.DocumentUI,
                     BrukerMetricType = graphPane.BrukerMetricType,
                     BrukerMetrics = graphPane.BrukerMetrics,
-                    BrukerTemplateFile = RTScheduleGraphPane.BrukerTemplateFile,
-                    PrimaryTransitionCount = RTScheduleGraphPane.PrimaryTransitionCount,
+                    BrukerTemplateFileValue = BrukerTemplateFile,
+                    PrimaryTransitionCountValue = PrimaryTransitionCount,
                     SchedulingAlgorithm = graphPane.SchedulingAlgorithm,
                     SchedulingReplicateIndex = graphPane.SchedulingReplicateIndex,
                     SchedulingWindows = ImmutableList.ValueOf(RTScheduleGraphPane.ScheduleWindows)
@@ -194,8 +194,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
             public SrmDocument Document { get; private set; }
             public ImmutableList<double> SchedulingWindows { get; private set; }
-            public int PrimaryTransitionCount { get; private set; }
-            public string BrukerTemplateFile { get; private set; }
+            public int PrimaryTransitionCountValue { get; private set; }
+            public string BrukerTemplateFileValue { get; private set; }
 
             public SchedulingMetrics BrukerMetricType { get; private set; }
             public BrukerTimsTofMethodExporter.Metrics BrukerMetrics { get; private set; }
@@ -206,8 +206,9 @@ namespace pwiz.Skyline.Controls.Graphs
             protected bool Equals(InputData other)
             {
                 return Equals(Document, other.Document) && Equals(SchedulingWindows, other.SchedulingWindows) &&
-                       PrimaryTransitionCount == other.PrimaryTransitionCount &&
-                       BrukerTemplateFile == other.BrukerTemplateFile && BrukerMetricType == other.BrukerMetricType &&
+                       PrimaryTransitionCountValue == other.PrimaryTransitionCountValue &&
+                       BrukerTemplateFileValue == other.BrukerTemplateFileValue &&
+                       BrukerMetricType == other.BrukerMetricType &&
                        Equals(BrukerMetrics, other.BrukerMetrics) &&
                        SchedulingReplicateIndex == other.SchedulingReplicateIndex &&
                        SchedulingAlgorithm == other.SchedulingAlgorithm;
@@ -285,7 +286,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             private IPointList MakeCurve(SrmDocument document, InputData input, CancellationToken cancellationToken)
             {
-                if (!string.IsNullOrEmpty(BrukerTemplateFile))
+                if (!string.IsNullOrEmpty(input.BrukerTemplateFileValue))
                 {
                     IPointList brukerPoints = null;
                     if (input.BrukerMetrics != null)
@@ -296,7 +297,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     {
                         BrukerTimsTofMethodExporter.GetScheduling(document,
                             new ExportDlgProperties(new ExportMethodDlg(document, ExportFileType.Method), new CancellationToken()) { MethodType = ExportMethodType.Scheduled },
-                            BrukerTemplateFile, new SilentProgressMonitor(cancellationToken), out brukerPoints);
+                            input.BrukerTemplateFileValue, new SilentProgressMonitor(cancellationToken), out brukerPoints);
                     }
 
                     return brukerPoints;
@@ -310,7 +311,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 List<PrecursorScheduleBase> listSchedules = new List<PrecursorScheduleBase>();
                 double xMax = double.MinValue, xMin = double.MaxValue;
-                int primaryTransitionCount = input.PrimaryTransitionCount;
+                int primaryTransitionCount = input.PrimaryTransitionCountValue;
                 foreach (var nodePep in document.Molecules)
                 {
                     foreach (TransitionGroupDocNode nodeGroup in nodePep.Children)
