@@ -459,7 +459,7 @@ namespace pwiz.Skyline.Controls.Clustering
 
             protected override Tuple<Clusterer, ReportColorScheme> CalculateResults(ClusterInput input, CancellationToken cancellationToken)
             {
-                var resultsTuple = input.GetClusterResultsTuple(cancellationToken, progressValue=>UpdateProgress(cancellationToken, progressValue));
+                var resultsTuple = input.GetClusterResultsTuple(GetProgressHandler(cancellationToken));
                 return Tuple.Create(resultsTuple.Item1, resultsTuple.Item3);
             }
 

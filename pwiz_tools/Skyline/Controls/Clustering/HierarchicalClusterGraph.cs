@@ -413,7 +413,7 @@ namespace pwiz.Skyline.Controls.Clustering
 
             protected override ClusterGraphResults CalculateResults(ClusterInput input, CancellationToken cancellationToken)
             {
-                return input.GetClusterGraphResults(cancellationToken, UpdateProgressAction(cancellationToken));
+                return input.GetClusterGraphResults(GetProgressHandler(cancellationToken));
             }
 
             protected override void ResultsAvailable()

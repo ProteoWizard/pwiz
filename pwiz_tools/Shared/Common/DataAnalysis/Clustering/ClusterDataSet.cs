@@ -197,26 +197,40 @@ namespace pwiz.Common.DataAnalysis.Clustering
             return Tuple.Create(newGroup, dendrogramData);
         }
 
-        public ClusterResults<TRow, TColumn> ClusterColumns()
+        public ClusterResults<TRow, TColumn> PerformClustering(bool clusterRows, ProgressHandler progressHandler)
         {
-            var clusteredGroups = DataFrameGroups.Select(ClusterDataFrameGroup).ToList();
-            var newDataSet = new ClusterDataSet<TRow, TColumn>(RowLabels, clusteredGroups.Select(tuple=>tuple.Item1));
-            return new ClusterResults<TRow, TColumn>(newDataSet, null, ImmutableList.ValueOf(clusteredGroups.Select(tuple=>tuple.Item2)));
-        }
+            int stepCount = DataFrameGroups.Count;
+            if (clusterRows)
+            {
+                stepCount++;
+            }
 
-        public ClusterResults<TRow, TColumn> PerformClustering(bool clusterRows)
-        {
+            int iStep = 0;
             ClusterResults<TRow, TColumn> rowResults;
             if (clusterRows)
             {
                 rowResults = ClusterRows();
+                iStep++;
+                progressHandler.SetPercentComplete(100 / stepCount);
             }
             else
             {
                 rowResults = new ClusterResults<TRow, TColumn>(this, null, null);
             }
-            ClusterResults<TRow, TColumn> columnResults = rowResults.DataSet.ClusterColumns();
-            return new ClusterResults<TRow, TColumn>(columnResults.DataSet, rowResults.RowDendrogram, columnResults.ColumnGroupDendrograms);
+
+            var clusteredDataFrames = new List<ImmutableList<DataFrame>>();
+            var dendrogramDatas = new List<DendrogramData>();
+            foreach (var dataFrameGroup in rowResults.DataSet.DataFrameGroups)
+            {
+                var tuple = rowResults.DataSet.ClusterDataFrameGroup(dataFrameGroup);
+                clusteredDataFrames.Add(tuple.Item1);
+                dendrogramDatas.Add(tuple.Item2);
+                iStep++;
+                progressHandler.SetPercentComplete(iStep * 100 / stepCount);
+            }
+
+            var newDataSet = new ClusterDataSet<TRow, TColumn>(RowLabels, clusteredDataFrames);
+            return new ClusterResults<TRow, TColumn>(newDataSet, rowResults.RowDendrogram, ImmutableList.ValueOf(dendrogramDatas));
         }
 
         public IEnumerable<PcaResults<TColumn>> PerformPcaOnColumnGroups(int maxLevels)
@@ -329,6 +343,18 @@ namespace pwiz.Common.DataAnalysis.Clustering
         public static IEnumerable<T> Reorder<T>(IList<T> list, IList<int> newOrder)
         {
             return Enumerable.Range(0, list.Count).OrderBy(i => newOrder[i]).Select(i => list[i]);
+        }
+
+        private static IProgressStatus SetPercentComplete(IProgressMonitor progressMonitor,
+            IProgressStatus progressStatus, int stepNumber, int stepCount)
+        {
+            progressStatus = progressStatus.ChangePercentComplete(stepNumber * 100 / stepCount);
+            if (progressMonitor.UpdateProgress(progressStatus) == UpdateProgressResponse.cancel)
+            {
+                throw new OperationCanceledException();
+            }
+
+            return progressStatus;
         }
     }
 }

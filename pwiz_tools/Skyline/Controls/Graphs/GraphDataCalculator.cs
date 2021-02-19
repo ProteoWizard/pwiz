@@ -105,6 +105,11 @@ namespace pwiz.Skyline.Controls.Graphs
             return progressValue => UpdateProgress(cancellationToken, progressValue);
         }
 
+        public ProgressHandler GetProgressHandler(CancellationToken cancellationToken)
+        {
+            return new ProgressHandler(cancellationToken, UpdateProgressAction(cancellationToken));
+        }
+
         protected abstract TResults CalculateResults(TInput input, CancellationToken cancellationToken);
 
         protected abstract void ResultsAvailable();

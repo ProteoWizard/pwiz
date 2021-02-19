@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using System.Threading;
 using pwiz.Common.DataAnalysis.Clustering;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Clustering;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Databinding;
 
 namespace pwiz.Skyline.Controls.Clustering
@@ -24,9 +24,9 @@ namespace pwiz.Skyline.Controls.Clustering
         public ReportResults ReportResults { get; private set; }
         public ClusteringSpec ClusteringSpec { get; private set; }
 
-        public ClusterGraphResults GetClusterGraphResults(CancellationToken cancellationToken, Action<int> updateProgressAction)
+        public ClusterGraphResults GetClusterGraphResults(ProgressHandler progressHandler)
         {
-            var tuple = GetClusterResultsTuple(cancellationToken, updateProgressAction);
+            var tuple = GetClusterResultsTuple(progressHandler);
             if (tuple == null)
             {
                 return null;
@@ -112,16 +112,16 @@ namespace pwiz.Skyline.Controls.Clustering
             return new ClusterGraphResults(clusteredResults.RowDendrogramData?.DendrogramData, rowHeaders, columnGroups, points);
         }
 
-        public Tuple<Clusterer, ClusteredReportResults, ReportColorScheme> GetClusterResultsTuple(CancellationToken cancellationToken, Action<int> updateProgressAction)
+        public Tuple<Clusterer, ClusteredReportResults, ReportColorScheme> GetClusterResultsTuple(ProgressHandler progressHandler)
         {
-            var clusterer = Clusterer.CreateClusterer(cancellationToken, ClusteringSpec ?? ClusteringSpec.DEFAULT, ReportResults);
+            var clusterer = Clusterer.CreateClusterer(progressHandler.CancellationToken, ClusteringSpec ?? ClusteringSpec.DEFAULT, ReportResults);
             if (clusterer == null)
             {
                 return null;
             }
 
-            var results = clusterer.GetClusteredResults();
-            var colorScheme = ReportColorScheme.FromClusteredResults(cancellationToken, results);
+            var results = clusterer.GetClusteredResults(progressHandler);
+            var colorScheme = ReportColorScheme.FromClusteredResults(progressHandler.CancellationToken, results);
             return Tuple.Create(clusterer, results, colorScheme);
         }
     }
