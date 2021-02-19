@@ -49,7 +49,8 @@ namespace SkylineBatch
             _newReportList = new List<ReportInfo>();
 
             _mainControl = mainControl;
-            _initialEnabled = config?.Enabled ?? false;
+            if (config != null) 
+                _initialEnabled = config.Enabled;
             _isBusy = isBusy;
 
             _canEditSkylineSettings = !SkylineInstallations.HasLocalSkylineCmd;
@@ -285,7 +286,10 @@ namespace SkylineBatch
             if (config != null)
                 _skylineTypeControl = new SkylineTypeControl(config.UsesSkyline, config.UsesSkylineDaily, config.UsesCustomSkylinePath, config.SkylineSettings.CmdPath);
             else
-                _skylineTypeControl = new SkylineTypeControl(true,false, false, "C:\\Program Files\\Skyline");
+            {
+                // Default to the first existing Skyline installation (Skyline, Skyline-daily, custom path)
+                _skylineTypeControl = new SkylineTypeControl();
+            }
 
             _skylineTypeControl.Dock = DockStyle.Fill;
             _skylineTypeControl.Show();
