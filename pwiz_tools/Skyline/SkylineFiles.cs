@@ -1146,6 +1146,13 @@ namespace pwiz.Skyline
             }
         }
 
+        public byte[] GetViewFileBytes()
+        {
+            var memoryStream = new MemoryStream();
+            dockPanel.SaveAsXml(memoryStream, Encoding.Unicode);
+            return memoryStream.ToArray();
+        }
+
         private void SetActiveFile(string path)
         {
             if (!string.IsNullOrEmpty(path))
@@ -1191,22 +1198,7 @@ namespace pwiz.Skyline
                 return;
             }
 
-            bool saved = false;
             string fileName = DocumentFilePath;
-            if (string.IsNullOrEmpty(fileName))
-            {
-                if (MessageBox.Show(this, Resources.SkylineWindow_shareDocumentMenuItem_Click_The_document_must_be_saved_before_it_can_be_shared, 
-                    Program.Name, MessageBoxButtons.OKCancel) == DialogResult.Cancel)
-                    return;
-
-                if (!SaveDocumentAs())
-                    return;
-
-                saved = true;
-                fileName = DocumentFilePath;
-            }
-
-            
             ShareType shareType;
             using (var dlgType = new ShareTypeDlg(document))
             {
@@ -1219,18 +1211,17 @@ namespace pwiz.Skyline
             {
                 Title = Resources.SkylineWindow_shareDocumentMenuItem_Click_Share_Document,
                 InitialDirectory = Path.GetDirectoryName(fileName),
-                FileName = Path.GetFileNameWithoutExtension(fileName) + SrmDocumentSharing.EXT_SKY_ZIP,
                 OverwritePrompt = true,
                 DefaultExt = SrmDocumentSharing.EXT_SKY_ZIP,
                 SupportMultiDottedExtensions = true,
                 Filter = TextUtil.FileDialogFilterAll(Resources.SkylineWindow_shareDocumentMenuItem_Click_Skyline_Shared_Documents, SrmDocumentSharing.EXT),
             })
             {
+                if (fileName != null)
+                {
+                    dlg.FileName = Path.GetFileNameWithoutExtension(fileName) + SrmDocumentSharing.EXT_SKY_ZIP;
+                }
                 if (dlg.ShowDialog(this) == DialogResult.Cancel)
-                    return;
-
-                // Make sure the document is completely saved before sharing
-                if (!saved && !SaveDocument())
                     return;
 
                 ShareDocument(dlg.FileName, shareType);
@@ -1244,7 +1235,10 @@ namespace pwiz.Skyline
                 bool success;
                 using (var longWaitDlg = new LongWaitDlg { Text = Resources.SkylineWindow_ShareDocument_Compressing_Files, })
                 {
-                    var sharing = new SrmDocumentSharing(DocumentUI, DocumentFilePath, fileDest, shareType);
+                    var sharing = new SrmDocumentSharing(DocumentUI, DocumentFilePath, fileDest, shareType)
+                    {
+                        ViewFileBytes = GetViewFileBytes()
+                    };
                     longWaitDlg.PerformWork(this, 1000, sharing.Share);
                     success = !longWaitDlg.IsCanceled;
                 }

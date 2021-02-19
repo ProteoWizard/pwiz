@@ -20,8 +20,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
+using System.Xml;
 using Ionic.Zip;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.BlibData;
 using pwiz.Skyline.Model.Results;
@@ -58,7 +61,9 @@ namespace pwiz.Skyline.Model
         }
 
         public SrmDocument Document { get; private set; }
+        public string DocumentHash { get; private set; }
         public string DocumentPath { get; private set; }
+        public byte[] ViewFileBytes { get; set; }
         public string SharedPath { get; private set; }
 
         public ShareType ShareType { get; set; }
@@ -202,21 +207,12 @@ namespace pwiz.Skyline.Model
                    DocumentFormat.VERSION_4_13;
         }
 
-        private void SafeAuditLog(ZipFileShare zip, string docPath)
-        {
-            if (ShouldShareAuditLog(Document, ShareType))
-            {
-                var path = SrmDocument.GetAuditLogPath(docPath);
-                if (File.Exists(path))
-                    zip.AddFile(path);
-            }
-        }
-
         private void ShareComplete(ZipFileShare zip)
         {
             TemporaryDirectory tempDir = null;
             try
             {
+                zip.AddWriteDelegate(DecideSkylineDocumentFileName(), DocumentWriteDelegate);
                 // If complete sharing, just zip up existing files
                 var pepSettings = Document.Settings.PeptideSettings;
                 var transitionSettings = Document.Settings.TransitionSettings;
@@ -246,16 +242,9 @@ namespace pwiz.Skyline.Model
                     }
                 }
 
-                var auditLogDocPath = DocumentPath;
                 // ReSharper disable ExpressionIsAlwaysNull
                 tempDir = ShareDataAndView(zip, tempDir);
                 // ReSharper restore ExpressionIsAlwaysNull
-                if (null == ShareType.SkylineVersion)
-                    zip.AddFile(DocumentPath); // CONSIDER(bpratt) there's no check to see if this is a current representation of the document - a dirty check would be good
-                else
-                    tempDir = ShareDocument(zip, tempDir, out auditLogDocPath);
-
-                SafeAuditLog(zip, auditLogDocPath);
 
                 Save(zip);
             }
@@ -265,12 +254,33 @@ namespace pwiz.Skyline.Model
             }
         }
 
+        public string DecideSkylineDocumentFileName()
+        {
+            if (!string.IsNullOrEmpty(DocumentPath))
+            {
+                return Path.GetFileName(DocumentPath);
+            }
+
+            return Path.ChangeExtension(Path.GetFileNameWithoutExtension(SharedPath), SrmDocument.EXT);
+        }
+
+        private void DocumentWriteDelegate(string entryName, Stream stream)
+        {                
+            using (var writer = new XmlTextWriter(new HashingStream(stream), Encoding.UTF8)
+            {
+                Formatting = Formatting.Indented
+            })
+            {
+                DocumentHash = Document.Serialize(writer, entryName, ShareType.SkylineVersion, ProgressMonitor);
+            }
+        }
+
         private void ShareMinimal(ZipFileShare zip)
         {
             TemporaryDirectory tempDir = null;
             try
             {
-                var docOriginal = Document;
+                zip.AddWriteDelegate(DecideSkylineDocumentFileName(), DocumentWriteDelegate);
                 if (Document.Settings.HasBackgroundProteome)
                 {
                     // Remove any background proteome reference
@@ -328,15 +338,7 @@ namespace pwiz.Skyline.Model
                     }
                 }
 
-                var auditLogDocPath = DocumentPath;
                 tempDir = ShareDataAndView(zip, tempDir);
-                if (ReferenceEquals(docOriginal, Document) && null == ShareType.SkylineVersion)
-                    zip.AddFile(DocumentPath);
-                else
-                    tempDir = ShareDocument(zip, tempDir, out auditLogDocPath);
-
-                SafeAuditLog(zip, auditLogDocPath);
-
                 Save(zip);
             }
             finally
@@ -378,26 +380,19 @@ namespace pwiz.Skyline.Model
         private TemporaryDirectory ShareDataAndView(ZipFileShare zip, TemporaryDirectory tempDir)
         {
             tempDir = ShareSkydFile(zip, tempDir);
-            string viewPath = SkylineWindow.GetViewFile(DocumentPath);
-            if (File.Exists(viewPath))
-                zip.AddFile(viewPath);
-            return tempDir;
-        }
-
-        private TemporaryDirectory ShareDocument(ZipFileShare zip, TemporaryDirectory tempDir, out string tempDocPath)
-        {
-            if (tempDir == null)
-                tempDir = new TemporaryDirectory();
-            string fileName = Path.GetFileName(DocumentPath) ?? string.Empty;
-            tempDocPath = Path.Combine(tempDir.DirPath, fileName);
-            Document.SerializeToFile(tempDocPath, tempDocPath, 
-                ShareType.SkylineVersion ?? SkylineVersion.CURRENT, ProgressMonitor);
-            zip.AddFile(tempDocPath);
+            if (null != ViewFileBytes)
+            {
+                zip.AddByteContent(SkylineWindow.GetViewFile(DecideSkylineDocumentFileName()), ViewFileBytes);
+            }
             return tempDir;
         }
 
         private TemporaryDirectory ShareSkydFile(ZipFileShare zip, TemporaryDirectory tempDir)
         {
+            if (DocumentPath == null)
+            {
+                return tempDir;
+            }
             string pathCache = ChromatogramCache.FinalPathForName(DocumentPath, null);
             if (!File.Exists(pathCache))
             {
@@ -463,6 +458,17 @@ namespace pwiz.Skyline.Model
             using (var saver = new FileSaver(SharedPath))
             {
                 zip.Save(saver.SafeName, SrmDocumentSharing_SaveProgress);
+                if (ShouldShareAuditLog(Document, ShareType))
+                {
+                    using (var zipFile = new ZipFile(saver.SafeName))
+                    {
+                        var auditLog = Document.AuditLog.RecalculateHashValues(ShareType.SkylineVersion.SrmDocumentVersion, DocumentHash);
+                        var memoryStream = new MemoryStream();
+                        auditLog.WriteToStream(memoryStream, DocumentHash);
+                        zipFile.AddEntry(Path.ChangeExtension(DecideSkylineDocumentFileName(), AuditLogList.EXT), memoryStream.ToArray());
+                        zipFile.Save();
+                    }
+                }
                 ProgressMonitor.UpdateProgress(_progressStatus.Complete());
                 saver.Commit();
             }
@@ -565,6 +571,18 @@ namespace pwiz.Skyline.Model
                 _zip.AddFile(path, string.Empty);
             }
 
+            public void AddWriteDelegate(string entryName, WriteDelegate writeDelegate)
+            {
+                _dictNameToPath.Add(entryName, null);
+                _zip.AddEntry(entryName, writeDelegate);
+            }
+
+            public void AddByteContent(string entryName, byte[] byteContent)
+            {
+                _dictNameToPath.Add(entryName, null);
+                _zip.AddEntry(entryName, byteContent);
+            }
+
             public void Save(string path, EventHandler<SaveProgressEventArgs> progressEvent)
             {
                 _zip.SaveProgress += progressEvent;
@@ -576,7 +594,6 @@ namespace pwiz.Skyline.Model
                 if (_zip != null) _zip.Dispose();
             }
         }
-
 
         #region Functional testing support
 

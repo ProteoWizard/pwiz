@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Security.Principal;
@@ -247,6 +248,14 @@ namespace pwiz.Skyline.Model.AuditLog
                 }
 
                 fileSaver.Commit();
+            }
+        }
+
+        public void WriteToStream(Stream stream, string documentHash)
+        {
+            using (var writer = new XmlTextWriter(stream, Encoding.UTF8) { Formatting = Formatting.Indented })
+            {
+                WriteToXmlWriter(writer, documentHash);
             }
         }
 
