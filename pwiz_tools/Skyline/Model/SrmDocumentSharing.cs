@@ -264,6 +264,10 @@ namespace pwiz.Skyline.Model
             return Path.ChangeExtension(Path.GetFileNameWithoutExtension(SharedPath), SrmDocument.EXT);
         }
 
+        /// <summary>
+        /// Method which serializes <see cref="Document"/> to XML. Also, sets the value of <see cref="DocumentHash"/>.
+        /// This method gets called when all of the files are being added to the Zip file on disk
+        /// </summary>
         private void DocumentWriteDelegate(string entryName, Stream stream)
         {                
             using (var writer = new XmlTextWriter(new HashingStream(stream), Encoding.UTF8)
@@ -271,7 +275,7 @@ namespace pwiz.Skyline.Model
                 Formatting = Formatting.Indented
             })
             {
-                DocumentHash = Document.Serialize(writer, entryName, ShareType.SkylineVersion, ProgressMonitor);
+                DocumentHash = Document.Serialize(writer, entryName, ShareType.SkylineVersion ?? SkylineVersion.CURRENT, ProgressMonitor);
             }
         }
 
@@ -462,7 +466,7 @@ namespace pwiz.Skyline.Model
                 {
                     using (var zipFile = new ZipFile(saver.SafeName))
                     {
-                        var auditLog = Document.AuditLog.RecalculateHashValues(ShareType.SkylineVersion.SrmDocumentVersion, DocumentHash);
+                        var auditLog = Document.AuditLog.RecalculateHashValues((ShareType.SkylineVersion ?? SkylineVersion.CURRENT).SrmDocumentVersion, DocumentHash);
                         var memoryStream = new MemoryStream();
                         auditLog.WriteToStream(memoryStream, DocumentHash);
                         zipFile.AddEntry(Path.ChangeExtension(DecideSkylineDocumentFileName(), AuditLogList.EXT), memoryStream.ToArray());
@@ -594,6 +598,7 @@ namespace pwiz.Skyline.Model
                 if (_zip != null) _zip.Dispose();
             }
         }
+
 
         #region Functional testing support
 

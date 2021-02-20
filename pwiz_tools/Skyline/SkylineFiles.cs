@@ -1146,7 +1146,7 @@ namespace pwiz.Skyline
             }
         }
 
-        public byte[] GetViewFileBytes()
+        private byte[] GetViewFileBytes()
         {
             var memoryStream = new MemoryStream();
             dockPanel.SaveAsXml(memoryStream, Encoding.Unicode);
