@@ -44,13 +44,13 @@ namespace SkylineBatch
             Application.SetCompatibleTextRenderingDefault(false);
             Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
             // Handle exceptions on the UI thread.
-            Application.ThreadException += ((sender, e) => ProgramLog.LogError(e.Exception.Message, e.Exception));
+            Application.ThreadException += ((sender, e) => ProgramLog.Error(e.Exception.Message, e.Exception));
             // Handle exceptions on the non-UI thread.
             AppDomain.CurrentDomain.UnhandledException += ((sender, e) =>
             {
                 try
                 {
-                    ProgramLog.LogError(Resources.Program_Main_An_unexpected_error_occured_during_initialization_, (Exception)e.ExceptionObject);
+                    ProgramLog.Error(Resources.Program_Main_An_unexpected_error_occured_during_initialization_, (Exception)e.ExceptionObject);
                     MessageBox.Show(Resources.Program_Main_An_unexpected_error_occured_during_initialization_ + Environment.NewLine +
                                     string.Format(Resources.Program_Main_Error_details_may_be_found_in_the_file__0_,
                                         Path.Combine(Path.GetDirectoryName(Application.ExecutablePath) ?? string.Empty, "SkylineBatchProgram.log")) + Environment.NewLine +
@@ -80,7 +80,7 @@ namespace SkylineBatch
                 try
                 {
                     var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal);
-                    ProgramLog.LogInfo(string.Format(Resources.Program_Main_Saved_configurations_were_found_in___0_, config.FilePath));
+                    ProgramLog.Info(string.Format(Resources.Program_Main_Saved_configurations_were_found_in___0_, config.FilePath));
                 }
                 catch (Exception)
                 {

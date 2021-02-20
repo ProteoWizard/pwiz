@@ -67,21 +67,9 @@ namespace AutoQC
                 }
                 catch (UriFormatException)
                 {
-                    ProgramLog.LogError(Resources.PanoramaSettings_PanoramaSettings_Panorama_server_name_is_invalid__Please_enter_a_different_Panorama_server_name_);
+                    ProgramLog.Error(Resources.PanoramaSettings_PanoramaSettings_Panorama_server_name_is_invalid__Please_enter_a_different_Panorama_server_name_);
                 }
             }
-
-            /*var panoramaClient = new WebPanoramaClient(PanoramaServerUri);
-            try
-            {
-                PanoramaUtil.VerifyServerInformation(panoramaClient, PanoramaUserEmail, PanoramaPassword);
-                PanoramaServerUri = panoramaClient.ServerUri ?? PanoramaServerUri;
-                if (!(PanoramaServerUri is null)) PanoramaServerUrl = PanoramaServerUri.AbsoluteUri;
-            }
-            catch (Exception)
-            {
-                // ignored
-            }*/
         }
 
         public virtual bool IsSelected()
@@ -190,7 +178,7 @@ namespace AutoQC
             }
             catch (Exception e)
             {
-                ProgramLog.LogError("Error encrypting password. ", e);
+                ProgramLog.Error("Error encrypting password. ", e);
   
             }
             return string.Empty;
@@ -211,7 +199,7 @@ namespace AutoQC
             }
             catch (Exception e)
             {              
-                ProgramLog.LogError("Error decrypting password. ", e);
+                ProgramLog.Error("Error decrypting password. ", e);
             }
             return string.Empty;
         }

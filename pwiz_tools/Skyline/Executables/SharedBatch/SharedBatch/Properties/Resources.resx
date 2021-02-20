@@ -117,62 +117,29 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="AlertDlg_GetDefaultButtonText_OK" xml:space="preserve">
-    <value>OK</value>
+  <data name="AlertDlg_GetDefaultButtonText_Abort" xml:space="preserve">
+    <value>Abort</value>
   </data>
   <data name="AlertDlg_GetDefaultButtonText_Cancel" xml:space="preserve">
     <value>Cancel</value>
   </data>
-  <data name="AlertDlg_TruncateMessage_Message_truncated__Press_Ctrl_C_to_copy_entire_message_to_the_clipboard_" xml:space="preserve">
-    <value>Message truncated. Press Ctrl+C to copy entire message to the clipboard.</value>
-  </data>
-  <data name="AlertDlg_GetDefaultButtonText_Yes" xml:space="preserve">
-    <value>Yes</value>
+  <data name="AlertDlg_GetDefaultButtonText_Ignore" xml:space="preserve">
+    <value>Ignore</value>
   </data>
   <data name="AlertDlg_GetDefaultButtonText_No" xml:space="preserve">
     <value>No</value>
   </data>
-  <data name="AlertDlg_GetDefaultButtonText_Abort" xml:space="preserve">
-    <value>Abort</value>
+  <data name="AlertDlg_GetDefaultButtonText_OK" xml:space="preserve">
+    <value>OK</value>
   </data>
   <data name="AlertDlg_GetDefaultButtonText_Retry" xml:space="preserve">
     <value>Retry</value>
   </data>
-  <data name="AlertDlg_GetDefaultButtonText_Ignore" xml:space="preserve">
-    <value>Ignore</value>
+  <data name="AlertDlg_GetDefaultButtonText_Yes" xml:space="preserve">
+    <value>Yes</value>
   </data>
-  <data name="TextUtil_FILTER_XML_XML_Files" xml:space="preserve">
-    <value>XML Files</value>
-  </data>
-  <data name="TextUtil_FILTER_SKY_Skyline_Files" xml:space="preserve">
-    <value>Skyline Files</value>
-  </data>
-  <data name="TextUtil_FILTER_SKYR_Skyline_Reports" xml:space="preserve">
-    <value>Skyline Reports</value>
-  </data>
-  <data name="TextUtil_FILTER_R_R_Files" xml:space="preserve">
-    <value>R Files</value>
-  </data>
-  <data name="TextUtil_FILTER_ALL_All_Files" xml:space="preserve">
-    <value>All Files</value>
-  </data>
-  <data name="SkylineSettings_Validate_Could_not_find_a_Skyline_daily_installation_on_this_computer_" xml:space="preserve">
-    <value>Could not find a Skyline-daily installation on this computer.</value>
-  </data>
-  <data name="SkylineSettings_Validate_Could_not_find_a_Skyline_installation_at_this_location___0_" xml:space="preserve">
-    <value>Could not find a Skyline installation at this location: {0}</value>
-  </data>
-  <data name="SkylineSettings_Validate_Could_not_find_a_Skyline_installation_on_this_computer_" xml:space="preserve">
-    <value>Could not find a Skyline installation on this computer.</value>
-  </data>
-  <data name="SkylineSettings_Validate_Could_not_find__0__at_this_location___1_" xml:space="preserve">
-    <value>Could not find {0} at this location: {1}</value>
-  </data>
-  <data name="SkylineSettings_Validate_Please_select_a_folder_containing__0__" xml:space="preserve">
-    <value>Please select a folder containing {0}.</value>
-  </data>
-  <data name="SkylineSettings_Validate_Please_try_a_different_Skyline_option_" xml:space="preserve">
-    <value>Please try a different Skyline option.</value>
+  <data name="AlertDlg_TruncateMessage_Message_truncated__Press_Ctrl_C_to_copy_entire_message_to_the_clipboard_" xml:space="preserve">
+    <value>Message truncated. Press Ctrl+C to copy entire message to the clipboard.</value>
   </data>
   <data name="ConfigManager_CheckConfigSelected_There_is_no_configuration_selected_" xml:space="preserve">
     <value>There is no configuration selected.</value>
@@ -219,11 +186,17 @@
   <data name="ConfigManager_RemoveConfig_Cannot_delete___0____configuration_does_not_exist_" xml:space="preserve">
     <value>Cannot delete "{0}": configuration does not exist.</value>
   </data>
+  <data name="ConfigManager_RemoveSelected_Are_you_sure_you_want_to_delete___0___" xml:space="preserve">
+    <value>Are you sure you want to delete "{0}"?</value>
+  </data>
   <data name="ConfigManager_RemoveSelected_Removing_configuration____0__" xml:space="preserve">
     <value>Removing configuration: "{0}"</value>
   </data>
   <data name="ConfigManager_SelectConfig_There_is_no_configuration_at_index___0_" xml:space="preserve">
     <value>There is no configuration at index: {0}</value>
+  </data>
+  <data name="FindSkylineForm_FindSkylineForm__0__requires_Skyline_to_run__but_did_not_find_an_administrative_or_web_based_installation_" xml:space="preserve">
+    <value>{0} requires Skyline to run, but did not find an administrative or web-based installation.</value>
   </data>
   <data name="Logger_DisplayLog_Could_not_read_the_log_file___0___File_does_not_exist_" xml:space="preserve">
     <value>Could not read the log file: {0}. File does not exist.</value>
@@ -261,16 +234,43 @@
   <data name="Logger_WriteToFile_Exception_stack_trace__" xml:space="preserve">
     <value>Exception stack trace: </value>
   </data>
-  <data name="ConfigManager_RemoveSelected_Are_you_sure_you_want_to_delete___0___" xml:space="preserve">
-    <value>Are you sure you want to delete "{0}"?</value>
-  </data>
   <data name="MainFormUtils_OpenFileExplorer_Cannot_open_the__0__of_an_invalid_configuration_" xml:space="preserve">
     <value>Cannot open the {0} of an invalid configuration.</value>
   </data>
   <data name="MainFormUtils_OpenFileExplorer_Please_fix___0___and_try_again_" xml:space="preserve">
     <value>Please fix "{0}" and try again.</value>
   </data>
-  <data name="FindSkylineForm_FindSkylineForm__0__requires_Skyline_to_run__but_did_not_find_an_administrative_or_web_based_installation_" xml:space="preserve">
-    <value>{0} requires Skyline to run, but did not find an administrative or web-based installation.</value>
+  <data name="SkylineSettings_Validate_Could_not_find_a_Skyline_daily_installation_on_this_computer_" xml:space="preserve">
+    <value>Could not find a Skyline-daily installation on this computer.</value>
+  </data>
+  <data name="SkylineSettings_Validate_Could_not_find_a_Skyline_installation_at_this_location___0_" xml:space="preserve">
+    <value>Could not find a Skyline installation at this location: {0}</value>
+  </data>
+  <data name="SkylineSettings_Validate_Could_not_find_a_Skyline_installation_on_this_computer_" xml:space="preserve">
+    <value>Could not find a Skyline installation on this computer.</value>
+  </data>
+  <data name="SkylineSettings_Validate_Could_not_find__0__at_this_location___1_" xml:space="preserve">
+    <value>Could not find {0} at this location: {1}</value>
+  </data>
+  <data name="SkylineSettings_Validate_Please_select_a_folder_containing__0__" xml:space="preserve">
+    <value>Please select a folder containing {0}.</value>
+  </data>
+  <data name="SkylineSettings_Validate_Please_try_a_different_Skyline_option_" xml:space="preserve">
+    <value>Please try a different Skyline option.</value>
+  </data>
+  <data name="TextUtil_FILTER_ALL_All_Files" xml:space="preserve">
+    <value>All Files</value>
+  </data>
+  <data name="TextUtil_FILTER_R_R_Files" xml:space="preserve">
+    <value>R Files</value>
+  </data>
+  <data name="TextUtil_FILTER_SKYR_Skyline_Reports" xml:space="preserve">
+    <value>Skyline Reports</value>
+  </data>
+  <data name="TextUtil_FILTER_SKY_Skyline_Files" xml:space="preserve">
+    <value>Skyline Files</value>
+  </data>
+  <data name="TextUtil_FILTER_XML_XML_Files" xml:space="preserve">
+    <value>XML Files</value>
   </data>
 </root>

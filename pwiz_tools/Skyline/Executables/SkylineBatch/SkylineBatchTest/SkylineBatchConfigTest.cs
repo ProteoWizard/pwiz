@@ -63,13 +63,13 @@ namespace SkylineBatchTest
             var validPattern = string.Empty;
 
             TestValidateMainSettings(invalidTemplatePath, validAnalysisFolder, validDataDir, validPattern,
-                string.Format("The skyline template file {0} does not exist.\r\nPlease provide a valid file.", invalidTemplatePath));
+                string.Format("The Skyline template file {0} does not exist.\r\nPlease provide a valid file.", invalidTemplatePath));
             TestValidateMainSettings(validTemplatePath, invalidAnalysisFolder, validDataDir, validPattern,
                 string.Format("The analysis folder {0} does not exist.\r\nPlease provide a valid folder.", TestUtils.GetTestFilePath(string.Empty) + @"nonexistentOne\nonexistentTwo"));
             TestValidateMainSettings(validTemplatePath, validAnalysisFolder, invalidDataDir, validPattern,
                 string.Format("The data folder {0} does not exist.\r\nPlease provide a valid folder.", invalidDataDir));
             TestValidateMainSettings(invalidTemplatePath, invalidAnalysisFolder, invalidDataDir, validPattern,
-                string.Format("The skyline template file {0} does not exist.\r\nPlease provide a valid file.", invalidTemplatePath));
+                string.Format("The Skyline template file {0} does not exist.\r\nPlease provide a valid file.", invalidTemplatePath));
             try
             {
                 var testValidMainSettings = new MainSettings(validTemplatePath, validAnalysisFolder, validDataDir, null);

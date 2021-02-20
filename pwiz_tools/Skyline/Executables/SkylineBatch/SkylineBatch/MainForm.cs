@@ -53,7 +53,7 @@ namespace SkylineBatch
                 listViewStatus.Width
             });
             listViewConfigs.ColumnWidthChanged += listViewConfigs_ColumnWidthChanged;
-            ProgramLog.LogInfo(Resources.MainForm_MainForm_Loading_configurations_from_saved_settings_);
+            ProgramLog.Info(Resources.MainForm_MainForm_Loading_configurations_from_saved_settings_);
             _configManager = new SkylineBatchConfigManager(_skylineBatchLogger, this);
 
             UpdateUiConfigurations();
@@ -90,7 +90,7 @@ namespace SkylineBatch
         
         private void btnNewConfig_Click(object sender, EventArgs e)
         {
-            ProgramLog.LogInfo(Resources.MainForm_btnNewConfig_Click_Creating_a_new_configuration_);
+            ProgramLog.Info(Resources.MainForm_btnNewConfig_Click_Creating_a_new_configuration_);
             var initialConfigValues = (SkylineBatchConfig)_configManager.GetLastModified();
             var configForm = new SkylineBatchConfigForm(this, initialConfigValues, ConfigAction.Add, false);
             configForm.ShowDialog();
@@ -313,7 +313,7 @@ namespace SkylineBatch
         {
             RunUi(() =>
             {
-                ProgramLog.LogInfo("Updating configurations");
+                ProgramLog.Info("Updating configurations");
                 listViewConfigs.Items.Clear();
                 listViewConfigs.ItemCheck -= listViewConfigs_ItemCheck;
                 var listViewItems = _configManager.ConfigsListViewItems();
@@ -331,7 +331,7 @@ namespace SkylineBatch
         {
             RunUi(() =>
             {
-                ProgramLog.LogInfo("Updating log files");
+                ProgramLog.Info("Updating log files");
                 comboLogList.Items.Clear();
                 comboLogList.Items.AddRange(_configManager.GetAllLogFiles());
                 comboLogList.SelectedIndex = _configManager.SelectedLog;

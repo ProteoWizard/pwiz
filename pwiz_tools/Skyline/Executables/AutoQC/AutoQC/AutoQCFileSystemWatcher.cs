@@ -366,7 +366,7 @@ namespace AutoQC
                 // it means another config watching a folder on the same mapped drive re-mapped the drive.
                 if (Directory.Exists(_fileWatcher.Path))
                 {
-                    ProgramLog.LogInfo(string.Format(Resources.AutoQCFileSystemWatcher_CheckDrive_Restarting_file_watcher_for_configuration___0___, _configName));
+                    ProgramLog.Info(string.Format(Resources.AutoQCFileSystemWatcher_CheckDrive_Restarting_file_watcher_for_configuration___0___, _configName));
                     RestartFileWatcher();
                 }
                 else
@@ -411,7 +411,7 @@ namespace AutoQC
 
             if (reconnected)
             {
-                ProgramLog.LogInfo(string.Format(Resources.AutoQCFileSystemWatcher_TryConnect_Re_connected_drive__0__for_configuration___1_____Restarting_file_watcher_, _driveInfo,
+                ProgramLog.Info(string.Format(Resources.AutoQCFileSystemWatcher_TryConnect_Re_connected_drive__0__for_configuration___1_____Restarting_file_watcher_, _driveInfo,
                     _configName));
                 RestartFileWatcher();
             }

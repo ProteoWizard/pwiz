@@ -22,6 +22,7 @@ using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using AutoQC;
 using SharedBatch;
+using System.Configuration;
 
 namespace AutoQCTest
 {
@@ -187,6 +188,7 @@ namespace AutoQCTest
         [TestMethod]
         public void TestConfigEquals()
         {
+            var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath;
             var testConfig = TestUtils.GetTestConfig("Config");
             Assert.IsTrue(Equals(testConfig, TestUtils.GetTestConfig("Config")));
             Assert.IsFalse(Equals(testConfig, TestUtils.GetTestConfig("other")));

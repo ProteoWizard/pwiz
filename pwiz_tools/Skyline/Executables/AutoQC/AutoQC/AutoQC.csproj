@@ -81,6 +81,12 @@
     <Content Include="AutoQCStarter.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="SkylineDailyRunner.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="SkylineRunner.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <EmbeddedResource Include="FilePathControl.resx">
       <DependentUpon>FilePathControl.cs</DependentUpon>
     </EmbeddedResource>
@@ -166,6 +172,10 @@
       <HintPath>..\..\..\..\Shared\Lib\log4net.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL" />
+    <Reference Include="SharedBatch, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\SharedBatch\SharedBatch\bin\Debug\SharedBatch.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Configuration.Install" />
@@ -225,12 +235,6 @@
       <ProductName>.NET Framework 3.5 SP1</ProductName>
       <Install>false</Install>
     </BootstrapperPackage>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\SharedBatch\SharedBatch\SharedBatch.csproj">
-      <Project>{8DC37752-C356-446F-A1EE-6AA6D8A23B6F}</Project>
-      <Name>SharedBatch</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <COMReference Include="IWshRuntimeLibrary">

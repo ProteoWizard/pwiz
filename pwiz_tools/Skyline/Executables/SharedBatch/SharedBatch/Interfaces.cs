@@ -68,6 +68,18 @@ namespace SharedBatch
         void Cancel();
     }
 
+    // Validates a string variable, throws ArgumentException if invalid
+    public delegate void Validator(string variable);
+
+    // UserControl interface to validate value of an input
+    public interface IValidatorControl
+    {
+        object GetVariable();
+
+        // Uses Validator to determine if variable is valid
+        bool IsValid(out string errorMessage);
+    }
+
     // Possible actions a user is taking when opening a configuration in the edit configuration form 
     public enum ConfigAction
     {

@@ -23,6 +23,7 @@ using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SkylineBatch;
 using SharedBatch;
+using System.Configuration;
 
 namespace SkylineBatchTest
 {
@@ -136,7 +137,10 @@ namespace SkylineBatchTest
 
         public static void ClearSavedConfigurations()
         {
-            var logger = GetTestLogger();
+
+            var savedConfigsFile = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath;
+            if (File.Exists(savedConfigsFile)) File.Delete(savedConfigsFile);
+            /*var logger = GetTestLogger();
             var testConfigManager = new SkylineBatchConfigManager(logger);
             while (testConfigManager.HasConfigs())
             {
@@ -144,7 +148,7 @@ namespace SkylineBatchTest
                 testConfigManager.RemoveSelected();
             }
             testConfigManager.Close();
-            logger.Delete();
+            logger.Delete();*/
         }
 
         public static List<string> GetAllLogFiles(string directory = null)

@@ -49,13 +49,13 @@ namespace AutoQC
             Application.SetCompatibleTextRenderingDefault(false);
             Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
             // Handle exceptions on the UI thread.
-            Application.ThreadException += ((sender, e) => ProgramLog.LogError(e.Exception.Message, e.Exception));
+            Application.ThreadException += ((sender, e) => ProgramLog.Error(e.Exception.Message, e.Exception));
             // Handle exceptions on the non-UI thread.
             AppDomain.CurrentDomain.UnhandledException += ((sender, e) =>
             {
                 try
                 {
-                    ProgramLog.LogError("AutoQC Loader encountered an unexpected error. ", (Exception)e.ExceptionObject);
+                    ProgramLog.Error("AutoQC Loader encountered an unexpected error. ", (Exception)e.ExceptionObject);
 
                     const string logFile = "AutoQCProgram.log";
                     MessageBox.Show(
@@ -93,7 +93,7 @@ namespace AutoQC
                 try
                 {
                     var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal);
-                    ProgramLog.LogInfo(string.Format("user.config path: {0}", config.FilePath));
+                    ProgramLog.Info(string.Format("user.config path: {0}", config.FilePath));
                 }
                 catch (Exception)
                 {
@@ -115,7 +115,7 @@ namespace AutoQC
                 {
                     if (eventArgs.Error != null)
                     {
-                        ProgramLog.LogError($"Unable to update {AUTO_QC_STARTER} shortcut.", eventArgs.Error);
+                        ProgramLog.Error($"Unable to update {AUTO_QC_STARTER} shortcut.", eventArgs.Error);
                         form.DisplayError(string.Format(Resources.Program_Main_Unable_to_update__0__shortcut___Error_was___1_,
                                 AUTO_QC_STARTER, eventArgs.Error));
                     }
@@ -155,13 +155,13 @@ namespace AutoQC
                 if (IsFirstRun())
                 {
                     // First time running a newer version of the application
-                    ProgramLog.LogInfo($"Updating {AutoQcStarterExe} shortcut.");
+                    ProgramLog.Info($"Updating {AutoQcStarterExe} shortcut.");
                     StartupManager.UpdateAutoQcStarterInStartup();
                 }
                 else if (!StartupManager.IsAutoQcStarterRunning())
                 {
                     // AutoQCStarter should be running but it is not
-                    ProgramLog.LogInfo($"{AUTO_QC_STARTER} is not running. It should be running since Keep AutoQC Loader running is checked. Starting it up...");
+                    ProgramLog.Info($"{AUTO_QC_STARTER} is not running. It should be running since Keep AutoQC Loader running is checked. Starting it up...");
                     StartupManager.UpdateAutoQcStarterInStartup();
                 }
             }
@@ -176,7 +176,7 @@ namespace AutoQC
             var installedVersion = Settings.Default.InstalledVersion ?? string.Empty;
             if (!currentVersion.Equals(installedVersion))
             {
-                ProgramLog.LogInfo(string.Empty.Equals(installedVersion)
+                ProgramLog.Info(string.Empty.Equals(installedVersion)
                     ? $"This is a first install and run of version: {currentVersion}."
                     : $"Current version: {currentVersion} is newer than the last installed version: {installedVersion}.");
 
@@ -184,7 +184,7 @@ namespace AutoQC
                 Settings.Default.Save();
                 return true;
             }
-            ProgramLog.LogInfo($"Current version: {currentVersion} same as last installed version: {installedVersion}.");
+            ProgramLog.Info($"Current version: {currentVersion} same as last installed version: {installedVersion}.");
             return false;
         }
         

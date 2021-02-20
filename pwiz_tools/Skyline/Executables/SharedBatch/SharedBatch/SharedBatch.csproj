@@ -4,17 +4,16 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{8DC37752-C356-446F-A1EE-6AA6D8A23B6F}</ProjectGuid>
-    <OutputType>WinExe</OutputType>
+    <ProjectGuid>{9660E7B1-A0AD-4C2B-A395-350D4055640A}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>SharedBatch</RootNamespace>
     <AssemblyName>SharedBatch</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>true</Deterministic>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -24,7 +23,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -38,14 +36,13 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
-    <Reference Include="System.Deployment" />
-    <Reference Include="System.Drawing" />
     <Reference Include="System.Net.Http" />
-    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
@@ -63,11 +60,21 @@
       <DependentUpon>FindSkylineForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Interfaces.cs" />
-    <Compile Include="IValidatorControl.cs" />
+    <Compile Include="Logger.cs" />
     <Compile Include="MainFormUtils.cs" />
     <Compile Include="ProgramLog.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <DependentUpon>Settings.settings</DependentUpon>
+    </Compile>
     <Compile Include="Settings.cs" />
-    <Compile Include="Logger.cs" />
     <Compile Include="ShareConfigsForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -75,8 +82,6 @@
       <DependentUpon>ShareConfigsForm.cs</DependentUpon>
     </Compile>
     <Compile Include="SkylineInstallations.cs" />
-    <Compile Include="Program.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SkylineSettings.cs" />
     <Compile Include="SkylineTypeControl.cs">
       <SubType>UserControl</SubType>
@@ -86,6 +91,8 @@
     </Compile>
     <Compile Include="TextUtil.cs" />
     <Compile Include="XMLUtil.cs" />
+  </ItemGroup>
+  <ItemGroup>
     <EmbeddedResource Include="AlertDlg.resx">
       <DependentUpon>AlertDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -96,13 +103,7 @@
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-      <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Resources.resx</DependentUpon>
-      <DesignTime>True</DesignTime>
-    </Compile>
     <EmbeddedResource Include="ShareConfigsForm.resx">
       <DependentUpon>ShareConfigsForm.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -110,27 +111,17 @@
     <EmbeddedResource Include="SkylineTypeControl.resx">
       <DependentUpon>SkylineTypeControl.cs</DependentUpon>
     </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
     <None Include="app.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
-    <Compile Include="Properties\Settings.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Settings.settings</DependentUpon>
-      <DesignTimeSharedInput>True</DesignTimeSharedInput>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <WCFMetadata Include="Connected Services\" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="SkylineDailyRunner.exe">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="SkylineRunner.exe">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PreBuildEvent>cd "C:\Branches\Skylinework20210204_Consolidate_shared_AutoQcSkylineBatch_files\ProteoWizard\pwiz\pwiz_tools\Skyline\Executables\SharedBatch\SharedBatch\bin\Debug"
+del "SharedBatch.dll" "SharedBatch.dll.config" "SharedBatch.pdb"</PreBuildEvent>
+  </PropertyGroup>
 </Project>

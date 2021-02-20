@@ -29,7 +29,7 @@ namespace AutoQC
 
                 if (!driveInfo.IsMappedNetworkDrive())
                 {
-                    ProgramLog.LogInfo(string.Format("Unable to connect to drive {0}. Config: {1}", driveInfo.DriveLetter, configName));
+                    ProgramLog.Info(string.Format("Unable to connect to drive {0}. Config: {1}", driveInfo.DriveLetter, configName));
                     reconnected = false;
                     return false;
                 }
@@ -49,7 +49,7 @@ namespace AutoQC
                         process.WaitForExit();
                     }
 
-                    ProgramLog.LogInfo(string.Format("After attempting to reconnect.. {0}. Config: {1}", driveInfo.DriveLetter, configName));
+                    ProgramLog.Info(string.Format("After attempting to reconnect.. {0}. Config: {1}", driveInfo.DriveLetter, configName));
 
                     if(IsDriveAvailable(driveInfo, configName))
                     {
@@ -62,7 +62,7 @@ namespace AutoQC
                     }
                 }
 
-                ProgramLog.LogInfo(string.Format("Unable to connect to network drive {0}. Config: {1}", driveInfo.DriveLetter, configName));
+                ProgramLog.Info(string.Format("Unable to connect to network drive {0}. Config: {1}", driveInfo.DriveLetter, configName));
                 reconnected = false;
                 return false;
             }

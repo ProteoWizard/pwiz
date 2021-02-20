@@ -28,8 +28,8 @@
     <PublisherName>University of Washington</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>414</ApplicationRevision>
-    <ApplicationVersion>20.2.0.414</ApplicationVersion>
+    <ApplicationRevision>416</ApplicationRevision>
+    <ApplicationVersion>20.2.0.416</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -69,7 +69,7 @@
     <GenerateManifests>true</GenerateManifests>
   </PropertyGroup>
   <PropertyGroup>
-    <SignManifests>false</SignManifests>
+    <SignManifests>true</SignManifests>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>SkylineBatch_release.ico</ApplicationIcon>
@@ -84,7 +84,15 @@
     <AssemblyOriginatorKeyFile>
     </AssemblyOriginatorKeyFile>
   </PropertyGroup>
+  <PropertyGroup />
+  <PropertyGroup />
   <ItemGroup>
+    <Content Include="SkylineDailyRunner.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="SkylineRunner.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <None Include="Resources\OpenFolder.bmp" />
     <None Include="Resources\SkylineData.ico" />
     <None Include="Resources\SkylineDoc.ico" />
@@ -192,6 +200,10 @@
       <HintPath>..\..\..\..\Shared\Lib\Newtonsoft.Json.dll</HintPath>
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
+    <Reference Include="SharedBatch, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\SharedBatch\SharedBatch\bin\Debug\SharedBatch.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Collections.Immutable, Version=5.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -245,12 +257,6 @@
       <ProductName>.NET Framework 3.5 SP1</ProductName>
       <Install>false</Install>
     </BootstrapperPackage>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\SharedBatch\SharedBatch\SharedBatch.csproj">
-      <Project>{8dc37752-c356-446f-a1ee-6aa6d8a23b6f}</Project>
-      <Name>SharedBatch</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <COMReference Include="IWshRuntimeLibrary">

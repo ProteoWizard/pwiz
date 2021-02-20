@@ -196,8 +196,7 @@ namespace AutoQC
                     return;
                 }
                 // remove config
-                RemoveConfigLoggerAndRunner(GetSelectedConfig());
-                base.RemoveSelected();
+                if (base.RemoveSelected()) RemoveConfigLoggerAndRunner(configRunner.Config);
             }
         }
 
@@ -401,7 +400,7 @@ namespace AutoQC
         {
             config.IsEnabled = true;
             var configRunner = _configRunners[config.Name];
-            ProgramLog.LogInfo(string.Format(Resources.ConfigManager_StartConfig_Starting_configuration___0__, config.Name));
+            ProgramLog.Info(string.Format(Resources.ConfigManager_StartConfig_Starting_configuration___0__, config.Name));
             try
             {
                 ((ConfigRunner)configRunner).Start();
@@ -411,7 +410,7 @@ namespace AutoQC
                 DisplayErrorWithException(string.Format(Resources.ConfigManager_StartConfig_Error_starting_configuration__0__, configRunner.GetConfig().GetName()) + Environment.NewLine +
                                           e.Message, e);
                 // ReSharper disable once LocalizableElement
-                ProgramLog.LogError(string.Format(Resources.ConfigManager_StartConfig_Error_starting_configuration___0__, configRunner.GetConfig().GetName()), e);
+                ProgramLog.Error(string.Format(Resources.ConfigManager_StartConfig_Error_starting_configuration___0__, configRunner.GetConfig().GetName()), e);
             }
         }
 

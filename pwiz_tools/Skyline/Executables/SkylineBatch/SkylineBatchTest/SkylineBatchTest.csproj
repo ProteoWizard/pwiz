@@ -36,7 +36,12 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="SharedBatch, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\SharedBatch\SharedBatch\bin\Debug\SharedBatch.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Numerics" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
@@ -63,10 +68,6 @@
     <Compile Include="ConfigManagerThreadingTest.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\SharedBatch\SharedBatch\SharedBatch.csproj">
-      <Project>{8dc37752-c356-446f-a1ee-6aa6d8a23b6f}</Project>
-      <Name>SharedBatch</Name>
-    </ProjectReference>
     <ProjectReference Include="..\SkylineBatch\SkylineBatch.csproj">
       <Project>{7ab2d7ad-6760-450e-bccd-b08502307b99}</Project>
       <Name>SkylineBatch</Name>

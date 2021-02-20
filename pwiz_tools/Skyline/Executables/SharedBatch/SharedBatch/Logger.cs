@@ -108,7 +108,7 @@ using SharedBatch.Properties;
                 {
                     var err = new StringBuilder(Resources.Logger_WriteToFile_Error_occurred_while_trying_to_backup_log_file__).AppendLine(_filePath);
                     err.AppendLine(Resources.Logger_WriteToFile_Exception_stack_trace__);
-                    ProgramLog.LogError(err.ToString(), e);
+                    ProgramLog.Error(err.ToString(), e);
                 }
 
                 var dateAndMessage = GetDate() + message;
@@ -143,15 +143,15 @@ using SharedBatch.Properties;
                         WriteToBuffer(string.Format(Resources.Logger_WriteToFile_ERROR_writing_to_the_log_file___0___Check_program_log_for_details___1_, e.Message, ProgramLog.GetProgramLogFilePath()));
                     }
 
-                    ProgramLog.LogError(string.Format(Resources.Logger_WriteToFile_Error_occurred_writing_to_log_file___0___Attempted_to_write_, _filePath));
-                    ProgramLog.LogError(message);
+                    ProgramLog.Error(string.Format(Resources.Logger_WriteToFile_Error_occurred_writing_to_log_file___0___Attempted_to_write_, _filePath));
+                    ProgramLog.Error(message);
                     if (!fileNotFound)
                     {
-                        ProgramLog.LogError(Resources.Logger_WriteToFile_Exception_stack_trace_, e);
+                        ProgramLog.Error(Resources.Logger_WriteToFile_Exception_stack_trace_, e);
                     }
                     else
                     {
-                        ProgramLog.LogError(string.Format(Resources.Logger_WriteToFile_Error_message_was__0__, e.Message));
+                        ProgramLog.Error(string.Format(Resources.Logger_WriteToFile_Error_message_was__0__, e.Message));
                     }
                 }
             }
@@ -284,7 +284,7 @@ using SharedBatch.Properties;
                 line = string.Format(line, args);
             }
 
-            ProgramLog.LogError(line);
+            ProgramLog.Error(line);
 
             if (_mainUi != null)
             {

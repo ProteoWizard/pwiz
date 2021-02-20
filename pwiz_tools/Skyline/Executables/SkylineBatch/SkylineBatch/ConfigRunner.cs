@@ -117,7 +117,6 @@ namespace SkylineBatch
             Config.MainSettings.CreateAnalysisFolderIfNonexistent();
             // Writes commands to the log and a file for batch processing
             var commandWriter = new CommandWriter(_logger, Config.SkylineSettings, newSkylineFileName);
-            commandWriter.Start();
 
             // STEP 1: open skyline file and save copy to analysis folder
             if (startStep == 1)

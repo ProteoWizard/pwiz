@@ -90,9 +90,9 @@ namespace SharedBatch
                     config.Validate();
                     _configValidation.Add(config.GetName(), true);
                 }
-                catch (ArgumentException e)
+                catch (ArgumentException)
                 {
-                    //Program.LogInfo(e.Message);
+                    // Invalid configurations are loaded
                     _configValidation.Add(config.GetName(), false);
                 }
             }
@@ -276,7 +276,7 @@ namespace SharedBatch
                     throw new ArgumentException(string.Format(Resources.ConfigManager_InsertConfiguration_Configuration___0___already_exists_, config.GetName()) + Environment.NewLine +
                                                 Resources.ConfigManager_InsertConfiguration_Please_enter_a_unique_name_for_the_configuration_);
                 }
-                //Program.LogInfo(string.Format(Resources.ConfigManager_InsertConfiguration_Adding_configuration___0___, config.GetName()));
+                ProgramLog.Info(string.Format(Resources.ConfigManager_InsertConfiguration_Adding_configuration___0___, config.GetName()));
                 _configList.Insert(index, config);
                 
                 try
@@ -322,7 +322,7 @@ namespace SharedBatch
             }
         }
         
-        public void RemoveSelected()
+        public bool RemoveSelected()
         {
             lock (_lock)
             {
@@ -332,11 +332,12 @@ namespace SharedBatch
                     string.Format(Resources.ConfigManager_RemoveSelected_Are_you_sure_you_want_to_delete___0___,
                         config.GetName()));
                 if (doDelete != DialogResult.Yes)
-                    return;
-                //Program.LogInfo(string.Format(Resources.ConfigManager_RemoveSelected_Removing_configuration____0__, config.Name));
+                    return false;
+                ProgramLog.Info(string.Format(Resources.ConfigManager_RemoveSelected_Removing_configuration____0__, config.GetName()));
                 RemoveConfig(config);
                 if (SelectedConfig == _configList.Count)
                     SelectedConfig--;
+                return true;
             }
         }
 

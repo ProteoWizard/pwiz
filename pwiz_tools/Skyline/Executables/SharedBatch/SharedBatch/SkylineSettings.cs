@@ -97,7 +97,7 @@ namespace SharedBatch
             writer.WriteEndElement();
         }
 
-        public async Task<int[]> GetVersion()
+        public int[] GetVersion()
         {
             var output = "";
             Process cmd = new Process();
@@ -136,10 +136,10 @@ namespace SharedBatch
             return versionNumbers;
         }
 
-        public async Task<bool> HigherVersion(string versionCutoff)
+        public bool HigherVersion(string versionCutoff)
         {
             var cutoff = ParseVersionFromString(versionCutoff);
-            var version = await GetVersion();
+            var version = GetVersion();
             for (int i = 0; i < cutoff.Length; i++)
             {
                 if (version[i] < cutoff[i]) return false;

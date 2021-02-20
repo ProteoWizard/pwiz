@@ -134,17 +134,19 @@ namespace SkylineBatch
                         configRunner.GetConfigName()));
                     return;
                 }
-                RemoveConfigRunner(GetSelectedConfig());
-                base.RemoveSelected();
+                if (base.RemoveSelected()) RemoveConfigRunner(configRunner.Config);
             }
         }
 
         public new void ReplaceSelectedConfig(IConfig newConfig)
         {
-            var oldConfig = GetSelectedConfig();
-            base.ReplaceSelectedConfig(newConfig);
-            RemoveConfigRunner(oldConfig);
-            AddConfigRunner(newConfig);
+            lock (_lock)
+            {
+                var oldConfig = GetSelectedConfig();
+                base.ReplaceSelectedConfig(newConfig);
+                RemoveConfigRunner(oldConfig);
+                AddConfigRunner(newConfig);
+            }
         }
 
         public new SkylineBatchConfig GetSelectedConfig()
