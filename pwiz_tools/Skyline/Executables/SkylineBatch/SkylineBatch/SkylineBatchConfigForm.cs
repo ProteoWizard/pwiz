@@ -52,7 +52,8 @@ namespace SkylineBatch
             _newReportList = new List<ReportInfo>();
 
             _mainControl = mainControl;
-            _initialEnabled = config.Enabled;
+            if (config != null) 
+                _initialEnabled = config.Enabled;
             _isBusy = isBusy;
 
             _canEditSkylineSettings = !Installations.HasLocalSkylineCmd;
@@ -77,6 +78,8 @@ namespace SkylineBatch
 
         private void InitInputFieldsFromConfig(SkylineBatchConfig config)
         {
+            SetInitialSkylineSettings(config);
+
             if (config == null)
                 return;
 
@@ -86,7 +89,6 @@ namespace SkylineBatch
             SetInitialMainSettings(config);
             SetInitialFileSettings(config);
             SetInitialReportSettings(config);
-            SetInitialSkylineSettings(config);
         }
 
         public void DisableUserInputs(Control parentControl = null)
@@ -146,7 +148,14 @@ namespace SkylineBatch
         {
             OpenFileDialog openDialog = new OpenFileDialog();
             openDialog.Filter = TextUtil.FILTER_SKY;
-            openDialog.InitialDirectory = Path.GetDirectoryName(textSkylinePath.Text);
+            try
+            {
+                openDialog.InitialDirectory = Path.GetDirectoryName(textSkylinePath.Text);
+            }
+            catch (Exception)
+            {
+                // Accept the default directory
+            }
             if (openDialog.ShowDialog()== DialogResult.OK)
                 textSkylinePath.Text = openDialog.FileName;
         }
@@ -282,8 +291,13 @@ namespace SkylineBatch
         private void SetInitialSkylineSettings(SkylineBatchConfig config)
         {
             if (!_canEditSkylineSettings) return;
-
-            _skylineTypeControl = new SkylineTypeControl(config.UsesSkyline, config.UsesSkylineDaily, config.UsesCustomSkylinePath, config.SkylineSettings.CmdPath);
+            if (config != null)
+                _skylineTypeControl = new SkylineTypeControl(config.UsesSkyline, config.UsesSkylineDaily, config.UsesCustomSkylinePath, config.SkylineSettings.CmdPath);
+            else
+            {
+                // Default to the first existing Skyline installation (Skyline, Skyline-daily, custom path)
+                _skylineTypeControl = new SkylineTypeControl();
+            }
             _skylineTypeControl.Dock = DockStyle.Fill;
             _skylineTypeControl.Show();
             panelSkylineSettings.Controls.Add(_skylineTypeControl);
