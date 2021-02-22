@@ -466,6 +466,33 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Crosslinks.
+        /// </summary>
+        public static string CrosslinkStructure_Crosslinks {
+            get {
+                return ResourceManager.GetString("CrosslinkStructure_Crosslinks", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Linked explicit modifications.
+        /// </summary>
+        public static string CrosslinkStructure_LinkedExplicitMods {
+            get {
+                return ResourceManager.GetString("CrosslinkStructure_LinkedExplicitMods", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Linked peptides.
+        /// </summary>
+        public static string CrosslinkStructure_LinkedPeptides {
+            get {
+                return ResourceManager.GetString("CrosslinkStructure_LinkedPeptides", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Average m/z.
         /// </summary>
         public static string CustomIon_AverageMassMz {
@@ -813,6 +840,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string ExplicitMod_Modification {
             get {
                 return ResourceManager.GetString("ExplicitMod_Modification", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Crosslink structure.
+        /// </summary>
+        public static string ExplicitMods_CrosslinkStructure {
+            get {
+                return ResourceManager.GetString("ExplicitMods_CrosslinkStructure", resourceCulture);
             }
         }
         
@@ -4467,6 +4503,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string ViewSpecLayout_Layouts {
             get {
                 return ResourceManager.GetString("ViewSpecLayout_Layouts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Layouts.
+        /// </summary>
+        public static string ViewSpecList_ViewLayouts {
+            get {
+                return ResourceManager.GetString("ViewSpecList_ViewLayouts", resourceCulture);
             }
         }
         

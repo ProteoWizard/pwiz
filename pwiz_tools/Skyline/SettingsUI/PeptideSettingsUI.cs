@@ -159,7 +159,7 @@ namespace pwiz.Skyline.SettingsUI
 
             // Initialize modification settings
             _driverStaticMod = new SettingsListBoxDriver<StaticMod>(listStaticMods, Settings.Default.StaticModList);
-            _driverStaticMod.LoadList(null, Modifications.StaticModifications.Where(mod=>null == mod.CrosslinkerSettings).ToList());
+            _driverStaticMod.LoadList(null, Modifications.StaticModifications);
             _driverHeavyMod = new SettingsListBoxDriver<StaticMod>(listHeavyMods, Settings.Default.HeavyModList);
             _driverLabelType = new LabelTypeComboDriver(LabelTypeComboDriver.UsageType.ModificationsPicker, comboLabelType, Modifications, _driverHeavyMod, 
                 labelStandardType, comboStandardType, listStandardTypes);
@@ -508,7 +508,7 @@ namespace pwiz.Skyline.SettingsUI
                 ? _driverSmallMolInternalStandardTypes.InternalStandardTypes
                 : _driverLabelType.InternalStandardTypes;
             PeptideModifications modifications = new PeptideModifications(
-                _driverStaticMod.Chosen.Where(mod=>null == mod.CrosslinkerSettings).ToList(), maxVariableMods, maxNeutralLosses,
+                _driverStaticMod.Chosen, maxVariableMods, maxNeutralLosses,
                 _driverLabelType.GetHeavyModifications(), standardTypes);
             // Should not be possible to change explicit modifications in the background,
             // so this should be safe.  CONSIDER: Document structure because of a library load?

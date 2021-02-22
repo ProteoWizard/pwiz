@@ -32,47 +32,47 @@ namespace AutoQC
     /// </summary>
     public partial class AlertDlg : Form
     {
-        private const int MAX_HEIGHT = 500;
+        private const int MaxHeight = 500;
         private readonly int _originalFormHeight;
         private readonly int _originalMessageHeight;
         private string _message;
         private string _detailMessage;
 
-        private AlertDlg(string message, string title, Image icon)
+        private AlertDlg(string message, Image icon)
         {
             InitializeComponent();
             _originalFormHeight = Height;
             _originalMessageHeight = labelMessage.Height;
             Message = message;
             btnMoreInfo.Parent.Controls.Remove(btnMoreInfo);
-            Text = title;
+            Text = Program.AppName;
             pictureBox1.Image = icon;
         }
 
-        public static void ShowWarning(IWin32Window parent, string message, string title)
+        public static void ShowWarning(IWin32Window parent, string message)
         {
-            Show(parent, message, title, SystemIcons.Warning.ToBitmap(), MessageBoxButtons.OK);
+            Show(parent, message, SystemIcons.Warning.ToBitmap(), MessageBoxButtons.OK);
         }
-        public static void ShowError(IWin32Window parent, string message, string title)
+        public static void ShowError(IWin32Window parent, string message)
         {
-            Show(parent, message, title, SystemIcons.Error.ToBitmap(), MessageBoxButtons.OK);
+            Show(parent, message, SystemIcons.Error.ToBitmap(), MessageBoxButtons.OK);
         }
-        public static void ShowInfo(IWin32Window parent, string message, string title)
+        public static void ShowInfo(IWin32Window parent, string message)
         {
-            Show(parent, message, title, SystemIcons.Information.ToBitmap(), MessageBoxButtons.OK);
+            Show(parent, message, SystemIcons.Information.ToBitmap(), MessageBoxButtons.OK);
         }
-        public static DialogResult ShowQuestion(IWin32Window parent, string message, string title)
+        public static DialogResult ShowQuestion(IWin32Window parent, string message)
         {
-            return Show(parent, message, title, SystemIcons.Question.ToBitmap(), MessageBoxButtons.YesNo);
+            return Show(parent, message, SystemIcons.Question.ToBitmap(), MessageBoxButtons.YesNo);
         }
 
-        private static DialogResult Show(IWin32Window parent, string message, string title, Image icon, MessageBoxButtons messageBoxButtons)
+        private static DialogResult Show(IWin32Window parent, string message, Image icon, MessageBoxButtons messageBoxButtons)
         {
-            return new AlertDlg(message, title, icon).ShowAndDispose(parent, messageBoxButtons);
+            return new AlertDlg(message, icon).ShowAndDispose(parent, messageBoxButtons);
         }
-        public static void ShowErrorWithException(IWin32Window parent, string message, string title, Exception exception)
+        public static void ShowErrorWithException(IWin32Window parent, string message, Exception exception)
         {
-            new AlertDlg(message, title, SystemIcons.Error.ToBitmap()) { Exception = exception }.ShowAndDispose(parent, MessageBoxButtons.OK);
+            new AlertDlg(message,SystemIcons.Error.ToBitmap()) { Exception = exception }.ShowAndDispose(parent, MessageBoxButtons.OK);
         }
 
         private string Message
@@ -83,7 +83,7 @@ namespace AutoQC
                 labelMessage.Text = TruncateMessage(_message);
                 int formGrowth = Math.Max(labelMessage.Height - _originalMessageHeight * 3, 0);
                 formGrowth = Math.Max(formGrowth, 0);
-                formGrowth = Math.Min(formGrowth, MAX_HEIGHT);
+                formGrowth = Math.Min(formGrowth, MaxHeight);
                 Height = _originalFormHeight + formGrowth;
             }
         }
@@ -119,14 +119,9 @@ namespace AutoQC
         /// <summary>
         /// Returns the buttons on the button bar from LEFT to RIGHT.
         /// </summary>
-        private IEnumerable<Button> VisibleButtons
-        {
-            get
-            {
-                // return the buttons in reverse order because buttonPanel is a right-to-left FlowPanel.
-                return buttonPanel.Controls.OfType<Button>().Reverse();
-            }
-        }
+        private IEnumerable<Button> VisibleButtons =>
+            // return the buttons in reverse order because buttonPanel is a right-to-left FlowPanel.
+            buttonPanel.Controls.OfType<Button>().Reverse();
 
         public void ClickButton(DialogResult dialogResult)
         {
@@ -271,10 +266,7 @@ namespace AutoQC
 
         public string DetailMessage
         {
-            get
-            {
-                return _detailMessage;
-            }
+            get => _detailMessage;
             set
             {
                 _detailMessage = value;
@@ -297,7 +289,7 @@ namespace AutoQC
             }
         }
 
-        private const int MAX_MESSAGE_LENGTH = 50000;
+        private const int MaxMessageLength = 50000;
         /// <summary>
         /// Labels have difficulty displaying text longer than 50,000 characters, and SetWindowText
         /// replaces strings longer than 520,000 characters with the empty string.
@@ -309,11 +301,11 @@ namespace AutoQC
             {
                 return string.Empty;
             }
-            if (message.Length < MAX_MESSAGE_LENGTH)
+            if (message.Length < MaxMessageLength)
             {
                 return message;
             }
-            return TextUtil.LineSeparate(message.Substring(0, MAX_MESSAGE_LENGTH),
+            return TextUtil.LineSeparate(message.Substring(0, MaxMessageLength),
                 Resources.AlertDlg_TruncateMessage_Message_truncated__Press_Ctrl_C_to_copy_entire_message_to_the_clipboard_);
         }
 
@@ -322,8 +314,8 @@ namespace AutoQC
         /// </summary>
         public sealed override string Text
         {
-            get { return base.Text; }
-            set { base.Text = value; }
+            get => base.Text;
+            set => base.Text = value;
         }
 
     }

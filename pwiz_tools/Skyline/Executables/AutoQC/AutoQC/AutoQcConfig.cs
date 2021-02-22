@@ -3,30 +3,61 @@ using System.Text;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
+using AutoQC.Properties;
 
 namespace AutoQC
 {
     [XmlRoot("autoqc_config")]
-    public class AutoQcConfig: IXmlSerializable
+    public class AutoQcConfig
     {
-        public string Name { get; set; }
-        public bool IsEnabled { get; set; }
-        public string User { get; set; }
-        public DateTime Created { get; set; }
-        public DateTime Modified { get; set; }
 
-        public MainSettings MainSettings { get; set; }
-        public PanoramaSettings PanoramaSettings { get; set; }
+        public AutoQcConfig(string name, bool isEnabled, DateTime created, DateTime modified,
+            MainSettings mainSettings, PanoramaSettings panoramaSettings, SkylineSettings skylineSettings)
+        {
+            if (string.IsNullOrEmpty(name))
+            {
+                throw new ArgumentException(string.Format(Resources.AutoQcConfig_AutoQcConfig___0___is_not_a_valid_name_for_the_configuration_, name) + Environment.NewLine +
+                                            Resources.AutoQcConfig_AutoQcConfig_Please_enter_a_name_);
+            }
+            Name = name;
+            IsEnabled = isEnabled;
+            Created = created;
+            Modified = modified;
+            MainSettings = mainSettings;
+            PanoramaSettings = panoramaSettings;
+            SkylineSettings = skylineSettings;
+        }
 
+        public readonly string Name;
 
-        private enum ATTR
+        public bool IsEnabled;
+
+        public readonly DateTime Created;
+
+        public readonly DateTime Modified;
+
+        public readonly MainSettings MainSettings;
+
+        public readonly PanoramaSettings PanoramaSettings;
+
+        public readonly SkylineSettings SkylineSettings;
+
+        public string User => PanoramaSettings.PublishToPanorama ? PanoramaSettings.PanoramaUserEmail : string.Empty;
+        
+        public bool UsesSkyline => SkylineSettings.Type == SkylineType.Skyline;
+
+        public bool UsesSkylineDaily => SkylineSettings.Type == SkylineType.SkylineDaily;
+
+        public bool UsesCustomSkylinePath => SkylineSettings.Type == SkylineType.Custom;
+
+        private enum Attr
         {
             name,
             is_enabled,
             user,
             created,
             modified
-        };
+        }
 
 
         public XmlSchema GetSchema()
@@ -34,57 +65,79 @@ namespace AutoQC
             return null;
         }
 
-        public void ReadXml(XmlReader reader)
+        #region XML
+
+        public static AutoQcConfig ReadXml(XmlReader reader)
         {
-            Name = reader.GetAttribute(ATTR.name);
+            var name = reader.GetAttribute(Attr.name);
             
-            IsEnabled = reader.GetBoolAttribute(ATTR.is_enabled);
-            User = reader.GetAttribute(ATTR.user);
+            var isEnabled = reader.GetBoolAttribute(Attr.is_enabled);
             DateTime dateTime;
-            DateTime.TryParse(reader.GetAttribute(ATTR.created), out dateTime);
-            Created = dateTime;
-            DateTime.TryParse(reader.GetAttribute(ATTR.modified), out dateTime);
-            Modified = dateTime;
+            DateTime.TryParse(reader.GetAttribute(Attr.created), out dateTime);
+            var created = dateTime;
+            DateTime.TryParse(reader.GetAttribute(Attr.modified), out dateTime);
+            var modified = dateTime;
 
             do
             {
                 reader.Read();
             } while (reader.NodeType != XmlNodeType.Element);
 
-            var mainSettings = new MainSettings();
-            mainSettings.ReadXml(reader);
-            MainSettings = mainSettings;
-            do
+            MainSettings mainSettings = null;
+            PanoramaSettings panoramaSettings = null;
+            SkylineSettings skylineSettings = null;
+            string exceptionMessage = null;
+            try
             {
-                reader.Read();
-            } while (reader.NodeType != XmlNodeType.Element);
+                mainSettings = MainSettings.ReadXml(reader);
+                do
+                {
+                    reader.Read();
+                } while (reader.NodeType != XmlNodeType.Element);
+                panoramaSettings = PanoramaSettings.ReadXml(reader);
+                do
+                {
+                    reader.Read();
 
-            var panoramaSettings = new PanoramaSettings();
-            panoramaSettings.ReadXml(reader);
-            PanoramaSettings = panoramaSettings;
-            do
+                    if (reader.Name.Equals("autoqc_config")) // handles old configurations without skyline settings
+                    {
+                        skylineSettings = new SkylineSettings(SkylineType.Skyline);
+                        break;
+                    }
+                } while (reader.NodeType != XmlNodeType.Element);
+                skylineSettings = skylineSettings ?? SkylineSettings.ReadXml(reader);
+            }
+            catch (ArgumentException e)
+            {
+                exceptionMessage = string.Format("\"{0}\" ({1})", name, e.Message);
+            }
+
+            // finish reading config before exception is thrown so following configs aren't messed up
+            while (!(reader.Name == "autoqc_config" && reader.NodeType == XmlNodeType.EndElement))
             {
                 reader.Read();
-            } while (reader.NodeType != XmlNodeType.EndElement);
+            } 
+
+            if (exceptionMessage != null)
+                throw new ArgumentException(exceptionMessage);
+
+            return new AutoQcConfig(name, isEnabled, created, modified, mainSettings, panoramaSettings, skylineSettings);
         }
 
         public void WriteXml(XmlWriter writer)
         {
             writer.WriteStartElement("autoqc_config");
-            writer.WriteAttribute(ATTR.name, Name);
-            writer.WriteAttribute(ATTR.is_enabled, IsEnabled);
-            writer.WriteAttributeIfString(ATTR.user, User);
-            writer.WriteAttributeIfString(ATTR.created, Created.ToShortDateString() + " " + Created.ToShortTimeString());
-            writer.WriteAttributeIfString(ATTR.modified, Modified.ToShortDateString() + " " + Modified.ToShortTimeString());
+            writer.WriteAttribute(Attr.name, Name);
+            writer.WriteAttribute(Attr.is_enabled, IsEnabled);
+            writer.WriteAttributeIfString(Attr.created, Created.ToShortDateString() + " " + Created.ToShortTimeString());
+            writer.WriteAttributeIfString(Attr.modified, Modified.ToShortDateString() + " " + Modified.ToShortTimeString());
             MainSettings.WriteXml(writer);
             PanoramaSettings.WriteXml(writer);
+            SkylineSettings.WriteXml(writer);
             writer.WriteEndElement();
         }
 
-        public static AutoQcConfig Deserialize(XmlReader reader)
-        {
-            return reader.Deserialize(new AutoQcConfig());
-        }
+        #endregion
 
         public void Validate()
         {
@@ -94,30 +147,49 @@ namespace AutoQC
             }
 
             MainSettings.ValidateSettings();
+            SkylineSettings.Validate();
             PanoramaSettings.ValidateSettings();
-           
+
         }
 
-        public static AutoQcConfig GetDefault()
+        public virtual ProcessInfo RunBefore(ImportContext importContext)
         {
-            var config = new AutoQcConfig
+            string archiveArgs = null;
+            if (!importContext.ImportExisting)
             {
-                MainSettings = MainSettings.GetDefault(),
-                PanoramaSettings = PanoramaSettings.GetDefault()
-            };
-            return config;
+                // If we are NOT importing existing results, create an archive (if required) of the 
+                // Skyline document BEFORE importing a results file.
+                archiveArgs = MainSettings.GetArchiveArgs(MainSettings.GetLastArchivalDate(), DateTime.Today);
+            }
+            if (string.IsNullOrEmpty(archiveArgs))
+            {
+                return null;
+            }
+            var args = string.Format("--in=\"{0}\" {1}", MainSettings.SkylineFilePath, archiveArgs);
+            return new ProcessInfo(SkylineSettings.CmdPath, args, args);
         }
 
-        public AutoQcConfig Copy()
+        public virtual ProcessInfo RunAfter(ImportContext importContext)
         {
-            return new AutoQcConfig
+            string archiveArgs = null;
+            var currentDate = DateTime.Today;
+            if (importContext.ImportExisting && importContext.ImportingLast())
             {
-                Name = Name,
-                IsEnabled = false, // Disable by default
-                User = PanoramaSettings.PanoramaUserEmail,
-                MainSettings = MainSettings.Copy(),
-                PanoramaSettings = PanoramaSettings.Copy()
-            };
+                // If we are importing existing files in the folder, create an archive (if required) of the 
+                // Skyline document AFTER importing the last results file.
+                var oldestFileDate = importContext.GetOldestImportedFileDate(MainSettings.LastAcquiredFileDate);
+                var today = DateTime.Today;
+                if (oldestFileDate.Year < today.Year || oldestFileDate.Month < today.Month)
+                {
+                    archiveArgs = MainSettings.GetArchiveArgs(currentDate.AddMonths(-1), currentDate);
+                }
+            }
+            if (string.IsNullOrEmpty(archiveArgs))
+            {
+                return null;
+            }
+            var args = string.Format("--in=\"{0}\" {1}", MainSettings.SkylineFilePath, archiveArgs);
+            return new ProcessInfo(SkylineSettings.CmdPath, args, args);
         }
 
         public override string ToString()
@@ -125,13 +197,14 @@ namespace AutoQC
             var sb = new StringBuilder();
             sb.Append("Name: ").AppendLine(Name);
             sb.Append("Enabled: ").AppendLine(IsEnabled.ToString());
-            sb.Append("Panorama User: ").AppendLine(User);
             sb.Append("Created: ").Append(Created.ToShortDateString()).Append(" ").AppendLine(Created.ToShortTimeString());
             sb.Append("Modified: ").Append(Modified.ToShortDateString()).Append(" ").AppendLine(Modified.ToShortTimeString());
-            sb.AppendLine("").AppendLine("Main Settings");
+            sb.AppendLine().AppendLine("Main Settings");
             sb.Append(MainSettings);
-            sb.AppendLine("").AppendLine("Panorama Settings");
+            sb.AppendLine().AppendLine("Panorama Settings");
             sb.Append(PanoramaSettings);
+            sb.AppendLine().AppendLine("Skyline Settings");
+            sb.Append(SkylineSettings);
             return sb.ToString();
         }
 
@@ -142,7 +215,8 @@ namespace AutoQC
             return string.Equals(Name, other.Name)
                    && IsEnabled == other.IsEnabled
                    && Equals(MainSettings, other.MainSettings)
-                   && Equals(PanoramaSettings, other.PanoramaSettings);
+                   && Equals(PanoramaSettings, other.PanoramaSettings)
+                   && Equals(SkylineSettings, other.SkylineSettings);
         }
 
         public override bool Equals(object obj)
@@ -158,9 +232,9 @@ namespace AutoQC
             unchecked
             {
                 var hashCode = (Name != null ? Name.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ IsEnabled.GetHashCode();
                 hashCode = (hashCode*397) ^ (MainSettings != null ? MainSettings.GetHashCode() : 0);
                 hashCode = (hashCode*397) ^ (PanoramaSettings != null ? PanoramaSettings.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (SkylineSettings != null ? SkylineSettings.GetHashCode() : 0);
                 return hashCode;
             }
         }

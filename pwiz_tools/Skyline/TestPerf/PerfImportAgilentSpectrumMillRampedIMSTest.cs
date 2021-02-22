@@ -69,8 +69,8 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             // RunPerfTests = true; // Uncomment this to force test to run in UI
             Log.AddMemoryAppender();
             _testCase = testCase;
-            TestFilesZip = _testCase ==1 ? "https://skyline.gs.washington.edu/perftests/PerfImportAgilentSpectrumMillRampedIMS2.zip" :
-                                           "https://skyline.gs.washington.edu/perftests/PerfImportAgilentSpectrumMillLibTest.zip";
+            TestFilesZip = _testCase ==1 ? GetPerfTestDataURL(@"PerfImportAgilentSpectrumMillRampedIMS2.zip") :
+                                           GetPerfTestDataURL(@"PerfImportAgilentSpectrumMillLibTest.zip");
             TestFilesPersistent = new[] { ".d" }; // List of file basenames that we'd like to unzip alongside parent zipFile, and (re)use in place
 
             MsDataFileImpl.PerfUtilFactory.IssueDummyPerfUtils = false; // Turn on performance measurement

@@ -50,8 +50,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>286</ApplicationRevision>
-    <ApplicationVersion>20.2.1.286</ApplicationVersion>
+    <ApplicationRevision>404</ApplicationRevision>
+    <ApplicationVersion>20.2.1.404</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -398,11 +398,11 @@
       <DependentUpon>TutorialTextResources.resx</DependentUpon>
     </Compile>
     <Compile Include="Controls\TargetColumn.cs" />
-    <Compile Include="EditUI\EditLinkedPeptideDlg.cs">
+    <Compile Include="EditUI\EditLinkedPeptidesDlg.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="EditUI\EditLinkedPeptideDlg.Designer.cs">
-      <DependentUpon>EditLinkedPeptideDlg.cs</DependentUpon>
+    <Compile Include="EditUI\EditLinkedPeptidesDlg.Designer.cs">
+      <DependentUpon>EditLinkedPeptidesDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="EditUI\PermuteIsotopeModificationsDlg.designer.cs">
       <DependentUpon>PermuteIsotopeModificationsDlg.cs</DependentUpon>
@@ -462,6 +462,12 @@
     <Compile Include="Model\AuditLog\AuditLogToStringHelper.cs" />
     <Compile Include="Model\AuditLog\BlockHash.cs" />
     <Compile Include="Model\AuditLog\Databinding\AuditLogColumn.cs" />
+    <Compile Include="FileUI\ImportTransitionListColumnSelectDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FileUI\ImportTransitionListColumnSelectDlg.Designer.cs">
+      <DependentUpon>ImportTransitionListColumnSelectDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="Model\AuditLog\Databinding\AuditLogDetailRow.cs" />
     <Compile Include="Model\AuditLog\Databinding\AuditLogRow.cs" />
     <Compile Include="Model\AuditLog\CustomPropertyLocalizer.cs" />
@@ -487,12 +493,22 @@
     <Compile Include="Model\AuditLog\ReflectorEnumerator.cs" />
     <Compile Include="Model\AuditLog\ReflectorToString.cs" />
     <Compile Include="Model\Crosslinking\ComplexFragmentIon.cs" />
+    <Compile Include="Model\Crosslinking\CrosslinkStructure.cs" />
+    <Compile Include="Model\Crosslinking\IonChain.cs" />
+    <Compile Include="Model\Crosslinking\CrosslinkedSequence.cs" />
+    <Compile Include="Model\Crosslinking\CrosslinkPeptideBuilder.cs" />
+    <Compile Include="Model\Crosslinking\IonOrdinal.cs" />
     <Compile Include="Model\Crosslinking\CrosslinkBuilder.cs" />
-    <Compile Include="Model\Crosslinking\ComplexFragmentIonName.cs" />
-    <Compile Include="Model\Crosslinking\CrosslinkerDef.cs" />
+    <Compile Include="Model\Crosslinking\LegacyComplexFragmentIonName.cs" />
+    <Compile Include="Model\Crosslinking\NeutralFragmentIon.cs" />
+    <Compile Include="Model\Crosslinking\CrosslinkerSettings.cs" />
+    <Compile Include="Model\Crosslinking\Crosslink.cs" />
     <Compile Include="Model\Crosslinking\CrosslinkSequenceParser.cs" />
+    <Compile Include="Model\Crosslinking\CrosslinkSite.cs" />
     <Compile Include="Model\Crosslinking\ModificationSite.cs" />
-    <Compile Include="Model\Crosslinking\LinkedPeptide.cs" />
+    <Compile Include="Model\Crosslinking\LegacyLinkedPeptide.cs" />
+    <Compile Include="Model\Crosslinking\PeptideStructure.cs" />
+    <Compile Include="Model\Crosslinking\SimpleFragmentIon.cs" />
     <Compile Include="Model\Databinding\CellLocator.cs" />
     <Compile Include="Model\Databinding\Entities\ColumnCaptions.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -553,11 +569,13 @@
     <Compile Include="Model\IonMobility\ValidatingIonMobilityPrecursor.cs" />
     <Compile Include="Model\Irt\IrtPeptidePicker.cs" />
     <Compile Include="Model\Irt\Regression.cs" />
+    <Compile Include="Model\LegacyCrosslinkConverter.cs" />
     <Compile Include="Model\Lib\BlibData\DbRefSpectraPeakAnnotations.cs" />
     <Compile Include="Model\Lib\ExplicitPeakBounds.cs" />
     <Compile Include="Model\Lib\LibKeyIndex.cs" />
     <Compile Include="Model\Lib\SpectralLibraryExporter.cs" />
     <Compile Include="Model\Lib\SpectrumRanker.cs" />
+    <Compile Include="Model\ProteomicSequence.cs" />
     <Compile Include="SettingsUI\ViewLibraryPepInfoList.cs" />
     <Compile Include="Model\Lib\LibKeyMap.cs" />
     <Compile Include="Model\Lib\LibraryKey.cs" />
@@ -2436,14 +2454,8 @@
       <DependentUpon>ComparePeakPickingDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="EditUI\EditLinkedPeptideDlg.ja.resx">
-      <DependentUpon>EditLinkedPeptideDlg.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="EditUI\EditLinkedPeptideDlg.resx">
-      <DependentUpon>EditLinkedPeptideDlg.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="EditUI\EditLinkedPeptideDlg.zh-CHS.resx">
-      <DependentUpon>EditLinkedPeptideDlg.cs</DependentUpon>
+    <EmbeddedResource Include="EditUI\EditLinkedPeptidesDlg.resx">
+      <DependentUpon>EditLinkedPeptidesDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\MassErrorChartPropertyDlg.ja.resx">
       <DependentUpon>MassErrorChartPropertyDlg.cs</DependentUpon>
@@ -2498,6 +2510,10 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ImportResultsLockMassDlg.zh-CHS.resx">
       <DependentUpon>ImportResultsLockMassDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\ImportTransitionListColumnSelectDlg.resx">
+      <DependentUpon>ImportTransitionListColumnSelectDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ImportTransitionListErrorDlg.ja.resx">

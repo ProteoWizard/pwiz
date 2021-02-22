@@ -221,6 +221,10 @@ namespace pwiz.Skyline.Controls.Clustering
 
         public List<DendrogramFormat> GetUpdatedColumnDendrograms()
         {
+            if (!GraphResults.ColumnGroups.Any())
+            {
+                return null;
+            }
             var columnDendrograms = new List<DendrogramFormat>();
             double xStart = .5;
             foreach (var group in GraphResults.ColumnGroups)
@@ -243,9 +247,13 @@ namespace pwiz.Skyline.Controls.Clustering
 
         public List<DendrogramFormat> GetUpdatedRowDendrograms()
         {
-            int rowCount = GraphResults.RowCount;
+            if (GraphResults.RowDendrogramData == null)
+            {
+                return null;
+            }
             var rowLocations = new List<KeyValuePair<double, double>>();
             var colors = new List<ImmutableList<Color>>();
+            int rowCount = GraphResults.RowCount;
             for (int rowIndex = 0; rowIndex < rowCount; rowIndex++)
             {
                 var y1 = rowCount + .5 - rowIndex;
@@ -253,7 +261,6 @@ namespace pwiz.Skyline.Controls.Clustering
                 rowLocations.Add(new KeyValuePair<double, double>(y1, y2));
                 colors.Add(GraphResults.RowHeaders[rowIndex].Colors);
             }
-
             return new List<DendrogramFormat>
                 {new DendrogramFormat(GraphResults.RowDendrogramData, rowLocations, colors)};
         }

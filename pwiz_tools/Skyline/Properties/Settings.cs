@@ -517,6 +517,65 @@ namespace pwiz.Skyline.Properties
                 this[@"CustomMoleculeTransitionInsertColumnsList"] = value;
             }
         }
+
+        [UserScopedSettingAttribute]
+        // Used to make sure that last seen Transition List headers match the current headers
+        // before proceeding with using saved column locations
+        public List<string> CustomImportTransitionListHeaders
+        {
+            get
+            {
+                if (this[@"CustomImportTransitionListHeaders"] == null)
+                {
+                    var list = new List<string>();
+                    CustomImportTransitionListHeaders = list;
+                }
+                return (List<string>)this[@"CustomImportTransitionListHeaders"];
+            }
+            set
+            {
+                this[@"CustomImportTransitionListHeaders"] = value;
+            }
+        }
+
+        [UserScopedSettingAttribute]
+        // Saves column positions between transition lists. This way when a user tell us the correct column positions they are carried
+        // on to the next transition list
+        public List<Tuple<int, string>> CustomImportTransitionListColumnsList
+        {
+            get
+            {
+                if (this[@"CustomImportTransitionListColumnsList"] == null)
+                {
+                    var list = new List<Tuple<int, string>>();
+                    CustomImportTransitionListColumnsList = list;
+                }
+                return (List < Tuple < int, string>>)this[@"CustomImportTransitionListColumnsList"];
+            }
+            set
+            {
+                this[@"CustomImportTransitionListColumnsList"] = value;
+            }
+        }
+
+        [UserScopedSettingAttribute]
+        public int CustomImportTransitionListColumnCount
+        {
+            get
+            {
+                if (this[@"CustomImportTransitionListColumnCount"] == null)
+                {
+                    var i = new int();
+                    CustomImportTransitionListColumnCount = i;
+                }
+                return (int)this[@"CustomImportTransitionListColumnCount"];
+            }
+            set
+            {
+                this[@"CustomImportTransitionListColumnCount"] = value;
+            }
+        }
+
         [UserScopedSettingAttribute]
         public EnzymeList EnzymeList
         {
