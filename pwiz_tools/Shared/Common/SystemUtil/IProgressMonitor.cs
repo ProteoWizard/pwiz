@@ -62,7 +62,7 @@ namespace pwiz.Common.SystemUtil
         }
         public bool IsCanceled
         {
-            get { return false; }
+            get { return CancellationToken.IsCancellationRequested; }
         }
 
         public UpdateProgressResponse UpdateProgress(IProgressStatus status)
