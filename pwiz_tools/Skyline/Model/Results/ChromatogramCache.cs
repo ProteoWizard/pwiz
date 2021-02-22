@@ -1338,7 +1338,7 @@ namespace pwiz.Skyline.Model.Results
                                 }
                                 else
                                 {
-                                    chromPeakSerializer.WriteItems(fsPeaks.FileStream, peaks.Skip(startIndex).Take(count));    
+                                    chromPeakSerializer.WriteItems(fsPeaks.FileStream, ReadOnlyList.Create(count, index => peaks[startIndex + index]));    
                                 }
                             },
                             start,
