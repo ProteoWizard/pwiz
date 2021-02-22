@@ -849,9 +849,16 @@ namespace pwiz.SkylineTestData
             string rawPath = testFilesDir.GetTestPath("ah_20101011y_BSA_MS-MS_only_5-2" +
                 ExtensionTestContext.ExtThermoRaw);
 
+            // Only .sky files are accepted with the --in argument
+            var output = RunCommand("--in=" + bogusPath + ".zip");
+            Assert.IsTrue(output.Contains(string.Format(
+                Resources
+                    .CommandArgs_ARG_IN_The_specified_input_file__0__is_not_supported__Only_Skyline_files_with_the__1__extension_are_accepted_,
+                bogusPath + ".zip",
+                SrmDocument.EXT)));
 
             //Error: file does not exist
-            string output = RunCommand("--in=" + bogusPath);
+            output = RunCommand("--in=" + bogusPath);
             Assert.IsTrue(output.Contains(string.Format(Resources.CommandLine_OpenSkyFile_Error__The_Skyline_file__0__does_not_exist_, bogusPath)));
 
             //Error: no raw file

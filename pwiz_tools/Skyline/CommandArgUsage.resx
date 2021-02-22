@@ -286,7 +286,7 @@
     <value>If importing a file fails with an error the message is emitted as a warning, the replicate is removed, and importing continues to completion.</value>
   </data>
   <data name="_in" xml:space="preserve">
-    <value>Open a Skyline file</value>
+    <value>Open a Skyline (.sky) file</value>
   </data>
   <data name="_irt_calc_name" xml:space="preserve">
     <value>The name for the iRT calculator created during assay library import. (optional) The default name is the document base name.</value>

@@ -4428,6 +4428,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The specified input file {0} is not supported. Only Skyline files with the {1} extension are accepted..
+        /// </summary>
+        public static string CommandArgs_ARG_IN_The_specified_input_file__0__is_not_supported__Only_Skyline_files_with_the__1__extension_are_accepted_ {
+            get {
+                return ResourceManager.GetString("CommandArgs_ARG_IN_The_specified_input_file__0__is_not_supported__Only_Skyline_fi" +
+                        "les_with_the__1__extension_are_accepted_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The dwell time {0} must be between {1} and {2}..
         /// </summary>
         public static string CommandArgs_DwellTime_The_dwell_time__0__must_be_between__1__and__2__ {

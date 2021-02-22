@@ -700,7 +700,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Open a Skyline file.
+        ///   Looks up a localized string similar to Open a Skyline (.sky) file.
         /// </summary>
         internal static string _in {
             get {

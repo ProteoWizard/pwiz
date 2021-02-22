@@ -11319,4 +11319,7 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
   <data name="SmallMoleculeTransitionListReader_GetMoleculeTransitionGroup_Inconsistent_molecule_description" xml:space="preserve">
     <value>Inconsistent molecule description</value>
   </data>
+  <data name="CommandArgs_ARG_IN_The_specified_input_file__0__is_not_supported__Only_Skyline_files_with_the__1__extension_are_accepted_" xml:space="preserve">
+    <value>The specified input file {0} is not supported. Only Skyline files with the {1} extension are accepted.</value>
+  </data>
 </root>
