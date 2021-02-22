@@ -140,15 +140,6 @@ namespace SkylineBatchTest
 
             var savedConfigsFile = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath;
             if (File.Exists(savedConfigsFile)) File.Delete(savedConfigsFile);
-            /*var logger = GetTestLogger();
-            var testConfigManager = new SkylineBatchConfigManager(logger);
-            while (testConfigManager.HasConfigs())
-            {
-                testConfigManager.SelectConfig(0);
-                testConfigManager.RemoveSelected();
-            }
-            testConfigManager.Close();
-            logger.Delete();*/
         }
 
         public static List<string> GetAllLogFiles(string directory = null)

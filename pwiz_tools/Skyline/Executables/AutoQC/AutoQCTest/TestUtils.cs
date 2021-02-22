@@ -17,6 +17,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.IO;
 using AutoQC;
 using SharedBatch;
@@ -75,20 +76,8 @@ namespace AutoQCTest
 
         public static AutoQcConfig GetTestConfig(string name)
         {
-            //return GetTestConfig(name, null, null);
             return new AutoQcConfig(name, false, DateTime.MinValue, DateTime.MinValue, GetTestMainSettings(), GetTestPanoramaSettings(), GetTestSkylineSettings());
-        } 
-
-        /*public static AutoQcConfig GetTestConfig(string name)
-        {
-            var created = DateTime.MinValue;
-            if (changedVariable.Equals("created"))
-            {
-                DateTime.TryParse(value, out created);
-            }
-
-            return new AutoQcConfig(name, false, created, DateTime.MinValue, GetTestMainSettings(name, changedVariable, value), GetTestPanoramaSettings(changedVariable, value), GetTestSkylineSettings());
-        }*/
+        }
 
         public static ConfigRunner GetTestConfigRunner(string configName = "Config")
         {
@@ -139,27 +128,8 @@ namespace AutoQCTest
 
         public static void ClearSavedConfigurations()
         {
-            var testConfigManager = new AutoQcConfigManager();
-            while (testConfigManager.HasConfigs())
-            {
-                testConfigManager.SelectConfig(0);
-                testConfigManager.RemoveSelected();
-            }
-            testConfigManager.Close();
-        }
-
-        public static List<string> GetAllLogFiles(string directory = null)
-        {
-            //directory = directory == null ? GetTestFilePath("") : directory;
-            //var files = Directory.GetFiles(directory);
-            var logFiles = new List<string>();
-            /*foreach (var fullName in files)
-            {
-                var file = Path.GetFileName(fullName);
-                if (file.EndsWith(".log"))
-                    logFiles.Add(fullName);
-            }*/
-            return logFiles;
+            var savedConfigsFile = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath;
+            if (File.Exists(savedConfigsFile)) File.Delete(savedConfigsFile);
         }
     }
     
