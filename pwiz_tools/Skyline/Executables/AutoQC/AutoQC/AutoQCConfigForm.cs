@@ -273,16 +273,17 @@ namespace AutoQC
 
         private void Save()
         {
+            var newConfig = GetConfigFromUi();
             try
             {
-                //throws ArgumentException if any fields are invalid
-                var newConfig = GetConfigFromUi();
-                //throws ArgumentException if config has a duplicate name
-                _mainControl.TryExecuteOperation(_action, newConfig);
+                if (_action == ConfigAction.Edit)
+                    _mainControl.ReplaceSelectedConfig(newConfig);
+                else
+                    _mainControl.AddConfiguration(newConfig);
             }
             catch (ArgumentException e)
             {
-                _mainControl.DisplayError(e.Message);
+                AlertDlg.ShowError(this, Program.AppName, e.Message);
                 return;
             }
 

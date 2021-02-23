@@ -96,24 +96,16 @@ namespace SkylineBatch
             configForm.ShowDialog();
         }
 
-        public void TryExecuteOperation(ConfigAction operation, IConfig config)
+        public void AddConfiguration(IConfig config)
         {
-            var existingIndex = _configManager.GetConfigIndex(config.GetName());
-            var duplicateName = operation != ConfigAction.Edit && existingIndex >= 0 ||
-                                operation == ConfigAction.Edit && existingIndex != _configManager.SelectedConfig;
-            if (duplicateName)
-            {
-                throw new ArgumentException(string.Format(Resources.MainForm_TryExecuteOperation_Cannot_add___0___because_there_is_another_configuration_with_the_same_name_, config.GetName()) + Environment.NewLine +
-                                            Resources.MainForm_TryExecuteOperation_Please_choose_a_unique_name_);
-            }
-            config.Validate();
-            if (operation == ConfigAction.Edit)
-                _configManager.ReplaceSelectedConfig(config);
-            else
-            {
-                _configManager.AddConfiguration((SkylineBatchConfig)config);
-                _configManager.SelectConfig(_configManager.GetConfigIndex(config.GetName()));
-            }
+            _configManager.AddConfiguration(config);
+            UpdateUiConfigurations();
+            UpdateUiLogFiles();
+        }
+
+        public void ReplaceSelectedConfig(IConfig config)
+        {
+            _configManager.ReplaceSelectedConfig(config);
             UpdateUiConfigurations();
             UpdateUiLogFiles();
         }

@@ -82,18 +82,26 @@ namespace SharedBatch
             if (!_runningUi) return; // Do not load saved configurations in test mode
             ConfigList.Importer = importer;
             foreach (var config in Settings.Default.ConfigList)
+                AddPossiblyInvalidConfiguration(config);
+        }
+
+        private void AddPossiblyInvalidConfiguration(IConfig config)
+        {
+            InsertPossiblyInvalidConfiguration(config, _configList.Count);
+        }
+
+        private void InsertPossiblyInvalidConfiguration(IConfig config, int index)
+        {
+            _configList.Insert(index, config);
+            try
             {
-                _configList.Add(config);
-                try
-                {
-                    config.Validate();
-                    _configValidation.Add(config.GetName(), true);
-                }
-                catch (ArgumentException)
-                {
-                    // Invalid configurations are loaded
-                    _configValidation.Add(config.GetName(), false);
-                }
+                config.Validate();
+                _configValidation.Add(config.GetName(), true);
+            }
+            catch (ArgumentException)
+            {
+                // Invalid configurations are loaded
+                _configValidation.Add(config.GetName(), false);
             }
         }
 
@@ -245,17 +253,10 @@ namespace SharedBatch
                                                 Resources.ConfigManager_InsertConfiguration_Please_enter_a_unique_name_for_the_configuration_);
                 }
                 ProgramLog.Info(string.Format(Resources.ConfigManager_InsertConfiguration_Adding_configuration___0___, config.GetName()));
+
+                config.Validate();
                 _configList.Insert(index, config);
-                
-                try
-                {
-                    config.Validate();
-                    _configValidation.Add(config.GetName(), true);
-                }
-                catch (ArgumentException)
-                {
-                    _configValidation.Add(config.GetName(), false);
-                }
+                _configValidation.Add(config.GetName(), true);
             }
         }
 
@@ -273,8 +274,19 @@ namespace SharedBatch
                                                     Resources.ConfigManager_InsertConfiguration_Please_enter_a_unique_name_for_the_configuration_);
                     }
                 }
+                var oldValidation = _configValidation[oldConfig.GetName()];
                 RemoveConfig(oldConfig);
-                InsertConfiguration(newConfig, SelectedConfig);
+                try
+                {
+                    InsertConfiguration(newConfig, SelectedConfig);
+                }
+                catch (ArgumentException)
+                {
+                    // undo old configuration delete
+                    _configList.Insert(SelectedConfig, oldConfig);
+                    _configValidation.Add(oldConfig.GetName(), oldValidation);
+                    throw;
+                }
             }
         }
 
@@ -381,6 +393,7 @@ namespace SharedBatch
             var readConfigs = new List<IConfig>();
             var addedConfigs = new List<IConfig>();
             var readXmlErrors = new List<string>();
+            // read configs from file
             try
             {
                 using (var stream = new FileStream(filePath, FileMode.Open))
@@ -418,12 +431,14 @@ namespace SharedBatch
             }
             catch (Exception e)
             {
+                // possible xml format error
                 DisplayError(string.Format(Resources.ConfigManager_Import_An_error_occurred_while_importing_configurations_from__0__, filePath) + Environment.NewLine +
                              e.Message);
                 return addedConfigs;
             }
             if (readConfigs.Count == 0 && readXmlErrors.Count == 0)
             {
+                // warn if no configs found
                 DisplayWarning(string.Format(Resources.ConfigManager_Import_No_configurations_were_found_in__0__, filePath));
                 return addedConfigs;
             }
@@ -441,7 +456,7 @@ namespace SharedBatch
 
                 var addingConfig = RunRootReplacement(config);
                 addedConfigs.Add(addingConfig);
-                InsertConfiguration(addingConfig, _configList.Count);
+                AddPossiblyInvalidConfiguration(addingConfig);
                 numAdded++;
             }
             var message = new StringBuilder(Resources.ConfigManager_Import_Number_of_configurations_imported_);
@@ -470,9 +485,8 @@ namespace SharedBatch
                 message.Append(errorMessage);
                 DisplayError(errorMessage.ToString());
             }
-
+            ProgramLog.Info(message.ToString());
             return addedConfigs;
-            //Program.LogInfo(message.ToString());
         }
         
         public object[] ConfigNamesAsObjectArray()
@@ -590,8 +604,9 @@ namespace SharedBatch
                         var pathsReplaced = config.TryPathReplace(oldRoot, newRoot, out IConfig replacedPathConfig);
                         if (pathsReplaced)
                         {
-                            RemoveConfig(config);
-                            InsertConfiguration(replacedPathConfig, i);
+                            _configList.Remove(config);
+                            _configValidation.Remove(config.GetName());
+                            InsertPossiblyInvalidConfiguration(replacedPathConfig, i);
                         }
                     }
                 }

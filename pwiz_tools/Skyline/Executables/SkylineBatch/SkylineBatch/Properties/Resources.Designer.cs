@@ -609,6 +609,25 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Please enter a valid file path, or no text if you do not wish to include annotations..
+        /// </summary>
+        internal static string MainSettings_ValidateAnnotationsFolder_Please_enter_a_valid_file_path__or_no_text_if_you_do_not_wish_to_include_annotations_ {
+            get {
+                return ResourceManager.GetString("MainSettings_ValidateAnnotationsFolder_Please_enter_a_valid_file_path__or_no_text" +
+                        "_if_you_do_not_wish_to_include_annotations_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The annotations file {0} does not exist..
+        /// </summary>
+        internal static string MainSettings_ValidateAnnotationsFolder_The_annotations_file__0__does_not_exist_ {
+            get {
+                return ResourceManager.GetString("MainSettings_ValidateAnnotationsFolder_The_annotations_file__0__does_not_exist_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to data folder.
         /// </summary>
         internal static string MainSettings_ValidateDataFolder_data_folder {

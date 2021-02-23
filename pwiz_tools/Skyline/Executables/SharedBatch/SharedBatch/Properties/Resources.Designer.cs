@@ -309,6 +309,25 @@ namespace SharedBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cannot add &quot;{0}&quot; because there is another configuration with the same name..
+        /// </summary>
+        internal static string ConfigManager_TryOperation_Cannot_add___0___because_there_is_another_configuration_with_the_same_name_ {
+            get {
+                return ResourceManager.GetString("ConfigManager_TryOperation_Cannot_add___0___because_there_is_another_configuratio" +
+                        "n_with_the_same_name_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please choose a unique name..
+        /// </summary>
+        internal static string ConfigManager_TryOperation_Please_choose_a_unique_name_ {
+            get {
+                return ResourceManager.GetString("ConfigManager_TryOperation_Please_choose_a_unique_name_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Could not find the {0}..
         /// </summary>
         internal static string FilePathControl_FilePathControl_Could_not_find_the__0__ {
@@ -525,6 +544,15 @@ namespace SharedBatch.Properties {
         internal static string TextUtil_FILTER_ALL_All_Files {
             get {
                 return ResourceManager.GetString("TextUtil_FILTER_ALL_All_Files", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to CSV Files.
+        /// </summary>
+        internal static string TextUtil_FILTER_CSV_CSV_Files {
+            get {
+                return ResourceManager.GetString("TextUtil_FILTER_CSV_CSV_Files", resourceCulture);
             }
         }
         

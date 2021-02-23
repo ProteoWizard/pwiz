@@ -117,14 +117,9 @@ namespace SkylineBatch
             _configRunners.Remove(config.Name);
         }
 
-        public void AddConfiguration(SkylineBatchConfig config)
+        public void AddConfiguration(IConfig config)
         {
             InsertConfiguration(config, _configList.Count);
-        }
-
-        private void InsertConfiguration(SkylineBatchConfig config, int index)
-        {
-            base.InsertConfiguration(config, index);
             AddConfigRunner(config);
         }
 

@@ -109,13 +109,15 @@ namespace SkylineBatch
         private void SetInitialMainSettings(SkylineBatchConfig config)
         {
             var mainSettings = config.MainSettings;
-            textAnalysisPath.Text = mainSettings.AnalysisFolderPath;
-            textNamingPattern.Text = mainSettings.ReplicateNamingPattern;
             if (_action == ConfigAction.Add)
             {
                 // ReSharper disable once LocalizableElement - backslash does not need to be localized string
                 textAnalysisPath.Text = Path.GetDirectoryName(mainSettings.AnalysisFolderPath) + @"\";
-                textNamingPattern.Text = string.Empty;
+            }
+            else
+            {
+                textAnalysisPath.Text = mainSettings.AnalysisFolderPath;
+                textNamingPattern.Text = mainSettings.ReplicateNamingPattern;
             }
 
             textSkylinePath.Text = mainSettings.TemplateFilePath;
@@ -128,7 +130,7 @@ namespace SkylineBatch
             var analysisFolderPath = textAnalysisPath.Text;
             var dataFolderPath = textDataPath.Text;
             var replicateNamingPattern = textNamingPattern.Text;
-            return new MainSettings(templateFilePath, analysisFolderPath, dataFolderPath, replicateNamingPattern);
+            return new MainSettings(templateFilePath, analysisFolderPath, dataFolderPath, annotationsFilePath, replicateNamingPattern);
         }
 
         private void textConfigName_TextChanged(object sender, EventArgs e)
@@ -143,14 +145,7 @@ namespace SkylineBatch
 
         private void btnSkylineFilePath_Click(object sender, EventArgs e)
         {
-            OpenFileDialog openDialog = new OpenFileDialog();
-            openDialog.Filter = TextUtil.FILTER_SKY;
-            openDialog.InitialDirectory = TextUtil.GetInitialDirectory(textSkylinePath.Text, _lastEnteredPath);
-            if (openDialog.ShowDialog() == DialogResult.OK)
-            {
-                textSkylinePath.Text = openDialog.FileName;
-                _lastEnteredPath = openDialog.FileName;
-            }
+            OpenFile(textSkylinePath, TextUtil.FILTER_SKY);
         }
 
         private void btnAnalysisFilePath_Click(object sender, EventArgs e)
@@ -161,6 +156,20 @@ namespace SkylineBatch
         private void btnDataPath_Click(object sender, EventArgs e)
         {
             OpenFolder(textDataPath);
+        }
+
+        private void OpenFile(TextBox textbox, string filter)
+        {
+            var dialog = new OpenFileDialog();
+            var initialDirectory = TextUtil.GetInitialDirectory(textbox.Text, _lastEnteredPath);
+            dialog.InitialDirectory = initialDirectory;
+            dialog.Filter = filter;
+            DialogResult result = dialog.ShowDialog();
+            if (result == DialogResult.OK)
+            {
+                textbox.Text = dialog.FileName;
+                _lastEnteredPath = dialog.FileName;
+            }
         }
 
         private void OpenFolder(TextBox textbox)
@@ -327,25 +336,21 @@ namespace SkylineBatch
 
         private void Save()
         {
+            var newConfig = GetConfigFromUi();
             try
             {
-                //throws ArgumentException if any fields are invalid
-                var newConfig = GetConfigFromUi();
-                //throws ArgumentException if config has a duplicate name
-                _mainControl.TryExecuteOperation(_action, newConfig);
+                if (_action == ConfigAction.Edit)
+                    _mainControl.ReplaceSelectedConfig(newConfig);
+                else
+                    _mainControl.AddConfiguration(newConfig);
             }
             catch (ArgumentException e)
             {
-                ShowErrorDialog(e.Message);
+                AlertDlg.ShowError(this, Program.AppName(), e.Message);
                 return;
             }
 
             Close();
-        }
-
-        private void ShowErrorDialog(string message)
-        {
-            AlertDlg.ShowError(this, Program.AppName(), message);
         }
         
         #endregion

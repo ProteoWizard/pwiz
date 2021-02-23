@@ -34,6 +34,11 @@ namespace SharedBatch
             get { return FileDialogFilter(Resources.TextUtil_FILTER_SKYR_Skyline_Reports, EXT_SKYR); }
         }
 
+        public static string FILTER_CSV
+        {
+            get { return FileDialogFilter(Resources.TextUtil_FILTER_CSV_CSV_Files, EXT_CSV); }
+        }
+
         public static string FILTER_R
         {
             get { return FileDialogFilter(Resources.TextUtil_FILTER_R_R_Files, EXT_R); }
@@ -41,7 +46,7 @@ namespace SharedBatch
 
         public static string FILTER_ALL
         {
-            get { return FileDialogFilter(Resources.TextUtil_FILTER_ALL_All_Files, @".*"); ; }
+            get { return FileDialogFilter(Resources.TextUtil_FILTER_ALL_All_Files, @".*"); }
         }
 
 

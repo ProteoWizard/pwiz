@@ -285,4 +285,13 @@
   <data name="TextUtil_GetDirectory_Could_not_get_the_directory_of_a_null_file_path_" xml:space="preserve">
     <value>Could not get the directory of a null file path.</value>
   </data>
+  <data name="TextUtil_FILTER_CSV_CSV_Files" xml:space="preserve">
+    <value>CSV Files</value>
+  </data>
+  <data name="ConfigManager_TryOperation_Cannot_add___0___because_there_is_another_configuration_with_the_same_name_" xml:space="preserve">
+    <value>Cannot add "{0}" because there is another configuration with the same name.</value>
+  </data>
+  <data name="ConfigManager_TryOperation_Please_choose_a_unique_name_" xml:space="preserve">
+    <value>Please choose a unique name.</value>
+  </data>
 </root>

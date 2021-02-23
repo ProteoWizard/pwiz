@@ -164,15 +164,11 @@ namespace AutoQC
             }
         }
 
-        public void AddConfiguration(AutoQcConfig config)
+        public void AddConfiguration(IConfig config)
         {
             InsertConfiguration(config, _configList.Count);
-        }
-
-        public void InsertConfiguration(AutoQcConfig config, int index)
-        {
-            base.InsertConfiguration(config, index);
             AddConfigLoggerAndRunner(config);
+            SelectConfig(GetConfigIndex(config.GetName()));
         }
 
         public new void ReplaceSelectedConfig(IConfig newConfig)
