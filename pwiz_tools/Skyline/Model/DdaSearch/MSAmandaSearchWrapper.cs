@@ -113,6 +113,9 @@ namespace pwiz.Skyline.Model.DdaSearch
 
         private void Helper_SearchProgressChanged(string message)
         {
+            if (message.Contains(@"Identifying Peptides") || message.Contains(@"decoy peptide hits"))
+                return;
+
             if (amandaInputParser != null && amandaInputParser.TotalSpectra > 0 && TotalFiles > 0)
             {
                 int percentProgress = amandaInputParser.CurrentSpectrum * 100 / amandaInputParser.TotalSpectra;
@@ -201,6 +204,11 @@ namespace pwiz.Skyline.Model.DdaSearch
             Settings.ConsideredCharges.Add(3);
             Settings.ChemicalData.UseMonoisotopicMass = true;
             Settings.ReportBothBestHitsForTD = false;
+            Settings.CombineConsideredCharges = false;
+            //Settings.WriteResultsTwice = true;
+            //Settings.ForceTargetDecoyMode = false;
+            //Console.WriteLine("\nReportBothBestHitsForTD CombineConsideredCharges WriteResultsTwice ForceTargetDecoyMode");
+            //Console.WriteLine($@"{Settings.ReportBothBestHitsForTD}       {Settings.CombineConsideredCharges}        {Settings.WriteResultsTwice}       {Settings.ForceTargetDecoyMode}");
             mzID.Settings = Settings;
             SearchEngine = new MSAmandaSearch(helper, _baseDir.DirPath, _outputParameters, Settings, token);
             SearchEngine.InitializeOutputMZ(mzID);

@@ -209,7 +209,7 @@ namespace TestPerf
 
             // Wait for search to finish
             WaitForConditionUI(60000 * 60, () => searchSucceeded.HasValue);
-            Assert.IsTrue(searchSucceeded.Value);
+            RunUI(() => Assert.IsTrue(searchSucceeded.Value, importPeptideSearchDlg.SearchControl.LogText));
             if (IsCoverShotMode)
             {
                 _searchLogImage = ScreenshotManager.TakeNextShot(importPeptideSearchDlg);
@@ -217,7 +217,7 @@ namespace TestPerf
             }
 
             // clicking 'Finish' (Next) will run ImportFasta
-            var ambiguousDlg = ShowDialog<MessageDlg>(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
+            var ambiguousDlg = ShowDialog<MessageDlg>(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()), 60000 * 10);
             PauseForScreenShot<MessageDlg>("Import Peptide Search - Ambiguous Peptides dialog", tutorialPage++);
             RunUI(() => AssertEx.Contains(ambiguousDlg.Message,
                 Resources.BiblioSpecLiteBuilder_AmbiguousMatches_The_library_built_successfully__Spectra_matching_the_following_peptides_had_multiple_ambiguous_peptide_matches_and_were_excluded_));

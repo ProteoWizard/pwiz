@@ -136,7 +136,7 @@ namespace pwiz.Skyline.Model.DdaSearch
         {
             List<Spectrum> spectra = new List<Spectrum>();
             nrOfParsed = 0;
-            while (nrOfParsed < numberOfSpectraToRead && specId < spectrumFileReader.SpectrumCount) { 
+            while (nrOfParsed < numberOfSpectraToRead && specId < TotalSpectra) { 
                 MsDataSpectrum spectrum = spectrumFileReader.GetSpectrum(specId);
                 cancellationToken.ThrowIfCancellationRequested();
                 ++specId;
@@ -177,6 +177,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                 //clone peaks
                 FragmentsPeaks = new List<AMassCentroid>(spec.FragmentsPeaks.ToArray()),
                 SpectrumId = id,
+                ScanNumber = spec.ScanNumber,
                 RT = spec.RT,
                 immuneMasses = new SortedSet<double>(),
                 immunePeaks = new Dictionary<int, double>()

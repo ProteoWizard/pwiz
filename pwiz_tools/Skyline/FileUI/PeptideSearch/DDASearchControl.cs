@@ -196,6 +196,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 txtSearchProgress.AppendText($@"{entry.ToString(showTimestampsCheckbox.Checked)}{Environment.NewLine}");
         }
 
+        public string LogText => txtSearchProgress.Text;
+
         public bool HasUI => true;
         public bool IsCanceled => cancelToken.IsCancellationRequested;
 
