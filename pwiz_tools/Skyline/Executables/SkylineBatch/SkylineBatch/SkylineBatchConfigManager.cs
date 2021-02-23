@@ -75,7 +75,10 @@ namespace SkylineBatch
         public new void Close()
         {
             base.Close();
-            _logList[0].Archive();
+            lock (_loggerLock)
+            {
+                _logList[0].Archive();
+            }
         }
 
 

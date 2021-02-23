@@ -55,9 +55,8 @@ namespace AutoQC
                     {
                         reconnected = true;
                         logger.Log(
-                            string.Format(
                                 "Network drive was temporarily disconnected. Successfully remapped network drive {0}. Config: {1}",
-                                driveInfo, configName));
+                                driveInfo, configName);
                         return true;
                     }
                 }
@@ -80,7 +79,7 @@ namespace AutoQC
             {
                 if (drive.Name.StartsWith(driveInfo.DriveLetter) && drive.IsReady)
                 {
-                    // Program.LogInfo(string.Format("Network Drive is mapped {0}. Config: {1}", driveInfo.DriveLetter, configName));
+                    ProgramLog.Info(string.Format("Network Drive is mapped {0}. Config: {1}", driveInfo.DriveLetter, configName));
                     return true;
                 }
             }

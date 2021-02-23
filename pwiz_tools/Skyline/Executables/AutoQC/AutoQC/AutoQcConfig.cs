@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
 using System.Xml;
@@ -79,7 +78,6 @@ namespace AutoQC
         {
             name,
             is_enabled,
-            user,
             created,
             modified
         }

@@ -31,12 +31,7 @@ namespace SkylineBatch
             }
         }
 
-        public void Write(string command, string arg)
-        {
-            Write(command, new object []{arg});
-        }
-
-        public void Write(string command, object[] args = null)
+        public void Write(string command, params object[] args)
         {
             if (args != null)
                 command = string.Format(command, args);

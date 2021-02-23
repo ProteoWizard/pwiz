@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
+﻿
 using System.Configuration;
-using System.Xml;
-using System.Xml.Schema;
-using System.Xml.Serialization;
 
 namespace AutoQC.Properties
 {

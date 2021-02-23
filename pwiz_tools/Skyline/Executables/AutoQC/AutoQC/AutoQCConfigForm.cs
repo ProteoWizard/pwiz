@@ -17,9 +17,7 @@
  */
 
 using System;
-using System.IO;
 using System.Windows.Forms;
-using AutoQC.Properties;
 using SharedBatch;
 
 namespace AutoQC
@@ -80,7 +78,7 @@ namespace AutoQC
             if (config != null) _lastEnteredPath = config.MainSettings.SkylineFilePath;
             InitSkylineTab(config);
             SetInitialPanoramaSettings(config);
-            if (_action == ConfigAction.Add)
+            if (_action == ConfigAction.Add || config == null)
             {
                 SetDefaultMainSettings();
                 return;

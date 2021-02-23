@@ -16,16 +16,9 @@
  * limitations under the License.
  */
 
-
-using System;
+ 
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Configuration;
-using System.Text;
-using System.Windows.Forms;
-using System.Xml;
-using System.Xml.Schema;
-using System.Xml.Serialization;
 
 namespace SkylineBatch.Properties
 {

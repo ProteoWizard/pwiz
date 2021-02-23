@@ -212,8 +212,7 @@ namespace AutoQC
         {
             var baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
             var iconPath = Path.Combine(baseDirectory, "AutoQC_release.ico");
-            var icon =  System.Drawing.Icon.ExtractAssociatedIcon(iconPath);
-            return new Icon(icon, 16, 16);
+            return  System.Drawing.Icon.ExtractAssociatedIcon(iconPath);
         }
 
         private static void InitializeSecurityProtocol()

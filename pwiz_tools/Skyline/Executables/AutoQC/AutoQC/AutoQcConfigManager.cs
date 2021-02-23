@@ -1,12 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.SqlTypes;
-using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Windows.Forms;
-using System.Xml;
 using AutoQC.Properties;
 using SharedBatch;
 
@@ -14,44 +10,43 @@ namespace AutoQC
 {
     public class AutoQcConfigManager : ConfigManager
     {
-        // Handles all modification to configs, the config list, configRunners, and log files
+        // Extension of ConfigManager, handles more specific AutoQC functionality
         // The UI should reflect the configs, runners, and log files from this class
 
-
-        //private List<AutoQcConfig> _configList; // the list of configurations. Every config must have a runner in configRunners
         private readonly Dictionary<string, IConfigRunner> _configRunners; // dictionary mapping from config name to that config's runner
-        /*private readonly Dictionary<string, bool> _configValidation; // dictionary mapping from config name to if that config is valid
-
-        private readonly List<IAutoQcLogger> _loggers; // list of archived loggers, from most recent to least recent
-
-        private readonly bool _runningUi; // if the UI is displayed (false when testing)
-        private readonly IMainUiControl _uiControl; // null if no UI displayed*/
-
-        private readonly object _lock = new object(); // lock required for any mutator or getter method on _configList, _configRunners, or SelectedConfig
-
         private int _sortedColumn; // column index the configurations were last sorted by
+
+        // Shared variables with ConfigManager:
+        //  Protected -
+        //    Importer importer; <- a ReadXml method to import the configurations
+        //    List<IConfig> _configList; <- the list of configurations. Every config must have a runner in _configRunners
+        //    Dictionary<string, bool> _configValidation; <- dictionary mapping from config name to if that config is valid
+        //    List<Logger>  _logList; <- list of all loggers displayed in the dropDown list on the log tab, logger Names correspond to config names
+        //
+        //    _runningUi; <- if the UI is displayed (false when testing)
+        //    IMainUiControl _uiControl; <- null if no UI displayed
+        //
+        //    object _lock = new object(); <- lock required for any mutator or getter method on _configList, _configRunners, or SelectedConfig
+        //    object _loggerLock = new object(); <- lock required for any mutator or getter method on _logList or SelectedLog
+        //  
+        //  Public - 
+        //    int SelectedConfig <- index of the selected configuration
+        //    int SelectedLog <- index of the selected log. index 0 corresponds to _logger, any index > 0 corresponds to oldLogs[index - 1]
+        //    Dictionary<string, string> RootReplacement; <- dictionary mapping from roots of invalid file paths to roots of valid file paths
 
         public AutoQcConfigManager(IMainUiControl uiControl = null)
         {
             importer = AutoQcConfig.ReadXml;
-            //SelectedConfig = -1;
             SelectedLog = -1;
             _sortedColumn = -1;
-            //_uiControl = uiControl;
-            //_runningUi = uiControl != null;
             _configRunners = new Dictionary<string, IConfigRunner>();
-            //_configValidation = new Dictionary<string, bool>();
-            //_configList = new List<AutoQcConfig>();
-            //_loggers = new List<IAutoQcLogger>();
             _uiControl = uiControl;
             _runningUi = uiControl != null;
             LoadConfigList();
 
             Init();
         }
-
-        //public int SelectedConfig { get; private set; } // index of the selected configuration
-        //public int SelectedLog { get; private set; } // index of the selected log
+        
 
         public enum SortColumn
         {
@@ -64,48 +59,17 @@ namespace AutoQC
         private new void LoadConfigList()
         {
             base.LoadConfigList();
-            foreach (AutoQcConfig config in _configList)
+            foreach (var config in _configList)
             {
-                if (config.IsEnabled && !Settings.Default.KeepAutoQcRunning)
+                var autoQcConfig = (AutoQcConfig)config;
+                if (autoQcConfig.IsEnabled && !Settings.Default.KeepAutoQcRunning)
                 {
                     // If the config was running last time AutoQC Loader was running (and properties saved), but we are not 
                     // automatically starting configs on startup, change its IsEnabled state
-                    config.IsEnabled = false;
+                    autoQcConfig.IsEnabled = false;
                 }
                 AddConfigLoggerAndRunner(config);
             }
-
-            /*
-            foreach (var config in Settings.Default.ConfigList)
-            {
-                if (config.IsEnabled && !Settings.Default.KeepAutoQcRunning)
-                {
-                    // If the config was running last time AutoQC Loader was running (and properties saved), but we are not 
-                    // automatically starting configs on startup, change its IsEnabled state
-                    config.IsEnabled = false;
-                }
-
-                /*var skylineFileDir = Path.GetDirectoryName(config.MainSettings.SkylineFilePath);
-                var defaultFileFolder = Path.Combine(skylineFileDir, TextUtil.GetSafeName(config.Name));
-                if (!Directory.Exists(defaultFileFolder))
-                    Directory.CreateDirectory(defaultFileFolder);* /
-
-                var logger = Logger.GetLoggerFromConfig(config, Path.GetDirectoryName(config.MainSettings.SkylineFilePath), _uiControl);
-                _logList.Add(logger);
-                _configList.Add(config);
-                var runner = new ConfigRunner(config, logger, _uiControl);
-                _configRunners.Add(config.Name, runner);
-                try
-                {
-                    config.Validate();
-                    _configValidation.Add(config.Name, true);
-                }
-                catch (ArgumentException e)
-                {
-                    Program.LogInfo(e.Message);
-                    _configValidation.Add(config.Name, false);
-                }
-            }*/
         }
 
 
@@ -116,10 +80,10 @@ namespace AutoQC
                 throw new Exception("Config runner already exists.");
 
             var directory = Path.GetDirectoryName(config.MainSettings.SkylineFilePath);
+            if (directory == null) throw new Exception("Cannot have a null Skyline file directory.");
             var logFile = Path.Combine(directory, TextUtil.GetSafeName(config.GetName()), "AutoQC.log");
 
             var logger = new Logger(logFile, config.Name, _uiControl);
-                //Logger.GetLoggerFromConfig(config, Path.GetDirectoryName(config.MainSettings.SkylineFilePath), _uiControl);
             _logList.Add(logger);
             var runner = new ConfigRunner(config, logger, _uiControl);
             _configRunners.Add(config.Name, runner);
@@ -170,7 +134,7 @@ namespace AutoQC
             return ConfigsListViewItems(_configRunners);
         }
 
-        public void RemoveSelected()
+        public new void RemoveSelected()
         {
             lock (_lock)
             {
@@ -305,15 +269,11 @@ namespace AutoQC
             return true;
         }
 
-        private void SelectConfigFromName(string name)
-        {
-            SelectConfig(GetConfigIndex(name));
-        }
-
         private AutoQcConfig[] CutConfigList()
         {
             var configListHolder = new AutoQcConfig[_configList.Count];
-            _configList.CopyTo(configListHolder);
+            for (int i = 0; i < _configList.Count; i++)
+                configListHolder[i] = (AutoQcConfig) _configList[i];
             _configList.Clear();
             return configListHolder;
         }
@@ -342,11 +302,12 @@ namespace AutoQC
         {
             lock (_lock)
             {
-                foreach (AutoQcConfig config in _configList)
+                foreach (var config in _configList)
                 {
-                    if (!config.IsEnabled)
+                    var autoQcConfig = (AutoQcConfig) config;
+                    if (!autoQcConfig.IsEnabled)
                         continue;
-                    StartConfig(config);
+                    StartConfig(autoQcConfig);
                 }
             }
         }
@@ -445,11 +406,6 @@ namespace AutoQC
             }
         }
 
-        public Logger GetSelectedLogger()
-        {
-            return _logList[SelectedLog];
-        }
-
         public Logger GetLogger(string name)
         {
             return _logList[GetLoggerIndex(name)];
@@ -475,151 +431,6 @@ namespace AutoQC
         {
             var addedConfigs = ImportFrom(filePath, AutoQcConfig.ReadXml);
             AddConfigLoggerAndRunner(addedConfigs);
-            /*var readConfigs = new List<AutoQcConfig>();
-            var readXmlErrors = new List<string>();
-            var fileName = filePath;
-            try
-            {
-                fileName = Path.GetFileName(filePath);
-            }
-            catch (Exception)
-            {
-                // ignored
-            }
-
-            try
-            {
-                using (var stream = new FileStream(filePath, FileMode.Open))
-                {
-                    using (var reader = XmlReader.Create(stream))
-                    {
-                        while (reader.Name != "autoqc_config")
-                        {
-                            if (reader.Name == "userSettings" && !reader.IsStartElement())
-                                break; // there are no configurations in the file
-                            reader.Read();
-                        }
-                        while (reader.IsStartElement())
-                        {
-                            if (reader.Name == "autoqc_config")
-                            {
-                                AutoQcConfig config = null;
-                                try
-                                {
-                                    config = AutoQcConfig.ReadXml(reader);
-                                }
-                                catch (Exception ex)
-                                {
-                                    readXmlErrors.Add(ex.Message);
-                                }
-                                
-                                if (config != null)
-                                    readConfigs.Add(config);
-                            }
-                            reader.Read();
-                            reader.Read();
-                        }
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                DisplayError(string.Format(Resources.ConfigManager_Import_An_error_occurred_while_importing_configurations_from__0__, fileName) + Environment.NewLine +
-                             e.Message);
-                return;
-            }
-            if (readConfigs.Count == 0 && readXmlErrors.Count == 0)
-            {
-                DisplayWarning(string.Format(Resources.ConfigManager_Import_No_configurations_were_found_in__0_, fileName));
-                return;
-            }
-
-            var duplicateConfigs = new List<string>();
-            var numAdded = 0;
-            foreach (AutoQcConfig config in readConfigs)
-            {
-                // Make sure that the configuration name is unique
-                if (_configRunners.Keys.Contains(config.Name))
-                {
-                    // If a configuration with the same name already exists, don't add it
-                    duplicateConfigs.Add(config.Name);
-                    continue;
-                }
-                
-                AddConfiguration(config);
-                numAdded++;
-            }
-            var message = new StringBuilder(Resources.ConfigManager_Import_Number_of_configurations_imported__);
-            message.Append(numAdded).Append(Environment.NewLine);
-            if (duplicateConfigs.Count > 0)
-            {
-                var duplicateMessage = new StringBuilder(Resources.ConfigManager_Import_The_following_configurations_already_exist_and_were_not_imported_)
-                    .Append(Environment.NewLine);
-                foreach (var name in duplicateConfigs)
-                {
-                    duplicateMessage.Append("\"").Append(name).Append("\"").Append(Environment.NewLine);
-                }
-
-                duplicateMessage.Append(Resources.ConfigManager_Import_Please_remove_the_configurations_you_would_like_to_import_);
-                message.Append(duplicateMessage);
-                DisplayError(duplicateMessage.ToString());
-            }
-            if (readXmlErrors.Count > 0)
-            {
-                var errorMessage = new StringBuilder(Resources.ConfigManager_Import_Configurations_with_errors_that_could_not_be_imported_)
-                    .Append(Environment.NewLine);
-                foreach (var error in readXmlErrors)
-                {
-                    errorMessage.Append(error).Append(Environment.NewLine);
-                }
-                message.Append(errorMessage);
-                DisplayError(errorMessage.ToString());
-            }
-            Program.LogInfo(message.ToString());*/
-        }
-
-
-        public void ExportConfigs(string filePath, int[] indiciesToSave)
-        {
-            lock (_lock)
-            {
-                var directory = Path.GetDirectoryName(filePath) ?? string.Empty;
-                // Exception if no configurations are selected to export
-                if (indiciesToSave.Length == 0)
-                {
-                    throw new ArgumentException(Resources.ConfigManager_ExportConfigs_There_are_no_configurations_selected_ + Environment.NewLine +
-                                                Resources.ConfigManager_ExportConfigs_Please_select_the_configurations_you_would_like_to_share_);
-                }
-                try
-                {
-                    directory = Path.GetDirectoryName(filePath);
-                }
-                catch (ArgumentException)
-                {
-                }
-                // Exception if file folder does not exist
-                if (!Directory.Exists(directory))
-                    throw new ArgumentException(Resources.ConfigManager_ExportConfigs_Could_not_save_configurations_to_ + Environment.NewLine +
-                                                filePath + Environment.NewLine +
-                                                Resources.ConfigManager_ExportConfigs_Please_provide_a_path_to_a_file_inside_an_existing_folder_);
-
-                using (var file = File.Create(filePath))
-                {
-                    using (var streamWriter = new StreamWriter(file))
-                    {
-                        XmlWriterSettings settings = new XmlWriterSettings();
-                        settings.Indent = true;
-                        settings.NewLineChars = Environment.NewLine;
-                        using (XmlWriter writer = XmlWriter.Create(streamWriter, settings))
-                        {
-                            writer.WriteStartElement("ConfigList");
-                            foreach (int index in indiciesToSave)
-                                _configList[index].WriteXml(writer);
-                            writer.WriteEndElement();
-                        }
-                    }
-                }
-            }
         }
 
         #endregion
