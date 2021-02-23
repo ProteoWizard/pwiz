@@ -551,9 +551,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             browseFastaTargetsBtn.Visible = tbxFastaTargets.Visible = cbImportFromSeparateFasta.Checked;
         }
 
-        private void flowLayoutPanel1_Paint(object sender, PaintEventArgs e)
-        {
-
         private void cbAutoTrain_CheckedChanged(object sender, EventArgs e)
         {
             if (!IsImportingResults && cbAutoTrain.Checked)
