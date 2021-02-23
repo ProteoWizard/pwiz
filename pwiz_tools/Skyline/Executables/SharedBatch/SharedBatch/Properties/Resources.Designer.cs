@@ -134,6 +134,15 @@ namespace SharedBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Load Configurations Error.
+        /// </summary>
+        internal static string ConfigList_ReadXml_Load_Configurations_Error {
+            get {
+                return ResourceManager.GetString("ConfigList_ReadXml_Load_Configurations_Error", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to There is no configuration selected..
         /// </summary>
         internal static string ConfigManager_CheckConfigSelected_There_is_no_configuration_selected_ {
@@ -552,6 +561,15 @@ namespace SharedBatch.Properties {
         internal static string TextUtil_FILTER_XML_XML_Files {
             get {
                 return ResourceManager.GetString("TextUtil_FILTER_XML_XML_Files", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not get the directory of a null file path..
+        /// </summary>
+        internal static string TextUtil_GetDirectory_Could_not_get_the_directory_of_a_null_file_path_ {
+            get {
+                return ResourceManager.GetString("TextUtil_GetDirectory_Could_not_get_the_directory_of_a_null_file_path_", resourceCulture);
             }
         }
     }

@@ -89,10 +89,16 @@ namespace SharedBatch
     // Interface to control parts of the MainForm user interface programatically
     public interface IMainUiControl
     {
+        // Attempts to execute the operation as described in ConfigAction, throws ArgumentException if failed
         void TryExecuteOperation(ConfigAction action, IConfig config);
-        //void EditSelectedConfiguration(IConfig newVersion);
+
+        // Updates the displayed configurations based on the configManager
         void UpdateUiConfigurations();
+
+        // Updates the log files in the dropdown list based on the configManager
         void UpdateUiLogFiles();
+
+        // Updates the Ui running buttons
         void UpdateRunningButtons(bool canStart, bool canStop);
 
         void LogToUi(string filePath, string text, bool scrollToEnd = true, bool trim = true);

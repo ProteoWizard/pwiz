@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 using System.Xml;
 using SharedBatch.Properties;
 
@@ -121,7 +119,7 @@ namespace SharedBatch
             
             var versionString = output.Split(' ');
             int i = 0;
-            while (i < versionString.Length && !Int32.TryParse(versionString[i].Substring(0,1), out int result)) i++;
+            while (i < versionString.Length && !Int32.TryParse(versionString[i].Substring(0,1), out _)) i++;
             if (i == versionString.Length) throw new Exception("No parsable Skyline version found.");
             return ParseVersionFromString(versionString[i]);
         }

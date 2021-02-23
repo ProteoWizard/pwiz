@@ -429,7 +429,7 @@ namespace AutoQC
 
         public void Import(string filePath)
         {
-            var addedConfigs = ImportFrom(filePath, AutoQcConfig.ReadXml);
+            var addedConfigs = ImportFrom(filePath);
             AddConfigLoggerAndRunner(addedConfigs);
         }
 

@@ -7,7 +7,7 @@ namespace SharedBatch
 {
     public partial class SkylineTypeControl : UserControl, IValidatorControl
     {
-        // A control used by the InvalidConfigSetupForm to switch to a Skyline Installation that exists on this computer
+        // A control used by a configuration set up manager to switch to a Skyline Installation that exists on this computer
 
         // Implements IValidatorControl:
         //    - GetVariable() returns a SkylineSettings instance using the Type from the radioButtons and CommandPath from textSkylineInstallationPath

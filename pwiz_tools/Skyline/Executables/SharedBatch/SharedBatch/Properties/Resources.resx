@@ -279,4 +279,10 @@
   <data name="FilePathControl_FilePathControl_Please_correct_the__0__to_continue_" xml:space="preserve">
     <value>Please correct the {0} to continue:</value>
   </data>
+  <data name="ConfigList_ReadXml_Load_Configurations_Error" xml:space="preserve">
+    <value>Load Configurations Error</value>
+  </data>
+  <data name="TextUtil_GetDirectory_Could_not_get_the_directory_of_a_null_file_path_" xml:space="preserve">
+    <value>Could not get the directory of a null file path.</value>
+  </data>
 </root>

@@ -219,37 +219,6 @@ namespace SharedBatch
             return _configValidation[_configList[index].GetName()];
         }
 
-        /*public bool CheckConfigAtIndex(int index, out string errorMessage)
-        {
-            lock (_lock)
-            {
-                errorMessage = "";
-                var config = _configList[index];
-                var runner = _configRunners[config.GetName()];
-                if (!_configValidation[config.GetName()])
-                {
-                    errorMessage =
-                        string.Format(
-                            Resources.MainForm_listViewConfigs_ItemCheck_Cannot_enable___0___while_it_is_invalid_,
-                            config.Name) +
-                        Environment.NewLine +
-                        string.Format(Resources.ConfigManager_RunAll_Please_edit___0___to_enable_running_, config.Name);
-                    return false;
-                }
-                if (runner.IsBusy())
-                {
-                    errorMessage =
-                        string.Format( Resources.ConfigManager_CheckConfigAtIndex_Cannot_disable___0___while_it_has_status___1_,
-                            config.Name, runner.GetStatus()) +
-                        Environment.NewLine +
-                        string.Format(Resources.ConfigManager_CheckConfigAtIndex_Please_wait_until___0___has_finished_running_, config.Name);
-                    return false;
-                }
-                config.Enabled = !config.Enabled;
-                return true;
-            }
-        }*/
-
         public IConfig GetLastModified() // creates config using most recently modified config
         {
             lock (_lock)
@@ -407,7 +376,7 @@ namespace SharedBatch
 
         #region Import/Export
 
-        protected List<IConfig> ImportFrom(string filePath, Importer importer)
+        protected List<IConfig> ImportFrom(string filePath)
         {
             var readConfigs = new List<IConfig>();
             var addedConfigs = new List<IConfig>();

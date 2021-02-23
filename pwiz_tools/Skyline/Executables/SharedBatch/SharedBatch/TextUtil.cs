@@ -57,6 +57,13 @@ namespace SharedBatch
             return true;
         }
 
+        // Extension of Path.GetDirectoryName that handles null file paths
+        public static string GetDirectory(string path)
+        {
+            if (path == null) throw new ArgumentNullException(nameof(path), Resources.TextUtil_GetDirectory_Could_not_get_the_directory_of_a_null_file_path_);
+            return Path.GetDirectoryName(path);
+        }
+
         // Find an existing initial directory to use in a file/folder browser dialog, can be null (dialog will use a default)
         public static string GetInitialDirectory(string directory, string lastEnteredPath = "")
         {

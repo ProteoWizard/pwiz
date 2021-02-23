@@ -123,8 +123,7 @@ namespace SharedBatch
             var messageStart = labelMessage.Location.X;
             var padding = 30;
             var measureString = labelMessage.Text;
-            var stringSize = new SizeF();
-            stringSize = e.Graphics.MeasureString(measureString, labelMessage.Font);
+            SizeF stringSize = e.Graphics.MeasureString(measureString, labelMessage.Font);
             Width = messageStart + padding + (int)stringSize.Width;
             labelMessage.MaximumSize = new Size((int)stringSize.Width, 0);
             Paint -= FitWidthToMessage;

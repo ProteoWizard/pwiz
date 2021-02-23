@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using SharedBatch;
 using SkylineBatch.Properties;
 
@@ -31,7 +32,7 @@ namespace SkylineBatch
             }
         }
 
-        public void Write(string command, params object[] args)
+        public void Write(string command, params Object[] args)
         {
             if (args != null)
                 command = string.Format(command, args);

@@ -24,7 +24,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Xml;
 using SharedBatch;
 using SkylineBatch.Properties;
 
@@ -484,15 +483,10 @@ namespace SkylineBatch
 
         public void Import(string filePath)
         {
-            var importedConfigs = ImportFrom(filePath, SkylineBatchImporter);
+            var importedConfigs = ImportFrom(filePath);
+            foreach (var config in importedConfigs)
+                ((SkylineBatchConfig) config).Enabled = false;
             AddConfigRunner(importedConfigs);
-        }
-
-        public IConfig SkylineBatchImporter(XmlReader reader)
-        {
-            var config = SkylineBatchConfig.ReadXml(reader);
-            config.Enabled = false;
-            return config;
         }
 
         #endregion

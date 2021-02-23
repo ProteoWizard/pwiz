@@ -118,7 +118,7 @@ namespace SharedBatch.Properties
             }
 
             if (message.Length > 0)
-                MessageBox.Show(message.ToString(), @"Load Configurations Error", MessageBoxButtons.OK);
+                MessageBox.Show(message.ToString(), Resources.ConfigList_ReadXml_Load_Configurations_Error, MessageBoxButtons.OK);
         }
 
         public void WriteXml(XmlWriter writer)
