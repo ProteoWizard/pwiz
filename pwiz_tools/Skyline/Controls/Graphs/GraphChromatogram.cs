@@ -2332,7 +2332,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                         if (nodePep != null && nodeTranGroup != null)
                         {
-                            var libKey = new LibKey(nodePep.ModifiedTarget, nodeTranGroup.PrecursorCharge);
+                            var libKey = new LibKey(nodePep.ModifiedTarget, nodeTranGroup.PrecursorAdduct);
                             chromGraphPrimary.MidasRetentionMsMs = settings.PeptideSettings.Libraries.MidasLibraries
                                 .SelectMany(lib => lib.GetSpectraByPeptide(chromGraphPrimary.Chromatogram.FilePath, libKey))
                                 .Select(s => s.RetentionTime).ToArray();
