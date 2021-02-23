@@ -278,7 +278,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>tabSettings</value>
   </data>
   <data name="&gt;&gt;label5.ZOrder" xml:space="preserve">
-    <value>8</value>
+    <value>7</value>
   </data>
   <data name="label4.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -309,7 +309,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>tabSettings</value>
   </data>
   <data name="&gt;&gt;label4.ZOrder" xml:space="preserve">
-    <value>9</value>
+    <value>8</value>
   </data>
   <data name="radioShuffleDecoys.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -343,7 +343,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>tabSettings</value>
   </data>
   <data name="&gt;&gt;radioShuffleDecoys.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>3</value>
   </data>
   <data name="radioReverseDecoys.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -377,7 +377,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>tabSettings</value>
   </data>
   <data name="&gt;&gt;radioReverseDecoys.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>4</value>
   </data>
   <data name="checkBoxDecoys.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -408,7 +408,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>tabSettings</value>
   </data>
   <data name="&gt;&gt;checkBoxDecoys.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>5</value>
   </data>
   <data name="textMsOneResolvingPower.Location" type="System.Drawing.Point, System.Drawing">
     <value>9, 29</value>
@@ -433,7 +433,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>tabSettings</value>
   </data>
   <data name="&gt;&gt;textMsOneResolvingPower.ZOrder" xml:space="preserve">
-    <value>10</value>
+    <value>9</value>
   </data>
   <data name="textRetentionTime.Location" type="System.Drawing.Point, System.Drawing">
     <value>9, 126</value>
@@ -458,7 +458,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>tabSettings</value>
   </data>
   <data name="&gt;&gt;textRetentionTime.ZOrder" xml:space="preserve">
-    <value>11</value>
+    <value>10</value>
   </data>
   <data name="label9.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -492,7 +492,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>tabSettings</value>
   </data>
   <data name="&gt;&gt;label9.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>1</value>
   </data>
   <data name="textMsMsResolvingPower.Location" type="System.Drawing.Point, System.Drawing">
     <value>9, 77</value>
@@ -517,7 +517,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>tabSettings</value>
   </data>
   <data name="&gt;&gt;textMsMsResolvingPower.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>2</value>
   </data>
   <data name="checkBoxMProphet.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -548,40 +548,6 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>tabSettings</value>
   </data>
   <data name="&gt;&gt;checkBoxMProphet.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="checkBoxRefine.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="checkBoxRefine.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="checkBoxRefine.Location" type="System.Drawing.Point, System.Drawing">
-    <value>10, 255</value>
-  </data>
-  <data name="checkBoxRefine.Size" type="System.Drawing.Size, System.Drawing">
-    <value>57, 17</value>
-  </data>
-  <data name="checkBoxRefine.TabIndex" type="System.Int32, mscorlib">
-    <value>27</value>
-  </data>
-  <data name="checkBoxRefine.Text" xml:space="preserve">
-    <value>R&amp;efine</value>
-  </data>
-  <data name="checkBoxRefine.ToolTip" xml:space="preserve">
-    <value>Adds the commands: --reintegrate-model-name --reintegrate-create-model --reintegrate-overwrite-peaks
-See Help &gt;Documentation &gt;Command Line in Skyline.</value>
-  </data>
-  <data name="&gt;&gt;checkBoxRefine.Name" xml:space="preserve">
-    <value>checkBoxRefine</value>
-  </data>
-  <data name="&gt;&gt;checkBoxRefine.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;checkBoxRefine.Parent" xml:space="preserve">
-    <value>tabSettings</value>
-  </data>
-  <data name="&gt;&gt;checkBoxRefine.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="splitContainer1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
@@ -876,7 +842,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>3, 3, 3, 3</value>
   </data>
   <data name="tabFiles.Size" type="System.Drawing.Size, System.Drawing">
-    <value>445, 392</value>
+    <value>445, 393</value>
   </data>
   <data name="tabFiles.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -924,7 +890,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>tabSettings</value>
   </data>
   <data name="&gt;&gt;label6.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>6</value>
   </data>
   <data name="tabSettings.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
@@ -933,7 +899,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>3, 3, 3, 3</value>
   </data>
   <data name="tabSettings.Size" type="System.Drawing.Size, System.Drawing">
-    <value>445, 391</value>
+    <value>445, 393</value>
   </data>
   <data name="tabSettings.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -1065,7 +1031,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>2, 2, 2, 2</value>
   </data>
   <data name="gridReportSettings.Size" type="System.Drawing.Size, System.Drawing">
-    <value>415, 383</value>
+    <value>415, 384</value>
   </data>
   <data name="gridReportSettings.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1092,7 +1058,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>2, 2, 2, 2</value>
   </data>
   <data name="tabReports.Size" type="System.Drawing.Size, System.Drawing">
-    <value>445, 391</value>
+    <value>445, 392</value>
   </data>
   <data name="tabReports.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -1119,7 +1085,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>8, 6</value>
   </data>
   <data name="panelSkylineSettings.Size" type="System.Drawing.Size, System.Drawing">
-    <value>438, 386</value>
+    <value>438, 387</value>
   </data>
   <data name="panelSkylineSettings.TabIndex" type="System.Int32, mscorlib">
     <value>24</value>
@@ -1143,7 +1109,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>3, 3, 3, 3</value>
   </data>
   <data name="tabSkyline.Size" type="System.Drawing.Size, System.Drawing">
-    <value>445, 391</value>
+    <value>445, 392</value>
   </data>
   <data name="tabSkyline.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -1173,7 +1139,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>2, 2, 2, 2</value>
   </data>
   <data name="tabsConfig.Size" type="System.Drawing.Size, System.Drawing">
-    <value>453, 418</value>
+    <value>453, 419</value>
   </data>
   <data name="tabsConfig.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1206,7 +1172,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>Bottom, Right</value>
   </data>
   <data name="btnCancelConfig.Location" type="System.Drawing.Point, System.Drawing">
-    <value>367, 6</value>
+    <value>367, 5</value>
   </data>
   <data name="btnCancelConfig.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -1239,7 +1205,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>Microsoft Sans Serif, 9pt</value>
   </data>
   <data name="btnSaveConfig.Location" type="System.Drawing.Point, System.Drawing">
-    <value>288, 6</value>
+    <value>288, 5</value>
   </data>
   <data name="btnSaveConfig.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -1303,7 +1269,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>NoControl</value>
   </data>
   <data name="btnOkConfig.Location" type="System.Drawing.Point, System.Drawing">
-    <value>367, 6</value>
+    <value>367, 5</value>
   </data>
   <data name="btnOkConfig.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -1345,7 +1311,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>2, 2, 2, 2</value>
   </data>
   <data name="groupBox1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>453, 37</value>
+    <value>453, 36</value>
   </data>
   <data name="groupBox1.TabIndex" type="System.Int32, mscorlib">
     <value>100</value>
@@ -1378,7 +1344,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>453, 458</value>
   </data>
   <data name="splitContainer1.SplitterDistance" type="System.Int32, mscorlib">
-    <value>418</value>
+    <value>419</value>
   </data>
   <data name="splitContainer1.SplitterWidth" type="System.Int32, mscorlib">
     <value>3</value>
@@ -1406,7 +1372,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
         AAEAAAD/////AQAAAAAAAAAMAgAAAFdTeXN0ZW0uV2luZG93cy5Gb3JtcywgVmVyc2lvbj00LjAuMC4w
         LCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODkFAQAAACZTeXN0
         ZW0uV2luZG93cy5Gb3Jtcy5JbWFnZUxpc3RTdHJlYW1lcgEAAAAERGF0YQcCAgAAAAkDAAAADwMAAACw
-        CgAAAk1TRnQBSQFMAgEBAgEAAVgBAQFYAQEBHgEAAR4BAAT/AQkBAAj/AUIBTQE2AQQGAAE2AQQCAAEo
+        CgAAAk1TRnQBSQFMAgEBAgEAAWABAQFgAQEBHgEAAR4BAAT/AQkBAAj/AUIBTQE2AQQGAAE2AQQCAAEo
         AwABeAMAAR4DAAEBAQABCAUAARABDhgAAYACAAGAAwACgAEAAYADAAGAAQABgAEAAoACAAPAAQABwAHc
         AcABAAHwAcoBpgEAATMFAAEzAQABMwEAATMBAAIzAgADFgEAAxwBAAMiAQADKQEAA1UBAANNAQADQgEA
         AzkBAAGAAXwB/wEAAlAB/wEAAZMBAAHWAQAB/wHsAcwBAAHGAdYB7wEAAdYC5wEAAZABqQGtAgAB/wEz

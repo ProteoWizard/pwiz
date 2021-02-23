@@ -48,7 +48,6 @@
             this.label9 = new System.Windows.Forms.Label();
             this.textMsMsResolvingPower = new System.Windows.Forms.TextBox();
             this.checkBoxMProphet = new System.Windows.Forms.CheckBox();
-            this.checkBoxRefine = new System.Windows.Forms.CheckBox();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.tabsConfig = new System.Windows.Forms.TabControl();
             this.tabFiles = new System.Windows.Forms.TabPage();
@@ -188,13 +187,6 @@
             this.toolTip1.SetToolTip(this.checkBoxMProphet, resources.GetString("checkBoxMProphet.ToolTip"));
             this.checkBoxMProphet.UseVisualStyleBackColor = true;
             // 
-            // checkBoxRefine
-            // 
-            resources.ApplyResources(this.checkBoxRefine, "checkBoxRefine");
-            this.checkBoxRefine.Name = "checkBoxRefine";
-            this.toolTip1.SetToolTip(this.checkBoxRefine, resources.GetString("checkBoxRefine.ToolTip"));
-            this.checkBoxRefine.UseVisualStyleBackColor = true;
-            // 
             // splitContainer1
             // 
             resources.ApplyResources(this.splitContainer1, "splitContainer1");
@@ -292,7 +284,6 @@
             // tabSettings
             // 
             this.tabSettings.BackColor = System.Drawing.Color.WhiteSmoke;
-            this.tabSettings.Controls.Add(this.checkBoxRefine);
             this.tabSettings.Controls.Add(this.checkBoxMProphet);
             this.tabSettings.Controls.Add(this.label9);
             this.tabSettings.Controls.Add(this.textMsMsResolvingPower);
@@ -553,6 +544,5 @@
         private System.Windows.Forms.Label label9;
         private System.Windows.Forms.TextBox textMsMsResolvingPower;
         private System.Windows.Forms.CheckBox checkBoxMProphet;
-        private System.Windows.Forms.CheckBox checkBoxRefine;
     }
 }
