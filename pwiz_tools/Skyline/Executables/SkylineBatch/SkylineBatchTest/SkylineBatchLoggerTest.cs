@@ -63,7 +63,6 @@ namespace SkylineBatchTest
         [TestMethod]
         public async Task TestMultipleLogs()
         {
-            TestUtils.ClearSavedConfigurations();
             TestUtils.InitializeRInstallation();
 
             var logFolder = TestUtils.GetTestFilePath("MultipleLogsTest");

@@ -806,33 +806,6 @@ namespace AutoQC.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Could not find path to the {0}..
-        /// </summary>
-        internal static string FilePathControl_Could_not_find_path_to_the__0___ {
-            get {
-                return ResourceManager.GetString("FilePathControl_Could_not_find_path_to_the__0___", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Could not find the {0}..
-        /// </summary>
-        internal static string FilePathControl_FilePathControl_Could_not_find_the__0__ {
-            get {
-                return ResourceManager.GetString("FilePathControl_FilePathControl_Could_not_find_the__0__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Please correct the {0} to continue:.
-        /// </summary>
-        internal static string FilePathControl_FilePathControl_Please_correct_the__0__to_continue_ {
-            get {
-                return ResourceManager.GetString("FilePathControl_FilePathControl_Please_correct_the__0__to_continue_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Would you like to replace:
         ///{0}
         ///with:

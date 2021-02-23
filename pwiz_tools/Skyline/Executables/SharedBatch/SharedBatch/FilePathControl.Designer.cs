@@ -1,4 +1,4 @@
-﻿namespace SkylineBatch
+﻿namespace SharedBatch
 {
     partial class FilePathControl
     {

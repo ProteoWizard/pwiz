@@ -1,10 +1,8 @@
 ﻿using System;
-using System.IO;
 using System.Windows.Forms;
-using SharedBatch;
-using SkylineBatch.Properties;
+using SharedBatch.Properties;
 
-namespace SkylineBatch
+namespace SharedBatch
 {
     public partial class FilePathControl : UserControl, IValidatorControl
     {
@@ -50,7 +48,7 @@ namespace SkylineBatch
                 }
             }
             label1.Text = string.Format(Resources.FilePathControl_FilePathControl_Could_not_find_the__0__, variableName);
-            label2.Text = string.Format(Resources.FilePathControl_FilePathControl_Please_specify_the_path_to_the__0__, variableName);
+            label2.Text = string.Format(Resources.FilePathControl_FilePathControl_Please_correct_the__0__to_continue_, variableName);
             textFilePath.Text = _path;
             textFilePath.TextChanged += textFilePath_TextChanged;
         }

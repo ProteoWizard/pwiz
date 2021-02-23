@@ -21,6 +21,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -38,7 +39,6 @@ namespace SkylineBatchTest
         [TestMethod]
         public void TestSelectConfig()
         {
-            TestUtils.ClearSavedConfigurations();
             var testConfigManager = TestUtils.GetTestConfigManager();
             try
             {
@@ -85,9 +85,7 @@ namespace SkylineBatchTest
         [TestMethod]
         public void TestAddInsertConfig()
         {
-            TestUtils.ClearSavedConfigurations();
             var testConfigManager = new SkylineBatchConfigManager(TestUtils.GetTestLogger());
-            Assert.IsTrue(!testConfigManager.HasConfigs());
             var addedConfig = TestUtils.GetTestConfig("one");
             testConfigManager.AddConfiguration(addedConfig);
             var oneConfig = TestUtils.ConfigListFromNames(new List<string> { "one" });
@@ -116,7 +114,6 @@ namespace SkylineBatchTest
         [TestMethod]
         public void TestRemoveConfig()
         {
-            TestUtils.ClearSavedConfigurations();
             var configManager = TestUtils.GetTestConfigManager();
             configManager.SelectConfig(0);
             configManager.RemoveSelected();
@@ -143,7 +140,6 @@ namespace SkylineBatchTest
         [TestMethod]
         public void TestMoveConfig()
         {
-            TestUtils.ClearSavedConfigurations();
             var configManager = TestUtils.GetTestConfigManager();
             configManager.SelectConfig(0);
             configManager.MoveSelectedConfig(false);
@@ -160,7 +156,6 @@ namespace SkylineBatchTest
         [TestMethod]
         public void TestReplaceConfig()
         {
-            TestUtils.ClearSavedConfigurations();
             var configManager = TestUtils.GetTestConfigManager();
             configManager.SelectConfig(0);
             configManager.ReplaceSelectedConfig(TestUtils.GetTestConfig("oneReplaced"));
@@ -194,7 +189,6 @@ namespace SkylineBatchTest
         [TestMethod]
         public void TestImportExport()
         {
-            TestUtils.ClearSavedConfigurations();
             var configsXmlPath = TestUtils.GetTestFilePath("configs.xml");
             var configManager = TestUtils.GetTestConfigManager();
             configManager.ExportConfigs(configsXmlPath, new [] {0,1,2});
@@ -223,13 +217,14 @@ namespace SkylineBatchTest
         [TestMethod]
         public void TestCloseReopenConfigs()
         {
-            TestUtils.ClearSavedConfigurations();
             var configManager = TestUtils.GetTestConfigManager();
             configManager.AddConfiguration(TestUtils.GetTestConfig("four"));
             var testingConfigs = TestUtils.ConfigListFromNames(new List<string> { "one", "two", "three", "four" });
             configManager.Close();
             configManager.GetSelectedLogger().Delete();
             var testConfigManager = new SkylineBatchConfigManager(TestUtils.GetTestLogger());
+            // Simulate loading saved configs from file
+            testConfigManager.Import(ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath);
             Assert.IsTrue(testConfigManager.ConfigListEquals(testingConfigs));
             testConfigManager.GetSelectedLogger().Delete();
         }

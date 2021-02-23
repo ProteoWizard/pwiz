@@ -99,9 +99,6 @@
     <Content Include="SkylineBatch_release.ico">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <EmbeddedResource Include="FilePathControl.resx">
-      <DependentUpon>FilePathControl.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="InvalidConfigSetupForm.resx">
       <DependentUpon>InvalidConfigSetupForm.cs</DependentUpon>
     </EmbeddedResource>
@@ -129,12 +126,6 @@
   <ItemGroup>
     <Compile Include="CommandWriter.cs" />
     <Compile Include="SkylineBatchConfigManager.cs" />
-    <Compile Include="FilePathControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="FilePathControl.Designer.cs">
-      <DependentUpon>FilePathControl.cs</DependentUpon>
-    </Compile>
     <Compile Include="FileSettings.cs" />
     <Compile Include="InvalidConfigSetupForm.cs">
       <SubType>Form</SubType>

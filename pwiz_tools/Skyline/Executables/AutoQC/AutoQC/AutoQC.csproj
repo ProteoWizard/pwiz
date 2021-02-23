@@ -87,9 +87,6 @@
     <Content Include="SkylineRunner.exe">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <EmbeddedResource Include="FilePathControl.resx">
-      <DependentUpon>FilePathControl.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="InvalidConfigSetupForm.resx">
       <DependentUpon>InvalidConfigSetupForm.cs</DependentUpon>
     </EmbeddedResource>
@@ -118,12 +115,6 @@
   <ItemGroup>
     <Compile Include="AutoQcConfig.cs" />
     <Compile Include="AutoQcConfigManager.cs" />
-    <Compile Include="FilePathControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="FilePathControl.Designer.cs">
-      <DependentUpon>FilePathControl.cs</DependentUpon>
-    </Compile>
     <Compile Include="InvalidConfigSetupForm.cs">
       <SubType>Form</SubType>
     </Compile>

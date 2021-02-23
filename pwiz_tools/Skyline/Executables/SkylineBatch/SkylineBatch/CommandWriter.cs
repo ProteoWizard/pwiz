@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data.Odbc;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.IO;
 using SharedBatch;
 using SkylineBatch.Properties;
 
@@ -12,7 +6,7 @@ namespace SkylineBatch
 {
     class CommandWriter
     {
-        private const string ALLOW_NEWLINE_SAVE_VERSION = "20.2.1.415";
+        private const string ALLOW_NEWLINE_SAVE_VERSION = "20.2.1.415"; // TODO(Ali): Make sure this matches future Skyline-daily release with --save fix
 
         private readonly StreamWriter _writer;
         private readonly string _commandFile;

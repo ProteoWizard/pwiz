@@ -184,9 +184,6 @@
   <data name="FileSettings_Validate_MS1_filtering_res_accuracy" xml:space="preserve">
     <value>MS1 filtering res/accuracy</value>
   </data>
-  <data name="FilePathControl_FilePathControl_Please_specify_the_path_to_the__0__" xml:space="preserve">
-    <value>Please specify the path to the {0}:</value>
-  </data>
   <data name="ConfigRunner_KillProcessChildren_Killing_a_processes_spawned_by_the_process_with_Id___0_" xml:space="preserve">
     <value>Killing a processes spawned by the process with Id: {0}</value>
   </data>
@@ -237,9 +234,6 @@
   </data>
   <data name="Program_Main_Error_details_may_be_found_in_the_file__0_" xml:space="preserve">
     <value>Error details may be found in the file: {0}.</value>
-  </data>
-  <data name="FilePathControl_FilePathControl_Could_not_find_the__0__" xml:space="preserve">
-    <value>Could not find the {0}.</value>
   </data>
   <data name="ConfigRunner_KillProcessChildren_The_child_process_has_already_been_terminated_" xml:space="preserve">
     <value>The child process has already been terminated.</value>
@@ -297,9 +291,6 @@
   </data>
   <data name="SkylineBatchConfigForm_SkylineBatchConfigForm_Viewing_configuration___0__" xml:space="preserve">
     <value>Viewing configuration "{0}"</value>
-  </data>
-  <data name="FilePathControl_FilePathControl_Please_enter_a_valid_path_" xml:space="preserve">
-    <value>Please enter a valid path:</value>
   </data>
   <data name="InvalidConfigSetupForm_GetValidPath_Would_you_like_to_replace__0__with__1___" xml:space="preserve">
     <value>Would you like to replace:

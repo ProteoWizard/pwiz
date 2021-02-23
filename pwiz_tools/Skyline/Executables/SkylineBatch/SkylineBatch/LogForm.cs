@@ -19,7 +19,6 @@
 
 using System;
 using System.Windows.Forms;
-using SharedBatch;
 
 namespace SkylineBatch
 {

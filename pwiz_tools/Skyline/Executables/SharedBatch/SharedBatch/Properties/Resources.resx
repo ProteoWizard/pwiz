@@ -273,4 +273,10 @@
   <data name="TextUtil_FILTER_XML_XML_Files" xml:space="preserve">
     <value>XML Files</value>
   </data>
+  <data name="FilePathControl_FilePathControl_Could_not_find_the__0__" xml:space="preserve">
+    <value>Could not find the {0}.</value>
+  </data>
+  <data name="FilePathControl_FilePathControl_Please_correct_the__0__to_continue_" xml:space="preserve">
+    <value>Please correct the {0} to continue:</value>
+  </data>
 </root>

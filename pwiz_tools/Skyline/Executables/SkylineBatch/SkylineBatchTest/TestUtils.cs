@@ -19,7 +19,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SkylineBatch;
 using SharedBatch;
@@ -94,11 +93,6 @@ namespace SkylineBatchTest
         public static SkylineBatchConfigManager GetTestConfigManager()
         {
             var testConfigManager = new SkylineBatchConfigManager(GetTestLogger());
-            while (testConfigManager.HasConfigs())
-            {
-                testConfigManager.SelectConfig(0);
-                testConfigManager.RemoveSelected();
-            }
             testConfigManager.AddConfiguration(GetTestConfig("one"));
             testConfigManager.AddConfiguration(GetTestConfig("two"));
             testConfigManager.AddConfiguration(GetTestConfig("three"));
@@ -133,13 +127,6 @@ namespace SkylineBatchTest
         public static void InitializeRInstallation()
         {
             Assert.IsTrue(RInstallations.FindRDirectory());
-        }
-
-        public static void ClearSavedConfigurations()
-        {
-
-            var savedConfigsFile = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath;
-            if (File.Exists(savedConfigsFile)) File.Delete(savedConfigsFile);
         }
 
         public static List<string> GetAllLogFiles(string directory = null)

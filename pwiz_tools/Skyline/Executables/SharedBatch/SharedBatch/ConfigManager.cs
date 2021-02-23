@@ -36,21 +36,20 @@ namespace SharedBatch
         // Handles all modification to configs, the config list, configRunners, and log files
         // The UI should reflect the configs, runners, and log files from this class
 
-        protected Importer importer;
+        protected Importer importer; // a ReadXml method to import the configurations
 
-        protected readonly List<IConfig> _configList; // the list of configurations. Every config must have a runner in configRunners
+        protected readonly List<IConfig> _configList; // the list of configurations. Every config must have a validation status in _configValidation
         protected readonly Dictionary<string, bool> _configValidation; // dictionary mapping from config name to if that config is valid
 
-        protected Logger _currentLogger; // the current logger - always logs to SkylineBatch.log
-        protected List<Logger> _logList; // list of archived loggers, from most recent to least recent
+        protected List<Logger> _logList; // list of all loggers displayed in the dropDown list on the log tab
 
         protected bool _runningUi; // if the UI is displayed (false when testing)
         protected IMainUiControl _uiControl; // null if no UI displayed
 
-        protected readonly object _lock = new object(); // lock required for any mutator or getter method on _configList, _configRunners, or SelectedConfig
-        protected readonly object _loggerLock = new object(); // lock required for any mutator or getter method on _logger, _oldLogs or SelectedLog
+        protected readonly object _lock = new object(); // lock required for any mutator or getter method on _configList, _configValidators, or SelectedConfig
+        protected readonly object _loggerLock = new object(); // lock required for any mutator or getter method on _logList or SelectedLog
 
-        public Dictionary<string, string> RootReplacement;
+        public Dictionary<string, string> RootReplacement; // dictionary mapping from roots of invalid file paths to roots of valid file paths
         
 
         public ConfigManager()
@@ -59,7 +58,6 @@ namespace SharedBatch
             SelectedLog = 0;
             _logList = new List<Logger>();
             _configList = new List<IConfig>();
-            //_currentLogger = logger;
             _configValidation = new Dictionary<string, bool>();
             RootReplacement = new Dictionary<string, string>();
         }
@@ -81,6 +79,7 @@ namespace SharedBatch
         
         protected void LoadConfigList()
         {
+            if (!_runningUi) return; // Do not load saved configurations in test mode
             ConfigList.Importer = importer;
             foreach (var config in Settings.Default.ConfigList)
             {

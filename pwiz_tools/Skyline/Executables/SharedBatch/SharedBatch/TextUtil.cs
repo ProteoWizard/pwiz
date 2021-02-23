@@ -51,7 +51,8 @@ namespace SharedBatch
         public static bool TryReplaceStart(string oldText, string newText, string originalString, out string replacedString)
         {
             replacedString = originalString;
-            if (!originalString.Substring(0, oldText.Length).Equals(oldText)) return false;
+            if (!originalString.StartsWith(oldText))
+                return false;
             replacedString = newText + originalString.Substring(oldText.Length);
             return true;
         }

@@ -17,11 +17,8 @@
  */
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
-using System.IO;
-using System.Text;
 using System.Threading.Tasks;
 using SharedBatch;
 using SkylineBatch.Properties;
@@ -109,7 +106,7 @@ namespace SkylineBatch
             var addDecoys = Config.FileSettings.AddDecoys;
             var shuffleDecoys = Config.FileSettings.ShuffleDecoys;
             var trainMProfit = Config.FileSettings.TrainMProphet;
-            var refine = false;
+            //var refine = false;
             var newSkylineFileName = Config.MainSettings.GetResultsFilePath();
             var dataDir = Config.MainSettings.DataFolderPath;
             var namingPattern = Config.MainSettings.ReplicateNamingPattern;
@@ -141,13 +138,12 @@ namespace SkylineBatch
                 if (!string.IsNullOrEmpty(namingPattern)) commandWriter.Write("--import-naming-pattern=\"{0}\"", namingPattern);
                 if (trainMProfit) commandWriter.Write("--reintegrate-model-name=\"{0}\" --reintegrate-create-model --reintegrate-overwrite-peaks", Config.Name);
                 commandWriter.Write("--save");
-                if (refine)
+                /*if (refine)
                 {
                     var refinedFile = Path.Combine(Config.MainSettings.AnalysisFolderPath,
                         Path.GetFileNameWithoutExtension(newSkylineFileName) + "_refined.sky");
-                    //writer.WriteLine();
                     commandWriter.Write("--out=\"{0}\" --refine-cv-remove-above-cutoff=20 --refine-cv-global-normalize=equalize_medians --refine-qvalue-cutoff=0.01 --refine-minimum-detections=4", refinedFile);
-                }
+                }*/
                 commandWriter.EndCommandGroup();
             }
             
@@ -158,7 +154,7 @@ namespace SkylineBatch
                 {
                     var newReportPath = Config.MainSettings.AnalysisFolderPath + "\\" + report.Name + ".csv";
                     commandWriter.Write("--report-add=\"{0}\" --report-conflict-resolution=overwrite ", report.ReportPath);
-                    commandWriter.Write("--report-name=\"{0}\" --report-file=\"{1}\" --report-invariant ", new []{report.Name, newReportPath});
+                    commandWriter.Write("--report-name=\"{0}\" --report-file=\"{1}\" --report-invariant ", new object[]{report.Name, newReportPath});
                     commandWriter.EndCommandGroup();
                 }
             }

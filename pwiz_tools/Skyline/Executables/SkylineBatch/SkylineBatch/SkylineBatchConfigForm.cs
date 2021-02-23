@@ -113,6 +113,7 @@ namespace SkylineBatch
             textNamingPattern.Text = mainSettings.ReplicateNamingPattern;
             if (_action == ConfigAction.Add)
             {
+                // ReSharper disable once LocalizableElement - backslash does not need to be localized string
                 textAnalysisPath.Text = Path.GetDirectoryName(mainSettings.AnalysisFolderPath) + @"\";
                 textNamingPattern.Text = string.Empty;
             }

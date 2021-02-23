@@ -19,7 +19,6 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.IO;
 using System.Windows.Forms;
 using SharedBatch;
 using SkylineBatch.Properties;

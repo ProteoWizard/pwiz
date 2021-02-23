@@ -104,12 +104,7 @@ namespace AutoQCTest
         public static AutoQcConfigManager GetTestConfigManager(List<AutoQcConfig> configs = null)
         {
             var testConfigManager = new AutoQcConfigManager();
-            while (testConfigManager.HasConfigs())
-            {
-                testConfigManager.SelectConfig(0);
-                testConfigManager.RemoveSelected();
-            }
-
+          
             if (configs == null)
             {
                 configs = new List<AutoQcConfig>
@@ -126,11 +121,6 @@ namespace AutoQCTest
             return testConfigManager;
         }
 
-        public static void ClearSavedConfigurations()
-        {
-            var savedConfigsFile = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath;
-            if (File.Exists(savedConfigsFile)) File.Delete(savedConfigsFile);
-        }
     }
     
     class TestImportContext : ImportContext

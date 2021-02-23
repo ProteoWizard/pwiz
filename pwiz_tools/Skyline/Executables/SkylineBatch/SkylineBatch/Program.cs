@@ -25,7 +25,6 @@ using System.IO;
 using System.Net;
 using System.Threading;
 using System.Windows.Forms;
-using log4net;
 using log4net.Config;
 using SkylineBatch.Properties;
 using SharedBatch;

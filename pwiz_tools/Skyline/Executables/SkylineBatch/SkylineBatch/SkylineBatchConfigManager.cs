@@ -19,7 +19,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -33,33 +32,36 @@ namespace SkylineBatch
 {
     public class SkylineBatchConfigManager : ConfigManager
     {
-        // Handles all modification to configs, the config list, configRunners, and log files
+        // Extension of ConfigManager, handles more specific SkylineBatch functionality
         // The UI should reflect the configs, runners, and log files from this class
 
-        //private readonly List<SkylineBatchConfig> _configList; // the list of configurations. Every config must have a runner in configRunners
         private readonly Dictionary<string, IConfigRunner> _configRunners; // dictionary mapping from config name to that config's runner
-        //private readonly Dictionary<string, bool> _configValidation; // dictionary mapping from config name to if that config is valid
 
-        //private readonly Logger _logger; // the current logger - always logs to SkylineBatch.log
-        //private readonly List<Logger> _oldLogs; // list of archived loggers, from most recent to least recent
+        // Shared variables with ConfigManager:
+        //  Protected -
+        //    Importer importer; <- a ReadXml method to import the configurations
+        //    List<IConfig> _configList; <- the list of configurations. Every config must have a runner in _configRunners
+        //    Dictionary<string, bool> _configValidation; <- dictionary mapping from config name to if that config is valid
+        //    List<Logger>  _logList; <- list of all loggers displayed in the dropDown list on the log tab, _logList[0] is always "Skyline Batch.log"
+        //
+        //    _runningUi; <- if the UI is displayed (false when testing)
+        //    IMainUiControl _uiControl; <- null if no UI displayed
+        //
+        //    object _lock = new object(); <- lock required for any mutator or getter method on _configList, _configRunners, or SelectedConfig
+        //    object _loggerLock = new object(); <- lock required for any mutator or getter method on _logList or SelectedLog
+        //  
+        //  Public - 
+        //    int SelectedConfig <- index of the selected configuration
+        //    int SelectedLog <- index of the selected log. index 0 corresponds to _logger, any index > 0 corresponds to oldLogs[index - 1]
+        //    Dictionary<string, string> RootReplacement; <- dictionary mapping from roots of invalid file paths to roots of valid file paths
 
-        //private readonly bool _runningUi; // if the UI is displayed (false when testing)
-        //private readonly IMainUiControl _uiControl; // null if no UI displayed
-
-        //private readonly object _lock = new object(); // lock required for any mutator or getter method on _configList, _configRunners, or SelectedConfig
-        //private readonly object _loggerLock = new object(); // lock required for any mutator or getter method on _logger, _oldLogs or SelectedLog
-
-        //private readonly ConfigListWrapper _configList;
 
         public SkylineBatchConfigManager(Logger logger, IMainUiControl uiControl = null)
         {
             importer = SkylineBatchConfig.ReadXml;
             SelectedLog = 0;
-            _currentLogger = logger;
+            _logList.Add(logger);
             _configRunners = new Dictionary<string, IConfigRunner>();
-            //_uiControl = uiControl;
-            //_runningUi = uiControl != null;
-            //_configRunners = new Dictionary<string, ConfigRunner>();
 
             _uiControl = uiControl;
             _runningUi = uiControl != null;
@@ -70,14 +72,10 @@ namespace SkylineBatch
             AssertAllInitialized();
         }
 
-        //public int SelectedConfig { get; private set; } // index of the selected configuration
-        //public int SelectedLog { get; private set; } // index of the selected log. index 0 corresponds to _logger, any index > 0 corresponds to oldLogs[index - 1]
-
-
         public new void Close()
         {
             base.Close();
-            _currentLogger.Archive();
+            _logList[0].Archive();
         }
 
 
@@ -92,16 +90,22 @@ namespace SkylineBatch
 
         private void AddConfigRunner(IConfig config)
         {
-            if (_configRunners.ContainsKey(config.GetName()))
-                throw new Exception("Config runner already exists.");
-            var runner = new ConfigRunner((SkylineBatchConfig)config, _currentLogger, _uiControl);
-            _configRunners.Add(config.GetName(), runner);
+            lock (_lock)
+            {
+                if (_configRunners.ContainsKey(config.GetName()))
+                    throw new Exception("Config runner already exists.");
+
+                var runner = new ConfigRunner((SkylineBatchConfig) config, _logList[0], _uiControl);
+                _configRunners.Add(config.GetName(), runner);
+            }
         }
 
         private void AddConfigRunner(List<IConfig> configs)
         {
-            foreach (SkylineBatchConfig config in configs)
-                AddConfigRunner(config);
+            foreach (var config in configs)
+            {
+                AddConfigRunner((SkylineBatchConfig)config);
+            }
         }
 
         private void RemoveConfigRunner(SkylineBatchConfig config)
@@ -202,7 +206,10 @@ namespace SkylineBatch
 
         public ConfigRunner GetSelectedConfigRunner()
         {
-            return (ConfigRunner)_configRunners[GetSelectedConfig().GetName()];
+            lock (_lock)
+            {
+                return (ConfigRunner) _configRunners[GetSelectedConfig().GetName()];
+            }
         }
         public async Task RunAllEnabled(int startStep)
         {
@@ -231,12 +238,13 @@ namespace SkylineBatch
                     startStep, overwriteInfo)).AppendLine().AppendLine();
                 var showOverwriteMessage = false;
 
-                foreach (SkylineBatchConfig config in _configList)
+                foreach (var config in _configList)
                 {
-                    if (!config.Enabled) continue;
+                    var skylineBatchConfig = (SkylineBatchConfig) config;
+                    if (!skylineBatchConfig.Enabled) continue;
                     var tab = "      ";
-                    var configurationHeader = tab + string.Format(Resources.ConfigManager_RunAllEnabled_Configuration___0___, config.Name)  + Environment.NewLine;
-                    var willOverwrite = config.MainSettings.RunWillOverwrite(startStep, configurationHeader, out StringBuilder message);
+                    var configurationHeader = tab + string.Format(Resources.ConfigManager_RunAllEnabled_Configuration___0___, skylineBatchConfig.Name)  + Environment.NewLine;
+                    var willOverwrite = skylineBatchConfig.MainSettings.RunWillOverwrite(startStep, configurationHeader, out StringBuilder message);
                     if (willOverwrite)
                     {
                         overwriteMessage.Append(message).AppendLine();
@@ -252,11 +260,12 @@ namespace SkylineBatch
                 }
                 // Checks if there are enabled configs and starts them waiting
                 var hasEnabledConfigs = false;
-                foreach (ConfigRunner runner in _configRunners.Values)
+                foreach (var runner in _configRunners.Values)
                 {
-                    if (runner.Config.Enabled)
+                    var skylineBatchConfigRunner = (ConfigRunner) runner;
+                    if (skylineBatchConfigRunner.Config.Enabled)
                     {
-                        runner.ChangeStatus(RunnerStatus.Waiting);
+                        skylineBatchConfigRunner.ChangeStatus(RunnerStatus.Waiting);
                         hasEnabledConfigs = true;
                     }
                 }
@@ -274,7 +283,7 @@ namespace SkylineBatch
 
             lock (_loggerLock)
             {
-                var oldLogger = (_currentLogger).Archive();
+                var oldLogger = (_logList[0]).Archive();
                 if (oldLogger != null)
                     _logList.Insert(1, oldLogger);
                 UpdateUiLogs();
@@ -282,7 +291,12 @@ namespace SkylineBatch
 
             while (!string.IsNullOrEmpty(nextConfig))
             {
-                await ((ConfigRunner)_configRunners[nextConfig]).Run(startStep);
+                ConfigRunner startingConfigRunner;
+                lock (_lock)
+                {
+                    startingConfigRunner = (ConfigRunner)_configRunners[nextConfig];
+                }
+                await startingConfigRunner.Run(startStep);
                 nextConfig = GetNextWaitingConfig();
             }
 
@@ -357,12 +371,11 @@ namespace SkylineBatch
         {
             lock (_loggerLock)
             {
-                _logList.Add(_currentLogger);
-                var logDirectory = Path.GetDirectoryName(_currentLogger.GetFile());
+                var logDirectory = Path.GetDirectoryName(_logList[0].GetFile());
                 var files = logDirectory != null ? new DirectoryInfo(logDirectory).GetFiles() : new FileInfo[0];
                 foreach (var file in files)
                 {
-                    if (file.Name.EndsWith(TextUtil.EXT_LOG) && !file.Name.Equals(_currentLogger.GetFileName()))
+                    if (file.Name.EndsWith(TextUtil.EXT_LOG) && !file.Name.Equals(_logList[0].GetFileName()))
                     {
                         _logList.Insert(1, new Logger(file.FullName, file.Name, _uiControl));
                     }
