@@ -130,7 +130,7 @@ namespace SkylineBatch
             var analysisFolderPath = textAnalysisPath.Text;
             var dataFolderPath = textDataPath.Text;
             var replicateNamingPattern = textNamingPattern.Text;
-            return new MainSettings(templateFilePath, analysisFolderPath, dataFolderPath, annotationsFilePath, replicateNamingPattern);
+            return new MainSettings(templateFilePath, analysisFolderPath, dataFolderPath,  replicateNamingPattern);
         }
 
         private void textConfigName_TextChanged(object sender, EventArgs e)

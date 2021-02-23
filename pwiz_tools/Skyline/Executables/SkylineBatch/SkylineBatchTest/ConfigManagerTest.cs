@@ -155,6 +155,7 @@ namespace SkylineBatchTest
         [TestMethod]
         public void TestReplaceConfig()
         {
+            TestUtils.InitializeRInstallation();
             var configManager = TestUtils.GetTestConfigManager();
             configManager.SelectConfig(0);
             configManager.ReplaceSelectedConfig(TestUtils.GetTestConfig("oneReplaced"));
@@ -216,6 +217,7 @@ namespace SkylineBatchTest
         [TestMethod]
         public void TestCloseReopenConfigs()
         {
+            TestUtils.InitializeRInstallation();
             var configManager = TestUtils.GetTestConfigManager();
             configManager.AddConfiguration(TestUtils.GetTestConfig("four"));
             var testingConfigs = TestUtils.ConfigListFromNames(new List<string> { "one", "two", "three", "four" });
