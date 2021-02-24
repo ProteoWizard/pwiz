@@ -122,6 +122,7 @@ namespace SkylineBatch
             InsertConfiguration(config, _configList.Count);
             AddConfigRunner(config);
         }
+        
 
         public new void RemoveSelected()
         {
@@ -139,7 +140,7 @@ namespace SkylineBatch
             }
         }
 
-        public new void ReplaceSelectedConfig(IConfig newConfig)
+        public new bool ReplaceSelectedConfig(IConfig newConfig)
         {
             lock (_lock)
             {
@@ -147,6 +148,7 @@ namespace SkylineBatch
                 base.ReplaceSelectedConfig(newConfig);
                 RemoveConfigRunner(oldConfig);
                 AddConfigRunner(newConfig);
+                return true;
             }
         }
 

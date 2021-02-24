@@ -34,14 +34,13 @@ namespace SkylineBatch
 
         public void Write(string command, params Object[] args)
         {
-            if (args != null)
-                command = string.Format(command, args);
-            _logger.Log(command);
+            command = string.Format(command, args);
             if (_reopenFile)
             {
                 _reopenFile = false;
                 Write("--in=\"{0}\"", _newSkyFileName);
             }
+            _logger.Log(command);
             if (_multiLine) _writer.WriteLine(command);
             else _writer.Write(command + " ");
         }

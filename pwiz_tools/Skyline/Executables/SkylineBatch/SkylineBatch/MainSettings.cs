@@ -36,11 +36,12 @@ namespace SkylineBatch
 
 
         public MainSettings(string templateFilePath, string analysisFolderPath, string dataFolderPath,
-            string replicateNamingPattern)
+            string annotationsFilePath, string replicateNamingPattern)
         {
             TemplateFilePath = templateFilePath;
             AnalysisFolderPath = analysisFolderPath;
             DataFolderPath = dataFolderPath;
+            AnnotationsFilePath = annotationsFilePath;
             ReplicateNamingPattern = replicateNamingPattern ?? string.Empty;
         }
 
@@ -49,6 +50,8 @@ namespace SkylineBatch
         public readonly string AnalysisFolderPath;
 
         public readonly string DataFolderPath;
+
+        public readonly string AnnotationsFilePath;
 
         public readonly string ReplicateNamingPattern;
 
@@ -77,6 +80,7 @@ namespace SkylineBatch
             ValidateSkylineFile(TemplateFilePath);
             ValidateDataFolder(DataFolderPath);
             ValidateAnalysisFolder(AnalysisFolderPath);
+            ValidateAnnotationsFile(AnnotationsFilePath);
         }
 
         public static void ValidateSkylineFile(string skylineFile)
@@ -110,6 +114,15 @@ namespace SkylineBatch
             }
         }
 
+        public static void ValidateAnnotationsFile(string annotationsFilePath)
+        {
+            if (!string.IsNullOrWhiteSpace(annotationsFilePath) && !File.Exists(annotationsFilePath))
+            {
+                throw new ArgumentException(string.Format(Resources.MainSettings_ValidateAnnotationsFolder_The_annotations_file__0__does_not_exist_, annotationsFilePath) + Environment.NewLine +
+                                            Resources.MainSettings_ValidateAnnotationsFolder_Please_enter_a_valid_file_path__or_no_text_if_you_do_not_wish_to_include_annotations_);
+            }
+        }
+
         public static void CheckIfEmptyPath(string input, string name)
         {
             if (string.IsNullOrWhiteSpace(input))
@@ -126,7 +139,10 @@ namespace SkylineBatch
                 TextUtil.TryReplaceStart(oldRoot, newRoot, AnalysisFolderPath, out string replacedAnalysisPath);
             var dataReplaced =
                 TextUtil.TryReplaceStart(oldRoot, newRoot, DataFolderPath, out string replacedDataPath);
-            pathReplacedMainSettings = new MainSettings(replacedTemplatePath, replacedAnalysisPath, replacedDataPath, ReplicateNamingPattern);
+            // annotations replaced
+            TextUtil.TryReplaceStart(oldRoot, newRoot, AnnotationsFilePath, out string replacedAnnotationsPath);
+
+            pathReplacedMainSettings = new MainSettings(replacedTemplatePath, replacedAnalysisPath, replacedDataPath, replacedAnnotationsPath, ReplicateNamingPattern);
             return templateReplaced || analysisReplaced || dataReplaced;
         }
 
@@ -202,6 +218,7 @@ namespace SkylineBatch
             TemplateFilePath,
             AnalysisFolderPath,
             DataFolderPath,
+            AnnotationsFilePath,
             ReplicateNamingPattern,
         };
 
@@ -210,8 +227,9 @@ namespace SkylineBatch
             var templateFilePath = reader.GetAttribute(Attr.TemplateFilePath);
             var analysisFolderPath = reader.GetAttribute(Attr.AnalysisFolderPath);
             var dataFolderPath = reader.GetAttribute(Attr.DataFolderPath);
+            var annotationsFilePath = reader.GetAttribute(Attr.AnnotationsFilePath);
             var replicateNamingPattern = reader.GetAttribute(Attr.ReplicateNamingPattern);
-            return new MainSettings(templateFilePath, analysisFolderPath, dataFolderPath, replicateNamingPattern);
+            return new MainSettings(templateFilePath, analysisFolderPath, dataFolderPath, annotationsFilePath, replicateNamingPattern);
         }
 
         public void WriteXml(XmlWriter writer)
@@ -220,6 +238,7 @@ namespace SkylineBatch
             writer.WriteAttributeIfString(Attr.TemplateFilePath, TemplateFilePath);
             writer.WriteAttributeIfString(Attr.AnalysisFolderPath, AnalysisFolderPath);
             writer.WriteAttributeIfString(Attr.DataFolderPath, DataFolderPath);
+            writer.WriteAttributeIfString(Attr.AnnotationsFilePath, AnnotationsFilePath);
             writer.WriteAttributeIfString(Attr.ReplicateNamingPattern, ReplicateNamingPattern);
             writer.WriteEndElement();
         }
@@ -231,6 +250,7 @@ namespace SkylineBatch
             return (other.TemplateFilePath == TemplateFilePath &&
                     other.AnalysisFolderPath == AnalysisFolderPath &&
                     other.DataFolderPath == DataFolderPath &&
+                    other.AnnotationsFilePath == AnnotationsFilePath &&
                     other.ReplicateNamingPattern == ReplicateNamingPattern);
         }
 

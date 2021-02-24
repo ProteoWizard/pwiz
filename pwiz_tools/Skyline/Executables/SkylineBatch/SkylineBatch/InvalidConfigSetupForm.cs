@@ -64,8 +64,10 @@ namespace SkylineBatch
                 mainSettings.AnalysisFolderPath, true, MainSettings.ValidateAnalysisFolder);
             var validDataFolderPath = await GetValidPath(Resources.InvalidConfigSetupForm_FixInvalidMainSettings_data_folder, 
                 mainSettings.DataFolderPath, true, MainSettings.ValidateDataFolder);
+            var validAnnotationsFilePath = await GetValidPath("annotations file", mainSettings.AnnotationsFilePath,
+                false, MainSettings.ValidateAnnotationsFile);
 
-            return new MainSettings(validTemplateFilePath, validAnalysisFolderPath, validDataFolderPath, _invalidConfig.MainSettings.ReplicateNamingPattern);
+            return new MainSettings(validTemplateFilePath, validAnalysisFolderPath, validDataFolderPath, validAnnotationsFilePath, mainSettings.ReplicateNamingPattern);
         }
         
         private async Task<ReportSettings> FixInvalidReportSettings()

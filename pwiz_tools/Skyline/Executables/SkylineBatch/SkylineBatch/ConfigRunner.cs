@@ -106,6 +106,7 @@ namespace SkylineBatch
             var addDecoys = Config.FileSettings.AddDecoys;
             var shuffleDecoys = Config.FileSettings.ShuffleDecoys;
             var trainMProfit = Config.FileSettings.TrainMProphet;
+            var annotationsPath = Config.MainSettings.AnnotationsFilePath;
             //var refine = false;
             var newSkylineFileName = Config.MainSettings.GetResultsFilePath();
             var dataDir = Config.MainSettings.DataFolderPath;
@@ -137,6 +138,8 @@ namespace SkylineBatch
                 commandWriter.Write("--import-all=\"{0}\"", dataDir);
                 if (!string.IsNullOrEmpty(namingPattern)) commandWriter.Write("--import-naming-pattern=\"{0}\"", namingPattern);
                 if (trainMProfit) commandWriter.Write("--reintegrate-model-name=\"{0}\" --reintegrate-create-model --reintegrate-overwrite-peaks", Config.Name);
+                if (!string.IsNullOrWhiteSpace(annotationsPath)) commandWriter.Write("‑‑import‑annotations=\"{0}\"", annotationsPath);
+
                 commandWriter.Write("--save");
                 /*if (refine)
                 {

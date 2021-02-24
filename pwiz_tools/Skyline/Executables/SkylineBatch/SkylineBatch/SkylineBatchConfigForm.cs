@@ -122,6 +122,7 @@ namespace SkylineBatch
 
             textSkylinePath.Text = mainSettings.TemplateFilePath;
             textDataPath.Text = mainSettings.DataFolderPath;
+            textAnnotationsFile.Text = mainSettings.AnnotationsFilePath;
         }
 
         private MainSettings GetMainSettingsFromUi()
@@ -129,8 +130,9 @@ namespace SkylineBatch
             var templateFilePath = textSkylinePath.Text;
             var analysisFolderPath = textAnalysisPath.Text;
             var dataFolderPath = textDataPath.Text;
+            var annotationsFilePath = textAnnotationsFile.Text;
             var replicateNamingPattern = textNamingPattern.Text;
-            return new MainSettings(templateFilePath, analysisFolderPath, dataFolderPath,  replicateNamingPattern);
+            return new MainSettings(templateFilePath, analysisFolderPath, dataFolderPath, annotationsFilePath, replicateNamingPattern);
         }
 
         private void textConfigName_TextChanged(object sender, EventArgs e)
@@ -146,6 +148,11 @@ namespace SkylineBatch
         private void btnSkylineFilePath_Click(object sender, EventArgs e)
         {
             OpenFile(textSkylinePath, TextUtil.FILTER_SKY);
+        }
+
+        private void btnAnnotationsFile_Click(object sender, EventArgs e)
+        {
+            OpenFile(textAnnotationsFile, TextUtil.FILTER_CSV);
         }
 
         private void btnAnalysisFilePath_Click(object sender, EventArgs e)
