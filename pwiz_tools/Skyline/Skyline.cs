@@ -277,7 +277,16 @@ namespace pwiz.Skyline
             if (_fileToOpen == null)
                 return false;
 
-            string parentDir = Path.GetDirectoryName(_fileToOpen);
+            string parentDir;
+            try
+            {
+                parentDir = Path.GetDirectoryName(_fileToOpen);
+            }
+            catch (PathTooLongException e)
+            {
+                MessageDlg.ShowWithException(this, TextUtil.LineSeparate(Resources.SkylineWindow_HasFileToOpen_The_path_to_the_file_to_open_is_too_long_, _fileToOpen), e);
+                return false;
+            }
             // If the parent directory ends with .zip and lives in AppData\Local\Temp
             // then the user has double-clicked a file in Windows Explorer inside a ZIP file
             if (parentDir != null && PathEx.HasExtension(parentDir, @".zip") &&
