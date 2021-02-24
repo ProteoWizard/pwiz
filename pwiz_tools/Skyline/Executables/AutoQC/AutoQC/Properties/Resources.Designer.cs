@@ -806,33 +806,6 @@ namespace AutoQC.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Could not find path to the {0}..
-        /// </summary>
-        internal static string FilePathControl_Could_not_find_path_to_the__0___ {
-            get {
-                return ResourceManager.GetString("FilePathControl_Could_not_find_path_to_the__0___", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Could not find the {0}..
-        /// </summary>
-        internal static string FilePathControl_FilePathControl_Could_not_find_the__0__ {
-            get {
-                return ResourceManager.GetString("FilePathControl_FilePathControl_Could_not_find_the__0__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Please correct the {0} to continue:.
-        /// </summary>
-        internal static string FilePathControl_FilePathControl_Please_correct_the__0__to_continue_ {
-            get {
-                return ResourceManager.GetString("FilePathControl_FilePathControl_Please_correct_the__0__to_continue_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Would you like to replace:
         ///{0}
         ///with:
@@ -883,31 +856,20 @@ namespace AutoQC.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cannot open the Panorama folder of an invalid configuration..
+        ///   Looks up a localized string similar to Panorama folder.
         /// </summary>
-        internal static string MainForm_btnOpenPanoramaFolder_Click_Cannot_open_the_Panorama_folder_of_an_invalid_configuration_ {
+        internal static string MainForm_btnOpenPanoramaFolder_Click_Panorama_folder {
             get {
-                return ResourceManager.GetString("MainForm_btnOpenPanoramaFolder_Click_Cannot_open_the_Panorama_folder_of_an_invali" +
-                        "d_configuration_", resourceCulture);
+                return ResourceManager.GetString("MainForm_btnOpenPanoramaFolder_Click_Panorama_folder", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cannot open the Skyline file of an invalid configuration..
+        ///   Looks up a localized string similar to Skyline file.
         /// </summary>
-        internal static string MainForm_btnOpenResults_Click_Cannot_open_the_Skyline_file_of_an_invalid_configuration_ {
+        internal static string MainForm_btnOpenResults_Click_Skyline_file {
             get {
-                return ResourceManager.GetString("MainForm_btnOpenResults_Click_Cannot_open_the_Skyline_file_of_an_invalid_configur" +
-                        "ation_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Please fix &quot;{0}&quot; and try again..
-        /// </summary>
-        internal static string MainForm_btnOpenResults_Click_Please_fix___0___and_try_again_ {
-            get {
-                return ResourceManager.GetString("MainForm_btnOpenResults_Click_Please_fix___0___and_try_again_", resourceCulture);
+                return ResourceManager.GetString("MainForm_btnOpenResults_Click_Skyline_file", resourceCulture);
             }
         }
         
@@ -957,12 +919,11 @@ namespace AutoQC.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cannot open the folder to watch of an invalid configuration..
+        ///   Looks up a localized string similar to folder to watch.
         /// </summary>
-        internal static string MainForm_toolStripFolderToWatch_Click_Cannot_open_the_folder_to_watch_of_an_invalid_configuration_ {
+        internal static string MainForm_toolStripFolderToWatch_Click_folder_to_watch {
             get {
-                return ResourceManager.GetString("MainForm_toolStripFolderToWatch_Click_Cannot_open_the_folder_to_watch_of_an_inval" +
-                        "id_configuration_", resourceCulture);
+                return ResourceManager.GetString("MainForm_toolStripFolderToWatch_Click_folder_to_watch", resourceCulture);
             }
         }
         
@@ -973,6 +934,15 @@ namespace AutoQC.Properties {
             get {
                 return ResourceManager.GetString("MainForm_toolStripLogFolder_Click_Cannot_open_the_log_folder_of_an_invalid_config" +
                         "uration_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to log folder.
+        /// </summary>
+        internal static string MainForm_toolStripLogFolder_Click_log_folder {
+            get {
+                return ResourceManager.GetString("MainForm_toolStripLogFolder_Click_log_folder", resourceCulture);
             }
         }
         
@@ -1369,6 +1339,24 @@ namespace AutoQC.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} requires Skyline to run..
+        /// </summary>
+        internal static string Program_InitSkylineSettings__0__requires_Skyline_to_run_ {
+            get {
+                return ResourceManager.GetString("Program_InitSkylineSettings__0__requires_Skyline_to_run_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please install Skyline to run {0}..
+        /// </summary>
+        internal static string Program_InitSkylineSettings_Please_install_Skyline_to_run__0__ {
+            get {
+                return ResourceManager.GetString("Program_InitSkylineSettings_Please_install_Skyline_to_run__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Another instance of {0} is already running..
         /// </summary>
         internal static string Program_Main_Another_instance_of__0__is_already_running_ {
@@ -1467,51 +1455,6 @@ namespace AutoQC.Properties {
         internal static string StartsWithFilter_FilterName_Starts_with {
             get {
                 return ResourceManager.GetString("StartsWithFilter_FilterName_Starts_with", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to All Files.
-        /// </summary>
-        internal static string TextUtil_FILTER_ALL_All_Files {
-            get {
-                return ResourceManager.GetString("TextUtil_FILTER_ALL_All_Files", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to R Files.
-        /// </summary>
-        internal static string TextUtil_FILTER_R_R_Files {
-            get {
-                return ResourceManager.GetString("TextUtil_FILTER_R_R_Files", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Skyline Files.
-        /// </summary>
-        internal static string TextUtil_FILTER_SKY_Skyline_Files {
-            get {
-                return ResourceManager.GetString("TextUtil_FILTER_SKY_Skyline_Files", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Skyline Reports.
-        /// </summary>
-        internal static string TextUtil_FILTER_SKYR_Skyline_Reports {
-            get {
-                return ResourceManager.GetString("TextUtil_FILTER_SKYR_Skyline_Reports", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to XML Files.
-        /// </summary>
-        internal static string TextUtil_FILTER_XML_XML_Files {
-            get {
-                return ResourceManager.GetString("TextUtil_FILTER_XML_XML_Files", resourceCulture);
             }
         }
     }

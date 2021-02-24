@@ -18,33 +18,23 @@
 
 using System;
 using System.Diagnostics;
-using System.IO;
+using System.Drawing;
 using System.Threading.Tasks;
+using SharedBatch;
 using SkylineBatch.Properties;
 
 namespace SkylineBatch
 {
-    public class ConfigRunner
+    public class ConfigRunner : IConfigRunner
     {
-
         private readonly IMainUiControl _uiControl;
-        private readonly ISkylineBatchLogger _logger;
+        private readonly Logger _logger;
 
         private readonly object _lock = new object();
         private RunnerStatus _runnerStatus;
 
-        public enum RunnerStatus
-        {
-            Waiting,
-            Running,
-            Cancelling,
-            Cancelled,
-            Stopped,
-            Completed,
-            Error
-        }
 
-        public ConfigRunner(SkylineBatchConfig config, ISkylineBatchLogger logger, IMainUiControl uiControl = null)
+        public ConfigRunner(SkylineBatchConfig config, Logger logger, IMainUiControl uiControl = null)
         {
             _runnerStatus = RunnerStatus.Stopped;
             Config = config;
@@ -53,6 +43,16 @@ namespace SkylineBatch
         }
         
         public SkylineBatchConfig Config { get; }
+
+        public IConfig GetConfig()
+        {
+            return Config;
+        }
+
+        public Color GetDisplayColor()
+        {
+            return Color.Black;
+        }
 
         public RunnerStatus GetStatus()
         {
@@ -106,44 +106,63 @@ namespace SkylineBatch
             var addDecoys = Config.FileSettings.AddDecoys;
             var shuffleDecoys = Config.FileSettings.ShuffleDecoys;
             var trainMProfit = Config.FileSettings.TrainMProphet;
+            //var refine = false;
             var newSkylineFileName = Config.MainSettings.GetResultsFilePath();
             var dataDir = Config.MainSettings.DataFolderPath;
             var namingPattern = Config.MainSettings.ReplicateNamingPattern;
 
             Config.MainSettings.CreateAnalysisFolderIfNonexistent();
+            // Writes commands to the log and a file for batch processing
+            var commandWriter = new CommandWriter(_logger, Config.SkylineSettings, newSkylineFileName);
 
             // STEP 1: open skyline file and save copy to analysis folder
-            var firstStep = string.Format("--in=\"{0}\" ", templateFullName);
-            firstStep += !string.IsNullOrEmpty(msOneResolvingPower) ? string.Format("--full-scan-precursor-res={0} ", msOneResolvingPower) : string.Empty;
-            firstStep += !string.IsNullOrEmpty(msMsResolvingPower) ? string.Format("--full-scan-product-res={0} ", msMsResolvingPower) : string.Empty;
-            firstStep += !string.IsNullOrEmpty(retentionTime) ? string.Format("--full-scan-rt-filter-tolerance={0} ", retentionTime) : string.Empty;
-            firstStep += addDecoys ? string.Format("--decoys-add={0} ", shuffleDecoys ? "shuffle" : "reverse") : string.Empty;
-            firstStep += string.Format("--out=\"{0}\" ‑‑save‑settings", newSkylineFileName);
-            firstStep += startStep == 1 ? " --version" : string.Empty;
-            if (startStep <= 1)
-                await ExecuteProcess(skylineRunner, firstStep);
-
-            // STEP 2: import data to new skyline file
-            var secondStep = string.Format("--in=\"{0}\" --import-all=\"{1}\" ", newSkylineFileName, dataDir);
-            secondStep += !string.IsNullOrEmpty(namingPattern) ? string.Format("--import-naming-pattern=\"{0}\" ", namingPattern) : string.Empty;
-            secondStep += trainMProfit ? string.Format("--reintegrate-model-name=\"{0}\" --reintegrate-create-model --reintegrate-overwrite-peaks ", Config.Name) : string.Empty;
-            secondStep += "--save";
-            secondStep += startStep == 2 ? " --version" : string.Empty;
-            if (startStep <= 2)
-                await ExecuteProcess(skylineRunner, secondStep);
-            
-            // STEP 3: ouput report(s) for completed analysis
-            foreach (var report in Config.ReportSettings.Reports)
+            if (startStep == 1)
             {
-                var newReportPath = Config.MainSettings.AnalysisFolderPath + "\\" + report.Name + ".csv";
-                var reportArguments = string.Format("--in=\"{0}\" ", newSkylineFileName);
-                reportArguments += string.Format("--report-add=\"{0}\" --report-conflict-resolution=overwrite ", report.ReportPath);
-                reportArguments += string.Format("--report-name=\"{0}\" --report-file=\"{1}\" --report-invariant ", report.Name, newReportPath);
-                reportArguments += startStep == 3 && Config.ReportSettings.Reports.IndexOf(report) == 0 ? " --version" : string.Empty;
-                if (startStep <= 3)
-                    await ExecuteProcess(skylineRunner, reportArguments);
+                commandWriter.Write("--in=\"{0}\"", templateFullName);
+                if (!string.IsNullOrEmpty(msOneResolvingPower)) commandWriter.Write("--full-scan-precursor-res={0}", msOneResolvingPower);
+                if (!string.IsNullOrEmpty(msMsResolvingPower)) commandWriter.Write("--full-scan-product-res={0}", msMsResolvingPower);
+                if (!string.IsNullOrEmpty(retentionTime)) commandWriter.Write("--full-scan-rt-filter-tolerance={0}", retentionTime);
+                if (addDecoys) commandWriter.Write("--decoys-add={0} ", shuffleDecoys ? "shuffle" : "reverse");
+                commandWriter.Write("--out=\"{0}\" ‑‑save‑settings ", newSkylineFileName);
+                commandWriter.EndCommandGroup();
+            }
+            else
+            {
+                commandWriter.Write("--in=\"{0}\"", newSkylineFileName);
             }
             
+            // STEP 2: import data to new skyline file
+            if (startStep <= 2)
+            {
+                commandWriter.Write("--import-all=\"{0}\"", dataDir);
+                if (!string.IsNullOrEmpty(namingPattern)) commandWriter.Write("--import-naming-pattern=\"{0}\"", namingPattern);
+                if (trainMProfit) commandWriter.Write("--reintegrate-model-name=\"{0}\" --reintegrate-create-model --reintegrate-overwrite-peaks", Config.Name);
+                commandWriter.Write("--save");
+                /*if (refine)
+                {
+                    var refinedFile = Path.Combine(Config.MainSettings.AnalysisFolderPath,
+                        Path.GetFileNameWithoutExtension(newSkylineFileName) + "_refined.sky");
+                    commandWriter.Write("--out=\"{0}\" --refine-cv-remove-above-cutoff=20 --refine-cv-global-normalize=equalize_medians --refine-qvalue-cutoff=0.01 --refine-minimum-detections=4", refinedFile);
+                }*/
+                commandWriter.EndCommandGroup();
+            }
+            
+            // STEP 3: ouput report(s) for completed analysis
+            if (startStep <= 3)
+            {
+                foreach (var report in Config.ReportSettings.Reports)
+                {
+                    var newReportPath = Config.MainSettings.AnalysisFolderPath + "\\" + report.Name + ".csv";
+                    commandWriter.Write("--report-add=\"{0}\" --report-conflict-resolution=overwrite ", report.ReportPath);
+                    commandWriter.Write("--report-name=\"{0}\" --report-file=\"{1}\" --report-invariant ", new object[]{report.Name, newReportPath});
+                    commandWriter.EndCommandGroup();
+                }
+            }
+
+            var commandFile = commandWriter.ReturnCommandFile();
+            var command = string.Format("--version --batch-commands=\"{0}\"", commandFile);
+            if (startStep != 4) await ExecuteProcess(skylineRunner, command);
+
             // STEP 4: run r scripts using csv files
             foreach (var report in Config.ReportSettings.Reports)
             {

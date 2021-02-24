@@ -23,14 +23,15 @@ using System.Globalization;
 using System.IO;
 using System.Threading;
 using AutoQC.Properties;
+using SharedBatch;
 
 namespace AutoQC
 {
 
     public class AutoQCFileSystemWatcher
     {
-        private readonly IAutoQcLogger _logger;
-        private readonly IConfigRunner _configRunner;
+        private readonly Logger _logger;
+        private readonly ConfigRunner _configRunner;
 
         private IResultFileStatus _fileStatusChecker;
 
@@ -65,7 +66,7 @@ namespace AutoQC
         private bool _includeSubfolders;
         private string _instrument;
 
-        public AutoQCFileSystemWatcher(IAutoQcLogger logger, IConfigRunner configRunner)
+        public AutoQCFileSystemWatcher(Logger logger, ConfigRunner configRunner)
         {
             _fileWatcher = InitFileSystemWatcher();
 
@@ -365,7 +366,7 @@ namespace AutoQC
                 // it means another config watching a folder on the same mapped drive re-mapped the drive.
                 if (Directory.Exists(_fileWatcher.Path))
                 {
-                    Program.LogInfo(string.Format(Resources.AutoQCFileSystemWatcher_CheckDrive_Restarting_file_watcher_for_configuration___0___, _configName));
+                    ProgramLog.Info(string.Format(Resources.AutoQCFileSystemWatcher_CheckDrive_Restarting_file_watcher_for_configuration___0___, _configName));
                     RestartFileWatcher();
                 }
                 else
@@ -393,14 +394,14 @@ namespace AutoQC
             var driveAvailable = NetworkDriveUtil.EnsureDrive(_driveInfo, _logger, out reconnected, _configName);
             if (driveAvailable && _configRunner.IsDisconnected())
             {
-                _configRunner.ChangeStatus(ConfigRunner.RunnerStatus.Running);
+                _configRunner.ChangeStatus(RunnerStatus.Running);
             }
 
             if (!driveAvailable)
             {
                 if (_configRunner.IsRunning())
                 {
-                    _configRunner.ChangeStatus(ConfigRunner.RunnerStatus.Disconnected);
+                    _configRunner.ChangeStatus(RunnerStatus.Disconnected);
                 }
                 // keep trying every 1 minute for a hour or until the drive is available again.  
                 Thread.Sleep(TimeSpan.FromMinutes(1));
@@ -410,7 +411,7 @@ namespace AutoQC
 
             if (reconnected)
             {
-                Program.LogInfo(string.Format(Resources.AutoQCFileSystemWatcher_TryConnect_Re_connected_drive__0__for_configuration___1_____Restarting_file_watcher_, _driveInfo,
+                ProgramLog.Info(string.Format(Resources.AutoQCFileSystemWatcher_TryConnect_Re_connected_drive__0__for_configuration___1_____Restarting_file_watcher_, _driveInfo,
                     _configName));
                 RestartFileWatcher();
             }
@@ -434,7 +435,7 @@ namespace AutoQC
                 // Path is unavailable.  Disable raising events
                 _fileWatcher.EnableRaisingEvents = false;
             }
-            _configRunner.ChangeStatus(ConfigRunner.RunnerStatus.Disconnected);
+            _configRunner.ChangeStatus(RunnerStatus.Disconnected);
 
             while (true)
             {
@@ -458,7 +459,7 @@ namespace AutoQC
 
                     if (_configRunner.IsDisconnected())
                     {
-                        _configRunner.ChangeStatus(ConfigRunner.RunnerStatus.Running);
+                        _configRunner.ChangeStatus(RunnerStatus.Running);
                     }
                     RestartFileWatcher();
                     break;
