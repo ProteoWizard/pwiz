@@ -137,6 +137,7 @@ namespace pwiz.SkylineTestFunctional
             // Add a bunch of unmeasured precursors and transitions which should not impact the statistics
             // This once caused the CV graphs to fail to complete calculating
             AddUnmeasuredElements();
+//PauseTest(); // Left this here on purpose to verify that this does NOT cause a failure in TeamCity builds. >>>>> TO BE REMOVED BEFORE BRANCH IS MERGED TO MASTER. <<<<<<<<<            
 
             TestRefinement();
             TestHistogram<AreaCVHistogramGraphPane>(SkylineWindow.ShowPeakAreaCVHistogram, HISTOGRAM_DATA_START);

@@ -80,6 +80,7 @@ namespace pwiz.SkylineTestFunctional
             var editListDlg = ShowDialog<EditListDlg<SettingsListBase<AnnotationDef>, AnnotationDef>>(chooseAnnotationsDlg.EditAnnotationList);
             // Define the annotations that we are going to be using in this test.
             RunUI(editListDlg.ResetList);
+PauseTest(); // Left this here on purpose to verify that this causes a failure in TeamCity builds    >>>>> TO BE REMOVED BEFORE BRANCH IS MERGED TO MASTER. <<<<<<<<<           
             DefineAnnotation(editListDlg, ANNOTATION_PROTEIN_TEXT, AnnotationDef.AnnotationTargetSet.Singleton(AnnotationDef.AnnotationTarget.protein), AnnotationDef.AnnotationType.text, null);
             DefineAnnotation(editListDlg, "peptide Items", AnnotationDef.AnnotationTargetSet.Singleton(AnnotationDef.AnnotationTarget.peptide),
                              AnnotationDef.AnnotationType.value_list, new[] { "one", "two", "three" });

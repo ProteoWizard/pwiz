@@ -32,6 +32,7 @@ using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Controls;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs;
@@ -52,6 +53,16 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void CodeInspection()
         {
+            // Looking for forgotten PauseTest() calls that will mess up automated tests
+            AddTextInspection(@"*.cs", // Examine files with this mask
+                Inspection.Forbidden, // This is a test for things that should NOT be in such files
+                Level.Error, // Any failure is treated as an error, and overall test fails
+                new[] { @"TestFunctional.cs", @"AuditLogTutorialTest.cs" }, // Only these files should contain this
+                string.Empty, // No file content required for inspection
+                @"^\s*PauseTest\(", // Forbidden pattern (uncommented PauseTest)
+                true, // Pattern is not a regular expression
+                @"This appears to be temporary debugging code that should not be checked in."); // Explanation for prohibition, appears in report
+
             // Looking for non-standard image scaling
             AddTextInspection(@"*.Designer.cs", // Examine files with this mask
                 Inspection.Forbidden, // This is a test for things that should NOT be in such files
@@ -422,21 +433,21 @@ namespace pwiz.SkylineTest
         {
             public string Cue; // If non-empty, pattern only applies to files containing this cue
             public string Reason; // Note to show on failure
-            public string[] IgnoredDirectories; // Don't flag on hits in these directories
+            public string[] IgnoredFileMasks; // Don't flag on hits in files that contain these strings in their full paths
             public Level FailureType;  // Is failure an error, or just a warning?
 
-            public PatternDetails(string cue,string reason, string[] ignoredDirectories, Level failureType)
+            public PatternDetails(string cue, string reason, string[] ignoredFileMasks, Level failureType)
             {
                 Cue = cue;
                 Reason = reason;
-                IgnoredDirectories = ignoredDirectories;
+                IgnoredFileMasks = ignoredFileMasks;
                 FailureType = failureType;
             }
 
             public bool IgnorePath(string path)
             {
                 return string.IsNullOrEmpty(path) ||
-                       IgnoredDirectories != null && IgnoredDirectories.Any(d => path.ToLowerInvariant().Contains(d.ToLowerInvariant()));
+                       IgnoredFileMasks != null && IgnoredFileMasks.Any(d => path.ToLowerInvariant().Contains(d.ToLowerInvariant()));
             }
         }
         private readonly Dictionary<string, Dictionary<Pattern, PatternDetails>> forbiddenPatternsByFileMask = new Dictionary<string, Dictionary<Pattern, PatternDetails>>();
