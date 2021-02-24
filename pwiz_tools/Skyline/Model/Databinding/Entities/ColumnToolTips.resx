@@ -842,6 +842,9 @@ Edit menu</value>
   <data name="PointsAcrossPeak">
     <value>Number of chromatogram points between the start and end time of the integrated peak.</value>
   </data>
+  <data name="CycleTimeAcrossPeak">
+    <value>Cycle time (in seconds) across the integrated peak.</value>
+  </data>
   <data name="Precursor">
     <value>Precursor</value>
   </data>
