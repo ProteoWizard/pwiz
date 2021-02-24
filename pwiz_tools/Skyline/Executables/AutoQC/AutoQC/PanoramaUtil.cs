@@ -18,7 +18,6 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Dynamic;
 using System.Net;
 using System.Text;
 using AutoQC.Properties;
@@ -291,9 +290,9 @@ namespace AutoQC
             URI = uri;
         }
 
-        internal string Username { get; set; }
-        internal string Password { get; set; }
-        internal Uri URI { get; set; }
+        internal string Username { get; }
+        internal string Password { get; }
+        internal Uri URI { get; }
 
 
         internal string AuthHeader
@@ -331,7 +330,7 @@ namespace AutoQC
         {
             unchecked
             {
-                int hashCode = (Username != null ? Username.GetHashCode() : 0);
+                int hashCode = Username != null ? Username.GetHashCode() : 0;
                 hashCode = (hashCode * 397) ^ (Password != null ? Password.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (URI != null ? URI.GetHashCode() : 0);
                 return hashCode;
@@ -566,7 +565,7 @@ namespace AutoQC
                 using (var webClient = new WebClientWithCredentials(ServerUri, username, password))
                 {
                     Uri requestUri = PanoramaUtil.CallNewInterface(ServerUri, @"core", folderPath, @"createContainer", "", true);
-                    JObject result = webClient.Post(requestUri, createRequest);
+                    webClient.Post(requestUri, createRequest);
                     return FolderOperationStatus.OK;
                 }
             }
@@ -584,7 +583,7 @@ namespace AutoQC
 
         public string DownloadString(Uri queryUri, string username, string password)
         {
-            string data = null;
+            string data;
 
             using (var webClient = new WebClientWithCredentials(ServerUri, username, password))
             {
@@ -611,7 +610,7 @@ namespace AutoQC
                 using (var webClient = new WebClientWithCredentials(ServerUri, username, password))
                 {
                     Uri requestUri = PanoramaUtil.CallNewInterface(ServerUri, @"core", folderPath, @"deleteContainer", "", true);
-                    JObject result = webClient.Post(requestUri, "");
+                    webClient.Post(requestUri, "");
                     return FolderOperationStatus.OK;
                 }
             }
