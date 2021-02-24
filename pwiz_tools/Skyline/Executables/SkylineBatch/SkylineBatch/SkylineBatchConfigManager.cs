@@ -86,6 +86,12 @@ namespace SkylineBatch
         private new void LoadConfigList()
         {
             base.LoadConfigList();
+            foreach (var config in _configList)
+            {
+                // disable invalid loaded configs
+                if (!_configValidation[config.GetName()])
+                    ((SkylineBatchConfig) config).Enabled = false;
+            }
             AddConfigRunner(_configList);
         }
 
@@ -122,7 +128,6 @@ namespace SkylineBatch
             InsertConfiguration(config, _configList.Count);
             AddConfigRunner(config);
         }
-        
 
         public new void RemoveSelected()
         {
@@ -140,7 +145,7 @@ namespace SkylineBatch
             }
         }
 
-        public new bool ReplaceSelectedConfig(IConfig newConfig)
+        public new void ReplaceSelectedConfig(IConfig newConfig)
         {
             lock (_lock)
             {
@@ -148,7 +153,6 @@ namespace SkylineBatch
                 base.ReplaceSelectedConfig(newConfig);
                 RemoveConfigRunner(oldConfig);
                 AddConfigRunner(newConfig);
-                return true;
             }
         }
 

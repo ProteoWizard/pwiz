@@ -256,11 +256,11 @@ namespace SkylineBatch
 
         protected bool Equals(ReportInfo other)
         {
-            if (other.Name != Name || other.ReportPath != ReportPath || other.RScripts.Count != RScripts.Count)
+            if (!other.Name.Equals(Name) || !other.ReportPath.Equals(ReportPath) || other.RScripts.Count != RScripts.Count)
                 return false;
             for (int i = 0; i < RScripts.Count; i++)
             {
-                if (RScripts[i].Item1 != other.RScripts[i].Item1 || RScripts[i].Item2 != other.RScripts[i].Item2)
+                if (!RScripts[i].Item1.Equals(other.RScripts[i].Item1) || !RScripts[i].Item2.Equals(other.RScripts[i].Item2))
                     return false;
             }
 

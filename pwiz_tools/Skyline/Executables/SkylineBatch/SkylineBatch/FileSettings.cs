@@ -117,11 +117,13 @@ namespace SkylineBatch
 
         protected bool Equals(FileSettings other)
         {
-            return other.MsOneResolvingPower == MsOneResolvingPower &&
-                   other.MsMsResolvingPower == MsMsResolvingPower &&
-                   other.RetentionTime == RetentionTime &&
-                   other.AddDecoys == AddDecoys &&
-                   other.ShuffleDecoys == ShuffleDecoys;
+            // shuffle decoys only matters if add decoys is true
+            if (other.AddDecoys && AddDecoys && other.ShuffleDecoys != ShuffleDecoys)
+                return false;
+            return other.MsOneResolvingPower.Equals(MsOneResolvingPower) &&
+                   other.MsMsResolvingPower.Equals(MsMsResolvingPower) &&
+                   other.RetentionTime.Equals(RetentionTime) &&
+                   other.AddDecoys == AddDecoys;
         }
 
         public override bool Equals(object obj)

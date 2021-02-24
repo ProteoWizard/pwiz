@@ -246,12 +246,16 @@ namespace SkylineBatch
 
         protected bool Equals(MainSettings other)
         {
+            // checks if annotation paths are both empty or equal
+            if (!(string.IsNullOrWhiteSpace(AnnotationsFilePath) && string.IsNullOrWhiteSpace(other.AnnotationsFilePath))
+            {
+                if (!other.AnnotationsFilePath.Equals(AnnotationsFilePath)) return false;
+            }
 
-            return (other.TemplateFilePath == TemplateFilePath &&
-                    other.AnalysisFolderPath == AnalysisFolderPath &&
-                    other.DataFolderPath == DataFolderPath &&
-                    other.AnnotationsFilePath == AnnotationsFilePath &&
-                    other.ReplicateNamingPattern == ReplicateNamingPattern);
+            return (other.TemplateFilePath.Equals(TemplateFilePath) &&
+                    other.AnalysisFolderPath.Equals(AnalysisFolderPath) &&
+                    other.DataFolderPath.Equals(DataFolderPath) &&
+                    other.ReplicateNamingPattern.Equals(ReplicateNamingPattern));
         }
 
         public override bool Equals(object obj)

@@ -208,7 +208,9 @@ namespace SkylineBatch
         {
             return string.Equals(Name, other.Name)
                    && Equals(MainSettings, other.MainSettings)
-                  && Equals(ReportSettings, other.ReportSettings);
+                   && Equals(ReportSettings, other.ReportSettings)
+                   && Equals(FileSettings, other.FileSettings)
+                   && Equals(SkylineSettings, other.SkylineSettings);
         }
 
         public override bool Equals(object obj)

@@ -189,6 +189,7 @@ namespace SkylineBatchTest
         [TestMethod]
         public void TestImportExport()
         {
+            TestUtils.InitializeRInstallation();
             var configsXmlPath = TestUtils.GetTestFilePath("configs.xml");
             var configManager = TestUtils.GetTestConfigManager();
             configManager.ExportConfigs(configsXmlPath, new [] {0,1,2});
