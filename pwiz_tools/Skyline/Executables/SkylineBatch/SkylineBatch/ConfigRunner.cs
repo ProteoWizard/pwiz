@@ -17,8 +17,10 @@
  */
 
 using System;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
+using System.Management;
 using System.Threading.Tasks;
 using SharedBatch;
 using SkylineBatch.Properties;
@@ -223,10 +225,48 @@ namespace SkylineBatch
             // end cmd and SkylineRunner/SkylineCmd processes if runner has been stopped before completion
             if (!cmd.HasExited)
             {
-                LogToUi(Resources.ConfigRunner_ExecuteCommandLine_Process_terminated_);
+                // make sure no process children left running
+                await KillProcessChildren((UInt32)cmd.Id);
                 if (!cmd.HasExited) cmd.Kill();
                 if (!IsError())
                     ChangeStatus(RunnerStatus.Cancelled);
+            }
+        }
+
+        private async Task KillProcessChildren(UInt32 parentProcessId)
+        {
+            ManagementObjectSearcher searcher = new ManagementObjectSearcher(
+                "SELECT * " +
+                "FROM Win32_Process " +
+                "WHERE ParentProcessId=" + parentProcessId);
+
+            ManagementObjectCollection collection = searcher.Get();
+            if (collection.Count > 0)
+            {
+                ProgramLog.Info("Killing [" + collection.Count + "] processes spawned by process with Id [" + parentProcessId + "]");
+                foreach (var item in collection)
+                {
+                    UInt32 childProcessId = (UInt32)item["ProcessId"];
+                    if (childProcessId != Process.GetCurrentProcess().Id)
+                    {
+                        await KillProcessChildren(childProcessId);
+
+                        try
+                        {
+                            var childProcess = Process.GetProcessById((int)childProcessId);
+                            ProgramLog.Info("Killing child process [" + childProcess.ProcessName + "] with Id [" + childProcessId + "]");
+                            childProcess.Kill();
+                        }
+                        catch (ArgumentException)
+                        {
+                            ProgramLog.Info("Child process already terminated");
+                        }
+                        catch (Win32Exception)
+                        {
+                            ProgramLog.Info("Cannot kill windows child process.");
+                        }
+                    }
+                }
             }
         }
 

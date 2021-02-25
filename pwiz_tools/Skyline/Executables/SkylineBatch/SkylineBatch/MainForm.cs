@@ -207,6 +207,7 @@ namespace SkylineBatch
         private void btnOpenAnalysis_Click(object sender, EventArgs e)
         {
             var config = _configManager.GetSelectedConfig();
+            config.MainSettings.CreateAnalysisFolderIfNonexistent();
             MainFormUtils.OpenFileExplorer(config.Name, _configManager.IsSelectedConfigValid(),
                 Resources.MainForm_btnOpenAnalysis_Click_analysis_folder,
                 config.MainSettings.AnalysisFolderPath, this);

@@ -247,7 +247,7 @@ namespace SkylineBatch
         protected bool Equals(MainSettings other)
         {
             // checks if annotation paths are both empty or equal
-            if (!(string.IsNullOrWhiteSpace(AnnotationsFilePath) && string.IsNullOrWhiteSpace(other.AnnotationsFilePath))
+            if (!(string.IsNullOrWhiteSpace(AnnotationsFilePath) && string.IsNullOrWhiteSpace(other.AnnotationsFilePath)))
             {
                 if (!other.AnnotationsFilePath.Equals(AnnotationsFilePath)) return false;
             }

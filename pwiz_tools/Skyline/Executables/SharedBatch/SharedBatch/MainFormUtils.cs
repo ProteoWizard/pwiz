@@ -11,7 +11,7 @@ namespace SharedBatch
         {
             if (CanOpen(configName, configValid, folderDescription, mainUi))
             {
-                Process.Start("explorer.exe", "/n," + folderPath);
+                Process.Start(folderPath);
             }
         }
 
@@ -22,7 +22,7 @@ namespace SharedBatch
             {
                 mainUi.DisplayError(string.Format(Resources.MainFormUtils_OpenFileExplorer_Cannot_open_the__0__of_an_invalid_configuration_, fileDescription) + Environment.NewLine +
                                     string.Format(Resources.MainFormUtils_OpenFileExplorer_Please_fix___0___and_try_again_, configName));
-            }
+            } 
             return configValid;
         }
     }
