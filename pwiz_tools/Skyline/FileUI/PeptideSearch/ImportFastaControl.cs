@@ -553,7 +553,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private void cbAutoTrain_CheckedChanged(object sender, EventArgs e)
         {
-            if (!IsImportingResults && cbAutoTrain.Checked)
+            if (!IsImportingResults && !IsDDASearch && cbAutoTrain.Checked)
             {
                 MessageDlg.Show(WizardForm,
                     Resources.ImportFastaControl_cbAutoTrain_CheckedChanged_Cannot_automatically_train_mProphet_model_since_no_results_files_are_being_imported__Continue_without_automatically_training_an_mProphet_model__or_go_back_and_add_at_least_one_results_file_);

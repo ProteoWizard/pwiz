@@ -73,9 +73,17 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private void UpdateSearchEngineProgress(IProgressStatus status)
         {
-            var newEntry = new ProgressEntry(DateTime.Now, status.Message);
+            string message = status.IsError ? status.ErrorException.ToString() : status.Message;
+
+            var newEntry = new ProgressEntry(DateTime.Now, message);
             _progressTextItems.Add(newEntry);
             txtSearchProgress.AppendText($@"{newEntry.ToString(showTimestampsCheckbox.Checked)}{Environment.NewLine}");
+
+            if (status.IsError)
+            {
+                Program.ReportException(status.ErrorException);
+                return;
+            }
 
             int percentComplete = status.PercentComplete;
             if (status.SegmentCount > 0)

@@ -33,14 +33,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
     public partial class ConverterSettingsControl : UserControl
     {
         private ImportPeptideSearch ImportPeptideSearch { get; set; }
-        private FullScanSettingsControl _fullScanSettingsControl;
+        private Func<FullScanSettingsControl> _fullScanSettingsControlGetter;
         private IDictionary<string, AbstractDdaSearchEngine.Setting> _diaUmpireAdditionalSettings;
 
-        public ConverterSettingsControl(IModifyDocumentContainer documentContainer, ImportPeptideSearch importPeptideSearch, FullScanSettingsControl fullScanSettingsControl)
+        public ConverterSettingsControl(IModifyDocumentContainer documentContainer, ImportPeptideSearch importPeptideSearch, Func<FullScanSettingsControl> fullScanSettingsControlGetter)
         {
             InitializeComponent();
             ImportPeptideSearch = importPeptideSearch;
-            _fullScanSettingsControl = fullScanSettingsControl;
+            _fullScanSettingsControlGetter = fullScanSettingsControlGetter;
             converterTabControl.SelectedTab = null;
 
             LoadComboboxEntries();
@@ -269,7 +269,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 foreach (var kvp in _diaUmpireAdditionalSettings)
                     diaUmpireConfig.Parameters[kvp.Key] = kvp.Value.Value;
 
-            return new DiaUmpireDdaConverter(ImportPeptideSearch.SearchEngine, _fullScanSettingsControl.IsolationScheme, diaUmpireConfig);
+            return new DiaUmpireDdaConverter(ImportPeptideSearch.SearchEngine, _fullScanSettingsControlGetter().IsolationScheme, diaUmpireConfig);
         }
     }
 }

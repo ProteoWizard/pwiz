@@ -33,6 +33,9 @@ namespace pwiz.Skyline.Model
             _variableWindows = isolationWindows.Select(w => new DiaUmpire.TargetWindow { Start = w.Start, End = w.End });
             _diaUmpireConfig = diaUmpireConfig;
             _parentProgressMonitor = null;
+
+            if (_windowScheme == DiaUmpire.WindowScheme.SWATH_Variable)
+                Assume.IsTrue(_variableWindows.Any());
         }
 
         public override bool Run(IProgressMonitor progressMonitor, IProgressStatus status)

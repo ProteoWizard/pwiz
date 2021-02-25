@@ -345,6 +345,9 @@ namespace pwiz.SkylineTestFunctional
 
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // now on transition settings
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // now on full scan settings
+
+                // re-select isolation scheme after FullScanSettingsControl reset
+                importPeptideSearchDlg.FullScanSettingsControl.IsolationSchemeName = isolationSchemeName;
             });
 
             RunUI(() =>
@@ -356,7 +359,7 @@ namespace pwiz.SkylineTestFunctional
             });
 
             WaitForConditionUI(60000, () => searchSucceeded.HasValue);
-            Assert.IsTrue(searchSucceeded.Value);
+            RunUI(() => Assert.IsTrue(searchSucceeded.Value, importPeptideSearchDlg.SearchControl.LogText));
 
             RunDlg<PeptidesPerProteinDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck, emptyProteinsDlg =>
             {

@@ -154,7 +154,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             getChromatogramsPage.Controls.Add(ImportResultsDDAControl);
             ImportResultsControl = ImportResultsDDAControl;
 
-            ConverterSettingsControl = new ConverterSettingsControl(this, ImportPeptideSearch, FullScanSettingsControl)
+            ConverterSettingsControl = new ConverterSettingsControl(this, ImportPeptideSearch, () => { return FullScanSettingsControl; })
             {
                 Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
                 Location = new Point(18, 50)
@@ -524,11 +524,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                                     Location = oldImportResultsControl.Location
                                 };
                                 ImportResultsControl = ImportResultsDIAControl;
-
-                                if (BuildPepSearchLibControl.PerformDDASearch)
-                                    ImportResultsDIAControl.FoundResultsFiles = BuildPepSearchLibControl.DdaSearchDataSources.Select(o =>
-                                        new ImportPeptideSearch.FoundResultsFile(o.GetFileName(), o.GetFilePath())).ToList();
                             }
+
+                            if (BuildPepSearchLibControl.PerformDDASearch)
+                                ImportResultsDIAControl.FoundResultsFiles = BuildPepSearchLibControl.DdaSearchDataSources.Select(o =>
+                                    new ImportPeptideSearch.FoundResultsFile(o.GetFileName(), o.GetFilePath())).ToList();
                         }
                         getChromatogramsPage.Controls.Add((Control)ImportResultsControl);
 
@@ -657,8 +657,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     {
                         if (!File.Exists(ImportFastaControl.FastaFile)) 
                         {
-                            MessageBox.Show(this, Resources.ImportPeptideSearchDlg_NextPage_FastFileMissing_DDASearch,
-                                Program.Name, MessageBoxButtons.OK);
+                            MessageDlg.Show(this, Resources.ImportPeptideSearchDlg_NextPage_FastFileMissing_DDASearch);
                             
                             return;
                         }
@@ -678,6 +677,19 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         }
                         return;
                     }
+                case Pages.converter_settings_page:
+                    if (WorkflowType == Workflow.dia && BuildPepSearchLibControl.DIAConversionNeeded)
+                    {
+                        if (FullScanSettingsControl.IsolationScheme.PrespecifiedIsolationWindows.Count == 0)
+                        {
+                            MessageDlg.Show(this, "No isolation windows are configured, but are required for deconvoluting DIA raw files by DIA-Umpire in preparation for DDA search. Go back to full scan settings to configure the isolation scheme.");
+
+                            return;
+                        }
+                        else
+                            ImportPeptideSearch.DdaConverter = ConverterSettingsControl.GetDiaUmpireConverter();
+                    }
+                    break;
                 case Pages.dda_search_settings_page:
                     bool valid = SearchSettingsControl.SaveAllSettings();
                     if (!valid) return;
@@ -689,9 +701,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     btnCancel.Enabled = false;
                     btnBack.Enabled = false;
                     ControlBox = false;
-
-                    if (WorkflowType == Workflow.dia && BuildPepSearchLibControl.DIAConversionNeeded)
-                        ImportPeptideSearch.DdaConverter = ConverterSettingsControl.GetDiaUmpireConverter();
 
                     if (!_expandedDdaSearchLog)
                     {
