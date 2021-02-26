@@ -17,9 +17,10 @@
  * limitations under the License.
  */
 using System;
-using System.Linq;
+using System.Collections.Generic;
 using System.Windows.Forms;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Alerts
@@ -30,10 +31,22 @@ namespace pwiz.Skyline.Alerts
     /// </summary>
     public partial class ShareTypeDlg : FormEx
     {
-        public ShareTypeDlg(SrmDocument document)
+        private List<SkylineVersion> _skylineVersionOptions;
+        public ShareTypeDlg(SrmDocument document, DocumentFormat? savedFileFormat)
         {
             InitializeComponent();
-            comboSkylineVersion.Items.AddRange(SkylineVersion.SupportedForSharing().Cast<object>().ToArray());
+            _skylineVersionOptions = new List<SkylineVersion>();
+            if (savedFileFormat.HasValue)
+            {
+                _skylineVersionOptions.Add(null);
+                comboSkylineVersion.Items.Add(string.Format("Current saved file ({0})", savedFileFormat.Value.GetDescription()));
+            }
+
+            foreach (var skylineVersion in SkylineVersion.SupportedForSharing())
+            {
+                _skylineVersionOptions.Add(skylineVersion);
+                comboSkylineVersion.Items.Add(skylineVersion.ToString());
+            }
             comboSkylineVersion.SelectedIndex = 0;
             radioComplete.Checked = true;
         }
@@ -43,7 +56,7 @@ namespace pwiz.Skyline.Alerts
         public void OkDialog()
         {
             DialogResult = DialogResult.OK;
-            ShareType = new ShareType(radioComplete.Checked, (SkylineVersion)comboSkylineVersion.SelectedItem);
+            ShareType = new ShareType(radioComplete.Checked, _skylineVersionOptions[comboSkylineVersion.SelectedIndex]);
             Close();
         }
 

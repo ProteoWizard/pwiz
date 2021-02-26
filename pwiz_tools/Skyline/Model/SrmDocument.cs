@@ -332,6 +332,11 @@ namespace pwiz.Skyline.Model
 
         public DocumentFormat FormatVersion { get; private set; }
 
+        public SrmDocument ChangeFormatVersion(DocumentFormat formatVersion)
+        {
+            return ChangeProp(ImClone(this), im => im.FormatVersion = formatVersion);
+        }
+
         /// <summary>
         /// Monotonically increasing index, incremented each time a modified
         /// document is created.  Works much like the revision count in Subversion.

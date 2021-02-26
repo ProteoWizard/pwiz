@@ -56,6 +56,7 @@ using pwiz.Skyline.Model.Lib.Midas;
 using pwiz.Skyline.Model.Optimization;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -910,7 +911,7 @@ namespace pwiz.Skyline
                 var result = MultiButtonMsgDlg.Show(this,
                     Resources.SkylineWindow_CheckSaveDocument_Do_you_want_to_save_changes,
                     Resources.SkylineWindow_CheckSaveDocument_Yes, Resources.SkylineWindow_CheckSaveDocument_No, true);
-                    switch (result)
+                switch (result)
                 {
                     case DialogResult.Yes:
                         return SaveDocument();
@@ -1146,13 +1147,6 @@ namespace pwiz.Skyline
             }
         }
 
-        private byte[] GetViewFileBytes()
-        {
-            var memoryStream = new MemoryStream();
-            dockPanel.SaveAsXml(memoryStream, Encoding.Unicode);
-            return memoryStream.ToArray();
-        }
-
         private void SetActiveFile(string path)
         {
             if (!string.IsNullOrEmpty(path))
@@ -1198,9 +1192,19 @@ namespace pwiz.Skyline
                 return;
             }
 
+            if (!CheckSaveDocument())
+            {
+                return;
+            }
+            document = DocumentUI;
             string fileName = DocumentFilePath;
             ShareType shareType;
-            using (var dlgType = new ShareTypeDlg(document))
+            DocumentFormat? fileFormatOnDisk = null;
+            if (!Dirty && null != DocumentFilePath)
+            {
+                fileFormatOnDisk = document.FormatVersion;
+            }
+            using (var dlgType = new ShareTypeDlg(document, fileFormatOnDisk))
             {
                 if (dlgType.ShowDialog(this) == DialogResult.Cancel)
                     return;
@@ -1210,7 +1214,6 @@ namespace pwiz.Skyline
             using (var dlg = new SaveFileDialog
             {
                 Title = Resources.SkylineWindow_shareDocumentMenuItem_Click_Share_Document,
-                InitialDirectory = Path.GetDirectoryName(fileName),
                 OverwritePrompt = true,
                 DefaultExt = SrmDocumentSharing.EXT_SKY_ZIP,
                 SupportMultiDottedExtensions = true,
@@ -1219,6 +1222,7 @@ namespace pwiz.Skyline
             {
                 if (fileName != null)
                 {
+                    dlg.InitialDirectory = Path.GetDirectoryName(fileName);
                     dlg.FileName = Path.GetFileNameWithoutExtension(fileName) + SrmDocumentSharing.EXT_SKY_ZIP;
                 }
                 if (dlg.ShowDialog(this) == DialogResult.Cancel)
@@ -1235,10 +1239,23 @@ namespace pwiz.Skyline
                 bool success;
                 using (var longWaitDlg = new LongWaitDlg { Text = Resources.SkylineWindow_ShareDocument_Compressing_Files, })
                 {
-                    var sharing = new SrmDocumentSharing(DocumentUI, DocumentFilePath, fileDest, shareType)
+                    var sharing = new SrmDocumentSharing(DocumentUI, DocumentFilePath, fileDest, shareType);
+                    if (shareType.MustSaveNewDocument)
                     {
-                        ViewFileBytes = GetViewFileBytes()
-                    };
+                        var tempDocumentPath = Path.Combine(sharing.EnsureTempDir().DirPath,
+                            sharing.GetDocumentFileName());
+                        SaveLayout(tempDocumentPath);
+                        sharing.ViewFilePath = GetViewFile(tempDocumentPath);
+                    }
+                    else if (DocumentFilePath != null)
+                    {
+                        string viewFilePath = GetViewFile(DocumentFilePath);
+                        if (File.Exists(viewFilePath))
+                        {
+                            sharing.ViewFilePath = viewFilePath;
+                        }
+                    }
+
                     longWaitDlg.PerformWork(this, 1000, sharing.Share);
                     success = !longWaitDlg.IsCanceled;
                 }

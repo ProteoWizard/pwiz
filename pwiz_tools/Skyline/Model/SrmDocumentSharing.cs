@@ -20,8 +20,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Xml;
 using Ionic.Zip;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.AuditLog;
@@ -41,7 +39,7 @@ namespace pwiz.Skyline.Model
     {
         public const string EXT = ".zip";
         public const string EXT_SKY_ZIP = ".sky.zip";
-
+        private TemporaryDirectory _tempDir;
         public static string FILTER_SHARING
         {
             get { return TextUtil.FileDialogFilter(Resources.SrmDocumentSharing_FILTER_SHARING_Shared_Files, EXT); }
@@ -63,7 +61,8 @@ namespace pwiz.Skyline.Model
         public SrmDocument Document { get; private set; }
         public string DocumentHash { get; private set; }
         public string DocumentPath { get; private set; }
-        public byte[] ViewFileBytes { get; set; }
+        public string ViewFilePath { get; set; }
+
         public string SharedPath { get; private set; }
 
         public ShareType ShareType { get; set; }
@@ -80,9 +79,9 @@ namespace pwiz.Skyline.Model
             get
             {
                 return string.Format(Document != null
-                                         ? Resources.SrmDocumentSharing_DefaultMessage_Compressing_files_for_sharing_archive__0__
-                                         : Resources.SrmDocumentSharing_DefaultMessage_Extracting_files_from_sharing_archive__0__,
-                                     Path.GetFileName(SharedPath));
+                        ? Resources.SrmDocumentSharing_DefaultMessage_Compressing_files_for_sharing_archive__0__
+                        : Resources.SrmDocumentSharing_DefaultMessage_Extracting_files_from_sharing_archive__0__,
+                    Path.GetFileName(SharedPath));
             }
         }
 
@@ -193,68 +192,71 @@ namespace pwiz.Skyline.Model
 
             using (var zip = new ZipFileShare())
             {
-                if (ShareType.Complete)
-                    ShareComplete(zip);
-                else
-                    ShareMinimal(zip);
+                try
+                {
+                    if (ShareType.Complete)
+                        ShareComplete(zip);
+                    else
+                        ShareMinimal(zip);
+                }
+                finally
+                {
+                    DeleteTempDir();
+                }
             }
         }
 
         public static bool ShouldShareAuditLog(SrmDocument doc, ShareType shareType)
         {
             return doc.Settings.DataSettings.AuditLogging &&
-                   (shareType.SkylineVersion ?? SkylineVersion.CURRENT).SrmDocumentVersion >=
+                   (shareType.SkylineVersion?.SrmDocumentVersion ?? doc.FormatVersion) >=
                    DocumentFormat.VERSION_4_13;
         }
 
         private void ShareComplete(ZipFileShare zip)
         {
-            TemporaryDirectory tempDir = null;
-            try
+            // If complete sharing, just zip up existing files
+            var pepSettings = Document.Settings.PeptideSettings;
+            var transitionSettings = Document.Settings.TransitionSettings;
+            if (Document.Settings.HasBackgroundProteome)
+                zip.AddFile(pepSettings.BackgroundProteome.BackgroundProteomeSpec.DatabasePath);
+            if (Document.Settings.HasRTCalcPersisted)
+                zip.AddFile(pepSettings.Prediction.RetentionTime.Calculator.PersistencePath);
+            if (Document.Settings.HasOptimizationLibraryPersisted)
+                zip.AddFile(transitionSettings.Prediction.OptimizedLibrary.PersistencePath);
+            if (Document.Settings.HasIonMobilityLibraryPersisted)
+                zip.AddFile(transitionSettings.IonMobilityFiltering.IonMobilityLibrary.FilePath);
+                
+            var libFiles = new HashSet<string>();
+            foreach (var librarySpec in pepSettings.Libraries.LibrarySpecs)
             {
-                zip.AddWriteDelegate(DecideSkylineDocumentFileName(), DocumentWriteDelegate);
-                // If complete sharing, just zip up existing files
-                var pepSettings = Document.Settings.PeptideSettings;
-                var transitionSettings = Document.Settings.TransitionSettings;
-                if (Document.Settings.HasBackgroundProteome)
-                    zip.AddFile(pepSettings.BackgroundProteome.BackgroundProteomeSpec.DatabasePath);
-                if (Document.Settings.HasRTCalcPersisted)
-                    zip.AddFile(pepSettings.Prediction.RetentionTime.Calculator.PersistencePath);
-                if (Document.Settings.HasOptimizationLibraryPersisted)
-                    zip.AddFile(transitionSettings.Prediction.OptimizedLibrary.PersistencePath);
-                if (Document.Settings.HasIonMobilityLibraryPersisted)
-                    zip.AddFile(transitionSettings.IonMobilityFiltering.IonMobilityLibrary.FilePath);
-                    
-                var libfiles = new HashSet<string>();
-                foreach (var librarySpec in pepSettings.Libraries.LibrarySpecs)
+                if (libFiles.Add(librarySpec.FilePath))
+                    // Sometimes the same .blib file is referred to by different library specs
                 {
-                    if (libfiles.Add(librarySpec.FilePath))
-                        // Sometimes the same .blib file is referred to by different library specs
-                    {
-                        zip.AddFile(librarySpec.FilePath);
+                    zip.AddFile(librarySpec.FilePath);
 
-                        if (Document.Settings.TransitionSettings.FullScan.IsEnabledMs)
-                        {
-                            // If there is a .redundant.blib file that corresponds 
-                            // to a .blib file, add that as well
-                            IncludeRedundantBlib(librarySpec, zip, librarySpec.FilePath);
-                        }
+                    if (Document.Settings.TransitionSettings.FullScan.IsEnabledMs)
+                    {
+                        // If there is a .redundant.blib file that corresponds 
+                        // to a .blib file, add that as well
+                        IncludeRedundantBlib(librarySpec, zip, librarySpec.FilePath);
                     }
                 }
-
-                // ReSharper disable ExpressionIsAlwaysNull
-                tempDir = ShareDataAndView(zip, tempDir);
-                // ReSharper restore ExpressionIsAlwaysNull
-
-                Save(zip);
             }
-            finally
+
+            ShareDataAndView(zip);
+            if (ShareType.MustSaveNewDocument || string.IsNullOrEmpty(DocumentPath))
             {
-                DeleteTempDir(tempDir);
+                SaveDocToTempFile(zip);
             }
+            else
+            {
+                zip.AddFile(DocumentPath);
+            }
+            Save(zip);
         }
 
-        public string DecideSkylineDocumentFileName()
+        public string GetDocumentFileName()
         {
             if (!string.IsNullOrEmpty(DocumentPath))
             {
@@ -264,109 +266,92 @@ namespace pwiz.Skyline.Model
             return Path.ChangeExtension(Path.GetFileNameWithoutExtension(SharedPath), SrmDocument.EXT);
         }
 
-        /// <summary>
-        /// Method which serializes <see cref="Document"/> to XML. Also, sets the value of <see cref="DocumentHash"/>.
-        /// This method gets called when all of the files are being added to the Zip file on disk
-        /// </summary>
-        private void DocumentWriteDelegate(string entryName, Stream stream)
-        {                
-            using (var writer = new XmlTextWriter(new HashingStream(stream), Encoding.UTF8)
-            {
-                Formatting = Formatting.Indented
-            })
-            {
-                DocumentHash = Document.Serialize(writer, entryName, ShareType.SkylineVersion ?? SkylineVersion.CURRENT, ProgressMonitor);
-            }
-        }
-
         private void ShareMinimal(ZipFileShare zip)
         {
-            TemporaryDirectory tempDir = null;
-            try
+            if (Document.Settings.HasBackgroundProteome)
             {
-                zip.AddWriteDelegate(DecideSkylineDocumentFileName(), DocumentWriteDelegate);
-                if (Document.Settings.HasBackgroundProteome)
-                {
-                    // Remove any background proteome reference
-                    Document = Document.ChangeSettings(Document.Settings.ChangePeptideSettings(
-                        set => set.ChangeBackgroundProteome(BackgroundProteome.NONE)));
-                }
-                if (Document.Settings.HasRTCalcPersisted)
-                {
-                    // Minimize any persistable retention time calculator
-                    tempDir = new TemporaryDirectory();
-                    string tempDbPath = Document.Settings.PeptideSettings.Prediction.RetentionTime
-                        .Calculator.PersistMinimized(tempDir.DirPath, Document);
-                    if (tempDbPath != null)
-                        zip.AddFile(tempDbPath);
-                }
-                if (Document.Settings.HasOptimizationLibraryPersisted)
-                {
-                    if (tempDir == null)
-                        tempDir = new TemporaryDirectory();
-                    string tempDbPath = Document.Settings.TransitionSettings.Prediction.OptimizedLibrary.PersistMinimized(
-                            tempDir.DirPath, Document);
-                    if (tempDbPath != null)
-                        zip.AddFile(tempDbPath);
-                }
-                if (Document.Settings.HasIonMobilityLibraryPersisted)
-                {
-                    // Minimize any persistable ion mobility predictor
-                    if (tempDir == null)
-                        tempDir = new TemporaryDirectory();
-                    string tempDbPath = Document.Settings.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary
-                        .PersistMinimized(tempDir.DirPath, Document, null, out _);
-                    if (tempDbPath != null)
-                        zip.AddFile(tempDbPath);
-                }
-                if (Document.Settings.HasLibraries)
-                {
-                    // Minimize all libraries in a temporary directory, and add them
-                    if (tempDir == null)
-                        tempDir = new TemporaryDirectory();
-                    Document = BlibDb.MinimizeLibraries(Document, tempDir.DirPath, 
-                                                        Path.GetFileNameWithoutExtension(DocumentPath),
-                                                        null,
-                                                        ProgressMonitor);
-                    if (ProgressMonitor != null && ProgressMonitor.IsCanceled)
-                        return;
-
-                    foreach (var librarySpec in Document.Settings.PeptideSettings.Libraries.LibrarySpecs)
-                    {
-                        var tempLibPath = Path.Combine(tempDir.DirPath, Path.GetFileName(librarySpec.FilePath) ?? string.Empty);
-                        zip.AddFile(tempLibPath);
-
-                        // If there is a .redundant.blib file that corresponds to a .blib file
-                        // in the temp temporary directory, add that as well
-                        IncludeRedundantBlib(librarySpec, zip, tempLibPath);
-                    }
-                }
-
-                tempDir = ShareDataAndView(zip, tempDir);
-                Save(zip);
+                // Remove any background proteome reference
+                Document = Document.ChangeSettings(Document.Settings.ChangePeptideSettings(
+                    set => set.ChangeBackgroundProteome(BackgroundProteome.NONE)));
             }
-            finally
+            if (Document.Settings.HasRTCalcPersisted)
             {
-                DeleteTempDir(tempDir);
+                // Minimize any persistable retention time calculator
+                string tempDbPath = Document.Settings.PeptideSettings.Prediction.RetentionTime
+                    .Calculator.PersistMinimized(EnsureTempDir().DirPath, Document);
+                if (tempDbPath != null)
+                    zip.AddFile(tempDbPath);
             }
+            if (Document.Settings.HasOptimizationLibraryPersisted)
+            {
+                string tempDbPath = Document.Settings.TransitionSettings.Prediction.OptimizedLibrary
+                    .PersistMinimized(EnsureTempDir().DirPath, Document);
+                if (tempDbPath != null)
+                    zip.AddFile(tempDbPath);
+            }
+            if (Document.Settings.HasIonMobilityLibraryPersisted)
+            {
+                // Minimize any persistable ion mobility predictor
+                string tempDbPath = Document.Settings.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary
+                    .PersistMinimized(EnsureTempDir().DirPath, Document, null, out _);
+                if (tempDbPath != null)
+                    zip.AddFile(tempDbPath);
+            }
+            if (Document.Settings.HasLibraries)
+            {
+                // Minimize all libraries in a temporary directory, and add them
+                Document = BlibDb.MinimizeLibraries(Document, EnsureTempDir().DirPath,
+                    Path.GetFileNameWithoutExtension(DocumentPath),
+                    null,
+                    ProgressMonitor);
+                if (ProgressMonitor != null && ProgressMonitor.IsCanceled)
+                    return;
+
+                foreach (var librarySpec in Document.Settings.PeptideSettings.Libraries.LibrarySpecs)
+                {
+                    var tempLibPath = Path.Combine(EnsureTempDir().DirPath, Path.GetFileName(librarySpec.FilePath) ?? string.Empty);
+                    zip.AddFile(tempLibPath);
+
+                    // If there is a .redundant.blib file that corresponds to a .blib file
+                    // in the temp temporary directory, add that as well
+                    IncludeRedundantBlib(librarySpec, zip, tempLibPath);
+                }
+            }
+
+            ShareDataAndView(zip);
+            SaveDocToTempFile(zip);
+            Save(zip);
         }
 
-        private void DeleteTempDir(TemporaryDirectory tempDir)
+        private void DeleteTempDir()
         {
-            if (tempDir != null)
+            if (_tempDir != null)
             {
                 try
                 {
-                    tempDir.Dispose();
+                    _tempDir.Dispose();
                 }
                 catch (IOException x)
                 {
-                    var message = TextUtil.LineSeparate(string.Format(Resources.SrmDocumentSharing_ShareMinimal_Failure_removing_temporary_directory__0__,
-                                                                      tempDir.DirPath),
-                                                        x.Message);
+                    var message = TextUtil.LineSeparate(string.Format(
+                            Resources.SrmDocumentSharing_ShareMinimal_Failure_removing_temporary_directory__0__,
+                            _tempDir.DirPath),
+                        x.Message);
                     throw new IOException(message);
                 }
+
+                _tempDir = null;
             }
+        }
+
+        public TemporaryDirectory EnsureTempDir()
+        {
+            if (_tempDir == null)
+            {
+                _tempDir = new TemporaryDirectory();
+            }
+
+            return _tempDir;
         }
 
         private void IncludeRedundantBlib(LibrarySpec librarySpec, ZipFileShare zip, string blibPath)
@@ -381,26 +366,38 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        private TemporaryDirectory ShareDataAndView(ZipFileShare zip, TemporaryDirectory tempDir)
+        private void ShareDataAndView(ZipFileShare zip)
         {
-            tempDir = ShareSkydFile(zip, tempDir);
-            if (null != ViewFileBytes)
+            ShareSkydFile(zip);
+            if (null != ViewFilePath)
             {
-                zip.AddByteContent(SkylineWindow.GetViewFile(DecideSkylineDocumentFileName()), ViewFileBytes);
+                zip.AddFile(ViewFilePath);
             }
-            return tempDir;
         }
 
-        private TemporaryDirectory ShareSkydFile(ZipFileShare zip, TemporaryDirectory tempDir)
+        private void SaveDocToTempFile(ZipFileShare zip)
+        {
+            string entryName = GetDocumentFileName();
+            string docFilePath = Path.Combine(EnsureTempDir().DirPath, entryName);
+            Document.SerializeToFile(docFilePath, docFilePath, ShareType.SkylineVersion ?? SkylineVersion.CURRENT, ProgressMonitor);
+            zip.AddFile(docFilePath);
+            var auditLogPath = SrmDocument.GetAuditLogPath(docFilePath);
+            if (File.Exists(auditLogPath))
+            {
+                zip.AddFile(auditLogPath);
+            }
+        }
+
+        private void ShareSkydFile(ZipFileShare zip)
         {
             if (DocumentPath == null)
             {
-                return tempDir;
+                return;
             }
             string pathCache = ChromatogramCache.FinalPathForName(DocumentPath, null);
             if (!File.Exists(pathCache))
             {
-                return tempDir;
+                return;
             }
             if (ShareType.SkylineVersion != null && Document.Settings.HasResults)
             {
@@ -411,19 +408,14 @@ namespace pwiz.Skyline.Model
                     String cacheFileName = Path.GetFileName(pathCache);
                     if (cacheFileName != null)
                     {
-                        if (tempDir == null)
-                        {
-                            tempDir = new TemporaryDirectory();
-                        }
-                        String newCachePath = Path.Combine(tempDir.DirPath, cacheFileName);
+                        String newCachePath = Path.Combine(EnsureTempDir().DirPath, cacheFileName);
                         MinimizeToFile(newCachePath, CacheFormat.FromVersion(ShareType.SkylineVersion.CacheFormatVersion));
                         zip.AddFile(newCachePath);
-                        return tempDir;
+                        return;
                     }
                 }
             }
             zip.AddFile(pathCache);
-            return tempDir;
         }
 
         public void MinimizeToFile(string targetFile, CacheFormat cacheFormat)
@@ -462,17 +454,6 @@ namespace pwiz.Skyline.Model
             using (var saver = new FileSaver(SharedPath))
             {
                 zip.Save(saver.SafeName, SrmDocumentSharing_SaveProgress);
-                if (ShouldShareAuditLog(Document, ShareType))
-                {
-                    using (var zipFile = new ZipFile(saver.SafeName))
-                    {
-                        var auditLog = Document.AuditLog.RecalculateHashValues((ShareType.SkylineVersion ?? SkylineVersion.CURRENT).SrmDocumentVersion, DocumentHash);
-                        var memoryStream = new MemoryStream();
-                        auditLog.WriteToStream(memoryStream, DocumentHash);
-                        zipFile.AddEntry(Path.ChangeExtension(DecideSkylineDocumentFileName(), AuditLogList.EXT), memoryStream.ToArray());
-                        zipFile.Save();
-                    }
-                }
                 ProgressMonitor.UpdateProgress(_progressStatus.Complete());
                 saver.Commit();
             }
@@ -493,9 +474,9 @@ namespace pwiz.Skyline.Model
                 if (progressValue != _progressStatus.PercentComplete)
                 {
                     var message = (e.CurrentEntry != null
-                                       ? string.Format(Resources.SrmDocumentSharing_SrmDocumentSharing_ExtractProgress_Extracting__0__,
-                                                       e.CurrentEntry.FileName)
-                                       : DefaultMessage);
+                        ? string.Format(Resources.SrmDocumentSharing_SrmDocumentSharing_ExtractProgress_Extracting__0__,
+                            e.CurrentEntry.FileName)
+                        : DefaultMessage);
                     ProgressMonitor.UpdateProgress(_progressStatus = _progressStatus.ChangeMessage(message).ChangePercentComplete(progressValue));
                 }
             }
@@ -511,7 +492,7 @@ namespace pwiz.Skyline.Model
                     return;
                 }
 
-                // TODO: More accurate total byte progress
+                // Consider: More accurate total byte progress
                 double percentCompressed = (e.TotalBytesToTransfer > 0 ?
                     1.0 * e.BytesTransferred / e.TotalBytesToTransfer : 0);
                 int progressValue = (int)Math.Round((EntriesSaved + percentCompressed) * 100 / CountEntries);
@@ -533,8 +514,10 @@ namespace pwiz.Skyline.Model
                                 EntriesSaved++;
                             CurrentEntry = e.CurrentEntry.FileName;
                         }
-                        var message = string.Format(Resources.SrmDocumentSharing_SrmDocumentSharing_SaveProgress_Compressing__0__,
-                                                           e.CurrentEntry.FileName);
+
+                        var message = string.Format(
+                            Resources.SrmDocumentSharing_SrmDocumentSharing_SaveProgress_Compressing__0__,
+                            e.CurrentEntry.FileName);
                         ProgressMonitor.UpdateProgress(_progressStatus = _progressStatus.ChangeMessage(message));
                     }
                 }
@@ -573,18 +556,6 @@ namespace pwiz.Skyline.Model
                 }
                 _dictNameToPath.Add(fileName, path);
                 _zip.AddFile(path, string.Empty);
-            }
-
-            public void AddWriteDelegate(string entryName, WriteDelegate writeDelegate)
-            {
-                _dictNameToPath.Add(entryName, null);
-                _zip.AddEntry(entryName, writeDelegate);
-            }
-
-            public void AddByteContent(string entryName, byte[] byteContent)
-            {
-                _dictNameToPath.Add(entryName, null);
-                _zip.AddEntry(entryName, byteContent);
             }
 
             public void Save(string path, EventHandler<SaveProgressEventArgs> progressEvent)
@@ -642,6 +613,11 @@ namespace pwiz.Skyline.Model
         public ShareType ChangeSkylineVersion(SkylineVersion skylineVersion)
         {
             return ChangeProp(ImClone(this), im => im.SkylineVersion = skylineVersion);
+        }
+
+        public bool MustSaveNewDocument
+        {
+            get { return SkylineVersion != null; }
         }
 
         protected bool Equals(ShareType other)
