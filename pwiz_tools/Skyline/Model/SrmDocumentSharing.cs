@@ -22,7 +22,6 @@ using System.IO;
 using System.Linq;
 using Ionic.Zip;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.BlibData;
 using pwiz.Skyline.Model.Results;
@@ -59,7 +58,6 @@ namespace pwiz.Skyline.Model
         }
 
         public SrmDocument Document { get; private set; }
-        public string DocumentHash { get; private set; }
         public string DocumentPath { get; private set; }
         public string ViewFilePath { get; set; }
 

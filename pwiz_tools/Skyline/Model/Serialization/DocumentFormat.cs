@@ -19,6 +19,7 @@
 using System;
 using System.Diagnostics.Contracts;
 using System.Globalization;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Serialization
@@ -127,6 +128,10 @@ namespace pwiz.Skyline.Model.Serialization
             return _versionNumber.ToString(CultureInfo.InvariantCulture);
         }
 
+        /// <summary>
+        /// Return the name of the Skyline version corresponding to this format.
+        /// If this format is not an official Skyline release then it will be just "Version: " and the number.
+        /// </summary>
         public string GetDescription()
         {
             foreach (var skylineVersion in SkylineVersion.SupportedForSharing())
@@ -141,7 +146,7 @@ namespace pwiz.Skyline.Model.Serialization
                 }
             }
 
-            return string.Format("Version {0}", ToString());
+            return string.Format(Resources.SpectrumLibraryInfoDlg_SetDetailsText_Version__0__, ToString());
         }
     }
 }

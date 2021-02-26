@@ -242,19 +242,12 @@ namespace pwiz.Skyline.Model.AuditLog
         {
             using (var fileSaver = new FileSaver(fileName))
             {
-                using (var stream = new FileStream(fileSaver.SafeName, FileMode.Create))
+                using (var writer = new XmlTextWriter(fileSaver.SafeName, Encoding.UTF8) { Formatting = Formatting.Indented })
                 {
-                    WriteToStream(stream, documentHash);
+                    WriteToXmlWriter(writer, documentHash);
                 }
-                fileSaver.Commit();
-            }
-        }
 
-        public void WriteToStream(Stream stream, string documentHash)
-        {
-            using (var writer = new XmlTextWriter(stream, Encoding.UTF8) { Formatting = Formatting.Indented })
-            {
-                WriteToXmlWriter(writer, documentHash);
+                fileSaver.Commit();
             }
         }
 
