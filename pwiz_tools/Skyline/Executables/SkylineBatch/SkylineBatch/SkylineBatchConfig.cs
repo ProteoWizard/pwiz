@@ -18,15 +18,17 @@
 
 using System;
 using System.Text;
+using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using SkylineBatch.Properties;
+using SharedBatch;
 
 namespace SkylineBatch
 {
     [XmlRoot("skylinebatch_config")]
-    public class SkylineBatchConfig
+    public class SkylineBatchConfig : IConfig
     {
         // IMMUTABLE - all fields are readonly, all variables are immutable
         // A configuration is a set of information about a skyline file, data, reports and scripts.
@@ -70,6 +72,24 @@ namespace SkylineBatch
         public bool UsesSkylineDaily => SkylineSettings.Type == SkylineType.SkylineDaily;
 
         public bool UsesCustomSkylinePath => SkylineSettings.Type == SkylineType.Custom;
+
+        public string GetName() { return Name; }
+
+        public DateTime GetModified()  { return Modified; }
+
+        public ListViewItem AsListViewItem(IConfigRunner runner)
+        {
+            var lvi = new ListViewItem(Name);
+            lvi.Checked = Enabled;
+            lvi.SubItems.Add(Modified.ToShortDateString());
+            lvi.SubItems.Add(((ConfigRunner)runner).GetDisplayStatus());//_configRunners[config.Name].GetDisplayStatus());
+            return lvi;
+        }
+
+        public IConfigRunner CreateRunner(Logger logger, IMainUiControl uiControl)
+        {
+            return new ConfigRunner(this, logger, uiControl);
+        }
 
         private enum Attr
         {
@@ -162,7 +182,7 @@ namespace SkylineBatch
             SkylineSettings.Validate();
         }
 
-        public bool TryPathReplace(string oldRoot, string newRoot, out SkylineBatchConfig replacedPathConfig)
+        public bool TryPathReplace(string oldRoot, string newRoot, out IConfig replacedPathConfig)
         {
             var mainSettingsReplaced = MainSettings.TryPathReplace(oldRoot, newRoot, out MainSettings pathReplacedMainSettings);
             var reportSettingsReplaced =

@@ -21,15 +21,11 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Windows.Forms;
+using SharedBatch;
 using SkylineBatch.Properties;
 
 namespace SkylineBatch
 {
-    public enum ConfigAction
-    {
-        Add, Edit, Copy
-    }
-
     public partial class SkylineBatchConfigForm : Form
     {
         // Allows a user to create a new configuration and add it to the list of configurations,
@@ -44,6 +40,7 @@ namespace SkylineBatch
         private readonly bool _canEditSkylineSettings;
 
         private SkylineTypeControl _skylineTypeControl;
+        private string _lastEnteredPath;
 
         public SkylineBatchConfigForm(IMainUiControl mainControl, SkylineBatchConfig config, ConfigAction action, bool isBusy)
         {
@@ -56,7 +53,7 @@ namespace SkylineBatch
                 _initialEnabled = config.Enabled;
             _isBusy = isBusy;
 
-            _canEditSkylineSettings = !Installations.HasLocalSkylineCmd;
+            _canEditSkylineSettings = !SkylineInstallations.HasLocalSkylineCmd;
             if (!_canEditSkylineSettings)
                 tabsConfig.TabPages[2].Hide();
             
@@ -78,11 +75,10 @@ namespace SkylineBatch
 
         private void InitInputFieldsFromConfig(SkylineBatchConfig config)
         {
-            SetInitialSkylineSettings(config);
-
+            InitSkylineTab(config);
             if (config == null)
                 return;
-
+            _lastEnteredPath = config.MainSettings.TemplateFilePath;
             textConfigName.Text = _action == ConfigAction.Add ? string.Empty : config.Name;
             textConfigName.TextChanged += textConfigName_TextChanged;
             // Initialize UI input values using config
@@ -113,12 +109,15 @@ namespace SkylineBatch
         private void SetInitialMainSettings(SkylineBatchConfig config)
         {
             var mainSettings = config.MainSettings;
-            textAnalysisPath.Text = mainSettings.AnalysisFolderPath;
-            textNamingPattern.Text = mainSettings.ReplicateNamingPattern;
             if (_action == ConfigAction.Add)
             {
+                // ReSharper disable once LocalizableElement - backslash does not need to be localized string
                 textAnalysisPath.Text = Path.GetDirectoryName(mainSettings.AnalysisFolderPath) + @"\";
-                textNamingPattern.Text = string.Empty;
+            }
+            else
+            {
+                textAnalysisPath.Text = mainSettings.AnalysisFolderPath;
+                textNamingPattern.Text = mainSettings.ReplicateNamingPattern;
             }
 
             textSkylinePath.Text = mainSettings.TemplateFilePath;
@@ -131,7 +130,7 @@ namespace SkylineBatch
             var analysisFolderPath = textAnalysisPath.Text;
             var dataFolderPath = textDataPath.Text;
             var replicateNamingPattern = textNamingPattern.Text;
-            return new MainSettings(templateFilePath, analysisFolderPath, dataFolderPath, replicateNamingPattern);
+            return new MainSettings(templateFilePath, analysisFolderPath, dataFolderPath,  replicateNamingPattern);
         }
 
         private void textConfigName_TextChanged(object sender, EventArgs e)
@@ -146,18 +145,7 @@ namespace SkylineBatch
 
         private void btnSkylineFilePath_Click(object sender, EventArgs e)
         {
-            OpenFileDialog openDialog = new OpenFileDialog();
-            openDialog.Filter = TextUtil.FILTER_SKY;
-            try
-            {
-                openDialog.InitialDirectory = Path.GetDirectoryName(textSkylinePath.Text);
-            }
-            catch (Exception)
-            {
-                // Accept the default directory
-            }
-            if (openDialog.ShowDialog()== DialogResult.OK)
-                textSkylinePath.Text = openDialog.FileName;
+            OpenFile(textSkylinePath, TextUtil.FILTER_SKY);
         }
 
         private void btnAnalysisFilePath_Click(object sender, EventArgs e)
@@ -170,17 +158,30 @@ namespace SkylineBatch
             OpenFolder(textDataPath);
         }
 
+        private void OpenFile(TextBox textbox, string filter)
+        {
+            var dialog = new OpenFileDialog();
+            var initialDirectory = TextUtil.GetInitialDirectory(textbox.Text, _lastEnteredPath);
+            dialog.InitialDirectory = initialDirectory;
+            dialog.Filter = filter;
+            DialogResult result = dialog.ShowDialog();
+            if (result == DialogResult.OK)
+            {
+                textbox.Text = dialog.FileName;
+                _lastEnteredPath = dialog.FileName;
+            }
+        }
+
         private void OpenFolder(TextBox textbox)
         {
             var dialog = new FolderBrowserDialog();
-            var initialPath = textbox.Text;
-            while (!Directory.Exists(initialPath) && !string.IsNullOrEmpty(initialPath))
-                initialPath = Path.GetDirectoryName(initialPath);
+            var initialPath = TextUtil.GetInitialDirectory(textbox.Text, _lastEnteredPath);
             dialog.SelectedPath = initialPath;
             DialogResult result = dialog.ShowDialog();
             if (result == DialogResult.OK)
             {
                 textbox.Text = dialog.SelectedPath;
+                _lastEnteredPath = dialog.SelectedPath;
             }
         }
 
@@ -236,7 +237,7 @@ namespace SkylineBatch
 
         private void btnAddReport_Click(object sender, EventArgs e)
         {
-            Program.LogInfo(Resources.SkylineBatchConfigForm_btnAddReport_Click_Creating_new_report_);
+            ProgramLog.Info(Resources.SkylineBatchConfigForm_btnAddReport_Click_Creating_new_report_);
             ShowAddReportDialog(_newReportList.Count);
         }
 
@@ -260,7 +261,7 @@ namespace SkylineBatch
 
         private void btnEditReport_Click(object sender, EventArgs e)
         {
-            Program.LogInfo(Resources.SkylineBatchConfigForm_btnEditReport_Click_Editing_report_);
+            ProgramLog.Info(Resources.SkylineBatchConfigForm_btnEditReport_Click_Editing_report_);
             var indexSelected = gridReportSettings.SelectedRows[0].Index;
             var editingReport = _newReportList.Count > indexSelected ? _newReportList[indexSelected] : null;
             ShowAddReportDialog(indexSelected, editingReport);
@@ -288,9 +289,10 @@ namespace SkylineBatch
         
         #region Skyline Settings
         
-        private void SetInitialSkylineSettings(SkylineBatchConfig config)
+        private void InitSkylineTab(SkylineBatchConfig config)
         {
             if (!_canEditSkylineSettings) return;
+
             if (config != null)
                 _skylineTypeControl = new SkylineTypeControl(config.UsesSkyline, config.UsesSkylineDaily, config.UsesCustomSkylinePath, config.SkylineSettings.CmdPath);
             else
@@ -298,6 +300,7 @@ namespace SkylineBatch
                 // Default to the first existing Skyline installation (Skyline, Skyline-daily, custom path)
                 _skylineTypeControl = new SkylineTypeControl();
             }
+
             _skylineTypeControl.Dock = DockStyle.Fill;
             _skylineTypeControl.Show();
             panelSkylineSettings.Controls.Add(_skylineTypeControl);
@@ -333,29 +336,21 @@ namespace SkylineBatch
 
         private void Save()
         {
+            var newConfig = GetConfigFromUi();
             try
             {
-                //throws ArgumentException if any fields are invalid
-                var newConfig = GetConfigFromUi();
-                newConfig.Validate();
-                //throws ArgumentException if config has a duplicate name
                 if (_action == ConfigAction.Edit)
-                    _mainControl.EditSelectedConfiguration(newConfig);
+                    _mainControl.ReplaceSelectedConfig(newConfig);
                 else
                     _mainControl.AddConfiguration(newConfig);
             }
             catch (ArgumentException e)
             {
-                ShowErrorDialog(e.Message);
+                AlertDlg.ShowError(this, Program.AppName(), e.Message);
                 return;
             }
 
             Close();
-        }
-
-        private void ShowErrorDialog(string message)
-        {
-            AlertDlg.ShowError(this, message);
         }
         
         #endregion

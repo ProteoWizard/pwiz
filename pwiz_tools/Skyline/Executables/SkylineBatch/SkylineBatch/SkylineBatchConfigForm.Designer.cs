@@ -34,9 +34,6 @@
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-            this.textAnalysisPath = new System.Windows.Forms.TextBox();
-            this.textSkylinePath = new System.Windows.Forms.TextBox();
-            this.textDataPath = new System.Windows.Forms.TextBox();
             this.linkLabelRegex = new System.Windows.Forms.LinkLabel();
             this.label5 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
@@ -48,18 +45,21 @@
             this.label9 = new System.Windows.Forms.Label();
             this.textMsMsResolvingPower = new System.Windows.Forms.TextBox();
             this.checkBoxMProphet = new System.Windows.Forms.CheckBox();
+            this.labelConfigName = new System.Windows.Forms.Label();
+            this.label3 = new System.Windows.Forms.Label();
+            this.label1 = new System.Windows.Forms.Label();
+            this.label2 = new System.Windows.Forms.Label();
+            this.textAnalysisPath = new System.Windows.Forms.TextBox();
+            this.textSkylinePath = new System.Windows.Forms.TextBox();
+            this.textDataPath = new System.Windows.Forms.TextBox();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.tabsConfig = new System.Windows.Forms.TabControl();
             this.tabFiles = new System.Windows.Forms.TabPage();
             this.textNamingPattern = new System.Windows.Forms.TextBox();
             this.textConfigName = new System.Windows.Forms.TextBox();
-            this.labelConfigName = new System.Windows.Forms.Label();
-            this.label3 = new System.Windows.Forms.Label();
             this.btnDataPath = new System.Windows.Forms.Button();
-            this.label1 = new System.Windows.Forms.Label();
             this.btnAnalysisPath = new System.Windows.Forms.Button();
             this.btnSkylineFilePath = new System.Windows.Forms.Button();
-            this.label2 = new System.Windows.Forms.Label();
             this.tabSettings = new System.Windows.Forms.TabPage();
             this.label6 = new System.Windows.Forms.Label();
             this.tabReports = new System.Windows.Forms.TabPage();
@@ -92,24 +92,6 @@
             this.tabSkyline.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
-            // 
-            // textAnalysisPath
-            // 
-            resources.ApplyResources(this.textAnalysisPath, "textAnalysisPath");
-            this.textAnalysisPath.Name = "textAnalysisPath";
-            this.toolTip1.SetToolTip(this.textAnalysisPath, resources.GetString("textAnalysisPath.ToolTip"));
-            // 
-            // textSkylinePath
-            // 
-            resources.ApplyResources(this.textSkylinePath, "textSkylinePath");
-            this.textSkylinePath.Name = "textSkylinePath";
-            this.toolTip1.SetToolTip(this.textSkylinePath, resources.GetString("textSkylinePath.ToolTip"));
-            // 
-            // textDataPath
-            // 
-            resources.ApplyResources(this.textDataPath, "textDataPath");
-            this.textDataPath.Name = "textDataPath";
-            this.toolTip1.SetToolTip(this.textDataPath, resources.GetString("textDataPath.ToolTip"));
             // 
             // linkLabelRegex
             // 
@@ -187,6 +169,45 @@
             this.toolTip1.SetToolTip(this.checkBoxMProphet, resources.GetString("checkBoxMProphet.ToolTip"));
             this.checkBoxMProphet.UseVisualStyleBackColor = true;
             // 
+            // labelConfigName
+            // 
+            resources.ApplyResources(this.labelConfigName, "labelConfigName");
+            this.labelConfigName.Name = "labelConfigName";
+            this.toolTip1.SetToolTip(this.labelConfigName, resources.GetString("labelConfigName.ToolTip"));
+            // 
+            // label3
+            // 
+            resources.ApplyResources(this.label3, "label3");
+            this.label3.Name = "label3";
+            this.toolTip1.SetToolTip(this.label3, resources.GetString("label3.ToolTip"));
+            // 
+            // label1
+            // 
+            resources.ApplyResources(this.label1, "label1");
+            this.label1.Name = "label1";
+            this.toolTip1.SetToolTip(this.label1, resources.GetString("label1.ToolTip"));
+            // 
+            // label2
+            // 
+            resources.ApplyResources(this.label2, "label2");
+            this.label2.Name = "label2";
+            this.toolTip1.SetToolTip(this.label2, resources.GetString("label2.ToolTip"));
+            // 
+            // textAnalysisPath
+            // 
+            resources.ApplyResources(this.textAnalysisPath, "textAnalysisPath");
+            this.textAnalysisPath.Name = "textAnalysisPath";
+            // 
+            // textSkylinePath
+            // 
+            resources.ApplyResources(this.textSkylinePath, "textSkylinePath");
+            this.textSkylinePath.Name = "textSkylinePath";
+            // 
+            // textDataPath
+            // 
+            resources.ApplyResources(this.textDataPath, "textDataPath");
+            this.textDataPath.Name = "textDataPath";
+            // 
             // splitContainer1
             // 
             resources.ApplyResources(this.splitContainer1, "splitContainer1");
@@ -240,27 +261,12 @@
             resources.ApplyResources(this.textConfigName, "textConfigName");
             this.textConfigName.Name = "textConfigName";
             // 
-            // labelConfigName
-            // 
-            resources.ApplyResources(this.labelConfigName, "labelConfigName");
-            this.labelConfigName.Name = "labelConfigName";
-            // 
-            // label3
-            // 
-            resources.ApplyResources(this.label3, "label3");
-            this.label3.Name = "label3";
-            // 
             // btnDataPath
             // 
             resources.ApplyResources(this.btnDataPath, "btnDataPath");
             this.btnDataPath.Name = "btnDataPath";
             this.btnDataPath.UseVisualStyleBackColor = true;
             this.btnDataPath.Click += new System.EventHandler(this.btnDataPath_Click);
-            // 
-            // label1
-            // 
-            resources.ApplyResources(this.label1, "label1");
-            this.label1.Name = "label1";
             // 
             // btnAnalysisPath
             // 
@@ -275,11 +281,6 @@
             this.btnSkylineFilePath.Name = "btnSkylineFilePath";
             this.btnSkylineFilePath.UseVisualStyleBackColor = true;
             this.btnSkylineFilePath.Click += new System.EventHandler(this.btnSkylineFilePath_Click);
-            // 
-            // label2
-            // 
-            resources.ApplyResources(this.label2, "label2");
-            this.label2.Name = "label2";
             // 
             // tabSettings
             // 

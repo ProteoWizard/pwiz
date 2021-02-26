@@ -327,7 +327,7 @@ namespace pwiz.SkylineTestTutorial
             RestoreViewOnScreen(27);
             PauseForScreenShot<GraphChromatogram>("Chromatogram graph metafile", 26);
 
-            RunUI(SkylineWindow.SelectedNode.Expand);
+            RunUI(() => SkylineWindow.SelectedNode.Expand()); 
 
             RunUI(() =>
             {

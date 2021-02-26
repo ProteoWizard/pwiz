@@ -15,12 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-using System;
-using System.Collections.Generic;
+ 
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using SharedBatch;
 using SkylineBatch;
 
 namespace SkylineBatchTest
@@ -64,15 +63,13 @@ namespace SkylineBatchTest
         [TestMethod]
         public async Task TestMultipleLogs()
         {
-            TestUtils.ClearSavedConfigurations();
             TestUtils.InitializeRInstallation();
 
             var logFolder = TestUtils.GetTestFilePath("MultipleLogsTest");
             if (Directory.Exists(logFolder)) Directory.Delete(logFolder);
             Directory.CreateDirectory(logFolder);
-
-            SkylineBatchLogger.LOG_FOLDER = logFolder;
-            var testConfigManager = new ConfigManager(new SkylineBatchLogger("testLog.log"));
+            
+            var testConfigManager = new SkylineBatchConfigManager(new Logger(Path.Combine(logFolder, "testLog.log"), "testLog.log"));
             testConfigManager.AddConfiguration(TestUtils.GetTestConfig());
             Assert.IsTrue(testConfigManager.HasOldLogs() == false, "Expected no old logs.");
 
