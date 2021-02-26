@@ -27380,6 +27380,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The path to the file to open is too long..
+        /// </summary>
+        public static string SkylineWindow_HasFileToOpen_The_path_to_the_file_to_open_is_too_long_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_HasFileToOpen_The_path_to_the_file_to_open_is_too_long_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unzip the file {0} first and then open the extracted file {1}..
         /// </summary>
         public static string SkylineWindow_HasFileToOpen_Unzip_the_file__0__first_and_then_open_the_extracted_file__1__ {
