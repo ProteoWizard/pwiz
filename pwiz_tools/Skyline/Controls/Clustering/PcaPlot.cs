@@ -42,11 +42,11 @@ namespace pwiz.Skyline.Controls.Clustering
         private List<Tuple<string, PivotedProperties.SeriesGroup>> _datasetOptions;
         private bool _inUpdateControls;
         private static readonly Color MISSING_COLOR = Color.Black;
-        private readonly Calculator _calculator;
+        private readonly PcaCalculator _calculator;
         public PcaPlot()
         {
             InitializeComponent();
-            _calculator = new Calculator(this);
+            _calculator = new PcaCalculator(this);
             Localizer = SkylineDataSchema.GetLocalizedSchemaLocalizer();
         }
 
@@ -445,9 +445,9 @@ namespace pwiz.Skyline.Controls.Clustering
             return true;
         }
 
-        private class Calculator : GraphDataCalculator<ClusterInput, Tuple<Clusterer, ReportColorScheme>>
+        private class PcaCalculator : GraphDataCalculator<ClusterInput, Tuple<Clusterer, ReportColorScheme>>
         {
-            public Calculator(PcaPlot pcaPlot) : base(CancellationToken.None, pcaPlot.zedGraphControl1)
+            public PcaCalculator(PcaPlot pcaPlot) : base(CancellationToken.None, pcaPlot.zedGraphControl1)
             {
                 PcaPlot = pcaPlot;
             }

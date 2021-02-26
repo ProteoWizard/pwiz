@@ -663,7 +663,7 @@ namespace pwiz.Skyline.Controls.Databinding
             ShowHeatMap();
         }
 
-        public ClusterInput GetClusterInput()
+        public ClusterInput CreateClusterInput()
         {
             return new ClusterInput(BindingListSource.ViewInfo.DataSchema.DataSchemaLocalizer, BindingListSource.ReportResults, BindingListSource.ClusteringSpec);
         }
@@ -675,7 +675,7 @@ namespace pwiz.Skyline.Controls.Databinding
                 SkylineWindow = DataSchemaSkylineWindow,
             };
             heatMapGraph.Show(FormUtil.FindTopLevelOwner(this));
-            heatMapGraph.ClusterInput = GetClusterInput();
+            heatMapGraph.ClusterInput = CreateClusterInput();
             return true;
         }
 
@@ -842,7 +842,7 @@ namespace pwiz.Skyline.Controls.Databinding
                 SkylineWindow = DataSchemaSkylineWindow
             };
             pcaPlot.Show(FormUtil.FindTopLevelOwner(this));
-            pcaPlot.ClusterInput = GetClusterInput();
+            pcaPlot.ClusterInput = CreateClusterInput();
         }
     }
 }

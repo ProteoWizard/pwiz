@@ -38,13 +38,13 @@ namespace pwiz.Skyline.Controls.Clustering
         private bool _showSelection = true;
         private AxisLabelScaler _xAxisLabelScaler;
         private AxisLabelScaler _yAxisLabelScaler;
-        private readonly Calculator _calculator;
+        private readonly HeatMapCalculator _calculator;
 
         public HierarchicalClusterGraph()
         {
             InitializeComponent();
             InitializeDendrograms();
-            _calculator = new Calculator(this);
+            _calculator = new HeatMapCalculator(this);
             var graphPane = zedGraphControl1.GraphPane;
             graphPane.Title.Text = Resources.RTLinearRegressionGraphPane_UpdateGraph_Calculating___;
             graphPane.XAxis.Title.IsVisible = false;
@@ -402,9 +402,9 @@ namespace pwiz.Skyline.Controls.Clustering
             SkylineWindow?.SelectPathAndReplicate(point?.IdentityPath, point?.ReplicateName);
         }
 
-        private class Calculator : GraphDataCalculator<ClusterInput, ClusterGraphResults>
+        private class HeatMapCalculator : GraphDataCalculator<ClusterInput, ClusterGraphResults>
         {
-            public Calculator(HierarchicalClusterGraph hierarchicalClusterGraph) : base(CancellationToken.None, hierarchicalClusterGraph.zedGraphControl1)
+            public HeatMapCalculator(HierarchicalClusterGraph hierarchicalClusterGraph) : base(CancellationToken.None, hierarchicalClusterGraph.zedGraphControl1)
             {
                 HierarchicalClusterGraph = hierarchicalClusterGraph;
             }
