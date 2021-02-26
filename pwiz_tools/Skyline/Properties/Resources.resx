@@ -10959,7 +10959,6 @@ Invalid peptide sequence at position 18
   <data name="DetectionPlotPane_EmptyPlotCanceled_Label" xml:space="preserve">
     <value>Operation canceled.</value>
   </data>
-  
   <data name="DetectionPlotData_NoDataLoaded_Label" xml:space="preserve">
     <value>No data loaded.</value>
   </data>
@@ -10981,7 +10980,6 @@ Invalid peptide sequence at position 18
   <data name="DetectionPlotData_DataRetrieved_Label" xml:space="preserve">
     <value>"Data retrieved successfully."</value>
   </data>
-
   <data name="DetectionHistogramPane_XAxis_Name" xml:space="preserve">
     <value>Replicate Count</value>
   </data>
@@ -11243,7 +11241,7 @@ Invalid peptide sequence at position 18
   </data>
   <data name="ImportTransitionListErrorDlg_ImportTransitionListErrorDlg_This_transition_list_cannot_be_imported_as_it_does_not_provide_values_for_" xml:space="preserve">
     <value>This transition list cannot be imported as it does not provide values for:</value>
-   </data>
+  </data>
   <data name="HierarchicalClusterGraph_zedGraphControl1_ContextMenuBuilder_Show_Selection" xml:space="preserve">
     <value>Show Selection</value>
   </data>
@@ -11336,5 +11334,14 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
   </data>
   <data name="SkylineWindow_HasFileToOpen_The_path_to_the_file_to_open_is_too_long_" xml:space="preserve">
     <value>The path to the file to open is too long.</value>
+  </data>
+  <data name="DDASearchControl_RunSearch_Conversion_cancelled_" xml:space="preserve">
+    <value>Conversion cancelled.</value>
+  </data>
+  <data name="DDASearchControl_RunSearch_Conversion_failed_" xml:space="preserve">
+    <value>Conversion failed.</value>
+  </data>
+  <data name="DDASearchControl_RunSearch_Conversion_finished_" xml:space="preserve">
+    <value>Conversion finished.</value>
   </data>
 </root>
