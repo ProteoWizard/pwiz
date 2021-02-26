@@ -682,7 +682,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     {
                         if (FullScanSettingsControl.IsolationScheme.PrespecifiedIsolationWindows.Count == 0)
                         {
-                            MessageDlg.Show(this, "No isolation windows are configured, but are required for deconvoluting DIA raw files by DIA-Umpire in preparation for DDA search. Go back to full scan settings to configure the isolation scheme.");
+                            MessageDlg.Show(this, Resources.ImportPeptideSearchDlg_NextPage_No_isolation_windows_are_configured__);
 
                             return;
                         }
