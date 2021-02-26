@@ -37,7 +37,8 @@ namespace SkylineBatch
 
         
         public SkylineBatchConfig(string name, bool enabled, DateTime modified, MainSettings mainSettings, 
-            FileSettings fileSettings, ReportSettings reportSettings, SkylineSettings skylineSettings)
+            FileSettings fileSettings, RefineSettings refineSettings, ReportSettings reportSettings, 
+            SkylineSettings skylineSettings)
         {
             if (string.IsNullOrEmpty(name))
             {
@@ -49,6 +50,7 @@ namespace SkylineBatch
             Modified = modified;
             MainSettings = mainSettings;
             FileSettings = fileSettings;
+            RefineSettings = refineSettings;
             ReportSettings = reportSettings;
             SkylineSettings = skylineSettings;
         }
@@ -58,6 +60,8 @@ namespace SkylineBatch
         public readonly DateTime Modified;
 
         public readonly MainSettings MainSettings;
+
+        public readonly RefineSettings RefineSettings;
 
         public readonly FileSettings FileSettings;
 
@@ -112,12 +116,9 @@ namespace SkylineBatch
             DateTime modified;
             DateTime.TryParse(reader.GetAttribute(Attr.Modified), out modified);
 
-            do
-            {
-                reader.Read();
-            } while (reader.NodeType != XmlNodeType.Element);
-
+                ReadUntilElement(reader);
             MainSettings mainSettings = null;
+            RefineSettings refineSettings = null;
             FileSettings fileSettings = null;
             ReportSettings reportSettings = null;
             SkylineSettings skylineSettings = null;
@@ -125,22 +126,13 @@ namespace SkylineBatch
             try
             {
                 mainSettings = MainSettings.ReadXml(reader);
-                do
-                {
-                    reader.Read();
-                } while (reader.NodeType != XmlNodeType.Element);
-
+                ReadUntilElement(reader);
                 fileSettings = FileSettings.ReadXml(reader);
-                do
-                {
-                    reader.Read();
-                } while (reader.NodeType != XmlNodeType.Element);
-
+                ReadUntilElement(reader);
+                refineSettings = RefineSettings.ReadXml(reader);
+                ReadUntilElement(reader);
                 reportSettings = ReportSettings.ReadXml(reader);
-                do
-                {
-                    reader.Read();
-                } while (reader.NodeType != XmlNodeType.Element);
+                ReadUntilElement(reader);
                 skylineSettings = SkylineSettings.ReadXml(reader);
             }
             catch (ArgumentException e)
@@ -156,7 +148,16 @@ namespace SkylineBatch
             if (exceptionMessage != null)
                 throw new ArgumentException(exceptionMessage);
 
-            return new SkylineBatchConfig(name, enabled, modified, mainSettings, fileSettings, reportSettings, skylineSettings);
+            return new SkylineBatchConfig(name, enabled, modified, mainSettings, fileSettings,
+                refineSettings, reportSettings, skylineSettings);
+        }
+
+        private static void ReadUntilElement(XmlReader reader)
+        {
+            do
+            {
+                reader.Read();
+            } while (reader.NodeType != XmlNodeType.Element);
         }
 
         public void WriteXml(XmlWriter writer)
@@ -167,6 +168,7 @@ namespace SkylineBatch
             writer.WriteAttributeIfString(Attr.Modified, Modified.ToShortDateString() + " " + Modified.ToShortTimeString());
             MainSettings.WriteXml(writer);
             FileSettings.WriteXml(writer);
+            RefineSettings.WriteXml(writer);
             ReportSettings.WriteXml(writer);
             SkylineSettings.WriteXml(writer);
             writer.WriteEndElement();
@@ -178,6 +180,7 @@ namespace SkylineBatch
         {
             MainSettings.Validate();
             FileSettings.Validate();
+            RefineSettings.Validate();
             ReportSettings.Validate();
             SkylineSettings.Validate();
         }
@@ -187,7 +190,8 @@ namespace SkylineBatch
             var mainSettingsReplaced = MainSettings.TryPathReplace(oldRoot, newRoot, out MainSettings pathReplacedMainSettings);
             var reportSettingsReplaced =
                 ReportSettings.TryPathReplace(oldRoot, newRoot, out ReportSettings pathReplacedReportSettings);
-            replacedPathConfig = new SkylineBatchConfig(Name, Enabled, DateTime.Now, pathReplacedMainSettings, FileSettings, pathReplacedReportSettings, SkylineSettings);
+            replacedPathConfig = new SkylineBatchConfig(Name, Enabled, DateTime.Now, pathReplacedMainSettings,
+                FileSettings, RefineSettings, pathReplacedReportSettings, SkylineSettings);
             return mainSettingsReplaced || reportSettingsReplaced;
         }
 

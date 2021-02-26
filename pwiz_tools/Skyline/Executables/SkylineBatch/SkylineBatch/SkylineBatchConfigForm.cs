@@ -84,6 +84,7 @@ namespace SkylineBatch
             // Initialize UI input values using config
             SetInitialMainSettings(config);
             SetInitialFileSettings(config);
+            SetInitialRefineSettings(config);
             SetInitialReportSettings(config);
         }
 
@@ -225,9 +226,34 @@ namespace SkylineBatch
             return new FileSettings(textMsOneResolvingPower.Text, textMsMsResolvingPower.Text, textRetentionTime.Text, 
                 checkBoxDecoys.Checked, radioShuffleDecoys.Enabled && radioShuffleDecoys.Checked, checkBoxMProphet.Checked);
         }
-        
+
         #endregion
-        
+
+        #region Refine Settings
+
+        private void SetInitialRefineSettings(SkylineBatchConfig config)
+        {
+            if (_action == ConfigAction.Add) return;
+            var refineSettings = config.RefineSettings;
+            textCvCutoff.Text = refineSettings.CvCutoff;
+            textDetected.Text = refineSettings.NumDetectedReplicates;
+            textQValueCutoff.Text = refineSettings.QValueCutoff;
+            int index = comboNormalize.Items.IndexOf(refineSettings.NormalizeMethod);
+            comboNormalize.SelectedIndex = index;
+            if (index < 0) comboNormalize.SelectedIndex = comboNormalize.Items.Count - 1;
+        }
+
+        private RefineSettings GetRefineSettingsFromUi()
+        {
+            var cvCutoff = textCvCutoff.Text;
+            var normalizeMethod = (string) comboNormalize.SelectedItem;
+            var qValueCutoff = textQValueCutoff.Text;
+            var numDetectedReplicates = textDetected.Text;
+            return new RefineSettings(cvCutoff, normalizeMethod, qValueCutoff, numDetectedReplicates);
+        }
+
+        #endregion
+
         #region Reports
 
         private void SetInitialReportSettings(SkylineBatchConfig config)
@@ -336,9 +362,10 @@ namespace SkylineBatch
             var enabled = _action == ConfigAction.Edit ? _initialEnabled : true;
             var mainSettings = GetMainSettingsFromUi();
             var fileSettings = GetFileSettingsFromUi();
+            var refineSettings = GetRefineSettingsFromUi();
             var reportSettings = new ReportSettings(_newReportList);
             var skylineSettings = GetSkylineSettingsFromUi();
-            return new SkylineBatchConfig(name, enabled, DateTime.Now, mainSettings, fileSettings, reportSettings, skylineSettings);
+            return new SkylineBatchConfig(name, enabled, DateTime.Now, mainSettings, fileSettings, refineSettings, reportSettings, skylineSettings);
         }
 
         private void Save()

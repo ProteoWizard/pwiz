@@ -41,7 +41,7 @@ namespace SkylineBatch
             TemplateFilePath = templateFilePath;
             AnalysisFolderPath = analysisFolderPath;
             DataFolderPath = dataFolderPath;
-            AnnotationsFilePath = annotationsFilePath;
+            AnnotationsFilePath = annotationsFilePath ?? string.Empty;
             ReplicateNamingPattern = replicateNamingPattern ?? string.Empty;
         }
 
