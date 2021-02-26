@@ -52,6 +52,11 @@ namespace SkylineBatchTest
             return new FileSettings(string.Empty, string.Empty, string.Empty, false, false, true);
         }
 
+        public static RefineSettings GetTestRefineSettings()
+        {
+            return new RefineSettings(string.Empty, string.Empty, string.Empty, string.Empty);
+        }
+
         public static ReportSettings GetTestReportSettings()
         {
             var reportList = new List<ReportInfo>{GetTestReportInfo() };
@@ -72,7 +77,7 @@ namespace SkylineBatchTest
         public static SkylineBatchConfig GetTestConfig(string name = "name")
         {
             return new SkylineBatchConfig(name, true, DateTime.MinValue, GetTestMainSettings(), GetTestFileSettings(), 
-                GetTestReportSettings(), GetTestSkylineSettings());
+                GetTestRefineSettings(), GetTestReportSettings(), GetTestSkylineSettings());
         }
 
         public static ConfigRunner GetTestConfigRunner(string configName = "name")

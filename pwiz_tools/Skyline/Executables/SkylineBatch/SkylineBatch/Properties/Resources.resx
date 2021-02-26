@@ -415,4 +415,25 @@ with:
   <data name="MainSettings_ValidateAnnotationsFolder_Please_enter_a_valid_file_path__or_no_text_if_you_do_not_wish_to_include_annotations_" xml:space="preserve">
     <value>Please enter a valid file path, or no text if you do not wish to include annotations.</value>
   </data>
+  <data name="RefineSettings_ValidateNumberInput_Invalid_value_for_the__0____1_" xml:space="preserve">
+    <value>Invalid value for the {0}: {1}</value>
+  </data>
+  <data name="RefineSettings_ValidateNumberInput__0__is_out_of_range_for_the__1__" xml:space="preserve">
+    <value>{0} is out of range for the {1}.</value>
+  </data>
+  <data name="RefineSettings_ValidateNumberInput_Please_enter_a_number_between__0__and__1_" xml:space="preserve">
+    <value>Please enter a number between {0} and {1}</value>
+  </data>
+  <data name="RefineSettings_ValidateNumberInput_Please_enter_a_number_" xml:space="preserve">
+    <value>Please enter a number.</value>
+  </data>
+  <data name="RefineSettings_Validate_minimum_detections_allowed" xml:space="preserve">
+    <value>minimum detections allowed</value>
+  </data>
+  <data name="RefineSettings_Validate_Q_value_cutoff" xml:space="preserve">
+    <value>Q value cutoff</value>
+  </data>
+  <data name="RefineSettings_Validate_CV_cutoff" xml:space="preserve">
+    <value>CV cutoff</value>
+  </data>
 </root>

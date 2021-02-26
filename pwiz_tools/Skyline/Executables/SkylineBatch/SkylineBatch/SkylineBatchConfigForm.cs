@@ -236,7 +236,7 @@ namespace SkylineBatch
             if (_action == ConfigAction.Add) return;
             var refineSettings = config.RefineSettings;
             textCvCutoff.Text = refineSettings.CvCutoff;
-            textDetected.Text = refineSettings.NumDetectedReplicates;
+            textDetected.Text = refineSettings.MinDetectedReplicates;
             textQValueCutoff.Text = refineSettings.QValueCutoff;
             int index = comboNormalize.Items.IndexOf(refineSettings.NormalizeMethod);
             comboNormalize.SelectedIndex = index;

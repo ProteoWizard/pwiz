@@ -93,6 +93,24 @@ namespace SkylineBatch
             writer.WriteEndElement();
         }
 
+        #region Run Commands
+
+        public void WriteReportCommands(CommandWriter commandWriter, string analysisFolder)
+        {
+            foreach(var report in Reports)
+                report.WriteAddExportReportCommand(commandWriter, analysisFolder);
+        }
+
+        public List<Dictionary<RRunInfo, string>> GetScriptArguments(string analysisFolder)
+        {
+            var rRunInformation = new List<Dictionary<RRunInfo, string>>();
+            foreach (var report in Reports)
+                rRunInformation.AddRange(report.GetScriptArguments(analysisFolder));
+            return rRunInformation;
+        }
+
+        #endregion
+
         protected bool Equals(ReportSettings other)
         {
             if (Reports.Count != other.Reports.Count)
@@ -254,6 +272,36 @@ namespace SkylineBatch
             writer.WriteEndElement();
         }
 
+        #region Run Commands
+
+        public const string ADD_REPORT_OVERWRITE_COMMAND =
+            "--report-add=\"{0}\" --report-conflict-resolution=overwrite";
+        public const string EXPORT_REPORT_COMMAND = "--report-name=\"{0}\" --report-file=\"{1}\" --report-invariant";
+        public const string RUN_R_ARGUMENT = "\"{0}\" \"{1}\" 2>&1";
+
+        public void WriteAddExportReportCommand(CommandWriter commandWriter, string analysisFolder)
+        {
+            commandWriter.Write(ADD_REPORT_OVERWRITE_COMMAND, ReportPath);
+            commandWriter.Write(EXPORT_REPORT_COMMAND, Name, Path.Combine(analysisFolder, Name + TextUtil.EXT_CSV));
+            commandWriter.EndCommandGroup();
+        }
+
+        public List<Dictionary<RRunInfo, string>> GetScriptArguments(string analysisFolder)
+        {
+            var rRunInformation = new List<Dictionary<RRunInfo, string>>();
+            var newReportPath = Path.Combine(analysisFolder, Name + TextUtil.EXT_CSV);
+            foreach (var scriptAndVersion in RScripts)
+            {
+                var rExeAndArguments = new Dictionary<RRunInfo, string>();
+                rExeAndArguments.Add(RRunInfo.ExePath, Settings.Default.RVersions[scriptAndVersion.Item2]);
+                rExeAndArguments.Add(RRunInfo.Arguments, string.Format(RUN_R_ARGUMENT, scriptAndVersion.Item1, newReportPath));
+                rRunInformation.Add(rExeAndArguments);
+            }
+            return rRunInformation;
+        }
+        
+        #endregion
+
         protected bool Equals(ReportInfo other)
         {
             if (!other.Name.Equals(Name) || !other.ReportPath.Equals(ReportPath) || other.RScripts.Count != RScripts.Count)
@@ -279,5 +327,11 @@ namespace SkylineBatch
         {
             return Name.GetHashCode() + ReportPath.GetHashCode();
         }
+    }
+
+    public enum RRunInfo
+    {
+        ExePath,
+        Arguments
     }
 }

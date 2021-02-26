@@ -756,6 +756,69 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to CV cutoff.
+        /// </summary>
+        internal static string RefineSettings_Validate_CV_cutoff {
+            get {
+                return ResourceManager.GetString("RefineSettings_Validate_CV_cutoff", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to minimum detections allowed.
+        /// </summary>
+        internal static string RefineSettings_Validate_minimum_detections_allowed {
+            get {
+                return ResourceManager.GetString("RefineSettings_Validate_minimum_detections_allowed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Q value cutoff.
+        /// </summary>
+        internal static string RefineSettings_Validate_Q_value_cutoff {
+            get {
+                return ResourceManager.GetString("RefineSettings_Validate_Q_value_cutoff", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} is out of range for the {1}..
+        /// </summary>
+        internal static string RefineSettings_ValidateNumberInput__0__is_out_of_range_for_the__1__ {
+            get {
+                return ResourceManager.GetString("RefineSettings_ValidateNumberInput__0__is_out_of_range_for_the__1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid value for the {0}: {1}.
+        /// </summary>
+        internal static string RefineSettings_ValidateNumberInput_Invalid_value_for_the__0____1_ {
+            get {
+                return ResourceManager.GetString("RefineSettings_ValidateNumberInput_Invalid_value_for_the__0____1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please enter a number..
+        /// </summary>
+        internal static string RefineSettings_ValidateNumberInput_Please_enter_a_number_ {
+            get {
+                return ResourceManager.GetString("RefineSettings_ValidateNumberInput_Please_enter_a_number_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please enter a number between {0} and {1}.
+        /// </summary>
+        internal static string RefineSettings_ValidateNumberInput_Please_enter_a_number_between__0__and__1_ {
+            get {
+                return ResourceManager.GetString("RefineSettings_ValidateNumberInput_Please_enter_a_number_between__0__and__1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Please enter a name for this report..
         /// </summary>
         internal static string ReportInfo_Validate_Please_enter_a_name_for_this_report_ {

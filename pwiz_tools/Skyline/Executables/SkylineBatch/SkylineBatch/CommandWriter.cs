@@ -5,7 +5,7 @@ using SkylineBatch.Properties;
 
 namespace SkylineBatch
 {
-    class CommandWriter
+    public class CommandWriter
     {
         private const string ALLOW_NEWLINE_SAVE_VERSION = "20.2.1.415"; // TODO(Ali): Make sure this matches future Skyline-daily release with --save fix
 

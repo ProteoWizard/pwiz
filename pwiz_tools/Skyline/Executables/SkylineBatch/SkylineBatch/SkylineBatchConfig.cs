@@ -17,6 +17,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Text;
 using System.Windows.Forms;
 using System.Xml;
@@ -205,6 +206,38 @@ namespace SkylineBatch
             sb.Append(MainSettings);
             return sb.ToString();
         }
+
+        #region Batch Commands
+
+        public const string SAVE_COMMAND = "--save";
+        public const string SAVE_SETTINGS_COMMAND = "‑‑save‑settings";
+
+        public void WriteSaveCommand(CommandWriter commandWriter) => commandWriter.Write(SAVE_COMMAND);
+        public void WriteSaveSettingsCommand(CommandWriter commandWriter) => commandWriter.Write(SAVE_SETTINGS_COMMAND);
+
+        public void WriteOpenSkylineTemplateCommand(CommandWriter commandWriter) => MainSettings.WriteOpenSkylineTemplateCommand(commandWriter);
+        public void WriteOpenSkylineResultsCommand(CommandWriter commandWriter) => MainSettings.WriteOpenSkylineResultsCommand(commandWriter);
+        public void WriteSaveToResultsFile(CommandWriter commandWriter) => MainSettings.WriteSaveToResultsFile(commandWriter);
+
+        public void WriteImportDataCommand(CommandWriter commandWriter) => MainSettings.WriteImportDataCommand(commandWriter);
+        public void WriteImportNamingPatternCommand(CommandWriter commandWriter) => MainSettings.WriteImportNamingPatternCommand(commandWriter);
+        public void WriteImportAnnotationsCommand(CommandWriter commandWriter) => MainSettings.WriteImportAnnotationsCommand(commandWriter);
+        
+        public void WriteMsOneCommand(CommandWriter commandWriter) => FileSettings.WriteMsOneCommand(commandWriter);
+        public void WriteMsMsCommand(CommandWriter commandWriter) => FileSettings.WriteMsMsCommand(commandWriter);
+        public void WriteAddDecoysCommand(CommandWriter commandWriter) => FileSettings.WriteAddDecoysCommand(commandWriter);
+        public void WriteRetentionTimeCommand(CommandWriter commandWriter) => FileSettings.WriteRetentionTimeCommand(commandWriter);
+        public void WriteTrainMProphetCommand(CommandWriter commandWriter) => FileSettings.WriteTrainMProphetCommand(commandWriter, Name);
+
+        public void WriteQValueCutoffCommand(CommandWriter commandWriter) => RefineSettings.WriteQValueCutoffCommand(commandWriter);
+        public void WriteCvCutoffCommand(CommandWriter commandWriter) => RefineSettings.WriteCvCutoffCommand(commandWriter);
+        public void WriteMinimumDetectionsCommand(CommandWriter commandWriter) => RefineSettings.WriteMinimumDetectionsCommand(commandWriter);
+        public void WriteNormalizeCommand(CommandWriter commandWriter) => RefineSettings.WriteNormalizeCommand(commandWriter);
+
+        public void WriteReportCommands(CommandWriter commandWriter) => ReportSettings.WriteReportCommands(commandWriter, MainSettings.AnalysisFolderPath);
+        public List<Dictionary<RRunInfo, string>> GetScriptArguments() => ReportSettings.GetScriptArguments(MainSettings.AnalysisFolderPath);
+
+        #endregion
 
         #region Equality members
 
