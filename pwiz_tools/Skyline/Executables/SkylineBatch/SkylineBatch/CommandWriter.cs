@@ -7,7 +7,7 @@ namespace SkylineBatch
 {
     public class CommandWriter
     {
-        private const string ALLOW_NEWLINE_SAVE_VERSION = "20.2.1.415"; // TODO(Ali): Make sure this matches future Skyline-daily release with --save fix
+        public static readonly string ALLOW_NEWLINE_SAVE_VERSION = "20.2.1.415"; // TODO(Ali): Make sure this matches future Skyline-daily release with --save fix
 
         private readonly StreamWriter _writer;
         private readonly string _commandFile;

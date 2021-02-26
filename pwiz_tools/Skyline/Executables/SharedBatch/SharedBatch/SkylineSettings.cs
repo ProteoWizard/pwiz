@@ -140,9 +140,9 @@ namespace SharedBatch
             var version = GetVersion();
             for (int i = 0; i < cutoff.Length; i++)
             {
-                if (version[i] < cutoff[i]) return false;
+                if (version[i] != cutoff[i]) return version[i] > cutoff[i];
             }
-            return true;
+            return true; // version == cuttoff
         }
 
         protected bool Equals(SkylineSettings other)

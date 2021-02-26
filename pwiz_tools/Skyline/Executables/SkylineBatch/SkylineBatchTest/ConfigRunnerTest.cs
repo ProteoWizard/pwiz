@@ -17,6 +17,7 @@
  */
 
 
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -58,6 +59,50 @@ namespace SkylineBatchTest
             await testRunner.Run(4);
             logger.Delete();
             Assert.IsTrue(testRunner.IsCompleted(), "Expected runner to have status \"Completed\" but was: " + testRunner.GetStatus());
+        }
+
+        [TestMethod]
+        public async Task TestGenerateCommandFile()
+        {
+            TestUtils.InitializeRInstallation();
+            var logger = TestUtils.GetTestLogger();
+            var testRunner = new ConfigRunner(TestUtils.GetFullyPopulatedConfig(), logger);
+            Assert.IsTrue(testRunner.IsStopped());
+            var expectedCommandFile = TestUtils.GetTestFilePath("RunFile_PopulatedConfig_MultiLineCommands.tmp");
+            var actualCommandFile = testRunner.WriteBatchCommandsToFile(1);
+            CompareFiles(expectedCommandFile, actualCommandFile);
+        }
+
+
+        private void CompareFiles(string expectedFilePath, string actualFilePath)
+        {
+            using (var expectedReader = new StreamReader(expectedFilePath))
+            using (var actualReader = new StreamReader(actualFilePath))
+            {
+                int line = 0;
+                while (line < 1000)
+                {
+                    if (expectedReader.EndOfStream != actualReader.EndOfStream)
+                        Assert.Fail($"Line {line}: Expected end of stream value to be {expectedReader.EndOfStream} but instead was {actualReader.EndOfStream}.");
+                    var expectedLine = expectedReader.ReadLine();
+                    var actualLine = actualReader.ReadLine();
+                    if (expectedLine == null || actualLine == null)
+                    {
+                        Assert.IsTrue(expectedLine == actualLine,
+                            $"Line {line}: Expected reached end of file to be {expectedLine == null} but instead was {actualLine == null}.");
+                        return;
+                    }
+
+                    Assert.IsTrue(expectedLine.Equals(actualLine),
+                        $"Line {line} does not match" + Environment.NewLine +
+                                                                   "Expected:" + Environment.NewLine +
+                                                                   expectedLine + Environment.NewLine +
+                                                                   "Actual:" + Environment.NewLine +
+                                                                   actualLine);
+                    line++;
+                }
+                throw new Exception("Test Error: should never reach 1000 lines");
+            }
         }
 
         // CONSIDER: add tests for configRunner.run

@@ -80,6 +80,22 @@ namespace SkylineBatchTest
                 GetTestRefineSettings(), GetTestReportSettings(), GetTestSkylineSettings());
         }
 
+        public static SkylineBatchConfig GetFullyPopulatedConfig()
+        {
+            var main = new MainSettings(GetTestFilePath("emptyTemplate.sky"), GetTestFilePath("analysis"),
+                GetTestFilePath("emptyData"), GetTestFilePath("fakeAnnotations.csv"), "testNamingPattern");
+            var file = new FileSettings("5", "4", "3", true, true, true);
+            var refine = new RefineSettings("20", "Equalize Medians", "0.01", "2");
+            var reportList = new List<ReportInfo>();
+            var script = new List<Tuple<string, string>>()
+                {new Tuple<string, string>(GetTestFilePath("testScript.R"), "4.0.2")};
+            reportList.Add(new ReportInfo("Unique Report", GetTestFilePath("uniqueReport.skyr"), script));
+            reportList.Add(new ReportInfo("Another Unique Report", GetTestFilePath("uniqueReport.skyr"), script));
+            var reports = new ReportSettings(reportList);
+            var skyline = GetTestSkylineSettings();
+            return new SkylineBatchConfig("TestConfig", true, DateTime.Now, main, file, refine, reports, skyline);
+        }
+
         public static ConfigRunner GetTestConfigRunner(string configName = "name")
         {
             return new ConfigRunner(GetTestConfig(configName), GetTestLogger());

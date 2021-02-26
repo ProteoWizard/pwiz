@@ -99,10 +99,33 @@ namespace SkylineBatch
 
             ChangeStatus(RunnerStatus.Running);
             var startTime = DateTime.Now;
-            
             Config.MainSettings.CreateAnalysisFolderIfNonexistent();
-            // Writes commands to the log and a file for batch processing
+
+            // Writes the batch commands for steps 1-3 to a file
+            var commandFile = WriteBatchCommandsToFile(startStep);
+            
+            var command = string.Format("--version --batch-commands=\"{0}\"", commandFile);
+            if (startStep != 4) await ExecuteProcess(Config.SkylineSettings.CmdPath, command);
+
+            // STEP 4: run r scripts using csv files
+            var rScriptsRunInformation = Config.GetScriptArguments();
+            foreach(var rScript in rScriptsRunInformation)
+                await ExecuteProcess(rScript[RRunInfo.ExePath], rScript[RRunInfo.Arguments]);
+
+            // Runner is still running if no errors or cancellations
+            if (IsRunning()) ChangeStatus(RunnerStatus.Completed);
+            if (IsCancelling()) ChangeStatus(RunnerStatus.Cancelled);
+            var endTime = DateTime.Now;
+            var delta = endTime - startTime;
+            var timeString = delta.Hours > 0 ? delta.ToString(@"hh\:mm\:ss") : string.Format("{0} minutes", delta.ToString(@"mm\:ss"));
+            LogToUi(string.Format(Resources.ConfigRunner_Run_________________________________0____1_________________________________, Config.Name, GetStatus()));
+            LogToUi(string.Format(Resources.ConfigRunner_Run_________________________________0____1_________________________________, "Runtime", timeString));
+        }
+
+        public string WriteBatchCommandsToFile(int startStep)
+        {
             var newSkylineFileName = Config.MainSettings.GetResultsFilePath();
+            // Writes commands to the log and a file for batch processing
             var commandWriter = new CommandWriter(_logger, Config.SkylineSettings, newSkylineFileName);
 
             // STEP 1: open skyline file and save copy to analysis folder
@@ -121,7 +144,7 @@ namespace SkylineBatch
             {
                 Config.WriteOpenSkylineResultsCommand(commandWriter);
             }
-            
+
             // STEP 2: import data to new skyline file
             if (startStep <= 2)
             {
@@ -138,31 +161,14 @@ namespace SkylineBatch
                 Config.WriteSaveCommand(commandWriter);
                 commandWriter.EndCommandGroup();
             }
-            
+
             // STEP 3: output report(s) for completed analysis
             if (startStep <= 3)
             {
                 Config.WriteReportCommands(commandWriter);
             }
 
-            var skylineRunner = Config.SkylineSettings.CmdPath;
-            var commandFile = commandWriter.ReturnCommandFile();
-            var command = string.Format("--version --batch-commands=\"{0}\"", commandFile);
-            if (startStep != 4) await ExecuteProcess(skylineRunner, command);
-
-            // STEP 4: run r scripts using csv files
-            var rScriptsRunInformation = Config.GetScriptArguments();
-            foreach(var rScript in rScriptsRunInformation)
-                await ExecuteProcess(rScript[RRunInfo.ExePath], rScript[RRunInfo.Arguments]);
-
-            // Runner is still running if no errors or cancellations
-            if (IsRunning()) ChangeStatus(RunnerStatus.Completed);
-            if (IsCancelling()) ChangeStatus(RunnerStatus.Cancelled);
-            var endTime = DateTime.Now;
-            var delta = endTime - startTime;
-            var timeString = delta.Hours > 0 ? delta.ToString(@"hh\:mm\:ss") : string.Format("{0} minutes", delta.ToString(@"mm\:ss"));
-            LogToUi(string.Format(Resources.ConfigRunner_Run_________________________________0____1_________________________________, Config.Name, GetStatus()));
-            LogToUi(string.Format(Resources.ConfigRunner_Run_________________________________0____1_________________________________, "Runtime", timeString));
+            return commandWriter.ReturnCommandFile();
         }
         
         public async Task ExecuteProcess(string exeFile, string arguments)
