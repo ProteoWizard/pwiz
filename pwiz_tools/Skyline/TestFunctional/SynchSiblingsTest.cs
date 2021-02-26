@@ -66,8 +66,9 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(pepCount, SkylineWindow.Document.PeptideCount);
             RunUI(() => SkylineWindow.NewDocument());
             Assert.AreEqual(0, SkylineWindow.Document.PeptideCount);
-            RunDlg<MissingFileDlg>(() => SkylineWindow.OpenFile(documentPath),
-                dlg => dlg.OkDialog(movedPath));
+            var missingFileDlg = ShowDialog<MissingFileDlg>(() => SkylineWindow.OpenFile(documentPath));
+            RunDlg<AlertDlg>(()=>missingFileDlg.ChooseFile(documentPath), alertDlg=>alertDlg.OkDialog());
+            OkDialog(missingFileDlg, () => missingFileDlg.ChooseFile(movedPath));
             RunUI(SkylineWindow.ExpandPrecursors);
 
             Settings.Default.SynchronizeIsotopeTypes = true;

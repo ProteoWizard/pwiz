@@ -16,7 +16,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System.IO;
 using System.Windows.Forms;
+using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Alerts
@@ -64,11 +67,18 @@ namespace pwiz.Skyline.Alerts
 
         public string FilePath { get; private set; }
 
-        public void OkDialog(string filePath = null)
+        public void ChooseFile(string filePath)
         {
-            if (!string.IsNullOrEmpty(filePath))
-                FilePath = filePath;
+            if (!ValidateFilePath(filePath))
+            {
+                return;
+            }
+            FilePath = filePath;
+            OkDialog();
+        }
 
+        public void OkDialog()
+        {
             DialogResult = DialogResult.OK;
         }
 
@@ -91,8 +101,28 @@ namespace pwiz.Skyline.Alerts
                 if (openFileDialog.ShowDialog(this) == DialogResult.Cancel)
                     return;
 
-                OkDialog(openFileDialog.FileName);
+                ChooseFile(openFileDialog.FileName);
             }
+        }
+
+        public virtual bool ValidateFilePath(string filePath)
+        {
+            if (FileHint != null)
+            {
+                string requiredExtension = Path.GetExtension(FileHint);
+                if (requiredExtension != Path.GetExtension(filePath))
+                {
+                    MessageDlg.Show(this, string.Format("You must choose a file with the '{0}' filename extension.", requiredExtension));
+                    return false;
+                }
+            }
+
+            if (!EditLibraryDlg.ValidateLibraryPath(this, filePath))
+            {
+                return false;
+            }
+
+            return true;
         }
     }
 }
