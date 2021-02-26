@@ -5,6 +5,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using SharedBatch;
 using SkylineBatch.Properties;
 
 namespace SkylineBatch
@@ -15,7 +16,7 @@ namespace SkylineBatch
         // Allows users to correct file paths, R versions, and Skyline types of an invalid configuration.
 
         private readonly SkylineBatchConfig _invalidConfig;
-        private readonly ConfigManager _configManager;
+        private readonly SkylineBatchConfigManager _configManager;
         private readonly IMainUiControl _mainControl;
 
         private string _lastInputPath; // the last user-entered file or folder path
@@ -24,7 +25,7 @@ namespace SkylineBatch
 
         private bool _askedAboutRootReplacement; // if the user has been asked about replacing path roots for this configuration
 
-        public InvalidConfigSetupForm(SkylineBatchConfig invalidConfig, ConfigManager configManager, IMainUiControl mainControl)
+        public InvalidConfigSetupForm(SkylineBatchConfig invalidConfig, SkylineBatchConfigManager configManager, IMainUiControl mainControl)
         {
             InitializeComponent();
             _invalidConfig = invalidConfig;
@@ -146,7 +147,7 @@ namespace SkylineBatch
                 await btnNext;
                 valid = control.IsValid(out errorMessage);
                 if (!valid)
-                    AlertDlg.ShowError(this, errorMessage);
+                    AlertDlg.ShowError(this, Program.AppName(), errorMessage);
             }
             // remove the control and return the valid variable
             if (removeControl) RemoveControl((UserControl)control);
@@ -179,7 +180,7 @@ namespace SkylineBatch
             // the first time a path is changed, ask if user wants all path roots replaced
             if (!_askedAboutRootReplacement && oldRoot.Length > 0 && !Directory.Exists(oldRoot) && !_configManager.RootReplacement.ContainsKey(oldRoot))
             {
-                var replaceRoot = AlertDlg.ShowQuestion(this, string.Format(Resources.InvalidConfigSetupForm_GetValidPath_Would_you_like_to_replace__0__with__1___, oldRoot, newRoot)) == DialogResult.Yes;
+                var replaceRoot = AlertDlg.ShowQuestion(this, Program.AppName(), string.Format(Resources.InvalidConfigSetupForm_GetValidPath_Would_you_like_to_replace__0__with__1___, oldRoot, newRoot)) == DialogResult.Yes;
                 _askedAboutRootReplacement = true;
                 if (replaceRoot)
                     _configManager.AddRootReplacement(oldRoot, newRoot);
@@ -214,19 +215,7 @@ namespace SkylineBatch
             panel1.Controls.Remove(control);
         }
     }
-    
-    // Validates a string variable, throws ArgumentException if invalid
-    public delegate void Validator(string variable, string name = "");
-    
-    // UserControl interface to validate value of an input
-    public interface IValidatorControl
-    {
-        object GetVariable();
 
-        // Uses Validator to determine if variable is valid
-        bool IsValid(out string errorMessage);
-    }
-    
     // Class that lets you wait for button click (ex: "await btnNext")
     public static class ButtonAwaiterExtensions
     {

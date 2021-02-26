@@ -43,8 +43,8 @@
             this.columnCreated = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnStatus = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.panel1 = new System.Windows.Forms.Panel();
+            this.btnAdd = new System.Windows.Forms.Button();
             this.toolStrip = new System.Windows.Forms.ToolStrip();
-            this.btnAdd = new System.Windows.Forms.ToolStripButton();
             this.btnDelete = new System.Windows.Forms.ToolStripButton();
             this.btnOpenResults = new System.Windows.Forms.ToolStripButton();
             this.btnOpenPanoramaFolder = new System.Windows.Forms.ToolStripButton();
@@ -170,6 +170,7 @@
             // panel1
             // 
             resources.ApplyResources(this.panel1, "panel1");
+            this.panel1.Controls.Add(this.btnAdd);
             this.panel1.Controls.Add(this.toolStrip);
             this.panel1.Controls.Add(this.btnImportConfigs);
             this.panel1.Controls.Add(this.btnExportConfigs);
@@ -177,27 +178,25 @@
             this.panel1.Controls.Add(this.btnCopy);
             this.panel1.Name = "panel1";
             // 
+            // btnAdd
+            // 
+            resources.ApplyResources(this.btnAdd, "btnAdd");
+            this.btnAdd.Name = "btnAdd";
+            this.btnAdd.UseVisualStyleBackColor = true;
+            this.btnAdd.Click += new System.EventHandler(this.btnAdd_Click);
+            // 
             // toolStrip
             // 
             this.toolStrip.BackColor = System.Drawing.SystemColors.Control;
             resources.ApplyResources(this.toolStrip, "toolStrip");
             this.toolStrip.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
             this.toolStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.btnAdd,
             this.btnDelete,
             this.btnOpenResults,
             this.btnOpenPanoramaFolder,
             this.btnOpenFolder});
             this.toolStrip.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.VerticalStackWithOverflow;
             this.toolStrip.Name = "toolStrip";
-            // 
-            // btnAdd
-            // 
-            this.btnAdd.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.btnAdd.Image = global::AutoQC.Properties.Resources.add;
-            resources.ApplyResources(this.btnAdd, "btnAdd");
-            this.btnAdd.Name = "btnAdd";
-            this.btnAdd.Click += new System.EventHandler(this.btnAdd_Click);
             // 
             // btnDelete
             // 
@@ -315,9 +314,9 @@
             // 
             // groupBoxAutoQcSettings
             // 
+            resources.ApplyResources(this.groupBoxAutoQcSettings, "groupBoxAutoQcSettings");
             this.groupBoxAutoQcSettings.Controls.Add(this.cb_minimizeToSysTray);
             this.groupBoxAutoQcSettings.Controls.Add(this.cb_keepRunning);
-            resources.ApplyResources(this.groupBoxAutoQcSettings, "groupBoxAutoQcSettings");
             this.groupBoxAutoQcSettings.Name = "groupBoxAutoQcSettings";
             this.groupBoxAutoQcSettings.TabStop = false;
             // 
@@ -422,7 +421,6 @@
         private System.Windows.Forms.ColumnHeader columnCreated;
         private System.Windows.Forms.ColumnHeader columnStatus;
         private System.Windows.Forms.ToolStrip toolStrip;
-        private System.Windows.Forms.ToolStripButton btnAdd;
         private System.Windows.Forms.ToolStripButton btnDelete;
         private System.Windows.Forms.ToolStripButton btnOpenResults;
         private System.Windows.Forms.ToolStripButton btnOpenFolder;
@@ -430,5 +428,6 @@
         private System.Windows.Forms.ContextMenuStrip openFolderMenuStrip;
         private System.Windows.Forms.ToolStripMenuItem toolStripFolderToWatch;
         private System.Windows.Forms.ToolStripMenuItem toolStripLogFolder;
+        private System.Windows.Forms.Button btnAdd;
     }
 }

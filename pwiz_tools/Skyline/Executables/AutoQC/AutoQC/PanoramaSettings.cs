@@ -24,6 +24,7 @@ using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using AutoQC.Properties;
+using SharedBatch;
 
 namespace AutoQC
 {
@@ -66,21 +67,9 @@ namespace AutoQC
                 }
                 catch (UriFormatException)
                 {
-                    Program.LogError(Resources.PanoramaSettings_PanoramaSettings_Panorama_server_name_is_invalid__Please_enter_a_different_Panorama_server_name_);
+                    ProgramLog.Error(Resources.PanoramaSettings_PanoramaSettings_Panorama_server_name_is_invalid__Please_enter_a_different_Panorama_server_name_);
                 }
             }
-
-            /*var panoramaClient = new WebPanoramaClient(PanoramaServerUri);
-            try
-            {
-                PanoramaUtil.VerifyServerInformation(panoramaClient, PanoramaUserEmail, PanoramaPassword);
-                PanoramaServerUri = panoramaClient.ServerUri ?? PanoramaServerUri;
-                if (!(PanoramaServerUri is null)) PanoramaServerUrl = PanoramaServerUri.AbsoluteUri;
-            }
-            catch (Exception)
-            {
-                // ignored
-            }*/
         }
 
         public virtual bool IsSelected()
@@ -189,7 +178,7 @@ namespace AutoQC
             }
             catch (Exception e)
             {
-                Program.LogError("Error encrypting password. ", e);
+                ProgramLog.Error("Error encrypting password. ", e);
   
             }
             return string.Empty;
@@ -210,7 +199,7 @@ namespace AutoQC
             }
             catch (Exception e)
             {              
-                Program.LogError("Error decrypting password. ", e);
+                ProgramLog.Error("Error decrypting password. ", e);
             }
             return string.Empty;
         }
@@ -311,11 +300,11 @@ namespace AutoQC
     public class PanoramaPinger
     {
         private readonly PanoramaSettings _panoramaSettings;
-        private readonly IAutoQcLogger _logger;
+        private readonly Logger _logger;
         private short _status; //1 = success; 2 = fail
         private Timer _timer;
 
-        public PanoramaPinger(PanoramaSettings panoramaSettings, IAutoQcLogger logger)
+        public PanoramaPinger(PanoramaSettings panoramaSettings, Logger logger)
         {
             _panoramaSettings = panoramaSettings;
             _logger = logger;

@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using AutoQC.Properties;
+using SharedBatch;
 
 namespace AutoQC
 {
@@ -14,7 +15,7 @@ namespace AutoQC
         // Allows users to correct file paths, R versions, and Skyline types of an invalid configuration.
 
         private readonly AutoQcConfig _invalidConfig;
-        private readonly ConfigManager _configManager;
+        private readonly AutoQcConfigManager _configManager;
         private readonly IMainUiControl _mainControl;
 
         private string _lastInputPath; // the last user-entered file or folder path
@@ -23,7 +24,7 @@ namespace AutoQC
 
         private bool _askedAboutRootReplacement; // if the user has been asked about replacing path roots for this configuration
 
-        public InvalidConfigSetupForm(AutoQcConfig invalidConfig, ConfigManager configManager, IMainUiControl mainControl)
+        public InvalidConfigSetupForm(AutoQcConfig invalidConfig, AutoQcConfigManager configManager, IMainUiControl mainControl)
         {
             InitializeComponent();
             _invalidConfig = invalidConfig;
@@ -125,7 +126,7 @@ namespace AutoQC
                 await btnNext;
                 valid = control.IsValid(out errorMessage);
                 if (!valid)
-                    AlertDlg.ShowError(this, errorMessage);
+                    AlertDlg.ShowError(this, Program.AppName, errorMessage);
             }
             // remove the control and return the valid variable
             if (removeControl) RemoveControl((UserControl)control);
@@ -158,7 +159,7 @@ namespace AutoQC
             // the first time a path is changed, ask if user wants all path roots replaced
             if (!_askedAboutRootReplacement && oldRoot.Length > 0 && !Directory.Exists(oldRoot))
             {
-                var replaceRoot = AlertDlg.ShowQuestion(this, string.Format(Resources.InvalidConfigSetupForm_GetValidPath_Would_you_like_to_replace__0__with__1___, oldRoot, newRoot)) == DialogResult.Yes;
+                var replaceRoot = AlertDlg.ShowQuestion(this, Program.AppName, string.Format(Resources.InvalidConfigSetupForm_GetValidPath_Would_you_like_to_replace__0__with__1___, oldRoot, newRoot)) == DialogResult.Yes;
                 _askedAboutRootReplacement = true;
                 if (replaceRoot)
                 {
@@ -182,18 +183,6 @@ namespace AutoQC
             control.Hide();
             panel1.Controls.Remove(control);
         }
-    }
-
-    // Validates a string variable, throws ArgumentException if invalid
-    public delegate void Validator(string variable);
-
-    // UserControl interface to validate value of an input
-    public interface IValidatorControl
-    {
-        object GetVariable();
-
-        // Uses Validator to determine if variable is valid
-        bool IsValid(out string errorMessage);
     }
 
     // Class that lets you wait for button click (ex: "await btnNext")
