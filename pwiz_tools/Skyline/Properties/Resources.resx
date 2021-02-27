@@ -8942,8 +8942,8 @@ If your transition list format combines formulas and adducts in a single column 
   <data name="EditIsolationSchemeDlg_ReadIsolationRanges_No_repeating_isolation_scheme_found_in__0_" xml:space="preserve">
     <value>No repeating isolation scheme found in {0}</value>
   </data>
-  <data name="SkylineVersion_GetCurrentVersionName_Current___0__" xml:space="preserve">
-    <value>Current ({0})</value>
+  <data name="SkylineVersion_GetCurrentVersionName_Latest___0__" xml:space="preserve">
+    <value>Latest ({0})</value>
   </data>
   <data name="SkylineVersion_GetCurrentVersionName_Developer_Build" xml:space="preserve">
     <value>Developer Build</value>
