@@ -11328,4 +11328,7 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
   <data name="SkylineWindow_HasFileToOpen_The_path_to_the_file_to_open_is_too_long_" xml:space="preserve">
     <value>The path to the file to open is too long.</value>
   </data>
+  <data name="ShareTypeDlg_ShareTypeDlg_Current_saved_file___0__" xml:space="preserve">
+    <value>Current saved file ({0})</value>
+  </data>
 </root>

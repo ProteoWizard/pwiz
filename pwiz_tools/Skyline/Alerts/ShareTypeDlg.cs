@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Windows.Forms;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Serialization;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Alerts
@@ -39,7 +40,7 @@ namespace pwiz.Skyline.Alerts
             if (savedFileFormat.HasValue)
             {
                 _skylineVersionOptions.Add(null);
-                comboSkylineVersion.Items.Add(string.Format("Current saved file ({0})", savedFileFormat.Value.GetDescription()));
+                comboSkylineVersion.Items.Add(string.Format(Resources.ShareTypeDlg_ShareTypeDlg_Current_saved_file___0__, savedFileFormat.Value.GetDescription()));
             }
 
             foreach (var skylineVersion in SkylineVersion.SupportedForSharing())
@@ -63,6 +64,43 @@ namespace pwiz.Skyline.Alerts
         private void btnShare_Click(object sender, EventArgs e)
         {
             OkDialog();
+        }
+
+        public SkylineVersion SelectedSkylineVersion
+        {
+            get
+            {
+                return _skylineVersionOptions[comboSkylineVersion.SelectedIndex];
+            }
+            set
+            {
+                int index = _skylineVersionOptions.IndexOf(value);
+                if (index < 0)
+                {
+                    throw new ArgumentException();
+                }
+
+                comboSkylineVersion.SelectedIndex = index;
+            }
+        }
+
+        public bool ShareTypeComplete
+        {
+            get
+            {
+                return radioComplete.Checked;
+            }
+            set
+            {
+                if (value)
+                {
+                    radioComplete.Checked = true;
+                }
+                else
+                {
+                    radioMinimal.Checked = true;
+                }
+            }
         }
     }
 }
