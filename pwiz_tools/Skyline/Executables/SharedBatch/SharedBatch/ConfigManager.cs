@@ -257,6 +257,7 @@ namespace SharedBatch
                 config.Validate();
                 _configList.Insert(index, config);
                 _configValidation.Add(config.GetName(), true);
+                SelectedConfig = index;
             }
         }
 
