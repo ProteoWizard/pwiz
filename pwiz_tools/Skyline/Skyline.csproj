@@ -342,6 +342,7 @@
     <Compile Include="Controls\AuditLog\AuditLogExtraInfoForm.Designer.cs">
       <DependentUpon>AuditLogExtraInfoForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\Clustering\ClusterInput.cs" />
     <Compile Include="Controls\Clustering\ClusteredHeatMapItem.cs" />
     <Compile Include="Controls\Clustering\DataboundGraph.cs">
       <SubType>Form</SubType>
@@ -383,6 +384,7 @@
     <Compile Include="Controls\Graphs\DetectionToolbarProperties.Designer.cs">
       <DependentUpon>DetectionToolbarProperties.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\Graphs\GraphDataCalculator.cs" />
     <Compile Include="Controls\Graphs\PaneProgressBar.cs" />
     <Compile Include="Controls\Graphs\ReplicateGroupOp.cs" />
     <Compile Include="Controls\Graphs\ReplicateValue.cs" />

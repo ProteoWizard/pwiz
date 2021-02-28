@@ -197,26 +197,52 @@ namespace pwiz.Common.DataAnalysis.Clustering
             return Tuple.Create(newGroup, dendrogramData);
         }
 
-        public ClusterResults<TRow, TColumn> ClusterColumns()
+        public ClusterResults<TRow, TColumn> PerformClustering(bool clusterRows, ProgressHandler progressHandler)
         {
-            var clusteredGroups = DataFrameGroups.Select(ClusterDataFrameGroup).ToList();
-            var newDataSet = new ClusterDataSet<TRow, TColumn>(RowLabels, clusteredGroups.Select(tuple=>tuple.Item1));
-            return new ClusterResults<TRow, TColumn>(newDataSet, null, ImmutableList.ValueOf(clusteredGroups.Select(tuple=>tuple.Item2)));
-        }
+            int stepCount = DataFrameGroups.Count;
+            if (clusterRows)
+            {
+                stepCount++;
+            }
 
-        public ClusterResults<TRow, TColumn> PerformClustering(bool clusterRows)
-        {
+            int iStep = 0;
             ClusterResults<TRow, TColumn> rowResults;
             if (clusterRows)
             {
                 rowResults = ClusterRows();
+                iStep++;
+                progressHandler.SetPercentComplete(100 / stepCount);
             }
             else
             {
                 rowResults = new ClusterResults<TRow, TColumn>(this, null, null);
             }
-            ClusterResults<TRow, TColumn> columnResults = rowResults.DataSet.ClusterColumns();
-            return new ClusterResults<TRow, TColumn>(columnResults.DataSet, rowResults.RowDendrogram, columnResults.ColumnGroupDendrograms);
+
+            return rowResults.DataSet.PerformClusteringOnColumns(progressHandler, rowResults.RowDendrogram);
+        }
+
+        private ClusterResults<TRow, TColumn> PerformClusteringOnColumns(ProgressHandler progressHandler, DendrogramData rowDendrogram)
+        {
+            int iStep = 0;
+            int stepCount = DataFrameGroups.Count;
+            if (rowDendrogram != null)
+            {
+                iStep++;
+                stepCount++;
+            }
+            var clusteredDataFrames = new List<ImmutableList<DataFrame>>();
+            var dendrogramDatas = new List<DendrogramData>();
+            foreach (var dataFrameGroup in DataFrameGroups)
+            {
+                var tuple = ClusterDataFrameGroup(dataFrameGroup);
+                clusteredDataFrames.Add(tuple.Item1);
+                dendrogramDatas.Add(tuple.Item2);
+                iStep++;
+                progressHandler.SetPercentComplete(iStep * 100 / stepCount);
+            }
+
+            var newDataSet = new ClusterDataSet<TRow, TColumn>(RowLabels, clusteredDataFrames);
+            return new ClusterResults<TRow, TColumn>(newDataSet, rowDendrogram, ImmutableList.ValueOf(dendrogramDatas));
         }
 
         public IEnumerable<PcaResults<TColumn>> PerformPcaOnColumnGroups(int maxLevels)
