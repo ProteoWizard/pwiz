@@ -57,7 +57,6 @@ namespace SkylineBatch
             _configManager = new SkylineBatchConfigManager(_skylineBatchLogger, this);
 
             UpdateUiConfigurations();
-            UpdateLabelVisibility();
             UpdateUiLogFiles();
 
             Shown += ((sender, args) => { _loaded = true; });
@@ -307,9 +306,9 @@ namespace SkylineBatch
             RunUi(() =>
             {
                 ProgramLog.Info("Updating configurations");
-                listViewConfigs.Items.Clear();
                 listViewConfigs.ItemCheck -= listViewConfigs_ItemCheck;
                 var listViewItems = _configManager.ConfigsListViewItems();
+                listViewConfigs.Items.Clear();
                 foreach (var lvi in listViewItems)
                     listViewConfigs.Items.Add(lvi);
                 listViewConfigs.ItemCheck += listViewConfigs_ItemCheck;

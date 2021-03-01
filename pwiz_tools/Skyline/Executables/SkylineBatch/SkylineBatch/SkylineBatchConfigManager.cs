@@ -325,16 +325,13 @@ namespace SkylineBatch
 
         public List<string> ConfigsRunning()
         {
-            lock (_lock)
+            var configsRunning = new List<string>();
+            foreach (var runner in _configRunners.Values)
             {
-                var configsRunning = new List<string>();
-                foreach (var runner in _configRunners.Values)
-                {
-                    if (runner.IsBusy())
-                        configsRunning.Add(runner.GetConfigName());
-                }
-                return configsRunning;
+                if (runner.IsBusy())
+                    configsRunning.Add(runner.GetConfigName());
             }
+            return configsRunning;
         }
 
         public void CancelRunners()

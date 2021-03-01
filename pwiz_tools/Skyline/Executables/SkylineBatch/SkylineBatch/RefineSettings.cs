@@ -108,6 +108,8 @@ namespace SkylineBatch
         public const string CV_REFERENCE_NORMALIZE_COMMAND = "--refine-cv-reference-normalize={0}";
         public const string Q_VALUE_CUTOFF_COMMAND = "--refine-qvalue-cutoff={0}";
         public const string MINIMUM_DETECTIONS_COMMAND = "--refine-minimum-detections={0}";
+        public const string REMOVE_DECOYS_COMMAND = "--decoys-discard";
+        public const string REMOVE_RESULTS_COMMAND = "--remove-all";
 
         public void WriteCvCutoffCommand(CommandWriter commandWriter)
         {

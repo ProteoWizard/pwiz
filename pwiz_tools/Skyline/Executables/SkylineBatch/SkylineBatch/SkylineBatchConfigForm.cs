@@ -76,6 +76,7 @@ namespace SkylineBatch
         private void InitInputFieldsFromConfig(SkylineBatchConfig config)
         {
             InitSkylineTab(config);
+            SetInitialRefineSettings(config);
             if (config == null)
                 return;
             _lastEnteredPath = config.MainSettings.TemplateFilePath;
@@ -84,7 +85,6 @@ namespace SkylineBatch
             // Initialize UI input values using config
             SetInitialMainSettings(config);
             SetInitialFileSettings(config);
-            SetInitialRefineSettings(config);
             SetInitialReportSettings(config);
         }
 
@@ -233,14 +233,14 @@ namespace SkylineBatch
 
         private void SetInitialRefineSettings(SkylineBatchConfig config)
         {
+            comboNormalize.SelectedIndex = comboNormalize.Items.Count - 1;
             if (_action == ConfigAction.Add) return;
             var refineSettings = config.RefineSettings;
             textCvCutoff.Text = refineSettings.CvCutoff;
             textDetected.Text = refineSettings.MinDetectedReplicates;
             textQValueCutoff.Text = refineSettings.QValueCutoff;
             int index = comboNormalize.Items.IndexOf(refineSettings.NormalizeMethod);
-            comboNormalize.SelectedIndex = index;
-            if (index < 0) comboNormalize.SelectedIndex = comboNormalize.Items.Count - 1;
+            if (index  >= 0) comboNormalize.SelectedIndex = index;
         }
 
         private RefineSettings GetRefineSettingsFromUi()
