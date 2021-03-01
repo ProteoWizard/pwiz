@@ -22,6 +22,7 @@ using System.IO;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
+using SharedBatch;
 using SkylineBatch.Properties;
 
 namespace SkylineBatch
@@ -78,34 +79,34 @@ namespace SkylineBatch
             ValidateAnalysisFolder(AnalysisFolderPath);
         }
 
-        public static void ValidateSkylineFile(string skylineFile, string name = "")
+        public static void ValidateSkylineFile(string skylineFile)
         {
-            CheckIfEmptyPath(skylineFile, "Skyline file");
+            CheckIfEmptyPath(skylineFile, Resources.MainSettings_ValidateSkylineFile_Skyline_file);
             if (!File.Exists(skylineFile))
             {
-                throw new ArgumentException(string.Format("The skyline template file {0} does not exist.", skylineFile) + Environment.NewLine +
-                                            "Please provide a valid file.");
+                throw new ArgumentException(string.Format(Resources.MainSettings_ValidateSkylineFile_The_Skyline_template_file__0__does_not_exist_, skylineFile) + Environment.NewLine +
+                                            Resources.MainSettings_ValidateSkylineFile_Please_provide_a_valid_file_);
             }
         }
 
-        public static void ValidateAnalysisFolder(string analysisFolder, string name = "")
+        public static void ValidateAnalysisFolder(string analysisFolder)
         {
-            CheckIfEmptyPath(analysisFolder, "analysis folder");
+            CheckIfEmptyPath(analysisFolder, Resources.MainSettings_ValidateAnalysisFolder_analysis_folder);
             var analysisFolderDirectory = Path.GetDirectoryName(analysisFolder);
             if (!Directory.Exists(analysisFolderDirectory))
             {
                 throw new ArgumentException(string.Format(Resources.MainSettings_ValidateAnalysisFolder_The_analysis_folder__0__does_not_exist_, analysisFolderDirectory) + Environment.NewLine +
-                                            "Please provide a valid folder.");
+                                            Resources.MainSettings_ValidateAnalysisFolder_Please_provide_a_valid_folder_);
             }
         }
 
-        public static void ValidateDataFolder(string dataFolder, string name = "")
+        public static void ValidateDataFolder(string dataFolder)
         {
-            CheckIfEmptyPath(dataFolder, "data folder");
+            CheckIfEmptyPath(dataFolder, Resources.MainSettings_ValidateDataFolder_data_folder);
             if (!Directory.Exists(dataFolder))
             {
-                throw new ArgumentException(string.Format("The data folder {0} does not exist.", dataFolder) + Environment.NewLine +
-                                            "Please provide a valid folder.");
+                throw new ArgumentException(string.Format(Resources.MainSettings_ValidateDataFolder_The_data_folder__0__does_not_exist_, dataFolder) + Environment.NewLine +
+                                            Resources.MainSettings_ValidateAnalysisFolder_Please_provide_a_valid_folder_);
             }
         }
 
@@ -113,7 +114,7 @@ namespace SkylineBatch
         {
             if (string.IsNullOrWhiteSpace(input))
             {
-                throw new ArgumentException(string.Format("Please specify a path to {0}", name));
+                throw new ArgumentException(string.Format(Resources.MainSettings_CheckIfEmptyPath_Please_specify_a_path_to__0_, name));
             }
         }
 
