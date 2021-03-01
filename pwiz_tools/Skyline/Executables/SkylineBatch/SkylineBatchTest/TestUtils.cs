@@ -19,10 +19,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SkylineBatch;
-using SkylineBatch.Properties;
+using SharedBatch;
+using System.Configuration;
 
 namespace SkylineBatchTest
 {
@@ -80,9 +80,9 @@ namespace SkylineBatchTest
             return new ConfigRunner(GetTestConfig(configName), GetTestLogger());
         }
 
-        public static List<SkylineBatchConfig> ConfigListFromNames(List<string> names)
+        public static List<IConfig> ConfigListFromNames(List<string> names)
         {
-            var configList = new List<SkylineBatchConfig>();
+            var configList = new List<IConfig>();
             foreach (var name in names)
             {
                 configList.Add(GetTestConfig(name));
@@ -90,14 +90,9 @@ namespace SkylineBatchTest
             return configList;
         }
 
-        public static ConfigManager GetTestConfigManager()
+        public static SkylineBatchConfigManager GetTestConfigManager()
         {
-            var testConfigManager = new ConfigManager(GetTestLogger());
-            while (testConfigManager.HasConfigs())
-            {
-                testConfigManager.SelectConfig(0);
-                testConfigManager.RemoveSelected();
-            }
+            var testConfigManager = new SkylineBatchConfigManager(GetTestLogger());
             testConfigManager.AddConfiguration(GetTestConfig("one"));
             testConfigManager.AddConfiguration(GetTestConfig("two"));
             testConfigManager.AddConfiguration(GetTestConfig("three"));
@@ -122,28 +117,16 @@ namespace SkylineBatchTest
             return null;
         }
 
-        public static SkylineBatchLogger GetTestLogger(string logFolder = "")
+        public static Logger GetTestLogger(string logFolder = "")
         {
-            SkylineBatchLogger.LOG_FOLDER = string.IsNullOrEmpty(logFolder) ? GetTestFilePath("OldLogs") : logFolder;
-            return new SkylineBatchLogger("TestLog" + DateTime.Now.ToString("_HHmmssfff") + ".log");
+            logFolder = string.IsNullOrEmpty(logFolder) ? GetTestFilePath("OldLogs") : logFolder;
+            var logName = "TestLog" + DateTime.Now.ToString("_HHmmssfff") + ".log";
+            return new Logger(Path.Combine(logFolder, logName), logName);
         }
 
         public static void InitializeRInstallation()
         {
-            Assert.IsTrue(Installations.FindRDirectory());
-        }
-
-        public static void ClearSavedConfigurations()
-        {
-            var logger = GetTestLogger();
-            var testConfigManager = new ConfigManager(logger);
-            while (testConfigManager.HasConfigs())
-            {
-                testConfigManager.SelectConfig(0);
-                testConfigManager.RemoveSelected();
-            }
-            testConfigManager.Close();
-            logger.Delete();
+            Assert.IsTrue(RInstallations.FindRDirectory());
         }
 
         public static List<string> GetAllLogFiles(string directory = null)

@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using AutoQC;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using SharedBatch;
 
 namespace AutoQCTest
 {
@@ -76,7 +76,7 @@ namespace AutoQCTest
         private static void FilesFromWatcherEquals(MainSettings mainSettings, string[] expectedFiles)
         {
             var config = new AutoQcConfig("test", false, DateTime.MinValue, DateTime.MinValue, mainSettings, new PanoramaSettings(), TestUtils.GetTestSkylineSettings());
-            var logger = new AutoQcLogger(config, null);
+            var logger = TestUtils.GetTestLogger(config);
             var watcher = new AutoQCFileSystemWatcher(logger, new ConfigRunner(config, logger));
 
             watcher.Init(config);
@@ -167,10 +167,9 @@ namespace AutoQCTest
                 MainSettings.ACCUM_TIME_WINDOW.ToString(), instrument, MainSettings.ACQUISITION_TIME.ToString());
 
             var config = new AutoQcConfig("test", false, DateTime.MinValue, DateTime.MinValue, mainSettings, new PanoramaSettings(), TestUtils.GetTestSkylineSettings());
-
-            var logger = new AutoQcLogger(config, null);
+            var logger = TestUtils.GetTestLogger(config);
             var configRunner = new ConfigRunner(config, logger);
-            configRunner.ChangeStatus(ConfigRunner.RunnerStatus.Running);
+            configRunner.ChangeStatus(RunnerStatus.Running);
             
 
             // 1. Look for files in folderToWatchOnly
@@ -209,9 +208,9 @@ namespace AutoQCTest
 
             config = new AutoQcConfig("test", false, DateTime.MinValue, DateTime.MinValue, mainSettings, new PanoramaSettings(), TestUtils.GetTestSkylineSettings());
 
-            logger = new AutoQcLogger(config, null);
+            logger = TestUtils.GetTestLogger(config);
             configRunner = new ConfigRunner(config, logger);
-            configRunner.ChangeStatus(ConfigRunner.RunnerStatus.Running);
+            configRunner.ChangeStatus(RunnerStatus.Running);
             watcher = new AutoQCFileSystemWatcher(logger, configRunner);
             
             mainSettings.ValidateSettings();
@@ -249,9 +248,9 @@ namespace AutoQCTest
 
             config = new AutoQcConfig("test", false, DateTime.MinValue, DateTime.MinValue, mainSettings, new PanoramaSettings(), TestUtils.GetTestSkylineSettings());
 
-            logger = new AutoQcLogger(config, null);
+            logger = TestUtils.GetTestLogger(config);
             configRunner = new ConfigRunner(config, logger);
-            configRunner.ChangeStatus(ConfigRunner.RunnerStatus.Running);
+            configRunner.ChangeStatus(RunnerStatus.Running);
             watcher = new AutoQCFileSystemWatcher(logger, configRunner);
 
             
@@ -287,9 +286,9 @@ namespace AutoQCTest
 
             config = new AutoQcConfig("test", false, DateTime.MinValue, DateTime.MinValue, mainSettings, new PanoramaSettings(), TestUtils.GetTestSkylineSettings());
 
-            logger = new AutoQcLogger(config, null);
+            logger = TestUtils.GetTestLogger(config);
             configRunner = new ConfigRunner(config, logger);
-            configRunner.ChangeStatus(ConfigRunner.RunnerStatus.Running);
+            configRunner.ChangeStatus(RunnerStatus.Running);
             watcher = new AutoQCFileSystemWatcher(logger, configRunner);
 
 
