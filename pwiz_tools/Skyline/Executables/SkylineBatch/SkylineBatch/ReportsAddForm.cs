@@ -19,8 +19,8 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.IO;
 using System.Windows.Forms;
+using SharedBatch;
 using SkylineBatch.Properties;
 
 namespace SkylineBatch
@@ -56,16 +56,13 @@ namespace SkylineBatch
             {
                 // Prevent user from adding R script if R is not installed
                 _uiControl.DisplayError(Resources.ReportsAddForm_btnAddRScript_Click_Could_not_find_any_R_Installations_in__ + Environment.NewLine + 
-                                                                    Installations.RLocation + Environment.NewLine +
+                                                                    RInstallations.RLocation + Environment.NewLine +
                                                                     Environment.NewLine +
                                                                     Resources.ReportsAddForm_btnAddRScript_Click_Please_install_R_before_adding_R_scripts_to_this_configuration_);
                 return;
             }
 
-            var initialDirectory = !string.IsNullOrEmpty(textReportPath.Text)
-                ? Path.GetDirectoryName(textReportPath.Text)
-                : string.Empty;
-            var fileNames = OpenRScript(initialDirectory, true);
+            var fileNames = OpenRScript(textReportPath.Text, true);
             foreach (var fileName in fileNames)
             {
                 dataGridScripts.Rows.Add(fileName, rVersionsDropDown.Items[rVersionsDropDown.Items.Count - 1].AccessibilityObject.Name);
@@ -77,26 +74,19 @@ namespace SkylineBatch
             if (e.ColumnIndex != 0 || string.IsNullOrEmpty((string)dataGridScripts.SelectedCells[0].Value))
                 return;
             var selectedCell = dataGridScripts.SelectedCells[0];
-            var fileNames = OpenRScript(Path.GetDirectoryName((string)selectedCell.Value), false);
+            var fileNames = OpenRScript((string)selectedCell.Value, false);
             if (fileNames.Length > 0)
             {
                 selectedCell.Value = fileNames[0];
             }
         }
 
-        private string[] OpenRScript(string initialDirectory, bool allowMultiSelect)
+        private string[] OpenRScript(string path, bool allowMultiSelect)
         {
             var openDialog = new OpenFileDialog();
             openDialog.Filter = TextUtil.FILTER_R;
             openDialog.Multiselect = allowMultiSelect;
-            try
-            {
-                openDialog.InitialDirectory = initialDirectory;
-            }
-            catch (Exception)
-            {
-                // Use default path
-            }
+            openDialog.InitialDirectory = TextUtil.GetInitialDirectory(path);
             if (openDialog.ShowDialog() != DialogResult.OK)
                 return new string[]{};
             return openDialog.FileNames;
@@ -114,13 +104,7 @@ namespace SkylineBatch
         {
             OpenFileDialog openDialog = new OpenFileDialog();
             openDialog.Filter = TextUtil.FILTER_SKYR;
-            try
-            {
-                openDialog.InitialDirectory = Path.GetDirectoryName(textReportPath.Text);
-            }
-            catch (Exception)
-            {
-            }
+            openDialog.InitialDirectory = TextUtil.GetInitialDirectory(textReportPath.Text);
             openDialog.ShowDialog();
             textReportPath.Text = openDialog.FileName;
         }
