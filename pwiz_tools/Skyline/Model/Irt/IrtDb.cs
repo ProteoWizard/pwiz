@@ -478,23 +478,28 @@ namespace pwiz.Skyline.Model.Irt
                 var precursors = new List<DocNode>();
                 foreach (TransitionGroupDocNode nodeTranGroup in nodePep.Children)
                 {
-                    var transitions = nodeTranGroup.Transitions.Where(tran => tran.ResultsRank.HasValue).OrderBy(tran => tran.ResultsRank.Value).Cast<DocNode>().ToList();
+                    var transitions = nodeTranGroup.Transitions.Where(tran => tran.ResultsRank.HasValue)
+                        .OrderBy(tran => tran.ResultsRank.Value)
+                        .Select(tran => tran.ChangeResults(null))
+                        .Cast<DocNode>().ToList();
                     if (transitions.Count > 0)
-                        precursors.Add(nodeTranGroup.ChangeChildren(transitions));
+                        precursors.Add(nodeTranGroup.ChangeResults(null).ChangeChildren(transitions));
                 }
                 if (precursors.Count > 0)
-                    peptides.Add((PeptideDocNode)nodePep.ChangeChildren(precursors));
+                {
+                    peptides.Add((PeptideDocNode) nodePep.ChangeResults(null).ChangeChildren(precursors));
+                }
             }
             if (peptides.Count == 0)
                 return null;
 
+            // Clear some settings to make the document smaller and so that they won't get imported into a document
+            doc = doc.ChangeMeasuredResults(null);
+            doc = (SrmDocument)doc.ChangeChildren(new[] { new PeptideGroupDocNode(new PeptideGroup(), Resources.IrtDb_MakeDocumentXml_iRT_standards, string.Empty, new PeptideDocNode[0]) });
+            doc = doc.ChangeSettings(doc.Settings.ChangePeptideLibraries(libs => libs.ChangeLibraries(new List<LibrarySpec>(), new List<Library>())));
+
             peptides.Sort((nodePep1, nodePep2) => nodePep1.ModifiedTarget.CompareTo(nodePep2.ModifiedTarget));
             doc = (SrmDocument)doc.ChangeChildren(new[] { new PeptideGroupDocNode(new PeptideGroup(), Resources.IrtDb_MakeDocumentXml_iRT_standards, string.Empty, peptides.ToArray()) });
-
-            // Clear some settings to make the document smaller and so that they won't get imported into a document
-            // TODO: Convert all modifications to explicit?
-            doc = doc.ChangeMeasuredResults(null);
-            doc = doc.ChangeSettings(doc.Settings.ChangePeptideLibraries(libs => libs.ChangeLibraries(new List<LibrarySpec>(), new List<Library>())));
 
             using (var writer = new StringWriter())
             using (var writer2 = new XmlTextWriter(writer))
