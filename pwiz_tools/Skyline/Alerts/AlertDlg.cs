@@ -21,7 +21,6 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
-using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -48,7 +47,6 @@ namespace pwiz.Skyline.Alerts
         public AlertDlg(string message)
         {
             InitializeComponent();
-            GetModeUIHelper().ModeUI = SrmDocument.DOCUMENT_TYPE.none;
             _originalFormHeight = Height;
             _originalMessageHeight = labelMessage.Height;
             _labelPadding = messageScrollPanel.Width - labelMessage.MaximumSize.Width;

@@ -263,6 +263,22 @@ namespace pwiz.SkylineTestFunctional
 
         public void TestPeptideToMoleculeText()
         {
+            void TestFormattedStringDetection(string resource, object[] args)
+            {
+                foreach (var mode in (SrmDocument.DOCUMENT_TYPE[]) Enum.GetValues(typeof(SrmDocument.DOCUMENT_TYPE)))
+                {
+                    var translated0 = Helpers.PeptideToMoleculeTextMapper.Format(resource, mode, args);
+                    var raw = string.Format(resource, args);
+                    var translated1 = Helpers.PeptideToMoleculeTextMapper.Translate(raw, mode);
+                    AssertEx.AreEqual(translated0, translated1);
+                }
+            }
+
+            // Test translating only the resource parts of formatted strings
+            TestFormattedStringDetection(Resources.ListColumnPropertyDescriptor_ChangeListData_No_such_list__0_, new[] { "peptide" });
+            TestFormattedStringDetection(Resources.EditPepModsDlg_GetTooltip_Crosslink_to__0____1____2__, new[] { "peptide", "modified sequence", "blah" });
+            TestFormattedStringDetection(Resources.FullScanAcquisitionMethod_FromName__0__is_not_a_valid_Full_Scan_Acquisition_Method, new[] { "peptide" });
+            TestFormattedStringDetection(Resources.PeptideGroupDocNode_ChangeSettings_The_current_document_settings_would_cause_the_number_of_targeted_transitions_to_exceed__0_n0___The_document_settings_must_be_more_restrictive_or_add_fewer_proteins_, new object[] { 1000 });
 
             // The basics
             TestTranslate("Protein", "Molecule List");

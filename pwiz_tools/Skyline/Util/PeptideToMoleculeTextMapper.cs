@@ -24,6 +24,8 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
+using System.Resources;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.Controls;
@@ -43,6 +45,8 @@ namespace pwiz.Skyline.Util
 
             private readonly List<KeyValuePair<string, string>> TRANSLATION_TABLE;
             private List<ToolTip> ToolTips; // Used when working on an entire form
+            private static List<Tuple<Regex, string>> _resourceRegexs;
+            private static HashSet<string> _resourcesNonFormatting;
             private readonly SrmDocument.DOCUMENT_TYPE ModeUI;
 
             public PeptideToMoleculeTextMapper(SrmDocument.DOCUMENT_TYPE modeUI, ModeUIExtender extender)
@@ -158,6 +162,9 @@ namespace pwiz.Skyline.Util
                 InUseKeyboardAccelerators = new HashSet<char>();
                 ToolTips = null;
                 HandledComponents = extender == null ? new Dictionary<IComponent, ModeUIExtender.MODE_UI_HANDLING_TYPE>() : extender.GetHandledComponents();
+
+                // Prepare for handling strings which were formatted before translation - we try to identify use of resource strings and translate only the right parts
+                InitializeResourceRegexDict();
             }
 
             public HashSet<char> InUseKeyboardAccelerators { get; set; }  // Used when working on an entire form or menu (be set explicitly for test purposes)
@@ -263,12 +270,102 @@ namespace pwiz.Skyline.Util
                 return string.Format(TranslateString(format), args);
             }
 
+            private static void InitializeResourceRegexDict()
+            {
+                if (_resourceRegexs == null)
+                {
+                    var rManager = new ResourceManager(typeof(Resources));
+                    var resourceSet = rManager.GetResourceSet(CultureInfo.CurrentUICulture, true, true);
+                    _resourceRegexs = new List<Tuple<Regex, string>>();
+                    _resourcesNonFormatting = new HashSet<string>();
+
+                    foreach (DictionaryEntry entry in resourceSet)
+                    {
+                        var resource = entry.Value as string;
+                        if (resource == null)
+                        {
+                            continue;
+                        }
+
+                        if (!resource.Contains('{'))
+                        {
+                            _resourcesNonFormatting.Add(resource);
+                            continue;
+                        }
+
+                        // Create a regex where each arg formatter (e.g. {0:fs}) in the resource becomes a capture
+                        var escaped = Regex.Escape(resource);
+                        var nonGreedy = @"(.*?)";
+                        var pattern = Regex.Replace(escaped, @"\\{\d.*?}", nonGreedy);
+                        if (pattern.EndsWith(nonGreedy))
+                        {
+                            // Need a greedy match at end of line
+                            pattern = pattern.Substring(0, pattern.Length - nonGreedy.Length) + @"(.*)";
+                        }
+                        // Remove exotic formatting (e.g. {0,12} or (1:d} etc) since we'll a;ways be using strings
+                        var simpleFormat = Regex.Replace(resource, @"\{(\d).*?}", @"{$+}");
+                        var regex = new Regex(pattern, RegexOptions.CultureInvariant | RegexOptions.Compiled);
+                        _resourceRegexs.Add(new Tuple<Regex, string>(regex, simpleFormat));
+                    }
+                }
+            }
+
+
             public string TranslateString(string text) // Public for test purposes
             {
                 if (ModeUI == SrmDocument.DOCUMENT_TYPE.proteomic || string.IsNullOrEmpty(text))
                 {
                     return text;
                 }
+
+                // Try to determine if this is a formatted string, and translate the format and not the arguments
+                if (!text.Contains(@"{0"))
+                {
+                    // This isn't a format (e.g. "The peptide '{0}' is already in this list") - but is it perhaps
+                    // a use of one,  e.g. "The peptide 'magic peptide' is already in this list"?
+                    InitializeResourceRegexDict(); // In case it hasn't already been done
+
+                    // Quickly identify resources that don't involve formatting 
+                    if (!_resourcesNonFormatting.Contains(text) && 
+                        !_resourcesNonFormatting.Contains(text.Replace(@"&", string.Empty))) // Some accelerators are added dynamically
+                    {
+                        // We've built a regex for each resource that appears to be a string formatter, find one that matches 
+                        foreach (var regexAndPattern in _resourceRegexs)
+                        {
+                            try
+                            {
+                                var m = regexAndPattern.Item1.Match(text);
+                                if (m.Success)
+                                {
+                                    var args = new List<object>();
+                                    for (var i = 1; i < m.Groups.Count; i++)
+                                    {
+                                        args.Add(m.Groups[i].Captures[0].Value);
+                                    }
+
+                                    if (args.Count > 0)
+                                    {
+                                        // If we plug these args into our simplifed formatter, then it's clear that this was a
+                                        // use of string.Format with a format string from our resources
+                                        var argArray = args.ToArray();
+                                        var simpleFormat = regexAndPattern.Item2;
+                                        var formatted = string.Format(simpleFormat, argArray);
+                                        if (Equals(formatted, text))
+                                        {
+                                            // Translate just the parts from the resource file
+                                            return FormatTranslateString(simpleFormat, argArray);
+                                        }
+                                    }
+                                }
+                            }
+                            catch (Exception)
+                            {
+                                // ignored, this wasn't the right format string so just move on to the next one
+                            }
+                        }
+                    }
+                }
+
 
                 var noAmp = text.Replace(@"&", String.Empty);
                 if (TRANSLATION_TABLE.Any(kvp => noAmp.Contains(kvp.Value))) // Avoid "p&eptides are a kind of molecule" => "mol&ecules are a kind of molecule" 
