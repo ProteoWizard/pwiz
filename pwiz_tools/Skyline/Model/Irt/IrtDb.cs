@@ -499,7 +499,10 @@ namespace pwiz.Skyline.Model.Irt
             doc = doc.ChangeSettings(doc.Settings.ChangePeptideLibraries(libs => libs.ChangeLibraries(new List<LibrarySpec>(), new List<Library>())));
 
             peptides.Sort((nodePep1, nodePep2) => nodePep1.ModifiedTarget.CompareTo(nodePep2.ModifiedTarget));
-            doc = (SrmDocument)doc.ChangeChildren(new[] { new PeptideGroupDocNode(new PeptideGroup(), Resources.IrtDb_MakeDocumentXml_iRT_standards, string.Empty, peptides.ToArray()) });
+            doc = (SrmDocument) doc.ChangeChildren(new[]
+            {
+                new PeptideGroupDocNode(new PeptideGroup(), Annotations.EMPTY, Resources.IrtDb_MakeDocumentXml_iRT_standards, string.Empty, peptides.ToArray(), false)
+            });
 
             using (var writer = new StringWriter())
             using (var writer2 = new XmlTextWriter(writer))
