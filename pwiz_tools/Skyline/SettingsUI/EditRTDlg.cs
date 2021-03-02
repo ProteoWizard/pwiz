@@ -162,7 +162,7 @@ namespace pwiz.Skyline.SettingsUI
 
             if (comboCalculator.SelectedIndex == -1)
             {
-                MessageBox.Show(this, Resources.EditRTDlg_OkDialog_Retention_time_prediction_requires_a_calculator_algorithm,
+                MessageDlg.Show(this, Resources.EditRTDlg_OkDialog_Retention_time_prediction_requires_a_calculator_algorithm,
                                 Program.Name);
                 comboCalculator.Focus();
                 return;
@@ -379,7 +379,7 @@ namespace pwiz.Skyline.SettingsUI
                         });
                         if (status.IsError)
                         {
-                            MessageBox.Show(this, status.ErrorException.Message, Program.Name);
+                            MessageDlg.Show(this, status.ErrorException.Message, Program.Name);
                             return;
                         }
                     }

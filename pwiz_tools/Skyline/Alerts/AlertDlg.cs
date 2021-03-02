@@ -44,7 +44,7 @@ namespace pwiz.Skyline.Alerts
         {
         }
 
-        public AlertDlg(string message)
+        public AlertDlg(string message, string title = null)
         {
             InitializeComponent();
             _originalFormHeight = Height;
@@ -52,13 +52,14 @@ namespace pwiz.Skyline.Alerts
             _labelPadding = messageScrollPanel.Width - labelMessage.MaximumSize.Width;
             Message = message;
             btnMoreInfo.Parent.Controls.Remove(btnMoreInfo);
-            Text = Program.Name;
+            Text = title ?? Program.Name;
             toolStrip1.Renderer = new NoBorderSystemRenderer();
         }
 
-        public AlertDlg(string message, MessageBoxButtons messageBoxButtons) : this(message)
+        public AlertDlg(string message, MessageBoxButtons messageBoxButtons, string title = null,
+            MessageBoxDefaultButton defaultButton = MessageBoxDefaultButton.Button1) : this(message, title)
         {
-            AddMessageBoxButtons(messageBoxButtons);
+            AddMessageBoxButtons(messageBoxButtons, defaultButton);
         }
 
         public string Message
@@ -181,11 +182,31 @@ namespace pwiz.Skyline.Alerts
             }
         }
 
-        public void AddMessageBoxButtons(MessageBoxButtons messageBoxButtons) 
+        public void AddMessageBoxButtons(MessageBoxButtons messageBoxButtons, MessageBoxDefaultButton defaultButton)
         {
+            var buttons = new List<Button>();
             foreach (var dialogResult in GetDialogResults(messageBoxButtons).Reverse())
             {
-                AddButton(dialogResult);
+                buttons.Add(AddButton(dialogResult));
+            }
+
+            Button focusButton = null;
+            switch (defaultButton)
+            {
+                case MessageBoxDefaultButton.Button1:
+                    focusButton = buttons.LastOrDefault();
+                    break;
+                case MessageBoxDefaultButton.Button2:
+                    focusButton = buttons.Count == 3 ? buttons[1] : buttons.Count == 2 ? buttons[0] : null;
+                    break;
+                case MessageBoxDefaultButton.Button3:
+                    focusButton = buttons.FirstOrDefault();
+                    break;
+            }
+
+            if (focusButton != null)
+            {
+                focusButton.Select();
             }
         }
 

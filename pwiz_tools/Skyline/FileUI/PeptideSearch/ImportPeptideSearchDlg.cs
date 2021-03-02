@@ -609,7 +609,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     {
                         if (!File.Exists(ImportFastaControl.FastaFile)) 
                         {
-                            MessageBox.Show(this, Resources.ImportPeptideSearchDlg_NextPage_FastFileMissing_DDASearch,
+                            MessageDlg.Show(this, Resources.ImportPeptideSearchDlg_NextPage_FastFileMissing_DDASearch,
                                 Program.Name, MessageBoxButtons.OK);
                             
                             return;

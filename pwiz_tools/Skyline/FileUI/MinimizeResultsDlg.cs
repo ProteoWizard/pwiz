@@ -259,7 +259,7 @@ namespace pwiz.Skyline.FileUI
             }
             if (!Settings.DiscardUnmatchedChromatograms && !Settings.NoiseTimeRange.HasValue)
             {
-                if (MessageBox.Show(this, 
+                if (MessageDlg.Show(this, 
                     Resources.MinimizeResultsDlg_Minimize_You_have_not_chosen_any_options_to_minimize_your_cache_file_Are_you_sure_you_want_to_continue, 
                     Program.Name, MessageBoxButtons.OKCancel) != DialogResult.OK)
                 {

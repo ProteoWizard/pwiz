@@ -24,6 +24,7 @@ using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Chemistry;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
@@ -497,7 +498,7 @@ namespace pwiz.Skyline.SettingsUI
         private void helpToolStripMenuItem_Click(object sender, EventArgs e)
         {
             var helpText = FormulaHelpText;
-            MessageBox.Show(this, helpText, Resources.FormulaBox_helpToolStripMenuItem_Click_Formula_Help);
+            MessageDlg.Show(this, helpText, Resources.FormulaBox_helpToolStripMenuItem_Click_Formula_Help);
         }
 
         private string FormulaHelpText

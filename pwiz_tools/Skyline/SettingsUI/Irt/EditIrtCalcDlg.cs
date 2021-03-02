@@ -212,7 +212,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
         {
             if (DatabaseChanged)
             {
-                var result = MessageBox.Show(this, Resources.EditIrtCalcDlg_btnCreateDb_Click_Are_you_sure_you_want_to_create_a_new_database_file_Any_changes_to_the_current_calculator_will_be_lost,
+                var result = MessageDlg.Show(this, Resources.EditIrtCalcDlg_btnCreateDb_Click_Are_you_sure_you_want_to_create_a_new_database_file_Any_changes_to_the_current_calculator_will_be_lost,
                     Program.Name, MessageBoxButtons.YesNo);
 
                 if (result != DialogResult.Yes)
@@ -277,7 +277,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
         {
             if (DatabaseChanged)
             {
-                var result = MessageBox.Show(this, Resources.EditIrtCalcDlg_btnBrowseDb_Click_Are_you_sure_you_want_to_open_a_new_database_file_Any_changes_to_the_current_calculator_will_be_lost,
+                var result = MessageDlg.Show(this, Resources.EditIrtCalcDlg_btnBrowseDb_Click_Are_you_sure_you_want_to_open_a_new_database_file_Any_changes_to_the_current_calculator_will_be_lost,
                     Program.Name, MessageBoxButtons.YesNo);
 
                 if (result != DialogResult.Yes)
@@ -354,7 +354,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 {
                     if (Equals(existingCalc.Name, textCalculatorName.Text) && !Equals(existingCalc.Name, _editingName))
                     {
-                        if (MessageBox.Show(this, string.Format(
+                        if (MessageDlg.Show(this, string.Format(
                                 Resources.EditIrtCalcDlg_OkDialog_A_calculator_with_the_name__0__already_exists_Do_you_want_to_overwrite_it,
                                 textCalculatorName.Text), Program.Name, MessageBoxButtons.YesNo) != DialogResult.Yes)
                         {
@@ -408,7 +408,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             if (!string.Equals(Path.GetExtension(path), IrtDb.EXT) && !((chromLib || specLib) && !DatabaseChanged))
                 path += IrtDb.EXT;
 
-            //This function MessageBox.Show's error messages
+            //This function MessageDlg.Show's error messages
             if (!ValidatePeptideList(StandardPeptideList, Resources.EditIrtCalcDlg_OkDialog_standard_table_name))
             {
                 gridViewStandard.Focus();
@@ -810,7 +810,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                             irtAverages = ProcessRetentionTimes(monitor, GetRetentionTimeProviders(document).ToArray(), RegressionType));
                         if (status.IsError)
                         {
-                            MessageBox.Show(MessageParent, status.ErrorException.Message, Program.Name);
+                            MessageDlg.Show(MessageParent, status.ErrorException.Message, Program.Name);
                             return;
                         }
                     }
@@ -936,7 +936,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                             });
                             if (status.IsError)
                             {
-                                MessageBox.Show(MessageParent, status.ErrorException.Message, Program.Name);
+                                MessageDlg.Show(MessageParent, status.ErrorException.Message, Program.Name);
                                 return;
                             }
                         }
@@ -999,7 +999,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                         });
                         if (status.IsError)
                         {
-                            MessageBox.Show(MessageParent, status.ErrorException.Message, Program.Name);
+                            MessageDlg.Show(MessageParent, status.ErrorException.Message, Program.Name);
                             return;
                         }
                     }

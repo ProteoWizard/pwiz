@@ -18,6 +18,7 @@
  */
 using System;
 using System.Windows.Forms;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
@@ -59,7 +60,7 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     var message = TextUtil.LineSeparate(String.Format(Resources.SaveSettingsDlg_OnClosing_The_name__0__already_exists, name),
                                                         Resources.SaveSettingsDlg_OnClosing_Do_you_want_to_overwrite_the_existing_settings);
-                    var result = MessageBox.Show(this, message, Program.Name, MessageBoxButtons.OKCancel, MessageBoxIcon.Question,
+                    var result = MessageDlg.Show(this, message, Program.Name, MessageBoxButtons.OKCancel,
                                                     MessageBoxDefaultButton.Button2);
                     if (result == DialogResult.OK)
                         break;

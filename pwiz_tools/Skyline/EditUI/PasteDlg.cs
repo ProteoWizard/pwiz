@@ -892,7 +892,7 @@ namespace pwiz.Skyline.EditUI
                     Adduct.Tips;
             }
             // ReSharper restore LocalizableElement
-            MessageBox.Show(this, helpText, Resources.PasteDlg_btnTransitionListHelp_Click_Transition_List_Help);
+            MessageDlg.Show(this, helpText, Resources.PasteDlg_btnTransitionListHelp_Click_Transition_List_Help);
         }
 
         private void btnCancel_Click(object sender, EventArgs e)

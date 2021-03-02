@@ -52,6 +52,16 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void CodeInspection()
         {
+            // Looking for uses of MessageBox where we should really be using MessageDlg
+            AddTextInspection(@"*.cs", // Examine files with this mask
+                Inspection.Forbidden, // This is a test for things that should NOT be in such files
+                Level.Error, // Any failure is treated as an error, and overall test fails
+                NonSkylineDirectories(), // We only care about this in Skyline code
+                string.Empty, // No file content required for inspection
+                @"MessageBox.Show", // Forbidden pattern
+                false, // Pattern is not a regular expression
+                @"use MessageDlg.Show instead - this ensures proper interaction with automated tests, small molecule interface operation, and other enhancements"); // Explanation for prohibition, appears in report
+
             // Looking for non-standard image scaling
             AddTextInspection(@"*.Designer.cs", // Examine files with this mask
                 Inspection.Forbidden, // This is a test for things that should NOT be in such files
@@ -447,9 +457,16 @@ namespace pwiz.SkylineTest
 
         private HashSet<string> allFileMasks = new HashSet<string>();
 
+        // Return a list of directories that we don't care about from a strictly Skyline point of view
+        private string[] NonSkylineDirectories()
+        {
+            return new[] {@"TestRunner", @"SkylineTester", @"SkylineNightly", "Executables", "CommonTest" };
+        }
+
         // Prepare a list of files that we never need to deal with for L10N
         // Uses the information found in our KeepResx L10N development tool,
         // along with a hardcoded list herein.
+
         private string[] NonLocalizedFiles()
         {
             var root = GetCodeBaseRoot(out var thisFile);

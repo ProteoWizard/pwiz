@@ -156,7 +156,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
         {
             if (DatabaseChanged)
             {
-                var result = MessageBox.Show(this, Resources.EditIonMobilityLibraryDlg_btnCreateDb_Click_Are_you_sure_you_want_to_create_a_new_ion_mobility_library_file___Any_changes_to_the_current_library_will_be_lost_,
+                var result = MessageDlg.Show(this, Resources.EditIonMobilityLibraryDlg_btnCreateDb_Click_Are_you_sure_you_want_to_create_a_new_ion_mobility_library_file___Any_changes_to_the_current_library_will_be_lost_,
                     Program.Name, MessageBoxButtons.YesNo);
 
                 if (result != DialogResult.Yes)
@@ -234,7 +234,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
         {
             if (DatabaseChanged)
             {
-                var result = MessageBox.Show(this, Resources.EditIonMobilityLibraryDlg_btnBrowseDb_Click_Are_you_sure_you_want_to_open_a_new_ion_mobility_library_file___Any_changes_to_the_current_library_will_be_lost_,
+                var result = MessageDlg.Show(this, Resources.EditIonMobilityLibraryDlg_btnBrowseDb_Click_Are_you_sure_you_want_to_open_a_new_ion_mobility_library_file___Any_changes_to_the_current_library_will_be_lost_,
                     Program.Name, MessageBoxButtons.YesNo);
 
                 if (result != DialogResult.Yes)
@@ -302,7 +302,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                 {
                     if (Equals(existingLib.Name, textLibraryName.Text) && !Equals(existingLib.Name, _editingName))
                     {
-                        if (MessageBox.Show(this, string.Format(Resources.EditIonMobilityLibraryDlg_OkDialog_An_ion_mobility_library_with_the_name__0__already_exists__Do_you_want_to_overwrite_it_,
+                        if (MessageDlg.Show(this, string.Format(Resources.EditIonMobilityLibraryDlg_OkDialog_An_ion_mobility_library_with_the_name__0__already_exists__Do_you_want_to_overwrite_it_,
                                     textLibraryName.Text),
                                 Program.Name, MessageBoxButtons.YesNo) != DialogResult.Yes)
                         {
@@ -334,7 +334,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             if (!string.Equals(Path.GetExtension(path), IonMobilityDb.EXT))
                 path += IonMobilityDb.EXT;
 
-            // This function MessageBox.Show's error messages
+            // This function MessageDlg.Show's error messages
             if (!ValidateIonMobilitiesList(LibraryMobilitiesFlat, textLibraryName.Text ?? string.Empty))
             {
                 gridViewIonMobilities.Focus();

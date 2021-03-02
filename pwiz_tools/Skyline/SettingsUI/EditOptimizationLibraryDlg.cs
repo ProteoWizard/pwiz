@@ -150,7 +150,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             if (DatabaseChanged)
             {
-                var result = MessageBox.Show(this, Resources.EditOptimizationLibraryDlg_btnOpen_Click_Are_you_sure_you_want_to_open_a_new_optimization_library_file__Any_changes_to_the_current_library_will_be_lost_,
+                var result = MessageDlg.Show(this, Resources.EditOptimizationLibraryDlg_btnOpen_Click_Are_you_sure_you_want_to_open_a_new_optimization_library_file__Any_changes_to_the_current_library_will_be_lost_,
                     Program.Name, MessageBoxButtons.YesNo);
 
                 if (result != DialogResult.Yes)
@@ -206,7 +206,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             if (DatabaseChanged)
             {
-                var result = MessageBox.Show(this, Resources.EditOptimizationLibraryDlg_btnCreate_Click_Are_you_sure_you_want_to_create_a_new_optimization_library_file__Any_changes_to_the_current_library_will_be_lost_,
+                var result = MessageDlg.Show(this, Resources.EditOptimizationLibraryDlg_btnCreate_Click_Are_you_sure_you_want_to_create_a_new_optimization_library_file__Any_changes_to_the_current_library_will_be_lost_,
                     Program.Name, MessageBoxButtons.YesNo);
 
                 if (result != DialogResult.Yes)
@@ -285,7 +285,7 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     if (Equals(existing.Name, textName.Text) && !Equals(existing.Name, _editingName))
                     {
-                        if (MessageBox.Show(this, string.Format(Resources.EditOptimizationLibraryDlg_OkDialog_A_library_with_the_name__0__already_exists__Do_you_want_to_overwrite_it_,
+                        if (MessageDlg.Show(this, string.Format(Resources.EditOptimizationLibraryDlg_OkDialog_A_library_with_the_name__0__already_exists__Do_you_want_to_overwrite_it_,
                                                                 textName.Text),
                                             Program.Name, MessageBoxButtons.YesNo) != DialogResult.Yes)
                         {

@@ -24,9 +24,11 @@ namespace pwiz.Skyline.Alerts
 {
     public class MessageDlg : AlertDlg
     {
-        public static void Show(IWin32Window parent, string message)
+        public static DialogResult Show(IWin32Window parent, string message, string title = null, MessageBoxButtons buttons = MessageBoxButtons.OK,
+            MessageBoxDefaultButton defaultButton = MessageBoxDefaultButton.Button1)
         {
-            new MessageDlg(message).ShowAndDispose(parent);
+            var dlg = new MessageDlg(message, title, buttons, defaultButton);
+            return dlg.ShowAndDispose(parent);
         }
 
         public static void ShowException(IWin32Window parent, Exception exception)
@@ -39,7 +41,8 @@ namespace pwiz.Skyline.Alerts
             new MessageDlg(message) { Exception = exception }.ShowAndDispose(parent);
         }
 
-        private MessageDlg(string message) : base(message, MessageBoxButtons.OK)
+        private MessageDlg(string message, string title = null, MessageBoxButtons buttons = MessageBoxButtons.OK, 
+            MessageBoxDefaultButton defaultButton = MessageBoxDefaultButton.Button1) : base(message, buttons, title, defaultButton)
         {
         }
     }
