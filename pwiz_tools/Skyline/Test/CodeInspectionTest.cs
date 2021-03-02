@@ -56,7 +56,7 @@ namespace pwiz.SkylineTest
             AddTextInspection(@"*.cs", // Examine files with this mask
                 Inspection.Forbidden, // This is a test for things that should NOT be in such files
                 Level.Error, // Any failure is treated as an error, and overall test fails
-                new[] { @"TestFunctional.cs", @"AuditLogTutorialTest.cs" }, // Only these files should contain this
+                new[] { @"TestFunctional.cs" }, // Only these files should contain this
                 string.Empty, // No file content required for inspection
                 @"^\s*PauseTest\(", // Forbidden pattern (uncommented PauseTest)
                 true, // Pattern is not a regular expression
