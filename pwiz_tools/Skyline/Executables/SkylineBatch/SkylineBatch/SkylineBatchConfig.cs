@@ -230,7 +230,7 @@ namespace SkylineBatch
         public void WriteRetentionTimeCommand(CommandWriter commandWriter) => FileSettings.WriteRetentionTimeCommand(commandWriter);
         public void WriteTrainMProphetCommand(CommandWriter commandWriter) => FileSettings.WriteTrainMProphetCommand(commandWriter, Name);
 
-        public void WriteRefineCommands(CommandWriter commandWriter) => RefineSettings.WriteRefineCommands(commandWriter, MainSettings.GetResultsFilePath());
+        public void WriteRefineCommands(CommandWriter commandWriter) => RefineSettings.WriteRefineCommands(commandWriter);
 
         public void WriteReportCommands(CommandWriter commandWriter) => ReportSettings.WriteReportCommands(commandWriter, MainSettings.AnalysisFolderPath);
         public List<Dictionary<RRunInfo, string>> GetScriptArguments() => ReportSettings.GetScriptArguments(MainSettings.AnalysisFolderPath);

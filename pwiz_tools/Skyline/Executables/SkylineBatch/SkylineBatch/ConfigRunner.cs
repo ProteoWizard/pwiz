@@ -154,6 +154,7 @@ namespace SkylineBatch
                 Config.WriteTrainMProphetCommand(commandWriter);
                 Config.WriteImportAnnotationsCommand(commandWriter);
                 Config.WriteSaveCommand(commandWriter);
+                commandWriter.EndCommandGroup();
                 // refine
                 Config.WriteRefineCommands(commandWriter);
                 commandWriter.EndCommandGroup();

@@ -18,6 +18,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.Xml;
 using System.Xml.Serialization;
@@ -30,27 +31,19 @@ namespace SkylineBatch
     public class RefineSettings
     {
 
-        // IMMUTABLE - all fields are readonly strings
+        // IMMUTABLE - all fields are readonly literals or in an immutable list
         // Holds information for refining the skyline file after data import
-
-        public RefineSettings(RefineInputObject inputValues, bool removeDecoys, bool removeResults, string outputFilePath)
-        {
-            RemoveDecoys = removeDecoys;
-            RemoveResults = removeResults;
-            OutputFilePath = outputFilePath ?? string.Empty;
-            _commandValues = inputValues.AsCommandList();
-        }
-
-        private RefineSettings(List<Tuple<string, string>> commandValues, bool removeDecoys, bool removeResults,
+        
+        public RefineSettings(List<Tuple<RefineVariable, string>> commandValues, bool removeDecoys, bool removeResults,
             string outputFilePath)
         {
             RemoveDecoys = removeDecoys;
             RemoveResults = removeResults;
             OutputFilePath = outputFilePath ?? string.Empty;
-            _commandValues = commandValues;
+            CommandValues = ImmutableList.Create<Tuple<RefineVariable, string>>().AddRange(commandValues);
         }
-
-        private readonly List<Tuple<string, string>> _commandValues;
+        
+        public readonly ImmutableList<Tuple<RefineVariable, string>> CommandValues;
 
         public readonly bool RemoveDecoys;
 
@@ -85,8 +78,7 @@ namespace SkylineBatch
         {
             RemoveDecoys,
             RemoveResults,
-            OutputFilePath,
-            CommandDictionary
+            OutputFilePath
         };
 
         public static RefineSettings ReadXml(XmlReader reader)
@@ -94,13 +86,15 @@ namespace SkylineBatch
             var removeDecoys = reader.GetBoolAttribute(Attr.RemoveDecoys);
             var removeResults = reader.GetBoolAttribute(Attr.RemoveResults);
             var outputFilePath = reader.GetAttribute(Attr.OutputFilePath);
-            var commandList = new List<Tuple<string, string>>();
+            var commandList = new List<Tuple<RefineVariable, string>>();
             while (reader.IsStartElement() && !reader.IsEmptyElement)
             {
                 if (reader.Name == "command_value")
                 {
                     var tupleItems = reader.ReadElementContentAsString().Split(new[] { '(', ',', ')' }, StringSplitOptions.RemoveEmptyEntries);
-                    commandList.Add(new Tuple<string, string>(tupleItems[0].Trim(), tupleItems[1].Trim()));
+                    var variable = (RefineVariable)Enum.Parse(typeof(RefineVariable), tupleItems[0].Trim());
+                    var value = tupleItems[1].Trim();
+                    commandList.Add(new Tuple<RefineVariable, string>(variable, value));
                 }
                 else
                 {
@@ -116,7 +110,7 @@ namespace SkylineBatch
             writer.WriteAttribute(Attr.RemoveDecoys, RemoveDecoys);
             writer.WriteAttribute(Attr.RemoveResults, RemoveResults);
             writer.WriteAttributeIfString(Attr.OutputFilePath, OutputFilePath);
-            foreach (var commandValue in _commandValues)
+            foreach (var commandValue in CommandValues)
             {
                 writer.WriteElementString("command_value", commandValue);
             }
@@ -129,24 +123,27 @@ namespace SkylineBatch
         public const string REMOVE_DECOYS_COMMAND = "--decoys-discard";
         public const string REMOVE_RESULTS_COMMAND = "--remove-all";
 
-        public void WriteRefineCommands(CommandWriter commandWriter, string newSkylineFileName)
+        public void WriteRefineCommands(CommandWriter commandWriter)
         {
-            foreach (var commandValue in _commandValues)
+            foreach (var commandValue in CommandValues)
             {
+                var variableName = Enum.GetName(typeof(RefineVariable), commandValue.Item1);
+                var command = "-" + (RefineInputObject.REFINE_RESOURCE_KEY_PREFIX + variableName).Replace('_', '-');
                 if (!string.IsNullOrEmpty(commandValue.Item2))
-                    commandWriter.Write("{0}={1}", commandValue.Item1, commandValue.Item2);
+                    commandWriter.Write("{0}={1}", command, commandValue.Item2);
                 else
-                    commandWriter.Write(commandValue.Item1);
+                    commandWriter.Write(command);
             }
             if (RemoveDecoys) commandWriter.Write(REMOVE_DECOYS_COMMAND);
             if (RemoveResults) commandWriter.Write(REMOVE_RESULTS_COMMAND);
             if (!string.IsNullOrEmpty(OutputFilePath))
             {
                 commandWriter.Write(SkylineBatchConfig.SAVE_AS_NEW_FILE_COMMAND, OutputFilePath);
-                commandWriter.EndCommandGroup();
-                commandWriter.Write(SkylineBatchConfig.OPEN_SKYLINE_FILE_COMMAND, newSkylineFileName);
-            } else if (_commandValues.Count > 0 || RemoveResults || RemoveDecoys)
+                commandWriter.ReopenSkylineResultsFile();
+            }
+            else if (CommandValues.Count > 0 || RemoveResults || RemoveDecoys)
             {
+                // Save document if it's been changed
                 commandWriter.Write(SkylineBatchConfig.SAVE_COMMAND);
             }
         }

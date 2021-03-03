@@ -133,7 +133,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Attributes.cs" />
     <Compile Include="CommandArgName.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -145,7 +144,7 @@
       <DependentUpon>CommandArgUsage.resx</DependentUpon>
     </Compile>
     <Compile Include="CommandWriter.cs" />
-    <Compile Include="Descriptors.cs" />
+    <Compile Include="RefineInputLocalization.cs" />
     <Compile Include="RefineInputObject.cs" />
     <Compile Include="RefineSettings.cs" />
     <Compile Include="SkylineBatchConfigManager.cs" />

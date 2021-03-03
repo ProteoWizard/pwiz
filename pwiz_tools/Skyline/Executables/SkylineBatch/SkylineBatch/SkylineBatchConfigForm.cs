@@ -47,7 +47,7 @@ namespace SkylineBatch
         {
             InitializeComponent();
             _action = action;
-            _refineInput = new RefineInputObject();
+            _refineInput = config != null ? new RefineInputObject(config.RefineSettings.CommandValues) : new RefineInputObject();
             _newReportList = new List<ReportInfo>();
 
             _mainControl = mainControl;
@@ -168,9 +168,9 @@ namespace SkylineBatch
             OpenFolder(textDataPath);
         }
 
-        private void OpenFile(TextBox textbox, string filter)
+        private void OpenFile(TextBox textbox, string filter, bool save = false)
         {
-            var dialog = new OpenFileDialog();
+            FileDialog dialog = save ? (FileDialog)new SaveFileDialog() : new OpenFileDialog();
             var initialDirectory = TextUtil.GetInitialDirectory(textbox.Text, _lastEnteredPath);
             dialog.InitialDirectory = initialDirectory;
             dialog.Filter = filter;
@@ -235,7 +235,6 @@ namespace SkylineBatch
 
         private void SetInitialRefineSettings(SkylineBatchConfig config)
         {
-            // TODO(Ali): Display saved refine settings form config
             gridRefineInputs.SelectedObject = _refineInput;
             if (config == null) return;
             var refineSettings = config.RefineSettings;
@@ -244,13 +243,17 @@ namespace SkylineBatch
             textBoxRefinedFilePath.Text = refineSettings.OutputFilePath;
         }
         
-
         private RefineSettings GetRefineSettingsFromUi()
         {
             var removeDecoys = checkBoxRemoveDecoys.Checked;
             var removeData = checkBoxRemoveData.Checked;
             var outputFilePath = textBoxRefinedFilePath.Text;
-            return new RefineSettings(_refineInput, removeDecoys, removeData, outputFilePath);
+            return new RefineSettings(_refineInput.AsCommandList(), removeDecoys, removeData, outputFilePath);
+        }
+
+        private void btnRefinedFilePath_Click(object sender, EventArgs e)
+        {
+            OpenFile(textBoxRefinedFilePath, TextUtil.FILTER_SKY, true);
         }
 
         #endregion
