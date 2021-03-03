@@ -208,9 +208,10 @@ namespace SkylineBatch
         }
 
         #region Batch Commands
-
-        public const string SAVE_COMMAND = "--save";
-        public const string SAVE_SETTINGS_COMMAND = "‑‑save‑settings";
+        public static readonly string OPEN_SKYLINE_FILE_COMMAND = "--in=\"{0}\"";
+        public static readonly string SAVE_AS_NEW_FILE_COMMAND = "--out=\"{0}\"";
+        public static readonly string SAVE_COMMAND = "--save";
+        public static readonly string SAVE_SETTINGS_COMMAND = "‑‑save‑settings";
 
         public void WriteSaveCommand(CommandWriter commandWriter) => commandWriter.Write(SAVE_COMMAND);
         public void WriteSaveSettingsCommand(CommandWriter commandWriter) => commandWriter.Write(SAVE_SETTINGS_COMMAND);
@@ -229,10 +230,7 @@ namespace SkylineBatch
         public void WriteRetentionTimeCommand(CommandWriter commandWriter) => FileSettings.WriteRetentionTimeCommand(commandWriter);
         public void WriteTrainMProphetCommand(CommandWriter commandWriter) => FileSettings.WriteTrainMProphetCommand(commandWriter, Name);
 
-        public void WriteQValueCutoffCommand(CommandWriter commandWriter) => RefineSettings.WriteQValueCutoffCommand(commandWriter);
-        public void WriteCvCutoffCommand(CommandWriter commandWriter) => RefineSettings.WriteCvCutoffCommand(commandWriter);
-        public void WriteMinimumDetectionsCommand(CommandWriter commandWriter) => RefineSettings.WriteMinimumDetectionsCommand(commandWriter);
-        public void WriteNormalizeCommand(CommandWriter commandWriter) => RefineSettings.WriteNormalizeCommand(commandWriter);
+        public void WriteRefineCommands(CommandWriter commandWriter) => RefineSettings.WriteRefineCommands(commandWriter, MainSettings.GetResultsFilePath());
 
         public void WriteReportCommands(CommandWriter commandWriter) => ReportSettings.WriteReportCommands(commandWriter, MainSettings.AnalysisFolderPath);
         public List<Dictionary<RRunInfo, string>> GetScriptArguments() => ReportSettings.GetScriptArguments(MainSettings.AnalysisFolderPath);

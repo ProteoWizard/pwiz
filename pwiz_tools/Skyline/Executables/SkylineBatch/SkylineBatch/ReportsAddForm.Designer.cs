@@ -145,6 +145,7 @@
             dataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
             dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
             this.dataGridScripts.RowHeadersDefaultCellStyle = dataGridViewCellStyle3;
+            this.dataGridScripts.RowHeadersVisible = false;
             this.dataGridScripts.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridScripts_CellClick);
             this.dataGridScripts.CellContentDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridScripts_CellContentDoubleClick);
             this.dataGridScripts.SelectionChanged += new System.EventHandler(this.dataGridScripts_SelectionChanged);

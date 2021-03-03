@@ -246,25 +246,23 @@ namespace SkylineBatch
 
         #region Batch Commands
 
-        public const string OPEN_SKYLINE_FILE_COMMAND = "--in=\"{0}\"";
-        public const string SAVE_AS_NEW_FILE_COMMAND = "--out=\"{0}\"";
         public const string IMPORT_DATA_COMMAND = "--import-all=\"{0}\"";
         public const string IMPORT_NAMING_PATTERN_COMMAND = "--import-naming-pattern=\"{0}\"";
         public const string IMPORT_ANNOTATIONS_COMMAND = "--import-annotations=\"{0}\"";
 
         public void WriteOpenSkylineTemplateCommand(CommandWriter commandWriter)
         {
-            commandWriter.Write(OPEN_SKYLINE_FILE_COMMAND, TemplateFilePath);
+            commandWriter.Write(SkylineBatchConfig.OPEN_SKYLINE_FILE_COMMAND, TemplateFilePath);
         }
 
         public void WriteSaveToResultsFile(CommandWriter commandWriter)
         {
-            commandWriter.Write(SAVE_AS_NEW_FILE_COMMAND, GetResultsFilePath());
+            commandWriter.Write(SkylineBatchConfig.SAVE_AS_NEW_FILE_COMMAND, GetResultsFilePath());
         }
 
         public void WriteOpenSkylineResultsCommand(CommandWriter commandWriter)
         {
-            commandWriter.Write(OPEN_SKYLINE_FILE_COMMAND, GetResultsFilePath());
+            commandWriter.Write(SkylineBatchConfig.OPEN_SKYLINE_FILE_COMMAND, GetResultsFilePath());
         }
 
         public void WriteImportDataCommand(CommandWriter commandWriter)

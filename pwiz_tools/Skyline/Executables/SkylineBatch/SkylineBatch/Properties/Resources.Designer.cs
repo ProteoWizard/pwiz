@@ -756,6 +756,15 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cannot save the refined file to {0}.
+        /// </summary>
+        internal static string RefineSettings_Validate_Cannot_save_the_refined_file_to__0_ {
+            get {
+                return ResourceManager.GetString("RefineSettings_Validate_Cannot_save_the_refined_file_to__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to CV cutoff.
         /// </summary>
         internal static string RefineSettings_Validate_CV_cutoff {
@@ -770,6 +779,16 @@ namespace SkylineBatch.Properties {
         internal static string RefineSettings_Validate_minimum_detections_allowed {
             get {
                 return ResourceManager.GetString("RefineSettings_Validate_minimum_detections_allowed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please provide a valid output file path, or an empty string if you do not wish to save a separate refined file..
+        /// </summary>
+        internal static string RefineSettings_Validate_Please_provide_a_valid_output_file_path__or_an_empty_string_if_you_do_not_wish_to_save_a_separate_refined_file_ {
+            get {
+                return ResourceManager.GetString("RefineSettings_Validate_Please_provide_a_valid_output_file_path__or_an_empty_stri" +
+                        "ng_if_you_do_not_wish_to_save_a_separate_refined_file_", resourceCulture);
             }
         }
         

@@ -153,12 +153,9 @@ namespace SkylineBatch
                 Config.WriteImportNamingPatternCommand(commandWriter);
                 Config.WriteTrainMProphetCommand(commandWriter);
                 Config.WriteImportAnnotationsCommand(commandWriter);
-                // refine
-                Config.WriteCvCutoffCommand(commandWriter);
-                Config.WriteNormalizeCommand(commandWriter);
-                Config.WriteQValueCutoffCommand(commandWriter);
-                Config.WriteMinimumDetectionsCommand(commandWriter);
                 Config.WriteSaveCommand(commandWriter);
+                // refine
+                Config.WriteRefineCommands(commandWriter);
                 commandWriter.EndCommandGroup();
             }
 

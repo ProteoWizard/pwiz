@@ -38,7 +38,7 @@ namespace SkylineBatch
             if (_reopenFile)
             {
                 _reopenFile = false;
-                Write("--in=\"{0}\"", _newSkyFileName);
+                Write(SkylineBatchConfig.OPEN_SKYLINE_FILE_COMMAND, _newSkyFileName);
             }
             _logger.Log(command);
             if (_multiLine) _writer.WriteLine(command);
@@ -48,10 +48,7 @@ namespace SkylineBatch
         public void EndCommandGroup()
         {
             if (!_multiLine)
-            {
-                _writer.WriteLine();
-                _reopenFile = true;
-            }
+                ReopenSkylineResultsFile();
         }
 
         public string ReturnCommandFile()
@@ -60,5 +57,10 @@ namespace SkylineBatch
             return _commandFile;
         }
 
+        public void ReopenSkylineResultsFile()
+        {
+            _writer.WriteLine();
+            _reopenFile = true;
+        }
     }
 }

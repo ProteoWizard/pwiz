@@ -30,9 +30,9 @@
         {
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(SkylineBatchConfigForm));
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle5 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle6 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle7 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle8 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle9 = new System.Windows.Forms.DataGridViewCellStyle();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.linkLabelRegex = new System.Windows.Forms.LinkLabel();
             this.label5 = new System.Windows.Forms.Label();
@@ -50,6 +50,9 @@
             this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.label7 = new System.Windows.Forms.Label();
+            this.label8 = new System.Windows.Forms.Label();
+            this.checkBoxRemoveDecoys = new System.Windows.Forms.CheckBox();
+            this.checkBoxRemoveData = new System.Windows.Forms.CheckBox();
             this.textAnalysisPath = new System.Windows.Forms.TextBox();
             this.textSkylinePath = new System.Windows.Forms.TextBox();
             this.textDataPath = new System.Windows.Forms.TextBox();
@@ -65,6 +68,10 @@
             this.btnSkylineFilePath = new System.Windows.Forms.Button();
             this.tabSettings = new System.Windows.Forms.TabPage();
             this.label6 = new System.Windows.Forms.Label();
+            this.tabRefine = new System.Windows.Forms.TabPage();
+            this.gridRefineInputs = new System.Windows.Forms.PropertyGrid();
+            this.button1 = new System.Windows.Forms.Button();
+            this.textBoxRefinedFilePath = new System.Windows.Forms.TextBox();
             this.tabReports = new System.Windows.Forms.TabPage();
             this.toolBar = new System.Windows.Forms.ToolStrip();
             this.btnAddReport = new System.Windows.Forms.ToolStripButton();
@@ -77,23 +84,10 @@
             this.tabSkyline = new System.Windows.Forms.TabPage();
             this.panelSkylineSettings = new System.Windows.Forms.Panel();
             this.btnCancelConfig = new System.Windows.Forms.Button();
-            this.btnSaveConfig = new System.Windows.Forms.Button();
             this.lblConfigRunning = new System.Windows.Forms.Label();
+            this.btnSaveConfig = new System.Windows.Forms.Button();
             this.btnOkConfig = new System.Windows.Forms.Button();
             this.imageListToolbarIcons = new System.Windows.Forms.ImageList(this.components);
-            this.tabRefine = new System.Windows.Forms.TabPage();
-            this.label8 = new System.Windows.Forms.Label();
-            this.textCvCutoff = new System.Windows.Forms.TextBox();
-            this.label10 = new System.Windows.Forms.Label();
-            this.label11 = new System.Windows.Forms.Label();
-            this.comboNormalize = new System.Windows.Forms.ComboBox();
-            this.label12 = new System.Windows.Forms.Label();
-            this.groupBox2 = new System.Windows.Forms.GroupBox();
-            this.groupBox3 = new System.Windows.Forms.GroupBox();
-            this.textQValueCutoff = new System.Windows.Forms.TextBox();
-            this.label13 = new System.Windows.Forms.Label();
-            this.textDetected = new System.Windows.Forms.TextBox();
-            this.label14 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -101,13 +95,11 @@
             this.tabsConfig.SuspendLayout();
             this.tabFiles.SuspendLayout();
             this.tabSettings.SuspendLayout();
+            this.tabRefine.SuspendLayout();
             this.tabReports.SuspendLayout();
             this.toolBar.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.gridReportSettings)).BeginInit();
             this.tabSkyline.SuspendLayout();
-            this.tabRefine.SuspendLayout();
-            this.groupBox2.SuspendLayout();
-            this.groupBox3.SuspendLayout();
             this.SuspendLayout();
             // 
             // linkLabelRegex
@@ -215,6 +207,26 @@
             resources.ApplyResources(this.label7, "label7");
             this.label7.Name = "label7";
             this.toolTip1.SetToolTip(this.label7, resources.GetString("label7.ToolTip"));
+            // 
+            // label8
+            // 
+            resources.ApplyResources(this.label8, "label8");
+            this.label8.Name = "label8";
+            this.toolTip1.SetToolTip(this.label8, resources.GetString("label8.ToolTip"));
+            // 
+            // checkBoxRemoveDecoys
+            // 
+            resources.ApplyResources(this.checkBoxRemoveDecoys, "checkBoxRemoveDecoys");
+            this.checkBoxRemoveDecoys.Name = "checkBoxRemoveDecoys";
+            this.toolTip1.SetToolTip(this.checkBoxRemoveDecoys, resources.GetString("checkBoxRemoveDecoys.ToolTip"));
+            this.checkBoxRemoveDecoys.UseVisualStyleBackColor = true;
+            // 
+            // checkBoxRemoveData
+            // 
+            resources.ApplyResources(this.checkBoxRemoveData, "checkBoxRemoveData");
+            this.checkBoxRemoveData.Name = "checkBoxRemoveData";
+            this.toolTip1.SetToolTip(this.checkBoxRemoveData, resources.GetString("checkBoxRemoveData.ToolTip"));
+            this.checkBoxRemoveData.UseVisualStyleBackColor = true;
             // 
             // textAnalysisPath
             // 
@@ -346,6 +358,36 @@
             resources.ApplyResources(this.label6, "label6");
             this.label6.Name = "label6";
             // 
+            // tabRefine
+            // 
+            this.tabRefine.Controls.Add(this.gridRefineInputs);
+            this.tabRefine.Controls.Add(this.checkBoxRemoveData);
+            this.tabRefine.Controls.Add(this.checkBoxRemoveDecoys);
+            this.tabRefine.Controls.Add(this.label8);
+            this.tabRefine.Controls.Add(this.button1);
+            this.tabRefine.Controls.Add(this.textBoxRefinedFilePath);
+            resources.ApplyResources(this.tabRefine, "tabRefine");
+            this.tabRefine.Name = "tabRefine";
+            this.tabRefine.UseVisualStyleBackColor = true;
+            // 
+            // gridRefineInputs
+            // 
+            resources.ApplyResources(this.gridRefineInputs, "gridRefineInputs");
+            this.gridRefineInputs.Name = "gridRefineInputs";
+            this.gridRefineInputs.PropertySort = System.Windows.Forms.PropertySort.Categorized;
+            this.gridRefineInputs.ToolbarVisible = false;
+            // 
+            // button1
+            // 
+            resources.ApplyResources(this.button1, "button1");
+            this.button1.Name = "button1";
+            this.button1.UseVisualStyleBackColor = true;
+            // 
+            // textBoxRefinedFilePath
+            // 
+            resources.ApplyResources(this.textBoxRefinedFilePath, "textBoxRefinedFilePath");
+            this.textBoxRefinedFilePath.Name = "textBoxRefinedFilePath";
+            // 
             // tabReports
             // 
             this.tabReports.BackColor = System.Drawing.Color.WhiteSmoke;
@@ -396,37 +438,37 @@
             this.gridReportSettings.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
             this.gridReportSettings.AutoSizeRowsMode = System.Windows.Forms.DataGridViewAutoSizeRowsMode.DisplayedCells;
             this.gridReportSettings.CellBorderStyle = System.Windows.Forms.DataGridViewCellBorderStyle.Raised;
-            dataGridViewCellStyle4.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle4.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle4.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle4.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle4.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle4.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle4.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.gridReportSettings.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle4;
+            dataGridViewCellStyle7.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle7.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle7.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle7.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle7.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle7.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle7.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.gridReportSettings.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle7;
             this.gridReportSettings.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.gridReportSettings.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.columnName,
             this.columnPath,
             this.columnScripts});
-            dataGridViewCellStyle5.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle5.BackColor = System.Drawing.SystemColors.Window;
-            dataGridViewCellStyle5.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle5.ForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle5.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle5.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle5.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.gridReportSettings.DefaultCellStyle = dataGridViewCellStyle5;
+            dataGridViewCellStyle8.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle8.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle8.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle8.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle8.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle8.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle8.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.gridReportSettings.DefaultCellStyle = dataGridViewCellStyle8;
             this.gridReportSettings.EditMode = System.Windows.Forms.DataGridViewEditMode.EditProgrammatically;
             this.gridReportSettings.Name = "gridReportSettings";
-            dataGridViewCellStyle6.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle6.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle6.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle6.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle6.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle6.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle6.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.gridReportSettings.RowHeadersDefaultCellStyle = dataGridViewCellStyle6;
+            dataGridViewCellStyle9.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle9.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle9.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle9.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle9.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle9.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle9.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.gridReportSettings.RowHeadersDefaultCellStyle = dataGridViewCellStyle9;
             this.gridReportSettings.RowHeadersVisible = false;
             this.gridReportSettings.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.gridReportSettings.TabStop = false;
@@ -469,18 +511,18 @@
             this.btnCancelConfig.Name = "btnCancelConfig";
             this.btnCancelConfig.UseVisualStyleBackColor = true;
             // 
+            // lblConfigRunning
+            // 
+            resources.ApplyResources(this.lblConfigRunning, "lblConfigRunning");
+            this.lblConfigRunning.ForeColor = System.Drawing.Color.DarkRed;
+            this.lblConfigRunning.Name = "lblConfigRunning";
+            // 
             // btnSaveConfig
             // 
             resources.ApplyResources(this.btnSaveConfig, "btnSaveConfig");
             this.btnSaveConfig.Name = "btnSaveConfig";
             this.btnSaveConfig.UseVisualStyleBackColor = true;
             this.btnSaveConfig.Click += new System.EventHandler(this.btnSaveConfig_Click);
-            // 
-            // lblConfigRunning
-            // 
-            resources.ApplyResources(this.lblConfigRunning, "lblConfigRunning");
-            this.lblConfigRunning.ForeColor = System.Drawing.Color.DarkRed;
-            this.lblConfigRunning.Name = "lblConfigRunning";
             // 
             // btnOkConfig
             // 
@@ -495,94 +537,6 @@
             this.imageListToolbarIcons.TransparentColor = System.Drawing.Color.Transparent;
             this.imageListToolbarIcons.Images.SetKeyName(0, "AddedIcon.ico");
             this.imageListToolbarIcons.Images.SetKeyName(1, "DeletedIcon.ico");
-            // 
-            // tabRefine
-            // 
-            this.tabRefine.Controls.Add(this.groupBox3);
-            this.tabRefine.Controls.Add(this.groupBox2);
-            resources.ApplyResources(this.tabRefine, "tabRefine");
-            this.tabRefine.Name = "tabRefine";
-            this.tabRefine.UseVisualStyleBackColor = true;
-            // 
-            // label8
-            // 
-            resources.ApplyResources(this.label8, "label8");
-            this.label8.Name = "label8";
-            // 
-            // textCvCutoff
-            // 
-            resources.ApplyResources(this.textCvCutoff, "textCvCutoff");
-            this.textCvCutoff.Name = "textCvCutoff";
-            // 
-            // label10
-            // 
-            resources.ApplyResources(this.label10, "label10");
-            this.label10.Name = "label10";
-            // 
-            // label11
-            // 
-            resources.ApplyResources(this.label11, "label11");
-            this.label11.Name = "label11";
-            // 
-            // comboNormalize
-            // 
-            this.comboNormalize.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboNormalize.FormattingEnabled = true;
-            this.comboNormalize.Items.AddRange(new object[] {
-            resources.GetString("comboNormalize.Items"),
-            resources.GetString("comboNormalize.Items1"),
-            resources.GetString("comboNormalize.Items2"),
-            resources.GetString("comboNormalize.Items3"),
-            resources.GetString("comboNormalize.Items4")});
-            resources.ApplyResources(this.comboNormalize, "comboNormalize");
-            this.comboNormalize.Name = "comboNormalize";
-            // 
-            // label12
-            // 
-            resources.ApplyResources(this.label12, "label12");
-            this.label12.Name = "label12";
-            // 
-            // groupBox2
-            // 
-            resources.ApplyResources(this.groupBox2, "groupBox2");
-            this.groupBox2.Controls.Add(this.textCvCutoff);
-            this.groupBox2.Controls.Add(this.label8);
-            this.groupBox2.Controls.Add(this.comboNormalize);
-            this.groupBox2.Controls.Add(this.label10);
-            this.groupBox2.Controls.Add(this.label11);
-            this.groupBox2.Name = "groupBox2";
-            this.groupBox2.TabStop = false;
-            // 
-            // groupBox3
-            // 
-            this.groupBox3.Controls.Add(this.label14);
-            this.groupBox3.Controls.Add(this.textDetected);
-            this.groupBox3.Controls.Add(this.label13);
-            this.groupBox3.Controls.Add(this.textQValueCutoff);
-            this.groupBox3.Controls.Add(this.label12);
-            resources.ApplyResources(this.groupBox3, "groupBox3");
-            this.groupBox3.Name = "groupBox3";
-            this.groupBox3.TabStop = false;
-            // 
-            // textQValueCutoff
-            // 
-            resources.ApplyResources(this.textQValueCutoff, "textQValueCutoff");
-            this.textQValueCutoff.Name = "textQValueCutoff";
-            // 
-            // label13
-            // 
-            resources.ApplyResources(this.label13, "label13");
-            this.label13.Name = "label13";
-            // 
-            // textDetected
-            // 
-            resources.ApplyResources(this.textDetected, "textDetected");
-            this.textDetected.Name = "textDetected";
-            // 
-            // label14
-            // 
-            resources.ApplyResources(this.label14, "label14");
-            this.label14.Name = "label14";
             // 
             // SkylineBatchConfigForm
             // 
@@ -605,17 +559,14 @@
             this.tabFiles.PerformLayout();
             this.tabSettings.ResumeLayout(false);
             this.tabSettings.PerformLayout();
+            this.tabRefine.ResumeLayout(false);
+            this.tabRefine.PerformLayout();
             this.tabReports.ResumeLayout(false);
             this.tabReports.PerformLayout();
             this.toolBar.ResumeLayout(false);
             this.toolBar.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.gridReportSettings)).EndInit();
             this.tabSkyline.ResumeLayout(false);
-            this.tabRefine.ResumeLayout(false);
-            this.groupBox2.ResumeLayout(false);
-            this.groupBox2.PerformLayout();
-            this.groupBox3.ResumeLayout(false);
-            this.groupBox3.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -671,17 +622,11 @@
         private System.Windows.Forms.Button btnAnnotationsFile;
         private System.Windows.Forms.TextBox textAnnotationsFile;
         private System.Windows.Forms.TabPage tabRefine;
-        private System.Windows.Forms.Label label10;
-        private System.Windows.Forms.TextBox textCvCutoff;
+        private System.Windows.Forms.PropertyGrid gridRefineInputs;
+        private System.Windows.Forms.CheckBox checkBoxRemoveData;
+        private System.Windows.Forms.CheckBox checkBoxRemoveDecoys;
         private System.Windows.Forms.Label label8;
-        private System.Windows.Forms.GroupBox groupBox3;
-        private System.Windows.Forms.TextBox textQValueCutoff;
-        private System.Windows.Forms.Label label12;
-        private System.Windows.Forms.GroupBox groupBox2;
-        private System.Windows.Forms.ComboBox comboNormalize;
-        private System.Windows.Forms.Label label11;
-        private System.Windows.Forms.Label label14;
-        private System.Windows.Forms.TextBox textDetected;
-        private System.Windows.Forms.Label label13;
+        private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.TextBox textBoxRefinedFilePath;
     }
 }

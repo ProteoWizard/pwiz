@@ -18,6 +18,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Xml;
 using System.Xml.Serialization;
 using SharedBatch;
@@ -32,131 +33,134 @@ namespace SkylineBatch
         // IMMUTABLE - all fields are readonly strings
         // Holds information for refining the skyline file after data import
 
-        public RefineSettings(string cvCutoff, string normalizeMethod, string qValueCutoff,
-            string minDetectedReplicates)
+        public RefineSettings(RefineInputObject inputValues, bool removeDecoys, bool removeResults, string outputFilePath)
         {
-            CvCutoff = cvCutoff ?? string.Empty;
-            NormalizeMethod = normalizeMethod ?? string.Empty;
-            QValueCutoff = qValueCutoff ?? string.Empty;
-            MinDetectedReplicates = minDetectedReplicates ?? string.Empty;
+            RemoveDecoys = removeDecoys;
+            RemoveResults = removeResults;
+            OutputFilePath = outputFilePath ?? string.Empty;
+            _commandValues = inputValues.AsCommandList();
         }
 
-        public readonly string CvCutoff;
+        private RefineSettings(List<Tuple<string, string>> commandValues, bool removeDecoys, bool removeResults,
+            string outputFilePath)
+        {
+            RemoveDecoys = removeDecoys;
+            RemoveResults = removeResults;
+            OutputFilePath = outputFilePath ?? string.Empty;
+            _commandValues = commandValues;
+        }
 
-        public readonly string NormalizeMethod;
+        private readonly List<Tuple<string, string>> _commandValues;
 
-        public readonly string QValueCutoff;
+        public readonly bool RemoveDecoys;
 
-        public readonly string MinDetectedReplicates;
+        public readonly bool RemoveResults;
+
+        public readonly string OutputFilePath;
 
         public void Validate()
         {
-            ValidateNumberInput(CvCutoff, Resources.RefineSettings_Validate_CV_cutoff, 0, 100);
-            ValidateNumberInput(QValueCutoff, Resources.RefineSettings_Validate_Q_value_cutoff, 0, 1);
-            ValidateNumberInput(MinDetectedReplicates, Resources.RefineSettings_Validate_minimum_detections_allowed, 0, 100);
+            if (!string.IsNullOrEmpty(OutputFilePath))
+            {
+                bool validPath = true;
+                try
+                {
+                    validPath = Directory.Exists(Path.GetDirectoryName(OutputFilePath));
+                }
+                catch (Exception)
+                {
+                    validPath = false;
+                }
+                if (!validPath) throw new ArgumentException(string.Format(Resources.RefineSettings_Validate_Cannot_save_the_refined_file_to__0_) + Environment.NewLine +
+                                                            Resources.RefineSettings_Validate_Please_provide_a_valid_output_file_path__or_an_empty_string_if_you_do_not_wish_to_save_a_separate_refined_file_);
+            }
         }
 
-        private void ValidateNumberInput(string numberAsString, string variableName, int min, int max)
-        {
-            if (string.IsNullOrWhiteSpace(numberAsString)) return; // optional input
-            var isNumber = Double.TryParse(numberAsString, out Double number);
-            if (!isNumber)
-                throw new ArgumentException(string.Format(Resources.RefineSettings_ValidateNumberInput_Invalid_value_for_the__0____1_, variableName, numberAsString) + Environment.NewLine +
-                                            Resources.RefineSettings_ValidateNumberInput_Please_enter_a_number_);
-            if (number > max || number < min)
-                throw new ArgumentException(string.Format(Resources.RefineSettings_ValidateNumberInput__0__is_out_of_range_for_the__1__, number, variableName) + Environment.NewLine +
-                                            string.Format(Resources.RefineSettings_ValidateNumberInput_Please_enter_a_number_between__0__and__1_, min, max));
-        }
+        
 
         
         #region Read/Write XML
 
         private enum Attr
         {
-            CvCutoff,
-            NormalizeMethod,
-            QValueCutoff,
-            MinDetectedReplicates
+            RemoveDecoys,
+            RemoveResults,
+            OutputFilePath,
+            CommandDictionary
         };
 
         public static RefineSettings ReadXml(XmlReader reader)
         {
-            var cvCutoff = reader.GetAttribute(Attr.CvCutoff);
-            var normalizeMethod = reader.GetAttribute(Attr.NormalizeMethod);
-            var qValueCutoff = reader.GetAttribute(Attr.QValueCutoff);
-            var minDetectedReplicates = reader.GetAttribute(Attr.MinDetectedReplicates);
-            return new RefineSettings(cvCutoff, normalizeMethod, qValueCutoff, minDetectedReplicates);
+            var removeDecoys = reader.GetBoolAttribute(Attr.RemoveDecoys);
+            var removeResults = reader.GetBoolAttribute(Attr.RemoveResults);
+            var outputFilePath = reader.GetAttribute(Attr.OutputFilePath);
+            var commandList = new List<Tuple<string, string>>();
+            while (reader.IsStartElement() && !reader.IsEmptyElement)
+            {
+                if (reader.Name == "command_value")
+                {
+                    var tupleItems = reader.ReadElementContentAsString().Split(new[] { '(', ',', ')' }, StringSplitOptions.RemoveEmptyEntries);
+                    commandList.Add(new Tuple<string, string>(tupleItems[0].Trim(), tupleItems[1].Trim()));
+                }
+                else
+                {
+                    reader.Read();
+                }
+            }
+            return new RefineSettings(commandList, removeDecoys, removeResults, outputFilePath);
         }
 
         public void WriteXml(XmlWriter writer)
         {
             writer.WriteStartElement("refine_settings");
-            writer.WriteAttributeIfString(Attr.CvCutoff, CvCutoff);
-            writer.WriteAttributeIfString(Attr.NormalizeMethod, NormalizeMethod);
-            writer.WriteAttributeIfString(Attr.QValueCutoff, QValueCutoff);
-            writer.WriteAttributeIfString(Attr.MinDetectedReplicates, MinDetectedReplicates);
+            writer.WriteAttribute(Attr.RemoveDecoys, RemoveDecoys);
+            writer.WriteAttribute(Attr.RemoveResults, RemoveResults);
+            writer.WriteAttributeIfString(Attr.OutputFilePath, OutputFilePath);
+            foreach (var commandValue in _commandValues)
+            {
+                writer.WriteElementString("command_value", commandValue);
+            }
             writer.WriteEndElement();
         }
         #endregion
 
         #region Batch Commands
 
-        public const string CV_CUTOFF_COMMAND = "--refine-cv-remove-above-cutoff={0}";
-        public const string CV_GLOBAL_NORMALIZE_COMMAND = "--refine-cv-global-normalize={0}";
-
-        // TODO (Ali): ask if this is feasible to include. How to get reference types? User input?
-        public const string CV_REFERENCE_NORMALIZE_COMMAND = "--refine-cv-reference-normalize={0}";
-        public const string Q_VALUE_CUTOFF_COMMAND = "--refine-qvalue-cutoff={0}";
-        public const string MINIMUM_DETECTIONS_COMMAND = "--refine-minimum-detections={0}";
         public const string REMOVE_DECOYS_COMMAND = "--decoys-discard";
         public const string REMOVE_RESULTS_COMMAND = "--remove-all";
 
-        public void WriteCvCutoffCommand(CommandWriter commandWriter)
+        public void WriteRefineCommands(CommandWriter commandWriter, string newSkylineFileName)
         {
-            if (!string.IsNullOrEmpty(CvCutoff))
-                commandWriter.Write(CV_CUTOFF_COMMAND, CvCutoff);
+            foreach (var commandValue in _commandValues)
+            {
+                if (!string.IsNullOrEmpty(commandValue.Item2))
+                    commandWriter.Write("{0}={1}", commandValue.Item1, commandValue.Item2);
+                else
+                    commandWriter.Write(commandValue.Item1);
+            }
+            if (RemoveDecoys) commandWriter.Write(REMOVE_DECOYS_COMMAND);
+            if (RemoveResults) commandWriter.Write(REMOVE_RESULTS_COMMAND);
+            if (!string.IsNullOrEmpty(OutputFilePath))
+            {
+                commandWriter.Write(SkylineBatchConfig.SAVE_AS_NEW_FILE_COMMAND, OutputFilePath);
+                commandWriter.EndCommandGroup();
+                commandWriter.Write(SkylineBatchConfig.OPEN_SKYLINE_FILE_COMMAND, newSkylineFileName);
+            } else if (_commandValues.Count > 0 || RemoveResults || RemoveDecoys)
+            {
+                commandWriter.Write(SkylineBatchConfig.SAVE_COMMAND);
+            }
         }
-
-        public void WriteNormalizeCommand(CommandWriter commandWriter)
-        {   
-            // TODO (Ali): update this if no reference normalize
-            if (string.IsNullOrEmpty(NormalizeMethod) || NormalizeMethod.Equals("None"))
-                return;
-            var formattedInput = NormalizeMethod.ToLower().Replace(' ', '_');
-            if (new List<string> {"equalize_medians", "global_standards"}.Contains(formattedInput))
-                commandWriter.Write(CV_GLOBAL_NORMALIZE_COMMAND, formattedInput);
-            else
-                commandWriter.Write(CV_REFERENCE_NORMALIZE_COMMAND, formattedInput);
-        }
-
-        public void WriteQValueCutoffCommand(CommandWriter commandWriter)
-        {
-            if (!string.IsNullOrEmpty(QValueCutoff))
-                commandWriter.Write(Q_VALUE_CUTOFF_COMMAND, QValueCutoff);
-        }
-
-        public void WriteMinimumDetectionsCommand(CommandWriter commandWriter)
-        {
-            if (!string.IsNullOrEmpty(MinDetectedReplicates))
-                commandWriter.Write(MINIMUM_DETECTIONS_COMMAND, MinDetectedReplicates);
-        }
-
+        
         #endregion
 
-        private bool EmptyOrEqual(string one, string two)
-        {
-            if (string.IsNullOrWhiteSpace(one) && string.IsNullOrWhiteSpace(two))
-                return true;
-            if (one == null) return false;
-            return one.Equals(two);
-        }
+        
 
         protected bool Equals(RefineSettings other)
         {
-            return (EmptyOrEqual(other.CvCutoff, CvCutoff) &&
-                    other.NormalizeMethod.Equals(NormalizeMethod) &&
-                    EmptyOrEqual(other.QValueCutoff, QValueCutoff) &&
-                    EmptyOrEqual(other.MinDetectedReplicates, MinDetectedReplicates));
+            // TODO (Ali): add _commandValues equals
+            return other.RemoveResults == RemoveResults &&
+                    other.RemoveDecoys == RemoveDecoys &&
+                    other.OutputFilePath.Equals(OutputFilePath);
         }
 
         public override bool Equals(object obj)
@@ -169,10 +173,9 @@ namespace SkylineBatch
 
         public override int GetHashCode()
         {
-            return CvCutoff.GetHashCode() +
-                   NormalizeMethod.GetHashCode() +
-                   QValueCutoff.GetHashCode() +
-                   MinDetectedReplicates.GetHashCode();
+            return RemoveResults.GetHashCode() +
+                   RemoveDecoys.GetHashCode() +
+                   OutputFilePath.GetHashCode();
         }
     }
 }

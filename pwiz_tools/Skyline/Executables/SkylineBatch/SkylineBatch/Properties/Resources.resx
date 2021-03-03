@@ -436,4 +436,10 @@ with:
   <data name="RefineSettings_Validate_CV_cutoff" xml:space="preserve">
     <value>CV cutoff</value>
   </data>
+  <data name="RefineSettings_Validate_Cannot_save_the_refined_file_to__0_" xml:space="preserve">
+    <value>Cannot save the refined file to {0}</value>
+  </data>
+  <data name="RefineSettings_Validate_Please_provide_a_valid_output_file_path__or_an_empty_string_if_you_do_not_wish_to_save_a_separate_refined_file_" xml:space="preserve">
+    <value>Please provide a valid output file path, or an empty string if you do not wish to save a separate refined file.</value>
+  </data>
 </root>

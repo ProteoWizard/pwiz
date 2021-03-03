@@ -36,6 +36,7 @@ namespace SkylineBatch
         private readonly bool _initialEnabled;
         private readonly bool _isBusy;
         private readonly ConfigAction _action;
+        private readonly RefineInputObject _refineInput;
         private readonly List<ReportInfo> _newReportList;
         private readonly bool _canEditSkylineSettings;
 
@@ -46,6 +47,7 @@ namespace SkylineBatch
         {
             InitializeComponent();
             _action = action;
+            _refineInput = new RefineInputObject();
             _newReportList = new List<ReportInfo>();
 
             _mainControl = mainControl;
@@ -233,23 +235,22 @@ namespace SkylineBatch
 
         private void SetInitialRefineSettings(SkylineBatchConfig config)
         {
-            comboNormalize.SelectedIndex = comboNormalize.Items.Count - 1;
-            if (_action == ConfigAction.Add) return;
+            // TODO(Ali): Display saved refine settings form config
+            gridRefineInputs.SelectedObject = _refineInput;
+            if (config == null) return;
             var refineSettings = config.RefineSettings;
-            textCvCutoff.Text = refineSettings.CvCutoff;
-            textDetected.Text = refineSettings.MinDetectedReplicates;
-            textQValueCutoff.Text = refineSettings.QValueCutoff;
-            int index = comboNormalize.Items.IndexOf(refineSettings.NormalizeMethod);
-            if (index  >= 0) comboNormalize.SelectedIndex = index;
+            checkBoxRemoveData.Checked = refineSettings.RemoveResults;
+            checkBoxRemoveDecoys.Checked = refineSettings.RemoveDecoys;
+            textBoxRefinedFilePath.Text = refineSettings.OutputFilePath;
         }
+        
 
         private RefineSettings GetRefineSettingsFromUi()
         {
-            var cvCutoff = textCvCutoff.Text;
-            var normalizeMethod = (string) comboNormalize.SelectedItem;
-            var qValueCutoff = textQValueCutoff.Text;
-            var numDetectedReplicates = textDetected.Text;
-            return new RefineSettings(cvCutoff, normalizeMethod, qValueCutoff, numDetectedReplicates);
+            var removeDecoys = checkBoxRemoveDecoys.Checked;
+            var removeData = checkBoxRemoveData.Checked;
+            var outputFilePath = textBoxRefinedFilePath.Text;
+            return new RefineSettings(_refineInput, removeDecoys, removeData, outputFilePath);
         }
 
         #endregion

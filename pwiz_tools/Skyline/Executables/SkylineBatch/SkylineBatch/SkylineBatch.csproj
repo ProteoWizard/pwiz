@@ -99,8 +99,13 @@
     <Content Include="SkylineBatch_release.ico">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <EmbeddedResource Include="..\..\..\CommandArgUsage.resx">
-      <Link>CommandArgUsage.resx</Link>
+    <EmbeddedResource Include="CommandArgName.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>CommandArgName.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="CommandArgUsage.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>CommandArgUsage.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Include="InvalidConfigSetupForm.resx">
       <DependentUpon>InvalidConfigSetupForm.cs</DependentUpon>
@@ -113,6 +118,7 @@
     <None Include="Resources\Delete.bmp" />
     <Content Include="Resources\downarrow.bmp" />
     <Content Include="Resources\uparrow.bmp" />
+    <EmbeddedResource Include="RefineInputObject.resx" />
     <EmbeddedResource Include="ReportsAddForm.resx">
       <DependentUpon>ReportsAddForm.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -127,7 +133,20 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Attributes.cs" />
+    <Compile Include="CommandArgName.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>CommandArgName.resx</DependentUpon>
+    </Compile>
+    <Compile Include="CommandArgUsage.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>CommandArgUsage.resx</DependentUpon>
+    </Compile>
     <Compile Include="CommandWriter.cs" />
+    <Compile Include="Descriptors.cs" />
+    <Compile Include="RefineInputObject.cs" />
     <Compile Include="RefineSettings.cs" />
     <Compile Include="SkylineBatchConfigManager.cs" />
     <Compile Include="FileSettings.cs" />
