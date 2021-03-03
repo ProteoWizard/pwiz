@@ -331,7 +331,7 @@ namespace pwiz.Skyline.Util
             {
                 string message = string.Format(Resources.DataGridViewPasteHandler_TryConvertValue_Error_converting___0___to_required_type___1_, strValue,
                                                exception.Message);
-                MessageDlg.Show(DataGridView, message, Program.Name);
+                MessageDlg.Show(DataGridView, message);
                 convertedValue = null;
                 return false;
             }

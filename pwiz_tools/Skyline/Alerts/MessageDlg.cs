@@ -20,12 +20,30 @@
 using System;
 using System.Windows.Forms;
 
+
 namespace pwiz.Skyline.Alerts
 {
+    /// <summary>
+    /// More or less reproduces the MessageBox API, but in a way that integrates well with our automated tests and our peptide -> small molecule interface translations
+    /// </summary>
     public class MessageDlg : AlertDlg
     {
-        public static DialogResult Show(IWin32Window parent, string message, string title = null, MessageBoxButtons buttons = MessageBoxButtons.OK,
-            MessageBoxDefaultButton defaultButton = MessageBoxDefaultButton.Button1)
+        public static DialogResult Show(IWin32Window parent, string message)
+        {
+            return Show(parent, message, null, MessageBoxButtons.OK, DialogResult.OK);
+        }
+
+        public static DialogResult Show(IWin32Window parent, string message, string title)
+        {
+            return Show(parent, message, title, MessageBoxButtons.OK, DialogResult.OK);
+        }
+
+        public static DialogResult Show(IWin32Window parent, string message, MessageBoxButtons buttons, DialogResult defaultButton = DialogResult.None)
+        {
+            return Show(parent, message, null, buttons, DialogResult.OK);
+        }
+
+        public static DialogResult Show(IWin32Window parent, string message, string title, MessageBoxButtons buttons, DialogResult defaultButton)
         {
             var dlg = new MessageDlg(message, title, buttons, defaultButton);
             return dlg.ShowAndDispose(parent);
@@ -42,7 +60,7 @@ namespace pwiz.Skyline.Alerts
         }
 
         private MessageDlg(string message, string title = null, MessageBoxButtons buttons = MessageBoxButtons.OK, 
-            MessageBoxDefaultButton defaultButton = MessageBoxDefaultButton.Button1) : base(message, buttons, title, defaultButton)
+            DialogResult defaultButton = DialogResult.None) : base(message, buttons, title, defaultButton)
         {
         }
     }

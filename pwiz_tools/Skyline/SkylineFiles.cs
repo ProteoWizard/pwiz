@@ -1196,7 +1196,7 @@ namespace pwiz.Skyline
             if (string.IsNullOrEmpty(fileName))
             {
                 if (MessageDlg.Show(this, Resources.SkylineWindow_shareDocumentMenuItem_Click_The_document_must_be_saved_before_it_can_be_shared, 
-                    Program.Name, MessageBoxButtons.OKCancel) == DialogResult.Cancel)
+                    MessageBoxButtons.OKCancel) == DialogResult.Cancel)
                     return;
 
                 if (!SaveDocumentAs())
@@ -2600,7 +2600,7 @@ namespace pwiz.Skyline
                 if (!canChooseReplicatesForCalibration)
                 {
                     if (MessageDlg.Show(this, Resources.SkylineWindow_CheckRetentionTimeFilter_NoReplicatesAvailableForPrediction,
-                        Program.Name, MessageBoxButtons.OKCancel) == DialogResult.Cancel)
+                        MessageBoxButtons.OKCancel) == DialogResult.Cancel)
                     {
                         return false;
                     }
@@ -2987,7 +2987,7 @@ namespace pwiz.Skyline
             if (string.IsNullOrEmpty(fileName))
             {
                 if (MessageDlg.Show(this, Resources.SkylineWindow_ShowPublishDlg_The_document_must_be_saved_before_it_can_be_uploaded_,
-                    Program.Name, MessageBoxButtons.OKCancel) == DialogResult.Cancel)
+                    MessageBoxButtons.OKCancel) == DialogResult.Cancel)
                     return;
 
                 if (!SaveDocumentAs())

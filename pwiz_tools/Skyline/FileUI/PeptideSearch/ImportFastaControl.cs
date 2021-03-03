@@ -351,7 +351,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
                 if (MessageDlg.Show(WizardForm, TextUtil.LineSeparate(Resources.ImportFastaControl_ImportFasta_The_document_does_not_contain_any_precursor_transitions_,
                                                                       Resources.ImportFastaControl_ImportFasta_Would_you_like_to_change_the_document_settings_to_automatically_pick_the_precursor_transitions_specified_in_the_full_scan_settings_),
-                                    Program.Name, MessageBoxButtons.OKCancel) != DialogResult.OK)
+                                     MessageBoxButtons.OKCancel) != DialogResult.OK)
                     return false;
 
                 DocumentContainer.ModifyDocumentNoUndo(doc => ImportPeptideSearch.ChangeAutoManageChildren(doc, PickLevel.transitions, true));

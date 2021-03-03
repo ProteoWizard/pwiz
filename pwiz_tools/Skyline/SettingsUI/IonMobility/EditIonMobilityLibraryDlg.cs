@@ -157,7 +157,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             if (DatabaseChanged)
             {
                 var result = MessageDlg.Show(this, Resources.EditIonMobilityLibraryDlg_btnCreateDb_Click_Are_you_sure_you_want_to_create_a_new_ion_mobility_library_file___Any_changes_to_the_current_library_will_be_lost_,
-                    Program.Name, MessageBoxButtons.YesNo);
+                     MessageBoxButtons.YesNo);
 
                 if (result != DialogResult.Yes)
                     return;
@@ -235,7 +235,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             if (DatabaseChanged)
             {
                 var result = MessageDlg.Show(this, Resources.EditIonMobilityLibraryDlg_btnBrowseDb_Click_Are_you_sure_you_want_to_open_a_new_ion_mobility_library_file___Any_changes_to_the_current_library_will_be_lost_,
-                    Program.Name, MessageBoxButtons.YesNo);
+                     MessageBoxButtons.YesNo);
 
                 if (result != DialogResult.Yes)
                     return;
@@ -304,7 +304,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                     {
                         if (MessageDlg.Show(this, string.Format(Resources.EditIonMobilityLibraryDlg_OkDialog_An_ion_mobility_library_with_the_name__0__already_exists__Do_you_want_to_overwrite_it_,
                                     textLibraryName.Text),
-                                Program.Name, MessageBoxButtons.YesNo) != DialogResult.Yes)
+                                 MessageBoxButtons.YesNo) != DialogResult.Yes)
                         {
                             textLibraryName.Focus();
                             return;

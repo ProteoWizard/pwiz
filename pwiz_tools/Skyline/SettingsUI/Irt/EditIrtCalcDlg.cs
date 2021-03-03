@@ -213,7 +213,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             if (DatabaseChanged)
             {
                 var result = MessageDlg.Show(this, Resources.EditIrtCalcDlg_btnCreateDb_Click_Are_you_sure_you_want_to_create_a_new_database_file_Any_changes_to_the_current_calculator_will_be_lost,
-                    Program.Name, MessageBoxButtons.YesNo);
+                     MessageBoxButtons.YesNo);
 
                 if (result != DialogResult.Yes)
                     return;
@@ -278,7 +278,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             if (DatabaseChanged)
             {
                 var result = MessageDlg.Show(this, Resources.EditIrtCalcDlg_btnBrowseDb_Click_Are_you_sure_you_want_to_open_a_new_database_file_Any_changes_to_the_current_calculator_will_be_lost,
-                    Program.Name, MessageBoxButtons.YesNo);
+                     MessageBoxButtons.YesNo);
 
                 if (result != DialogResult.Yes)
                     return;
@@ -356,7 +356,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     {
                         if (MessageDlg.Show(this, string.Format(
                                 Resources.EditIrtCalcDlg_OkDialog_A_calculator_with_the_name__0__already_exists_Do_you_want_to_overwrite_it,
-                                textCalculatorName.Text), Program.Name, MessageBoxButtons.YesNo) != DialogResult.Yes)
+                                textCalculatorName.Text),  MessageBoxButtons.YesNo) != DialogResult.Yes)
                         {
                             textCalculatorName.Focus();
                             return;
@@ -810,7 +810,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                             irtAverages = ProcessRetentionTimes(monitor, GetRetentionTimeProviders(document).ToArray(), RegressionType));
                         if (status.IsError)
                         {
-                            MessageDlg.Show(MessageParent, status.ErrorException.Message, Program.Name);
+                            MessageDlg.Show(MessageParent, status.ErrorException.Message);
                             return;
                         }
                     }
@@ -936,7 +936,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                             });
                             if (status.IsError)
                             {
-                                MessageDlg.Show(MessageParent, status.ErrorException.Message, Program.Name);
+                                MessageDlg.Show(MessageParent, status.ErrorException.Message);
                                 return;
                             }
                         }
@@ -999,7 +999,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                         });
                         if (status.IsError)
                         {
-                            MessageDlg.Show(MessageParent, status.ErrorException.Message, Program.Name);
+                            MessageDlg.Show(MessageParent, status.ErrorException.Message);
                             return;
                         }
                     }

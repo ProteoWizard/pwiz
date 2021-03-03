@@ -44,7 +44,11 @@ namespace pwiz.Skyline.Alerts
         {
         }
 
-        public AlertDlg(string message, string title = null)
+        public AlertDlg(string message) : this(message, null)
+        {
+        }
+
+        public AlertDlg(string message, string title)
         {
             InitializeComponent();
             _originalFormHeight = Height;
@@ -56,8 +60,12 @@ namespace pwiz.Skyline.Alerts
             toolStrip1.Renderer = new NoBorderSystemRenderer();
         }
 
-        public AlertDlg(string message, MessageBoxButtons messageBoxButtons, string title = null,
-            MessageBoxDefaultButton defaultButton = MessageBoxDefaultButton.Button1) : this(message, title)
+        public AlertDlg(string message, MessageBoxButtons messageBoxButtons) : this(message, messageBoxButtons, null, DialogResult.None)
+        {
+        }
+
+        public AlertDlg(string message, MessageBoxButtons messageBoxButtons, string title,
+            DialogResult defaultButton) : this(message, title)
         {
             AddMessageBoxButtons(messageBoxButtons, defaultButton);
         }
@@ -182,31 +190,19 @@ namespace pwiz.Skyline.Alerts
             }
         }
 
-        public void AddMessageBoxButtons(MessageBoxButtons messageBoxButtons, MessageBoxDefaultButton defaultButton)
+        private void AddMessageBoxButtons(MessageBoxButtons messageBoxButtons, DialogResult defaultDialogResult)
         {
-            var buttons = new List<Button>();
+            var buttons = new Dictionary<DialogResult, Button>();
             foreach (var dialogResult in GetDialogResults(messageBoxButtons).Reverse())
             {
-                buttons.Add(AddButton(dialogResult));
+                buttons.Add(dialogResult, AddButton(dialogResult));
             }
 
-            Button focusButton = null;
-            switch (defaultButton)
+            // Optionally define the button action when user hits Enter in a text edit etc.
+            // Default is the one most recently created by AddButton()
+            if (buttons.TryGetValue(defaultDialogResult, out var acceptButton))
             {
-                case MessageBoxDefaultButton.Button1:
-                    focusButton = buttons.LastOrDefault();
-                    break;
-                case MessageBoxDefaultButton.Button2:
-                    focusButton = buttons.Count == 3 ? buttons[1] : buttons.Count == 2 ? buttons[0] : null;
-                    break;
-                case MessageBoxDefaultButton.Button3:
-                    focusButton = buttons.FirstOrDefault();
-                    break;
-            }
-
-            if (focusButton != null)
-            {
-                focusButton.Select();
+                AcceptButton = acceptButton;
             }
         }
 

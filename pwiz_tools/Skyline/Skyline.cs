@@ -1810,7 +1810,7 @@ namespace pwiz.Skyline
                 var result = MessageDlg.Show(this,
                                              Resources.
                                                  SkylineWindow_ViewSpectralLibraries_No_libraries_to_show_Would_you_like_to_add_a_library,
-                                             Program.Name, MessageBoxButtons.OKCancel);
+                                             MessageBoxButtons.OKCancel);
                 if (result == DialogResult.Cancel)
                     return;
                 ShowPeptideSettingsUI(PeptideSettingsUI.TABS.Library);
@@ -2378,7 +2378,7 @@ namespace pwiz.Skyline
                         MessageDlg.Show(_skyline,
                             Resources.
                                 SelectSettingsHandler_ToolStripMenuItemClick_Do_you_want_to_save_your_current_settings_before_switching,
-                        Program.Name, MessageBoxButtons.YesNoCancel);
+                            MessageBoxButtons.YesNoCancel);
                     switch (result)
                     {
                         case DialogResult.Cancel:

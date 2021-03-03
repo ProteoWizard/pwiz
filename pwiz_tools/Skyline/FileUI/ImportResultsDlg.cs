@@ -176,7 +176,7 @@ namespace pwiz.Skyline.FileUI
                 {
                     if (comboName.SelectedIndex == -1)
                     {
-                        MessageDlg.Show(this, Resources.ImportResultsDlg_OkDialog_You_must_select_an_existing_set_of_results_to_which_to_append_new_data, Program.Name);
+                        MessageDlg.Show(this, Resources.ImportResultsDlg_OkDialog_You_must_select_an_existing_set_of_results_to_which_to_append_new_data);
                         comboName.Focus();
                         return;
                     }
@@ -307,7 +307,7 @@ namespace pwiz.Skyline.FileUI
             {
                 if (MessageDlg.Show(this,
                                 Resources.ImportResultsDlg_CanCreateMultiInjectionMethods_The_current_document_does_not_appear_to_have_enough_transitions_to_require_multiple_injections,
-                                Program.Name, MessageBoxButtons.YesNo, MessageBoxDefaultButton.Button2) == DialogResult.No)
+                                MessageBoxButtons.YesNo, DialogResult.No) == DialogResult.No)
                     return false;
             }
             return true;
@@ -478,8 +478,7 @@ namespace pwiz.Skyline.FileUI
                 if (namedPaths.Length == 0)
                 {
                     MessageDlg.Show(this,
-                        string.Format(Resources.ImportResultsDlg_GetDataSourcePathsDir_No_results_found_in_the_folder__0__, dirRoot),
-                        Program.Name);
+                        string.Format(Resources.ImportResultsDlg_GetDataSourcePathsDir_No_results_found_in_the_folder__0__, dirRoot));
                     return null;
                 }
                 return namedPaths;
