@@ -230,6 +230,12 @@ namespace pwiz.Skyline.Model.Databinding.RowActions
                     }
                     foreach (TransitionGroupDocNode transitionGroup in peptideDocNode.TransitionGroups)
                     {
+                        var chromInfos = transitionGroup.Results?[resultFileKey.ReplicateIndex] ??
+                                         default(ChromInfoList<TransitionGroupChromInfo>);
+                        if (chromInfos.IsEmpty)
+                        {
+                            continue;
+                        }
                         var groupPath = new IdentityPath(peaks.Key, transitionGroup.Id);
                         document = RemovePrecursorPeak(document, groupPath, replicateName, filePath);
                     }
