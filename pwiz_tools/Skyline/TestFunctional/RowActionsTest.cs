@@ -47,10 +47,10 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            // TestDeletePeptides();
-            // TestRemovePrecursorPeaks();
-            // TestRemovePivotedPeptides();
+            TestDeletePeptides();
+            TestRemovePrecursorPeaks();
             TestRemovePeptidePeaks();
+            TestRemovePivotedPeptides();
         }
 
         /// <summary>
@@ -184,15 +184,15 @@ namespace pwiz.SkylineTestFunctional
                 {
                     Assert.AreEqual(1, peptide.Results[iReplicate].Count);
                     var peptideChromInfo = peptide.Results[iReplicate].First();
-                    Assert.IsNotNull(peptideChromInfo.RetentionTime);
+                    AssertEx.IsNotNull(peptideChromInfo.RetentionTime);
                 }
             }
             RunUI(() =>
             {
                 var colPeptide = documentGrid.FindColumn(PropertyPath.Parse("Precursor.Peptide"));
-                Assert.IsNotNull(colPeptide);
+                AssertEx.IsNotNull(colPeptide);
                 var colReplicate = documentGrid.FindColumn(PropertyPath.Parse("Results!*.Value.PrecursorResult.PeptideResult.ResultFile.Replicate"));
-                Assert.IsNotNull(colReplicate);
+                AssertEx.IsNotNull(colReplicate);
                 for (int iRow = 0; iRow < documentGrid.RowCount; iRow++)
                 {
                     var row = documentGrid.DataGridView.Rows[iRow];
@@ -255,7 +255,6 @@ namespace pwiz.SkylineTestFunctional
             WaitForConditionUI(() => documentGrid.IsComplete);
             WaitForConditionUI(() => 3 == documentGrid.DataGridView.ColumnCount);
             Assert.AreEqual(13, documentGrid.DataGridView.RowCount);
-            PauseTest();
             RunUI(() =>
             {
                 for (int i = 0; i < documentGrid.DataGridView.RowCount; i++)
