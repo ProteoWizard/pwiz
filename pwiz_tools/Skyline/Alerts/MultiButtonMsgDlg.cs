@@ -98,18 +98,18 @@ namespace pwiz.Skyline.Alerts
         /// <summary>
         /// Show a message box with a set of standard buttons, and an optional custom title.
         /// </summary>
-        public static DialogResult Show(IWin32Window parent, string message, MessageBoxButtons buttons, string title = null)
+        public static DialogResult Show(IWin32Window parent, string message, MessageBoxButtons buttons)
         {
-            return new MultiButtonMsgDlg(message, buttons, DialogResult.None, title)
+            return new MultiButtonMsgDlg(message, buttons, DialogResult.None)
                 .ShowAndDispose(parent);
         }
 
         /// <summary>
         /// Show a message box with a set of standard buttons and a specified AcceptButton, and an optional custom title.
         /// </summary>
-        public static DialogResult Show(IWin32Window parent, string message, MessageBoxButtons buttons, DialogResult defaultDialogResult, string title = null)
+        public static DialogResult Show(IWin32Window parent, string message, MessageBoxButtons buttons, DialogResult defaultDialogResult)
         {
-            return new MultiButtonMsgDlg(message, buttons, defaultDialogResult, title)
+            return new MultiButtonMsgDlg(message, buttons, defaultDialogResult)
                 .ShowAndDispose(parent);
         }
 
@@ -119,14 +119,9 @@ namespace pwiz.Skyline.Alerts
         /// <param name="message">The message to show</param>
         /// <param name="buttons">The set of buttons to show, as also used in MessageBox.</param>
         /// <param name="defaultDialogResult">The button to be assumed if user hits Enter in a different control in the window.</param>
-        /// <param name="title">The window title. Defaults to Program.Name in the parent class ctor</param>
-        public MultiButtonMsgDlg(string message, MessageBoxButtons buttons, DialogResult defaultDialogResult, string title)
+        public MultiButtonMsgDlg(string message, MessageBoxButtons buttons, DialogResult defaultDialogResult)
             : base(message, buttons, defaultDialogResult)
         {
-            if (title != null)
-            {
-                Text = title;
-            }
             if (ModeUI != SrmDocument.DOCUMENT_TYPE.proteomic)
             {
                 // Force replacement of "peptide" etc with "molecule" etc in all controls on open

@@ -498,18 +498,22 @@ namespace pwiz.Skyline.SettingsUI
         private void helpToolStripMenuItem_Click(object sender, EventArgs e)
         {
             var helpText = FormulaHelpText;
-            MultiButtonMsgDlg.Show(this, helpText, MessageBoxButtons.OK, Resources.FormulaBox_helpToolStripMenuItem_Click_Formula_Help);
+
+            // CONSIDER(bspratt) use DocumentationViewer instead, this is quite a lot of text
+            MessageDlg.Show(this, helpText);
         }
 
         private string FormulaHelpText
         {
             get
             {
-                var helpText = Resources.FormulaBox_FormulaHelpText_Formulas_are_written_in_standard_chemical_notation__e_g___C2H6O____Heavy_isotopes_are_indicated_by_a_prime__e_g__C__for_C13__or_double_prime_for_less_abundant_stable_iostopes__e_g__O__for_O17__O__for_O18__;
+                // ReSharper disable once LocalizableElement
+                var emptyLine = "\r\n\r\n";
+                var helpText = Resources.FormulaBox_helpToolStripMenuItem_Click_Formula_Help + emptyLine +
+                    Resources.FormulaBox_FormulaHelpText_Formulas_are_written_in_standard_chemical_notation__e_g___C2H6O____Heavy_isotopes_are_indicated_by_a_prime__e_g__C__for_C13__or_double_prime_for_less_abundant_stable_iostopes__e_g__O__for_O17__O__for_O18__;
                 if (_editMode != EditMode.formula_only)
                 {
-                    // ReSharper disable once LocalizableElement
-                    helpText += "\r\n\r\n" + Adduct.Tips; // Charge implies ion formula, so help with adduct descriptions as well
+                    helpText += emptyLine + Adduct.Tips; // Charge implies ion formula, so help with adduct descriptions as well
                 }
                 return helpText;
             }

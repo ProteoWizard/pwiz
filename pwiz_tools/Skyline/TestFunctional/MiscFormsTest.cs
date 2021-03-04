@@ -45,7 +45,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 DialogResult result = DialogResult.Ignore;
                 RunDlg<MultiButtonMsgDlg>( () =>
-                        result = MultiButtonMsgDlg.Show(Program.MainWindow, buttonSet.ToString(), buttonSet, buttonSet.ToString()),
+                        result = MultiButtonMsgDlg.Show(Program.MainWindow, buttonSet.ToString(), buttonSet),
                     d => d.AcceptButton.PerformClick());
                 var expected = DialogResult.None;
                 var newDefault = DialogResult.None; // Used in next step, setting the default button
@@ -80,7 +80,7 @@ namespace pwiz.SkylineTestFunctional
 
                 // Now test setting the default response
                 RunDlg<MultiButtonMsgDlg>(() =>
-                        result = MultiButtonMsgDlg.Show(Program.MainWindow, buttonSet.ToString(), buttonSet, newDefault, buttonSet.ToString()),
+                        result = MultiButtonMsgDlg.Show(Program.MainWindow, buttonSet.ToString(), buttonSet, newDefault),
                     d => d.AcceptButton.PerformClick());
                 AssertEx.AreEqual(newDefault, result);
 

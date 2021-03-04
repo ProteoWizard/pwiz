@@ -891,8 +891,13 @@ namespace pwiz.Skyline.EditUI
                     "\r\n\r\n" + 
                     Adduct.Tips;
             }
+
+            // CONSIDER(bspratt) use DocumentationViewer instead, this is quite a lot of text
+            helpText = Resources.PasteDlg_btnTransitionListHelp_Click_Transition_List_Help +
+                       "\r\n\r\n" +
+                       helpText;
             // ReSharper restore LocalizableElement
-            MultiButtonMsgDlg.Show(this, helpText, MessageBoxButtons.OK, DialogResult.OK, Resources.PasteDlg_btnTransitionListHelp_Click_Transition_List_Help);
+            MessageDlg.Show(this, helpText);
         }
 
         private void btnCancel_Click(object sender, EventArgs e)
