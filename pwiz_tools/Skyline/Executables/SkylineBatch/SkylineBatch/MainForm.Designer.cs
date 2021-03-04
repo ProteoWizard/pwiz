@@ -234,7 +234,6 @@
             this.listViewConfigs.HideSelection = false;
             this.listViewConfigs.MultiSelect = false;
             this.listViewConfigs.Name = "listViewConfigs";
-            this.listViewConfigs.Scrollable = false;
             this.listViewConfigs.UseCompatibleStateImageBehavior = false;
             this.listViewConfigs.View = System.Windows.Forms.View.Details;
             this.listViewConfigs.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.listViewConfigs_ItemCheck);

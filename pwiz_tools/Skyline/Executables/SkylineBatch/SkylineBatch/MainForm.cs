@@ -34,8 +34,9 @@ namespace SkylineBatch
         private readonly SkylineBatchConfigManager _configManager;
         private readonly Logger _skylineBatchLogger;
         private bool _loaded;
-        private ColumnWidthCalculator _listViewColumnWidths;
+        private readonly ColumnWidthCalculator _listViewColumnWidths;
         private bool _resizing;
+        private long _lastResize;
 
         public MainForm()
         {
@@ -46,6 +47,7 @@ namespace SkylineBatch
             _skylineBatchLogger = new Logger(logPath, Program.AppName() + TextUtil.EXT_LOG, this);
             btnRunOptions.Text = char.ConvertFromUtf32(0x2BC6);
             toolStrip1.Items.Insert(3,new ToolStripSeparator());
+            _lastResize = 0;
             _listViewColumnWidths = new ColumnWidthCalculator(new []
             {
                 listViewConfigName.Width,
@@ -531,6 +533,10 @@ namespace SkylineBatch
 
         private void listViewConfigs_Resize(object sender, EventArgs e)
         {
+            // Resize every 10 milliseconds max
+            if (DateTimeOffset.Now.ToUnixTimeMilliseconds() - _lastResize < 10)
+                return;
+            _lastResize = DateTimeOffset.Now.ToUnixTimeMilliseconds();
             _listViewColumnWidths.ListViewContainerResize(listViewConfigs.Width);
             UpdateListViewColumns();
         }
@@ -538,9 +544,12 @@ namespace SkylineBatch
         private void UpdateListViewColumns()
         {
             _resizing = true;
+            listViewConfigs.ColumnWidthChanged -= listViewConfigs_ColumnWidthChanged;
             listViewConfigName.Width = _listViewColumnWidths.Get(0);
             listViewModified.Width = _listViewColumnWidths.Get(1);
-            listViewStatus.Width = -2;
+            listViewStatus.Width = -2; // set status column to fill remaining listView width
+            listViewStatus.Width -= 10; // add buffer to prevent horizontal scrollbar
+            listViewConfigs.ColumnWidthChanged += listViewConfigs_ColumnWidthChanged;
             _resizing = false;
         }
 
