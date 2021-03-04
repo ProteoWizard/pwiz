@@ -29,6 +29,7 @@ using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.SettingsUI
 {
@@ -508,12 +509,12 @@ namespace pwiz.Skyline.SettingsUI
             get
             {
                 // ReSharper disable once LocalizableElement
-                var emptyLine = "\r\n\r\n";
-                var helpText = Resources.FormulaBox_helpToolStripMenuItem_Click_Formula_Help + emptyLine +
-                    Resources.FormulaBox_FormulaHelpText_Formulas_are_written_in_standard_chemical_notation__e_g___C2H6O____Heavy_isotopes_are_indicated_by_a_prime__e_g__C__for_C13__or_double_prime_for_less_abundant_stable_iostopes__e_g__O__for_O17__O__for_O18__;
+                var helpText = TextUtil.LineSeparate(Resources.FormulaBox_helpToolStripMenuItem_Click_Formula_Help, 
+                    string.Empty,
+                    Resources.FormulaBox_FormulaHelpText_Formulas_are_written_in_standard_chemical_notation__e_g___C2H6O____Heavy_isotopes_are_indicated_by_a_prime__e_g__C__for_C13__or_double_prime_for_less_abundant_stable_iostopes__e_g__O__for_O17__O__for_O18__);
                 if (_editMode != EditMode.formula_only)
                 {
-                    helpText += emptyLine + Adduct.Tips; // Charge implies ion formula, so help with adduct descriptions as well
+                    helpText = TextUtil.LineSeparate(helpText, string.Empty, Adduct.Tips); // Charge implies ion formula, so help with adduct descriptions as well
                 }
                 return helpText;
             }
