@@ -415,6 +415,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 //Get 11 peptides from the document (all of them) and go back to calculator dialog
                 calibrateDlg2.Recalculate(SkylineWindow.Document, 11);
+                calibrateDlg2.WriteFixedPointPeptides(); // diagnostic
                 calibrateDlg2.StandardName = "Document2";
                 calibrateDlg2.OkDialog();
             });
