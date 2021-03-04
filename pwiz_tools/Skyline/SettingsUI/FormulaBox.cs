@@ -498,7 +498,7 @@ namespace pwiz.Skyline.SettingsUI
         private void helpToolStripMenuItem_Click(object sender, EventArgs e)
         {
             var helpText = FormulaHelpText;
-            MessageDlg.Show(this, helpText, Resources.FormulaBox_helpToolStripMenuItem_Click_Formula_Help);
+            MultiButtonMsgDlg.Show(this, helpText, MessageBoxButtons.OK, Resources.FormulaBox_helpToolStripMenuItem_Click_Formula_Help);
         }
 
         private string FormulaHelpText

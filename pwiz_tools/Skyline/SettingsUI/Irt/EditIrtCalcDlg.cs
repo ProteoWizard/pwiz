@@ -212,8 +212,8 @@ namespace pwiz.Skyline.SettingsUI.Irt
         {
             if (DatabaseChanged)
             {
-                var result = MessageDlg.Show(this, Resources.EditIrtCalcDlg_btnCreateDb_Click_Are_you_sure_you_want_to_create_a_new_database_file_Any_changes_to_the_current_calculator_will_be_lost,
-                     MessageBoxButtons.YesNo);
+                var result = MultiButtonMsgDlg.Show(this, Resources.EditIrtCalcDlg_btnCreateDb_Click_Are_you_sure_you_want_to_create_a_new_database_file_Any_changes_to_the_current_calculator_will_be_lost,
+                    MessageBoxButtons.YesNo);
 
                 if (result != DialogResult.Yes)
                     return;
@@ -277,8 +277,8 @@ namespace pwiz.Skyline.SettingsUI.Irt
         {
             if (DatabaseChanged)
             {
-                var result = MessageDlg.Show(this, Resources.EditIrtCalcDlg_btnBrowseDb_Click_Are_you_sure_you_want_to_open_a_new_database_file_Any_changes_to_the_current_calculator_will_be_lost,
-                     MessageBoxButtons.YesNo);
+                var result = MultiButtonMsgDlg.Show(this, Resources.EditIrtCalcDlg_btnBrowseDb_Click_Are_you_sure_you_want_to_open_a_new_database_file_Any_changes_to_the_current_calculator_will_be_lost,
+                    MessageBoxButtons.YesNo);
 
                 if (result != DialogResult.Yes)
                     return;
@@ -354,9 +354,9 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 {
                     if (Equals(existingCalc.Name, textCalculatorName.Text) && !Equals(existingCalc.Name, _editingName))
                     {
-                        if (MessageDlg.Show(this, string.Format(
+                        if (MultiButtonMsgDlg.Show(this, string.Format(
                                 Resources.EditIrtCalcDlg_OkDialog_A_calculator_with_the_name__0__already_exists_Do_you_want_to_overwrite_it,
-                                textCalculatorName.Text),  MessageBoxButtons.YesNo) != DialogResult.Yes)
+                                textCalculatorName.Text), MessageBoxButtons.YesNo) != DialogResult.Yes)
                         {
                             textCalculatorName.Focus();
                             return;

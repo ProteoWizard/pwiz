@@ -305,9 +305,9 @@ namespace pwiz.Skyline.FileUI
         {
             if (_warnOnMultiInjection && !IsOptimizing)
             {
-                if (MessageDlg.Show(this,
+                if (MultiButtonMsgDlg.Show(this,
                                 Resources.ImportResultsDlg_CanCreateMultiInjectionMethods_The_current_document_does_not_appear_to_have_enough_transitions_to_require_multiple_injections,
-                                MessageBoxButtons.YesNo, DialogResult.No) == DialogResult.No)
+                                 MessageBoxButtons.YesNo, DialogResult.No) == DialogResult.No)
                     return false;
             }
             return true;

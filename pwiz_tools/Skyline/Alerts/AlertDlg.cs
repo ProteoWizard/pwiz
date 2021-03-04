@@ -44,11 +44,7 @@ namespace pwiz.Skyline.Alerts
         {
         }
 
-        public AlertDlg(string message) : this(message, null)
-        {
-        }
-
-        public AlertDlg(string message, string title)
+        public AlertDlg(string message)
         {
             InitializeComponent();
             _originalFormHeight = Height;
@@ -56,16 +52,15 @@ namespace pwiz.Skyline.Alerts
             _labelPadding = messageScrollPanel.Width - labelMessage.MaximumSize.Width;
             Message = message;
             btnMoreInfo.Parent.Controls.Remove(btnMoreInfo);
-            Text = title ?? Program.Name;
+            Text = Program.Name;
             toolStrip1.Renderer = new NoBorderSystemRenderer();
         }
 
-        public AlertDlg(string message, MessageBoxButtons messageBoxButtons) : this(message, messageBoxButtons, null, DialogResult.None)
+        public AlertDlg(string message, MessageBoxButtons messageBoxButtons) : this(message, messageBoxButtons, DialogResult.None)
         {
         }
 
-        public AlertDlg(string message, MessageBoxButtons messageBoxButtons, string title,
-            DialogResult defaultButton) : this(message, title)
+        public AlertDlg(string message, MessageBoxButtons messageBoxButtons, DialogResult defaultButton) : this(message)
         {
             AddMessageBoxButtons(messageBoxButtons, defaultButton);
         }

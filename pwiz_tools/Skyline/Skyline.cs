@@ -1807,7 +1807,7 @@ namespace pwiz.Skyline
         {
             if (Settings.Default.SpectralLibraryList.Count == 0)
             {
-                var result = MessageDlg.Show(this,
+                var result = MultiButtonMsgDlg.Show(this,
                                              Resources.
                                                  SkylineWindow_ViewSpectralLibraries_No_libraries_to_show_Would_you_like_to_add_a_library,
                                              MessageBoxButtons.OKCancel);
@@ -2375,7 +2375,7 @@ namespace pwiz.Skyline
                 if (_skyline.DocumentUI.Settings.Name == SrmSettingsList.DefaultName)
                 {
                     DialogResult result =
-                        MessageDlg.Show(_skyline,
+                        MultiButtonMsgDlg.Show(_skyline,
                             Resources.
                                 SelectSettingsHandler_ToolStripMenuItemClick_Do_you_want_to_save_your_current_settings_before_switching,
                             MessageBoxButtons.YesNoCancel);
