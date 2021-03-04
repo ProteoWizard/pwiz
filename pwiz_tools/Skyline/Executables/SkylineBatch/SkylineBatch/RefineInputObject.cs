@@ -75,6 +75,7 @@ namespace SkylineBatch
         #region Values for enum variables
 
         // Enum variables must have a "none" option. When "none" is selected, the command is not used
+        // CONSIDER: How will these be localized?
         public enum CvGlobalNormalizeValues
         {
             global_standards,

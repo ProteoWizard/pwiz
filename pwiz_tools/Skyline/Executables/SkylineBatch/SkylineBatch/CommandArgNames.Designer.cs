@@ -22,14 +22,14 @@ namespace SkylineBatch {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class CommandArgName {
+    internal class CommandArgNames {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
         private static global::System.Globalization.CultureInfo resourceCulture;
         
         [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        internal CommandArgName() {
+        internal CommandArgNames() {
         }
         
         /// <summary>
@@ -39,7 +39,7 @@ namespace SkylineBatch {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("SkylineBatch.CommandArgName", typeof(CommandArgName).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("SkylineBatch.CommandArgNames", typeof(CommandArgNames).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -354,24 +354,6 @@ namespace SkylineBatch {
         internal static string _refine_use_best_result {
             get {
                 return ResourceManager.GetString("_refine_use_best_result", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Refining the targets list.
-        /// </summary>
-        internal static string CommandArgs_GROUP_REFINEMENT {
-            get {
-                return ResourceManager.GetString("CommandArgs_GROUP_REFINEMENT", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Global standards.
-        /// </summary>
-        internal static string global_standards {
-            get {
-                return ResourceManager.GetString("global_standards", resourceCulture);
             }
         }
     }

@@ -117,12 +117,6 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="CommandArgs_GROUP_REFINEMENT" xml:space="preserve">
-    <value>Refining the targets list</value>
-  </data>
-  <data name="global_standards" xml:space="preserve">
-    <value>Global standards</value>
-  </data>
   <data name="_refine_add_label_type" xml:space="preserve">
     <value>Add label type</value>
   </data>

@@ -84,7 +84,7 @@ namespace SkylineBatchTest
             var validReportSettings = new ReportSettings(new List<ReportInfo>());
             var validSkylineSettings = new SkylineSettings(SkylineType.Custom, TestUtils.GetSkylineDir());
             var validFileSettings = new FileSettings(string.Empty, string.Empty, string.Empty, false, false, true);
-            var validRefineSettings = new RefineSettings(string.Empty, string.Empty, string.Empty, string.Empty);
+            var validRefineSettings = new RefineSettings(new List<Tuple<RefineVariable, string>>(), false, false, string.Empty);
 
             var validatedNoName = false;
             try

@@ -373,6 +373,7 @@
             // gridRefineInputs
             // 
             resources.ApplyResources(this.gridRefineInputs, "gridRefineInputs");
+            this.gridRefineInputs.CommandsForeColor = System.Drawing.SystemColors.ControlText;
             this.gridRefineInputs.Name = "gridRefineInputs";
             this.gridRefineInputs.PropertySort = System.Windows.Forms.PropertySort.Categorized;
             this.gridRefineInputs.ToolbarVisible = false;

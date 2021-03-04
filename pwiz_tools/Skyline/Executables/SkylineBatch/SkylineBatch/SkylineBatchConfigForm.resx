@@ -656,7 +656,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>NoControl</value>
   </data>
   <data name="label8.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 351</value>
+    <value>4, 352</value>
   </data>
   <data name="label8.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 0, 2, 0</value>
@@ -692,7 +692,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>True</value>
   </data>
   <data name="checkBoxRemoveDecoys.Location" type="System.Drawing.Point, System.Drawing">
-    <value>7, 331</value>
+    <value>7, 332</value>
   </data>
   <data name="checkBoxRemoveDecoys.Size" type="System.Drawing.Size, System.Drawing">
     <value>103, 17</value>
@@ -728,7 +728,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>NoControl</value>
   </data>
   <data name="checkBoxRemoveData.Location" type="System.Drawing.Point, System.Drawing">
-    <value>7, 308</value>
+    <value>7, 309</value>
   </data>
   <data name="checkBoxRemoveData.Size" type="System.Drawing.Size, System.Drawing">
     <value>90, 17</value>
@@ -941,7 +941,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>3, 3, 3, 3</value>
   </data>
   <data name="tabFiles.Size" type="System.Drawing.Size, System.Drawing">
-    <value>445, 390</value>
+    <value>445, 391</value>
   </data>
   <data name="tabFiles.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -980,7 +980,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>3, 3, 3, 3</value>
   </data>
   <data name="tabSettings.Size" type="System.Drawing.Size, System.Drawing">
-    <value>445, 389</value>
+    <value>445, 390</value>
   </data>
   <data name="tabSettings.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -1007,7 +1007,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>3, 3</value>
   </data>
   <data name="gridRefineInputs.Size" type="System.Drawing.Size, System.Drawing">
-    <value>439, 299</value>
+    <value>439, 300</value>
   </data>
   <data name="gridRefineInputs.TabIndex" type="System.Int32, mscorlib">
     <value>10</value>
@@ -1031,7 +1031,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>NoControl</value>
   </data>
   <data name="btnRefinedFilePath.Location" type="System.Drawing.Point, System.Drawing">
-    <value>403, 366</value>
+    <value>403, 367</value>
   </data>
   <data name="btnRefinedFilePath.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -1061,7 +1061,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>Bottom, Left, Right</value>
   </data>
   <data name="textBoxRefinedFilePath.Location" type="System.Drawing.Point, System.Drawing">
-    <value>7, 368</value>
+    <value>7, 369</value>
   </data>
   <data name="textBoxRefinedFilePath.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -1088,7 +1088,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>4, 22</value>
   </data>
   <data name="tabRefine.Size" type="System.Drawing.Size, System.Drawing">
-    <value>445, 390</value>
+    <value>445, 391</value>
   </data>
   <data name="tabRefine.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -1145,7 +1145,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>2, 2, 2, 2</value>
   </data>
   <data name="tabReports.Size" type="System.Drawing.Size, System.Drawing">
-    <value>445, 389</value>
+    <value>445, 390</value>
   </data>
   <data name="tabReports.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -1184,7 +1184,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>3, 3, 3, 3</value>
   </data>
   <data name="tabSkyline.Size" type="System.Drawing.Size, System.Drawing">
-    <value>445, 389</value>
+    <value>445, 390</value>
   </data>
   <data name="tabSkyline.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -1214,7 +1214,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>2, 2, 2, 2</value>
   </data>
   <data name="tabsConfig.Size" type="System.Drawing.Size, System.Drawing">
-    <value>453, 416</value>
+    <value>453, 417</value>
   </data>
   <data name="tabsConfig.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1389,7 +1389,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>453, 458</value>
   </data>
   <data name="splitContainer1.SplitterDistance" type="System.Int32, mscorlib">
-    <value>416</value>
+    <value>417</value>
   </data>
   <data name="splitContainer1.SplitterWidth" type="System.Int32, mscorlib">
     <value>3</value>
@@ -1749,7 +1749,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>2, 2, 2, 2</value>
   </data>
   <data name="gridReportSettings.Size" type="System.Drawing.Size, System.Drawing">
-    <value>415, 381</value>
+    <value>415, 382</value>
   </data>
   <data name="gridReportSettings.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1773,7 +1773,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>8, 6</value>
   </data>
   <data name="panelSkylineSettings.Size" type="System.Drawing.Size, System.Drawing">
-    <value>438, 384</value>
+    <value>438, 385</value>
   </data>
   <data name="panelSkylineSettings.TabIndex" type="System.Int32, mscorlib">
     <value>24</value>
@@ -1798,7 +1798,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
         AAEAAAD/////AQAAAAAAAAAMAgAAAFdTeXN0ZW0uV2luZG93cy5Gb3JtcywgVmVyc2lvbj00LjAuMC4w
         LCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODkFAQAAACZTeXN0
         ZW0uV2luZG93cy5Gb3Jtcy5JbWFnZUxpc3RTdHJlYW1lcgEAAAAERGF0YQcCAgAAAAkDAAAADwMAAACw
-        CgAAAk1TRnQBSQFMAgEBAgEAAbgBAQG4AQEBHgEAAR4BAAT/AQkBAAj/AUIBTQE2AQQGAAE2AQQCAAEo
+        CgAAAk1TRnQBSQFMAgEBAgEAAcABAQHAAQEBHgEAAR4BAAT/AQkBAAj/AUIBTQE2AQQGAAE2AQQCAAEo
         AwABeAMAAR4DAAEBAQABCAUAARABDhgAAYACAAGAAwACgAEAAYADAAGAAQABgAEAAoACAAPAAQABwAHc
         AcABAAHwAcoBpgEAATMFAAEzAQABMwEAATMBAAIzAgADFgEAAxwBAAMiAQADKQEAA1UBAANNAQADQgEA
         AzkBAAGAAXwB/wEAAlAB/wEAAZMBAAHWAQAB/wHsAcwBAAHGAdYB7wEAAdYC5wEAAZABqQGtAgAB/wEz

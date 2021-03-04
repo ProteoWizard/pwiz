@@ -54,7 +54,7 @@ namespace SkylineBatchTest
 
         public static RefineSettings GetTestRefineSettings()
         {
-            return new RefineSettings(string.Empty, string.Empty, string.Empty, string.Empty);
+            return new RefineSettings(new List<Tuple<RefineVariable, string>>(), false, false, string.Empty);
         }
 
         public static ReportSettings GetTestReportSettings()
@@ -85,7 +85,15 @@ namespace SkylineBatchTest
             var main = new MainSettings(GetTestFilePath("emptyTemplate.sky"), GetTestFilePath("analysis"),
                 GetTestFilePath("emptyData"), GetTestFilePath("fakeAnnotations.csv"), "testNamingPattern");
             var file = new FileSettings("5", "4", "3", true, true, true);
-            var refine = new RefineSettings("20", "Equalize Medians", "0.01", "2");
+            var refine = new RefineSettings(new List<Tuple<RefineVariable, string>>()
+                {
+                    new Tuple<RefineVariable, string>(RefineVariable.cv_remove_above_cutoff, "20"),
+                    new Tuple<RefineVariable, string>(RefineVariable.cv_global_normalize, "equalize_medians"),
+                    new Tuple<RefineVariable, string>(RefineVariable.qvalue_cutoff, "0.01"),
+                    new Tuple<RefineVariable, string>(RefineVariable.cv_transitions_count, "2"),
+
+                },  false, false, string.Empty);
+
             var reportList = new List<ReportInfo>();
             var script = new List<Tuple<string, string>>()
                 {new Tuple<string, string>(GetTestFilePath("testScript.R"), "4.0.2")};

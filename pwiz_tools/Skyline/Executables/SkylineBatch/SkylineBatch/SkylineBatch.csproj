@@ -99,13 +99,9 @@
     <Content Include="SkylineBatch_release.ico">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <EmbeddedResource Include="CommandArgName.resx">
+    <EmbeddedResource Include="CommandArgNames.resx">
       <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>CommandArgName.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <EmbeddedResource Include="CommandArgUsage.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>CommandArgUsage.Designer.cs</LastGenOutput>
+      <LastGenOutput>CommandArgNames.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Include="InvalidConfigSetupForm.resx">
       <DependentUpon>InvalidConfigSetupForm.cs</DependentUpon>
@@ -133,15 +129,10 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CommandArgName.Designer.cs">
+    <Compile Include="CommandArgNames.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
-      <DependentUpon>CommandArgName.resx</DependentUpon>
-    </Compile>
-    <Compile Include="CommandArgUsage.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>CommandArgUsage.resx</DependentUpon>
+      <DependentUpon>CommandArgNames.resx</DependentUpon>
     </Compile>
     <Compile Include="CommandWriter.cs" />
     <Compile Include="RefineInputLocalization.cs" />
@@ -216,6 +207,9 @@
     <Reference Include="SharedBatch, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\SharedBatch\SharedBatch\bin\Debug\SharedBatch.dll</HintPath>
+    </Reference>
+    <Reference Include="Skyline-daily">
+      <HintPath>..\..\..\bin\x64\Release\Skyline-daily.exe</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Collections.Immutable, Version=5.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">

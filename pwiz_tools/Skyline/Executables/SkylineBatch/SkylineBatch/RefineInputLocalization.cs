@@ -1,5 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Reflection;
+using System.Resources;
 
 namespace SkylineBatch
 {
@@ -35,8 +37,8 @@ namespace SkylineBatch
             get
             {
                 // Get display name from CommandArgName
-                var displayNameKey = RefineInputObject.REFINE_RESOURCE_KEY_PREFIX + basePropertyDescriptor.DisplayName;
-                return CommandArgName.ResourceManager.GetString(displayNameKey);
+                var displayNameKey = RefineInputObject.REFINE_RESOURCE_KEY_PREFIX + basePropertyDescriptor.Name;
+                return CommandArgNames.ResourceManager.GetString(displayNameKey);
             }
         }
 
@@ -44,9 +46,11 @@ namespace SkylineBatch
         {
             get
             {
+                // TODO (Ali): Ask if CommandArgUsage can be accessed through a dll so you don't need Skyline-daily
+                var rm = new ResourceManager("pwiz.Skyline.CommandArgUsage", Assembly.LoadFrom("Skyline-daily.exe"));
                 // Get description from CommandArgUsage
-                var displayNameKey = RefineInputObject.REFINE_RESOURCE_KEY_PREFIX + basePropertyDescriptor.DisplayName;
-                var description = CommandArgUsage.ResourceManager.GetString(displayNameKey);
+                var displayNameKey = RefineInputObject.REFINE_RESOURCE_KEY_PREFIX + basePropertyDescriptor.Name;
+                var description = rm.GetString(displayNameKey);
                 // Remove newlines
                 description = description != null ? description.Replace(Environment.NewLine, " ") : string.Empty;
                 return description;
@@ -57,12 +61,14 @@ namespace SkylineBatch
         {
             get
             {
+                // TODO (Ali): update if stop using Skyline-daily
+                var rm = new ResourceManager("pwiz.Skyline.CommandArgUsage", Assembly.LoadFrom("Skyline-daily.exe"));
                 // Get category from CommandArgUsage
-                var variableName = basePropertyDescriptor.DisplayName;
+                var variableName = basePropertyDescriptor.Name;
                 var variable = (RefineVariable)Enum.Parse(typeof(RefineVariable), variableName);
-                return (int)variable <= (int)RefineVariable.auto_select_transitions
-                    ? CommandArgUsage.CommandArgs_GROUP_REFINEMENT
-                    : CommandArgUsage.CommandArgs_GROUP_REFINEMENT_W_RESULTS;
+                return (int) variable <= (int) RefineVariable.auto_select_transitions
+                    ? rm.GetString("CommandArgs_GROUP_REFINEMENT")
+                    : rm.GetString("CommandArgs_GROUP_REFINEMENT_W_RESULTS");
             }
         }
 
