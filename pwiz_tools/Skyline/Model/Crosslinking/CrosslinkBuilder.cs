@@ -85,13 +85,6 @@ namespace pwiz.Skyline.Model.Crosslinking
                 transitionQuantInfo = transitionQuantInfo.ChangeIsotopeDistInfo(new TransitionIsotopeDistInfo(
                     isotopeDist.GetRankI(chargedIon.MassIndex), isotopeDist.GetProportionI(chargedIon.MassIndex)));
             }
-            else
-            {
-                if (null != transitionQuantInfo.IsotopeDistInfo)
-                {
-                    transitionQuantInfo = transitionQuantInfo.ChangeIsotopeDistInfo(null);
-                }
-            }
             return new TransitionDocNode(chargedIon, annotations, productMass, transitionQuantInfo, explicitTransitionValues, results);
         }
 
