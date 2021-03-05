@@ -253,7 +253,7 @@ namespace AutoQC
                 listViewConfigs.Items.Clear();
                 foreach (var lvi in listViewItems)
                     listViewConfigs.Items.Add(lvi);
-                if (topItemIndex != -1)
+                if (topItemIndex != -1 && listViewConfigs.Items.Count > topItemIndex)
                     listViewConfigs.TopItem = listViewConfigs.Items[topItemIndex];
                 UpdateLabelVisibility();
                 UpdateButtonsEnabled();
