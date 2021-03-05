@@ -22,6 +22,8 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
+using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.GroupComparison;
@@ -269,6 +271,15 @@ namespace pwiz.Skyline.Controls.GroupComparison
         private void OnGridClick(object o, EventArgs eventArgs)
         {
             Program.MainWindow.ShowGroupComparisonWindow(_groupComparisonName);
+        }
+
+        protected IEnumerable<FoldChangeBindingSource.FoldChangeRow> GetFoldChangeRows(
+            BindingListSource bindingListSource)
+        {
+            return bindingListSource.OfType<RowItem>()
+                .Select(rowItem => rowItem.Value)
+                .OfType<FoldChangeBindingSource.AbstractFoldChangeRow>()
+                .SelectMany(row => row.GetFoldChangeRows());
         }
 
         public static FoldChangeBindingSource FindOrCreateBindingSource(IDocumentUIContainer documentContainer,

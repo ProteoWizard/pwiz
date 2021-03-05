@@ -1034,7 +1034,14 @@ namespace pwiz.SkylineTestUtil
             if (!Program.SkylineOffscreen)
                 PauseAndContinueForm.Show(description);
         }
-        
+
+        // We don't normally leave PauseTest() in checked in code, but there are times
+        // when that's actually what's needed. For those, use this instead.
+        public static void PauseForManualTutorialStep(string description = null)
+        {
+            PauseTest(description);
+        }
+
         // Pause a test's UI thread by posting a simple MessageBox.
         // Doesn't allow for UI manipulation, but can be handy for 
         // debugging multiline RunUI() statements.
