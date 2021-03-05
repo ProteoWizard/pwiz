@@ -59,7 +59,7 @@ namespace SkylineBatch
 
         public void ReopenSkylineResultsFile()
         {
-            _writer.WriteLine();
+            if (!_reopenFile) _writer.WriteLine();
             _reopenFile = true;
         }
     }

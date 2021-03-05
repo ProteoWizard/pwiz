@@ -52,7 +52,7 @@ namespace SkylineBatch
                 var displayNameKey = RefineInputObject.REFINE_RESOURCE_KEY_PREFIX + basePropertyDescriptor.Name;
                 var description = rm.GetString(displayNameKey);
                 // Remove newlines
-                description = description != null ? description.Replace(Environment.NewLine, " ") : string.Empty;
+                description = description != null ? description.Replace('\n', ' ') : string.Empty;
                 return description;
             }
         }
