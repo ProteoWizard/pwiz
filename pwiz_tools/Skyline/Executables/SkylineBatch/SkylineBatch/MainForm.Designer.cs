@@ -240,7 +240,6 @@
             this.listViewConfigs.ItemSelectionChanged += new System.Windows.Forms.ListViewItemSelectionChangedEventHandler(this.listViewConfigs_PreventItemSelectionChanged);
             this.listViewConfigs.DoubleClick += new System.EventHandler(this.HandleEditEvent);
             this.listViewConfigs.MouseUp += new System.Windows.Forms.MouseEventHandler(this.listViewConfigs_MouseUp);
-            this.listViewConfigs.Resize += new System.EventHandler(this.listViewConfigs_Resize);
             // 
             // listViewConfigName
             // 
@@ -399,6 +398,7 @@
             this.Controls.Add(this.tabMain);
             this.Name = "MainForm";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
+            this.Resize += new System.EventHandler(this.MainForm_Resize);
             this.batchRunDropDown.ResumeLayout(false);
             this.tabLog.ResumeLayout(false);
             this.tabLog.PerformLayout();

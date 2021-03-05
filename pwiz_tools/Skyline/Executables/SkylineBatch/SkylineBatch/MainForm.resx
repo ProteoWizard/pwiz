@@ -951,19 +951,19 @@
     <value>Configuration</value>
   </data>
   <data name="listViewConfigName.Width" type="System.Int32, mscorlib">
-    <value>294</value>
+    <value>241</value>
   </data>
   <data name="listViewModified.Text" xml:space="preserve">
     <value>Modified</value>
   </data>
   <data name="listViewModified.Width" type="System.Int32, mscorlib">
-    <value>82</value>
+    <value>108</value>
   </data>
   <data name="listViewStatus.Text" xml:space="preserve">
     <value>Status</value>
   </data>
   <data name="listViewStatus.Width" type="System.Int32, mscorlib">
-    <value>99</value>
+    <value>117</value>
   </data>
   <data name="listViewConfigs.Location" type="System.Drawing.Point, System.Drawing">
     <value>7, 24</value>

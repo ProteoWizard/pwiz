@@ -36,27 +36,21 @@ namespace AutoQC
         // Flag that gets set to true in the "Shown" event handler. 
         // ItemCheck and ItemChecked events on the listview are ignored until then.
         private bool _loaded;
-        private ColumnWidthCalculator _listViewColumnWidths;
-        private bool _resizing;
+        private readonly ColumnWidthCalculator _listViewColumnWidths;
 
         public MainForm()
         {
             InitializeComponent();
             
             toolStrip.Items.Insert(1,new ToolStripSeparator());
-            _listViewColumnWidths = new ColumnWidthCalculator(new []
-            {
-                columnName.Width,
-                columnUser.Width,
-                columnCreated.Width,
-                columnStatus.Width
-            });
+            _listViewColumnWidths = new ColumnWidthCalculator(listViewConfigs);
             listViewConfigs.ColumnWidthChanged += listViewConfigs_ColumnWidthChanged;
 
             ProgramLog.Info(Resources.MainForm_MainForm_Loading_configurations_from_saved_settings_);
             _configManager = new AutoQcConfigManager(this);
 
             UpdateUiConfigurations();
+            ListViewSizeChanged();
             UpdateUiLogFiles();
             UpdateSettingsTab();
 
@@ -121,6 +115,7 @@ namespace AutoQC
         {
             _configManager.AddConfiguration(config);
             UpdateUiConfigurations();
+            ListViewSizeChanged();
             UpdateUiLogFiles();
         }
 
@@ -135,6 +130,7 @@ namespace AutoQC
         {
             _configManager.RemoveSelected();
             UpdateUiConfigurations();
+            ListViewSizeChanged();
             UpdateUiLogFiles();
         }
 
@@ -252,10 +248,13 @@ namespace AutoQC
         {
             RunUi(() =>
             {
-                listViewConfigs.Items.Clear();
+                var topItemIndex = listViewConfigs.TopItem != null ? listViewConfigs.TopItem.Index : -1;
                 var listViewItems = _configManager.ConfigsListViewItems();
+                listViewConfigs.Items.Clear();
                 foreach (var lvi in listViewItems)
                     listViewConfigs.Items.Add(lvi);
+                if (topItemIndex != -1)
+                    listViewConfigs.TopItem = listViewConfigs.Items[topItemIndex];
                 UpdateLabelVisibility();
                 UpdateButtonsEnabled();
             });
@@ -521,45 +520,10 @@ namespace AutoQC
 
         #region Form event handlers and errors
 
-        private void listViewConfigs_Resize(object sender, EventArgs e)
-        {
-            _listViewColumnWidths.ListViewContainerResize(listViewConfigs.Width);
-            UpdateListViewColumns();
-        }
-
-        private void UpdateListViewColumns()
-        {
-            // keeps the same column width ratios when the form is resized
-            _resizing = true;
-            columnName.Width = _listViewColumnWidths.Get(0);
-            columnUser.Width = _listViewColumnWidths.Get(1);
-            columnCreated.Width = _listViewColumnWidths.Get(2);
-            columnStatus.Width = -2;
-            _resizing = false;
-        }
-
-        private void listViewConfigs_ColumnWidthChanged(object sender, ColumnWidthChangedEventArgs e)
-        {
-            if (_resizing) return;
-            _listViewColumnWidths.WidthsChangedByUser(new[]
-            {
-                columnName.Width,
-                columnUser.Width,
-                columnCreated.Width,
-                columnStatus.Width
-            });
-            UpdateListViewColumns();
-        }
-
-        private void systray_icon_MouseDoubleClick(object sender, MouseEventArgs e)
-        {
-            Show();
-            WindowState = FormWindowState.Normal;
-            systray_icon.Visible = false;
-        }
-
         private void MainForm_Resize(object sender, EventArgs e)
         {
+            ListViewSizeChanged();
+
             //If the form is minimized hide it from the task bar  
             //and show the system tray icon (represented by the NotifyIcon control)  
             if (WindowState == FormWindowState.Minimized && Settings.Default.MinimizeToSystemTray)
@@ -567,6 +531,27 @@ namespace AutoQC
                 Hide();
                 systray_icon.Visible = true;
             }
+        }
+
+        private void ListViewSizeChanged()
+        {
+            listViewConfigs.ColumnWidthChanged -= listViewConfigs_ColumnWidthChanged;
+            _listViewColumnWidths.ListViewContainerResize();
+            listViewConfigs.ColumnWidthChanged += listViewConfigs_ColumnWidthChanged;
+        }
+
+        private void listViewConfigs_ColumnWidthChanged(object sender, ColumnWidthChangedEventArgs e)
+        {
+            listViewConfigs.ColumnWidthChanged -= listViewConfigs_ColumnWidthChanged;
+            _listViewColumnWidths.WidthsChangedByUser();
+            listViewConfigs.ColumnWidthChanged += listViewConfigs_ColumnWidthChanged;
+        }
+
+        private void systray_icon_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            Show();
+            WindowState = FormWindowState.Normal;
+            systray_icon.Visible = false;
         }
 
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)

@@ -35,8 +35,6 @@ namespace SkylineBatch
         private readonly Logger _skylineBatchLogger;
         private bool _loaded;
         private readonly ColumnWidthCalculator _listViewColumnWidths;
-        private bool _resizing;
-        private long _lastResize;
 
         public MainForm()
         {
@@ -47,18 +45,13 @@ namespace SkylineBatch
             _skylineBatchLogger = new Logger(logPath, Program.AppName() + TextUtil.EXT_LOG, this);
             btnRunOptions.Text = char.ConvertFromUtf32(0x2BC6);
             toolStrip1.Items.Insert(3,new ToolStripSeparator());
-            _lastResize = 0;
-            _listViewColumnWidths = new ColumnWidthCalculator(new []
-            {
-                listViewConfigName.Width,
-                listViewModified.Width,
-                listViewStatus.Width
-            });
+            _listViewColumnWidths = new ColumnWidthCalculator(listViewConfigs);
             listViewConfigs.ColumnWidthChanged += listViewConfigs_ColumnWidthChanged;
             ProgramLog.Info(Resources.MainForm_MainForm_Loading_configurations_from_saved_settings_);
             _configManager = new SkylineBatchConfigManager(_skylineBatchLogger, this);
 
             UpdateUiConfigurations();
+            ListViewSizeChanged();
             UpdateUiLogFiles();
 
             Shown += ((sender, args) => { _loaded = true; });
@@ -101,6 +94,7 @@ namespace SkylineBatch
         {
             _configManager.AddConfiguration(config);
             UpdateUiConfigurations();
+            ListViewSizeChanged();
             UpdateUiLogFiles();
         }
 
@@ -199,6 +193,7 @@ namespace SkylineBatch
         {
             _configManager.RemoveSelected();
             UpdateUiConfigurations();
+            ListViewSizeChanged();
         }
 
         #endregion
@@ -308,11 +303,14 @@ namespace SkylineBatch
             RunUi(() =>
             {
                 ProgramLog.Info("Updating configurations");
+                var topItemIndex = listViewConfigs.TopItem != null ? listViewConfigs.TopItem.Index : -1;
                 listViewConfigs.ItemCheck -= listViewConfigs_ItemCheck;
                 var listViewItems = _configManager.ConfigsListViewItems();
                 listViewConfigs.Items.Clear();
                 foreach (var lvi in listViewItems)
                     listViewConfigs.Items.Add(lvi);
+                if (topItemIndex != -1)
+                    listViewConfigs.TopItem = listViewConfigs.Items[topItemIndex];
                 listViewConfigs.ItemCheck += listViewConfigs_ItemCheck;
                 UpdateLabelVisibility();
                 UpdateButtonsEnabled();
@@ -531,38 +529,23 @@ namespace SkylineBatch
 
         #region Mainform event handlers and errors
 
-        private void listViewConfigs_Resize(object sender, EventArgs e)
+        private void MainForm_Resize(object sender, EventArgs e)
         {
-            // Resize every 10 milliseconds max
-            if (DateTimeOffset.Now.ToUnixTimeMilliseconds() - _lastResize < 10)
-                return;
-            _lastResize = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-            _listViewColumnWidths.ListViewContainerResize(listViewConfigs.Width);
-            UpdateListViewColumns();
+            ListViewSizeChanged();
         }
 
-        private void UpdateListViewColumns()
+        private void ListViewSizeChanged()
         {
-            _resizing = true;
             listViewConfigs.ColumnWidthChanged -= listViewConfigs_ColumnWidthChanged;
-            listViewConfigName.Width = _listViewColumnWidths.Get(0);
-            listViewModified.Width = _listViewColumnWidths.Get(1);
-            listViewStatus.Width = -2; // set status column to fill remaining listView width
-            listViewStatus.Width -= 10; // add buffer to prevent horizontal scrollbar
+            _listViewColumnWidths.ListViewContainerResize();
             listViewConfigs.ColumnWidthChanged += listViewConfigs_ColumnWidthChanged;
-            _resizing = false;
         }
 
         private void listViewConfigs_ColumnWidthChanged(object sender, ColumnWidthChangedEventArgs e)
         {
-            if (_resizing) return;
-            _listViewColumnWidths.WidthsChangedByUser(new []
-            {
-                listViewConfigName.Width,
-                listViewModified.Width,
-                listViewStatus.Width
-            });
-            UpdateListViewColumns();
+            listViewConfigs.ColumnWidthChanged -= listViewConfigs_ColumnWidthChanged;
+            _listViewColumnWidths.WidthsChangedByUser();
+            listViewConfigs.ColumnWidthChanged += listViewConfigs_ColumnWidthChanged;
         }
         private void systray_icon_MouseDoubleClick(object sender, MouseEventArgs e)
         {
