@@ -19,6 +19,7 @@
 
 using System.IO;
 using System.Windows.Forms;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 
@@ -112,7 +113,7 @@ namespace pwiz.Skyline.Alerts
                 string requiredExtension = Path.GetExtension(FileHint);
                 if (requiredExtension != Path.GetExtension(filePath))
                 {
-                    MessageDlg.Show(this, string.Format("You must choose a file with the '{0}' filename extension.", requiredExtension));
+                    MessageDlg.Show(this, string.Format(Resources.MissingFileDlg_ValidateFilePath_You_must_choose_a_file_with_the___0___filename_extension_, requiredExtension));
                     return false;
                 }
             }
