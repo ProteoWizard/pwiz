@@ -22,6 +22,7 @@ using System.Drawing;
 using DigitalRune.Windows.Docking;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.GroupComparison;
 
 namespace pwiz.Skyline.Controls.GroupComparison
@@ -103,9 +104,12 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         public DataboundGridControl DataboundGridControl { get { return databoundGridControl; } }
 
-        string IDataboundGridForm.GetPersistentString()
+        public DataGridId DataGridId
         {
-            return GetPersistentString();
+            get
+            {
+                return new DataGridId(DataGridType.GROUP_COMPARISON, GroupComparisonName);
+            }
         }
 
         DataboundGridControl IDataboundGridForm.GetDataboundGridControl()

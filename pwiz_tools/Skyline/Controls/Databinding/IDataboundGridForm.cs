@@ -1,14 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using pwiz.Skyline.Model.Databinding;
 
 namespace pwiz.Skyline.Controls.Databinding
 {
     public interface IDataboundGridForm
     {
-        string GetPersistentString();
+        DataGridId DataGridId { get; }
         DataboundGridControl GetDataboundGridControl();
     }
 }

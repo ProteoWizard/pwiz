@@ -128,6 +128,15 @@ namespace pwiz.Skyline.Controls.GroupComparison
             return base.GetPersistentString() + '|' + Uri.EscapeDataString(_groupComparisonName);
         }
 
+        protected string GroupComparisonName
+        {
+            get
+            {
+                return _groupComparisonName;
+            }
+        }
+
+
         public static T FindForm<T>(IDocumentContainer documentContainer, string groupComparisonName) 
             where T : FoldChangeForm
         {

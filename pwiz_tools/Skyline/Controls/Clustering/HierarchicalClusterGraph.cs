@@ -79,8 +79,6 @@ namespace pwiz.Skyline.Controls.Clustering
             };
         }
 
-        public SkylineWindow SkylineWindow { get; set; }
-
         protected override void OnHandleCreated(EventArgs e)
         {
             base.OnHandleCreated(e);

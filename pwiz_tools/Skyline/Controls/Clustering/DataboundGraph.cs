@@ -3,6 +3,7 @@ using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Skyline.Controls.Databinding;
+using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.Clustering
@@ -11,14 +12,29 @@ namespace pwiz.Skyline.Controls.Clustering
     {
         private BindingListSource _bindingListSource;
         private DataboundGridControl _databoundGridControl;
+        private IDataboundGridForm _ownerGridForm;
+        private DataGridId _dataGridId;
         private SkylineWindow _skylineWindow;
         private bool _updateSelectionPending;
 
-        public string OwnerPersistedString
+        public IDataboundGridForm OwnerGridForm
         {
-            get; set;
+            get
+            {
+                return _ownerGridForm;
+            }
+            set
+            {
+                if (ReferenceEquals(OwnerGridForm, value))
+                {
+                    return;
+                }
+
+                _ownerGridForm = value;
+                DataboundGridControl = OwnerGridForm?.GetDataboundGridControl();
+            }
         }
-        
+
         public BindingListSource BindingListSource
         {
             get { return _bindingListSource; }
@@ -40,7 +56,7 @@ namespace pwiz.Skyline.Controls.Clustering
             {
                 return _databoundGridControl;
             }
-            set
+            private set
             {
                 if (ReferenceEquals(DataboundGridControl, value))
                 {
@@ -55,8 +71,6 @@ namespace pwiz.Skyline.Controls.Clustering
                 if (DataboundGridControl != null)
                 {
                     DataboundGridControl.Disposed += DataboundGridControl_OnDisposed;
-                    OwnerPersistedString =
-                        (DataboundGridControl.FindForm() as IDataboundGridForm)?.GetPersistentString();
                 }
 
                 BindingListSource = DataboundGridControl?.BindingListSource;
@@ -145,12 +159,12 @@ namespace pwiz.Skyline.Controls.Clustering
 
         protected override string GetPersistentString()
         {
-            return GetType() + @"|" + OwnerPersistedString;
+            return GetType() + @"|" + _ownerGridForm?.DataGridId?.ToPersistedString();
         }
 
         protected override void OnShown(EventArgs e)
         {
-            if (DataboundGridControl == null && !string.IsNullOrEmpty(OwnerPersistedString))
+            if (DataboundGridControl == null && _dataGridId != null)
             {
                 BeginInvoke(new Action(AttachToOwner));
             }
@@ -160,7 +174,7 @@ namespace pwiz.Skyline.Controls.Clustering
         {
             var formGroup = new FormGroup(this);
             var ownerForm = formGroup.SiblingForms.OfType<IDataboundGridForm>()
-                .FirstOrDefault(form => form.GetPersistentString() == OwnerPersistedString);
+                .FirstOrDefault(form => Equals(_dataGridId, form.DataGridId));
             if (ownerForm == null)
             {
                 Close();
@@ -186,14 +200,14 @@ namespace pwiz.Skyline.Controls.Clustering
             }
             else if (className == typeof(PcaPlot).ToString())
             {
-                databoundGraph = new HierarchicalClusterGraph();
+                databoundGraph = new PcaPlot();
             }
             else
             {
                 return null;
             }
             databoundGraph.SkylineWindow = skylineWindow;
-            databoundGraph.OwnerPersistedString = persistentString.Substring(ichPipe + 1);
+            databoundGraph._dataGridId = DataGridId.FromPersistentString(persistentString.Substring(ichPipe + 1));
             return databoundGraph;
         }
     }

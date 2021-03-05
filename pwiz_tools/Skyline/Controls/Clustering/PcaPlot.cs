@@ -38,7 +38,7 @@ using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Clustering
 {
-    public partial class PcaPlot : DockableFormEx
+    public partial class PcaPlot : DataboundGraph
     {
         private List<Tuple<string, PivotedProperties.SeriesGroup>> _datasetOptions;
         private bool _inUpdateControls;
@@ -50,8 +50,6 @@ namespace pwiz.Skyline.Controls.Clustering
             _calculator = new PcaCalculator(this);
             Localizer = SkylineDataSchema.GetLocalizedSchemaLocalizer();
         }
-
-        public SkylineWindow SkylineWindow { get; set; }
 
         public ClusterInput ClusterInput
         {

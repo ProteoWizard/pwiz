@@ -21,6 +21,7 @@ using System;
 using System.Windows.Forms;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
+using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Util;
 
@@ -33,7 +34,6 @@ namespace pwiz.Skyline.Controls.Databinding
         public DataboundGridForm()
         {
             InitializeComponent();
-
         }
 
         protected override void OnClosed(EventArgs e)
@@ -42,9 +42,18 @@ namespace pwiz.Skyline.Controls.Databinding
             Dispose();
         }
 
-        string IDataboundGridForm.GetPersistentString()
+        public virtual DataGridId DataGridId
         {
-            return GetPersistentString();
+            get
+            {
+                return null;
+            }
+        }
+
+        public ViewName? GetViewName()
+        {
+            return DataboundGridControl?.BindingListSource?.ViewInfo?.ViewGroup?.Id.ViewName(DataboundGridControl
+                .BindingListSource.ViewInfo.Name);
         }
 
         DataboundGridControl IDataboundGridForm.GetDataboundGridControl()
