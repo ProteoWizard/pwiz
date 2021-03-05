@@ -30,9 +30,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
-using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using ZedGraph;
 
@@ -446,14 +444,9 @@ namespace pwiz.Skyline.Controls.Clustering
 
         public override bool RefreshData()
         {
-            var clusteredResultsTuple = DataboundGridControl?.GetClusteredResults();
-            if (clusteredResultsTuple == null)
-            {
-                return false;
-            }
-            SetData(clusteredResultsTuple.Item1, clusteredResultsTuple.Item3);
+            ClusterInput = DataboundGridControl?.CreateClusterInput() ?? ClusterInput;
             return true;
-		}
+        }
 
         private class PcaCalculator : GraphDataCalculator<ClusterInput, Tuple<Clusterer, ReportColorScheme>>
         {

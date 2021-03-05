@@ -402,13 +402,7 @@ namespace pwiz.Skyline.Controls.Clustering
 
         public override bool RefreshData()
         {
-            var data = DataboundGridControl?.GetHeatMapData();
-            if (data == null)
-            {
-                return false;
-            }
-
-            GraphResults = data;
+            ClusterInput = DataboundGridControl?.CreateClusterInput() ?? ClusterInput;
             return true;
 		}
         private class HeatMapCalculator : GraphDataCalculator<ClusterInput, ClusterGraphResults>

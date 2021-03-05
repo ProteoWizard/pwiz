@@ -670,12 +670,23 @@ namespace pwiz.Skyline.Controls.Databinding
 
         public bool ShowHeatMap()
         {
-            var heatMapGraph = new HierarchicalClusterGraph
+            var formGroup = FormGroup.FromControl(this);
+            var heatMap = formGroup.SiblingForms.OfType<HierarchicalClusterGraph>().FirstOrDefault();
+            if (heatMap != null)
+            {
+                heatMap.OwnerGridForm = DataboundGridForm;
+                heatMap.ClusterInput = CreateClusterInput();
+                heatMap.Activate();
+                return true;
+            }
+            heatMap = new HierarchicalClusterGraph
             {
                 SkylineWindow = DataSchemaSkylineWindow,
+                OwnerGridForm = DataboundGridForm,
+                ClusterInput = CreateClusterInput()
             };
-            heatMapGraph.Show(FormUtil.FindTopLevelOwner(this));
-            heatMapGraph.ClusterInput = CreateClusterInput();
+
+            formGroup.ShowSibling(heatMap);
             return true;
         }
 
@@ -835,38 +846,34 @@ namespace pwiz.Skyline.Controls.Databinding
             ShowPcaPlot();
         }
 
+        public IDataboundGridForm DataboundGridForm
+        {
+            get
+            {
+                return (ParentForm as IDataboundGridForm);
+            }
+        }
+
         public void ShowPcaPlot()
         {
-<<<<<<< HEAD
             var formGroup = FormGroup.FromControl(this);
             var pcaPlot = formGroup.SiblingForms.OfType<PcaPlot>()
                 .FirstOrDefault(form => ReferenceEquals(form.DataboundGridControl, this));
             if (pcaPlot != null)
-=======
-            var pcaPlot = new PcaPlot
->>>>>>> remotes/origin/master
             {
-                if (pcaPlot.RefreshData())
-                {
-                    pcaPlot.Activate();
-                }
+                pcaPlot.OwnerGridForm = DataboundGridForm;
+                pcaPlot.ClusterInput = CreateClusterInput();
+                pcaPlot.Activate();
                 return;
             }
             pcaPlot = new PcaPlot
             {
                 SkylineWindow = DataSchemaSkylineWindow,
-                DataboundGridControl = this
+                OwnerGridForm = DataboundGridForm,
+                ClusterInput = CreateClusterInput()
             };
-<<<<<<< HEAD
-            if (!pcaPlot.RefreshData())
-            {
-                return;
-            }
             formGroup.ShowSibling(pcaPlot);
-=======
-            pcaPlot.Show(FormUtil.FindTopLevelOwner(this));
             pcaPlot.ClusterInput = CreateClusterInput();
->>>>>>> remotes/origin/master
         }
     }
 }

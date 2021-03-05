@@ -2132,27 +2132,7 @@ namespace pwiz.Skyline
         /// </summary>
         private Rectangle GetFloatingRectangleForNewWindow()
         {
-            var rectFloat = dockPanel.Bounds;
-            rectFloat = dockPanel.RectangleToScreen(rectFloat);
-            rectFloat.X += rectFloat.Width / 4;
-            rectFloat.Y += rectFloat.Height / 3;
-            rectFloat.Width = Math.Max(600, rectFloat.Width / 2);
-            rectFloat.Height = Math.Max(440, rectFloat.Height / 2);
-            if (Program.SkylineOffscreen)
-            {
-                var offscreenPoint = GetOffscreenPoint();
-                rectFloat.X = offscreenPoint.X;
-                rectFloat.Y = offscreenPoint.Y;
-            }
-            else
-            {
-                // Make sure it is on the screen.
-                var screen = Screen.FromControl(dockPanel);
-                var rectScreen = screen.WorkingArea;
-                rectFloat.X = Math.Max(rectScreen.X, Math.Min(rectScreen.Width - rectFloat.Width, rectFloat.X));
-                rectFloat.Y = Math.Max(rectScreen.Y, Math.Min(rectScreen.Height - rectFloat.Height, rectFloat.Y));
-            }
-            return rectFloat;
+            return FormGroup.GetFloatingRectangleForNewWindow(dockPanel);
         }
 
         private bool GraphVisible(IEnumerable<GraphSummary> graphs, GraphTypeSummary type)
