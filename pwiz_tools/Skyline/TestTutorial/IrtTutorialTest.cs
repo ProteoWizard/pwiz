@@ -173,6 +173,7 @@ namespace pwiz.SkylineTestTutorial
                     calibrateDlg.UseResults();
                     Assert.AreEqual(11, calibrateDlg.StandardPeptideCount);
                     calibrateDlg.WriteFixedPointPeptides(); // diagnostic
+                    WaitForCondition(() => calibrateDlg.NumFixedPointPeptides == 11);
                     calibrateDlg.SetFixedPoints(1, 10);
                     for (int i = 0; i < calibrateDlg.StandardPeptideCount; i++)
                     {
