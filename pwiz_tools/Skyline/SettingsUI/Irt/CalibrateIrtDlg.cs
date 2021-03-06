@@ -823,7 +823,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             comboMaxPeptide.SelectedIndex = two;
         }
 
-        public int NumFixedPointPeptides => Math.Min(comboMinPeptide.Items.Count, comboMaxPeptide.Items.Count);
+        public int NumFixedPointOptions => Math.Min(comboMinPeptide.Items.Count, comboMaxPeptide.Items.Count);
 
         public void WriteFixedPointPeptides()
         {
