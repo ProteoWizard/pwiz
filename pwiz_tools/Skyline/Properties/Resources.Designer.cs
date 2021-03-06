@@ -28095,6 +28095,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Ion Mobility.
+        /// </summary>
+        public static string SkylineWindow_Ion_Mobility {
+            get {
+                return ResourceManager.GetString("SkylineWindow_Ion_Mobility", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to In the Peptide Settings - Prediction tab, click the calculator button to edit the current iRT calculator..
         /// </summary>
         public static string SkylineWindow_irtStandardContextMenuItem_Click_In_the_Peptide_Settings___Prediction_tab__click_the_calculator_button_to_edit_the_current_iRT_calculator_ {

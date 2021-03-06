@@ -2121,6 +2121,20 @@ namespace pwiz.Skyline
             UpdateGraphPanes();
         }
 
+        public bool ShowIonMobility
+        {
+            get { return Settings.Default.ShowIonMobility; }
+            set
+            {
+                if (value == Settings.Default.ShowIonMobility)
+                {
+                    return;
+                }
+                Settings.Default.ShowIonMobility = value;
+                UpdateGraphPanes();
+            }
+        }
+
         /// <summary>
         /// Returns a rectangle suitable for positioning a floating DockableForm.
         /// The size of the rectangle is based off of the size of the DockPanel, and the size of the screen.

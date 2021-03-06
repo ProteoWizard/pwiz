@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
+using pwiz.Common.Chemistry;
 using pwiz.MSGraph;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -361,7 +362,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         }
                         else
                         {
-                            string label = FormatTimeLabel(timeBest.DisplayTime, massError, dotProduct);
+                            string label = FormatTimeLabel(timeBest.DisplayTime, massError, dotProduct, Chromatogram.GetIonMobilityFilter());
 
                             text = new TextObj(label, timeBest.DisplayTime, intensityLabel,
                                 CoordType.AxisXYScale, AlignH.Center, AlignV.Bottom)
@@ -817,7 +818,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     float? massError = null;
                     if (Settings.Default.ShowMassError)
                         massError = Chromatogram.GetPeak(indexPeak).MassError;
-                    string label = FormatTimeLabel(point.X, massError, dotProduct);
+                    string label = FormatTimeLabel(point.X, massError, dotProduct, IonMobilityFilter.EMPTY);
                     return new PointAnnotation(label, FontSpec);
                 }
             }
@@ -825,7 +826,7 @@ namespace pwiz.Skyline.Controls.Graphs
             return null;
         }
 
-        public string FormatTimeLabel(double time, float? massError, double dotProduct)
+        public string FormatTimeLabel(double time, float? massError, double dotProduct, IonMobilityFilter ionMobilityfilter)
         {
             string label = string.Format(@"{0:F01}", time);
             if (massError.HasValue && !_isSummary)
@@ -833,7 +834,21 @@ namespace pwiz.Skyline.Controls.Graphs
                 label += string.Format("\n{0}{1} ppm", (massError.Value > 0 ? "+" : string.Empty), massError.Value);
             if (dotProduct != 0)
                 label += string.Format("\n({0} {1:F02})", _isFullScanMs ? "idotp" : "dotp", dotProduct);
-                // ReSharper restore LocalizableElement
+            if (ionMobilityfilter.IonMobility.HasValue && !_isSummary && Settings.Default.ShowIonMobility)
+            {
+                var imString = string.Format("{0:F02}{1}",
+                    ionMobilityfilter.IonMobility.Mobility,
+                    IonMobilityValue.GetUnitsString(ionMobilityfilter.IonMobilityUnits));
+                if (ionMobilityfilter.CollisionalCrossSectionSqA.HasValue)
+                {
+                    label += string.Format("\nCCS {0:F02}\n({1})", ionMobilityfilter.CollisionalCrossSectionSqA.Value, imString);
+                }
+                else
+                {
+                    label += string.Format("\nIM {0}", imString);
+                }
+            }
+            // ReSharper restore LocalizableElement
             return label;
         }
 

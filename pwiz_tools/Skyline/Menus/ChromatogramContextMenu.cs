@@ -20,6 +20,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.Chemistry;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
@@ -73,6 +74,7 @@ namespace pwiz.Skyline.Menus
                 massErrorContextMenuItem.Checked = set.ShowMassError;
                 menuStrip.Items.Insert(iInsert++, massErrorContextMenuItem);
             }
+            iInsert = InsertIonMobilityMenuItems(menuStrip.Items, chromFileInfoId, iInsert);
 
             peakBoundariesContextMenuItem.Checked = set.ShowPeakBoundaries;
             menuStrip.Items.Insert(iInsert++, peakBoundariesContextMenuItem);
@@ -173,6 +175,31 @@ namespace pwiz.Skyline.Menus
                     menuStrip.Items.Remove(item);
             }
             CopyEmfToolStripMenuItem.AddToContextMenu(zedGraphControl, menuStrip);
+        }
+
+        /// <summary>
+        /// Insert ion mobility-related menu items as appropriate
+        /// </summary>
+        private int InsertIonMobilityMenuItems(ToolStripItemCollection items, ChromFileInfoId chromFileInfoId, int iInsert)
+        {
+
+            if (null != chromFileInfoId && DocumentUI.Settings.HasResults)
+            {
+                foreach (var chromatogramSet in DocumentUI.Settings.MeasuredResults.Chromatograms)
+                {
+                    var chromFileInfo = chromatogramSet.GetFileInfo(chromFileInfoId);
+                    if (null != chromFileInfo && chromFileInfo.IonMobilityUnits != eIonMobilityUnits.none)
+                    {
+                        var menuItemText = Resources.SkylineWindow_Ion_Mobility;
+                        var ionMobilityItem = new ToolStripMenuItem(menuItemText);
+                        ionMobilityItem.Click += (sender, eventArgs) => SkylineWindow.ShowIonMobility = !SkylineWindow.ShowIonMobility;
+                        ionMobilityItem.Checked = SkylineWindow.ShowIonMobility;
+                        items.Insert(iInsert++, ionMobilityItem);
+                        break;
+                    }
+                }
+            }
+            return iInsert;
         }
 
         /// <summary>
