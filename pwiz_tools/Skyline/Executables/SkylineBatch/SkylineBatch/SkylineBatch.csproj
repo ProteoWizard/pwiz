@@ -28,8 +28,8 @@
     <PublisherName>University of Washington</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>417</ApplicationRevision>
-    <ApplicationVersion>20.2.0.417</ApplicationVersion>
+    <ApplicationRevision>419</ApplicationRevision>
+    <ApplicationVersion>20.2.0.419</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -103,6 +103,19 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>CommandArgNames.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+    <EmbeddedResource Include="CommandArgUsage.ja.resx">
+      <DependentUpon>CommandArgUsage.resx</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="CommandArgUsage.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>CommandArgUsage.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="CommandArgUsage.zh-CHS.resx">
+      <DependentUpon>CommandArgUsage.resx</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="InvalidConfigSetupForm.resx">
       <DependentUpon>InvalidConfigSetupForm.cs</DependentUpon>
     </EmbeddedResource>
@@ -133,6 +146,11 @@
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>CommandArgNames.resx</DependentUpon>
+    </Compile>
+    <Compile Include="CommandArgUsage.Designer.cs">
+      <DependentUpon>CommandArgUsage.resx</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
     </Compile>
     <Compile Include="CommandWriter.cs" />
     <Compile Include="RefineInputLocalization.cs" />
@@ -207,9 +225,6 @@
     <Reference Include="SharedBatch, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\SharedBatch\SharedBatch\bin\Debug\SharedBatch.dll</HintPath>
-    </Reference>
-    <Reference Include="Skyline-daily">
-      <HintPath>..\..\..\bin\x64\Release\Skyline-daily.exe</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Collections.Immutable, Version=5.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">

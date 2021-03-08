@@ -46,11 +46,11 @@ namespace SkylineBatch
         {
             get
             {
-                // TODO (Ali): Ask if CommandArgUsage can be accessed through a dll so you don't need Skyline-daily
-                var rm = new ResourceManager("pwiz.Skyline.CommandArgUsage", Assembly.LoadFrom("Skyline-daily.exe"));
+                // TODO (Ali): Ask Nick if it's OK to copy resx
+                //var rm = new ResourceManager("pwiz.Skyline.CommandArgUsage", Assembly.LoadFrom("Skyline-daily.exe"));
                 // Get description from CommandArgUsage
                 var displayNameKey = RefineInputObject.REFINE_RESOURCE_KEY_PREFIX + basePropertyDescriptor.Name;
-                var description = rm.GetString(displayNameKey);
+                var description = CommandArgUsage.ResourceManager.GetString(displayNameKey);
                 // Remove newlines
                 description = description != null ? description.Replace('\n', ' ') : string.Empty;
                 return description;
@@ -61,14 +61,14 @@ namespace SkylineBatch
         {
             get
             {
-                // TODO (Ali): update if stop using Skyline-daily
-                var rm = new ResourceManager("pwiz.Skyline.CommandArgUsage", Assembly.LoadFrom("Skyline-daily.exe"));
+                // TODO (Ali): update if use resx new way
+                //var rm = new ResourceManager("pwiz.Skyline.CommandArgUsage", Assembly.LoadFrom("Skyline-daily.exe"));
                 // Get category from CommandArgUsage
                 var variableName = basePropertyDescriptor.Name;
                 var variable = (RefineVariable)Enum.Parse(typeof(RefineVariable), variableName);
                 return (int) variable <= (int) RefineVariable.auto_select_transitions
-                    ? rm.GetString("CommandArgs_GROUP_REFINEMENT")
-                    : rm.GetString("CommandArgs_GROUP_REFINEMENT_W_RESULTS");
+                    ? CommandArgUsage.ResourceManager.GetString("CommandArgs_GROUP_REFINEMENT")
+                    : CommandArgUsage.ResourceManager.GetString("CommandArgs_GROUP_REFINEMENT_W_RESULTS");
             }
         }
 
@@ -78,13 +78,7 @@ namespace SkylineBatch
             var value = basePropertyDescriptor.GetValue(component);
             if (value == null)
                 return string.Empty;
-            if (value is Int32 && (Int32)value == 0)
-                return string.Empty;
-            if (value is Double && Math.Abs((Double)value) < 0.00000000001)
-                return string.Empty;
             if (value is bool && !(bool) value)
-                return string.Empty;
-            if (!(value is string) && !(value is bool) && value.ToString().Equals("none"))
                 return string.Empty;
 
             return value;

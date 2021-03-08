@@ -1,0 +1,808 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="_add_library_name" xml:space="preserve">
+    <value>Name to give the spectral library in an –-add-library-path operation.</value>
+  </data>
+  <data name="_add_library_path" xml:space="preserve">
+    <value>Specify a spectral library to be added to the open document.</value>
+  </data>
+  <data name="_batch_commands" xml:space="preserve">
+    <value>Runs a file line by line treating each line like a SkylineRunner/Cmd input. Useful for automating the execution of multiple commands.  The open Skyline file remains active through all commands.</value>
+  </data>
+  <data name="_chromatogram_base_peaks" xml:space="preserve">
+    <value>Export base peak chromatograms. Requires the --chromatogram-file argument.</value>
+  </data>
+  <data name="_chromatogram_file" xml:space="preserve">
+    <value>The path to the tab delimited file to export chromatograms to. Defaults to exporting precursors and products.</value>
+  </data>
+  <data name="_chromatogram_precursors" xml:space="preserve">
+    <value>Export precursor ion chromatograms. Requires the --chromatogram-file argument.</value>
+  </data>
+  <data name="_chromatogram_products" xml:space="preserve">
+    <value>Export product ion chromatograms. Requires the --chromatogram-file argument.</value>
+  </data>
+  <data name="_chromatogram_tics" xml:space="preserve">
+    <value>Export total ion current chromatograms. Requires the --chromatogram-file argument.</value>
+  </data>
+  <data name="_decoys_add" xml:space="preserve">
+    <value>Add decoys to a template document for reintegrate model generation with mProphet. (decoy generation method is optional and defaults to “reverse”)</value>
+  </data>
+  <data name="_decoys_add_count" xml:space="preserve">
+    <value>A number of decoys to add. (optional – default is to generate as many decoys as targets)</value>
+  </data>
+  <data name="_dir" xml:space="preserve">
+    <value>Used to specify a default root directory for all other path arguments, other than the directory in which the command is run.</value>
+  </data>
+  <data name="_exp_file" xml:space="preserve">
+    <value>Path to the method or transition list file (or directory) to export to. This option is required for method and transition list export.</value>
+  </data>
+  <data name="_exp_ignore_proteins" xml:space="preserve">
+    <value>Ignore protein boundaries in creating methods.</value>
+  </data>
+  <data name="_exp_isolationlist_instrument" xml:space="preserve">
+    <value>Export an isolation list. This option is required for exporting an isolation list and has no default. This option cannot be used with -–exp-translist-instrument or –exp-method-instrument, because you cannot export an isolation list and a transition list or method simultaneously.</value>
+  </data>
+  <data name="_exp_max_trans" xml:space="preserve">
+    <value>Maximum number of transitions per injection for export strategies “protein” and “buckets” OR maximum number of simultaneous transitions for scheduled methods. The default is 100.</value>
+  </data>
+  <data name="_exp_method_instrument" xml:space="preserve">
+    <value>Export a method. This option is required for exporting a method and has no default. This option cannot be used with --exp-isolationlist-instrument or --exp-translist-instrument, because you cannot export a method and an isolation/transition list simultaneously.</value>
+  </data>
+  <data name="_exp_method_type" xml:space="preserve">
+    <value>Sets a standard, scheduled or triggered method. The default is “standard”.</value>
+  </data>
+  <data name="_exp_optimizing" xml:space="preserve">
+    <value>Export a method with extra transitions for finding optimal collision energy or declustering potential.</value>
+  </data>
+  <data name="_exp_polarity" xml:space="preserve">
+    <value>Controls export behavior for documents with both positive and negative transitions. Allows for output of only positive or only negative transitions, or creates separate outputs for each polarity. Defaults to all, and is ignored for single polarity documents.</value>
+  </data>
+  <data name="_exp_primary_count" xml:space="preserve">
+    <value>For --exp-method-type=triggered specifies the number of transitions to make primary.</value>
+  </data>
+  <data name="_exp_scheduling_replicate" xml:space="preserve">
+    <value>Use this only if creating a scheduled or triggered method. The default is to schedule based on an average of all replicates, but if you specify one, the method will be scheduled based on that replicate.</value>
+  </data>
+  <data name="_exp_strategy" xml:space="preserve">
+    <value>Strategy for dividing a method into injections. The default is “single”.</value>
+  </data>
+  <data name="_exp_template" xml:space="preserve">
+    <value>Path of the method template. This can be a file or a directory depending on your instrument. This option is required for method export.</value>
+  </data>
+  <data name="_exp_translist_instrument" xml:space="preserve">
+    <value>Export a transition list. This option is required for exporting a transition list and has no default. This option cannot be used with --exp-isolation-list or --exp-method-instrument, because you cannot export a transition list and an isolation list or method simultaneously.</value>
+  </data>
+  <data name="_help" xml:space="preserve">
+    <value>Shows this text.</value>
+  </data>
+  <data name="_ignore_transition_errors" xml:space="preserve">
+    <value>When present imports all recognized transitions from a transition list or assay library, with error rows reported as warnings.</value>
+  </data>
+  <data name="_import_all" xml:space="preserve">
+    <value>Imports from a folder all files or sub-folders which are not already in the document, naming each with the base-name of the file or sub-folder, unless the --import-naming-pattern parameter is also supplied. If --import-replicate-name is supplied, then all files are added to one multi-injection replicate.</value>
+  </data>
+  <data name="_import_all_files" xml:space="preserve">
+    <value>Imports from a folder all files but not subfolders which are not already in the document, naming each with the base-name of the file, unless the --import-naming-pattern parameter is also supplied. If --import-replicate-name is supplied, then all files are added to one multi-injection replicate.</value>
+  </data>
+  <data name="_import_append" xml:space="preserve">
+    <value>Append the import-file to the given replicate. This is an intention check in case the document already has a replicate with the given name. By default this is set to false. This option only works with the -–import-file option.</value>
+  </data>
+  <data name="_import_assay_library" xml:space="preserve">
+    <value>Import an assay library transition list with columns for iRT and relative product ion abundance to create an iRT calculator and spectral library for enhanced peak picking.</value>
+  </data>
+  <data name="_import_before" xml:space="preserve">
+    <value>When importing from a folder, only import from files with modified time before the given date.</value>
+  </data>
+  <data name="_import_document" xml:space="preserve">
+    <value>Import another Skyline document file into the open document. This may be specified multiple times for multiple files.</value>
+  </data>
+  <data name="_import_document_merge_peptides" xml:space="preserve">
+    <value>Matching peptides are merged if used, otherwise not.</value>
+  </data>
+  <data name="_import_document_results" xml:space="preserve">
+    <value>Determines how any results in the imported document are handled. The default is to remove them.</value>
+  </data>
+  <data name="_import_fasta" xml:space="preserve">
+    <value>Import a FASTA file into the open document.</value>
+  </data>
+  <data name="_import_file" xml:space="preserve">
+    <value>Attach a replicate to the open document.</value>
+  </data>
+  <data name="_import_lockmass_negative" xml:space="preserve">
+    <value>Waters lockmass correction m/z for negative ion scans.</value>
+  </data>
+  <data name="_import_lockmass_positive" xml:space="preserve">
+    <value>Waters lockmass correction m/z for positive ion scans.</value>
+  </data>
+  <data name="_import_lockmass_tolerance" xml:space="preserve">
+    <value>Waters lockmass correction tolerance m/z.</value>
+  </data>
+  <data name="_import_naming_pattern" xml:space="preserve">
+    <value>A regular expression from which the first group will be used to name replicates in an --import-all operation (e.g. [^_]_(.*) for everything after the first underscore).</value>
+  </data>
+  <data name="_import_no_join" xml:space="preserve">
+    <value>Import results files to individual .skyd files without joining them to the main document .skyd file. This is useful for distributed processing, as on HPC cluster.</value>
+  </data>
+  <data name="_import_on_or_after" xml:space="preserve">
+    <value>When importing from a folder, only import from files with modified time on or after the given date.</value>
+  </data>
+  <data name="_import_optimizing" xml:space="preserve">
+    <value>Indicates the data being imported contains extra transitions for detecting optimal collision energy or declustering potential.</value>
+  </data>
+  <data name="_import_process_count" xml:space="preserve">
+    <value>A number of sub-processes will be run for single-file import, after which the results from each single file will be joined by the main process. This can produce 10x performance gains on24-core NUMA servers and 3-4x even on i7 processors, under the right conditions. Be sure to test with your system.</value>
+  </data>
+  <data name="_import_replicate_name" xml:space="preserve">
+    <value>Name to give the new replicate in an –import-file operation.</value>
+  </data>
+  <data name="_import_search_add_mods" xml:space="preserve">
+    <value>Adds all modifications found in peptide search results files to the open document.</value>
+  </data>
+  <data name="_import_search_cutoff_score" xml:space="preserve">
+    <value>Defines a cutoff score (between 0 and 1) to be used when building a spectral library from peptide search results files, where 1 is for highest confidence matches and 0 includes everything. [default 0.95]</value>
+  </data>
+  <data name="_import_search_irts" xml:space="preserve">
+    <value>Name of iRT standard to to be used when building a spectral library.</value>
+  </data>
+  <data name="_import_search_num_cirts" xml:space="preserve">
+    <value>Specify the number of CiRT peptides to use as iRT standards if building a spectral library with CiRT peptides as iRT standards.</value>
+  </data>
+  <data name="_import_search_recalibrate_irts" xml:space="preserve">
+    <value>If building a spectral library with iRT standards, recalibrate the iRT standard values relative to the peptides being added.</value>
+  </data>
+  <data name="_import_search_file" xml:space="preserve">
+    <value>Import a peptide search results file into the open document, building a document-specific spectral library. This may be specified multiple times for multiple files. Use –import-fasta argument to add matched peptides as targets.</value>
+  </data>
+  <data name="_import_search_include_ambiguous" xml:space="preserve">
+    <value>Prevent spectra with multiple ambiguous peptide matches from being discarded when building the spectral library.</value>
+  </data>
+  <data name="_import_search_prefer_embedded_spectra" xml:space="preserve">
+    <value>For MaxQuant msms.txt files to force use of the spectra in the file rather than opening raw data files for the original spectra. The MaxQuant msms.txt files contain charge-state deconvoluted spectra which may not be appropriate for target selection.</value>
+  </data>
+  <data name="_import_threads" xml:space="preserve">
+    <value>A number of files will be imported in parallel using threads in the main process (equivalent to “Files to import simultaneously” in the user interface), after which the results from each single file will be joined. This can produce 2-4x performance gains under the right conditions. Be sure to test with your system.</value>
+  </data>
+  <data name="_import_transition_list" xml:space="preserve">
+    <value>Import a simple transition list with Q1, Q3 and peptide sequence.  Also supports molecule transition lists in CSV format with suitable headers.</value>
+  </data>
+  <data name="_import_warn_on_failure" xml:space="preserve">
+    <value>If importing a file fails with an error the message is emitted as a warning, the replicate is removed, and importing continues to completion.</value>
+  </data>
+  <data name="_in" xml:space="preserve">
+    <value>Open a Skyline file</value>
+  </data>
+  <data name="_irt_calc_name" xml:space="preserve">
+    <value>The name for the iRT calculator created during assay library import. (optional) The default name is the document base name.</value>
+  </data>
+  <data name="_irt_database_path" xml:space="preserve">
+    <value>The path to an existing iRT calculator (.irtdb file) to be used with an imported assay library. Or, if –irt-standards-group-name or –irt-standards-file are used, then this is the output path for the created .irtdb file. (optional) The default iRT calculator path is path/to/document.irtdb</value>
+  </data>
+  <data name="_irt_standards_file" xml:space="preserve">
+    <value>The path to a separate assay library containing the iRT standards to be applied to an imported assay library. (optional)</value>
+  </data>
+  <data name="_irt_standards_group_name" xml:space="preserve">
+    <value>The name of a protein or peptide list containing the iRT standards within an imported assay library. (optional)</value>
+  </data>
+  <data name="_keep_empty_proteins" xml:space="preserve">
+    <value>Keeps any empty proteins in the open document after importing a FASTA file.</value>
+  </data>
+  <data name="_log_file" xml:space="preserve">
+    <value>Sends all logged output to a file.</value>
+  </data>
+  <data name="_memstamp" xml:space="preserve">
+    <value>All logging output will be preceded by two memory usage values managed and process private bytes in MB, rounded to the nearest MB.</value>
+  </data>
+  <data name="_out" xml:space="preserve">
+    <value>Same as save except writes to the specified file</value>
+  </data>
+  <data name="_reintegrate_create_model" xml:space="preserve">
+    <value>This option will cause a new model to be created, using the mProphet algorithm with all available scores for the results found in the document. (requires --reintegrate-model-name)</value>
+  </data>
+  <data name="_reintegrate_exclude_feature" xml:space="preserve">
+    <value>Use to exclude a particular feature score by name from the model. Names can be found in the user interface. This argument may be used multiple times to exclude multiple features.</value>
+  </data>
+  <data name="_reintegrate_log_training" xml:space="preserve">
+    <value>Causes detailed information about model training to be logged.</value>
+  </data>
+  <data name="_reintegrate_model_both" xml:space="preserve">
+    <value>Forces the use of both decoys and second best peaks during reintegration. The default is to use decoys only.</value>
+  </data>
+  <data name="_reintegrate_model_iteration_count" xml:space="preserve">
+    <value>Can be used to control the number of iterations performed during model creation. By default up to 10 are allowed and iterations stop when a new model produces fewer detections.</value>
+  </data>
+  <data name="_reintegrate_model_name" xml:space="preserve">
+    <value>The name of a scoring model to use for the reintegrate operation. The model can either be pre-defined (e.g. using the Edit &gt; Refine &gt; Reintegrate form) or created automatically during this operation by using --reintegrate-create-model.</value>
+  </data>
+  <data name="_reintegrate_model_second_best" xml:space="preserve">
+    <value>Forces the use of second best peaks during reintegration. The default is to use decoys only.</value>
+  </data>
+  <data name="_reintegrate_overwrite_peaks" xml:space="preserve">
+    <value>Existing manually integrated peaks will be overwritten with peaks chosen by the reintegration model. (requires --reintegrate-model-name)</value>
+  </data>
+  <data name="_remove_all" xml:space="preserve">
+    <value>Remove all results from the open document.</value>
+  </data>
+  <data name="_remove_before" xml:space="preserve">
+    <value>Remove all results from the open document with an acquired time before the given date.</value>
+  </data>
+  <data name="_report_add" xml:space="preserve">
+    <value>Add reports from a saved report template file to the running program.</value>
+  </data>
+  <data name="_report_conflict_resolution" xml:space="preserve">
+    <value>Specifies how to resolve report name conflicts, by either overwriting or skipping them, when using --report-add (default is to output an error message for conflicts)</value>
+  </data>
+  <data name="_report_file" xml:space="preserve">
+    <value>The path to export the report to. Required if --report-name is specified.</value>
+  </data>
+  <data name="_report_format" xml:space="preserve">
+    <value>CSV for comma-separated reports (or semicolon separated, depending on your localization) or TSV for tab separated reports [default CSV]</value>
+  </data>
+  <data name="_report_invariant" xml:space="preserve">
+    <value>Exports the report with the “Invariant” language setting, using English (US) number formats and header text without spaces, ideal for use with the R statistical programming environment.</value>
+  </data>
+  <data name="_report_name" xml:space="preserve">
+    <value>The name of a report to export as it appears in the Skyline Export Report form.</value>
+  </data>
+  <data name="_save" xml:space="preserve">
+    <value>Saves any changes to the file</value>
+  </data>
+  <data name="_share_type" xml:space="preserve">
+    <value>Specifies the type, 'minimal' or 'complete', of archive to share when --share-zip is specified. Minimal is the default attempting to reduce the size of the archive to the minimum necessary to represent the targets in the document while 'complete' maintains full fidelity of all project files.</value>
+  </data>
+  <data name="_share_zip" xml:space="preserve">
+    <value>Saves the entire project (document, results, libraries, etc.) to a ZIP archive. Defaults to a minimal archive.</value>
+  </data>
+  <data name="_timestamp" xml:space="preserve">
+    <value>All logging output will be preceded by a time and date.</value>
+  </data>
+  <data name="CommandArgGroup_ToString_Argument" xml:space="preserve">
+    <value>Argument</value>
+  </data>
+  <data name="CommandArgGroup_ToString_Description" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="CommandArgs_GROUP_GENERAL_IO_General_input_output" xml:space="preserve">
+    <value>General input/output</value>
+  </data>
+  <data name="CommandArgs_GROUP_IMPORT_Importing_results_replicates" xml:space="preserve">
+    <value>Importing results replicates</value>
+  </data>
+  <data name="CommandArgs_GROUP_REMOVE_Removing_results_replicates" xml:space="preserve">
+    <value>Removing results replicates</value>
+  </data>
+  <data name="CommandArgs_GROUP_IMPORT_DOC_Importing_other_Skyline_documents" xml:space="preserve">
+    <value>Importing other Skyline documents</value>
+  </data>
+  <data name="CommandArgs_GROUP_FASTA_Importing_FASTA_files" xml:space="preserve">
+    <value>Importing FASTA files</value>
+  </data>
+  <data name="CommandArgs_GROUP_IMPORT_LIST_Importing_transition_lists_and_assay_libraries" xml:space="preserve">
+    <value>Importing transition lists and assay libraries</value>
+  </data>
+  <data name="CommandArgs_GROUP_ADD_LIBRARY_Adding_spectral_libraries" xml:space="preserve">
+    <value>Adding spectral libraries</value>
+  </data>
+  <data name="CommandArgs_GROUP_REINTEGRATE_Reintegrate_with_advanced_peak_picking_models" xml:space="preserve">
+    <value>Reintegrate with advanced peak picking models</value>
+  </data>
+  <data name="CommandArgs_GROUP_REPORT_Exporting_reports" xml:space="preserve">
+    <value>Exporting reports</value>
+  </data>
+  <data name="CommandArgs_GROUP_CHROMATOGRAM_Exporting_chromatograms" xml:space="preserve">
+    <value>Exporting chromatograms</value>
+  </data>
+  <data name="CommandArgs_GROUP_IMPORT_SEARCH_Importing_peptide_searches" xml:space="preserve">
+    <value>Importing peptide searches</value>
+  </data>
+  <data name="CommandArgs_GROUP_LISTS_Exporting_isolation_transition_lists" xml:space="preserve">
+    <value>Exporting isolation/transition lists</value>
+  </data>
+  <data name="CommandArgs_GROUP_METHOD_Exporting_native_instrument_methods" xml:space="preserve">
+    <value>Exporting native instrument methods</value>
+  </data>
+  <data name="CommandArgs_GROUP_EXP_GENERAL_Method_and_transition_list_options" xml:space="preserve">
+    <value>Method and transition list options</value>
+  </data>
+  <data name="CommandArgs_Usage_To_access_the_command_line_interface_for_Skyline_you_can_use_either_SkylineRunner_exe_or_SkylineCmd_exe_" xml:space="preserve">
+    <value>To access the command-line interface for Skyline you can use either SkylineRunner.exe or SkylineCmd.exe.</value>
+  </data>
+  <data name="CommandArgs_Usage_" xml:space="preserve">
+    <value>SkylineRunner.exe is a tiny shim executable less than 10 KB in size.  It requires a Skyline installation, performed with the self-updating web installers, on the computer on which SkylineRunner is run.  SkylineRunner simply starts a separate Skyline process running without any user interface, pipes the parameter options from the command-line to the running Skyline instance, and prints output from its Skyline instance to the command console. You can still run multiple instances of SkylineRunner and it will start multiple instances of Skyline. The Skyline instance started by SkylineRunner is independent of any other instances that may already be running on the same machine.  It is not necessary to have a visible instance of Skyline running on your computer for SkylineRunner to work.</value>
+  </data>
+  <data name="CommandArgs_Usage_para2" xml:space="preserve">
+    <value>SkylineRunner.exe is a tiny shim executable less than 10 KB in size.  It requires a Skyline installation, performed with the self-updating web installers, on the computer on which SkylineRunner is run.  SkylineRunner simply starts a separate Skyline process running without any user interface, pipes the parameter options from the command-line to the running Skyline instance, and prints output from its Skyline instance to the command console. You can still run multiple instances of SkylineRunner and it will start multiple instances of Skyline. The Skyline instance started by SkylineRunner is independent of any other instances that may already be running on the same machine.  It is not necessary to have a visible instance of Skyline running on your computer for SkylineRunner to work.</value>
+  </data>
+  <data name="CommandArgs_Usage_para3" xml:space="preserve">
+    <value>SkylineCmd.exe is a much simpler executable which is always installed beside Skyline.exe. It uses the Skyline.exe module as a DLL providing a much cleaner command-line implementation than SkylineRunner.exe, but you must know where SkylineCmd.exe lives on disk to run it, which is usually not the case with the web installer. Usually, you will use either the “Unplugged” installer or the Administrator installer (or recently the Wine Docker Container for Linux systems) if you want to use SkylineCmd.exe. The “Unplugged” installer comes in a ZIP file and you can just unzip it, find SkylineCmd.exe and run it in-place. The Administrator installer puts SkylineCmd.exe in C:\Program Files\Skyline.</value>
+  </data>
+  <data name="CommandArgs_Usage_para4" xml:space="preserve">
+    <value>The Skyline command-line interface is intended for automating tasks such as quality control, scheduling and refinement, during acquisition.  With the Skyline command-line interface, you can open a Skyline document, import a newly acquired data file, and export a report or new method. You can also run large-scale chromatogram extraction and peak picking for proteomewide DIA and DDA experiments faster and consuming less memory than using the full graphic user interface. (See Webinar 14: https://skyline.ms/webinar14.url)</value>
+  </data>
+  <data name="CommandArgs_Usage_Until_the_section_titled_Settings_Customization_all_other_command_line_arguments_rely_on_the____in__argument_because_they_all_rely_on_having_a_Skyline_document_open_" xml:space="preserve">
+    <value>Until the section titled Settings Customization all other command line arguments rely on the '--in' argument because they all rely on having a Skyline document open.</value>
+  </data>
+  <data name="CommandArgs_GROUP_PANORAMA_Publishing_to_Panorama" xml:space="preserve">
+    <value>Publishing to Panorama</value>
+  </data>
+  <data name="CommandArgs_GROUP_PANORAMA_postamble" xml:space="preserve">
+    <value>If the arguments above are used along with arguments to import results files into the document (--import-file or -–import-all) the Skyline document will be uploaded to the given Panorama server only if new results are added to the document.</value>
+  </data>
+  <data name="_full_scan_precursor_res" xml:space="preserve">
+    <value>Resolving power of the precursor mass analyzer. If the mass analyzer is 'Centroided' the value is in PPM.</value>
+  </data>
+  <data name="_full_scan_precursor_res_mz" xml:space="preserve">
+    <value>The m/z value at which the precursor mass analyzer resolving power is specified. (applies only to orbitrap and ft_icr mass analyzers)</value>
+  </data>
+  <data name="_full_scan_product_res" xml:space="preserve">
+    <value>Resolving power of the product mass analyzer. If the mass analyzer is 'Centroided' the value is in PPM.</value>
+  </data>
+  <data name="_full_scan_product_res_mz" xml:space="preserve">
+    <value>The m/z value at which the product mass analyzer resolving power is specified. (applies only to orbitrap and ft_icr mass analyzers)</value>
+  </data>
+  <data name="_full_scan_rt_filter_tolerance" xml:space="preserve">
+    <value>The number of minutes on either side of the predicted time or MS/MS IDs, i.e. ± minutes.</value>
+  </data>
+  <data name="_panorama_folder" xml:space="preserve">
+    <value>The path to a folder on the Panorama server to which the file is to be published (e.g. MyProject/MyFolder).</value>
+  </data>
+  <data name="_panorama_password" xml:space="preserve">
+    <value>The password for a user with access to publish to the Panorama server.</value>
+  </data>
+  <data name="_panorama_server" xml:space="preserve">
+    <value>URL of the Panorama server to which the --in file is to be published. The URL should contain the protocol (http or https), hostname and port, if required. Examples:
+https://panoramaweb.org
+or
+http://localhost:8080</value>
+  </data>
+  <data name="_panorama_username" xml:space="preserve">
+    <value>The username/email address for a user with access to publish to the Panorama server.</value>
+  </data>
+  <data name="_tool_add" xml:space="preserve">
+    <value>The name of a tool to be added by its settings rather than an installation ZIP file.</value>
+  </data>
+  <data name="_tool_add_zip" xml:space="preserve">
+    <value>Import tools from a tool installation ZIP file.</value>
+  </data>
+  <data name="_tool_arguments" xml:space="preserve">
+    <value>Optional command-line arguments for the tool to be added, used when the tool is executed. (Not applicable to web URL commands)</value>
+  </data>
+  <data name="_tool_command" xml:space="preserve">
+    <value>The command or webpage URL to run for a command being added by its settings rather than an installation ZIP file.</value>
+  </data>
+  <data name="_tool_conflict_resolution" xml:space="preserve">
+    <value>Tells how to resolve a tool name conflict, by either overwriting an existing installation or skipping installation of the new tool.</value>
+  </data>
+  <data name="_tool_ignore_required_packages" xml:space="preserve">
+    <value>Ignore required packages when installing a tool from a ZIP file.</value>
+  </data>
+  <data name="_tool_initial_dir" xml:space="preserve">
+    <value>Optional initial directory for the tool to be added, used when the tool is executed.  (Not applicable to web URL commands)</value>
+  </data>
+  <data name="_tool_list_export" xml:space="preserve">
+    <value>Exports all the tools in the Tools menu to a text file as line separated lists of arguments for --batch-commands.</value>
+  </data>
+  <data name="_tool_output_to_immediate_window" xml:space="preserve">
+    <value>When present the tool output is piped to the Immediate Window at runtime.</value>
+  </data>
+  <data name="_tool_program_macro" xml:space="preserve">
+    <value>Specifies a program title and version to use with the -–tool-program-path command. Together these commands are for importing tools from a ZIP file that use the $(ProgramPath()) macro as their command. For more information see the documentation on External Tools. e.g.
+--tool-program-macro=R,2.15.2</value>
+  </data>
+  <data name="_tool_program_path" xml:space="preserve">
+    <value>Specifies the path to an executable on the local machine for the program title and version specified by the --tool-program-macro flag.</value>
+  </data>
+  <data name="_tool_report" xml:space="preserve">
+    <value>The name of a report in the settings to use as the input report for the tool.</value>
+  </data>
+  <data name="_tool_zip_conflict_resolution" xml:space="preserve">
+    <value>Specify whether tool conflicts from the provided ZIP file should be resolved by overwriting or installing in parallel. This is for conflicts related to tool versioning and report names.</value>
+  </data>
+  <data name="_tool_zip_overwrite_annotations" xml:space="preserve">
+    <value>Specify whether conflicting custom annotations from the provided ZIP file should overwrite (true) existing annotations or be skipped (false).</value>
+  </data>
+  <data name="CommandArgs_GROUP_SETTINGS_Document_Settings" xml:space="preserve">
+    <value>Document Settings</value>
+  </data>
+  <data name="CommandArgs_PATH_TO_FILE_path_to_file" xml:space="preserve">
+    <value>path/to/file</value>
+  </data>
+  <data name="CommandArgs_PATH_TO_FOLDER" xml:space="preserve">
+    <value>path/to/folder</value>
+  </data>
+  <data name="CommandArgs_DATE_VALUE" xml:space="preserve">
+    <value>&lt;date&gt;</value>
+  </data>
+  <data name="CommandArgs_INT_VALUE" xml:space="preserve">
+    <value>&lt;integer&gt;</value>
+  </data>
+  <data name="CommandArgs_NUM_VALUE" xml:space="preserve">
+    <value>&lt;number&gt;</value>
+  </data>
+  <data name="CommandArgs_NAME_VALUE" xml:space="preserve">
+    <value>&lt;name&gt;</value>
+  </data>
+  <data name="CommandArgs_FEATURE_NAME_VALUE" xml:space="preserve">
+    <value>&lt;feature name&gt;</value>
+  </data>
+  <data name="CommandArgs_REPORT_NAME_VALUE" xml:space="preserve">
+    <value>&lt;report name&gt;</value>
+  </data>
+  <data name="CommandArgs_PIPE_NAME_VALUE" xml:space="preserve">
+    <value>&lt;pipe name&gt;</value>
+  </data>
+  <data name="CommandArgs_REGEX_VALUE" xml:space="preserve">
+    <value>&lt;reg-ex&gt;</value>
+  </data>
+  <data name="CommandArgs_RP_VALUE" xml:space="preserve">
+    <value>&lt;resolving power&gt;</value>
+  </data>
+  <data name="CommandArgs_MZ_VALUE" xml:space="preserve">
+    <value>&lt;m/z value&gt;</value>
+  </data>
+  <data name="CommandArgs_MINUTES_VALUE" xml:space="preserve">
+    <value>&lt;minutes&gt;</value>
+  </data>
+  <data name="CommandArgs_MILLIS_VALE" xml:space="preserve">
+    <value>&lt;millis&gt;</value>
+  </data>
+  <data name="CommandArgs_SERVER_URL_VALUE" xml:space="preserve">
+    <value>&lt;server url&gt;</value>
+  </data>
+  <data name="CommandArgs_USERNAME_VALUE" xml:space="preserve">
+    <value>&lt;username&gt;</value>
+  </data>
+  <data name="CommandArgs_PASSWORD_VALUE" xml:space="preserve">
+    <value>&lt;password&gt;</value>
+  </data>
+  <data name="CommandArgs_COMMAND_VALUE" xml:space="preserve">
+    <value>&lt;command | url&gt;</value>
+  </data>
+  <data name="CommandArgs_COMMAND_ARGUMENTS_VALUE" xml:space="preserve">
+    <value>"&lt;arguments&gt;"</value>
+  </data>
+  <data name="CommandArgs_PROGRAM_MACRO_VALUE" xml:space="preserve">
+    <value>&lt;program title&gt;[,&lt;program version&gt;]</value>
+  </data>
+  <data name="CommandArgs_GROUP_ANNOTATIONS_Importing_annotations" xml:space="preserve">
+    <value>Importing annotations</value>
+  </data>
+  <data name="CommandArgGroup_ToString_Applies_To" xml:space="preserve">
+    <value>Applies To</value>
+  </data>
+  <data name="CommandArgs_ARG_EXP_DWELL_TIME_AppliesTo" xml:space="preserve">
+    <value>Agilent
+SCIEX</value>
+  </data>
+  <data name="CommandArgs_ARG_EXP_Thermo" xml:space="preserve">
+    <value>Thermo</value>
+  </data>
+  <data name="CommandArgs_ARG_EXP_RUN_LENGTH_AppliesTo" xml:space="preserve">
+    <value>Thermo
+Waters</value>
+  </data>
+  <data name="CommandArgs_GROUP_EXP_INSTRUMENT_Vendor_specific_method_and_transition_list_options" xml:space="preserve">
+    <value>Vendor-specific method and transition list options</value>
+  </data>
+  <data name="_exp_add_energy_ramp" xml:space="preserve">
+    <value>Adds an extra column for energy ramp to the transition list.  Optional. Defaults to false.</value>
+  </data>
+  <data name="_exp_dwell_time" xml:space="preserve">
+    <value>Dwell time per transition. This option is required for unscheduled transition lists.</value>
+  </data>
+  <data name="_exp_run_length" xml:space="preserve">
+    <value>Run length of the entire gradient in minutes. This option is required for unscheduled experiments.</value>
+  </data>
+  <data name="_exp_use_s_lens" xml:space="preserve">
+    <value>Adds an extra column for SLens (which defaults to 50) to the transition list.  Optional. Defaults to false.</value>
+  </data>
+  <data name="_import_annotations" xml:space="preserve">
+    <value>Imports annotations from a CSV file into the document. Use File &gt; Export &gt; Annotations to create example files of the required format with paths to associate the annotations to document elements.</value>
+  </data>
+  <data name="CommandArgs_GROUP_DECOYS" xml:space="preserve">
+    <value>Adding decoy peptides</value>
+  </data>
+  <data name="_decoys_discard" xml:space="preserve">
+    <value>Forces any existing decoys to be discarded when --decoys-add is used.</value>
+  </data>
+  <data name="CommandArgs_GROUP_INTERNAL" xml:space="preserve">
+    <value>Internal use only</value>
+  </data>
+  <data name="CommandArgs_GROUP_REFINEMENT" xml:space="preserve">
+    <value>Refining the targets list</value>
+  </data>
+  <data name="_refine_add_label_type" xml:space="preserve">
+    <value>Add back precursors of an isotope label type.</value>
+  </data>
+  <data name="_refine_auto_select_peptides" xml:space="preserve">
+    <value>All proteins will be reset to auto-select the peptides they contain.</value>
+  </data>
+  <data name="_refine_auto_select_precursors" xml:space="preserve">
+    <value>All peptides will be reset to auto-select the precursors they contain.</value>
+  </data>
+  <data name="_refine_auto_select_transitions" xml:space="preserve">
+    <value>All precursors will be reset to auto-select the transitions they contain.</value>
+  </data>
+  <data name="_refine_label_type" xml:space="preserve">
+    <value>Precursors of the specified isotope label type will be removed (default) or added if --refine-add-label-type is also used.</value>
+  </data>
+  <data name="_refine_min_peptides" xml:space="preserve">
+    <value>Proteins with fewer than this number of peptides will be
+removed from the document.</value>
+  </data>
+  <data name="_refine_min_transitions" xml:space="preserve">
+    <value>Precursors with fewer than this number of transitions will be
+removed from the document.</value>
+  </data>
+  <data name="_refine_missing_library" xml:space="preserve">
+    <value>All targets that do not correspond to a library match will be removed.</value>
+  </data>
+  <data name="_refine_remove_duplicates" xml:space="preserve">
+    <value>All peptides that are not unique within the document
+will be removed.</value>
+  </data>
+  <data name="_refine_remove_repeats" xml:space="preserve">
+    <value>All repeated peptides will be removed to leave only the
+first occurrence of any peptide.</value>
+  </data>
+  <data name="CommandArgs_LABEL_VALUE" xml:space="preserve">
+    <value>&lt;label type&gt;</value>
+  </data>
+  <data name="_refine_max_peak_found_ratio" xml:space="preserve">
+    <value>All elements with peak found ratio above this number
+will be removed from the document:
+
+Green = 1.0
+Orange &amp;gt;= 0.5
+Red &amp;lt; 0.5</value>
+  </data>
+  <data name="_refine_max_peptide_peak_rank" xml:space="preserve">
+    <value>All transitions with an average area peak ranking
+greater than this number will be removed from the
+document.</value>
+  </data>
+  <data name="_refine_max_transition_peak_rank" xml:space="preserve">
+    <value>All transitions with an average area peak ranking
+greater than this number will be removed from the
+document.</value>
+  </data>
+  <data name="_refine_min_dotp" xml:space="preserve">
+    <value>All precursors with a product ion peak area to library
+spectrum dot-product below this threshold will be removed
+from the document.</value>
+  </data>
+  <data name="_refine_min_idotp" xml:space="preserve">
+    <value>All precursors with a MS1 precursor peak area to expected
+isotope distribution dot-product below this threshold will be
+removed from the document.</value>
+  </data>
+  <data name="_refine_min_peak_found_ratio" xml:space="preserve">
+    <value>All elements with peak found ratio below this number
+will be removed from the document:
+
+Green = 1.0
+Orange &amp;gt;= 0.5
+Red &amp;lt; 0.5</value>
+  </data>
+  <data name="_refine_min_time_correlation" xml:space="preserve">
+    <value>Precursors will be removed from the document
+until the target value for the correlation coefficient of a linear
+regression with the optimal retention time calculator
+exceed this threshold.</value>
+  </data>
+  <data name="_refine_missing_results" xml:space="preserve">
+    <value>All elements without measured results will be
+removed from the document.</value>
+  </data>
+  <data name="_refine_prefer_larger_products" xml:space="preserve">
+    <value>Causes refinement to choose larger product ions
+when smaller, less selective ions yeild only fractionally
+greater peak area.</value>
+  </data>
+  <data name="_refine_use_best_result" xml:space="preserve">
+    <value>Use only the best replicate for each peptide in refinement value calculations. (use for fractionation)</value>
+  </data>
+  <data name="CommandArgs_GROUP_REFINEMENT_W_RESULTS" xml:space="preserve">
+    <value>Refining the targets list based on imported results</value>
+  </data>
+  <data name="_tran_precursor_ion_charges" xml:space="preserve">
+    <value>A comma-separated list of precursor ion charge states to apply to peptide molecules to generate precursor targets. Changes the transition filter settings for the open document.</value>
+  </data>
+  <data name="_tran_product_ion_charges" xml:space="preserve">
+    <value>A comma-separated list of product ion charge states to apply to peptide fragments to generate product ion transitions. Changes the transition filter settings for the open document.</value>
+  </data>
+  <data name="_tran_product_ion_types" xml:space="preserve">
+    <value>A comma-separated list of product ion types expected in peptide fragmentation to generate product ion transitions. Changes the transition filter settings for the open document.</value>
+  </data>
+  <data name="_refine_max_precursor_only" xml:space="preserve">
+    <value>Only the precursor charge state with the maximum peak area will be retained.</value>
+  </data>
+  <data name="_refine_cv_remove_above_cutoff" xml:space="preserve">
+    <value>All target precursors with peak area CV above the cutoff will be removed.</value>
+  </data>
+  <data name="_refine_cv_global_normalize" xml:space="preserve">
+    <value>Areas used in CV calculations are normalized as specified. (default no normalization)</value>
+  </data>
+  <data name="_refine_cv_reference_normalize" xml:space="preserve">
+    <value>Areas used in CV calculations are normalized to a reference type, e.g. "heavy".</value>
+  </data>
+  <data name="_refine_qvalue_cutoff" xml:space="preserve">
+    <value>All target precursors with a maximum detection q value above the cutoff will be removed. If --refine-minimum-detections is used then at least the specified number of replicates must have a detection q value below the cutoff.</value>
+  </data>
+  <data name="_refine_minimum_detections" xml:space="preserve">
+    <value>All target precursors with less than the specified number of replicates with detection q value below the --refine-qvalue-cutoff are removed.</value>
+  </data>
+  <data name="_import_filename_pattern" xml:space="preserve">
+    <value>A regular expression that is applied to file names to select the ones that will be imported.</value>
+  </data>
+  <data name="_import_samplename_pattern" xml:space="preserve">
+    <value>A regular expression that is applied to sample names (e.g. in a multi-injection .wiff file) to select the ones that will be imported.</value>
+  </data>
+  <data name="_exp_order_by_mz" xml:space="preserve">
+    <value>Order exported method by m/z values in ascending order (precursor m/z, then product m/z when applicable) for optimized quadrupole switching.</value>
+  </data>
+  <data name="_tran_predict_ce" xml:space="preserve">
+    <value>Changes the transition settings collision energy prediction setting to one of the previously defined options.</value>
+  </data>
+  <data name="_tran_predict_cov" xml:space="preserve">
+    <value>Changes the transition settings compensation voltage prediction setting to one of the previously defined options.</value>
+  </data>
+  <data name="_tran_predict_dp" xml:space="preserve">
+    <value>Changes the transition settings declustering potential prediction setting to one of the previously defined options.</value>
+  </data>
+  <data name="_tran_predict_optdb" xml:space="preserve">
+    <value>Changes the transition settings optimization library used in predicting instrument parameters to one of the previously defined options.</value>
+  </data>
+  <data name="_version" xml:space="preserve">
+    <value>Emits version information for the running installation</value>
+  </data>
+  <data name="_save_settings" xml:space="preserve">
+    <value>Causes settings changes to the global environment, e.g. added reports, libraries, enzymes, etc. to be saved to the program configuration file.</value>
+  </data>
+  <data name="_refine_cv_transitions" xml:space="preserve">
+    <value>Specifies the transitions for which peak areas are summed and used in CV calculations for CV refinement. (either all or a single best transition)</value>
+  </data>
+  <data name="_refine_cv_transitions_count" xml:space="preserve">
+    <value>Specifies the count of transitions selected by library transition rank (isotopes for precursors and library for fragments) for which peak areas are summed and used in CV calculations for CV refinement.</value>
+  </data>
+  <data name="_refine_cv_ms_level" xml:space="preserve">
+    <value>The MS level used in the CV calculations. Defaults to "products" which will usually have lower CVs than precursors in methods like PRM and DIA.</value>
+  </data>
+  <data name="_reintegrate_model_type" xml:space="preserve">
+    <value>The type of peak scoring model to train to produce z scores and q values. (dafault mProphet) Skyline - simply scales coefficients of the default Skyline model to estimate a unit normal distribution from the decoys. SkylineML - uses the mProphet machine learning algorithm to train a model using only the default set of feature scores.</value>
+  </data>
+  <data name="CommandArgs_NUM_LIST_VALUE" xml:space="preserve">
+    <value>&lt;number list&gt;</value>
+  </data>
+  <data name="_ims_library_res" xml:space="preserve">
+    <value>Resolving power of ion mobility dimension used to filter around ion mobility values from the spectral libraries.</value>
+  </data>
+  <data name="_refine_gc_fold_change_cutoff" xml:space="preserve">
+    <value>Keep only targets with a group comparision fold change above this cutoff. (optional for group comparison refinement)</value>
+  </data>
+  <data name="_refine_gc_ms_level" xml:space="preserve">
+    <value>The MS level (1 or 2) to use in calculating peak areas for a group comparison refinement. Defaults to level 2 if both levels are present, and otherwise uses whichever level is present.</value>
+  </data>
+  <data name="_refine_gc_name" xml:space="preserve">
+    <value>The name of a previously defined group comparison to use in refining for significantly changing targets. Specify the argument multiple times with multiple names to keep the union of multiple comparisons.</value>
+  </data>
+  <data name="_refine_gc_p_value_cutoff" xml:space="preserve">
+    <value>Keep only targets with a group comparison adjusted p value below the specified cut-off. (required for group comparison refinement)</value>
+  </data>
+</root>

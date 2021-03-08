@@ -795,31 +795,31 @@
     <value>285, 17</value>
   </metadata>
   <data name="startFromStepOne.Size" type="System.Drawing.Size, System.Drawing">
-    <value>252, 22</value>
+    <value>238, 22</value>
   </data>
   <data name="startFromStepOne.Text" xml:space="preserve">
     <value>Run all steps</value>
   </data>
   <data name="startFromStepTwo.Size" type="System.Drawing.Size, System.Drawing">
-    <value>252, 22</value>
+    <value>238, 22</value>
   </data>
   <data name="startFromStepTwo.Text" xml:space="preserve">
     <value>Run from step 2: data import</value>
   </data>
   <data name="startFromStepThree.Size" type="System.Drawing.Size, System.Drawing">
-    <value>252, 22</value>
+    <value>238, 22</value>
   </data>
   <data name="startFromStepThree.Text" xml:space="preserve">
-    <value>Run from step 3: report extraction</value>
+    <value>Run from step 3: export reports</value>
   </data>
   <data name="startFromStepFour.Size" type="System.Drawing.Size, System.Drawing">
-    <value>252, 22</value>
+    <value>238, 22</value>
   </data>
   <data name="startFromStepFour.Text" xml:space="preserve">
     <value>Run from step 4: run R scripts</value>
   </data>
   <data name="batchRunDropDown.Size" type="System.Drawing.Size, System.Drawing">
-    <value>253, 92</value>
+    <value>239, 114</value>
   </data>
   <data name="&gt;&gt;batchRunDropDown.Name" xml:space="preserve">
     <value>batchRunDropDown</value>

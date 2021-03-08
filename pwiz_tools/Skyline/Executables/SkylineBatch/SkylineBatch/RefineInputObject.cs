@@ -9,23 +9,10 @@ namespace SkylineBatch
         // prefix for all refine labels in CommandArgName.resx and refine descriptions in CommandArgUsage.resx
         public static readonly string REFINE_RESOURCE_KEY_PREFIX = "_refine_";
 
-        public RefineInputObject()
-        {
-            InitializeEnumVariables();
-        }
 
-        public RefineInputObject(ImmutableList<Tuple<RefineVariable, string>> initialValues)
+        public RefineInputObject(ImmutableList<Tuple<RefineVariable, string>> initialValues = null)
         {
-            InitializeEnumVariables();
-            ReadCommandList(initialValues);
-        }
-
-        private void InitializeEnumVariables()
-        {
-            // Default for enum variables is none (command not used)
-            cv_global_normalize = CvGlobalNormalizeValues.none;
-            cv_transitions = CvTransitionsValues.none;
-            cv_ms_level = CvMsLevelValues.none;
+            if (initialValues != null) ReadCommandList(initialValues);
         }
 
         #region Variables
@@ -35,66 +22,61 @@ namespace SkylineBatch
         //      Displayed description = CommandArgUsage.(REFINE_RESOURCE_KEY_PREFIX + variableName)
         //      Batch command = "-" + (REFINE_RESOURCE_KEY_PREFIX + variableName).Replace('_', '-')
 
-        public int min_peptides { get; set; }
+        public int? min_peptides { get; set; }
         public bool remove_repeats { get; set; }
         public bool remove_duplicates { get; set; }
         public bool  missing_library { get; set; }
-        public int min_transitions { get; set; }
+        public int? min_transitions { get; set; }
         public string label_type { get; set; }
         public bool add_label_type { get; set; }
         public bool auto_select_peptides { get; set; }
         public bool auto_select_precursors { get; set; }
         public bool auto_select_transitions { get; set; }
         
-        public double min_peak_found_ratio { get; set; }
-        public double max_peak_found_ratio { get; set; }
-        public int max_peptide_peak_rank { get; set; }
-        public int max_transition_peak_rank { get; set; }
+        public double? min_peak_found_ratio { get; set; }
+        public double? max_peak_found_ratio { get; set; }
+        public int? max_peptide_peak_rank { get; set; }
+        public int? max_transition_peak_rank { get; set; }
         public bool max_precursor_only { get; set; }
         public bool  prefer_larger_products { get; set; }
         public bool  missing_results { get; set; }
-        public double  min_time_correlation { get; set; }
-        public double  min_dotp { get; set; }
-        public double  min_idotp { get; set; }
+        public double?  min_time_correlation { get; set; }
+        public double?  min_dotp { get; set; }
+        public double?  min_idotp { get; set; }
         public bool  use_best_result { get; set; }
-        public double  cv_remove_above_cutoff { get; set; }
-        public CvGlobalNormalizeValues  cv_global_normalize { get; set; }
+        public double?  cv_remove_above_cutoff { get; set; }
+        public CvGlobalNormalizeValues?  cv_global_normalize { get; set; }
         public string  cv_reference_normalize { get; set; }
-        public CvTransitionsValues  cv_transitions { get; set; }
-        public int  cv_transitions_count { get; set; }
-        public CvMsLevelValues  cv_ms_level { get; set; }
-        public double  qvalue_cutoff { get; set; }
-        public int  minimum_detections { get; set; }
-        public double  gc_p_value_cutoff { get; set; }
-        public double  gc_fold_change_cutoff { get; set; }
-        public double  gc_ms_level { get; set; }
+        public CvTransitionsValues?  cv_transitions { get; set; }
+        public int?  cv_transitions_count { get; set; }
+        public CvMsLevelValues?  cv_ms_level { get; set; }
+        public double?  qvalue_cutoff { get; set; }
+        public int?  minimum_detections { get; set; }
+        public double?  gc_p_value_cutoff { get; set; }
+        public double?  gc_fold_change_cutoff { get; set; }
+        public double?  gc_ms_level { get; set; }
         public string  gc_name { get; set; }
 
         #endregion
 
         #region Values for enum variables
 
-        // Enum variables must have a "none" option. When "none" is selected, the command is not used
-        // CONSIDER: How will these be localized?
         public enum CvGlobalNormalizeValues
         {
             global_standards,
-            equalize_medians,
-            none
+            equalize_medians
         }
 
         public enum CvTransitionsValues
         {
             all,
-            best,
-            none
+            best
         }
 
         public enum CvMsLevelValues
         {
             precursors,
-            products,
-            none
+            products
         }
 
         #endregion
@@ -254,41 +236,29 @@ namespace SkylineBatch
             AddCommand(commands, RefineVariable.gc_ms_level, gc_ms_level);
             AddCommand(commands, RefineVariable.gc_name, gc_name);
 
-            AddEnumCommand(commands, RefineVariable.cv_global_normalize,  cv_global_normalize.ToString());
-            AddEnumCommand(commands, RefineVariable.cv_transitions,  cv_transitions.ToString());
-            AddEnumCommand(commands, RefineVariable.cv_ms_level,  cv_ms_level.ToString());
+            AddCommand(commands, RefineVariable.cv_global_normalize,  cv_global_normalize);
+            AddCommand(commands, RefineVariable.cv_transitions,  cv_transitions);
+            AddCommand(commands, RefineVariable.cv_ms_level,  cv_ms_level);
             return commands;
         }
 
 
-        private void AddCommand(List<Tuple<RefineVariable, string>> commands, RefineVariable variable, int input)
+        private void AddCommand(List<Tuple<RefineVariable, string>> commands, RefineVariable variable, object input)
         {
-            if (input == 0) return;
-            Add(commands, variable, input.ToString());
-        }
-
-        private void AddCommand(List<Tuple<RefineVariable, string>> commands, RefineVariable variable, double input)
-        {
-            if (Math.Abs(input) < 0.00000000001) return;
+            if (input == null) return;
             Add(commands, variable, input.ToString());
         }
 
         private void AddCommand(List<Tuple<RefineVariable, string>> commands, RefineVariable variable, string input)
         {
-            if (string.IsNullOrEmpty(input)) return;
+            if (string.IsNullOrWhiteSpace(input)) return;
             Add(commands, variable, input);
         }
 
         private void AddCommand(List<Tuple<RefineVariable, string>> commands, RefineVariable variable, bool input)
         {
             if (!input) return;
-            Add(commands, variable, string.Empty);
-        }
-
-        private void AddEnumCommand(List<Tuple<RefineVariable, string>> commands, RefineVariable variable, string input)
-        {
-            if (input.Equals("none")) return;
-            Add(commands, variable, input);
+            Add(commands, variable, input.ToString());
         }
 
         private void Add(List<Tuple<RefineVariable, string>> commands, RefineVariable variable, string value)
