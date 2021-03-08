@@ -67,7 +67,14 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.NewDocument());
             Assert.AreEqual(0, SkylineWindow.Document.PeptideCount);
             var missingFileDlg = ShowDialog<MissingFileDlg>(() => SkylineWindow.OpenFile(documentPath));
-            RunDlg<AlertDlg>(()=>missingFileDlg.ChooseFile(documentPath), alertDlg=>alertDlg.OkDialog());
+            RunDlg<AlertDlg>(()=>missingFileDlg.ChooseFile(documentPath), alertDlg=>
+            {
+                string expectedMessage = string.Format(
+                    Resources.MissingFileDlg_ValidateFilePath_You_must_choose_a_file_with_the___0___filename_extension_,
+                    ".blib");
+                Assert.AreEqual(expectedMessage, alertDlg.Message);
+                alertDlg.OkDialog();
+            });
             OkDialog(missingFileDlg, () => missingFileDlg.ChooseFile(movedPath));
             RunUI(SkylineWindow.ExpandPrecursors);
 
