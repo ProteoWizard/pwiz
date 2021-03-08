@@ -331,6 +331,8 @@ namespace pwiz.Skyline.Util
             {
                 string message = string.Format(Resources.DataGridViewPasteHandler_TryConvertValue_Error_converting___0___to_required_type___1_, strValue,
                                                exception.Message);
+
+                // CONSIDER(bspratt): this is probably not the proper parent. See "Issue 775: follow up on possible improper parenting of MessageDlg"
                 MessageDlg.Show(DataGridView, message);
                 convertedValue = null;
                 return false;
