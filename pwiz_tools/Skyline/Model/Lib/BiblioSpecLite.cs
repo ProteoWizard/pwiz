@@ -1111,10 +1111,19 @@ namespace pwiz.Skyline.Model.Lib
 
         string FormatErrorMessage(Exception x)
         {
+            string details;
+            try
+            {
+                details = LibraryDetails.ToString();
+            }
+            catch (Exception e)
+            {
+                details = e.Message; // File is too messed up to pull details, leave a hint as to why that might be
+            }
             return TextUtil.LineSeparate(
                 string.Format(Resources.BiblioSpecLiteLibrary_Load_Failed_loading_library__0__, FilePath),
                 x.Message,
-                LibraryDetails.ToString());
+                details);
         }
 
         private ImmutableSortedList<int, ExplicitPeakBounds> ReadPeakBoundaries(Stream stream)
