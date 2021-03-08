@@ -745,7 +745,6 @@ namespace pwiz.Skyline.SettingsUI
                                 _driverLibrary.LoadList(_driverLibrary.Chosen.Concat(new[] {editLibDlg.LibrarySpec}).ToArray());
                             }
                         }
-
                         return;
                     }
 
