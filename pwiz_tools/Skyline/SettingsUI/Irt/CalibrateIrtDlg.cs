@@ -822,6 +822,14 @@ namespace pwiz.Skyline.SettingsUI.Irt
             comboMinPeptide.SelectedIndex = one;
             comboMaxPeptide.SelectedIndex = two;
         }
+
+        public int NumFixedPointOptions => Math.Min(comboMinPeptide.Items.Count, comboMaxPeptide.Items.Count);
+
+        public void WriteFixedPointPeptides()
+        {
+            Console.WriteLine(@"Fixed point peptides (min), {0} = {1}", comboMinPeptide.Items.Count, string.Join(@", ", comboMinPeptide.Items.Cast<string>()));
+            Console.WriteLine(@"Fixed point peptides (max), {0} = {1}", comboMaxPeptide.Items.Count, string.Join(@", ", comboMaxPeptide.Items.Cast<string>()));
+        }
         #endregion
 
         private void gridViewCalibrate_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
