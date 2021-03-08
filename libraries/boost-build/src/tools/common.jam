@@ -774,9 +774,9 @@ if --verbose in [ modules.peek : ARGV ]
     {
         actions hard-link
         {
-            $(RM) "$(<)" 2$(NULL_OUT) $(NULL_OUT)
+            IF EXIST "$(<)" $(RM) "$(<)" 2$(NULL_OUT)
             $(LN) "$(<)" "$(>)" 2$(NULL_OUT) $(NULL_OUT)
-            IF ERRORLEVEL 1 $(CP) "$(>)" $(WINDOWS-CP-HACK) "$(<)" $(NULL_OUT)
+            IF ERRORLEVEL 1 $(CP) "$(>)" $(WINDOWS-CP-HACK) "$(<)"
         }
     }
     else
@@ -799,9 +799,9 @@ else
     {
         actions quietly hard-link
         {
-            $(RM) "$(<)" 2$(NULL_OUT) $(NULL_OUT)
+            IF EXIST "$(<)" $(RM) "$(<)" 2$(NULL_OUT)
             $(LN) "$(<)" "$(>)" 2$(NULL_OUT) $(NULL_OUT)
-            IF ERRORLEVEL 1 $(CP) "$(>)" $(WINDOWS-CP-HACK) "$(<)" $(NULL_OUT)
+            IF ERRORLEVEL 1 $(CP) "$(>)" $(WINDOWS-CP-HACK) "$(<)"
         }
     }
     else

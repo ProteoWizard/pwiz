@@ -22,6 +22,7 @@ using System.Linq;
 using System.Threading;
 using pwiz.Common.Collections;
 using pwiz.Common.DataAnalysis.Clustering;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.DataBinding.Clustering
 {
@@ -136,12 +137,12 @@ namespace pwiz.Common.DataBinding.Clustering
             return clusterDataSet;
         }
 
-        private ClusterResults<RowItem, int> GetClusterDataSetResults()
+        private ClusterResults<RowItem, int> GetClusterDataSetResults(ProgressHandler progressHandler)
         {
             var clusterDataSet = MakeClusterDataSet();
             bool performRowClustering = RowHeaderLevels.Any() || Properties.PivotedProperties.UngroupedProperties
                 .Any(p => null != Properties.GetRowTransform(p));
-            return clusterDataSet.PerformClustering(performRowClustering);
+            return clusterDataSet.PerformClustering(performRowClustering, progressHandler);
         }
 
         public PcaResults<int> PerformPcaOnColumnGroup(PivotedProperties.SeriesGroup seriesGroup, int maxLevels)
@@ -157,9 +158,9 @@ namespace pwiz.Common.DataBinding.Clustering
             return dataSet.PerformPcaOnRows(maxLevels);
         }
 
-        public ClusteredReportResults GetClusteredResults()
+        public ClusteredReportResults GetClusteredResults(ProgressHandler progressHandler)
         {
-            var clusterResults = GetClusterDataSetResults();
+            var clusterResults = GetClusterDataSetResults(progressHandler);
             CaptionedDendrogramData rowDendrogramData = null;
             if (clusterResults.RowDendrogram != null)
             {
@@ -226,9 +227,9 @@ namespace pwiz.Common.DataBinding.Clustering
             return new Clusterer(cancellationToken, reportResults.RowItems, clusteredProperties, ClusterMetricType.FromName(clusteringSpec.DistanceMetric) ?? ClusterMetricType.DEFAULT);
         }
 
-        public static ReportResults PerformClustering(CancellationToken cancellationToken, ClusteringSpec clusteringSpec, ReportResults reportResults)
+        public static ReportResults PerformClustering(ProgressHandler progressHandler, ClusteringSpec clusteringSpec, ReportResults reportResults)
         {
-            return CreateClusterer(cancellationToken, clusteringSpec, reportResults)?.GetClusteredResults();
+            return CreateClusterer(progressHandler.CancellationToken, clusteringSpec, reportResults)?.GetClusteredResults(progressHandler);
         }
     }
 }
