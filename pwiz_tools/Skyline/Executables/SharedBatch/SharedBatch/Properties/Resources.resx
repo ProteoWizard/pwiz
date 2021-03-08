@@ -294,4 +294,7 @@
   <data name="ConfigManager_TryOperation_Please_choose_a_unique_name_" xml:space="preserve">
     <value>Please choose a unique name.</value>
   </data>
+  <data name="TextUtil_FILTER_SKYC_Skyline_Configuration_Files" xml:space="preserve">
+    <value>Skyline Configuration Files</value>
+  </data>
 </root>

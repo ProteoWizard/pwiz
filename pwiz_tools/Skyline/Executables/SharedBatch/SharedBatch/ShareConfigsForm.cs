@@ -20,7 +20,7 @@ namespace SharedBatch
 
         private void btnBrowse_Click(object sender, EventArgs e)
         {
-            var dialog = new SaveFileDialog { Filter = TextUtil.FILTER_XML, FileName = textFileName.Text };
+            var dialog = new SaveFileDialog { Filter = TextUtil.FILTER_SKYC, FileName = textFileName.Text };
             if (dialog.ShowDialog(this) != DialogResult.OK)
                 return;
 

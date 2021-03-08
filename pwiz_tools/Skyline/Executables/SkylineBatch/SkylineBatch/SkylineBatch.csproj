@@ -127,7 +127,6 @@
     <None Include="Resources\Delete.bmp" />
     <Content Include="Resources\downarrow.bmp" />
     <Content Include="Resources\uparrow.bmp" />
-    <EmbeddedResource Include="RefineInputObject.resx" />
     <EmbeddedResource Include="ReportsAddForm.resx">
       <DependentUpon>ReportsAddForm.cs</DependentUpon>
       <SubType>Designer</SubType>

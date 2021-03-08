@@ -575,6 +575,15 @@ namespace SharedBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Skyline Configuration Files.
+        /// </summary>
+        internal static string TextUtil_FILTER_SKYC_Skyline_Configuration_Files {
+            get {
+                return ResourceManager.GetString("TextUtil_FILTER_SKYC_Skyline_Configuration_Files", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Skyline Reports.
         /// </summary>
         internal static string TextUtil_FILTER_SKYR_Skyline_Reports {

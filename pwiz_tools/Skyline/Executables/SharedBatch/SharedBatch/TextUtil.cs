@@ -14,6 +14,7 @@ namespace SharedBatch
         public const string EXT_SKY_ZIP = ".sky.zip";
         public const string EXT_SKYR = ".skyr";
         public const string EXT_SKYD = ".skyd";
+        public const string EXT_SKYC = ".skyc";
         public const string EXT_R = ".R";
         public const string EXT_CSV = ".csv";
         public const string EXT_LOG = ".log";
@@ -32,6 +33,11 @@ namespace SharedBatch
         public static string FILTER_SKYR
         {
             get { return FileDialogFilter(Resources.TextUtil_FILTER_SKYR_Skyline_Reports, EXT_SKYR); }
+        }
+
+        public static string FILTER_SKYC
+        {
+            get { return FileDialogFilter(Resources.TextUtil_FILTER_SKYC_Skyline_Configuration_Files, EXT_SKYC); }
         }
 
         public static string FILTER_CSV
