@@ -74,7 +74,20 @@ namespace SkylineBatch
 
         public override object GetValue(object component)
         {
-            return basePropertyDescriptor.GetValue(component);
+            // Doesn't display default values to highlight changed ones
+            var value = basePropertyDescriptor.GetValue(component);
+            if (value == null)
+                return string.Empty;
+            if (value is Int32 && (Int32)value == 0)
+                return string.Empty;
+            if (value is Double && Math.Abs((Double)value) < 0.00000000001)
+                return string.Empty;
+            if (value is bool && !(bool) value)
+                return string.Empty;
+            if (!(value is string) && !(value is bool) && value.ToString().Equals("none"))
+                return string.Empty;
+
+            return value;
         }
 
         public override bool IsReadOnly
