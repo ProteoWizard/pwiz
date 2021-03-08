@@ -172,6 +172,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             resources.ApplyResources(this.cbAutoTrain, "cbAutoTrain");
             this.cbAutoTrain.Name = "cbAutoTrain";
             this.cbAutoTrain.UseVisualStyleBackColor = true;
+            this.cbAutoTrain.CheckedChanged += new System.EventHandler(this.cbAutoTrain_CheckedChanged);
             // 
             // ImportFastaControl
             // 

@@ -20,13 +20,13 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.Versioning;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using AutoQC.Properties;
+using SharedBatch;
 
 namespace AutoQC
 {
@@ -118,7 +118,6 @@ namespace AutoQC
             // File filter
             if (!(QcFileFilter is AllFileFilter))
             {
-                bool isRegex = QcFileFilter is RegexFilter;
                 var pattern = QcFileFilter.Pattern;
                 if (string.IsNullOrEmpty(pattern))
                 {

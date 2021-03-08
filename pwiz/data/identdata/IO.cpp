@@ -2032,7 +2032,7 @@ struct HandlerEnzyme : public HandlerIdentifiable
             inSiteRegexp = false;
         else if (name == "Enzyme")
         {
-            if (ez->enzymeName.hasCVParam(MS_unspecific_cleavage))
+            if (ez->enzymeName.hasCVParam(MS_NoEnzyme_OBSOLETE))
             {
                 ez->enzymeName.clear();
                 CVID cleavageAgent = proteome::Digestion::getCleavageAgentByRegex(ez->siteRegexp);
@@ -2040,6 +2040,8 @@ struct HandlerEnzyme : public HandlerIdentifiable
                     ez->enzymeName.set(cleavageAgent);
                 ez->terminalSpecificity = proteome::Digestion::NonSpecific;
             }
+            else if (ez->enzymeName.hasCVParam(MS_unspecific_cleavage))
+                ez->terminalSpecificity = proteome::Digestion::NonSpecific;
             else if (_semiSpecific == "true")
                 ez->terminalSpecificity = proteome::Digestion::SemiSpecific;
         }
