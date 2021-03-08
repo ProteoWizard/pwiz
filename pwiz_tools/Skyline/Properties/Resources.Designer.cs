@@ -2694,6 +2694,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The file {0} is a library file and does not need to be built. Would you like to add this library to the document?.
+        /// </summary>
+        public static string BuildLibraryDlg_AddInputFiles_The_file__0__is_a_library_file_and_does_not_need_to_be_built__Would_you_like_to_add_this_library_to_the_document_ {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_AddInputFiles_The_file__0__is_a_library_file_and_does_not_need_to" +
+                        "_be_built__Would_you_like_to_add_this_library_to_the_document_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The file {0} is not a valid library input file..
         /// </summary>
         public static string BuildLibraryDlg_AddInputFiles_The_file__0__is_not_a_valid_library_input_file {
@@ -2709,6 +2719,16 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("BuildLibraryDlg_AddInputFiles_The_following_files_are_not_valid_library_input_fil" +
                         "es", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to These files are library files and do not need to be built. Edit the list of libraries to add them directly..
+        /// </summary>
+        public static string BuildLibraryDlg_AddInputFiles_These_files_are_library_files_and_do_not_need_to_be_built__Edit_the_list_of_libraries_to_add_them_directly_ {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_AddInputFiles_These_files_are_library_files_and_do_not_need_to_be" +
+                        "_built__Edit_the_list_of_libraries_to_add_them_directly_", resourceCulture);
             }
         }
         
