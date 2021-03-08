@@ -182,22 +182,16 @@ namespace pwiz.Skyline.Menus
         /// </summary>
         private int InsertIonMobilityMenuItems(ToolStripItemCollection items, ChromFileInfoId chromFileInfoId, int iInsert)
         {
-
-            if (null != chromFileInfoId && DocumentUI.Settings.HasResults)
+            var chromFileInfo = DocumentUI.Settings.MeasuredResults?.Chromatograms
+                .Select(chromatogramSet => chromatogramSet.GetFileInfo(chromFileInfoId))
+                .FirstOrDefault(fileInfo => null != fileInfo);
+            if (null != chromFileInfo && chromFileInfo.IonMobilityUnits != eIonMobilityUnits.none)
             {
-                foreach (var chromatogramSet in DocumentUI.Settings.MeasuredResults.Chromatograms)
-                {
-                    var chromFileInfo = chromatogramSet.GetFileInfo(chromFileInfoId);
-                    if (null != chromFileInfo && chromFileInfo.IonMobilityUnits != eIonMobilityUnits.none)
-                    {
-                        var menuItemText = Resources.SkylineWindow_Ion_Mobility;
-                        var ionMobilityItem = new ToolStripMenuItem(menuItemText);
-                        ionMobilityItem.Click += (sender, eventArgs) => SkylineWindow.ShowIonMobility = !SkylineWindow.ShowIonMobility;
-                        ionMobilityItem.Checked = SkylineWindow.ShowIonMobility;
-                        items.Insert(iInsert++, ionMobilityItem);
-                        break;
-                    }
-                }
+                var menuItemText = Resources.SkylineWindow_Ion_Mobility;
+                var ionMobilityItem = new ToolStripMenuItem(menuItemText);
+                ionMobilityItem.Click += (sender, eventArgs) => SkylineWindow.ShowIonMobility = !SkylineWindow.ShowIonMobility;
+                ionMobilityItem.Checked = SkylineWindow.ShowIonMobility;
+                items.Insert(iInsert++, ionMobilityItem);
             }
             return iInsert;
         }

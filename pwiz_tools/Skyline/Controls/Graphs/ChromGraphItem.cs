@@ -27,6 +27,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util.Extensions;
 using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Graphs
@@ -828,28 +829,28 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public string FormatTimeLabel(double time, float? massError, double dotProduct, IonMobilityFilter ionMobilityfilter)
         {
-            string label = string.Format(@"{0:F01}", time);
+            // ReSharper disable LocalizableElement
+            var lines = new List<string> {string.Format("{0:F01}", time)};
             if (massError.HasValue && !_isSummary)
-                // ReSharper disable LocalizableElement
-                label += string.Format("\n{0}{1} ppm", (massError.Value > 0 ? "+" : string.Empty), massError.Value);
+                lines.Add(string.Format("{0}{1} ppm", (massError.Value > 0 ? "+" : string.Empty), massError.Value));
             if (dotProduct != 0)
-                label += string.Format("\n({0} {1:F02})", _isFullScanMs ? "idotp" : "dotp", dotProduct);
+                lines.Add(string.Format("({0} {1:F02})", _isFullScanMs ? "idotp" : "dotp", dotProduct));
             if (ionMobilityfilter.IonMobility.HasValue && !_isSummary && Settings.Default.ShowIonMobility)
             {
-                var imString = string.Format("{0:F02}{1}",
-                    ionMobilityfilter.IonMobility.Mobility,
-                    IonMobilityValue.GetUnitsString(ionMobilityfilter.IonMobilityUnits));
+                var imString = string.Format("{0:F02} {1}",
+                    ionMobilityfilter.IonMobility.Mobility, IonMobilityValue.GetUnitsString(ionMobilityfilter.IonMobilityUnits));
                 if (ionMobilityfilter.CollisionalCrossSectionSqA.HasValue)
                 {
-                    label += string.Format("\nCCS {0:F02}\n({1})", ionMobilityfilter.CollisionalCrossSectionSqA.Value, imString);
+                    lines.Add(string.Format("CCS {0:F02}", ionMobilityfilter.CollisionalCrossSectionSqA.Value));
+                    lines.Add(string.Format("({0})", imString));
                 }
                 else
                 {
-                    label += string.Format("\nIM {0}", imString);
+                    lines.Add(string.Format("IM {0}", imString)); // No CCS available, show IM only
                 }
             }
             // ReSharper restore LocalizableElement
-            return label;
+            return TextUtil.LineSeparate(lines);
         }
 
         public IdentityPath FindIdentityPath(TextObj label)
