@@ -270,6 +270,11 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
 
             try
             {
+                // Infer library name from file name if user has not specified otherwise
+                if (string.IsNullOrEmpty(LibraryName) && !string.IsNullOrEmpty(path))
+                {
+                    LibraryName = Path.GetFileNameWithoutExtension(path);
+                }
                 var db = IonMobilityDb.GetIonMobilityDb(path, null); // TODO: (copied from iRT code) LongWaitDlg
                 var dbIonMobilities = db.GetIonMobilities().ToArray(); // Avoid multiple enumeration
 
