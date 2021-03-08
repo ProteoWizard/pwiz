@@ -287,7 +287,8 @@ namespace pwiz.Skyline.Util
                             continue;
                         }
 
-                        if (!resource.Contains('{'))
+                        if (!resource.Contains('{') || // Not a formatter
+                            resource.Equals(@"{0}:{1}")) // Wordless formatter
                         {
                             _resourcesNonFormatting.Add(resource);
                             continue;
@@ -343,9 +344,9 @@ namespace pwiz.Skyline.Util
                                         args.Add(m.Groups[i].Captures[0].Value);
                                     }
 
-                                    if (args.Count > 0)
+                                    if (args.Count > 0 && !args.Any(arg => string.IsNullOrEmpty(arg.ToString())))
                                     {
-                                        // If we plug these args into our simplifed formatter, then it's clear that this was a
+                                        // If we plug these args into our simplified formatter, then it's clear that this was a
                                         // use of string.Format with a format string from our resources
                                         var argArray = args.ToArray();
                                         var simpleFormat = regexAndPattern.Item2;
