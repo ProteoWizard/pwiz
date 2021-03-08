@@ -137,7 +137,7 @@ namespace AutoQC
         private void btnImport_Click(object sender, EventArgs e)
         {
             var dialog = new OpenFileDialog();
-            dialog.Filter = TextUtil.FILTER_XML;
+            dialog.Filter = TextUtil.FILTER_SKYC;
             if (dialog.ShowDialog(this) != DialogResult.OK)
                 return;
 
