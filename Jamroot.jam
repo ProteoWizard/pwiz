@@ -678,6 +678,7 @@ rule install-vendor-api-dependencies ( properties * )
         if [ path.exists pwiz_aux/msrc/utility/vendor_api/ABI/T2D ] { dependencies += <dependency>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/ABI/T2D//install_pwiz_vendor_api_abi_t2d/$(location) ; }
         if [ path.exists pwiz_aux/msrc/utility/vendor_api/Agilent ] { dependencies += <dependency>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Agilent//install_pwiz_vendor_api_agilent/$(location) ; }
         if [ path.exists pwiz_aux/msrc/utility/vendor_api/Bruker ] { dependencies += <dependency>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Bruker//install_pwiz_vendor_api_bruker/$(location) ; }
+        if [ path.exists pwiz_aux/msrc/utility/vendor_api/Mobilion ] { dependencies += <dependency>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Mobilion//install_pwiz_vendor_api_mbi/$(location) ; }
         if [ path.exists pwiz_aux/msrc/utility/vendor_api/Shimadzu ] { dependencies += <dependency>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Shimadzu//install_pwiz_vendor_api_shimadzu/$(location) ; }
         if [ path.exists pwiz_aux/msrc/utility/vendor_api/thermo ] { dependencies += <dependency>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/thermo//install_pwiz_vendor_api_thermo/$(location) ; }
         if [ path.exists pwiz_aux/msrc/utility/vendor_api/UIMF ] { dependencies += <dependency>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/UIMF//install_pwiz_vendor_api_uimf/$(location) ; }
@@ -997,6 +998,16 @@ rule unifi-dll-location ( api-path : properties * )
     local result = $(api-path) ;
     if --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ] &&
        [ path.exists $(result)\\unifi-protobuf-net.dll ]
+    {
+        return $(result) ;
+    }
+}
+
+rule mbi-dll-location ( api-path : properties * )
+{
+    local result = $(api-path) ;
+    if --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ] &&
+       [ path.exists $(api-path)\\MBICore.dll ]
     {
         return $(result) ;
     }

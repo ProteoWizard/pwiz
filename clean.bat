@@ -57,6 +57,7 @@ del /f /q pwiz_aux\msrc\utility\vendor_api\Bruker\schema.h > nul 2>&1
 rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Bruker\install_pwiz_vendor_api_bruker_stub > nul 2>&1
 rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Bruker\x86 > nul 2>&1
 rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Bruker\x64 > nul 2>&1
+del /f /q pwiz_aux\msrc\utility\vendor_api\Mobilion\* > nul 2>&1
 del /f /q pwiz_aux\msrc\utility\vendor_api\Shimadzu\EULA.SFCS > nul 2>&1
 rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Shimadzu\x86 > nul 2>&1
 rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Shimadzu\x64 > nul 2>&1
@@ -80,6 +81,7 @@ git clean -f -d -X pwiz\data\vendor_readers\UIMF\Reader_UIMF_Test.data > nul
 git clean -f -d -X pwiz\data\vendor_readers\ABI\Reader_ABI_Test.data > nul
 git clean -f -d -X pwiz\data\vendor_readers\Agilent\Reader_Agilent_Test.data > nul
 git clean -f -d -X pwiz\data\vendor_readers\Bruker\Reader_Bruker_Test.data > nul
+git clean -f -d -X pwiz\data\vendor_readers\Mobilion\Reader_Mobilion_Test.data > nul
 git clean -f -d -X pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data > nul
 
 IF EXIST pwiz_tools\clean-apps.bat call pwiz_tools\clean-apps.bat

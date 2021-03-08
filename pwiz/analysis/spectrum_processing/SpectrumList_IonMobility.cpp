@@ -28,6 +28,7 @@
 
 #include "pwiz/data/vendor_readers/Agilent/SpectrumList_Agilent.hpp"
 #include "pwiz/data/vendor_readers/Bruker/SpectrumList_Bruker.hpp"
+#include "pwiz/data/vendor_readers/Mobilion/SpectrumList_Mobilion.hpp"
 #include "pwiz/data/vendor_readers/Waters/SpectrumList_Waters.hpp"
 #include "pwiz/data/vendor_readers/Thermo/SpectrumList_Thermo.hpp"
 #include "pwiz/data/vendor_readers/UIMF/SpectrumList_UIMF.hpp"
@@ -98,7 +99,27 @@ SpectrumList_IonMobility::SpectrumList_IonMobility(const msdata::SpectrumListPtr
                 units_ = IonMobilityUnits::compensation_V;
             else if (!scan.userParam("drift time").empty()) // Oldest known mzML drift time style
                 units_ = IonMobilityUnits::drift_time_msec;
+            else
+            {
+                spectrum = inner->spectrum(0, true);
+                for (const auto& binaryArray : spectrum->binaryDataArrayPtrs)
+                {
+                    CVID ionMobilityArrayType = binaryArray->cvParamChild(MS_ion_mobility_array).cvid;
+                    if (ionMobilityArrayType == CVID_Unknown)
+                        continue;
+
+                    if (ionMobilityArrayType == MS_raw_ion_mobility_array || ionMobilityArrayType == MS_mean_ion_mobility_array)
+                        units_ = IonMobilityUnits::drift_time_msec;
+                    else if (ionMobilityArrayType == MS_raw_inverse_reduced_ion_mobility_array || ionMobilityArrayType == MS_mean_inverse_reduced_ion_mobility_array)
+                        units_ = IonMobilityUnits::inverse_reduced_ion_mobility_Vsec_per_cm2;
+                    else
+                        continue;
+
+                    break;
+                }
+            }
         }
+
         sl_ = nullptr;
         return;
     }
