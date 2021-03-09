@@ -442,4 +442,10 @@ with:
   <data name="RefineSettings_Validate_Please_provide_a_valid_output_file_path__or_an_empty_string_if_you_do_not_wish_to_save_a_separate_refined_file_" xml:space="preserve">
     <value>Please provide a valid output file path, or an empty string if you do not wish to save a separate refined file.</value>
   </data>
+  <data name="MainSettings_ValidateTemplateFile_The_Skyline_template_file_for_this_configuration_does_not_exist_" xml:space="preserve">
+    <value>The Skyline template file for this configuration does not exist.</value>
+  </data>
+  <data name="MainSettings_ValidateTemplateFile_Will_another_configuration_generate__0__before_this_configuration_runs_" xml:space="preserve">
+    <value>Will another configuration generate {0} before this configuration runs?</value>
+  </data>
 </root>

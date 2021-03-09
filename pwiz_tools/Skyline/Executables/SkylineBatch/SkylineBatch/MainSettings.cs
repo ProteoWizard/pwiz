@@ -75,22 +75,54 @@ namespace SkylineBatch
             return sb.ToString();
         }
 
-        public void Validate()
+        public List<string> Validate(List<string> generatedSkylineFiles = null)
         {
-            ValidateSkylineFile(TemplateFilePath);
+            var questions = new List<string>();
+            questions.Add(ValidateTemplateFile(TemplateFilePath));
+
             ValidateDataFolder(DataFolderPath);
             ValidateAnalysisFolder(AnalysisFolderPath);
             ValidateAnnotationsFile(AnnotationsFilePath);
+            questions.RemoveAll(item => item == null);
+            return questions;
         }
 
         public static void ValidateSkylineFile(string skylineFile)
         {
-            CheckIfEmptyPath(skylineFile, Resources.MainSettings_ValidateSkylineFile_Skyline_file);
-            if (!File.Exists(skylineFile))
+            // Used by InvalidConfigSetupForm, validates the template file regardless of questions
+            ValidateTemplateFile(skylineFile);
+        }
+
+        private static string ValidateTemplateFile(string templateFile)
+        {
+            CheckIfEmptyPath(templateFile, Resources.MainSettings_ValidateSkylineFile_Skyline_file);
+
+            if (!File.Exists(templateFile))
             {
-                throw new ArgumentException(string.Format(Resources.MainSettings_ValidateSkylineFile_The_Skyline_template_file__0__does_not_exist_, skylineFile) + Environment.NewLine +
+                string directory = null;
+                string directoryParent = null;
+                try
+                {
+                    directory = Path.GetDirectoryName(templateFile);
+                    directoryParent = Path.GetDirectoryName(directory);
+
+                }
+                catch (Exception)
+                {
+                    // pass, will throw ArgumentException if directories are null
+                }
+
+                if (Directory.Exists(directory) || Directory.Exists(directoryParent))
+                {
+                    return "The Skyline template file for this configuration does not exist." +
+                                 Environment.NewLine +
+                                 string.Format("Will another configuration generate {0} before this configuration runs?",
+                                     Path.GetFileName(templateFile));
+                }
+                throw new ArgumentException(string.Format(Resources.MainSettings_ValidateSkylineFile_The_Skyline_template_file__0__does_not_exist_, templateFile) + Environment.NewLine +
                                             Resources.MainSettings_ValidateSkylineFile_Please_provide_a_valid_file_);
             }
+            return null;
         }
 
         public static void ValidateAnalysisFolder(string analysisFolder)

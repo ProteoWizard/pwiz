@@ -55,7 +55,7 @@ namespace SkylineBatchTest
             }
 
             var validTemplatePath = TestUtils.GetTestFilePath("emptyTemplate.sky");
-            var invalidTemplatePath = TestUtils.GetTestFilePath("nonexistent.sky");
+            var invalidTemplatePath = "U:\\nonexistent.sky";
             var validAnalysisFolder = TestUtils.GetTestFilePath(string.Empty) + "folderToCreate";
             var invalidAnalysisFolder = TestUtils.GetTestFilePath(string.Empty) + @"nonexistentOne\nonexistentTwo\";
             var validDataDir = TestUtils.GetTestFilePath("emptyData");

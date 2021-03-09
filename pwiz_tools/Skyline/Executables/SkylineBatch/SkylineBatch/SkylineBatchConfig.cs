@@ -177,13 +177,14 @@ namespace SkylineBatch
         
         #endregion
         
-        public void Validate()
+        public List<string> Validate()
         {
-            MainSettings.Validate();
+            var questions = MainSettings.Validate();
             FileSettings.Validate();
             RefineSettings.Validate();
             ReportSettings.Validate();
             SkylineSettings.Validate();
+            return questions;
         }
 
         public bool TryPathReplace(string oldRoot, string newRoot, out IConfig replacedPathConfig)

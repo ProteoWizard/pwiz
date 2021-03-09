@@ -13,7 +13,9 @@ namespace SharedBatch
         // Throws an ArgumentException if the configuration does not have enough
         // information to run, or if the information is not applicable to this computer
         // (ie: incorrect file paths)
-        void Validate();
+        // Returns a list of questions to ask the user if the validation status cannot be determined.
+        // Any answer other than Yes makes the configuration invalid
+        List<string> Validate();
 
         // Returns the name of the configuration
         string GetName();
@@ -94,6 +96,9 @@ namespace SharedBatch
 
         // Updates the log files in the dropdown list based on the configManager
         void UpdateUiLogFiles();
+
+        // Checks there are no configurations with the name addingName
+        void AssertUniqueConfigName(string addingName, bool replacing);
 
         // Updates the Ui running buttons
         void UpdateRunningButtons(bool canStart, bool canStop);

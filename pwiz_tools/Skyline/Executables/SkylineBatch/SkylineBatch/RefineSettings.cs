@@ -64,7 +64,7 @@ namespace SkylineBatch
                 {
                     validPath = false;
                 }
-                if (!validPath) throw new ArgumentException(string.Format(Resources.RefineSettings_Validate_Cannot_save_the_refined_file_to__0_) + Environment.NewLine +
+                if (!validPath) throw new ArgumentException(string.Format(Resources.RefineSettings_Validate_Cannot_save_the_refined_file_to__0_, OutputFilePath) + Environment.NewLine +
                                                             Resources.RefineSettings_Validate_Please_provide_a_valid_output_file_path__or_an_empty_string_if_you_do_not_wish_to_save_a_separate_refined_file_);
             }
         }

@@ -90,6 +90,11 @@ namespace SkylineBatch
             configForm.ShowDialog();
         }
 
+        public void AssertUniqueConfigName(string newName, bool replacing)
+        {
+            _configManager.AssertUniqueName(newName, replacing);
+        }
+
         public void AddConfiguration(IConfig config)
         {
             _configManager.AddConfiguration(config);

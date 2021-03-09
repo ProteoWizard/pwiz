@@ -375,18 +375,28 @@ namespace SkylineBatch
         private void Save()
         {
             var newConfig = GetConfigFromUi();
+            var questions = new List<string>();
             try
             {
-                if (_action == ConfigAction.Edit)
-                    _mainControl.ReplaceSelectedConfig(newConfig);
-                else
-                    _mainControl.AddConfiguration(newConfig);
+                _mainControl.AssertUniqueConfigName(newConfig.Name, _action == ConfigAction.Edit);
+                questions.AddRange(newConfig.Validate());
             }
             catch (ArgumentException e)
             {
                 AlertDlg.ShowError(this, Program.AppName(), e.Message);
                 return;
             }
+
+            foreach (var question in questions)
+            {
+                if (DialogResult.Yes != AlertDlg.ShowQuestion(this, Program.AppName(), question))
+                    return;
+            }
+
+            if (_action == ConfigAction.Edit)
+                _mainControl.ReplaceSelectedConfig(newConfig);
+            else
+                _mainControl.AddConfiguration(newConfig);
 
             Close();
         }

@@ -243,18 +243,22 @@ namespace SharedBatch
             }
         }
 
+        public void AssertUniqueName(string newName, bool replacingSelected)
+        {
+            if (_configValidation.Keys.Contains(newName))
+            {
+                if (!replacingSelected || !_configList[SelectedConfig].GetName().Equals(newName))
+                    throw new ArgumentException(string.Format(Resources.ConfigManager_InsertConfiguration_Configuration___0___already_exists_, newName) + Environment.NewLine +
+                                            Resources.ConfigManager_InsertConfiguration_Please_enter_a_unique_name_for_the_configuration_);
+            }
+        }
+
         protected void InsertConfiguration(IConfig config, int index)
         {
             lock (_lock)
             {
-                if (_configValidation.Keys.Contains(config.GetName()))
-                {
-                    throw new ArgumentException(string.Format(Resources.ConfigManager_InsertConfiguration_Configuration___0___already_exists_, config.GetName()) + Environment.NewLine +
-                                                Resources.ConfigManager_InsertConfiguration_Please_enter_a_unique_name_for_the_configuration_);
-                }
+                AssertUniqueName(config.GetName(), false);
                 ProgramLog.Info(string.Format(Resources.ConfigManager_InsertConfiguration_Adding_configuration___0___, config.GetName()));
-
-                config.Validate();
                 _configList.Insert(index, config);
                 _configValidation.Add(config.GetName(), true);
                 SelectedConfig = index;

@@ -673,6 +673,26 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The Skyline template file for this configuration does not exist..
+        /// </summary>
+        internal static string MainSettings_ValidateTemplateFile_The_Skyline_template_file_for_this_configuration_does_not_exist_ {
+            get {
+                return ResourceManager.GetString("MainSettings_ValidateTemplateFile_The_Skyline_template_file_for_this_configuratio" +
+                        "n_does_not_exist_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Will another configuration generate {0} before this configuration runs?.
+        /// </summary>
+        internal static string MainSettings_ValidateTemplateFile_Will_another_configuration_generate__0__before_this_configuration_runs_ {
+            get {
+                return ResourceManager.GetString("MainSettings_ValidateTemplateFile_Will_another_configuration_generate__0__before_" +
+                        "this_configuration_runs_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         internal static System.Drawing.Bitmap OpenFolder {
