@@ -8,19 +8,21 @@ namespace SharedBatch
     {
         private readonly ConfigManager _configManager;
         private readonly IMainUiControl _uiControl;
+        private readonly string _filter;
         
-        public ShareConfigsForm(IMainUiControl uiControl, ConfigManager configManager, Icon icon)
+        public ShareConfigsForm(IMainUiControl uiControl, ConfigManager configManager, string filter, Icon icon)
         {
             InitializeComponent();
             Icon = icon;
             _uiControl = uiControl;
             _configManager = configManager;
+            _filter = filter;
             checkedSaveConfigs.Items.AddRange(_configManager.ConfigNamesAsObjectArray());
         }
 
         private void btnBrowse_Click(object sender, EventArgs e)
         {
-            var dialog = new SaveFileDialog { Filter = TextUtil.FILTER_SKYC, FileName = textFileName.Text };
+            var dialog = new SaveFileDialog { Filter = _filter, FileName = textFileName.Text };
             if (dialog.ShowDialog(this) != DialogResult.OK)
                 return;
 

@@ -297,4 +297,10 @@
   <data name="TextUtil_FILTER_SKYC_Skyline_Configuration_Files" xml:space="preserve">
     <value>Skyline Configuration Files</value>
   </data>
+  <data name="TextUtil_FILTER_BCFG_Skyline_Batch_Configuration_Files" xml:space="preserve">
+    <value>Skyline Batch Configuration Files</value>
+  </data>
+  <data name="TextUtil_FILTER_QCFG_AutoQC_Configuration_Files" xml:space="preserve">
+    <value>AutoQC Configuration Files</value>
+  </data>
 </root>

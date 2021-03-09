@@ -142,7 +142,7 @@ namespace AutoQC
         private void btnImport_Click(object sender, EventArgs e)
         {
             var dialog = new OpenFileDialog();
-            dialog.Filter = TextUtil.FILTER_SKYC;
+            dialog.Filter = TextUtil.FILTER_QCFG;
             if (dialog.ShowDialog(this) != DialogResult.OK)
                 return;
 
@@ -154,7 +154,7 @@ namespace AutoQC
 
         private void btnExport_Click(object sender, EventArgs e)
         {
-            var shareForm = new ShareConfigsForm(this, _configManager, Program.Icon());
+            var shareForm = new ShareConfigsForm(this, _configManager, TextUtil.FILTER_QCFG, Program.Icon());
             shareForm.ShowDialog();
         }
 

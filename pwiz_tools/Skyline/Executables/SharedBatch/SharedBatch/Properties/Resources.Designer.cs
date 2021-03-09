@@ -548,11 +548,29 @@ namespace SharedBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Skyline Batch Configuration Files.
+        /// </summary>
+        internal static string TextUtil_FILTER_BCFG_Skyline_Batch_Configuration_Files {
+            get {
+                return ResourceManager.GetString("TextUtil_FILTER_BCFG_Skyline_Batch_Configuration_Files", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to CSV Files.
         /// </summary>
         internal static string TextUtil_FILTER_CSV_CSV_Files {
             get {
                 return ResourceManager.GetString("TextUtil_FILTER_CSV_CSV_Files", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to AutoQC Configuration Files.
+        /// </summary>
+        internal static string TextUtil_FILTER_QCFG_AutoQC_Configuration_Files {
+            get {
+                return ResourceManager.GetString("TextUtil_FILTER_QCFG_AutoQC_Configuration_Files", resourceCulture);
             }
         }
         
