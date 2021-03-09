@@ -2482,11 +2482,24 @@ namespace pwiz.Skyline.Model.DocSettings
 
             // Background proteome uniqueness constraints - only considered a change if constraint type
             // changes, or if constraint is non-None and background proteome or digestion enzyme changes
-            var uniquenessConstraintChange = 
-                !Equals(newPep.Filter.PeptideUniqueness, oldPep.Filter.PeptideUniqueness) ||
-                (!Equals(newPep.Filter.PeptideUniqueness, PeptideFilter.PeptideUniquenessConstraint.none) &&
-                 (!newPep.BackgroundProteome.Equals(oldPep.BackgroundProteome) ||
-                  !newPep.DigestSettings.Equals(oldPep.DigestSettings)));
+            // Background proteome uniqueness constraints - only considered a change if constraint type
+            // changes, or if constraint is non-None and background proteome or digestion enzyme changes
+            bool uniquenessConstraintChange = !Equals(newPep.Filter.PeptideUniqueness, oldPep.Filter.PeptideUniqueness);
+            if (!uniquenessConstraintChange && newPep.Filter.PeptideUniqueness != PeptideFilter.PeptideUniquenessConstraint.none)
+            {
+                if (newPep.BackgroundProteome != null || oldPep.BackgroundProteome != null)
+                {
+                    if (newPep.BackgroundProteome == null || oldPep.BackgroundProteome == null)
+                    {
+                        uniquenessConstraintChange = true;
+                    }
+                    else
+                    {
+                        uniquenessConstraintChange = !newPep.BackgroundProteome.EqualsSpec(oldPep.BackgroundProteome);
+                    }
+                }
+                uniquenessConstraintChange = uniquenessConstraintChange || !newPep.DigestSettings.Equals(oldPep.DigestSettings);
+            }
 
             // Change peptides if enzyme, digestion or filter settings changed
             DiffPeptides = !newPep.Enzyme.Equals(oldPep.Enzyme) ||
