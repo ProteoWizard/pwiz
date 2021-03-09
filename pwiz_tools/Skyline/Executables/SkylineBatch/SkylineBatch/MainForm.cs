@@ -276,22 +276,20 @@ namespace SkylineBatch
 
         private void RunBatch()
         {
+            var running = false;
             for (int i = 1; i <= batchRunDropDown.Items.Count; i++)
             {
                 if (((ToolStripMenuItem)batchRunDropDown.Items[i - 1]).Checked)
                 {
-                    _ =_configManager.RunAllEnabled(i); // configurations run asynchronously
+                    running = _configManager.StartBatchRun(i);
                     break;
                 }
             }
             // update ui log and switch to log tab
-            if (_configManager.ConfigsRunning().Count > 0)
+            if (running)
             {
                 comboLogList.SelectedIndex = 0;
-                RunUi(() =>
-                {
-                    tabMain.SelectTab(tabLog);
-                });
+                tabMain.SelectTab(tabLog);
             }
         }
 

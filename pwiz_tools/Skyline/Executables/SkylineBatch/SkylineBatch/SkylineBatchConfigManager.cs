@@ -226,19 +226,18 @@ namespace SkylineBatch
                 return (ConfigRunner) _configRunners[GetSelectedConfig().GetName()];
             }
         }
-        public async Task RunAllEnabled(int startStep)
+        public bool StartBatchRun(int startStep)
         {
-
+            ProgramLog.Info("SkylineBatchConfigManager: Starting async run");
             var configsRunning = ConfigsRunning();
             if (configsRunning.Count > 0)
             {
                 DisplayError(Resources.ConfigManager_RunAll_Cannot_run_while_the_following_configurations_are_running_ + Environment.NewLine +
                              string.Join(Environment.NewLine, configsRunning) + Environment.NewLine +
                              Resources.ConfigManager_RunAll_Please_wait_until_the_current_run_is_finished_);
-                return;
+                return false;
             }
 
-            string nextConfig;
             lock (_lock)
             {
                 // Check if files will be overwritten by run
@@ -271,7 +270,7 @@ namespace SkylineBatch
                 if (showOverwriteMessage)
                 {
                     if (DisplayLargeQuestion(overwriteMessage.ToString()) != DialogResult.OK)
-                        return;
+                        return false;
                 }
                 // Checks if there are enabled configs and starts them waiting
                 var hasEnabledConfigs = false;
@@ -288,22 +287,25 @@ namespace SkylineBatch
                 {
                     DisplayError(Resources.ConfigManager_RunAllEnabled_There_are_no_enabled_configurations_to_run_ + Environment.NewLine +
                                  Resources.ConfigManager_RunAllEnabled_Please_check_the_checkbox_next_to_one_or_more_configurations_);
-                    return;
+                    return false;
                 }
-
-                nextConfig = GetNextWaitingConfig();
             }
-
-            UpdateIsRunning(false, true);
-
             lock (_loggerLock)
             {
                 var oldLogger = (_logList[0]).Archive();
                 if (oldLogger != null)
                     _logList.Insert(1, oldLogger);
-                UpdateUiLogs();
             }
+            _ = RunAsync(startStep);
+            return true;
+        }
 
+
+        public async Task RunAsync(int startStep)
+        {
+            UpdateUiLogs();
+            UpdateIsRunning(false, true);
+            string nextConfig = GetNextWaitingConfig();
             while (!string.IsNullOrEmpty(nextConfig))
             {
                 ConfigRunner startingConfigRunner;
@@ -311,9 +313,7 @@ namespace SkylineBatch
                 {
                     startingConfigRunner = (ConfigRunner)_configRunners[nextConfig];
                 }
-                ProgramLog.Info($"SkylineBatchConfigManager: {nextConfig} start run");
                 await startingConfigRunner.Run(startStep);
-                ProgramLog.Info($"SkylineBatchConfigManager: {nextConfig} end run");
                 nextConfig = GetNextWaitingConfig();
             }
 
