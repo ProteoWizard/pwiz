@@ -262,6 +262,9 @@
       <Component Id="Remotion.Linq.EagerFetching.dll">
         <File Source="$(var.Skyline.TargetDir)/Remotion.Linq.EagerFetching.dll" KeyPath="yes"/>
       </Component>
+      <Component Id="SharedBatch.dll">
+        <File Source="$(var.Skyline.TargetDir)/SharedBatch.dll" KeyPath="yes"/>
+      </Component>
       <Component Id="Skyline.exe" Guid="{9C43D011-2748-480D-95EF-E7298E4E1B55}">
         <File Source="$(var.Skyline.TargetDir)/$(var.Skyline.TargetName).exe" Id="Skyline.exe_file" KeyPath="yes"/>
         <ProgId Id="Skyline.Document.0" Description="Skyline Document" Icon="SkylineDoc.ico">
