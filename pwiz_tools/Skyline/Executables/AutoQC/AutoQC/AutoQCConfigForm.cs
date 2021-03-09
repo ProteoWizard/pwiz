@@ -253,7 +253,6 @@ namespace AutoQC
 
         #endregion
 
-
         #region Save config
 
         private void btnSaveConfig_Click(object sender, EventArgs e)
@@ -276,16 +275,19 @@ namespace AutoQC
             var newConfig = GetConfigFromUi();
             try
             {
-                if (_action == ConfigAction.Edit)
-                    _mainControl.ReplaceSelectedConfig(newConfig);
-                else
-                    _mainControl.AddConfiguration(newConfig);
+                _mainControl.AssertUniqueConfigName(newConfig.Name, _action == ConfigAction.Edit);
+                newConfig.Validate();
             }
             catch (ArgumentException e)
             {
                 AlertDlg.ShowError(this, Program.AppName, e.Message);
                 return;
             }
+
+            if (_action == ConfigAction.Edit)
+                _mainControl.ReplaceSelectedConfig(newConfig);
+            else
+                _mainControl.AddConfiguration(newConfig);
 
             Close();
         }

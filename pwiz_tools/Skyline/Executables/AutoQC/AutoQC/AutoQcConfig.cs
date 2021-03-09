@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text;
 using System.Windows.Forms;
 using System.Xml;
@@ -162,7 +163,7 @@ namespace AutoQC
 
         #endregion
 
-        public void Validate()
+        public List<string> Validate()
         {
             if (string.IsNullOrEmpty(Name))
             {
@@ -172,7 +173,7 @@ namespace AutoQC
             MainSettings.ValidateSettings();
             SkylineSettings.Validate();
             PanoramaSettings.ValidateSettings();
-
+            return null;
         }
 
         public virtual ProcessInfo RunBefore(ImportContext importContext)
