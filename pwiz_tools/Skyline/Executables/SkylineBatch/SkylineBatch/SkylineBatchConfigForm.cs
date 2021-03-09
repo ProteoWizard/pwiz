@@ -100,6 +100,13 @@ namespace SkylineBatch
                 buttonBase.Enabled = false;
             if (parentControl is ToolStrip strip)
                 strip.Enabled = false;
+            if (parentControl is PropertyGrid grid)
+            {
+                var properties = (grid.SelectedObject as RefineInputObject).GetProperties();
+                foreach (GlobalizedPropertyDescriptor prop in properties)
+                    prop.ReadOnly = true;
+                return;
+            }
 
             foreach (Control control in parentControl.Controls)
             {

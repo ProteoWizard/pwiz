@@ -16,6 +16,7 @@ namespace SkylineBatch
     public class GlobalizedPropertyDescriptor : PropertyDescriptor
     {
         private PropertyDescriptor basePropertyDescriptor;
+        public bool ReadOnly = true;
 
         public GlobalizedPropertyDescriptor(PropertyDescriptor basePropertyDescriptor) : base(basePropertyDescriptor)
         {
@@ -86,7 +87,7 @@ namespace SkylineBatch
 
         public override bool IsReadOnly
         {
-            get => basePropertyDescriptor.IsReadOnly;
+            get => ReadOnly;
         }
 
         public override string Name
