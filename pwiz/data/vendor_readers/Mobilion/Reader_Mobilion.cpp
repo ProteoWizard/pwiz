@@ -206,7 +206,7 @@ namespace msdata {
     
 PWIZ_API_DECL void Reader_Mobilion::read(const string& filename, const string& head, MSData& result, int runIndex, const Config& config) const
 {
-    throw ReaderFail("[Reader_Mobilion::read()] Waters RAW reader not implemented: "
+    throw ReaderFail("[Reader_Mobilion::read()] Mobilion MBI reader not implemented: "
 #ifdef _MSC_VER // should be possible, apparently somebody decided to skip it
         "support was explicitly disabled when program was built"
 #elif defined(WIN32) // wrong compiler
