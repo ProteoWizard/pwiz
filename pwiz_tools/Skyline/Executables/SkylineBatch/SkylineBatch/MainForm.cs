@@ -78,6 +78,9 @@ namespace SkylineBatch
             catch (ObjectDisposedException)
             {
             }
+            catch (InvalidOperationException)
+            {
+            }
         }
 
         #region Manipulating configuration list
@@ -559,9 +562,24 @@ namespace SkylineBatch
             systray_icon.Visible = false;
         }
 
-        private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
+        private async Task CloseForm()
         {
             _configManager.Close();
+            // Wait for config manager to close
+            while (!_configManager.Closed)
+                await Task.Delay(3000);
+            Close();
+        }
+
+        private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (!_configManager.Closed)
+                e.Cancel = true;
+            if (Visible)
+            {
+                Hide();
+                _ = CloseForm();
+            }
         }
 
         public void DisplayError(string message)

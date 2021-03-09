@@ -35,6 +35,8 @@ namespace SkylineBatch
         // The UI should reflect the configs, runners, and log files from this class
 
         private readonly Dictionary<string, IConfigRunner> _configRunners; // dictionary mapping from config name to that config's runner
+        public bool Closed { get; private set; }
+        private bool _closing;
 
         // Shared variables with ConfigManager:
         //  Protected -
@@ -73,13 +75,23 @@ namespace SkylineBatch
 
         public new void Close()
         {
+            _closing = true;
             base.Close();
+            if (ConfigsRunning().Count == 0)
+                EndClose();
+
+            CancelRunners(); // EndClose called by RunAllEnabled when runners cancelled
+        }
+
+        private void EndClose()
+        {
+            if (!_closing) throw new Exception("Cannot EndClose before Close");
+            Closed = true;
             lock (_loggerLock)
             {
                 _logList[0].Archive();
             }
         }
-
 
         #region Configs
 
@@ -299,13 +311,16 @@ namespace SkylineBatch
                 {
                     startingConfigRunner = (ConfigRunner)_configRunners[nextConfig];
                 }
+                ProgramLog.Info($"SkylineBatchConfigManager: {nextConfig} start run");
                 await startingConfigRunner.Run(startStep);
+                ProgramLog.Info($"SkylineBatchConfigManager: {nextConfig} end run");
                 nextConfig = GetNextWaitingConfig();
             }
 
-            while (ConfigsRunning().Count > 0)
-                await Task.Delay(3000);
-            UpdateIsRunning(true, false);
+            if (_closing)
+                EndClose(); // configManager is done closing when batch run finishes cancelling
+            else
+                UpdateIsRunning(true, false);
         }
 
         private string GetNextWaitingConfig()
