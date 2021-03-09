@@ -180,7 +180,7 @@ namespace pwiz.SkylineTestUtil
             get
             {
                 // return false to import mzML
-                return AllowVendorReaders;
+                return Environment.Is64BitProcess && AllowVendorReaders;
             }
         }
 
