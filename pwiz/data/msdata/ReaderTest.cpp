@@ -278,7 +278,7 @@ void testIdentifyFileFormat()
         set<CVID> expectedCvTypeSet{ MS_mzML_format, MS_ISB_mzXML_format, MS_MS1_format, MS_MS2_format, MS_Mascot_MGF_format, MS_Bruker_XML_format, MS_mz5_format,
                                      MS_ABI_WIFF_format, MS_SCIEX_TOF_TOF_T2D_format, MS_Agilent_MassHunter_format,
                                      MS_Bruker_FID_format, MS_Bruker_Agilent_YEP_format, MS_Bruker_BAF_format, MS_Bruker_U2_format, MS_Bruker_TDF_format,
-                                     MS_mass_spectrometer_file_format, MS_Thermo_RAW_format, MS_UIMF_format, MS_Waters_raw_format };
+                                     MS_file_format, MS_mass_spectrometer_file_format, MS_Thermo_RAW_format, MS_UIMF_format, MS_Waters_raw_format };
         auto expectedButNotFound = expectedCvTypeSet - readerCvTypeSet;
         auto foundButNotExpected = readerCvTypeSet - expectedCvTypeSet;
         unit_assert_operator_equal(set<CVID>(), expectedButNotFound);
@@ -293,6 +293,8 @@ void testIdentifyFileFormat()
     unit_assert_operator_equal(2, extByType["Bruker YEP"].size());
     unit_assert_operator_equal(".d", extByType["Bruker YEP"][0]);
     unit_assert_operator_equal(".yep", extByType["Bruker YEP"][1]);
+    unit_assert_operator_equal(1, extByType["Mobilion MBI"].size());
+    unit_assert_operator_equal(".mbi", extByType["Mobilion MBI"][0]);
 }
 
 

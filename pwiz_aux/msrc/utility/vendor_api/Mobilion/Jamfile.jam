@@ -86,6 +86,7 @@ lib pwiz_vendor_api_mbi
     : # requirements      
         <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
         <conditional>@vendor-api-requirements
+        <address-model>32:<build>no
     : # default-build
     : # usage-requirements
         <conditional>@vendor-api-usage-requirements

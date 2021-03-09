@@ -36,7 +36,12 @@ constant READER_NAME : "Reader_Mobilion" ;
 rule vendor-api-requirements ( properties * )
 {
     local result ;
-    if [ project-exists $(API_PATH) ]
+    if <toolset>msvc in $(properties) &&
+       [ project-exists $(API_PATH) ] &&
+       [ mbi-dll-location $(API_PATH) : $(properties) ] &&
+       ! [ without-binary-msdata $(properties) ] &&
+       ! <vendor-api-support>off in $(properties) &&
+       <address-model>64 in $(properties)
     {
         result += <source>Reader_Mobilion_Detail.cpp ;
     }
@@ -50,7 +55,8 @@ rule vendor-api-usage-requirements ( properties * )
        [ project-exists $(API_PATH) ] &&
        [ mbi-dll-location $(API_PATH) : $(properties) ] &&
        ! [ without-binary-msdata $(properties) ] &&
-       ! <vendor-api-support>off in $(properties)
+       ! <vendor-api-support>off in $(properties) &&
+       <address-model>64 in $(properties)
     {
         result += <define>PWIZ_READER_MOBILION ;
         result += <dependency>$(API_PATH)//pwiz_vendor_api_mbi ;
