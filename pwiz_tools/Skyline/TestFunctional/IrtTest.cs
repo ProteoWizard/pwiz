@@ -413,7 +413,6 @@ namespace pwiz.SkylineTestFunctional
             //Calc dialog -> calibrate standard
             RunDlg<CalibrateIrtDlg>(irtDlg2.Calibrate, calibrateDlg2 =>
             {
-                WaitForCondition(() => calibrateDlg2.IsShown);
                 //Get 11 peptides from the document (all of them) and go back to calculator dialog
                 calibrateDlg2.Recalculate(SkylineWindow.Document, 11);
                 calibrateDlg2.StandardName = "Document2";

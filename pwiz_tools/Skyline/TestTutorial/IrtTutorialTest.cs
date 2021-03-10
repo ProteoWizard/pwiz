@@ -167,7 +167,6 @@ namespace pwiz.SkylineTestTutorial
                       });
             {
                 var calibrateDlg = ShowDialog<CalibrateIrtDlg>(editIrtCalc1.Calibrate);
-                WaitForConditionUI(() => calibrateDlg.IsShown);
                 RunUI(() =>
                 {
                     calibrateDlg.StandardName = "Biognosys (30 min cal)";
@@ -279,6 +278,7 @@ namespace pwiz.SkylineTestTutorial
             RunDlg<RefineDlg>(SkylineWindow.ShowRefineDlg, refineDlg =>
                     {
                         refineDlg.RefineLabelType = IsotopeLabelType.heavy;
+                        WaitForCondition(() => refineDlg.RefineLabelType == IsotopeLabelType.heavy);
                         refineDlg.OkDialog();
                     });
             var docLightOnly = WaitForDocumentChange(docHumanAndStandard);
