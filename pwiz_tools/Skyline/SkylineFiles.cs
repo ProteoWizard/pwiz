@@ -1855,19 +1855,51 @@ namespace pwiz.Skyline
             List<PeptideGroupDocNode> peptideGroups = null;
             var docCurrent = DocumentUI;
             SrmDocument docNew = null;
-
-            // PreImport of mass list
-            var importer = docCurrent.PreImportMassList(inputs, null);
-            if (importer == null)
-                return;
-
-            using (var columnDlg = new ImportTransitionListColumnSelectDlg(importer, docCurrent, inputs, insertPath))
+            MassListImporter importer = null;
+            var analyzingMessage = string.Format( Resources.SkylineWindow_ImportMassList_Analyzing_input__0_, inputs.InputFilename ?? string.Empty);
+            using (var longWaitDlg0 = new LongWaitDlg(this)
             {
-                var result = columnDlg.ShowDialog(this);
-                if (result == DialogResult.Cancel)
+                Text = analyzingMessage,
+            })
+            {
+                var status = longWaitDlg0.PerformWork(this, 1000, longWaitBroker =>
+                {
+                    // PreImport of mass list
+                    importer = docCurrent.PreImportMassList(inputs, longWaitBroker);
+                });
+                if (importer == null || status.IsCanceled)
+                {
                     return;
+                }
             }
-            
+
+            // NOT COMPLETE:
+            // It can take a long time between ImportTransitionListColumnSelectDlg.ShowDialog() and ImportTransitionListColumnSelectDlg.OnColumnsShown()
+            // So we need something like LongOperationRunner
+            // But the problem with LongOperationRunner is that the progress bar doesn't go away once ImportTransitionListColumnSelectDlg.OnColumnsShown() hits
+            var longOperationRunner = new LongOperationRunner
+            {
+                ParentControl = this
+            };
+
+            bool SelectColumns(ILongWaitBroker longWaitBroker)
+            {
+                longWaitBroker.Message = analyzingMessage;
+                using (var columnDlg =
+                    new ImportTransitionListColumnSelectDlg(importer, docCurrent, inputs, insertPath))
+                {
+                    var result = columnDlg.ShowDialog(this);
+                    return result != DialogResult.Cancel;
+                }
+            }
+
+            var success = longOperationRunner.CallFunction(SelectColumns);
+            if (!success)
+            {
+                return;
+            }
+
+
             using (var longWaitDlg = new LongWaitDlg(this) {Text = description})
             {
                 var status = longWaitDlg.PerformWork(this, 1000, longWaitBroker =>
