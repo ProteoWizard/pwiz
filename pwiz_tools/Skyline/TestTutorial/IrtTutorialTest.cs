@@ -278,7 +278,6 @@ namespace pwiz.SkylineTestTutorial
             RunDlg<RefineDlg>(SkylineWindow.ShowRefineDlg, refineDlg =>
                     {
                         refineDlg.RefineLabelType = IsotopeLabelType.heavy;
-                        WaitForCondition(() => refineDlg.RefineLabelType == IsotopeLabelType.heavy);
                         refineDlg.OkDialog();
                     });
             var docLightOnly = WaitForDocumentChange(docHumanAndStandard);
