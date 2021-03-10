@@ -45,6 +45,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
         private readonly CalibrationGridViewDriver _gridViewDriver;
         private bool FireStandardsChanged { get; set; }
+        public bool IsShown { get; private set; }
 
         private IrtStandard _standard;
         private readonly IEnumerable<IrtStandard> _existing;
@@ -155,6 +156,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
         {
             FireStandardsChanged = true;
             UpdateEquation(sender, e);
+            IsShown = true;
         }
 
         public void OkDialog()

@@ -167,13 +167,12 @@ namespace pwiz.SkylineTestTutorial
                       });
             {
                 var calibrateDlg = ShowDialog<CalibrateIrtDlg>(editIrtCalc1.Calibrate);
+                WaitForConditionUI(() => calibrateDlg.IsShown);
                 RunUI(() =>
                 {
                     calibrateDlg.StandardName = "Biognosys (30 min cal)";
                     calibrateDlg.UseResults();
                     Assert.AreEqual(11, calibrateDlg.StandardPeptideCount);
-                    calibrateDlg.WriteFixedPointPeptides(); // diagnostic
-                    WaitForCondition(() => calibrateDlg.NumFixedPointOptions == 11);
                     calibrateDlg.SetFixedPoints(1, 10);
                     for (int i = 0; i < calibrateDlg.StandardPeptideCount; i++)
                     {
