@@ -130,6 +130,7 @@ namespace pwiz.Skyline.FileUI
 
         private void PopulateComboBoxes()
         {
+            int? comboWidth = null;
             foreach (var comboBox in ComboBoxes)
             {
                 comboBox.Text = string.Empty;
@@ -148,8 +149,16 @@ namespace pwiz.Skyline.FileUI
                     // Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge
                 });
                 comboBox.SelectedIndex = 0;
-                comboBox.SelectedIndexChanged += ComboChanged;       
-                ComboHelper.AutoSizeDropDown(comboBox);
+                comboBox.SelectedIndexChanged += ComboChanged;
+                if (comboWidth.HasValue)
+                {
+                    comboBox.DropDownWidth = comboWidth.Value;
+                }
+                else
+                {
+                    ComboHelper.AutoSizeDropDown(comboBox);
+                    comboWidth = comboBox.DropDownWidth;
+                }
             }
 
             var columns = Importer.RowReader.Indices;
