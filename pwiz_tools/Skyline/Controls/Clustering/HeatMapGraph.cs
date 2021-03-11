@@ -79,6 +79,8 @@ namespace pwiz.Skyline.Controls.Clustering
             };
         }
 
+        public override ZedGraphControl GraphControl => zedGraphControl1;
+
         protected override void OnHandleCreated(EventArgs e)
         {
             base.OnHandleCreated(e);

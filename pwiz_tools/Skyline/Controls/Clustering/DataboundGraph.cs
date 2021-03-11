@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.DataBinding;
@@ -6,6 +7,7 @@ using pwiz.Common.DataBinding.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Util;
+using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Clustering
 {
@@ -17,6 +19,7 @@ namespace pwiz.Skyline.Controls.Clustering
         private DataGridId _dataGridId;
         private SkylineWindow _skylineWindow;
         private bool _updateSelectionPending;
+        private bool _refreshDataPending;
 
         public IDataboundGridForm OwnerGridForm
         {
@@ -51,14 +54,21 @@ namespace pwiz.Skyline.Controls.Clustering
                 if (BindingListSource != null)
                 {
                     BindingListSource.AllRowsChanged -= BindingListSource_OnAllRowsChanged;
+                    BindingListSource.ListChanged -= BindingListSource_OnListChanged;
                 }
 
                 _bindingListSource = value;
                 if (BindingListSource != null)
                 {
                     BindingListSource.AllRowsChanged += BindingListSource_OnAllRowsChanged;
+                    BindingListSource.ListChanged += BindingListSource_OnListChanged;
                 }
             }
+        }
+
+        private void BindingListSource_OnListChanged(object sender, ListChangedEventArgs e)
+        {
+            DataChanged();
         }
 
         private void BindingListSource_OnAllRowsChanged(object sender, EventArgs e)
@@ -118,7 +128,11 @@ namespace pwiz.Skyline.Controls.Clustering
                     {
                         SkylineWindow.ComboResults.SelectedIndexChanged -= ComboResults_OnSelectedIndexChanged;
                     }
-                    SkylineWindow.SequenceTree.AfterSelect -= SequenceTree_OnAfterSelect;
+
+                    if (SkylineWindow.SequenceTree != null)
+                    {
+                        SkylineWindow.SequenceTree.AfterSelect -= SequenceTree_OnAfterSelect;
+                    }
                 }
 
                 _skylineWindow = value;
@@ -128,10 +142,15 @@ namespace pwiz.Skyline.Controls.Clustering
                     {
                         SkylineWindow.ComboResults.SelectedIndexChanged += ComboResults_OnSelectedIndexChanged;
                     }
-                    SkylineWindow.SequenceTree.AfterSelect += SequenceTree_OnAfterSelect;
+                    if (SkylineWindow.SequenceTree != null)
+                    {
+                        SkylineWindow.SequenceTree.AfterSelect += SequenceTree_OnAfterSelect;
+                    }
                 }
             }
         }
+
+        public virtual ZedGraphControl GraphControl => null;
 
         protected override void Dispose(bool disposing)
         {
@@ -178,9 +197,25 @@ namespace pwiz.Skyline.Controls.Clustering
         {
         }
 
+        public void QueueRefreshData()
+        {
+            if (!IsHandleCreated)
+                return;
+            if (_refreshDataPending)
+            {
+                return;
+            }
+            _refreshDataPending = true;
+            BeginInvoke(new Action(() =>
+            {
+                _refreshDataPending = false;
+                RefreshData();
+            }));
+        }
+
         protected virtual void DataChanged()
         {
-            RefreshData();
+            QueueRefreshData();
         }
 
         protected void UpdateTitle(string baseTitle)
@@ -220,10 +255,18 @@ namespace pwiz.Skyline.Controls.Clustering
                 .FirstOrDefault(form => Equals(_dataGridId, form.DataGridId));
             if (ownerForm == null)
             {
+                if (GraphControl != null)
+                {
+                    GraphControl.GraphPane.Title.Text = "Disconnected";
+                }
                 Close();
                 return;
             }
 
+            if (GraphControl != null)
+            {
+                GraphControl.GraphPane.Title.Text = "Waiting for data";
+            }
             DataboundGridControl = ownerForm.GetDataboundGridControl();
             DataChanged();
         }

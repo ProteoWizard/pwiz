@@ -77,6 +77,8 @@ namespace pwiz.Skyline.Controls.Clustering
             }
         }
 
+        public override ZedGraphControl GraphControl => zedGraphControl1;
+
         public DataSchemaLocalizer Localizer { get; }
 
         public void UpdateControls()
