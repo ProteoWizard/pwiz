@@ -735,6 +735,19 @@ namespace pwiz.Skyline.SettingsUI
             {
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
+                    if (!string.IsNullOrEmpty(dlg.AddLibraryFile))
+                    {
+                        using (var editLibDlg = new EditLibraryDlg(Settings.Default.SpectralLibraryList) {LibraryPath = dlg.AddLibraryFile})
+                        {
+                            if (editLibDlg.ShowDialog(this) == DialogResult.OK)
+                            {
+                                _driverLibrary.List.Add(editLibDlg.LibrarySpec);
+                                _driverLibrary.LoadList(_driverLibrary.Chosen.Concat(new[] {editLibDlg.LibrarySpec}).ToArray());
+                            }
+                        }
+                        return;
+                    }
+
                     IsBuildingLibrary = true;
 
                     var builder = dlg.Builder;
