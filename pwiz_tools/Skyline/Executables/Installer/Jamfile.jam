@@ -152,7 +152,7 @@ actions test_msi
     $(TEST_PRECOMMAND)
 
     echo Uninstalling $(ARTIFACT_NAME)...
-    $(PWIZ_LIBRARIES_PATH)\tuxliketimeout.exe 120000 $(PWIZ_LIBRARIES_PATH)\tuxliketimeout.exe 120000 msiexec /qn /l* "%TEMP%\$(ARTIFACT_NAME)-uninstall.log" /norestart /x "%TEMP%\$(ARTIFACT_NAME).msi" REBOOT=ReallySuppress
+    $(PWIZ_LIBRARIES_PATH)\tuxliketimeout.exe 120000 msiexec /qn /l* "%TEMP%\$(ARTIFACT_NAME)-uninstall.log" /norestart /x "%TEMP%\$(ARTIFACT_NAME).msi" REBOOT=ReallySuppress
     set EXIT=%ERRORLEVEL%
     IF %TEST_EXIT% NEQ 0 IF %EXIT% NEQ 0 set status=%EXIT%
     IF %EXIT% NEQ 0 echo Uninstall failed with code %EXIT%.
