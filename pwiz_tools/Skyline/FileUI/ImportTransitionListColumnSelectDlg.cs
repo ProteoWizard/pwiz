@@ -130,7 +130,6 @@ namespace pwiz.Skyline.FileUI
 
         private void PopulateComboBoxes()
         {
-            int? comboWidth = null;
             foreach (var comboBox in ComboBoxes)
             {
                 comboBox.Text = string.Empty;
@@ -150,15 +149,7 @@ namespace pwiz.Skyline.FileUI
                 });
                 comboBox.SelectedIndex = 0;
                 comboBox.SelectedIndexChanged += ComboChanged;
-                if (comboWidth.HasValue)
-                {
-                    comboBox.DropDownWidth = comboWidth.Value;
-                }
-                else
-                {
-                    ComboHelper.AutoSizeDropDown(comboBox);
-                    comboWidth = comboBox.DropDownWidth;
-                }
+                ComboHelper.AutoSizeDropDown(comboBox);
             }
 
             var columns = Importer.RowReader.Indices;
