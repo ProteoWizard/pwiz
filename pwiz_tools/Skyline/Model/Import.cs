@@ -315,6 +315,12 @@ namespace pwiz.Skyline.Model
             Separator = separator;
         }
 
+        public MassListInputs(IList<string> lines)
+        {
+            InitFormat(lines);
+            _lines = lines;
+        }
+
         public IList<string> ReadLines()
         {
             return _lines ?? (_lines = _inputFilename != null ? ReadLinesFromFile() : ReadLinesFromText());
@@ -367,7 +373,7 @@ namespace pwiz.Skyline.Model
                 {
                     throw new IOException(Resources.SkylineWindow_importMassListMenuItem_Click_Data_columns_not_found_in_first_line);
                 }
-                // If there are no numbers in the first column, try the second. Without numbers the format provider may not be correct
+                // If there are no numbers in the first line, try the second. Without numbers the format provider may not be correct
                 if (columnTypes.All(t => Type.GetTypeCode(t) != TypeCode.Double))
                 {
                     inputLine = 1 < inputLines.Count ? inputLines[1] : string.Empty;
