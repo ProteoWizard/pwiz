@@ -442,10 +442,10 @@ namespace pwiz.Skyline.Controls.Clustering
             return true;
         }
 
-        public override bool RefreshData()
+        public override void RefreshData()
         {
             ClusterInput = DataboundGridControl?.CreateClusterInput() ?? ClusterInput;
-            return true;
+            UpdateTitle("PCA Plot");
         }
 
         private class PcaCalculator : GraphDataCalculator<ClusterInput, Tuple<Clusterer, ReportColorScheme>>

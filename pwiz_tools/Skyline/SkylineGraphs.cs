@@ -70,7 +70,7 @@ namespace pwiz.Skyline
         private readonly List<GraphSummary> _listGraphMassError = new List<GraphSummary>();
         private readonly List<GraphSummary> _listGraphDetections = new List<GraphSummary>();
 
-        private DockableForm _resultsGridForm;
+        private LiveResultsGrid _resultsGridForm;
         private DocumentGridForm _documentGridForm;
         private CalibrationForm _calibrationForm;
         private AuditLogForm _auditLogForm;
@@ -4954,7 +4954,7 @@ namespace pwiz.Skyline
             }
         }
 
-        private DockableForm CreateResultsGrid()
+        public LiveResultsGrid CreateResultsGrid()
         {
             Debug.Assert(null == _resultsGridForm);
             _resultsGridForm = new LiveResultsGrid(this);
@@ -5018,7 +5018,7 @@ namespace pwiz.Skyline
             
         }
 
-        private DocumentGridForm CreateDocumentGrid()
+        public DocumentGridForm CreateDocumentGrid()
         {
             Assume.IsNull(_documentGridForm);
             _documentGridForm = new DocumentGridForm(this);

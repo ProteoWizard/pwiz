@@ -20,6 +20,7 @@
 using System;
 using System.Drawing;
 using DigitalRune.Windows.Docking;
+using pwiz.Common.DataBinding;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
@@ -39,6 +40,21 @@ namespace pwiz.Skyline.Controls.GroupComparison
             return base.GetTitle(groupComparisonName) + ':' + GroupComparisonStrings.FoldChangeGrid_GetTitle_Grid;
         }
 
+        public ViewName? ViewToRestore { get; set; }
+
+        protected override string GetPersistentString()
+        {
+            var persistentString = base.GetPersistentString();
+            var viewName = DataboundGridControl.GetViewName();
+            if (viewName.HasValue)
+            {
+                persistentString += DataGridId.PERSISTENT_SEPARATOR +
+                                    DataGridId.EscapePersistentStringPart(viewName.ToString());
+            }
+
+            return persistentString;
+        }
+
         protected override void OnShown(EventArgs e)
         {
             base.OnShown(e);
@@ -48,6 +64,10 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 toolStripButtonChangeSettings.Visible =
                     !string.IsNullOrEmpty(FoldChangeBindingSource.GroupComparisonModel.GroupComparisonName);
                 FoldChangeBindingSource.ViewContext.BoundDataGridView = DataboundGridControl.DataGridView;
+                if (ViewToRestore.HasValue)
+                {
+                    DataboundGridControl.ChooseView(ViewToRestore.Value);
+                }
             }
         }
 

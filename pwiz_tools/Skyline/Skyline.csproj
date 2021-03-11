@@ -347,11 +347,11 @@
     <Compile Include="Controls\Clustering\DataboundGraph.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Controls\Clustering\HierarchicalClusterGraph.cs">
+    <Compile Include="Controls\Clustering\HeatMapGraph.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Controls\Clustering\HierarchicalClusterGraph.Designer.cs">
-      <DependentUpon>HierarchicalClusterGraph.cs</DependentUpon>
+    <Compile Include="Controls\Clustering\HeatMapGraph.Designer.cs">
+      <DependentUpon>HeatMapGraph.cs</DependentUpon>
     </Compile>
     <Compile Include="Controls\Clustering\ClusterGraphResults.cs" />
     <Compile Include="Controls\Clustering\PcaPlot.cs">
@@ -2140,8 +2140,8 @@
     <EmbeddedResource Include="Controls\AuditLog\AuditLogForm.resx">
       <DependentUpon>AuditLogForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Controls\Clustering\HierarchicalClusterGraph.resx">
-      <DependentUpon>HierarchicalClusterGraph.cs</DependentUpon>
+    <EmbeddedResource Include="Controls\Clustering\HeatMapGraph.resx">
+      <DependentUpon>HeatMapGraph.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Clustering\PcaPlot.resx">
       <DependentUpon>PcaPlot.cs</DependentUpon>

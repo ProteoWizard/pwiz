@@ -198,6 +198,11 @@ namespace pwiz.Skyline.Controls.Databinding
             }
         }
 
+        public ViewName? GetViewName()
+        {
+            return BindingListSource?.ViewInfo?.ViewGroup?.Id.ViewName(BindingListSource.ViewInfo.Name);
+        }
+
         public void ChooseView(string viewName)
         {
             var groups = new[] {ViewGroup.BUILT_IN}.Concat(BindingListSource.ViewContext.ViewGroups);
@@ -671,20 +676,20 @@ namespace pwiz.Skyline.Controls.Databinding
         public bool ShowHeatMap()
         {
             var formGroup = FormGroup.FromControl(this);
-            var heatMap = formGroup.SiblingForms.OfType<HierarchicalClusterGraph>().FirstOrDefault();
+            var heatMap = formGroup.SiblingForms.OfType<HeatMapGraph>().FirstOrDefault();
             if (heatMap != null)
             {
                 heatMap.OwnerGridForm = DataboundGridForm;
-                heatMap.ClusterInput = CreateClusterInput();
+                heatMap.RefreshData();
                 heatMap.Activate();
                 return true;
             }
-            heatMap = new HierarchicalClusterGraph
+            heatMap = new HeatMapGraph
             {
                 SkylineWindow = DataSchemaSkylineWindow,
                 OwnerGridForm = DataboundGridForm,
-                ClusterInput = CreateClusterInput()
             };
+            heatMap.RefreshData();
 
             formGroup.ShowSibling(heatMap);
             return true;

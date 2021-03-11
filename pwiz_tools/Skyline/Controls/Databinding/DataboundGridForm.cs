@@ -22,7 +22,6 @@ using System.Windows.Forms;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Skyline.Model.Databinding;
-using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Util;
 
 // This code is associated with the DocumentGrid.
@@ -52,8 +51,7 @@ namespace pwiz.Skyline.Controls.Databinding
 
         public ViewName? GetViewName()
         {
-            return DataboundGridControl?.BindingListSource?.ViewInfo?.ViewGroup?.Id.ViewName(DataboundGridControl
-                .BindingListSource.ViewInfo.Name);
+            return DataboundGridControl?.GetViewName();
         }
 
         DataboundGridControl IDataboundGridForm.GetDataboundGridControl()

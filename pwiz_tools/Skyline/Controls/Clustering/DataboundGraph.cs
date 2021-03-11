@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model.Databinding;
@@ -31,6 +32,7 @@ namespace pwiz.Skyline.Controls.Clustering
                 }
 
                 _ownerGridForm = value;
+                _dataGridId = OwnerGridForm?.DataGridId;
                 DataboundGridControl = OwnerGridForm?.GetDataboundGridControl();
             }
         }
@@ -46,8 +48,22 @@ namespace pwiz.Skyline.Controls.Clustering
                     return;
                 }
 
+                if (BindingListSource != null)
+                {
+                    BindingListSource.AllRowsChanged -= BindingListSource_OnAllRowsChanged;
+                }
+
                 _bindingListSource = value;
+                if (BindingListSource != null)
+                {
+                    BindingListSource.AllRowsChanged += BindingListSource_OnAllRowsChanged;
+                }
             }
+        }
+
+        private void BindingListSource_OnAllRowsChanged(object sender, EventArgs e)
+        {
+            DataChanged();
         }
 
         public DataboundGridControl DataboundGridControl
@@ -98,14 +114,20 @@ namespace pwiz.Skyline.Controls.Clustering
 
                 if (SkylineWindow != null)
                 {
-                    SkylineWindow.ComboResults.SelectedIndexChanged -= ComboResults_OnSelectedIndexChanged;
+                    if (SkylineWindow.ComboResults != null)
+                    {
+                        SkylineWindow.ComboResults.SelectedIndexChanged -= ComboResults_OnSelectedIndexChanged;
+                    }
                     SkylineWindow.SequenceTree.AfterSelect -= SequenceTree_OnAfterSelect;
                 }
 
                 _skylineWindow = value;
                 if (SkylineWindow != null)
                 {
-                    SkylineWindow.ComboResults.SelectedIndexChanged += ComboResults_OnSelectedIndexChanged;
+                    if (SkylineWindow.ComboResults != null)
+                    {
+                        SkylineWindow.ComboResults.SelectedIndexChanged += ComboResults_OnSelectedIndexChanged;
+                    }
                     SkylineWindow.SequenceTree.AfterSelect += SequenceTree_OnAfterSelect;
                 }
             }
@@ -152,9 +174,30 @@ namespace pwiz.Skyline.Controls.Clustering
         {
         }
 
-        public virtual bool RefreshData()
+        public virtual void RefreshData()
         {
-            return true;
+        }
+
+        protected virtual void DataChanged()
+        {
+            RefreshData();
+        }
+
+        protected void UpdateTitle(string baseTitle)
+        {
+            string title = baseTitle;
+            if (_dataGridId != null)
+            {
+                title = title + @":" + _dataGridId;
+            }
+
+            var viewInfo = BindingListSource?.ViewInfo;
+            if (viewInfo != null && !Equals(viewInfo.ViewGroup?.Id, ViewGroup.BUILT_IN.Id))
+            {
+                title = title + @"(" + viewInfo.Name + @")";
+            }
+
+            Text = TabText = title;
         }
 
         protected override string GetPersistentString()
@@ -182,6 +225,7 @@ namespace pwiz.Skyline.Controls.Clustering
             }
 
             DataboundGridControl = ownerForm.GetDataboundGridControl();
+            DataChanged();
         }
 
         public static DataboundGraph RestoreDataboundGraph(SkylineWindow skylineWindow, string persistentString)
@@ -193,10 +237,10 @@ namespace pwiz.Skyline.Controls.Clustering
                 return null;
             }
 
-            string className = persistentString.Substring(ichPipe);
-            if (className == typeof(HierarchicalClusterGraph).ToString())
+            string className = persistentString.Substring(0, ichPipe);
+            if (className == typeof(HeatMapGraph).ToString())
             {
-                databoundGraph = new HierarchicalClusterGraph();
+                databoundGraph = new HeatMapGraph();
             }
             else if (className == typeof(PcaPlot).ToString())
             {

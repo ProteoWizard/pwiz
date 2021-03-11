@@ -31,7 +31,7 @@ using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Clustering
 {
-    public partial class HierarchicalClusterGraph : DataboundGraph
+    public partial class HeatMapGraph : DataboundGraph
     {
         private DendrogramScale _rowDendrogramScale;
         private DendrogramScale _columnDendrogramScale;
@@ -40,7 +40,7 @@ namespace pwiz.Skyline.Controls.Clustering
         private AxisLabelScaler _yAxisLabelScaler;
         private readonly HeatMapCalculator _calculator;
 
-        public HierarchicalClusterGraph()
+        public HeatMapGraph()
         {
             InitializeComponent();
             InitializeDendrograms();
@@ -351,10 +351,11 @@ namespace pwiz.Skyline.Controls.Clustering
             {
                 Checked = ShowSelection
             });
+            menuStrip.Items.Insert(0, new ToolStripSeparator());
+            menuStrip.Items.Insert(0, new ToolStripMenuItem("Refresh", null, (o, args)=>RefreshData()));
             var pointObject = PointFromMousePoint(mousePt);
             if (pointObject?.ReplicateName != null || pointObject?.IdentityPath != null)
             {
-                menuStrip.Items.Insert(0, new ToolStripSeparator());
                 menuStrip.Items.Insert(0, new ToolStripMenuItem(Resources.HierarchicalClusterGraph_zedGraphControl1_ContextMenuBuilder_Select, null, (o, args)=>SelectPoint(pointObject)));
             }
         }
@@ -377,6 +378,10 @@ namespace pwiz.Skyline.Controls.Clustering
 
         private ClusterGraphResults.Point PointFromMousePoint(Point mousePoint)
         {
+            if (GraphResults == null)
+            {
+                return null;
+            }
             var graphPane = zedGraphControl1.GraphPane;
             graphPane.ReverseTransform(new PointF(mousePoint.X, mousePoint.Y), out double x, out double y);
             if (x < graphPane.XAxis.Scale.Min || x > graphPane.XAxis.Scale.Max)
@@ -400,19 +405,19 @@ namespace pwiz.Skyline.Controls.Clustering
             SkylineWindow?.SelectPathAndReplicate(point?.IdentityPath, point?.ReplicateName);
         }
 
-        public override bool RefreshData()
+        public override void RefreshData()
         {
             ClusterInput = DataboundGridControl?.CreateClusterInput() ?? ClusterInput;
-            return true;
-		}
+            UpdateTitle("Heat Map");
+        }
         private class HeatMapCalculator : GraphDataCalculator<ClusterInput, ClusterGraphResults>
         {
-            public HeatMapCalculator(HierarchicalClusterGraph hierarchicalClusterGraph) : base(CancellationToken.None, hierarchicalClusterGraph.zedGraphControl1)
+            public HeatMapCalculator(HeatMapGraph heatMapGraph) : base(CancellationToken.None, heatMapGraph.zedGraphControl1)
             {
-                HierarchicalClusterGraph = hierarchicalClusterGraph;
+                HeatMapGraph = heatMapGraph;
             }
 
-            public HierarchicalClusterGraph HierarchicalClusterGraph { get; }
+            public HeatMapGraph HeatMapGraph { get; }
 
             protected override ClusterGraphResults CalculateResults(ClusterInput input, CancellationToken cancellationToken)
             {
@@ -421,7 +426,7 @@ namespace pwiz.Skyline.Controls.Clustering
 
             protected override void ResultsAvailable()
             {
-                HierarchicalClusterGraph.UpdateGraph();
+                HeatMapGraph.UpdateGraph();
             }
         }
     }

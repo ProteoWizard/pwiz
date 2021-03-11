@@ -129,7 +129,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(()=>SkylineWindow.SaveDocument(Path.Combine(TestContext.TestDir, skylineDocumentPath)));
             AssertEx.Serializable(SkylineWindow.Document);
             RunUI(()=>listGrid.DataboundGridControl.ShowHeatMap());
-            var heatMap = WaitForOpenForm<HierarchicalClusterGraph>();
+            var heatMap = WaitForOpenForm<HeatMapGraph>();
             Assert.IsNotNull(heatMap);
             RunUI(()=>SkylineWindow.SaveDocument(skylineDocumentPath));
             RunUI(()=>
@@ -139,7 +139,7 @@ namespace pwiz.SkylineTestFunctional
             });
             listGrid = FindOpenForm<ListGridForm>();
             Assert.IsNotNull(listGrid);
-            heatMap = FindOpenForm<HierarchicalClusterGraph>();
+            heatMap = FindOpenForm<HeatMapGraph>();
             Assert.IsNotNull(heatMap);
             Assert.AreSame(listGrid.DataboundGridControl, heatMap.DataboundGridControl);
 

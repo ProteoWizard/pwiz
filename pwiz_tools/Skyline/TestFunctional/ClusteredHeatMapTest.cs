@@ -52,7 +52,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsNotNull(documentGrid);
             RunUI(()=>documentGrid.ChooseView("PeptideResultValues"));
             WaitForCondition(() => documentGrid.IsComplete);
-            var heatMap = ShowDialog<HierarchicalClusterGraph>(()=>documentGrid.DataboundGridControl.ShowHeatMap());
+            var heatMap = ShowDialog<HeatMapGraph>(()=>documentGrid.DataboundGridControl.ShowHeatMap());
             WaitForConditionUI(() => null != heatMap.GraphResults);
             var heatMapResults = heatMap.GraphResults;
             Assert.IsNotNull(heatMap);
@@ -73,7 +73,7 @@ namespace pwiz.SkylineTestFunctional
 
             RunUI(()=>documentGrid.ChooseView("ThreeColumnGroups"));
             WaitForCondition(() => documentGrid.IsComplete);
-            heatMap = ShowDialog<HierarchicalClusterGraph>(()=>documentGrid.DataboundGridControl.ShowHeatMap());
+            heatMap = ShowDialog<HeatMapGraph>(()=>documentGrid.DataboundGridControl.ShowHeatMap());
             WaitForConditionUI(() => null != heatMap.GraphResults);
             PauseForScreenShot("Heat map with three column groups");
             Assert.AreEqual(6, heatMap.GraphResults.ColumnGroups.Count);
@@ -99,7 +99,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForCondition(() => grid.DataboundGridControl.IsComplete);
             RunUI(()=>grid.DataboundGridControl.ChooseView("Clustered"));
             WaitForCondition(() => grid.DataboundGridControl.IsComplete && 0 != grid.DataboundGridControl.RowCount);
-            var heatMap = ShowDialog<HierarchicalClusterGraph>(()=>grid.DataboundGridControl.ShowHeatMap());
+            var heatMap = ShowDialog<HeatMapGraph>(()=>grid.DataboundGridControl.ShowHeatMap());
             var pcaPlot = ShowDialog<PcaPlot>(() => grid.DataboundGridControl.ShowPcaPlot());
             OkDialog(heatMap, heatMap.Close);
             OkDialog(pcaPlot, pcaPlot.Close);

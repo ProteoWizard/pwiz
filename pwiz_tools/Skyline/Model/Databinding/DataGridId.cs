@@ -1,17 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using DigitalRune.Windows.Docking;
 using pwiz.Common.DataBinding;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Databinding
 {
     public class DataGridType
     {
-        private Func<string> _titleTemplateStringFunc;
+        private Func<string> _titleFunc;
         public static DataGridType DOCUMENT_GRID = new DataGridType(@"DocumentGrid", ()=>"Document Grid");
         public static DataGridType RESULTS_GRID = new DataGridType(@"ResultsGrid", ()=>"Results Grid");
-        public static DataGridType GROUP_COMPARISON = new DataGridType(@"GroupComparison", ()=>"{0}");
-        public static DataGridType LIST = new DataGridType(@"List", ()=>"List {0}");
+        public static DataGridType GROUP_COMPARISON = new DataGridType(@"GroupComparison", ()=>"Group Comparison");
+        public static DataGridType LIST = new DataGridType(@"List", ()=>"List");
         public static DataGridType AUDIT_LOG = new DataGridType(@"AuditLog", ()=>"Audit Log");
 
         public static IEnumerable<DataGridType> All
@@ -30,17 +32,17 @@ namespace pwiz.Skyline.Model.Databinding
             return All.FirstOrDefault(type => type.Name == name);
         }
 
-        public DataGridType(string name, Func<string> titleTemplateStringFunc)
+        public DataGridType(string name, Func<string> titleFunc)
         {
             Name = name;
-            _titleTemplateStringFunc = titleTemplateStringFunc;
+            _titleFunc = titleFunc;
         }
 
-        public string Name { get; private set; }
+        public string Name { get; }
 
-        public string TitleTemplateString
+        public string Title
         {
-            get { return _titleTemplateStringFunc(); }
+            get { return _titleFunc(); }
         }
     }
 
@@ -57,7 +59,13 @@ namespace pwiz.Skyline.Model.Databinding
 
         public override string ToString()
         {
-            return string.Format(DataGridType.TitleTemplateString, Name);
+            string title = DataGridType.Title;
+            if (string.IsNullOrEmpty(Name))
+            {
+                return title;
+            }
+
+            return TextUtil.SpaceSeparate(title, Name);
         }
 
         public string ToPersistedString()
@@ -80,13 +88,18 @@ namespace pwiz.Skyline.Model.Databinding
             }
             return new DataGridId(dataGridType, parts[1]);
         }
-        private const char PERSISTENT_SEPARATOR = '|';
+        public const char PERSISTENT_SEPARATOR = '|';
 
 
         public static string MakePersistentStringFromParts(params string[] parts)
         {
             return string.Join(PERSISTENT_SEPARATOR.ToString(),
-                parts.Select(part => Uri.EscapeDataString(part ?? string.Empty)));
+                parts.Select(EscapePersistentStringPart));
+        }
+
+        public static string EscapePersistentStringPart(string part)
+        {
+            return Uri.EscapeDataString(part ?? string.Empty);
         }
 
         public static IEnumerable<string> ParsePersistedStringParts(string persistentString)
@@ -96,6 +109,27 @@ namespace pwiz.Skyline.Model.Databinding
                 var decoded = Uri.UnescapeDataString(part);
                 return string.IsNullOrEmpty(decoded) ? null : decoded;
             });
+        }
+
+        protected bool Equals(DataGridId other)
+        {
+            return Equals(DataGridType, other.DataGridType) && Name == other.Name;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != GetType()) return false;
+            return Equals((DataGridId) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return ((DataGridType != null ? DataGridType.GetHashCode() : 0) * 397) ^ (Name != null ? Name.GetHashCode() : 0);
+            }
         }
     }
 
