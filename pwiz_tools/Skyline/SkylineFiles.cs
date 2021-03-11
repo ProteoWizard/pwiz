@@ -1873,15 +1873,11 @@ namespace pwiz.Skyline
                 }
             }
 
-
-            using (var columnDlg =
-                new ImportTransitionListColumnSelectDlg(importer, docCurrent, inputs, insertPath))
+            using (var columnDlg = new ImportTransitionListColumnSelectDlg(importer, docCurrent, inputs, insertPath))
             {
                 var result = columnDlg.ShowDialog(this);
                 if (result == DialogResult.Cancel)
-                {
                     return;
-                }
             }
 
             using (var longWaitDlg = new LongWaitDlg(this) {Text = description})
