@@ -1452,7 +1452,7 @@ namespace pwiz.Skyline.Model
                 try
                 {
                     if (importer == null)
-                        importer = PreImportMassList(inputs, progressMonitor);
+                        importer = PreImportMassList(inputs, progressMonitor, false);
                     if (importer != null)
                     {
                         IdentityPath nextAdd;
@@ -1477,10 +1477,10 @@ namespace pwiz.Skyline.Model
             return docNew;
         }
 
-        public MassListImporter PreImportMassList(MassListInputs inputs, IProgressMonitor progressMonitor)
+        public MassListImporter PreImportMassList(MassListInputs inputs, IProgressMonitor progressMonitor, bool tolerateErrors)
         {
             var importer = new MassListImporter(this, inputs);
-            if (importer.PreImport(progressMonitor, null))
+            if (importer.PreImport(progressMonitor, null, tolerateErrors))
                 return importer;
             return null;
         }

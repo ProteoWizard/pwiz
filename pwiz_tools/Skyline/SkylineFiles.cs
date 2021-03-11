@@ -1865,7 +1865,7 @@ namespace pwiz.Skyline
                 var status = longWaitDlg0.PerformWork(this, 1000, longWaitBroker =>
                 {
                     // PreImport of mass list
-                    importer = docCurrent.PreImportMassList(inputs, longWaitBroker);
+                    importer = docCurrent.PreImportMassList(inputs, longWaitBroker, true);
                 });
                 if (importer == null || status.IsCanceled)
                 {
@@ -1873,32 +1873,16 @@ namespace pwiz.Skyline
                 }
             }
 
-            // NOT COMPLETE:
-            // It can take a long time between ImportTransitionListColumnSelectDlg.ShowDialog() and ImportTransitionListColumnSelectDlg.OnColumnsShown()
-            // So we need something like LongOperationRunner
-            // But the problem with LongOperationRunner is that the progress bar doesn't go away once ImportTransitionListColumnSelectDlg.OnColumnsShown() hits
-            var longOperationRunner = new LongOperationRunner
-            {
-                ParentControl = this
-            };
 
-            bool SelectColumns(ILongWaitBroker longWaitBroker)
+            using (var columnDlg =
+                new ImportTransitionListColumnSelectDlg(importer, docCurrent, inputs, insertPath))
             {
-                longWaitBroker.Message = analyzingMessage;
-                using (var columnDlg =
-                    new ImportTransitionListColumnSelectDlg(importer, docCurrent, inputs, insertPath))
+                var result = columnDlg.ShowDialog(this);
+                if (result == DialogResult.Cancel)
                 {
-                    var result = columnDlg.ShowDialog(this);
-                    return result != DialogResult.Cancel;
+                    return;
                 }
             }
-
-            var success = longOperationRunner.CallFunction(SelectColumns);
-            if (!success)
-            {
-                return;
-            }
-
 
             using (var longWaitDlg = new LongWaitDlg(this) {Text = description})
             {
@@ -1977,7 +1961,7 @@ namespace pwiz.Skyline
                     doc = doc.ImportMassList(inputs, importer, insertPath, out selectPath);
                     if (irtInputs != null)
                     {
-                        var iRTimporter = doc.PreImportMassList(irtInputs, null);
+                        var iRTimporter = doc.PreImportMassList(irtInputs, null, false);
                         doc = doc.ImportMassList(irtInputs, iRTimporter, null, out selectPath);
                     }
                     var newSettings = doc.Settings;

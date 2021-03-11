@@ -405,7 +405,7 @@ namespace pwiz.Skyline.Model
 
         private const int PERCENT_READER = 95;
 
-        public bool PreImport(IProgressMonitor progressMonitor, ColumnIndices indices)
+        public bool PreImport(IProgressMonitor progressMonitor, ColumnIndices indices, bool tolerateErrors)
         {
             IProgressStatus status = new ProgressStatus();
             // Get the lines used to guess the necessary columns and create the row reader
@@ -447,7 +447,7 @@ namespace pwiz.Skyline.Model
                 RowReader = ExPeptideRowReader.Create(FormatProvider, Separator, indices, Settings, lines);
                 if (RowReader == null)
                 {
-                    RowReader = GeneralRowReader.Create(FormatProvider, Separator, indices, Settings, lines);
+                    RowReader = GeneralRowReader.Create(FormatProvider, Separator, indices, Settings, lines, tolerateErrors);
                     if (RowReader == null)
                         throw new LineColNumberedIoException(Resources.MassListImporter_Import_Failed_to_find_peptide_column, 1, -1);
                 }
@@ -1172,7 +1172,7 @@ namespace pwiz.Skyline.Model
                 public int LabelIndex { get; private set; }
             }
 
-            public static GeneralRowReader Create(IFormatProvider provider, char separator, ColumnIndices indices, SrmSettings settings, IList<string> lines)
+            public static GeneralRowReader Create(IFormatProvider provider, char separator, ColumnIndices indices, SrmSettings settings, IList<string> lines, bool tolerateErrors)
             {
                 // Split the first line into fields.
                 Assume.IsTrue(lines.Count > 0);
@@ -1198,7 +1198,13 @@ namespace pwiz.Skyline.Model
                         // If no sequence column found, return null.  After this, all errors throw.
                         var newSeqCandidates = FindSequenceCandidates(fields);
                         if (newSeqCandidates.Length == 0)
+                        {
+                            if (tolerateErrors)
+                            {
+                                break; // Caller will assign columns by other means
+                            }
                             return null;
+                        }
 
                         var listNewCandidates = new List<PrecursorCandidate>();
                         foreach (var candidateIndex in newSeqCandidates)
@@ -1252,7 +1258,13 @@ namespace pwiz.Skyline.Model
                         }
 
                         if (listNewCandidates.Count == 0)
+                        {
+                            if (tolerateErrors)
+                            {
+                                break; // Caller will assign columns by other means
+                            }
                             throw new MzMatchException(Resources.GeneralRowReader_Create_No_valid_precursor_m_z_column_found, 1, -1);
+                        }
                         sequenceCandidates = listNewCandidates.ToArray();
                     }
 
@@ -1262,34 +1274,41 @@ namespace pwiz.Skyline.Model
                         break;
                 }
                 if (sequenceCandidates == null)
-                    return null;
+                {
+                    if (!tolerateErrors)
+                    {
+                        return null;
+                    }
+                }
+                else
+                {
+                   
+                    if (bestCandidateIndex == -1)
+                        bestCandidateIndex = 0;
 
-                if (bestCandidateIndex == -1)
-                    bestCandidateIndex = 0;
+                    var prec = sequenceCandidates[bestCandidateIndex];
+                    int iSequence = prec.SequenceIndex;
+                    int iPrecursor = prec.PrecursorMzIdex;
+                    int iProduct = FindProduct(fieldsFirstRow, prec.Sequence, prec.TransitionExps, prec.SequenceIndex, prec.PrecursorMzIdex,
+                        tolerance, provider, settings);
+                    if (iProduct == -1)
+                        throw new MzMatchException(Resources.GeneralRowReader_Create_No_valid_product_m_z_column_found, 1, -1);
 
-                var prec = sequenceCandidates[bestCandidateIndex];
-                int iSequence = prec.SequenceIndex;
-                int iPrecursor = prec.PrecursorMzIdex;
-                int iProduct = FindProduct(fieldsFirstRow, prec.Sequence, prec.TransitionExps, prec.SequenceIndex, prec.PrecursorMzIdex,
-                    tolerance, provider, settings);
-                if (iProduct == -1)
-                    throw new MzMatchException(Resources.GeneralRowReader_Create_No_valid_product_m_z_column_found, 1, -1);
+                    int iProt = indices.ProteinColumn;
+                    if (iProt == -1)
+                        iProt = FindProtein(fieldsFirstRow, iSequence, lines, indices.Headers, provider, separator);
+                    int iPrecursorCharge = indices.PrecursorChargeColumn;
+                    // Explicitly declaring the charge state interferes with downstream logic that matches m/z and peptide
+                    // to plausible peptide modifications
+                    //if (iPrecursorCharge == -1)
+                    //    iPrecursorCharge = FindPrecursorCharge(fieldsFirstRow, lines, separator);
+                    int iFragmentName = indices.FragmentNameColumn;
+                    if (iFragmentName == -1)
+                        iFragmentName = FindFragmentName(fieldsFirstRow, lines, separator);
+                    iLabelType = prec.LabelIndex;
 
-                int iProt = indices.ProteinColumn;
-                if (iProt == -1)
-                    iProt = FindProtein(fieldsFirstRow, iSequence, lines, indices.Headers, provider, separator);
-                int iPrecursorCharge = indices.PrecursorChargeColumn;
-                // Explicitly declaring the charge state interferes with downstream logic that matches m/z and peptide
-                // to plausible peptide modifications
-                //if (iPrecursorCharge == -1)
-                //    iPrecursorCharge = FindPrecursorCharge(fieldsFirstRow, lines, separator);
-                int iFragmentName = indices.FragmentNameColumn;
-                if (iFragmentName == -1)
-                    iFragmentName = FindFragmentName(fieldsFirstRow, lines, separator);
-                iLabelType = prec.LabelIndex;
-
-                indices.AssignDetected(iProt, iSequence, iPrecursor, iProduct, iLabelType, iFragmentName, iPrecursorCharge);
-
+                    indices.AssignDetected(iProt, iSequence, iPrecursor, iProduct, iLabelType, iFragmentName, iPrecursorCharge);
+                }
                 return new GeneralRowReader(provider, separator, indices, settings, lines);
             }
 
