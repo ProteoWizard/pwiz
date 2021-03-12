@@ -86,10 +86,6 @@ namespace pwiz.SkylineTestFunctional
         private void Filter(DataboundGridControl databoundGridControl, PropertyPath propertyPath, string filterValue)
         {
             WaitForConditionUI(() => databoundGridControl.IsComplete);
-            if (0 == databoundGridControl.RowCount)
-            {
-                System.Diagnostics.Debugger.Break();
-            }
             var filterDlg = ShowDialog<QuickFilterForm>(() =>
             {
                 databoundGridControl.QuickFilter(databoundGridControl.FindColumn(propertyPath));
