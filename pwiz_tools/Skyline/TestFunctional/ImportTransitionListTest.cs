@@ -43,6 +43,7 @@ namespace pwiz.SkylineTestFunctional
         {
             RunUI(()=>SkylineWindow.OpenFile(TestFilesDir.GetTestPath("ImportHighPrecTranList.sky")));
             ImportTransitionListSkipColumnSelect(TestFilesDir.GetTestPath("ThermoTransitionList.csv"));
+            WaitForCondition(() => 0 != SkylineWindow.Document.MoleculeCount);
             var documentGrid = ShowDialog<DocumentGridForm>(() => SkylineWindow.ShowDocumentGrid(true));
             RunUI(() => documentGrid.ChooseView("PeptideModSeqFullNames"));
             VerifyExpectedPeptides(documentGrid);
@@ -85,6 +86,10 @@ namespace pwiz.SkylineTestFunctional
         private void Filter(DataboundGridControl databoundGridControl, PropertyPath propertyPath, string filterValue)
         {
             WaitForConditionUI(() => databoundGridControl.IsComplete);
+            if (0 == databoundGridControl.RowCount)
+            {
+                System.Diagnostics.Debugger.Break();
+            }
             var filterDlg = ShowDialog<QuickFilterForm>(() =>
             {
                 databoundGridControl.QuickFilter(databoundGridControl.FindColumn(propertyPath));
