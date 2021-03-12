@@ -805,4 +805,13 @@ greater peak area.</value>
   <data name="_refine_gc_p_value_cutoff" xml:space="preserve">
     <value>Keep only targets with a group comparison adjusted p value below the specified cut-off. (required for group comparison refinement)</value>
   </data>
+  <data name="CommandArgs_GROUP_MINIMIZE_RESULTS_Minimizing_results_file_size" xml:space="preserve">
+    <value>Minimizing results file size</value>
+  </data>
+  <data name="_chromatogram_discard" xml:space="preserve">
+    <value>Discard all unused chromatograms from the document.</value>
+  </data>
+  <data name="_limit_noise" xml:space="preserve">
+    <value>Limits the length of the chromatagrams to a number of minutes around the chromatogram peak, i.e. ± minutes.</value>
+  </data>
 </root>

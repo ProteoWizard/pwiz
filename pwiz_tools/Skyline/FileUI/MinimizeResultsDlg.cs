@@ -49,11 +49,10 @@ namespace pwiz.Skyline.FileUI
         {
             InitializeComponent();
             Icon = Resources.Skyline;
-            _minimizeResults = new MinimizeResults(documentUIContainer, OnProgress);
+            _minimizeResults = new MinimizeResults(documentUIContainer.Document, OnProgress);
+            _minimizeResults.StartStatisticsCollection();
             Settings = _minimizeResults.Settings
-                .ChangeDiscardUnmatchedChromatograms(true)
-                .ChangeDiscardAllIonsChromatograms(false)
-                .ChangeNoiseTimeRange(null);
+                .ChangeDiscardUnmatchedChromatograms(true);
             DocumentUIContainer = documentUIContainer;
             bindingSource1.DataSource = _rowItems = new BindingList<GridRowItem>();
         }
@@ -66,7 +65,8 @@ namespace pwiz.Skyline.FileUI
             if (DocumentUIContainer != null)
             {
                 DocumentUIContainer.ListenUI(OnDocumentChanged);
-                SetDocument(DocumentUIContainer.Document);
+                // TODO (Ali): Ask if it's ok you moved SetDocument to MinimizeResults.cs constructor. Happens before listenUI now.
+                //SetDocument(DocumentUIContainer.Document);
             }
         }
 
@@ -89,15 +89,9 @@ namespace pwiz.Skyline.FileUI
         private void OnDocumentChanged(object sender, DocumentChangedEventArgs args)
         {
             if (!_minimizeResults.BlockStatisticsCollection)
-                SetDocument(DocumentUIContainer.DocumentUI);
+                _minimizeResults.SetDocument(DocumentUIContainer.DocumentUI);
         }
 
-        private void SetDocument(SrmDocument document)
-        {
-            ChromCacheMinimizer = document.Settings.HasResults
-                                      ? document.Settings.MeasuredResults.GetChromCacheMinimizer(document)
-                                      : null;
-        }
 
         private bool _changingOptimizeSettings;
         public ChromCacheMinimizer.Settings Settings
@@ -249,12 +243,12 @@ namespace pwiz.Skyline.FileUI
         {
             // First dispose of statistics collection to avoid it consuming disk reads
             // while actual minimizing is happening.
-            _minimizeResults.StartBlockStatisticsCollection();
+            _minimizeResults.PauseStatisticsCollection();
             if (!TryMinimizeToFile(targetFile))
             {
                 // Restore statistics calculation if minimizing didn't happen and the
                 // form is to remain open
-                _minimizeResults.StopBlockStatisticsCollection();
+                _minimizeResults.StartStatisticsCollection();
                 return;
             }
             DialogResult = DialogResult.OK;
@@ -271,7 +265,13 @@ namespace pwiz.Skyline.FileUI
                         longWaitBroker.Message = Resources.MinimizeResultsDlg_MinimizeToFile_Saving_new_cache_file;
                         try
                         {
-                            _minimizeResults.MinimizeToFile(targetFile, longWaitBroker);
+                            var measuredResults =_minimizeResults.MinimizeToFile(targetFile, longWaitBroker);
+                            SrmDocument docOrig, docNew;
+                            do
+                            {
+                                docOrig = DocumentUIContainer.Document;
+                                docNew = docOrig.ChangeMeasuredResults(measuredResults);
+                            } while (!DocumentUIContainer.SetDocument(docNew, docOrig));
                         }
                         catch (ObjectDisposedException)
                         {

@@ -12,25 +12,35 @@ namespace pwiz.Skyline.Model
         private ChromCacheMinimizer.Settings _settings;
         private ChromCacheMinimizer _chromCacheMinimizer;
         private BackgroundWorker _statisticsCollector;
-        private bool _blockStatisticsCollection;
+        private bool _doStatisticsCollection;
 
-        private IDocumentUIContainer _documentUIContainer;
+        private SrmDocument _document;
+
+
+        public MinimizeResults(SrmDocument document, ProgressCallback doOnProgress)
+        {
+            _doStatisticsCollection = false; // Block statistics collection during initialization
+            _doOnProgress = doOnProgress;
+            Settings = new ChromCacheMinimizer.Settings()
+                .ChangeDiscardUnmatchedChromatograms(false)
+                .ChangeDiscardAllIonsChromatograms(false)
+                .ChangeNoiseTimeRange(null);
+            _document = document;
+            SetDocument(_document);
+        }
 
         public delegate void ProgressCallback(ChromCacheMinimizer.MinStatistics minStatistics, BackgroundWorker worker);
 
         public ProgressCallback _doOnProgress { get; private set; }
+        public bool BlockStatisticsCollection => !_doStatisticsCollection;
 
-
-        public MinimizeResults(IDocumentUIContainer documentUIContainer, ProgressCallback doOnProgress)
+        public void SetDocument(SrmDocument document)
         {
-            _doOnProgress = doOnProgress;
-            Settings = new ChromCacheMinimizer.Settings()
-                .ChangeDiscardUnmatchedChromatograms(true)
-                .ChangeDiscardAllIonsChromatograms(false)
-                .ChangeNoiseTimeRange(null);
-            _documentUIContainer = documentUIContainer;
+            _document = document;
+            ChromCacheMinimizer = document.Settings.HasResults
+                ? document.Settings.MeasuredResults.GetChromCacheMinimizer(document)
+                : null;
         }
-
 
         public ChromCacheMinimizer.Settings Settings
         {
@@ -46,7 +56,7 @@ namespace pwiz.Skyline.Model
                 }
                 
                 _settings = value;
-                if (ChromCacheMinimizer != null)
+                if (_doStatisticsCollection && ChromCacheMinimizer != null)
                 {
                     StatisticsCollector = new BackgroundWorker(this, null);
                 }
@@ -67,7 +77,7 @@ namespace pwiz.Skyline.Model
                     StatisticsCollector = null;
                 }
                 _chromCacheMinimizer = value;
-                if (ChromCacheMinimizer != null)
+                if (_doStatisticsCollection && ChromCacheMinimizer != null)
                 {
                     StatisticsCollector = new BackgroundWorker(this, null);
                 }
@@ -79,7 +89,7 @@ namespace pwiz.Skyline.Model
             get { return _statisticsCollector; }
             private set
             {
-                if (ReferenceEquals(value, _statisticsCollector))
+                if (ReferenceEquals(value, _statisticsCollector) || !_doStatisticsCollection)
                 {
                     return;
                 }
@@ -95,31 +105,21 @@ namespace pwiz.Skyline.Model
                 }
             }
         }
-
-        public bool BlockStatisticsCollection
+        
+        public void PauseStatisticsCollection()
         {
-            get { return _blockStatisticsCollection; }
-            private set
-            {
-                _blockStatisticsCollection = value;
-                if (value)
-                    StatisticsCollector = null;
-            }
+            _doStatisticsCollection = false;
+            StatisticsCollector = null;
         }
 
-        public void StartBlockStatisticsCollection()
+        public void StartStatisticsCollection()
         {
-            BlockStatisticsCollection = true;
-        }
-
-        public void StopBlockStatisticsCollection()
-        {
-            BlockStatisticsCollection = false;
+            _doStatisticsCollection = true;
             StatisticsCollector = new BackgroundWorker(this, null);
         }
 
 
-        public void MinimizeToFile(string targetFile, ILongWaitBroker longWaitBroker)
+        public MeasuredResults MinimizeToFile(string targetFile, ILongWaitBroker longWaitBroker)
         {
             var targetSkydFile = ChromatogramCache.FinalPathForName(targetFile, null);
             using (var skydSaver = new FileSaver(targetSkydFile))
@@ -136,14 +136,7 @@ namespace pwiz.Skyline.Model
                         scansSaver.FileStream, peaksSaver.FileStream, scoreSaver.FileStream);
                 }
                 
-                var measuredResults =
-                    _documentUIContainer.Document.Settings.MeasuredResults.CommitCacheFile(skydSaver);
-                SrmDocument docOrig, docNew;
-                do
-                {
-                    docOrig = _documentUIContainer.Document;
-                    docNew = docOrig.ChangeMeasuredResults(measuredResults);
-                } while (!_documentUIContainer.SetDocument(docNew, docOrig));
+                return _document.Settings.MeasuredResults.CommitCacheFile(skydSaver);
             }
         }
 

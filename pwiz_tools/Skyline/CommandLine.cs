@@ -283,6 +283,12 @@ namespace pwiz.Skyline
 
             WaitForDocumentLoaded();
 
+            if (commandArgs.Minimizing)
+            {
+                if (!MinimizeResults(commandArgs))
+                    return false;
+            }
+
             if (commandArgs.RemovingResults && commandArgs.RemoveBeforeDate.HasValue)
             {
                 // We are given a remove-before date. Remove results AFTER all results have been imported. 
@@ -1715,6 +1721,34 @@ namespace pwiz.Skyline
 
                 ModifyDocument(d => d.ChangeMeasuredResults(newMeasuredResults));
             }
+        }
+
+        public bool MinimizeResults(CommandArgs commandArgs)
+        {
+            if (!_doc.Settings.HasResults)
+            {
+                _out.WriteLine(Resources.CommandLine_ReintegratePeaks_Error__You_must_first_import_results_into_the_document_before_reintegrating_);
+                return false;
+            }
+
+            var saveFile = commandArgs.MinimizeFilePath ?? _skylineFile;
+            _out.WriteLine("Minimizing results to {0}", saveFile);
+            if (commandArgs.ChromatogramsDiscard)
+                _out.WriteLine("Removing unused chromatograms" + @"...");
+            if (commandArgs.LimitNoise.HasValue)
+                _out.WriteLine("Limiting chromatogram noise to +/- {0} minutes around peak" + @"...", commandArgs.LimitNoise);
+
+            var minimizeResults = new MinimizeResults(Document, ((statistics, sizeCalculator) =>
+            {
+                _out.WriteLine(statistics.PercentComplete + "%");
+            }));
+            minimizeResults.Settings = minimizeResults.Settings
+                .ChangeDiscardUnmatchedChromatograms(commandArgs.ChromatogramsDiscard)
+                .ChangeNoiseTimeRange(commandArgs.LimitNoise);
+            var measuredResults = minimizeResults.MinimizeToFile(saveFile, null);
+            _doc = _doc.ChangeMeasuredResults(measuredResults);
+            _skylineFile = saveFile;
+            return true;
         }
 
         private bool ImportSearch(CommandArgs commandArgs)
