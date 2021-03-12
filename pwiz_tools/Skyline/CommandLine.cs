@@ -1732,15 +1732,15 @@ namespace pwiz.Skyline
             }
 
             var saveFile = commandArgs.MinimizeFilePath ?? _skylineFile;
-            _out.WriteLine("Minimizing results to {0}", saveFile);
+            _out.WriteLine(Resources.CommandLine_MinimizeResults_Minimizing_results_to__0_, saveFile);
             if (commandArgs.ChromatogramsDiscard)
-                _out.WriteLine("Removing unused chromatograms" + @"...");
+                _out.WriteLine(Resources.CommandLine_MinimizeResults_Removing_unused_chromatograms___);
             if (commandArgs.LimitNoise.HasValue)
-                _out.WriteLine("Limiting chromatogram noise to +/- {0} minutes around peak" + @"...", commandArgs.LimitNoise);
+                _out.WriteLine(Resources.CommandLine_MinimizeResults_Limiting_chromatogram_noise_to______0__minutes_around_peak___, commandArgs.LimitNoise);
 
             var minimizeResults = new MinimizeResults(Document, ((statistics, sizeCalculator) =>
             {
-                _out.WriteLine(statistics.PercentComplete + "%");
+                _out.WriteLine(statistics.PercentComplete + @"%");
             }));
             minimizeResults.Settings = minimizeResults.Settings
                 .ChangeDiscardUnmatchedChromatograms(commandArgs.ChromatogramsDiscard)
