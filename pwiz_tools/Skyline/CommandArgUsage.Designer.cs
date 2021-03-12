@@ -97,15 +97,6 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Discard all unused chromatograms from the document..
-        /// </summary>
-        internal static string _chromatogram_discard {
-            get {
-                return ResourceManager.GetString("_chromatogram_discard", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to The path to the tab delimited file to export chromatograms to. Defaults to exporting precursors and products..
         /// </summary>
         internal static string _chromatogram_file {
@@ -138,6 +129,24 @@ namespace pwiz.Skyline {
         internal static string _chromatogram_tics {
             get {
                 return ResourceManager.GetString("_chromatogram_tics", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Discard all unused chromatograms from the document..
+        /// </summary>
+        internal static string _chromatograms_discard_unused {
+            get {
+                return ResourceManager.GetString("_chromatograms_discard_unused", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Limits the length of the chromatagrams to a number of minutes around the chromatogram peak, i.e. ± minutes..
+        /// </summary>
+        internal static string _chromatograms_limit_noise {
+            get {
+                return ResourceManager.GetString("_chromatograms_limit_noise", resourceCulture);
             }
         }
         
@@ -759,15 +768,6 @@ namespace pwiz.Skyline {
         internal static string _keep_empty_proteins {
             get {
                 return ResourceManager.GetString("_keep_empty_proteins", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Limits the length of the chromatagrams to a number of minutes around the chromatogram peak, i.e. ± minutes..
-        /// </summary>
-        internal static string _limit_noise {
-            get {
-                return ResourceManager.GetString("_limit_noise", resourceCulture);
             }
         }
         

@@ -311,14 +311,14 @@ namespace pwiz.Skyline
             return true;
         }
 
-        public static readonly Argument ARG_LIMIT_NOISE = new DocArgument(@"limit-noise", NUM_VALUE,
+        public static readonly Argument ARG_CHROMATOGRAMS_LIMIT_NOISE = new DocArgument(@"chromatograms-limit-noise", NUM_VALUE,
             (c, p) => c.LimitNoise = p.ValueDouble);
 
-        public static readonly Argument ARG_CHROMATOGRAM_DISCARD = new DocArgument(@"chromatogram-discard",
+        public static readonly Argument ARG_CHROMATOGRAMS_DISCARD_UNUSED = new DocArgument(@"chromatograms-discard-unused",
             (c, p) => c.ChromatogramsDiscard = true );
 
         private static readonly ArgumentGroup GROUP_MINIMIZE_RESULTS = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_MINIMIZE_RESULTS_Minimizing_results_file_size, false,
-            ARG_LIMIT_NOISE, ARG_CHROMATOGRAM_DISCARD)
+            ARG_CHROMATOGRAMS_LIMIT_NOISE, ARG_CHROMATOGRAMS_DISCARD_UNUSED)
         {
             Validate = c => c.ValidateMinimizeResultsArgs()
         };
@@ -331,12 +331,12 @@ namespace pwiz.Skyline
                 // TODO (Ali): Should this be an error?
                 if (ChromatogramsDiscard)
                 {
-                    WarnArgRequirement(ARG_CHROMATOGRAM_DISCARD, ARG_SAVE, ARG_OUT);
+                    WarnArgRequirement(ARG_CHROMATOGRAMS_DISCARD_UNUSED, ARG_SAVE, ARG_OUT);
                     ChromatogramsDiscard = false;
                 }
                 if (LimitNoise.HasValue)
                 {
-                    WarnArgRequirement(ARG_LIMIT_NOISE, ARG_SAVE, ARG_OUT);
+                    WarnArgRequirement(ARG_CHROMATOGRAMS_LIMIT_NOISE, ARG_SAVE, ARG_OUT);
                     LimitNoise = null;
                 }
                 MinimizeFilePath = null;
