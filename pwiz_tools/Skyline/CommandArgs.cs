@@ -1969,11 +1969,15 @@ namespace pwiz.Skyline
                 return string.Format(Resources.CommandArgs_WarnArgRequirment_Warning__Use_of_the_argument__0__requires_the_argument__1_,
                     usedArg.ArgumentText, requiredArgs[0].ArgumentText);
 
-            var requiredArgsText = new string[requiredArgs.Length];
-            for (int i = 0; i < requiredArgs.Length; i++)
-                requiredArgsText[i] = requiredArgs[i].ArgumentText;
-            return string.Format(Resources.CommandArgs_WarnArgRequirementText_Use_of_the_argument__0__requires_one_of_the_following_arguments_,
-                       usedArg.ArgumentText) + TextUtil.SpaceSeparate(requiredArgsText);
+            var requiredArgsText = new List<string>()
+            {
+                string.Format(
+                    Resources
+                        .CommandArgs_WarnArgRequirementText_Use_of_the_argument__0__requires_one_of_the_following_arguments_,
+                    usedArg.ArgumentText)
+            };
+            requiredArgsText.AddRange(requiredArgs.Select(i => i.ArgumentText).ToList());
+            return TextUtil.LineSeparate(requiredArgsText);
         }
 
         private void WarnArgRequirement(Argument usedArg, params Argument[] requiredArgs)
