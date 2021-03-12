@@ -835,20 +835,29 @@ namespace pwiz.Skyline.Controls.Graphs
                 lines.Add(string.Format("{0}{1} ppm", (massError.Value > 0 ? "+" : string.Empty), massError.Value));
             if (dotProduct != 0)
                 lines.Add(string.Format("({0} {1:F02})", _isFullScanMs ? "idotp" : "dotp", dotProduct));
-            if (ionMobilityfilter.IonMobility.HasValue && !_isSummary && Settings.Default.ShowIonMobility)
+
+            // Ion mobility values
+            if (ionMobilityfilter.IonMobility.HasValue && !_isSummary && 
+                (Settings.Default.ShowCollisionCrossSection || Settings.Default.ShowIonMobility))
             {
-                var imString = string.Format("{0:F02} {1}",
-                    ionMobilityfilter.IonMobility.Mobility, IonMobilityValue.GetUnitsString(ionMobilityfilter.IonMobilityUnits));
-                if (ionMobilityfilter.CollisionalCrossSectionSqA.HasValue)
+                if (Settings.Default.ShowCollisionCrossSection && 
+                    ionMobilityfilter.IonMobilityUnits != eIonMobilityUnits.compensation_V) // CCS isn't measurable with FAIMS
                 {
-                    lines.Add(string.Format("CCS {0:F02}", ionMobilityfilter.CollisionalCrossSectionSqA.Value));
-                    lines.Add(string.Format("({0})", imString));
+                    var ccsString = ionMobilityfilter.CollisionalCrossSectionSqA.HasValue ?
+                        string.Format("CCS {0:F02} Å²", ionMobilityfilter.CollisionalCrossSectionSqA.Value) :
+                        "CCS unknown"; // Should never happen, except for very old data
+                    lines.Add(ccsString);
                 }
-                else
+                if (Settings.Default.ShowIonMobility)
                 {
-                    lines.Add(string.Format("IM {0}", imString)); // No CCS available, show IM only
+                    var imString = ionMobilityfilter.IonMobility.HasValue ?
+                        string.Format("{0:F02} {1}",
+                            ionMobilityfilter.IonMobility.Mobility, IonMobilityValue.GetUnitsString(ionMobilityfilter.IonMobilityUnits)) :
+                        "IM unknown"; // Should never happen
+                    lines.Add(string.Format("IM {0}", imString)); 
                 }
             }
+
             // ReSharper restore LocalizableElement
             return TextUtil.LineSeparate(lines);
         }

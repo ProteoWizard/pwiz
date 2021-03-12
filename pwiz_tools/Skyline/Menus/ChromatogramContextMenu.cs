@@ -27,6 +27,7 @@ using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using ZedGraph;
 
 namespace pwiz.Skyline.Menus
@@ -187,11 +188,47 @@ namespace pwiz.Skyline.Menus
                 .FirstOrDefault(fileInfo => null != fileInfo);
             if (null != chromFileInfo && chromFileInfo.IonMobilityUnits != eIonMobilityUnits.none)
             {
-                var menuItemText = Resources.SkylineWindow_Ion_Mobility;
-                var ionMobilityItem = new ToolStripMenuItem(menuItemText);
+                var asSubMenu = true;
+
+                var ccsMenuItemText = Resources.ChromatogramContextMenu_Collision_Cross_Section;
+                var ccsItem = new ToolStripMenuItem(ccsMenuItemText);
+                ccsItem.Click += (sender, eventArgs) => SkylineWindow.ShowCollisionCrossSection = !SkylineWindow.ShowCollisionCrossSection;
+                ccsItem.Checked = SkylineWindow.ShowCollisionCrossSection;
+
+                string imMenuItemText;
+                switch (chromFileInfo.IonMobilityUnits)
+                {
+                    case eIonMobilityUnits.drift_time_msec:
+                        imMenuItemText = Resources.ChromatogramContextMenu_InsertIonMobilityMenuItems_Drift_Time;
+                        break;
+                    case eIonMobilityUnits.inverse_K0_Vsec_per_cm2:
+                        imMenuItemText = Resources.ChromatogramContextMenu_InsertIonMobilityMenuItems_Inverse_Ion_Mobility;
+                        break;
+                    case eIonMobilityUnits.compensation_V:
+                        imMenuItemText = Resources.ChromatogramContextMenu_InsertIonMobilityMenuItems_Compensation_Voltage;
+                        asSubMenu = false; // No CCS value, no need to submenu
+                        break;
+                    default:
+                        Assume.Fail(@"unknown ion mobility type");
+                        imMenuItemText = string.Empty;
+                        break;
+                }
+                var ionMobilityItem = new ToolStripMenuItem(imMenuItemText);
                 ionMobilityItem.Click += (sender, eventArgs) => SkylineWindow.ShowIonMobility = !SkylineWindow.ShowIonMobility;
                 ionMobilityItem.Checked = SkylineWindow.ShowIonMobility;
-                items.Insert(iInsert++, ionMobilityItem);
+
+                if (asSubMenu)
+                {
+                    var imSubMenu = new ToolStripMenuItem(Resources.ChromatogramContextMenu_InsertIonMobilityMenuItems_Ion_Mobility);
+                    imSubMenu.DropDownItems.Add(ccsItem);
+                    imSubMenu.DropDownItems.Add(ionMobilityItem);
+                    items.Insert(iInsert++, imSubMenu);
+                }
+                else
+                {
+                    items.Insert(iInsert++, ionMobilityItem);
+                }
+
             }
             return iInsert;
         }
