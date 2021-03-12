@@ -140,6 +140,7 @@
     <Compile Include="Collections\UniqueList.cs" />
     <Compile Include="SystemUtil\CenterWinDialog.cs" />
     <Compile Include="SystemUtil\CommonException.cs" />
+    <Compile Include="SystemUtil\ProgressHandler.cs" />
     <Compile Include="SystemUtil\MemoryBlockingCollection.cs" />
     <Compile Include="SystemUtil\ParallelEx.cs" />
     <Compile Include="SystemUtil\TrackAttribute.cs" />

@@ -144,6 +144,27 @@ namespace pwiz.SkylineTestFunctional
             BuildLibraryError("no_such_file.pep.XML", null, "Failed to open");
             BuildLibraryError("missing_mzxml.pep.XML", null, "Could not find spectrum file");
 
+            // Test trying to build using an existing library (e.g. msp/sptxt)
+            EnsurePeptideSettings();
+            var buildLibAddDlg = ShowDialog<BuildLibraryDlg>(PeptideSettingsUI.ShowBuildLibraryDlg);
+            RunUI(() =>
+            {
+                buildLibAddDlg.LibraryName = "test_msp_lib";
+                buildLibAddDlg.OkWizardPage();
+            });
+            var mspPath = Path.Combine(TestFilesDir.GetTestPath("msp"), "aurum_consensus_final_true_lib.msp");
+            var askAddLibDlg = ShowDialog<MultiButtonMsgDlg>(() => buildLibAddDlg.AddInputFiles(new[] {mspPath}));
+            var addLibDlg = ShowDialog<EditLibraryDlg>(askAddLibDlg.BtnYesClick);
+            const string mspLibName = "aurum_consensus";
+            RunUI(() =>
+            {
+                Assert.AreEqual(mspPath, addLibDlg.LibraryPath);
+                addLibDlg.LibraryName = mspLibName;
+            });
+            OkDialog(addLibDlg, addLibDlg.OkDialog);
+            if (!TryWaitForConditionUI(() => PeptideSettingsUI.AvailableLibraries.Contains(mspLibName)))
+                AssertEx.Fail("Failed waiting for the library {0} in Peptide Settings", mspLibName);
+
             // Check for proper handling of labeled addducts in small molecule files 
             // (formerly this would throw on a null object, fixed with the use of ExplicitMods.EMPTY)
             BuildLibraryValid("heavy_adduct.ssl", true, false, false, 1);
@@ -219,6 +240,14 @@ namespace pwiz.SkylineTestFunctional
             };
             TestAddPaths(buildLibraryDlg, invalidTypes, true);
 
+            // Test AddPathsDlg (multiple library files)
+            string[] existingLibFiles =
+            {
+                Path.Combine(TestFilesDir.GetTestPath("msp"), "aurum_consensus_final_true_lib.msp"),
+                Path.Combine(TestFilesDir.GetTestPath("msp"), "human_b2mg_consensus_final_true_lib.msp")
+            };
+            TestAddPaths(buildLibraryDlg, existingLibFiles, true);
+            
             // Test AddPathsDlg (valid files)
             string[] goodPaths =
             {

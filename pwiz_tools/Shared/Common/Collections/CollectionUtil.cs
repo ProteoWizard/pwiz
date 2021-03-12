@@ -209,5 +209,19 @@ namespace pwiz.Common.Collections
         {
             get { return Comparer<object>.Create(CompareColumnValues); }
         }
+
+        public static Dictionary<TKey, TValue> SafeToDictionary<TKey, TValue>(IEnumerable<KeyValuePair<TKey, TValue>> entries)
+        {
+            var dictionary = new Dictionary<TKey, TValue>();
+            foreach (var entry in entries)
+            {
+                if (!dictionary.ContainsKey(entry.Key))
+                {
+                    dictionary.Add(entry.Key, entry.Value);
+                }
+            }
+
+            return dictionary;
+        }
     }
 }

@@ -20,45 +20,67 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.DataAnalysis.Clustering;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Clustering;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Clustering
 {
-    public partial class PcaPlot : Form
+    public partial class PcaPlot : DockableFormEx
     {
         private List<Tuple<string, PivotedProperties.SeriesGroup>> _datasetOptions;
         private bool _inUpdateControls;
         private static readonly Color MISSING_COLOR = Color.Black;
+        private readonly PcaCalculator _calculator;
         public PcaPlot()
         {
             InitializeComponent();
+            _calculator = new PcaCalculator(this);
             Localizer = SkylineDataSchema.GetLocalizedSchemaLocalizer();
         }
 
         public SkylineWindow SkylineWindow { get; set; }
 
-        public Clusterer Clusterer { get; private set; }
+        public ClusterInput ClusterInput
+        {
+            get
+            {
+                return _calculator.Input;
+            }
+            set
+            {
+                _calculator.Input = value;
+            }
+        }
 
-        public ReportColorScheme ColorScheme { get; private set; }
+        public Clusterer Clusterer
+        {
+            get
+            {
+                return _calculator.Results.Item1;
+            }
+        }
+
+        public ReportColorScheme ColorScheme
+        {
+            get
+            {
+                return _calculator.Results.Item2;
+            }
+        }
 
         public DataSchemaLocalizer Localizer { get; }
-
-        public void SetData(Clusterer clusterer, ReportColorScheme colorScheme)
-        {
-            Clusterer = clusterer;
-            ColorScheme = colorScheme;
-            UpdateControls();
-        }
 
         public void UpdateControls()
         {
@@ -421,6 +443,30 @@ namespace pwiz.Skyline.Controls.Clustering
 
             sender.Cursor = Cursors.Hand;
             return true;
+        }
+
+        private class PcaCalculator : GraphDataCalculator<ClusterInput, Tuple<Clusterer, ReportColorScheme>>
+        {
+            public PcaCalculator(PcaPlot pcaPlot) : base(CancellationToken.None, pcaPlot.zedGraphControl1)
+            {
+                PcaPlot = pcaPlot;
+            }
+
+            public PcaPlot PcaPlot
+            {
+                get;
+            }
+
+            protected override Tuple<Clusterer, ReportColorScheme> CalculateResults(ClusterInput input, CancellationToken cancellationToken)
+            {
+                var resultsTuple = input.GetClusterResultsTuple(GetProgressHandler(cancellationToken));
+                return Tuple.Create(resultsTuple.Item1, resultsTuple.Item3);
+            }
+
+            protected override void ResultsAvailable()
+            {
+                PcaPlot.UpdateControls();
+            }
         }
     }
 }
