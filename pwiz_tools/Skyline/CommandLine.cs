@@ -1731,7 +1731,7 @@ namespace pwiz.Skyline
                 return false;
             }
 
-            var saveFile = commandArgs.MinimizeFilePath ?? _skylineFile;
+            var saveFile = commandArgs.SaveFile ?? _skylineFile;
             _out.WriteLine(Resources.CommandLine_MinimizeResults_Minimizing_results_to__0_, saveFile);
             if (commandArgs.ChromatogramsDiscard)
                 _out.WriteLine(Resources.CommandLine_MinimizeResults_Removing_unused_chromatograms___);

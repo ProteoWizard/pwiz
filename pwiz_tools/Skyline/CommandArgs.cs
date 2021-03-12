@@ -118,20 +118,10 @@ namespace pwiz.Skyline
 
         public static readonly Argument ARG_IN = new DocArgument(@"in", PATH_TO_DOCUMENT,
             (c, p) => c.SkylineFile = p.ValueFullPath);
-        public static readonly Argument ARG_SAVE = new DocArgument(@"save", (c, p) =>
-        {
-            if (!c.Minimizing)
-                c.Saving = true;
-        });
+        public static readonly Argument ARG_SAVE = new DocArgument(@"save", (c, p) => { c.Saving = true; });
         public static readonly Argument ARG_SAVE_SETTINGS = new DocArgument(@"save-settings", (c, p) => c.SaveSettings = true);
         public static readonly Argument ARG_OUT = new DocArgument(@"out", PATH_TO_DOCUMENT,
-            (c, p) =>
-            {
-                if (!c.Minimizing)
-                    c.SaveFile = p.ValueFullPath;
-                else
-                    c.MinimizeFilePath = p.ValueFullPath;
-            });
+            (c, p) => { c.SaveFile = p.ValueFullPath; });
         public static readonly Argument ARG_SHARE_ZIP = new DocArgument(@"share-zip", () => GetPathToFile(SrmDocumentSharing.EXT_SKY_ZIP),
             (c, p) =>
             {
@@ -325,21 +315,23 @@ namespace pwiz.Skyline
         
         private bool ValidateMinimizeResultsArgs()
         {
-            if (Minimizing && !(_seenArguments.Contains(ARG_SAVE) || _seenArguments.Contains(ARG_OUT)))
+            if (Minimizing)
             {
-                // Has minimize argument(s), but no --save or --out command
-                // TODO (Ali): Should this be an error?
-                if (ChromatogramsDiscard)
+                if (!_seenArguments.Contains(ARG_SAVE) && !_seenArguments.Contains(ARG_OUT))
                 {
-                    WarnArgRequirement(ARG_CHROMATOGRAMS_DISCARD_UNUSED, ARG_SAVE, ARG_OUT);
-                    ChromatogramsDiscard = false;
+                    // Has minimize argument(s), but no --save or --out command
+                    if (ChromatogramsDiscard)
+                    {
+                        WarnArgRequirement(ARG_CHROMATOGRAMS_DISCARD_UNUSED, ARG_SAVE, ARG_OUT);
+                    }
+                    if (LimitNoise.HasValue)
+                    {
+                        WarnArgRequirement(ARG_CHROMATOGRAMS_LIMIT_NOISE, ARG_SAVE, ARG_OUT);
+                    }
+                    return false;
                 }
-                if (LimitNoise.HasValue)
-                {
-                    WarnArgRequirement(ARG_CHROMATOGRAMS_LIMIT_NOISE, ARG_SAVE, ARG_OUT);
-                    LimitNoise = null;
-                }
-                MinimizeFilePath = null;
+                // Valid minimize commands automatically save skyline file
+                Saving = false;
             }
             return true;
         }
@@ -360,7 +352,6 @@ namespace pwiz.Skyline
         public DateTime? RemoveBeforeDate { get; private set; }
         public bool ChromatogramsDiscard{ get; private set; }
         public double? LimitNoise { get; private set; }
-        public string MinimizeFilePath { get; private set; }
         public DateTime? ImportBeforeDate { get; private set; }
         public DateTime? ImportOnOrAfterDate { get; private set; }
         // Waters lockmass correction
