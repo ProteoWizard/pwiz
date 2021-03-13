@@ -25,6 +25,7 @@ using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.GroupComparison;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.GroupComparison
 {
@@ -44,15 +45,14 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         protected override string GetPersistentString()
         {
-            var persistentString = base.GetPersistentString();
+            var persistentString = PersistentString.Parse(base.GetPersistentString());
             var viewName = DataboundGridControl.GetViewName();
             if (viewName.HasValue)
             {
-                persistentString += DataGridId.PERSISTENT_SEPARATOR +
-                                    DataGridId.EscapePersistentStringPart(viewName.ToString());
+                persistentString = persistentString.Append(viewName.ToString());
             }
 
-            return persistentString;
+            return persistentString.ToString();
         }
 
         protected override void OnShown(EventArgs e)

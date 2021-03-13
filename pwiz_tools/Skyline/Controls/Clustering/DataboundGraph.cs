@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
-using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Skyline.Controls.Databinding;
@@ -78,11 +76,12 @@ namespace pwiz.Skyline.Controls.Clustering
             DataChanged();
         }
 
-        public virtual void RestoreFromViewFile(SkylineWindow skylineWindow, DataGridId dataGridId,
-            IList<string> persistedStringParts)
+        public virtual PersistentString RestoreFromViewFile(SkylineWindow skylineWindow, PersistentString persistentString)
         {
             SkylineWindow = skylineWindow;
-            _dataGridId = dataGridId;
+            PersistentString remainingParts;
+            _dataGridId = DataGridId.FromPersistentString(persistentString, out remainingParts);
+            return remainingParts;
         }
 
         public DataboundGridControl DataboundGridControl
@@ -246,7 +245,8 @@ namespace pwiz.Skyline.Controls.Clustering
 
         protected override string GetPersistentString()
         {
-            return GetType() + @"|" + _ownerGridForm?.DataGridId?.ToPersistedString();
+            return PersistentString.FromParts(GetType().ToString())
+                .Concat(OwnerGridForm?.DataGridId?.ToPersistedString()).ToString();
         }
 
         protected override void OnShown(EventArgs e)
@@ -282,16 +282,10 @@ namespace pwiz.Skyline.Controls.Clustering
 
         public static DataboundGraph RestoreDataboundGraph(SkylineWindow skylineWindow, string persistentString)
         {
-            var parts = DataGridId.ParsePersistedStringParts(persistentString).ToList();
-            
-            int ichPipe = persistentString.IndexOf('|');
-            if (ichPipe < 0)
-            {
-                return null;
-            }
-
+            var parsed = PersistentString.Parse(persistentString);
+          
             DataboundGraph databoundGraph;
-            string className = persistentString.Substring(0, ichPipe);
+            string className = parsed.Parts[0];
             if (className == typeof(HeatMapGraph).ToString())
             {
                 databoundGraph = new HeatMapGraph();
@@ -305,17 +299,7 @@ namespace pwiz.Skyline.Controls.Clustering
                 return null;
             }
 
-            IList<string> remainingParts = ImmutableList.Empty<string>();
-            DataGridId dataGridId = null;
-            if (parts.Count >= 3)
-            {
-                dataGridId = DataGridId.MakeDataGridId(parts[1], parts[2]);
-                if (dataGridId != null)
-                {
-                    remainingParts = parts.Skip(3).ToList();
-                }
-            }
-            databoundGraph.RestoreFromViewFile(skylineWindow, dataGridId, remainingParts);
+            databoundGraph.RestoreFromViewFile(skylineWindow, parsed.Skip(1));
             return databoundGraph;
         }
     }

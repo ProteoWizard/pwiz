@@ -32,6 +32,7 @@ using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using ZedGraph;
 
@@ -513,19 +514,23 @@ namespace pwiz.Skyline.Controls.Clustering
             }
         }
 
-        public override void RestoreFromViewFile(SkylineWindow skylineWindow, DataGridId dataGridId, IList<string> persistedStringParts)
+        public override PersistentString RestoreFromViewFile(SkylineWindow skylineWindow, PersistentString persistentString)
         {
-            base.RestoreFromViewFile(skylineWindow, dataGridId, persistedStringParts);
-            if (persistedStringParts.Count >= 1)
+            persistentString = base.RestoreFromViewFile(skylineWindow, persistentString);
+            if (persistentString.Parts.Count >= 1)
             {
-                PcaChoiceValue = PcaChoice.ParsePersistentString(persistedStringParts[0]) ?? PcaChoice.EMPTY;
+                PcaChoiceValue = PcaChoice.ParsePersistentString(persistentString.Parts[0]) ?? PcaChoice.EMPTY;
+                persistentString = persistentString.Skip(1);
             }
+
+            return persistentString;
         }
 
         protected override string GetPersistentString()
         {
-            return base.GetPersistentString() + DataGridId.PERSISTENT_SEPARATOR +
-                   DataGridId.EscapePersistentStringPart(PcaChoiceValue.ToPersistentString());
+            return PersistentString.Parse(base.GetPersistentString())
+                .Append(PcaChoiceValue.ToPersistentStringPart())
+                .ToString();
         }
 
         public class PcaChoice : Immutable
@@ -571,7 +576,7 @@ namespace pwiz.Skyline.Controls.Clustering
                 return ChangeProp(ImClone(this), im => im.DataSetIndex = dataSetIndex);
             }
 
-            public string ToPersistentString()
+            public string ToPersistentStringPart()
             {
                 return string.Join(@",", XComponent.ToString(CultureInfo.InvariantCulture),
                     YComponent.ToString(CultureInfo.InvariantCulture),

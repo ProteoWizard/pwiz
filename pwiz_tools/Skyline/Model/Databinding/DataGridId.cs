@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using DigitalRune.Windows.Docking;
-using pwiz.Common.Collections;
-using pwiz.Common.DataBinding;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Databinding
@@ -69,9 +67,9 @@ namespace pwiz.Skyline.Model.Databinding
             return TextUtil.SpaceSeparate(title, Name);
         }
 
-        public string ToPersistedString()
+        public PersistentString ToPersistedString()
         {
-            return MakePersistentStringFromParts(DataGridType.Name, Name);
+            return PersistentString.FromParts(DataGridType.Name, Name);
         }
 
         public static DataGridId MakeDataGridId(string typeName, string instanceName)
@@ -84,45 +82,21 @@ namespace pwiz.Skyline.Model.Databinding
             return new DataGridId(dataGridType, instanceName);
         }
 
-        public static DataGridId FromPersistentString(string persistentString, out IList<string> remainingParts)
+        public static DataGridId FromPersistentString(PersistentString persistentString, out PersistentString remainingParts)
         {
-            remainingParts = ImmutableList.Empty<string>();
-            var parts = ParsePersistedStringParts(persistentString).ToList();
-            if (parts.Count != 2)
+            remainingParts = PersistentString.EMPTY;
+            if (persistentString.Parts.Count < 2)
             {
                 return null;
             }
-
-            var dataGridType = DataGridType.FromName(parts[0]);
+            var dataGridType = DataGridType.FromName(persistentString.Parts[0]);
             if (dataGridType == null)
             {
                 return null;
             }
 
-            remainingParts = ImmutableList.ValueOf(parts.Skip(2));
-            return new DataGridId(dataGridType, parts[1]);
-        }
-        public const char PERSISTENT_SEPARATOR = '|';
-
-
-        public static string MakePersistentStringFromParts(params string[] parts)
-        {
-            return string.Join(PERSISTENT_SEPARATOR.ToString(),
-                parts.Select(EscapePersistentStringPart));
-        }
-
-        public static string EscapePersistentStringPart(string part)
-        {
-            return Uri.EscapeDataString(part ?? string.Empty);
-        }
-
-        public static IEnumerable<string> ParsePersistedStringParts(string persistentString)
-        {
-            return persistentString.Split(PERSISTENT_SEPARATOR).Select(part =>
-            {
-                var decoded = Uri.UnescapeDataString(part);
-                return string.IsNullOrEmpty(decoded) ? null : decoded;
-            });
+            remainingParts = persistentString.Skip(2);
+            return new DataGridId(dataGridType, persistentString.Parts[1]);
         }
 
         protected bool Equals(DataGridId other)
@@ -144,75 +118,6 @@ namespace pwiz.Skyline.Model.Databinding
             {
                 return ((DataGridType != null ? DataGridType.GetHashCode() : 0) * 397) ^ (Name != null ? Name.GetHashCode() : 0);
             }
-        }
-    }
-
-    public class DataSourceId
-    {
-        public DataSourceId(DataGridId dataGridId, ViewName viewName, string layoutName)
-        {
-            DataGridId = dataGridId;
-            ViewName = viewName;
-        }
-        public DataGridId DataGridId
-        {
-            get;
-            private set;
-        }
-
-        public ViewName ViewName { get; private set; }
-        public string LayoutName { get; private set; }
-
-        public override string ToString()
-        {
-            string result = DataGridId.ToString();
-            if (!string.IsNullOrEmpty(ViewName.Name))
-            {
-                result = result + ':' + ViewName.Name;
-            }
-
-            if (!string.IsNullOrEmpty(LayoutName))
-            {
-                result = result + '(' + LayoutName + ')';
-            }
-
-            return result;
-        }
-
-        private const char PERSISTENT_SEPARATOR = '|';
-        public string ToPersistentString()
-        {
-            var parts = new[]
-            {
-                DataGridId.DataGridType.Name,
-                DataGridId.Name,
-                ViewName.GroupId.Name,
-                ViewName.Name,
-                LayoutName
-            };
-            return string.Join(PERSISTENT_SEPARATOR.ToString(), parts.Select(part => Uri.EscapeDataString(part ?? string.Empty)));
-        }
-
-        public static DataSourceId ParsePersistentString(string persistentString)
-        {
-            var parts = persistentString.Split(PERSISTENT_SEPARATOR).Select(part =>
-            {
-                var decoded = Uri.UnescapeDataString(part);
-                return string.IsNullOrEmpty(decoded) ? null : decoded;
-            }).ToList();
-            if (parts.Count != 5)
-            {
-                return null;
-            }
-
-            var gridType = DataGridType.FromName(parts[0]);
-            if (gridType == null)
-            {
-                return null;
-            }
-            var gridId = new DataGridId(gridType, parts[1]);
-            var viewName = new ViewGroupId(parts[2]).ViewName(parts[3]);
-            return new DataSourceId(gridId, viewName, parts[4]);
         }
     }
 }

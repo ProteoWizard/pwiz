@@ -26,7 +26,6 @@ using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -297,14 +296,14 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         public static FoldChangeForm RestoreFoldChangeForm(IDocumentUIContainer documentContainer, string persistentString)
         {
-            var parts = DataGridId.ParsePersistedStringParts(persistentString).ToList();
-            if (parts.Count < 2)
+            var parsed = PersistentString.Parse(persistentString);
+            if (parsed.Parts.Count < 2)
             {
                 return null;
             }
 
-            var formTypeName = parts[0];
-            var groupComparisonName = parts[1];
+            var formTypeName = parsed.Parts[0];
+            var groupComparisonName = parsed.Parts[1];
             FoldChangeForm foldChangeForm;
             foreach (var type in new[]
                 {typeof(FoldChangeGrid), typeof(FoldChangeBarGraph), typeof(FoldChangeVolcanoPlot)})
@@ -318,9 +317,9 @@ namespace pwiz.Skyline.Controls.GroupComparison
                     foldChangeForm.SetGroupComparisonName(documentContainer, groupComparisonName);
                     if (foldChangeForm is FoldChangeGrid grid)
                     {
-                        if (parts.Count >= 3)
+                        if (parsed.Parts.Count >= 3)
                         {
-                            grid.ViewToRestore = ViewName.Parse(parts[2]);
+                            grid.ViewToRestore = ViewName.Parse(parsed.Parts[2]);
                         }
                     }
 
