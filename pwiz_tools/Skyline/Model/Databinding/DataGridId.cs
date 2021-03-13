@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using DigitalRune.Windows.Docking;
+using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Util.Extensions;
 
@@ -73,8 +74,19 @@ namespace pwiz.Skyline.Model.Databinding
             return MakePersistentStringFromParts(DataGridType.Name, Name);
         }
 
-        public static DataGridId FromPersistentString(string persistentString)
+        public static DataGridId MakeDataGridId(string typeName, string instanceName)
         {
+            var dataGridType = DataGridType.FromName(typeName);
+            if (dataGridType == null)
+            {
+                return null;
+            }
+            return new DataGridId(dataGridType, instanceName);
+        }
+
+        public static DataGridId FromPersistentString(string persistentString, out IList<string> remainingParts)
+        {
+            remainingParts = ImmutableList.Empty<string>();
             var parts = ParsePersistedStringParts(persistentString).ToList();
             if (parts.Count != 2)
             {
@@ -86,6 +98,8 @@ namespace pwiz.Skyline.Model.Databinding
             {
                 return null;
             }
+
+            remainingParts = ImmutableList.ValueOf(parts.Skip(2));
             return new DataGridId(dataGridType, parts[1]);
         }
         public const char PERSISTENT_SEPARATOR = '|';

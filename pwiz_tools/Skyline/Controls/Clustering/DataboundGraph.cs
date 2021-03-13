@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Skyline.Controls.Databinding;
@@ -74,6 +76,13 @@ namespace pwiz.Skyline.Controls.Clustering
         private void BindingListSource_OnAllRowsChanged(object sender, EventArgs e)
         {
             DataChanged();
+        }
+
+        public virtual void RestoreFromViewFile(SkylineWindow skylineWindow, DataGridId dataGridId,
+            IList<string> persistedStringParts)
+        {
+            SkylineWindow = skylineWindow;
+            _dataGridId = dataGridId;
         }
 
         public DataboundGridControl DataboundGridControl
@@ -273,13 +282,15 @@ namespace pwiz.Skyline.Controls.Clustering
 
         public static DataboundGraph RestoreDataboundGraph(SkylineWindow skylineWindow, string persistentString)
         {
-            DataboundGraph databoundGraph = null;
+            var parts = DataGridId.ParsePersistedStringParts(persistentString).ToList();
+            
             int ichPipe = persistentString.IndexOf('|');
             if (ichPipe < 0)
             {
                 return null;
             }
 
+            DataboundGraph databoundGraph;
             string className = persistentString.Substring(0, ichPipe);
             if (className == typeof(HeatMapGraph).ToString())
             {
@@ -293,8 +304,18 @@ namespace pwiz.Skyline.Controls.Clustering
             {
                 return null;
             }
-            databoundGraph.SkylineWindow = skylineWindow;
-            databoundGraph._dataGridId = DataGridId.FromPersistentString(persistentString.Substring(ichPipe + 1));
+
+            IList<string> remainingParts = ImmutableList.Empty<string>();
+            DataGridId dataGridId = null;
+            if (parts.Count >= 3)
+            {
+                dataGridId = DataGridId.MakeDataGridId(parts[1], parts[2]);
+                if (dataGridId != null)
+                {
+                    remainingParts = parts.Skip(3).ToList();
+                }
+            }
+            databoundGraph.RestoreFromViewFile(skylineWindow, dataGridId, remainingParts);
             return databoundGraph;
         }
     }
