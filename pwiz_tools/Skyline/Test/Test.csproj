@@ -229,6 +229,7 @@
     <Compile Include="UndoManagerTest.cs" />
     <Compile Include="UniModTest.cs" />
     <Compile Include="UniquePrefixTest.cs" />
+    <Compile Include="MassListInputsTest.cs" />
     <Compile Include="UtilTest.cs" />
     <Compile Include="VariableModTest.cs" />
     <Compile Include="WebEnabledFastaImporterTest.cs" />
