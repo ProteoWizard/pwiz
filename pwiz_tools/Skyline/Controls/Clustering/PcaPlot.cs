@@ -170,7 +170,7 @@ namespace pwiz.Skyline.Controls.Clustering
             {
                 return;
             }
-
+            UpdateTitle(Resources.PcaPlot_RefreshData_PCA_Plot);
             var seriesGroup = _datasetOptions[_pcaChoice.DataSetIndex].Item2;
             List<SymbolType> symbolTypes = new List<SymbolType>()
             {
@@ -483,7 +483,15 @@ namespace pwiz.Skyline.Controls.Clustering
         public override void RefreshData()
         {
             ClusterInput = DataboundGridControl?.CreateClusterInput() ?? ClusterInput;
-            UpdateTitle("PCA Plot");
+            UpdateTitle(Resources.PcaPlot_RefreshData_PCA_Plot);
+        }
+
+        public override bool IsComplete
+        {
+            get
+            {
+                return base.IsComplete && _calculator.IsComplete;
+            }
         }
 
         private class PcaCalculator : GraphDataCalculator<ClusterInput, Tuple<Clusterer, ReportColorScheme>>
@@ -601,6 +609,30 @@ namespace pwiz.Skyline.Controls.Clustering
                     intParts.Add(intPart);
                 }
                 return new PcaChoice(intParts[0], intParts[1], intParts[2]);
+            }
+
+            protected bool Equals(PcaChoice other)
+            {
+                return XComponent == other.XComponent && YComponent == other.YComponent && DataSetIndex == other.DataSetIndex;
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != this.GetType()) return false;
+                return Equals((PcaChoice) obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    var hashCode = XComponent;
+                    hashCode = (hashCode * 397) ^ YComponent;
+                    hashCode = (hashCode * 397) ^ DataSetIndex;
+                    return hashCode;
+                }
             }
         }
     }

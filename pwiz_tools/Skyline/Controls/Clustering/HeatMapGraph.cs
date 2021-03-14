@@ -102,11 +102,19 @@ namespace pwiz.Skyline.Controls.Clustering
         }
         private void ComboResults_OnSelectedIndexChanged(object sender, EventArgs e)
         {
+            if (sender == null || !ReferenceEquals(sender, SkylineWindow?.ComboResults))
+            {
+                return;
+            }
             UpdateSelection();
         }
 
         private void SequenceTree_OnAfterSelect(object sender, TreeViewEventArgs e)
         {
+            if (sender == null || !ReferenceEquals(sender, SkylineWindow?.SequenceTree))
+            {
+                return;
+            }
             UpdateSelection();
         }
 
@@ -126,6 +134,14 @@ namespace pwiz.Skyline.Controls.Clustering
         public ClusterGraphResults GraphResults
         {
             get { return _calculator.Results; }
+        }
+
+        public override bool IsComplete
+        {
+            get
+            {
+                return base.IsComplete && _calculator.IsComplete;
+            }
         }
 
         public void InitializeDendrograms()
@@ -410,7 +426,7 @@ namespace pwiz.Skyline.Controls.Clustering
         public override void RefreshData()
         {
             ClusterInput = DataboundGridControl?.CreateClusterInput() ?? ClusterInput;
-            UpdateTitle("Heat Map");
+            UpdateTitle(Resources.HeatMapGraph_RefreshData_Heat_Map);
         }
         private class HeatMapCalculator : GraphDataCalculator<ClusterInput, ClusterGraphResults>
         {

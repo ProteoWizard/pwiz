@@ -14646,6 +14646,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Heat Map.
+        /// </summary>
+        public static string HeatMapGraph_RefreshData_Heat_Map {
+            get {
+                return ResourceManager.GetString("HeatMapGraph_RefreshData_Heat_Map", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Edit Isotope Modification.
         /// </summary>
         public static string HeavyModList_EditItem_Edit_Isotope_Modification {
@@ -21180,6 +21189,15 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("PathChooserDlg_OkDialog_You_must_select_an_empty_directory_for_the_tutorial_files" +
                         "_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to PCA Plot.
+        /// </summary>
+        public static string PcaPlot_RefreshData_PCA_Plot {
+            get {
+                return ResourceManager.GetString("PcaPlot_RefreshData_PCA_Plot", resourceCulture);
             }
         }
         

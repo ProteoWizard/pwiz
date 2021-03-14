@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Security.Permissions;
 using System.Threading;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util;
@@ -111,6 +112,14 @@ namespace pwiz.Skyline.Controls.Graphs
                     ResultsAvailable();
                 });
             });
+        }
+
+        public bool IsComplete
+        {
+            get
+            {
+                return _progressTuple == null;
+            }
         }
 
         public void UpdateProgress(CancellationToken cancellationToken, int progressValue)

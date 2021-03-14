@@ -205,6 +205,14 @@ namespace pwiz.Skyline.Controls.Clustering
         {
         }
 
+        public virtual bool IsComplete
+        {
+            get
+            {
+                return !_refreshDataPending && !_updateSelectionPending;
+            }
+        }
+
         public void QueueRefreshData()
         {
             if (!IsHandleCreated)
@@ -228,19 +236,25 @@ namespace pwiz.Skyline.Controls.Clustering
 
         protected void UpdateTitle(string baseTitle)
         {
-            string title = baseTitle;
-            if (_dataGridId != null)
-            {
-                title = title + @":" + _dataGridId;
-            }
-
-            var viewInfo = BindingListSource?.ViewInfo;
-            if (viewInfo != null && !Equals(viewInfo.ViewGroup?.Id, ViewGroup.BUILT_IN.Id))
-            {
-                title = title + @"(" + viewInfo.Name + @")";
-            }
+            string title = MakeTitle(baseTitle, _dataGridId, DataboundGridControl?.GetViewName());
 
             Text = TabText = title;
+        }
+
+        public static string MakeTitle(string baseTitle, DataGridId dataGridId, ViewName? viewName)
+        {
+            string title = baseTitle;
+            if (dataGridId != null)
+            {
+                title = title + @":" + dataGridId;
+            }
+
+            if (viewName.HasValue && !Equals(viewName.Value.GroupId, ViewGroup.BUILT_IN.Id))
+            {
+                title = title + @"(" + viewName.Value.Name + @")";
+            }
+
+            return title;
         }
 
         protected override string GetPersistentString()
@@ -276,7 +290,8 @@ namespace pwiz.Skyline.Controls.Clustering
             {
                 GraphControl.GraphPane.Title.Text = "Waiting for data";
             }
-            DataboundGridControl = ownerForm.GetDataboundGridControl();
+
+            OwnerGridForm = ownerForm;
             DataChanged();
         }
 
