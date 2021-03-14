@@ -1345,7 +1345,7 @@ namespace pwiz.Skyline
             var bookmark = new Bookmark(startPath);
             if (_resultsGridForm != null && _resultsGridForm.Visible)
             {
-                var liveResultsGrid = _resultsGridForm as LiveResultsGrid;
+                var liveResultsGrid = _resultsGridForm;
                 if (null != liveResultsGrid)
                 {
                     bookmark = bookmark.ChangeChromFileInfoId(liveResultsGrid.GetCurrentChromFileInfoId());
@@ -1460,7 +1460,7 @@ namespace pwiz.Skyline
             if (isAnnotationOrNote && findResult.Bookmark.ChromFileInfoId != null)
             {
                 ShowResultsGrid(true);
-                LiveResultsGrid liveResultGrid = _resultsGridForm as LiveResultsGrid;
+                LiveResultsGrid liveResultGrid = _resultsGridForm;
                 if (null != liveResultGrid)
                 {
                     liveResultGrid.HighlightFindResult(findResult);

@@ -370,7 +370,7 @@ namespace pwiz.Skyline.Controls.Clustering
                 Checked = ShowSelection
             });
             menuStrip.Items.Insert(0, new ToolStripSeparator());
-            menuStrip.Items.Insert(0, new ToolStripMenuItem("Refresh", null, (o, args)=>RefreshData()));
+            menuStrip.Items.Insert(0, new ToolStripMenuItem(Resources.HeatMapGraph_zedGraphControl1_ContextMenuBuilder_Refresh, null, (o, args)=>RefreshData()));
             var pointObject = PointFromMousePoint(mousePt);
             if (pointObject?.ReplicateName != null || pointObject?.IdentityPath != null)
             {

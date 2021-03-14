@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System;
-using System.Security.Permissions;
 using System.Threading;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util;

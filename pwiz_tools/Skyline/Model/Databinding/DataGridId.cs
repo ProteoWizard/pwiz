@@ -1,6 +1,25 @@
-﻿using System;
+﻿/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2021 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -9,11 +28,11 @@ namespace pwiz.Skyline.Model.Databinding
     public class DataGridType
     {
         private Func<string> _titleFunc;
-        public static DataGridType DOCUMENT_GRID = new DataGridType(@"DocumentGrid", ()=>"Document Grid");
-        public static DataGridType RESULTS_GRID = new DataGridType(@"ResultsGrid", ()=>"Results Grid");
-        public static DataGridType GROUP_COMPARISON = new DataGridType(@"GroupComparison", ()=>"Group Comparison");
-        public static DataGridType LIST = new DataGridType(@"List", ()=>"List");
-        public static DataGridType AUDIT_LOG = new DataGridType(@"AuditLog", ()=>"Audit Log");
+        public static DataGridType DOCUMENT_GRID = new DataGridType(@"DocumentGrid", ()=>Resources.DataGridType_DOCUMENT_GRID_Document_Grid);
+        public static DataGridType RESULTS_GRID = new DataGridType(@"ResultsGrid", ()=>Resources.DataGridType_RESULTS_GRID_Results_Grid);
+        public static DataGridType GROUP_COMPARISON = new DataGridType(@"GroupComparison", ()=>Resources.DataGridType_GROUP_COMPARISON_Group_Comparison);
+        public static DataGridType LIST = new DataGridType(Resources.DataGridType_LIST_List, ()=>Resources.DataGridType_LIST_List);
+        public static DataGridType AUDIT_LOG = new DataGridType(@"AuditLog", ()=>Resources.DataGridType_AUDIT_LOG_Audit_Log);
 
         public static IEnumerable<DataGridType> All
         {
