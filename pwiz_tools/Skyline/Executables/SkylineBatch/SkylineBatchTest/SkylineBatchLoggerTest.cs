@@ -15,7 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
+using System;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -73,13 +74,23 @@ namespace SkylineBatchTest
             testConfigManager.AddConfiguration(TestUtils.GetTestConfig());
             Assert.IsTrue(testConfigManager.HasOldLogs() == false, "Expected no old logs.");
 
+
+            int timeout = 5000;
+            int timestep = 200;
+            var cancelErrorMessage = "Timeout - configuration took too long to cancel";
+            configManager = testConfigManager;
+
             // Run and cancel three times creates two old logs
-            await testConfigManager.RunAllEnabled(4);
+            testConfigManager.StartBatchRun(4);
             testConfigManager.CancelRunners();
-            await testConfigManager.RunAllEnabled(4);
+            await TestUtils.WaitForCondition(ConfigRunnersStopped, timeout, timestep, cancelErrorMessage);
+            testConfigManager.StartBatchRun(4);
             testConfigManager.CancelRunners();
-            await testConfigManager.RunAllEnabled(4);
+            await TestUtils.WaitForCondition(ConfigRunnersStopped, timeout, timestep, cancelErrorMessage);
+            testConfigManager.StartBatchRun(4);
             testConfigManager.CancelRunners();
+            await TestUtils.WaitForCondition(ConfigRunnersStopped, timeout, timestep, cancelErrorMessage);
+
 
             var hasOldLogs = testConfigManager.HasOldLogs();
             var numberOldLogs = testConfigManager.GetOldLogFiles().Length;
@@ -99,6 +110,12 @@ namespace SkylineBatchTest
             Assert.AreEqual(false, hasOldLogsAfterDelete, "Expected no old logs after deletion.");
         }
 
+        private static SkylineBatchConfigManager configManager;
+
+        private bool ConfigRunnersStopped()
+        {
+            return configManager.ConfigsRunning().Count == 0;
+        }
     }
 }
 

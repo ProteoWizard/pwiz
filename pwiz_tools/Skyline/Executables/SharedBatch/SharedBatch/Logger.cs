@@ -294,7 +294,14 @@ using SharedBatch.Properties;
 
         public void Delete()
         {
-            CloseFileStreams();
+            try
+            {
+                Close();
+            }
+            catch (ObjectDisposedException)
+            {
+                // pass - file already closed
+            }
             File.Delete(_filePath);
         }
 
@@ -305,7 +312,7 @@ using SharedBatch.Properties;
                 var lastModified = File.GetLastWriteTime(_filePath);
                 var timestampFileName = Path.GetDirectoryName(_filePath) + "\\" + Path.GetFileNameWithoutExtension(_filePath);
                 timestampFileName += lastModified.ToString("_yyyyMMdd_HHmmss") + ".log";
-                CloseFileStreams();
+                Close();
 
                 File.Copy(GetFile(), timestampFileName);
                 File.Delete(_filePath);
@@ -322,7 +329,7 @@ using SharedBatch.Properties;
             _mainUi = mainUi;
         }
 
-        private void CloseFileStreams()
+        public void Close()
         {
             _streamWriter.Close();
             _streamWriter.BaseStream.Dispose();

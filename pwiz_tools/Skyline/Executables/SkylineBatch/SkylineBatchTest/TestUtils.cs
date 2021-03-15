@@ -23,6 +23,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SkylineBatch;
 using SharedBatch;
 using System.Configuration;
+using System.Threading.Tasks;
 
 namespace SkylineBatchTest
 {
@@ -171,6 +172,19 @@ namespace SkylineBatchTest
             }
             return logFiles;
         }
-        
+
+        public delegate bool ConditionDelegate();
+
+        public static async Task WaitForCondition(ConditionDelegate condition, int timeout, int timestep, string errorMessage)
+        {
+            var ticksPerMillisecond = 10000;
+            var millisecondStartTime = DateTime.Now.Ticks / ticksPerMillisecond;
+            while ((DateTime.Now.Ticks / ticksPerMillisecond) - millisecondStartTime < timeout)
+            {
+                if (condition()) return;
+                await Task.Delay(timestep);
+            }
+            throw new Exception(errorMessage);
+        }
     }
 }

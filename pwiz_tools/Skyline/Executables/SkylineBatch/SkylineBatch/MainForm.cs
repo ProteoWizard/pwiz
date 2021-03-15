@@ -560,24 +560,9 @@ namespace SkylineBatch
             systray_icon.Visible = false;
         }
 
-        private async Task CloseForm()
-        {
-            _configManager.Close();
-            // Wait for config manager to close
-            while (!_configManager.Closed)
-                await Task.Delay(1000);
-            Close();
-        }
-
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            if (!_configManager.Closed)
-                e.Cancel = true;
-            if (Visible)
-            {
-                Hide();
-                _ = CloseForm();
-            }
+            _configManager.Close();
         }
 
         public void DisplayError(string message)

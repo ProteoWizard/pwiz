@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Threading.Tasks;
 using System.Xml;
 using SharedBatch.Properties;
 
@@ -115,7 +116,12 @@ namespace SharedBatch
             };
             cmd.Start();
             cmd.BeginOutputReadLine();
-            cmd.WaitForExit();
+            cmd.WaitForExit(3000);
+            if (!cmd.HasExited)
+            {
+                cmd.Kill();
+                throw new Exception("Unable to get Skyline version.");
+            }
             
             var versionString = output.Split(' ');
             int i = 0;

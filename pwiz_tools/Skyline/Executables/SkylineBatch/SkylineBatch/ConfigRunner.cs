@@ -197,6 +197,8 @@ namespace SkylineBatch
             };
             cmd.Start();
             cmd.BeginOutputReadLine();
+            // Add process to tracker so the OS will dispose of it if SkylineBatch exits/crashes
+            ChildProcessTracker.AddProcess(cmd);
             while (!cmd.HasExited && IsRunning())
             {
                 await Task.Delay(2000);

@@ -35,8 +35,6 @@ namespace SkylineBatch
         // The UI should reflect the configs, runners, and log files from this class
 
         private readonly Dictionary<string, IConfigRunner> _configRunners; // dictionary mapping from config name to that config's runner
-        public bool Closed { get; private set; }
-        private bool _closing;
 
         // Shared variables with ConfigManager:
         //  Protected -
@@ -75,36 +73,11 @@ namespace SkylineBatch
 
         public new void Close()
         {
-            _closing = true;
             base.Close();
-            if (ConfigsRunning().Count == 0)
-                EndClose();
-
-            CancelRunners(); // EndClose called by RunAllEnabled when runners cancelled
-            _ = ForceCloseAfterTimeout();
-        }
-
-        private async Task ForceCloseAfterTimeout()
-        {
-            int iterations = 0;
-            int timestep = 500;
-            int timeout = 10000;
-            while (!Closed && iterations * timestep < timeout)
-            {
-                await Task.Delay(timestep);
-                iterations++;
-            }
-            EndClose();
-        }
-
-        private void EndClose()
-        {
-            if (Closed) return;
-            if (!_closing) throw new Exception("Cannot EndClose before Close");
-            Closed = true;
             lock (_loggerLock)
             {
                 _logList[0].Archive();
+                _logList[0].Close();
             }
         }
 
@@ -332,10 +305,7 @@ namespace SkylineBatch
                 nextConfig = GetNextWaitingConfig();
             }
 
-            if (_closing)
-                EndClose(); // configManager is done closing when batch run finishes cancelling
-            else
-                UpdateIsRunning(true, false);
+            UpdateIsRunning(true, false);
         }
 
         private string GetNextWaitingConfig()
@@ -356,10 +326,13 @@ namespace SkylineBatch
         public List<string> ConfigsRunning()
         {
             var configsRunning = new List<string>();
-            foreach (var runner in _configRunners.Values)
+            lock (_lock)
             {
-                if (runner.IsBusy())
-                    configsRunning.Add(runner.GetConfigName());
+                foreach (var runner in _configRunners.Values)
+                {
+                    if (runner.IsBusy())
+                        configsRunning.Add(runner.GetConfigName());
+                }
             }
             return configsRunning;
         }
