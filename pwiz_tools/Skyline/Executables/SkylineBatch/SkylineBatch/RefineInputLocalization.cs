@@ -1,7 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Reflection;
-using System.Resources;
+using pwiz.Skyline;
 
 namespace SkylineBatch
 {
@@ -15,8 +14,8 @@ namespace SkylineBatch
     /// </summary>
     public class GlobalizedPropertyDescriptor : PropertyDescriptor
     {
-        private PropertyDescriptor basePropertyDescriptor;
-        public bool ReadOnly = true;
+        private readonly PropertyDescriptor basePropertyDescriptor;
+        public bool ReadOnly = false;
 
         public GlobalizedPropertyDescriptor(PropertyDescriptor basePropertyDescriptor) : base(basePropertyDescriptor)
         {
@@ -47,9 +46,6 @@ namespace SkylineBatch
         {
             get
             {
-                // TODO (Ali): Ask Nick if it's OK to copy resx
-                //var rm = new ResourceManager("pwiz.Skyline.CommandArgUsage", Assembly.LoadFrom("Skyline-daily.exe"));
-                // Get description from CommandArgUsage
                 var displayNameKey = RefineInputObject.REFINE_RESOURCE_KEY_PREFIX + basePropertyDescriptor.Name;
                 var description = CommandArgUsage.ResourceManager.GetString(displayNameKey);
                 // Remove newlines
@@ -62,9 +58,6 @@ namespace SkylineBatch
         {
             get
             {
-                // TODO (Ali): update if use resx new way
-                //var rm = new ResourceManager("pwiz.Skyline.CommandArgUsage", Assembly.LoadFrom("Skyline-daily.exe"));
-                // Get category from CommandArgUsage
                 var variableName = basePropertyDescriptor.Name;
                 var variable = (RefineVariable)Enum.Parse(typeof(RefineVariable), variableName);
                 return (int) variable <= (int) RefineVariable.auto_select_transitions

@@ -565,7 +565,7 @@ namespace SkylineBatch
             _configManager.Close();
             // Wait for config manager to close
             while (!_configManager.Closed)
-                await Task.Delay(3000);
+                await Task.Delay(1000);
             Close();
         }
 

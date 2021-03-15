@@ -81,10 +81,25 @@ namespace SkylineBatch
                 EndClose();
 
             CancelRunners(); // EndClose called by RunAllEnabled when runners cancelled
+            _ = ForceCloseAfterTimeout();
+        }
+
+        private async Task ForceCloseAfterTimeout()
+        {
+            int iterations = 0;
+            int timestep = 500;
+            int timeout = 10000;
+            while (!Closed && iterations * timestep < timeout)
+            {
+                await Task.Delay(timestep);
+                iterations++;
+            }
+            EndClose();
         }
 
         private void EndClose()
         {
+            if (Closed) return;
             if (!_closing) throw new Exception("Cannot EndClose before Close");
             Closed = true;
             lock (_loggerLock)

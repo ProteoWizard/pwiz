@@ -102,7 +102,7 @@ namespace SkylineBatch
                 strip.Enabled = false;
             if (parentControl is PropertyGrid grid)
             {
-                var properties = (grid.SelectedObject as RefineInputObject).GetProperties();
+                var properties = ((RefineInputObject) grid.SelectedObject).GetProperties();
                 foreach (GlobalizedPropertyDescriptor prop in properties)
                     prop.ReadOnly = true;
                 return;

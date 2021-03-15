@@ -104,7 +104,7 @@ namespace SkylineBatch
             // Writes the batch commands for steps 1-3 to a file
             var commandFile = WriteBatchCommandsToFile(startStep);
             
-            var command = string.Format("--version --batch-commands=\"{0}\"", commandFile);
+            var command = string.Format("--batch-commands=\"{0}\" --version", commandFile);
             if (startStep != 4) await ExecuteProcess(Config.SkylineSettings.CmdPath, command);
 
             // STEP 4: run r scripts using csv files
