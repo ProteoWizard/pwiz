@@ -276,10 +276,11 @@ namespace pwiz.Skyline.Model.Results
         public IDictionary<PeptideDocNode.TransitionKey, TransitionDocNode> GetTransitionMap(
             TransitionGroupDocNode transitionGroupDocNode)
         {
-            return transitionGroupDocNode.Transitions.ToDictionary(transition =>
-                new PeptideDocNode.TransitionKey(transitionGroupDocNode,
-                    new TransitionLossKey(transitionGroupDocNode, transition, transition.Losses),
-                    transitionGroupDocNode.LabelType)
+            return CollectionUtil.SafeToDictionary(transitionGroupDocNode.Transitions.Select(transition =>
+                new KeyValuePair<PeptideDocNode.TransitionKey, TransitionDocNode>(
+                    new PeptideDocNode.TransitionKey(transitionGroupDocNode,
+                        new TransitionLossKey(transitionGroupDocNode, transition, transition.Losses),
+                        transitionGroupDocNode.LabelType), transition))
             );
         }
 

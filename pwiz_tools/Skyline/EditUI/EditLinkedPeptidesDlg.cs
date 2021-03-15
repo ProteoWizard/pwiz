@@ -60,7 +60,7 @@ namespace pwiz.Skyline.EditUI
                 column.ValueMember = @"Value";
             }
 
-            _crosslinkers = AvailableCrosslinkers(settings).ToDictionary(mod => mod.Name);
+            _crosslinkers = AvailableCrosslinkers(settings, peptideStructure).ToDictionary(mod => mod.Name);
             var availableCrosslinkers = _crosslinkers.Values
                 .OrderBy(mod => mod.Name, StringComparer.CurrentCultureIgnoreCase)
                 .Select(mod=>new KeyValuePair<string, string>(mod.Name, mod.Name));
@@ -277,18 +277,17 @@ namespace pwiz.Skyline.EditUI
             }
         }
 
-        public static IEnumerable<StaticMod> AvailableCrosslinkers(SrmSettings settings)
+        public static IEnumerable<StaticMod> AvailableCrosslinkers(SrmSettings settings, PeptideStructure peptideStructure)
         {
             var names = new HashSet<string>();
-            foreach (var mod in settings.PeptideSettings.Modifications.StaticModifications.Concat(Settings.Default
-                .StaticModList))
+            var crosslinkers = settings.PeptideSettings.Modifications.StaticModifications
+                .Concat(Settings.Default.StaticModList)
+                .Where(mod => mod.IsCrosslinker);
+            // Also, include any non-crosslinker modifications which are currently being used as a crosslinker in this peptide
+            crosslinkers = crosslinkers.Concat(peptideStructure.Crosslinks.Select(link => link.Crosslinker));
+            foreach (var mod in crosslinkers)
             {
                 if (!names.Add(mod.Name))
-                {
-                    continue;
-                }
-
-                if (null == mod.CrosslinkerSettings)
                 {
                     continue;
                 }
