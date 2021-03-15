@@ -13,30 +13,41 @@ namespace pwiz.Skyline.Model
         private ChromCacheMinimizer _chromCacheMinimizer;
         private BackgroundWorker _statisticsCollector;
         private bool _doStatisticsCollection;
+        private FileSaver _skydSaver;
 
-        private SrmDocument _document;
+        private IDocumentContainer _documentContainer;
 
-
-        public MinimizeResults(SrmDocument document, ProgressCallback doOnProgress)
+        public MinimizeResults(IDocumentContainer documentContainer, ProgressCallback doOnProgress)
         {
+            _documentContainer = documentContainer;
             _doStatisticsCollection = false; // Block statistics collection during initialization
             _doOnProgress = doOnProgress;
             Settings = new ChromCacheMinimizer.Settings()
                 .ChangeDiscardUnmatchedChromatograms(false)
                 .ChangeDiscardAllIonsChromatograms(false)
                 .ChangeNoiseTimeRange(null);
-            _document = document;
-            SetDocument(_document);
+            SetDocument(_documentContainer.Document);
+        }
+
+        public MinimizeResults(SrmDocument document, ProgressCallback doOnProgress) : this(GetDocumentContainer(document), doOnProgress)
+        {
+        }
+
+        private static MemoryDocumentContainer GetDocumentContainer(SrmDocument document)
+        {
+            var documentContainer = new MemoryDocumentContainer();
+            documentContainer.SetDocument(document, null);
+            return documentContainer;
         }
 
         public delegate void ProgressCallback(ChromCacheMinimizer.MinStatistics minStatistics, BackgroundWorker worker);
 
         public ProgressCallback _doOnProgress { get; private set; }
         public bool BlockStatisticsCollection => !_doStatisticsCollection;
+        public SrmDocument Document => _documentContainer.Document;
 
         public void SetDocument(SrmDocument document)
         {
-            _document = document;
             ChromCacheMinimizer = document.Settings.HasResults
                 ? document.Settings.MeasuredResults.GetChromCacheMinimizer(document)
                 : null;
@@ -58,7 +69,7 @@ namespace pwiz.Skyline.Model
                 _settings = value;
                 if (_doStatisticsCollection && ChromCacheMinimizer != null)
                 {
-                    StatisticsCollector = new BackgroundWorker(this, null);
+                    StatisticsCollector = new BackgroundWorker(this);
                 }
             }
         }
@@ -79,7 +90,7 @@ namespace pwiz.Skyline.Model
                 _chromCacheMinimizer = value;
                 if (_doStatisticsCollection && ChromCacheMinimizer != null)
                 {
-                    StatisticsCollector = new BackgroundWorker(this, null);
+                    StatisticsCollector = new BackgroundWorker(this);
                 }
             }
         }
@@ -115,31 +126,63 @@ namespace pwiz.Skyline.Model
         public void StartStatisticsCollection()
         {
             _doStatisticsCollection = true;
-            StatisticsCollector = new BackgroundWorker(this, null);
+            StatisticsCollector = new BackgroundWorker(this);
         }
 
-
-        public MeasuredResults MinimizeToFile(string targetFile, ILongWaitBroker longWaitBroker)
+        public void MinimizeCacheFile(string targetFile)
         {
             var targetSkydFile = ChromatogramCache.FinalPathForName(targetFile, null);
-            using (var skydSaver = new FileSaver(targetSkydFile))
+
+            _skydSaver = new FileSaver(targetSkydFile);
             using (var scansSaver = new FileSaver(targetSkydFile + ChromatogramCache.SCANS_EXT, true))
             using (var peaksSaver = new FileSaver(targetSkydFile + ChromatogramCache.PEAKS_EXT, true))
             using (var scoreSaver = new FileSaver(targetSkydFile + ChromatogramCache.SCORES_EXT, true))
             {
-                skydSaver.Stream = File.OpenWrite(skydSaver.SafeName);
 
-                using (var backgroundWorker =
-                    new BackgroundWorker(this, longWaitBroker))
+                _skydSaver.Stream = File.OpenWrite(_skydSaver.SafeName);
+                BackgroundWorker backgroundWorker = null;
+                try
                 {
-                    backgroundWorker.RunBackground(skydSaver.Stream,
-                        scansSaver.FileStream, peaksSaver.FileStream, scoreSaver.FileStream);
+                    using (backgroundWorker =
+                        new BackgroundWorker(this, true))
+                    {
+                        backgroundWorker.RunBackground(_skydSaver.Stream,
+                            scansSaver.FileStream, peaksSaver.FileStream, scoreSaver.FileStream);
+                    }
                 }
-                
-                return _document.Settings.MeasuredResults.CommitCacheFile(skydSaver);
+                catch (Exception)
+                {
+                    if (backgroundWorker == null || !backgroundWorker.Canceled)
+                    {
+                        throw;
+                    }
+                }
+
+                if (backgroundWorker.Canceled)
+                    return;
             }
         }
 
+        public void SetMeasuredResults(string targetFile)
+        {
+            using (_skydSaver)
+            {
+                var measuredResults =
+                    _documentContainer.Document.Settings.MeasuredResults.CommitCacheFile(_skydSaver);
+                SrmDocument docOrig, docNew;
+                do
+                {
+                    docOrig = _documentContainer.Document;
+                    docNew = docOrig.ChangeMeasuredResults(measuredResults);
+                } while (!_documentContainer.SetDocument(docNew, docOrig));
+            }
+        }
+
+        public void MinimizeToFile(string targetFile)
+        {
+            MinimizeCacheFile(targetFile);
+            SetMeasuredResults(targetFile);
+        }
 
         /// <summary>
         /// Handles the task of either estimating the space savings the user will achieve
@@ -150,16 +193,24 @@ namespace pwiz.Skyline.Model
         public class BackgroundWorker : MustDispose
         {
             private readonly MinimizeResults _minimizeResults;
-            public readonly ILongWaitBroker LongWaitBroker;
+            public bool Canceled { get; private set; }
+            public bool IsMinimizingFile { get; private set; }
 
-            public BackgroundWorker(MinimizeResults minimizeResults, ILongWaitBroker longWaitBroker)
+            public BackgroundWorker(MinimizeResults minimizeResults, bool isMinimizingFile = false/*, ILongWaitBroker longWaitBroker*/)
             {
                 _minimizeResults = minimizeResults;
-                LongWaitBroker = longWaitBroker;
+                Canceled = false;
+                IsMinimizingFile = isMinimizingFile;
+            }
+
+            public void Cancel()
+            {
+                Canceled = true;
             }
 
             void OnProgress(ChromCacheMinimizer.MinStatistics minStatistics)
             {
+                if (Canceled) throw new Exception("BackgroundWorker has been cancelled.");
                 if (_minimizeResults._doOnProgress != null)
                 {
                     _minimizeResults._doOnProgress(minStatistics, this);

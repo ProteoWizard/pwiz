@@ -45,16 +45,18 @@ namespace pwiz.Skyline.FileUI
         private ChromCacheMinimizer.MinStatistics _minStatistics;
         private bool _updatePending;
 
+        private ILongWaitBroker _longWaitBroker;
+
         public MinimizeResultsDlg(IDocumentUIContainer documentUIContainer)
         {
             InitializeComponent();
             Icon = Resources.Skyline;
-            _minimizeResults = new MinimizeResults(documentUIContainer.Document, OnProgress);
-            _minimizeResults.StartStatisticsCollection();
+            _minimizeResults = new MinimizeResults(documentUIContainer, OnProgress);
             Settings = _minimizeResults.Settings
                 .ChangeDiscardUnmatchedChromatograms(true);
             DocumentUIContainer = documentUIContainer;
             bindingSource1.DataSource = _rowItems = new BindingList<GridRowItem>();
+            _minimizeResults.StartStatisticsCollection();
         }
 
         public IDocumentUIContainer DocumentUIContainer { get; private set; }
@@ -65,8 +67,7 @@ namespace pwiz.Skyline.FileUI
             if (DocumentUIContainer != null)
             {
                 DocumentUIContainer.ListenUI(OnDocumentChanged);
-                // TODO (Ali): Ask if it's ok you moved SetDocument to MinimizeResults.cs constructor. Happens before listenUI now.
-                //SetDocument(DocumentUIContainer.Document);
+                UpdateMinimizeButtons();
             }
         }
 
@@ -89,7 +90,10 @@ namespace pwiz.Skyline.FileUI
         private void OnDocumentChanged(object sender, DocumentChangedEventArgs args)
         {
             if (!_minimizeResults.BlockStatisticsCollection)
+            {
                 _minimizeResults.SetDocument(DocumentUIContainer.DocumentUI);
+                UpdateMinimizeButtons();
+            }
         }
 
 
@@ -135,22 +139,17 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
-        private ChromCacheMinimizer ChromCacheMinimizer
+        private void UpdateMinimizeButtons()
         {
-            get { return _minimizeResults.ChromCacheMinimizer; }
-            set
+            if (_minimizeResults.ChromCacheMinimizer != null)
             {
-                _minimizeResults.ChromCacheMinimizer = value;
-                if (ChromCacheMinimizer != null)
-                {
-                    btnMinimize.Enabled = btnMinimizeAs.Enabled = true;
-                }
-                else
-                {
-                    btnMinimize.Enabled = btnMinimizeAs.Enabled = false;
-                    lblCurrentCacheFileSize.Text = Resources.MinimizeResultsDlg_ChromCacheMinimizer_The_cache_file_has_not_been_loaded_yet;
-                    lblSpaceSavings.Text = string.Empty;
-                }
+                btnMinimize.Enabled = btnMinimizeAs.Enabled = true;
+            }
+            else
+            {
+                btnMinimize.Enabled = btnMinimizeAs.Enabled = false;
+                lblCurrentCacheFileSize.Text = Resources.MinimizeResultsDlg_ChromCacheMinimizer_The_cache_file_has_not_been_loaded_yet;
+                lblSpaceSavings.Text = string.Empty;
             }
         }
 
@@ -256,62 +255,45 @@ namespace pwiz.Skyline.FileUI
 
         public bool TryMinimizeToFile(string targetFile)
         {
-            Exception exception = null;
             using (var longWaitDlg = new LongWaitDlg(DocumentUIContainer))
             {
                 longWaitDlg.PerformWork(this, 1000,
                     longWaitBroker =>
                     {
+                        _longWaitBroker = longWaitBroker;
                         longWaitBroker.Message = Resources.MinimizeResultsDlg_MinimizeToFile_Saving_new_cache_file;
-                        try
-                        {
-                            var measuredResults =_minimizeResults.MinimizeToFile(targetFile, longWaitBroker);
-                            SrmDocument docOrig, docNew;
-                            do
-                            {
-                                docOrig = DocumentUIContainer.Document;
-                                docNew = docOrig.ChangeMeasuredResults(measuredResults);
-                            } while (!DocumentUIContainer.SetDocument(docNew, docOrig));
-                        }
-                        catch (ObjectDisposedException)
-                        {
-                            if (!longWaitBroker.IsCanceled)
-                            {
-                                throw;
-                            }
-                        }
-                        catch (Exception e)
-                        {
-                            exception = e;
-                        }
+                        _minimizeResults.MinimizeCacheFile(targetFile);
                     });
 
                 if (longWaitDlg.IsCanceled)
                 {
                     return false;
                 }
-
-                // Save file before throw exception
-                // TODO(ALI): Ask if save can be done here (after docNew created, MinimizeResults.cs line 150-157)
-                var skylineWindow = (SkylineWindow)DocumentUIContainer;
-                if (!skylineWindow.SaveDocument(targetFile, false))
-                {
-                    return false;
-                }
-
-                if (exception != null)
-                {
-                    var message = TextUtil.LineSeparate(
-                        string.Format(
-                            Resources
-                                .MinimizeResultsDlg_MinimizeToFile_An_unexpected_error_occurred_while_saving_the_data_cache_file__0__,
-                            targetFile),
-                        exception.Message);
-                    MessageDlg.ShowWithException(this, message, exception);
-                    return false;
-                }
-                skylineWindow.InvalidateChromatogramGraphs();
             }
+
+            var skylineWindow = (SkylineWindow)DocumentUIContainer;
+            if (!skylineWindow.SaveDocument(targetFile, false))
+            {
+                return false;
+            }
+
+            try
+            {
+                _minimizeResults.SetMeasuredResults(targetFile);
+            }
+            catch (Exception e)
+            {
+                var message = TextUtil.LineSeparate(
+                    string.Format(
+                        Resources
+                            .MinimizeResultsDlg_MinimizeToFile_An_unexpected_error_occurred_while_saving_the_data_cache_file__0__,
+                        targetFile),
+                    e.Message);
+                MessageDlg.ShowWithException(this, message, e);
+                return false;
+            }
+            skylineWindow.InvalidateChromatogramGraphs();
+            
             return true;
         }
 
@@ -320,7 +302,9 @@ namespace pwiz.Skyline.FileUI
             lock (worker)
             {
                 CheckDisposed();
-                bool updateUi = _minStatistics == null || _minStatistics.PercentComplete != minStatistics.PercentComplete;
+                bool updateUi = _minStatistics == null || 
+                                _minStatistics.PercentComplete != minStatistics.PercentComplete ||
+                                _minStatistics.MinimizedRatio != minStatistics.MinimizedRatio;
                 _minStatistics = minStatistics;
                 var _this = this;
                 if (ReferenceEquals(_minimizeResults.StatisticsCollector, worker))
@@ -339,11 +323,12 @@ namespace pwiz.Skyline.FileUI
                     }
                 }
             }
-            if (worker.LongWaitBroker != null)
+            if (worker.IsMinimizingFile)
             {
-                worker.LongWaitBroker.ProgressValue = minStatistics.PercentComplete;
-                if (worker.LongWaitBroker.IsCanceled)
+                _longWaitBroker.ProgressValue = minStatistics.PercentComplete;
+                if (_longWaitBroker.IsCanceled)
                 {
+                    worker.Cancel();
                     throw new ObjectDisposedException(GetType().FullName);
                 }
             }

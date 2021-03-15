@@ -330,8 +330,6 @@ namespace pwiz.Skyline
                     }
                     return false;
                 }
-                // Valid minimize commands automatically save skyline file
-                Saving = false;
             }
             return true;
         }

@@ -1745,8 +1745,8 @@ namespace pwiz.Skyline
             minimizeResults.Settings = minimizeResults.Settings
                 .ChangeDiscardUnmatchedChromatograms(commandArgs.ChromatogramsDiscard)
                 .ChangeNoiseTimeRange(commandArgs.LimitNoise);
-            var measuredResults = minimizeResults.MinimizeToFile(saveFile, null);
-            _doc = _doc.ChangeMeasuredResults(measuredResults);
+            minimizeResults.MinimizeToFile(saveFile);
+            _doc = minimizeResults.Document;
             _skylineFile = saveFile;
             return true;
         }
