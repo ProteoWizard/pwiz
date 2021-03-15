@@ -144,17 +144,16 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
         private List<StandardPeptide> _recalibrationPeptides;
 
-        private void OnLoad(object sender, EventArgs e)
+        protected override void OnLoad(EventArgs e)
         {
+            base.OnLoad(e);
+
             // If you set this in the Designer, DataGridView has a defect that causes it to throw an
             // exception if the the cursor is positioned over the record selector column during loading.
             gridViewCalibrate.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-        }
 
-        private void CalibrateIrtDlg_Shown(object sender, EventArgs e)
-        {
             FireStandardsChanged = true;
-            UpdateEquation(sender, e);
+            UpdateEquation(null, e);
         }
 
         public void OkDialog()
