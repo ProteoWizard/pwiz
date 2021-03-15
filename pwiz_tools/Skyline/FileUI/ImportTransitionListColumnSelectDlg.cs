@@ -433,7 +433,7 @@ namespace pwiz.Skyline.FileUI
 
             List<TransitionImportErrorInfo> testErrorList = null;
             SrmDocument docNew = null;
-            var errorCheckCanceled = false;
+            var errorCheckCanceled = true;
 
             using (var longWaitDlg = new LongWaitDlg { Text = Resources.ImportTransitionListColumnSelectDlg_CheckForErrors_Checking_for_errors___ })
             {
