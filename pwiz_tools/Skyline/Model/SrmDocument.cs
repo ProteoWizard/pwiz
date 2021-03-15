@@ -1458,8 +1458,12 @@ namespace pwiz.Skyline.Model
                         IdentityPath nextAdd;
                         //peptideGroups = importer.Import(progressMonitor, out irtPeptides, out librarySpectra, out errorList).ToList();
                         var dictNameSeqAll = new Dictionary<string, FastaSequence>();
-                        peptideGroups = (List<PeptideGroupDocNode>)importer.DoImport(progressMonitor, dictNameSeqAll, irtPeptides, librarySpectra, errorList);
-
+                        var imported = importer.DoImport(progressMonitor, dictNameSeqAll, irtPeptides, librarySpectra, errorList);
+                        if (progressMonitor != null && progressMonitor.IsCanceled)
+                        {
+                            return this;
+                        }
+                        peptideGroups = (List<PeptideGroupDocNode>) imported;
                         docNew = AddPeptideGroups(peptideGroups, false, to, out firstAdded, out nextAdd);
                         var pepModsNew = importer.GetModifications(docNew);
                         if (!ReferenceEquals(pepModsNew, Settings.PeptideSettings.Modifications))

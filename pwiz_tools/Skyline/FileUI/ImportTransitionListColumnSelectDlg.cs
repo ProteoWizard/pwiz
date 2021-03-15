@@ -30,6 +30,7 @@ using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Skyline.Controls;
 
 namespace pwiz.Skyline.FileUI
 {
@@ -429,24 +430,43 @@ namespace pwiz.Skyline.FileUI
         /// <returns>True if list contains any errors and user does not elect to ignore them</returns>
         private bool CheckForErrors(bool silentSuccess)
         {
-            IdentityPath testSelectPath = null;
-            List<MeasuredRetentionTime> testIrtPeptides = null;
-            List<SpectrumMzInfo> testLibrarySpectra = null;
+
             List<TransitionImportErrorInfo> testErrorList = null;
-            List<PeptideGroupDocNode> testPeptideGroups = null;
-            var columns = Importer.RowReader.Indices;
-            MissingEssentialColumns = new List<string>();
-            CheckEssentialColumn(new Tuple<int, string>(columns.PeptideColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence));
-            CheckEssentialColumn(new Tuple<int, string>(columns.PrecursorColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z));
-            CheckEssentialColumn(new Tuple<int, string>(columns.ProductColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z));
-            var docNew = _docCurrent.ImportMassList(_inputs, Importer, null,
-                _insertPath, out testSelectPath, out testIrtPeptides, out testLibrarySpectra,
-                out testErrorList, out testPeptideGroups);
-            if (testErrorList.Any())
+            SrmDocument docNew = null;
+            var errorCheckCanceled = false;
+
+            using (var longWaitDlg = new LongWaitDlg { Text = Resources.ImportTransitionListColumnSelectDlg_CheckForErrors_Checking_for_errors___ })
+            {
+                longWaitDlg.PerformWork(this, 1000, progressMonitor =>
+                {
+                    IdentityPath testSelectPath = null;
+                    List<MeasuredRetentionTime> testIrtPeptides = null;
+                    List<SpectrumMzInfo> testLibrarySpectra = null;
+                    List<PeptideGroupDocNode> testPeptideGroups = null;
+                    var columns = Importer.RowReader.Indices;
+                    MissingEssentialColumns = new List<string>();
+                    CheckEssentialColumn(new Tuple<int, string>(columns.PeptideColumn,
+                        Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence));
+                    CheckEssentialColumn(new Tuple<int, string>(columns.PrecursorColumn,
+                        Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z));
+                    CheckEssentialColumn(new Tuple<int, string>(columns.ProductColumn,
+                        Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z));
+                    docNew = _docCurrent.ImportMassList(_inputs, Importer, progressMonitor,
+                        _insertPath, out testSelectPath, out testIrtPeptides, out testLibrarySpectra,
+                        out testErrorList, out testPeptideGroups);
+                    errorCheckCanceled = progressMonitor.IsCanceled;
+                });
+            }
+
+            if (errorCheckCanceled)
+            {
+                return true; // User cancelled, we can't say that there are no errors
+            }
+
+            if (testErrorList != null && testErrorList.Any())
             {
                 // There are errors, show them to user
                 var isErrorAll = ReferenceEquals(docNew, _docCurrent);
-                DialogResult response;
                 if (MissingEssentialColumns.Count != 0)
                 {
                     // If the transition list is missing essential columns, tell the user in a 
@@ -457,19 +477,19 @@ namespace pwiz.Skyline.FileUI
                         errorMessage = errorMessage + @" " + MissingEssentialColumns[i];
                     }
                     MessageDlg.Show(this, errorMessage);
-                    return true;
+                    return true; // There are errors
                 }
                 else
                 {
+                    DialogResult response;
                     using (var dlg = new ImportTransitionListErrorDlg(testErrorList, isErrorAll, silentSuccess))
                     {
                         response = dlg.ShowDialog(this);
                     }
-
                     return response == DialogResult.Cancel; // There are errors, and user does not want to ignore them
                 }
             }
-            else if (!silentSuccess) 
+            else if (!silentSuccess)
             {
                 // No errors, confirm this to user
                 MessageDlg.Show(this, Resources.PasteDlg_ShowNoErrors_No_errors);

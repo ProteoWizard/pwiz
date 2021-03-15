@@ -11340,4 +11340,7 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
   <data name="SkylineWindow_ImportMassList_Analyzing_input__0_" xml:space="preserve">
     <value>Analyzing input {0}</value>
   </data>
+  <data name="ImportTransitionListColumnSelectDlg_CheckForErrors_Checking_for_errors___" xml:space="preserve">
+    <value>Checking for errors...</value>
+  </data>
 </root>
