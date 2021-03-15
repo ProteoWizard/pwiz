@@ -315,6 +315,12 @@ namespace pwiz.Skyline.Model
             Separator = separator;
         }
 
+        public MassListInputs(IList<string> lines)
+        {
+            InitFormat(lines);
+            _lines = lines;
+        }
+
         public IList<string> ReadLines()
         {
             return _lines ?? (_lines = _inputFilename != null ? ReadLinesFromFile() : ReadLinesFromText());
@@ -362,8 +368,21 @@ namespace pwiz.Skyline.Model
                 char sep;
                 IFormatProvider provider;
                 Type[] columnTypes;
-                if (!MassListImporter.IsColumnar(inputLines[0], out provider, out sep, out columnTypes))
+                string inputLine = 0 < inputLines.Count ? inputLines[0] : string.Empty;
+                if (!MassListImporter.IsColumnar(inputLine, out provider, out sep, out columnTypes))
+                {
                     throw new IOException(Resources.SkylineWindow_importMassListMenuItem_Click_Data_columns_not_found_in_first_line);
+                }
+                // If there are no numbers in the first line, try the second. Without numbers the format provider may not be correct
+                if (columnTypes.All(t => Type.GetTypeCode(t) != TypeCode.Double))
+                {
+                    inputLine = 1 < inputLines.Count ? inputLines[1] : string.Empty;
+                    if (!MassListImporter.IsColumnar(inputLine, out provider, out sep, out columnTypes) ||
+                        columnTypes.All(t => Type.GetTypeCode(t) != TypeCode.Double))
+                    {
+                        throw new IOException(Resources.SkylineWindow_importMassListMenuItem_Click_Data_columns_not_found_in_first_line);
+                    }
+                }
                 FormatProvider = provider;
                 Separator = sep;
             }
@@ -1794,45 +1813,56 @@ namespace pwiz.Skyline.Model
         {
             provider = CultureInfo.InvariantCulture;
             sep = '\0';
+            columnTypes = new Type[0];
+
             int endLine = text.IndexOf('\n');
             string line = (endLine != -1 ? text.Substring(0, endLine) : text);
-            string localDecimalSep = LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator;
+            // Avoid reporting a crosslink peptide specification as columnar just because they can contain commas
+            if (CrosslinkSequenceParser.TryParseCrosslinkLibraryKey(line.Trim(), 0) != null)
+                return false;
+
+            // Work out the column separator and the column strings
             string[] columns;
             if (TrySplitColumns(line, TextUtil.SEPARATOR_TSV, out columns)) 
             {
-                // If the current culture's decimal separator is different from the
-                // invariant culture, and their are more occurances of the current
-                // culture's decimal separator in the line, then use current culture.
-                string invDecimalSep = CultureInfo.InvariantCulture.NumberFormat.NumberDecimalSeparator;
-                if (!Equals(localDecimalSep, invDecimalSep))
-                {
-                    if (CountDecimals(columns, LocalizationHelper.CurrentCulture) >
-                            CountDecimals(columns, CultureInfo.InvariantCulture))
-                        provider = LocalizationHelper.CurrentCulture;
-                }
                 sep = TextUtil.SEPARATOR_TSV;
-            }
-            // Excel CSVs for cultures with a comma decimal use semi-colons.
-            else if (Equals(@",", localDecimalSep) && TrySplitColumns(line, TextUtil.SEPARATOR_CSV_INTL, out columns))
-            {
-                provider = LocalizationHelper.CurrentCulture;
-                sep = TextUtil.SEPARATOR_CSV_INTL;           
             }
             else
             {
-                if (null == CrosslinkSequenceParser.TryParseCrosslinkLibraryKey(line.Trim(), 0))
-                {
-                    if (TrySplitColumns(line, TextUtil.SEPARATOR_CSV, out columns))
-                    {
-                        sep = TextUtil.SEPARATOR_CSV;
-                    }
-                }
+                bool hasCommaColumns = TrySplitColumns(line, TextUtil.SEPARATOR_CSV, out columns);
+                bool hasSemiColumns = TrySplitColumns(line, TextUtil.SEPARATOR_CSV_INTL, out var semiColumns);
+                if (hasCommaColumns && hasSemiColumns)
+                    sep = columns.Length >= semiColumns.Length ? TextUtil.SEPARATOR_CSV : TextUtil.SEPARATOR_CSV_INTL;
+                else if (hasCommaColumns)
+                    sep = TextUtil.SEPARATOR_CSV;
+                else if (hasSemiColumns)
+                    sep = TextUtil.SEPARATOR_CSV_INTL;
+
+                if (sep == TextUtil.SEPARATOR_CSV_INTL)
+                    columns = semiColumns;
             }
 
             if (sep == '\0')
-            {
-                columnTypes = new Type[0];
                 return false;
+
+            if (sep != TextUtil.SEPARATOR_CSV)
+            {
+                // Test for the right decimal separator when the list separator is not a comma
+                var culture = CultureInfo.CurrentCulture;
+                // If the local decimal separator is not a comma, then try that. Otherwise, try a comma.
+                if (Equals(culture.NumberFormat.NumberDecimalSeparator,
+                    CultureInfo.InvariantCulture.NumberFormat.NumberDecimalSeparator))
+                {
+                    culture = (CultureInfo)CultureInfo.InvariantCulture.Clone();
+                    var nf = culture.NumberFormat;
+                    nf.NumberDecimalSeparator = nf.CurrencyDecimalSeparator = nf.PercentDecimalSeparator = @",";
+                    nf.NumberGroupSeparator = nf.CurrencyGroupSeparator = nf.PercentGroupSeparator = @".";
+                    culture.TextInfo.ListSeparator = sep.ToString();
+                }
+                
+                // The decimal separator that appears in the most columns wins
+                if (CountDecimals(columns, culture) > CountDecimals(columns, provider))
+                    provider = culture;
             }
 
             List<Type> listColumnTypes = new List<Type>();
@@ -2030,7 +2060,7 @@ namespace pwiz.Skyline.Model
 
 
         // ReSharper disable StringLiteralTypo
-        public static IEnumerable<string> ProteinNames { get { return new[] { @"proteinname", @"protein", @"proteinid", @"uniprotid" }; } }
+        public static IEnumerable<string> ProteinNames { get { return new[] { @"proteinname", @"protein.name", @"protein", @"proteinid", @"uniprotid" }; } }
         public static IEnumerable<string> PrecursorChargeNames { get { return new[] { @"precursorcharge" }; } }
         public static IEnumerable<string> ProductChargeNames { get { return new[] { @"productcharge" }; } }
         public static IEnumerable<string> IrtColumnNames { get { return new[] { @"irt", @"normalizedretentiontime", @"tr_recalibrated" }; } }
