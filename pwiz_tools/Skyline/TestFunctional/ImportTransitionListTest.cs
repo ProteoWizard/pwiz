@@ -43,6 +43,7 @@ namespace pwiz.SkylineTestFunctional
         {
             RunUI(()=>SkylineWindow.OpenFile(TestFilesDir.GetTestPath("ImportHighPrecTranList.sky")));
             ImportTransitionListSkipColumnSelect(TestFilesDir.GetTestPath("ThermoTransitionList.csv"));
+            WaitForCondition(() => 0 != SkylineWindow.Document.MoleculeCount);
             var documentGrid = ShowDialog<DocumentGridForm>(() => SkylineWindow.ShowDocumentGrid(true));
             RunUI(() => documentGrid.ChooseView("PeptideModSeqFullNames"));
             VerifyExpectedPeptides(documentGrid);

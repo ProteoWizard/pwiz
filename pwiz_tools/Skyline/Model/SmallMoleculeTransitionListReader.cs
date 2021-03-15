@@ -1886,22 +1886,10 @@ namespace pwiz.Skyline.Model
 
         public SmallMoleculeTransitionListCSVReader(IList<string> csvText)
         {
-            // Accept either true CSV or currentculture equivalent
-            Type[] columnTypes;
-            IFormatProvider formatProvider;
-            char separator;
-            var header = csvText[0];
-            // Skip over header line to deduce decimal format
-            string line = csvText.Count > 1 ? csvText[1] : header;
-            MassListImporter.IsColumnar(line, out formatProvider, out separator, out columnTypes);
-            // Double check that separator - does it appear in header row, or was it just an unlucky hit in a text field?
-            if (!header.Contains(separator))
-            {
-                // Try again, this time without the distraction of a plausible but clearly incorrect seperator
-                MassListImporter.IsColumnar(line.Replace(separator,'_'), out formatProvider, out separator, out columnTypes);
-            }
-            _cultureInfo = formatProvider;
-            _csvReader = new DsvFileReader(new StringListReader(csvText), separator, SmallMoleculeTransitionListColumnHeaders.KnownHeaderSynonyms);
+            // Ask MassListInputs to figure out the column and decimal separators
+            var inputs = new MassListInputs(csvText);
+            _cultureInfo = inputs.FormatProvider;
+            _csvReader = new DsvFileReader(new StringListReader(csvText), inputs.Separator, SmallMoleculeTransitionListColumnHeaders.KnownHeaderSynonyms);
             // Do we recognize all the headers?
             var badHeaders =
                 _csvReader.FieldNames.Where(

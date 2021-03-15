@@ -757,8 +757,11 @@ namespace pwiz.Skyline.Model
             SrmDocument docClone = (SrmDocument)clone;
             docClone.RevisionIndex = RevisionIndex + 1;
 
-            // Make sure peptide standards lists are up to date
-            docClone.Settings = docClone.Settings.CachePeptideStandards(Children, docClone.Children);
+            if (!DeferSettingsChanges)
+            {
+                // Make sure peptide standards lists are up to date
+                docClone.Settings = docClone.Settings.CachePeptideStandards(Children, docClone.Children);
+            }
 
             // Note protein metadata readiness
             docClone.IsProteinMetadataPending = docClone.CalcIsProteinMetadataPending();
