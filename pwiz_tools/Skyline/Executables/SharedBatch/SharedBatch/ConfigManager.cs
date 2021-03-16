@@ -596,8 +596,9 @@ namespace SharedBatch
             return logNames;
         }
 
-        public void AddRootReplacement(string oldRoot, string newRoot)
+        public List<IConfig> AddRootReplacement(string oldRoot, string newRoot)
         {
+            var replacedConfigNames = new List<IConfig>();
             RootReplacement.Add(oldRoot, newRoot);
             lock (_lock)
             {
@@ -612,10 +613,12 @@ namespace SharedBatch
                             _configList.Remove(config);
                             _configValidation.Remove(config.GetName());
                             InsertPossiblyInvalidConfiguration(replacedPathConfig, i);
+                            replacedConfigNames.Add(replacedPathConfig);
                         }
                     }
                 }
             }
+            return replacedConfigNames;
         }
 
         public IConfig RunRootReplacement(IConfig config)

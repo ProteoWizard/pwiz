@@ -63,13 +63,13 @@ namespace SkylineBatch
         private async Task<MainSettings> FixInvalidMainSettings()
         {
             var validTemplateFilePath = await GetValidPath(Resources.InvalidConfigSetupForm_FixInvalidMainSettings_Skyline_template_file, 
-                mainSettings.TemplateFilePath, false, MainSettings.ValidateSkylineFile);
+                mainSettings.TemplateFilePath, MainSettings.ValidateSkylineFile, PathDialogOptions.File, PathDialogOptions.ExistingOptional);
             var validAnalysisFolderPath = await GetValidPath(Resources.InvalidConfigSetupForm_FixInvalidMainSettings_analysis_folder, 
-                mainSettings.AnalysisFolderPath, true, MainSettings.ValidateAnalysisFolder);
+                mainSettings.AnalysisFolderPath, MainSettings.ValidateAnalysisFolder, PathDialogOptions.Folder);
             var validDataFolderPath = await GetValidPath(Resources.InvalidConfigSetupForm_FixInvalidMainSettings_data_folder, 
-                mainSettings.DataFolderPath, true, MainSettings.ValidateDataFolder);
+                mainSettings.DataFolderPath, MainSettings.ValidateDataFolder, PathDialogOptions.Folder);
             var validAnnotationsFilePath = await GetValidPath(Resources.InvalidConfigSetupForm_FixInvalidMainSettings_annotations_file, mainSettings.AnnotationsFilePath,
-                false, MainSettings.ValidateAnnotationsFile);
+                MainSettings.ValidateAnnotationsFile, PathDialogOptions.File);
 
             return new MainSettings(validTemplateFilePath, validAnalysisFolderPath, validDataFolderPath, validAnnotationsFilePath, mainSettings.ReplicateNamingPattern);
         }
@@ -77,7 +77,7 @@ namespace SkylineBatch
         private async Task<RefineSettings> FixInvalidRefineSettings()
         {
             var validOutputPath = await GetValidPath(Resources.InvalidConfigSetupForm_FixInvalidRefineSettings_path_to_the_refined_output_file,
-                refineSettings.OutputFilePath, false, RefineSettings.ValidateOutputFile);
+                refineSettings.OutputFilePath, RefineSettings.ValidateOutputFile, PathDialogOptions.File, PathDialogOptions.Save);
             return new RefineSettings(refineSettings.CommandValues, refineSettings.RemoveDecoys, refineSettings.RemoveResults, validOutputPath);
         }
 
@@ -89,8 +89,8 @@ namespace SkylineBatch
             {
                 var report = reportSettings.Reports[i];
                 var validReportPath = await GetValidPath(string.Format(Resources.InvalidConfigSetupForm_FixInvalidReportSettings__0__report, 
-                        report.Name), report.ReportPath, false,
-                    ReportInfo.ValidateReportPath);
+                        report.Name), report.ReportPath, 
+                    ReportInfo.ValidateReportPath, PathDialogOptions.File);
                 var validScripts = new List<Tuple<string, string>>();
                 if (!_removeRScripts)
                 {
@@ -103,8 +103,8 @@ namespace SkylineBatch
                             break;
                         }
                         var validRScript = await GetValidPath(string.Format(Resources.InvalidConfigSetupForm_FixInvalidReportSettings__0__R_script, Path.GetFileNameWithoutExtension(scriptAndVersion.Item1)),
-                            scriptAndVersion.Item1, false,
-                            ReportInfo.ValidateRScriptPath);
+                            scriptAndVersion.Item1, 
+                            ReportInfo.ValidateRScriptPath, PathDialogOptions.File);
                         
                         validScripts.Add(new Tuple<string, string>(validRScript, validVersion));
                     }
@@ -124,11 +124,11 @@ namespace SkylineBatch
         
         #region Get Valid Variables
 
-        private async Task<string> GetValidPath(string variableName, string invalidPath, bool folder, Validator validator)
+        private async Task<string> GetValidPath(string variableName, string invalidPath, Validator validator, params PathDialogOptions[] dialogOptions)
         {
             var path = invalidPath;
             
-            var folderControl = new FilePathControl(variableName, path, _lastInputPath, folder, validator);
+            var folderControl = new FilePathControl(variableName, path, _lastInputPath, validator, dialogOptions);
             path = (string) await GetValidVariable(folderControl, false);
 
             if (path.Equals(invalidPath))

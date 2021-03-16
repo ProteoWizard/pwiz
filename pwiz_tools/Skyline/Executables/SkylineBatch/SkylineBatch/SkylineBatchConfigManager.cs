@@ -350,6 +350,18 @@ namespace SkylineBatch
 
         #endregion
 
+        public new void AddRootReplacement(string oldRoot, string newRoot)
+        {
+            var replacedConfigs = base.AddRootReplacement(oldRoot, newRoot);
+            lock (_lock)
+            {
+                foreach (var config in replacedConfigs)
+                {
+                    _configRunners[config.GetName()] = new ConfigRunner((SkylineBatchConfig)config, _logList[0], _uiControl);
+                }
+            }
+        }
+
         #region Logging
 
         public bool HasOldLogs()
