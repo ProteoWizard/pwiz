@@ -139,7 +139,8 @@ namespace SkylineNightly
                 if (HangThreshold > 0)
                 {
                     var lastWrite = File.GetLastWriteTime(_testerLog);
-                    _isHang = lastWrite.AddMinutes(HangThreshold) <= signalTime;
+                    // Convert to UTC before adding threshold, then convert back to avoid false detection of hang when going from standard time to DST.
+                    _isHang = lastWrite.ToUniversalTime().AddMinutes(HangThreshold).ToLocalTime() <= signalTime;
                     if (_isHang)
                     {
                         if (!_hangNotificationSent)
