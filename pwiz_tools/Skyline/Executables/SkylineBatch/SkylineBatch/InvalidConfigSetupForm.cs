@@ -15,7 +15,7 @@ namespace SkylineBatch
         // The Configuration Setup Manager Form
         // Allows users to correct file paths, R versions, and Skyline types of an invalid configuration.
 
-        private readonly SkylineBatchConfig _invalidConfig;
+        private SkylineBatchConfig _invalidConfig;
         private readonly SkylineBatchConfigManager _configManager;
         private readonly IMainUiControl _mainControl;
 
@@ -36,16 +36,20 @@ namespace SkylineBatch
 
         public SkylineBatchConfig ValidConfig { get; private set; }
 
+        private MainSettings mainSettings => _invalidConfig.MainSettings;
+        private RefineSettings refineSettings => _invalidConfig.RefineSettings;
+        private ReportSettings reportSettings => _invalidConfig.ReportSettings;
 
         private async void CreateValidConfig()
         {
             // get valid settings
             var validMainSettings = await FixInvalidMainSettings();
+            var validRefineSettings = await FixInvalidRefineSettings();
             var validReportSettings = await FixInvalidReportSettings();
             var validSkylineSettings = await FixInvalidSkylineSettings();
             // create valid configuration
             ValidConfig = new SkylineBatchConfig(_invalidConfig.Name, _invalidConfig.Enabled, DateTime.Now, 
-                validMainSettings, _invalidConfig.FileSettings, _invalidConfig.RefineSettings, 
+                validMainSettings, _invalidConfig.FileSettings, validRefineSettings, 
                 validReportSettings, validSkylineSettings);
             // save invalid configuration
             _configManager.ReplaceSelectedConfig(ValidConfig);
@@ -58,25 +62,32 @@ namespace SkylineBatch
 
         private async Task<MainSettings> FixInvalidMainSettings()
         {
-            var mainSettings = _invalidConfig.MainSettings;
             var validTemplateFilePath = await GetValidPath(Resources.InvalidConfigSetupForm_FixInvalidMainSettings_Skyline_template_file, 
                 mainSettings.TemplateFilePath, false, MainSettings.ValidateSkylineFile);
             var validAnalysisFolderPath = await GetValidPath(Resources.InvalidConfigSetupForm_FixInvalidMainSettings_analysis_folder, 
                 mainSettings.AnalysisFolderPath, true, MainSettings.ValidateAnalysisFolder);
             var validDataFolderPath = await GetValidPath(Resources.InvalidConfigSetupForm_FixInvalidMainSettings_data_folder, 
                 mainSettings.DataFolderPath, true, MainSettings.ValidateDataFolder);
-            var validAnnotationsFilePath = await GetValidPath("annotations file", mainSettings.AnnotationsFilePath,
+            var validAnnotationsFilePath = await GetValidPath(Resources.InvalidConfigSetupForm_FixInvalidMainSettings_annotations_file, mainSettings.AnnotationsFilePath,
                 false, MainSettings.ValidateAnnotationsFile);
 
             return new MainSettings(validTemplateFilePath, validAnalysisFolderPath, validDataFolderPath, validAnnotationsFilePath, mainSettings.ReplicateNamingPattern);
         }
-        
+
+        private async Task<RefineSettings> FixInvalidRefineSettings()
+        {
+            var validOutputPath = await GetValidPath(Resources.InvalidConfigSetupForm_FixInvalidRefineSettings_path_to_the_refined_output_file,
+                refineSettings.OutputFilePath, false, RefineSettings.ValidateOutputFile);
+            return new RefineSettings(refineSettings.CommandValues, refineSettings.RemoveDecoys, refineSettings.RemoveResults, validOutputPath);
+        }
+
         private async Task<ReportSettings> FixInvalidReportSettings()
         {
-            var reports = _invalidConfig.ReportSettings.Reports;
+            var reportNumber = reportSettings.Reports.Count;
             var validReports = new List<ReportInfo>();
-            foreach (var report in reports)
+            for (int i = 0; i < reportNumber; i++)
             {
+                var report = reportSettings.Reports[i];
                 var validReportPath = await GetValidPath(string.Format(Resources.InvalidConfigSetupForm_FixInvalidReportSettings__0__report, 
                         report.Name), report.ReportPath, false,
                     ReportInfo.ValidateReportPath);
@@ -115,7 +126,7 @@ namespace SkylineBatch
 
         private async Task<string> GetValidPath(string variableName, string invalidPath, bool folder, Validator validator)
         {
-            var path = TryReplaceRoot(invalidPath);
+            var path = invalidPath;
             
             var folderControl = new FilePathControl(variableName, path, _lastInputPath, folder, validator);
             path = (string) await GetValidVariable(folderControl, false);
@@ -186,21 +197,11 @@ namespace SkylineBatch
                 var replaceRoot = AlertDlg.ShowQuestion(this, Program.AppName(), string.Format(Resources.InvalidConfigSetupForm_GetValidPath_Would_you_like_to_replace__0__with__1___, oldRoot, newRoot)) == DialogResult.Yes;
                 _askedAboutRootReplacement = true;
                 if (replaceRoot)
+                {
                     _configManager.AddRootReplacement(oldRoot, newRoot);
+                    _invalidConfig = _configManager.GetSelectedConfig();
+                }
             }
-        }
-        
-        private string TryReplaceRoot(string path)
-        {
-            var bestRoot = string.Empty;
-            foreach (var oldRoot in _configManager.RootReplacement.Keys)
-            {
-                if (path.StartsWith(oldRoot) && oldRoot.Length > bestRoot.Length)
-                    bestRoot = oldRoot;
-            }
-            if (string.IsNullOrEmpty(bestRoot))
-                return path;
-            return path.Replace(bestRoot, _configManager.RootReplacement[bestRoot]);
         }
 
         #endregion

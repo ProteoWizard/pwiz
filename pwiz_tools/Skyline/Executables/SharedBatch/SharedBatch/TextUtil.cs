@@ -92,7 +92,11 @@ namespace SharedBatch
             {
                 directoryName = Path.GetDirectoryName(directory);
             }
-            catch (Exception) 
+            catch (Exception)
+            {
+                directoryName = null;
+            }
+            if (directoryName == null)
             {
                 if (!string.IsNullOrEmpty(lastEnteredPath))
                     return GetInitialDirectory(lastEnteredPath);

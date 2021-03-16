@@ -415,6 +415,15 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to annotations file.
+        /// </summary>
+        internal static string InvalidConfigSetupForm_FixInvalidMainSettings_annotations_file {
+            get {
+                return ResourceManager.GetString("InvalidConfigSetupForm_FixInvalidMainSettings_annotations_file", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to data folder.
         /// </summary>
         internal static string InvalidConfigSetupForm_FixInvalidMainSettings_data_folder {
@@ -429,6 +438,15 @@ namespace SkylineBatch.Properties {
         internal static string InvalidConfigSetupForm_FixInvalidMainSettings_Skyline_template_file {
             get {
                 return ResourceManager.GetString("InvalidConfigSetupForm_FixInvalidMainSettings_Skyline_template_file", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to path to the refined output file.
+        /// </summary>
+        internal static string InvalidConfigSetupForm_FixInvalidRefineSettings_path_to_the_refined_output_file {
+            get {
+                return ResourceManager.GetString("InvalidConfigSetupForm_FixInvalidRefineSettings_path_to_the_refined_output_file", resourceCulture);
             }
         }
         

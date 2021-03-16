@@ -35,14 +35,20 @@ namespace SkylineBatch
         // Holds information for refining the skyline file after data import
         
         public RefineSettings(List<Tuple<RefineVariable, string>> commandValues, bool removeDecoys, bool removeResults,
+            string outputFilePath) : this(ImmutableList.Create<Tuple<RefineVariable, string>>().AddRange(commandValues), 
+            removeDecoys, removeResults, outputFilePath)
+        {
+        }
+
+        public RefineSettings(ImmutableList<Tuple<RefineVariable, string>> commandValues, bool removeDecoys, bool removeResults,
             string outputFilePath)
         {
             RemoveDecoys = removeDecoys;
             RemoveResults = removeResults;
             OutputFilePath = outputFilePath ?? string.Empty;
-            CommandValues = ImmutableList.Create<Tuple<RefineVariable, string>>().AddRange(commandValues);
+            CommandValues = commandValues;
         }
-        
+
         public readonly ImmutableList<Tuple<RefineVariable, string>> CommandValues;
 
         public readonly bool RemoveDecoys;
@@ -53,23 +59,34 @@ namespace SkylineBatch
 
         public void Validate()
         {
-            if (!string.IsNullOrEmpty(OutputFilePath))
+            ValidateOutputFile(OutputFilePath);
+        }
+
+        public static void ValidateOutputFile(string outputFilePath)
+        {
+            if (!string.IsNullOrEmpty(outputFilePath))
             {
-                bool validPath = true;
+                bool validPath;
                 try
                 {
-                    validPath = Directory.Exists(Path.GetDirectoryName(OutputFilePath));
+                    validPath = Directory.Exists(Path.GetDirectoryName(outputFilePath));
                 }
                 catch (Exception)
                 {
                     validPath = false;
                 }
-                if (!validPath) throw new ArgumentException(string.Format(Resources.RefineSettings_Validate_Cannot_save_the_refined_file_to__0_, OutputFilePath) + Environment.NewLine +
+                if (!validPath) throw new ArgumentException(string.Format(Resources.RefineSettings_Validate_Cannot_save_the_refined_file_to__0_, outputFilePath) + Environment.NewLine +
                                                             Resources.RefineSettings_Validate_Please_provide_a_valid_output_file_path__or_an_empty_string_if_you_do_not_wish_to_save_a_separate_refined_file_);
             }
         }
 
-        
+        public bool TryPathReplace(string oldRoot, string newRoot, out RefineSettings pathReplacedRefineSettings)
+        {
+            var didReplace = TextUtil.TryReplaceStart(oldRoot, newRoot, OutputFilePath, out string replacedOutputPath);
+            pathReplacedRefineSettings =
+                new RefineSettings(CommandValues, RemoveDecoys, RemoveResults, replacedOutputPath);
+            return didReplace;
+        }
 
         
         #region Read/Write XML

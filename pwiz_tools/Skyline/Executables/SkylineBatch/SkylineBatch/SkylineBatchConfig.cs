@@ -190,11 +190,13 @@ namespace SkylineBatch
         public bool TryPathReplace(string oldRoot, string newRoot, out IConfig replacedPathConfig)
         {
             var mainSettingsReplaced = MainSettings.TryPathReplace(oldRoot, newRoot, out MainSettings pathReplacedMainSettings);
+            var refineSettingsReplaced =
+                RefineSettings.TryPathReplace(oldRoot, newRoot, out RefineSettings pathReplacedRefineSettings);
             var reportSettingsReplaced =
                 ReportSettings.TryPathReplace(oldRoot, newRoot, out ReportSettings pathReplacedReportSettings);
             replacedPathConfig = new SkylineBatchConfig(Name, Enabled, DateTime.Now, pathReplacedMainSettings,
-                FileSettings, RefineSettings, pathReplacedReportSettings, SkylineSettings);
-            return mainSettingsReplaced || reportSettingsReplaced;
+                FileSettings, pathReplacedRefineSettings, pathReplacedReportSettings, SkylineSettings);
+            return mainSettingsReplaced || reportSettingsReplaced || refineSettingsReplaced;
         }
 
         public override string ToString()

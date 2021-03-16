@@ -448,4 +448,10 @@ with:
   <data name="MainSettings_ValidateTemplateFile_Will_another_configuration_generate__0__before_this_configuration_runs_" xml:space="preserve">
     <value>Will another configuration generate {0} before this configuration runs?</value>
   </data>
+  <data name="InvalidConfigSetupForm_FixInvalidRefineSettings_path_to_the_refined_output_file" xml:space="preserve">
+    <value>path to the refined output file</value>
+  </data>
+  <data name="InvalidConfigSetupForm_FixInvalidMainSettings_annotations_file" xml:space="preserve">
+    <value>annotations file</value>
+  </data>
 </root>
