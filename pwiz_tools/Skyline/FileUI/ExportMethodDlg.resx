@@ -1423,6 +1423,9 @@ If unchecked, zeros will be written in their place.</value>
   <data name="textMs1RepetitionTime.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
+  <data name="textMs1RepetitionTime.ToolTip" xml:space="preserve">
+    <value>The maximum time allowed between MS1 spectrum acquisition interspersed between MS/MS spectra for PRM (default 10 ms)</value>
+  </data>
   <data name="&gt;&gt;textMs1RepetitionTime.Name" xml:space="preserve">
     <value>textMs1RepetitionTime</value>
   </data>
