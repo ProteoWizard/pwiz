@@ -33,7 +33,7 @@ namespace SkylineBatch
         // Running configurations cannot be replaced, and will be opened in a read only mode.
         
         private readonly IMainUiControl _mainControl;
-        private readonly bool _initialEnabled;
+        private readonly bool _configEnabled;
         private readonly bool _isBusy;
         private readonly ConfigAction _action;
         private readonly RefineInputObject _refineInput;
@@ -51,8 +51,8 @@ namespace SkylineBatch
             _newReportList = new List<ReportInfo>();
 
             _mainControl = mainControl;
-            if (config != null) 
-                _initialEnabled = config.Enabled;
+            if (config != null)
+                _configEnabled = config.Enabled;
             _isBusy = isBusy;
 
             _canEditSkylineSettings = !SkylineInstallations.HasLocalSkylineCmd;
@@ -65,10 +65,12 @@ namespace SkylineBatch
             if (isBusy)
             {
                 lblConfigRunning.Show();
-                btnSaveConfig.Hide(); // save and cancel buttons are replaced with OK button
+                // save and cancel buttons are replaced with OK button
+                btnSaveConfig.Hide();
                 btnCancelConfig.Hide();
                 btnOkConfig.Show();
                 AcceptButton = btnOkConfig;
+
                 DisableUserInputs();
             }
 
@@ -242,12 +244,37 @@ namespace SkylineBatch
 
         private void SetInitialRefineSettings(SkylineBatchConfig config)
         {
+            var outputFilePath = config == null ? null : config.RefineSettings.OutputFilePath;
             gridRefineInputs.SelectedObject = _refineInput;
-            if (config == null) return;
-            var refineSettings = config.RefineSettings;
-            checkBoxRemoveData.Checked = refineSettings.RemoveResults;
-            checkBoxRemoveDecoys.Checked = refineSettings.RemoveDecoys;
-            textBoxRefinedFilePath.Text = refineSettings.OutputFilePath;
+
+            if (config == null || _action == ConfigAction.Add || string.IsNullOrEmpty(outputFilePath))
+            {
+                checkBoxRemoveDecoys.Checked = true;
+                checkBoxRemoveData.Checked = true;
+                ToggleRefineEnabled(false);
+            }
+            else
+            {
+                var refineSettings = config.RefineSettings;
+                checkBoxRemoveData.Checked = refineSettings.RemoveResults;
+                checkBoxRemoveDecoys.Checked = refineSettings.RemoveDecoys;
+                textBoxRefinedFilePath.Text = refineSettings.OutputFilePath;
+            }
+        }
+
+        private void textBoxRefinedFilePath_TextChanged(object sender, EventArgs e)
+        {
+            ToggleRefineEnabled(!string.IsNullOrEmpty(textBoxRefinedFilePath.Text));
+        }
+
+        private void ToggleRefineEnabled(bool enabled)
+        {
+            checkBoxRemoveDecoys.Enabled = enabled;
+            checkBoxRemoveData.Enabled = enabled;
+            var properties = _refineInput.GetProperties();
+            foreach (GlobalizedPropertyDescriptor prop in properties)
+                prop.ReadOnly = !enabled;
+            gridRefineInputs.SelectedObject = _refineInput;
         }
         
         private RefineSettings GetRefineSettingsFromUi()
@@ -287,7 +314,7 @@ namespace SkylineBatch
 
         private void ShowAddReportDialog(int addingIndex, ReportInfo editingReport = null)
         {
-            var addReportsForm = new ReportsAddForm(_mainControl, editingReport);
+            var addReportsForm = new ReportsAddForm(_mainControl, !string.IsNullOrEmpty(textBoxRefinedFilePath.Text), editingReport);
             var addReportResult = addReportsForm.ShowDialog();
 
             if (addReportResult == DialogResult.OK)
@@ -370,7 +397,7 @@ namespace SkylineBatch
         private SkylineBatchConfig GetConfigFromUi()
         {
             var name = textConfigName.Text;
-            var enabled = _action == ConfigAction.Edit ? _initialEnabled : true;
+            var enabled = _action == ConfigAction.Edit ? _configEnabled : true;
             var mainSettings = GetMainSettingsFromUi();
             var fileSettings = GetFileSettingsFromUi();
             var refineSettings = GetRefineSettingsFromUi();

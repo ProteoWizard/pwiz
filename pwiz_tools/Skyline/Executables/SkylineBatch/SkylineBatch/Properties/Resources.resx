@@ -331,31 +331,31 @@ with:
   <data name="ConfigManager_CheckConfigAtIndex_Cannot_disable___0___while_it_has_status___1_" xml:space="preserve">
     <value>Cannot disable "{0}" while it has status: {1}</value>
   </data>
-  <data name="ConfigManager_RunAllEnabled_chromatagram_files" xml:space="preserve">
+  <data name="SkylineBatchConfigManager_StartBatchRun_chromatagram_files" xml:space="preserve">
     <value>chromatagram files</value>
   </data>
-  <data name="ConfigManager_RunAllEnabled_Configuration___0___" xml:space="preserve">
+  <data name="SkylineBatchConfigManager_StartBatchRun_Configuration___0___" xml:space="preserve">
     <value>Configuration "{0}"</value>
   </data>
-  <data name="ConfigManager_RunAllEnabled_Do_you_want_to_continue_" xml:space="preserve">
+  <data name="SkylineBatchConfigManager_StartBatchRun_Do_you_want_to_continue_" xml:space="preserve">
     <value>Do you want to continue?</value>
   </data>
-  <data name="ConfigManager_RunAllEnabled_exported_reports" xml:space="preserve">
+  <data name="SkylineBatchConfigManager_StartBatchRun_exported_reports" xml:space="preserve">
     <value>exported reports</value>
   </data>
-  <data name="ConfigManager_RunAllEnabled_Please_check_the_checkbox_next_to_one_or_more_configurations_" xml:space="preserve">
+  <data name="SkylineBatchConfigManager_StartBatchRun_Please_check_the_checkbox_next_to_one_or_more_configurations_" xml:space="preserve">
     <value>Please check the checkbox next to one or more configurations.</value>
   </data>
-  <data name="ConfigManager_RunAllEnabled_results_files" xml:space="preserve">
+  <data name="SkylineBatchConfigManager_StartBatchRun_results_files" xml:space="preserve">
     <value>results files</value>
   </data>
-  <data name="ConfigManager_RunAllEnabled_Running_the_enabled_configurations_from_step__0__would_overwrite_the_following__1__" xml:space="preserve">
+  <data name="SkylineBatchConfigManager_StartBatchRun_Running_the_enabled_configurations_from_step__0__would_overwrite_the_following__1__" xml:space="preserve">
     <value>Running the enabled configurations from step {0} would overwrite the following {1}:</value>
   </data>
-  <data name="ConfigManager_RunAllEnabled_R_script_outputs" xml:space="preserve">
+  <data name="SkylineBatchConfigManager_StartBatchRun_R_script_outputs" xml:space="preserve">
     <value>R script outputs</value>
   </data>
-  <data name="ConfigManager_RunAllEnabled_There_are_no_enabled_configurations_to_run_" xml:space="preserve">
+  <data name="SkylineBatchConfigManager_StartBatchRun_There_are_no_enabled_configurations_to_run_" xml:space="preserve">
     <value>There are no enabled configurations to run.</value>
   </data>
   <data name="Logger_DisplayLog_____Log_truncated_____Full_log_is_in__0_" xml:space="preserve">
@@ -439,9 +439,6 @@ with:
   <data name="RefineSettings_Validate_Cannot_save_the_refined_file_to__0_" xml:space="preserve">
     <value>Cannot save the refined file to {0}</value>
   </data>
-  <data name="RefineSettings_Validate_Please_provide_a_valid_output_file_path__or_an_empty_string_if_you_do_not_wish_to_save_a_separate_refined_file_" xml:space="preserve">
-    <value>Please provide a valid output file path, or an empty string if you do not wish to save a separate refined file.</value>
-  </data>
   <data name="MainSettings_ValidateTemplateFile_The_Skyline_template_file_for_this_configuration_does_not_exist_" xml:space="preserve">
     <value>The Skyline template file for this configuration does not exist.</value>
   </data>
@@ -453,5 +450,23 @@ with:
   </data>
   <data name="InvalidConfigSetupForm_FixInvalidMainSettings_annotations_file" xml:space="preserve">
     <value>annotations file</value>
+  </data>
+  <data name="RefineSettings_ValidateOutputFile_Please_provide_a_valid_output_file_path_" xml:space="preserve">
+    <value>Please provide a valid output file path.</value>
+  </data>
+  <data name="RefineSettings_Validate_No_refine_commands_have_been_selected_" xml:space="preserve">
+    <value>No refine commands have been selected.</value>
+  </data>
+  <data name="RefineSettings_Validate_Please_enter_values_for_the_refine_commands_you_wish_to_use__or_skip_the_refinement_step_by_removing_the_file_path_on_the_refine_tab_" xml:space="preserve">
+    <value>Please enter values for the refine commands you wish to use, or skip the refinement step by removing the file path on the refine tab.</value>
+  </data>
+  <data name="SkylineBatchConfigManager_StartBatchRun_refined_files" xml:space="preserve">
+    <value>refined files</value>
+  </data>
+  <data name="ReportInfo_AsObjectArray_Results" xml:space="preserve">
+    <value>Results</value>
+  </data>
+  <data name="ReportInfo_AsObjectArray_Refined" xml:space="preserve">
+    <value>Refined</value>
   </data>
 </root>

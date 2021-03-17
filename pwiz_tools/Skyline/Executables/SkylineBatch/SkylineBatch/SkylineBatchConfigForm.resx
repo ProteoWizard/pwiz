@@ -656,19 +656,19 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>NoControl</value>
   </data>
   <data name="label8.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 355</value>
+    <value>7, 11</value>
   </data>
   <data name="label8.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 0, 2, 0</value>
   </data>
   <data name="label8.Size" type="System.Drawing.Size, System.Drawing">
-    <value>168, 15</value>
+    <value>113, 15</value>
   </data>
   <data name="label8.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
   </data>
   <data name="label8.Text" xml:space="preserve">
-    <value>&amp;Save refined file as (optional):</value>
+    <value>&amp;Save refined file as:</value>
   </data>
   <data name="label8.ToolTip" xml:space="preserve">
     <value>Saves the refined file to a new location. The original file will be used for the rest of the data processing.</value>
@@ -683,7 +683,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>tabRefine</value>
   </data>
   <data name="&gt;&gt;label8.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>2</value>
   </data>
   <data name="checkBoxRemoveDecoys.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
@@ -692,7 +692,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>True</value>
   </data>
   <data name="checkBoxRemoveDecoys.Location" type="System.Drawing.Point, System.Drawing">
-    <value>7, 335</value>
+    <value>3, 0</value>
   </data>
   <data name="checkBoxRemoveDecoys.Size" type="System.Drawing.Size, System.Drawing">
     <value>103, 17</value>
@@ -713,10 +713,10 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;checkBoxRemoveDecoys.Parent" xml:space="preserve">
-    <value>tabRefine</value>
+    <value>splitContainer2.Panel2</value>
   </data>
   <data name="&gt;&gt;checkBoxRemoveDecoys.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>0</value>
   </data>
   <data name="checkBoxRemoveData.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
@@ -728,7 +728,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>NoControl</value>
   </data>
   <data name="checkBoxRemoveData.Location" type="System.Drawing.Point, System.Drawing">
-    <value>7, 312</value>
+    <value>7, 0</value>
   </data>
   <data name="checkBoxRemoveData.Size" type="System.Drawing.Size, System.Drawing">
     <value>90, 17</value>
@@ -749,10 +749,10 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;checkBoxRemoveData.Parent" xml:space="preserve">
-    <value>tabRefine</value>
+    <value>splitContainer2.Panel1</value>
   </data>
   <data name="&gt;&gt;checkBoxRemoveData.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>0</value>
   </data>
   <data name="textAnalysisPath.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -1055,7 +1055,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>3, 3, 3, 3</value>
   </data>
   <data name="tabFiles.Size" type="System.Drawing.Size, System.Drawing">
-    <value>445, 395</value>
+    <value>445, 399</value>
   </data>
   <data name="tabFiles.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -1112,7 +1112,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>3, 3, 3, 3</value>
   </data>
   <data name="tabSettings.Size" type="System.Drawing.Size, System.Drawing">
-    <value>445, 394</value>
+    <value>445, 398</value>
   </data>
   <data name="tabSettings.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -1132,14 +1132,65 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   <data name="&gt;&gt;tabSettings.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
+  <data name="splitContainer2.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
+  <data name="splitContainer2.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 53</value>
+  </data>
+  <data name="&gt;&gt;splitContainer2.Panel1.Name" xml:space="preserve">
+    <value>splitContainer2.Panel1</value>
+  </data>
+  <data name="&gt;&gt;splitContainer2.Panel1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;splitContainer2.Panel1.Parent" xml:space="preserve">
+    <value>splitContainer2</value>
+  </data>
+  <data name="&gt;&gt;splitContainer2.Panel1.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;splitContainer2.Panel2.Name" xml:space="preserve">
+    <value>splitContainer2.Panel2</value>
+  </data>
+  <data name="&gt;&gt;splitContainer2.Panel2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;splitContainer2.Panel2.Parent" xml:space="preserve">
+    <value>splitContainer2</value>
+  </data>
+  <data name="&gt;&gt;splitContainer2.Panel2.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="splitContainer2.Size" type="System.Drawing.Size, System.Drawing">
+    <value>438, 15</value>
+  </data>
+  <data name="splitContainer2.SplitterDistance" type="System.Int32, mscorlib">
+    <value>206</value>
+  </data>
+  <data name="splitContainer2.TabIndex" type="System.Int32, mscorlib">
+    <value>11</value>
+  </data>
+  <data name="&gt;&gt;splitContainer2.Name" xml:space="preserve">
+    <value>splitContainer2</value>
+  </data>
+  <data name="&gt;&gt;splitContainer2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.SplitContainer, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;splitContainer2.Parent" xml:space="preserve">
+    <value>tabRefine</value>
+  </data>
+  <data name="&gt;&gt;splitContainer2.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
   <data name="gridRefineInputs.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
   <data name="gridRefineInputs.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 3</value>
+    <value>10, 73</value>
   </data>
   <data name="gridRefineInputs.Size" type="System.Drawing.Size, System.Drawing">
-    <value>439, 303</value>
+    <value>427, 325</value>
   </data>
   <data name="gridRefineInputs.TabIndex" type="System.Int32, mscorlib">
     <value>10</value>
@@ -1154,7 +1205,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>tabRefine</value>
   </data>
   <data name="&gt;&gt;gridRefineInputs.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>1</value>
   </data>
   <data name="btnRefinedFilePath.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
@@ -1163,7 +1214,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>NoControl</value>
   </data>
   <data name="btnRefinedFilePath.Location" type="System.Drawing.Point, System.Drawing">
-    <value>403, 370</value>
+    <value>406, 26</value>
   </data>
   <data name="btnRefinedFilePath.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -1187,13 +1238,13 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>tabRefine</value>
   </data>
   <data name="&gt;&gt;btnRefinedFilePath.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>3</value>
   </data>
   <data name="textBoxRefinedFilePath.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left, Right</value>
   </data>
   <data name="textBoxRefinedFilePath.Location" type="System.Drawing.Point, System.Drawing">
-    <value>7, 372</value>
+    <value>10, 28</value>
   </data>
   <data name="textBoxRefinedFilePath.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -1214,13 +1265,13 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>tabRefine</value>
   </data>
   <data name="&gt;&gt;textBoxRefinedFilePath.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>4</value>
   </data>
   <data name="tabRefine.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
   </data>
   <data name="tabRefine.Size" type="System.Drawing.Size, System.Drawing">
-    <value>445, 394</value>
+    <value>445, 398</value>
   </data>
   <data name="tabRefine.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -1345,6 +1396,12 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   <data name="columnScripts.HeaderText" xml:space="preserve">
     <value>Scripts</value>
   </data>
+  <metadata name="columnFile.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="columnFile.HeaderText" xml:space="preserve">
+    <value>File</value>
+  </data>
   <data name="gridReportSettings.Location" type="System.Drawing.Point, System.Drawing">
     <value>2, 5</value>
   </data>
@@ -1352,7 +1409,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>2, 2, 2, 2</value>
   </data>
   <data name="gridReportSettings.Size" type="System.Drawing.Size, System.Drawing">
-    <value>415, 386</value>
+    <value>415, 391</value>
   </data>
   <data name="gridReportSettings.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1379,7 +1436,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>2, 2, 2, 2</value>
   </data>
   <data name="tabReports.Size" type="System.Drawing.Size, System.Drawing">
-    <value>445, 394</value>
+    <value>445, 399</value>
   </data>
   <data name="tabReports.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -1406,7 +1463,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>8, 6</value>
   </data>
   <data name="panelSkylineSettings.Size" type="System.Drawing.Size, System.Drawing">
-    <value>438, 389</value>
+    <value>438, 393</value>
   </data>
   <data name="panelSkylineSettings.TabIndex" type="System.Int32, mscorlib">
     <value>24</value>
@@ -1430,7 +1487,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>3, 3, 3, 3</value>
   </data>
   <data name="tabSkyline.Size" type="System.Drawing.Size, System.Drawing">
-    <value>445, 394</value>
+    <value>445, 398</value>
   </data>
   <data name="tabSkyline.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -1460,7 +1517,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>2, 2, 2, 2</value>
   </data>
   <data name="tabsConfig.Size" type="System.Drawing.Size, System.Drawing">
-    <value>453, 421</value>
+    <value>453, 425</value>
   </data>
   <data name="tabsConfig.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1493,7 +1550,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>Bottom, Right</value>
   </data>
   <data name="btnCancelConfig.Location" type="System.Drawing.Point, System.Drawing">
-    <value>367, 9</value>
+    <value>371, 2</value>
   </data>
   <data name="btnCancelConfig.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -1523,7 +1580,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>True</value>
   </data>
   <data name="lblConfigRunning.Location" type="System.Drawing.Point, System.Drawing">
-    <value>11, 14</value>
+    <value>11, 7</value>
   </data>
   <data name="lblConfigRunning.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 0, 2, 0</value>
@@ -1557,7 +1614,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>Microsoft Sans Serif, 9pt</value>
   </data>
   <data name="btnSaveConfig.Location" type="System.Drawing.Point, System.Drawing">
-    <value>288, 9</value>
+    <value>292, 2</value>
   </data>
   <data name="btnSaveConfig.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -1590,7 +1647,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>NoControl</value>
   </data>
   <data name="btnOkConfig.Location" type="System.Drawing.Point, System.Drawing">
-    <value>367, 10</value>
+    <value>370, 2</value>
   </data>
   <data name="btnOkConfig.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -1635,7 +1692,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>453, 458</value>
   </data>
   <data name="splitContainer1.SplitterDistance" type="System.Int32, mscorlib">
-    <value>421</value>
+    <value>425</value>
   </data>
   <data name="splitContainer1.SplitterWidth" type="System.Int32, mscorlib">
     <value>3</value>
@@ -1662,53 +1719,53 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>
         AAEAAAD/////AQAAAAAAAAAMAgAAAFdTeXN0ZW0uV2luZG93cy5Gb3JtcywgVmVyc2lvbj00LjAuMC4w
         LCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODkFAQAAACZTeXN0
-        ZW0uV2luZG93cy5Gb3Jtcy5JbWFnZUxpc3RTdHJlYW1lcgEAAAAERGF0YQcCAgAAAAkDAAAADwMAAACw
-        CgAAAk1TRnQBSQFMAgEBAgEAAeABAQHgAQEBHgEAAR4BAAT/AQkBAAj/AUIBTQE2AQQGAAE2AQQCAAEo
-        AwABeAMAAR4DAAEBAQABCAUAARABDhgAAYACAAGAAwACgAEAAYADAAGAAQABgAEAAoACAAPAAQABwAHc
-        AcABAAHwAcoBpgEAATMFAAEzAQABMwEAATMBAAIzAgADFgEAAxwBAAMiAQADKQEAA1UBAANNAQADQgEA
-        AzkBAAGAAXwB/wEAAlAB/wEAAZMBAAHWAQAB/wHsAcwBAAHGAdYB7wEAAdYC5wEAAZABqQGtAgAB/wEz
-        AwABZgMAAZkDAAHMAgABMwMAAjMCAAEzAWYCAAEzAZkCAAEzAcwCAAEzAf8CAAFmAwABZgEzAgACZgIA
-        AWYBmQIAAWYBzAIAAWYB/wIAAZkDAAGZATMCAAGZAWYCAAKZAgABmQHMAgABmQH/AgABzAMAAcwBMwIA
-        AcwBZgIAAcwBmQIAAswCAAHMAf8CAAH/AWYCAAH/AZkCAAH/AcwBAAEzAf8CAAH/AQABMwEAATMBAAFm
-        AQABMwEAAZkBAAEzAQABzAEAATMBAAH/AQAB/wEzAgADMwEAAjMBZgEAAjMBmQEAAjMBzAEAAjMB/wEA
-        ATMBZgIAATMBZgEzAQABMwJmAQABMwFmAZkBAAEzAWYBzAEAATMBZgH/AQABMwGZAgABMwGZATMBAAEz
-        AZkBZgEAATMCmQEAATMBmQHMAQABMwGZAf8BAAEzAcwCAAEzAcwBMwEAATMBzAFmAQABMwHMAZkBAAEz
-        AswBAAEzAcwB/wEAATMB/wEzAQABMwH/AWYBAAEzAf8BmQEAATMB/wHMAQABMwL/AQABZgMAAWYBAAEz
-        AQABZgEAAWYBAAFmAQABmQEAAWYBAAHMAQABZgEAAf8BAAFmATMCAAFmAjMBAAFmATMBZgEAAWYBMwGZ
-        AQABZgEzAcwBAAFmATMB/wEAAmYCAAJmATMBAANmAQACZgGZAQACZgHMAQABZgGZAgABZgGZATMBAAFm
-        AZkBZgEAAWYCmQEAAWYBmQHMAQABZgGZAf8BAAFmAcwCAAFmAcwBMwEAAWYBzAGZAQABZgLMAQABZgHM
-        Af8BAAFmAf8CAAFmAf8BMwEAAWYB/wGZAQABZgH/AcwBAAHMAQAB/wEAAf8BAAHMAQACmQIAAZkBMwGZ
-        AQABmQEAAZkBAAGZAQABzAEAAZkDAAGZAjMBAAGZAQABZgEAAZkBMwHMAQABmQEAAf8BAAGZAWYCAAGZ
-        AWYBMwEAAZkBMwFmAQABmQFmAZkBAAGZAWYBzAEAAZkBMwH/AQACmQEzAQACmQFmAQADmQEAApkBzAEA
-        ApkB/wEAAZkBzAIAAZkBzAEzAQABZgHMAWYBAAGZAcwBmQEAAZkCzAEAAZkBzAH/AQABmQH/AgABmQH/
-        ATMBAAGZAcwBZgEAAZkB/wGZAQABmQH/AcwBAAGZAv8BAAHMAwABmQEAATMBAAHMAQABZgEAAcwBAAGZ
-        AQABzAEAAcwBAAGZATMCAAHMAjMBAAHMATMBZgEAAcwBMwGZAQABzAEzAcwBAAHMATMB/wEAAcwBZgIA
-        AcwBZgEzAQABmQJmAQABzAFmAZkBAAHMAWYBzAEAAZkBZgH/AQABzAGZAgABzAGZATMBAAHMAZkBZgEA
-        AcwCmQEAAcwBmQHMAQABzAGZAf8BAALMAgACzAEzAQACzAFmAQACzAGZAQADzAEAAswB/wEAAcwB/wIA
-        AcwB/wEzAQABmQH/AWYBAAHMAf8BmQEAAcwB/wHMAQABzAL/AQABzAEAATMBAAH/AQABZgEAAf8BAAGZ
-        AQABzAEzAgAB/wIzAQAB/wEzAWYBAAH/ATMBmQEAAf8BMwHMAQAB/wEzAf8BAAH/AWYCAAH/AWYBMwEA
-        AcwCZgEAAf8BZgGZAQAB/wFmAcwBAAHMAWYB/wEAAf8BmQIAAf8BmQEzAQAB/wGZAWYBAAH/ApkBAAH/
-        AZkBzAEAAf8BmQH/AQAB/wHMAgAB/wHMATMBAAH/AcwBZgEAAf8BzAGZAQAB/wLMAQAB/wHMAf8BAAL/
-        ATMBAAHMAf8BZgEAAv8BmQEAAv8BzAEAAmYB/wEAAWYB/wFmAQABZgL/AQAB/wJmAQAB/wFmAf8BAAL/
-        AWYBAAEhAQABpQEAA18BAAN3AQADhgEAA5YBAAPLAQADsgEAA9cBAAPdAQAD4wEAA+oBAAPxAQAD+AEA
-        AfAB+wH/AQABpAKgAQADgAMAAf8CAAH/AwAC/wEAAf8DAAH/AQAB/wEAAv8CAAP/AwAC/wHzAZgBcgFP
-        AXIBmAHyAv8TAAL/ARsBkwFGASABRgFvARoC/04AAf8B9AGYB08BmAH0Af8RAAH/AfQBbwcgAW8B9AH/
-        TQAB9AGXA08BlwGYAZcDTwGXAfQB/xAAAfQBbwkgAUYB9AH/SwAB/wGYBE8BmAH/AQgETwGYAf8PAAH/
-        AW8BIAFGAm8DIAIXAiABbwH/SwAB8wVPAZgB/wEIBU8B8g8AAfMCIAEXAfQBvQFvAUYBbwG9AfMBFwIg
-        ARpLAAGYBE8BcgGYAf8BCAGXBE8BmAH/DgABkwIgAUYBvQH/ARoBlAG9Af8BvQEXAiABbwH/SgABcgFP
-        AXIDCAHyAf8B8wMIAZcBTwFyAf8OAAFGAyABFwG9A/8BvQFvAyABRgH/SgACTwGXCf8BmAJPAf8OAAFG
-        AyABRgGUA/8BlAFGBCAB/0oAAZcBTwGXAZgCCAHxAf8B8wIIAZgBlwFPAXIB/w4AAUYDIAFvAb0D/wEa
-        AW8DIAFGAf9KAAGYBE8BlwEIAf8BCAGXBE8BmAH/DgABkwIgARcBGgH/Ab0BlAG9Af8BvQFvAiABkwH/
-        SgAB9AVPAZgB/wEIAZcETwHzDwAB8wIgAUYB8wEaAW8BRgEXAb0B9AFvAiABG0sAAf8BmARPAZgB/wEI
-        AZcDTwGYAf8PAAH/AZMBIAJGARcDIAFGARcBRgEgAW8B/0wAAf8BlwNPAZcBmAGXA08BlwH0Af8QAAH/
-        AW8JIAFvAfQB/0wAAv8BmAdPAZgB9AH/EQAC/wGTByABbwH0Af9PAAH/AfQBmAGXAU8BlwGYAfMB/xUA
-        Af8B8wGTA0YBkwHzAf//AP8A/wD/AP8A/wD/AF0AAUIBTQE+BwABPgMAASgDAAF4AwABHgMAAQEBAAEB
-        BQAB4AEBFgAD/wEAAcABBwL/AQABHwH/AfAIAAGAAQMB/wH+AQABDwH/AfAIAAGAAQEB/wH+AQABBwH/
-        AfAJAAEBAf8B/AEAAQcB/wHwCQABAQH/AfwBAAEHAf8B8AoAAf8B/AEAAQMB/wHwCgAB/wH8AQABAwH/
-        AfAKAAH/AfwBAAEDAf8B8AoAAf8B/AEAAQMB/wHwCgAB/wH8AQABAwH/AfAJAAEBAf8B/AEAAQcB/wHw
-        CQABAQH/AfwBAAEHAf8B8AgAAYABAQH/Af4BAAEHAf8B8AgAAYABAwH/Af4BAAEPAf8B8AgAAeABDwL/
-        AYABPwH/AfAIAAf/AfAIAAf/AfAIAAf/AfAIAAf/AfAIAAf/AfAIAAf/AfAIAAf/AfAIAAf/AfAIAAf/
-        AfAIAAf/AfAIAAf/AfAIAAf/AfAIAAf/AfAIAAf/AfAIAAf/AfAIAAs=
+        ZW0uV2luZG93cy5Gb3Jtcy5JbWFnZUxpc3RTdHJlYW1lcgEAAAAERGF0YQcCAgAAAAkDAAAADwMAAACu
+        CgAAAk1TRnQBSQFMAgEBAgIAAQIBAAECAR4BAAEeAQAE/wEJAQAI/wFCAU0BNgEEBgABNgEEAgABKAMA
+        AXgDAAEeAwABAQEAAQgFAAEQAQ4YAAGAAgABgAMAAoABAAGAAwABgAEAAYABAAKAAgADwAEAAcAB3AHA
+        AQAB8AHKAaYBAAEzBQABMwEAATMBAAEzAQACMwIAAxYBAAMcAQADIgEAAykBAANVAQADTQEAA0IBAAM5
+        AQABgAF8Af8BAAJQAf8BAAGTAQAB1gEAAf8B7AHMAQABxgHWAe8BAAHWAucBAAGQAakBrQIAAf8BMwMA
+        AWYDAAGZAwABzAIAATMDAAIzAgABMwFmAgABMwGZAgABMwHMAgABMwH/AgABZgMAAWYBMwIAAmYCAAFm
+        AZkCAAFmAcwCAAFmAf8CAAGZAwABmQEzAgABmQFmAgACmQIAAZkBzAIAAZkB/wIAAcwDAAHMATMCAAHM
+        AWYCAAHMAZkCAALMAgABzAH/AgAB/wFmAgAB/wGZAgAB/wHMAQABMwH/AgAB/wEAATMBAAEzAQABZgEA
+        ATMBAAGZAQABMwEAAcwBAAEzAQAB/wEAAf8BMwIAAzMBAAIzAWYBAAIzAZkBAAIzAcwBAAIzAf8BAAEz
+        AWYCAAEzAWYBMwEAATMCZgEAATMBZgGZAQABMwFmAcwBAAEzAWYB/wEAATMBmQIAATMBmQEzAQABMwGZ
+        AWYBAAEzApkBAAEzAZkBzAEAATMBmQH/AQABMwHMAgABMwHMATMBAAEzAcwBZgEAATMBzAGZAQABMwLM
+        AQABMwHMAf8BAAEzAf8BMwEAATMB/wFmAQABMwH/AZkBAAEzAf8BzAEAATMC/wEAAWYDAAFmAQABMwEA
+        AWYBAAFmAQABZgEAAZkBAAFmAQABzAEAAWYBAAH/AQABZgEzAgABZgIzAQABZgEzAWYBAAFmATMBmQEA
+        AWYBMwHMAQABZgEzAf8BAAJmAgACZgEzAQADZgEAAmYBmQEAAmYBzAEAAWYBmQIAAWYBmQEzAQABZgGZ
+        AWYBAAFmApkBAAFmAZkBzAEAAWYBmQH/AQABZgHMAgABZgHMATMBAAFmAcwBmQEAAWYCzAEAAWYBzAH/
+        AQABZgH/AgABZgH/ATMBAAFmAf8BmQEAAWYB/wHMAQABzAEAAf8BAAH/AQABzAEAApkCAAGZATMBmQEA
+        AZkBAAGZAQABmQEAAcwBAAGZAwABmQIzAQABmQEAAWYBAAGZATMBzAEAAZkBAAH/AQABmQFmAgABmQFm
+        ATMBAAGZATMBZgEAAZkBZgGZAQABmQFmAcwBAAGZATMB/wEAApkBMwEAApkBZgEAA5kBAAKZAcwBAAKZ
+        Af8BAAGZAcwCAAGZAcwBMwEAAWYBzAFmAQABmQHMAZkBAAGZAswBAAGZAcwB/wEAAZkB/wIAAZkB/wEz
+        AQABmQHMAWYBAAGZAf8BmQEAAZkB/wHMAQABmQL/AQABzAMAAZkBAAEzAQABzAEAAWYBAAHMAQABmQEA
+        AcwBAAHMAQABmQEzAgABzAIzAQABzAEzAWYBAAHMATMBmQEAAcwBMwHMAQABzAEzAf8BAAHMAWYCAAHM
+        AWYBMwEAAZkCZgEAAcwBZgGZAQABzAFmAcwBAAGZAWYB/wEAAcwBmQIAAcwBmQEzAQABzAGZAWYBAAHM
+        ApkBAAHMAZkBzAEAAcwBmQH/AQACzAIAAswBMwEAAswBZgEAAswBmQEAA8wBAALMAf8BAAHMAf8CAAHM
+        Af8BMwEAAZkB/wFmAQABzAH/AZkBAAHMAf8BzAEAAcwC/wEAAcwBAAEzAQAB/wEAAWYBAAH/AQABmQEA
+        AcwBMwIAAf8CMwEAAf8BMwFmAQAB/wEzAZkBAAH/ATMBzAEAAf8BMwH/AQAB/wFmAgAB/wFmATMBAAHM
+        AmYBAAH/AWYBmQEAAf8BZgHMAQABzAFmAf8BAAH/AZkCAAH/AZkBMwEAAf8BmQFmAQAB/wKZAQAB/wGZ
+        AcwBAAH/AZkB/wEAAf8BzAIAAf8BzAEzAQAB/wHMAWYBAAH/AcwBmQEAAf8CzAEAAf8BzAH/AQAC/wEz
+        AQABzAH/AWYBAAL/AZkBAAL/AcwBAAJmAf8BAAFmAf8BZgEAAWYC/wEAAf8CZgEAAf8BZgH/AQAC/wFm
+        AQABIQEAAaUBAANfAQADdwEAA4YBAAOWAQADywEAA7IBAAPXAQAD3QEAA+MBAAPqAQAD8QEAA/gBAAHw
+        AfsB/wEAAaQCoAEAA4ADAAH/AgAB/wMAAv8BAAH/AwAB/wEAAf8BAAL/AgAD/wMAAv8B8wGYAXIBTwFy
+        AZgB8gL/EwAC/wEbAZMBRgEgAUYBbwEaAv9OAAH/AfQBmAdPAZgB9AH/EQAB/wH0AW8HIAFvAfQB/00A
+        AfQBlwNPAZcBmAGXA08BlwH0Af8QAAH0AW8JIAFGAfQB/0sAAf8BmARPAZgB/wEIBE8BmAH/DwAB/wFv
+        ASABRgJvAyACFwIgAW8B/0sAAfMFTwGYAf8BCAVPAfIPAAHzAiABFwH0Ab0BbwFGAW8BvQHzARcCIAEa
+        SwABmARPAXIBmAH/AQgBlwRPAZgB/w4AAZMCIAFGAb0B/wEaAZQBvQH/Ab0BFwIgAW8B/0oAAXIBTwFy
+        AwgB8gH/AfMDCAGXAU8BcgH/DgABRgMgARcBvQP/Ab0BbwMgAUYB/0oAAk8Blwn/AZgCTwH/DgABRgMg
+        AUYBlAP/AZQBRgQgAf9KAAGXAU8BlwGYAggB8QH/AfMCCAGYAZcBTwFyAf8OAAFGAyABbwG9A/8BGgFv
+        AyABRgH/SgABmARPAZcBCAH/AQgBlwRPAZgB/w4AAZMCIAEXARoB/wG9AZQBvQH/Ab0BbwIgAZMB/0oA
+        AfQFTwGYAf8BCAGXBE8B8w8AAfMCIAFGAfMBGgFvAUYBFwG9AfQBbwIgARtLAAH/AZgETwGYAf8BCAGX
+        A08BmAH/DwAB/wGTASACRgEXAyABRgEXAUYBIAFvAf9MAAH/AZcDTwGXAZgBlwNPAZcB9AH/EAAB/wFv
+        CSABbwH0Af9MAAL/AZgHTwGYAfQB/xEAAv8BkwcgAW8B9AH/TwAB/wH0AZgBlwFPAZcBmAHzAf8VAAH/
+        AfMBkwNGAZMB8wH//wD/AP8A/wD/AP8A/wBdAAFCAU0BPgcAAT4DAAEoAwABeAMAAR4DAAEBAQABAQUA
+        AeABARYAA/8BAAHAAQcC/wEAAR8B/wHwCAABgAEDAf8B/gEAAQ8B/wHwCAABgAEBAf8B/gEAAQcB/wHw
+        CQABAQH/AfwBAAEHAf8B8AkAAQEB/wH8AQABBwH/AfAKAAH/AfwBAAEDAf8B8AoAAf8B/AEAAQMB/wHw
+        CgAB/wH8AQABAwH/AfAKAAH/AfwBAAEDAf8B8AoAAf8B/AEAAQMB/wHwCQABAQH/AfwBAAEHAf8B8AkA
+        AQEB/wH8AQABBwH/AfAIAAGAAQEB/wH+AQABBwH/AfAIAAGAAQMB/wH+AQABDwH/AfAIAAHgAQ8C/wGA
+        AT8B/wHwCAAH/wHwCAAH/wHwCAAH/wHwCAAH/wHwCAAH/wHwCAAH/wHwCAAH/wHwCAAH/wHwCAAH/wHw
+        CAAH/wHwCAAH/wHwCAAH/wHwCAAH/wHwCAAH/wHwCAAH/wHwCAAL
 </value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
@@ -2169,6 +2226,12 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   <data name="&gt;&gt;btnEditReport.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;imageListToolbarIcons.Name" xml:space="preserve">
+    <value>imageListToolbarIcons</value>
+  </data>
+  <data name="&gt;&gt;imageListToolbarIcons.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ImageList, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;columnName.Name" xml:space="preserve">
     <value>columnName</value>
   </data>
@@ -2187,11 +2250,11 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   <data name="&gt;&gt;columnScripts.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;imageListToolbarIcons.Name" xml:space="preserve">
-    <value>imageListToolbarIcons</value>
+  <data name="&gt;&gt;columnFile.Name" xml:space="preserve">
+    <value>columnFile</value>
   </data>
-  <data name="&gt;&gt;imageListToolbarIcons.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ImageList, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="&gt;&gt;columnFile.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>SkylineBatchConfigForm</value>
