@@ -108,6 +108,8 @@ namespace pwiz.Skyline.Model
         {
             string aas = FastaSequence.StripModifications(seq);
             bool isSpecificHeavy = FastaSequence.OPEN_MOD.All(paren => aas.Length > seq.Count(c => c == paren));
+            var lossOnlyMods = Settings.PeptideSettings.Modifications.StaticModifications
+                .Where(m =>m.HasLoss && !m.HasMod).ToArray();
             int indexAA = 0;
             int indexAAInSeq = 0;
             int i = 0;
@@ -182,20 +184,34 @@ namespace pwiz.Skyline.Model
                         IndexAAInSeq = indexAAInSeq,
                     };
                 }
-                else if (includeUnmod)
+                else
                 {
-                    // If need unmodified amino acids (as when 
-                    // checking for equality), yield SequenceKeys for these AA's.
-                    var key = new AAModKey
+                    // Check for applicable loss-only modifications, since they don't appear in the modified sequence
+                    var lossMod = lossOnlyMods.FirstOrDefault(m => m.IsLoss(aa, indexAAInSeq, aas.Length));
+                    if (lossMod != null)
                     {
-                        AA = aa,
-                        Mass = 0
-                    };
-                    yield return new AAModInfo
+                        yield return new AAModInfo
+                        {
+                            ModKey = new AAModKey { Name = lossMod.Name, AA = aa, Terminus = lossMod.Terminus },
+                            IndexAA = indexAA,
+                            IndexAAInSeq = indexAAInSeq,
+                        };
+                    }
+                    else if (includeUnmod)
                     {
-                        ModKey = key,
-                        IndexAA = indexAA,
-                    };
+                        // If need unmodified amino acids (as when 
+                        // checking for equality), yield SequenceKeys for these AA's.
+                        var key = new AAModKey
+                        {
+                            AA = aa,
+                            Mass = 0
+                        };
+                        yield return new AAModInfo
+                        {
+                            ModKey = key,
+                            IndexAA = indexAA,
+                        };
+                    }
                 }
                 // If the next character is a bracket, continue using the same amino
                 // acid and leave i where it is.
