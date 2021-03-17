@@ -272,6 +272,34 @@ namespace pwiz.SkylineTest
             }
         }
 
+        [TestMethod]
+        public void TestNeutralLossModificationMatcher()
+        {
+            var srmSettings = SrmSettingsList.GetDefault();
+            var staticMods =
+                srmSettings.PeptideSettings.Modifications.StaticModifications
+                    .Append(UniMod.GetModification("Water Loss (D, E, S, T)", true))
+                    .Append(UniMod.GetModification("Oxidation (M)", true).ChangeVariable(true))
+                    .ToList();
+            srmSettings = srmSettings.ChangePeptideSettings(
+                srmSettings.PeptideSettings.ChangeModifications(
+                    srmSettings.PeptideSettings.Modifications.ChangeStaticModifications(staticMods)));
+            var modificationMatcher = new ModificationMatcher();
+            var peptideSequences = new List<string>
+            {
+                "PEPTIDECK",
+                "CM[+16]K",
+                "CK",
+                "PEPTIDEK",
+            };
+            modificationMatcher.CreateMatches(srmSettings, peptideSequences, Settings.Default.StaticModList, Settings.Default.HeavyModList);
+            foreach (var sequence in peptideSequences)
+            {
+                var peptideDocNode = modificationMatcher.GetModifiedNode(sequence);
+                Assert.IsNotNull(peptideDocNode, sequence);
+            }
+        }
+
         private const string ZIP_FILE = @"Test\ModMatch.zip";
 
         private static void UpdateMatcherFail(string seq)

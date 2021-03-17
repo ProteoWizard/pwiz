@@ -1031,10 +1031,25 @@ namespace pwiz.Skyline.Model
             var dictHeavyMods = new Dictionary<IsotopeLabelType, List<ExplicitMod>>();
             foreach (var info in infos)
             {
+                AAModMatch modMatch;
                 var match = GetMatch(info.ModKey);
                 if (match == null)
-                    return null;
-                AAModMatch modMatch = (AAModMatch)match;
+                {
+                    var staticMod = FindModification(info.ModKey);
+                    if (staticMod == null)
+                    {
+                        return null;
+                    }
+                    modMatch = new AAModMatch
+                    {
+                        StructuralMod = staticMod
+                    };
+                }
+                else
+                {
+                    modMatch = (AAModMatch)match;
+                }
+                
                 var lightMod = modMatch.StructuralMod;
                 if (lightMod != null)
                 {
