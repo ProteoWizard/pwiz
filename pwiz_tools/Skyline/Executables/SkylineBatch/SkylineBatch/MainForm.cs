@@ -35,6 +35,7 @@ namespace SkylineBatch
         private readonly Logger _skylineBatchLogger;
         private bool _loaded;
         private readonly ColumnWidthCalculator _listViewColumnWidths;
+        private bool _showRefineStep;
 
         public MainForm()
         {
@@ -148,7 +149,9 @@ namespace SkylineBatch
             {
                 e.NewValue = e.CurrentValue;
                 DisplayError(errorMessage);
+                return;
             }
+            UpdateRunBatchSteps();
         }
 
         private void listViewConfigs_MouseUp(object sender, MouseEventArgs e)
@@ -261,12 +264,20 @@ namespace SkylineBatch
             {
                 if (batchRunDropDown.Items[i].Text == e.ClickedItem.Text)
                     selectedIndex = i;
+            }
+            CheckDropDownOption(selectedIndex);
+            RunBatch();
+        }
+
+        private void CheckDropDownOption(int index)
+        {
+            for (int i = 0; i < batchRunDropDown.Items.Count; i++)
+            {
                 ((ToolStripMenuItem)batchRunDropDown.Items[i]).Checked = false;
             }
-            ((ToolStripMenuItem)batchRunDropDown.Items[selectedIndex]).Checked = true;
-            btnRunBatch.TextAlign = selectedIndex == 0 ? ContentAlignment.MiddleCenter : ContentAlignment.MiddleLeft;
-            btnRunBatch.Text = e.ClickedItem.Text.Insert(1,"&");
-            RunBatch();
+            ((ToolStripMenuItem)batchRunDropDown.Items[index]).Checked = true;
+            btnRunBatch.TextAlign = index == 0 ? ContentAlignment.MiddleCenter : ContentAlignment.MiddleLeft;
+            btnRunBatch.Text = batchRunDropDown.Items[index].Text.Insert(1, "&");
         }
 
         private void btnRunBatch_Click(object sender, EventArgs e)
@@ -281,7 +292,10 @@ namespace SkylineBatch
             {
                 if (((ToolStripMenuItem)batchRunDropDown.Items[i - 1]).Checked)
                 {
-                    running = _configManager.StartBatchRun(i);
+                    var stepNumber = i;
+                    if (!_showRefineStep && i > 2)
+                         stepNumber += 1; // step 3 and 4 become step 4 and 5 when refine step is hidden
+                    running = _configManager.StartBatchRun(stepNumber);
                     break;
                 }
             }
@@ -320,6 +334,7 @@ namespace SkylineBatch
                 listViewConfigs.ItemCheck += listViewConfigs_ItemCheck;
                 UpdateLabelVisibility();
                 UpdateButtonsEnabled();
+                UpdateRunBatchSteps();
             });
 
         }
@@ -358,6 +373,45 @@ namespace SkylineBatch
             else
             {
                 lblNoConfigs.Show();
+            }
+        }
+
+        private void UpdateRunBatchSteps()
+        {
+            if (_showRefineStep != _configManager.WillRefine())
+            {
+                _showRefineStep = _configManager.WillRefine();
+                var oldChecked = 0;
+                for (int i = 0; i < batchRunDropDown.Items.Count; i++)
+                {
+                    if (((ToolStripMenuItem)batchRunDropDown.Items[i]).Checked)
+                    {
+                        oldChecked = i;
+                        break;
+                    }
+                }
+                    batchRunDropDown.Items.Clear();
+                batchRunDropDown.Items.Add("Run All Steps");
+                batchRunDropDown.Items.Add("Run from step 2: data import");
+                if (_showRefineStep)
+                {
+                    batchRunDropDown.Items.Add("Run from step 3: refine file");
+                    batchRunDropDown.Items.Add("Run from step 4: export reports");
+                    batchRunDropDown.Items.Add("Run from step 5: run R scripts");
+                }
+                else
+                {
+                    batchRunDropDown.Items.Add("Run from step 3: export reports");
+                    batchRunDropDown.Items.Add("Run from step 4: run R scripts");
+                }
+
+                var newChecked = oldChecked;
+                if (oldChecked == 2 && _showRefineStep)
+                    newChecked += 1;
+                else if (newChecked >= 3)
+                    newChecked = _showRefineStep ? oldChecked + 1 : oldChecked - 1;
+                
+                CheckDropDownOption(newChecked);
             }
         }
 

@@ -28,15 +28,19 @@ namespace SkylineBatch
     public partial class ReportsAddForm : Form
     {
         private readonly IMainUiControl _uiControl;
-        public ReportsAddForm(IMainUiControl uiControl, ReportInfo editingReport = null)
+        public ReportsAddForm(IMainUiControl uiControl, bool hasRefineFile, ReportInfo editingReport = null)
         {
             InitializeComponent();
             _uiControl = uiControl;
+
+            radioResultsFile.Checked = true;
+            radioRefinedFile.Enabled = hasRefineFile;
 
             if (editingReport != null)
             {
                 textReportName.Text = editingReport.Name;
                 textReportPath.Text = editingReport.ReportPath;
+                radioRefinedFile.Checked = editingReport.UseRefineFile;
                 foreach (var scriptAndVersion in editingReport.RScripts)
                 {
                     dataGridScripts.Rows.Add(scriptAndVersion.Item1, scriptAndVersion.Item2);
@@ -50,7 +54,7 @@ namespace SkylineBatch
 
         public ReportInfo NewReportInfo { get; private set; }
 
-        private void btnAddRScript_Click(object sender, EventArgs e)
+        private void btnAdd_Click(object sender, EventArgs e)
         {
             if (Settings.Default.RVersions.Count == 0)
             {
@@ -92,7 +96,7 @@ namespace SkylineBatch
             return openDialog.FileNames;
         }
 
-        private void btnRemove_Click(object sender, EventArgs e)
+        private void btnDelete_Click(object sender, EventArgs e)
         {
             if (dataGridScripts.SelectedCells.Count > 0)
             {
@@ -113,7 +117,7 @@ namespace SkylineBatch
         {
             try
             {
-                NewReportInfo = new ReportInfo(textReportName.Text, textReportPath.Text, GetScriptsFromUi());
+                NewReportInfo = new ReportInfo(textReportName.Text, textReportPath.Text, GetScriptsFromUi(), radioRefinedFile.Checked);
                 NewReportInfo.Validate();
             }
             catch (ArgumentException ex)
@@ -142,11 +146,11 @@ namespace SkylineBatch
             rVersionsDropDown.Hide();
             if (dataGridScripts.SelectedCells.Count == 0)
             {
-                btnRemove.Enabled = false;
+                btnDelete.Enabled = false;
                 return;
             }
 
-            btnRemove.Enabled = dataGridScripts.SelectedCells[0].ColumnIndex == 0;
+            btnDelete.Enabled = dataGridScripts.SelectedCells[0].ColumnIndex == 0;
         }
 
         private void SelectRVersion(string version)

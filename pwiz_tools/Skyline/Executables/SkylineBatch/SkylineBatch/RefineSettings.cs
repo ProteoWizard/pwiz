@@ -204,14 +204,15 @@ namespace SkylineBatch
 
         protected bool Equals(RefineSettings other)
         {
+            if (CommandValues.Count != other.CommandValues.Count) return false;
             for (int i = 0; i < CommandValues.Count; i++)
             {
                 if (!CommandValues[i].Item1.Equals(other.CommandValues[i].Item1) || !CommandValues[i].Item2.Equals(other.CommandValues[i].Item2))
                     return false;
             }
             return other.RemoveResults == RemoveResults &&
-                   other.RemoveDecoys == RemoveDecoys &&
-                   other.OutputFilePath.Equals(OutputFilePath);
+                    other.RemoveDecoys == RemoveDecoys &&
+                    other.OutputFilePath.Equals(OutputFilePath);
         }
 
         public override bool Equals(object obj)

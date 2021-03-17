@@ -100,21 +100,24 @@ namespace SkylineBatch
             ChangeStatus(RunnerStatus.Running);
             var startTime = DateTime.Now;
             Config.MainSettings.CreateAnalysisFolderIfNonexistent();
-
-            // Writes the batch commands for steps 1-3 to a file
-            var commandFile = WriteBatchCommandsToFile(startStep);
             
-            var command = string.Format("--batch-commands=\"{0}\" --version", commandFile);
-            if (startStep != 4) await ExecuteProcess(Config.SkylineSettings.CmdPath, command);
+            
+            if (startStep != 5)
+            {
+                // Writes the batch commands for steps 1-4 to a file
+                var commandFile = WriteBatchCommandsToFile(startStep);
+                var command = string.Format("--batch-commands=\"{0}\" --version", commandFile);
+                await ExecuteProcess(Config.SkylineSettings.CmdPath, command);
+            }
 
-            // STEP 4: run r scripts using csv files
+            // STEP 5: run r scripts using csv files
             var rScriptsRunInformation = Config.GetScriptArguments();
             foreach(var rScript in rScriptsRunInformation)
                 await ExecuteProcess(rScript[RRunInfo.ExePath], rScript[RRunInfo.Arguments]);
 
             // Runner is still running if no errors or cancellations
             if (IsRunning()) ChangeStatus(RunnerStatus.Completed);
-            if (IsCancelling()) ChangeStatus(RunnerStatus.Cancelled);
+            if (IsCancelling()) ChangeStatus(RunnerStatus.Canceled);
             var endTime = DateTime.Now;
             var delta = endTime - startTime;
             var timeString = delta.Hours > 0 ? delta.ToString(@"hh\:mm\:ss") : string.Format("{0} minutes", delta.ToString(@"mm\:ss"));
@@ -140,7 +143,7 @@ namespace SkylineBatch
                 Config.WriteSaveSettingsCommand(commandWriter);
                 commandWriter.EndCommandGroup();
             }
-            else
+            else if (startStep < 4)
             {
                 Config.WriteOpenSkylineResultsCommand(commandWriter);
             }
@@ -155,15 +158,27 @@ namespace SkylineBatch
                 Config.WriteImportAnnotationsCommand(commandWriter);
                 Config.WriteSaveCommand(commandWriter);
                 commandWriter.EndCommandGroup();
-                // refine
+            }
+
+            // STEP 3: refine file and save to new location
+            if (startStep <= 3)
+            {
                 Config.WriteRefineCommands(commandWriter);
                 commandWriter.EndCommandGroup();
             }
 
-            // STEP 3: output report(s) for completed analysis
-            if (startStep <= 3)
+            // STEP 4: output report(s) for completed analysis
+            if (startStep <= 4)
             {
-                Config.WriteReportCommands(commandWriter);
+                if (Config.ReportSettings.UsesRefinedFile())
+                {
+                    if (!commandWriter.CurrentSkylineFile.Equals(Config.RefineSettings.OutputFilePath))
+                        Config.WriteOpenRefineFileCommand(commandWriter);
+                    Config.WriteRefinedFileReportCommands(commandWriter);
+                }
+                if (!commandWriter.CurrentSkylineFile.Equals(Config.MainSettings.GetResultsFilePath()))
+                    Config.WriteOpenSkylineResultsCommand(commandWriter);
+                Config.WriteResultsFileReportCommands(commandWriter);
             }
 
             return commandWriter.ReturnCommandFile();
@@ -266,14 +281,14 @@ namespace SkylineBatch
         public void Cancel()
         {
             if (IsRunning()) 
-                ChangeStatus(RunnerStatus.Cancelling);
+                ChangeStatus(RunnerStatus.Canceling);
             if (IsWaiting())
                 ChangeStatus(RunnerStatus.Stopped);                                                                                            
         }
 
         public bool IsCancelling()
         {
-            return _runnerStatus == RunnerStatus.Cancelling;
+            return _runnerStatus == RunnerStatus.Canceling;
         }
         
         public bool IsBusy()

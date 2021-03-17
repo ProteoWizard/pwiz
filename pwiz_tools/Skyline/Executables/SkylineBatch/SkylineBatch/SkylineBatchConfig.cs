@@ -187,6 +187,13 @@ namespace SkylineBatch
             return questions;
         }
 
+        public bool RunWillOverwrite(int startStep, string configurationHeader, out StringBuilder message)
+        {
+            if (startStep != 3)
+                return MainSettings.RunWillOverwrite(startStep, configurationHeader, out message);
+            return RefineSettings.RunWillOverwrite(startStep, configurationHeader, out message);
+        }
+
         public bool TryPathReplace(string oldRoot, string newRoot, out IConfig replacedPathConfig)
         {
             var mainSettingsReplaced = MainSettings.TryPathReplace(oldRoot, newRoot, out MainSettings pathReplacedMainSettings);
@@ -234,8 +241,11 @@ namespace SkylineBatch
         public void WriteTrainMProphetCommand(CommandWriter commandWriter) => FileSettings.WriteTrainMProphetCommand(commandWriter, Name);
 
         public void WriteRefineCommands(CommandWriter commandWriter) => RefineSettings.WriteRefineCommands(commandWriter);
+        public void WriteOpenRefineFileCommand(CommandWriter commandWriter) => RefineSettings.WriteOpenRefineFileCommand(commandWriter);
 
-        public void WriteReportCommands(CommandWriter commandWriter) => ReportSettings.WriteReportCommands(commandWriter, MainSettings.AnalysisFolderPath);
+        public void WriteRefinedFileReportCommands(CommandWriter commandWriter) => ReportSettings.WriteReportCommands(commandWriter, MainSettings.AnalysisFolderPath, true);
+        public void WriteResultsFileReportCommands(CommandWriter commandWriter) => ReportSettings.WriteReportCommands(commandWriter, MainSettings.AnalysisFolderPath, false);
+
         public List<Dictionary<RRunInfo, string>> GetScriptArguments() => ReportSettings.GetScriptArguments(MainSettings.AnalysisFolderPath);
 
         #endregion

@@ -258,7 +258,7 @@ namespace SkylineBatch
         private void AddCommand(List<Tuple<RefineVariable, string>> commands, RefineVariable variable, bool input)
         {
             if (!input) return;
-            Add(commands, variable, input.ToString());
+            Add(commands, variable, string.Empty);
         }
 
         private void Add(List<Tuple<RefineVariable, string>> commands, RefineVariable variable, string value)

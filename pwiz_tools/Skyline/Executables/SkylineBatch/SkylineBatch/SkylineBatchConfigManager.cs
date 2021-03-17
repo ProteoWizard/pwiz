@@ -207,6 +207,20 @@ namespace SkylineBatch
         
         #region Run Configs
 
+        public bool WillRefine()
+        {
+            lock (_lock)
+            {
+                foreach (var iconfig in _configList)
+                {
+                    var config = (SkylineBatchConfig) iconfig;
+                    if (config.Enabled && config.RefineSettings.WillRefine())
+                        return true;
+                }
+                return false;
+            }
+        }
+
         public ConfigRunner GetSelectedConfigRunner()
         {
             lock (_lock)
@@ -230,13 +244,14 @@ namespace SkylineBatch
             {
                 // Check if files will be overwritten by run
                 var overwriteInfo = "";
-                if (startStep == 1) overwriteInfo = Resources.ConfigManager_RunAllEnabled_results_files;
-                if (startStep == 2) overwriteInfo = Resources.ConfigManager_RunAllEnabled_chromatagram_files;
-                if (startStep == 3) overwriteInfo = Resources.ConfigManager_RunAllEnabled_exported_reports;
-                if (startStep == 4) overwriteInfo = Resources.ConfigManager_RunAllEnabled_R_script_outputs;
+                if (startStep == 1) overwriteInfo = Resources.SkylineBatchConfigManager_StartBatchRun_results_files;
+                if (startStep == 2) overwriteInfo = Resources.SkylineBatchConfigManager_StartBatchRun_chromatagram_files;
+                if (startStep == 3) overwriteInfo = Resources.SkylineBatchConfigManager_StartBatchRun_refined_files;
+                if (startStep == 4) overwriteInfo = Resources.SkylineBatchConfigManager_StartBatchRun_exported_reports;
+                if (startStep == 5) overwriteInfo = Resources.SkylineBatchConfigManager_StartBatchRun_R_script_outputs;
                 var overwriteMessage = new StringBuilder();
                 overwriteMessage.Append(string.Format(
-                    Resources.ConfigManager_RunAllEnabled_Running_the_enabled_configurations_from_step__0__would_overwrite_the_following__1__,
+                    Resources.SkylineBatchConfigManager_StartBatchRun_Running_the_enabled_configurations_from_step__0__would_overwrite_the_following__1__,
                     startStep, overwriteInfo)).AppendLine().AppendLine();
                 var showOverwriteMessage = false;
 
@@ -245,8 +260,8 @@ namespace SkylineBatch
                     var skylineBatchConfig = (SkylineBatchConfig) config;
                     if (!skylineBatchConfig.Enabled) continue;
                     var tab = "      ";
-                    var configurationHeader = tab + string.Format(Resources.ConfigManager_RunAllEnabled_Configuration___0___, skylineBatchConfig.Name)  + Environment.NewLine;
-                    var willOverwrite = skylineBatchConfig.MainSettings.RunWillOverwrite(startStep, configurationHeader, out StringBuilder message);
+                    var configurationHeader = tab + string.Format(Resources.SkylineBatchConfigManager_StartBatchRun_Configuration___0___, skylineBatchConfig.Name)  + Environment.NewLine;
+                    var willOverwrite = skylineBatchConfig.RunWillOverwrite(startStep, configurationHeader, out StringBuilder message);
                     if (willOverwrite)
                     {
                         overwriteMessage.Append(message).AppendLine();
@@ -254,7 +269,7 @@ namespace SkylineBatch
                     }
                 }
                 // Ask if run should start if files will be overwritten
-                overwriteMessage.Append(Resources.ConfigManager_RunAllEnabled_Do_you_want_to_continue_);
+                overwriteMessage.Append(Resources.SkylineBatchConfigManager_StartBatchRun_Do_you_want_to_continue_);
                 if (showOverwriteMessage)
                 {
                     if (DisplayLargeQuestion(overwriteMessage.ToString()) != DialogResult.OK)
@@ -273,8 +288,8 @@ namespace SkylineBatch
                 }
                 if (!hasEnabledConfigs)
                 {
-                    DisplayError(Resources.ConfigManager_RunAllEnabled_There_are_no_enabled_configurations_to_run_ + Environment.NewLine +
-                                 Resources.ConfigManager_RunAllEnabled_Please_check_the_checkbox_next_to_one_or_more_configurations_);
+                    DisplayError(Resources.SkylineBatchConfigManager_StartBatchRun_There_are_no_enabled_configurations_to_run_ + Environment.NewLine +
+                                 Resources.SkylineBatchConfigManager_StartBatchRun_Please_check_the_checkbox_next_to_one_or_more_configurations_);
                     return false;
                 }
             }
@@ -446,51 +461,7 @@ namespace SkylineBatch
 
         #endregion
 
-        #region UI Control
-
-        /*private void DisplayError(string message)
-        {
-            if (!_runningUi)
-                return;
-            _uiControl.DisplayError(message);
-        }
-
-        private void DisplayWarning(string message)
-        {
-            if (!_runningUi)
-                return;
-            _uiControl.DisplayWarning(message);
-        }
-
-        private DialogResult DisplayQuestion(string message)
-        {
-            if (!_runningUi)
-                return DialogResult.Yes;
-            return _uiControl.DisplayQuestion(message);
-        }
-
-        private DialogResult DisplayLargeQuestion(string message)
-        {
-            if (!_runningUi)
-                return DialogResult.Yes;
-            return _uiControl.DisplayLargeQuestion(message);
-        }
-
-        private void UpdateUiLogs()
-        {
-            if (!_runningUi)
-                return;
-            _uiControl.UpdateUiLogFiles();
-        }
-
-        private void UpdateIsRunning(bool isRunning)
-        {
-            if (!_runningUi)
-                return;
-            _uiControl.UpdateRunningButtons(isRunning);
-        }*/
         
-        #endregion
 
         #region Import/Export
 

@@ -209,7 +209,7 @@ namespace SkylineBatch
                         return true;
                     }
                     break;
-                case 3:
+                case 4:
                     var reportFiles = GetFilesInFolder(AnalysisFolderPath, TextUtil.EXT_CSV);
                     if (reportFiles.Count > 0)
                     {
@@ -220,7 +220,7 @@ namespace SkylineBatch
                         return true;
                     }
                     break;
-                case 4:
+                case 5:
                     // pass
                     break;
                 default:

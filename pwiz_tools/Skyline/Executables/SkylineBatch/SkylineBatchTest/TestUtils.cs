@@ -67,7 +67,7 @@ namespace SkylineBatchTest
         public static ReportInfo GetTestReportInfo()
         {
             return new ReportInfo("UniqueReport", GetTestFilePath("UniqueReport.skyr"),
-                new List<Tuple<string, string>> {new Tuple<string, string>(GetTestFilePath("testScript.r"), "4.0.3")});
+                new List<Tuple<string, string>> {new Tuple<string, string>(GetTestFilePath("testScript.r"), "4.0.3")}, false);
         }
 
         public static SkylineSettings GetTestSkylineSettings()
@@ -98,8 +98,8 @@ namespace SkylineBatchTest
             var reportList = new List<ReportInfo>();
             var script = new List<Tuple<string, string>>()
                 {new Tuple<string, string>(GetTestFilePath("testScript.R"), "4.0.2")};
-            reportList.Add(new ReportInfo("Unique Report", GetTestFilePath("uniqueReport.skyr"), script));
-            reportList.Add(new ReportInfo("Another Unique Report", GetTestFilePath("uniqueReport.skyr"), script));
+            reportList.Add(new ReportInfo("Unique Report", GetTestFilePath("uniqueReport.skyr"), script, false));
+            reportList.Add(new ReportInfo("Another Unique Report", GetTestFilePath("uniqueReport.skyr"), script, false));
             var reports = new ReportSettings(reportList);
             var skyline = GetTestSkylineSettings();
             return new SkylineBatchConfig("TestConfig", true, DateTime.Now, main, file, refine, reports, skyline);

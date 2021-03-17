@@ -49,6 +49,15 @@ namespace SkylineBatch
             }
         }
 
+        public bool UsesRefinedFile()
+        {
+            foreach (var report in Reports)
+            {
+                if (report.UseRefineFile) return true;
+            }
+            return false;
+        }
+
         public bool TryPathReplace(string oldRoot, string newRoot, out ReportSettings pathReplacedReportSettings)
         {
             var anyReplaced = false;
@@ -95,10 +104,13 @@ namespace SkylineBatch
 
         #region Run Commands
 
-        public void WriteReportCommands(CommandWriter commandWriter, string analysisFolder)
+        public void WriteReportCommands(CommandWriter commandWriter, string analysisFolder, bool useRefineFile)
         {
             foreach(var report in Reports)
-                report.WriteAddExportReportCommand(commandWriter, analysisFolder);
+            {
+                if (useRefineFile == report.UseRefineFile)
+                    report.WriteAddExportReportCommand(commandWriter, analysisFolder);
+            }
         }
 
         public List<Dictionary<RRunInfo, string>> GetScriptArguments(string analysisFolder)
@@ -152,11 +164,12 @@ namespace SkylineBatch
         // IMMUTABLE
         // Represents a report and associated r scripts to run using that report.
         
-        public ReportInfo(string name, string path, List<Tuple<string, string>> rScripts)
+        public ReportInfo(string name, string path, List<Tuple<string, string>> rScripts, bool useRefineFile)
         {
             Name = name;
             ReportPath = path;
             RScripts = ImmutableList.Create<Tuple<string,string>>().AddRange(rScripts);
+            UseRefineFile = useRefineFile;
 
             if (string.IsNullOrWhiteSpace(Name))
             {
@@ -170,6 +183,8 @@ namespace SkylineBatch
 
         public readonly ImmutableList<Tuple<string,string>> RScripts;
 
+        public readonly bool UseRefineFile;
+
         public object[] AsObjectArray()
         {
             var scriptsString = string.Empty;
@@ -177,7 +192,8 @@ namespace SkylineBatch
             {
                 scriptsString += Path.GetFileName(script.Item1) + Environment.NewLine;
             }
-            return new object[] {Name, ReportPath, scriptsString};
+            var fileString = !UseRefineFile ? Resources.ReportInfo_AsObjectArray_Results : Resources.ReportInfo_AsObjectArray_Refined;
+            return new object[] {Name, ReportPath, scriptsString, fileString};
         }
 
         public void Validate()
@@ -228,7 +244,7 @@ namespace SkylineBatch
                 anyScriptReplaced = TextUtil.TryReplaceStart(oldRoot, newRoot, rScriptAndVersion.Item1, out string replacedRScript) || anyScriptReplaced;
                 replacedRScripts.Add(new Tuple<string, string>(replacedRScript, rScriptAndVersion.Item2));
             }
-            pathReplacedReportInfo = new ReportInfo(Name, replacedReportPath, replacedRScripts);
+            pathReplacedReportInfo = new ReportInfo(Name, replacedReportPath, replacedRScripts, UseRefineFile);
             return reportReplaced || anyScriptReplaced;
         }
         
@@ -236,12 +252,14 @@ namespace SkylineBatch
         {
             Name,
             Path,
+            UseRefineFile
         };
 
         public static ReportInfo ReadXml(XmlReader reader)
         {
             var name = reader.GetAttribute(Attr.Name);
             var reportPath = reader.GetAttribute(Attr.Path);
+            var resultsFile = reader.GetNullableBoolAttribute(Attr.UseRefineFile);
             var rScripts = new List<Tuple<string, string>>();
             while (reader.IsStartElement() && !reader.IsEmptyElement)
             {
@@ -256,7 +274,7 @@ namespace SkylineBatch
                 }
             }
 
-            return new ReportInfo(name, reportPath, rScripts);
+            return new ReportInfo(name, reportPath, rScripts, resultsFile?? false);
         }
         
         public void WriteXml(XmlWriter writer)
@@ -264,6 +282,7 @@ namespace SkylineBatch
             writer.WriteStartElement("report_info");
             writer.WriteAttributeIfString(Attr.Name, Name);
             writer.WriteAttributeIfString(Attr.Path, ReportPath);
+            writer.WriteAttribute(Attr.UseRefineFile, UseRefineFile);
             foreach (var script in RScripts)
             {
                 writer.WriteElementString("script_path", script);
