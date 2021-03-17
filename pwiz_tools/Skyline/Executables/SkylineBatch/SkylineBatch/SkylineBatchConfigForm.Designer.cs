@@ -69,6 +69,7 @@
             this.tabSettings = new System.Windows.Forms.TabPage();
             this.label6 = new System.Windows.Forms.Label();
             this.tabRefine = new System.Windows.Forms.TabPage();
+            this.splitContainer2 = new System.Windows.Forms.SplitContainer();
             this.gridRefineInputs = new System.Windows.Forms.PropertyGrid();
             this.btnRefinedFilePath = new System.Windows.Forms.Button();
             this.textBoxRefinedFilePath = new System.Windows.Forms.TextBox();
@@ -78,9 +79,6 @@
             this.btnDeleteReport = new System.Windows.Forms.ToolStripButton();
             this.btnEditReport = new System.Windows.Forms.ToolStripButton();
             this.gridReportSettings = new System.Windows.Forms.DataGridView();
-            this.columnName = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.columnPath = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.columnScripts = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.tabSkyline = new System.Windows.Forms.TabPage();
             this.panelSkylineSettings = new System.Windows.Forms.Panel();
             this.btnCancelConfig = new System.Windows.Forms.Button();
@@ -88,6 +86,10 @@
             this.btnSaveConfig = new System.Windows.Forms.Button();
             this.btnOkConfig = new System.Windows.Forms.Button();
             this.imageListToolbarIcons = new System.Windows.Forms.ImageList(this.components);
+            this.columnName = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.columnPath = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.columnScripts = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.columnFile = new System.Windows.Forms.DataGridViewTextBoxColumn();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -96,6 +98,10 @@
             this.tabFiles.SuspendLayout();
             this.tabSettings.SuspendLayout();
             this.tabRefine.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer2)).BeginInit();
+            this.splitContainer2.Panel1.SuspendLayout();
+            this.splitContainer2.Panel2.SuspendLayout();
+            this.splitContainer2.SuspendLayout();
             this.tabReports.SuspendLayout();
             this.toolBar.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.gridReportSettings)).BeginInit();
@@ -360,15 +366,27 @@
             // 
             // tabRefine
             // 
+            this.tabRefine.Controls.Add(this.splitContainer2);
             this.tabRefine.Controls.Add(this.gridRefineInputs);
-            this.tabRefine.Controls.Add(this.checkBoxRemoveData);
-            this.tabRefine.Controls.Add(this.checkBoxRemoveDecoys);
             this.tabRefine.Controls.Add(this.label8);
             this.tabRefine.Controls.Add(this.btnRefinedFilePath);
             this.tabRefine.Controls.Add(this.textBoxRefinedFilePath);
             resources.ApplyResources(this.tabRefine, "tabRefine");
             this.tabRefine.Name = "tabRefine";
             this.tabRefine.UseVisualStyleBackColor = true;
+            // 
+            // splitContainer2
+            // 
+            resources.ApplyResources(this.splitContainer2, "splitContainer2");
+            this.splitContainer2.Name = "splitContainer2";
+            // 
+            // splitContainer2.Panel1
+            // 
+            this.splitContainer2.Panel1.Controls.Add(this.checkBoxRemoveData);
+            // 
+            // splitContainer2.Panel2
+            // 
+            this.splitContainer2.Panel2.Controls.Add(this.checkBoxRemoveDecoys);
             // 
             // gridRefineInputs
             // 
@@ -389,6 +407,7 @@
             // 
             resources.ApplyResources(this.textBoxRefinedFilePath, "textBoxRefinedFilePath");
             this.textBoxRefinedFilePath.Name = "textBoxRefinedFilePath";
+            this.textBoxRefinedFilePath.TextChanged += new System.EventHandler(this.textBoxRefinedFilePath_TextChanged);
             // 
             // tabReports
             // 
@@ -452,7 +471,8 @@
             this.gridReportSettings.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.columnName,
             this.columnPath,
-            this.columnScripts});
+            this.columnScripts,
+            this.columnFile});
             dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
             dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Window;
             dataGridViewCellStyle2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
@@ -475,24 +495,6 @@
             this.gridReportSettings.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.gridReportSettings.TabStop = false;
             this.gridReportSettings.SelectionChanged += new System.EventHandler(this.gridReportSettings_SelectionChanged);
-            // 
-            // columnName
-            // 
-            this.columnName.FillWeight = 90.63071F;
-            resources.ApplyResources(this.columnName, "columnName");
-            this.columnName.Name = "columnName";
-            // 
-            // columnPath
-            // 
-            this.columnPath.FillWeight = 133.2271F;
-            resources.ApplyResources(this.columnPath, "columnPath");
-            this.columnPath.Name = "columnPath";
-            // 
-            // columnScripts
-            // 
-            this.columnScripts.FillWeight = 76.14214F;
-            resources.ApplyResources(this.columnScripts, "columnScripts");
-            this.columnScripts.Name = "columnScripts";
             // 
             // tabSkyline
             // 
@@ -540,6 +542,30 @@
             this.imageListToolbarIcons.Images.SetKeyName(0, "AddedIcon.ico");
             this.imageListToolbarIcons.Images.SetKeyName(1, "DeletedIcon.ico");
             // 
+            // columnName
+            // 
+            this.columnName.FillWeight = 128.5841F;
+            resources.ApplyResources(this.columnName, "columnName");
+            this.columnName.Name = "columnName";
+            // 
+            // columnPath
+            // 
+            this.columnPath.FillWeight = 101.5228F;
+            resources.ApplyResources(this.columnPath, "columnPath");
+            this.columnPath.Name = "columnPath";
+            // 
+            // columnScripts
+            // 
+            this.columnScripts.FillWeight = 108.0281F;
+            resources.ApplyResources(this.columnScripts, "columnScripts");
+            this.columnScripts.Name = "columnScripts";
+            // 
+            // columnFile
+            // 
+            this.columnFile.FillWeight = 61.86493F;
+            resources.ApplyResources(this.columnFile, "columnFile");
+            this.columnFile.Name = "columnFile";
+            // 
             // SkylineBatchConfigForm
             // 
             this.AcceptButton = this.btnSaveConfig;
@@ -563,6 +589,12 @@
             this.tabSettings.PerformLayout();
             this.tabRefine.ResumeLayout(false);
             this.tabRefine.PerformLayout();
+            this.splitContainer2.Panel1.ResumeLayout(false);
+            this.splitContainer2.Panel1.PerformLayout();
+            this.splitContainer2.Panel2.ResumeLayout(false);
+            this.splitContainer2.Panel2.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer2)).EndInit();
+            this.splitContainer2.ResumeLayout(false);
             this.tabReports.ResumeLayout(false);
             this.tabReports.PerformLayout();
             this.toolBar.ResumeLayout(false);
@@ -614,9 +646,6 @@
         private System.Windows.Forms.RadioButton radioShuffleDecoys;
         private System.Windows.Forms.RadioButton radioReverseDecoys;
         private System.Windows.Forms.CheckBox checkBoxDecoys;
-        private System.Windows.Forms.DataGridViewTextBoxColumn columnName;
-        private System.Windows.Forms.DataGridViewTextBoxColumn columnPath;
-        private System.Windows.Forms.DataGridViewTextBoxColumn columnScripts;
         private System.Windows.Forms.Label label9;
         private System.Windows.Forms.TextBox textMsMsResolvingPower;
         private System.Windows.Forms.CheckBox checkBoxMProphet;
@@ -630,5 +659,10 @@
         private System.Windows.Forms.Label label8;
         private System.Windows.Forms.Button btnRefinedFilePath;
         private System.Windows.Forms.TextBox textBoxRefinedFilePath;
+        private System.Windows.Forms.SplitContainer splitContainer2;
+        private System.Windows.Forms.DataGridViewTextBoxColumn columnName;
+        private System.Windows.Forms.DataGridViewTextBoxColumn columnPath;
+        private System.Windows.Forms.DataGridViewTextBoxColumn columnScripts;
+        private System.Windows.Forms.DataGridViewTextBoxColumn columnFile;
     }
 }
