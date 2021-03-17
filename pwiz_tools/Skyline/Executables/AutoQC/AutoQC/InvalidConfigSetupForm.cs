@@ -60,9 +60,9 @@ namespace AutoQC
         {
             var mainSettings = _invalidConfig.MainSettings;
             var validSkylinePath = await GetValidPath("Skyline file",
-                mainSettings.SkylineFilePath, false, MainSettings.ValidateSkylineFile);
+                mainSettings.SkylineFilePath, MainSettings.ValidateSkylineFile, PathDialogOptions.File);
             var validFolderToWatch = await GetValidPath("folder to watch",
-                mainSettings.FolderToWatch, false, MainSettings.ValidateFolderToWatch);
+                mainSettings.FolderToWatch, MainSettings.ValidateFolderToWatch, PathDialogOptions.Folder);
             return new MainSettings(validSkylinePath, validFolderToWatch, mainSettings.IncludeSubfolders, mainSettings.QcFileFilter, mainSettings.RemoveResults, 
                 mainSettings.ResultsWindow.ToString(), mainSettings.InstrumentType, mainSettings.AcquisitionTime.ToString());
         }
@@ -95,11 +95,11 @@ namespace AutoQC
 
         #region Get Valid Variables
 
-        private async Task<string> GetValidPath(string variableName, string invalidPath, bool folder, Validator validator)
+        private async Task<string> GetValidPath(string variableName, string invalidPath, Validator validator, params PathDialogOptions[] pathDialogOptions)
         {
             TextUtil.TryReplaceStart(_oldRoot, _newRoot, invalidPath, out string path);
 
-            var folderControl = new FilePathControl(variableName, path, _lastInputPath, folder, validator);
+            var folderControl = new FilePathControl(variableName, path, _lastInputPath, validator, pathDialogOptions);
             path = (string)await GetValidVariable(folderControl, false);
 
             if (path.Equals(invalidPath))
