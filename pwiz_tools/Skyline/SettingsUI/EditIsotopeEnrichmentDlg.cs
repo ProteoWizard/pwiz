@@ -161,7 +161,7 @@ namespace pwiz.Skyline.SettingsUI
         private void InvalidCell(DataGridViewCell cell,
             string message, params object[] args)
         {            
-            MessageDlg.Show(this,string.Format(message, args));
+            MessageDlg.Show(FormUtil.FindTopLevelOwner(this),string.Format(message, args));
             gridEnrichments.Focus();
             gridEnrichments.ClearSelection();
             cell.Selected = true;
