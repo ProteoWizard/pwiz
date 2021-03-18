@@ -24,10 +24,12 @@ using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Chemistry;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.SettingsUI
 {
@@ -497,18 +499,21 @@ namespace pwiz.Skyline.SettingsUI
         private void helpToolStripMenuItem_Click(object sender, EventArgs e)
         {
             var helpText = FormulaHelpText;
-            MessageBox.Show(this, helpText, Resources.FormulaBox_helpToolStripMenuItem_Click_Formula_Help);
+
+            // CONSIDER(bspratt) use DocumentationViewer instead, this is quite a lot of text
+            MessageDlg.Show(this, helpText);
         }
 
         private string FormulaHelpText
         {
             get
             {
-                var helpText = Resources.FormulaBox_FormulaHelpText_Formulas_are_written_in_standard_chemical_notation__e_g___C2H6O____Heavy_isotopes_are_indicated_by_a_prime__e_g__C__for_C13__or_double_prime_for_less_abundant_stable_iostopes__e_g__O__for_O17__O__for_O18__;
+                var helpText = TextUtil.LineSeparate(Resources.FormulaBox_helpToolStripMenuItem_Click_Formula_Help, 
+                    string.Empty,
+                    Resources.FormulaBox_FormulaHelpText_Formulas_are_written_in_standard_chemical_notation__e_g___C2H6O____Heavy_isotopes_are_indicated_by_a_prime__e_g__C__for_C13__or_double_prime_for_less_abundant_stable_iostopes__e_g__O__for_O17__O__for_O18__);
                 if (_editMode != EditMode.formula_only)
                 {
-                    // ReSharper disable once LocalizableElement
-                    helpText += "\r\n\r\n" + Adduct.Tips; // Charge implies ion formula, so help with adduct descriptions as well
+                    helpText = TextUtil.LineSeparate(helpText, string.Empty, Adduct.Tips); // Charge implies ion formula, so help with adduct descriptions as well
                 }
                 return helpText;
             }
