@@ -190,12 +190,16 @@ namespace pwiz.Skyline.Model
                     var lossMod = lossOnlyMods.FirstOrDefault(m => m.IsLoss(aa, indexAAInSeq, aas.Length));
                     if (lossMod != null)
                     {
-                        yield return new AAModInfo
+                        var info = new AAModInfo
                         {
                             ModKey = new AAModKey { Name = lossMod.Name, AA = aa, Terminus = lossMod.Terminus },
                             IndexAA = indexAA,
                             IndexAAInSeq = indexAAInSeq,
                         };
+                        // Make sure this key finds a modification in the Matches dictionary
+                        if (!Matches.ContainsKey(info.ModKey))
+                            Matches.Add(info.ModKey, new AAModMatch {StructuralMod = lossMod});
+                        yield return info;
                     }
                     else if (includeUnmod)
                     {
