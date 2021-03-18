@@ -596,7 +596,7 @@ namespace pwiz.Skyline
                             var message = TextUtil.SpaceSeparate(
                                 Resources.SkylineWindow_FindIrtDatabase_The_database_file_specified_could_not_be_opened,
                                 e.Message);
-                            MessageDlg.Show(this, message);
+                            MessageDlg.Show(parent, message);
                         }
                     }
                     else
