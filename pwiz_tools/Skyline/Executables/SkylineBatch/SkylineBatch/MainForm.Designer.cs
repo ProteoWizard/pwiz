@@ -215,7 +215,6 @@
             // 
             this.tabFront.BackColor = System.Drawing.Color.Transparent;
             this.tabFront.Controls.Add(this.listViewConfigs);
-            this.tabFront.Controls.Add(this.btnViewLog);
             this.tabFront.Controls.Add(this.labelSavedConfigurations);
             this.tabFront.Controls.Add(this.panel2);
             this.tabFront.Controls.Add(this.panel1);
@@ -265,6 +264,7 @@
             // 
             resources.ApplyResources(this.panel2, "panel2");
             this.panel2.Controls.Add(this.btnRunOptions);
+            this.panel2.Controls.Add(this.btnViewLog);
             this.panel2.Controls.Add(this.btnCancel);
             this.panel2.Controls.Add(this.lblNoConfigs);
             this.panel2.Controls.Add(this.btnRunBatch);
