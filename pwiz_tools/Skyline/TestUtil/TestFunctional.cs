@@ -1048,7 +1048,7 @@ namespace pwiz.SkylineTestUtil
         public static void PauseTestUI(string description = null)
         {
             if (!Program.SkylineOffscreen)
-                MessageBox.Show(description ?? string.Empty, @"Test paused on UI thread",
+                MessageBox.Show(description ?? string.Empty, @"Test paused on UI thread", // Purposely using MessageBox here so that owner is properly set
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Information);
         }
