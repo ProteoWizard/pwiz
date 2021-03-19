@@ -204,16 +204,8 @@ namespace SkylineBatch
                     if (cmd.ExitCode != 0)
                         ChangeStatus(RunnerStatus.Error);
             };
-            cmd.OutputDataReceived += (s, e) =>
-            {
-                if (e.Data != null && _logger != null)
-                    _logger.Log(e.Data);
-            };
-            cmd.ErrorDataReceived += (s, e) =>
-            {
-                if (e.Data != null && _logger != null)
-                    _logger.LogError(e.Data);
-            };
+            cmd.OutputDataReceived += DataReceived;
+            cmd.ErrorDataReceived += DataReceived;
             cmd.Start();
             cmd.BeginOutputReadLine();
             cmd.BeginErrorReadLine();
@@ -230,6 +222,17 @@ namespace SkylineBatch
                 // make sure no process children left running
                 await KillProcessChildren((UInt32)cmd.Id);
                 if (!cmd.HasExited) cmd.Kill();
+            }
+        }
+
+        private void DataReceived(object s, DataReceivedEventArgs e)
+        {
+            if (e.Data != null && _logger != null)
+            {
+                if (e.Data.StartsWith("Error") || e.Data.StartsWith("Fatal error"))
+                    _logger.LogError(e.Data);
+                else
+                    _logger.Log(e.Data);
             }
         }
 

@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq.Expressions;
 using System.Text;
 using SharedBatch.Properties;
 
@@ -215,7 +216,6 @@ using SharedBatch.Properties;
 
         private void LogErrorToFile(string message)
         {
-            message = string.Format(Resources.Logger_LogErrorToFile_ERROR___0_, message);
             WriteToFile(message);
         }
 
@@ -249,6 +249,7 @@ using SharedBatch.Properties;
             {
                 line = string.Format(line, args);
             }
+            line = string.Format(Resources.Logger_LogErrorToFile_ERROR___0_, line);
 
             var exStr = ex != null ? ex.ToString() : string.Empty;
             if (_mainUi != null)
@@ -268,6 +269,10 @@ using SharedBatch.Properties;
             {
                 line = string.Format(line, args);
             }
+
+            if (line.StartsWith(Resources.Logger_LogError_Error_, StringComparison.CurrentCultureIgnoreCase))
+                line = line.Substring(Resources.Logger_LogError_Error_.Length);
+            line = string.Format(Resources.Logger_LogErrorToFile_ERROR___0_, line);
 
             if (_mainUi != null)
             {
@@ -416,9 +421,7 @@ using SharedBatch.Properties;
 
                 foreach (var line in lines)
                 {
-                    // CONSIDER: Find a different way to determine errors
-                    var error = line.Contains("Fatal error: ") || line.Contains("Error: ");
-                    if (error)
+                    if (line.Contains(string.Format(Resources.Logger_LogErrorToFile_ERROR___0_, string.Empty)))
                     {
                         if (!lastLineErr && toLog.Count > 0)
                         {

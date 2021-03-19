@@ -392,6 +392,15 @@ namespace SharedBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error:.
+        /// </summary>
+        internal static string Logger_LogError_Error_ {
+            get {
+                return ResourceManager.GetString("Logger_LogError_Error_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to ERROR: {0}.
         /// </summary>
         internal static string Logger_LogErrorToFile_ERROR___0_ {

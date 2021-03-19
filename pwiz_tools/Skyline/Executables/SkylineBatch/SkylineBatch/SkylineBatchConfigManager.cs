@@ -452,6 +452,8 @@ namespace SkylineBatch
         {
             lock (_loggerLock)
             {
+                var oldSelectedLog = _logList[SelectedLog].Name;
+                SelectedLog = 0;
                 int i = 0;
                 while (i < _logList.Count)
                 {
@@ -459,11 +461,17 @@ namespace SkylineBatch
                     {
                         _logList[i].Delete(); // closes and deletes log file
                         _logList.RemoveAt(i); // removes from list
-                        if (i <= SelectedLog - 1)
-                            SelectedLog = SelectedLog - 1 == i ? 0 : SelectedLog - 1;
                         continue;
                     }
                     i++;
+                }
+                for (int j = 0; j < _logList.Count; j++)
+                {
+                    if (_logList[j].Name.Equals(oldSelectedLog))
+                    {
+                        SelectedLog = j;
+                        break;
+                    }
                 }
                 UpdateUiLogs();
             }

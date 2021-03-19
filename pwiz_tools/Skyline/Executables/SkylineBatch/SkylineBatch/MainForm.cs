@@ -509,11 +509,6 @@ namespace SkylineBatch
             RunUi(() =>
             {
                 if (comboLogList.SelectedIndex != 0) return; // don't log if old log is displayed
-                if (text.Contains("Fatal error: ") || text.Contains("Error: "))
-                {
-                    LogErrorToUi(name, text, scrollToEnd, trim);
-                    return;
-                }
 
                 if (trim)
                 {

@@ -303,4 +303,7 @@
   <data name="TextUtil_FILTER_QCFG_AutoQC_Configuration_Files" xml:space="preserve">
     <value>AutoQC Configuration Files</value>
   </data>
+  <data name="Logger_LogError_Error_" xml:space="preserve">
+    <value>Error:</value>
+  </data>
 </root>
