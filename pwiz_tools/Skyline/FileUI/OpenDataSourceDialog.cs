@@ -427,7 +427,7 @@ namespace pwiz.Skyline.FileUI
                         Application.DoEvents();
                         if (_abortPopulateList)
                         {
-                            //MessageBox.Show( "abort" );
+                            //MessageDlg.Show( "abort" );
                             break;
                         }
                     }
@@ -440,7 +440,7 @@ namespace pwiz.Skyline.FileUI
                             Application.DoEvents();
                             if (_abortPopulateList)
                             {
-                                //MessageBox.Show( "abort" );
+                                //MessageDlg.Show( "abort" );
                                 break;
                             }
                         }

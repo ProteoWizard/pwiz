@@ -182,8 +182,7 @@ namespace pwiz.Skyline.SettingsUI
                 return null;
             if (!document.Settings.MeasuredResults.IsLoaded)
             {
-                MessageBox.Show(this, Resources.EditDPDlg_GetRegressionData_Measured_results_must_be_completely_loaded_before_they_can_be_used_to_create_a_declustering_potential_regression,
-                                Program.Name);
+                MessageDlg.Show(this, Resources.EditDPDlg_GetRegressionData_Measured_results_must_be_completely_loaded_before_they_can_be_used_to_create_a_declustering_potential_regression);
                 return null;
             }
 
