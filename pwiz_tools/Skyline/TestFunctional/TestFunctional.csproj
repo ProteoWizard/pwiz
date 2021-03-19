@@ -168,6 +168,7 @@
     <Compile Include="CrosslinkNeutralLossTest.cs" />
     <Compile Include="DdaSearchTest.cs" />
     <Compile Include="DetectionsPlotTest.cs" />
+    <Compile Include="DirtyDocumentSharingTest.cs" />
     <Compile Include="DocumentFileLockingTest.cs" />
     <Compile Include="ExplicitAnalyteConcentrationTest.cs" />
     <Compile Include="GroupComparisonRefineTest.cs" />

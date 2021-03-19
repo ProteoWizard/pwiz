@@ -70,6 +70,7 @@ using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Lists;
 using pwiz.Skyline.Model.Prosit.Communication;
 using pwiz.Skyline.Model.Prosit.Models;
+using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.Skyline.ToolsUI;
@@ -401,6 +402,8 @@ namespace pwiz.Skyline
         /// The currently saved location of the document
         /// </summary>
         public string DocumentFilePath { get; set; }
+
+        public DocumentFormat SavedDocumentFormat { get; private set; }
 
         public BackgroundProteomeManager BackgroundProteomeManager
         {
@@ -868,6 +871,7 @@ namespace pwiz.Skyline
                 else
                 {
                     _savedVersion = document.UserRevisionIndex;
+                    SavedDocumentFormat = document.FormatVersion;
 
                     SetActiveFile(pathOnDisk);                    
                 }
