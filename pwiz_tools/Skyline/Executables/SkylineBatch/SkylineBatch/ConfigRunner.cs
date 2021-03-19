@@ -194,6 +194,7 @@ namespace SkylineBatch
             cmd.StartInfo.Arguments = arguments;
             cmd.StartInfo.RedirectStandardInput = true;
             cmd.StartInfo.RedirectStandardOutput = true;
+            cmd.StartInfo.RedirectStandardError = true;
             cmd.StartInfo.CreateNoWindow = true;
             cmd.StartInfo.UseShellExecute = false;
             cmd.EnableRaisingEvents = true;
@@ -206,12 +207,16 @@ namespace SkylineBatch
             cmd.OutputDataReceived += (s, e) =>
             {
                 if (e.Data != null && _logger != null)
-                {
                     _logger.Log(e.Data);
-                }
+            };
+            cmd.ErrorDataReceived += (s, e) =>
+            {
+                if (e.Data != null && _logger != null)
+                    _logger.LogError(e.Data);
             };
             cmd.Start();
             cmd.BeginOutputReadLine();
+            cmd.BeginErrorReadLine();
             // Add process to tracker so the OS will dispose of it if SkylineBatch exits/crashes
             ChildProcessTracker.AddProcess(cmd);
             while (!cmd.HasExited && IsRunning())
