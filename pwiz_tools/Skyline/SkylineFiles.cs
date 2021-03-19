@@ -596,7 +596,7 @@ namespace pwiz.Skyline
                             var message = TextUtil.SpaceSeparate(
                                 Resources.SkylineWindow_FindIrtDatabase_The_database_file_specified_could_not_be_opened,
                                 e.Message);
-                            MessageBox.Show(message);
+                            MessageDlg.Show(parent, message);
                         }
                     }
                     else
@@ -674,7 +674,7 @@ namespace pwiz.Skyline
                             var message = TextUtil.SpaceSeparate(
                                 Resources.SkylineWindow_FindOptimizationDatabase_The_database_file_specified_could_not_be_opened_,
                                 e.Message);
-                            MessageBox.Show(message);
+                            MessageDlg.Show(parent, message);
                         }
                     }
                     else
@@ -749,7 +749,7 @@ namespace pwiz.Skyline
                             var message = TextUtil.SpaceSeparate(
                                 Resources.SkylineWindow_FindIonMobilityDatabase_The_ion_mobility_library_specified_could_not_be_opened_,
                                 e.Message); 
-                            MessageBox.Show(message);
+                            MessageDlg.Show(parent, message);
                         }
                     }
                     else
@@ -1195,8 +1195,8 @@ namespace pwiz.Skyline
             string fileName = DocumentFilePath;
             if (string.IsNullOrEmpty(fileName))
             {
-                if (MessageBox.Show(this, Resources.SkylineWindow_shareDocumentMenuItem_Click_The_document_must_be_saved_before_it_can_be_shared, 
-                    Program.Name, MessageBoxButtons.OKCancel) == DialogResult.Cancel)
+                if (MultiButtonMsgDlg.Show(this, Resources.SkylineWindow_shareDocumentMenuItem_Click_The_document_must_be_saved_before_it_can_be_shared, 
+                    MessageBoxButtons.OKCancel) == DialogResult.Cancel)
                     return;
 
                 if (!SaveDocumentAs())
@@ -2599,8 +2599,8 @@ namespace pwiz.Skyline
             {
                 if (!canChooseReplicatesForCalibration)
                 {
-                    if (MessageBox.Show(this, Resources.SkylineWindow_CheckRetentionTimeFilter_NoReplicatesAvailableForPrediction,
-                        Program.Name, MessageBoxButtons.OKCancel) == DialogResult.Cancel)
+                    if (MultiButtonMsgDlg.Show(this, Resources.SkylineWindow_CheckRetentionTimeFilter_NoReplicatesAvailableForPrediction,
+                        MessageBoxButtons.OKCancel) == DialogResult.Cancel)
                     {
                         return false;
                     }
@@ -2986,8 +2986,8 @@ namespace pwiz.Skyline
             string fileName = DocumentFilePath;
             if (string.IsNullOrEmpty(fileName))
             {
-                if (MessageBox.Show(this, Resources.SkylineWindow_ShowPublishDlg_The_document_must_be_saved_before_it_can_be_uploaded_,
-                    Program.Name, MessageBoxButtons.OKCancel) == DialogResult.Cancel)
+                if (MultiButtonMsgDlg.Show(this, Resources.SkylineWindow_ShowPublishDlg_The_document_must_be_saved_before_it_can_be_uploaded_,
+                    MessageBoxButtons.OKCancel) == DialogResult.Cancel)
                     return;
 
                 if (!SaveDocumentAs())
