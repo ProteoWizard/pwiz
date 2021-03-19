@@ -308,7 +308,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public bool IsApplicableMod(string sequence, int indexAA)
         {
-            return IsApplicable(sequence, indexAA) && HasMod;
+            return IsApplicable(sequence, indexAA); // allow loss-only mods in EditPepModsDlg - && HasMod;
         }
 
         public bool IsApplicableCrosslink(string sequence, int indexAA)
@@ -1230,7 +1230,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     if (iStaticMod == -1)
                         continue;
                     var staticMod = staticMods[iStaticMod];
-                    if(!staticMod.IsMod(Peptide.Sequence[mod.IndexAA], mod.IndexAA, Peptide.Sequence.Length))
+                    if(!staticMod.IsApplicableMod(Peptide.Sequence, mod.IndexAA))
                         continue;
                     modsNew.Add(mod.Modification.EquivalentAll(staticMod)
                         ? mod
