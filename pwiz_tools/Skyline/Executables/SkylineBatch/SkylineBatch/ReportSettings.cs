@@ -58,6 +58,14 @@ namespace SkylineBatch
             return false;
         }
 
+        public HashSet<string> RVersions()
+        {
+            var RVersions = new HashSet<string>();
+            foreach (var report in Reports)
+                RVersions.UnionWith(report.RVersions());
+            return RVersions;
+        }
+
         public bool TryPathReplace(string oldRoot, string newRoot, out ReportSettings pathReplacedReportSettings)
         {
             var anyReplaced = false;
@@ -194,6 +202,14 @@ namespace SkylineBatch
             }
             var fileString = !UseRefineFile ? Resources.ReportInfo_AsObjectArray_Results : Resources.ReportInfo_AsObjectArray_Refined;
             return new object[] {Name, ReportPath, scriptsString, fileString};
+        }
+
+        public HashSet<string> RVersions()
+        {
+            var RVersions = new HashSet<string>();
+            foreach (var rScript in RScripts)
+                RVersions.Add(rScript.Item2);
+            return RVersions;
         }
 
         public void Validate()

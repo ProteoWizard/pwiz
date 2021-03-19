@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 using SharedBatch;
 using SkylineBatch.Properties;
@@ -28,11 +29,12 @@ namespace SkylineBatch
     public partial class ReportsAddForm : Form
     {
         private readonly IMainUiControl _uiControl;
-        public ReportsAddForm(IMainUiControl uiControl, bool hasRefineFile, ReportInfo editingReport = null)
+        private readonly RDirectorySelector _rDirectorySelector;
+        public ReportsAddForm(IMainUiControl uiControl, RDirectorySelector rDirectorySelector, bool hasRefineFile, ReportInfo editingReport = null)
         {
             InitializeComponent();
             _uiControl = uiControl;
-
+            _rDirectorySelector = rDirectorySelector;
             radioResultsFile.Checked = true;
             radioRefinedFile.Enabled = hasRefineFile;
 
@@ -46,10 +48,7 @@ namespace SkylineBatch
                     dataGridScripts.Rows.Add(scriptAndVersion.Item1, scriptAndVersion.Item2);
                 }
             }
-            foreach (var version in Settings.Default.RVersions.Keys)
-            {
-                rVersionsDropDown.Items.Add(version);
-            }
+            UpdateRVersionDropDown();
         }
 
         public ReportInfo NewReportInfo { get; private set; }
@@ -58,12 +57,8 @@ namespace SkylineBatch
         {
             if (Settings.Default.RVersions.Count == 0)
             {
-                // Prevent user from adding R script if R is not installed
-                _uiControl.DisplayError(Resources.ReportsAddForm_btnAddRScript_Click_Could_not_find_any_R_Installations_in__ + Environment.NewLine + 
-                                                                    RInstallations.RLocation + Environment.NewLine +
-                                                                    Environment.NewLine +
-                                                                    Resources.ReportsAddForm_btnAddRScript_Click_Please_install_R_before_adding_R_scripts_to_this_configuration_);
-                return;
+                if (!AddRDirectory())
+                    return;
             }
 
             var fileNames = OpenRScript(textReportPath.Text, true);
@@ -161,6 +156,23 @@ namespace SkylineBatch
             }
         }
 
+        private void UpdateRVersionDropDown()
+        {
+            rVersionsDropDown.Items.Clear();
+            var sortedRVersions = Settings.Default.RVersions.Keys.ToList();
+            sortedRVersions.Sort();
+            foreach (var version in sortedRVersions)
+                rVersionsDropDown.Items.Add(version);
+        }
+
+        private bool AddRDirectory()
+        {
+            if (!_rDirectorySelector.RequiredDirectoryAdded())
+                return false;
+            UpdateRVersionDropDown();
+            return true;
+        }
+
         private void dataGridScripts_CellClick(object sender, DataGridViewCellEventArgs e)
         {
             if (e.ColumnIndex == 1 && e.RowIndex > -1 && !string.IsNullOrEmpty((string)dataGridScripts.SelectedCells[0].Value))
@@ -168,7 +180,11 @@ namespace SkylineBatch
                 var rectangle = dataGridScripts.GetCellDisplayRectangle(e.ColumnIndex, e.RowIndex, true);
                 var showLocation = new Point(rectangle.X, rectangle.Bottom);
                 SelectRVersion((string)dataGridScripts.Rows[e.RowIndex].Cells[e.ColumnIndex].Value);
-                rVersionsDropDown.Show(dataGridScripts, showLocation);
+                var dropDown = true;
+                if (Settings.Default.RVersions.Count == 0)
+                    dropDown = AddRDirectory();
+                if (dropDown)
+                    rVersionsDropDown.Show(dataGridScripts, showLocation);
             }
         }
 

@@ -227,6 +227,27 @@ namespace SharedBatch
             return _configValidation[_configList[index].GetName()];
         }
 
+        public void UpdateConfigValidation()
+        {
+            lock (_lock)
+            {
+                _configValidation.Clear();
+                foreach (var config in _configList)
+                {
+                    try
+                    {
+                        config.Validate();
+                        _configValidation.Add(config.GetName(), true);
+                    }
+                    catch (ArgumentException)
+                    {
+                        _configValidation.Add(config.GetName(), false);
+                    }
+                }
+            }
+            _uiControl.UpdateUiConfigurations();
+        }
+
         public IConfig GetLastModified() // creates config using most recently modified config
         {
             lock (_lock)
@@ -576,6 +597,9 @@ namespace SharedBatch
 
         #endregion
 
+
+        #region Logging
+
         public Logger GetSelectedLogger()
         {
             return _logList[SelectedLog];
@@ -631,6 +655,8 @@ namespace SharedBatch
             }
             return config;
         }
+
+        #endregion
     }
 }
 

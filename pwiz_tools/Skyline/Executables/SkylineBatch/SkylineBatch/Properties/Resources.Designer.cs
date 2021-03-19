@@ -508,6 +508,69 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Run All Steps.
+        /// </summary>
+        internal static string MainForm_UpdateRunBatchSteps_Run_All_Steps {
+            get {
+                return ResourceManager.GetString("MainForm_UpdateRunBatchSteps_Run_All_Steps", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Run from step 2: data import.
+        /// </summary>
+        internal static string MainForm_UpdateRunBatchSteps_Run_from_step_2__data_import {
+            get {
+                return ResourceManager.GetString("MainForm_UpdateRunBatchSteps_Run_from_step_2__data_import", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Run from step 3: export reports.
+        /// </summary>
+        internal static string MainForm_UpdateRunBatchSteps_Run_from_step_3__export_reports {
+            get {
+                return ResourceManager.GetString("MainForm_UpdateRunBatchSteps_Run_from_step_3__export_reports", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Run from step 3: refine file.
+        /// </summary>
+        internal static string MainForm_UpdateRunBatchSteps_Run_from_step_3__refine_file {
+            get {
+                return ResourceManager.GetString("MainForm_UpdateRunBatchSteps_Run_from_step_3__refine_file", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Run from step 4: export reports.
+        /// </summary>
+        internal static string MainForm_UpdateRunBatchSteps_Run_from_step_4__export_reports {
+            get {
+                return ResourceManager.GetString("MainForm_UpdateRunBatchSteps_Run_from_step_4__export_reports", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Run from step 4: run R scripts.
+        /// </summary>
+        internal static string MainForm_UpdateRunBatchSteps_Run_from_step_4__run_R_scripts {
+            get {
+                return ResourceManager.GetString("MainForm_UpdateRunBatchSteps_Run_from_step_4__run_R_scripts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Run from step 5: run R scripts.
+        /// </summary>
+        internal static string MainForm_UpdateRunBatchSteps_Run_from_step_5__run_R_scripts {
+            get {
+                return ResourceManager.GetString("MainForm_UpdateRunBatchSteps_Run_from_step_5__run_R_scripts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Please specify a path to {0}.
         /// </summary>
         internal static string MainSettings_CheckIfEmptyPath_Please_specify_a_path_to__0_ {
@@ -920,12 +983,66 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Click next to remove R scripts from this configuration..
+        ///   Looks up a localized string similar to No R installations were found in: {0}.
         /// </summary>
-        internal static string RVersionControl_RVersionControl_Click_next_to_remove_R_scripts_from_this_configuration_ {
+        internal static string RInstallations_AddRDirectory_No_R_installations_were_found_in___0_ {
             get {
-                return ResourceManager.GetString("RVersionControl_RVersionControl_Click_next_to_remove_R_scripts_from_this_configur" +
-                        "ation_", resourceCulture);
+                return ResourceManager.GetString("RInstallations_AddRDirectory_No_R_installations_were_found_in___0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please choose a directory with R installations..
+        /// </summary>
+        internal static string RInstallations_AddRDirectory_Please_choose_a_directory_with_R_installations_ {
+            get {
+                return ResourceManager.GetString("RInstallations_AddRDirectory_Please_choose_a_directory_with_R_installations_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please enter a different directory..
+        /// </summary>
+        internal static string RInstallations_AddRDirectory_Please_enter_a_different_directory_ {
+            get {
+                return ResourceManager.GetString("RInstallations_AddRDirectory_Please_enter_a_different_directory_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please enter a valid directory..
+        /// </summary>
+        internal static string RInstallations_AddRDirectory_Please_enter_a_valid_directory_ {
+            get {
+                return ResourceManager.GetString("RInstallations_AddRDirectory_Please_enter_a_valid_directory_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to R installation directory not found: {0}.
+        /// </summary>
+        internal static string RInstallations_AddRDirectory_R_installation_directory_not_found___0_ {
+            get {
+                return ResourceManager.GetString("RInstallations_AddRDirectory_R_installation_directory_not_found___0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The R directory is already used to find R installations: {0}.
+        /// </summary>
+        internal static string RInstallations_AddRDirectory_The_R_directory_is_already_used_to_find_R_installations___0_ {
+            get {
+                return ResourceManager.GetString("RInstallations_AddRDirectory_The_R_directory_is_already_used_to_find_R_installati" +
+                        "ons___0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No R version selected. Please choose an R version..
+        /// </summary>
+        internal static string RVersionControl_IsValid_No_R_version_selected__Please_choose_an_R_version_ {
+            get {
+                return ResourceManager.GetString("RVersionControl_IsValid_No_R_version_selected__Please_choose_an_R_version_", resourceCulture);
             }
         }
         
@@ -936,6 +1053,15 @@ namespace SkylineBatch.Properties {
             get {
                 return ResourceManager.GetString("RVersionControl_RVersionControl_Could_not_find_any_R_installations_on_this_comput" +
                         "er_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please add an R installation directory..
+        /// </summary>
+        internal static string RVersionControl_RVersionControl_Please_add_an_R_installation_directory_ {
+            get {
+                return ResourceManager.GetString("RVersionControl_RVersionControl_Please_add_an_R_installation_directory_", resourceCulture);
             }
         }
         

@@ -18,23 +18,23 @@ namespace SkylineBatch
         private SkylineBatchConfig _invalidConfig;
         private readonly SkylineBatchConfigManager _configManager;
         private readonly IMainUiControl _mainControl;
+        private readonly RDirectorySelector _rDirectorySelector;
 
         private string _lastInputPath; // the last user-entered file or folder path
-        private bool _removeRScripts; // if all R scripts should be automatically removed from the configuration
-                                      // (true iff R is not installed and the user chooses to remove scripts)
 
         private bool _askedAboutRootReplacement; // if the user has been asked about replacing path roots for this configuration
 
-        public InvalidConfigSetupForm(SkylineBatchConfig invalidConfig, SkylineBatchConfigManager configManager, IMainUiControl mainControl)
+        public InvalidConfigSetupForm(IMainUiControl mainControl, SkylineBatchConfig invalidConfig, SkylineBatchConfigManager configManager, RDirectorySelector rDirectorySelector)
         {
             InitializeComponent();
             _invalidConfig = invalidConfig;
             _configManager = configManager;
+            _rDirectorySelector = rDirectorySelector;
             _mainControl = mainControl;
             CreateValidConfig();
         }
 
-        public SkylineBatchConfig ValidConfig { get; private set; }
+        public SkylineBatchConfig Config { get; private set; }
 
         private MainSettings mainSettings => _invalidConfig.MainSettings;
         private RefineSettings refineSettings => _invalidConfig.RefineSettings;
@@ -48,12 +48,23 @@ namespace SkylineBatch
             var validReportSettings = await FixInvalidReportSettings();
             var validSkylineSettings = await FixInvalidSkylineSettings();
             // create valid configuration
-            ValidConfig = new SkylineBatchConfig(_invalidConfig.Name, _invalidConfig.Enabled, DateTime.Now, 
+            Config = new SkylineBatchConfig(_invalidConfig.Name, _invalidConfig.Enabled, DateTime.Now, 
                 validMainSettings, _invalidConfig.FileSettings, validRefineSettings, 
                 validReportSettings, validSkylineSettings);
-            // save invalid configuration
-            _configManager.ReplaceSelectedConfig(ValidConfig);
+            // replace old configuration
+            _configManager.ReplaceSelectedConfig(Config);
             _mainControl.UpdateUiConfigurations();
+            CloseSetup();
+        }
+
+        private void btnSkip_Click(object sender, EventArgs e)
+        {
+            Config = _invalidConfig;
+            CloseSetup();
+        }
+
+        private void CloseSetup()
+        {
             DialogResult = DialogResult.OK;
             Close();
         }
@@ -92,22 +103,14 @@ namespace SkylineBatch
                         report.Name), report.ReportPath, 
                     ReportInfo.ValidateReportPath, PathDialogOptions.File);
                 var validScripts = new List<Tuple<string, string>>();
-                if (!_removeRScripts)
+                foreach (var scriptAndVersion in report.RScripts)
                 {
-                    foreach (var scriptAndVersion in report.RScripts)
-                    {
-                        var validVersion = await GetValidRVersion(scriptAndVersion.Item1, scriptAndVersion.Item2);
-                        if (validVersion == null)
-                        {
-                            _removeRScripts = true;
-                            break;
-                        }
-                        var validRScript = await GetValidPath(string.Format(Resources.InvalidConfigSetupForm_FixInvalidReportSettings__0__R_script, Path.GetFileNameWithoutExtension(scriptAndVersion.Item1)),
-                            scriptAndVersion.Item1, 
-                            ReportInfo.ValidateRScriptPath, PathDialogOptions.File);
-                        
-                        validScripts.Add(new Tuple<string, string>(validRScript, validVersion));
-                    }
+                    var validVersion = await GetValidRVersion(scriptAndVersion.Item1, scriptAndVersion.Item2);
+                    var validRScript = await GetValidPath(string.Format(Resources.InvalidConfigSetupForm_FixInvalidReportSettings__0__R_script, Path.GetFileNameWithoutExtension(scriptAndVersion.Item1)),
+                        scriptAndVersion.Item1, 
+                        ReportInfo.ValidateRScriptPath, PathDialogOptions.File);
+                    
+                    validScripts.Add(new Tuple<string, string>(validRScript, validVersion));
                 }
                 validReports.Add(new ReportInfo(report.Name, validReportPath, validScripts, report.UseRefineFile));
             }
@@ -144,7 +147,7 @@ namespace SkylineBatch
         private async Task<string> GetValidRVersion(string scriptName, string invalidVersion)
         {
             var version = invalidVersion;
-            var rVersionControl = new RVersionControl(scriptName, version, _removeRScripts);
+            var rVersionControl = new RVersionControl(scriptName, version, _rDirectorySelector);
             return (string) await GetValidVariable(rVersionControl);
         }
         

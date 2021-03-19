@@ -95,6 +95,16 @@ namespace SkylineBatch
             AddConfigRunner(_configList);
         }
 
+        public HashSet<string> RVersionsUsed()
+        {
+            var RVersions = new HashSet<string>();
+            foreach (var iconfig in _configList)
+            {
+                var config = (SkylineBatchConfig)iconfig;
+                RVersions.UnionWith(config.ReportSettings.RVersions());
+            }
+            return RVersions;
+        }
 
         private void AddConfigRunner(IConfig config)
         {

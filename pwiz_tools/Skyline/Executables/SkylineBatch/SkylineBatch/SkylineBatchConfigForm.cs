@@ -33,6 +33,7 @@ namespace SkylineBatch
         // Running configurations cannot be replaced, and will be opened in a read only mode.
         
         private readonly IMainUiControl _mainControl;
+        private readonly RDirectorySelector _rDirectorySelector;
         private readonly bool _configEnabled;
         private readonly bool _isBusy;
         private readonly ConfigAction _action;
@@ -43,13 +44,13 @@ namespace SkylineBatch
         private SkylineTypeControl _skylineTypeControl;
         private string _lastEnteredPath;
 
-        public SkylineBatchConfigForm(IMainUiControl mainControl, SkylineBatchConfig config, ConfigAction action, bool isBusy)
+        public SkylineBatchConfigForm(IMainUiControl mainControl, RDirectorySelector rDirectorySelector, SkylineBatchConfig config, ConfigAction action, bool isBusy)
         {
             InitializeComponent();
             _action = action;
             _refineInput = config != null ? new RefineInputObject(config.RefineSettings.CommandValues) : new RefineInputObject();
             _newReportList = new List<ReportInfo>();
-
+            _rDirectorySelector = rDirectorySelector;
             _mainControl = mainControl;
             if (config != null)
                 _configEnabled = config.Enabled;
@@ -314,7 +315,7 @@ namespace SkylineBatch
 
         private void ShowAddReportDialog(int addingIndex, ReportInfo editingReport = null)
         {
-            var addReportsForm = new ReportsAddForm(_mainControl, !string.IsNullOrEmpty(textBoxRefinedFilePath.Text), editingReport);
+            var addReportsForm = new ReportsAddForm(_mainControl, _rDirectorySelector, !string.IsNullOrEmpty(textBoxRefinedFilePath.Text), editingReport);
             var addReportResult = addReportsForm.ShowDialog();
 
             if (addReportResult == DialogResult.OK)

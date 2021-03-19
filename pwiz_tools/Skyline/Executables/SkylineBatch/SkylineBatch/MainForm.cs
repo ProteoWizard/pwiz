@@ -33,6 +33,7 @@ namespace SkylineBatch
 
         private readonly SkylineBatchConfigManager _configManager;
         private readonly Logger _skylineBatchLogger;
+        private readonly RDirectorySelector _rDirectorySelector;
         private bool _loaded;
         private readonly ColumnWidthCalculator _listViewColumnWidths;
         private bool _showRefineStep;
@@ -50,12 +51,17 @@ namespace SkylineBatch
             listViewConfigs.ColumnWidthChanged += listViewConfigs_ColumnWidthChanged;
             ProgramLog.Info(Resources.MainForm_MainForm_Loading_configurations_from_saved_settings_);
             _configManager = new SkylineBatchConfigManager(_skylineBatchLogger, this);
+            _rDirectorySelector = new RDirectorySelector(this, _configManager);
 
             UpdateUiConfigurations();
             ListViewSizeChanged();
             UpdateUiLogFiles();
 
-            Shown += ((sender, args) => { _loaded = true; });
+            Shown += ((sender, args) =>
+            {
+                _loaded = true;
+                _rDirectorySelector.AddIfNecassary();
+            });
         }
 
         private void RunUi(Action action)
@@ -90,7 +96,7 @@ namespace SkylineBatch
         {
             ProgramLog.Info(Resources.MainForm_btnNewConfig_Click_Creating_a_new_configuration_);
             var initialConfigValues = (SkylineBatchConfig)_configManager.GetLastModified();
-            var configForm = new SkylineBatchConfigForm(this, initialConfigValues, ConfigAction.Add, false);
+            var configForm = new SkylineBatchConfigForm(this, _rDirectorySelector, initialConfigValues, ConfigAction.Add, false);
             configForm.ShowDialog();
         }
 
@@ -125,19 +131,19 @@ namespace SkylineBatch
             catch (ArgumentException)
             {
                 if (configRunner.IsRunning()) throw new Exception("Invalid configuration cannot be running.");
-                var validateConfigForm = new InvalidConfigSetupForm(config, _configManager, this);
+                var validateConfigForm = new InvalidConfigSetupForm(this, config, _configManager, _rDirectorySelector);
                 validateConfigForm.ShowDialog();
+
                 if (validateConfigForm.DialogResult != DialogResult.OK)
                     return;
-                config = validateConfigForm.ValidConfig;
             }
-            var configForm = new SkylineBatchConfigForm(this, config, ConfigAction.Edit, configRunner.IsBusy());
+            var configForm = new SkylineBatchConfigForm(this, _rDirectorySelector, _configManager.GetSelectedConfig(), ConfigAction.Edit, configRunner.IsBusy());
             configForm.ShowDialog();
         }
 
         private void btnCopy_Click(object sender, EventArgs e)
         {
-            var configForm = new SkylineBatchConfigForm(this, _configManager.GetSelectedConfig(), ConfigAction.Copy, false);
+            var configForm = new SkylineBatchConfigForm(this, _rDirectorySelector, _configManager.GetSelectedConfig(), ConfigAction.Copy, false);
             configForm.ShowDialog();
         }
 
@@ -391,18 +397,18 @@ namespace SkylineBatch
                     }
                 }
                     batchRunDropDown.Items.Clear();
-                batchRunDropDown.Items.Add("Run All Steps");
-                batchRunDropDown.Items.Add("Run from step 2: data import");
+                batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Run_All_Steps);
+                batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Run_from_step_2__data_import);
                 if (_showRefineStep)
                 {
-                    batchRunDropDown.Items.Add("Run from step 3: refine file");
-                    batchRunDropDown.Items.Add("Run from step 4: export reports");
-                    batchRunDropDown.Items.Add("Run from step 5: run R scripts");
+                    batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Run_from_step_3__refine_file);
+                    batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Run_from_step_4__export_reports);
+                    batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Run_from_step_5__run_R_scripts);
                 }
                 else
                 {
-                    batchRunDropDown.Items.Add("Run from step 3: export reports");
-                    batchRunDropDown.Items.Add("Run from step 4: run R scripts");
+                    batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Run_from_step_3__export_reports);
+                    batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Run_from_step_4__run_R_scripts);
                 }
 
                 var newChecked = oldChecked;
@@ -429,6 +435,9 @@ namespace SkylineBatch
 
             _configManager.Import(filePath);
             UpdateUiConfigurations();
+
+            if (!_rDirectorySelector.ShownDialog)
+                 _rDirectorySelector.AddIfNecassary();
         }
 
         private void btnExport_Click(object sender, EventArgs e)
