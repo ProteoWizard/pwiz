@@ -25985,6 +25985,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Current saved file ({0}).
+        /// </summary>
+        public static string ShareTypeDlg_ShareTypeDlg_Current_saved_file___0__ {
+            get {
+                return ResourceManager.GetString("ShareTypeDlg_ShareTypeDlg_Current_saved_file___0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cannot open output file..
         /// </summary>
         public static string ShimadzuMethodExporter_ExportMethod_Cannot_open_output_file_ {
@@ -26473,20 +26482,20 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Current ({0}).
-        /// </summary>
-        public static string SkylineVersion_GetCurrentVersionName_Current___0__ {
-            get {
-                return ResourceManager.GetString("SkylineVersion_GetCurrentVersionName_Current___0__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Developer Build.
         /// </summary>
         public static string SkylineVersion_GetCurrentVersionName_Developer_Build {
             get {
                 return ResourceManager.GetString("SkylineVersion_GetCurrentVersionName_Developer_Build", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Latest ({0}).
+        /// </summary>
+        public static string SkylineVersion_GetCurrentVersionName_Latest___0__ {
+            get {
+                return ResourceManager.GetString("SkylineVersion_GetCurrentVersionName_Latest___0__", resourceCulture);
             }
         }
         
