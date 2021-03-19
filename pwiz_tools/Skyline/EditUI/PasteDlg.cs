@@ -880,19 +880,23 @@ namespace pwiz.Skyline.EditUI
             var helpText = Resources.PasteDlg_btnTransitionListHelp_Click_;
             if (btnCustomMoleculeColumns.Visible)
             {
-                helpText = Resources.PasteDlg_btnTransitionListHelp_Click_SmallMol_ +
-                    string.Join(", ", SmallMoleculeTransitionListColumnHeaders.KnownHeaders) +
-                    "\r\n" +
+                helpText = TextUtil.LineSeparate(Resources.PasteDlg_btnTransitionListHelp_Click_SmallMol_,
+                    string.Join(", ", SmallMoleculeTransitionListColumnHeaders.KnownHeaders),
                     string.Format(Resources.PasteDlg_btnTransitionListHelp_Click_Supported_values_for__0__are___1_, SmallMoleculeTransitionListColumnHeaders.imUnits, string.Join(", ", Enum.GetNames(typeof(eIonMobilityUnits))))+
-                    "\r\n\r\n" + 
-                    Resources.PasteDlg_btnTransitionListHelp_Click_2_ +
-                    "\r\n\r\n" + 
+                    string.Empty,
+                    Resources.PasteDlg_btnTransitionListHelp_Click_2_,
+                    string.Empty,
                     Resources.FormulaBox_FormulaHelpText_Formulas_are_written_in_standard_chemical_notation__e_g___C2H6O____Heavy_isotopes_are_indicated_by_a_prime__e_g__C__for_C13__or_double_prime_for_less_abundant_stable_iostopes__e_g__O__for_O17__O__for_O18__ +
-                    "\r\n\r\n" + 
-                    Adduct.Tips;
+                    string.Empty,
+                    Adduct.Tips);
             }
+
+            // CONSIDER(bspratt) use DocumentationViewer instead, this is quite a lot of text
+            helpText = TextUtil.LineSeparate(Resources.PasteDlg_btnTransitionListHelp_Click_Transition_List_Help,
+                string.Empty,
+                helpText);
             // ReSharper restore LocalizableElement
-            MessageBox.Show(this, helpText, Resources.PasteDlg_btnTransitionListHelp_Click_Transition_List_Help);
+            MessageDlg.Show(this, helpText);
         }
 
         private void btnCancel_Click(object sender, EventArgs e)
