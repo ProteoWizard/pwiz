@@ -140,7 +140,7 @@
     <Compile Include="BilinearCurveFitTest.cs" />
     <Compile Include="BookmarkEnumeratorTest.cs" />
     <Compile Include="ChromatogramExporterTest.cs" />
-    <Compile Include="ClusteredHeatMapItemTest.cs" />
+    <Compile Include="StripePainterTest.cs" />
     <Compile Include="ComplexFragmentIonTest.cs" />
     <Compile Include="ObjectSizeTest.cs" />
     <Compile Include="ChromPeakTest.cs" />
@@ -247,10 +247,6 @@
     <ProjectReference Include="..\..\Shared\ProteomeDb\ProteomeDb.csproj">
       <Project>{09FC3CB3-FCCD-4906-A370-160B28725936}</Project>
       <Name>ProteomeDb</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Shared\zedgraph\ZedGraph.csproj">
-      <Project>{b99650ee-af46-47b4-a4a9-212ade7809b7}</Project>
-      <Name>ZedGraph</Name>
     </ProjectReference>
     <ProjectReference Include="..\CommonTest\CommonTest.csproj">
       <Project>{3F077244-13E5-4815-BA55-31F030042E06}</Project>

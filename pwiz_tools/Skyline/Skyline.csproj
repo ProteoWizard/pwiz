@@ -5260,7 +5260,7 @@
       <Name>ProteowizardWrapper</Name>
     </ProjectReference>
     <ProjectReference Include="..\Shared\zedgraph\ZedGraph.csproj">
-      <Project>{B99650EE-AF46-47B4-A4A9-212ADE7809B7}</Project>
+      <Project>{b99650ee-af46-47b4-a4a9-212ade7809b7}</Project>
       <Name>ZedGraph</Name>
     </ProjectReference>
     <ProjectReference Include="SkylineCmd\SkylineCmd.csproj">
