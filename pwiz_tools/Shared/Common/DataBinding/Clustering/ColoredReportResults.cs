@@ -100,19 +100,22 @@ namespace pwiz.Common.DataBinding.Clustering
             var colorManagers = new Dictionary<string, ColorManager>();
             var columnHeaderValues = new Dictionary<string, object>();
             var seriesColorManagers = new Dictionary<object, ColorManager>();
-            foreach (var property in reportResults.ClusteredProperties.RowHeaders)
+            if (clusteredReportResults.RowDendrogramData != null)
             {
-                cancellationToken.ThrowIfCancellationRequested();
-                if (ClusterRole.IsNumericType(property.PropertyType))
+                foreach (var property in reportResults.ClusteredProperties.RowHeaders)
                 {
-                    var colorScheme = new NumericColorScheme();
-                    colorScheme.AddValues(reportResults.RowItems.Select(row => property.GetValue(row)));
-                    colorManagers[property.Name] = new ColorManager(colorScheme, new[] { property }, null);
-                }
-                else
-                {
-                    distinctValues.UnionWith(reportResults.RowItems.Select(property.GetValue).Where(v => null != v));
-                    colorManagers[property.Name] = new ColorManager(discreteColorScheme, new[] { property }, null);
+                    cancellationToken.ThrowIfCancellationRequested();
+                    if (ClusterRole.IsNumericType(property.PropertyType))
+                    {
+                        var colorScheme = new NumericColorScheme();
+                        colorScheme.AddValues(reportResults.RowItems.Select(row => property.GetValue(row)));
+                        colorManagers[property.Name] = new ColorManager(colorScheme, new[] { property }, null);
+                    }
+                    else
+                    {
+                        distinctValues.UnionWith(reportResults.RowItems.Select(property.GetValue).Where(v => null != v));
+                        colorManagers[property.Name] = new ColorManager(discreteColorScheme, new[] { property }, null);
+                    }
                 }
             }
             foreach (var property in reportResults.ClusteredProperties.PivotedProperties.UngroupedProperties)
