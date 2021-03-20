@@ -360,6 +360,7 @@
     <Compile Include="Controls\Clustering\PcaPlot.Designer.cs">
       <DependentUpon>PcaPlot.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\Clustering\StripePainter.cs" />
     <Compile Include="Controls\Databinding\IDataboundGridForm.cs" />
     <Compile Include="Controls\Graphs\ExportMethodScheduleGraph.cs">
       <SubType>Form</SubType>
