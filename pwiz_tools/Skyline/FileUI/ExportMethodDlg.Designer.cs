@@ -424,6 +424,7 @@
             // 
             resources.ApplyResources(this.textMs1RepetitionTime, "textMs1RepetitionTime");
             this.textMs1RepetitionTime.Name = "textMs1RepetitionTime";
+            this.helpTip.SetToolTip(this.textMs1RepetitionTime, resources.GetString("textMs1RepetitionTime.ToolTip"));
             // 
             // label1
             // 
