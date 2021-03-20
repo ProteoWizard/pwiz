@@ -90,39 +90,6 @@ namespace pwiz.Common.DataBinding.Clustering
             return colorManager.GetRowValues(rowItem).Select(colorManager.ColorScheme.GetColor);
         }
 
-        public static ReportColorScheme GetFastColorScheme(ClusteredReportResults reportResults)
-        {
-            var seriesColorManagers = new Dictionary<object, ColorManager>();
-            var colorManagers = new Dictionary<string, ColorManager>();
-            foreach (var group in reportResults.PivotedProperties.SeriesGroups)
-            {
-                foreach (var series in group.SeriesList)
-                {
-                    IColorScheme colorScheme = null;
-                    var role = reportResults.ClusteredProperties.GetColumnRole(series);
-                    if (role == ClusterRole.ZSCORE)
-                    {
-                        colorScheme = new NumericColorScheme()
-                        {
-                            MaxValue = 6,
-                            MinValue = -6
-                        };
-                    }
-
-                    if (colorScheme != null)
-                    {
-                        var colorManager = new ColorManager(colorScheme, series.PropertyDescriptors, role as ClusterRole.Transform);
-                        foreach (var pd in series.PropertyDescriptors)
-                        {
-                            colorManagers.Add(pd.Name, colorManager);
-                        }
-                        seriesColorManagers.Add(series.SeriesId, colorManager);
-                    }
-                }
-            }
-            return new ReportColorScheme(reportResults.ClusteredProperties, colorManagers, new Dictionary<string, Color>(), seriesColorManagers);
-        }
-
         public static ReportColorScheme FromClusteredResults(CancellationToken cancellationToken, ClusteredReportResults clusteredReportResults)
         {
             var discreteColorScheme = new DiscreteColorScheme();

@@ -514,9 +514,6 @@ namespace pwiz.Skyline.Controls.Clustering
                     return null;
                 }
 
-                PushResults(cancellationToken,
-                    Tuple.Create(resultsTuple.Item1,
-                        input.LastColorScheme ?? ReportColorScheme.GetFastColorScheme(resultsTuple.Item2)));
                 var finalColorScheme = ReportColorScheme.FromClusteredResults(cancellationToken, resultsTuple.Item2);
                 return Tuple.Create(resultsTuple.Item1, finalColorScheme);
             }

@@ -447,12 +447,8 @@ namespace pwiz.Skyline.Controls.Clustering
                     return null;
                 }
 
-                var initialResults = input.GetClusterGraphResults(cancellationToken, resultsTuple.Item2,
-                    input.LastColorScheme ?? ReportColorScheme.GetFastColorScheme(resultsTuple.Item2));
-                PushResults(cancellationToken, initialResults);
                 var finalColorScheme = ReportColorScheme.FromClusteredResults(cancellationToken, resultsTuple.Item2);
-                var finalResults =
-                    input.GetClusterGraphResults(cancellationToken, resultsTuple.Item2, finalColorScheme);
+                var finalResults = input.GetClusterGraphResults(cancellationToken, resultsTuple.Item2, finalColorScheme);
                 return finalResults;
             }
 
