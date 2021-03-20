@@ -670,7 +670,8 @@ namespace pwiz.Skyline.Controls.Databinding
 
         public ClusterInput CreateClusterInput()
         {
-            return new ClusterInput(BindingListSource.ViewInfo.DataSchema.DataSchemaLocalizer, BindingListSource.ReportResults, BindingListSource.ClusteringSpec);
+            return new ClusterInput(BindingListSource.ViewInfo.DataSchema, BindingListSource.ReportResults,
+                BindingListSource.ClusteringSpec, DataGridView.ReportColorScheme);
         }
 
         public bool ShowHeatMap()

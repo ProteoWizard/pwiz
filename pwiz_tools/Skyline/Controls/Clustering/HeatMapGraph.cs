@@ -23,6 +23,7 @@ using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.Controls.Clustering;
+using pwiz.Common.DataBinding.Clustering;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -428,7 +429,7 @@ namespace pwiz.Skyline.Controls.Clustering
             ClusterInput = DataboundGridControl?.CreateClusterInput() ?? ClusterInput;
             UpdateTitle(Resources.HeatMapGraph_RefreshData_Heat_Map);
         }
-        private class HeatMapCalculator : GraphDataCalculator<ClusterInput, ClusterGraphResults>
+        private class HeatMapCalculator : BoundGraphDataCalculator<ClusterInput, ClusterGraphResults>
         {
             public HeatMapCalculator(HeatMapGraph heatMapGraph) : base(CancellationToken.None, heatMapGraph.zedGraphControl1)
             {
@@ -437,9 +438,22 @@ namespace pwiz.Skyline.Controls.Clustering
 
             public HeatMapGraph HeatMapGraph { get; }
 
-            protected override ClusterGraphResults CalculateResults(ClusterInput input, CancellationToken cancellationToken)
+
+            protected override ClusterGraphResults CalculateDataBoundResults(ClusterInput input, CancellationToken cancellationToken)
             {
-                return input.GetClusterGraphResults(GetProgressHandler(cancellationToken));
+                var resultsTuple = input.GetClusterResultsTuple(GetProgressHandler(cancellationToken));
+                if (resultsTuple == null)
+                {
+                    return null;
+                }
+
+                var initialResults = input.GetClusterGraphResults(cancellationToken, resultsTuple.Item2,
+                    input.LastColorScheme ?? ReportColorScheme.GetFastColorScheme(resultsTuple.Item2));
+                PushResults(cancellationToken, initialResults);
+                var finalColorScheme = ReportColorScheme.FromClusteredResults(cancellationToken, resultsTuple.Item2);
+                var finalResults =
+                    input.GetClusterGraphResults(cancellationToken, resultsTuple.Item2, finalColorScheme);
+                return finalResults;
             }
 
             protected override void ResultsAvailable()

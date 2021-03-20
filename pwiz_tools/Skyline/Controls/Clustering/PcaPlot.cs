@@ -494,7 +494,7 @@ namespace pwiz.Skyline.Controls.Clustering
             }
         }
 
-        private class PcaCalculator : GraphDataCalculator<ClusterInput, Tuple<Clusterer, ReportColorScheme>>
+        private class PcaCalculator : BoundGraphDataCalculator<ClusterInput, Tuple<Clusterer, ReportColorScheme>>
         {
             public PcaCalculator(PcaPlot pcaPlot) : base(CancellationToken.None, pcaPlot.zedGraphControl1)
             {
@@ -506,14 +506,19 @@ namespace pwiz.Skyline.Controls.Clustering
                 get;
             }
 
-            protected override Tuple<Clusterer, ReportColorScheme> CalculateResults(ClusterInput input, CancellationToken cancellationToken)
+            protected override Tuple<Clusterer, ReportColorScheme> CalculateDataBoundResults(ClusterInput input, CancellationToken cancellationToken)
             {
                 var resultsTuple = input.GetClusterResultsTuple(GetProgressHandler(cancellationToken));
                 if (resultsTuple == null)
                 {
                     return null;
                 }
-                return Tuple.Create(resultsTuple.Item1, resultsTuple.Item3);
+
+                PushResults(cancellationToken,
+                    Tuple.Create(resultsTuple.Item1,
+                        input.LastColorScheme ?? ReportColorScheme.GetFastColorScheme(resultsTuple.Item2)));
+                var finalColorScheme = ReportColorScheme.FromClusteredResults(cancellationToken, resultsTuple.Item2);
+                return Tuple.Create(resultsTuple.Item1, finalColorScheme);
             }
 
             protected override void ResultsAvailable()

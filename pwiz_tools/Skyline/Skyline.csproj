@@ -342,6 +342,7 @@
     <Compile Include="Controls\AuditLog\AuditLogExtraInfoForm.Designer.cs">
       <DependentUpon>AuditLogExtraInfoForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\Clustering\BoundGraphDataCalculator.cs" />
     <Compile Include="Controls\Clustering\ClusterInput.cs" />
     <Compile Include="Controls\Clustering\ClusteredHeatMapItem.cs" />
     <Compile Include="Controls\Clustering\DataboundGraph.cs">

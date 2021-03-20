@@ -98,17 +98,15 @@ namespace pwiz.Skyline.Controls.Graphs
             var cancellationToken = cancellationTokenSource.Token;
             ActionUtil.RunAsync(() =>
             {
-                var results = CalculateResults(input, cancellationToken);
-                if (Equals(results, default(TResults)))
+                TResults results = CalculateResults(input, cancellationToken);
+                if (!Equals(results, default(TResults)))
                 {
-                    return;
+                    PushResults(cancellationToken, results);
                 }
                 BeginInvoke(cancellationToken, ()=> {
                     Assume.IsTrue(ReferenceEquals(_progressTuple.Item1, cancellationTokenSource));
                     _progressTuple.Item2.Dispose();
                     _progressTuple = null;
-                    Results = results;
-                    ResultsAvailable();
                 });
             });
         }
@@ -137,6 +135,15 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         protected abstract TResults CalculateResults(TInput input, CancellationToken cancellationToken);
+
+        protected void PushResults(CancellationToken cancellationToken, TResults results)
+        {
+            BeginInvoke(cancellationToken, () =>
+            {
+                Results = results;
+                ResultsAvailable();
+            });
+        }
 
         protected abstract void ResultsAvailable();
 

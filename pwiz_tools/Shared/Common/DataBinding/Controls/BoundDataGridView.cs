@@ -30,6 +30,7 @@ using pwiz.Common.DataBinding.Attributes;
 using pwiz.Common.DataBinding.Clustering;
 using pwiz.Common.DataBinding.Internal;
 using pwiz.Common.DataBinding.Layout;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.DataBinding.Controls
 {
@@ -46,6 +47,7 @@ namespace pwiz.Common.DataBinding.Controls
         private IViewContext _viewContext;
         private ItemProperties _itemProperties;
         private ImmutableList<ColumnFormat> _columnFormats;
+        private CancellationTokenSource _colorSchemeCancellationTokenSource;
 
         public BoundDataGridView()
         {
@@ -394,6 +396,8 @@ namespace pwiz.Common.DataBinding.Controls
 
         public void UpdateColorScheme()
         {
+            _colorSchemeCancellationTokenSource?.Cancel();
+            _colorSchemeCancellationTokenSource = null;
             var reportResults = (DataSource as BindingListSource)?.ReportResults as ClusteredReportResults;
             if (reportResults == null)
             {
@@ -401,7 +405,43 @@ namespace pwiz.Common.DataBinding.Controls
             }
             else
             {
-                ReportColorScheme = ReportColorScheme.FromClusteredResults(CancellationToken.None, reportResults);
+                var dataSchema = (DataSource as BindingListSource)?.ViewInfo?.DataSchema;
+                if (dataSchema == null)
+                {
+                    return;
+                }
+
+                _colorSchemeCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(dataSchema.QueryLock.CancellationToken);
+                var cancellationToken = _colorSchemeCancellationTokenSource.Token;
+                CommonActionUtil.RunAsync(() =>
+                {
+                    using (dataSchema.QueryLock.GetReadLock())
+                    {
+                        GetColorScheme(cancellationToken, reportResults);
+                    }
+                });
+            }
+        }
+
+        private void GetColorScheme(CancellationToken cancellationToken, ClusteredReportResults reportResults)
+        {
+            try
+            {
+                var reportColorScheme = ReportColorScheme.FromClusteredResults(cancellationToken, reportResults);
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    CommonActionUtil.SafeBeginInvoke(this, () =>
+                    {
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            ReportColorScheme = reportColorScheme;
+                            Invalidate();
+                        }
+                    });
+                }
+            }
+            catch (OperationCanceledException)
+            {
             }
         }
 
