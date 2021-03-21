@@ -50,8 +50,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>286</ApplicationRevision>
-    <ApplicationVersion>20.2.1.286</ApplicationVersion>
+    <ApplicationRevision>404</ApplicationRevision>
+    <ApplicationVersion>20.2.1.404</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -342,6 +342,7 @@
     <Compile Include="Controls\AuditLog\AuditLogExtraInfoForm.Designer.cs">
       <DependentUpon>AuditLogExtraInfoForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\Clustering\ClusterInput.cs" />
     <Compile Include="Controls\Clustering\ClusteredHeatMapItem.cs" />
     <Compile Include="Controls\Clustering\HierarchicalClusterGraph.cs">
       <SubType>Form</SubType>
@@ -379,6 +380,7 @@
     <Compile Include="Controls\Graphs\DetectionToolbarProperties.Designer.cs">
       <DependentUpon>DetectionToolbarProperties.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\Graphs\GraphDataCalculator.cs" />
     <Compile Include="Controls\Graphs\PaneProgressBar.cs" />
     <Compile Include="Controls\Graphs\ReplicateGroupOp.cs" />
     <Compile Include="Controls\Graphs\ReplicateValue.cs" />

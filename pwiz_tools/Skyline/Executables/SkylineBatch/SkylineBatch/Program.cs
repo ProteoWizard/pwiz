@@ -20,38 +20,36 @@
 using System;
 using System.Configuration;
 using System.Deployment.Application;
+using System.Drawing;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Windows.Forms;
-using log4net;
-using log4net.Appender;
 using log4net.Config;
-using log4net.Repository.Hierarchy;
 using SkylineBatch.Properties;
+using SharedBatch;
 
 namespace SkylineBatch
 {
     class Program
     {
-        private static readonly ILog Log = LogManager.GetLogger("SkylineBatch");
         private static string _version;
         
         [STAThread]
         public static void Main(string[] args)
         {
+            ProgramLog.Init("SkylineBatch");
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
             // Handle exceptions on the UI thread.
-            Application.ThreadException += ((sender, e) => Log.Error(e.Exception));
+            Application.ThreadException += ((sender, e) => ProgramLog.Error(e.Exception.Message, e.Exception));
             // Handle exceptions on the non-UI thread.
             AppDomain.CurrentDomain.UnhandledException += ((sender, e) =>
             {
                 try
                 {
-                    Log.Error(Resources.Program_Main_An_unexpected_error_occured_during_initialization_, (Exception)e.ExceptionObject);
+                    ProgramLog.Error(Resources.Program_Main_An_unexpected_error_occured_during_initialization_, (Exception)e.ExceptionObject);
                     MessageBox.Show(Resources.Program_Main_An_unexpected_error_occured_during_initialization_ + Environment.NewLine +
                                     string.Format(Resources.Program_Main_Error_details_may_be_found_in_the_file__0_,
                                         Path.Combine(Path.GetDirectoryName(Application.ExecutablePath) ?? string.Empty, "SkylineBatchProgram.log")) + Environment.NewLine +
@@ -81,7 +79,7 @@ namespace SkylineBatch
                 try
                 {
                     var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal);
-                    LogInfo(string.Format(Resources.Program_Main_Saved_configurations_were_found_in___0_, config.FilePath));
+                    ProgramLog.Info(string.Format(Resources.Program_Main_Saved_configurations_were_found_in___0_, config.FilePath));
                 }
                 catch (Exception)
                 {
@@ -89,7 +87,7 @@ namespace SkylineBatch
                 }
                 
                 if (!InitSkylineSettings()) return;
-                Installations.FindRDirectory();
+                RInstallations.FindRDirectory();
                 
                 var form = new MainForm();
                 // CurrentDeployment is null if it isn't network deployed.
@@ -105,10 +103,10 @@ namespace SkylineBatch
         
         private static bool InitSkylineSettings()
         {
-            if (Installations.FindSkyline())
+            if (SkylineInstallations.FindSkyline())
                 return true;
-
-            var form = new FindSkylineForm();
+            
+            var form = new FindSkylineForm(AppName(), Icon());
             Application.Run(form);
             if (form.DialogResult == DialogResult.OK)
                 return true;
@@ -116,43 +114,6 @@ namespace SkylineBatch
             MessageBox.Show(string.Format(Resources.Program_InitSkylineSettings__0__requires_Skyline_to_run_, AppName()) + Environment.NewLine +
                 string.Format(Resources.Program_InitSkylineSettings_Please_install_Skyline_to_start__0__, AppName()), AppName(), MessageBoxButtons.OK, MessageBoxIcon.Error);
             return false;
-        }
-
-        public static void LogError(string message)
-        {
-            Log.Error(message);
-        }
-
-        public static void LogError(string configName, string message)
-        {
-            Log.Error(string.Format("{0}: {1}", configName, message));
-        }
-
-        public static void LogError(string message, Exception e)
-        {
-            Log.Error(message, e);
-        }
-
-        public static void LogError(string configName, string message, Exception e)
-        {
-            LogError(string.Format("{0}: {1}", configName, message), e);
-        }
-
-        public static void LogInfo(string message)
-        {
-            Log.Info(message);
-        }
-
-        public static string GetProgramLogFilePath()
-        {
-            var repository = ((Hierarchy) LogManager.GetRepository());
-            FileAppender rootAppender = null;
-            if (repository != null)
-            {
-                rootAppender = repository.Root.Appenders.OfType<FileAppender>()
-                    .FirstOrDefault();
-            }
-            return rootAppender != null ? rootAppender.File : string.Empty;
         }
 
         public static string Version()
@@ -163,6 +124,13 @@ namespace SkylineBatch
         public static string AppName()
         {
             return "Skyline Batch";
+        }
+
+        public static Icon Icon()
+        {
+            var baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            var iconPath = Path.Combine(baseDirectory, "SkylineBatch_release.ico");
+            return System.Drawing.Icon.ExtractAssociatedIcon(iconPath);
         }
 
         private static void InitializeSecurityProtocol()

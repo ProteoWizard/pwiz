@@ -170,6 +170,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public bool RequirePrecursorTransition { private get; set; }
 
+        public bool IsImportingResults { private get; set; }
+
         public bool DecoyGenerationEnabled
         {
             get { return panelDecoys.Visible; }
@@ -347,9 +349,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     return false;
                 }
 
-                if (MessageBox.Show(WizardForm, TextUtil.LineSeparate(Resources.ImportFastaControl_ImportFasta_The_document_does_not_contain_any_precursor_transitions_,
+                if (MultiButtonMsgDlg.Show(WizardForm, TextUtil.LineSeparate(Resources.ImportFastaControl_ImportFasta_The_document_does_not_contain_any_precursor_transitions_,
                                                                       Resources.ImportFastaControl_ImportFasta_Would_you_like_to_change_the_document_settings_to_automatically_pick_the_precursor_transitions_specified_in_the_full_scan_settings_),
-                                    Program.Name, MessageBoxButtons.OKCancel) != DialogResult.OK)
+                    MessageBoxButtons.OKCancel) != DialogResult.OK)
                     return false;
 
                 DocumentContainer.ModifyDocumentNoUndo(doc => ImportPeptideSearch.ChangeAutoManageChildren(doc, PickLevel.transitions, true));
@@ -483,6 +485,16 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             cbAutoTrain.Enabled = decoys;
             if (!decoys)
             {
+                cbAutoTrain.Checked = false;
+            }
+        }
+
+        private void cbAutoTrain_CheckedChanged(object sender, EventArgs e)
+        {
+            if (!IsImportingResults && cbAutoTrain.Checked)
+            {
+                MessageDlg.Show(WizardForm,
+                    Resources.ImportFastaControl_cbAutoTrain_CheckedChanged_Cannot_automatically_train_mProphet_model_since_no_results_files_are_being_imported__Continue_without_automatically_training_an_mProphet_model__or_go_back_and_add_at_least_one_results_file_);
                 cbAutoTrain.Checked = false;
             }
         }

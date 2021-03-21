@@ -8942,8 +8942,8 @@ If your transition list format combines formulas and adducts in a single column 
   <data name="EditIsolationSchemeDlg_ReadIsolationRanges_No_repeating_isolation_scheme_found_in__0_" xml:space="preserve">
     <value>No repeating isolation scheme found in {0}</value>
   </data>
-  <data name="SkylineVersion_GetCurrentVersionName_Current___0__" xml:space="preserve">
-    <value>Current ({0})</value>
+  <data name="SkylineVersion_GetCurrentVersionName_Latest___0__" xml:space="preserve">
+    <value>Latest ({0})</value>
   </data>
   <data name="SkylineVersion_GetCurrentVersionName_Developer_Build" xml:space="preserve">
     <value>Developer Build</value>
@@ -11318,5 +11318,26 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
   </data>
   <data name="SmallMoleculeTransitionListReader_GetMoleculeTransitionGroup_Inconsistent_molecule_description" xml:space="preserve">
     <value>Inconsistent molecule description</value>
+  </data>
+  <data name="ImportPeptideSearchDlg_NextPage_No_results_files_were_specified__Are_you_sure_you_want_to_continue__Continuing_will_create_a_template_document_with_no_imported_results_" xml:space="preserve">
+    <value>No results files were specified. Are you sure you want to continue? Continuing will create a template document with no imported results.</value>
+  </data>
+  <data name="ImportFastaControl_cbAutoTrain_CheckedChanged_Cannot_automatically_train_mProphet_model_since_no_results_files_are_being_imported__Continue_without_automatically_training_an_mProphet_model__or_go_back_and_add_at_least_one_results_file_" xml:space="preserve">
+    <value>Cannot automatically train mProphet model since no results files are being imported. Continue without automatically training an mProphet model, or go back and add at least one results file.</value>
+  </data>
+  <data name="SkylineWindow_HasFileToOpen_The_path_to_the_file_to_open_is_too_long_" xml:space="preserve">
+    <value>The path to the file to open is too long.</value>
+  </data>
+  <data name="ShareTypeDlg_ShareTypeDlg_Current_saved_file___0__" xml:space="preserve">
+    <value>Current saved file ({0})</value>
+  </data>
+  <data name="MissingFileDlg_ValidateFilePath_You_must_choose_a_file_with_the___0___filename_extension_" xml:space="preserve">
+    <value>You must choose a file with the '{0}' filename extension.</value>
+  </data>
+  <data name="BuildLibraryDlg_AddInputFiles_The_file__0__is_a_library_file_and_does_not_need_to_be_built__Would_you_like_to_add_this_library_to_the_document_" xml:space="preserve">
+    <value>The file {0} is a library file and does not need to be built. Would you like to add this library to the document?</value>
+  </data>
+  <data name="BuildLibraryDlg_AddInputFiles_These_files_are_library_files_and_do_not_need_to_be_built__Edit_the_list_of_libraries_to_add_them_directly_" xml:space="preserve">
+    <value>These files are library files and do not need to be built. Edit the list of libraries to add them directly.</value>
   </data>
 </root>

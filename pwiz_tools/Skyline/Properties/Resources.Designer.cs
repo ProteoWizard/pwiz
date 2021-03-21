@@ -2694,6 +2694,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The file {0} is a library file and does not need to be built. Would you like to add this library to the document?.
+        /// </summary>
+        public static string BuildLibraryDlg_AddInputFiles_The_file__0__is_a_library_file_and_does_not_need_to_be_built__Would_you_like_to_add_this_library_to_the_document_ {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_AddInputFiles_The_file__0__is_a_library_file_and_does_not_need_to" +
+                        "_be_built__Would_you_like_to_add_this_library_to_the_document_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The file {0} is not a valid library input file..
         /// </summary>
         public static string BuildLibraryDlg_AddInputFiles_The_file__0__is_not_a_valid_library_input_file {
@@ -2709,6 +2719,16 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("BuildLibraryDlg_AddInputFiles_The_following_files_are_not_valid_library_input_fil" +
                         "es", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to These files are library files and do not need to be built. Edit the list of libraries to add them directly..
+        /// </summary>
+        public static string BuildLibraryDlg_AddInputFiles_These_files_are_library_files_and_do_not_need_to_be_built__Edit_the_list_of_libraries_to_add_them_directly_ {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_AddInputFiles_These_files_are_library_files_and_do_not_need_to_be" +
+                        "_built__Edit_the_list_of_libraries_to_add_them_directly_", resourceCulture);
             }
         }
         
@@ -14856,6 +14876,17 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cannot automatically train mProphet model since no results files are being imported. Continue without automatically training an mProphet model, or go back and add at least one results file..
+        /// </summary>
+        public static string ImportFastaControl_cbAutoTrain_CheckedChanged_Cannot_automatically_train_mProphet_model_since_no_results_files_are_being_imported__Continue_without_automatically_training_an_mProphet_model__or_go_back_and_add_at_least_one_results_file_ {
+            get {
+                return ResourceManager.GetString("ImportFastaControl_cbAutoTrain_CheckedChanged_Cannot_automatically_train_mProphet" +
+                        "_model_since_no_results_files_are_being_imported__Continue_without_automatically" +
+                        "_training_an_mProphet_model__or_go_back_and_add_at_least_one_results_file_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed reading the file {0}..
         /// </summary>
         public static string ImportFastaControl_GetFastaFileContent_Failed_reading_the_file__0__ {
@@ -15188,6 +15219,17 @@ namespace pwiz.Skyline.Properties {
         public static string ImportPeptideSearchDlg_NextPage_Import_FASTA__required_ {
             get {
                 return ResourceManager.GetString("ImportPeptideSearchDlg_NextPage_Import_FASTA__required_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No results files were specified. Are you sure you want to continue? Continuing will create a template document with no imported results..
+        /// </summary>
+        public static string ImportPeptideSearchDlg_NextPage_No_results_files_were_specified__Are_you_sure_you_want_to_continue__Continuing_will_create_a_template_document_with_no_imported_results_ {
+            get {
+                return ResourceManager.GetString("ImportPeptideSearchDlg_NextPage_No_results_files_were_specified__Are_you_sure_you" +
+                        "_want_to_continue__Continuing_will_create_a_template_document_with_no_imported_r" +
+                        "esults_", resourceCulture);
             }
         }
         
@@ -18721,6 +18763,16 @@ namespace pwiz.Skyline.Properties {
         public static string MissingAnyResultsFinder_DisplayName_Missing_any_results {
             get {
                 return ResourceManager.GetString("MissingAnyResultsFinder_DisplayName_Missing_any_results", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You must choose a file with the &apos;{0}&apos; filename extension..
+        /// </summary>
+        public static string MissingFileDlg_ValidateFilePath_You_must_choose_a_file_with_the___0___filename_extension_ {
+            get {
+                return ResourceManager.GetString("MissingFileDlg_ValidateFilePath_You_must_choose_a_file_with_the___0___filename_ex" +
+                        "tension_", resourceCulture);
             }
         }
         
@@ -25933,6 +25985,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Current saved file ({0}).
+        /// </summary>
+        public static string ShareTypeDlg_ShareTypeDlg_Current_saved_file___0__ {
+            get {
+                return ResourceManager.GetString("ShareTypeDlg_ShareTypeDlg_Current_saved_file___0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cannot open output file..
         /// </summary>
         public static string ShimadzuMethodExporter_ExportMethod_Cannot_open_output_file_ {
@@ -26421,20 +26482,20 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Current ({0}).
-        /// </summary>
-        public static string SkylineVersion_GetCurrentVersionName_Current___0__ {
-            get {
-                return ResourceManager.GetString("SkylineVersion_GetCurrentVersionName_Current___0__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Developer Build.
         /// </summary>
         public static string SkylineVersion_GetCurrentVersionName_Developer_Build {
             get {
                 return ResourceManager.GetString("SkylineVersion_GetCurrentVersionName_Developer_Build", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Latest ({0}).
+        /// </summary>
+        public static string SkylineVersion_GetCurrentVersionName_Latest___0__ {
+            get {
+                return ResourceManager.GetString("SkylineVersion_GetCurrentVersionName_Latest___0__", resourceCulture);
             }
         }
         
@@ -27326,6 +27387,15 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("SkylineWindow_HasFileToOpen_Opening_a_document_inside_a_ZIP_file_is_not_supported" +
                         "_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The path to the file to open is too long..
+        /// </summary>
+        public static string SkylineWindow_HasFileToOpen_The_path_to_the_file_to_open_is_too_long_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_HasFileToOpen_The_path_to_the_file_to_open_is_too_long_", resourceCulture);
             }
         }
         

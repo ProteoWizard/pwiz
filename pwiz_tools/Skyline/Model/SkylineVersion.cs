@@ -94,7 +94,7 @@ namespace pwiz.Skyline.Model
 
         public static String GetCurrentVersionName()
         {
-            String labelFormat = Resources.SkylineVersion_GetCurrentVersionName_Current___0__;
+            String labelFormat = Resources.SkylineVersion_GetCurrentVersionName_Latest___0__;
 
             if (Install.Type == Install.InstallType.developer)
             {
