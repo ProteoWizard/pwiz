@@ -129,6 +129,14 @@ namespace pwiz.Skyline.Controls.Databinding
             }
         }
 
+        public override DataGridId DataGridId
+        {
+            get
+            {
+                return new DataGridId(DataGridType.DOCUMENT_GRID, null);
+            }
+        }
+
         public bool ShowViewsMenu
         {
             get

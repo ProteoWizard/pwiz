@@ -40,6 +40,7 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.AuditLog;
+using pwiz.Skyline.Controls.Clustering;
 using pwiz.Skyline.Controls.Graphs.Calibration;
 using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Model.AuditLog;
@@ -69,7 +70,7 @@ namespace pwiz.Skyline
         private readonly List<GraphSummary> _listGraphMassError = new List<GraphSummary>();
         private readonly List<GraphSummary> _listGraphDetections = new List<GraphSummary>();
 
-        private DockableForm _resultsGridForm;
+        private LiveResultsGrid _resultsGridForm;
         private DocumentGridForm _documentGridForm;
         private CalibrationForm _calibrationForm;
         private AuditLogForm _auditLogForm;
@@ -503,6 +504,7 @@ namespace pwiz.Skyline
 
             type = DetectionsGraphController.GraphType;
             _listGraphDetections.ToList().ForEach(DestroyGraphDetections);
+            DetectionsGraphController.GraphType = type;
 
             FormUtil.OpenForms.OfType<FoldChangeForm>().ForEach(f => f.Close());
 
@@ -678,11 +680,14 @@ namespace pwiz.Skyline
                         return GetGraphChrom(name) ?? CreateGraphChrom(name);
                 }
             }
-            var foldChangeForm = FoldChangeForm.RestoreFoldChangeForm(this, persistentString);
-            if (null != foldChangeForm)
+
+            var databoundForm = (IDockableForm) FoldChangeForm.RestoreFoldChangeForm(this, persistentString)
+                                ?? DataboundGraph.RestoreDataboundGraph(this, persistentString);
+            if (null != databoundForm)
             {
-                return foldChangeForm;
+                return databoundForm;
             }
+
             if (Equals(persistentString, typeof(GraphFullScan).ToString()))
             {
                 return _graphFullScan ?? CreateGraphFullScan();
@@ -2133,27 +2138,7 @@ namespace pwiz.Skyline
         /// </summary>
         private Rectangle GetFloatingRectangleForNewWindow()
         {
-            var rectFloat = dockPanel.Bounds;
-            rectFloat = dockPanel.RectangleToScreen(rectFloat);
-            rectFloat.X += rectFloat.Width / 4;
-            rectFloat.Y += rectFloat.Height / 3;
-            rectFloat.Width = Math.Max(600, rectFloat.Width / 2);
-            rectFloat.Height = Math.Max(440, rectFloat.Height / 2);
-            if (Program.SkylineOffscreen)
-            {
-                var offscreenPoint = GetOffscreenPoint();
-                rectFloat.X = offscreenPoint.X;
-                rectFloat.Y = offscreenPoint.Y;
-            }
-            else
-            {
-                // Make sure it is on the screen.
-                var screen = Screen.FromControl(dockPanel);
-                var rectScreen = screen.WorkingArea;
-                rectFloat.X = Math.Max(rectScreen.X, Math.Min(rectScreen.Width - rectFloat.Width, rectFloat.X));
-                rectFloat.Y = Math.Max(rectScreen.Y, Math.Min(rectScreen.Height - rectFloat.Height, rectFloat.Y));
-            }
-            return rectFloat;
+            return FormGroup.GetFloatingRectangleForNewWindow(dockPanel);
         }
 
         private bool GraphVisible(IEnumerable<GraphSummary> graphs, GraphTypeSummary type)
@@ -4975,7 +4960,7 @@ namespace pwiz.Skyline
             }
         }
 
-        private DockableForm CreateResultsGrid()
+        public LiveResultsGrid CreateResultsGrid()
         {
             Debug.Assert(null == _resultsGridForm);
             _resultsGridForm = new LiveResultsGrid(this);
@@ -5039,7 +5024,7 @@ namespace pwiz.Skyline
             
         }
 
-        private DocumentGridForm CreateDocumentGrid()
+        public DocumentGridForm CreateDocumentGrid()
         {
             Assume.IsNull(_documentGridForm);
             _documentGridForm = new DocumentGridForm(this);

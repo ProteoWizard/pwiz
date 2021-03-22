@@ -20,13 +20,16 @@
 using System;
 using System.Drawing;
 using DigitalRune.Windows.Docking;
+using pwiz.Common.DataBinding;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.GroupComparison;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.GroupComparison
 {
-    public partial class FoldChangeGrid : FoldChangeForm
+    public partial class FoldChangeGrid : FoldChangeForm, IDataboundGridForm
     {
         public FoldChangeGrid()
         {
@@ -38,6 +41,20 @@ namespace pwiz.Skyline.Controls.GroupComparison
             return base.GetTitle(groupComparisonName) + ':' + GroupComparisonStrings.FoldChangeGrid_GetTitle_Grid;
         }
 
+        public ViewName? ViewToRestore { get; set; }
+
+        protected override string GetPersistentString()
+        {
+            var persistentString = PersistentString.Parse(base.GetPersistentString());
+            var viewName = DataboundGridControl.GetViewName();
+            if (viewName.HasValue)
+            {
+                persistentString = persistentString.Append(viewName.ToString());
+            }
+
+            return persistentString.ToString();
+        }
+
         protected override void OnShown(EventArgs e)
         {
             base.OnShown(e);
@@ -47,6 +64,10 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 toolStripButtonChangeSettings.Visible =
                     !string.IsNullOrEmpty(FoldChangeBindingSource.GroupComparisonModel.GroupComparisonName);
                 FoldChangeBindingSource.ViewContext.BoundDataGridView = DataboundGridControl.DataGridView;
+                if (ViewToRestore.HasValue)
+                {
+                    DataboundGridControl.ChooseView(ViewToRestore.Value);
+                }
             }
         }
 
@@ -102,5 +123,18 @@ namespace pwiz.Skyline.Controls.GroupComparison
         }
 
         public DataboundGridControl DataboundGridControl { get { return databoundGridControl; } }
+
+        public DataGridId DataGridId
+        {
+            get
+            {
+                return new DataGridId(DataGridType.GROUP_COMPARISON, GroupComparisonName);
+            }
+        }
+
+        DataboundGridControl IDataboundGridForm.GetDataboundGridControl()
+        {
+            return DataboundGridControl;
+        }
     }
 }

@@ -7919,6 +7919,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Disconnected.
+        /// </summary>
+        public static string DataboundGraph_AttachToOwner_Disconnected {
+            get {
+                return ResourceManager.GetString("DataboundGraph_AttachToOwner_Disconnected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Waiting for data.
+        /// </summary>
+        public static string DataboundGraph_AttachToOwner_Waiting_for_data {
+            get {
+                return ResourceManager.GetString("DataboundGraph_AttachToOwner_Waiting_for_data", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Show Heat Map.
         /// </summary>
         public static string DataboundGridControl_DataboundGridControl_Show_Heat_Map {
@@ -8000,6 +8018,51 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("DataboundGridControl_GetClusteredResults_Unable_to_choose_a_set_of_columns_to_use" +
                         "_for_hierarchical_clustering_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Audit Log.
+        /// </summary>
+        public static string DataGridType_AUDIT_LOG_Audit_Log {
+            get {
+                return ResourceManager.GetString("DataGridType_AUDIT_LOG_Audit_Log", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Document Grid.
+        /// </summary>
+        public static string DataGridType_DOCUMENT_GRID_Document_Grid {
+            get {
+                return ResourceManager.GetString("DataGridType_DOCUMENT_GRID_Document_Grid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Group Comparison.
+        /// </summary>
+        public static string DataGridType_GROUP_COMPARISON_Group_Comparison {
+            get {
+                return ResourceManager.GetString("DataGridType_GROUP_COMPARISON_Group_Comparison", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to List.
+        /// </summary>
+        public static string DataGridType_LIST_List {
+            get {
+                return ResourceManager.GetString("DataGridType_LIST_List", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Results Grid.
+        /// </summary>
+        public static string DataGridType_RESULTS_GRID_Results_Grid {
+            get {
+                return ResourceManager.GetString("DataGridType_RESULTS_GRID_Results_Grid", resourceCulture);
             }
         }
         
@@ -14646,6 +14709,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Heat Map.
+        /// </summary>
+        public static string HeatMapGraph_RefreshData_Heat_Map {
+            get {
+                return ResourceManager.GetString("HeatMapGraph_RefreshData_Heat_Map", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Refresh.
+        /// </summary>
+        public static string HeatMapGraph_zedGraphControl1_ContextMenuBuilder_Refresh {
+            get {
+                return ResourceManager.GetString("HeatMapGraph_zedGraphControl1_ContextMenuBuilder_Refresh", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Edit Isotope Modification.
         /// </summary>
         public static string HeavyModList_EditItem_Edit_Isotope_Modification {
@@ -21184,6 +21265,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to PCA Plot.
+        /// </summary>
+        public static string PcaPlot_RefreshData_PCA_Plot {
+            get {
+                return ResourceManager.GetString("PcaPlot_RefreshData_PCA_Plot", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to  Across .
         /// </summary>
         public static string PcaPlot_UpdateGraph__Across_ {
@@ -25985,6 +26075,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Current saved file ({0}).
+        /// </summary>
+        public static string ShareTypeDlg_ShareTypeDlg_Current_saved_file___0__ {
+            get {
+                return ResourceManager.GetString("ShareTypeDlg_ShareTypeDlg_Current_saved_file___0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cannot open output file..
         /// </summary>
         public static string ShimadzuMethodExporter_ExportMethod_Cannot_open_output_file_ {
@@ -26473,20 +26572,20 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Current ({0}).
-        /// </summary>
-        public static string SkylineVersion_GetCurrentVersionName_Current___0__ {
-            get {
-                return ResourceManager.GetString("SkylineVersion_GetCurrentVersionName_Current___0__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Developer Build.
         /// </summary>
         public static string SkylineVersion_GetCurrentVersionName_Developer_Build {
             get {
                 return ResourceManager.GetString("SkylineVersion_GetCurrentVersionName_Developer_Build", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Latest ({0}).
+        /// </summary>
+        public static string SkylineVersion_GetCurrentVersionName_Latest___0__ {
+            get {
+                return ResourceManager.GetString("SkylineVersion_GetCurrentVersionName_Latest___0__", resourceCulture);
             }
         }
         

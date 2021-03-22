@@ -342,13 +342,17 @@
     <Compile Include="Controls\AuditLog\AuditLogExtraInfoForm.Designer.cs">
       <DependentUpon>AuditLogExtraInfoForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\Clustering\BoundGraphDataCalculator.cs" />
     <Compile Include="Controls\Clustering\ClusterInput.cs" />
     <Compile Include="Controls\Clustering\ClusteredHeatMapItem.cs" />
-    <Compile Include="Controls\Clustering\HierarchicalClusterGraph.cs">
+    <Compile Include="Controls\Clustering\DataboundGraph.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Controls\Clustering\HierarchicalClusterGraph.Designer.cs">
-      <DependentUpon>HierarchicalClusterGraph.cs</DependentUpon>
+    <Compile Include="Controls\Clustering\HeatMapGraph.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Controls\Clustering\HeatMapGraph.Designer.cs">
+      <DependentUpon>HeatMapGraph.cs</DependentUpon>
     </Compile>
     <Compile Include="Controls\Clustering\ClusterGraphResults.cs" />
     <Compile Include="Controls\Clustering\PcaPlot.cs">
@@ -357,6 +361,8 @@
     <Compile Include="Controls\Clustering\PcaPlot.Designer.cs">
       <DependentUpon>PcaPlot.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\Clustering\StripePainter.cs" />
+    <Compile Include="Controls\Databinding\IDataboundGridForm.cs" />
     <Compile Include="Controls\Graphs\ExportMethodScheduleGraph.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -512,6 +518,7 @@
     <Compile Include="Model\Crosslinking\PeptideStructure.cs" />
     <Compile Include="Model\Crosslinking\SimpleFragmentIon.cs" />
     <Compile Include="Model\Databinding\CellLocator.cs" />
+    <Compile Include="Model\Databinding\DataGridId.cs" />
     <Compile Include="Model\Databinding\Entities\ColumnCaptions.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -734,6 +741,8 @@
     <Compile Include="FileUI\PeptideSearch\DDASearchControl.Designer.cs">
       <DependentUpon>DDASearchControl.cs</DependentUpon>
     </Compile>
+    <Compile Include="Util\FormGroup.cs" />
+    <Compile Include="Util\PersistentString.cs" />
     <Compile Include="Util\UiModes.cs" />
     <Compile Include="ToolsUI\ColorGrid.cs">
       <SubType>UserControl</SubType>
@@ -2138,8 +2147,8 @@
     <EmbeddedResource Include="Controls\AuditLog\AuditLogForm.resx">
       <DependentUpon>AuditLogForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Controls\Clustering\HierarchicalClusterGraph.resx">
-      <DependentUpon>HierarchicalClusterGraph.cs</DependentUpon>
+    <EmbeddedResource Include="Controls\Clustering\HeatMapGraph.resx">
+      <DependentUpon>HeatMapGraph.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Clustering\PcaPlot.resx">
       <DependentUpon>PcaPlot.cs</DependentUpon>
@@ -5256,7 +5265,7 @@
       <Name>ProteowizardWrapper</Name>
     </ProjectReference>
     <ProjectReference Include="..\Shared\zedgraph\ZedGraph.csproj">
-      <Project>{B99650EE-AF46-47B4-A4A9-212ADE7809B7}</Project>
+      <Project>{b99650ee-af46-47b4-a4a9-212ade7809b7}</Project>
       <Name>ZedGraph</Name>
     </ProjectReference>
     <ProjectReference Include="SkylineCmd\SkylineCmd.csproj">
