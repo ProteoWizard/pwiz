@@ -157,6 +157,7 @@ namespace pwiz.Skyline.Controls.Startup
                     Top = distanceFromTop,
                     EventAction = () => DoAction(skylineWindow=>skylineWindow.LoadFile(filePath, this))
                 };
+                modeUIHandler.SetUIMode(recentFileControl, Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.invariant);
                 toolTip.SetToolTip(recentFileControl, filePath);
                 foreach (Control control in recentFileControl.Controls)
                 {
