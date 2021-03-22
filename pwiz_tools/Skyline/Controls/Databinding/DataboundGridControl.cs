@@ -198,6 +198,11 @@ namespace pwiz.Skyline.Controls.Databinding
             }
         }
 
+        public ViewName? GetViewName()
+        {
+            return BindingListSource?.ViewInfo?.ViewGroup?.Id.ViewName(BindingListSource.ViewInfo.Name);
+        }
+
         public void ChooseView(string viewName)
         {
             var groups = new[] {ViewGroup.BUILT_IN}.Concat(BindingListSource.ViewContext.ViewGroups);
@@ -665,17 +670,29 @@ namespace pwiz.Skyline.Controls.Databinding
 
         public ClusterInput CreateClusterInput()
         {
-            return new ClusterInput(BindingListSource.ViewInfo.DataSchema.DataSchemaLocalizer, BindingListSource.ReportResults, BindingListSource.ClusteringSpec);
+            return new ClusterInput(BindingListSource.ViewInfo.DataSchema, BindingListSource.ReportResults,
+                BindingListSource.ClusteringSpec, DataGridView.ReportColorScheme);
         }
 
         public bool ShowHeatMap()
         {
-            var heatMapGraph = new HierarchicalClusterGraph
+            var formGroup = FormGroup.FromControl(this);
+            var heatMap = formGroup.SiblingForms.OfType<HeatMapGraph>().FirstOrDefault();
+            if (heatMap != null)
+            {
+                heatMap.OwnerGridForm = DataboundGridForm;
+                heatMap.RefreshData();
+                heatMap.Activate();
+                return true;
+            }
+            heatMap = new HeatMapGraph
             {
                 SkylineWindow = DataSchemaSkylineWindow,
+                OwnerGridForm = DataboundGridForm,
             };
-            heatMapGraph.Show(FormUtil.FindTopLevelOwner(this));
-            heatMapGraph.ClusterInput = CreateClusterInput();
+            heatMap.RefreshData();
+
+            formGroup.ShowSibling(heatMap);
             return true;
         }
 
@@ -835,13 +852,33 @@ namespace pwiz.Skyline.Controls.Databinding
             ShowPcaPlot();
         }
 
+        public IDataboundGridForm DataboundGridForm
+        {
+            get
+            {
+                return (ParentForm as IDataboundGridForm);
+            }
+        }
+
         public void ShowPcaPlot()
         {
-            var pcaPlot = new PcaPlot
+            var formGroup = FormGroup.FromControl(this);
+            var pcaPlot = formGroup.SiblingForms.OfType<PcaPlot>()
+                .FirstOrDefault(form => ReferenceEquals(form.DataboundGridControl, this));
+            if (pcaPlot != null)
             {
-                SkylineWindow = DataSchemaSkylineWindow
+                pcaPlot.OwnerGridForm = DataboundGridForm;
+                pcaPlot.ClusterInput = CreateClusterInput();
+                pcaPlot.Activate();
+                return;
+            }
+            pcaPlot = new PcaPlot
+            {
+                SkylineWindow = DataSchemaSkylineWindow,
+                OwnerGridForm = DataboundGridForm,
+                ClusterInput = CreateClusterInput()
             };
-            pcaPlot.Show(FormUtil.FindTopLevelOwner(this));
+            formGroup.ShowSibling(pcaPlot);
             pcaPlot.ClusterInput = CreateClusterInput();
         }
     }

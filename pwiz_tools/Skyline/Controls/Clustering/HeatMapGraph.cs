@@ -23,6 +23,7 @@ using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.Controls.Clustering;
+using pwiz.Common.DataBinding.Clustering;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -31,7 +32,7 @@ using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Clustering
 {
-    public partial class HierarchicalClusterGraph : DockableFormEx
+    public partial class HeatMapGraph : DataboundGraph
     {
         private DendrogramScale _rowDendrogramScale;
         private DendrogramScale _columnDendrogramScale;
@@ -40,7 +41,7 @@ namespace pwiz.Skyline.Controls.Clustering
         private AxisLabelScaler _yAxisLabelScaler;
         private readonly HeatMapCalculator _calculator;
 
-        public HierarchicalClusterGraph()
+        public HeatMapGraph()
         {
             InitializeComponent();
             InitializeDendrograms();
@@ -79,7 +80,7 @@ namespace pwiz.Skyline.Controls.Clustering
             };
         }
 
-        public SkylineWindow SkylineWindow { get; set; }
+        public override ZedGraphControl GraphControl => zedGraphControl1;
 
         protected override void OnHandleCreated(EventArgs e)
         {
@@ -102,11 +103,19 @@ namespace pwiz.Skyline.Controls.Clustering
         }
         private void ComboResults_OnSelectedIndexChanged(object sender, EventArgs e)
         {
+            if (sender == null || !ReferenceEquals(sender, SkylineWindow?.ComboResults))
+            {
+                return;
+            }
             UpdateSelection();
         }
 
         private void SequenceTree_OnAfterSelect(object sender, TreeViewEventArgs e)
         {
+            if (sender == null || !ReferenceEquals(sender, SkylineWindow?.SequenceTree))
+            {
+                return;
+            }
             UpdateSelection();
         }
 
@@ -126,6 +135,14 @@ namespace pwiz.Skyline.Controls.Clustering
         public ClusterGraphResults GraphResults
         {
             get { return _calculator.Results; }
+        }
+
+        public override bool IsComplete
+        {
+            get
+            {
+                return base.IsComplete && _calculator.IsComplete;
+            }
         }
 
         public void InitializeDendrograms()
@@ -193,7 +210,7 @@ namespace pwiz.Skyline.Controls.Clustering
             };
         }
 
-        public void UpdateSelection()
+        public override void UpdateSelection()
         {
             if (!ShowSelection)
             {
@@ -353,10 +370,11 @@ namespace pwiz.Skyline.Controls.Clustering
             {
                 Checked = ShowSelection
             });
+            menuStrip.Items.Insert(0, new ToolStripSeparator());
+            menuStrip.Items.Insert(0, new ToolStripMenuItem(Resources.HeatMapGraph_zedGraphControl1_ContextMenuBuilder_Refresh, null, (o, args)=>RefreshData()));
             var pointObject = PointFromMousePoint(mousePt);
             if (pointObject?.ReplicateName != null || pointObject?.IdentityPath != null)
             {
-                menuStrip.Items.Insert(0, new ToolStripSeparator());
                 menuStrip.Items.Insert(0, new ToolStripMenuItem(Resources.HierarchicalClusterGraph_zedGraphControl1_ContextMenuBuilder_Select, null, (o, args)=>SelectPoint(pointObject)));
             }
         }
@@ -379,6 +397,10 @@ namespace pwiz.Skyline.Controls.Clustering
 
         private ClusterGraphResults.Point PointFromMousePoint(Point mousePoint)
         {
+            if (GraphResults == null)
+            {
+                return null;
+            }
             var graphPane = zedGraphControl1.GraphPane;
             graphPane.ReverseTransform(new PointF(mousePoint.X, mousePoint.Y), out double x, out double y);
             if (x < graphPane.XAxis.Scale.Min || x > graphPane.XAxis.Scale.Max)
@@ -402,23 +424,37 @@ namespace pwiz.Skyline.Controls.Clustering
             SkylineWindow?.SelectPathAndReplicate(point?.IdentityPath, point?.ReplicateName);
         }
 
-        private class HeatMapCalculator : GraphDataCalculator<ClusterInput, ClusterGraphResults>
+        public override void RefreshData()
         {
-            public HeatMapCalculator(HierarchicalClusterGraph hierarchicalClusterGraph) : base(CancellationToken.None, hierarchicalClusterGraph.zedGraphControl1)
+            ClusterInput = DataboundGridControl?.CreateClusterInput() ?? ClusterInput;
+            UpdateTitle(Resources.HeatMapGraph_RefreshData_Heat_Map);
+        }
+        private class HeatMapCalculator : BoundGraphDataCalculator<ClusterInput, ClusterGraphResults>
+        {
+            public HeatMapCalculator(HeatMapGraph heatMapGraph) : base(CancellationToken.None, heatMapGraph.zedGraphControl1)
             {
-                HierarchicalClusterGraph = hierarchicalClusterGraph;
+                HeatMapGraph = heatMapGraph;
             }
 
-            public HierarchicalClusterGraph HierarchicalClusterGraph { get; }
+            public HeatMapGraph HeatMapGraph { get; }
 
-            protected override ClusterGraphResults CalculateResults(ClusterInput input, CancellationToken cancellationToken)
+
+            protected override ClusterGraphResults CalculateDataBoundResults(ClusterInput input, CancellationToken cancellationToken)
             {
-                return input.GetClusterGraphResults(GetProgressHandler(cancellationToken));
+                var resultsTuple = input.GetClusterResultsTuple(GetProgressHandler(cancellationToken));
+                if (resultsTuple == null)
+                {
+                    return null;
+                }
+
+                var finalColorScheme = ReportColorScheme.FromClusteredResults(cancellationToken, resultsTuple.Item2);
+                var finalResults = input.GetClusterGraphResults(cancellationToken, resultsTuple.Item2, finalColorScheme);
+                return finalResults;
             }
 
             protected override void ResultsAvailable()
             {
-                HierarchicalClusterGraph.UpdateGraph();
+                HeatMapGraph.UpdateGraph();
             }
         }
     }
