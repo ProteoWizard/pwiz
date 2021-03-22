@@ -158,7 +158,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 {
                     message = ModeUIAwareStringFormat(Resources.ChangeIrtPeptidesDlg_OkDialog_The_sequence__0__is_not_currently_in_the_database,
                                             invalidLines[0]);
-                    MessageBox.Show(this, message, Program.Name);
+                    MessageDlg.Show(this, message);
                 }
                 else
                 {
@@ -167,7 +167,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                                                     TextUtil.LineSeparate(invalidLines),
                                                     string.Empty,
                                                     GetModeUIHelper().Translate(Resources.ChangeIrtPeptidesDlg_OkDialog_Standard_peptides_must_exist_in_the_database));
-                    MessageBox.Show(this, message, Program.Name);
+                    MessageDlg.Show(this, message);
                 }
                 return;
             }
