@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
@@ -32,13 +33,25 @@ namespace pwiz.Skyline.Model
     public class ModificationMatcher : AbstractModificationMatcher
     {
         private IEnumerator<string> _sequences;
-
+        private int _sequenceCurrent;
+        private int _sequenceCount;
+        private IProgressMonitor _progressMonitor;
+        private IProgressStatus _status;
         private const int DEFAULT_ROUNDING_DIGITS = 6;
 
         public void CreateMatches(SrmSettings settings, IEnumerable<string> sequences,
-            MappedList<string, StaticMod> defSetStatic, MappedList<string, StaticMod> defSetHeavy)
+            MappedList<string, StaticMod> defSetStatic, MappedList<string, StaticMod> defSetHeavy, 
+            int? expectedCount = null, IProgressMonitor progressMonitor = null)
         {
             _sequences = sequences.GetEnumerator();
+            _sequenceCurrent = 0;
+            var countable = sequences as ICollection<string>; // Can we know the range without enumerating?
+            _sequenceCount = countable?.Count ?? expectedCount ?? 0;
+            _progressMonitor = progressMonitor;
+            if (progressMonitor != null)
+            {
+                _status = new ProgressStatus(Resources.ModificationMatcher_CreateMatches_Matching_modifications);
+            }
             InitMatcherSettings(settings, defSetStatic, defSetHeavy);
             if (UnmatchedSequences.Count > 0)
             {
@@ -61,6 +74,14 @@ namespace pwiz.Skyline.Model
             {
                 if (!_sequences.MoveNext())
                     return false;
+                if (_progressMonitor != null)
+                {
+                    _sequenceCurrent++;
+                    if (_progressMonitor.IsCanceled)
+                        return false;
+                    if (_sequenceCount > 0)
+                        _progressMonitor.UpdateProgress(_status = _status.UpdatePercentCompleteProgress(_progressMonitor, _sequenceCurrent, _sequenceCount));
+                }
             }
             return true;
         }

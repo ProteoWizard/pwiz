@@ -18918,6 +18918,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Matching modifications.
+        /// </summary>
+        public static string ModificationMatcher_CreateMatches_Matching_modifications {
+            get {
+                return ResourceManager.GetString("ModificationMatcher_CreateMatches_Matching_modifications", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unrecognized modification placement for Unimod id {0} in modified peptide sequence {1} (amino acid {2}, {3})..
         /// </summary>
         public static string ModificationMatcher_ThrowUnimodException_Unrecognized_modification_placement_for_Unimod_id__0__in_modified_peptide_sequence__1___amino_acid__2____3___ {

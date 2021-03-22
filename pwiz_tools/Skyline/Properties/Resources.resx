@@ -11343,4 +11343,7 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
   <data name="ImportTransitionListColumnSelectDlg_CheckForErrors_Checking_for_errors___" xml:space="preserve">
     <value>Checking for errors...</value>
   </data>
+  <data name="ModificationMatcher_CreateMatches_Matching_modifications" xml:space="preserve">
+    <value>Matching modifications</value>
+  </data>
 </root>

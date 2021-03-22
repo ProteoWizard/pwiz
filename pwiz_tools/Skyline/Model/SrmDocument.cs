@@ -1434,7 +1434,7 @@ namespace pwiz.Skyline.Model
             firstAdded = null;
 
             // Is this a small molecule transition list, or trying to be?
-            var lines = inputs.ReadLines();
+            var lines = inputs.ReadLines(progressMonitor);
             if (SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(lines))
             {
                 try
