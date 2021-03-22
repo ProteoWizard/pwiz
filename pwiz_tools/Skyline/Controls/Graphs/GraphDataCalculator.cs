@@ -113,6 +113,14 @@ namespace pwiz.Skyline.Controls.Graphs
             });
         }
 
+        public bool IsComplete
+        {
+            get
+            {
+                return _progressTuple == null;
+            }
+        }
+
         public void UpdateProgress(CancellationToken cancellationToken, int progressValue)
         {
             BeginInvoke(cancellationToken, ()=> _progressTuple?.Item2.UpdateProgressUI(progressValue));

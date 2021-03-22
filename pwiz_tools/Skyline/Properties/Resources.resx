@@ -11340,4 +11340,34 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
   <data name="BuildLibraryDlg_AddInputFiles_These_files_are_library_files_and_do_not_need_to_be_built__Edit_the_list_of_libraries_to_add_them_directly_" xml:space="preserve">
     <value>These files are library files and do not need to be built. Edit the list of libraries to add them directly.</value>
   </data>
+  <data name="HeatMapGraph_RefreshData_Heat_Map" xml:space="preserve">
+    <value>Heat Map</value>
+  </data>
+  <data name="PcaPlot_RefreshData_PCA_Plot" xml:space="preserve">
+    <value>PCA Plot</value>
+  </data>
+  <data name="HeatMapGraph_zedGraphControl1_ContextMenuBuilder_Refresh" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
+  <data name="DataboundGraph_AttachToOwner_Disconnected" xml:space="preserve">
+    <value>Disconnected</value>
+  </data>
+  <data name="DataboundGraph_AttachToOwner_Waiting_for_data" xml:space="preserve">
+    <value>Waiting for data</value>
+  </data>
+  <data name="DataGridType_DOCUMENT_GRID_Document_Grid" xml:space="preserve">
+    <value>Document Grid</value>
+  </data>
+  <data name="DataGridType_RESULTS_GRID_Results_Grid" xml:space="preserve">
+    <value>Results Grid</value>
+  </data>
+  <data name="DataGridType_GROUP_COMPARISON_Group_Comparison" xml:space="preserve">
+    <value>Group Comparison</value>
+  </data>
+  <data name="DataGridType_LIST_List" xml:space="preserve">
+    <value>List</value>
+  </data>
+  <data name="DataGridType_AUDIT_LOG_Audit_Log" xml:space="preserve">
+    <value>Audit Log</value>
+  </data>
 </root>

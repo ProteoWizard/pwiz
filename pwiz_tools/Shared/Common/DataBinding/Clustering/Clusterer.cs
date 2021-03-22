@@ -28,6 +28,8 @@ namespace pwiz.Common.DataBinding.Clustering
 {
     public class Clusterer
     {
+        public const int MAX_CLUSTER_ROW_COUNT = 15000;
+
         public Clusterer(CancellationToken cancellationToken, IEnumerable<RowItem> rowItems, ClusteredProperties properties, ClusterMetricType distanceMetric)
         {
             CancellationToken = cancellationToken;
@@ -142,6 +144,10 @@ namespace pwiz.Common.DataBinding.Clustering
             var clusterDataSet = MakeClusterDataSet();
             bool performRowClustering = RowHeaderLevels.Any() || Properties.PivotedProperties.UngroupedProperties
                 .Any(p => null != Properties.GetRowTransform(p));
+            if (clusterDataSet.RowCount > MAX_CLUSTER_ROW_COUNT)
+            {
+                performRowClustering = false;
+            }
             return clusterDataSet.PerformClustering(performRowClustering, progressHandler);
         }
 
