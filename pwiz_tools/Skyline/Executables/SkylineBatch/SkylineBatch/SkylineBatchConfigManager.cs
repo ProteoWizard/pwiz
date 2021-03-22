@@ -210,7 +210,27 @@ namespace SkylineBatch
             }
         }
 
+        public Dictionary<string, string> GetRefinedTemplates()
+        {
+            var refinedTemplates = new Dictionary<string, string>();
+            foreach (var iconfig in _configList)
+            {
+                var config = (SkylineBatchConfig) iconfig;
+                if (config.RefineSettings.WillRefine())
+                    refinedTemplates.Add(config.Name, config.RefineSettings.OutputFilePath);
+            }
+            return refinedTemplates;
+        }
 
+        public void ReplaceSkylineSettings(SkylineSettings skylineSettings)
+        {
+            var runningConfigs = ConfigsRunning();
+            UpdateReplacedConfigRunners(ReplaceSkylineSettings(skylineSettings, runningConfigs));
+            if (runningConfigs.Count > 0)
+                throw new ArgumentException(Resources.SkylineBatchConfigManager_ReplaceSkylineSettings_The_following_configurations_are_running_and_could_not_be_updated_
+                                            + Environment.NewLine +
+                                            TextUtil.LineSeparate(runningConfigs));
+        }
 
 
         #endregion
@@ -377,7 +397,11 @@ namespace SkylineBatch
 
         public new void AddRootReplacement(string oldRoot, string newRoot)
         {
-            var replacedConfigs = base.AddRootReplacement(oldRoot, newRoot);
+            UpdateReplacedConfigRunners(base.AddRootReplacement(oldRoot, newRoot));
+        }
+
+        private void UpdateReplacedConfigRunners(List<IConfig> replacedConfigs)
+        {
             lock (_lock)
             {
                 foreach (var config in replacedConfigs)

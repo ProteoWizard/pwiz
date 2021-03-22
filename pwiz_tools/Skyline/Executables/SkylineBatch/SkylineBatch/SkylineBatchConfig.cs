@@ -91,9 +91,10 @@ namespace SkylineBatch
             return lvi;
         }
 
-        public IConfigRunner CreateRunner(Logger logger, IMainUiControl uiControl)
+        public IConfig ReplaceSkylineVersion(SkylineSettings newSettings)
         {
-            return new ConfigRunner(this, logger, uiControl);
+            return new SkylineBatchConfig(Name, Enabled, DateTime.Now, MainSettings,
+                FileSettings, RefineSettings, ReportSettings, newSettings);
         }
 
         private enum Attr

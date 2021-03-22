@@ -96,7 +96,7 @@ namespace SkylineBatch
         {
             ProgramLog.Info(Resources.MainForm_btnNewConfig_Click_Creating_a_new_configuration_);
             var initialConfigValues = (SkylineBatchConfig)_configManager.GetLastModified();
-            var configForm = new SkylineBatchConfigForm(this, _rDirectorySelector, initialConfigValues, ConfigAction.Add, false);
+            var configForm = new SkylineBatchConfigForm(this, _rDirectorySelector, initialConfigValues, ConfigAction.Add, false, _configManager.GetRefinedTemplates());
             configForm.ShowDialog();
         }
 
@@ -137,14 +137,40 @@ namespace SkylineBatch
                 if (validateConfigForm.DialogResult != DialogResult.OK)
                     return;
             }
-            var configForm = new SkylineBatchConfigForm(this, _rDirectorySelector, _configManager.GetSelectedConfig(), ConfigAction.Edit, configRunner.IsBusy());
+            var configForm = new SkylineBatchConfigForm(this, _rDirectorySelector, _configManager.GetSelectedConfig(), ConfigAction.Edit, configRunner.IsBusy(), _configManager.GetRefinedTemplates());
             configForm.ShowDialog();
         }
 
         private void btnCopy_Click(object sender, EventArgs e)
         {
-            var configForm = new SkylineBatchConfigForm(this, _rDirectorySelector, _configManager.GetSelectedConfig(), ConfigAction.Copy, false);
+            var configForm = new SkylineBatchConfigForm(this, _rDirectorySelector, _configManager.GetSelectedConfig(), ConfigAction.Copy, false, _configManager.GetRefinedTemplates());
             configForm.ShowDialog();
+        }
+
+        public void ReplaceAllSkylineVersions(SkylineSettings skylineSettings)
+        {
+            try
+            {
+                skylineSettings.Validate();
+            }
+            catch (ArgumentException)
+            {
+                // Only ask to replace Skyline settings if new settings are valid
+                return;
+            }
+            if (DialogResult.Yes ==
+                DisplayQuestion(Resources.MainForm_ReplaceAllSkylineVersions_Do_you_want_to_use_this_Skyline_version_for_all_configurations_))
+            {
+                try
+                {
+                    _configManager.ReplaceSkylineSettings(skylineSettings);
+                }
+                catch (ArgumentException e)
+                {
+                    DisplayError(e.Message);
+                }
+                UpdateUiConfigurations();
+            }
         }
 
         private void listViewConfigs_ItemCheck(object sender, ItemCheckEventArgs e)

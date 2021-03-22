@@ -480,6 +480,16 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Do you want to use this Skyline version for all configurations?.
+        /// </summary>
+        internal static string MainForm_ReplaceAllSkylineVersions_Do_you_want_to_use_this_Skyline_version_for_all_configurations_ {
+            get {
+                return ResourceManager.GetString("MainForm_ReplaceAllSkylineVersions_Do_you_want_to_use_this_Skyline_version_for_al" +
+                        "l_configurations_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to ... Log truncated ....
         /// </summary>
         internal static string MainForm_TrimDisplayedLog_____Log_truncated____ {
@@ -1135,6 +1145,16 @@ namespace SkylineBatch.Properties {
         internal static string SkylineBatchConfigForm_SkylineBatchConfigForm_Viewing_configuration___0__ {
             get {
                 return ResourceManager.GetString("SkylineBatchConfigForm_SkylineBatchConfigForm_Viewing_configuration___0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The following configurations are running and could not be updated:.
+        /// </summary>
+        internal static string SkylineBatchConfigManager_ReplaceSkylineSettings_The_following_configurations_are_running_and_could_not_be_updated_ {
+            get {
+                return ResourceManager.GetString("SkylineBatchConfigManager_ReplaceSkylineSettings_The_following_configurations_are" +
+                        "_running_and_could_not_be_updated_", resourceCulture);
             }
         }
         

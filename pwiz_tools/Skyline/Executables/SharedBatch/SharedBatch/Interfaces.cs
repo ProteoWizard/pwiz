@@ -30,6 +30,9 @@ namespace SharedBatch
         //                      otherwise replaced is the same as the current configuration (this)
         bool TryPathReplace(string oldRoot, string newRoot, out IConfig replaced);
 
+        // Returns a copy of the configuration with the new Skyline settings
+        IConfig ReplaceSkylineVersion(SkylineSettings skylineSettings);
+
         // Writes the configuration as xml
         void WriteXml(XmlWriter writer);
 
@@ -105,6 +108,7 @@ namespace SharedBatch
 
         void AddConfiguration(IConfig config);
         void ReplaceSelectedConfig(IConfig config);
+        void ReplaceAllSkylineVersions(SkylineSettings skylineSettings);
 
         void LogToUi(string filePath, string text, bool scrollToEnd = true, bool trim = true);
         void LogErrorToUi(string filePath, string text, bool scrollToEnd = true, bool trim = true);

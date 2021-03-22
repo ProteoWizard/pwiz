@@ -54,11 +54,12 @@
             this.checkBoxRemoveDecoys = new System.Windows.Forms.CheckBox();
             this.checkBoxRemoveData = new System.Windows.Forms.CheckBox();
             this.textAnalysisPath = new System.Windows.Forms.TextBox();
-            this.textSkylinePath = new System.Windows.Forms.TextBox();
+            this.textTemplateFile = new System.Windows.Forms.TextBox();
             this.textDataPath = new System.Windows.Forms.TextBox();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.tabsConfig = new System.Windows.Forms.TabControl();
             this.tabFiles = new System.Windows.Forms.TabPage();
+            this.comboTemplateFile = new System.Windows.Forms.ComboBox();
             this.btnAnnotationsFile = new System.Windows.Forms.Button();
             this.textAnnotationsFile = new System.Windows.Forms.TextBox();
             this.textNamingPattern = new System.Windows.Forms.TextBox();
@@ -79,6 +80,10 @@
             this.btnDeleteReport = new System.Windows.Forms.ToolStripButton();
             this.btnEditReport = new System.Windows.Forms.ToolStripButton();
             this.gridReportSettings = new System.Windows.Forms.DataGridView();
+            this.columnName = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.columnPath = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.columnScripts = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.columnFile = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.tabSkyline = new System.Windows.Forms.TabPage();
             this.panelSkylineSettings = new System.Windows.Forms.Panel();
             this.btnCancelConfig = new System.Windows.Forms.Button();
@@ -86,10 +91,6 @@
             this.btnSaveConfig = new System.Windows.Forms.Button();
             this.btnOkConfig = new System.Windows.Forms.Button();
             this.imageListToolbarIcons = new System.Windows.Forms.ImageList(this.components);
-            this.columnName = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.columnPath = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.columnScripts = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.columnFile = new System.Windows.Forms.DataGridViewTextBoxColumn();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -239,10 +240,10 @@
             resources.ApplyResources(this.textAnalysisPath, "textAnalysisPath");
             this.textAnalysisPath.Name = "textAnalysisPath";
             // 
-            // textSkylinePath
+            // textTemplateFile
             // 
-            resources.ApplyResources(this.textSkylinePath, "textSkylinePath");
-            this.textSkylinePath.Name = "textSkylinePath";
+            resources.ApplyResources(this.textTemplateFile, "textTemplateFile");
+            this.textTemplateFile.Name = "textTemplateFile";
             // 
             // textDataPath
             // 
@@ -280,6 +281,7 @@
             // tabFiles
             // 
             this.tabFiles.BackColor = System.Drawing.Color.WhiteSmoke;
+            this.tabFiles.Controls.Add(this.comboTemplateFile);
             this.tabFiles.Controls.Add(this.label7);
             this.tabFiles.Controls.Add(this.btnAnnotationsFile);
             this.tabFiles.Controls.Add(this.textAnnotationsFile);
@@ -295,9 +297,16 @@
             this.tabFiles.Controls.Add(this.btnAnalysisPath);
             this.tabFiles.Controls.Add(this.btnSkylineFilePath);
             this.tabFiles.Controls.Add(this.label2);
-            this.tabFiles.Controls.Add(this.textSkylinePath);
+            this.tabFiles.Controls.Add(this.textTemplateFile);
             resources.ApplyResources(this.tabFiles, "tabFiles");
             this.tabFiles.Name = "tabFiles";
+            this.tabFiles.Enter += new System.EventHandler(this.TabEnter);
+            // 
+            // comboTemplateFile
+            // 
+            this.comboTemplateFile.FormattingEnabled = true;
+            resources.ApplyResources(this.comboTemplateFile, "comboTemplateFile");
+            this.comboTemplateFile.Name = "comboTemplateFile";
             // 
             // btnAnnotationsFile
             // 
@@ -358,6 +367,7 @@
             this.tabSettings.Controls.Add(this.textRetentionTime);
             resources.ApplyResources(this.tabSettings, "tabSettings");
             this.tabSettings.Name = "tabSettings";
+            this.tabSettings.Enter += new System.EventHandler(this.TabEnter);
             // 
             // label6
             // 
@@ -374,6 +384,7 @@
             resources.ApplyResources(this.tabRefine, "tabRefine");
             this.tabRefine.Name = "tabRefine";
             this.tabRefine.UseVisualStyleBackColor = true;
+            this.tabRefine.Enter += new System.EventHandler(this.TabEnter);
             // 
             // splitContainer2
             // 
@@ -416,6 +427,7 @@
             this.tabReports.Controls.Add(this.gridReportSettings);
             resources.ApplyResources(this.tabReports, "tabReports");
             this.tabReports.Name = "tabReports";
+            this.tabReports.Enter += new System.EventHandler(this.TabEnter);
             // 
             // toolBar
             // 
@@ -496,12 +508,37 @@
             this.gridReportSettings.TabStop = false;
             this.gridReportSettings.SelectionChanged += new System.EventHandler(this.gridReportSettings_SelectionChanged);
             // 
+            // columnName
+            // 
+            this.columnName.FillWeight = 128.5841F;
+            resources.ApplyResources(this.columnName, "columnName");
+            this.columnName.Name = "columnName";
+            // 
+            // columnPath
+            // 
+            this.columnPath.FillWeight = 101.5228F;
+            resources.ApplyResources(this.columnPath, "columnPath");
+            this.columnPath.Name = "columnPath";
+            // 
+            // columnScripts
+            // 
+            this.columnScripts.FillWeight = 108.0281F;
+            resources.ApplyResources(this.columnScripts, "columnScripts");
+            this.columnScripts.Name = "columnScripts";
+            // 
+            // columnFile
+            // 
+            this.columnFile.FillWeight = 61.86493F;
+            resources.ApplyResources(this.columnFile, "columnFile");
+            this.columnFile.Name = "columnFile";
+            // 
             // tabSkyline
             // 
             this.tabSkyline.BackColor = System.Drawing.Color.WhiteSmoke;
             this.tabSkyline.Controls.Add(this.panelSkylineSettings);
             resources.ApplyResources(this.tabSkyline, "tabSkyline");
             this.tabSkyline.Name = "tabSkyline";
+            this.tabSkyline.Enter += new System.EventHandler(this.TabEnter);
             // 
             // panelSkylineSettings
             // 
@@ -541,30 +578,6 @@
             this.imageListToolbarIcons.TransparentColor = System.Drawing.Color.Transparent;
             this.imageListToolbarIcons.Images.SetKeyName(0, "AddedIcon.ico");
             this.imageListToolbarIcons.Images.SetKeyName(1, "DeletedIcon.ico");
-            // 
-            // columnName
-            // 
-            this.columnName.FillWeight = 128.5841F;
-            resources.ApplyResources(this.columnName, "columnName");
-            this.columnName.Name = "columnName";
-            // 
-            // columnPath
-            // 
-            this.columnPath.FillWeight = 101.5228F;
-            resources.ApplyResources(this.columnPath, "columnPath");
-            this.columnPath.Name = "columnPath";
-            // 
-            // columnScripts
-            // 
-            this.columnScripts.FillWeight = 108.0281F;
-            resources.ApplyResources(this.columnScripts, "columnScripts");
-            this.columnScripts.Name = "columnScripts";
-            // 
-            // columnFile
-            // 
-            this.columnFile.FillWeight = 61.86493F;
-            resources.ApplyResources(this.columnFile, "columnFile");
-            this.columnFile.Name = "columnFile";
             // 
             // SkylineBatchConfigForm
             // 
@@ -618,7 +631,7 @@
         private System.Windows.Forms.Label labelConfigName;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Button btnSkylineFilePath;
-        private System.Windows.Forms.TextBox textSkylinePath;
+        private System.Windows.Forms.TextBox textTemplateFile;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Button btnAnalysisPath;
         private System.Windows.Forms.TextBox textAnalysisPath;
@@ -664,5 +677,6 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn columnPath;
         private System.Windows.Forms.DataGridViewTextBoxColumn columnScripts;
         private System.Windows.Forms.DataGridViewTextBoxColumn columnFile;
+        private System.Windows.Forms.ComboBox comboTemplateFile;
     }
 }

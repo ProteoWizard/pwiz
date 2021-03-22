@@ -13,9 +13,12 @@ namespace SharedBatch
         //    - GetVariable() returns a SkylineSettings instance using the Type from the radioButtons and CommandPath from textSkylineInstallationPath
         //    - IsValid() uses skylineSettings.Validate to determine if the selection is valid.
 
-        public SkylineTypeControl(bool skyline, bool skylineDaily, bool custom, string path)
+        private readonly IMainUiControl _mainUiControl;
+
+        public SkylineTypeControl(IMainUiControl mainUiControl, bool skyline, bool skylineDaily, bool custom, string path)
         {
             InitializeComponent();
+            _mainUiControl = mainUiControl;
 
             radioButtonSkyline.Enabled = SkylineInstallations.HasSkyline;
             radioButtonSkylineDaily.Enabled = SkylineInstallations.HasSkylineDaily;
@@ -73,7 +76,9 @@ namespace SharedBatch
             errorMessage = null;
             try
             {
-                new SkylineSettings(Type, CommandPath).Validate();
+                var newSettings = new SkylineSettings(Type, CommandPath);
+                newSettings.Validate();
+                _mainUiControl.ReplaceAllSkylineVersions(newSettings);
                 return true;
             } catch (ArgumentException e)
             {

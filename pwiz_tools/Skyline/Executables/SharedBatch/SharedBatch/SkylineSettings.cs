@@ -83,6 +83,9 @@ namespace SharedBatch
         
         public static SkylineSettings ReadXml(XmlReader reader)
         {
+            // always use local Skyline if it exists
+            if (SkylineInstallations.HasLocalSkylineCmd)
+                return new SkylineSettings(SkylineType.Local);
             var type = Enum.Parse(typeof(SkylineType), reader.GetAttribute(Attr.Type), false);
             var cmdPath = Path.GetDirectoryName(reader.GetAttribute(Attr.CmdPath));
             return new SkylineSettings((SkylineType)type, cmdPath);

@@ -39,12 +39,14 @@ namespace SkylineBatch
         private readonly ConfigAction _action;
         private readonly RefineInputObject _refineInput;
         private readonly List<ReportInfo> _newReportList;
-        private readonly bool _canEditSkylineSettings;
+        private readonly Dictionary<string, string> _possibleTemplates;
+        private TabPage _lastSelectedTab;
+        private SkylineSettings _currentSkylineSettings;
 
         private SkylineTypeControl _skylineTypeControl;
         private string _lastEnteredPath;
 
-        public SkylineBatchConfigForm(IMainUiControl mainControl, RDirectorySelector rDirectorySelector, SkylineBatchConfig config, ConfigAction action, bool isBusy)
+        public SkylineBatchConfigForm(IMainUiControl mainControl, RDirectorySelector rDirectorySelector, SkylineBatchConfig config, ConfigAction action, bool isBusy, Dictionary<string, string> possibleTemplates)
         {
             InitializeComponent();
             _action = action;
@@ -52,16 +54,12 @@ namespace SkylineBatch
             _newReportList = new List<ReportInfo>();
             _rDirectorySelector = rDirectorySelector;
             _mainControl = mainControl;
+            _possibleTemplates = possibleTemplates;
             if (config != null)
                 _configEnabled = config.Enabled;
             _isBusy = isBusy;
 
-            _canEditSkylineSettings = !SkylineInstallations.HasLocalSkylineCmd;
-            if (!_canEditSkylineSettings)
-                tabsConfig.TabPages[2].Hide();
-            
             InitInputFieldsFromConfig(config);
-            lblConfigRunning.Hide();
 
             if (isBusy)
             {
@@ -80,17 +78,15 @@ namespace SkylineBatch
 
         private void InitInputFieldsFromConfig(SkylineBatchConfig config)
         {
-            InitSkylineTab(config);
-            SetInitialRefineSettings(config);
-            if (config == null)
-                return;
-            _lastEnteredPath = config.MainSettings.TemplateFilePath;
             textConfigName.Text = _action == ConfigAction.Add ? string.Empty : config.Name;
             textConfigName.TextChanged += textConfigName_TextChanged;
-            // Initialize UI input values using config
+            _lastEnteredPath = config != null ? config.MainSettings.TemplateFilePath : null;
+
             SetInitialMainSettings(config);
             SetInitialFileSettings(config);
+            SetInitialRefineSettings(config);
             SetInitialReportSettings(config);
+            InitSkylineTab(config);
         }
 
         public void DisableUserInputs(Control parentControl = null)
@@ -121,11 +117,20 @@ namespace SkylineBatch
 
         private void SetInitialMainSettings(SkylineBatchConfig config)
         {
+            if (_possibleTemplates.Count > 0)
+            {
+                comboTemplateFile.Visible = true;
+                foreach (var possibleTemplate in _possibleTemplates.Values)
+                    comboTemplateFile.Items.Add(possibleTemplate);
+            }
+
+            if (config == null) return;
             var mainSettings = config.MainSettings;
             if (_action == ConfigAction.Add)
             {
-                // ReSharper disable once LocalizableElement - backslash does not need to be localized string
-                textAnalysisPath.Text = Path.GetDirectoryName(mainSettings.AnalysisFolderPath) + @"\";
+                var directoryName = Path.GetDirectoryName(mainSettings.AnalysisFolderPath);
+                textAnalysisPath.Text =
+                    directoryName != null ? Path.Combine(directoryName, string.Empty) : string.Empty;
             }
             else
             {
@@ -133,14 +138,17 @@ namespace SkylineBatch
                 textNamingPattern.Text = mainSettings.ReplicateNamingPattern;
             }
 
-            textSkylinePath.Text = mainSettings.TemplateFilePath;
+            if (_possibleTemplates.Count > 0)
+                comboTemplateFile.Text = mainSettings.TemplateFilePath;
+            else
+                textTemplateFile.Text = mainSettings.TemplateFilePath;
             textDataPath.Text = mainSettings.DataFolderPath;
             textAnnotationsFile.Text = mainSettings.AnnotationsFilePath;
         }
 
         private MainSettings GetMainSettingsFromUi()
         {
-            var templateFilePath = textSkylinePath.Text;
+            var templateFilePath = _possibleTemplates.Count > 0 ? comboTemplateFile.Text : textTemplateFile.Text;
             var analysisFolderPath = textAnalysisPath.Text;
             var dataFolderPath = textDataPath.Text;
             var annotationsFilePath = textAnnotationsFile.Text;
@@ -160,7 +168,8 @@ namespace SkylineBatch
 
         private void btnSkylineFilePath_Click(object sender, EventArgs e)
         {
-            OpenFile(textSkylinePath, TextUtil.FILTER_SKY);
+            Control templatePathControl = _possibleTemplates.Count > 0 ? (Control)comboTemplateFile : textTemplateFile;
+            OpenFile(templatePathControl, TextUtil.FILTER_SKY);
         }
 
         private void btnAnnotationsFile_Click(object sender, EventArgs e)
@@ -178,16 +187,16 @@ namespace SkylineBatch
             OpenFolder(textDataPath);
         }
 
-        private void OpenFile(TextBox textbox, string filter, bool save = false)
+        private void OpenFile(Control textBox, string filter, bool save = false)
         {
             FileDialog dialog = save ? (FileDialog)new SaveFileDialog() : new OpenFileDialog();
-            var initialDirectory = TextUtil.GetInitialDirectory(textbox.Text, _lastEnteredPath);
+            var initialDirectory = TextUtil.GetInitialDirectory(textBox.Text, _lastEnteredPath);
             dialog.InitialDirectory = initialDirectory;
             dialog.Filter = filter;
             DialogResult result = dialog.ShowDialog();
             if (result == DialogResult.OK)
             {
-                textbox.Text = dialog.FileName;
+                textBox.Text = dialog.FileName;
                 _lastEnteredPath = dialog.FileName;
             }
         }
@@ -216,6 +225,7 @@ namespace SkylineBatch
 
         private void SetInitialFileSettings(SkylineBatchConfig config)
         {
+            if (config == null) return;
             if (config.FileSettings.MsOneResolvingPower != null)
                 textMsOneResolvingPower.Text = config.FileSettings.MsOneResolvingPower;
             if (config.FileSettings.MsMsResolvingPower != null)
@@ -363,10 +373,14 @@ namespace SkylineBatch
         
         private void InitSkylineTab(SkylineBatchConfig config)
         {
-            if (!_canEditSkylineSettings) return;
+            if (SkylineInstallations.HasLocalSkylineCmd)
+            {
+                tabsConfig.TabPages.Remove(tabSkyline);
+                return;
+            }
 
             if (config != null)
-                _skylineTypeControl = new SkylineTypeControl(config.UsesSkyline, config.UsesSkylineDaily, config.UsesCustomSkylinePath, config.SkylineSettings.CmdPath);
+                _skylineTypeControl = new SkylineTypeControl(_mainControl, config.UsesSkyline, config.UsesSkylineDaily, config.UsesCustomSkylinePath, config.SkylineSettings.CmdPath);
             else
             {
                 // Default to the first existing Skyline installation (Skyline, Skyline-daily, custom path)
@@ -376,14 +390,35 @@ namespace SkylineBatch
             _skylineTypeControl.Dock = DockStyle.Fill;
             _skylineTypeControl.Show();
             panelSkylineSettings.Controls.Add(_skylineTypeControl);
+            _currentSkylineSettings = GetSkylineSettingsFromUi();
         }
-        
+
+        private void TabEnter(object sender, EventArgs e)
+        {
+            // Ask if the user wants to update all SkylineSettings if they are leaving the Skyline tab
+            // after changing settings
+            var selectingTab = tabsConfig.SelectedTab;
+            if (tabSkyline.Equals(_lastSelectedTab) && !tabSkyline.Equals(selectingTab))
+                CheckIfSkylineChanged();
+            _lastSelectedTab = selectingTab;
+        }
+
+        private void CheckIfSkylineChanged()
+        {
+            var changedSkylineSettings = GetSkylineSettingsFromUi();
+            if (!changedSkylineSettings.Equals(_currentSkylineSettings))
+            {
+                _currentSkylineSettings = changedSkylineSettings;
+                _mainControl.ReplaceAllSkylineVersions(_currentSkylineSettings);
+            }
+        }
+
         private SkylineSettings GetSkylineSettingsFromUi()
         {
-            if (!_canEditSkylineSettings)
+            if (SkylineInstallations.HasLocalSkylineCmd)
                 return new SkylineSettings(SkylineType.Local);
             
-            return new SkylineSettings(_skylineTypeControl.Type, _skylineTypeControl.CommandPath);
+            return (SkylineSettings)_skylineTypeControl.GetVariable();
         }
 
         #endregion
@@ -392,6 +427,8 @@ namespace SkylineBatch
 
         private void btnSaveConfig_Click(object sender, EventArgs e)
         {
+            if (tabsConfig.SelectedTab.Equals(tabSkyline))
+                CheckIfSkylineChanged();
             Save();
         }
 
@@ -409,10 +446,11 @@ namespace SkylineBatch
 
         private void Save()
         {
-            var newConfig = GetConfigFromUi();
+            SkylineBatchConfig newConfig;
             var questions = new List<string>();
             try
             {
+                newConfig = GetConfigFromUi();
                 _mainControl.AssertUniqueConfigName(newConfig.Name, _action == ConfigAction.Edit);
                 questions.AddRange(newConfig.Validate());
             }
@@ -437,5 +475,6 @@ namespace SkylineBatch
         }
         
         #endregion
+
     }
 }

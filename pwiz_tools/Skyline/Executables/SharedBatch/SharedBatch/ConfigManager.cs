@@ -328,7 +328,7 @@ namespace SharedBatch
             }
         }
         
-        public bool RemoveSelected()
+        protected bool RemoveSelected()
         {
             lock (_lock)
             {
@@ -620,9 +620,29 @@ namespace SharedBatch
             return logNames;
         }
 
-        public List<IConfig> AddRootReplacement(string oldRoot, string newRoot)
+        protected List<IConfig> ReplaceSkylineSettings(SkylineSettings newSettings, List<string> runningConfigs)
         {
-            var replacedConfigNames = new List<IConfig>();
+            lock (_lock)
+            {
+                var replacedConfigs = new List<IConfig>();
+                for (int i = 0; i < _configList.Count; i++)
+                {
+                    var config = _configList[i];
+                    if (runningConfigs.Contains(config.GetName()))
+                        continue;
+                    var newConfig = config.ReplaceSkylineVersion(newSettings);
+                    _configList.Remove(config);
+                    _configValidation.Remove(config.GetName());
+                    InsertPossiblyInvalidConfiguration(newConfig, i);
+                    replacedConfigs.Add(newConfig);
+                }
+                return replacedConfigs;
+            }
+        }
+
+        protected List<IConfig> AddRootReplacement(string oldRoot, string newRoot)
+        {
+            var replacedConfigs = new List<IConfig>();
             RootReplacement.Add(oldRoot, newRoot);
             lock (_lock)
             {
@@ -637,12 +657,12 @@ namespace SharedBatch
                             _configList.Remove(config);
                             _configValidation.Remove(config.GetName());
                             InsertPossiblyInvalidConfiguration(replacedPathConfig, i);
-                            replacedConfigNames.Add(replacedPathConfig);
+                            replacedConfigs.Add(replacedPathConfig);
                         }
                     }
                 }
             }
-            return replacedConfigNames;
+            return replacedConfigs;
         }
 
         public IConfig RunRootReplacement(IConfig config)
