@@ -55,6 +55,11 @@ namespace AutoQC
             return false;
         }
 
+        public IConfig ReplaceSkylineVersion(SkylineSettings newSettings)
+        {
+            return new AutoQcConfig(Name, IsEnabled, Created, Modified, MainSettings, PanoramaSettings, newSettings);
+        }
+
         public ListViewItem AsListViewItem(IConfigRunner runner)
         {
             var lvi = new ListViewItem(Name);

@@ -123,14 +123,14 @@
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="labelMessage.Location" type="System.Drawing.Point, System.Drawing">
-    <value>-6, 42</value>
+    <value>-2, 15</value>
   </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="labelMessage.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>6, 0, 6, 0</value>
   </data>
   <data name="labelMessage.Size" type="System.Drawing.Size, System.Drawing">
-    <value>105, 25</value>
+    <value>52, 13</value>
   </data>
   <data name="labelMessage.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -151,13 +151,13 @@
     <value>3</value>
   </data>
   <data name="comboRVersions.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 123</value>
+    <value>1, 60</value>
   </data>
   <data name="comboRVersions.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>6, 6, 6, 6</value>
   </data>
   <data name="comboRVersions.Size" type="System.Drawing.Size, System.Drawing">
-    <value>242, 33</value>
+    <value>125, 21</value>
   </data>
   <data name="comboRVersions.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -178,13 +178,13 @@
     <value>True</value>
   </data>
   <data name="labelTitle.Location" type="System.Drawing.Point, System.Drawing">
-    <value>-6, 0</value>
+    <value>-2, 0</value>
   </data>
   <data name="labelTitle.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>6, 0, 6, 0</value>
   </data>
   <data name="labelTitle.Size" type="System.Drawing.Size, System.Drawing">
-    <value>53, 25</value>
+    <value>27, 13</value>
   </data>
   <data name="labelTitle.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -205,16 +205,16 @@
     <value>1</value>
   </data>
   <data name="btnAddDirectory.Location" type="System.Drawing.Point, System.Drawing">
-    <value>-1, 70</value>
+    <value>0, 31</value>
   </data>
   <data name="btnAddDirectory.Size" type="System.Drawing.Size, System.Drawing">
-    <value>243, 44</value>
+    <value>126, 23</value>
   </data>
   <data name="btnAddDirectory.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
   </data>
   <data name="btnAddDirectory.Text" xml:space="preserve">
-    <value>Add R Location</value>
+    <value>Add R Location...</value>
   </data>
   <data name="&gt;&gt;btnAddDirectory.Name" xml:space="preserve">
     <value>btnAddDirectory</value>
@@ -232,13 +232,13 @@
     <value>True</value>
   </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
-    <value>12, 25</value>
+    <value>6, 13</value>
   </data>
   <data name="$this.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>6, 6, 6, 6</value>
   </data>
   <data name="$this.Size" type="System.Drawing.Size, System.Drawing">
-    <value>554, 157</value>
+    <value>136, 97</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>RVersionControl</value>

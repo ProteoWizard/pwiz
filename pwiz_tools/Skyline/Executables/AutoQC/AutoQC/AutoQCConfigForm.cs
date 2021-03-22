@@ -35,6 +35,8 @@ namespace AutoQC
 
         private SkylineTypeControl _skylineTypeControl;
         private string _lastEnteredPath;
+        private TabPage _lastSelectedTab;
+        private SkylineSettings _currentSkylineSettings;
 
         public AutoQcConfigForm(IMainUiControl mainControl, AutoQcConfig config, ConfigAction action, bool isBusy)
         {
@@ -237,13 +239,33 @@ namespace AutoQC
         private void InitSkylineTab(AutoQcConfig config)
         {
             if (config != null)
-                _skylineTypeControl = new SkylineTypeControl(config.UsesSkyline, config.UsesSkylineDaily, config.UsesCustomSkylinePath, config.SkylineSettings.CmdPath);
+                _skylineTypeControl = new SkylineTypeControl(_mainControl, config.UsesSkyline, config.UsesSkylineDaily, config.UsesCustomSkylinePath, config.SkylineSettings.CmdPath);
             else
                 _skylineTypeControl = new SkylineTypeControl();
 
             _skylineTypeControl.Dock = DockStyle.Fill;
             _skylineTypeControl.Show();
             panelSkylineSettings.Controls.Add(_skylineTypeControl);
+        }
+
+        private void TabEnter(object sender, EventArgs e)
+        {
+            // Ask if the user wants to update all SkylineSettings if they are leaving the Skyline tab
+            // after changing settings
+            var selectingTab = tabControl.SelectedTab;
+            if (tabSkylineSettings.Equals(_lastSelectedTab) && !tabSkylineSettings.Equals(selectingTab))
+                CheckIfSkylineChanged();
+            _lastSelectedTab = selectingTab;
+        }
+
+        private void CheckIfSkylineChanged()
+        {
+            var changedSkylineSettings = GetSkylineSettingsFromUi();
+            if (!changedSkylineSettings.Equals(_currentSkylineSettings))
+            {
+                _currentSkylineSettings = changedSkylineSettings;
+                _mainControl.ReplaceAllSkylineVersions(_currentSkylineSettings);
+            }
         }
 
         private SkylineSettings GetSkylineSettingsFromUi()

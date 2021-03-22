@@ -179,6 +179,27 @@ namespace AutoQC
             AddConfigLoggerAndRunner(newConfig);
         }
 
+        public void ReplaceSkylineSettings(SkylineSettings skylineSettings)
+        {
+            var runningConfigs = ConfigsRunning();
+            UpdateReplacedConfigRunners(ReplaceSkylineSettings(skylineSettings, runningConfigs));
+            if (runningConfigs.Count > 0)
+                throw new ArgumentException(Resources.AutoQcConfigManager_ReplaceSkylineSettings_The_following_configurations_are_running_and_could_not_be_updated_
+                                            + Environment.NewLine +
+                                            TextUtil.LineSeparate(runningConfigs));
+        }
+
+        private void UpdateReplacedConfigRunners(List<IConfig> replacedConfigs)
+        {
+            lock (_lock)
+            {
+                foreach (var config in replacedConfigs)
+                {
+                    _configRunners[config.GetName()] = new ConfigRunner((AutoQcConfig)config, _logList[0], _uiControl);
+                }
+            }
+        }
+
         #endregion
 
 
@@ -377,6 +398,17 @@ namespace AutoQC
             {
                 ((ConfigRunner)configRunner).Stop();
             }
+        }
+
+        public List<string> ConfigsRunning()
+        {
+            var runningConfigs = new List<string>();
+            foreach (var configRunner in _configRunners.Values)
+            {
+                if (configRunner.IsBusy())
+                    runningConfigs.Add(configRunner.GetConfigName());
+            }
+            return runningConfigs;
         }
 
         #endregion

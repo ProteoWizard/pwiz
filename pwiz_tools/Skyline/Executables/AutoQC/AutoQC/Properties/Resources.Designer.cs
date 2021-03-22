@@ -116,6 +116,16 @@ namespace AutoQC.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The following configurations are running and could not be updated:.
+        /// </summary>
+        internal static string AutoQcConfigManager_ReplaceSkylineSettings_The_following_configurations_are_running_and_could_not_be_updated_ {
+            get {
+                return ResourceManager.GetString("AutoQcConfigManager_ReplaceSkylineSettings_The_following_configurations_are_runni" +
+                        "ng_and_could_not_be_updated_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to File already exists in re-import queue: {0}.
         /// </summary>
         internal static string AutoQCFileSystemWatcher_AddToReimportQueue_File_already_exists_in_re_import_queue___0_ {

@@ -131,6 +131,32 @@ namespace AutoQC
             UpdateUiLogFiles();
         }
 
+        public void ReplaceAllSkylineVersions(SkylineSettings skylineSettings)
+        {
+            try
+            {
+                skylineSettings.Validate();
+            }
+            catch (ArgumentException)
+            {
+                // Only ask to replace Skyline settings if new settings are valid
+                return;
+            }
+            if (DialogResult.Yes ==
+                DisplayQuestion("Do you want to use this Skyline version for all configurations?"))
+            {
+                try
+                {
+                    _configManager.ReplaceSkylineSettings(skylineSettings);
+                }
+                catch (ArgumentException e)
+                {
+                    DisplayError(e.Message);
+                }
+                UpdateUiConfigurations();
+            }
+        }
+
         private void btnDelete_Click(object sender, EventArgs e)
         {
             _configManager.RemoveSelected();

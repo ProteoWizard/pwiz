@@ -87,7 +87,7 @@ namespace AutoQC
 
         private async Task<SkylineSettings> FixInvalidSkylineSettings()
         {
-            var skylineTypeControl = new SkylineTypeControl(_invalidConfig.UsesSkyline, _invalidConfig.UsesSkylineDaily, _invalidConfig.UsesCustomSkylinePath, _invalidConfig.SkylineSettings.CmdPath);
+            var skylineTypeControl = new SkylineTypeControl(_mainControl, _invalidConfig.UsesSkyline, _invalidConfig.UsesSkylineDaily, _invalidConfig.UsesCustomSkylinePath, _invalidConfig.SkylineSettings.CmdPath);
             return (SkylineSettings)await GetValidVariable(skylineTypeControl);
         }
 

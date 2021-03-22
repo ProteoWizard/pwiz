@@ -224,12 +224,17 @@ namespace SkylineBatch
 
         public void ReplaceSkylineSettings(SkylineSettings skylineSettings)
         {
-            var runningConfigs = ConfigsRunning();
-            UpdateReplacedConfigRunners(ReplaceSkylineSettings(skylineSettings, runningConfigs));
-            if (runningConfigs.Count > 0)
-                throw new ArgumentException(Resources.SkylineBatchConfigManager_ReplaceSkylineSettings_The_following_configurations_are_running_and_could_not_be_updated_
-                                            + Environment.NewLine +
-                                            TextUtil.LineSeparate(runningConfigs));
+            lock (_lock)
+            {
+                var runningConfigs = ConfigsRunning();
+                UpdateReplacedConfigRunners(ReplaceSkylineSettings(skylineSettings, runningConfigs));
+                if (runningConfigs.Count > 0)
+                    throw new ArgumentException(
+                        Resources
+                            .SkylineBatchConfigManager_ReplaceSkylineSettings_The_following_configurations_are_running_and_could_not_be_updated_
+                        + Environment.NewLine +
+                        TextUtil.LineSeparate(runningConfigs));
+            }
         }
 
 
