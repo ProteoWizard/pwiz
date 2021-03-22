@@ -56,6 +56,7 @@ using pwiz.Skyline.Model.Lib.Midas;
 using pwiz.Skyline.Model.Optimization;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -596,7 +597,7 @@ namespace pwiz.Skyline
                             var message = TextUtil.SpaceSeparate(
                                 Resources.SkylineWindow_FindIrtDatabase_The_database_file_specified_could_not_be_opened,
                                 e.Message);
-                            MessageBox.Show(message);
+                            MessageDlg.Show(parent, message);
                         }
                     }
                     else
@@ -674,7 +675,7 @@ namespace pwiz.Skyline
                             var message = TextUtil.SpaceSeparate(
                                 Resources.SkylineWindow_FindOptimizationDatabase_The_database_file_specified_could_not_be_opened_,
                                 e.Message);
-                            MessageBox.Show(message);
+                            MessageDlg.Show(parent, message);
                         }
                     }
                     else
@@ -749,7 +750,7 @@ namespace pwiz.Skyline
                             var message = TextUtil.SpaceSeparate(
                                 Resources.SkylineWindow_FindIonMobilityDatabase_The_ion_mobility_library_specified_could_not_be_opened_,
                                 e.Message); 
-                            MessageBox.Show(message);
+                            MessageDlg.Show(parent, message);
                         }
                     }
                     else
@@ -910,7 +911,7 @@ namespace pwiz.Skyline
                 var result = MultiButtonMsgDlg.Show(this,
                     Resources.SkylineWindow_CheckSaveDocument_Do_you_want_to_save_changes,
                     Resources.SkylineWindow_CheckSaveDocument_Yes, Resources.SkylineWindow_CheckSaveDocument_No, true);
-                    switch (result)
+                switch (result)
                 {
                     case DialogResult.Yes:
                         return SaveDocument();
@@ -1022,6 +1023,7 @@ namespace pwiz.Skyline
 
             DocumentFilePath = fileName;
             _savedVersion = document.UserRevisionIndex;
+            SavedDocumentFormat = DocumentFormat.CURRENT;
             SetActiveFile(fileName);
 
             // Make sure settings lists contain correct values for this document.
@@ -1175,6 +1177,11 @@ namespace pwiz.Skyline
 
         public void ShareDocument()
         {
+            ShareDocument(null);
+        }
+
+        public void ShareDocument(string skyZipFileName)
+        {
             var document = DocumentUI;
             if (!document.IsLoaded)
             {
@@ -1191,50 +1198,47 @@ namespace pwiz.Skyline
                 return;
             }
 
-            bool saved = false;
-            string fileName = DocumentFilePath;
-            if (string.IsNullOrEmpty(fileName))
+            if (!CheckSaveDocument())
             {
-                if (MessageBox.Show(this, Resources.SkylineWindow_shareDocumentMenuItem_Click_The_document_must_be_saved_before_it_can_be_shared, 
-                    Program.Name, MessageBoxButtons.OKCancel) == DialogResult.Cancel)
-                    return;
-
-                if (!SaveDocumentAs())
-                    return;
-
-                saved = true;
-                fileName = DocumentFilePath;
+                return;
             }
-
-            
+            document = DocumentUI;
+            string fileName = DocumentFilePath;
             ShareType shareType;
-            using (var dlgType = new ShareTypeDlg(document))
+            DocumentFormat? fileFormatOnDisk = null;
+            if (!Dirty && null != DocumentFilePath)
+            {
+                fileFormatOnDisk = SavedDocumentFormat;
+            }
+            using (var dlgType = new ShareTypeDlg(document, fileFormatOnDisk))
             {
                 if (dlgType.ShowDialog(this) == DialogResult.Cancel)
                     return;
                 shareType = dlgType.ShareType;
             }
 
-            using (var dlg = new SaveFileDialog
+            if (skyZipFileName == null)
             {
-                Title = Resources.SkylineWindow_shareDocumentMenuItem_Click_Share_Document,
-                InitialDirectory = Path.GetDirectoryName(fileName),
-                FileName = Path.GetFileNameWithoutExtension(fileName) + SrmDocumentSharing.EXT_SKY_ZIP,
-                OverwritePrompt = true,
-                DefaultExt = SrmDocumentSharing.EXT_SKY_ZIP,
-                SupportMultiDottedExtensions = true,
-                Filter = TextUtil.FileDialogFilterAll(Resources.SkylineWindow_shareDocumentMenuItem_Click_Skyline_Shared_Documents, SrmDocumentSharing.EXT),
-            })
-            {
-                if (dlg.ShowDialog(this) == DialogResult.Cancel)
-                    return;
-
-                // Make sure the document is completely saved before sharing
-                if (!saved && !SaveDocument())
-                    return;
-
-                ShareDocument(dlg.FileName, shareType);
+                using (var dlg = new SaveFileDialog
+                {
+                    Title = Resources.SkylineWindow_shareDocumentMenuItem_Click_Share_Document,
+                    OverwritePrompt = true,
+                    DefaultExt = SrmDocumentSharing.EXT_SKY_ZIP,
+                    SupportMultiDottedExtensions = true,
+                    Filter = TextUtil.FileDialogFilterAll(Resources.SkylineWindow_shareDocumentMenuItem_Click_Skyline_Shared_Documents, SrmDocumentSharing.EXT),
+                })
+                {
+                    if (fileName != null)
+                    {
+                        dlg.InitialDirectory = Path.GetDirectoryName(fileName);
+                        dlg.FileName = Path.GetFileNameWithoutExtension(fileName) + SrmDocumentSharing.EXT_SKY_ZIP;
+                    }
+                    if (dlg.ShowDialog(this) == DialogResult.Cancel)
+                        return;
+                    skyZipFileName = dlg.FileName;
+                }
             }
+            ShareDocument(skyZipFileName, shareType);
         }
 
         public bool ShareDocument(string fileDest, ShareType shareType)
@@ -1245,6 +1249,22 @@ namespace pwiz.Skyline
                 using (var longWaitDlg = new LongWaitDlg { Text = Resources.SkylineWindow_ShareDocument_Compressing_Files, })
                 {
                     var sharing = new SrmDocumentSharing(DocumentUI, DocumentFilePath, fileDest, shareType);
+                    if (shareType.MustSaveNewDocument)
+                    {
+                        var tempDocumentPath = Path.Combine(sharing.EnsureTempDir().DirPath,
+                            sharing.GetDocumentFileName());
+                        SaveLayout(tempDocumentPath);
+                        sharing.ViewFilePath = GetViewFile(tempDocumentPath);
+                    }
+                    else if (DocumentFilePath != null)
+                    {
+                        string viewFilePath = GetViewFile(DocumentFilePath);
+                        if (File.Exists(viewFilePath))
+                        {
+                            sharing.ViewFilePath = viewFilePath;
+                        }
+                    }
+
                     longWaitDlg.PerformWork(this, 1000, sharing.Share);
                     success = !longWaitDlg.IsCanceled;
                 }
@@ -1440,11 +1460,18 @@ namespace pwiz.Skyline
             }
             catch (Exception x)
             {
-                MessageDlg.ShowWithException(this,
-                                TextUtil.LineSeparate(
-                                string.Format(Resources.SkylineWindow_ImportPeakBoundariesFile_Failed_reading_the_file__0__,
-                                              peakBoundariesFile), x.Message), x);
-            }         
+                // Manually construct an AlertDlg so we can prevent the Peptide -> Molecule translation that MessageDlg does
+                using (var alertDlg = new AlertDlg(TextUtil.LineSeparate(
+                    string.Format(Resources.SkylineWindow_ImportPeakBoundariesFile_Failed_reading_the_file__0__,
+                        peakBoundariesFile), x.Message), MessageBoxButtons.OK)
+                {
+                    Exception = x
+                })
+                {
+                    alertDlg.GetModeUIHelper().ModeUI = SrmDocument.DOCUMENT_TYPE.none;
+                    alertDlg.ShowDialog(this);
+                }
+            }
         }
 
         private static void AddMessageInfo<T>(IList<MessageInfo> messageInfos, MessageType type, SrmDocument.DOCUMENT_TYPE docType, IEnumerable<T> items)
@@ -2611,8 +2638,8 @@ namespace pwiz.Skyline
             {
                 if (!canChooseReplicatesForCalibration)
                 {
-                    if (MessageBox.Show(this, Resources.SkylineWindow_CheckRetentionTimeFilter_NoReplicatesAvailableForPrediction,
-                        Program.Name, MessageBoxButtons.OKCancel) == DialogResult.Cancel)
+                    if (MultiButtonMsgDlg.Show(this, Resources.SkylineWindow_CheckRetentionTimeFilter_NoReplicatesAvailableForPrediction,
+                        MessageBoxButtons.OKCancel) == DialogResult.Cancel)
                     {
                         return false;
                     }
@@ -2998,8 +3025,8 @@ namespace pwiz.Skyline
             string fileName = DocumentFilePath;
             if (string.IsNullOrEmpty(fileName))
             {
-                if (MessageBox.Show(this, Resources.SkylineWindow_ShowPublishDlg_The_document_must_be_saved_before_it_can_be_uploaded_,
-                    Program.Name, MessageBoxButtons.OKCancel) == DialogResult.Cancel)
+                if (MultiButtonMsgDlg.Show(this, Resources.SkylineWindow_ShowPublishDlg_The_document_must_be_saved_before_it_can_be_uploaded_,
+                    MessageBoxButtons.OKCancel) == DialogResult.Cancel)
                     return;
 
                 if (!SaveDocumentAs())
