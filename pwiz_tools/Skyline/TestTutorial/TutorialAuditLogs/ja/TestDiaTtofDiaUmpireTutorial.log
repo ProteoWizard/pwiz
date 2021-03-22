@@ -50,13 +50,7 @@ All Info  :
 ペプチド検索のインポート>DDA search settings>Fragment ion typesは"b, y"です
 ペプチド検索のインポート>DDA converter settings>DDA conversion protocolは"DIA-Umpire"です
 ペプチド検索のインポート>DDA converter settings>Instrument presetは"TripleTOF"です
-ペプチド検索のインポート>DDA converter settings>DDA conversion non-default settings：MS1PPM = 10.00が含まれています
-ペプチド検索のインポート>DDA converter settings>DDA conversion non-default settings：MS2PPM = 20.00が含まれています
-ペプチド検索のインポート>DDA converter settings>DDA conversion non-default settings：SNThreshold = 1.00が含まれています
-ペプチド検索のインポート>DDA converter settings>DDA conversion non-default settings：MS2SNThreshold = 1.00が含まれています
-ペプチド検索のインポート>DDA converter settings>DDA conversion non-default settings：MaxCurveRTRange = 4.00が含まれています
-ペプチド検索のインポート>DDA converter settings>DDA conversion non-default settings：RTOverlapThreshold = 0.05が含まれています
-ペプチド検索のインポート>DDA converter settings>DDA conversion non-default settings：CorrThreshold = 0.10が含まれています
+ペプチド検索のインポート>DDA converter settings>DDA conversion non-default settings：EstimateBG = Trueが含まれています
 Extra Info: クロマトグラムを抽出 = 
 {
     結果ファイルが見つかりました = 
@@ -97,13 +91,7 @@ DDA converter settings =
     Instrument preset = "TripleTOF",
     DDA conversion non-default settings = 
     [
-        MS1PPM = 10.00,
-        MS2PPM = 20.00,
-        SNThreshold = 1.00,
-        MS2SNThreshold = 1.00,
-        MaxCurveRTRange = 4.00,
-        RTOverlapThreshold = 0.05,
-        CorrThreshold = 0.10
+        EstimateBG = True
     ]
 }
 

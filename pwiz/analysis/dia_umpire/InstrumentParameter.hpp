@@ -11,7 +11,7 @@ struct InstrumentParameter
     int Resolution;
     float MS1PPM;
     float MS2PPM;
-    float SNThreshold;
+    float SN;
     float MinMSIntensity;
     float MinMSMSIntensity;
     int NoPeakPerMin = 150;
@@ -22,7 +22,7 @@ struct InstrumentParameter
     int MS2EndCharge = 4;
     float MaxCurveRTRange = 2;
     float RTtol;
-    float MS2SNThreshold;
+    float MS2SN;
     int MaxNoPeakCluster = 4;
     int MinNoPeakCluster = 2;
     int MaxMS2NoPeakCluster = 3;
@@ -34,11 +34,11 @@ struct InstrumentParameter
     bool Deisotoping = false;
     bool BoostComplementaryIon = true;
     bool AdjustFragIntensity = true;
-    int PrecursorRank = 25;
-    int FragmentRank = 300;
-    float RTOverlapThreshold = (float) 0.3;
+    int RPmax = 25;
+    int RFmax = 300;
+    float RTOverlap = (float) 0.3;
     float CorrThreshold = (float) 0.2;
-    float ApexDelta = (float) 0.6;
+    float DeltaApex = (float) 0.6;
     float SymThreshold = (float) 0.3;
     int NoMissedScan = 1;
     int MinPeakPerPeakCurve = 1;
@@ -56,8 +56,8 @@ struct InstrumentParameter
     int TopNLocal = 6;
     int TopNLocalRange = 100;
     float IsoPattern = (float) 0.3;
-    float startRT = 0;
-    float endRT = 9999;
+    float StartRT = 0;
+    float EndRT = 9999;
     bool TargetIDOnly = false;
     bool MassDefectFilter = true;
     float MinPrecursorMass = 600;

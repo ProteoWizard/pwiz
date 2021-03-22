@@ -23,6 +23,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using MSAmanda.Utils;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 
@@ -81,7 +82,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             if (status.IsError)
             {
-                Program.ReportException(status.ErrorException);
+                MessageDlg.ShowWithException(Program.MainWindow, "error", status.ErrorException);
                 return;
             }
 
@@ -116,6 +117,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             cancelToken = new CancellationTokenSource();
             IProgressStatus status = new ProgressStatus();
             progressBar.Visible = true;
+            bool success = true;
 
             if (ImportPeptideSearch.DdaConverter != null)
             {
@@ -123,11 +125,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
                 t = Task<bool>.Factory.StartNew((statusObj) => ImportPeptideSearch.DdaConverter.Run(this, statusObj as IProgressStatus), status, cancelToken.Token);
                 await t;
+                success = t.Result;
 
                 if (cancelToken.IsCancellationRequested)
                 {
                     UpdateSearchEngineProgress(status.ChangeMessage(Resources.DDASearchControl_RunSearch_Conversion_cancelled_));
                     progressBar.Visible = false;
+                    success = false;
                 }
                 else if (!t.Result)
                 {
@@ -144,18 +148,20 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             else
                 status = status.ChangeSegments(0, ImportPeptideSearch.SearchEngine.SpectrumFileNames.Length);
 
-            if (!cancelToken.IsCancellationRequested)
+            if (success && !cancelToken.IsCancellationRequested)
             {
                 status.ChangeMessage(Resources.DDASearchControl_SearchProgress_Starting_search);
                 UpdateSearchEngineProgress(status);
 
                 t = Task<bool>.Factory.StartNew(() => ImportPeptideSearch.SearchEngine.Run(cancelToken, status), cancelToken.Token);
                 await t;
+                success = t.Result;
 
                 if (cancelToken.IsCancellationRequested)
                 {
                     UpdateSearchEngineProgress(status.ChangeMessage(Resources.DDASearchControl_SearchProgress_Search_canceled));
                     progressBar.Visible = false;
+                    success = false;
                 }
                 else if (!t.Result)
                 {
@@ -169,7 +175,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
             UpdateTaskbarProgress(TaskbarProgress.TaskbarStates.NoProgress, 0);
             btnCancel.Enabled = false;
-            OnSearchFinished?.Invoke(t.Result);
+            OnSearchFinished?.Invoke(success);
             ImportPeptideSearch.SearchEngine.SearchProgressChanged -= SearchEngine_MessageNotificationEvent;
         }
 

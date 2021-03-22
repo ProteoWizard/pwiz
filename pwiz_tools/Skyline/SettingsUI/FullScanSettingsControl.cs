@@ -902,7 +902,7 @@ namespace pwiz.Skyline.SettingsUI
             _lastPeptideSearchWorkflow = workflow;
 
             // reset controls to default (without reconstructing them like Initialize() would do)
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FullScanSettingsControl));
+            /*System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FullScanSettingsControl));
             resources.ApplyResources(groupBoxMS1, "groupBoxMS1");
             resources.ApplyResources(textPrecursorCharges, "textPrecursorCharges");
             resources.ApplyResources(lblPrecursorCharges, "lblPrecursorCharges");
@@ -910,7 +910,7 @@ namespace pwiz.Skyline.SettingsUI
             resources.ApplyResources(groupBoxMS2, "groupBoxMS2");
             resources.ApplyResources(cbHighSelectivity, "cbHighSelectivity");
             resources.ApplyResources(groupBoxRetentionTimeToKeep, "groupBoxRetentionTimeToKeep");
-            resources.ApplyResources(usercontrolIonMobilityFiltering, "usercontrolIonMobilityFiltering");
+            resources.ApplyResources(usercontrolIonMobilityFiltering, "usercontrolIonMobilityFiltering");*/
 
             // Reduce MS1 filtering groupbox
             int sepMS1FromMS2 = groupBoxMS2.Top - groupBoxMS1.Bottom;

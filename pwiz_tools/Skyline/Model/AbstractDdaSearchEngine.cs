@@ -44,7 +44,7 @@ namespace pwiz.Skyline.Model
         /// </summary>
         public class Setting : IAuditLogObject
         {
-            public Setting(string name, int defaultValue, int minValue, int maxValue)
+            public Setting(string name, int defaultValue, int minValue = int.MinValue, int maxValue = int.MaxValue)
             {
                 Name = name;
                 _value = defaultValue;
@@ -52,7 +52,7 @@ namespace pwiz.Skyline.Model
                 MaxValue = maxValue;
             }
 
-            public Setting(string name, double defaultValue, double minValue, double maxValue)
+            public Setting(string name, double defaultValue, double minValue = double.MinValue, double maxValue = double.MaxValue)
             {
                 Name = name;
                 _value = defaultValue;

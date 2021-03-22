@@ -1,8 +1,7 @@
 ﻿/*
- * Original author: Viktoria Dorfer <viktoria.dorfer .at. fh-hagenberg.at>,
- *                  Bioinformatics Research Group, University of Applied Sciences Upper Austria
+ * Original author: Matt Chambers <matt.chambers42 .at. gmail.com >
  *
- * Copyright 2020 University of Applied Sciences Upper Austria
+ * Copyright 2021 University of Washington - Seattle, WA
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
+using JetBrains.Annotations;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
@@ -33,8 +33,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
     public partial class ConverterSettingsControl : UserControl
     {
         private ImportPeptideSearch ImportPeptideSearch { get; set; }
+
+        private const string ESTIMATEBG = @"EstimateBG";
         private Func<FullScanSettingsControl> _fullScanSettingsControlGetter;
-        private IDictionary<string, AbstractDdaSearchEngine.Setting> _diaUmpireAdditionalSettings;
+        [NotNull] private IDictionary<string, AbstractDdaSearchEngine.Setting> _diaUmpireAdditionalSettings;
 
         public ConverterSettingsControl(IModifyDocumentContainer documentContainer, ImportPeptideSearch importPeptideSearch, Func<FullScanSettingsControl> fullScanSettingsControlGetter)
         {
@@ -42,6 +44,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             ImportPeptideSearch = importPeptideSearch;
             _fullScanSettingsControlGetter = fullScanSettingsControlGetter;
             converterTabControl.SelectedTab = null;
+
+            _diaUmpireAdditionalSettings = new Dictionary<string, AbstractDdaSearchEngine.Setting>();
 
             LoadComboboxEntries();
         }
@@ -75,7 +79,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             get
             {
                 if (converterTabControl.SelectedTab == diaUmpireTabPage)
+                {
+                    ApplyVisibleAdditionalSettings();
                     return _diaUmpireAdditionalSettings;
+                }
                 //else if (converterTabControl.SelectedTab == msconvertTabPage)
                 //  return _msconvertAdditionalSettings;
                 return null;
@@ -228,9 +235,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 }
             }
 
-            if (_diaUmpireAdditionalSettings != null)
-                foreach (var param in _diaUmpireAdditionalSettings)
-                    allDiaUmpireSettings[param.Key].Value = param.Value.Value;
+            foreach (var param in _diaUmpireAdditionalSettings)
+                allDiaUmpireSettings[param.Key].Value = param.Value.Value;
 
             // only non-default settings are kept in _diaUmpireAdditionalSettings
             _diaUmpireAdditionalSettings = new Dictionary<string, AbstractDdaSearchEngine.Setting>();
@@ -250,9 +256,38 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 setting.Value = value;
             };
 
+            stringToValueIfNonDefault(EstimateBackground.ToString(), defaultDiaUmpireSettings[ESTIMATEBG]);
+
             KeyValueGridDlg.Show(Resources.SearchSettingsControl_Additional_Settings,
                 allDiaUmpireSettings, valueToString, stringToValueIfNonDefault,
                 (value, setting) => setting.Validate(value));
+        }
+
+        private void UpdateSettingIfNonDefault<T>(IDictionary<string, AbstractDdaSearchEngine.Setting> settingStore,
+            string settingName, T newValue, T defaultValue) where T : IEquatable<T>
+        {
+            if (newValue.Equals(defaultValue))
+                return;
+
+            dynamic newValueDynamic = newValue;
+            settingStore[settingName] = new AbstractDdaSearchEngine.Setting(settingName, newValueDynamic);
+        }
+
+        private void ApplyVisibleAdditionalSettings()
+        {
+            switch (CurrentProtocol)
+            {
+                case Protocol.none:
+                    break;
+
+                case Protocol.msconvert:
+                    break;
+
+                case Protocol.dia_umpire:
+                    var diaUmpireConfig = DiaUmpire.Config.GetDefaultsForInstrument(InstrumentPreset);
+                    UpdateSettingIfNonDefault(_diaUmpireAdditionalSettings, ESTIMATEBG, EstimateBackground, (bool) diaUmpireConfig.Parameters[ESTIMATEBG]);
+                    break;
+            }
         }
 
         public DiaUmpire.Config.InstrumentPreset InstrumentPreset
@@ -261,13 +296,17 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             set { cbInstrumentPreset.SelectedIndex = (int) value; }
         }
 
-        public AbstractDdaConverter GetDiaUmpireConverter()
+        public bool EstimateBackground
+        {
+            get { return cbEstimateBg.Checked; }
+            set { cbEstimateBg.Checked = value; }
+        }
+
+        public DiaUmpireDdaConverter GetDiaUmpireConverter()
         {
             var diaUmpireConfig = DiaUmpire.Config.GetDefaultsForInstrument(InstrumentPreset);
-
-            if (_diaUmpireAdditionalSettings != null)
-                foreach (var kvp in _diaUmpireAdditionalSettings)
-                    diaUmpireConfig.Parameters[kvp.Key] = kvp.Value.Value;
+            foreach (var kvp in AdditionalSettings)
+                diaUmpireConfig.Parameters[kvp.Key] = kvp.Value.Value;
 
             return new DiaUmpireDdaConverter(ImportPeptideSearch.SearchEngine, _fullScanSettingsControlGetter().IsolationScheme, diaUmpireConfig);
         }

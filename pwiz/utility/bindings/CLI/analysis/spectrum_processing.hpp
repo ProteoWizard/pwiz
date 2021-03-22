@@ -528,7 +528,7 @@ public ref class SpectrumList_DiaUmpire : public msdata::SpectrumList
             DEFINE_SIMPLE_PRIMITIVE_PROPERTY(int, Resolution);
             DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, MS1PPM);
             DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, MS2PPM);
-            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, SNThreshold);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, SN);
             DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, MinMSIntensity);
             DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, MinMSMSIntensity);
             DEFINE_SIMPLE_PRIMITIVE_PROPERTY(int, NoPeakPerMin);
@@ -539,7 +539,7 @@ public ref class SpectrumList_DiaUmpire : public msdata::SpectrumList
             DEFINE_SIMPLE_PRIMITIVE_PROPERTY(int, MS2EndCharge);
             DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, MaxCurveRTRange);
             DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, RTtol);
-            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, MS2SNThreshold);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, MS2SN);
             DEFINE_SIMPLE_PRIMITIVE_PROPERTY(int, MaxNoPeakCluster);
             DEFINE_SIMPLE_PRIMITIVE_PROPERTY(int, MinNoPeakCluster);
             DEFINE_SIMPLE_PRIMITIVE_PROPERTY(int, MaxMS2NoPeakCluster);
@@ -551,11 +551,11 @@ public ref class SpectrumList_DiaUmpire : public msdata::SpectrumList
             DEFINE_SIMPLE_PRIMITIVE_PROPERTY(bool, Deisotoping);
             DEFINE_SIMPLE_PRIMITIVE_PROPERTY(bool, BoostComplementaryIon);
             DEFINE_SIMPLE_PRIMITIVE_PROPERTY(bool, AdjustFragIntensity);
-            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(int, PrecursorRank);
-            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(int, FragmentRank);
-            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, RTOverlapThreshold);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(int, RPmax);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(int, RFmax);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, RTOverlap);
             DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, CorrThreshold);
-            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, ApexDelta);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, DeltaApex);
             DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, SymThreshold);
             DEFINE_SIMPLE_PRIMITIVE_PROPERTY(int, NoMissedScan);
             DEFINE_SIMPLE_PRIMITIVE_PROPERTY(int, MinPeakPerPeakCurve);
@@ -573,8 +573,8 @@ public ref class SpectrumList_DiaUmpire : public msdata::SpectrumList
             DEFINE_SIMPLE_PRIMITIVE_PROPERTY(int, TopNLocal);
             DEFINE_SIMPLE_PRIMITIVE_PROPERTY(int, TopNLocalRange);
             DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, IsoPattern);
-            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, startRT);
-            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, endRT);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, StartRT);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, EndRT);
             DEFINE_SIMPLE_PRIMITIVE_PROPERTY(bool, TargetIDOnly);
             DEFINE_SIMPLE_PRIMITIVE_PROPERTY(bool, MassDefectFilter);
             DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, MinPrecursorMass);

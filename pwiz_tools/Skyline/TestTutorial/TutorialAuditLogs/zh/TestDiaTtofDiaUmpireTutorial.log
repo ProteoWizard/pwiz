@@ -50,13 +50,7 @@ All Info  :
 导入肽段搜索 > DDA search settings > Fragment ion types 是 "b, y"
 导入肽段搜索 > DDA converter settings > DDA conversion protocol 是 "DIA-Umpire"
 导入肽段搜索 > DDA converter settings > Instrument preset 是 "TripleTOF"
-导入肽段搜索 > DDA converter settings > DDA conversion non-default settings : 包含 MS1PPM = 10.00
-导入肽段搜索 > DDA converter settings > DDA conversion non-default settings : 包含 MS2PPM = 20.00
-导入肽段搜索 > DDA converter settings > DDA conversion non-default settings : 包含 SNThreshold = 1.00
-导入肽段搜索 > DDA converter settings > DDA conversion non-default settings : 包含 MS2SNThreshold = 1.00
-导入肽段搜索 > DDA converter settings > DDA conversion non-default settings : 包含 MaxCurveRTRange = 4.00
-导入肽段搜索 > DDA converter settings > DDA conversion non-default settings : 包含 RTOverlapThreshold = 0.05
-导入肽段搜索 > DDA converter settings > DDA conversion non-default settings : 包含 CorrThreshold = 0.10
+导入肽段搜索 > DDA converter settings > DDA conversion non-default settings : 包含 EstimateBG = True
 Extra Info: 提取色谱图 = 
 {
     查找到结果文件 = 
@@ -97,13 +91,7 @@ DDA converter settings =
     Instrument preset = "TripleTOF",
     DDA conversion non-default settings = 
     [
-        MS1PPM = 10.00,
-        MS2PPM = 20.00,
-        SNThreshold = 1.00,
-        MS2SNThreshold = 1.00,
-        MaxCurveRTRange = 4.00,
-        RTOverlapThreshold = 0.05,
-        CorrThreshold = 0.10
+        EstimateBG = True
     ]
 }
 

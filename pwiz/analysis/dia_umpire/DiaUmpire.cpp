@@ -100,9 +100,9 @@ namespace DiaUmpire {
 
         IsotopePatternMap isotopePatternMap_;
 
-        bool PeakCurveSmoothing(vector<PeakCurvePtr>& peakCurves, bool multithreaded = true);
-        bool PeakCurveCorrClustering(MzRange mzRange, vector<PeakCurvePtr>& peakCurves, vector<PeakClusterPtr>& peakClusters, int msLevel, bool multithreaded = true);
-        bool FindAllMzTracePeakCurves(const ScanCollection& scanCollection, vector<PeakCurvePtr>& peakCurves, float ppmTolerance, int msLevel,
+        bool PeakCurveSmoothing(vector<PeakCurvePtr>& peakCurves, const int& windowsProcessed, const int& windowsTotal, bool multithreaded = true);
+        bool PeakCurveCorrClustering(MzRange mzRange, vector<PeakCurvePtr>& peakCurves, vector<PeakClusterPtr>& peakClusters, int msLevel, const int& windowsProcessed, const int& windowsTotal, bool multithreaded = true);
+        bool FindAllMzTracePeakCurves(const ScanCollection& scanCollection, vector<PeakCurvePtr>& peakCurves, float ppmTolerance, int msLevel, const int& windowsProcessed, const int& windowsTotal,
                                       DiaUmpireStep step = DiaUmpireStep::InlineStep, const vector<size_t>& scanIndices = vector<size_t>());
         ScanCollectionPtr GetAllScanCollectionByMSLabel(bool MS1Included, bool MS2Included, bool MS1Peak, bool MS2Peak, float startTime, float endTime, DiaUmpireStep step);
         ScanCollectionPtr GetScanCollectionMS1Window(const TargetWindow& MS1Window, bool IncludePeak, float startTime, float endTime);
@@ -119,7 +119,8 @@ namespace DiaUmpire {
             string msgWithStep = "[step " + lexical_cast<string>(int(step)) + " of " + lexical_cast<string>(int(DiaUmpireStep::Count)-1) + "] " + msg;
 
             boost::lock_guard<boost::mutex> g(ilrMutex_);
-            return IterationListener::Status_Cancel == ilr_->broadcastUpdateMessage(IterationListener::UpdateMessage(index, size, msgWithStep));
+            canceled_ = canceled_ || IterationListener::Status_Cancel == ilr_->broadcastUpdateMessage(IterationListener::UpdateMessage(index, size, msgWithStep));
+            return canceled_;
         }
 
         const pwiz::msdata::MSData& msd_;
@@ -143,13 +144,14 @@ namespace DiaUmpire {
         std::vector<std::pair<int, float>> msLevelAndScanTimeByIndex_;
         const pwiz::util::IterationListenerRegistry* ilr_;
         mutable boost::mutex ilrMutex_;
+        mutable std::atomic<bool> canceled_;
 
         friend struct DiaWindow;
     };
 
 
     DiaUmpire::Impl::Impl(const MSData& msd, const SpectrumListPtr& spectrumList, const Config& config, const IterationListenerRegistry* ilr)
-        : msd_(msd), slp_(spectrumList), sl_(*slp_), config_(config), ilr_(ilr)
+        : msd_(msd), slp_(spectrumList), sl_(*slp_), config_(config), ilr_(ilr), canceled_(false)
     {
         isotopePatternMap_ = generateIsotopePatternMap(config_.instrumentParameters);
 
@@ -170,9 +172,9 @@ namespace DiaUmpire {
             bfs::remove(filepath);
 #endif
 
-        if (!BuildDIAWindows()) return;
-        if (!MS1PeakDetection()) return;
-        if (!DIAMS2PeakDetection()) return;
+        if (!BuildDIAWindows()) throw runtime_error(canceled_ ? "user canceled" : "error in BuildDIAWindows");
+        if (!MS1PeakDetection()) throw runtime_error(canceled_ ? "user canceled" : "error in MS1PeakDetection");
+        if (!DIAMS2PeakDetection()) throw runtime_error(canceled_ ? "user canceled" : "error in DIAMS2PeakDetection");
         
         ms1PeakClusters_.clear();
         ms1PeakCurves_.clear();
@@ -320,14 +322,15 @@ namespace DiaUmpire {
         return true;
     }
 
-    bool DiaUmpire::Impl::FindAllMzTracePeakCurves(const ScanCollection& scanCollection, vector<PeakCurvePtr>& peakCurves, float ppmTolerance, int msLevel, DiaUmpireStep step, const vector<size_t>& scanIndices)
+    bool DiaUmpire::Impl::FindAllMzTracePeakCurves(const ScanCollection& scanCollection, vector<PeakCurvePtr>& peakCurves, float ppmTolerance, int msLevel,
+                                                   const int& windowsProcessed, const int& windowsTotal, DiaUmpireStep step, const vector<size_t>& scanIndices)
     {
         boost::container::flat_set<pair<int, float>> IncludedHashMap;
 
         IncludedHashMap.reserve(scanCollection.GetNumPeaks() / 2);
 
         float preRT = 0;
-        float SNR = msLevel == 1 ? config_.instrumentParameters.SNThreshold : config_.instrumentParameters.MS2SNThreshold;
+        float SNR = msLevel == 1 ? config_.instrumentParameters.SN : config_.instrumentParameters.MS2SN;
         string progressMessage = "building peak curves";
 
         const auto& scansForMsLevel = scanIndices.empty() ? scanCollection.GetScanNoArray(msLevel) : scanIndices;
@@ -337,7 +340,12 @@ namespace DiaUmpire {
         //Loop for each scan in the ScanCollection
         for (int scanIdx = 0; scanIdx < scansForMsLevel.size(); ++scanIdx)
         {
-            if (msLevel == 1 && iterateAndCheckCancellation(scanIdx, scansForMsLevel.size(), progressMessage, step))
+            if (msLevel == 1)
+            {
+                if (iterateAndCheckCancellation(scanIdx, scansForMsLevel.size(), progressMessage, step))
+                    return false;
+            }
+            else if (iterateAndCheckCancellation(windowsProcessed, windowsTotal, "processing DIA window", DiaUmpireStep::ProcessDiaWindows))
                 return false;
 
             const ScanData* scanPtr = scanCollection.GetScan(scansForMsLevel[scanIdx]);
@@ -565,7 +573,7 @@ namespace DiaUmpire {
         return nullptr;
     }
 
-    bool DiaUmpire::Impl::PeakCurveSmoothing(vector<PeakCurvePtr>& peakCurves, bool multithreaded)
+    bool DiaUmpire::Impl::PeakCurveSmoothing(vector<PeakCurvePtr>& peakCurves, const int& windowsProcessed, const int& windowsTotal, bool multithreaded)
     {
 #ifdef DIAUMPIRE_DEBUG
         boost::asio::thread_pool pool(1);// multithreaded ? config_.maxThreads : max(4, config_.maxThreads) / 4);
@@ -581,15 +589,20 @@ namespace DiaUmpire {
         {
             boost::asio::post(pool, [&, curve]() mutable
             {
-                if (multithreaded && iterateAndCheckCancellation(curvesSmoothed, peakCurves.size(), progressMessage, DiaUmpireStep::SmoothPeakCurves))
-                    return;
+                if (multithreaded)
+                {
+                    if (iterateAndCheckCancellation(peakCurves.size(), peakCurves.size(), progressMessage, DiaUmpireStep::SmoothPeakCurves))
+                        return false;
+                }
+                else if (iterateAndCheckCancellation(windowsProcessed, windowsTotal, "processing DIA window", DiaUmpireStep::ProcessDiaWindows))
+                    return false;
 
                 curve->DoBspline();
 
                 if (config_.instrumentParameters.DetectByCWT)
                 {
                     curve->DetectPeakRegion();
-                    auto separateRegionPeakCurves = curve->SeparatePeakByRegion(config_.instrumentParameters.SNThreshold);
+                    auto separateRegionPeakCurves = curve->SeparatePeakByRegion(config_.instrumentParameters.SN);
 
                     boost::lock_guard<boost::mutex> g(m);
                     for (PeakCurvePtr& result : separateRegionPeakCurves)
@@ -606,11 +619,17 @@ namespace DiaUmpire {
                 }
 
                 ++curvesSmoothed;
+                return true;
             });
         }
         pool.join();
 
-        if (multithreaded && iterateAndCheckCancellation(peakCurves.size(), peakCurves.size(), progressMessage, DiaUmpireStep::SmoothPeakCurves))
+        if (multithreaded)
+        {
+            if (iterateAndCheckCancellation(peakCurves.size(), peakCurves.size(), progressMessage, DiaUmpireStep::SmoothPeakCurves))
+                return false;
+        }
+        else if (iterateAndCheckCancellation(windowsProcessed, windowsTotal, "processing DIA window", DiaUmpireStep::ProcessDiaWindows))
             return false;
 
         swap(peakCurves, resultCurves);
@@ -641,7 +660,8 @@ namespace DiaUmpire {
         return true;
     }
 
-    bool DiaUmpire::Impl::PeakCurveCorrClustering(MzRange mzRange, vector<PeakCurvePtr>& peakCurves, vector<PeakClusterPtr>& peakClusters, int msLevel, bool multithreaded)
+    bool DiaUmpire::Impl::PeakCurveCorrClustering(MzRange mzRange, vector<PeakCurvePtr>& peakCurves, vector<PeakClusterPtr>& peakClusters, int msLevel,
+                                                  const int& windowsProcessed, const int& windowsTotal, bool multithreaded)
     {
         int MaxNoPeakCluster;
         int MinNoPeakCluster;
@@ -657,7 +677,7 @@ namespace DiaUmpire {
             StartCharge = config_.instrumentParameters.StartCharge;
             EndCharge = config_.instrumentParameters.EndCharge;
             MiniIntensity = config_.instrumentParameters.MinMSMSIntensity;
-            SNR = config_.instrumentParameters.MS2SNThreshold;
+            SNR = config_.instrumentParameters.MS2SN;
         }
         else
         {
@@ -666,7 +686,7 @@ namespace DiaUmpire {
             StartCharge = config_.instrumentParameters.MS2StartCharge;
             EndCharge = config_.instrumentParameters.MS2EndCharge;
             MiniIntensity = config_.instrumentParameters.MinMSMSIntensity;
-            SNR = config_.instrumentParameters.MS2SNThreshold;
+            SNR = config_.instrumentParameters.MS2SN;
         }
 
         // generate peak curve search tree
@@ -704,17 +724,28 @@ namespace DiaUmpire {
         {
             boost::asio::post(pool, [&, i]
             {
-                if (multithreaded && iterateAndCheckCancellation(curvesClustered, curvesToCluster, progressMessage, DiaUmpireStep::ClusterPeakCurves))
-                    return;
+                if (multithreaded)
+                {
+                    if (iterateAndCheckCancellation(curvesClustered, curvesToCluster, progressMessage, DiaUmpireStep::ClusterPeakCurves))
+                        return false;
+                }
+                else if (iterateAndCheckCancellation(windowsProcessed, windowsTotal, "processing DIA window", DiaUmpireStep::ProcessDiaWindows))
+                    return false;
 
                 clusterJobs[i]();
 
                 ++curvesClustered;
+                return true;
             });
         }
         pool.join();
 
-        if (multithreaded && iterateAndCheckCancellation(curvesClustered, curvesToCluster, progressMessage, DiaUmpireStep::ClusterPeakCurves))
+        if (multithreaded)
+        {
+            if (iterateAndCheckCancellation(curvesClustered, curvesToCluster, progressMessage, DiaUmpireStep::ClusterPeakCurves))
+                return false;
+        }
+        else if (iterateAndCheckCancellation(windowsProcessed, windowsTotal, "processing DIA window", DiaUmpireStep::ProcessDiaWindows))
             return false;
 
         for (auto& unit : clusterJobs)
@@ -815,7 +846,7 @@ namespace DiaUmpire {
         if (ms1WindowScheme_.empty())
         {
             //The data has only one MS1 scan set
-            scanCollections.emplace_back(GetAllScanCollectionByMSLabel(true, true, true, false, config_.instrumentParameters.startRT, config_.instrumentParameters.endRT, DiaUmpireStep::ReadAllSpectra));
+            scanCollections.emplace_back(GetAllScanCollectionByMSLabel(true, true, true, false, config_.instrumentParameters.StartRT, config_.instrumentParameters.EndRT, DiaUmpireStep::ReadAllSpectra));
         }
         else
         {
@@ -847,14 +878,14 @@ namespace DiaUmpire {
         for (const ScanCollectionPtr& scanCollection : scanCollections)
         {
             //Detect mz trace peak curves for each ScanCollection
-            FindAllMzTracePeakCurves(*scanCollection, ms1PeakCurves_, config_.instrumentParameters.MS1PPM, 1, DiaUmpireStep::BuildPeakCurves);
+            FindAllMzTracePeakCurves(*scanCollection, ms1PeakCurves_, config_.instrumentParameters.MS1PPM, 1, 0, 0, DiaUmpireStep::BuildPeakCurves);
         }
 
         //Perform peak smoothing for each detected peak curve
-        PeakCurveSmoothing(ms1PeakCurves_);
+        PeakCurveSmoothing(ms1PeakCurves_, 0, 0);
 
         // ClearRawPeaks(); clear unsortedPeakCurves.GetPeakLists()
-        PeakCurveCorrClustering(MzRange{ -1e30f, 1e30f }, ms1PeakCurves_, ms1PeakClusters_, 1);
+        PeakCurveCorrClustering(MzRange{ -1e30f, 1e30f }, ms1PeakCurves_, ms1PeakClusters_, 1, 0, 0);
 
         if (config_.exportMs1ClusterTable)
             ExportPeakClusterResultCSV("MS1", ms1PeakClusters_);
@@ -864,7 +895,7 @@ namespace DiaUmpire {
 
     bool DiaUmpire::Impl::DIAMS2PeakDetection()
     {
-        auto scanCollectionAllMs2 = GetAllScanCollectionByMSLabel(false, true, true, false, config_.instrumentParameters.startRT, config_.instrumentParameters.endRT, DiaUmpireStep::ReadMs2Spectra);
+        auto scanCollectionAllMs2 = GetAllScanCollectionByMSLabel(false, true, true, false, config_.instrumentParameters.StartRT, config_.instrumentParameters.EndRT, DiaUmpireStep::ReadMs2Spectra);
 
 #ifdef DIAUMPIRE_DEBUG
         {
@@ -898,27 +929,19 @@ namespace DiaUmpire {
                 string diaWindowId = (boost::format("MS2:[%.1f-%.1f]") % diaWindow.mzRange.begin % diaWindow.mzRange.end).str();
 
                 if (iterateAndCheckCancellation(windowsProcessed, diaWindows_.size(), progressMessage, DiaUmpireStep::ProcessDiaWindows))
-                    return;
+                    return false;
 
                 //cout << "Processing DIA MS2 (mz range):" << DIAwindow.DIA_MZ_Range.getX() << "_" << DIAwindow.DIA_MZ_Range.getY() << "( " << (count++) << "/" diaWindows_.size() << " )";
 
                 DiaUmpireStep buildPeakCurvesStep = multithreadWindows ? DiaUmpireStep::InlineStep : DiaUmpireStep::BuildPeakCurves;
-                FindAllMzTracePeakCurves(*scanCollectionAllMs2, diaWindow.peakCurves, config_.instrumentParameters.MS2PPM, 2, buildPeakCurvesStep, diaWindow.spectraInRange);
-                if (iterateAndCheckCancellation(windowsProcessed, diaWindows_.size(), progressMessage, DiaUmpireStep::ProcessDiaWindows))
-                    return;
-
-                PeakCurveSmoothing(diaWindow.peakCurves, !multithreadWindows);
-                if (iterateAndCheckCancellation(windowsProcessed, diaWindows_.size(), progressMessage, DiaUmpireStep::ProcessDiaWindows))
-                    return;
-
-                PeakCurveCorrClustering(diaWindow.mzRange, diaWindow.peakCurves, diaWindow.peakClusters, 2, !multithreadWindows);
-                if (iterateAndCheckCancellation(windowsProcessed, diaWindows_.size(), progressMessage, DiaUmpireStep::ProcessDiaWindows))
-                    return;
+                FindAllMzTracePeakCurves(*scanCollectionAllMs2, diaWindow.peakCurves, config_.instrumentParameters.MS2PPM, 2, windowsProcessed, diaWindows_.size(), buildPeakCurvesStep, diaWindow.spectraInRange);
+                PeakCurveSmoothing(diaWindow.peakCurves, windowsProcessed, diaWindows_.size(), !multithreadWindows);
+                PeakCurveCorrClustering(diaWindow.mzRange, diaWindow.peakCurves, diaWindow.peakClusters, 2, windowsProcessed, diaWindows_.size(), !multithreadWindows);
 
                 if (diaWindow.peakCurves.empty())
                 {
                     cerr << "No peak detected for window " << diaWindow.mzRange.begin << "-" << diaWindow.mzRange.end << endl;
-                    return;
+                    return false;
                 }
 
                 if (config_.exportMs2ClusterTable)
@@ -948,12 +971,15 @@ namespace DiaUmpire {
                     //cout << "No. of remaining fragment peaks: " << diaWindow.peakCurves.size() << endl;
                 }
 
+                if (iterateAndCheckCancellation(windowsProcessed, diaWindows_.size(), progressMessage, DiaUmpireStep::ProcessDiaWindows))
+                    return false;
+
                 //FragmentGrouping();
                 diaWindow.PrecursorFragmentPairBuildingForMS1(*this);
                 diaWindow.PrecursorFragmentPairBuildingForUnfragmentedIon(*this);
 
                 if (iterateAndCheckCancellation(windowsProcessed, diaWindows_.size(), progressMessage, DiaUmpireStep::ProcessDiaWindows))
-                    return;
+                    return false;
 
                 vector<shared_ptr<PseudoMSMSProcessing>> LocalScanList;
 
@@ -981,7 +1007,7 @@ namespace DiaUmpire {
                 }
 
                 if (iterateAndCheckCancellation(windowsProcessed, diaWindows_.size(), progressMessage, DiaUmpireStep::ProcessDiaWindows))
-                    return;
+                    return false;
 
                 for (PeakClusterPtr& ms2clusterPtr : diaWindow.peakClusters)
                 {
@@ -1096,7 +1122,7 @@ namespace DiaUmpire {
                 }
 
                 if (iterateAndCheckCancellation(windowsProcessed, diaWindows_.size(), progressMessage, DiaUmpireStep::ProcessDiaWindows))
-                    return;
+                    return false;
 
                 diaWindow.peakClusters.clear();
                 diaWindow.peakCurves.clear();
@@ -1106,6 +1132,7 @@ namespace DiaUmpire {
                 diaWindow.FragmentMS1Ranking.clear();
                 diaWindow.FragmentUnfragRanking.clear();
                 ++windowsProcessed;
+                return true;
             });
         }
         pool.join();
@@ -1224,9 +1251,9 @@ namespace DiaUmpire {
                     }
                 }
                 if (fragmentClusterUnit.Correlation >= instrumentParameters.CorrThreshold &&
-                    CorrRank <= instrumentParameters.FragmentRank &&
-                    fragmentClusterUnit.FragmentMS1Rank <= instrumentParameters.PrecursorRank &&
-                    fragmentClusterUnit.ApexDelta <= instrumentParameters.ApexDelta) {
+                    CorrRank <= instrumentParameters.RFmax &&
+                    fragmentClusterUnit.FragmentMS1Rank <= instrumentParameters.RPmax &&
+                    fragmentClusterUnit.DeltaApex <= instrumentParameters.DeltaApex) {
                     newlist.push_back(fragmentClusterUnit);
                 }
             }
@@ -1329,9 +1356,9 @@ namespace DiaUmpire {
                     }
                 }
                 if (fragmentClusterUnit.Correlation >= instrumentParameters.CorrThreshold &&
-                    CorrRank <= instrumentParameters.FragmentRank &&
-                    fragmentClusterUnit.FragmentMS1Rank <= instrumentParameters.PrecursorRank &&
-                    fragmentClusterUnit.ApexDelta <= instrumentParameters.ApexDelta) {
+                    CorrRank <= instrumentParameters.RFmax &&
+                    fragmentClusterUnit.FragmentMS1Rank <= instrumentParameters.RPmax &&
+                    fragmentClusterUnit.DeltaApex <= instrumentParameters.DeltaApex) {
                     newlist.push_back(fragmentClusterUnit);
                 }
             }
@@ -1370,8 +1397,8 @@ namespace DiaUmpire {
         // default parameters from TTOF5600
         param.MS1PPM = 30;
         param.MS2PPM = 40;
-        param.SNThreshold = 2.f;
-        param.MS2SNThreshold = 2.f;
+        param.SN = 2.f;
+        param.MS2SN = 2.f;
         param.MinMSIntensity = 5.f;
         param.MinMSMSIntensity = 1.f;
         param.MinRTRange = 0.1f;
@@ -1437,11 +1464,11 @@ namespace DiaUmpire {
             }
             else if (type == "RPmax")
             {
-                param.PrecursorRank = lexical_cast<int>(value);
+                param.RPmax = lexical_cast<int>(value);
             }
             else if (type == "RFmax")
             {
-                param.FragmentRank = lexical_cast<int>(value);
+                param.RFmax = lexical_cast<int>(value);
             }
             else if (type == "CorrThreshold")
             {
@@ -1449,11 +1476,11 @@ namespace DiaUmpire {
             }
             else if (type == "DeltaApex")
             {
-                param.ApexDelta = lexical_cast<float>(value);
+                param.DeltaApex = lexical_cast<float>(value);
             }
             else if (type == "RTOverlap")
             {
-                param.RTOverlapThreshold = lexical_cast<float>(value);
+                param.RTOverlap = lexical_cast<float>(value);
             }
             else if (type == "BoostComplementaryIon")
             {
@@ -1473,11 +1500,11 @@ namespace DiaUmpire {
             }
             else if (type == "SE.SN")
             {
-                param.SNThreshold = lexical_cast<float>(value);
+                param.SN = lexical_cast<float>(value);
             }
             else if (type == "SE.MS2SN")
             {
-                param.MS2SNThreshold = lexical_cast<float>(value);
+                param.MS2SN = lexical_cast<float>(value);
             }
             else if (type == "SE.MinMSIntensity")
             {
@@ -1563,11 +1590,11 @@ namespace DiaUmpire {
             }
             else if (type == "SE.StartRT")
             {
-                param.startRT = lexical_cast<float>(value);
+                param.StartRT = lexical_cast<float>(value);
             }
             else if (type == "SE.EndRT")
             {
-                param.endRT = lexical_cast<float>(value);
+                param.EndRT = lexical_cast<float>(value);
             }
             else if (type == "SE.RemoveGroupedPeaksRTOverlap")
             {
@@ -1638,66 +1665,67 @@ namespace DiaUmpire {
 
         result["BoostComplementaryIon"] = lexical_cast<string>(BoostComplementaryIon);
         result["AdjustFragIntensity"] = lexical_cast<string>(AdjustFragIntensity);
-        result["RPmax"] = lexical_cast<string>(PrecursorRank);
-        result["RFmax"] = lexical_cast<string>(FragmentRank);
-        result["RTOverlap"] = lexical_cast<string>(RTOverlapThreshold);
-        result["CorrThreshold"] = lexical_cast<string>(CorrThreshold);
-        result["DeltaApex"] = lexical_cast<string>(ApexDelta);
+        result["RPmax"] = toString(RPmax);
+        result["RFmax"] = toString(RFmax);
+        result["RTOverlap"] = toString(RTOverlap);
+        result["CorrThreshold"] = toString(CorrThreshold);
+        result["DeltaApex"] = toString(DeltaApex);
 
-        result["SE.Resolution"] = lexical_cast<string>(Resolution);
-        result["SE.MS1PPM"] = lexical_cast<string>(MS1PPM);
-        result["SE.MS2PPM"] = lexical_cast<string>(MS2PPM);
-        result["SE.SN"] = lexical_cast<string>(SNThreshold);
-        result["SE.MinMSIntensity"] = lexical_cast<string>(MinMSIntensity);
-        result["SE.MinMSMSIntensity"] = lexical_cast<string>(MinMSMSIntensity);
-        result["SE.NoPeakPerMin"] = lexical_cast<string>(NoPeakPerMin);
-        result["SE.MinRTRange"] = lexical_cast<string>(MinRTRange);
-        result["SE.StartCharge"] = lexical_cast<string>(StartCharge);
-        result["SE.EndCharge"] = lexical_cast<string>(EndCharge);
-        result["SE.MS2StartCharge"] = lexical_cast<string>(MS2StartCharge);
-        result["SE.MS2EndCharge"] = lexical_cast<string>(MS2EndCharge);
-        result["SE.MaxCurveRTRange"] = lexical_cast<string>(MaxCurveRTRange);
-        result["SE.RTtol"] = lexical_cast<string>(RTtol);
-        result["SE.MS2SN"] = lexical_cast<string>(MS2SNThreshold);
-        result["SE.MaxNoPeakCluster"] = lexical_cast<string>(MaxNoPeakCluster);
-        result["SE.MinNoPeakCluster"] = lexical_cast<string>(MinNoPeakCluster);
-        result["SE.MaxMS2NoPeakCluster"] = lexical_cast<string>(MaxMS2NoPeakCluster);
-        result["SE.MinMS2NoPeakCluster"] = lexical_cast<string>(MinMS2NoPeakCluster);
+        result["SE.Resolution"] = toString(Resolution);
+        result["SE.MS1PPM"] = toString(MS1PPM);
+        result["SE.MS2PPM"] = toString(MS2PPM);
+        result["SE.SN"] = toString(SN);
+        result["SE.MinMSIntensity"] = toString(MinMSIntensity);
+        result["SE.MinMSMSIntensity"] = toString(MinMSMSIntensity);
+        result["SE.NoPeakPerMin"] = toString(NoPeakPerMin);
+        result["SE.MinRTRange"] = toString(MinRTRange);
+        result["SE.StartCharge"] = toString(StartCharge);
+        result["SE.EndCharge"] = toString(EndCharge);
+        result["SE.MS2StartCharge"] = toString(MS2StartCharge);
+        result["SE.MS2EndCharge"] = toString(MS2EndCharge);
+        result["SE.MaxCurveRTRange"] = toString(MaxCurveRTRange);
+        result["SE.RTtol"] = toString(RTtol);
+        result["SE.MS2SN"] = toString(MS2SN);
+        result["SE.MaxNoPeakCluster"] = toString(MaxNoPeakCluster);
+        result["SE.MinNoPeakCluster"] = toString(MinNoPeakCluster);
+        result["SE.MaxMS2NoPeakCluster"] = toString(MaxMS2NoPeakCluster);
+        result["SE.MinMS2NoPeakCluster"] = toString(MinMS2NoPeakCluster);
+        result["SE.SymThreshold"] = toString(SymThreshold);
+        result["SE.NoMissedScan"] = toString(NoMissedScan);
+        result["SE.MinPeakPerPeakCurve"] = toString(MinPeakPerPeakCurve);
+        result["SE.MinMZ"] = toString(MinMZ);
+        result["SE.MinFrag"] = toString(MinFrag);
+        result["SE.MiniOverlapP"] = toString(MiniOverlapP);
+        result["SE.CheckMonoIsotopicApex"] = toString(CheckMonoIsotopicApex);
+        result["SE.IsoCorrThreshold"] = toString(IsoCorrThreshold);
+        result["SE.RemoveGroupedPeaksCorr"] = toString(RemoveGroupedPeaksCorr);
+        result["SE.RemoveGroupedPeaksRTOverlap"] = toString(RemoveGroupedPeaksRTOverlap);
+        result["SE.HighCorrThreshold"] = toString(HighCorrThreshold);
+        result["SE.MinHighCorrCnt"] = toString(MinHighCorrCnt);
+        result["SE.TopNLocal"] = toString(TopNLocal);
+        result["SE.TopNLocalRange"] = toString(TopNLocalRange);
+        result["SE.IsoPattern"] = toString(IsoPattern);
+        result["SE.StartRT"] = toString(StartRT);
+        result["SE.EndRT"] = toString(EndRT);
+        result["SE.TargetIDOnly"] = toString(TargetIDOnly);
+        result["SE.MassDefectFilter"] = toString(MassDefectFilter);
+        result["SE.MinPrecursorMass"] = toString(MinPrecursorMass);
+        result["SE.MaxPrecursorMass"] = toString(MaxPrecursorMass);
+        result["SE.SmoothFactor"] = toString(SmoothFactor);
+        result["SE.MassDefectOffset"] = toString(MassDefectOffset);
+        result["SE.MS2PairTopN"] = toString(MS2PairTopN);
+        result["SE.MS2Pairing"] = toString(MS2Pairing);
+
+        //result["SE.RT_window_Targeted"]  = lexical_cast<string>(RT_window_Targeted);
+        //result["UseOldVersion"]  = lexical_cast<string>(UseOldVersion);
         result["SE.Denoise"] = lexical_cast<string>(Denoise);
         result["SE.EstimateBG"] = lexical_cast<string>(EstimateBG);
+        result["SE.Deisotoping"] = lexical_cast<string>(Deisotoping);
         result["SE.DetermineBGByID"] = lexical_cast<string>(DetermineBGByID);
         result["SE.RemoveGroupedPeaks"] = lexical_cast<string>(RemoveGroupedPeaks);
-        result["SE.Deisotoping"] = lexical_cast<string>(Deisotoping);
-        result["SE.SymThreshold"] = lexical_cast<string>(SymThreshold);
-        result["SE.NoMissedScan"] = lexical_cast<string>(NoMissedScan);
-        result["SE.MinPeakPerPeakCurve"] = lexical_cast<string>(MinPeakPerPeakCurve);
-        result["SE.MinMZ"] = lexical_cast<string>(MinMZ);
-        result["SE.MinFrag"] = lexical_cast<string>(MinFrag);
-        result["SE.MiniOverlapP"] = lexical_cast<string>(MiniOverlapP);
-        result["SE.CheckMonoIsotopicApex"] = lexical_cast<string>(CheckMonoIsotopicApex);
         result["SE.DetectByCWT"] = lexical_cast<string>(DetectByCWT);
         result["SE.FillGapByBK"] = lexical_cast<string>(FillGapByBK);
-        result["SE.IsoCorrThreshold"] = lexical_cast<string>(IsoCorrThreshold);
-        result["SE.RemoveGroupedPeaksCorr"] = lexical_cast<string>(RemoveGroupedPeaksCorr);
-        result["SE.RemoveGroupedPeaksRTOverlap"] = lexical_cast<string>(RemoveGroupedPeaksRTOverlap);
-        result["SE.HighCorrThreshold"] = lexical_cast<string>(HighCorrThreshold);
-        result["SE.MinHighCorrCnt"] = lexical_cast<string>(MinHighCorrCnt);
-        result["SE.TopNLocal"] = lexical_cast<string>(TopNLocal);
-        result["SE.TopNLocalRange"] = lexical_cast<string>(TopNLocalRange);
-        result["SE.IsoPattern"] = lexical_cast<string>(IsoPattern);
-        result["SE.StartRT"] = lexical_cast<string>(startRT);
-        result["SE.EndRT"] = lexical_cast<string>(endRT);
-        result["SE.TargetIDOnly"] = lexical_cast<string>(TargetIDOnly);
-        result["SE.MassDefectFilter"] = lexical_cast<string>(MassDefectFilter);
-        result["SE.MinPrecursorMass"] = lexical_cast<string>(MinPrecursorMass);
-        result["SE.MaxPrecursorMass"] = lexical_cast<string>(MaxPrecursorMass);
-        //result["UseOldVersion"]  = lexical_cast<string>(UseOldVersion);
-        //result["SE.RT_window_Targeted"]  = lexical_cast<string>(RT_window_Targeted);
-        result["SE.SmoothFactor"] = lexical_cast<string>(SmoothFactor);
         result["SE.DetectSameChargePairOnly"] = lexical_cast<string>(DetectSameChargePairOnly);
-        result["SE.MassDefectOffset"] = lexical_cast<string>(MassDefectOffset);
-        result["SE.MS2PairTopN"] = lexical_cast<string>(MS2PairTopN);
-        result["SE.MS2Pairing"] = lexical_cast<string>(MS2Pairing);
 
         return result;
     }

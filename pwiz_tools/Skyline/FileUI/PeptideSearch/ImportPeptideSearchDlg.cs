@@ -260,7 +260,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     skippedTransitionPage ? null : TransitionSettingsControl.FilterAndLibrariesSettings, FullScanSettingsControl.FullScan,
                     ImportFastaControl.ImportSettings,
                     ImportPeptideSearch.IsDDASearch ? SearchSettingsControl.SearchSettings : null,
-                    ConverterSettingsControl.CurrentProtocol != ConverterSettingsControl.Protocol.none ? ConverterSettingsControl.ConverterSettings : null,
+                    ConverterSettingsControl.ConverterSettings,
                     ModeUI);
             }
         }

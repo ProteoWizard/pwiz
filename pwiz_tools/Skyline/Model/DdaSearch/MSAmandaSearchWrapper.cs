@@ -51,6 +51,7 @@ namespace pwiz.Skyline.Model.DdaSearch
         private OutputParameters _outputParameters;
         private MSAmandaSpectrumParser amandaInputParser;
         private IProgressStatus _progressStatus;
+        private bool _success;
 
         public int CurrentFile { get; private set; }
         public int TotalFiles => SpectrumFileNames.Length;
@@ -64,6 +65,7 @@ namespace pwiz.Skyline.Model.DdaSearch
 
         private const string MAX_LOADED_PROTEINS_AT_ONCE = "MaxLoadedProteinsAtOnce";
         private const string MAX_LOADED_SPECTRA_AT_ONCE = "MaxLoadedSpectraAtOnce";
+        private const string CONSIDERED_CHARGES = "ConsideredCharges";
 
         private readonly TemporaryDirectory _baseDir = new TemporaryDirectory(tempPrefix: @"~SK_MSAmanda/");
 
@@ -96,7 +98,8 @@ namespace pwiz.Skyline.Model.DdaSearch
             AdditionalSettings = new Dictionary<string, Setting>
             {
                 {MAX_LOADED_PROTEINS_AT_ONCE, new Setting(MAX_LOADED_PROTEINS_AT_ONCE, 100000, 10, int.MaxValue)},
-                {MAX_LOADED_SPECTRA_AT_ONCE, new Setting(MAX_LOADED_SPECTRA_AT_ONCE, 10000, 100, int.MaxValue)}
+                {MAX_LOADED_SPECTRA_AT_ONCE, new Setting(MAX_LOADED_SPECTRA_AT_ONCE, 10000, 100, int.MaxValue)},
+                {CONSIDERED_CHARGES, new Setting(CONSIDERED_CHARGES, @"2,3")}
             };
 
             CurrentFile = 0;
@@ -116,7 +119,12 @@ namespace pwiz.Skyline.Model.DdaSearch
             if (message.Contains(@"Identifying Peptides") || message.Contains(@"decoy peptide hits"))
                 return;
 
-            if (amandaInputParser != null && amandaInputParser.TotalSpectra > 0 && TotalFiles > 0)
+            if (message.Contains(@"Search failed"))
+            {
+                SearchProgressChanged?.Invoke(this, _progressStatus.ChangeMessage(message));
+                _success = false;
+            }
+            else if (amandaInputParser != null && amandaInputParser.TotalSpectra > 0 && TotalFiles > 0)
             {
                 int percentProgress = amandaInputParser.CurrentSpectrum * 100 / amandaInputParser.TotalSpectra;
                 SearchProgressChanged?.Invoke(this, _progressStatus.ChangeMessage(message).ChangePercentComplete(percentProgress));
@@ -200,8 +208,8 @@ namespace pwiz.Skyline.Model.DdaSearch
             _outputParameters.SpectraFiles = new List<string>() { spectrumFileName};
             Settings.GenerateDecoyDb = true;
             Settings.ConsideredCharges.Clear();
-            Settings.ConsideredCharges.Add(2);
-            Settings.ConsideredCharges.Add(3);
+            foreach(var chargeStr in AdditionalSettings[CONSIDERED_CHARGES].Value.ToString().Split(','))
+                Settings.ConsideredCharges.Add(Convert.ToInt32(chargeStr));
             Settings.ChemicalData.UseMonoisotopicMass = true;
             Settings.ReportBothBestHitsForTD = false;
             Settings.CombineConsideredCharges = false;
@@ -220,7 +228,7 @@ namespace pwiz.Skyline.Model.DdaSearch
         {
             _progressStatus = status;
 
-            bool success = true;
+            _success = true;
             try
             {
                 using (var c = new CurrentCultureSetter(CultureInfo.InvariantCulture))
@@ -273,17 +281,17 @@ namespace pwiz.Skyline.Model.DdaSearch
                 }
                 else
                     Program.ReportException(e);
-                success = false;
+                _success = false;
             }
             catch (OperationCanceledException)
             {
                 helper.WriteMessage(Resources.DdaSearch_Search_is_canceled, true);
-                success = false;
+                _success = false;
             }
             catch (Exception ex)
             {
                 helper.WriteMessage(string.Format(Resources.DdaSearch_Search_failed__0, ex.Message), true);
-                success = false;
+                _success = false;
             }
             finally
             {
@@ -291,9 +299,9 @@ namespace pwiz.Skyline.Model.DdaSearch
             }
 
             if (tokenSource.IsCancellationRequested)
-                success = false;
+                _success = false;
             
-            return success;
+            return _success;
         }
 
         public override void SetModifications(IEnumerable<StaticMod> modifications, int maxVariableMods)

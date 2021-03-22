@@ -1,8 +1,7 @@
 /*
- * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
- *                  MacCoss Lab, Department of Genome Sciences, UW
+ * Original author: Matt Chambers <matt.chambers42 .at. gmail.com >
  *
- * Copyright 2020 University of Washington - Seattle, WA
+ * Copyright 2021 University of Washington - Seattle, WA
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -121,18 +120,18 @@ namespace TestPerf
             {
                 KeepPrecursors = false,
                 ChromatogramClickPoint = new PointF(23.02F, 150.0F),
-                LibraryPeptideCount = 18595,
-                IrtSlope = 3.007,
-                IrtIntercept = -67.325,
+                LibraryPeptideCount = 18125,
+                IrtSlope = 3.005,
+                IrtIntercept = -67.215,
 
-                TargetCounts = new[] { 13, 198, 262, 1572 },
-                FinalTargetCounts = new[] { 9, 198, 262, 1572 },
-                ScoringModelCoefficients = "0.0872|-0.4325|4.6642|-0.0719|-0.5895|0.9069|0.1453|-0.1057",
+                TargetCounts = new[] { 13, 202, 266, 1596 },
+                FinalTargetCounts = new[] { 9, 202, 266, 1596 },
+                ScoringModelCoefficients = "0.3350|-0.4802|5.7227|-1.0901|-0.4986|1.0273|0.0885|-0.0186",
                 MassErrorStats = new[]
                 {
-                    new[] {3.2, 3.8},
-                    new[] {3.1, 3.1},
-                    new[] {3.2, 4.4},
+                    new[] {3.3, 4},
+                    new[] {3.1, 3.6},
+                    new[] {3.4, 4.3},
                 },
             };
 
@@ -151,21 +150,22 @@ namespace TestPerf
                 MinPeptidesPerProtein = 2,
                 RemoveDuplicates = true,
                 ChromatogramClickPoint = new PointF(23.02F, 150.0F),
-                LibraryPeptideCount = 28802,
-                IrtSlope = 3.005,
-                IrtIntercept = -67.180,
-                TargetCounts = new[] { 6860, 42396, 46842, 281052 },
-                FinalTargetCounts = new[] { 2639, 28342, 31707, 190242 },
-                ScoringModelCoefficients = "0.2110|-0.6707|3.7894|0.1967|-0.1875|0.6020|0.0608|-0.0468",
+                LibraryPeptideCount = 28370,
+                IrtSlope = 3.006,
+                IrtIntercept = -67.212,
+
+                TargetCounts = new[] { 7075, 42626, 47137, 282822 },
+                FinalTargetCounts = new[] { 2691, 28270, 31644, 189864 },
+                ScoringModelCoefficients = "0.1750|-0.6318|3.9940|0.1965|-0.1755|0.5792|0.1594|-0.0447",
                 MassErrorStats = new[]
                 {
-                    new[] {2.6, 5},
-                    new[] {2.5, 4.6},
-                    new[] {3.4, 4.9},
-                    new[] {4.8, 4.6},
-                    new[] {3.9, 4.9},
-                    new[] {-0.2, 4.4},
-                    new[] {1, 4.7},
+                    new[] {2.7, 5.1},
+                    new[] {2.6, 4.7},
+                    new[] {3.6, 5.0},
+                    new[] {4.9, 4.7},
+                    new[] {4.0, 5.0},
+                    new[] {-0.1, 4.5},
+                    new[] {1.1, 4.8},
                 },
             };
 
@@ -196,14 +196,6 @@ namespace TestPerf
                 InstrumentPreset = DiaUmpire.Config.InstrumentPreset.TripleTOF,
                 AdditionalSettings = new Dictionary<string, AbstractDdaSearchEngine.Setting>
                 {
-                    {"MS1PPM", new AbstractDdaSearchEngine.Setting("MS1PPM", 10.0, 0, 1000)},
-                    {"MS2PPM", new AbstractDdaSearchEngine.Setting("MS2PPM", 20.0, 0, 1000)},
-                    {"SNThreshold", new AbstractDdaSearchEngine.Setting("SNThreshold", 1.0, 0, 1000)},
-                    {"MS2SNThreshold", new AbstractDdaSearchEngine.Setting("MS2SNThreshold", 1.0, 0, 1000)},
-                    //{"NoMissedScan", new AbstractDdaSearchEngine.Setting("NoMissedScan", 2, 0, 10)},
-                    {"MaxCurveRTRange", new AbstractDdaSearchEngine.Setting("MaxCurveRTRange", 4.0, 0, 10)},
-                    {"RTOverlapThreshold", new AbstractDdaSearchEngine.Setting("RTOverlapThreshold", 0.05, 0, 10)},
-                    {"CorrThreshold", new AbstractDdaSearchEngine.Setting("CorrThreshold", 0.1, 0, 10)},
                 }
             });
 
@@ -220,17 +212,18 @@ namespace TestPerf
                 KeepPrecursors = false,
                 IrtFilterText = "standard",
                 ChromatogramClickPoint = new PointF(18.19f, 1.8e6f),
-                LibraryPeptideCount = 10207,
-                IrtSlope = 2.607,
-                IrtIntercept = -46.029,
-                TargetCounts = new[] { 13, 192, 226, 1356 },
-                FinalTargetCounts = new[] { 9, 192, 226, 1356 },
-                ScoringModelCoefficients = "0.4571|-0.6871|4.1075|1.5161|-0.1427|0.6322|0.0604|-0.0753",
+                LibraryPeptideCount = 9698,
+                IrtSlope = 2.606,
+                IrtIntercept = -45.948,
+
+                TargetCounts = new[] { 13, 174, 204, 1224 },
+                FinalTargetCounts = new[] { 9, 174, 204, 1224 },
+                ScoringModelCoefficients = "0.2778|-0.7533|4.2037|1.0772|-0.0866|0.6578|0.1913|-0.0693",
                 MassErrorStats = new[]
                 {
-                    new[] {1.7, 3.1},
-                    new[] {1.3, 2.8},
                     new[] {2, 3.4},
+                    new[] {1.6, 3.3},
+                    new[] {2.4, 3.5},
                 },
             };
 
@@ -250,23 +243,22 @@ namespace TestPerf
                 MinPeptidesPerProtein = 2,
                 RemoveDuplicates = true,
                 ChromatogramClickPoint = new PointF(18.19f, 1.8e6f),
-                LibraryPeptideCount = 15118,
-                IrtSlope = 2.600,
-                IrtIntercept = -45.702,
-                TargetCounts = new[] { 5472, 30448, 32751, 196506 },
-                FinalTargetCounts = new[] { 1863, 18742, 20406, 122436 },
-                ScoringModelCoefficients = "0.1768|-0.8335|3.5691|1.0667|-0.0698|0.7307|0.1776|-0.0533",
+                LibraryPeptideCount = 14541,
+                IrtSlope = 2.599,
+                IrtIntercept = -45.630,
+                TargetCounts = new[] { 5130, 28562, 30791, 184746 },
+                FinalTargetCounts = new[] { 1741, 17404, 18953, 113718 },
+                ScoringModelCoefficients = "0.1684|-0.8487|3.8097|1.1177|-0.0577|0.7095|0.1366|-0.0444",
                 MassErrorStats = new[]
                 {
-                    new[] {1.8, 3.9},
-                    new[] {1.3, 3.8},
-                    new[] {1.8, 4.1},
-                    new[] {2, 3.8},
+                    new[] {1.8, 4},
+                    new[] {1.3, 3.9},
                     new[] {1.9, 4.1},
                     new[] {2, 3.8},
-                    new[] {1.7, 4.1},
+                    new[] {2, 4.1},
+                    new[] {2.1, 3.9},
+                    new[] {1.8, 4.1},
                 },
-
             };
 
             if (!IsCoverShotMode)
@@ -430,14 +422,10 @@ namespace TestPerf
             WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.transition_settings_page);
             RunUI(() =>
             {
-                importPeptideSearchDlg.TransitionSettingsControl.MinIonMz = 50;
-                importPeptideSearchDlg.TransitionSettingsControl.MaxIonMz = 1500;
-                importPeptideSearchDlg.TransitionSettingsControl.IonRangeFrom = TransitionFilter.StartFragmentFinder.MZ_PRECURSOR.Label;
-                importPeptideSearchDlg.TransitionSettingsControl.IonRangeTo = TransitionFilter.EndFragmentFinder.IONS_3.Label;
-                importPeptideSearchDlg.TransitionSettingsControl.ExclusionUseDIAWindow = true;
+                importPeptideSearchDlg.TransitionSettingsControl.ExclusionUseDIAWindow = false;
                 importPeptideSearchDlg.TransitionSettingsControl.PeptidePrecursorCharges = new[]
                 {
-                    Adduct.DOUBLY_PROTONATED, Adduct.TRIPLY_PROTONATED, Adduct.QUADRUPLY_PROTONATED
+                    /*Adduct.SINGLY_PROTONATED, */Adduct.DOUBLY_PROTONATED, Adduct.TRIPLY_PROTONATED, Adduct.QUADRUPLY_PROTONATED
                 };
                 // Default is to have precursors
                 if (_analysisValues.KeepPrecursors)
@@ -541,6 +529,7 @@ namespace TestPerf
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
 
                 importPeptideSearchDlg.ConverterSettingsControl.InstrumentPreset = _instrumentValues.InstrumentPreset;
+                importPeptideSearchDlg.ConverterSettingsControl.EstimateBackground = true;
                 importPeptideSearchDlg.ConverterSettingsControl.AdditionalSettings = _instrumentValues.AdditionalSettings;
             });
             PauseForScreenShot("Import Peptide Search - DiaUmpire settings page", 14);
@@ -556,6 +545,18 @@ namespace TestPerf
                 importPeptideSearchDlg.SearchSettingsControl.FragmentTolerance = _instrumentValues.FragmentTolerance;
                 importPeptideSearchDlg.SearchSettingsControl.FragmentIons = "b, y";
             });
+            PauseForScreenShot<ImportPeptideSearchDlg.DDASearchSettingsPage>("Import Peptide Search - DDA search settings", 13);
+
+            IDictionary<string, object> diaUmpireParameters = null;
+            SearchSettingsControl.DdaSearchSettings searchSettings = null;
+            if (IsRecordMode)
+            {
+                RunUI(() =>
+                {
+                    diaUmpireParameters = importPeptideSearchDlg.ConverterSettingsControl.GetDiaUmpireConverter().DiaUmpireConfig.Parameters;
+                    searchSettings = importPeptideSearchDlg.SearchSettingsControl.SearchSettings;
+                });
+            }
 
             RunUI(() =>
             {
@@ -570,7 +571,7 @@ namespace TestPerf
             WaitForConditionUI(120 * 600000, () => searchSucceeded.HasValue);
             Assert.IsTrue(searchSucceeded.Value);
 
-            var addIrtDlg = ShowDialog<AddIrtPeptidesDlg>(() => importPeptideSearchDlg.ClickNextButton());//peptidesPerProteinDlg.OkDialog());
+            var addIrtDlg = ShowDialog<AddIrtPeptidesDlg>(() => importPeptideSearchDlg.ClickNextButton(), 30 * 60000);//peptidesPerProteinDlg.OkDialog());
             RunUI(() =>
             {
                 // Check values shown in the tutorial
@@ -586,6 +587,7 @@ namespace TestPerf
                 }
                 else
                 {
+                    _analysisValues.LibraryPeptideCount = addIrtDlg.PeptidesCount;
                     Console.WriteLine($@"LibraryPeptideCount = {addIrtDlg.PeptidesCount},");
                     Console.WriteLine(ParseIrtProperties(row.Cells[2].Value.ToString()));
                 }
@@ -622,7 +624,7 @@ namespace TestPerf
             {
                 int proteinCount, peptideCount, precursorCount, transitionCount;
                 peptidesPerProteinDlg.NewTargetsAll(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
-                ValidateTargets(_analysisValues.TargetCounts, proteinCount, peptideCount, precursorCount, transitionCount, @"TargetCounts");
+                ValidateTargets(ref _analysisValues.TargetCounts, proteinCount, peptideCount, precursorCount, transitionCount, @"TargetCounts");
                 if (_analysisValues.RemoveDuplicates)
                     peptidesPerProteinDlg.RemoveDuplicatePeptides = true;
                 if (_analysisValues.MinPeptidesPerProtein.HasValue)
@@ -633,7 +635,7 @@ namespace TestPerf
             {
                 int proteinCount, peptideCount, precursorCount, transitionCount;
                 peptidesPerProteinDlg.NewTargetsFinal(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
-                ValidateTargets(_analysisValues.FinalTargetCounts, proteinCount, peptideCount, precursorCount, transitionCount, @"FinalTargetCounts");
+                ValidateTargets(ref _analysisValues.FinalTargetCounts, proteinCount, peptideCount, precursorCount, transitionCount, @"FinalTargetCounts");
             });
             PauseForScreenShot("Import FASTA summary form", 16);
             OkDialog(peptidesPerProteinDlg, peptidesPerProteinDlg.OkDialog);
@@ -724,9 +726,11 @@ namespace TestPerf
                 WaitForGraphs();
                 ValidateMassErrors(massErrorPane, massErrorStatsIndex++);
             }
+
             if (IsRecordMode)
             {
                 Console.WriteLine(@"},");
+                PrintAnalysisSettingsAndResultSummary(diaUmpireParameters, searchSettings, _analysisValues);
             }
 
             RunUI(() =>
@@ -775,6 +779,21 @@ namespace TestPerf
             }
         }
 
+        private void PrintAnalysisSettingsAndResultSummary(IDictionary<string, object> diaUmpireParameters, SearchSettingsControl.DdaSearchSettings searchSettings, AnalysisValues analysisValues)
+        {
+            var interestingParameters = new List<string>();
+            foreach (var key in "MS1PPM MS2PPM SN MS2SN DeltaApex CorrThreshold BoostComplementaryIon EstimateBG".Split())
+                interestingParameters.Add(diaUmpireParameters[key].ToString());
+            interestingParameters.Add(searchSettings.PrecursorTolerance.Value.ToString(CultureInfo.InvariantCulture));
+            interestingParameters.Add(searchSettings.FragmentTolerance.Value.ToString(CultureInfo.InvariantCulture));
+            interestingParameters.Add(analysisValues.LibraryPeptideCount.ToString());
+            for (int i = 0; i < 4; ++i)
+                interestingParameters.Add(analysisValues.TargetCounts[i].ToString());
+            for (int i = 0; i < 4; ++i)
+                interestingParameters.Add(analysisValues.FinalTargetCounts[i].ToString());
+            Console.WriteLine(string.Join("\t", interestingParameters));
+        }
+
         private void FilterIrtProtein(DataboundGridControl fcGridControl)
         {
             WaitForConditionUI(() => fcGridControl.IsComplete && fcGridControl.FindColumn(_proteinProperty) != null);
@@ -814,10 +833,14 @@ namespace TestPerf
             });
         }
 
-        private void ValidateTargets(int[] targetCounts, int proteinCount, int peptideCount, int precursorCount, int transitionCount, string propName)
+        private void ValidateTargets(ref int[] targetCounts, int proteinCount, int peptideCount, int precursorCount, int transitionCount, string propName)
         {
             if (IsRecordMode)
             {
+                targetCounts[0] = proteinCount;
+                targetCounts[1] = peptideCount;
+                targetCounts[2] = precursorCount;
+                targetCounts[3] = transitionCount;
                 Console.WriteLine(@"{0} = new[] {{ {1}, {2}, {3}, {4} }},", propName, proteinCount, peptideCount, precursorCount, transitionCount);
                 return;
             }

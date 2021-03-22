@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ConverterSettingsControl));
             this.btnAdditionalSettings = new System.Windows.Forms.Button();
             this.converterTabControl = new System.Windows.Forms.TabControl();
@@ -36,6 +37,8 @@
             this.label1 = new System.Windows.Forms.Label();
             this.cbInstrumentPreset = new System.Windows.Forms.ComboBox();
             this.lblInstrumentPreset = new System.Windows.Forms.Label();
+            this.cbEstimateBg = new System.Windows.Forms.CheckBox();
+            this.toolTip = new System.Windows.Forms.ToolTip(this.components);
             this.converterTabControl.SuspendLayout();
             this.diaUmpireTabPage.SuspendLayout();
             this.SuspendLayout();
@@ -63,6 +66,7 @@
             // 
             // diaUmpireTabPage
             // 
+            this.diaUmpireTabPage.Controls.Add(this.cbEstimateBg);
             this.diaUmpireTabPage.Controls.Add(this.label1);
             this.diaUmpireTabPage.Controls.Add(this.btnAdditionalSettings);
             this.diaUmpireTabPage.Controls.Add(this.cbInstrumentPreset);
@@ -88,6 +92,13 @@
             resources.ApplyResources(this.lblInstrumentPreset, "lblInstrumentPreset");
             this.lblInstrumentPreset.Name = "lblInstrumentPreset";
             // 
+            // cbEstimateBg
+            // 
+            resources.ApplyResources(this.cbEstimateBg, "cbEstimateBg");
+            this.cbEstimateBg.Name = "cbEstimateBg";
+            this.toolTip.SetToolTip(this.cbEstimateBg, resources.GetString("cbEstimateBg.ToolTip"));
+            this.cbEstimateBg.UseVisualStyleBackColor = true;
+            // 
             // ConverterSettingsControl
             // 
             resources.ApplyResources(this, "$this");
@@ -109,5 +120,7 @@
         private System.Windows.Forms.ComboBox cbInstrumentPreset;
         private System.Windows.Forms.Label lblInstrumentPreset;
         private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.CheckBox cbEstimateBg;
+        private System.Windows.Forms.ToolTip toolTip;
     }
 }

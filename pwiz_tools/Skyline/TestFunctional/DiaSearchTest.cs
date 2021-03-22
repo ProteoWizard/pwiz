@@ -77,8 +77,8 @@ namespace pwiz.SkylineTestFunctional
                 },
                 FastaPath = "collinsb_I180316.fasta",
 
-                Initial = new TestDetails.DocumentCounts { ProteinCount = 877, PeptideCount = 75, PrecursorCount = 84, TransitionCount = 756 },
-                Final = new TestDetails.DocumentCounts { ProteinCount = 67, PeptideCount = 75, PrecursorCount = 84, TransitionCount = 756 },
+                Initial = new TestDetails.DocumentCounts { ProteinCount = 877, PeptideCount = 82, PrecursorCount = 89, TransitionCount = 801 },
+                Final = new TestDetails.DocumentCounts { ProteinCount = 78, PeptideCount = 82, PrecursorCount = 89, TransitionCount = 801 },
 
                 EditIsolationSchemeAction = (importPeptideSearchDlg, isolationScheme) =>
                 {
@@ -113,8 +113,8 @@ namespace pwiz.SkylineTestFunctional
                 },
                 FastaPath = Path.Combine(diaUmpireTestDataPath, "Hoofnagle_10xDil_SWATH.fasta"),
 
-                Initial = new TestDetails.DocumentCounts { ProteinCount = 268, PeptideCount = 70, PrecursorCount = 71, TransitionCount = 639 },
-                Final = new TestDetails.DocumentCounts { ProteinCount = 70, PeptideCount = 70, PrecursorCount = 71, TransitionCount = 639 },
+                Initial = new TestDetails.DocumentCounts { ProteinCount = 268, PeptideCount = 93, PrecursorCount = 94, TransitionCount = 846 },
+                Final = new TestDetails.DocumentCounts { ProteinCount = 90, PeptideCount = 93, PrecursorCount = 94, TransitionCount = 846 },
 
                 EditIsolationSchemeAction = (importPeptideSearchDlg, isolationScheme) =>
                 {
@@ -271,17 +271,18 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.converter_settings_page);
 
                 importPeptideSearchDlg.ConverterSettingsControl.InstrumentPreset = DiaUmpire.Config.InstrumentPreset.TripleTOF;
+                importPeptideSearchDlg.ConverterSettingsControl.EstimateBackground = false;
                 importPeptideSearchDlg.ConverterSettingsControl.AdditionalSettings =
                     new Dictionary<string, AbstractDdaSearchEngine.Setting>
                     {
-                        //{"MS1PPM", new AbstractDdaSearchEngine.Setting("MS1PPM", _instrumentValues.PrecursorTolerance.Value, 0, 1000)},
-                        //{"MS2PPM", new AbstractDdaSearchEngine.Setting("MS2PPM", _instrumentValues.FragmentTolerance.Value, 0, 1000)},
+                        {"MS1PPM", new AbstractDdaSearchEngine.Setting("MS1PPM", 50, 0, 1000)},
+                        {"MS2PPM", new AbstractDdaSearchEngine.Setting("MS2PPM", 50, 0, 1000)},
                         //{"NoMissedScan", new AbstractDdaSearchEngine.Setting("NoMissedScan", 2, 0, 10)},
                         {"MaxCurveRTRange", new AbstractDdaSearchEngine.Setting("MaxCurveRTRange", 4, 0, 10)},
-                        {"RTOverlapThreshold", new AbstractDdaSearchEngine.Setting("RTOverlapThreshold", 0.05, 0, 10)},
+                        {"RTOverlap", new AbstractDdaSearchEngine.Setting("RTOverlap", 0.05, 0, 10)},
                         {"CorrThreshold", new AbstractDdaSearchEngine.Setting("CorrThreshold", 0.1, 0, 10)},
+                        {"DeltaApex", new AbstractDdaSearchEngine.Setting("DeltaApex", 0.6, 0, 10)},
                     };
-
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
 
@@ -290,8 +291,8 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.dda_search_settings_page);
-                importPeptideSearchDlg.SearchSettingsControl.PrecursorTolerance = new MzTolerance(10, MzTolerance.Units.ppm);
-                importPeptideSearchDlg.SearchSettingsControl.FragmentTolerance = new MzTolerance(25, MzTolerance.Units.ppm);
+                importPeptideSearchDlg.SearchSettingsControl.PrecursorTolerance = new MzTolerance(50, MzTolerance.Units.ppm);
+                importPeptideSearchDlg.SearchSettingsControl.FragmentTolerance = new MzTolerance(50, MzTolerance.Units.ppm);
                 importPeptideSearchDlg.SearchSettingsControl.FragmentIons = "b, y";
 
                 // Run the search
@@ -305,7 +306,7 @@ namespace pwiz.SkylineTestFunctional
             });
 
             WaitForConditionUI(60000, () => searchSucceeded.HasValue);
-            Assert.IsFalse(searchSucceeded.Value);
+            RunUI(() => Assert.IsFalse(searchSucceeded.Value, importPeptideSearchDlg.SearchControl.LogText));
             searchSucceeded = null;
 
             // Go back and add another file
