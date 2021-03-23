@@ -21,12 +21,12 @@ using System.Collections.Generic;
 using System.Windows.Forms;
 using JetBrains.Annotations;
 using pwiz.Common.SystemUtil;
+using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
-using pwiz.ProteowizardWrapper;
 
 namespace pwiz.Skyline.FileUI.PeptideSearch
 {
@@ -219,16 +219,16 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         allDiaUmpireSettings[param.Key] = new AbstractDdaSearchEngine.Setting(param.Key, s);
                         break;
                     case int i32:
-                        defaultDiaUmpireSettings[param.Key] = new AbstractDdaSearchEngine.Setting(param.Key, i32, int.MinValue, int.MaxValue);
-                        allDiaUmpireSettings[param.Key] = new AbstractDdaSearchEngine.Setting(param.Key, i32, int.MinValue, int.MaxValue);
+                        defaultDiaUmpireSettings[param.Key] = new AbstractDdaSearchEngine.Setting(param.Key, i32);
+                        allDiaUmpireSettings[param.Key] = new AbstractDdaSearchEngine.Setting(param.Key, i32);
                         break;
                     case float r32:
-                        defaultDiaUmpireSettings[param.Key] = new AbstractDdaSearchEngine.Setting(param.Key, r32, double.MinValue, double.MaxValue);
-                        allDiaUmpireSettings[param.Key] = new AbstractDdaSearchEngine.Setting(param.Key, r32, double.MinValue, double.MaxValue);
+                        defaultDiaUmpireSettings[param.Key] = new AbstractDdaSearchEngine.Setting(param.Key, r32);
+                        allDiaUmpireSettings[param.Key] = new AbstractDdaSearchEngine.Setting(param.Key, r32);
                         break;
                     case double r64:
-                        defaultDiaUmpireSettings[param.Key] = new AbstractDdaSearchEngine.Setting(param.Key, r64, double.MinValue, double.MaxValue);
-                        allDiaUmpireSettings[param.Key] = new AbstractDdaSearchEngine.Setting(param.Key, r64, double.MinValue, double.MaxValue);
+                        defaultDiaUmpireSettings[param.Key] = new AbstractDdaSearchEngine.Setting(param.Key, r64);
+                        allDiaUmpireSettings[param.Key] = new AbstractDdaSearchEngine.Setting(param.Key, r64);
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();
@@ -241,7 +241,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             // only non-default settings are kept in _diaUmpireAdditionalSettings
             _diaUmpireAdditionalSettings = new Dictionary<string, AbstractDdaSearchEngine.Setting>();
 
-            Func<AbstractDdaSearchEngine.Setting, string> valueToString = (setting) =>
+            Func<AbstractDdaSearchEngine.Setting, string> valueToString = setting =>
             {
                 if (setting.Value is double)
                     return Math.Round((double) setting.Value, 4).ToString(@"F");

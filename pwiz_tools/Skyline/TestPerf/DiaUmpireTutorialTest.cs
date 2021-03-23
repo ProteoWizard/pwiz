@@ -193,10 +193,7 @@ namespace TestPerf
                 IsolationSchemeFileSeparator = TextUtil.SEPARATOR_CSV,
                 PrecursorTolerance = new MzTolerance(30, MzTolerance.Units.ppm),
                 FragmentTolerance = new MzTolerance(40, MzTolerance.Units.ppm),
-                InstrumentPreset = DiaUmpire.Config.InstrumentPreset.TripleTOF,
-                AdditionalSettings = new Dictionary<string, AbstractDdaSearchEngine.Setting>
-                {
-                }
+                InstrumentPreset = DiaUmpire.Config.InstrumentPreset.TripleTOF
             });
 
             RunTest();
