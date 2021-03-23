@@ -113,7 +113,7 @@ namespace pwiz.ProteowizardWrapper
 
             public static Config GetConfigFromDiaUmpireOutput(string filepath)
             {
-                return MsDataFileInfo.RunPredicate<Config>(filepath, msd =>
+                return MsDataFileInfo.RunPredicate(filepath, msd =>
                 {
                     Config result = null;
                     foreach (var dp in msd.dataProcessingList)

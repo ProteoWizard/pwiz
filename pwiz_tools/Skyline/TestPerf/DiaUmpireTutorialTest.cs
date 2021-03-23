@@ -72,7 +72,9 @@ namespace TestPerf
             public MzTolerance PrecursorTolerance;
             public MzTolerance FragmentTolerance;
             public DiaUmpire.Config.InstrumentPreset InstrumentPreset;
-            public Dictionary<string, AbstractDdaSearchEngine.Setting> AdditionalSettings;
+
+            // This may be necessary in the future if the default settings change but we don't want the tutorial results to change.
+            //public Dictionary<string, AbstractDdaSearchEngine.Setting> AdditionalSettings;
         }
 
         private class AnalysisValues
