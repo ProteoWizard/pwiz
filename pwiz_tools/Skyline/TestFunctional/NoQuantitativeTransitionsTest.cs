@@ -174,8 +174,8 @@ namespace pwiz.SkylineTestFunctional
                                     }
                                     else
                                     {
-                                        var expectedStart = graphChrom.ChromGroupInfos.Entries[0].ChromatogramGroupInfo.TimeIntensitiesGroup.MinTime;
-                                        var expectedEnd = graphChrom.ChromGroupInfos.Entries[0].ChromatogramGroupInfo.TimeIntensitiesGroup.MaxTime;
+                                        var expectedStart = graphChrom.ChromGroupInfos[0].TimeIntensitiesGroup.MinTime;
+                                        var expectedEnd = graphChrom.ChromGroupInfos[0].TimeIntensitiesGroup.MaxTime;
                                         AssertEx.IsTrue(zoomState.XAxis.Min <= expectedStart);
                                         AssertEx.IsTrue(zoomState.XAxis.Max >= expectedEnd);
                                     }

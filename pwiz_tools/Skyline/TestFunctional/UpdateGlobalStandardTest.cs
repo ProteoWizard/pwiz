@@ -88,7 +88,7 @@ namespace pwiz.SkylineTestFunctional
             foreach (var graphChromatogram in SkylineWindow.GraphChromatograms)
             {
                 WaitForGraphs();
-                var chromGroupInfo = graphChromatogram.ChromGroupInfos.Entries[0].ChromatogramGroupInfo;
+                var chromGroupInfo = graphChromatogram.ChromGroupInfos[0];
                 for (int iPeak = 0; iPeak < chromGroupInfo.NumPeaks; iPeak++)
                 {
                     var globalStandardPeptide = (PeptideDocNode) SkylineWindow.Document.FindNode(globalStandardPath);
