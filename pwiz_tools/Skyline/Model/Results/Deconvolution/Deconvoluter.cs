@@ -68,11 +68,17 @@ namespace pwiz.Skyline.Model.Results.Deconvolution
                     timeIntensities.Add(chromatogram.TimeIntensities);
                     for (int iMassDist = 0; iMassDist < keys.Count; iMassDist++)
                     {
-                        var massDist = keys[iMassDist].MassDistribution;
-                        double mzMiddle = chromatogram.ProductMz.Value;
-                        double mzLower = mzMiddle - chromatogram.ExtractionWidth.GetValueOrDefault(0) - mzMiddle * massDist.MassResolution;
-                        double mzUpper = mzMiddle + chromatogram.ExtractionWidth.GetValueOrDefault(0) + mzMiddle * massDist.MassResolution;
-                        double intensity = GetIntensityInRange(massDist, mzLower, mzUpper);
+                        double intensity = 0;
+                        if (keys[iMassDist].IsNegativeCharge == chromatogram.ProductMz.IsNegative)
+                        {
+                            var massDist = keys[iMassDist].MassDistribution;
+                            double mzMiddle = chromatogram.ProductMz.Value;
+                            double mzLower = mzMiddle - chromatogram.ExtractionWidth.GetValueOrDefault(0) -
+                                             mzMiddle * massDist.MassResolution;
+                            double mzUpper = mzMiddle + chromatogram.ExtractionWidth.GetValueOrDefault(0) +
+                                             mzMiddle * massDist.MassResolution;
+                            intensity = GetIntensityInRange(massDist, mzLower, mzUpper);
+                        }
                         predictedIntensities[iMassDist].Add(intensity);
                     }
                 }
