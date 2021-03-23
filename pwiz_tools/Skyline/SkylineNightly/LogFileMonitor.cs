@@ -21,6 +21,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Timers;
 using Timer = System.Timers.Timer;
@@ -50,6 +51,7 @@ namespace SkylineNightly
         private readonly byte[] _buffer;
         private readonly StringBuilder _builder;
         private string _logTail;
+        private Regex _testLineRegex;
 
         private readonly Timer _logChecker;
 
@@ -68,6 +70,7 @@ namespace SkylineNightly
             _buffer = new byte[8192];
             _builder = new StringBuilder();
             _logTail = "";
+            _testLineRegex = new Regex(@"\[\d\d:\d\d\] +\d+.\d+ +(\S+) +\(\w\w\)", RegexOptions.Compiled | RegexOptions.RightToLeft);
             _logChecker = new Timer(10000); // check log file every 10 seconds
             _logChecker.Elapsed += CheckLog;
         }
@@ -118,6 +121,17 @@ namespace SkylineNightly
             }
         }
 
+        private string LastTest
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(_logTail))
+                    return null;
+                var match = _testLineRegex.Match(_logTail);
+                return match.Success ? match.Groups[1].Value : null;
+            }
+        }
+
         private void CheckLog(object source, ElapsedEventArgs e)
         {
             if (!Monitor.TryEnter(_lock))
@@ -149,6 +163,10 @@ namespace SkylineNightly
                             _hangNotificationSent = true;
 
                             Log("Hang detected, posting to " + Nightly.LABKEY_EMAIL_NOTIFICATION_URL);
+                            var lastTest = LastTest;
+                            var subject = string.Format("[{0} ({1})] !!! TestResults alert", Environment.MachineName, RunModeName);
+                            if (!string.IsNullOrEmpty(lastTest))
+                                subject += string.Format(" ({0})", lastTest);
                             var message = new StringBuilder();
                             message.AppendFormat("{0} ({1})", Environment.MachineName, RunModeName);
                             message.AppendLine();
@@ -161,7 +179,7 @@ namespace SkylineNightly
                             message.AppendLine("...");
                             message.Append(_logTail);
                             message.AppendLine();
-                            SendEmailNotification(string.Format("[{0} ({1})] !!! TestResults alert", Environment.MachineName, RunModeName), message.ToString());
+                            SendEmailNotification(subject, message.ToString());
                         }
                         return;
                     }
