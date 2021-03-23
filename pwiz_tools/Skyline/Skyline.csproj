@@ -154,6 +154,7 @@
     <Reference Condition="'$(Platform)' == 'x64'" Include="MethodConverter">
       <HintPath>Method\Shimadzu\x64\MethodConverter.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.CSharp" />
     <Reference Include="PrmPasefScheduler, Version=0.0.0.0, Culture=neutral, processorArchitecture=AnyCPU">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Shared\ProteowizardWrapper\obj\$(Platform)\PrmPasefScheduler.dll</HintPath>
