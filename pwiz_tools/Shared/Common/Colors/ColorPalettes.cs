@@ -202,5 +202,15 @@ namespace pwiz.Common.Colors
             saturation = (max == 0) ? 0 : 1d - (1d * min / max);
             value = max / 255d;
         }
+
+        /// <summary>
+        /// Returns a number between 0.0 and 1.0 indicating how bright the color is.
+        /// </summary>
+        /// <param name="color"></param>
+        /// <returns></returns>
+        public static double GetColorBrightness(Color color)
+        {
+            return (color.R * .21 + color.G * .72 + color.B * .07) / 256;
+        }
     }
 }

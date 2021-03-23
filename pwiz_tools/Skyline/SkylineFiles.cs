@@ -1460,11 +1460,18 @@ namespace pwiz.Skyline
             }
             catch (Exception x)
             {
-                MessageDlg.ShowWithException(this,
-                                TextUtil.LineSeparate(
-                                string.Format(Resources.SkylineWindow_ImportPeakBoundariesFile_Failed_reading_the_file__0__,
-                                              peakBoundariesFile), x.Message), x);
-            }         
+                // Manually construct an AlertDlg so we can prevent the Peptide -> Molecule translation that MessageDlg does
+                using (var alertDlg = new AlertDlg(TextUtil.LineSeparate(
+                    string.Format(Resources.SkylineWindow_ImportPeakBoundariesFile_Failed_reading_the_file__0__,
+                        peakBoundariesFile), x.Message), MessageBoxButtons.OK)
+                {
+                    Exception = x
+                })
+                {
+                    alertDlg.GetModeUIHelper().ModeUI = SrmDocument.DOCUMENT_TYPE.none;
+                    alertDlg.ShowDialog(this);
+                }
+            }
         }
 
         private static void AddMessageInfo<T>(IList<MessageInfo> messageInfos, MessageType type, SrmDocument.DOCUMENT_TYPE docType, IEnumerable<T> items)

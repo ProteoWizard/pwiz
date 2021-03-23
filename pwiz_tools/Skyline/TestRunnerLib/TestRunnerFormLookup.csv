@@ -40,6 +40,7 @@ ComparePeakPickingDlg,TestPeakBoundaryCompare
 ConfigureToolsDlg,TestQuasarTutorial
 CreateIrtCalculatorDlg,TestAssayLibraryImport
 CreateMatchExpressionDlg,TestVolcanoPlotFormatting
+DataboundGraph,*
 DefineAnnotationDlg,TestAnnotations
 DiaIsolationWindowsGraphForm,TestIsolationScheme
 DocumentationViewer,TestStandardType
@@ -100,7 +101,7 @@ GraphSpectrum,TestMs1Tutorial
 GraphSummary.AreaGraphView,*
 GraphSummary.RTGraphView,*
 GraphSummary.DetectionsGraphView,TODO (RitaCh)
-HierarchicalClusterGraph,TestClusteredHeatMap
+HeatMapGraph,TestClusteredHeatMap
 ImmediateWindow,ImmediateWindowTestMethod
 ImportDocResultsDlg,TestImportDoc
 ImportIonMobilityFromSpectralLibraryDlg,TestIonMobility

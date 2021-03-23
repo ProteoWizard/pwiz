@@ -60,7 +60,7 @@
             0,
             0,
             0});
-            this.numericUpDownXAxis.ValueChanged += new System.EventHandler(this.numericUpDown_ValueChanged);
+            this.numericUpDownXAxis.ValueChanged += new System.EventHandler(this.numericUpDownX_ValueChanged);
             // 
             // lblYAxis
             // 
@@ -81,7 +81,7 @@
             0,
             0,
             0});
-            this.numericUpDownYAxis.ValueChanged += new System.EventHandler(this.numericUpDown_ValueChanged);
+            this.numericUpDownYAxis.ValueChanged += new System.EventHandler(this.numericUpDownY_ValueChanged);
             // 
             // zedGraphControl1
             // 
