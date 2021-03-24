@@ -79,6 +79,10 @@ namespace TestPerf
 
         private class AnalysisValues
         {
+            /// <summary>
+            /// If true, all DiaFiles will be processed and searched with the full FASTA (FastaPathForSearch).
+            /// If false, only first 2 DiaFiles will be processed and searched with targets-only FASTA (FastaPath).
+            /// </summary>
             public bool IsWholeProteome;
             public bool KeepPrecursors;
 
@@ -142,8 +146,12 @@ namespace TestPerf
 
         [TestMethod]
         [Timeout(int.MaxValue)] // These can take a long time
-        public void TestDiaTtofDiaUmpireFullTutorial()
+        public void TestDiaTtofDiaUmpireTutorialFullFileset()
         {
+            // do not run full filesets for nightly tests
+            if (Program.SkylineOffscreen)
+                return;
+
             _analysisValues = new AnalysisValues
             {
                 KeepPrecursors = false,
@@ -232,8 +240,12 @@ namespace TestPerf
 
         [TestMethod]
         [Timeout(int.MaxValue)] // These can take a long time
-        public void TestDiaQeDiaUmpireFullTutorial()
+        public void TestDiaQeDiaUmpireTutorialFullFileset()
         {
+            // do not run full filesets for nightly tests
+            if (Program.SkylineOffscreen)
+                return;
+
             _analysisValues = new AnalysisValues
             {
                 KeepPrecursors = false,
@@ -289,6 +301,9 @@ namespace TestPerf
 
             RunTest();
         }
+
+        // disable audit log comparison for FullFileset tests
+        public override bool AuditLogCompareLogs => !TestContext.TestName.EndsWith("FullFileset");
 
         private void SetInstrumentType(InstrumentSpecificValues instrumentValues)
         {
