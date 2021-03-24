@@ -348,7 +348,7 @@ namespace TestPerf
         /// <summary>
         /// Change to true to write coefficient arrays.
         /// </summary>
-        private bool IsRecordMode { get { return IsRecordAuditLogForTutorials; } }
+        private bool IsRecordMode { get { return false; } }
 
         private string ParseIrtProperties(string irtFormula, CultureInfo cultureInfo = null)
         {
