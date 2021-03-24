@@ -77,20 +77,13 @@ namespace SharedBatch
         public int SelectedConfig { get; private set; } // index of the selected configuration
         public int SelectedLog { get; protected set; } // index of the selected log. index 0 corresponds to _logger, any index > 0 corresponds to oldLogs[index - 1]
         
-        protected void LoadConfigList()
+        protected List<IConfig> LoadConfigList()
         {
-            if (!_runningUi) return; // Do not load saved configurations in test mode
             ConfigList.Importer = importer;
-            foreach (var config in Settings.Default.ConfigList)
-                AddPossiblyInvalidConfiguration(config);
+            return Settings.Default.ConfigList.ToList();
         }
 
-        private void AddPossiblyInvalidConfiguration(IConfig config)
-        {
-            InsertPossiblyInvalidConfiguration(config, _configList.Count);
-        }
-
-        private void InsertPossiblyInvalidConfiguration(IConfig config, int index)
+        protected void ProgramaticallyInsertConfig(IConfig config, int index)
         {
             _configList.Insert(index, config);
             try
@@ -183,7 +176,7 @@ namespace SharedBatch
             }
         }
 
-        private void AssertConfigSelected()
+        protected void AssertConfigSelected()
         {
             if (SelectedConfig < 0)
             {
@@ -210,6 +203,14 @@ namespace SharedBatch
             {
                 AssertConfigSelected();
                 return _configList[SelectedConfig];
+            }
+        }
+
+        public IConfig GetConfig(int index)
+        {
+            lock (_lock)
+            {
+                return _configList[index];
             }
         }
 
@@ -274,7 +275,7 @@ namespace SharedBatch
             }
         }
 
-        protected void InsertConfiguration(IConfig config, int index)
+        protected void UserInsertConfig(IConfig config, int index)
         {
             lock (_lock)
             {
@@ -283,36 +284,6 @@ namespace SharedBatch
                 _configList.Insert(index, config);
                 _configValidation.Add(config.GetName(), true);
                 SelectedConfig = index;
-            }
-        }
-
-        protected void ReplaceSelectedConfig(IConfig newConfig)
-        {
-            lock (_lock)
-            {
-                AssertConfigSelected();
-                var oldConfig = _configList[SelectedConfig];
-                if (!string.Equals(oldConfig.GetName(), newConfig.GetName()))
-                {
-                    if (_configValidation.Keys.Contains(newConfig.GetName()))
-                    {
-                        throw new ArgumentException(string.Format(Resources.ConfigManager_InsertConfiguration_Configuration___0___already_exists_, newConfig.GetName()) + Environment.NewLine +
-                                                    Resources.ConfigManager_InsertConfiguration_Please_enter_a_unique_name_for_the_configuration_);
-                    }
-                }
-                var oldValidation = _configValidation[oldConfig.GetName()];
-                RemoveConfig(oldConfig);
-                try
-                {
-                    InsertConfiguration(newConfig, SelectedConfig);
-                }
-                catch (ArgumentException)
-                {
-                    // undo old configuration delete
-                    _configList.Insert(SelectedConfig, oldConfig);
-                    _configValidation.Add(oldConfig.GetName(), oldValidation);
-                    throw;
-                }
             }
         }
 
@@ -327,28 +298,26 @@ namespace SharedBatch
                 SelectedConfig += delta;
             }
         }
-        
-        protected bool RemoveSelected()
+
+        protected void UserRemoveAt(int index)
         {
             lock (_lock)
             {
-                AssertConfigSelected();
-                var config = GetSelectedConfig();
-                var doDelete = DisplayQuestion( 
-                    string.Format(Resources.ConfigManager_RemoveSelected_Are_you_sure_you_want_to_delete___0___,
-                        config.GetName()));
-                if (doDelete != DialogResult.Yes)
-                    return false;
-                ProgramLog.Info(string.Format(Resources.ConfigManager_RemoveSelected_Removing_configuration____0__, config.GetName()));
-                RemoveConfig(config);
+                RemoveAt(index);
                 if (SelectedConfig == _configList.Count)
                     SelectedConfig--;
-                return true;
             }
         }
 
-        private void RemoveConfig(IConfig config)
+        protected void ProgramaticallyRemoveAt(int index)
         {
+            RemoveAt(index);
+        }
+
+        private void RemoveAt(int index)
+        {
+            var config = _configList[index];
+            ProgramLog.Info(string.Format(Resources.ConfigManager_RemoveSelected_Removing_configuration____0__, config.GetName()));
             if (!_configValidation.Keys.Contains(config.GetName()))
             {
                 throw new ArgumentException(string.Format(Resources.ConfigManager_RemoveConfig_Cannot_delete___0____configuration_does_not_exist_, config.GetName()));
@@ -482,7 +451,6 @@ namespace SharedBatch
 
                 var addingConfig = RunRootReplacement(config);
                 addedConfigs.Add(addingConfig);
-                AddPossiblyInvalidConfiguration(addingConfig);
                 numAdded++;
             }
             var message = new StringBuilder(Resources.ConfigManager_Import_Number_of_configurations_imported_);
@@ -620,29 +588,26 @@ namespace SharedBatch
             return logNames;
         }
 
-        protected List<IConfig> ReplaceSkylineSettings(SkylineSettings newSettings, List<string> runningConfigs)
+        protected List<Tuple<int, IConfig>> GetReplacedSkylineSettings(SkylineSettings newSettings, List<string> runningConfigs)
         {
             lock (_lock)
             {
-                var replacedConfigs = new List<IConfig>();
+                var replacedConfigs = new List<Tuple<int, IConfig>>();
                 for (int i = 0; i < _configList.Count; i++)
                 {
                     var config = _configList[i];
                     if (runningConfigs.Contains(config.GetName()))
                         continue;
                     var newConfig = config.ReplaceSkylineVersion(newSettings);
-                    _configList.Remove(config);
-                    _configValidation.Remove(config.GetName());
-                    InsertPossiblyInvalidConfiguration(newConfig, i);
-                    replacedConfigs.Add(newConfig);
+                    replacedConfigs.Add(new Tuple<int, IConfig>(i, newConfig));
                 }
                 return replacedConfigs;
             }
         }
 
-        protected List<IConfig> AddRootReplacement(string oldRoot, string newRoot)
+        protected List<Tuple<int, IConfig>> GetRootReplacement(string oldRoot, string newRoot)
         {
-            var replacedConfigs = new List<IConfig>();
+            var replacingConfigs = new List<Tuple<int, IConfig>>();
             RootReplacement.Add(oldRoot, newRoot);
             lock (_lock)
             {
@@ -654,15 +619,12 @@ namespace SharedBatch
                         var pathsReplaced = config.TryPathReplace(oldRoot, newRoot, out IConfig replacedPathConfig);
                         if (pathsReplaced)
                         {
-                            _configList.Remove(config);
-                            _configValidation.Remove(config.GetName());
-                            InsertPossiblyInvalidConfiguration(replacedPathConfig, i);
-                            replacedConfigs.Add(replacedPathConfig);
+                            replacingConfigs.Add(new Tuple<int, IConfig>(i, replacedPathConfig));
                         }
                     }
                 }
             }
-            return replacedConfigs;
+            return replacingConfigs;
         }
 
         public IConfig RunRootReplacement(IConfig config)

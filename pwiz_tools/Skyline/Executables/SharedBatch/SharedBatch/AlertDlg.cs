@@ -73,7 +73,7 @@ namespace SharedBatch
         public static DialogResult ShowLargeQuestion(IWin32Window parent, string appName, string message)
         {
             var questionDlg = new AlertDlg(appName, message, SystemIcons.Question.ToBitmap(), true);
-            return questionDlg.ShowAndDispose(parent, MessageBoxButtons.OKCancel);
+            return questionDlg.ShowAndDispose(parent, MessageBoxButtons.YesNo);
         }
 
         private static DialogResult Show(IWin32Window parent, string appName, string message, Image icon, MessageBoxButtons messageBoxButtons)

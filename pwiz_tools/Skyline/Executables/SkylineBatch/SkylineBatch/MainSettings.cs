@@ -36,16 +36,20 @@ namespace SkylineBatch
 
 
         public MainSettings(string templateFilePath, string analysisFolderPath, string dataFolderPath,
-            string annotationsFilePath, string replicateNamingPattern)
+            string annotationsFilePath, string replicateNamingPattern, string dependentConfigName)
         {
             TemplateFilePath = templateFilePath;
+            DependentConfigName = !string.IsNullOrEmpty(dependentConfigName) ? dependentConfigName : null;
             AnalysisFolderPath = analysisFolderPath;
             DataFolderPath = dataFolderPath;
             AnnotationsFilePath = annotationsFilePath ?? string.Empty;
             ReplicateNamingPattern = replicateNamingPattern ?? string.Empty;
         }
 
+
         public readonly string TemplateFilePath;
+
+        public readonly string DependentConfigName;
 
         public readonly string AnalysisFolderPath;
 
@@ -58,6 +62,19 @@ namespace SkylineBatch
         public string GetResultsFilePath()
         {
             return Path.Combine(AnalysisFolderPath, Path.GetFileName(TemplateFilePath));
+        }
+
+        public MainSettings WithoutDependency()
+        {
+            return new MainSettings(TemplateFilePath, AnalysisFolderPath, DataFolderPath, AnnotationsFilePath,
+                ReplicateNamingPattern, string.Empty);
+        }
+
+        public MainSettings UpdateDependent(string newName, string newTemplate)
+        {
+            if (string.IsNullOrEmpty(newTemplate)) return WithoutDependency();
+            return new MainSettings(newTemplate, AnalysisFolderPath, DataFolderPath, AnnotationsFilePath,
+                ReplicateNamingPattern, newName);
         }
 
         public void CreateAnalysisFolderIfNonexistent()
@@ -75,54 +92,24 @@ namespace SkylineBatch
             return sb.ToString();
         }
 
-        public List<string> Validate(List<string> generatedSkylineFiles = null)
+        public void Validate(List<string> generatedSkylineFiles = null)
         {
-            var questions = new List<string>();
-            questions.Add(ValidateTemplateFile(TemplateFilePath));
-
+            if (DependentConfigName == null)
+                ValidateTemplateFile(TemplateFilePath);
             ValidateDataFolder(DataFolderPath);
             ValidateAnalysisFolder(AnalysisFolderPath);
             ValidateAnnotationsFile(AnnotationsFilePath);
-            questions.RemoveAll(item => item == null);
-            return questions;
         }
 
-        public static void ValidateSkylineFile(string skylineFile)
+        public static void ValidateTemplateFile(string templateFile)
         {
-            // Used by InvalidConfigSetupForm, validates the template file regardless of questions
-            ValidateTemplateFile(skylineFile);
-        }
 
-        private static string ValidateTemplateFile(string templateFile)
-        {
             CheckIfEmptyPath(templateFile, Resources.MainSettings_ValidateSkylineFile_Skyline_file);
-
             if (!File.Exists(templateFile))
-            {
-                string directory = null;
-                string directoryParent = null;
-                try
-                {
-                    directory = Path.GetDirectoryName(templateFile);
-                    directoryParent = Path.GetDirectoryName(directory);
-
-                }
-                catch (Exception)
-                {
-                    // pass, will throw ArgumentException if directories are null
-                }
-
-                if (Directory.Exists(directory) || Directory.Exists(directoryParent))
-                {
-                    return "The Skyline template file for this configuration does not exist." +
-                                 Environment.NewLine +
-                                 string.Format("Will another configuration generate {0} before this configuration runs?",
-                                     Path.GetFileName(templateFile));
-                }
+            
                 throw new ArgumentException(string.Format(Resources.MainSettings_ValidateSkylineFile_The_Skyline_template_file__0__does_not_exist_, templateFile) + Environment.NewLine +
                                             Resources.MainSettings_ValidateSkylineFile_Please_provide_a_valid_file_);
-            }
-            return null;
+            
         }
 
         public static void ValidateAnalysisFolder(string analysisFolder)
@@ -165,8 +152,10 @@ namespace SkylineBatch
 
         public bool TryPathReplace(string oldRoot, string newRoot, out MainSettings pathReplacedMainSettings)
         {
-            var templateReplaced =
-                TextUtil.TryReplaceStart(oldRoot, newRoot, TemplateFilePath, out string replacedTemplatePath);
+            var templateReplaced = false;
+            var replacedTemplatePath = TemplateFilePath;
+            if (DependentConfigName != null)
+                templateReplaced = TextUtil.TryReplaceStart(oldRoot, newRoot, TemplateFilePath, out replacedTemplatePath);
             var analysisReplaced =
                 TextUtil.TryReplaceStart(oldRoot, newRoot, AnalysisFolderPath, out string replacedAnalysisPath);
             var dataReplaced =
@@ -174,7 +163,9 @@ namespace SkylineBatch
             // annotations replaced
             TextUtil.TryReplaceStart(oldRoot, newRoot, AnnotationsFilePath, out string replacedAnnotationsPath);
 
-            pathReplacedMainSettings = new MainSettings(replacedTemplatePath, replacedAnalysisPath, replacedDataPath, replacedAnnotationsPath, ReplicateNamingPattern);
+            pathReplacedMainSettings = new MainSettings(replacedTemplatePath, replacedAnalysisPath, replacedDataPath,
+                    replacedAnnotationsPath, ReplicateNamingPattern, DependentConfigName);
+
             return templateReplaced || analysisReplaced || dataReplaced;
         }
 
@@ -248,6 +239,7 @@ namespace SkylineBatch
         private enum Attr
         {
             TemplateFilePath,
+            DependentConfigName,
             AnalysisFolderPath,
             DataFolderPath,
             AnnotationsFilePath,
@@ -257,17 +249,19 @@ namespace SkylineBatch
         public static MainSettings ReadXml(XmlReader reader)
         {
             var templateFilePath = reader.GetAttribute(Attr.TemplateFilePath);
+            var dependentConfigName = reader.GetAttribute(Attr.DependentConfigName);
             var analysisFolderPath = reader.GetAttribute(Attr.AnalysisFolderPath);
             var dataFolderPath = reader.GetAttribute(Attr.DataFolderPath);
             var annotationsFilePath = reader.GetAttribute(Attr.AnnotationsFilePath);
             var replicateNamingPattern = reader.GetAttribute(Attr.ReplicateNamingPattern);
-            return new MainSettings(templateFilePath, analysisFolderPath, dataFolderPath, annotationsFilePath, replicateNamingPattern);
+            return new MainSettings(templateFilePath, analysisFolderPath, dataFolderPath, annotationsFilePath, replicateNamingPattern, dependentConfigName);
         }
 
         public void WriteXml(XmlWriter writer)
         {
             writer.WriteStartElement("main_settings");
             writer.WriteAttributeIfString(Attr.TemplateFilePath, TemplateFilePath);
+            writer.WriteAttributeIfString(Attr.DependentConfigName, DependentConfigName);
             writer.WriteAttributeIfString(Attr.AnalysisFolderPath, AnalysisFolderPath);
             writer.WriteAttributeIfString(Attr.DataFolderPath, DataFolderPath);
             writer.WriteAttributeIfString(Attr.AnnotationsFilePath, AnnotationsFilePath);

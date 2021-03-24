@@ -72,7 +72,7 @@ namespace SkylineBatchTest
                 string.Format("The Skyline template file {0} does not exist.\r\nPlease provide a valid file.", invalidTemplatePath));
             try
             {
-                var testValidMainSettings = new MainSettings(validTemplatePath, validAnalysisFolder, validDataDir, string.Empty, string.Empty);
+                var testValidMainSettings = new MainSettings(validTemplatePath, validAnalysisFolder, validDataDir, string.Empty, string.Empty, string.Empty);
                 testValidMainSettings.Validate();
             }
             catch (Exception e)
@@ -80,7 +80,7 @@ namespace SkylineBatchTest
                 Assert.Fail("Should have validated valid MainSettings. Threw exception: " + e.Message);
             }
 
-            var validMainSettings = new MainSettings(validTemplatePath, validAnalysisFolder, validDataDir, string.Empty, string.Empty);
+            var validMainSettings = new MainSettings(validTemplatePath, validAnalysisFolder, validDataDir, string.Empty, string.Empty, string.Empty);
             var validReportSettings = new ReportSettings(new List<ReportInfo>());
             var validSkylineSettings = new SkylineSettings(SkylineType.Custom, TestUtils.GetSkylineDir());
             var validFileSettings = new FileSettings(string.Empty, string.Empty, string.Empty, false, false, true);
@@ -128,7 +128,7 @@ namespace SkylineBatchTest
 
         private void TestValidateMainSettings(string template, string analysis, string data, string pattern, string expectedError)
         {
-            var invalidMainSettings = new MainSettings(template, analysis, data, string.Empty, pattern);
+            var invalidMainSettings = new MainSettings(template, analysis, data, string.Empty, pattern, string.Empty);
             var validatedInvalidMainSettings = false;
             try
             {
@@ -148,7 +148,7 @@ namespace SkylineBatchTest
             var testMainSettings = TestUtils.GetTestMainSettings();
             Assert.IsTrue(Equals(testMainSettings, TestUtils.GetTestMainSettings()));
             var differentMainSettings = new MainSettings(testMainSettings.TemplateFilePath, 
-                testMainSettings.AnalysisFolderPath, testMainSettings.DataFolderPath, string.Empty, "differentPattern");
+                testMainSettings.AnalysisFolderPath, testMainSettings.DataFolderPath, string.Empty, "differentPattern", string.Empty);
             Assert.IsFalse(Equals(testMainSettings, null));
             Assert.IsFalse(Equals(testMainSettings, differentMainSettings));
         }

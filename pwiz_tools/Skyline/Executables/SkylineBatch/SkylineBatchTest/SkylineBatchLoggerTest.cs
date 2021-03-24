@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 
-using System;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -67,27 +66,31 @@ namespace SkylineBatchTest
             TestUtils.InitializeRInstallation();
 
             var logFolder = TestUtils.GetTestFilePath("MultipleLogsTest");
-            if (Directory.Exists(logFolder)) Directory.Delete(logFolder);
+            if (Directory.Exists(logFolder))
+            {
+                foreach (var file in Directory.EnumerateFiles(logFolder))
+                    File.Delete(file);
+            }
             Directory.CreateDirectory(logFolder);
             
             var testConfigManager = new SkylineBatchConfigManager(new Logger(Path.Combine(logFolder, "testLog.log"), "testLog.log"));
-            testConfigManager.AddConfiguration(TestUtils.GetTestConfig());
+            testConfigManager.UserAddConfig(TestUtils.GetTestConfig());
             Assert.IsTrue(testConfigManager.HasOldLogs() == false, "Expected no old logs.");
 
 
             int timeout = 5000;
-            int timestep = 200;
+            int timestep = 500;
             var cancelErrorMessage = "Timeout - configuration took too long to cancel";
             configManager = testConfigManager;
 
             // Run and cancel three times creates two old logs
-            testConfigManager.StartBatchRun(4);
+            Assert.IsTrue(testConfigManager.StartBatchRun(4), "Failed to start config");
             testConfigManager.CancelRunners();
             await TestUtils.WaitForCondition(ConfigRunnersStopped, timeout, timestep, cancelErrorMessage);
-            testConfigManager.StartBatchRun(4);
+            Assert.IsTrue(testConfigManager.StartBatchRun(4), "Failed to start config");
             testConfigManager.CancelRunners();
             await TestUtils.WaitForCondition(ConfigRunnersStopped, timeout, timestep, cancelErrorMessage);
-            testConfigManager.StartBatchRun(4);
+            Assert.IsTrue(testConfigManager.StartBatchRun(4), "Failed to start config");
             testConfigManager.CancelRunners();
             await TestUtils.WaitForCondition(ConfigRunnersStopped, timeout, timestep, cancelErrorMessage);
 

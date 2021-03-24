@@ -91,6 +91,18 @@ namespace SkylineBatch
             return lvi;
         }
 
+        public SkylineBatchConfig WithoutDependency()
+        {
+            return new SkylineBatchConfig(Name, Enabled, DateTime.Now, MainSettings.WithoutDependency(),
+                FileSettings, RefineSettings, ReportSettings, SkylineSettings);
+        }
+
+        public SkylineBatchConfig DependentChanged(string newName, string newTemplateFile)
+        {
+            return new SkylineBatchConfig(Name, Enabled, DateTime.Now, MainSettings.UpdateDependent(newName, newTemplateFile),
+                FileSettings, RefineSettings, ReportSettings, SkylineSettings);
+        }
+
         public IConfig ReplaceSkylineVersion(SkylineSettings newSettings)
         {
             return new SkylineBatchConfig(Name, Enabled, DateTime.Now, MainSettings,
@@ -178,14 +190,13 @@ namespace SkylineBatch
         
         #endregion
         
-        public List<string> Validate()
+        public void Validate()
         {
-            var questions = MainSettings.Validate();
+            MainSettings.Validate();
             FileSettings.Validate();
             RefineSettings.Validate();
             ReportSettings.Validate();
             SkylineSettings.Validate();
-            return questions;
         }
 
         public bool RunWillOverwrite(int startStep, string configurationHeader, out StringBuilder message)

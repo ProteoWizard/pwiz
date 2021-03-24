@@ -107,7 +107,7 @@ namespace SkylineBatch
 
         public void AddConfiguration(IConfig config)
         {
-            _configManager.AddConfiguration(config);
+            _configManager.UserAddConfig(config);
             UpdateUiConfigurations();
             ListViewSizeChanged();
             UpdateUiLogFiles();
@@ -115,7 +115,7 @@ namespace SkylineBatch
 
         public void ReplaceSelectedConfig(IConfig config)
         {
-            _configManager.ReplaceSelectedConfig(config);
+            _configManager.UserReplaceSelected(config);
             UpdateUiConfigurations();
             UpdateUiLogFiles();
         }
@@ -234,7 +234,7 @@ namespace SkylineBatch
 
         private void btnDelete_Click(object sender, EventArgs e)
         {
-            _configManager.RemoveSelected();
+            _configManager.UserRemoveSelected();
             UpdateUiConfigurations();
             ListViewSizeChanged();
         }

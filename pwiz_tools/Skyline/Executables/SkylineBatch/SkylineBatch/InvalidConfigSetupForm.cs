@@ -52,7 +52,7 @@ namespace SkylineBatch
                 validMainSettings, _invalidConfig.FileSettings, validRefineSettings, 
                 validReportSettings, validSkylineSettings);
             // replace old configuration
-            _configManager.ReplaceSelectedConfig(Config);
+            _configManager.UserReplaceSelected(Config);
             _mainControl.UpdateUiConfigurations();
             CloseSetup();
         }
@@ -73,8 +73,10 @@ namespace SkylineBatch
 
         private async Task<MainSettings> FixInvalidMainSettings()
         {
-            var validTemplateFilePath = await GetValidPath(Resources.InvalidConfigSetupForm_FixInvalidMainSettings_Skyline_template_file, 
-                mainSettings.TemplateFilePath, MainSettings.ValidateSkylineFile, PathDialogOptions.File, PathDialogOptions.ExistingOptional);
+            var validTemplateFilePath = mainSettings.TemplateFilePath;
+            if (mainSettings.DependentConfigName == null)
+                validTemplateFilePath = await GetValidPath(Resources.InvalidConfigSetupForm_FixInvalidMainSettings_Skyline_template_file, 
+                mainSettings.TemplateFilePath, MainSettings.ValidateTemplateFile, PathDialogOptions.File, PathDialogOptions.ExistingOptional);
             var validAnalysisFolderPath = await GetValidPath(Resources.InvalidConfigSetupForm_FixInvalidMainSettings_analysis_folder, 
                 mainSettings.AnalysisFolderPath, MainSettings.ValidateAnalysisFolder, PathDialogOptions.Folder);
             var validDataFolderPath = await GetValidPath(Resources.InvalidConfigSetupForm_FixInvalidMainSettings_data_folder, 
@@ -82,7 +84,7 @@ namespace SkylineBatch
             var validAnnotationsFilePath = await GetValidPath(Resources.InvalidConfigSetupForm_FixInvalidMainSettings_annotations_file, mainSettings.AnnotationsFilePath,
                 MainSettings.ValidateAnnotationsFile, PathDialogOptions.File);
 
-            return new MainSettings(validTemplateFilePath, validAnalysisFolderPath, validDataFolderPath, validAnnotationsFilePath, mainSettings.ReplicateNamingPattern);
+            return new MainSettings(validTemplateFilePath, validAnalysisFolderPath, validDataFolderPath, validAnnotationsFilePath, mainSettings.ReplicateNamingPattern, mainSettings.DependentConfigName);
         }
 
         private async Task<RefineSettings> FixInvalidRefineSettings()

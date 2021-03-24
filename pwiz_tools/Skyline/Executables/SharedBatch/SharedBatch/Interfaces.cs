@@ -13,9 +13,7 @@ namespace SharedBatch
         // Throws an ArgumentException if the configuration does not have enough
         // information to run, or if the information is not applicable to this computer
         // (ie: incorrect file paths)
-        // Returns a list of questions to ask the user if the validation status cannot be determined.
-        // Any answer other than Yes makes the configuration invalid
-        List<string> Validate();
+        void Validate();
 
         // Returns the name of the configuration
         string GetName();

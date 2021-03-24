@@ -55,6 +55,8 @@ namespace SkylineBatch
             _rDirectorySelector = rDirectorySelector;
             _mainControl = mainControl;
             _possibleTemplates = possibleTemplates;
+            if (config != null && _possibleTemplates.ContainsKey(config.Name))
+                _possibleTemplates.Remove(config.Name);
             if (config != null)
                 _configEnabled = config.Enabled;
             _isBusy = isBusy;
@@ -149,11 +151,21 @@ namespace SkylineBatch
         private MainSettings GetMainSettingsFromUi()
         {
             var templateFilePath = _possibleTemplates.Count > 0 ? comboTemplateFile.Text : textTemplateFile.Text;
+            string dependentConfig = null;
+            foreach (var configName in _possibleTemplates.Keys)
+            {
+                if (_possibleTemplates[configName].Equals(templateFilePath))
+                {
+                    dependentConfig = configName;
+                    break;
+                }
+            }
+            
             var analysisFolderPath = textAnalysisPath.Text;
             var dataFolderPath = textDataPath.Text;
             var annotationsFilePath = textAnnotationsFile.Text;
             var replicateNamingPattern = textNamingPattern.Text;
-            return new MainSettings(templateFilePath, analysisFolderPath, dataFolderPath, annotationsFilePath, replicateNamingPattern);
+            return new MainSettings(templateFilePath, analysisFolderPath, dataFolderPath, annotationsFilePath, replicateNamingPattern, dependentConfig);
         }
 
         private void textConfigName_TextChanged(object sender, EventArgs e)
@@ -447,23 +459,16 @@ namespace SkylineBatch
         private void Save()
         {
             SkylineBatchConfig newConfig;
-            var questions = new List<string>();
             try
             {
                 newConfig = GetConfigFromUi();
                 _mainControl.AssertUniqueConfigName(newConfig.Name, _action == ConfigAction.Edit);
-                questions.AddRange(newConfig.Validate());
+                newConfig.Validate();
             }
             catch (ArgumentException e)
             {
                 AlertDlg.ShowError(this, Program.AppName(), e.Message);
                 return;
-            }
-
-            foreach (var question in questions)
-            {
-                if (DialogResult.Yes != AlertDlg.ShowQuestion(this, Program.AppName(), question))
-                    return;
             }
 
             if (_action == ConfigAction.Edit)

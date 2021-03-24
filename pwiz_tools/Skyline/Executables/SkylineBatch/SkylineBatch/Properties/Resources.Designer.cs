@@ -1149,6 +1149,26 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The following configurations use refined template files from other configurations that do not exist:.
+        /// </summary>
+        internal static string SkylineBatchConfigManager_AssignDependencies_The_following_configurations_use_refined_template_files_from_other_configurations_that_do_not_exist_ {
+            get {
+                return ResourceManager.GetString("SkylineBatchConfigManager_AssignDependencies_The_following_configurations_use_ref" +
+                        "ined_template_files_from_other_configurations_that_do_not_exist_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You may want to update the template file paths..
+        /// </summary>
+        internal static string SkylineBatchConfigManager_AssignDependencies_You_may_want_to_update_the_template_file_paths_ {
+            get {
+                return ResourceManager.GetString("SkylineBatchConfigManager_AssignDependencies_You_may_want_to_update_the_template_" +
+                        "file_paths_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The following configurations are running and could not be updated:.
         /// </summary>
         internal static string SkylineBatchConfigManager_ReplaceSkylineSettings_The_following_configurations_are_running_and_could_not_be_updated_ {
@@ -1177,6 +1197,16 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Configuration {0} must be run before {1} to generate its template file..
+        /// </summary>
+        internal static string SkylineBatchConfigManager_StartBatchRun_Configuration__0__must_be_run_before__1__to_generate_its_template_file_ {
+            get {
+                return ResourceManager.GetString("SkylineBatchConfigManager_StartBatchRun_Configuration__0__must_be_run_before__1__" +
+                        "to_generate_its_template_file_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Do you want to continue?.
         /// </summary>
         internal static string SkylineBatchConfigManager_StartBatchRun_Do_you_want_to_continue_ {
@@ -1201,6 +1231,16 @@ namespace SkylineBatch.Properties {
             get {
                 return ResourceManager.GetString("SkylineBatchConfigManager_StartBatchRun_Please_check_the_checkbox_next_to_one_or_" +
                         "more_configurations_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please reorder the configurations so {0} runs first..
+        /// </summary>
+        internal static string SkylineBatchConfigManager_StartBatchRun_Please_reorder_the_configurations_so__0__runs_first_ {
+            get {
+                return ResourceManager.GetString("SkylineBatchConfigManager_StartBatchRun_Please_reorder_the_configurations_so__0__" +
+                        "runs_first_", resourceCulture);
             }
         }
         
@@ -1248,6 +1288,67 @@ namespace SkylineBatch.Properties {
             get {
                 return ResourceManager.GetString("SkylineBatchConfigManager_StartBatchRun_There_are_no_enabled_configurations_to_ru" +
                         "n_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to delete &quot;{0}&quot;?.
+        /// </summary>
+        internal static string SkylineBatchConfigManager_UserRemoveSelected_Are_you_sure_you_want_to_delete___0___ {
+            get {
+                return ResourceManager.GetString("SkylineBatchConfigManager_UserRemoveSelected_Are_you_sure_you_want_to_delete___0_" +
+                        "__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot delete &quot;{0}&quot; while the following configurations are running:.
+        /// </summary>
+        internal static string SkylineBatchConfigManager_UserRemoveSelected_Cannot_delete___0___while_the_following_configurations_are_running_ {
+            get {
+                return ResourceManager.GetString("SkylineBatchConfigManager_UserRemoveSelected_Cannot_delete___0___while_the_follow" +
+                        "ing_configurations_are_running_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Deleting &quot;{0}&quot; may impact the template files of the following configurations:.
+        /// </summary>
+        internal static string SkylineBatchConfigManager_UserRemoveSelected_Deleting___0___may_impact_the_template_files_of_the_following_configurations_ {
+            get {
+                return ResourceManager.GetString("SkylineBatchConfigManager_UserRemoveSelected_Deleting___0___may_impact_the_templa" +
+                        "te_files_of_the_following_configurations_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please wait until these configurations have finished running..
+        /// </summary>
+        internal static string SkylineBatchConfigManager_UserRemoveSelected_Please_wait_until_these_configurations_have_finished_running_ {
+            get {
+                return ResourceManager.GetString("SkylineBatchConfigManager_UserRemoveSelected_Please_wait_until_these_configuratio" +
+                        "ns_have_finished_running_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not update the configuration name or the refined output file path while the following dependent configurations are running:.
+        /// </summary>
+        internal static string SkylineBatchConfigManager_UserReplaceSelected_Could_not_update_the_configuration_name_or_the_refined_output_file_path_while_the_following_dependent_configurations_are_running_ {
+            get {
+                return ResourceManager.GetString("SkylineBatchConfigManager_UserReplaceSelected_Could_not_update_the_configuration_" +
+                        "name_or_the_refined_output_file_path_while_the_following_dependent_configuration" +
+                        "s_are_running_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please wait until the dependent configurations have stopped to change these values..
+        /// </summary>
+        internal static string SkylineBatchConfigManager_UserReplaceSelected_Please_wait_until_the_dependent_configurations_have_stopped_to_change_these_values_ {
+            get {
+                return ResourceManager.GetString("SkylineBatchConfigManager_UserReplaceSelected_Please_wait_until_the_dependent_con" +
+                        "figurations_have_stopped_to_change_these_values_", resourceCulture);
             }
         }
         

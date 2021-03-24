@@ -89,11 +89,13 @@ namespace SkylineBatchTest
                     if (expectedLine == null || actualLine == null)
                     {
                         Assert.IsTrue(expectedLine == actualLine,
+                            actualFilePath + Environment.NewLine +
                             $"Line {line}: Expected reached end of file to be {expectedLine == null} but instead was {actualLine == null}.");
                         return;
                     }
 
                     Assert.IsTrue(expectedLine.Equals(actualLine),
+                        actualFilePath + Environment.NewLine +
                         $"Line {line} does not match" + Environment.NewLine +
                                                                    "Expected:" + Environment.NewLine +
                                                                    expectedLine + Environment.NewLine +
