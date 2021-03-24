@@ -632,7 +632,7 @@ namespace TestPerf
             }
             OkDialog(addIrtDlg, addIrtDlg.OkDialog);
 
-            var peptidesPerProteinDlg = ShowDialog<PeptidesPerProteinDlg>(() => {}, 600000); //importPeptideSearchDlg.ClickNextButton(), 600000);
+            var peptidesPerProteinDlg = WaitForOpenForm<PeptidesPerProteinDlg>(600000);
             WaitForCondition(() => peptidesPerProteinDlg.DocumentFinalCalculated);
             RunUI(() =>
             {
