@@ -137,7 +137,7 @@ namespace SkylineBatch
                 if (validateConfigForm.DialogResult != DialogResult.OK)
                     return;
             }
-            var configForm = new SkylineBatchConfigForm(this, _rDirectorySelector, _configManager.GetSelectedConfig(), ConfigAction.Edit, configRunner.IsBusy(), _configManager.GetRefinedTemplates());
+            var configForm = new SkylineBatchConfigForm(this, _rDirectorySelector, config, ConfigAction.Edit, configRunner.IsBusy(), _configManager.GetRefinedTemplates());
             configForm.ShowDialog();
         }
 

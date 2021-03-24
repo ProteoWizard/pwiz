@@ -35,7 +35,7 @@ namespace AutoQC
             CreateValidConfig();
         }
 
-        public AutoQcConfig ValidConfig { get; private set; }
+        public AutoQcConfig Config { get; private set; }
 
 
         private async void CreateValidConfig()
@@ -45,13 +45,12 @@ namespace AutoQC
             var validPanoramaSettings = FixInvalidPanoramaSettings();
             var validSkylineSettings = await FixInvalidSkylineSettings();
             // create valid configuration
-            ValidConfig = new AutoQcConfig(_invalidConfig.Name, _invalidConfig.IsEnabled, _invalidConfig.Created, DateTime.Now, 
+            Config = new AutoQcConfig(_invalidConfig.Name, _invalidConfig.IsEnabled, _invalidConfig.Created, DateTime.Now,
                 validMainSettings, validPanoramaSettings, validSkylineSettings);
-            // save invalid configuration
-            _configManager.ReplaceSelectedConfig(ValidConfig);
+            // replace old configuration
+            _configManager.ReplaceSelectedConfig(Config);
             _mainControl.UpdateUiConfigurations();
-            DialogResult = DialogResult.OK;
-            Close();
+            CloseSetup();
         }
 
         #region Fix Configuration Settings
@@ -182,6 +181,18 @@ namespace AutoQC
         {
             control.Hide();
             panel1.Controls.Remove(control);
+        }
+
+        private void btnSkip_Click(object sender, EventArgs e)
+        {
+            Config = _invalidConfig;
+            CloseSetup();
+        }
+
+        private void CloseSetup()
+        {
+            DialogResult = DialogResult.OK;
+            Close();
         }
     }
 

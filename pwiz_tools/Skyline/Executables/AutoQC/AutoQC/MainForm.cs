@@ -99,7 +99,7 @@ namespace AutoQC
                 var validateConfigForm = new InvalidConfigSetupForm(config, _configManager, this);
                 if (validateConfigForm.ShowDialog() != DialogResult.OK)
                     return;
-                config = validateConfigForm.ValidConfig;
+                config = validateConfigForm.Config;
             }
             var configForm = new AutoQcConfigForm(this, config, ConfigAction.Edit, configRunner.IsBusy());
             configForm.ShowDialog();
@@ -118,7 +118,7 @@ namespace AutoQC
 
         public void AddConfiguration(IConfig config)
         {
-            _configManager.AddConfiguration(config);
+            _configManager.UserAddConfig(config);
             UpdateUiConfigurations();
             ListViewSizeChanged();
             UpdateUiLogFiles();
@@ -159,7 +159,7 @@ namespace AutoQC
 
         private void btnDelete_Click(object sender, EventArgs e)
         {
-            _configManager.RemoveSelected();
+            _configManager.UserRemoveSelected();
             UpdateUiConfigurations();
             ListViewSizeChanged();
             UpdateUiLogFiles();

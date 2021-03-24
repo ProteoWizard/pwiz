@@ -85,7 +85,6 @@ namespace SkylineBatch
 
         private new void LoadConfigList()
         {
-            if (!_runningUi) return; // Do not load saved configurations in test mode
             lock (_lock)
             {
                 var configs = base.LoadConfigList();
@@ -419,7 +418,7 @@ namespace SkylineBatch
                 foreach (var indexAndConfig in replacingConfigs)
                 {
                     ProgramaticallyRemoveAt(indexAndConfig.Item1);
-                    ProgramaticallyAddConfig(indexAndConfig.Item2);
+                    ProgramaticallyInsertConfig(indexAndConfig.Item2, indexAndConfig.Item1);
                 }
                 if (runningConfigs.Count > 0)
                     throw new ArgumentException(

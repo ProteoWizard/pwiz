@@ -80,7 +80,8 @@ namespace SharedBatch
         protected List<IConfig> LoadConfigList()
         {
             ConfigList.Importer = importer;
-            return Settings.Default.ConfigList.ToList();
+            // Do not load saved configurations in test mode
+            return _runningUi ? Settings.Default.ConfigList.ToList() : new List<IConfig>();
         }
 
         protected void ProgramaticallyInsertConfig(IConfig config, int index)

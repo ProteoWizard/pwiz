@@ -246,6 +246,7 @@ namespace AutoQC
             _skylineTypeControl.Dock = DockStyle.Fill;
             _skylineTypeControl.Show();
             panelSkylineSettings.Controls.Add(_skylineTypeControl);
+            _currentSkylineSettings = GetSkylineSettingsFromUi();
         }
 
         private void TabEnter(object sender, EventArgs e)
@@ -279,6 +280,8 @@ namespace AutoQC
 
         private void btnSaveConfig_Click(object sender, EventArgs e)
         {
+            if (tabControl.SelectedTab.Equals(tabSkylineSettings))
+                CheckIfSkylineChanged();
             Save();
         }
 

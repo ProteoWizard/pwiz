@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Text;
 using System.Windows.Forms;
 using System.Xml;
@@ -63,11 +62,12 @@ namespace AutoQC
         public ListViewItem AsListViewItem(IConfigRunner runner)
         {
             var lvi = new ListViewItem(Name);
-            var runnerStatusIndex = 2;
             lvi.UseItemStyleForSubItems = false; // So that we can change the color for sub-items.
             lvi.SubItems.Add(User);
             lvi.SubItems.Add(Created.ToShortDateString());
             lvi.SubItems.Add(runner.GetDisplayStatus());
+
+            var runnerStatusIndex = lvi.SubItems.Count - 1;
             lvi.SubItems[runnerStatusIndex].ForeColor = runner.GetDisplayColor();
             return lvi;
         }
@@ -168,17 +168,14 @@ namespace AutoQC
 
         #endregion
 
-        public List<string> Validate()
+        public void Validate()
         {
             if (string.IsNullOrEmpty(Name))
-            {
                 throw new ArgumentException("Please enter a name for the configuration.");
-            }
 
             MainSettings.ValidateSettings();
             SkylineSettings.Validate();
             PanoramaSettings.ValidateSettings();
-            return null;
         }
 
         public virtual ProcessInfo RunBefore(ImportContext importContext)
