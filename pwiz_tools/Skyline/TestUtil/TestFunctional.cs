@@ -885,7 +885,7 @@ namespace pwiz.SkylineTestUtil
             return WaitForDocumentLoaded(millis);
         }
 
-        public static bool WaitForCondition(Func<bool> func)
+        public static bool WaitForCondition([InstantHandle] Func<bool> func)
         {
             return WaitForCondition(WAIT_TIME, func);
         }

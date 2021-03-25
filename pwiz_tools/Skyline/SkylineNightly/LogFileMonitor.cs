@@ -21,6 +21,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Timers;
 using Timer = System.Timers.Timer;
@@ -50,6 +51,8 @@ namespace SkylineNightly
         private readonly byte[] _buffer;
         private readonly StringBuilder _builder;
         private string _logTail;
+        private readonly Regex _testLineRegex;
+        private string _lastTest;
 
         private readonly Timer _logChecker;
 
@@ -68,6 +71,8 @@ namespace SkylineNightly
             _buffer = new byte[8192];
             _builder = new StringBuilder();
             _logTail = "";
+            _testLineRegex = new Regex(@"\[\d\d:\d\d\] +\d+.\d+ +(\S+) +\(\w\w\)", RegexOptions.Compiled | RegexOptions.RightToLeft);
+            _lastTest = null;
             _logChecker = new Timer(10000); // check log file every 10 seconds
             _logChecker.Elapsed += CheckLog;
         }
@@ -149,6 +154,9 @@ namespace SkylineNightly
                             _hangNotificationSent = true;
 
                             Log("Hang detected, posting to " + Nightly.LABKEY_EMAIL_NOTIFICATION_URL);
+                            var subject = string.Format("[{0} ({1})] !!! TestResults alert", Environment.MachineName, RunModeName);
+                            if (!string.IsNullOrEmpty(_lastTest))
+                                subject += string.Format(" ({0})", _lastTest);
                             var message = new StringBuilder();
                             message.AppendFormat("{0} ({1})", Environment.MachineName, RunModeName);
                             message.AppendLine();
@@ -161,7 +169,7 @@ namespace SkylineNightly
                             message.AppendLine("...");
                             message.Append(_logTail);
                             message.AppendLine();
-                            SendEmailNotification(string.Format("[{0} ({1})] !!! TestResults alert", Environment.MachineName, RunModeName), message.ToString());
+                            SendEmailNotification(subject, message.ToString());
                         }
                         return;
                     }
@@ -180,6 +188,10 @@ namespace SkylineNightly
                     return;
 
                 var s = _builder.ToString();
+
+                var match = _testLineRegex.Match(s);
+                if (match.Success)
+                    _lastTest = match.Groups[1].Value;
 
                 _logTail += s.Substring(s.Length - totalN);
                 const int tailLineCount = 20;
