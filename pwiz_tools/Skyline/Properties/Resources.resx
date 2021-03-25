@@ -11398,4 +11398,25 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
   <data name="DataGridType_AUDIT_LOG_Audit_Log" xml:space="preserve">
     <value>Audit Log</value>
   </data>
+  <data name="DiaUmpireDdaConverter_Run_Starting_DIA_Umpire_conversion" xml:space="preserve">
+    <value>Starting DIA-Umpire conversion</value>
+  </data>
+  <data name="Setting_Validate_The_value___0___is_not_valid_for_the_argument__1__which_must_be_either__True__or__False__" xml:space="preserve">
+    <value>The value '{0}' is not valid for the argument {1} which must be either 'True' or 'False'.</value>
+  </data>
+  <data name="ImportPeptideSearchDlg_NextPage_No_isolation_windows_are_configured__" xml:space="preserve">
+    <value>No isolation windows are configured, but are required for deconvoluting DIA raw files by DIA-Umpire in preparation for DDA search. Go back to full scan settings to configure the isolation scheme.</value>
+  </data>
+  <data name="DDASearchControl_RunSearch_Conversion_cancelled_" xml:space="preserve">
+    <value>Conversion cancelled.</value>
+  </data>
+  <data name="DDASearchControl_RunSearch_Conversion_failed_" xml:space="preserve">
+    <value>Conversion failed.</value>
+  </data>
+  <data name="DDASearchControl_RunSearch_Conversion_finished_" xml:space="preserve">
+    <value>Conversion finished.</value>
+  </data>
+  <data name="DiaUmpireDdaConverter_Run_Re_using_existing_DiaUmpire_file__with_equivalent_settings__for__0_" xml:space="preserve">
+    <value>Re-using existing DIA-Umpire file (with equivalent settings) for {0}</value>
+  </data>
 </root>
