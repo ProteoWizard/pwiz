@@ -435,7 +435,7 @@ namespace SkylineBatch
             foreach (var indexAndConfig in replacingConfigs)
             {
                 ProgramaticallyRemoveAt(indexAndConfig.Item1);
-                ProgramaticallyAddConfig(indexAndConfig.Item2);
+                ProgramaticallyInsertConfig(indexAndConfig.Item2, indexAndConfig.Item1);
             }
         }
 

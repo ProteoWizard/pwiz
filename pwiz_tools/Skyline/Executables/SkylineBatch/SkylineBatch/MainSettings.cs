@@ -154,7 +154,7 @@ namespace SkylineBatch
         {
             var templateReplaced = false;
             var replacedTemplatePath = TemplateFilePath;
-            if (DependentConfigName != null)
+            if (DependentConfigName == null)
                 templateReplaced = TextUtil.TryReplaceStart(oldRoot, newRoot, TemplateFilePath, out replacedTemplatePath);
             var analysisReplaced =
                 TextUtil.TryReplaceStart(oldRoot, newRoot, AnalysisFolderPath, out string replacedAnalysisPath);

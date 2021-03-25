@@ -128,6 +128,12 @@ namespace SkylineBatch
 
         public static RefineSettings ReadXml(XmlReader reader)
         {
+            if (!reader.Name.Equals("refine_settings"))
+            {
+                // This is an old configuration with no refine settings
+                return new RefineSettings(ImmutableList<Tuple<RefineVariable, string>>.Empty, false, false,
+                    string.Empty);
+            }
             var removeDecoys = reader.GetBoolAttribute(Attr.RemoveDecoys);
             var removeResults = reader.GetBoolAttribute(Attr.RemoveResults);
             var outputFilePath = reader.GetAttribute(Attr.OutputFilePath);

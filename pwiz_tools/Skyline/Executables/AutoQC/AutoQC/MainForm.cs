@@ -99,9 +99,8 @@ namespace AutoQC
                 var validateConfigForm = new InvalidConfigSetupForm(config, _configManager, this);
                 if (validateConfigForm.ShowDialog() != DialogResult.OK)
                     return;
-                config = validateConfigForm.Config;
             }
-            var configForm = new AutoQcConfigForm(this, config, ConfigAction.Edit, configRunner.IsBusy());
+            var configForm = new AutoQcConfigForm(this, _configManager.GetSelectedConfig(), ConfigAction.Edit, configRunner.IsBusy());
             configForm.ShowDialog();
         }
 
