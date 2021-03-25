@@ -41,17 +41,23 @@ namespace pwiz.Skyline.Model
 
         public void CreateMatches(SrmSettings settings, IEnumerable<string> sequences,
             MappedList<string, StaticMod> defSetStatic, MappedList<string, StaticMod> defSetHeavy, 
-            int? expectedCount = null, IProgressMonitor progressMonitor = null)
+            IProgressMonitor progressMonitor = null)
         {
-            _sequences = sequences.GetEnumerator();
-            _sequenceCurrent = 0;
-            var countable = sequences as ICollection<string>; // Can we know the range without enumerating?
-            _sequenceCount = countable?.Count ?? expectedCount ?? 0;
             _progressMonitor = progressMonitor;
             if (progressMonitor != null)
             {
                 _status = new ProgressStatus(Resources.ModificationMatcher_CreateMatches_Matching_modifications);
+                var countable = sequences as ICollection<string>;
+                if (countable == null)
+                {
+                    countable = sequences.ToArray();
+                    sequences = countable;
+                }
+                _sequenceCount = countable.Count;
             }
+
+            _sequences = sequences.GetEnumerator();
+
             InitMatcherSettings(settings, defSetStatic, defSetHeavy);
             if (UnmatchedSequences.Count > 0)
             {
@@ -64,7 +70,7 @@ namespace pwiz.Skyline.Model
 
         public override bool MoveNextSequence()
         {
-            if(!_sequences.MoveNext())
+            if(!MoveNextSingleSequence())
                 return false;
             // Skip sequences that can be created from the current settings.
             TransitionGroupDocNode nodeGroup;
@@ -72,17 +78,26 @@ namespace pwiz.Skyline.Model
             while (!HasMods(_sequences.Current) ||
                    CreateDocNodeFromSettings(new Target(_sequences.Current), null, DIFF_GROUPS, out nodeGroup) != null)
             {
-                if (!_sequences.MoveNext())
+                if (!MoveNextSingleSequence())
                     return false;
-                if (_progressMonitor != null)
-                {
-                    _sequenceCurrent++;
-                    if (_progressMonitor.IsCanceled)
-                        return false;
-                    if (_sequenceCount > 0)
-                        _progressMonitor.UpdateProgress(_status = _status.UpdatePercentCompleteProgress(_progressMonitor, _sequenceCurrent, _sequenceCount));
-                }
             }
+            return true;
+        }
+
+        private bool MoveNextSingleSequence()
+        {
+            if (!_sequences.MoveNext())
+                return false;
+
+            if (_progressMonitor != null)
+            {
+                _sequenceCurrent++;
+                if (_progressMonitor.IsCanceled)
+                    return false;
+                if (_sequenceCount > 0)
+                    _progressMonitor.UpdateProgress(_status = _status.UpdatePercentCompleteProgress(_progressMonitor, _sequenceCurrent, _sequenceCount));
+            }
+
             return true;
         }
 

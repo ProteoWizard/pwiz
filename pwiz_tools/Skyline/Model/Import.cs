@@ -331,17 +331,11 @@ namespace pwiz.Skyline.Model
             using (var reader = new LineReaderWithProgress(_inputFilename, progressMonitor))
             {
                 var inputLines = new List<string>();
-                while (true)
+                string line;
+                while ((line = reader.ReadLine()?.Trim()) != null)
                 {
-                    var line = reader.ReadLine()?.Trim();
-                    if (line == null)
-                    {
-                        break;
-                    }
                     if (line.Length > 0)
-                    {
                         inputLines.Add(line);
-                    }
                 }
                 if (inputLines.Count == 0)
                     throw new InvalidDataException(Resources.MassListImporter_Import_Empty_transition_list);
@@ -691,7 +685,6 @@ namespace pwiz.Skyline.Model
                                         IList<string> lines,
                                         SrmSettings settings,
                                         IEnumerable<string> sequences,
-                                        int? expectedCount,
                                         IProgressMonitor progressMonitor)
             {
                 FormatProvider = provider;
@@ -699,12 +692,12 @@ namespace pwiz.Skyline.Model
                 Indices = indices;
                 Lines = lines;
                 Settings = settings;
-                ModMatcher = CreateModificationMatcher(settings, sequences, expectedCount, progressMonitor);
+                ModMatcher = CreateModificationMatcher(settings, sequences, progressMonitor);
                 NodeDictionary = new Dictionary<string, PeptideDocNode>();
             }
 
             private static ModificationMatcher CreateModificationMatcher(SrmSettings settings,
-                IEnumerable<string> sequences, int? expectedCount = null, IProgressMonitor progressMonitor = null)
+                IEnumerable<string> sequences, IProgressMonitor progressMonitor = null)
             {
                 var modMatcher = new ModificationMatcher();
                 // We want AutoSelect on so we can generate transition groups, but we want the filter to 
@@ -720,7 +713,7 @@ namespace pwiz.Skyline.Model
                                              sequences != null ? sequences.Distinct() : new string[0],
                                              Properties.Settings.Default.StaticModList,
                                              Properties.Settings.Default.HeavyModList,
-                                             expectedCount , progressMonitor);
+                                             progressMonitor);    // Can't use expected count
                 }
                 catch (FormatException)
                 {
@@ -728,7 +721,7 @@ namespace pwiz.Skyline.Model
                                              new string[0],
                                              Properties.Settings.Default.StaticModList,
                                              Properties.Settings.Default.HeavyModList,
-                                             expectedCount , progressMonitor);
+                                             progressMonitor);
                 }
                 return modMatcher;
             }
@@ -1164,7 +1157,7 @@ namespace pwiz.Skyline.Model
                 SrmSettings settings,
                 IList<string> lines,
                 IProgressMonitor progressMonitor)
-                : base(provider, separator, indices, lines, settings, GetSequencesFromLines(lines, separator, indices), lines.Count, progressMonitor)
+                : base(provider, separator, indices, lines, settings, GetSequencesFromLines(lines, separator, indices), progressMonitor)
             {
             }
 
@@ -1701,7 +1694,7 @@ namespace pwiz.Skyline.Model
                                        SrmSettings settings,
                                        IList<string> lines,
                                        IProgressMonitor progressMonitor)
-                : base(provider, separator, indices, lines, settings, GetSequencesFromLines(lines, separator, indices, exPeptideRegex), lines.Count, progressMonitor)
+                : base(provider, separator, indices, lines, settings, GetSequencesFromLines(lines, separator, indices, exPeptideRegex), progressMonitor)
             {
                 ExPeptideRegex = exPeptideRegex;
             }
