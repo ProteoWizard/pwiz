@@ -122,7 +122,7 @@ namespace SkylineBatch
                 {
                     // Writes the batch commands for steps 1-4 to a file
                     var commandFile = WriteBatchCommandsToFile(startStep, multiLine);
-                    var command = string.Format("--batch-commands=\"{0}\" --version", commandFile);
+                    var command = string.Format("--batch-commands=\"{0}\"", commandFile);
                     await _processRunner.Run(Config.SkylineSettings.CmdPath, command);
                 }
             }
