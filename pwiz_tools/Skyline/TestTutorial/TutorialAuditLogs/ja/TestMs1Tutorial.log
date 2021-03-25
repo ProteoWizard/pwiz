@@ -9,6 +9,7 @@ All Info  :
 スペクトルライブラリを構築>曖昧な一致を含めるは偽です
 スペクトルライブラリを構築>ドキュメント内のペプチドをフィルタリングは偽です
 スペクトルライブラリを構築>ワークフローは"MS1フィルタを用いたDDA"です
+スペクトルライブラリを構築>Input File Typeは"Search results (build library directly)"です
 Extra Info: カットオフスコア = "0.95",
 ファイルを検索 = 
 [
@@ -18,7 +19,8 @@ Extra Info: カットオフスコア = "0.95",
 iRT標準ペプチド = なし,
 曖昧な一致を含める = 偽,
 ドキュメント内のペプチドをフィルタリング = 偽,
-ワークフロー = "MS1フィルタを用いたDDA"
+ワークフロー = "MS1フィルタを用いたDDA",
+Input File Type = "Search results (build library directly)"
 
 Undo Redo : ペプチド検索がインポートされました
 Summary   : ペプチド検索がインポートされました

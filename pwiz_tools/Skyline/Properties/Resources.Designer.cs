@@ -8260,6 +8260,33 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Conversion cancelled..
+        /// </summary>
+        public static string DDASearchControl_RunSearch_Conversion_cancelled_ {
+            get {
+                return ResourceManager.GetString("DDASearchControl_RunSearch_Conversion_cancelled_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Conversion failed..
+        /// </summary>
+        public static string DDASearchControl_RunSearch_Conversion_failed_ {
+            get {
+                return ResourceManager.GetString("DDASearchControl_RunSearch_Conversion_failed_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Conversion finished..
+        /// </summary>
+        public static string DDASearchControl_RunSearch_Conversion_finished_ {
+            get {
+                return ResourceManager.GetString("DDASearchControl_RunSearch_Conversion_finished_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Search canceled..
         /// </summary>
         public static string DDASearchControl_SearchProgress_Search_canceled {
@@ -8789,6 +8816,25 @@ namespace pwiz.Skyline.Properties {
         public static string DiaIsolationWindowsGraphForm_DiaIsolationWindowsGraphForm_Measurement_Windows {
             get {
                 return ResourceManager.GetString("DiaIsolationWindowsGraphForm_DiaIsolationWindowsGraphForm_Measurement_Windows", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Re-using existing DIA-Umpire file (with equivalent settings) for {0}.
+        /// </summary>
+        public static string DiaUmpireDdaConverter_Run_Re_using_existing_DiaUmpire_file__with_equivalent_settings__for__0_ {
+            get {
+                return ResourceManager.GetString("DiaUmpireDdaConverter_Run_Re_using_existing_DiaUmpire_file__with_equivalent_setti" +
+                        "ngs__for__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Starting DIA-Umpire conversion.
+        /// </summary>
+        public static string DiaUmpireDdaConverter_Run_Starting_DIA_Umpire_conversion {
+            get {
+                return ResourceManager.GetString("DiaUmpireDdaConverter_Run_Starting_DIA_Umpire_conversion", resourceCulture);
             }
         }
         
@@ -15304,6 +15350,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to No isolation windows are configured, but are required for deconvoluting DIA raw files by DIA-Umpire in preparation for DDA search. Go back to full scan settings to configure the isolation scheme..
+        /// </summary>
+        public static string ImportPeptideSearchDlg_NextPage_No_isolation_windows_are_configured__ {
+            get {
+                return ResourceManager.GetString("ImportPeptideSearchDlg_NextPage_No_isolation_windows_are_configured__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to No results files were specified. Are you sure you want to continue? Continuing will create a template document with no imported results..
         /// </summary>
         public static string ImportPeptideSearchDlg_NextPage_No_results_files_were_specified__Are_you_sure_you_want_to_continue__Continuing_will_create_a_template_document_with_no_imported_results_ {
@@ -15911,7 +15966,7 @@ namespace pwiz.Skyline.Properties {
         ///
         ///Multipliers (e.g. the &quot;2&quot; in &quot;[2M+K]&quot;) and isotope labels (e.g. the &quot;2Cl37&quot; in &quot;[M2Cl37+H]&quot;) are supported.
         ///
-        ///Recognized adduct com [rest of string was truncated]&quot;;.
+        ///Recognized adduct components  [rest of string was truncated]&quot;;.
         /// </summary>
         public static string IonInfo_AdductTips_ {
             get {
@@ -20650,7 +20705,7 @@ namespace pwiz.Skyline.Properties {
         ///    
         ///Note that you can adjust column order in Skyline by dragging the column headers left or right.  For molecules, you can also select which columns to enable with the &quot;Columns...&quot; button.
         ///
-        ///Most peptide transition lists can be imported with the &quot;File|Import|Transition List...&quot; menu item or even pasted directly into the Targets window. You can also do this with molecule tra [rest of string was truncated]&quot;;.
+        ///Most peptide transition lists can be imported with the &quot;File|Import|Transition List...&quot; menu item or even pasted directly into the Targets window. You can also do this with molecule transit [rest of string was truncated]&quot;;.
         /// </summary>
         public static string PasteDlg_btnTransitionListHelp_Click_SmallMol_ {
             get {
@@ -25954,6 +26009,16 @@ namespace pwiz.Skyline.Properties {
         public static string ServerList_Title_Edit_Servers {
             get {
                 return ResourceManager.GetString("ServerList_Title_Edit_Servers", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The value &apos;{0}&apos; is not valid for the argument {1} which must be either &apos;True&apos; or &apos;False&apos;..
+        /// </summary>
+        public static string Setting_Validate_The_value___0___is_not_valid_for_the_argument__1__which_must_be_either__True__or__False__ {
+            get {
+                return ResourceManager.GetString("Setting_Validate_The_value___0___is_not_valid_for_the_argument__1__which_must_be_" +
+                        "either__True__or__False__", resourceCulture);
             }
         }
         

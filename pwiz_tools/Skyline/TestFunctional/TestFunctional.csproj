@@ -166,6 +166,7 @@
     <Compile Include="CrosslinkChromatogramTest.cs" />
     <Compile Include="CrosslinkingTest.cs" />
     <Compile Include="CrosslinkNeutralLossTest.cs" />
+    <Compile Include="DiaSearchTest.cs" />
     <Compile Include="DdaSearchTest.cs" />
     <Compile Include="DetectionsPlotTest.cs" />
     <Compile Include="DirtyDocumentSharingTest.cs" />

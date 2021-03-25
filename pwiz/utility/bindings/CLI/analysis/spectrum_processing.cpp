@@ -507,17 +507,32 @@ bool SpectrumList_IonMobility::accept(msdata::SpectrumList^ inner)
 }
 
 
+SpectrumList_DiaUmpire::Config::TargetWindow::TargetWindow(double start, double end)
+{
+    base_ = new DiaUmpire::TargetWindow(DiaUmpire::MzRange(start, end));
+}
+
+SpectrumList_DiaUmpire::Config::TargetWindowList^ SpectrumList_DiaUmpire::Config::diaVariableWindows::get()
+{
+    return gcnew SpectrumList_DiaUmpire::Config::TargetWindowList(&base().diaVariableWindows, this);
+}
+
+SpectrumList_DiaUmpire::Config::Config()
+{
+    base_ = new DiaUmpire::Config();
+}
+
 SpectrumList_DiaUmpire::SpectrumList_DiaUmpire(msdata::MSData^ msd, msdata::SpectrumList^ inner, Config^ config)
     : msdata::SpectrumList(0)
 {
-    base_ = new b::SpectrumList_DiaUmpire(msd->base(), *inner->base_, config->base());
+    try { base_ = new b::SpectrumList_DiaUmpire(msd->base(), *inner->base_, config->base()); } CATCH_AND_FORWARD
     msdata::SpectrumList::base_ = new boost::shared_ptr<pwiz::msdata::SpectrumList>(base_);
 }
 
 SpectrumList_DiaUmpire::SpectrumList_DiaUmpire(msdata::MSData^ msd, msdata::SpectrumList^ inner, Config^ config, util::IterationListenerRegistry^ ilr)
     : msdata::SpectrumList(0)
 {
-    base_ = new b::SpectrumList_DiaUmpire(msd->base(), *inner->base_, config->base(), &ilr->base());
+    try { base_ = new b::SpectrumList_DiaUmpire(msd->base(), *inner->base_, config->base(), &ilr->base()); } CATCH_AND_FORWARD
     msdata::SpectrumList::base_ = new boost::shared_ptr<pwiz::msdata::SpectrumList>(base_);
 }
 

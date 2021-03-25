@@ -156,7 +156,8 @@ namespace pwiz.SkylineTestUtil
             Thermo,
             UIMF,
             UNIFI,
-            Waters
+            Waters,
+            DiaUmpire
         }
 
         /// <summary>
@@ -173,13 +174,23 @@ namespace pwiz.SkylineTestUtil
             string vendorStr = Enum.GetName(typeof(VendorDir), vendorDir) ?? throw new ArgumentException(@"VendorDir value unknown");
             if (File.Exists(Path.Combine(projectDir, @"Skyline.sln")))
             {
-                vendorReaderPath = Path.Combine(projectDir, @"..\..\pwiz\data\vendor_readers");
-                return Path.Combine(vendorReaderPath, vendorStr, $"Reader_{vendorStr}_Test.data");
+                if (vendorDir == VendorDir.DiaUmpire)
+                {
+                    return Path.Combine(projectDir, @"..\..\pwiz\analysis\spectrum_processing\SpectrumList_DiaUmpireTest.data");
+                }
+                else
+                {
+                    vendorReaderPath = Path.Combine(projectDir, @"..\..\pwiz\data\vendor_readers");
+                    return Path.Combine(vendorReaderPath, vendorStr, $"Reader_{vendorStr}_Test.data");
+                }
             }
             else
             {
                 vendorReaderPath = Path.Combine(projectDir, @".."); // one up from TestZipFiles, and no vendorStr intermediate directory
-                return Path.Combine(vendorReaderPath, $"Reader_{vendorStr}_Test.data");
+                if (vendorDir == VendorDir.DiaUmpire)
+                    return Path.Combine(vendorReaderPath, "DiaUmpireTest.data");
+                else
+                    return Path.Combine(vendorReaderPath, $"Reader_{vendorStr}_Test.data");
             }
 
         }

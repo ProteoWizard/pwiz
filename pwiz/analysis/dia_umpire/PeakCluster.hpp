@@ -67,7 +67,7 @@ struct PrecursorFragmentPairEdge : public PeakOverlapRegion
 {
     float FragmentMz;
     float Intensity;
-    float ApexDelta;
+    float DeltaApex;
     float RTOverlapP;
     int FragmentMS1Rank = 0;
     float FragmentMS1RankScore = 1.f;
@@ -415,8 +415,8 @@ class PeakCurveClusteringCorrKDtree
     void operator()()
     {
         auto const& peakA = peakCurves[targetCurveIndex];
-        float lowrt = peakA->ApexRT - parameter.ApexDelta - 1e-4;
-        float highrt = peakA->ApexRT + parameter.ApexDelta + 1e-4;
+        float lowrt = peakA->ApexRT - parameter.DeltaApex - 1e-4;
+        float highrt = peakA->ApexRT + parameter.DeltaApex + 1e-4;
         float lowmz = InstrumentParameter::GetMzByPPM(peakA->TargetMz - 1e-4, 1, parameter.MS1PPM);
         float highmz = InstrumentParameter::GetMzByPPM((peakA->TargetMz + 1e-4 + ((float)MaxNoOfClusters / StartCharge)), 1, -parameter.MS1PPM);
 
@@ -616,8 +616,8 @@ class CorrCalcCluster2Curve
     void operator()()
     {
         //Get Start and End indices of peak curves which are in the RT range
-        auto startRTitr = PeakCurveSortedListApexRT.lower_bound(MS1PeakCluster->PeakHeightRT[0] - parameter.ApexDelta);
-        auto endRTitr = PeakCurveSortedListApexRT.lower_bound(MS1PeakCluster->PeakHeightRT[0] + parameter.ApexDelta);
+        auto startRTitr = PeakCurveSortedListApexRT.lower_bound(MS1PeakCluster->PeakHeightRT[0] - parameter.DeltaApex);
+        auto endRTitr = PeakCurveSortedListApexRT.lower_bound(MS1PeakCluster->PeakHeightRT[0] + parameter.DeltaApex);
         PeakCurve const& targetMS1Curve = *MS1PeakCluster->MonoIsotopePeak;
 
         //Calculate RT range of the peak cluster
@@ -649,7 +649,7 @@ class CorrCalcCluster2Curve
                 OverlapP = 1;
             }
 
-            if (OverlapP > parameter.RTOverlapThreshold
+            if (OverlapP > parameter.RTOverlap
                 && targetMS1Curve.ApexRT >= peakCurve.StartRT()
                 && targetMS1Curve.ApexRT <= peakCurve.EndRT()
                 && peakCurve.ApexRT >= targetMS1Curve.StartRT()
@@ -670,7 +670,7 @@ class CorrCalcCluster2Curve
                     PrecursorFragmentPair.FragmentMz = peakCurve.TargetMz;
                     PrecursorFragmentPair.Intensity = peakCurve.ApexInt;
                     PrecursorFragmentPair.RTOverlapP = OverlapP;
-                    PrecursorFragmentPair.ApexDelta = ApexDiff;
+                    PrecursorFragmentPair.DeltaApex = ApexDiff;
                     //FragmentPeaks.put(peakCurve.Index, peakCurve);
                     GroupedFragmentList.push_back(PrecursorFragmentPair);
                     if (PrecursorFragmentPair.Correlation > parameter.HighCorrThreshold)
@@ -860,7 +860,7 @@ class PseudoMSMSProcessing
                 fragment.ComplementaryFragment = true;
                 fragment.Intensity = bestfragment->Intensity * growth;
                 fragment.Correlation = bestfragment->Correlation;
-                fragment.ApexDelta = bestfragment->ApexDelta;
+                fragment.DeltaApex = bestfragment->DeltaApex;
                 fragment.RTOverlapP = bestfragment->RTOverlapP;
                 fragment.FragmentMS1Rank = bestfragment->FragmentMS1Rank;
                 fragment.FragmentMS1RankScore = bestfragment->FragmentMS1RankScore;

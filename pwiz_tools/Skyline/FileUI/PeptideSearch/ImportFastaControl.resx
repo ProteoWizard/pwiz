@@ -119,7 +119,7 @@
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="tbxFasta.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Bottom, Left, Right</value>
+    <value>Left, Right</value>
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="tbxFasta.Location" type="System.Drawing.Point, System.Drawing">
@@ -136,7 +136,7 @@
     <value>Both</value>
   </data>
   <data name="tbxFasta.Size" type="System.Drawing.Size, System.Drawing">
-    <value>282, 230</value>
+    <value>282, 179</value>
   </data>
   <data name="tbxFasta.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -160,7 +160,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;tbxFasta.ZOrder" xml:space="preserve">
-    <value>9</value>
+    <value>1</value>
   </data>
   <data name="browseFastaBtn.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -175,7 +175,7 @@
     <value>6</value>
   </data>
   <data name="browseFastaBtn.Text" xml:space="preserve">
-    <value>&amp;Browse...</value>
+    <value>Br&amp;owse...</value>
   </data>
   <data name="&gt;&gt;browseFastaBtn.Name" xml:space="preserve">
     <value>browseFastaBtn</value>
@@ -187,7 +187,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;browseFastaBtn.ZOrder" xml:space="preserve">
-    <value>8</value>
+    <value>10</value>
   </data>
   <data name="panelError.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left, Right</value>
@@ -244,7 +244,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;panelError.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>9</value>
   </data>
   <data name="txtNumDecoys.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -281,7 +281,7 @@ Can be a decimal number like 0.5 or 2.5.</value>
     <value>Top, Right</value>
   </data>
   <data name="clearBtn.Location" type="System.Drawing.Point, System.Drawing">
-    <value>302, 109</value>
+    <value>303, 109</value>
   </data>
   <data name="clearBtn.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -302,7 +302,7 @@ Can be a decimal number like 0.5 or 2.5.</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;clearBtn.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>8</value>
   </data>
   <data name="label1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -329,7 +329,7 @@ Can be a decimal number like 0.5 or 2.5.</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>7</value>
   </data>
   <data name="label2.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -356,7 +356,7 @@ Can be a decimal number like 0.5 or 2.5.</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>6</value>
   </data>
   <data name="cbMissedCleavages.Items" xml:space="preserve">
     <value>0</value>
@@ -407,7 +407,7 @@ Can be a decimal number like 0.5 or 2.5.</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;cbMissedCleavages.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>5</value>
   </data>
   <data name="label3.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -434,7 +434,7 @@ Can be a decimal number like 0.5 or 2.5.</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>4</value>
   </data>
   <data name="comboEnzyme.Location" type="System.Drawing.Point, System.Drawing">
     <value>14, 16</value>
@@ -455,7 +455,7 @@ Can be a decimal number like 0.5 or 2.5.</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;comboEnzyme.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>3</value>
   </data>
   <data name="label4.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -590,6 +590,129 @@ Can be a decimal number like 0.5 or 2.5.</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;panelDecoys.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="cbImportFromSeparateFasta.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbImportFromSeparateFasta.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="cbImportFromSeparateFasta.Location" type="System.Drawing.Point, System.Drawing">
+    <value>14, 0</value>
+  </data>
+  <data name="cbImportFromSeparateFasta.Size" type="System.Drawing.Size, System.Drawing">
+    <value>238, 17</value>
+  </data>
+  <data name="cbImportFromSeparateFasta.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="cbImportFromSeparateFasta.Text" xml:space="preserve">
+    <value>I&amp;mport target proteins from a separate FASTA</value>
+  </data>
+  <data name="&gt;&gt;cbImportFromSeparateFasta.Name" xml:space="preserve">
+    <value>cbImportFromSeparateFasta</value>
+  </data>
+  <data name="&gt;&gt;cbImportFromSeparateFasta.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbImportFromSeparateFasta.Parent" xml:space="preserve">
+    <value>targetFastaPanel</value>
+  </data>
+  <data name="&gt;&gt;cbImportFromSeparateFasta.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="tbxFastaTargets.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
+  <data name="tbxFastaTargets.Location" type="System.Drawing.Point, System.Drawing">
+    <value>14, 24</value>
+  </data>
+  <data name="tbxFastaTargets.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>0, 0, 0, 0</value>
+  </data>
+  <data name="tbxFastaTargets.Size" type="System.Drawing.Size, System.Drawing">
+    <value>282, 20</value>
+  </data>
+  <data name="tbxFastaTargets.TabIndex" type="System.Int32, mscorlib">
+    <value>23</value>
+  </data>
+  <data name="tbxFastaTargets.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="&gt;&gt;tbxFastaTargets.Name" xml:space="preserve">
+    <value>tbxFastaTargets</value>
+  </data>
+  <data name="&gt;&gt;tbxFastaTargets.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tbxFastaTargets.Parent" xml:space="preserve">
+    <value>targetFastaPanel</value>
+  </data>
+  <data name="&gt;&gt;tbxFastaTargets.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="browseFastaTargetsBtn.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="browseFastaTargetsBtn.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="browseFastaTargetsBtn.Location" type="System.Drawing.Point, System.Drawing">
+    <value>303, 22</value>
+  </data>
+  <data name="browseFastaTargetsBtn.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>0, 0, 0, 0</value>
+  </data>
+  <data name="browseFastaTargetsBtn.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="browseFastaTargetsBtn.TabIndex" type="System.Int32, mscorlib">
+    <value>24</value>
+  </data>
+  <data name="browseFastaTargetsBtn.Text" xml:space="preserve">
+    <value>Bro&amp;wse...</value>
+  </data>
+  <data name="browseFastaTargetsBtn.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="&gt;&gt;browseFastaTargetsBtn.Name" xml:space="preserve">
+    <value>browseFastaTargetsBtn</value>
+  </data>
+  <data name="&gt;&gt;browseFastaTargetsBtn.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;browseFastaTargetsBtn.Parent" xml:space="preserve">
+    <value>targetFastaPanel</value>
+  </data>
+  <data name="&gt;&gt;browseFastaTargetsBtn.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="targetFastaPanel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
+  <data name="targetFastaPanel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 265</value>
+  </data>
+  <data name="targetFastaPanel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>0, 0, 0, 0</value>
+  </data>
+  <data name="targetFastaPanel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>381, 45</value>
+  </data>
+  <data name="targetFastaPanel.TabIndex" type="System.Int32, mscorlib">
+    <value>25</value>
+  </data>
+  <data name="&gt;&gt;targetFastaPanel.Name" xml:space="preserve">
+    <value>targetFastaPanel</value>
+  </data>
+  <data name="&gt;&gt;targetFastaPanel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;targetFastaPanel.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;targetFastaPanel.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">

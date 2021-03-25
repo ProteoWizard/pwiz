@@ -36,15 +36,15 @@ namespace pwiz.Skyline.Model
         public abstract string[] FragmentIons { get; }
         public abstract string EngineName { get; }
         public abstract Bitmap SearchEngineLogo { get; }
-        protected MsDataFileUri[] SpectrumFileNames { get; set; }
+        public MsDataFileUri[] SpectrumFileNames { get; protected set; }
         protected string[] FastaFileNames { get; set; }
 
         /// <summary>
         /// A string or numeric variable with a default value and, for numeric types, min and max values.
         /// </summary>
-        public class Setting
+        public class Setting : IAuditLogObject
         {
-            public Setting(string name, int defaultValue, int minValue, int maxValue)
+            public Setting(string name, int defaultValue, int minValue = int.MinValue, int maxValue = int.MaxValue)
             {
                 Name = name;
                 _value = defaultValue;
@@ -52,18 +52,27 @@ namespace pwiz.Skyline.Model
                 MaxValue = maxValue;
             }
 
-            public Setting(string name, double defaultValue, double minValue, double maxValue)
+            public Setting(string name, double defaultValue, double minValue = double.MinValue, double maxValue = double.MaxValue)
             {
                 Name = name;
                 _value = defaultValue;
                 MinValue = minValue;
                 MaxValue = maxValue;
+            }
+
+            public Setting(string name, bool defaultValue)
+            {
+                Name = name;
+                _value = defaultValue;
+                MinValue = false;
+                MaxValue = true;
             }
 
             public Setting(string name, string defaultValue = null)
             {
                 Name = name;
-                _value = string.Empty;
+                MinValue = string.Empty;
+                _value = defaultValue ?? string.Empty;
             }
 
             public string Name { get; }
@@ -91,6 +100,13 @@ namespace pwiz.Skyline.Model
                     case string s:
                         return value;
 
+                    case bool b:
+                        if (!bool.TryParse(value.ToString(), out bool tmpb))
+                            throw new ArgumentException(string.Format(
+                                Resources.Setting_Validate_The_value___0___is_not_valid_for_the_argument__1__which_must_be_either__True__or__False__,
+                                value, Name));
+                        return tmpb;
+
                     case int minValue:
                         if (!int.TryParse(value.ToString(), out int tmpi32))
                             throw new ArgumentException(string.Format(
@@ -117,6 +133,16 @@ namespace pwiz.Skyline.Model
                         throw new InvalidOperationException(@"unsupported setting type");
                 }
             }
+
+            public override string ToString()
+            {
+                if (Value is double d)
+                    return $@"{Name} = {d.ToString(@"F")}";
+                return $@"{Name} = {Value}";
+            }
+
+            public string AuditLogText => ToString();
+            public bool IsName => false;
         }
 
         /// <summary>
@@ -132,7 +158,7 @@ namespace pwiz.Skyline.Model
         public delegate void NotificationEventHandler(object sender, IProgressStatus status);
         public abstract event NotificationEventHandler SearchProgressChanged;
 
-        public abstract bool Run(CancellationTokenSource cancelToken);
+        public abstract bool Run(CancellationTokenSource cancelToken, IProgressStatus status);
 
         public void SetSpectrumFiles(MsDataFileUri[] searchFilenames)
         {
