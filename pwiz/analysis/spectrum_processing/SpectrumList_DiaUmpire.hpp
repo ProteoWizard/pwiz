@@ -46,8 +46,8 @@ namespace analysis {
         ///@}
 
         private:
-        DiaUmpire::DiaUmpire diaumpire_;
-        msdata::SpectrumListPtr sl_;
+        class Impl;
+        boost::scoped_ptr<Impl> impl_;
     };
 
 } // namespace analysis

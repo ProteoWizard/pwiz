@@ -588,4 +588,31 @@
   <data name="ClusterMetricType_euclidean" xml:space="preserve">
     <value>Euclidean</value>
   </data>
+  <data name="InputFile_dda_raw" xml:space="preserve">
+    <value>DDA raw (search and build library)</value>
+  </data>
+  <data name="InputFile_dia_raw" xml:space="preserve">
+    <value>DIA raw (deconvolute, search, and build library)</value>
+  </data>
+  <data name="InputFile_search_result" xml:space="preserve">
+    <value>Search results (build library directly)</value>
+  </data>
+  <data name="InstrumentPreset_OrbitrapLTQ" xml:space="preserve">
+    <value>Orbitrap LTQ</value>
+  </data>
+  <data name="InstrumentPreset_QExactive" xml:space="preserve">
+    <value>Q Exactive</value>
+  </data>
+  <data name="InstrumentPreset_TripleTOF" xml:space="preserve">
+    <value>TripleTOF</value>
+  </data>
+  <data name="Protocol_dia_umpire" xml:space="preserve">
+    <value>DIA-Umpire</value>
+  </data>
+  <data name="Protocol_msconvert" xml:space="preserve">
+    <value>MSConvert</value>
+  </data>
+  <data name="Protocol_none" xml:space="preserve">
+    <value>None</value>
+  </data>
 </root>
