@@ -10959,7 +10959,6 @@ Invalid peptide sequence at position 18
   <data name="DetectionPlotPane_EmptyPlotCanceled_Label" xml:space="preserve">
     <value>Operation canceled.</value>
   </data>
-  
   <data name="DetectionPlotData_NoDataLoaded_Label" xml:space="preserve">
     <value>No data loaded.</value>
   </data>
@@ -10981,7 +10980,6 @@ Invalid peptide sequence at position 18
   <data name="DetectionPlotData_DataRetrieved_Label" xml:space="preserve">
     <value>"Data retrieved successfully."</value>
   </data>
-
   <data name="DetectionHistogramPane_XAxis_Name" xml:space="preserve">
     <value>Replicate Count</value>
   </data>
@@ -11243,7 +11241,7 @@ Invalid peptide sequence at position 18
   </data>
   <data name="ImportTransitionListErrorDlg_ImportTransitionListErrorDlg_This_transition_list_cannot_be_imported_as_it_does_not_provide_values_for_" xml:space="preserve">
     <value>This transition list cannot be imported as it does not provide values for:</value>
-   </data>
+  </data>
   <data name="HierarchicalClusterGraph_zedGraphControl1_ContextMenuBuilder_Show_Selection" xml:space="preserve">
     <value>Show Selection</value>
   </data>
@@ -11319,11 +11317,20 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
   <data name="SmallMoleculeTransitionListReader_GetMoleculeTransitionGroup_Inconsistent_molecule_description" xml:space="preserve">
     <value>Inconsistent molecule description</value>
   </data>
+  <data name="DiaUmpireDdaConverter_Run_Starting_DIA_Umpire_conversion" xml:space="preserve">
+    <value>Starting DIA-Umpire conversion</value>
+  </data>
+  <data name="Setting_Validate_The_value___0___is_not_valid_for_the_argument__1__which_must_be_either__True__or__False__" xml:space="preserve">
+    <value>The value '{0}' is not valid for the argument {1} which must be either 'True' or 'False'.</value>
+  </data>
   <data name="ImportPeptideSearchDlg_NextPage_No_results_files_were_specified__Are_you_sure_you_want_to_continue__Continuing_will_create_a_template_document_with_no_imported_results_" xml:space="preserve">
     <value>No results files were specified. Are you sure you want to continue? Continuing will create a template document with no imported results.</value>
   </data>
   <data name="ImportFastaControl_cbAutoTrain_CheckedChanged_Cannot_automatically_train_mProphet_model_since_no_results_files_are_being_imported__Continue_without_automatically_training_an_mProphet_model__or_go_back_and_add_at_least_one_results_file_" xml:space="preserve">
     <value>Cannot automatically train mProphet model since no results files are being imported. Continue without automatically training an mProphet model, or go back and add at least one results file.</value>
+  </data>
+  <data name="ImportPeptideSearchDlg_NextPage_No_isolation_windows_are_configured__" xml:space="preserve">
+    <value>No isolation windows are configured, but are required for deconvoluting DIA raw files by DIA-Umpire in preparation for DDA search. Go back to full scan settings to configure the isolation scheme.</value>
   </data>
   <data name="SkylineWindow_HasFileToOpen_The_path_to_the_file_to_open_is_too_long_" xml:space="preserve">
     <value>The path to the file to open is too long.</value>
@@ -11339,6 +11346,18 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
   </data>
   <data name="BuildLibraryDlg_AddInputFiles_These_files_are_library_files_and_do_not_need_to_be_built__Edit_the_list_of_libraries_to_add_them_directly_" xml:space="preserve">
     <value>These files are library files and do not need to be built. Edit the list of libraries to add them directly.</value>
+  </data>
+  <data name="DDASearchControl_RunSearch_Conversion_cancelled_" xml:space="preserve">
+    <value>Conversion cancelled.</value>
+  </data>
+  <data name="DDASearchControl_RunSearch_Conversion_failed_" xml:space="preserve">
+    <value>Conversion failed.</value>
+  </data>
+  <data name="DDASearchControl_RunSearch_Conversion_finished_" xml:space="preserve">
+    <value>Conversion finished.</value>
+  </data>
+  <data name="DiaUmpireDdaConverter_Run_Re_using_existing_DiaUmpire_file__with_equivalent_settings__for__0_" xml:space="preserve">
+    <value>Re-using existing DIA-Umpire file (with equivalent settings) for {0}</value>
   </data>
   <data name="HeatMapGraph_RefreshData_Heat_Map" xml:space="preserve">
     <value>Heat Map</value>

@@ -112,6 +112,7 @@ namespace pwiz.Skyline.Model
         }
 
         public int SegmentCount { get { return 1; } }
+        public int Segment { get {  return 1; } }
         public object Id { get; private set; }
         public int Tag { get; private set; }
 
@@ -202,6 +203,8 @@ namespace pwiz.Skyline.Model
                 return percent / ProgressList.Count;
             }
         }
+
+        public int ZoomedPercentComplete => PercentComplete;
 
         public bool ProgressEqual(IProgressStatus status)
         {

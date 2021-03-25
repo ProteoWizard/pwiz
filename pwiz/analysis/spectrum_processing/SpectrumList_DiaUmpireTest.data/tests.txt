@@ -1,0 +1,2 @@
+Hoofnagle_10xDil_SWATH_01-20130327_Hoofnagle_10xDil_SWATH_1_01.mzXML	diaumpire_se_5600_32fix.params
+collinsb_I180316_001_SW-A.mzXML	diaumpire_se_6600_64var.params
