@@ -62,7 +62,6 @@ namespace SharedBatch
             cmd.ErrorDataReceived += (sender, e) => DataReceived(e.Data);
             try
             {
-                throw new Exception("Test");
                 cmd.Start();
                 // Add process to tracker so the OS will dispose of it if SkylineBatch exits/crashes
                 ChildProcessTracker.AddProcess(cmd);
