@@ -589,7 +589,16 @@ namespace SkylineBatch
                 {
                     startingConfigRunner = (ConfigRunner)_configRunners[nextConfig];
                 }
-                await startingConfigRunner.Run(startStep);
+
+                try
+                {
+                    await startingConfigRunner.Run(startStep);
+                }
+                catch (Exception e)
+                {
+                    DisplayErrorWithException(string.Format("An unexpected error occurred while running {0}", nextConfig), e);
+                }
+
                 nextConfig = GetNextWaitingConfig();
             }
 

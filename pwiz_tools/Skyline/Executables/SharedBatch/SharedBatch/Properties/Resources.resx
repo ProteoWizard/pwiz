@@ -306,4 +306,7 @@
   <data name="Logger_LogError_Error_" xml:space="preserve">
     <value>Error:</value>
   </data>
+  <data name="ProcessRunner_StartException_Unable_to_start__0__" xml:space="preserve">
+    <value>Unable to start {0}.</value>
+  </data>
 </root>

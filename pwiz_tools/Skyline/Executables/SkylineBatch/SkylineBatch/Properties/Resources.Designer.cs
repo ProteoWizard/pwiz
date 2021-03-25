@@ -1179,6 +1179,16 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to An unexpected error occurred while running {0}.
+        /// </summary>
+        internal static string SkylineBatchConfigManager_RunAsync_An_unexpected_error_occurred_while_running__0_ {
+            get {
+                return ResourceManager.GetString("SkylineBatchConfigManager_RunAsync_An_unexpected_error_occurred_while_running__0_" +
+                        "", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to chromatagram files.
         /// </summary>
         internal static string SkylineBatchConfigManager_StartBatchRun_chromatagram_files {

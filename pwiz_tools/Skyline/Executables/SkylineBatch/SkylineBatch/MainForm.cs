@@ -505,16 +505,18 @@ namespace SkylineBatch
             {
                 DisplayError(ex.Message);
             }
-            ScrollToLogEnd();
+            if (_configManager.SelectedLog == 0)
+                ScrollToLogEnd(true);
         }
 
-        private void ScrollToLogEnd()
+        private void ScrollToLogEnd(bool forceScroll = false)
         {
-            RunUi(() =>
+            // Only scroll to end if forced or user is already scrolled to bottom of log
+            if (forceScroll || textBoxLog.GetPositionFromCharIndex(textBoxLog.Text.Length - 1).Y <= textBoxLog.Height)
             {
                 textBoxLog.SelectionStart = textBoxLog.Text.Length;
                 textBoxLog.ScrollToCaret();
-            });
+            }
         }
 
         private void btnDeleteLogs_Click(object sender, EventArgs e)
@@ -530,7 +532,7 @@ namespace SkylineBatch
             Process.Start("explorer.exe", arg);
         }
 
-        public void LogToUi(string name, string text, bool scrollToEnd, bool trim)
+        public void LogToUi(string name, string text, bool trim)
         {
             RunUi(() =>
             {
@@ -543,8 +545,6 @@ namespace SkylineBatch
                 
                 textBoxLog.AppendText(text);
                 textBoxLog.AppendText(Environment.NewLine);
-
-                if (!scrollToEnd) return;
 
                 ScrollToLogEnd();
             });
@@ -569,7 +569,7 @@ namespace SkylineBatch
             }
         }
 
-        public void LogErrorToUi(string name, string text, bool scrollToEnd, bool trim)
+        public void LogErrorToUi(string name, string text, bool trim)
         {
             RunUi(() =>
             {
@@ -584,6 +584,8 @@ namespace SkylineBatch
                 textBoxLog.AppendText(text);
                 textBoxLog.AppendText(Environment.NewLine);
                 textBoxLog.SelectionColor = textBoxLog.ForeColor;
+
+                ScrollToLogEnd();
             });
         }
 

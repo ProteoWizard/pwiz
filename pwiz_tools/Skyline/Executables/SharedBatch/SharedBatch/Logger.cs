@@ -20,7 +20,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq.Expressions;
 using System.Text;
 using SharedBatch.Properties;
 
@@ -33,7 +32,7 @@ using SharedBatch.Properties;
 
         public const long MaxLogSize = 10 * 1024 * 1024; // 10MB
         private const int MaxBackups = 5;
-        public const int MaxLogLines = 5000;
+        public const int MaxLogLines = 10000;
         public static string LogTruncatedMessage = Resources.Logger_DisplayLog_____Log_truncated_____Full_log_is_in__0_;
 
 
@@ -364,21 +363,21 @@ using SharedBatch.Properties;
                 if (!File.Exists(_filePath))
                 {
                     // If the log file is not accessible, display the contents of the in memory buffer and anything saved in the log buffer
-                    _mainUi.LogErrorToUi(_filePath, string.Format(Resources.Logger_DisplayLog_Could_not_read_the_log_file___0___File_does_not_exist_, _filePath), false, false);
+                    _mainUi.LogErrorToUi(_filePath, string.Format(Resources.Logger_DisplayLog_Could_not_read_the_log_file___0___File_does_not_exist_, _filePath), false);
                     if (_memLogMessages != null && _memLogMessages.Count > 0)
                     {
-                        _mainUi.LogErrorToUi(_filePath, string.Format(Resources.Logger_DisplayLog_Displaying_last__0__saved_log_messages_, _memLogMessages.Count), false, false);
+                        _mainUi.LogErrorToUi(_filePath, string.Format(Resources.Logger_DisplayLog_Displaying_last__0__saved_log_messages_, _memLogMessages.Count), false);
                         string[] arr = _memLogMessages.ToArray();
                         foreach (var s in arr)
                         {
-                            _mainUi.LogToUi(_filePath,s, false, false);
+                            _mainUi.LogToUi(_filePath,s, false);
                         }
                     }
 
                     if (_logBuffer != null && _logBuffer.Length > 0)
                     {
-                        _mainUi.LogErrorToUi(_filePath, Resources.Logger_DisplayLog_Displaying_messages_since_log_file_became_unavailable_, false, false);
-                        _mainUi.LogToUi(_filePath, _logBuffer.ToString(), false, false);
+                        _mainUi.LogErrorToUi(_filePath, Resources.Logger_DisplayLog_Displaying_messages_since_log_file_became_unavailable_, false);
+                        _mainUi.LogToUi(_filePath, _logBuffer.ToString(), false);
                     }
                     return;
                 }
@@ -425,32 +424,32 @@ using SharedBatch.Properties;
                     {
                         if (!lastLineErr && toLog.Count > 0)
                         {
-                            _mainUi.LogLinesToUi(_filePath, toLog);
+                            _mainUi.LogLinesToUi(Name, toLog);
                             toLog.Clear();
                         }
                         lastLineErr = true;
-                        toLog.Add(line);
                     }
-                    else
+                    // check that input starts with timestamp, accounts for multi-line errors
+                    else if (line.Length > 0 && line[0] == '[')
                     {
                         if (lastLineErr && toLog.Count > 0)
                         {
-                            _mainUi.LogErrorLinesToUi(_filePath, toLog);
+                            _mainUi.LogErrorLinesToUi(Name, toLog);
                             toLog.Clear();
                         }
                         lastLineErr = false;
-                        toLog.Add(line);
                     }
+                    toLog.Add(line);
                 }
                 if (toLog.Count > 0)
                 {
                     if (lastLineErr)
                     {
-                        _mainUi.LogErrorLinesToUi(_filePath, toLog);
+                        _mainUi.LogErrorLinesToUi(Name, toLog);
                     }
                     else
                     {
-                        _mainUi.LogLinesToUi(_filePath, toLog);
+                        _mainUi.LogLinesToUi(Name, toLog);
                     }
                 }
             }

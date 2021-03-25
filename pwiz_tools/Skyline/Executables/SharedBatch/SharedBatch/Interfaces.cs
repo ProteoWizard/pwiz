@@ -108,8 +108,8 @@ namespace SharedBatch
         void ReplaceSelectedConfig(IConfig config);
         void ReplaceAllSkylineVersions(SkylineSettings skylineSettings);
 
-        void LogToUi(string filePath, string text, bool scrollToEnd = true, bool trim = true);
-        void LogErrorToUi(string filePath, string text, bool scrollToEnd = true, bool trim = true);
+        void LogToUi(string filePath, string text, bool trim = true);
+        void LogErrorToUi(string filePath, string text, bool trim = true);
         void LogLinesToUi(string filePath, List<string> lines);
         void LogErrorLinesToUi(string filePath, List<string> lines);
 

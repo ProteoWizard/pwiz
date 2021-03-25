@@ -819,7 +819,7 @@
     <value>Run from step 4: run R scripts</value>
   </data>
   <data name="batchRunDropDown.Size" type="System.Drawing.Size, System.Drawing">
-    <value>239, 114</value>
+    <value>239, 92</value>
   </data>
   <data name="&gt;&gt;batchRunDropDown.Name" xml:space="preserve">
     <value>batchRunDropDown</value>
@@ -892,6 +892,9 @@
   </data>
   <data name="textBoxLog.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
+  </data>
+  <data name="textBoxLog.ScrollBars" type="System.Windows.Forms.RichTextBoxScrollBars, System.Windows.Forms">
+    <value>Vertical</value>
   </data>
   <data name="textBoxLog.Size" type="System.Drawing.Size, System.Drawing">
     <value>619, 402</value>

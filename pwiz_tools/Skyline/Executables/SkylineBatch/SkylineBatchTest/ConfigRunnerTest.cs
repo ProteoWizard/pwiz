@@ -42,7 +42,7 @@ namespace SkylineBatchTest
            var singleCommand = string.Format("--in=\"{0}\" --out=\"{1}\"", config.MainSettings.TemplateFilePath,
                TestUtils.GetTestFilePath("Copy.sky"));
             testRunner.ChangeStatus(RunnerStatus.Running);
-           await testRunner.ExecuteProcess(config.SkylineSettings.CmdPath, singleCommand);
+           await new ProcessRunner().Run(config.SkylineSettings.CmdPath, singleCommand);
            logger.Delete();
            Assert.IsTrue(testRunner.IsRunning(), "Expected no errors or cancellations.");
            Assert.IsTrue(File.Exists(TestUtils.GetTestFilePath("Copy.sky")));
@@ -69,7 +69,7 @@ namespace SkylineBatchTest
             var testRunner = new ConfigRunner(TestUtils.GetFullyPopulatedConfig(), logger);
             Assert.IsTrue(testRunner.IsStopped());
             var expectedCommandFile = TestUtils.GetTestFilePath("RunFile_PopulatedConfig_MultiLineCommands.tmp");
-            var actualCommandFile = testRunner.WriteBatchCommandsToFile(1);
+            var actualCommandFile = testRunner.WriteBatchCommandsToFile(1, true);
             CompareFiles(expectedCommandFile, actualCommandFile);
         }
 

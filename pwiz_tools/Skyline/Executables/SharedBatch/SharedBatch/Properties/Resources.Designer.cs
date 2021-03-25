@@ -492,6 +492,15 @@ namespace SharedBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unable to start {0}..
+        /// </summary>
+        internal static string ProcessRunner_StartException_Unable_to_start__0__ {
+            get {
+                return ResourceManager.GetString("ProcessRunner_StartException_Unable_to_start__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Could not find {0} at this location: {1}.
         /// </summary>
         internal static string SkylineSettings_Validate_Could_not_find__0__at_this_location___1_ {

@@ -29,12 +29,15 @@ namespace SkylineBatch
 {
     public class ConfigRunner : IConfigRunner
     {
+        public static readonly string ALLOW_NEWLINE_SAVE_VERSION = "20.2.1.415"; // TODO(Ali): Make sure this matches future Skyline-daily release with --save fix
+
+
         private readonly IMainUiControl _uiControl;
         private readonly Logger _logger;
 
         private readonly object _lock = new object();
         private RunnerStatus _runnerStatus;
-
+        private readonly ProcessRunner _processRunner;
 
         public ConfigRunner(SkylineBatchConfig config, Logger logger, IMainUiControl uiControl = null)
         {
@@ -42,6 +45,17 @@ namespace SkylineBatch
             Config = config;
             _uiControl = uiControl;
             _logger = logger;
+
+            _processRunner = new ProcessRunner()
+            {
+                OnDataReceived = DataReceived,
+                OnException = (e, message) => _logger?.LogException(e, message),
+                OnError = () =>
+                {
+                    if (IsRunning())
+                        ChangeStatus(RunnerStatus.Error);
+                }
+            };
         }
         
         public SkylineBatchConfig Config { get; }
@@ -100,24 +114,29 @@ namespace SkylineBatch
             ChangeStatus(RunnerStatus.Running);
             var startTime = DateTime.Now;
             Config.MainSettings.CreateAnalysisFolderIfNonexistent();
-            
-            
+
             if (startStep != 5)
             {
-                // Writes the batch commands for steps 1-4 to a file
-                var commandFile = WriteBatchCommandsToFile(startStep);
-                var command = string.Format("--batch-commands=\"{0}\" --version", commandFile);
-                await ExecuteProcess(Config.SkylineSettings.CmdPath, command);
+                var multiLine = await Config.SkylineSettings.HigherVersion(ALLOW_NEWLINE_SAVE_VERSION, _processRunner);
+                if (IsRunning())
+                {
+                    // Writes the batch commands for steps 1-4 to a file
+                    var commandFile = WriteBatchCommandsToFile(startStep, multiLine);
+                    var command = string.Format("--batch-commands=\"{0}\" --version", commandFile);
+                    await _processRunner.Run(Config.SkylineSettings.CmdPath, command);
+                }
             }
 
             // STEP 5: run r scripts using csv files
             var rScriptsRunInformation = Config.GetScriptArguments();
             foreach(var rScript in rScriptsRunInformation)
-                await ExecuteProcess(rScript[RRunInfo.ExePath], rScript[RRunInfo.Arguments]);
+                if (IsRunning())
+                    await _processRunner.Run(rScript[RRunInfo.ExePath], rScript[RRunInfo.Arguments]);
+            
 
             // Runner is still running if no errors or cancellations
             if (IsRunning()) ChangeStatus(RunnerStatus.Completed);
-            if (IsCancelling()) ChangeStatus(RunnerStatus.Canceled);
+            if (IsCanceling()) ChangeStatus(RunnerStatus.Canceled);
             var endTime = DateTime.Now;
             var delta = endTime - startTime;
             var timeString = delta.Hours > 0 ? delta.ToString(@"hh\:mm\:ss") : string.Format("{0} minutes", delta.ToString(@"mm\:ss"));
@@ -125,11 +144,10 @@ namespace SkylineBatch
             LogToUi(string.Format(Resources.ConfigRunner_Run_________________________________0____1_________________________________, "Runtime", timeString));
         }
 
-        public string WriteBatchCommandsToFile(int startStep)
+        public string WriteBatchCommandsToFile(int startStep, bool multiLine)
         {
-            var newSkylineFileName = Config.MainSettings.GetResultsFilePath();
             // Writes commands to the log and a file for batch processing
-            var commandWriter = new CommandWriter(_logger, Config.SkylineSettings, newSkylineFileName);
+            var commandWriter = new CommandWriter(_logger, multiLine);
 
             // STEP 1: open skyline file and save copy to analysis folder
             if (startStep == 1)
@@ -183,93 +201,15 @@ namespace SkylineBatch
 
             return commandWriter.ReturnCommandFile();
         }
-        
-        public async Task ExecuteProcess(string exeFile, string arguments)
+
+        private void DataReceived(string data)
         {
-            if (!IsRunning()) return;
-
-            _logger?.Log(arguments);
-            Process cmd = new Process();
-            cmd.StartInfo.FileName = exeFile;
-            cmd.StartInfo.Arguments = arguments;
-            cmd.StartInfo.RedirectStandardInput = true;
-            cmd.StartInfo.RedirectStandardOutput = true;
-            cmd.StartInfo.RedirectStandardError = true;
-            cmd.StartInfo.CreateNoWindow = true;
-            cmd.StartInfo.UseShellExecute = false;
-            cmd.EnableRaisingEvents = true;
-            cmd.Exited += (sender, e) =>
+            if (data != null && _logger != null)
             {
-                if (IsRunning())
-                    if (cmd.ExitCode != 0)
-                        ChangeStatus(RunnerStatus.Error);
-            };
-            cmd.OutputDataReceived += DataReceived;
-            cmd.ErrorDataReceived += DataReceived;
-            cmd.Start();
-            cmd.BeginOutputReadLine();
-            cmd.BeginErrorReadLine();
-            // Add process to tracker so the OS will dispose of it if SkylineBatch exits/crashes
-            ChildProcessTracker.AddProcess(cmd);
-            while (!cmd.HasExited && IsRunning())
-            {
-                await Task.Delay(2000);
-            }
-
-            // end cmd and SkylineRunner/SkylineCmd processes if runner has been stopped before completion
-            if (!cmd.HasExited)
-            {
-                // make sure no process children left running
-                await KillProcessChildren((UInt32)cmd.Id);
-                if (!cmd.HasExited) cmd.Kill();
-            }
-        }
-
-        private void DataReceived(object s, DataReceivedEventArgs e)
-        {
-            if (e.Data != null && _logger != null)
-            {
-                if (e.Data.StartsWith("Error") || e.Data.StartsWith("Fatal error"))
-                    _logger.LogError(e.Data);
+                if (data.StartsWith("Error") || data.StartsWith("Fatal error"))
+                    _logger.LogError(data);
                 else
-                    _logger.Log(e.Data);
-            }
-        }
-
-        private async Task KillProcessChildren(UInt32 parentProcessId)
-        {
-            ManagementObjectSearcher searcher = new ManagementObjectSearcher(
-                "SELECT * " +
-                "FROM Win32_Process " +
-                "WHERE ParentProcessId=" + parentProcessId);
-
-            ManagementObjectCollection collection = searcher.Get();
-            if (collection.Count > 0)
-            {
-                ProgramLog.Info("Killing [" + collection.Count + "] processes spawned by process with Id [" + parentProcessId + "]");
-                foreach (var item in collection)
-                {
-                    UInt32 childProcessId = (UInt32)item["ProcessId"];
-                    if (childProcessId != Process.GetCurrentProcess().Id)
-                    {
-                        await KillProcessChildren(childProcessId);
-
-                        try
-                        {
-                            var childProcess = Process.GetProcessById((int)childProcessId);
-                            ProgramLog.Info("Killing child process [" + childProcess.ProcessName + "] with Id [" + childProcessId + "]");
-                            childProcess.Kill();
-                        }
-                        catch (ArgumentException)
-                        {
-                            ProgramLog.Info("Child process already terminated");
-                        }
-                        catch (Win32Exception)
-                        {
-                            ProgramLog.Info("Cannot kill windows child process.");
-                        }
-                    }
-                }
+                    _logger.Log(data);
             }
         }
 
@@ -288,20 +228,23 @@ namespace SkylineBatch
 
         public void Cancel()
         {
-            if (IsRunning()) 
+            if (IsRunning())
+            {
+                _processRunner.Cancel();
                 ChangeStatus(RunnerStatus.Canceling);
+            }
             if (IsWaiting())
                 ChangeStatus(RunnerStatus.Stopped);                                                                                            
         }
 
-        public bool IsCancelling()
+        public bool IsCanceling()
         {
             return _runnerStatus == RunnerStatus.Canceling;
         }
         
         public bool IsBusy()
         {
-            return IsRunning() || IsWaiting() || IsCancelling();
+            return IsRunning() || IsWaiting() || IsCanceling();
         }
         
         public bool IsStopped()

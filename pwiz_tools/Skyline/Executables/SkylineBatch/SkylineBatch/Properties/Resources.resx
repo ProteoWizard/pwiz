@@ -547,4 +547,7 @@ with:
   <data name="SkylineBatchConfigManager_AssignDependencies_You_may_want_to_update_the_template_file_paths_" xml:space="preserve">
     <value>You may want to update the template file paths.</value>
   </data>
+  <data name="SkylineBatchConfigManager_RunAsync_An_unexpected_error_occurred_while_running__0_" xml:space="preserve">
+    <value>An unexpected error occurred while running {0}</value>
+  </data>
 </root>

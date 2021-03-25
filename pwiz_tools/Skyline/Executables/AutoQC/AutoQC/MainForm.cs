@@ -378,13 +378,17 @@ namespace AutoQC
                 DisplayErrorWithException(Resources.MainForm_SwitchLogger_Error_reading_log_ + Environment.NewLine + ex.Message, ex);
             }
 
-            ScrollToLogEnd();
+            ScrollToLogEnd(true);
         }
 
-        private void ScrollToLogEnd()
+        private void ScrollToLogEnd(bool forceScroll = false)
         {
-            textBoxLog.SelectionStart = textBoxLog.Text.Length;
-            textBoxLog.ScrollToCaret();
+            // Only scroll to end if forced or user is already scrolled to bottom of log
+            if (forceScroll || textBoxLog.GetPositionFromCharIndex(textBoxLog.Text.Length - 1).Y <= textBoxLog.Height)
+            {
+                textBoxLog.SelectionStart = textBoxLog.Text.Length;
+                textBoxLog.ScrollToCaret();
+            }
         }
 
         private void btnOpenLogFolder_Click(object sender, EventArgs e)
@@ -405,7 +409,7 @@ namespace AutoQC
             Process.Start("explorer.exe", arg);
         }
 
-        public void LogToUi(string name, string text, bool scrollToEnd, bool trim)
+        public void LogToUi(string name, string text, bool trim)
         {
             RunUi(() =>
             {
@@ -418,9 +422,7 @@ namespace AutoQC
                 
                 textBoxLog.AppendText(text);
                 textBoxLog.AppendText(Environment.NewLine);
-
-                if (!scrollToEnd) return;
-
+                
                 ScrollToLogEnd();
             });
         }
@@ -444,7 +446,7 @@ namespace AutoQC
             }
         }
 
-        public void LogErrorToUi(string name, string text, bool scrollToEnd, bool trim)
+        public void LogErrorToUi(string name, string text, bool trim)
         {
             RunUi(() =>
             {
@@ -458,7 +460,7 @@ namespace AutoQC
                 textBoxLog.SelectionStart = textBoxLog.TextLength;
                 textBoxLog.SelectionLength = 0;
                 textBoxLog.SelectionColor = Color.Red;
-                LogToUi(name, text, scrollToEnd,
+                LogToUi(name, text,
                     false); // Already trimmed
                 textBoxLog.SelectionColor = textBoxLog.ForeColor;
             });

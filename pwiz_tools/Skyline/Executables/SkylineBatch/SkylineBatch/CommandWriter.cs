@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Deployment.Application;
 using System.IO;
+using System.Threading.Tasks;
 using SharedBatch;
 using SkylineBatch.Properties;
 
@@ -8,7 +9,6 @@ namespace SkylineBatch
 {
     public class CommandWriter
     {
-        public static readonly string ALLOW_NEWLINE_SAVE_VERSION = "20.2.1.415"; // TODO(Ali): Make sure this matches future Skyline-daily release with --save fix
         private static readonly string IN_COMMAND = "--in=";
         private static readonly string OUT_COMMAND = "--out=";
 
@@ -17,17 +17,18 @@ namespace SkylineBatch
         private readonly Logger _logger;
         private bool _reopenFile; // If the Skyline file needs to be reopened with --in (true if _multiLine is false and a line has ended)
 
-        public CommandWriter(Logger logger, SkylineSettings skylineSettings, string newSkyFileName)
+        public CommandWriter(Logger logger, bool multiLine)
         {
             _commandFile = Path.GetTempFileName();
             CurrentSkylineFile = string.Empty;
             _logger = logger;
             _writer = new StreamWriter(_commandFile);
-            MultiLine = skylineSettings.HigherVersion(ALLOW_NEWLINE_SAVE_VERSION);
+
+            MultiLine = multiLine;
             if (!MultiLine)
             {
                 _logger.Log(string.Empty);
-                _logger.Log(string.Format(Resources.CommandWriter_Start_Notice__For_faster_Skyline_Batch_runs__use_Skyline_version__0__or_higher_, ALLOW_NEWLINE_SAVE_VERSION));
+                _logger.Log(string.Format(Resources.CommandWriter_Start_Notice__For_faster_Skyline_Batch_runs__use_Skyline_version__0__or_higher_, ConfigRunner.ALLOW_NEWLINE_SAVE_VERSION));
                 _logger.Log(string.Empty);
             }
         }
