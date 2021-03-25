@@ -78,6 +78,8 @@ namespace SkylineBatch
             ActiveControl = textConfigName;
         }
 
+        private bool ShowTemplateComboBox => _possibleTemplates.Count > 0 && !_isBusy;
+
         private void InitInputFieldsFromConfig(SkylineBatchConfig config)
         {
             textConfigName.Text = _action == ConfigAction.Add ? string.Empty : config.Name;
@@ -119,14 +121,14 @@ namespace SkylineBatch
 
         private void SetInitialMainSettings(SkylineBatchConfig config)
         {
-            if (_possibleTemplates.Count > 0)
+            if (ShowTemplateComboBox)
             {
                 comboTemplateFile.Visible = true;
                 foreach (var possibleTemplate in _possibleTemplates.Values)
                     comboTemplateFile.Items.Add(possibleTemplate);
             }
-
-            if (config == null) return;
+            if (config == null)
+                return;
             var mainSettings = config.MainSettings;
             if (_action == ConfigAction.Add)
             {
@@ -140,7 +142,7 @@ namespace SkylineBatch
                 textNamingPattern.Text = mainSettings.ReplicateNamingPattern;
             }
 
-            if (_possibleTemplates.Count > 0)
+            if (ShowTemplateComboBox)
                 comboTemplateFile.Text = mainSettings.TemplateFilePath;
             else
                 textTemplateFile.Text = mainSettings.TemplateFilePath;
@@ -150,7 +152,7 @@ namespace SkylineBatch
 
         private MainSettings GetMainSettingsFromUi()
         {
-            var templateFilePath = _possibleTemplates.Count > 0 ? comboTemplateFile.Text : textTemplateFile.Text;
+            var templateFilePath = ShowTemplateComboBox ? comboTemplateFile.Text : textTemplateFile.Text;
             string dependentConfig = null;
             foreach (var configName in _possibleTemplates.Keys)
             {
@@ -180,7 +182,7 @@ namespace SkylineBatch
 
         private void btnSkylineFilePath_Click(object sender, EventArgs e)
         {
-            Control templatePathControl = _possibleTemplates.Count > 0 ? (Control)comboTemplateFile : textTemplateFile;
+            Control templatePathControl = ShowTemplateComboBox ? (Control)comboTemplateFile : textTemplateFile;
             OpenFile(templatePathControl, TextUtil.FILTER_SKY);
         }
 
@@ -417,6 +419,7 @@ namespace SkylineBatch
 
         private void CheckIfSkylineChanged()
         {
+            if (_isBusy) return; // can't change Skyline settings if config is running
             var changedSkylineSettings = GetSkylineSettingsFromUi();
             if (!changedSkylineSettings.Equals(_currentSkylineSettings))
             {
