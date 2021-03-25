@@ -50,7 +50,7 @@ All Info  :
 ペプチド検索のインポート>DDA search settings>Fragment ion typesは"b, y"です
 ペプチド検索のインポート>DDA converter settings>DDA conversion protocolは"DIA-Umpire"です
 ペプチド検索のインポート>DDA converter settings>Instrument presetは"Q Exactive"です
-ペプチド検索のインポート>DDA converter settings>DDA conversion non-default settingsは見つかりませんです
+ペプチド検索のインポート>DDA converter settings>DDA conversion non-default settings：EstimateBG = Trueが含まれています
 Extra Info: クロマトグラムを抽出 = 
 {
     結果ファイルが見つかりました = 
@@ -89,6 +89,9 @@ DDA converter settings =
 {
     DDA conversion protocol = "DIA-Umpire",
     Instrument preset = "Q Exactive",
-    DDA conversion non-default settings = 見つかりません
+    DDA conversion non-default settings = 
+    [
+        EstimateBG = True
+    ]
 }
 

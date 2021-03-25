@@ -50,7 +50,7 @@ All Info  :
 导入肽段搜索 > DDA search settings > Fragment ion types 是 "b, y"
 导入肽段搜索 > DDA converter settings > DDA conversion protocol 是 "DIA-Umpire"
 导入肽段搜索 > DDA converter settings > Instrument preset 是 "Q Exactive"
-导入肽段搜索 > DDA converter settings > DDA conversion non-default settings 是 缺失
+导入肽段搜索 > DDA converter settings > DDA conversion non-default settings : 包含 EstimateBG = True
 Extra Info: 提取色谱图 = 
 {
     查找到结果文件 = 
@@ -89,6 +89,9 @@ DDA converter settings =
 {
     DDA conversion protocol = "DIA-Umpire",
     Instrument preset = "Q Exactive",
-    DDA conversion non-default settings = 缺失
+    DDA conversion non-default settings = 
+    [
+        EstimateBG = True
+    ]
 }
 

@@ -50,7 +50,7 @@ Import Peptide Search > DDA search settings > Max variable mods per peptide is "
 Import Peptide Search > DDA search settings > Fragment ion types is "b, y"
 Import Peptide Search > DDA converter settings > DDA conversion protocol is "DIA-Umpire"
 Import Peptide Search > DDA converter settings > Instrument preset is "Q Exactive"
-Import Peptide Search > DDA converter settings > DDA conversion non-default settings is Missing
+Import Peptide Search > DDA converter settings > DDA conversion non-default settings : contains EstimateBG = True
 Extra Info: Extract Chromatograms = 
 {
     Found results files = 
@@ -89,6 +89,9 @@ DDA converter settings =
 {
     DDA conversion protocol = "DIA-Umpire",
     Instrument preset = "Q Exactive",
-    DDA conversion non-default settings = Missing
+    DDA conversion non-default settings = 
+    [
+        EstimateBG = True
+    ]
 }
 
