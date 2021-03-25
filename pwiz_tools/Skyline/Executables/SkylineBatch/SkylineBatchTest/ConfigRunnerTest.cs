@@ -68,9 +68,13 @@ namespace SkylineBatchTest
             var logger = TestUtils.GetTestLogger();
             var testRunner = new ConfigRunner(TestUtils.GetFullyPopulatedConfig(), logger);
             Assert.IsTrue(testRunner.IsStopped());
-            var expectedCommandFile = TestUtils.GetTestFilePath("RunFile_PopulatedConfig_MultiLineCommands.tmp");
-            var actualCommandFile = testRunner.WriteBatchCommandsToFile(1, true);
-            CompareFiles(expectedCommandFile, actualCommandFile);
+            var expectedMultiLineCommandFile = TestUtils.GetTestFilePath("RunFile_PopulatedConfig_MultiLineCommands.tmp");
+            var actualMultiLineCommandFile = testRunner.WriteBatchCommandsToFile(1, true);
+            CompareFiles(expectedMultiLineCommandFile, actualMultiLineCommandFile);
+
+            var expectedSingleLineCommandFile = TestUtils.GetTestFilePath("RunFile_PopulatedConfig_SingleLineCommands.tmp");
+            var actualSingleLineCommandFile = testRunner.WriteBatchCommandsToFile(1, false);
+            CompareFiles(expectedSingleLineCommandFile, actualSingleLineCommandFile);
         }
 
 

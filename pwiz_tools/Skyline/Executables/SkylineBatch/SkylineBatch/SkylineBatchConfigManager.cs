@@ -596,7 +596,7 @@ namespace SkylineBatch
                 }
                 catch (Exception e)
                 {
-                    DisplayErrorWithException(string.Format("An unexpected error occurred while running {0}", nextConfig), e);
+                    DisplayErrorWithException(string.Format(Resources.SkylineBatchConfigManager_RunAsync_An_unexpected_error_occurred_while_running__0_, nextConfig), e);
                 }
 
                 nextConfig = GetNextWaitingConfig();

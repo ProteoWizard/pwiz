@@ -114,14 +114,10 @@ namespace SharedBatch
                 },
                 OnError = () =>
                 {
-                    baseProcessRunner.OnError();
+                    if (baseProcessRunner.OnError != null) baseProcessRunner.OnError();
                     error = true;
                 },
-                OnException = (e, message) =>
-                {
-                    baseProcessRunner.OnException(e, message);
-                    //throw e;
-                }
+                OnException = baseProcessRunner.OnException
             };
             
             await processRunner.Run(CmdPath, versionCommand);
@@ -144,10 +140,11 @@ namespace SharedBatch
             return versionNumbers;
         }
 
-        public async Task <bool> HigherVersion(string versionCutoff, ProcessRunner processRunner)
+        public async Task <bool> HigherVersion(string versionCutoff, ProcessRunner baseProcessRunner = null)
         {
+            baseProcessRunner = baseProcessRunner ?? new ProcessRunner();
             var cutoff = ParseVersionFromString(versionCutoff);
-            var version = await GetVersion(processRunner);
+            var version = await GetVersion(baseProcessRunner);
             if (version == null) return false; // could not parse version
             for (int i = 0; i < cutoff.Length; i++)
             {

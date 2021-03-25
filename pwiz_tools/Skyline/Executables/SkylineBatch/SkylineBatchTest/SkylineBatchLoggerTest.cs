@@ -84,13 +84,13 @@ namespace SkylineBatchTest
             configManager = testConfigManager;
 
             // Run and cancel three times creates two old logs
-            Assert.IsTrue(testConfigManager.StartBatchRun(4), "Failed to start config");
+            Assert.IsTrue(testConfigManager.StartBatchRun(5), "Failed to start config");
             testConfigManager.CancelRunners();
             await TestUtils.WaitForCondition(ConfigRunnersStopped, timeout, timestep, cancelErrorMessage);
-            Assert.IsTrue(testConfigManager.StartBatchRun(4), "Failed to start config");
+            Assert.IsTrue(testConfigManager.StartBatchRun(5), "Failed to start config");
             testConfigManager.CancelRunners();
             await TestUtils.WaitForCondition(ConfigRunnersStopped, timeout, timestep, cancelErrorMessage);
-            Assert.IsTrue(testConfigManager.StartBatchRun(4), "Failed to start config");
+            Assert.IsTrue(testConfigManager.StartBatchRun(5), "Failed to start config");
             testConfigManager.CancelRunners();
             await TestUtils.WaitForCondition(ConfigRunnersStopped, timeout, timestep, cancelErrorMessage);
 
