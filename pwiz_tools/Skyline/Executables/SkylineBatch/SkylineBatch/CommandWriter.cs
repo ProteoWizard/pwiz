@@ -2,6 +2,7 @@
 using System.Deployment.Application;
 using System.IO;
 using System.Threading.Tasks;
+using log4net.Config;
 using SharedBatch;
 using SkylineBatch.Properties;
 
@@ -25,12 +26,13 @@ namespace SkylineBatch
             _writer = new StreamWriter(_commandFile);
 
             MultiLine = multiLine;
-            if (!MultiLine)
+            // TODO (Ali): Uncomment this when Skyline-daily comes out with these changes
+            /*if (!MultiLine)
             {
                 _logger.Log(string.Empty);
                 _logger.Log(string.Format(Resources.CommandWriter_Start_Notice__For_faster_Skyline_Batch_runs__use_Skyline_version__0__or_higher_, ConfigRunner.ALLOW_NEWLINE_SAVE_VERSION));
                 _logger.Log(string.Empty);
-            }
+            }*/
         }
 
         public string CurrentSkylineFile { get; private set; } // Filepath of last opened Skyline file with --in or --out
