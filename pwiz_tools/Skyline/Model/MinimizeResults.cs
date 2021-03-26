@@ -153,9 +153,6 @@ namespace pwiz.Skyline.Model
                         throw;
                     }
                 }
-
-                if (backgroundWorker.Canceled)
-                    return;
             }
         }
 
@@ -206,8 +203,7 @@ namespace pwiz.Skyline.Model
 
             void OnProgress(ChromCacheMinimizer.MinStatistics minStatistics)
             {
-                if (Canceled) throw new Exception("BackgroundWorker has been canceled.");
-                if (_minimizeResults._doOnProgress != null)
+                if (!Canceled && _minimizeResults._doOnProgress != null)
                 {
                     _minimizeResults._doOnProgress(minStatistics, this);
                 }
