@@ -482,6 +482,12 @@ namespace SkylineBatch
             tabMain.SelectTab(tabLog);
         }
 
+        private void tabLog_Enter(object sender, EventArgs e)
+        {
+            if (_configManager.SelectedLog == 0)
+                ScrollToLogEnd(true);
+        }
+
         private void comboLogList_SelectedIndexChanged(object sender, EventArgs e)
         {
             _configManager.SelectLog(comboLogList.SelectedIndex);
@@ -624,6 +630,18 @@ namespace SkylineBatch
         private void MainForm_Resize(object sender, EventArgs e)
         {
             ListViewSizeChanged();
+        }
+
+        private void tabConfigs_Enter(object sender, EventArgs e)
+        {
+            // only toggle paint event when switching to main tab
+            tabConfigs.Paint += tabConfigs_Paint;
+        }
+
+        private void tabConfigs_Paint(object sender, PaintEventArgs e)
+        {
+            ListViewSizeChanged();
+            tabConfigs.Paint -= tabConfigs_Paint;
         }
 
         private void ListViewSizeChanged()

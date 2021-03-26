@@ -36,7 +36,7 @@
             this.labelSavedConfigurations = new System.Windows.Forms.Label();
             this.btnViewLog = new System.Windows.Forms.Button();
             this.tabMain = new System.Windows.Forms.TabControl();
-            this.tabFront = new System.Windows.Forms.TabPage();
+            this.tabConfigs = new System.Windows.Forms.TabPage();
             this.listViewConfigs = new System.Windows.Forms.ListView();
             this.columnName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnUser = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -69,7 +69,7 @@
             this.toolStripFolderToWatch = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripLogFolder = new System.Windows.Forms.ToolStripMenuItem();
             this.tabMain.SuspendLayout();
-            this.tabFront.SuspendLayout();
+            this.tabConfigs.SuspendLayout();
             this.panel1.SuspendLayout();
             this.toolStrip.SuspendLayout();
             this.panel2.SuspendLayout();
@@ -114,21 +114,22 @@
             // tabMain
             // 
             resources.ApplyResources(this.tabMain, "tabMain");
-            this.tabMain.Controls.Add(this.tabFront);
+            this.tabMain.Controls.Add(this.tabConfigs);
             this.tabMain.Controls.Add(this.tabLog);
             this.tabMain.Controls.Add(this.tabSettings);
             this.tabMain.Name = "tabMain";
             this.tabMain.SelectedIndex = 0;
             // 
-            // tabFront
+            // tabConfigs
             // 
-            this.tabFront.BackColor = System.Drawing.Color.Transparent;
-            this.tabFront.Controls.Add(this.listViewConfigs);
-            this.tabFront.Controls.Add(this.labelSavedConfigurations);
-            this.tabFront.Controls.Add(this.panel1);
-            this.tabFront.Controls.Add(this.panel2);
-            resources.ApplyResources(this.tabFront, "tabFront");
-            this.tabFront.Name = "tabFront";
+            this.tabConfigs.BackColor = System.Drawing.Color.Transparent;
+            this.tabConfigs.Controls.Add(this.listViewConfigs);
+            this.tabConfigs.Controls.Add(this.labelSavedConfigurations);
+            this.tabConfigs.Controls.Add(this.panel1);
+            this.tabConfigs.Controls.Add(this.panel2);
+            resources.ApplyResources(this.tabConfigs, "tabConfigs");
+            this.tabConfigs.Name = "tabConfigs";
+            this.tabConfigs.Enter += new System.EventHandler(this.tabConfigs_Enter);
             // 
             // listViewConfigs
             // 
@@ -277,6 +278,7 @@
             this.tabLog.Controls.Add(this.comboConfigs);
             resources.ApplyResources(this.tabLog, "tabLog");
             this.tabLog.Name = "tabLog";
+            this.tabLog.Enter += new System.EventHandler(this.tabLog_Enter);
             // 
             // btnOpenLogFolder
             // 
@@ -370,8 +372,8 @@
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
             this.Resize += new System.EventHandler(this.MainForm_Resize);
             this.tabMain.ResumeLayout(false);
-            this.tabFront.ResumeLayout(false);
-            this.tabFront.PerformLayout();
+            this.tabConfigs.ResumeLayout(false);
+            this.tabConfigs.PerformLayout();
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
             this.toolStrip.ResumeLayout(false);
@@ -396,7 +398,7 @@
         private System.Windows.Forms.Label labelSavedConfigurations;
         private System.Windows.Forms.Button btnViewLog;
         private System.Windows.Forms.TabControl tabMain;
-        private System.Windows.Forms.TabPage tabFront;
+        private System.Windows.Forms.TabPage tabConfigs;
         private System.Windows.Forms.TabPage tabLog;
         private System.Windows.Forms.Label lblConfigSelect;
         private System.Windows.Forms.RichTextBox textBoxLog;

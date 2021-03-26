@@ -55,7 +55,7 @@ namespace SkylineBatch
             _rDirectorySelector = rDirectorySelector;
             _mainControl = mainControl;
             _possibleTemplates = possibleTemplates;
-            if (config != null && _possibleTemplates.ContainsKey(config.Name))
+            if (_action == ConfigAction.Edit && _possibleTemplates.ContainsKey(config.Name))
                 _possibleTemplates.Remove(config.Name);
             if (config != null)
                 _configEnabled = config.Enabled;

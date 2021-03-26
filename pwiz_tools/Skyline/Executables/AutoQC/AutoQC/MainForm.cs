@@ -351,6 +351,11 @@ namespace AutoQC
             tabMain.SelectTab(tabLog);
         }
 
+        private void tabLog_Enter(object sender, EventArgs e)
+        {
+            ScrollToLogEnd(true);
+        }
+
         private void comboConfigs_SelectedIndexChanged(object sender, EventArgs e)
         {
             _configManager.SelectLog(comboConfigs.SelectedIndex);
@@ -563,6 +568,18 @@ namespace AutoQC
                 Hide();
                 systray_icon.Visible = true;
             }
+        }
+
+        private void tabConfigs_Enter(object sender, EventArgs e)
+        {
+            // only toggle paint event when switching to main tab
+            tabConfigs.Paint += tabConfigs_Paint;
+        }
+
+        private void tabConfigs_Paint(object sender, PaintEventArgs e)
+        {
+            ListViewSizeChanged();
+            tabConfigs.Paint -= tabConfigs_Paint;
         }
 
         private void ListViewSizeChanged()

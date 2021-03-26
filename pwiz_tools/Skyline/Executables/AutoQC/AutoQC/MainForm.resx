@@ -244,7 +244,7 @@
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;labelSavedConfigurations.Parent" xml:space="preserve">
-    <value>tabFront</value>
+    <value>tabConfigs</value>
   </data>
   <data name="&gt;&gt;labelSavedConfigurations.ZOrder" xml:space="preserve">
     <value>1</value>
@@ -331,7 +331,7 @@
     <value>System.Windows.Forms.ListView, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;listViewConfigs.Parent" xml:space="preserve">
-    <value>tabFront</value>
+    <value>tabConfigs</value>
   </data>
   <data name="&gt;&gt;listViewConfigs.ZOrder" xml:space="preserve">
     <value>0</value>
@@ -532,7 +532,7 @@
     <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;panel1.Parent" xml:space="preserve">
-    <value>tabFront</value>
+    <value>tabConfigs</value>
   </data>
   <data name="&gt;&gt;panel1.ZOrder" xml:space="preserve">
     <value>2</value>
@@ -613,39 +613,39 @@
     <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;panel2.Parent" xml:space="preserve">
-    <value>tabFront</value>
+    <value>tabConfigs</value>
   </data>
   <data name="&gt;&gt;panel2.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
-  <data name="tabFront.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="tabConfigs.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
   </data>
-  <data name="tabFront.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+  <data name="tabConfigs.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
   </data>
-  <data name="tabFront.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+  <data name="tabConfigs.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
   </data>
-  <data name="tabFront.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="tabConfigs.Size" type="System.Drawing.Size, System.Drawing">
     <value>632, 457</value>
   </data>
-  <data name="tabFront.TabIndex" type="System.Int32, mscorlib">
+  <data name="tabConfigs.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
-  <data name="tabFront.Text" xml:space="preserve">
+  <data name="tabConfigs.Text" xml:space="preserve">
     <value>Configurations</value>
   </data>
-  <data name="&gt;&gt;tabFront.Name" xml:space="preserve">
-    <value>tabFront</value>
+  <data name="&gt;&gt;tabConfigs.Name" xml:space="preserve">
+    <value>tabConfigs</value>
   </data>
-  <data name="&gt;&gt;tabFront.Type" xml:space="preserve">
+  <data name="&gt;&gt;tabConfigs.Type" xml:space="preserve">
     <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;tabFront.Parent" xml:space="preserve">
+  <data name="&gt;&gt;tabConfigs.Parent" xml:space="preserve">
     <value>tabMain</value>
   </data>
-  <data name="&gt;&gt;tabFront.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;tabConfigs.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="btnOpenLogFolder.Enabled" type="System.Boolean, mscorlib">

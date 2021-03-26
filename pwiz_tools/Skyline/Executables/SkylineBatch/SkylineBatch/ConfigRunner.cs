@@ -17,10 +17,7 @@
  */
 
 using System;
-using System.ComponentModel;
-using System.Diagnostics;
 using System.Drawing;
-using System.Management;
 using System.Threading.Tasks;
 using SharedBatch;
 using SkylineBatch.Properties;
@@ -204,7 +201,7 @@ namespace SkylineBatch
 
         private void DataReceived(string data)
         {
-            if (data != null && _logger != null)
+            if (IsRunning() && data != null && _logger != null)
             {
                 if (data.StartsWith("Error") || data.StartsWith("Fatal error"))
                     _logger.LogError(data);
