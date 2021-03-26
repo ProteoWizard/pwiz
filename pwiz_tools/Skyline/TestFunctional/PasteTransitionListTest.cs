@@ -67,9 +67,9 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(label, thermBoxes[7].Text);
                 // Modifies the selected index of one box so later we can test if it saved 
                 thermBoxes[4].SelectedIndex = 2;
-                therm.buttonOk.PerformClick();
-                therm.CancelDialog();
             });
+            RunDlg<ImportTransitionListErrorDlg>(therm.OkDialog, errDlg => errDlg.Close());
+            OkDialog(therm, therm.CancelDialog);
             RunUI(() => SkylineWindow.NewDocument());
 
             WaitForDocumentLoaded();
@@ -98,11 +98,11 @@ namespace pwiz.SkylineTestFunctional
                 var peptideBoxes = peptideTransitionList.ComboBoxes;
                 // Changes the contents of a combo box
                 peptideBoxes[4].SelectedIndex = 1;
-                // Clicking the Ok button will the change
-                peptideTransitionList.buttonOk.PerformClick();
-                peptideTransitionList.CancelDialog();
             });
-            
+            // Clicking the Ok button will the change
+            RunDlg<ImportTransitionListErrorDlg>(peptideTransitionList.OkDialog, errDlg => errDlg.Close());
+            OkDialog(peptideTransitionList, peptideTransitionList.CancelDialog);
+
             // This will paste in the same transition list, but with different headers. The program should realize it has
             // different headers and not use the saved list of column names
             SetClipboardText(File.ReadAllText(TestFilesDir.GetTestPath("PeptideTransitionListdiffheaders.csv")));
@@ -146,7 +146,7 @@ namespace pwiz.SkylineTestFunctional
             // Clicking OK while input is invalid should also pop up the error list
             RunDlg<MessageDlg>(dlg.buttonOk.PerformClick, messageDlg => { messageDlg.OkDialog(); });   // Dismiss it
             // Only way out without fixing the columns is to cancel
-            dlg.CancelButton.PerformClick();
+            OkDialog(dlg, dlg.CancelDialog);
 
             // Now check UI interactions with a bad import file whose headers we correct in the dialog
             using (new CheckDocumentState(1,2,2,9))
@@ -169,8 +169,7 @@ namespace pwiz.SkylineTestFunctional
                 RunDlg<MessageDlg>(dlg.buttonCheckForErrors.PerformClick, messageDlg => { messageDlg.OkDialog(); });   // Dismiss it
 
                 // Clicking OK while input is valid should proceed without delay
-                var dlg3 = dlg;
-                OkDialog(dlg, () => dlg3.DialogResult = DialogResult.OK);
+                OkDialog(dlg, dlg.OkDialog);
             }
 
             RunUI(() => SkylineWindow.NewDocument(true)); // Tidy up

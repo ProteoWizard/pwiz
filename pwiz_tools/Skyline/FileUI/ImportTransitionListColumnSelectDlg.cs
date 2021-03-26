@@ -134,7 +134,8 @@ namespace pwiz.Skyline.FileUI
             foreach (var comboBox in ComboBoxes)
             {
                 comboBox.Text = string.Empty;
-                comboBox.Items.AddRange(new object[] {
+                comboBox.Items.AddRange(new object[]
+                {
                     Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column,
                     Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Decoy,
                     Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_iRT,
@@ -177,7 +178,8 @@ namespace pwiz.Skyline.FileUI
                     ComboChanged(ComboBoxes[i], new EventArgs());
                 }
             }
-            else {
+            else
+            {
                 SetComboBoxText(columns.DecoyColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Decoy);
                 SetComboBoxText(columns.IrtColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_iRT);
                 SetComboBoxText(columns.LabelTypeColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type);
@@ -257,9 +259,8 @@ namespace pwiz.Skyline.FileUI
             WindowShown = true;
         }
 
-
-
         private bool comboBoxChanged;
+
         // Callback for when a combo box is changed. We use it to update the index of the PeptideColumnIndices and preventing combo boxes from overlapping.
         private void ComboChanged(object sender, EventArgs e)  // CONSIDER(bspratt) no charge state columns? (Seems to be because Skyline infers these and is confused when given explicit values)
         {
@@ -347,6 +348,7 @@ namespace pwiz.Skyline.FileUI
                 // if (columns.PrecursorChargeColumn == comboBoxIndex) columns.PrecursorChargeColumn = -1;
             }
         }
+
         // Saves column positions between transition lists
         private void UpdateColumnsList()
         {
@@ -362,6 +364,7 @@ namespace pwiz.Skyline.FileUI
 
             Settings.Default.CustomImportTransitionListColumnCount = numColumns;
         }
+
         // Saves a list of the current document's headers, if any exist, so that they can be compared to those of the next document
         private void UpdateHeadersList()
         {
@@ -384,28 +387,34 @@ namespace pwiz.Skyline.FileUI
         {
             comboPanelInner.Location = new Point(-dataGrid.HorizontalScrollingOffset, 0);
         }
+
         // If a combo box was changed, save the column indices and column count when the OK button is clicked
         private void ButtonOk_Click(object sender, EventArgs e)
+        {
+            OkDialog();
+        }
+
+        public void OkDialog()
         {
             if (comboBoxChanged)
             {
                 UpdateColumnsList();
                 UpdateHeadersList();
             }
-        }
 
-        private void ImportTransitionListColumnSelectDlg_FormClosing(object sender, FormClosingEventArgs e)
-        {
-            if (DialogResult == DialogResult.OK)
-            {
-                if (CheckForErrors(true)) // Look for errors, be silent on success
-                {
-                    e.Cancel = true; // Errors found, don't close yet
-                }
-            }
+            if (CheckForErrors(true)) // Look for errors, be silent on success
+                return;
+
+            Assume.IsNotNull(InsertionParams);
+            DialogResult = DialogResult.OK;
         }
 
         private void ButtonCheckForErrors_Click(object sender, EventArgs e)
+        {
+            CheckForErrors();
+        }
+
+        public void CheckForErrors()
         {
             CheckForErrors(false);
         }
@@ -419,6 +428,18 @@ namespace pwiz.Skyline.FileUI
                 MissingEssentialColumns.Add(column.Item2);
             }
         }
+
+        public class DocumentChecked
+        {
+            public SrmDocument Document;
+            public IdentityPath SelectPath;
+            public List<MeasuredRetentionTime> IrtPeptides;
+            public List<SpectrumMzInfo> LibrarySpectra;
+            public List<PeptideGroupDocNode> PeptideGroups;
+        }
+
+        public DocumentChecked InsertionParams { get; private set; }
+
         /// <summary>
         /// Parse the mass list text, then show a status dialog if:
         ///     errors are found, or
@@ -430,19 +451,15 @@ namespace pwiz.Skyline.FileUI
         /// <returns>True if list contains any errors and user does not elect to ignore them</returns>
         private bool CheckForErrors(bool silentSuccess)
         {
-
+            var insertionParams = new DocumentChecked();
             List<TransitionImportErrorInfo> testErrorList = null;
-            SrmDocument docNew = null;
             var errorCheckCanceled = true;
 
             using (var longWaitDlg = new LongWaitDlg { Text = Resources.ImportTransitionListColumnSelectDlg_CheckForErrors_Checking_for_errors___ })
             {
                 longWaitDlg.PerformWork(this, 1000, progressMonitor =>
                 {
-                    IdentityPath testSelectPath = null;
-                    List<MeasuredRetentionTime> testIrtPeptides = null;
-                    List<SpectrumMzInfo> testLibrarySpectra = null;
-                    List<PeptideGroupDocNode> testPeptideGroups = null;
+
                     var columns = Importer.RowReader.Indices;
                     MissingEssentialColumns = new List<string>();
                     CheckEssentialColumn(new Tuple<int, string>(columns.PeptideColumn,
@@ -451,9 +468,9 @@ namespace pwiz.Skyline.FileUI
                         Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z));
                     CheckEssentialColumn(new Tuple<int, string>(columns.ProductColumn,
                         Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z));
-                    docNew = _docCurrent.ImportMassList(_inputs, Importer, progressMonitor,
-                        _insertPath, out testSelectPath, out testIrtPeptides, out testLibrarySpectra,
-                        out testErrorList, out testPeptideGroups);
+                    insertionParams.Document = _docCurrent.ImportMassList(_inputs, Importer, progressMonitor,
+                        _insertPath, out insertionParams.SelectPath, out insertionParams.IrtPeptides,
+                        out insertionParams.LibrarySpectra, out testErrorList, out insertionParams.PeptideGroups);
                     errorCheckCanceled = progressMonitor.IsCanceled;
                 });
             }
@@ -466,27 +483,22 @@ namespace pwiz.Skyline.FileUI
             if (testErrorList != null && testErrorList.Any())
             {
                 // There are errors, show them to user
-                var isErrorAll = ReferenceEquals(docNew, _docCurrent);
+                var isErrorAll = ReferenceEquals(insertionParams.Document, _docCurrent);
                 if (MissingEssentialColumns.Count != 0)
                 {
                     // If the transition list is missing essential columns, tell the user in a 
                     // readable way
-                    string errorMessage = Resources.ImportTransitionListErrorDlg_ImportTransitionListErrorDlg_This_transition_list_cannot_be_imported_as_it_does_not_provide_values_for_;
-                    for (var i = 0; i < MissingEssentialColumns.Count; i++)
-                    {
-                        errorMessage = errorMessage + @" " + MissingEssentialColumns[i];
-                    }
-                    MessageDlg.Show(this, errorMessage);
+                    MessageDlg.Show(this, TextUtil.SpaceSeparate(Resources.ImportTransitionListErrorDlg_ImportTransitionListErrorDlg_This_transition_list_cannot_be_imported_as_it_does_not_provide_values_for_,
+                        TextUtil.SpaceSeparate(MissingEssentialColumns)));
                     return true; // There are errors
                 }
                 else
                 {
-                    DialogResult response;
                     using (var dlg = new ImportTransitionListErrorDlg(testErrorList, isErrorAll, silentSuccess))
                     {
-                        response = dlg.ShowDialog(this);
+                        if (dlg.ShowDialog(this) != DialogResult.OK)
+                            return true; // There are errors, and user does not want to ignore them
                     }
-                    return response == DialogResult.Cancel; // There are errors, and user does not want to ignore them
                 }
             }
             else if (!silentSuccess)
@@ -495,6 +507,7 @@ namespace pwiz.Skyline.FileUI
                 MessageDlg.Show(this, Resources.PasteDlg_ShowNoErrors_No_errors);
             }
 
+            InsertionParams = insertionParams;
             return false; // No errors
         }
 
@@ -506,11 +519,6 @@ namespace pwiz.Skyline.FileUI
         private void form_Resize(object sender, EventArgs e)
         {
             ResizeComboBoxes();
-        }
-
-        private void buttonCancel_Click(object sender, EventArgs e)
-        {
-
         }
     }
 }  
