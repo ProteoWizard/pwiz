@@ -1738,7 +1738,7 @@ namespace pwiz.Skyline
             if (commandArgs.LimitNoise.HasValue)
                 _out.WriteLine(Resources.CommandLine_MinimizeResults_Limiting_chromatogram_noise_to______0__minutes_around_peak___, commandArgs.LimitNoise);
 
-            var minimizeResults = new MinimizeResults(Document, ((statistics, sizeCalculator) =>
+            var minimizeResults = Model.MinimizeResults.MinimizeResultsFromDocument(Document, ((statistics, sizeCalculator) =>
             {
                 _out.WriteLine(statistics.PercentComplete + @"%");
             }));

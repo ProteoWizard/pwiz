@@ -17,6 +17,13 @@ namespace pwiz.Skyline.Model
 
         private IDocumentContainer _documentContainer;
 
+        public static MinimizeResults MinimizeResultsFromDocument(SrmDocument document, ProgressCallback doOnProgress)
+        {
+            var documentContainer = new MemoryDocumentContainer();
+            documentContainer.SetDocument(document, null);
+            return new MinimizeResults(documentContainer, doOnProgress);
+        }
+
         public MinimizeResults(IDocumentContainer documentContainer, ProgressCallback doOnProgress)
         {
             _documentContainer = documentContainer;
@@ -27,17 +34,6 @@ namespace pwiz.Skyline.Model
                 .ChangeDiscardAllIonsChromatograms(false)
                 .ChangeNoiseTimeRange(null);
             SetDocument(_documentContainer.Document);
-        }
-
-        public MinimizeResults(SrmDocument document, ProgressCallback doOnProgress) : this(GetDocumentContainer(document), doOnProgress)
-        {
-        }
-
-        private static MemoryDocumentContainer GetDocumentContainer(SrmDocument document)
-        {
-            var documentContainer = new MemoryDocumentContainer();
-            documentContainer.SetDocument(document, null);
-            return documentContainer;
         }
 
         public delegate void ProgressCallback(ChromCacheMinimizer.MinStatistics minStatistics, BackgroundWorker worker);
@@ -196,7 +192,7 @@ namespace pwiz.Skyline.Model
             public bool Canceled { get; private set; }
             public bool IsMinimizingFile { get; private set; }
 
-            public BackgroundWorker(MinimizeResults minimizeResults, bool isMinimizingFile = false/*, ILongWaitBroker longWaitBroker*/)
+            public BackgroundWorker(MinimizeResults minimizeResults, bool isMinimizingFile = false)
             {
                 _minimizeResults = minimizeResults;
                 Canceled = false;
@@ -210,7 +206,7 @@ namespace pwiz.Skyline.Model
 
             void OnProgress(ChromCacheMinimizer.MinStatistics minStatistics)
             {
-                if (Canceled) throw new Exception("BackgroundWorker has been cancelled.");
+                if (Canceled) throw new Exception("BackgroundWorker has been canceled.");
                 if (_minimizeResults._doOnProgress != null)
                 {
                     _minimizeResults._doOnProgress(minStatistics, this);
