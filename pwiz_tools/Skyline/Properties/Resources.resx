@@ -8942,8 +8942,8 @@ If your transition list format combines formulas and adducts in a single column 
   <data name="EditIsolationSchemeDlg_ReadIsolationRanges_No_repeating_isolation_scheme_found_in__0_" xml:space="preserve">
     <value>No repeating isolation scheme found in {0}</value>
   </data>
-  <data name="SkylineVersion_GetCurrentVersionName_Current___0__" xml:space="preserve">
-    <value>Current ({0})</value>
+  <data name="SkylineVersion_GetCurrentVersionName_Latest___0__" xml:space="preserve">
+    <value>Latest ({0})</value>
   </data>
   <data name="SkylineVersion_GetCurrentVersionName_Developer_Build" xml:space="preserve">
     <value>Developer Build</value>
@@ -10959,7 +10959,6 @@ Invalid peptide sequence at position 18
   <data name="DetectionPlotPane_EmptyPlotCanceled_Label" xml:space="preserve">
     <value>Operation canceled.</value>
   </data>
-  
   <data name="DetectionPlotData_NoDataLoaded_Label" xml:space="preserve">
     <value>No data loaded.</value>
   </data>
@@ -10981,7 +10980,6 @@ Invalid peptide sequence at position 18
   <data name="DetectionPlotData_DataRetrieved_Label" xml:space="preserve">
     <value>"Data retrieved successfully."</value>
   </data>
-
   <data name="DetectionHistogramPane_XAxis_Name" xml:space="preserve">
     <value>Replicate Count</value>
   </data>
@@ -11243,7 +11241,7 @@ Invalid peptide sequence at position 18
   </data>
   <data name="ImportTransitionListErrorDlg_ImportTransitionListErrorDlg_This_transition_list_cannot_be_imported_as_it_does_not_provide_values_for_" xml:space="preserve">
     <value>This transition list cannot be imported as it does not provide values for:</value>
-   </data>
+  </data>
   <data name="HierarchicalClusterGraph_zedGraphControl1_ContextMenuBuilder_Show_Selection" xml:space="preserve">
     <value>Show Selection</value>
   </data>
@@ -11328,6 +11326,9 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
   <data name="SkylineWindow_HasFileToOpen_The_path_to_the_file_to_open_is_too_long_" xml:space="preserve">
     <value>The path to the file to open is too long.</value>
   </data>
+  <data name="ShareTypeDlg_ShareTypeDlg_Current_saved_file___0__" xml:space="preserve">
+    <value>Current saved file ({0})</value>
+  </data>
   <data name="MissingFileDlg_ValidateFilePath_You_must_choose_a_file_with_the___0___filename_extension_" xml:space="preserve">
     <value>You must choose a file with the '{0}' filename extension.</value>
   </data>
@@ -11336,6 +11337,57 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
   </data>
   <data name="BuildLibraryDlg_AddInputFiles_These_files_are_library_files_and_do_not_need_to_be_built__Edit_the_list_of_libraries_to_add_them_directly_" xml:space="preserve">
     <value>These files are library files and do not need to be built. Edit the list of libraries to add them directly.</value>
+  </data>
+  <data name="HeatMapGraph_RefreshData_Heat_Map" xml:space="preserve">
+    <value>Heat Map</value>
+  </data>
+  <data name="PcaPlot_RefreshData_PCA_Plot" xml:space="preserve">
+    <value>PCA Plot</value>
+  </data>
+  <data name="HeatMapGraph_zedGraphControl1_ContextMenuBuilder_Refresh" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
+  <data name="DataboundGraph_AttachToOwner_Disconnected" xml:space="preserve">
+    <value>Disconnected</value>
+  </data>
+  <data name="DataboundGraph_AttachToOwner_Waiting_for_data" xml:space="preserve">
+    <value>Waiting for data</value>
+  </data>
+  <data name="DataGridType_DOCUMENT_GRID_Document_Grid" xml:space="preserve">
+    <value>Document Grid</value>
+  </data>
+  <data name="DataGridType_RESULTS_GRID_Results_Grid" xml:space="preserve">
+    <value>Results Grid</value>
+  </data>
+  <data name="DataGridType_GROUP_COMPARISON_Group_Comparison" xml:space="preserve">
+    <value>Group Comparison</value>
+  </data>
+  <data name="DataGridType_LIST_List" xml:space="preserve">
+    <value>List</value>
+  </data>
+  <data name="DataGridType_AUDIT_LOG_Audit_Log" xml:space="preserve">
+    <value>Audit Log</value>
+  </data>
+  <data name="DiaUmpireDdaConverter_Run_Starting_DIA_Umpire_conversion" xml:space="preserve">
+    <value>Starting DIA-Umpire conversion</value>
+  </data>
+  <data name="Setting_Validate_The_value___0___is_not_valid_for_the_argument__1__which_must_be_either__True__or__False__" xml:space="preserve">
+    <value>The value '{0}' is not valid for the argument {1} which must be either 'True' or 'False'.</value>
+  </data>
+  <data name="ImportPeptideSearchDlg_NextPage_No_isolation_windows_are_configured__" xml:space="preserve">
+    <value>No isolation windows are configured, but are required for deconvoluting DIA raw files by DIA-Umpire in preparation for DDA search. Go back to full scan settings to configure the isolation scheme.</value>
+  </data>
+  <data name="DDASearchControl_RunSearch_Conversion_cancelled_" xml:space="preserve">
+    <value>Conversion cancelled.</value>
+  </data>
+  <data name="DDASearchControl_RunSearch_Conversion_failed_" xml:space="preserve">
+    <value>Conversion failed.</value>
+  </data>
+  <data name="DDASearchControl_RunSearch_Conversion_finished_" xml:space="preserve">
+    <value>Conversion finished.</value>
+  </data>
+  <data name="DiaUmpireDdaConverter_Run_Re_using_existing_DiaUmpire_file__with_equivalent_settings__for__0_" xml:space="preserve">
+    <value>Re-using existing DIA-Umpire file (with equivalent settings) for {0}</value>
   </data>
   <data name="CommandArgs_WarnArgRequirementText_Use_of_the_argument__0__requires_one_of_the_following_arguments_" xml:space="preserve">
     <value>Use of the argument {0} requires one of the following arguments:</value>
