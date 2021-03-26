@@ -201,7 +201,7 @@ namespace SkylineBatch
 
         private void DataReceived(string data)
         {
-            if (IsRunning() && data != null && _logger != null)
+            if ((IsRunning() || IsCanceling()) && data != null && _logger != null)
             {
                 if (data.StartsWith("Error") || data.StartsWith("Fatal error"))
                     _logger.LogError(data);
