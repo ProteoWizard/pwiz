@@ -525,10 +525,13 @@ namespace pwiz.Skyline.EditUI
 
             FontStyle fontStyle = FontStyle.Regular;
             Color textColor = Color.Black;
-            
-            if (!string.IsNullOrEmpty((string) _listComboStatic[indexAA].SelectedItem))
+
+            string lightModName = (string) _listComboStatic[indexAA].SelectedItem;
+            if (!string.IsNullOrEmpty(lightModName))
             {
-                fontStyle = FontStyle.Bold | FontStyle.Underline;
+                var lightMod = StaticList[lightModName];
+                if (lightMod != null && lightMod.HasMod)    // Avoid highlighting loss-only mods
+                    fontStyle = FontStyle.Bold | FontStyle.Underline;
             }
 
             for (int i = 0; i < _listListComboHeavy.Count; i++)

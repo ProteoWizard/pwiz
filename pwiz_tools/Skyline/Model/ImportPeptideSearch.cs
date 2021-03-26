@@ -52,6 +52,7 @@ namespace pwiz.Skyline.Model
         public Library DocLib { get; private set; }
         public Dictionary<string, FoundResultsFilePossibilities> SpectrumSourceFiles { get; set; }
         public AbstractDdaSearchEngine SearchEngine { get; set; }
+        public AbstractDdaConverter DdaConverter { get; set; }
 
         public bool HasDocLib { get { return DocLib != null; } }
         public IrtStandard IrtStandard { get; set; }

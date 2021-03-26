@@ -59,13 +59,11 @@ namespace pwiz.Skyline.Controls.GroupComparison
             {
                 _skylineDataSchema = new SkylineDataSchema(GroupComparisonModel.DocumentContainer,
                     SkylineDataSchema.GetLocalizedSchemaLocalizer());
-                var viewInfo = new ViewInfo(_skylineDataSchema, typeof(FoldChangeRow), GetDefaultViewSpec(new FoldChangeRow[0]))
-                    .ChangeViewGroup(ViewGroup.BUILT_IN);
-                var rowSourceInfo = new RowSourceInfo(typeof(FoldChangeRow), new StaticRowSource(new FoldChangeRow[0]), new[] { viewInfo });
-                ViewContext = new GroupComparisonViewContext(_skylineDataSchema, new[]{rowSourceInfo});
+                var rowSourceInfos = CreateRowSourceInfos(new FoldChangeRow[0], new FoldChangeDetailRow[0]);
+                ViewContext = new GroupComparisonViewContext(_skylineDataSchema, rowSourceInfos);
                 _container = new Container();
                 _bindingListSource = new BindingListSource(_container);
-                _bindingListSource.SetViewContext(ViewContext, viewInfo);
+                _bindingListSource.SetViewContext(ViewContext, rowSourceInfos[0].Views[0]);
                 GroupComparisonModel.ModelChanged += GroupComparisonModelOnModelChanged;
                 GroupComparisonModelOnModelChanged(GroupComparisonModel, new EventArgs());
             }
@@ -151,17 +149,23 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 }
                 detailRows.Add(new FoldChangeDetailRow(grouping.Key.Item1, grouping.Key.Item2, grouping.Key.Item3, grouping.Key.Item4, foldChangeResults, runAbundances));
             }
-            var defaultViewSpec = GetDefaultViewSpec(rows);
+            SetRowSourceInfos(CreateRowSourceInfos(rows, detailRows));
+        }
+
+        private IList<RowSourceInfo> CreateRowSourceInfos(IList<FoldChangeRow> foldChangeRows, IList<FoldChangeDetailRow> detailRows)
+        {
+            var defaultViewSpec = GetDefaultViewSpec(foldChangeRows);
             var clusteredViewSpec = GetClusteredViewSpec(defaultViewSpec);
+
 
             var rowSourceInfos = new List<RowSourceInfo>()
             {
-                new RowSourceInfo(new StaticRowSource(rows),
+                new RowSourceInfo(new StaticRowSource(foldChangeRows),
                     new ViewInfo(_skylineDataSchema, typeof(FoldChangeRow), defaultViewSpec).ChangeViewGroup(ViewGroup.BUILT_IN)),
                 new RowSourceInfo(new StaticRowSource(detailRows),
                     new ViewInfo(_skylineDataSchema, typeof(FoldChangeDetailRow), clusteredViewSpec).ChangeViewGroup(ViewGroup.BUILT_IN))
             };
-            SetRowSourceInfos(rowSourceInfos);
+            return rowSourceInfos;
         }
 
         private void SetRowSourceInfos(IList<RowSourceInfo> rowSourceInfos)

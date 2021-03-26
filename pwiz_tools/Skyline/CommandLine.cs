@@ -132,7 +132,9 @@ namespace pwiz.Skyline
             }
             if (commandArgs.RunningBatchCommands)
             {
-                RunBatchCommands(commandArgs.BatchCommandsPath);
+                var exitCode = RunBatchCommands(commandArgs.BatchCommandsPath);
+                if (exitCode != Program.EXIT_CODE_SUCCESS)
+                    return exitCode;
                 anyAction = true;
             }
             if (commandArgs.ImportingSkyr)
@@ -2875,11 +2877,12 @@ namespace pwiz.Skyline
         }
 
         // A function for running each line of a text file like a SkylineRunner command
-        public void RunBatchCommands(string path)
+        public int RunBatchCommands(string path)
         {
             if (!File.Exists(path))
             {
                 _out.WriteLine(Resources.CommandLine_RunBatchCommands_Error___0__does_not_exist____batch_commands_failed_, path);
+                return Program.EXIT_CODE_RAN_WITH_ERRORS;
             }
             else
             {
@@ -2893,7 +2896,9 @@ namespace pwiz.Skyline
                         {
                             // Parse the line and run it.
                             string[] args = ParseArgs(input);
-                            Run(args);
+                            int exitCode = Run(args);
+                            if (exitCode != Program.EXIT_CODE_SUCCESS)
+                                return exitCode;
                         }
                     }
                 }
@@ -2902,6 +2907,7 @@ namespace pwiz.Skyline
                     _out.WriteLine(Resources.CommandLine_RunBatchCommands_Error__failed_to_open_file__0____batch_commands_command_failed_, path);
                 }
             }            
+            return Program.EXIT_CODE_SUCCESS;
         }
         
         /// <summary>

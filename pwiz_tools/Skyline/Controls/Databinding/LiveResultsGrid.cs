@@ -63,8 +63,15 @@ namespace pwiz.Skyline.Controls.Databinding
             contextMenuStrip.Opening += contextMenu_Opening;
         }
 
-        // TODO(nicksh): replace this with ResultsGrid.IStateProvider
         public SkylineWindow SkylineWindow { get; private set; }
+
+        public override DataGridId DataGridId
+        {
+            get
+            {
+                return new DataGridId(DataGridType.RESULTS_GRID, null);
+            }
+        }
 
         protected override void OnHandleCreated(EventArgs e)
         {

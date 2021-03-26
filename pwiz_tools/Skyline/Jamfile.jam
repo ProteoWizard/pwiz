@@ -122,9 +122,12 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
 
         echo Building Skyline in $(CONFIGURATION:L) configuration...
         msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);MSBuildAssemblyName=$(TARGET_NAME) /t:Skyline /t:TestRunner /nologo /verbosity:minimal
+        IF ERRORLEVEL 1 exit %ERRORLEVEL%
         
         echo Instantiating template files...
         msbuild $(SKYLINE_PATH)/Executables/Installer/SetupDeployProject.csproj /p:Configuration=Release;Platform=AnyCPU;$(INTERMEDIATE_PATH);OutDir=$(PWIZ_BUILD_PATH)/SkylineDeploy/ /nologo /verbosity:minimal
+        IF ERRORLEVEL 1 exit %ERRORLEVEL%
+
         $(PWIZ_BUILD_PATH)/SkylineDeploy/SetupDeployProject.exe "$(SKYLINE_PATH)" "$(OUTPUT_PATH_NO_TRAILING_SLASH)" "$(PWIZ_BUILD_PATH)" $(VERSION) $(ADDRESS_MODEL) $(TARGET_NAME)
     }
 
@@ -145,6 +148,34 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         $(SKYLINE_PATH)\Executables\LocalizationHelper\InspectSkylineCode.bat $(PWIZ_ROOT_PATH) $(OUTPUT_PATH) "Configuration=$(CONFIGURATION);Platform=$(PLATFORM)"
     }
 
+    rule do_skyline_batch ( targets + : sources * : properties * )
+    {
+        return [ build-properties $(targets) : $(sources) : $(properties) ] ;
+    }
+
+    actions do_skyline_batch
+    {
+        $(MSVC_CURRENT_SETUP_SCRIPT)
+        echo Building SkylineBatch in $(CONFIGURATION:L) configuration...
+        msbuild $(SKYLINE_PATH)/Executables/SkylineBatch/SkylineBatch.sln /p:Configuration=$(CONFIGURATION);OutDir=$(OUTPUT_PATH) /t:SkylineBatchTest /nologo /verbosity:minimal
+        set status=%ERRORLEVEL%
+        exit %status%
+    }
+
+    rule do_skyline_batch_test ( targets + : sources * : properties * )
+    {
+        return [ build-properties $(targets) : $(sources) : $(properties) ] ;
+    }
+
+    actions do_skyline_batch_test
+    {
+        $(MSVC_CURRENT_SETUP_SCRIPT)
+        echo Unit testing SkylineBatch in $(CONFIGURATION:L) configuration...
+        vstest.console.exe $(OUTPUT_PATH)\SkylineBatchTest.dll
+        set status=%ERRORLEVEL%
+        exit %status%
+    }
+
     rule do_skyline_test ( targets + : sources * : properties * )
     {
         return [ build-properties $(targets) : $(sources) : $(properties) ] ;
@@ -156,6 +187,8 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         chcp 437
         echo Building Skyline Test in $(CONFIGURATION:L) configuration...
         msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);MSBuildAssemblyName=$(TARGET_NAME) /t:Test /nologo /verbosity:minimal
+        IF ERRORLEVEL 1 exit %ERRORLEVEL%
+
         echo Unit testing Skyline in $(CONFIGURATION:L) configuration...
         $(OUTPUT_PATH)/TestRunner.exe log=Test.log buildcheck=1 test=Test.dll $(.teamcity-test-decoration)
         set status=%ERRORLEVEL%
@@ -173,6 +206,8 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         chcp 437
         echo Building Skyline Test Data in $(CONFIGURATION:L) configuration...
         msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);MSBuildAssemblyName=$(TARGET_NAME) /t:TestData /nologo /verbosity:minimal
+        IF ERRORLEVEL 1 exit %ERRORLEVEL%
+
         echo Unit testing pwiz data reading in Skyline in $(CONFIGURATION:L) configuration...
         $(OUTPUT_PATH)/TestRunner.exe log=TestData.log buildcheck=1 test=TestData.dll $(.teamcity-test-decoration)
         set status=%ERRORLEVEL%
@@ -190,6 +225,8 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         chcp 437
         echo Building Skyline Test Data in $(CONFIGURATION:L) configuration...
         msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);MSBuildAssemblyName=$(TARGET_NAME) /t:TestData /nologo /verbosity:minimal
+        IF ERRORLEVEL 1 exit %ERRORLEVEL%
+
         echo Testing subset of Skyline's leak checking (pass1) in $(CONFIGURATION:L) configuration...
         $(OUTPUT_PATH)/TestRunner.exe log=TestPass1Subset.log buildcheck=1 pass1=on pass2=off test=TestInstrumentInfo,TestQcTraces,TestTicChromatogram $(.teamcity-test-decoration)
         set status=%ERRORLEVEL%
@@ -207,6 +244,8 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         chcp 437
         echo Building Skyline TestFunctional in $(CONFIGURATION:L) configuration...
         msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);MSBuildAssemblyName=$(TARGET_NAME) /t:TestFunctional /nologo /verbosity:minimal
+        IF ERRORLEVEL 1 exit %ERRORLEVEL%
+
         echo Functional testing Skyline in $(CONFIGURATION:L) configuration...
         $(OUTPUT_PATH)/TestRunner.exe log=TestFunctional.log buildcheck=1 test=TestFunctional.dll $(.teamcity-test-decoration)
         set status=%ERRORLEVEL%
@@ -382,6 +421,33 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
             <dependency>../../pwiz_tools/BiblioSpec/src//BlibBuild/<runtime-debugging>off/<location>$(BIBLIO_SPEC_PATH)/obj/$(PLATFORM)
             <dependency>../../pwiz_tools/BiblioSpec/src//BlibFilter/<runtime-debugging>off/<location>$(BIBLIO_SPEC_PATH)/obj/$(PLATFORM)
     ;
+        
+    
+        
+    make SkylineBatch.exe
+        : # sources
+        : # actions
+            @do_skyline_batch
+        : # requirements
+            <link>shared:<build>no
+            <conditional>@no-express-requirement
+            <conditional>@msvc-dotnet-requirement
+            <conditional>@build-location
+            <dependency>Skyline.exe
+        ;
+        
+    make SkylineBatchTest
+        : # sources
+        : # actions
+            @do_skyline_batch_test
+        : # requirements
+            <link>shared:<build>no
+            <conditional>@no-express-requirement
+            <conditional>@msvc-dotnet-requirement
+            <conditional>@build-location
+            <dependency>SkylineBatch.exe
+        ;
+    explicit SkylineBatchTest ;
         
     
         
