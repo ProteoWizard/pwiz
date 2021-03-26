@@ -330,29 +330,6 @@ boost::format getNewMaxIdsSql(
     "       (SELECT IFNULL(MAX(Id), 0) FROM %1%.SpectrumSourceGroupLink),\n"
     "       (SELECT IFNULL(MAX(Id), 0) FROM %1%.Spectrum),\n"
     "       (SELECT IFNULL(MAX(Id), 0) FROM %1%.Analysis)\n");
-
-
-class TemporaryFile
-{
-    public:
-    TemporaryFile(const string& extension = ".tmp")
-    {
-        filepath = bfs::temp_directory_path() / bfs::unique_path("%%%%%%%%%%%%%%%%" + extension);
-    }
-
-    ~TemporaryFile()
-    {
-        if (bfs::exists(filepath))
-            bfs::remove(filepath);
-    }
-
-    const bfs::path& path() const { return filepath; }
-
-    private:
-    bfs::path filepath;
-};
-
-
 } // namespace
 
 

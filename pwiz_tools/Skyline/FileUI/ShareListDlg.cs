@@ -152,7 +152,7 @@ namespace pwiz.Skyline.FileUI
             }
             catch (Exception exception)
             {
-                MessageBox.Show(this, TextUtil.LineSeparate(Resources.ShareListDlg_OkDialog_An_error_occurred, exception.Message), Program.Name);
+                MessageDlg.Show(this, TextUtil.LineSeparate(Resources.ShareListDlg_OkDialog_An_error_occurred, exception.Message));
             }
             Close();            
         }

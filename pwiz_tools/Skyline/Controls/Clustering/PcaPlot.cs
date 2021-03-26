@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
@@ -27,7 +28,6 @@ using pwiz.Common.DataAnalysis.Clustering;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Clustering;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Properties;
@@ -37,20 +37,19 @@ using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Clustering
 {
-    public partial class PcaPlot : DockableFormEx
+    public partial class PcaPlot : DataboundGraph
     {
         private List<Tuple<string, PivotedProperties.SeriesGroup>> _datasetOptions;
         private bool _inUpdateControls;
         private static readonly Color MISSING_COLOR = Color.Black;
         private readonly PcaCalculator _calculator;
+        private PcaChoice _pcaChoice = PcaChoice.EMPTY;
         public PcaPlot()
         {
             InitializeComponent();
             _calculator = new PcaCalculator(this);
             Localizer = SkylineDataSchema.GetLocalizedSchemaLocalizer();
         }
-
-        public SkylineWindow SkylineWindow { get; set; }
 
         public ClusterInput ClusterInput
         {
@@ -68,7 +67,7 @@ namespace pwiz.Skyline.Controls.Clustering
         {
             get
             {
-                return _calculator.Results.Item1;
+                return _calculator.Results?.Item1;
             }
         }
 
@@ -80,6 +79,8 @@ namespace pwiz.Skyline.Controls.Clustering
             }
         }
 
+        public override ZedGraphControl GraphControl => zedGraphControl1;
+
         public DataSchemaLocalizer Localizer { get; }
 
         public void UpdateControls()
@@ -89,7 +90,6 @@ namespace pwiz.Skyline.Controls.Clustering
             {
                 _inUpdateControls = true;
                 var newDatasetOptions = GetDatasetOptions();
-                int oldSelectedIndex = comboDataset.SelectedIndex;
                 comboDataset.Items.Clear();
                 foreach (var tuple in newDatasetOptions)
                 {
@@ -98,9 +98,9 @@ namespace pwiz.Skyline.Controls.Clustering
 
                 if (newDatasetOptions.Any())
                 {
-                    if (oldSelectedIndex < newDatasetOptions.Count)
+                    if (PcaChoiceValue.DataSetIndex < newDatasetOptions.Count)
                     {
-                        comboDataset.SelectedIndex = oldSelectedIndex;
+                        comboDataset.SelectedIndex = PcaChoiceValue.DataSetIndex;
                     }
                     else
                     {
@@ -108,18 +108,22 @@ namespace pwiz.Skyline.Controls.Clustering
                     }
                 }
                 _datasetOptions = newDatasetOptions;
+                UpdateGraph();
             }
             finally
             {
                 _inUpdateControls = wasInUpdateControls;
             }
 
-            UpdateGraph();
         }
 
         private List<Tuple<string, PivotedProperties.SeriesGroup>> GetDatasetOptions()
         {
             var newDatasetOptions = new List<Tuple<string, PivotedProperties.SeriesGroup>>();
+            if (Clusterer == null)
+            {
+                return newDatasetOptions;
+            }
             if (Clusterer.RowHeaderLevels.Any())
             {
                 newDatasetOptions.Add(Tuple.Create(
@@ -161,12 +165,12 @@ namespace pwiz.Skyline.Controls.Clustering
 
         public void UpdateGraph()
         {
-            if (Clusterer == null || comboDataset.SelectedIndex < 0 || comboDataset.SelectedIndex >= _datasetOptions.Count)
+            if (Clusterer == null || _pcaChoice.DataSetIndex < 0 || _pcaChoice.DataSetIndex >= _datasetOptions.Count)
             {
                 return;
             }
-
-            var seriesGroup = _datasetOptions[comboDataset.SelectedIndex].Item2;
+            UpdateTitle(Resources.PcaPlot_RefreshData_PCA_Plot);
+            var seriesGroup = _datasetOptions[_pcaChoice.DataSetIndex].Item2;
             List<SymbolType> symbolTypes = new List<SymbolType>()
             {
                 SymbolType.Square,
@@ -182,8 +186,6 @@ namespace pwiz.Skyline.Controls.Clustering
             };
 
             zedGraphControl1.GraphPane.CurveList.Clear();
-            int xAxisIndex = (int) numericUpDownXAxis.Value - 1;
-            int yAxisIndex = (int) numericUpDownYAxis.Value - 1;
             var clusteredProperties = Clusterer.Properties;
             Dictionary<ImmutableList<HeaderLevel>, PointPairList> pointLists;
             int numberOfDimensions;
@@ -195,7 +197,8 @@ namespace pwiz.Skyline.Controls.Clustering
                                              group.SeriesList.Where(series =>
                                                  clusteredProperties.GetColumnRole(series) is ClusterRole.Transform))
                                          .Sum(series => series.PropertyIndexes.Count);
-                pointLists = GetRowPointPairLists(xAxisIndex, yAxisIndex);
+                _pcaChoice = _pcaChoice.ConstrainComponents(numberOfDimensions);
+                pointLists = GetRowPointPairLists(_pcaChoice.XComponent, _pcaChoice.YComponent);
                 graphTitle = Resources.PcaPlot_UpdateGraph_PCA_on_rows;
             }
             else
@@ -203,7 +206,8 @@ namespace pwiz.Skyline.Controls.Clustering
                 var valueSeriesList = seriesGroup.SeriesList.Where(series =>
                     Clusterer.Properties.GetColumnRole(series) is ClusterRole.Transform).ToList();
                 numberOfDimensions = Clusterer.RowItems.Count * valueSeriesList.Count;
-                pointLists = GetColumnPointPairLists(seriesGroup, xAxisIndex, yAxisIndex);
+                _pcaChoice = _pcaChoice.ConstrainComponents(numberOfDimensions);
+                pointLists = GetColumnPointPairLists(seriesGroup, _pcaChoice.XComponent, _pcaChoice.YComponent);
                 graphTitle = TextUtil.SpaceSeparate(
                     valueSeriesList.Select(series => series.SeriesCaption.GetCaption(Localizer)));
                 if (clusteredProperties.RowHeaders.Any())
@@ -215,6 +219,8 @@ namespace pwiz.Skyline.Controls.Clustering
 
             }
             numericUpDownYAxis.Maximum = numericUpDownXAxis.Maximum = numberOfDimensions;
+            numericUpDownXAxis.Value = _pcaChoice.XComponent + 1;
+            numericUpDownYAxis.Value = _pcaChoice.YComponent + 1;
 
             const int symbolHeaderLevel = 0;
             const int colorHeaderLevel = 1;
@@ -252,8 +258,8 @@ namespace pwiz.Skyline.Controls.Clustering
             }
 
             zedGraphControl1.GraphPane.Title.Text = graphTitle;
-            zedGraphControl1.GraphPane.XAxis.Title.Text = string.Format(Resources.PcaPlot_UpdateGraph_Principal_Component__0_, xAxisIndex + 1);
-            zedGraphControl1.GraphPane.YAxis.Title.Text = string.Format(Resources.PcaPlot_UpdateGraph_Principal_Component__0_, yAxisIndex + 1);
+            zedGraphControl1.GraphPane.XAxis.Title.Text = string.Format(Resources.PcaPlot_UpdateGraph_Principal_Component__0_, _pcaChoice.XComponent + 1);
+            zedGraphControl1.GraphPane.YAxis.Title.Text = string.Format(Resources.PcaPlot_UpdateGraph_Principal_Component__0_, _pcaChoice.YComponent + 1);
             zedGraphControl1.GraphPane.Legend.IsVisible = zedGraphControl1.GraphPane.CurveList.Count < 16;
             zedGraphControl1.GraphPane.AxisChange();
             zedGraphControl1.Invalidate();
@@ -338,9 +344,36 @@ namespace pwiz.Skyline.Controls.Clustering
             return pointLists;
         }
 
-        private void numericUpDown_ValueChanged(object sender, EventArgs e)
+        public PcaChoice PcaChoiceValue
         {
-            UpdateGraph();
+            get
+            {
+                return _pcaChoice;
+            }
+            set
+            {
+                _pcaChoice = value;
+                UpdateControls();
+            }
+        }
+
+        private void numericUpDownX_ValueChanged(object sender, EventArgs e)
+        {
+            if (_inUpdateControls)
+            {
+                return;
+            }
+
+            PcaChoiceValue = PcaChoiceValue.ChangeXComponent((int) numericUpDownXAxis.Value - 1);
+        }
+        private void numericUpDownY_ValueChanged(object sender, EventArgs e)
+        {
+            if (_inUpdateControls)
+            {
+                return;
+            }
+
+            PcaChoiceValue = PcaChoiceValue.ChangeYComponent((int) numericUpDownYAxis.Value - 1);
         }
 
         public class HeaderLevel
@@ -403,7 +436,8 @@ namespace pwiz.Skyline.Controls.Clustering
             {
                 return;
             }
-            UpdateGraph();
+
+            PcaChoiceValue = PcaChoiceValue.ChangeDataSetIndex(comboDataset.SelectedIndex);
         }
 
         private bool zedGraphControl1_MouseDownEvent(ZedGraphControl sender, MouseEventArgs e)
@@ -445,7 +479,21 @@ namespace pwiz.Skyline.Controls.Clustering
             return true;
         }
 
-        private class PcaCalculator : GraphDataCalculator<ClusterInput, Tuple<Clusterer, ReportColorScheme>>
+        public override void RefreshData()
+        {
+            ClusterInput = DataboundGridControl?.CreateClusterInput() ?? ClusterInput;
+            UpdateTitle(Resources.PcaPlot_RefreshData_PCA_Plot);
+        }
+
+        public override bool IsComplete
+        {
+            get
+            {
+                return base.IsComplete && _calculator.IsComplete;
+            }
+        }
+
+        private class PcaCalculator : BoundGraphDataCalculator<ClusterInput, Tuple<Clusterer, ReportColorScheme>>
         {
             public PcaCalculator(PcaPlot pcaPlot) : base(CancellationToken.None, pcaPlot.zedGraphControl1)
             {
@@ -457,15 +505,135 @@ namespace pwiz.Skyline.Controls.Clustering
                 get;
             }
 
-            protected override Tuple<Clusterer, ReportColorScheme> CalculateResults(ClusterInput input, CancellationToken cancellationToken)
+            protected override Tuple<Clusterer, ReportColorScheme> CalculateDataBoundResults(ClusterInput input, CancellationToken cancellationToken)
             {
                 var resultsTuple = input.GetClusterResultsTuple(GetProgressHandler(cancellationToken));
-                return Tuple.Create(resultsTuple.Item1, resultsTuple.Item3);
+                if (resultsTuple == null)
+                {
+                    return null;
+                }
+
+                var finalColorScheme = ReportColorScheme.FromClusteredResults(cancellationToken, resultsTuple.Item2);
+                return Tuple.Create(resultsTuple.Item1, finalColorScheme);
             }
 
             protected override void ResultsAvailable()
             {
                 PcaPlot.UpdateControls();
+            }
+        }
+
+        public override PersistentString RestoreFromViewFile(SkylineWindow skylineWindow, PersistentString persistentString)
+        {
+            persistentString = base.RestoreFromViewFile(skylineWindow, persistentString);
+            if (persistentString.Parts.Count >= 1)
+            {
+                PcaChoiceValue = PcaChoice.ParsePersistentString(persistentString.Parts[0]) ?? PcaChoice.EMPTY;
+                persistentString = persistentString.Skip(1);
+            }
+
+            return persistentString;
+        }
+
+        protected override string GetPersistentString()
+        {
+            return PersistentString.Parse(base.GetPersistentString())
+                .Append(PcaChoiceValue.ToPersistentStringPart())
+                .ToString();
+        }
+
+        public class PcaChoice : Immutable
+        {
+            public static readonly PcaChoice EMPTY = new PcaChoice(0, 1, -1);
+
+            public PcaChoice(int xComponent, int yComponent, int dataSetIndex)
+            {
+                XComponent = xComponent;
+                YComponent = yComponent;
+                DataSetIndex = dataSetIndex;
+            }
+            public int XComponent { get; private set; }
+
+            public PcaChoice ChangeXComponent(int xComponent)
+            {
+                return ChangeProp(ImClone(this), im => im.XComponent = xComponent);
+            }
+            public int YComponent { get; private set; }
+
+            public PcaChoice ChangeYComponent(int yComponent)
+            {
+                return ChangeProp(ImClone(this), im => im.YComponent = yComponent);
+            }
+            public int DataSetIndex { get; private set; }
+
+            public PcaChoice ConstrainComponents(int numberOfDimensions)
+            {
+                if (XComponent < numberOfDimensions || YComponent < numberOfDimensions)
+                {
+                    return this;
+                }
+
+                return ChangeProp(ImClone(this), im =>
+                {
+                    im.XComponent = Math.Min(im.XComponent, numberOfDimensions - 1);
+                    im.YComponent = Math.Min(im.YComponent, numberOfDimensions - 1);
+                });
+            }
+
+            public PcaChoice ChangeDataSetIndex(int dataSetIndex)
+            {
+                return ChangeProp(ImClone(this), im => im.DataSetIndex = dataSetIndex);
+            }
+
+            public string ToPersistentStringPart()
+            {
+                return string.Join(@",", XComponent.ToString(CultureInfo.InvariantCulture),
+                    YComponent.ToString(CultureInfo.InvariantCulture),
+                    DataSetIndex.ToString(CultureInfo.InvariantCulture));
+            }
+
+            public static PcaChoice ParsePersistentString(string str)
+            {
+                var parts = str.Split(',');
+                if (parts.Length != 3)
+                {
+                    return null;
+                }
+
+                var intParts = new List<int>();
+                foreach (var part in parts)
+                {
+                    if (!int.TryParse(part, NumberStyles.Integer, CultureInfo.InvariantCulture, out int intPart))
+                    {
+                        return null;
+                    }
+                    intParts.Add(intPart);
+                }
+                return new PcaChoice(intParts[0], intParts[1], intParts[2]);
+            }
+
+            protected bool Equals(PcaChoice other)
+            {
+                return XComponent == other.XComponent && YComponent == other.YComponent && DataSetIndex == other.DataSetIndex;
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != this.GetType()) return false;
+                return Equals((PcaChoice) obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    var hashCode = XComponent;
+                    hashCode = (hashCode * 397) ^ YComponent;
+                    hashCode = (hashCode * 397) ^ DataSetIndex;
+                    return hashCode;
+                }
             }
         }
     }
