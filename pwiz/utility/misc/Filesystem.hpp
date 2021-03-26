@@ -124,6 +124,19 @@ PWIZ_API_DECL bool isHTTP(const std::string& filepath);
 PWIZ_API_DECL std::string read_file_header(const std::string& filepath, size_t length = 512);
 
 
+/// creates a unique named file in the user temp directory
+PWIZ_API_DECL class TemporaryFile
+{
+    public:
+    TemporaryFile(const string& extension/* = ".tmp"*/);
+    ~TemporaryFile();
+
+    const bfs::path& path() const { return filepath; }
+
+    private:
+    bfs::path filepath;
+};
+
 /// attempts to get the platform-specific console bounds (number of columns and lines), returns defaultBounds if an error occurs or the platform is not supported
 PWIZ_API_DECL std::pair<int, int> get_console_bounds(const std::pair<int, int>& defaultBounds = std::pair<int, int>(80, 24));
 
