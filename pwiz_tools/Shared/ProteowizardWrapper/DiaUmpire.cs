@@ -52,6 +52,7 @@ namespace pwiz.ProteowizardWrapper
         public class Config
         {
             public IDictionary<string, object> Parameters { get; }
+            public bool UseMzMlSpillFile { get; set; }
 
             public Config()
             {
@@ -174,6 +175,8 @@ namespace pwiz.ProteowizardWrapper
                             throw new InvalidDataException(@"unexpected type in SpectrumList_DiaUmpire.Config.InstrumentParameter");
                     }
                 }
+
+                config.spillFileFormat = UseMzMlSpillFile ? MSDataFile.Format.Format_mzML : MSDataFile.Format.Format_MZ5;
 
                 return config;
             }
