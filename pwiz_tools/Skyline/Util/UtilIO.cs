@@ -1034,10 +1034,10 @@ namespace pwiz.Skyline.Util
         private long _totalChars;
         private long _charsRead;
 
-        public LineReaderWithProgress(string path, IProgressMonitor progressMonitor) : base(path, Encoding.UTF8)
+        public LineReaderWithProgress(string path, IProgressMonitor progressMonitor, IProgressStatus status = null) : base(path, Encoding.UTF8)
         {
             _progressMonitor = progressMonitor;
-            _status = new ProgressStatus(Path.GetFileName(path));
+            _status = (status ?? new ProgressStatus()).ChangeMessage(Path.GetFileName(path));
             _totalChars = new FileInfo(PathEx.SafePath(path)).Length;
         }
 
@@ -1057,6 +1057,15 @@ namespace pwiz.Skyline.Util
                 _status = _status.UpdatePercentCompleteProgress(_progressMonitor, _charsRead, _totalChars);
             }
             return result;
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            // Make sure we reach 100%
+            if (_progressMonitor != null)
+                _status.UpdatePercentCompleteProgress(_progressMonitor, _totalChars, _totalChars);
+
+            base.Dispose(disposing);
         }
     }
 

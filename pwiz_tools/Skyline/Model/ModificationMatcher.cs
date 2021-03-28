@@ -41,12 +41,12 @@ namespace pwiz.Skyline.Model
 
         public void CreateMatches(SrmSettings settings, IEnumerable<string> sequences,
             MappedList<string, StaticMod> defSetStatic, MappedList<string, StaticMod> defSetHeavy, 
-            IProgressMonitor progressMonitor = null)
+            IProgressMonitor progressMonitor = null, IProgressStatus status = null)
         {
             _progressMonitor = progressMonitor;
             if (progressMonitor != null)
             {
-                _status = new ProgressStatus(Resources.ModificationMatcher_CreateMatches_Matching_modifications);
+                _status = (status ?? new ProgressStatus()).ChangeMessage(Resources.ModificationMatcher_CreateMatches_Matching_modifications);
                 var countable = sequences as ICollection<string>;
                 if (countable == null)
                 {

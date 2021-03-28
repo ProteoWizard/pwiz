@@ -321,14 +321,14 @@ namespace pwiz.Skyline.Model
             _lines = lines;
         }
 
-        public IList<string> ReadLines(IProgressMonitor progressMonitor)
+        public IList<string> ReadLines(IProgressMonitor progressMonitor, IProgressStatus status = null)
         {
-            return _lines ?? (_lines = _inputFilename != null ? ReadLinesFromFile(progressMonitor) : ReadLinesFromText());
+            return _lines ?? (_lines = _inputFilename != null ? ReadLinesFromFile(progressMonitor, status) : ReadLinesFromText());
         }
 
-        private IList<string> ReadLinesFromFile(IProgressMonitor progressMonitor)
+        private IList<string> ReadLinesFromFile(IProgressMonitor progressMonitor, IProgressStatus status)
         {
-            using (var reader = new LineReaderWithProgress(_inputFilename, progressMonitor))
+            using (var reader = new LineReaderWithProgress(_inputFilename, progressMonitor, status))
             {
                 var inputLines = new List<string>();
                 string line;
@@ -434,16 +434,17 @@ namespace pwiz.Skyline.Model
 
         public bool PreImport(IProgressMonitor progressMonitor, ColumnIndices indices, bool tolerateErrors)
         {
-            IProgressStatus status = new ProgressStatus();
+            IProgressStatus status = new ProgressStatus(Resources.MassListImporter_Import_Reading_transition_list).ChangeSegments(0, 3);
             // Get the lines used to guess the necessary columns and create the row reader
             if (progressMonitor != null)
             {
                 if (progressMonitor.IsCanceled)
                     return false;
-                progressMonitor.UpdateProgress(status = status.ChangeMessage(Resources.MassListImporter_Import_Reading_transition_list));
+                progressMonitor.UpdateProgress(status);
             }
 
-            var lines = new List<string>(Inputs.ReadLines(progressMonitor));
+            var lines = new List<string>(Inputs.ReadLines(progressMonitor, status));
+            status = status.NextSegment();
             _linesSeen = 0;
 
             if (progressMonitor != null)
@@ -455,7 +456,7 @@ namespace pwiz.Skyline.Model
             if (indices != null)
             {
                 // CONSIDER: Only used by Edit > Insert > Transition List (should we still pass in headers?)
-                RowReader = new GeneralRowReader(FormatProvider, Separator, indices, Settings, lines, progressMonitor);
+                RowReader = new GeneralRowReader(FormatProvider, Separator, indices, Settings, lines, progressMonitor, status);
             }
             else
             {
@@ -471,10 +472,10 @@ namespace pwiz.Skyline.Model
                 }
 
                 // If no numeric columns in the first row
-                RowReader = ExPeptideRowReader.Create(FormatProvider, Separator, indices, Settings, lines, progressMonitor);
+                RowReader = ExPeptideRowReader.Create(FormatProvider, Separator, indices, Settings, lines, progressMonitor, status);
                 if (RowReader == null)
                 {
-                    RowReader = GeneralRowReader.Create(FormatProvider, Separator, indices, Settings, lines, tolerateErrors, progressMonitor);
+                    RowReader = GeneralRowReader.Create(FormatProvider, Separator, indices, Settings, lines, tolerateErrors, progressMonitor, status);
                     if (RowReader == null)
                         throw new LineColNumberedIoException(Resources.MassListImporter_Import_Failed_to_find_peptide_column, 1, -1);
                 }
@@ -685,19 +686,20 @@ namespace pwiz.Skyline.Model
                                         IList<string> lines,
                                         SrmSettings settings,
                                         IEnumerable<string> sequences,
-                                        IProgressMonitor progressMonitor)
+                                        IProgressMonitor progressMonitor,
+                                        IProgressStatus status)
             {
                 FormatProvider = provider;
                 Separator = separator;
                 Indices = indices;
                 Lines = lines;
                 Settings = settings;
-                ModMatcher = CreateModificationMatcher(settings, sequences, progressMonitor);
+                ModMatcher = CreateModificationMatcher(settings, sequences, lines.Count, progressMonitor, status);
                 NodeDictionary = new Dictionary<string, PeptideDocNode>();
             }
 
-            private static ModificationMatcher CreateModificationMatcher(SrmSettings settings,
-                IEnumerable<string> sequences, IProgressMonitor progressMonitor = null)
+            private static ModificationMatcher CreateModificationMatcher(SrmSettings settings, IEnumerable<string> sequences,
+                int expectedCount = 0, IProgressMonitor progressMonitor = null, IProgressStatus status = null)
             {
                 var modMatcher = new ModificationMatcher();
                 // We want AutoSelect on so we can generate transition groups, but we want the filter to 
@@ -709,11 +711,15 @@ namespace pwiz.Skyline.Model
                                                                                                                             TransitionGroup.MAX_PRECURSOR_CHARGE).Select(Adduct.FromChargeProtonated).ToArray()));
                 try
                 {
+                    var distinctSequences = GetDistinctSequences(sequences, expectedCount, progressMonitor, status);
+                    if (status != null)
+                        status = status.NextSegment();
+
                     modMatcher.CreateMatches(settingsMatcher,
-                                             sequences != null ? sequences.Distinct() : new string[0],
+                                             distinctSequences,
                                              Properties.Settings.Default.StaticModList,
                                              Properties.Settings.Default.HeavyModList,
-                                             progressMonitor);    // Can't use expected count
+                                             progressMonitor, status);    // Can't use expected count
                 }
                 catch (FormatException)
                 {
@@ -721,9 +727,39 @@ namespace pwiz.Skyline.Model
                                              new string[0],
                                              Properties.Settings.Default.StaticModList,
                                              Properties.Settings.Default.HeavyModList,
-                                             progressMonitor);
+                                             progressMonitor, status);
                 }
                 return modMatcher;
+            }
+
+            private static IList<string> GetDistinctSequences(IEnumerable<string> sequences, int expectedCount,
+                IProgressMonitor progressMonitor, IProgressStatus status)
+            {
+                if (sequences == null)
+                    return new string[0];
+
+                var setSeen = new HashSet<string>(expectedCount/4);
+                var listSeen = new List<string>(expectedCount/4);
+                int sequenceCurrent = 0;
+                foreach (string sequence in sequences)
+                {
+                    if (progressMonitor != null)
+                    {
+                        sequenceCurrent++;
+                        if (progressMonitor.IsCanceled)
+                            return new string[0];
+                        if (expectedCount > 0)
+                            progressMonitor.UpdateProgress(status = status.UpdatePercentCompleteProgress(progressMonitor, sequenceCurrent, expectedCount));
+                    }
+
+                    if (!setSeen.Contains(sequence))
+                    {
+                        setSeen.Add(sequence);
+                        listSeen.Add(sequence);
+                    }
+                }
+
+                return listSeen;
             }
 
             protected SrmSettings Settings { get; private set; }
@@ -1156,8 +1192,9 @@ namespace pwiz.Skyline.Model
                 ColumnIndices indices,
                 SrmSettings settings,
                 IList<string> lines,
-                IProgressMonitor progressMonitor)
-                : base(provider, separator, indices, lines, settings, GetSequencesFromLines(lines, separator, indices), progressMonitor)
+                IProgressMonitor progressMonitor,
+                IProgressStatus status)
+                : base(provider, separator, indices, lines, settings, GetSequencesFromLines(lines, separator, indices), progressMonitor, status)
             {
             }
 
@@ -1204,7 +1241,7 @@ namespace pwiz.Skyline.Model
             }
 
             public static GeneralRowReader Create(IFormatProvider provider, char separator, ColumnIndices indices, SrmSettings settings, IList<string> lines,
-                bool tolerateErrors, IProgressMonitor progressMonitor)
+                bool tolerateErrors, IProgressMonitor progressMonitor, IProgressStatus status)
             {
                 // Split the first line into fields.
                 Assume.IsTrue(lines.Count > 0);
@@ -1217,7 +1254,9 @@ namespace pwiz.Skyline.Model
                 double tolerance = settings.TransitionSettings.Instrument.MzMatchTolerance;
 
                 var linesSeen = 0;
-                IProgressStatus status = progressMonitor == null ? null : new ProgressStatus(Resources.MassListImporter_Import_Inspecting_peptide_sequence_information);
+                status = progressMonitor != null
+                    ? (status ?? new ProgressStatus()).ChangeMessage(Resources.MassListImporter_Import_Inspecting_peptide_sequence_information)
+                    : null;
 
                 foreach (var line in lines)
                 {
@@ -1352,7 +1391,7 @@ namespace pwiz.Skyline.Model
 
                     indices.AssignDetected(iProt, iSequence, iPrecursor, iProduct, iLabelType, iFragmentName, iPrecursorCharge);
                 }
-                return new GeneralRowReader(provider, separator, indices, settings, lines, progressMonitor);
+                return new GeneralRowReader(provider, separator, indices, settings, lines, progressMonitor, status);
             }
 
             private static int[] FindSequenceCandidates(string[] fields)
@@ -1693,8 +1732,9 @@ namespace pwiz.Skyline.Model
                                        Regex exPeptideRegex,
                                        SrmSettings settings,
                                        IList<string> lines,
-                                       IProgressMonitor progressMonitor)
-                : base(provider, separator, indices, lines, settings, GetSequencesFromLines(lines, separator, indices, exPeptideRegex), progressMonitor)
+                                       IProgressMonitor progressMonitor,
+                                       IProgressStatus status)
+                : base(provider, separator, indices, lines, settings, GetSequencesFromLines(lines, separator, indices, exPeptideRegex), progressMonitor, status)
             {
                 ExPeptideRegex = exPeptideRegex;
             }
@@ -1731,7 +1771,8 @@ namespace pwiz.Skyline.Model
                 }
             }
 
-            public static ExPeptideRowReader Create(IFormatProvider provider, char separator, ColumnIndices indices, SrmSettings settings, IList<string> lines, IProgressMonitor progressMonitor)
+            public static ExPeptideRowReader Create(IFormatProvider provider, char separator, ColumnIndices indices, SrmSettings settings, IList<string> lines,
+                IProgressMonitor progressMonitor, IProgressStatus status)
             {
                 // Split the first line into fields.
                 Debug.Assert(lines.Count > 0);
@@ -1774,7 +1815,7 @@ namespace pwiz.Skyline.Model
                     throw new MzMatchException(Resources.GeneralRowReader_Create_No_valid_product_m_z_column_found, 1, -1);
 
                 indices.AssignDetected(iExPeptide, iExPeptide, iPrecursor, iProduct, iExPeptide, iExPeptide, iExPeptide);
-                return new ExPeptideRowReader(provider, separator, indices, exPeptideRegex, settings, lines, progressMonitor);
+                return new ExPeptideRowReader(provider, separator, indices, exPeptideRegex, settings, lines, progressMonitor, status);
             }
 
             private static int FindExPeptide(string[] fields, Regex exPeptideRegex, SrmSettings settings,
