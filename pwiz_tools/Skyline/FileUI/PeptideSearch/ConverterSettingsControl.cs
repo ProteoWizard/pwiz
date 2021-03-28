@@ -302,11 +302,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             set { cbEstimateBg.Checked = value; }
         }
 
+        public bool UseMzMlSpillFile { get; set; }
+
         public DiaUmpireDdaConverter GetDiaUmpireConverter()
         {
             var diaUmpireConfig = DiaUmpire.Config.GetDefaultsForInstrument(InstrumentPreset);
             foreach (var kvp in AdditionalSettings)
                 diaUmpireConfig.Parameters[kvp.Key] = kvp.Value.Value;
+            diaUmpireConfig.UseMzMlSpillFile = UseMzMlSpillFile;
 
             return new DiaUmpireDdaConverter(ImportPeptideSearch.SearchEngine, _fullScanSettingsControlGetter().IsolationScheme, diaUmpireConfig);
         }

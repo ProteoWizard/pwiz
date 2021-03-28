@@ -280,6 +280,7 @@ namespace pwiz.SkylineTestFunctional
 
                 importPeptideSearchDlg.ConverterSettingsControl.InstrumentPreset = DiaUmpire.Config.InstrumentPreset.TripleTOF;
                 importPeptideSearchDlg.ConverterSettingsControl.EstimateBackground = false;
+                importPeptideSearchDlg.ConverterSettingsControl.UseMzMlSpillFile = true; // mz5 spill file leaks
                 importPeptideSearchDlg.ConverterSettingsControl.AdditionalSettings =
                     new Dictionary<string, AbstractDdaSearchEngine.Setting>
                     {
