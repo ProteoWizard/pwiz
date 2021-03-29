@@ -349,7 +349,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 settings.Instrument.MaxInclusions, settings.Instrument.MinTime, settings.Instrument.MaxTime);
             Helpers.AssignIfEquals(ref instrument, settings.Instrument);
 
-            TransitionLibraryPick pick = settings.Libraries.Pick != TransitionLibraryPick.none ? settings.Libraries.Pick : TransitionLibraryPick.all;
+            var pick = settings.Libraries.Pick != TransitionLibraryPick.none ? settings.Libraries.Pick : TransitionLibraryPick.filter;
+            if (TransitionFilter.GetEndFragmentFinder(fragmentRangeLast) is IEndCountFragmentFinder)
+                pick = TransitionLibraryPick.all;
             var libraries = new TransitionLibraries(ionMatchTolerance, minIonCount, ionCount, pick);
             Helpers.AssignIfEquals(ref libraries, settings.Libraries);
 
