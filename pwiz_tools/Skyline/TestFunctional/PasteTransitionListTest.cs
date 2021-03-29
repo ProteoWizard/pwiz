@@ -19,7 +19,6 @@
 
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Properties;
