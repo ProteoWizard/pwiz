@@ -11338,6 +11338,15 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
   <data name="BuildLibraryDlg_AddInputFiles_These_files_are_library_files_and_do_not_need_to_be_built__Edit_the_list_of_libraries_to_add_them_directly_" xml:space="preserve">
     <value>These files are library files and do not need to be built. Edit the list of libraries to add them directly.</value>
   </data>
+  <data name="SkylineWindow_ImportMassList_Analyzing_input__0_" xml:space="preserve">
+    <value>Analyzing input {0}</value>
+  </data>
+  <data name="ImportTransitionListColumnSelectDlg_CheckForErrors_Checking_for_errors___" xml:space="preserve">
+    <value>Checking for errors...</value>
+  </data>
+  <data name="ModificationMatcher_CreateMatches_Matching_modifications" xml:space="preserve">
+    <value>Matching modifications</value>
+  </data>
   <data name="HeatMapGraph_RefreshData_Heat_Map" xml:space="preserve">
     <value>Heat Map</value>
   </data>
