@@ -153,7 +153,12 @@ namespace pwiz.SkylineTestFunctional
 
         private string GetNameValues(DataGridView grid)
         {
-            return string.Join(string.Empty, grid.Rows.OfType<DataGridViewRow>().Select(row => row.Cells[0].Value).OfType<string>());
+            string result = null;
+            RunUI(() =>
+            {
+                result = string.Join(string.Empty, grid.Rows.OfType<DataGridViewRow>().Select(row => row.Cells[0].Value).OfType<string>());
+            });
+            return result;
         }
     }
 }
