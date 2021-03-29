@@ -239,7 +239,7 @@ namespace SkylineBatch
 
         private void SetInitialFileSettings(SkylineBatchConfig config)
         {
-            if (config == null) return;
+            if (_action == ConfigAction.Add) return;
             if (config.FileSettings.MsOneResolvingPower != null)
                 textMsOneResolvingPower.Text = config.FileSettings.MsOneResolvingPower;
             if (config.FileSettings.MsMsResolvingPower != null)
