@@ -157,6 +157,7 @@
             this.comboRangeTo.FormattingEnabled = true;
             resources.ApplyResources(this.comboRangeTo, "comboRangeTo");
             this.comboRangeTo.Name = "comboRangeTo";
+            this.comboRangeTo.SelectedIndexChanged += new System.EventHandler(this.comboRangeTo_SelectedIndexChanged);
             // 
             // label3
             // 

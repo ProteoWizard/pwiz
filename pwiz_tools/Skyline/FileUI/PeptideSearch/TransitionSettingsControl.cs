@@ -29,6 +29,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             InitialPeptideIonTypes = PeptideIonTypes.ToArray();
         }
 
+        private SrmSettings DocumentSettings => _documentContainer.Document.Settings;
+        private TransitionSettings DocumentTransitionSettings => DocumentSettings.TransitionSettings;
+
         public TransitionFilterAndLibrariesSettings FilterAndLibrariesSettings
         {
             get { return new TransitionFilterAndLibrariesSettings(this); }
@@ -265,7 +268,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public TransitionSettings GetTransitionSettings(Form parent)
         {
             var helper = new MessageBoxHelper(parent);
-            TransitionSettings settings = _documentContainer.Document.Settings.TransitionSettings;
+            TransitionSettings settings = DocumentTransitionSettings;
 
             // Validate and store filter settings
             Adduct[] peptidePrecursorCharges;
@@ -349,13 +352,30 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 settings.Instrument.MaxInclusions, settings.Instrument.MinTime, settings.Instrument.MaxTime);
             Helpers.AssignIfEquals(ref instrument, settings.Instrument);
 
-            var pick = settings.Libraries.Pick != TransitionLibraryPick.none ? settings.Libraries.Pick : TransitionLibraryPick.filter;
-            if (TransitionFilter.GetEndFragmentFinder(fragmentRangeLast) is IEndCountFragmentFinder)
+            var pick = settings.Libraries.Pick != TransitionLibraryPick.none && DocumentSettings.PeptideSettings.Libraries.LibrarySpecs.Any(lib => !lib.IsDocumentLibrary)
+                ? settings.Libraries.Pick
+                : TransitionLibraryPick.filter;
+            if (CountFinder != null && pick == TransitionLibraryPick.filter)
                 pick = TransitionLibraryPick.all;
             var libraries = new TransitionLibraries(ionMatchTolerance, minIonCount, ionCount, pick);
             Helpers.AssignIfEquals(ref libraries, settings.Libraries);
 
             return new TransitionSettings(settings.Prediction, filter, libraries, settings.Integration, instrument, settings.FullScan, settings.IonMobilityFiltering);
+        }
+
+        private IEndCountFragmentFinder CountFinder => TransitionFilter.GetEndFragmentFinder(
+            TransitionFilter.GetEndFragmentNameFromLabel(IonFilter ? IonRangeTo : DocumentTransitionSettings.Filter.FragmentRangeLast.Label)
+        ) as IEndCountFragmentFinder;
+
+        private void comboRangeTo_SelectedIndexChanged(object sender, System.EventArgs e)
+        {
+            var countFinder = CountFinder;
+            if (countFinder != null)
+            {
+                IonCount = countFinder.Count;
+                if (int.TryParse(txtMinIonCount.Text, out var minIon) && minIon > IonCount)
+                    MinIonCount = IonCount;
+            }
         }
     }
 }
