@@ -20,6 +20,7 @@ using System;
 using System.Globalization;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
@@ -65,7 +66,7 @@ namespace pwiz.SkylineTest
             try
             {
                 var inputs = new MassListInputs(text, true);
-                var lines = inputs.ReadLines();
+                var lines = inputs.ReadLines(new SilentProgressMonitor());
                 Assert.AreEqual(hasHeader ? 2 : 1, lines.Count);
                 var columns = lines.Last().Split(inputs.Separator);
                 Assert.AreEqual(VALUES[2], double.Parse(columns[2], culture));

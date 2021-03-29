@@ -1875,36 +1875,43 @@ namespace pwiz.Skyline
         {
             SrmTreeNode nodePaste = SequenceTree.SelectedNode as SrmTreeNode;
             IdentityPath insertPath = nodePaste != null ? nodePaste.Path : null;
-            IdentityPath selectPath = null;
-            List<MeasuredRetentionTime> irtPeptides = null;
-            List<SpectrumMzInfo> librarySpectra = null;
-            List<TransitionImportErrorInfo> errorList = null;
-            List<PeptideGroupDocNode> peptideGroups = null;
+            IdentityPath selectPath;
+            List<MeasuredRetentionTime> irtPeptides;
+            List<SpectrumMzInfo> librarySpectra;
+            List<PeptideGroupDocNode> peptideGroups;
             var docCurrent = DocumentUI;
             SrmDocument docNew = null;
-
-            // PreImport of mass list
-            var importer = docCurrent.PreImportMassList(inputs, null);
-            if (importer == null)
-                return;
+            MassListImporter importer = null;
+            var analyzingMessage = string.Format( Resources.SkylineWindow_ImportMassList_Analyzing_input__0_, inputs.InputFilename ?? string.Empty);
+            using (var longWaitDlg0 = new LongWaitDlg(this)
+            {
+                Text = analyzingMessage,
+            })
+            {
+                var status = longWaitDlg0.PerformWork(this, 1000, longWaitBroker =>
+                {
+                    // PreImport of mass list
+                    importer = docCurrent.PreImportMassList(inputs, longWaitBroker, true);
+                });
+                if (importer == null || status.IsCanceled)
+                {
+                    return;
+                }
+            }
 
             using (var columnDlg = new ImportTransitionListColumnSelectDlg(importer, docCurrent, inputs, insertPath))
             {
-                var result = columnDlg.ShowDialog(this);
-                if (result == DialogResult.Cancel)
+                if (columnDlg.ShowDialog(this) != DialogResult.OK)
                     return;
+
+                var insParams = columnDlg.InsertionParams;
+                docNew = insParams.Document;
+                selectPath = insParams.SelectPath;
+                irtPeptides = insParams.IrtPeptides;
+                librarySpectra = insParams.LibrarySpectra;
+                peptideGroups = insParams.PeptideGroups;
             }
-            
-            using (var longWaitDlg = new LongWaitDlg(this) {Text = description})
-            {
-                var status = longWaitDlg.PerformWork(this, 1000, longWaitBroker =>
-                {
-                    docNew = docCurrent.ImportMassList(inputs, importer, longWaitBroker,
-                        insertPath, out selectPath, out irtPeptides, out librarySpectra, out errorList, out peptideGroups);
-                });
-                if (status.IsCanceled)
-                    return;
-            }
+
             if (assayLibrary)
             {
                 var missingMessage = new List<string>();
@@ -1920,9 +1927,10 @@ namespace pwiz.Skyline
                     return;
                 }
             }
+
             bool isDocumentSame = ReferenceEquals(docNew, docCurrent);
             // If nothing was imported (e.g. operation was canceled or zero error-free transitions) and also no errors, just return
-            if (isDocumentSame && !errorList.Any())
+            if (isDocumentSame)
                 return;
 
             // Formerly this is where we would show any errors and give the user the option to proceed with just the non-error transitions.
@@ -1972,7 +1980,7 @@ namespace pwiz.Skyline
                     doc = doc.ImportMassList(inputs, importer, insertPath, out selectPath);
                     if (irtInputs != null)
                     {
-                        var iRTimporter = doc.PreImportMassList(irtInputs, null);
+                        var iRTimporter = doc.PreImportMassList(irtInputs, null, false);
                         doc = doc.ImportMassList(irtInputs, iRTimporter, null, out selectPath);
                     }
                     var newSettings = doc.Settings;

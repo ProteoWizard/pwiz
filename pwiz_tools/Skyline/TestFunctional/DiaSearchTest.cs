@@ -65,6 +65,10 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void TestDiaSearchVariableWindows()
         {
+            // TODO(matt.chambers): Fix "Cannot pass a GCHandle across AppDomains" error with MSTest
+            if (IsMsTestRun)
+                return;
+
             TestFilesZip = @"TestFunctional\DiaSearchTest.zip";
 
             _testDetails = new TestDetails
@@ -98,6 +102,10 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void TestDiaSearchFixedWindows()
         {
+            // TODO(matt.chambers): Fix "Cannot pass a GCHandle across AppDomains" error with MSTest
+            if (IsMsTestRun)
+                return;
+
             TestFilesZip = @"TestFunctional\DiaSearchTest.zip";
 
             string diaUmpireTestDataPath = TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.DiaUmpire);

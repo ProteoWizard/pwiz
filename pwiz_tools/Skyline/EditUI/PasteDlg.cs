@@ -731,7 +731,7 @@ namespace pwiz.Skyline.EditUI
                     var inputs = new MassListInputs(sbTransitionList.ToString(), LocalizationHelper.CurrentCulture, TRANSITION_LIST_SEPARATOR);
                     var importer = new MassListImporter(document, inputs);
                     // TODO: support long-wait broker        
-                    if (importer.PreImport(null, TRANSITION_LIST_COL_INDICES))
+                    if (importer.PreImport(null, TRANSITION_LIST_COL_INDICES, false))
                         peptideGroupDocNodes = importer.DoImport(null, dictNameSeq, irtPeptides, librarySpectra, errorList);
                     else
                         peptideGroupDocNodes = new PeptideGroupDocNode[0];
