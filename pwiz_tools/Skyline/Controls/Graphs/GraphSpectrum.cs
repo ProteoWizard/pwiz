@@ -1122,7 +1122,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private static bool IonMatches(Transition transition, LibraryChromGroup.ChromData chromData)
         {
-            if(transition.IonType.Equals(chromData.IonType) && transition.Charge == chromData.Charge)
+            if(transition.IonType.Equals(chromData.IonType) && Equals(transition.Adduct, chromData.Charge))
             {
                 if(transition.IsPrecursor())
                 {
@@ -1130,7 +1130,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 else
                 {
-                    return transition.Ordinal == chromData.Ordinal;
+                    return transition.IonType == IonType.custom ?
+                        Equals(transition.FragmentIonName, chromData.FragmentName) :
+                        transition.Ordinal == chromData.Ordinal;
                 }
             }
             return false;

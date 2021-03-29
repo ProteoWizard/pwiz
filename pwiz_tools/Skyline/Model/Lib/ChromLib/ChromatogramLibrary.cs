@@ -27,6 +27,7 @@ using System.Xml.Serialization;
 using NHibernate;
 using NHibernate.Criterion;
 using NHibernate.Exceptions;
+using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
@@ -73,7 +74,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
 
         protected override SpectrumHeaderInfo CreateSpectrumHeaderInfo(ChromLibSpectrumInfo info)
         {
-            return new ChromLibSpectrumHeaderInfo(Name, info.PeakArea);
+            return new ChromLibSpectrumHeaderInfo(Name, info.PeakArea, info.Protein);
         }
 
         protected override SpectrumPeaksInfo.MI[] ReadSpectrum(ChromLibSpectrumInfo info)
@@ -91,19 +92,35 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
                     var timeIntensities = precursor.ChromatogramData;
                     double height = 0;
                     var chromDatas = new List<LibraryChromGroup.ChromData>();
+                    var precursor13 = precursor as Precursor.Format1Dot3;
                     foreach (var transition in precursor.Transitions)
                     {
+                        var transition13 = transition as Data.Transition.Format1Dot3;
+                        var ionType = Helpers.ParseEnum(transition.FragmentType, IonType.y);
+                        IonMobilityValue ionMobility = null;
+                        var im = (ionType == IonType.precursor)
+                            ? precursor13?.IonMobilityMS1
+                            : precursor13?.IonMobilityFragment;
+                        if (im.HasValue)
+                        {
+                            var imUnits = Helpers.ParseEnum(precursor13.IonMobilityType, eIonMobilityUnits.none);
+                            if (imUnits != eIonMobilityUnits.none)
+                            {
+                                ionMobility = IonMobilityValue.GetIonMobilityValue(im, imUnits);
+                            }
+                        }
                         chromDatas.Add(new LibraryChromGroup.ChromData
                             {
                                 Mz = transition.Mz,
                                 Height = transition.Height,
                                 Intensities = timeIntensities.Intensities[transition.ChromatogramIndex],
-                                Charge = transition.Charge == 0 ? precursor.Charge : transition.Charge,
-                                IonType = Helpers.ParseEnum(transition.FragmentType, IonType.y),
+                                Charge = transition.GetAdduct(),
+                                IonType = ionType,
                                 Ordinal = transition.FragmentOrdinal,
                                 MassIndex = transition.MassIndex,
-                                // DriftTimeFilter = DriftTimeFilter.EMPTY // CONSIDER(bspratt) ion mobility info in chromatogram libs?
-                            });
+                                FragmentName = transition13?.FragmentName,
+                                IonMobility = ionMobility
+                        });
                         height = Math.Max(height, transition.Height);
                     }
                     var precursorRetentionTime =
@@ -134,15 +151,47 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
             return null;
         }
 
+        protected Data.Peptide GetPeptide(ISession session, int id)
+        {
+            try
+            {
+                return session.Get<Data.Peptide.Format1Dot3>(id);
+            }
+            catch (HibernateException)
+            {
+                return session.Get<Data.Peptide>(id);
+            }
+        }
+
+        protected Data.Transition GetTransition(ISession session, int id)
+        {
+            try
+            {
+                return session.Get<Data.Transition.Format1Dot3>(id);
+            }
+            catch (HibernateException)
+            {
+                return session.Get<Data.Transition>(id);
+            }
+        }
+
+
         protected Precursor GetPrecursor(ISession session, int id)
         {
             try
             {
-                return session.Get<Precursor.Format1Dot2>(id);
+                return session.Get<Precursor.Format1Dot3>(id);
             }
             catch (HibernateException)
             {
-                return session.Get<Precursor>(id);
+                try
+                {
+                    return session.Get<Precursor.Format1Dot2>(id);
+                }
+                catch (HibernateException)
+                {
+                    return session.Get<Precursor>(id);
+                }
             }
         }
 
@@ -249,12 +298,46 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
                     PanoramaServer = Convert.ToString(libInfo[0]);
                     LibraryRevision = Convert.ToInt32(libInfo[1]);
                     SchemaVersion = Convert.ToString(libInfo[2]);
+                    var hasSmallMoleculAndIonMobilityColumns = Convert.ToDouble(libInfo[2]) >= 3;
+                    var dictMolecules = new Dictionary<int, CustomMolecule>();
+                    var dictMoleculeLists = new Dictionary<int, Protein>();
+                    if (hasSmallMoleculAndIonMobilityColumns)
+                    {
+                        var moleculeQuery = session.CreateQuery(@"SELECT Id FROM Peptide"); 
+                        foreach (var peptideId in moleculeQuery.List<int>())
+                        {
+                            if (dictMolecules.ContainsKey(peptideId))
+                            {
+                                continue; // No idea while the query runs this list twice
+                            }
+                            var peptide13 = GetPeptide(session, peptideId) as Data.Peptide.Format1Dot3;
+                            if (peptide13 == null)
+                            {
+                                break;
+                            }
 
+                            var formula = peptide13.ChemicalFormula;
+                            var name = peptide13.MoleculeName;
+                            
+                            if (string.IsNullOrEmpty(formula) && string.IsNullOrEmpty(name) && peptide13.MassAverage == 0)
+                            {
+                                continue; // Probably a peptide rather than a molecule
+                            }
+                            var accessionNumbers = MoleculeAccessionNumbers.FromSerializableString(peptide13.MoleculeAccession);
+
+                            var molecule = formula == null ? 
+                                new CustomMolecule(new TypedMass(peptide13.MassMonoisotopic, MassType.Monoisotopic), 
+                                    new TypedMass(peptide13.MassAverage, MassType.Average), name, accessionNumbers) : 
+                                new CustomMolecule(formula, name, accessionNumbers);
+                            dictMolecules.Add(peptideId, molecule);
+                            dictMoleculeLists.Add(peptideId, peptide13.Protein); // For small molecules "Protein" is really molecule list name
+                        }
+                    }
                     try
                     {
                         var irtQuery = session.CreateQuery(@"SELECT PeptideModSeq, Irt, TimeSource FROM IrtLibrary");
                         _libraryIrts = irtQuery.List<object[]>().Select(
-                            irt => new ChromatogramLibraryIrt(new Target((string) irt[0]), (TimeSource) irt[2], Convert.ToDouble(irt[1]))
+                            irt => new ChromatogramLibraryIrt(Target.FromSerializableString((string) irt[0]), (TimeSource) irt[2], Convert.ToDouble(irt[1]))
                             ).ToArray();
                     }
                     catch (GenericADOException)
@@ -277,19 +360,40 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
                     }
 
                     var precursorQuery =
-                        session.CreateQuery(@"SELECT P.Id, P.ModifiedSequence, P.Charge, P.TotalArea FROM " + typeof (Precursor) +
+                        session.CreateQuery(@"SELECT P.Id, P.ModifiedSequence, P.Charge, P.TotalArea, P.PeptideId FROM " + typeof (Precursor) +
                                             @" P");
-                    var allTransitionAreas = ReadAllTransitionAreas(session);
+                    var allTransitionAreas = ReadAllTransitionAreas(session, dictMolecules.Any());
                     var spectrumInfos = new List<ChromLibSpectrumInfo>();
                     foreach (object[] row in precursorQuery.List<object[]>())
                     {
                         var id = (int) row[0];
-                        if (row[1] == null || row[2] == null)
+                        var precursor13 = hasSmallMoleculAndIonMobilityColumns ? GetPrecursor(session, id) as Precursor.Format1Dot3 : null;
+                        var adductSting = precursor13?.Adduct;
+                        if ((row[1] == null || row[2] == null) && string.IsNullOrEmpty(adductSting))
                         {
-                            continue; // Throw an error?
+                            continue; // Empty record? Throw an error?
                         }
-                        var modifiedSequence = new Target((string) row[1]);
-                        var charge = (int) row[2];  // TODO(bspratt) generalize chromatogram libs to small mol
+
+                        var modifiedSequenceString = (string) row[1];
+                        var peptideId = (int) row[4];
+                        var moleculeTarget = hasSmallMoleculAndIonMobilityColumns && !string.IsNullOrEmpty(adductSting) && string.IsNullOrEmpty(modifiedSequenceString) ?
+                            new Target(dictMolecules[peptideId]) :
+                            null;
+
+                        LibKey libKey;
+                        string moleculeList = null;  // CONSIDER(bspratt) pass protein name through as we do molecule list name?
+                        if (moleculeTarget == null)
+                        {
+                            var modifiedSequence = new Target(modifiedSequenceString);
+                            var charge = (int) row[2]; 
+                            var modSeqNormal = SequenceMassCalc.NormalizeModifiedSequence(modifiedSequence);
+                            libKey = new LibKey(modSeqNormal.Sequence, charge);
+                        }
+                        else
+                        {
+                            libKey = new LibKey(moleculeTarget, Adduct.FromStringAssumeChargeOnly(adductSting));
+                            moleculeList = dictMoleculeLists[peptideId]?.Name;
+                        }
                         double totalArea = Convert.ToDouble(row[3]);
                         List<KeyValuePair<int, double>> retentionTimes;
                         var indexedRetentionTimes = new IndexedRetentionTimes();
@@ -297,20 +401,10 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
                         {
                             indexedRetentionTimes = new IndexedRetentionTimes(retentionTimes);
                         }
-                        Target modSeqNormal;
-                        try
-                        {
-                            modSeqNormal = SequenceMassCalc.NormalizeModifiedSequence(modifiedSequence);
-                        }
-                        catch (ArgumentException)
-                        {
-                            continue;
-                        }
 
-                        var libKey = new LibKey(modSeqNormal.Sequence, charge);
                         IList<SpectrumPeaksInfo.MI> transitionAreas;
                         allTransitionAreas.TryGetValue(id, out transitionAreas);
-                        spectrumInfos.Add(new ChromLibSpectrumInfo(libKey, id, totalArea, indexedRetentionTimes, transitionAreas));
+                        spectrumInfos.Add(new ChromLibSpectrumInfo(libKey, id, totalArea, indexedRetentionTimes, transitionAreas, moleculeList));
                     }
                     SetLibraryEntries(spectrumInfos);
 
@@ -417,20 +511,34 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
         /// <summary>
         /// Returns a mapping from PrecursorId to list of mz/intensities.
         /// </summary>
-        private IDictionary<int, IList<SpectrumPeaksInfo.MI>> ReadAllTransitionAreas(ISession session)
+        private IDictionary<int, IList<SpectrumPeaksInfo.MI>> ReadAllTransitionAreas(ISession session, bool checkPeakAnnotations)
         {
             var allPeakAreas = new Dictionary<int, IList<SpectrumPeaksInfo.MI>>();
             var query =
-                session.CreateQuery(@"SELECT T.Precursor.Id as First, T.Mz, T.Area FROM " + typeof(Data.Transition) + @" T");
+                session.CreateQuery(@"SELECT T.Precursor.Id as First, T.Mz, T.Area, T.Id FROM " + typeof(Data.Transition) + @" T");
             var rows = query.List<object[]>();
             var rowsLookup = rows.ToLookup(row => (int) (row[0]));
             foreach (var grouping in rowsLookup)
             {
                 var mis = ImmutableList.ValueOf(grouping.Select(row
-                    => new SpectrumPeaksInfo.MI { Mz = Convert.ToDouble(row[1]), Intensity = Convert.ToSingle(row[2]) })); // TODO (bspratt) annotation?
+                    => new SpectrumPeaksInfo.MI
+                    {
+                        Mz = Convert.ToDouble(row[1]), Intensity = Convert.ToSingle(row[2]),
+                        Annotations = checkPeakAnnotations ? GetAnnotations(session, (int)row[3]) : null }));
                 allPeakAreas.Add(grouping.Key, mis);
             }
             return allPeakAreas;
+        }
+
+        private List<SpectrumPeakAnnotation> GetAnnotations(ISession session, int id)
+        {
+            var transition13 = GetTransition(session, id) as Data.Transition.Format1Dot3;
+            if (!string.IsNullOrEmpty(transition13?.FragmentName) || !string.IsNullOrEmpty(transition13?.ChemicalFormula))
+            {
+                var ion = new CustomIon(transition13.ChemicalFormula, transition13.GetAdduct(), null, null, transition13.FragmentName);
+                return new List<SpectrumPeakAnnotation>{SpectrumPeakAnnotation.Create(ion, null)};
+            }
+            return null;
         }
 
         private bool LoadFromCache(ILoadMonitor loadMonitor, ProgressStatus status)
@@ -632,8 +740,9 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
 
         private class Serializer
         {
-            private const int CURRENT_VERSION = 4;
-            private const int MIN_READABLE_VERSION = 4;
+            // Version 5 adds small molecule and ion mobility information
+            private const int CURRENT_VERSION = 5;
+            private const int MIN_READABLE_VERSION = 5;
 
             private readonly ChromatogramLibrary _library;
             private readonly Stream _stream;

@@ -2501,17 +2501,19 @@ namespace pwiz.Skyline.Model.Lib
             public double Mz { get; set; }
             public double Height { get; set; }
             public float[] Intensities { get; set; }
-            public int Charge { get; set; }
+            public Adduct Charge { get; set; }
             public IonType IonType { get; set; }
             public int Ordinal { get; set; }
             public int MassIndex { get; set; }
-            //public IonMobilityFilterSet IonMobility { get; set; } // Zero or more CCS and/or IM values  TODO(bspratt) IMS in chromatogram libs?
+            public string FragmentName { get; set; } // Small molecule use
+            public IonMobilityValue IonMobility { get; set; } 
 
             protected bool Equals(ChromData other)
             {
                 return Mz.Equals(other.Mz) && Height.Equals(other.Height) && Equals(Intensities, other.Intensities) &&
                        Charge == other.Charge && IonType == other.IonType && Ordinal == other.Ordinal &&
-                       // IonMobility.Equals(other.IonMobility &&
+                       Equals(IonMobility, other.IonMobility) &&
+                       Equals(FragmentName, other.FragmentName) &&
                        MassIndex == other.MassIndex;
             }
 
@@ -2530,11 +2532,12 @@ namespace pwiz.Skyline.Model.Lib
                     var hashCode = Mz.GetHashCode();
                     hashCode = (hashCode * 397) ^ Height.GetHashCode();
                     hashCode = (hashCode * 397) ^ (Intensities != null ? Intensities.GetHashCode() : 0);
-                    hashCode = (hashCode * 397) ^ Charge;
+                    hashCode = (hashCode * 397) ^ Charge.GetHashCode();
+                    hashCode = (hashCode * 397) ^ (string.IsNullOrEmpty(FragmentName) ? 0 : FragmentName.GetHashCode());
                     hashCode = (hashCode * 397) ^ (int) IonType;
                     hashCode = (hashCode * 397) ^ Ordinal;
                     hashCode = (hashCode * 397) ^ MassIndex;
-                    //hashCode = (hashCode * 397) ^ (IonMobility != null ? IonMobility.GetHashCode() : 0);
+                    hashCode = (hashCode * 397) ^ (IonMobility != null ? IonMobility.GetHashCode() : 0);
                     return hashCode;
                 }
             }

@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using JetBrains.Annotations;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 // ReSharper disable VirtualMemberCallInConstructor
 
@@ -35,10 +36,12 @@ namespace pwiz.Skyline.Model.Lib.ChromLib.Data
             Transitions = new List<Transition>();
         }
         public virtual Peptide Peptide { get; set; }
+        public virtual int PeptideId { get; set; }
         public virtual SampleFile SampleFile { get; set; }
         public virtual string IsotopeLabel { get; set; }
         public virtual double Mz { get; set; }
         public virtual int Charge { get; set; }
+        public virtual Adduct GetAdduct() { return Adduct.FromChargeProtonated(Charge); }
         public virtual double NeutralMass { get; set; }
         public virtual string ModifiedSequence { get; set; }  // CONSIDER: bspratt/nicksh More appropriately called TextId?
         public virtual double CollisionEnergy { get; set; }
@@ -130,6 +133,25 @@ namespace pwiz.Skyline.Model.Lib.ChromLib.Data
 
             public virtual int ChromatogramFormat { get; set; }
             public virtual int UncompressedSize { get; set; }
+        }
+
+        /// <summary>
+        /// Schema version 1.3 added ion mobility information
+        /// </summary>
+        [UsedImplicitly]
+        public class Format1Dot3 : Format1Dot2
+        {
+            public virtual string Adduct { get; set; }
+            public override Adduct GetAdduct() { return string.IsNullOrEmpty(Adduct) ? base.GetAdduct() : Util.Adduct.FromStringAssumeChargeOnly(Adduct); }
+            public virtual double ExplicitIonMobility { get; set; }
+            public virtual string ExplicitIonMobilityUnits { get; set; }
+            public virtual double ExplicitCcsSqa { get; set; }
+            public virtual double ExplicitCompensationVoltage { get; set; }
+            public virtual double CCS { get; set; }
+            public virtual double IonMobilityMS1 { get; set; }
+            public virtual double IonMobilityFragment { get; set; }
+            public virtual double IonMobilityWindow { get; set; }
+            public virtual string IonMobilityType { get; set; }
         }
     }
 }
