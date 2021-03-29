@@ -14,6 +14,7 @@ All Info  :
 スペクトルライブラリを構築>曖昧な一致を含めるは偽です
 スペクトルライブラリを構築>ドキュメント内のペプチドをフィルタリングは偽です
 スペクトルライブラリを構築>ワークフローは"MS1フィルタを用いたDDA"です
+スペクトルライブラリを構築>Input File Typeは"DDA raw (search and build library)"です
 Extra Info: カットオフスコア = "0.95",
 ファイルを検索 = 
 [
@@ -22,7 +23,8 @@ Extra Info: カットオフスコア = "0.95",
 iRT標準ペプチド = なし,
 曖昧な一致を含める = 偽,
 ドキュメント内のペプチドをフィルタリング = 偽,
-ワークフロー = "MS1フィルタを用いたDDA"
+ワークフロー = "MS1フィルタを用いたDDA",
+Input File Type = "DDA raw (search and build library)"
 
 Undo Redo : ペプチド検索がインポートされました
 Summary   : ペプチド検索がインポートされました
@@ -35,6 +37,10 @@ All Info  :
 ペプチド検索のインポート>修飾を追加>修飾が追加されました："Label:13C(6)15N(4) (C-term R) = R[10] （同位体標識）"が含まれています
 ペプチド検索のインポート>修飾を追加>修飾が追加されました："Oxidation (M) = M[16] （変数）"が含まれています
 ペプチド検索のインポート>FASTAをインポート>FASTAファイルは"2014_01_HUMAN_UPS.fasta"です
+ペプチド検索のインポート>DDA search settings>Precursor toleranceは5ppmです
+ペプチド検索のインポート>DDA search settings>Fragment toleranceは10ppmです
+ペプチド検索のインポート>DDA search settings>Max variable mods per peptideは"3"です
+ペプチド検索のインポート>DDA search settings>Fragment ion typesは"b, y"です
 Extra Info: クロマトグラムを抽出 = 
 {
     結果ファイルが見つかりました = 
@@ -56,5 +62,12 @@ Extra Info: クロマトグラムを抽出 =
 FASTAをインポート = 
 {
     FASTAファイル = "2014_01_HUMAN_UPS.fasta"
+},
+DDA search settings = 
+{
+    Precursor tolerance = 5ppm,
+    Fragment tolerance = 10ppm,
+    Max variable mods per peptide = "3",
+    Fragment ion types = "b, y"
 }
 

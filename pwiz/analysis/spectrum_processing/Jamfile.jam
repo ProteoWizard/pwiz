@@ -190,3 +190,11 @@ run-if-exists SpectrumList_DemuxTest.cpp pwiz_analysis_spectrum_processing_basic
     : SpectrumList_DemuxTest # target name
     : # default-build
     ;
+
+run-if-exists SpectrumList_DiaUmpireTest.cpp pwiz_analysis_spectrum_processing_basic 
+    : # args
+    : SpectrumList_DiaUmpireTest.data/tests.txt # input-files
+    : # requirements
+    : SpectrumList_DiaUmpireTest # target name
+    : # default-build
+    ;

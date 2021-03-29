@@ -178,7 +178,7 @@
     <value>4</value>
   </data>
   <metadata name="helpTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
+    <value>155, 17</value>
   </metadata>
   <data name="cbMissedCleavages.Items" xml:space="preserve">
     <value>0</value>
@@ -1024,6 +1024,87 @@ injected into the mass spectrometer.</value>
   <data name="&gt;&gt;importFastaPage.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
+  <data name="label2.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Arial Rounded MT Bold, 12pt</value>
+  </data>
+  <data name="label2.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
+    <value>12, 9</value>
+  </data>
+  <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
+    <value>350, 18</value>
+  </data>
+  <data name="label2.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="label2.Text" xml:space="preserve">
+    <value>Adjust Conversion Settings</value>
+  </data>
+  <data name="&gt;&gt;label2.Name" xml:space="preserve">
+    <value>label2</value>
+  </data>
+  <data name="&gt;&gt;label2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label2.Parent" xml:space="preserve">
+    <value>converterSettingsTitlePanel</value>
+  </data>
+  <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="converterSettingsTitlePanel.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Top</value>
+  </data>
+  <data name="converterSettingsTitlePanel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 3</value>
+  </data>
+  <data name="converterSettingsTitlePanel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>388, 43</value>
+  </data>
+  <data name="converterSettingsTitlePanel.TabIndex" type="System.Int32, mscorlib">
+    <value>17</value>
+  </data>
+  <data name="&gt;&gt;converterSettingsTitlePanel.Name" xml:space="preserve">
+    <value>converterSettingsTitlePanel</value>
+  </data>
+  <data name="&gt;&gt;converterSettingsTitlePanel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;converterSettingsTitlePanel.Parent" xml:space="preserve">
+    <value>converterSettingsPage</value>
+  </data>
+  <data name="&gt;&gt;converterSettingsTitlePanel.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="converterSettingsPage.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="converterSettingsPage.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="converterSettingsPage.Size" type="System.Drawing.Size, System.Drawing">
+    <value>394, 479</value>
+  </data>
+  <data name="converterSettingsPage.TabIndex" type="System.Int32, mscorlib">
+    <value>9</value>
+  </data>
+  <data name="converterSettingsPage.Text" xml:space="preserve">
+    <value>7</value>
+  </data>
+  <data name="&gt;&gt;converterSettingsPage.Name" xml:space="preserve">
+    <value>converterSettingsPage</value>
+  </data>
+  <data name="&gt;&gt;converterSettingsPage.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;converterSettingsPage.Parent" xml:space="preserve">
+    <value>wizardPagesImportPeptideSearch</value>
+  </data>
+  <data name="&gt;&gt;converterSettingsPage.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
   <data name="lblSearchSettings.Font" type="System.Drawing.Font, System.Drawing">
     <value>Arial Rounded MT Bold, 12pt</value>
   </data>
@@ -1088,7 +1169,7 @@ injected into the mass spectrometer.</value>
     <value>7</value>
   </data>
   <data name="ddaSearchSettingsPage.Text" xml:space="preserve">
-    <value>7</value>
+    <value>8</value>
   </data>
   <data name="&gt;&gt;ddaSearchSettingsPage.Name" xml:space="preserve">
     <value>ddaSearchSettingsPage</value>
@@ -1100,7 +1181,7 @@ injected into the mass spectrometer.</value>
     <value>wizardPagesImportPeptideSearch</value>
   </data>
   <data name="&gt;&gt;ddaSearchSettingsPage.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>7</value>
   </data>
   <data name="lblDDASearch.Font" type="System.Drawing.Font, System.Drawing">
     <value>Arial Rounded MT Bold, 12pt</value>
@@ -1166,7 +1247,7 @@ injected into the mass spectrometer.</value>
     <value>8</value>
   </data>
   <data name="ddaSearch.Text" xml:space="preserve">
-    <value>8</value>
+    <value>9</value>
   </data>
   <data name="&gt;&gt;ddaSearch.Name" xml:space="preserve">
     <value>ddaSearch</value>
@@ -1178,7 +1259,7 @@ injected into the mass spectrometer.</value>
     <value>wizardPagesImportPeptideSearch</value>
   </data>
   <data name="&gt;&gt;ddaSearch.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>8</value>
   </data>
   <data name="wizardPagesImportPeptideSearch.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 0</value>
@@ -1193,7 +1274,7 @@ injected into the mass spectrometer.</value>
     <value>wizardPagesImportPeptideSearch</value>
   </data>
   <data name="&gt;&gt;wizardPagesImportPeptideSearch.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.WizardPages, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.WizardPages, Skyline-daily, Version=20.1.1.234, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;wizardPagesImportPeptideSearch.Parent" xml:space="preserve">
     <value>$this</value>
@@ -1259,7 +1340,7 @@ injected into the mass spectrometer.</value>
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=20.1.1.234, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;helpTip.Name" xml:space="preserve">
     <value>helpTip</value>
@@ -1271,6 +1352,6 @@ injected into the mass spectrometer.</value>
     <value>ImportPeptideSearchDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=20.1.1.234, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

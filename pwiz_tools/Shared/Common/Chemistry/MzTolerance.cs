@@ -17,10 +17,11 @@
  */
 
 using System;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.Chemistry
 {
-    public class MzTolerance
+    public class MzTolerance : IAuditLogObject
     {
         public enum Units { mz, ppm };
 
@@ -70,5 +71,13 @@ namespace pwiz.Common.Chemistry
         {
             return (a < b - tolerance);
         }
+
+        public override string ToString()
+        {
+            return $@"{Value}{Enum.GetName(typeof(Units), Unit)}";
+        }
+
+        public string AuditLogText => ToString();
+        public bool IsName => false;
     };
 }
