@@ -11359,6 +11359,15 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
   <data name="DiaUmpireDdaConverter_Run_Re_using_existing_DiaUmpire_file__with_equivalent_settings__for__0_" xml:space="preserve">
     <value>Re-using existing DIA-Umpire file (with equivalent settings) for {0}</value>
   </data>
+  <data name="SkylineWindow_ImportMassList_Analyzing_input__0_" xml:space="preserve">
+    <value>Analyzing input {0}</value>
+  </data>
+  <data name="ImportTransitionListColumnSelectDlg_CheckForErrors_Checking_for_errors___" xml:space="preserve">
+    <value>Checking for errors...</value>
+  </data>
+  <data name="ModificationMatcher_CreateMatches_Matching_modifications" xml:space="preserve">
+    <value>Matching modifications</value>
+  </data>
   <data name="HeatMapGraph_RefreshData_Heat_Map" xml:space="preserve">
     <value>Heat Map</value>
   </data>

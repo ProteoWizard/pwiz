@@ -135,7 +135,7 @@ struct HandlerPrecursor : public SAXParser::Handler
 
         if (name == "precursorMz")
         {
-            string precursorScanNum, precursorIntensity, precursorCharge, possibleCharges, activationMethod, windowWideness, driftTime, collisionalCrossSection;
+            string precursorScanNum, precursorIntensity, precursorCharge, possibleCharges, activationMethod, windowWideness, driftTime, collisionalCrossSection, invK0;
             getAttribute(attributes, "precursorScanNum", precursorScanNum);
             getAttribute(attributes, "precursorIntensity", precursorIntensity);
             getAttribute(attributes, "precursorCharge", precursorCharge);
@@ -144,6 +144,7 @@ struct HandlerPrecursor : public SAXParser::Handler
             getAttribute(attributes, "windowWideness", windowWideness);
             getAttribute(attributes, "DT", driftTime);
             getAttribute(attributes, "CCS", collisionalCrossSection);
+            getAttribute(attributes, "invK0", invK0);
 
             if (!precursorScanNum.empty()) // precursorScanNum is an optional element
                 precursor->spectrumID = id::translateScanNumberToNativeID(nativeIdFormat, precursorScanNum);
@@ -195,6 +196,8 @@ struct HandlerPrecursor : public SAXParser::Handler
 
             if (!driftTime.empty())
                 scan->set(MS_ion_mobility_drift_time, driftTime, UO_millisecond);
+            else if (!invK0.empty())
+                scan->set(MS_inverse_reduced_ion_mobility, invK0, MS_Vs_cm_2);
 
             if (!collisionalCrossSection.empty())
                 scan->userParams.emplace_back("CCS", collisionalCrossSection);

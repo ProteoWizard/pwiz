@@ -65,6 +65,10 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void TestDiaSearchVariableWindows()
         {
+            // TODO(matt.chambers): Fix "Cannot pass a GCHandle across AppDomains" error with MSTest
+            if (IsMsTestRun)
+                return;
+
             TestFilesZip = @"TestFunctional\DiaSearchTest.zip";
 
             _testDetails = new TestDetails
@@ -98,6 +102,10 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void TestDiaSearchFixedWindows()
         {
+            // TODO(matt.chambers): Fix "Cannot pass a GCHandle across AppDomains" error with MSTest
+            if (IsMsTestRun)
+                return;
+
             TestFilesZip = @"TestFunctional\DiaSearchTest.zip";
 
             string diaUmpireTestDataPath = TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.DiaUmpire);
@@ -272,6 +280,7 @@ namespace pwiz.SkylineTestFunctional
 
                 importPeptideSearchDlg.ConverterSettingsControl.InstrumentPreset = DiaUmpire.Config.InstrumentPreset.TripleTOF;
                 importPeptideSearchDlg.ConverterSettingsControl.EstimateBackground = false;
+                importPeptideSearchDlg.ConverterSettingsControl.UseMzMlSpillFile = true; // mz5 spill file leaks
                 importPeptideSearchDlg.ConverterSettingsControl.AdditionalSettings =
                     new Dictionary<string, AbstractDdaSearchEngine.Setting>
                     {
