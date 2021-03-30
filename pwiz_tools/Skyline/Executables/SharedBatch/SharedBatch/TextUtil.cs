@@ -14,6 +14,8 @@ namespace SharedBatch
         public const string EXT_SKY_ZIP = ".sky.zip";
         public const string EXT_SKYR = ".skyr";
         public const string EXT_SKYD = ".skyd";
+        public const string EXT_QCFG = ".qcfg";
+        public const string EXT_BCFG = ".bcfg";
         public const string EXT_R = ".R";
         public const string EXT_CSV = ".csv";
         public const string EXT_LOG = ".log";
@@ -32,6 +34,16 @@ namespace SharedBatch
         public static string FILTER_SKYR
         {
             get { return FileDialogFilter(Resources.TextUtil_FILTER_SKYR_Skyline_Reports, EXT_SKYR); }
+        }
+
+        public static string FILTER_BCFG
+        {
+            get { return FileDialogFilter(Resources.TextUtil_FILTER_BCFG_Skyline_Batch_Configuration_Files, EXT_BCFG); }
+        }
+
+        public static string FILTER_QCFG
+        {
+            get { return FileDialogFilter(Resources.TextUtil_FILTER_QCFG_AutoQC_Configuration_Files, EXT_QCFG); }
         }
 
         public static string FILTER_CSV
@@ -80,7 +92,11 @@ namespace SharedBatch
             {
                 directoryName = Path.GetDirectoryName(directory);
             }
-            catch (Exception) 
+            catch (Exception)
+            {
+                directoryName = null;
+            }
+            if (directoryName == null)
             {
                 if (!string.IsNullOrEmpty(lastEnteredPath))
                     return GetInitialDirectory(lastEnteredPath);

@@ -22,6 +22,11 @@ namespace AutoQCTest
         [TestMethod]
         public async Task TestPublishToPanorama()
         {
+            Assert.IsTrue(File.Exists(TestUtils.GetTestFilePath("QEP_2015_0424_RJ_2015_04\\QEP_2015_0424_RJ.sky")),
+                "Could not find Skyline file, nothing to import data into.");
+            Assert.IsTrue(File.Exists(TestUtils.GetTestFilePath("PanoramaTestConfig\\QEP_2015_0424_RJ_05_prtc.raw")),
+                "Data file is not in configuration folder, nothing to upload.");
+
             File.Copy(TestUtils.GetTestFilePath("QEP_2015_0424_RJ_2015_04\\QEP_2015_0424_RJ.sky"), TestUtils.GetTestFilePath("QEP_2015_0424_RJ.sky"), true);
             File.Copy(TestUtils.GetTestFilePath("QEP_2015_0424_RJ_2015_04\\QEP_2015_0424_RJ.skyd"), TestUtils.GetTestFilePath("QEP_2015_0424_RJ.skyd"), true);
 

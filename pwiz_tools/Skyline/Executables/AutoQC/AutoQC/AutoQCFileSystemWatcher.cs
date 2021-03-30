@@ -169,7 +169,7 @@ namespace AutoQC
         {
             if (_cancelled)
             {
-                _logger.Log(Resources.AutoQCFileSystemWatcher_Restart_FileSystemWatcher_cancelled_);
+                _logger.Log(Resources.AutoQCFileSystemWatcher_Restart_FileSystemWatcher_canceled_);
                 return;
             }
 
@@ -296,7 +296,7 @@ namespace AutoQC
                 Thread.Sleep(WAIT_60SEC);
                 if (_cancelled)
                 {
-                    _logger.Log(Resources.AutoQCFileSystemWatcher_Restart_FileSystemWatcher_cancelled_);
+                    _logger.Log(Resources.AutoQCFileSystemWatcher_Restart_FileSystemWatcher_canceled_);
                     return;
                 }
             }
