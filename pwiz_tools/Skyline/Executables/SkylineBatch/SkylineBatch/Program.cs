@@ -18,6 +18,7 @@
 
 
 using System;
+using System.Collections.Generic;
 using System.Configuration;
 using System.Deployment.Application;
 using System.Drawing;
@@ -31,12 +32,20 @@ using SharedBatch;
 
 namespace SkylineBatch
 {
-    class Program
+    public class Program
     {
         private static string _version;
-        
+
+        #region For tests
+        public static MainForm MainWindow { get; private set; }     // Accessed by functional tests
+        // Parameters for running tests
+        public static bool FunctionalTest { get; set; }             // Set to true by AbstractFunctionalTest
+        public static List<Exception> TestExceptions { get; set; }  // To avoid showing unexpected exception UI during tests and instead log them as failures
+        // public static IList<string> PauseForms { get; set; }        // List of forms to pause after displaying.
+        #endregion
+
         [STAThread]
-        public static void Main(string[] args)
+        public static void Main()
         {
             ProgramLog.Init("SkylineBatch");
             Application.EnableVisualStyles();
@@ -88,14 +97,14 @@ namespace SkylineBatch
                 
                 if (!InitSkylineSettings()) return;
                 RInstallations.FindRDirectory();
-                
-                var form = new MainForm();
+
+                MainWindow = new MainForm();
                 // CurrentDeployment is null if it isn't network deployed.
                 _version = ApplicationDeployment.IsNetworkDeployed
                     ? ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString()
                     : string.Empty;
-                form.Text = Version();
-                Application.Run(form);
+                MainWindow.Text = Version();
+                Application.Run(MainWindow);
 
                 mutex.ReleaseMutex();
             }
@@ -137,6 +146,14 @@ namespace SkylineBatch
         {
             // Make sure we can negotiate with HTTPS servers that demand TLS 1.2 (default in dotNet 4.6, but has to be turned on in 4.5)
             ServicePointManager.SecurityProtocol |= (SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12);  
+        }
+
+        public static void AddTestException(Exception exception)
+        {
+            lock (TestExceptions)
+            {
+                TestExceptions.Add(exception);
+            }
         }
     }
 }

@@ -22,7 +22,7 @@ using System.Configuration;
 
 namespace SkylineBatch.Properties
 {
-    internal sealed partial class Settings
+    public sealed partial class Settings
     {
 
         
@@ -42,7 +42,13 @@ namespace SkylineBatch.Properties
             }
             set => this["RVersions"] = value; // Not L10N
         }
+
+        public new void Reset()
+        {
+            base.Reset();
+            SharedBatch.Properties.Settings.Default.Reset();
+        }
+
     }
 
-    
 }

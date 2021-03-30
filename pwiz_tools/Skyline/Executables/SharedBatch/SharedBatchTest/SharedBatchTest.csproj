@@ -3,11 +3,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{415D56D0-D83D-45D2-A833-E2D7E46E7A69}</ProjectGuid>
+    <ProjectGuid>{4955F974-381E-4902-8BAD-BAC7174CFC9F}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>SkylineBatchTest</RootNamespace>
-    <AssemblyName>SkylineBatchTest</AssemblyName>
+    <RootNamespace>SharedBatchTest</RootNamespace>
+    <AssemblyName>SharedBatchTest</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
@@ -36,13 +36,24 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="SharedBatchTest">
-      <HintPath>..\..\SharedBatch\SharedBatchTest\bin\Debug\SharedBatchTest.dll</HintPath>
+    <Reference Include="DotNetZip">
+      <HintPath>..\..\..\..\Shared\Lib\DotNetZip\DotNetZip.dll</HintPath>
+    </Reference>
+    <Reference Include="JetBrains.Annotations">
+      <HintPath>..\..\..\..\Shared\Lib\JetBrains.Annotations.dll</HintPath>
+    </Reference>
+    <Reference Include="log4net, Version=1.2.15.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\Shared\Lib\log4net.dll</HintPath>
+    </Reference>
+    <Reference Include="pwiz.Common">
+      <HintPath>..\..\..\bin\x64\Release\pwiz.Common.dll</HintPath>
+    </Reference>
+    <Reference Include="pwiz.CommonUtil, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\bin\x64\Release\pwiz.CommonUtil.dll</HintPath>
     </Reference>
     <Reference Include="System" />
-    <Reference Include="System.Collections.Immutable, Version=5.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-    <Reference Include="System.Configuration" />
-    <Reference Include="System.Numerics" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
   </ItemGroup>
@@ -59,30 +70,25 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
-    <Compile Include="AbstractSkylineBatchFunctionalTest.cs" />
-    <Compile Include="TemplateFileDependencyTest.cs" />
-    <Compile Include="SkylineSettingsTest.cs" />
+    <Compile Include="AbstractBatchFunctionalTest.cs" />
+    <Compile Include="AbstractBaseFunctionalTest.cs" />
+    <Compile Include="AbstractUnitTest.cs" />
+    <Compile Include="AssertEx.cs" />
+    <Compile Include="AutoQCLoaderTest.cs" />
+    <Compile Include="ExtensionTestContext.cs" />
+    <Compile Include="NormalizedValueCalculatorVerifier.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ConfigRunnerTest.cs" />
-    <Compile Include="TestUtils.cs" />
-    <Compile Include="SkylineBatchConfigTest.cs" />
-    <Compile Include="SkylineBatchLoggerTest.cs" />
-    <Compile Include="ConfigManagerTest.cs" />
-    <Compile Include="ConfigManagerThreadingTest.cs" />
-    <Compile Include="FunctionalTest.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\SharedBatch\SharedBatch\SharedBatch.csproj">
-      <Project>{9660e7b1-a0ad-4c2b-a395-350d4055640a}</Project>
-      <Name>SharedBatch</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\SkylineBatch\SkylineBatch.csproj">
-      <Project>{7ab2d7ad-6760-450e-bccd-b08502307b99}</Project>
-      <Name>SkylineBatch</Name>
-    </ProjectReference>
+    <Compile Include="TestFilesDir.cs" />
+    <Compile Include="Helpers.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Test\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SharedBatch\SharedBatch.csproj">
+      <Project>{9660e7b1-a0ad-4c2b-a395-350d4055640a}</Project>
+      <Name>SharedBatch</Name>
+    </ProjectReference>
   </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">

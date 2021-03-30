@@ -94,6 +94,11 @@ namespace SkylineBatch
         
         private void btnNewConfig_Click(object sender, EventArgs e)
         {
+            HandleNewConfigClick();
+        }
+
+        public void HandleNewConfigClick()
+        {
             ProgramLog.Info(Resources.MainForm_btnNewConfig_Click_Creating_a_new_configuration_);
             var initialConfigValues = (SkylineBatchConfig)_configManager.GetLastModified();
             var configForm = new SkylineBatchConfigForm(this, _rDirectorySelector, initialConfigValues, ConfigAction.Add, false, _configManager.GetRefinedTemplates());
@@ -697,6 +702,15 @@ namespace SkylineBatch
         public DialogResult DisplayLargeQuestion(string message)
         {
             return AlertDlg.ShowLargeQuestion(this, Program.AppName(), message);
+        }
+
+        #endregion
+
+        #region For Tests
+
+        public int ConfigCount()
+        {
+            return listViewConfigs.Items.Count;
         }
 
         #endregion

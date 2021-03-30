@@ -459,7 +459,7 @@ namespace SkylineBatch
             return new SkylineBatchConfig(name, enabled, DateTime.Now, mainSettings, fileSettings, refineSettings, reportSettings, skylineSettings);
         }
 
-        private void Save()
+        public void Save()
         {
             SkylineBatchConfig newConfig;
             try
