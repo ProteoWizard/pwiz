@@ -27,7 +27,7 @@ namespace SkylineBatchTest
             {
                 try
                 {
-                    configManager.AddConfiguration(addingConfig);
+                    configManager.UserAddConfig(addingConfig);
                 }
                 catch (Exception e)
                 {
@@ -95,7 +95,7 @@ namespace SkylineBatchTest
             {
                 try
                 {
-                    configManager.RemoveSelected();
+                    configManager.UserRemoveSelected();
                 }
                 catch (Exception e)
                 {
@@ -132,7 +132,7 @@ namespace SkylineBatchTest
                 try
                 {
                     configManager.SelectConfig(random.Next(0,2));
-                    configManager.ReplaceSelectedConfig(newConfig);
+                    configManager.UserReplaceSelected(newConfig);
                 }
                 catch (Exception e)
                 {
