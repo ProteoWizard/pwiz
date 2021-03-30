@@ -25,13 +25,12 @@ namespace SkylineBatch.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string RDir {
+        public global::System.Collections.Generic.List<System.String> RDirs {
             get {
-                return ((string)(this["RDir"]));
+                return ((global::System.Collections.Generic.List<System.String>)(this["RDirs"]));
             }
             set {
-                this["RDir"] = value;
+                this["RDirs"] = value;
             }
         }
     }

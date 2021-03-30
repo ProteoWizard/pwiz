@@ -33,9 +33,10 @@ namespace SkylineBatch
 
         private readonly SkylineBatchConfigManager _configManager;
         private readonly Logger _skylineBatchLogger;
+        private readonly RDirectorySelector _rDirectorySelector;
         private bool _loaded;
-        private ColumnWidthCalculator _listViewColumnWidths;
-        private bool _resizing;
+        private readonly ColumnWidthCalculator _listViewColumnWidths;
+        private bool _showRefineStep;
 
         public MainForm()
         {
@@ -46,21 +47,21 @@ namespace SkylineBatch
             _skylineBatchLogger = new Logger(logPath, Program.AppName() + TextUtil.EXT_LOG, this);
             btnRunOptions.Text = char.ConvertFromUtf32(0x2BC6);
             toolStrip1.Items.Insert(3,new ToolStripSeparator());
-            _listViewColumnWidths = new ColumnWidthCalculator(new []
-            {
-                listViewConfigName.Width,
-                listViewModified.Width,
-                listViewStatus.Width
-            });
+            _listViewColumnWidths = new ColumnWidthCalculator(listViewConfigs);
             listViewConfigs.ColumnWidthChanged += listViewConfigs_ColumnWidthChanged;
             ProgramLog.Info(Resources.MainForm_MainForm_Loading_configurations_from_saved_settings_);
             _configManager = new SkylineBatchConfigManager(_skylineBatchLogger, this);
+            _rDirectorySelector = new RDirectorySelector(this, _configManager);
 
             UpdateUiConfigurations();
-            UpdateLabelVisibility();
+            ListViewSizeChanged();
             UpdateUiLogFiles();
 
-            Shown += ((sender, args) => { _loaded = true; });
+            Shown += ((sender, args) =>
+            {
+                _loaded = true;
+                _rDirectorySelector.AddIfNecassary();
+            });
         }
 
         private void RunUi(Action action)
@@ -84,6 +85,9 @@ namespace SkylineBatch
             catch (ObjectDisposedException)
             {
             }
+            catch (InvalidOperationException)
+            {
+            }
         }
 
         #region Manipulating configuration list
@@ -92,20 +96,26 @@ namespace SkylineBatch
         {
             ProgramLog.Info(Resources.MainForm_btnNewConfig_Click_Creating_a_new_configuration_);
             var initialConfigValues = (SkylineBatchConfig)_configManager.GetLastModified();
-            var configForm = new SkylineBatchConfigForm(this, initialConfigValues, ConfigAction.Add, false);
+            var configForm = new SkylineBatchConfigForm(this, _rDirectorySelector, initialConfigValues, ConfigAction.Add, false, _configManager.GetRefinedTemplates());
             configForm.ShowDialog();
+        }
+
+        public void AssertUniqueConfigName(string newName, bool replacing)
+        {
+            _configManager.AssertUniqueName(newName, replacing);
         }
 
         public void AddConfiguration(IConfig config)
         {
-            _configManager.AddConfiguration(config);
+            _configManager.UserAddConfig(config);
             UpdateUiConfigurations();
+            ListViewSizeChanged();
             UpdateUiLogFiles();
         }
 
         public void ReplaceSelectedConfig(IConfig config)
         {
-            _configManager.ReplaceSelectedConfig(config);
+            _configManager.UserReplaceSelected(config);
             UpdateUiConfigurations();
             UpdateUiLogFiles();
         }
@@ -121,20 +131,46 @@ namespace SkylineBatch
             catch (ArgumentException)
             {
                 if (configRunner.IsRunning()) throw new Exception("Invalid configuration cannot be running.");
-                var validateConfigForm = new InvalidConfigSetupForm(config, _configManager, this);
+                var validateConfigForm = new InvalidConfigSetupForm(this, config, _configManager, _rDirectorySelector);
                 validateConfigForm.ShowDialog();
+
                 if (validateConfigForm.DialogResult != DialogResult.OK)
                     return;
-                config = validateConfigForm.ValidConfig;
             }
-            var configForm = new SkylineBatchConfigForm(this, config, ConfigAction.Edit, configRunner.IsBusy());
+            var configForm = new SkylineBatchConfigForm(this, _rDirectorySelector, _configManager.GetSelectedConfig(), ConfigAction.Edit, configRunner.IsBusy(), _configManager.GetRefinedTemplates());
             configForm.ShowDialog();
         }
 
         private void btnCopy_Click(object sender, EventArgs e)
         {
-            var configForm = new SkylineBatchConfigForm(this, _configManager.GetSelectedConfig(), ConfigAction.Copy, false);
+            var configForm = new SkylineBatchConfigForm(this, _rDirectorySelector, _configManager.GetSelectedConfig(), ConfigAction.Copy, false, _configManager.GetRefinedTemplates());
             configForm.ShowDialog();
+        }
+
+        public void ReplaceAllSkylineVersions(SkylineSettings skylineSettings)
+        {
+            try
+            {
+                skylineSettings.Validate();
+            }
+            catch (ArgumentException)
+            {
+                // Only ask to replace Skyline settings if new settings are valid
+                return;
+            }
+            if (DialogResult.Yes ==
+                DisplayQuestion(Resources.MainForm_ReplaceAllSkylineVersions_Do_you_want_to_use_this_Skyline_version_for_all_configurations_))
+            {
+                try
+                {
+                    _configManager.ReplaceSkylineSettings(skylineSettings);
+                }
+                catch (ArgumentException e)
+                {
+                    DisplayError(e.Message);
+                }
+                UpdateUiConfigurations();
+            }
         }
 
         private void listViewConfigs_ItemCheck(object sender, ItemCheckEventArgs e)
@@ -145,7 +181,9 @@ namespace SkylineBatch
             {
                 e.NewValue = e.CurrentValue;
                 DisplayError(errorMessage);
+                return;
             }
+            UpdateRunBatchSteps();
         }
 
         private void listViewConfigs_MouseUp(object sender, MouseEventArgs e)
@@ -196,8 +234,9 @@ namespace SkylineBatch
 
         private void btnDelete_Click(object sender, EventArgs e)
         {
-            _configManager.RemoveSelected();
+            _configManager.UserRemoveSelected();
             UpdateUiConfigurations();
+            ListViewSizeChanged();
         }
 
         #endregion
@@ -207,6 +246,7 @@ namespace SkylineBatch
         private void btnOpenAnalysis_Click(object sender, EventArgs e)
         {
             var config = _configManager.GetSelectedConfig();
+            config.MainSettings.CreateAnalysisFolderIfNonexistent();
             MainFormUtils.OpenFileExplorer(config.Name, _configManager.IsSelectedConfigValid(),
                 Resources.MainForm_btnOpenAnalysis_Click_analysis_folder,
                 config.MainSettings.AnalysisFolderPath, this);
@@ -256,12 +296,20 @@ namespace SkylineBatch
             {
                 if (batchRunDropDown.Items[i].Text == e.ClickedItem.Text)
                     selectedIndex = i;
+            }
+            CheckDropDownOption(selectedIndex);
+            RunBatch();
+        }
+
+        private void CheckDropDownOption(int index)
+        {
+            for (int i = 0; i < batchRunDropDown.Items.Count; i++)
+            {
                 ((ToolStripMenuItem)batchRunDropDown.Items[i]).Checked = false;
             }
-            ((ToolStripMenuItem)batchRunDropDown.Items[selectedIndex]).Checked = true;
-            btnRunBatch.TextAlign = selectedIndex == 0 ? ContentAlignment.MiddleCenter : ContentAlignment.MiddleLeft;
-            btnRunBatch.Text = e.ClickedItem.Text.Insert(1,"&");
-            RunBatch();
+            ((ToolStripMenuItem)batchRunDropDown.Items[index]).Checked = true;
+            btnRunBatch.TextAlign = index == 0 ? ContentAlignment.MiddleCenter : ContentAlignment.MiddleLeft;
+            btnRunBatch.Text = batchRunDropDown.Items[index].Text.Insert(1, "&");
         }
 
         private void btnRunBatch_Click(object sender, EventArgs e)
@@ -271,22 +319,23 @@ namespace SkylineBatch
 
         private void RunBatch()
         {
+            var running = false;
             for (int i = 1; i <= batchRunDropDown.Items.Count; i++)
             {
                 if (((ToolStripMenuItem)batchRunDropDown.Items[i - 1]).Checked)
                 {
-                    _ =_configManager.RunAllEnabled(i); // configurations run asynchronously
+                    var stepNumber = i;
+                    if (!_showRefineStep && i > 2)
+                         stepNumber += 1; // step 3 and 4 become step 4 and 5 when refine step is hidden
+                    running = _configManager.StartBatchRun(stepNumber);
                     break;
                 }
             }
             // update ui log and switch to log tab
-            if (_configManager.ConfigsRunning().Count > 0)
+            if (running)
             {
                 comboLogList.SelectedIndex = 0;
-                RunUi(() =>
-                {
-                    tabMain.SelectTab(tabLog);
-                });
+                tabMain.SelectTab(tabLog);
             }
         }
 
@@ -306,14 +355,18 @@ namespace SkylineBatch
             RunUi(() =>
             {
                 ProgramLog.Info("Updating configurations");
-                listViewConfigs.Items.Clear();
+                var topItemIndex = listViewConfigs.TopItem != null ? listViewConfigs.TopItem.Index : -1;
                 listViewConfigs.ItemCheck -= listViewConfigs_ItemCheck;
                 var listViewItems = _configManager.ConfigsListViewItems();
+                listViewConfigs.Items.Clear();
                 foreach (var lvi in listViewItems)
                     listViewConfigs.Items.Add(lvi);
+                if (topItemIndex != -1 && listViewConfigs.Items.Count > topItemIndex)
+                    listViewConfigs.TopItem = listViewConfigs.Items[topItemIndex];
                 listViewConfigs.ItemCheck += listViewConfigs_ItemCheck;
                 UpdateLabelVisibility();
                 UpdateButtonsEnabled();
+                UpdateRunBatchSteps();
             });
 
         }
@@ -355,6 +408,45 @@ namespace SkylineBatch
             }
         }
 
+        private void UpdateRunBatchSteps()
+        {
+            if (_showRefineStep != _configManager.WillRefine())
+            {
+                _showRefineStep = _configManager.WillRefine();
+                var oldChecked = 0;
+                for (int i = 0; i < batchRunDropDown.Items.Count; i++)
+                {
+                    if (((ToolStripMenuItem)batchRunDropDown.Items[i]).Checked)
+                    {
+                        oldChecked = i;
+                        break;
+                    }
+                }
+                    batchRunDropDown.Items.Clear();
+                batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Run_All_Steps);
+                batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Run_from_step_2__data_import);
+                if (_showRefineStep)
+                {
+                    batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Run_from_step_3__refine_file);
+                    batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Run_from_step_4__export_reports);
+                    batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Run_from_step_5__run_R_scripts);
+                }
+                else
+                {
+                    batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Run_from_step_3__export_reports);
+                    batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Run_from_step_4__run_R_scripts);
+                }
+
+                var newChecked = oldChecked;
+                if (oldChecked == 2 && _showRefineStep)
+                    newChecked += 1;
+                else if (newChecked >= 3)
+                    newChecked = _showRefineStep ? oldChecked + 1 : oldChecked - 1;
+                
+                CheckDropDownOption(newChecked);
+            }
+        }
+
         #endregion
         
         #region Import / export
@@ -362,18 +454,21 @@ namespace SkylineBatch
         private void btnImport_Click(object sender, EventArgs e)
         {
             var dialog = new OpenFileDialog();
-            dialog.Filter = TextUtil.FILTER_XML;
+            dialog.Filter = TextUtil.FILTER_BCFG;
             if (dialog.ShowDialog(this) != DialogResult.OK) return;
 
             var filePath = dialog.FileName;
 
             _configManager.Import(filePath);
             UpdateUiConfigurations();
+
+            if (!_rDirectorySelector.ShownDialog)
+                 _rDirectorySelector.AddIfNecassary();
         }
 
         private void btnExport_Click(object sender, EventArgs e)
         {
-            var shareForm = new ShareConfigsForm(this, _configManager, Program.Icon());
+            var shareForm = new ShareConfigsForm(this, _configManager, TextUtil.FILTER_BCFG, Program.Icon());
             shareForm.ShowDialog();
         }
         
@@ -385,6 +480,12 @@ namespace SkylineBatch
         {
             comboLogList.SelectedIndex = 0;
             tabMain.SelectTab(tabLog);
+        }
+
+        private void tabLog_Enter(object sender, EventArgs e)
+        {
+            if (_configManager.SelectedLog == 0)
+                ScrollToLogEnd(true);
         }
 
         private void comboLogList_SelectedIndexChanged(object sender, EventArgs e)
@@ -410,16 +511,18 @@ namespace SkylineBatch
             {
                 DisplayError(ex.Message);
             }
-            ScrollToLogEnd();
+            if (_configManager.SelectedLog == 0)
+                ScrollToLogEnd(true);
         }
 
-        private void ScrollToLogEnd()
+        private void ScrollToLogEnd(bool forceScroll = false)
         {
-            RunUi(() =>
+            // Only scroll to end if forced or user is already scrolled to bottom of log
+            if (forceScroll || textBoxLog.GetPositionFromCharIndex(textBoxLog.Text.Length - 1).Y <= textBoxLog.Height)
             {
                 textBoxLog.SelectionStart = textBoxLog.Text.Length;
                 textBoxLog.ScrollToCaret();
-            });
+            }
         }
 
         private void btnDeleteLogs_Click(object sender, EventArgs e)
@@ -435,16 +538,11 @@ namespace SkylineBatch
             Process.Start("explorer.exe", arg);
         }
 
-        public void LogToUi(string name, string text, bool scrollToEnd, bool trim)
+        public void LogToUi(string name, string text, bool trim)
         {
             RunUi(() =>
             {
-                if (comboLogList.SelectedIndex != 0) return; // don't log if old log is displayed
-                if (text.Contains("Fatal error: ") || text.Contains("Error: "))
-                {
-                    LogErrorToUi(name, text, scrollToEnd, trim);
-                    return;
-                }
+                if (_configManager.SelectedLog != 0) return; // don't log if old log is displayed
 
                 if (trim)
                 {
@@ -453,8 +551,6 @@ namespace SkylineBatch
                 
                 textBoxLog.AppendText(text);
                 textBoxLog.AppendText(Environment.NewLine);
-
-                if (!scrollToEnd) return;
 
                 ScrollToLogEnd();
             });
@@ -479,7 +575,7 @@ namespace SkylineBatch
             }
         }
 
-        public void LogErrorToUi(string name, string text, bool scrollToEnd, bool trim)
+        public void LogErrorToUi(string name, string text, bool trim)
         {
             RunUi(() =>
             {
@@ -494,6 +590,8 @@ namespace SkylineBatch
                 textBoxLog.AppendText(text);
                 textBoxLog.AppendText(Environment.NewLine);
                 textBoxLog.SelectionColor = textBoxLog.ForeColor;
+
+                ScrollToLogEnd();
             });
         }
 
@@ -529,31 +627,35 @@ namespace SkylineBatch
 
         #region Mainform event handlers and errors
 
-        private void listViewConfigs_Resize(object sender, EventArgs e)
+        private void MainForm_Resize(object sender, EventArgs e)
         {
-            _listViewColumnWidths.ListViewContainerResize(listViewConfigs.Width);
-            UpdateListViewColumns();
+            ListViewSizeChanged();
         }
 
-        private void UpdateListViewColumns()
+        private void tabConfigs_Enter(object sender, EventArgs e)
         {
-            _resizing = true;
-            listViewConfigName.Width = _listViewColumnWidths.Get(0);
-            listViewModified.Width = _listViewColumnWidths.Get(1);
-            listViewStatus.Width = -2;
-            _resizing = false;
+            // only toggle paint event when switching to main tab
+            tabConfigs.Paint += tabConfigs_Paint;
+        }
+
+        private void tabConfigs_Paint(object sender, PaintEventArgs e)
+        {
+            ListViewSizeChanged();
+            tabConfigs.Paint -= tabConfigs_Paint;
+        }
+
+        private void ListViewSizeChanged()
+        {
+            listViewConfigs.ColumnWidthChanged -= listViewConfigs_ColumnWidthChanged;
+            _listViewColumnWidths.ListViewContainerResize();
+            listViewConfigs.ColumnWidthChanged += listViewConfigs_ColumnWidthChanged;
         }
 
         private void listViewConfigs_ColumnWidthChanged(object sender, ColumnWidthChangedEventArgs e)
         {
-            if (_resizing) return;
-            _listViewColumnWidths.WidthsChangedByUser(new []
-            {
-                listViewConfigName.Width,
-                listViewModified.Width,
-                listViewStatus.Width
-            });
-            UpdateListViewColumns();
+            listViewConfigs.ColumnWidthChanged -= listViewConfigs_ColumnWidthChanged;
+            _listViewColumnWidths.WidthsChangedByUser();
+            listViewConfigs.ColumnWidthChanged += listViewConfigs_ColumnWidthChanged;
         }
         private void systray_icon_MouseDoubleClick(object sender, MouseEventArgs e)
         {

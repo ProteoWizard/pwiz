@@ -1434,7 +1434,7 @@ namespace pwiz.Skyline.Model
             firstAdded = null;
 
             // Is this a small molecule transition list, or trying to be?
-            var lines = inputs.ReadLines();
+            var lines = inputs.ReadLines(progressMonitor);
             if (SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(lines))
             {
                 try
@@ -1452,14 +1452,18 @@ namespace pwiz.Skyline.Model
                 try
                 {
                     if (importer == null)
-                        importer = PreImportMassList(inputs, progressMonitor);
+                        importer = PreImportMassList(inputs, progressMonitor, false);
                     if (importer != null)
                     {
                         IdentityPath nextAdd;
                         //peptideGroups = importer.Import(progressMonitor, out irtPeptides, out librarySpectra, out errorList).ToList();
                         var dictNameSeqAll = new Dictionary<string, FastaSequence>();
-                        peptideGroups = (List<PeptideGroupDocNode>)importer.DoImport(progressMonitor, dictNameSeqAll, irtPeptides, librarySpectra, errorList);
-
+                        var imported = importer.DoImport(progressMonitor, dictNameSeqAll, irtPeptides, librarySpectra, errorList);
+                        if (progressMonitor != null && progressMonitor.IsCanceled)
+                        {
+                            return this;
+                        }
+                        peptideGroups = (List<PeptideGroupDocNode>) imported;
                         docNew = AddPeptideGroups(peptideGroups, false, to, out firstAdded, out nextAdd);
                         var pepModsNew = importer.GetModifications(docNew);
                         if (!ReferenceEquals(pepModsNew, Settings.PeptideSettings.Modifications))
@@ -1477,10 +1481,10 @@ namespace pwiz.Skyline.Model
             return docNew;
         }
 
-        public MassListImporter PreImportMassList(MassListInputs inputs, IProgressMonitor progressMonitor)
+        public MassListImporter PreImportMassList(MassListInputs inputs, IProgressMonitor progressMonitor, bool tolerateErrors)
         {
             var importer = new MassListImporter(this, inputs);
-            if (importer.PreImport(progressMonitor, null))
+            if (importer.PreImport(progressMonitor, null, tolerateErrors))
                 return importer;
             return null;
         }

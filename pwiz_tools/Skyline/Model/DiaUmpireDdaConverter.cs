@@ -59,6 +59,11 @@ namespace pwiz.Skyline.Model
 
         public DiaUmpire.Config DiaUmpireConfig => _diaUmpireConfig;
 
+        public string DiaUmpireFileSuffix
+        {
+            get { return @"-diaumpire." + (_diaUmpireConfig.UseMzMlSpillFile ? @"mzML" : @"mz5"); }
+        }
+
         public override bool Run(IProgressMonitor progressMonitor, IProgressStatus status)
         {
             _parentProgressMonitor = progressMonitor;
@@ -78,7 +83,7 @@ namespace pwiz.Skyline.Model
 
                     // TODO/CONSIDER: source path may not be writable
                     string outputFilepath = Path.Combine(Path.GetDirectoryName(spectrumSource.GetFilePath()) ?? "",
-                        spectrumSource.GetFileNameWithoutExtension() + "-diaumpire.mz5");
+                        spectrumSource.GetFileNameWithoutExtension() + DiaUmpireFileSuffix);
                     ConvertedSpectrumSources[sourceIndex] = new MsDataFilePath(outputFilepath);
                     ++sourceIndex;
 
@@ -119,7 +124,7 @@ namespace pwiz.Skyline.Model
                         requireVendorCentroidedMS2: true,
                         progressMonitor: this))
                     {
-                        diaUmpire.WriteToFile(tmpFilepath, true);
+                        diaUmpire.WriteToFile(tmpFilepath, !_diaUmpireConfig.UseMzMlSpillFile);
                     }
 
                     if (progressMonitor?.IsCanceled == true)

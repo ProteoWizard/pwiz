@@ -115,13 +115,56 @@ namespace SkylineBatch
         }
         #endregion
 
+        #region Batch Commands
+
+        public const string MS_ONE_RESOLVING_POWER_COMMAND = "--full-scan-precursor-res={0}";
+        public const string MSMS_RESOLVING_POWER_COMMAND = "--full-scan-product-res={0}";
+        public const string RETENTION_TIME_COMMAND = "--full-scan-rt-filter-tolerance={0}";
+        public const string ADD_DECOYS_COMMAND = "--decoys-add={0}";
+        public const string TRAIN_MPROPHET_COMMAND =
+            "--reintegrate-model-name=\"{0}\" --reintegrate-create-model --reintegrate-overwrite-peaks";
+
+        public void WriteMsOneCommand(CommandWriter commandWriter)
+        {
+            if (!string.IsNullOrEmpty(MsOneResolvingPower))
+                commandWriter.Write(MS_ONE_RESOLVING_POWER_COMMAND, MsOneResolvingPower);
+        }
+
+        public void WriteMsMsCommand(CommandWriter commandWriter)
+        {
+            if (!string.IsNullOrEmpty(MsOneResolvingPower))
+                commandWriter.Write(MSMS_RESOLVING_POWER_COMMAND, MsMsResolvingPower);
+        }
+
+        public void WriteRetentionTimeCommand(CommandWriter commandWriter)
+        {
+            if (!string.IsNullOrEmpty(RetentionTime))
+                commandWriter.Write(RETENTION_TIME_COMMAND, RetentionTime);
+        }
+
+        public void WriteAddDecoysCommand(CommandWriter commandWriter)
+        {
+            if (AddDecoys)
+                commandWriter.Write(ADD_DECOYS_COMMAND, ShuffleDecoys ? "shuffle" : "reverse");
+        }
+
+        public void WriteTrainMProphetCommand(CommandWriter commandWriter, string modelName)
+        {
+            if (TrainMProphet)
+                commandWriter.Write(TRAIN_MPROPHET_COMMAND, modelName);
+        }
+
+        #endregion
+
         protected bool Equals(FileSettings other)
         {
-            return other.MsOneResolvingPower == MsOneResolvingPower &&
-                   other.MsMsResolvingPower == MsMsResolvingPower &&
-                   other.RetentionTime == RetentionTime &&
-                   other.AddDecoys == AddDecoys &&
-                   other.ShuffleDecoys == ShuffleDecoys;
+            // shuffle decoys only matters if add decoys is true
+            if (other.AddDecoys && AddDecoys && other.ShuffleDecoys != ShuffleDecoys)
+                return false;
+            return other.MsOneResolvingPower.Equals(MsOneResolvingPower) &&
+                   other.MsMsResolvingPower.Equals(MsMsResolvingPower) &&
+                   other.RetentionTime.Equals(RetentionTime) &&
+                   other.AddDecoys == AddDecoys;
         }
 
         public override bool Equals(object obj)
