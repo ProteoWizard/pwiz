@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Linq;
+using System.Windows.Forms;
 using SharedBatch.Properties;
 
 namespace SharedBatch
@@ -11,7 +12,7 @@ namespace SharedBatch
         {
             if (CanOpen(configName, configValid, folderDescription, mainUi))
             {
-                Process.Start("explorer.exe", "/n," + folderPath);
+                Process.Start(folderPath);
             }
         }
 
@@ -22,7 +23,7 @@ namespace SharedBatch
             {
                 mainUi.DisplayError(string.Format(Resources.MainFormUtils_OpenFileExplorer_Cannot_open_the__0__of_an_invalid_configuration_, fileDescription) + Environment.NewLine +
                                     string.Format(Resources.MainFormUtils_OpenFileExplorer_Please_fix___0___and_try_again_, configName));
-            }
+            } 
             return configValid;
         }
     }
@@ -30,45 +31,67 @@ namespace SharedBatch
 
     public class ColumnWidthCalculator
     {
-        private int[] _columnWidths;
-        private int _listViewWidth;
-
-        public ColumnWidthCalculator(int[] initialColumnWidths)
+        private ListView _listView;
+        private double[] _columnPercents; // ratio of column width to list view width (ie: column filling half the listView has value 0.5)
+        private int _buffer = 5; // buffer on last column to prevent horizontal scrollbar appearing
+        
+        public ColumnWidthCalculator(ListView listView)
         {
-            _listViewWidth = initialColumnWidths.Sum();
-            _columnWidths = new int[initialColumnWidths.Length];
-            initialColumnWidths.CopyTo(_columnWidths, 0);
+            _listView = listView;
+
+            _columnPercents = new double[listView.Columns.Count];
+            for (int i = 0; i < _columnPercents.Length - 1; i++)
+                _columnPercents[i] = (double)listView.Columns[i].Width / _listView.Width;
+            _columnPercents[_columnPercents.Length - 1] = 1 - _columnPercents.Sum();
         }
 
-        public int Get(int index)
+        private int ScrollBarWidth()
         {
-            return _columnWidths[index];
+            if (_listView.Items.Count == 0) return 0;
+            if (_listView.TopItem != _listView.Items[0] || _listView.Height < _listView.Items[_listView.Items.Count - 1].Bounds.Bottom + 10)
+                return SystemInformation.VerticalScrollBarWidth;
+            return 0;
         }
 
-        public void ListViewContainerResize(int newWidth)
+        private void UpdateListViewColumns()
         {
-            if (newWidth == 0) return;
-            for (int i = 0; i < _columnWidths.Length - 1; i++)
+            // keeps the same column width ratios when the form is resized
+            for (int i = 0; i < _listView.Columns.Count; i++)
+                _listView.Columns[i].Width = Get(i);
+        }
+
+        private int Get(int index)
+        {
+            var width = (int)Math.Floor(_columnPercents[index] * _listView.Width);
+            if (index == _columnPercents.Length - 1)
             {
-                _columnWidths[i] = (int) Math.Round(((double) _columnWidths[i] / _listViewWidth) * newWidth);
+                width -= ScrollBarWidth() + _buffer;
             }
-            _columnWidths[_columnWidths.Length - 1] = 0;
-            _columnWidths[_columnWidths.Length - 1] = newWidth - _columnWidths.Sum();
-            _listViewWidth = newWidth;
+            return width;
         }
 
-        public void WidthsChangedByUser(int[] changedColumnWidths)
+        public void ListViewContainerResize()
         {
-            for (int i = 0; i < _columnWidths.Length - 1; i++)
+            UpdateListViewColumns();
+        }
+
+        public void WidthsChangedByUser()
+        {
+            for (int i = 0; i < _columnPercents.Length - 1; i++)
             {
-                if (_columnWidths[i] != changedColumnWidths[i])
+                if (Get(i) != _listView.Columns[i].Width)
                 {
-                    if (changedColumnWidths[i] - _columnWidths[i] > _columnWidths[i + 1]) return;
-                    _columnWidths[i + 1] += _columnWidths[i] - changedColumnWidths[i];
-                    _columnWidths[i] = changedColumnWidths[i];
-                    return;
+                    // Only resize columns if it won't cover column to the right
+                    if (_listView.Columns[i].Width - Get(i) < Get(i + 1))
+                    {
+                        _columnPercents[i + 1] += (double)(Get(i) - _listView.Columns[i].Width) / _listView.Width;
+                        _columnPercents[i] = (double)_listView.Columns[i].Width / _listView.Width;
+                    }
+                    _columnPercents[_columnPercents.Length - 1] += 1 - _columnPercents.Sum(); // columnPercents must add up to 1
+                    break;
                 }
             }
+            UpdateListViewColumns();
         }
     }
 }

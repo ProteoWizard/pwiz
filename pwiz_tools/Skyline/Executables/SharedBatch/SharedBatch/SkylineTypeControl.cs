@@ -13,9 +13,14 @@ namespace SharedBatch
         //    - GetVariable() returns a SkylineSettings instance using the Type from the radioButtons and CommandPath from textSkylineInstallationPath
         //    - IsValid() uses skylineSettings.Validate to determine if the selection is valid.
 
-        public SkylineTypeControl(bool skyline, bool skylineDaily, bool custom, string path)
+        private readonly IMainUiControl _mainUiControl;
+        private readonly string _initialSkylineCmdPath;
+
+        public SkylineTypeControl(IMainUiControl mainUiControl, bool skyline, bool skylineDaily, bool custom, string path)
         {
             InitializeComponent();
+            _mainUiControl = mainUiControl;
+            _initialSkylineCmdPath = path;
 
             radioButtonSkyline.Enabled = SkylineInstallations.HasSkyline;
             radioButtonSkylineDaily.Enabled = SkylineInstallations.HasSkylineDaily;
@@ -73,7 +78,10 @@ namespace SharedBatch
             errorMessage = null;
             try
             {
-                new SkylineSettings(Type, CommandPath).Validate();
+                var newSettings = new SkylineSettings(Type, CommandPath);
+                newSettings.Validate();
+                if (!newSettings.CmdPath.Equals(_initialSkylineCmdPath))
+                    _mainUiControl.ReplaceAllSkylineVersions(newSettings);
                 return true;
             } catch (ArgumentException e)
             {
@@ -87,7 +95,7 @@ namespace SharedBatch
             using (var folderBrowserDlg = new FolderBrowserDialog())
             {
                 folderBrowserDlg.ShowNewFolderButton = false;
-                folderBrowserDlg.SelectedPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+                folderBrowserDlg.SelectedPath = TextUtil.GetInitialDirectory(textSkylineInstallationPath.Text, Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles));
                 if (folderBrowserDlg.ShowDialog() == DialogResult.OK)
                 {
                     textSkylineInstallationPath.Text = folderBrowserDlg.SelectedPath;

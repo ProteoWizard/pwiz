@@ -232,11 +232,11 @@ namespace pwiz.ProteowizardWrapper
                 precision = MSDataFile.Precision.Precision_32 // CONSIDER: is 64-bit precision needed for these pseudo-spectra?
             };
 
-            var ilr = new IterationListenerRegistry();
+            /*var ilr = new IterationListenerRegistry();
             if (_ilrMonitor != null)
-                ilr.addListenerWithTimer(_ilrMonitor, 5);
+                ilr.addListenerWithTimer(_ilrMonitor, 5);*/
             _msDataFile.run.spectrumList = SpectrumList;
-            MSDataFile.write(_msDataFile, outputFilepath, config, ilr);
+            MSDataFile.write(_msDataFile, outputFilepath, config/*, ilr*/);
         }
     }
 }
