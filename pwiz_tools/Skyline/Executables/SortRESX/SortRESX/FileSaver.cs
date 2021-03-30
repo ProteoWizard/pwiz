@@ -112,34 +112,6 @@ namespace SortRESX
             return backupFile;
         }
 
-        public static void SafeDelete(string path, bool ignoreExceptions = false)
-        {
-            if (ignoreExceptions)
-            {
-                try
-                {
-                    if (path != null && File.Exists(path))
-                        Helpers.TryTwice(() => File.Delete(path));
-                }
-                // ReSharper disable EmptyGeneralCatchClause
-                catch (Exception)
-                // ReSharper restore EmptyGeneralCatchClause
-                {
-                }
-
-                return;
-            }
-
-            Helpers.TryTwice(() => File.Delete(path));
-        }
-        public class DeleteException : IOException
-        {
-            public DeleteException(string message, Exception innerException)
-                : base(message, innerException)
-            {
-            }
-        }
-
         public void Dispose()
         {
             if (_stream != null)
