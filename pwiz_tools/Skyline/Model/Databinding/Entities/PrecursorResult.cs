@@ -96,14 +96,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public double? LibraryDotProduct { get { return ChromInfo.LibraryDotProduct; } }
         [Format(Formats.STANDARD_RATIO, NullValue = TextUtil.EXCEL_NA)]
         public double? IsotopeDotProduct { get { return ChromInfo.IsotopeDotProduct; } }
-        public double? AdjustedPrecursorArea
-        {
-            get
-            {
-                return
-            }
-        }
-
         public UserSet UserSetTotal { get { return ChromInfo.UserSet; } }
         [Format(NullValue = TextUtil.EXCEL_NA)]
         public int OptStep { get { return ChromInfo.OptimizationStep; } }
@@ -190,6 +182,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 });
             }
         }
+
 
         [InvariantDisplayName("PrecursorReplicateNote")]
         [Importable]
