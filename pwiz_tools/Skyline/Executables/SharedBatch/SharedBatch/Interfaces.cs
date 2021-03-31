@@ -28,6 +28,9 @@ namespace SharedBatch
         //                      otherwise replaced is the same as the current configuration (this)
         bool TryPathReplace(string oldRoot, string newRoot, out IConfig replaced);
 
+        // Returns a copy of the configuration with the new Skyline settings
+        IConfig ReplaceSkylineVersion(SkylineSettings skylineSettings);
+
         // Writes the configuration as xml
         void WriteXml(XmlWriter writer);
 
@@ -42,8 +45,8 @@ namespace SharedBatch
         Waiting,
         Starting,
         Running,
-        Cancelling,
-        Cancelled,
+        Canceling,
+        Canceled,
         Stopping,
         Stopped,
         Completed,
@@ -95,14 +98,18 @@ namespace SharedBatch
         // Updates the log files in the dropdown list based on the configManager
         void UpdateUiLogFiles();
 
+        // Checks there are no configurations with the name addingName
+        void AssertUniqueConfigName(string addingName, bool replacing);
+
         // Updates the Ui running buttons
         void UpdateRunningButtons(bool canStart, bool canStop);
 
         void AddConfiguration(IConfig config);
         void ReplaceSelectedConfig(IConfig config);
+        void ReplaceAllSkylineVersions(SkylineSettings skylineSettings);
 
-        void LogToUi(string filePath, string text, bool scrollToEnd = true, bool trim = true);
-        void LogErrorToUi(string filePath, string text, bool scrollToEnd = true, bool trim = true);
+        void LogToUi(string filePath, string text, bool trim = true);
+        void LogErrorToUi(string filePath, string text, bool trim = true);
         void LogLinesToUi(string filePath, List<string> lines);
         void LogErrorLinesToUi(string filePath, List<string> lines);
 

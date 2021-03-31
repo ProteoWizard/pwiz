@@ -1219,6 +1219,12 @@
   <data name="TransitionResult">
     <value>Transition Result</value>
   </data>
+  <data name="TransitionResultIsMs1">
+    <value>Transition Result Is MS1</value>
+  </data>
+  <data name="TransitionResultIsQuantitative">
+    <value>Transition Result Is Quantitative</value>
+  </data>
   <data name="TransitionResultLocator">
     <value>Transition Result Locator</value>
   </data>

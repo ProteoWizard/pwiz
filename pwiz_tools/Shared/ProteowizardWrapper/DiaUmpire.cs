@@ -52,6 +52,7 @@ namespace pwiz.ProteowizardWrapper
         public class Config
         {
             public IDictionary<string, object> Parameters { get; }
+            public bool UseMzMlSpillFile { get; set; }
 
             public Config()
             {
@@ -175,6 +176,8 @@ namespace pwiz.ProteowizardWrapper
                     }
                 }
 
+                config.spillFileFormat = UseMzMlSpillFile ? MSDataFile.Format.Format_mzML : MSDataFile.Format.Format_MZ5;
+
                 return config;
             }
         }
@@ -229,11 +232,11 @@ namespace pwiz.ProteowizardWrapper
                 precision = MSDataFile.Precision.Precision_32 // CONSIDER: is 64-bit precision needed for these pseudo-spectra?
             };
 
-            var ilr = new IterationListenerRegistry();
+            /*var ilr = new IterationListenerRegistry();
             if (_ilrMonitor != null)
-                ilr.addListenerWithTimer(_ilrMonitor, 5);
+                ilr.addListenerWithTimer(_ilrMonitor, 5);*/
             _msDataFile.run.spectrumList = SpectrumList;
-            MSDataFile.write(_msDataFile, outputFilepath, config, ilr);
+            MSDataFile.write(_msDataFile, outputFilepath, config/*, ilr*/);
         }
     }
 }

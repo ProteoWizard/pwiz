@@ -49,7 +49,7 @@ namespace AutoQC
 
         
         public const int WAIT_FOR_NEW_FILE = 5000;
-        private const string CANCELLED = "Cancelled";
+        private const string CANCELED = "Canceled";
         private const string COMPLETED = "Completed";
 
         private readonly object _lock = new object();
@@ -299,7 +299,7 @@ namespace AutoQC
             {
                 if (_worker.CancellationPending)
                 {
-                    e.Result = CANCELLED;
+                    e.Result = CANCELED;
                     break;
                 }
 
@@ -402,9 +402,9 @@ namespace AutoQC
             {
                 LogError(Resources.ConfigRunner_ProcessFilesCompleted_An_error_occurred__Stopping_configuration_);
             }
-            else if (CANCELLED.Equals(e.Result))
+            else if (CANCELED.Equals(e.Result))
             {
-                Log(Resources.ConfigRunner_ProcessFilesCompleted_Cancelled_configuration_);
+                Log(Resources.ConfigRunner_ProcessFilesCompleted_Canceled_configuration_);
             }
             else if (_panoramaUploadError)
             {
@@ -440,7 +440,7 @@ namespace AutoQC
             {
                 if (_worker.CancellationPending)
                 {
-                    e.Result = CANCELLED;
+                    e.Result = CANCELED;
                     return false;
                 }
 
@@ -507,7 +507,7 @@ namespace AutoQC
 
             if (_worker.CancellationPending)
             {
-                e.Result = CANCELLED;
+                e.Result = CANCELED;
                 return false;
             }
 

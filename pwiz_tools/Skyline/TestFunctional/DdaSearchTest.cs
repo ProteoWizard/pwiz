@@ -18,6 +18,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
@@ -61,6 +62,18 @@ namespace pwiz.SkylineTestFunctional
                 {
                     GetTestPath("Rpal_Std_2d_FullMS_Orbi30k_MSMS_Orbi7k_Centroid_Run1_102006_02.mzML"),
                     GetTestPath("Rpal_Std_2d_FullMS_Orbi30k_MSMS_Orbi7k_Centroid_Run1_102006_03.mzML")
+                };
+            }
+        }
+
+        private string[] SearchFilesSameName
+        {
+            get
+            {
+                return new[]
+                {
+                    GetTestPath("Rpal_Std_2d_FullMS_Orbi30k_MSMS_Orbi7k_Centroid_Run1_102006_02.mzML"),
+                    GetTestPath(Path.Combine("subdir", "Rpal_Std_2d_FullMS_Orbi30k_MSMS_Orbi7k_Centroid_Run1_102006_02.mzML"))
                 };
             }
         }
@@ -181,7 +194,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsFalse(searchSucceeded.Value);
             searchSucceeded = null;
 
-            // Go back and add another file
+            // Go back and test 2 input files with the same name
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton());
@@ -190,13 +203,22 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton());
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton());
 
-                importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources = SearchFiles.Select(o => (MsDataFileUri) new MsDataFilePath(o)).ToArray();
+                importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources = SearchFilesSameName.Select(o => (MsDataFileUri) new MsDataFilePath(o)).ToArray();
             });
 
+            var removeSuffix = ShowDialog<ImportResultsNameDlg>(() => importPeptideSearchDlg.ClickNextButton());
+            OkDialog(removeSuffix, removeSuffix.CancelDialog);
+
+            // Test with 2 files (different name)
+            RunUI(() =>
+            {
+                Assert.IsTrue(importPeptideSearchDlg.ClickBackButton());
+                importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources = SearchFiles.Select(o => (MsDataFileUri)new MsDataFilePath(o)).ToArray();
+            });
 
             // With 2 sources, we get the remove prefix/suffix dialog; accept default behavior
-            var removeSuffix = ShowDialog<ImportResultsNameDlg>(() => importPeptideSearchDlg.ClickNextButton());
-            OkDialog(removeSuffix, () => removeSuffix.YesDialog());
+            var removeSuffix2 = ShowDialog<ImportResultsNameDlg>(() => importPeptideSearchDlg.ClickNextButton());
+            OkDialog(removeSuffix, () => removeSuffix2.YesDialog());
             WaitForDocumentLoaded();
 
             RunUI(() =>

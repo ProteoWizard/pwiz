@@ -228,7 +228,7 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         IF ERRORLEVEL 1 exit %ERRORLEVEL%
 
         echo Testing subset of Skyline's leak checking (pass1) in $(CONFIGURATION:L) configuration...
-        $(OUTPUT_PATH)/TestRunner.exe log=TestPass1Subset.log buildcheck=1 pass1=on pass2=off test=TestInstrumentInfo,TestQcTraces,TestTicChromatogram $(.teamcity-test-decoration)
+        $(OUTPUT_PATH)/TestRunner.exe log=TestPass1Subset.log buildcheck=1 pass1=on pass2=off test=TestInstrumentInfo,TestQcTraces,TestTicChromatogram,TestDiaSearchFixedWindows $(.teamcity-test-decoration)
         set status=%ERRORLEVEL%
         exit %status%
     }

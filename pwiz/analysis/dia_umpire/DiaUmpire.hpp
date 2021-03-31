@@ -27,7 +27,7 @@
 #define _DIAUMPIRE_HPP_
 
 #include "pwiz/utility/misc/Export.hpp"
-#include "pwiz/data/msdata/MSData.hpp"
+#include "pwiz/data/msdata/MSDataFile.hpp"
 #include "pwiz/utility/misc/IterationListener.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "InstrumentParameter.hpp"
@@ -67,6 +67,8 @@ struct PWIZ_API_DECL Config
 
     int maxThreads = 0; // 0 = # of cores
     bool multithreadOverWindows = true;
+
+    pwiz::msdata::MSDataFile::Format spillFileFormat = pwiz::msdata::MSDataFile::Format_MZ5;
 
     Config(const std::string& paramsFilepath = "");
 };

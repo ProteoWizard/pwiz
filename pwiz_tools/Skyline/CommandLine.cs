@@ -285,6 +285,12 @@ namespace pwiz.Skyline
 
             WaitForDocumentLoaded();
 
+            if (commandArgs.Minimizing)
+            {
+                if (!MinimizeResults(commandArgs))
+                    return false;
+            }
+
             if (commandArgs.RemovingResults && commandArgs.RemoveBeforeDate.HasValue)
             {
                 // We are given a remove-before date. Remove results AFTER all results have been imported. 
@@ -1717,6 +1723,34 @@ namespace pwiz.Skyline
 
                 ModifyDocument(d => d.ChangeMeasuredResults(newMeasuredResults));
             }
+        }
+
+        public bool MinimizeResults(CommandArgs commandArgs)
+        {
+            if (!_doc.Settings.HasResults)
+            {
+                _out.WriteLine(Resources.CommandLine_ReintegratePeaks_Error__You_must_first_import_results_into_the_document_before_reintegrating_);
+                return false;
+            }
+
+            var saveFile = commandArgs.SaveFile ?? _skylineFile;
+            _out.WriteLine(Resources.CommandLine_MinimizeResults_Minimizing_results_to__0_, saveFile);
+            if (commandArgs.ChromatogramsDiscard)
+                _out.WriteLine(Resources.CommandLine_MinimizeResults_Removing_unused_chromatograms___);
+            if (commandArgs.LimitNoise.HasValue)
+                _out.WriteLine(Resources.CommandLine_MinimizeResults_Limiting_chromatogram_noise_to______0__minutes_around_peak___, commandArgs.LimitNoise);
+
+            var minimizeResults = Model.MinimizeResults.MinimizeResultsFromDocument(Document, ((statistics, sizeCalculator) =>
+            {
+                _out.WriteLine(statistics.PercentComplete + @"%");
+            }));
+            minimizeResults.Settings = minimizeResults.Settings
+                .ChangeDiscardUnmatchedChromatograms(commandArgs.ChromatogramsDiscard)
+                .ChangeNoiseTimeRange(commandArgs.LimitNoise);
+            minimizeResults.MinimizeToFile(saveFile);
+            _doc = minimizeResults.Document;
+            _skylineFile = saveFile;
+            return true;
         }
 
         private bool ImportSearch(CommandArgs commandArgs)

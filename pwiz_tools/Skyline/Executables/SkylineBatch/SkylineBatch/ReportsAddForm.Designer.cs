@@ -30,24 +30,34 @@
         {
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ReportsAddForm));
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle5 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle6 = new System.Windows.Forms.DataGridViewCellStyle();
             this.textReportName = new System.Windows.Forms.TextBox();
             this.labelConfigName = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.textReportPath = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
             this.btnOk = new System.Windows.Forms.Button();
-            this.btnAddRScript = new System.Windows.Forms.Button();
-            this.btnRemove = new System.Windows.Forms.Button();
             this.btnReportPath = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
             this.dataGridScripts = new System.Windows.Forms.DataGridView();
             this.columnPath = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.columnVersion = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.rVersionsDropDown = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.radioResultsFile = new System.Windows.Forms.RadioButton();
+            this.radioRefinedFile = new System.Windows.Forms.RadioButton();
+            this.label3 = new System.Windows.Forms.Label();
+            this.toolStrip1 = new System.Windows.Forms.ToolStrip();
+            this.btnAdd = new System.Windows.Forms.ToolStripButton();
+            this.btnDelete = new System.Windows.Forms.ToolStripButton();
+            this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridScripts)).BeginInit();
+            this.toolStrip1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
+            this.splitContainer1.Panel1.SuspendLayout();
+            this.splitContainer1.Panel2.SuspendLayout();
+            this.splitContainer1.SuspendLayout();
             this.SuspendLayout();
             // 
             // textReportName
@@ -82,20 +92,6 @@
             this.btnOk.UseVisualStyleBackColor = true;
             this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
             // 
-            // btnAddRScript
-            // 
-            resources.ApplyResources(this.btnAddRScript, "btnAddRScript");
-            this.btnAddRScript.Name = "btnAddRScript";
-            this.btnAddRScript.UseVisualStyleBackColor = true;
-            this.btnAddRScript.Click += new System.EventHandler(this.btnAddRScript_Click);
-            // 
-            // btnRemove
-            // 
-            resources.ApplyResources(this.btnRemove, "btnRemove");
-            this.btnRemove.Name = "btnRemove";
-            this.btnRemove.UseVisualStyleBackColor = true;
-            this.btnRemove.Click += new System.EventHandler(this.btnRemove_Click);
-            // 
             // btnReportPath
             // 
             resources.ApplyResources(this.btnReportPath, "btnReportPath");
@@ -112,39 +108,40 @@
             // 
             // dataGridScripts
             // 
-            resources.ApplyResources(this.dataGridScripts, "dataGridScripts");
             this.dataGridScripts.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
-            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.dataGridScripts.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
+            dataGridViewCellStyle4.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle4.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle4.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle4.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle4.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle4.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle4.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.dataGridScripts.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle4;
             this.dataGridScripts.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataGridScripts.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.columnPath,
             this.columnVersion});
-            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Window;
-            dataGridViewCellStyle2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.dataGridScripts.DefaultCellStyle = dataGridViewCellStyle2;
+            dataGridViewCellStyle5.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle5.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle5.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle5.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle5.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle5.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle5.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.dataGridScripts.DefaultCellStyle = dataGridViewCellStyle5;
+            resources.ApplyResources(this.dataGridScripts, "dataGridScripts");
             this.dataGridScripts.EditMode = System.Windows.Forms.DataGridViewEditMode.EditProgrammatically;
             this.dataGridScripts.MultiSelect = false;
             this.dataGridScripts.Name = "dataGridScripts";
-            dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle3.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle3.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle3.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle3.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.dataGridScripts.RowHeadersDefaultCellStyle = dataGridViewCellStyle3;
+            dataGridViewCellStyle6.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle6.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle6.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle6.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle6.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle6.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle6.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.dataGridScripts.RowHeadersDefaultCellStyle = dataGridViewCellStyle6;
+            this.dataGridScripts.RowHeadersVisible = false;
             this.dataGridScripts.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridScripts_CellClick);
             this.dataGridScripts.CellContentDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridScripts_CellContentDoubleClick);
             this.dataGridScripts.SelectionChanged += new System.EventHandler(this.dataGridScripts_SelectionChanged);
@@ -167,17 +164,78 @@
             resources.ApplyResources(this.rVersionsDropDown, "rVersionsDropDown");
             this.rVersionsDropDown.ItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.rVersionsDropDown_ItemClicked);
             // 
+            // radioResultsFile
+            // 
+            resources.ApplyResources(this.radioResultsFile, "radioResultsFile");
+            this.radioResultsFile.Name = "radioResultsFile";
+            this.radioResultsFile.TabStop = true;
+            this.radioResultsFile.UseVisualStyleBackColor = true;
+            // 
+            // radioRefinedFile
+            // 
+            resources.ApplyResources(this.radioRefinedFile, "radioRefinedFile");
+            this.radioRefinedFile.Name = "radioRefinedFile";
+            this.radioRefinedFile.TabStop = true;
+            this.radioRefinedFile.UseVisualStyleBackColor = true;
+            // 
+            // label3
+            // 
+            resources.ApplyResources(this.label3, "label3");
+            this.label3.Name = "label3";
+            // 
+            // toolStrip1
+            // 
+            resources.ApplyResources(this.toolStrip1, "toolStrip1");
+            this.toolStrip1.BackColor = System.Drawing.SystemColors.Control;
+            this.toolStrip1.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
+            this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.btnAdd,
+            this.btnDelete});
+            this.toolStrip1.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.VerticalStackWithOverflow;
+            this.toolStrip1.Name = "toolStrip1";
+            // 
+            // btnAdd
+            // 
+            this.btnAdd.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.btnAdd.Image = global::SkylineBatch.Properties.Resources.add;
+            resources.ApplyResources(this.btnAdd, "btnAdd");
+            this.btnAdd.Name = "btnAdd";
+            this.btnAdd.Click += new System.EventHandler(this.btnAdd_Click);
+            // 
+            // btnDelete
+            // 
+            this.btnDelete.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            resources.ApplyResources(this.btnDelete, "btnDelete");
+            this.btnDelete.Image = global::SkylineBatch.Properties.Resources.Delete;
+            this.btnDelete.Name = "btnDelete";
+            this.btnDelete.Click += new System.EventHandler(this.btnDelete_Click);
+            // 
+            // splitContainer1
+            // 
+            resources.ApplyResources(this.splitContainer1, "splitContainer1");
+            this.splitContainer1.FixedPanel = System.Windows.Forms.FixedPanel.Panel2;
+            this.splitContainer1.Name = "splitContainer1";
+            // 
+            // splitContainer1.Panel1
+            // 
+            this.splitContainer1.Panel1.Controls.Add(this.dataGridScripts);
+            // 
+            // splitContainer1.Panel2
+            // 
+            this.splitContainer1.Panel2.Controls.Add(this.toolStrip1);
+            // 
             // ReportsAddForm
             // 
             this.AcceptButton = this.btnOk;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.Controls.Add(this.dataGridScripts);
+            this.Controls.Add(this.splitContainer1);
+            this.Controls.Add(this.label3);
+            this.Controls.Add(this.radioRefinedFile);
+            this.Controls.Add(this.radioResultsFile);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnReportPath);
-            this.Controls.Add(this.btnRemove);
-            this.Controls.Add(this.btnAddRScript);
             this.Controls.Add(this.btnOk);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.textReportPath);
@@ -189,6 +247,12 @@
             this.Name = "ReportsAddForm";
             this.ShowInTaskbar = false;
             ((System.ComponentModel.ISupportInitialize)(this.dataGridScripts)).EndInit();
+            this.toolStrip1.ResumeLayout(false);
+            this.toolStrip1.PerformLayout();
+            this.splitContainer1.Panel1.ResumeLayout(false);
+            this.splitContainer1.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
+            this.splitContainer1.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -202,13 +266,18 @@
         private System.Windows.Forms.TextBox textReportPath;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Button btnOk;
-        private System.Windows.Forms.Button btnAddRScript;
-        private System.Windows.Forms.Button btnRemove;
         private System.Windows.Forms.Button btnReportPath;
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.DataGridView dataGridScripts;
         private System.Windows.Forms.DataGridViewTextBoxColumn columnPath;
         private System.Windows.Forms.DataGridViewTextBoxColumn columnVersion;
         private System.Windows.Forms.ContextMenuStrip rVersionsDropDown;
+        private System.Windows.Forms.RadioButton radioResultsFile;
+        private System.Windows.Forms.RadioButton radioRefinedFile;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.ToolStrip toolStrip1;
+        private System.Windows.Forms.ToolStripButton btnAdd;
+        private System.Windows.Forms.ToolStripButton btnDelete;
+        private System.Windows.Forms.SplitContainer splitContainer1;
     }
 }

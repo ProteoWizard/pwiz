@@ -1035,9 +1035,12 @@ namespace DiaUmpire {
 
                 MSData spillFile;
                 spillFile.id = spillFile.run.id = msd_.id + " DIA window " + diaWindowId;
+                spillFile.instrumentConfigurationPtrs = msd_.instrumentConfigurationPtrs;
+                spillFile.softwarePtrs = msd_.softwarePtrs;
+                spillFile.cvs = msd_.cvs;
                 auto outputScans = boost::make_shared<SpectrumListSimple>();
                 spillFile.run.spectrumListPtr = outputScans;
-                auto spillFilepathPtr = boost::make_shared<TemporaryFile>(".mz5");
+                auto spillFilepathPtr = boost::make_shared<TemporaryFile>(".tmp_spill");
 
                 vector<PseudoMsMsKey> localPseudoMsMs;
                 for (const auto& pseudoScan : LocalScanList)
@@ -1108,7 +1111,7 @@ namespace DiaUmpire {
                 }
 
                 {
-                    MSDataFile::WriteConfig writeConfig(MSDataFile::Format_MZ5);
+                    MSDataFile::WriteConfig writeConfig(config_.spillFileFormat);
                     writeConfig.useWorkerThreads = false;
                     writeConfig.binaryDataEncoderConfig.precision = BinaryDataEncoder::Precision_32;
 
