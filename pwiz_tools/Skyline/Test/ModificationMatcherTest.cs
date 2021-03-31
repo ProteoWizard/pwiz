@@ -347,7 +347,7 @@ namespace pwiz.SkylineTest
 
         private static void UpdateMatcher(
             StaticMod[] docStatMods, StaticMod[] docHeavyMods, 
-            StaticMod[] globalStatMods, StaticMod[] globalHeavyMods, IEnumerable<string> seqs)
+            StaticMod[] globalStatMods, StaticMod[] globalHeavyMods, IList<string> seqs)
         {
             docStatMods = docStatMods ?? new StaticMod[0];
             docHeavyMods = docHeavyMods ?? new StaticMod[0];

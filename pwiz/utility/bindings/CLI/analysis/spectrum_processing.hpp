@@ -29,7 +29,7 @@
 //#include "SpectrumListWrapper.hpp"
 
 #ifdef PWIZ_BINDINGS_CLI_COMBINED
-    #include "../msdata/MSData.hpp"
+    #include "../msdata/MSDataFile.hpp"
     #include "../common/IterationListener.hpp"
 #else
     #include "../common/SharedCLI.hpp"
@@ -630,6 +630,10 @@ public ref class SpectrumList_DiaUmpire : public msdata::SpectrumList
         DEFINE_SIMPLE_PRIMITIVE_PROPERTY(bool, exportMs1ClusterTable);
         DEFINE_SIMPLE_PRIMITIVE_PROPERTY(bool, exportMs2ClusterTable);
         DEFINE_SIMPLE_PRIMITIVE_PROPERTY(bool, exportSeparateQualityMGFs);
+
+        DEFINE_SIMPLE_PRIMITIVE_PROPERTY(int, maxThreads);
+        DEFINE_SIMPLE_PRIMITIVE_PROPERTY(bool, multithreadOverWindows);
+        DEFINE_PRIMITIVE_PROPERTY(pwiz::msdata::MSDataFile::Format, pwiz::CLI::msdata::MSDataFile::Format, spillFileFormat);
     };
 
     SpectrumList_DiaUmpire(pwiz::CLI::msdata::MSData^ msd, pwiz::CLI::msdata::SpectrumList^ inner, Config^ config);
