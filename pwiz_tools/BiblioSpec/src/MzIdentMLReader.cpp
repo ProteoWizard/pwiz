@@ -219,6 +219,11 @@ void MzIdentMLReader::collectPsms(map<DBSequencePtr, Protein>& proteins) {
                             curPSM_->specName = idStr;
                         }
                         break;
+                    case PEPTIDESHAKER_ANALYSIS:
+                        curPSM_->specName = result.hasCVParam(MS_spectrum_title)
+                            ? result.cvParam(MS_spectrum_title).valueAs<string>()
+                            : idStr;
+                        break;
                     default:
                         curPSM_->specName = idStr;
                         break;
