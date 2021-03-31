@@ -546,12 +546,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                             ImportPeptideSearch.SpectrumSourceFiles.Clear();
 
                             // in PerformDDA mode, set SpectrumSourceFiles and offer to remove prefix
-                            for (int i = 0; i < BuildPepSearchLibControl.DdaSearchDataSources.Length; ++i)
+                            var uniqueNames = Helpers.EnsureUniqueNames(BuildPepSearchLibControl.DdaSearchDataSources.Select(s => s.GetFileName()).ToList());
+                            for (var i = 0; i < BuildPepSearchLibControl.DdaSearchDataSources.Length; i++)
                             {
-                                var ddaSource = BuildPepSearchLibControl.DdaSearchDataSources[i];
-                                ImportPeptideSearch.SpectrumSourceFiles.Add(ddaSource.GetFileName(),
-                                    new ImportPeptideSearch.FoundResultsFilePossibilities(ddaSource.GetFileName())
-                                        {ExactMatch = ddaSource.ToString()});
+                                var source = BuildPepSearchLibControl.DdaSearchDataSources[i];
+                                ImportPeptideSearch.SpectrumSourceFiles.Add(uniqueNames[i],
+                                    new ImportPeptideSearch.FoundResultsFilePossibilities(uniqueNames[i]) {ExactMatch = source.ToString()});
                             }
                             ShowRemovePrefixDialog();
                         }
