@@ -509,7 +509,7 @@ namespace pwiz.Skyline.Menus
                 }
                 else if (text.Contains(@"."))
                 {
-                    MessageBox.Show(SkylineWindow, Resources.SkylineWindow_Paste_Unexpected_character_period_found);
+                    MessageDlg.Show(SkylineWindow, Resources.SkylineWindow_Paste_Unexpected_character_period_found);
                     return;
                 }
 
@@ -547,7 +547,7 @@ namespace pwiz.Skyline.Menus
                     continue;
                 if (pepSeqClean.Contains(@"."))
                 {
-                    MessageBox.Show(SkylineWindow, string.Format(Resources.SkylineWindow_Unexpected_character__0__found_on_line__1__, @".", i + 1));
+                    MessageDlg.Show(SkylineWindow, string.Format(Resources.SkylineWindow_Unexpected_character__0__found_on_line__1__, @".", i + 1));
                     return null;
                 }
 

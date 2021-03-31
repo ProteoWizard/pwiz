@@ -70,6 +70,7 @@ using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Lists;
 using pwiz.Skyline.Model.Prosit.Communication;
 using pwiz.Skyline.Model.Prosit.Models;
+using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.Skyline.ToolsUI;
@@ -231,7 +232,7 @@ namespace pwiz.Skyline
             }
             if (args != null && args.Length != 0)
             {
-                _fileToOpen = args[args.Length-1];
+                _fileToOpen = args.Where(a => !a.Equals(Program.OPEN_DOCUMENT_ARG)).LastOrDefault();
             }
 
             var defaultUIMode = Settings.Default.UIMode;
@@ -277,7 +278,16 @@ namespace pwiz.Skyline
             if (_fileToOpen == null)
                 return false;
 
-            string parentDir = Path.GetDirectoryName(_fileToOpen);
+            string parentDir;
+            try
+            {
+                parentDir = Path.GetDirectoryName(_fileToOpen);
+            }
+            catch (PathTooLongException e)
+            {
+                MessageDlg.ShowWithException(this, TextUtil.LineSeparate(Resources.SkylineWindow_HasFileToOpen_The_path_to_the_file_to_open_is_too_long_, _fileToOpen), e);
+                return false;
+            }
             // If the parent directory ends with .zip and lives in AppData\Local\Temp
             // then the user has double-clicked a file in Windows Explorer inside a ZIP file
             if (parentDir != null && PathEx.HasExtension(parentDir, @".zip") &&
@@ -392,6 +402,8 @@ namespace pwiz.Skyline
         /// The currently saved location of the document
         /// </summary>
         public string DocumentFilePath { get; set; }
+
+        public DocumentFormat SavedDocumentFormat { get; private set; }
 
         public BackgroundProteomeManager BackgroundProteomeManager
         {
@@ -859,6 +871,7 @@ namespace pwiz.Skyline
                 else
                 {
                     _savedVersion = document.UserRevisionIndex;
+                    SavedDocumentFormat = document.FormatVersion;
 
                     SetActiveFile(pathOnDisk);                    
                 }
@@ -1336,7 +1349,7 @@ namespace pwiz.Skyline
             var bookmark = new Bookmark(startPath);
             if (_resultsGridForm != null && _resultsGridForm.Visible)
             {
-                var liveResultsGrid = _resultsGridForm as LiveResultsGrid;
+                var liveResultsGrid = _resultsGridForm;
                 if (null != liveResultsGrid)
                 {
                     bookmark = bookmark.ChangeChromFileInfoId(liveResultsGrid.GetCurrentChromFileInfoId());
@@ -1347,7 +1360,7 @@ namespace pwiz.Skyline
 
             if (findResult == null)
             {
-                MessageBox.Show(this, findOptions.GetNotFoundMessage());
+                MessageDlg.Show(this, findOptions.GetNotFoundMessage());
             }
             else
                 DisplayFindResult(null, findResult);
@@ -1371,7 +1384,7 @@ namespace pwiz.Skyline
                 {
                     if (!longWaitDlg.IsCanceled)
                     {
-                        MessageBox.Show(parent.TopLevelControl, findOptions.GetNotFoundMessage());
+                        MessageDlg.Show(parent.TopLevelControl, findOptions.GetNotFoundMessage());
                     }
                     return;
                 }
@@ -1451,7 +1464,7 @@ namespace pwiz.Skyline
             if (isAnnotationOrNote && findResult.Bookmark.ChromFileInfoId != null)
             {
                 ShowResultsGrid(true);
-                LiveResultsGrid liveResultGrid = _resultsGridForm as LiveResultsGrid;
+                LiveResultsGrid liveResultGrid = _resultsGridForm;
                 if (null != liveResultGrid)
                 {
                     liveResultGrid.HighlightFindResult(findResult);
@@ -1798,10 +1811,10 @@ namespace pwiz.Skyline
         {
             if (Settings.Default.SpectralLibraryList.Count == 0)
             {
-                var result = MessageBox.Show(this,
+                var result = MultiButtonMsgDlg.Show(this,
                                              Resources.
                                                  SkylineWindow_ViewSpectralLibraries_No_libraries_to_show_Would_you_like_to_add_a_library,
-                                             Program.Name, MessageBoxButtons.OKCancel);
+                                             MessageBoxButtons.OKCancel);
                 if (result == DialogResult.Cancel)
                     return;
                 ShowPeptideSettingsUI(PeptideSettingsUI.TABS.Library);
@@ -2366,10 +2379,10 @@ namespace pwiz.Skyline
                 if (_skyline.DocumentUI.Settings.Name == SrmSettingsList.DefaultName)
                 {
                     DialogResult result =
-                        MessageBox.Show(
+                        MultiButtonMsgDlg.Show(_skyline,
                             Resources.
                                 SelectSettingsHandler_ToolStripMenuItemClick_Do_you_want_to_save_your_current_settings_before_switching,
-                        Program.Name, MessageBoxButtons.YesNoCancel);
+                            MessageBoxButtons.YesNoCancel);
                     switch (result)
                     {
                         case DialogResult.Cancel:
@@ -3639,7 +3652,7 @@ namespace pwiz.Skyline
             SetResultIndexOnGraphs(_listGraphMassError, false);
             SetResultIndexOnGraphs(_listGraphDetections, false);
 
-            var liveResultsGrid = (LiveResultsGrid)_resultsGridForm;
+            var liveResultsGrid = _resultsGridForm;
             if (null != liveResultsGrid)
             {
                 liveResultsGrid.SetReplicateIndex(ComboResults.SelectedIndex);

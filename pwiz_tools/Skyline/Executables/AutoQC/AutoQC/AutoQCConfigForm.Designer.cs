@@ -70,11 +70,7 @@ namespace AutoQC
             this.lblPanoramaEmail = new System.Windows.Forms.Label();
             this.textPanoramaEmail = new System.Windows.Forms.TextBox();
             this.tabSkylineSettings = new System.Windows.Forms.TabPage();
-            this.textSkylineInstallationPath = new System.Windows.Forms.TextBox();
-            this.radioButtonSkylineDaily = new System.Windows.Forms.RadioButton();
-            this.radioButtonSpecifySkylinePath = new System.Windows.Forms.RadioButton();
-            this.radioButtonSkyline = new System.Windows.Forms.RadioButton();
-            this.btnBrowse = new System.Windows.Forms.Button();
+            this.panelSkylineSettings = new System.Windows.Forms.Panel();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.lblConfigRunning = new System.Windows.Forms.Label();
             this.btnCancelConfig = new System.Windows.Forms.Button();
@@ -124,6 +120,7 @@ namespace AutoQC
             this.tabSettings.Controls.Add(this.groupBoxMain);
             resources.ApplyResources(this.tabSettings, "tabSettings");
             this.tabSettings.Name = "tabSettings";
+            this.tabSettings.Enter += new System.EventHandler(this.TabEnter);
             // 
             // textConfigName
             // 
@@ -296,6 +293,7 @@ namespace AutoQC
             this.tabPanoramaSettings.Controls.Add(this.groupBoxPanorama);
             resources.ApplyResources(this.tabPanoramaSettings, "tabPanoramaSettings");
             this.tabPanoramaSettings.Name = "tabPanoramaSettings";
+            this.tabPanoramaSettings.Enter += new System.EventHandler(this.TabEnter);
             // 
             // cbPublishToPanorama
             // 
@@ -362,47 +360,15 @@ namespace AutoQC
             // tabSkylineSettings
             // 
             this.tabSkylineSettings.BackColor = System.Drawing.Color.WhiteSmoke;
-            this.tabSkylineSettings.Controls.Add(this.textSkylineInstallationPath);
-            this.tabSkylineSettings.Controls.Add(this.radioButtonSkylineDaily);
-            this.tabSkylineSettings.Controls.Add(this.radioButtonSpecifySkylinePath);
-            this.tabSkylineSettings.Controls.Add(this.radioButtonSkyline);
-            this.tabSkylineSettings.Controls.Add(this.btnBrowse);
+            this.tabSkylineSettings.Controls.Add(this.panelSkylineSettings);
             resources.ApplyResources(this.tabSkylineSettings, "tabSkylineSettings");
             this.tabSkylineSettings.Name = "tabSkylineSettings";
+            this.tabSkylineSettings.Enter += new System.EventHandler(this.TabEnter);
             // 
-            // textSkylineInstallationPath
+            // panelSkylineSettings
             // 
-            resources.ApplyResources(this.textSkylineInstallationPath, "textSkylineInstallationPath");
-            this.textSkylineInstallationPath.Name = "textSkylineInstallationPath";
-            // 
-            // radioButtonSkylineDaily
-            // 
-            resources.ApplyResources(this.radioButtonSkylineDaily, "radioButtonSkylineDaily");
-            this.radioButtonSkylineDaily.Name = "radioButtonSkylineDaily";
-            this.radioButtonSkylineDaily.TabStop = true;
-            this.radioButtonSkylineDaily.UseVisualStyleBackColor = true;
-            // 
-            // radioButtonSpecifySkylinePath
-            // 
-            resources.ApplyResources(this.radioButtonSpecifySkylinePath, "radioButtonSpecifySkylinePath");
-            this.radioButtonSpecifySkylinePath.Name = "radioButtonSpecifySkylinePath";
-            this.radioButtonSpecifySkylinePath.TabStop = true;
-            this.radioButtonSpecifySkylinePath.UseVisualStyleBackColor = true;
-            this.radioButtonSpecifySkylinePath.CheckedChanged += new System.EventHandler(this.radioButtonSpecifySkylinePath_CheckedChanged);
-            // 
-            // radioButtonSkyline
-            // 
-            resources.ApplyResources(this.radioButtonSkyline, "radioButtonSkyline");
-            this.radioButtonSkyline.Name = "radioButtonSkyline";
-            this.radioButtonSkyline.TabStop = true;
-            this.radioButtonSkyline.UseVisualStyleBackColor = true;
-            // 
-            // btnBrowse
-            // 
-            resources.ApplyResources(this.btnBrowse, "btnBrowse");
-            this.btnBrowse.Name = "btnBrowse";
-            this.btnBrowse.UseVisualStyleBackColor = true;
-            this.btnBrowse.Click += new System.EventHandler(this.btnBrowse_Click);
+            resources.ApplyResources(this.panelSkylineSettings, "panelSkylineSettings");
+            this.panelSkylineSettings.Name = "panelSkylineSettings";
             // 
             // groupBox1
             // 
@@ -467,7 +433,6 @@ namespace AutoQC
             this.groupBoxPanorama.ResumeLayout(false);
             this.groupBoxPanorama.PerformLayout();
             this.tabSkylineSettings.ResumeLayout(false);
-            this.tabSkylineSettings.PerformLayout();
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             this.ResumeLayout(false);
@@ -520,10 +485,6 @@ namespace AutoQC
         private System.Windows.Forms.CheckBox checkBoxRemoveResults;
         private System.Windows.Forms.TextBox textAquisitionTime;
         private System.Windows.Forms.TabPage tabSkylineSettings;
-        private System.Windows.Forms.TextBox textSkylineInstallationPath;
-        private System.Windows.Forms.RadioButton radioButtonSkylineDaily;
-        private System.Windows.Forms.RadioButton radioButtonSpecifySkylinePath;
-        private System.Windows.Forms.RadioButton radioButtonSkyline;
-        private System.Windows.Forms.Button btnBrowse;
+        private System.Windows.Forms.Panel panelSkylineSettings;
     }
 }

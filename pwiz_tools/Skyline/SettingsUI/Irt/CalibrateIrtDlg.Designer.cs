@@ -297,8 +297,6 @@
             this.MinimizeBox = false;
             this.Name = "CalibrateIrtDlg";
             this.ShowInTaskbar = false;
-            this.Load += new System.EventHandler(this.OnLoad);
-            this.Shown += new System.EventHandler(this.CalibrateIrtDlg_Shown);
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceStandard)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.gridViewCalibrate)).EndInit();
             this.grpRegressionEquation.ResumeLayout(false);

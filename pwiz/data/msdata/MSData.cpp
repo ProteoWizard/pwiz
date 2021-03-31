@@ -501,6 +501,9 @@ pair<string,string> stringToPair(const string& nameValuePair)
 
 PWIZ_API_DECL map<string,string> parse(const string& id)
 {
+    if (id.empty())
+        throw runtime_error("[MSData::parse] Empty id");
+
     vector<string> pairs;
     boost::split(pairs, id, boost::is_any_of(" \t\n\r"));
 

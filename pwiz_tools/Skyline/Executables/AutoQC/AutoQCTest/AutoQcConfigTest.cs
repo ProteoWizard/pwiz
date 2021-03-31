@@ -18,9 +18,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using AutoQC;
+using SharedBatch;
 
 namespace AutoQCTest
 {
@@ -65,6 +65,7 @@ namespace AutoQCTest
             var nonNumberAcquisitionTime = "aaa";
             try
             {
+                // ReSharper disable once ObjectCreationAsStatement
                 new MainSettings(skylinePath, folderToWatch, false, fileFilter, false,
                     resultsWindow, instrumentType, nonNumberAcquisitionTime);
                 Assert.Fail("Expected non-number acquisition time to throw exception upon MainSettings construction.");
@@ -105,6 +106,7 @@ namespace AutoQCTest
         [TestMethod]
         public void TestValidatePanoramaSettings()
         {
+            ProgramLog.Init("TestLog");
             TestInvalidPanoramaSettings(new PanoramaSettings(true, "https://fake_panoramaweb.org/", "testEmail", "testPassword", "testFolder"), 
                 "The server https://fake_panoramaweb.org/ does not exist.");
             TestInvalidPanoramaSettings(new PanoramaSettings(true, string.Empty, "testEmail", "testPassword", "testFolder"),
@@ -209,11 +211,11 @@ namespace AutoQCTest
             {
                 fileMap = new Dictionary<string, TestFileInfo>();
                 var file = "Test_file_2015_04.sky.zip";
-                fileMap.Add(file, new TestFileInfo(file, new DateTime(2015, 04, 01)));
+                fileMap.Add(file, new TestFileInfo(new DateTime(2015, 04, 01)));
                 file = "Test_file_2015_05.sky.zip";
-                fileMap.Add(file, new TestFileInfo(file, new DateTime(2015, 05, 01)));
+                fileMap.Add(file, new TestFileInfo(new DateTime(2015, 05, 01)));
                 file = "Test_file_2015_06.sky.zip";
-                fileMap.Add(file, new TestFileInfo(file, new DateTime(2015, 06, 01)));
+                fileMap.Add(file, new TestFileInfo(new DateTime(2015, 06, 01)));
             }
 
             public IEnumerable<string> GetSkyZipFiles(string dirPath)
@@ -238,12 +240,10 @@ namespace AutoQCTest
 
         private class TestFileInfo
         {
-            private readonly string FilePath;
             public readonly DateTime LastWriteTime;
 
-            public TestFileInfo(string filePath, DateTime lastWriteTime)
+            public TestFileInfo(DateTime lastWriteTime)
             {
-                FilePath = filePath;
                 LastWriteTime = lastWriteTime;
             }
         }

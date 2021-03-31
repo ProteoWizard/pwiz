@@ -1,0 +1,119 @@
+#DIA-Umpire (version 2.0)
+#Data Independent Acquisition data processing and analysis package (Signal extraction module)
+
+#No of threads
+Thread = 1
+
+RPmax                   = 25 
+RFmax                   = 300
+CorrThreshold           = 0.2
+DeltaApex               = 0.6
+RTOverlap               = 0.3
+AdjustFragIntensity     = true
+BoostComplementaryIon   = false
+SE.MS1PPM               = 30  
+SE.MS2PPM               = 40  
+SE.SN	                  = 1.5 
+SE.MS2SN                = 1.5
+SE.MinMSIntensity = 1
+SE.MinMSMSIntensity = 1
+SE.MaxCurveRTRange	 	  = 2
+SE.RemoveGroupedPeaks = true
+SE.RemoveGroupedPeaksRTOverlap = 0.3
+SE.RemoveGroupedPeaksCorr = 0.3
+SE.StartCharge	     	  = 1  
+SE.EndCharge	       	  = 5  
+SE.MS2StartCharge	 			= 2  
+SE.MS2EndCharge	   			= 5
+SE.NoMissedScan					= 1
+SE.EstimateBG	  				= true
+SE.IsoPattern	  				=	0.5
+SE.MassDefectFilter = true
+SE.MassDefectOffset = 0.1
+SE.MinFrag=5
+SE.StartRT = 0
+SE.EndRT = 9999
+SE.MinMZ = 200
+SE.MinPrecursorMass = 400
+SE.MaxPrecursorMass = 5000
+
+#Report peak
+ExportPrecursorPeak = true
+#ExportFragmentPeak = false
+
+
+#Isolation window setting
+#The current version supports the following window type: SWATH (fixed window size), V_SWATH (variable SWATH window), MSX, MSE, pSMART
+WindowType=V_SWATH
+
+#Fix window size (Only for Absciex SWATH data, for Thermo data, you don't need to change anything here.)
+WindowSize=32
+
+#Variable SWATH window setting (start m/z, end m/z, separated by Tab)
+#The setting in this section will be used only if you specified WindowType=V_SWATH.
+==window setting begin
+399.5	408.2
+407.2	415.8
+414.8	422.7
+421.7	429.7
+428.7	437.3
+436.3	444.8
+443.8	451.7
+450.7	458.7
+457.7	466.7
+465.7	473.4
+472.4	478.3
+477.3	485.4
+484.4	491.2
+490.2	497.7
+496.7	504.3
+503.3	511.2
+510.2	518.2
+517.2	525.3
+524.3	533.3
+532.3	540.3
+539.3	546.8
+545.8	554.5
+553.5	561.8
+560.8	568.3
+567.3	575.7
+574.7	582.3
+581.3	588.8
+587.8	595.8
+594.8	601.8
+600.8	608.9
+607.9	616.9
+615.9	624.8
+623.8	632.2
+631.2	640.8
+639.8	647.9
+646.9	654.8
+653.8	661.5
+660.5	670.3
+669.3	678.8
+677.8	687.8
+686.8	696.9
+695.9	706.9
+705.9	715.9
+714.9	726.2
+725.2	737.4
+736.4	746.6
+745.6	757.5
+756.5	767.9
+766.9	779.5
+778.5	792.9
+791.9	807
+806	820
+819	834.2
+833.2	849.4
+848.4	866
+865	884.4
+883.4	899.9
+898.9	919
+918	942.1
+941.1	971.6
+970.6	1006
+1005	1053
+1052	1110.6
+1109.6	1200.5
+==window setting end

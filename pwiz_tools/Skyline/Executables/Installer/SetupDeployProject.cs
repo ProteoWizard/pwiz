@@ -37,6 +37,7 @@ namespace SetupDeployProject
         {
             if (args.Length != 6)
             {
+                Console.Error.WriteLine(String.Join(" ", args));
                 Console.Error.WriteLine("Usage: SetupDeployProject <Skyline path> <Skyline build path> <pwiz build path> <version string> <address-model> <target-name>");
                 return 1;
             }

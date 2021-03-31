@@ -17,42 +17,55 @@
  */
 
 using System;
-using System.Diagnostics;
-using System.IO;
+using System.Drawing;
 using System.Threading.Tasks;
+using SharedBatch;
 using SkylineBatch.Properties;
 
 namespace SkylineBatch
 {
-    public class ConfigRunner
+    public class ConfigRunner : IConfigRunner
     {
+        public static readonly string ALLOW_NEWLINE_SAVE_VERSION = "20.2.1.415"; // TODO(Ali): Make sure this matches future Skyline-daily release with --save fix
+
 
         private readonly IMainUiControl _uiControl;
-        private readonly ISkylineBatchLogger _logger;
+        private readonly Logger _logger;
 
         private readonly object _lock = new object();
         private RunnerStatus _runnerStatus;
+        private readonly ProcessRunner _processRunner;
 
-        public enum RunnerStatus
-        {
-            Waiting,
-            Running,
-            Cancelling,
-            Cancelled,
-            Stopped,
-            Completed,
-            Error
-        }
-
-        public ConfigRunner(SkylineBatchConfig config, ISkylineBatchLogger logger, IMainUiControl uiControl = null)
+        public ConfigRunner(SkylineBatchConfig config, Logger logger, IMainUiControl uiControl = null)
         {
             _runnerStatus = RunnerStatus.Stopped;
             Config = config;
             _uiControl = uiControl;
             _logger = logger;
+
+            _processRunner = new ProcessRunner()
+            {
+                OnDataReceived = DataReceived,
+                OnException = (e, message) => _logger?.LogException(e, message),
+                OnError = () =>
+                {
+                    if (IsRunning())
+                        ChangeStatus(RunnerStatus.Error);
+                }
+            };
         }
         
         public SkylineBatchConfig Config { get; }
+
+        public IConfig GetConfig()
+        {
+            return Config;
+        }
+
+        public Color GetDisplayColor()
+        {
+            return Color.Black;
+        }
 
         public RunnerStatus GetStatus()
         {
@@ -97,114 +110,103 @@ namespace SkylineBatch
 
             ChangeStatus(RunnerStatus.Running);
             var startTime = DateTime.Now;
-
-            var skylineRunner = Config.SkylineSettings.CmdPath;
-            var templateFullName = Config.MainSettings.TemplateFilePath;
-            var msOneResolvingPower = Config.FileSettings.MsOneResolvingPower;
-            var msMsResolvingPower = Config.FileSettings.MsMsResolvingPower;
-            var retentionTime = Config.FileSettings.RetentionTime;
-            var addDecoys = Config.FileSettings.AddDecoys;
-            var shuffleDecoys = Config.FileSettings.ShuffleDecoys;
-            var trainMProfit = Config.FileSettings.TrainMProphet;
-            var newSkylineFileName = Config.MainSettings.GetResultsFilePath();
-            var dataDir = Config.MainSettings.DataFolderPath;
-            var namingPattern = Config.MainSettings.ReplicateNamingPattern;
-
             Config.MainSettings.CreateAnalysisFolderIfNonexistent();
 
-            // STEP 1: open skyline file and save copy to analysis folder
-            var firstStep = string.Format("--in=\"{0}\" ", templateFullName);
-            firstStep += !string.IsNullOrEmpty(msOneResolvingPower) ? string.Format("--full-scan-precursor-res={0} ", msOneResolvingPower) : string.Empty;
-            firstStep += !string.IsNullOrEmpty(msMsResolvingPower) ? string.Format("--full-scan-product-res={0} ", msMsResolvingPower) : string.Empty;
-            firstStep += !string.IsNullOrEmpty(retentionTime) ? string.Format("--full-scan-rt-filter-tolerance={0} ", retentionTime) : string.Empty;
-            firstStep += addDecoys ? string.Format("--decoys-add={0} ", shuffleDecoys ? "shuffle" : "reverse") : string.Empty;
-            firstStep += string.Format("--out=\"{0}\" ‑‑save‑settings", newSkylineFileName);
-            firstStep += startStep == 1 ? " --version" : string.Empty;
-            if (startStep <= 1)
-                await ExecuteProcess(skylineRunner, firstStep);
-
-            // STEP 2: import data to new skyline file
-            var secondStep = string.Format("--in=\"{0}\" --import-all=\"{1}\" ", newSkylineFileName, dataDir);
-            secondStep += !string.IsNullOrEmpty(namingPattern) ? string.Format("--import-naming-pattern=\"{0}\" ", namingPattern) : string.Empty;
-            secondStep += trainMProfit ? string.Format("--reintegrate-model-name=\"{0}\" --reintegrate-create-model --reintegrate-overwrite-peaks ", Config.Name) : string.Empty;
-            secondStep += "--save";
-            secondStep += startStep == 2 ? " --version" : string.Empty;
-            if (startStep <= 2)
-                await ExecuteProcess(skylineRunner, secondStep);
-            
-            // STEP 3: ouput report(s) for completed analysis
-            foreach (var report in Config.ReportSettings.Reports)
+            if (startStep != 5)
             {
-                var newReportPath = Config.MainSettings.AnalysisFolderPath + "\\" + report.Name + ".csv";
-                var reportArguments = string.Format("--in=\"{0}\" ", newSkylineFileName);
-                reportArguments += string.Format("--report-add=\"{0}\" --report-conflict-resolution=overwrite ", report.ReportPath);
-                reportArguments += string.Format("--report-name=\"{0}\" --report-file=\"{1}\" --report-invariant ", report.Name, newReportPath);
-                reportArguments += startStep == 3 && Config.ReportSettings.Reports.IndexOf(report) == 0 ? " --version" : string.Empty;
-                if (startStep <= 3)
-                    await ExecuteProcess(skylineRunner, reportArguments);
-            }
-            
-            // STEP 4: run r scripts using csv files
-            foreach (var report in Config.ReportSettings.Reports)
-            {
-                var newReportPath = Config.MainSettings.AnalysisFolderPath + "\\" + report.Name + ".csv";
-                foreach (var scriptAndVersion in report.RScripts)
+                var multiLine = await Config.SkylineSettings.HigherVersion(ALLOW_NEWLINE_SAVE_VERSION, _processRunner);
+                if (IsRunning())
                 {
-                    var rVersionExe = Settings.Default.RVersions[scriptAndVersion.Item2];
-                    var scriptArguments = string.Format("\"{0}\" \"{1}\" 2>&1", scriptAndVersion.Item1, newReportPath);
-                    await ExecuteProcess(rVersionExe, scriptArguments);
+                    // Writes the batch commands for steps 1-4 to a file
+                    var commandFile = WriteBatchCommandsToFile(startStep, multiLine);
+                    var command = string.Format("--batch-commands=\"{0}\"", commandFile);
+                    await _processRunner.Run(Config.SkylineSettings.CmdPath, command);
                 }
             }
 
+            // STEP 5: run r scripts using csv files
+            var rScriptsRunInformation = Config.GetScriptArguments();
+            foreach(var rScript in rScriptsRunInformation)
+                if (IsRunning())
+                    await _processRunner.Run(rScript[RRunInfo.ExePath], rScript[RRunInfo.Arguments]);
+            
+
             // Runner is still running if no errors or cancellations
             if (IsRunning()) ChangeStatus(RunnerStatus.Completed);
+            if (IsCanceling()) ChangeStatus(RunnerStatus.Canceled);
             var endTime = DateTime.Now;
             var delta = endTime - startTime;
             var timeString = delta.Hours > 0 ? delta.ToString(@"hh\:mm\:ss") : string.Format("{0} minutes", delta.ToString(@"mm\:ss"));
             LogToUi(string.Format(Resources.ConfigRunner_Run_________________________________0____1_________________________________, Config.Name, GetStatus()));
             LogToUi(string.Format(Resources.ConfigRunner_Run_________________________________0____1_________________________________, "Runtime", timeString));
         }
-        
-        public async Task ExecuteProcess(string exeFile, string arguments)
-        {
-            if (!IsRunning()) return;
 
-            _logger?.Log(arguments);
-            Process cmd = new Process();
-            cmd.StartInfo.FileName = exeFile;
-            cmd.StartInfo.Arguments = arguments;
-            cmd.StartInfo.RedirectStandardInput = true;
-            cmd.StartInfo.RedirectStandardOutput = true;
-            cmd.StartInfo.CreateNoWindow = true;
-            cmd.StartInfo.UseShellExecute = false;
-            cmd.EnableRaisingEvents = true;
-            cmd.Exited += (sender, e) =>
+        public string WriteBatchCommandsToFile(int startStep, bool multiLine)
+        {
+            // Writes commands to the log and a file for batch processing
+            var commandWriter = new CommandWriter(_logger, multiLine);
+
+            // STEP 1: open skyline file and save copy to analysis folder
+            if (startStep == 1)
             {
-                if (IsRunning())
-                    if (cmd.ExitCode != 0)
-                        ChangeStatus(RunnerStatus.Error);
-            };
-            cmd.OutputDataReceived += (s, e) =>
+                Config.WriteOpenSkylineTemplateCommand(commandWriter);
+                Config.WriteMsOneCommand(commandWriter);
+                Config.WriteMsMsCommand(commandWriter);
+                Config.WriteRetentionTimeCommand(commandWriter);
+                Config.WriteAddDecoysCommand(commandWriter);
+                Config.WriteSaveToResultsFile(commandWriter);
+                Config.WriteSaveSettingsCommand(commandWriter);
+                commandWriter.EndCommandGroup();
+            }
+            else if (startStep < 4)
             {
-                if (e.Data != null && _logger != null)
-                {
-                    _logger.Log(e.Data);
-                }
-            };
-            cmd.Start();
-            cmd.BeginOutputReadLine();
-            while (!cmd.HasExited && IsRunning())
-            {
-                await Task.Delay(2000);
+                Config.WriteOpenSkylineResultsCommand(commandWriter);
             }
 
-            // end cmd and SkylineRunner/SkylineCmd processes if runner has been stopped before completion
-            if (!cmd.HasExited)
+            // STEP 2: import data to new skyline file
+            if (startStep <= 2)
             {
-                LogToUi(Resources.ConfigRunner_ExecuteCommandLine_Process_terminated_);
-                if (!cmd.HasExited) cmd.Kill();
-                if (!IsError())
-                    ChangeStatus(RunnerStatus.Cancelled);
+                // import data and train model
+                Config.WriteImportDataCommand(commandWriter);
+                Config.WriteImportNamingPatternCommand(commandWriter);
+                Config.WriteTrainMProphetCommand(commandWriter);
+                Config.WriteImportAnnotationsCommand(commandWriter);
+                Config.WriteSaveCommand(commandWriter);
+                commandWriter.EndCommandGroup();
+            }
+
+            // STEP 3: refine file and save to new location
+            if (startStep <= 3)
+            {
+                Config.WriteRefineCommands(commandWriter);
+                commandWriter.EndCommandGroup();
+            }
+
+            // STEP 4: output report(s) for completed analysis
+            if (startStep <= 4)
+            {
+                if (Config.ReportSettings.UsesRefinedFile())
+                {
+                    if (!commandWriter.CurrentSkylineFile.Equals(Config.RefineSettings.OutputFilePath))
+                        Config.WriteOpenRefineFileCommand(commandWriter);
+                    Config.WriteRefinedFileReportCommands(commandWriter);
+                }
+                if (!commandWriter.CurrentSkylineFile.Equals(Config.MainSettings.GetResultsFilePath()))
+                    Config.WriteOpenSkylineResultsCommand(commandWriter);
+                Config.WriteResultsFileReportCommands(commandWriter);
+            }
+
+            return commandWriter.ReturnCommandFile();
+        }
+
+        private void DataReceived(string data)
+        {
+            if ((IsRunning() || IsCanceling()) && data != null && _logger != null)
+            {
+                if (data.StartsWith("Error") || data.StartsWith("Fatal error"))
+                    _logger.LogError(data);
+                else
+                    _logger.Log(data);
             }
         }
 
@@ -223,20 +225,23 @@ namespace SkylineBatch
 
         public void Cancel()
         {
-            if (IsRunning()) 
-                ChangeStatus(RunnerStatus.Cancelling);
+            if (IsRunning())
+            {
+                _processRunner.Cancel();
+                ChangeStatus(RunnerStatus.Canceling);
+            }
             if (IsWaiting())
                 ChangeStatus(RunnerStatus.Stopped);                                                                                            
         }
 
-        public bool IsCancelling()
+        public bool IsCanceling()
         {
-            return _runnerStatus == RunnerStatus.Cancelling;
+            return _runnerStatus == RunnerStatus.Canceling;
         }
         
         public bool IsBusy()
         {
-            return IsRunning() || IsWaiting() || IsCancelling();
+            return IsRunning() || IsWaiting() || IsCanceling();
         }
         
         public bool IsStopped()

@@ -36,15 +36,15 @@
             this.labelSavedConfigurations = new System.Windows.Forms.Label();
             this.btnViewLog = new System.Windows.Forms.Button();
             this.tabMain = new System.Windows.Forms.TabControl();
-            this.tabFront = new System.Windows.Forms.TabPage();
+            this.tabConfigs = new System.Windows.Forms.TabPage();
             this.listViewConfigs = new System.Windows.Forms.ListView();
             this.columnName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnUser = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnCreated = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnStatus = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.panel1 = new System.Windows.Forms.Panel();
+            this.btnAdd = new System.Windows.Forms.Button();
             this.toolStrip = new System.Windows.Forms.ToolStrip();
-            this.btnAdd = new System.Windows.Forms.ToolStripButton();
             this.btnDelete = new System.Windows.Forms.ToolStripButton();
             this.btnOpenResults = new System.Windows.Forms.ToolStripButton();
             this.btnOpenPanoramaFolder = new System.Windows.Forms.ToolStripButton();
@@ -69,7 +69,7 @@
             this.toolStripFolderToWatch = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripLogFolder = new System.Windows.Forms.ToolStripMenuItem();
             this.tabMain.SuspendLayout();
-            this.tabFront.SuspendLayout();
+            this.tabConfigs.SuspendLayout();
             this.panel1.SuspendLayout();
             this.toolStrip.SuspendLayout();
             this.panel2.SuspendLayout();
@@ -114,25 +114,27 @@
             // tabMain
             // 
             resources.ApplyResources(this.tabMain, "tabMain");
-            this.tabMain.Controls.Add(this.tabFront);
+            this.tabMain.Controls.Add(this.tabConfigs);
             this.tabMain.Controls.Add(this.tabLog);
             this.tabMain.Controls.Add(this.tabSettings);
             this.tabMain.Name = "tabMain";
             this.tabMain.SelectedIndex = 0;
             // 
-            // tabFront
+            // tabConfigs
             // 
-            this.tabFront.BackColor = System.Drawing.Color.Transparent;
-            this.tabFront.Controls.Add(this.listViewConfigs);
-            this.tabFront.Controls.Add(this.labelSavedConfigurations);
-            this.tabFront.Controls.Add(this.panel1);
-            this.tabFront.Controls.Add(this.panel2);
-            resources.ApplyResources(this.tabFront, "tabFront");
-            this.tabFront.Name = "tabFront";
+            this.tabConfigs.BackColor = System.Drawing.Color.Transparent;
+            this.tabConfigs.Controls.Add(this.listViewConfigs);
+            this.tabConfigs.Controls.Add(this.labelSavedConfigurations);
+            this.tabConfigs.Controls.Add(this.panel1);
+            this.tabConfigs.Controls.Add(this.panel2);
+            resources.ApplyResources(this.tabConfigs, "tabConfigs");
+            this.tabConfigs.Name = "tabConfigs";
+            this.tabConfigs.Enter += new System.EventHandler(this.tabConfigs_Enter);
             // 
             // listViewConfigs
             // 
             resources.ApplyResources(this.listViewConfigs, "listViewConfigs");
+            this.listViewConfigs.AutoArrange = false;
             this.listViewConfigs.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.columnName,
             this.columnUser,
@@ -142,14 +144,12 @@
             this.listViewConfigs.HideSelection = false;
             this.listViewConfigs.MultiSelect = false;
             this.listViewConfigs.Name = "listViewConfigs";
-            this.listViewConfigs.Scrollable = false;
             this.listViewConfigs.UseCompatibleStateImageBehavior = false;
             this.listViewConfigs.View = System.Windows.Forms.View.Details;
             this.listViewConfigs.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.listViewConfigs_ColumnClick);
             this.listViewConfigs.ItemSelectionChanged += new System.Windows.Forms.ListViewItemSelectionChangedEventHandler(this.listViewConfigs_PreventItemSelectionChanged);
             this.listViewConfigs.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.HandleEditEvent);
             this.listViewConfigs.MouseDown += new System.Windows.Forms.MouseEventHandler(this.listViewConfigs_MouseDown);
-            this.listViewConfigs.Resize += new System.EventHandler(this.listViewConfigs_Resize);
             // 
             // columnName
             // 
@@ -170,6 +170,7 @@
             // panel1
             // 
             resources.ApplyResources(this.panel1, "panel1");
+            this.panel1.Controls.Add(this.btnAdd);
             this.panel1.Controls.Add(this.toolStrip);
             this.panel1.Controls.Add(this.btnImportConfigs);
             this.panel1.Controls.Add(this.btnExportConfigs);
@@ -177,27 +178,25 @@
             this.panel1.Controls.Add(this.btnCopy);
             this.panel1.Name = "panel1";
             // 
+            // btnAdd
+            // 
+            resources.ApplyResources(this.btnAdd, "btnAdd");
+            this.btnAdd.Name = "btnAdd";
+            this.btnAdd.UseVisualStyleBackColor = true;
+            this.btnAdd.Click += new System.EventHandler(this.btnAdd_Click);
+            // 
             // toolStrip
             // 
             this.toolStrip.BackColor = System.Drawing.SystemColors.Control;
             resources.ApplyResources(this.toolStrip, "toolStrip");
             this.toolStrip.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
             this.toolStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.btnAdd,
             this.btnDelete,
             this.btnOpenResults,
             this.btnOpenPanoramaFolder,
             this.btnOpenFolder});
             this.toolStrip.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.VerticalStackWithOverflow;
             this.toolStrip.Name = "toolStrip";
-            // 
-            // btnAdd
-            // 
-            this.btnAdd.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.btnAdd.Image = global::AutoQC.Properties.Resources.add;
-            resources.ApplyResources(this.btnAdd, "btnAdd");
-            this.btnAdd.Name = "btnAdd";
-            this.btnAdd.Click += new System.EventHandler(this.btnAdd_Click);
             // 
             // btnDelete
             // 
@@ -279,6 +278,7 @@
             this.tabLog.Controls.Add(this.comboConfigs);
             resources.ApplyResources(this.tabLog, "tabLog");
             this.tabLog.Name = "tabLog";
+            this.tabLog.Enter += new System.EventHandler(this.tabLog_Enter);
             // 
             // btnOpenLogFolder
             // 
@@ -315,9 +315,9 @@
             // 
             // groupBoxAutoQcSettings
             // 
+            resources.ApplyResources(this.groupBoxAutoQcSettings, "groupBoxAutoQcSettings");
             this.groupBoxAutoQcSettings.Controls.Add(this.cb_minimizeToSysTray);
             this.groupBoxAutoQcSettings.Controls.Add(this.cb_keepRunning);
-            resources.ApplyResources(this.groupBoxAutoQcSettings, "groupBoxAutoQcSettings");
             this.groupBoxAutoQcSettings.Name = "groupBoxAutoQcSettings";
             this.groupBoxAutoQcSettings.TabStop = false;
             // 
@@ -372,8 +372,8 @@
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
             this.Resize += new System.EventHandler(this.MainForm_Resize);
             this.tabMain.ResumeLayout(false);
-            this.tabFront.ResumeLayout(false);
-            this.tabFront.PerformLayout();
+            this.tabConfigs.ResumeLayout(false);
+            this.tabConfigs.PerformLayout();
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
             this.toolStrip.ResumeLayout(false);
@@ -398,7 +398,7 @@
         private System.Windows.Forms.Label labelSavedConfigurations;
         private System.Windows.Forms.Button btnViewLog;
         private System.Windows.Forms.TabControl tabMain;
-        private System.Windows.Forms.TabPage tabFront;
+        private System.Windows.Forms.TabPage tabConfigs;
         private System.Windows.Forms.TabPage tabLog;
         private System.Windows.Forms.Label lblConfigSelect;
         private System.Windows.Forms.RichTextBox textBoxLog;
@@ -422,7 +422,6 @@
         private System.Windows.Forms.ColumnHeader columnCreated;
         private System.Windows.Forms.ColumnHeader columnStatus;
         private System.Windows.Forms.ToolStrip toolStrip;
-        private System.Windows.Forms.ToolStripButton btnAdd;
         private System.Windows.Forms.ToolStripButton btnDelete;
         private System.Windows.Forms.ToolStripButton btnOpenResults;
         private System.Windows.Forms.ToolStripButton btnOpenFolder;
@@ -430,5 +429,6 @@
         private System.Windows.Forms.ContextMenuStrip openFolderMenuStrip;
         private System.Windows.Forms.ToolStripMenuItem toolStripFolderToWatch;
         private System.Windows.Forms.ToolStripMenuItem toolStripLogFolder;
+        private System.Windows.Forms.Button btnAdd;
     }
 }

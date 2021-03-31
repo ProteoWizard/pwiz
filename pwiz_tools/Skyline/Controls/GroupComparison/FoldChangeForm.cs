@@ -22,6 +22,8 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
+using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.GroupComparison;
@@ -127,6 +129,15 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
             return base.GetPersistentString() + '|' + Uri.EscapeDataString(_groupComparisonName);
         }
+
+        protected string GroupComparisonName
+        {
+            get
+            {
+                return _groupComparisonName;
+            }
+        }
+
 
         public static T FindForm<T>(IDocumentContainer documentContainer, string groupComparisonName) 
             where T : FoldChangeForm
@@ -262,6 +273,15 @@ namespace pwiz.Skyline.Controls.GroupComparison
             Program.MainWindow.ShowGroupComparisonWindow(_groupComparisonName);
         }
 
+        protected IEnumerable<FoldChangeBindingSource.FoldChangeRow> GetFoldChangeRows(
+            BindingListSource bindingListSource)
+        {
+            return bindingListSource.OfType<RowItem>()
+                .Select(rowItem => rowItem.Value)
+                .OfType<FoldChangeBindingSource.AbstractFoldChangeRow>()
+                .SelectMany(row => row.GetFoldChangeRows());
+        }
+
         public static FoldChangeBindingSource FindOrCreateBindingSource(IDocumentUIContainer documentContainer,
             string groupComparisonName)
         {
@@ -276,21 +296,34 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         public static FoldChangeForm RestoreFoldChangeForm(IDocumentUIContainer documentContainer, string persistentString)
         {
-            var formContructors = new[]
+            var parsed = PersistentString.Parse(persistentString);
+            if (parsed.Parts.Count < 2)
             {
-                FormConstructor.MakeFormConstructor(()=>new FoldChangeGrid()),
-                FormConstructor.MakeFormConstructor(()=>new FoldChangeBarGraph()),
-                FormConstructor.MakeFormConstructor(()=>new FoldChangeVolcanoPlot()), 
-            };
-            foreach (var formConstructor in formContructors)
+                return null;
+            }
+
+            var formTypeName = parsed.Parts[0];
+            var groupComparisonName = parsed.Parts[1];
+            FoldChangeForm foldChangeForm;
+            foreach (var type in new[]
+                {typeof(FoldChangeGrid), typeof(FoldChangeBarGraph), typeof(FoldChangeVolcanoPlot)})
             {
-                string prefix = formConstructor.FormType.ToString() + '|';
-                if (persistentString.StartsWith(prefix))
+                if (type.FullName == formTypeName)
                 {
-                    string groupComparisonName = Uri.UnescapeDataString(persistentString.Substring(prefix.Length));
-                    var form = formConstructor.Constructor();
-                    form.SetGroupComparisonName(documentContainer, groupComparisonName);
-                    return form;
+                    var constructor = type.GetConstructor(new Type[0]);
+                    // ReSharper disable PossibleNullReferenceException
+                    foldChangeForm = (FoldChangeForm) constructor.Invoke(new object[0]);
+                    // ReSharper restore PossibleNullReferenceException
+                    foldChangeForm.SetGroupComparisonName(documentContainer, groupComparisonName);
+                    if (foldChangeForm is FoldChangeGrid grid)
+                    {
+                        if (parsed.Parts.Count >= 3)
+                        {
+                            grid.ViewToRestore = ViewName.Parse(parsed.Parts[2]);
+                        }
+                    }
+
+                    return foldChangeForm;
                 }
             }
             return null;
@@ -313,22 +346,6 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 }
             }
         }
-
-        private class FormConstructor
-        {
-            public Type FormType { get; private set; }
-            public Func<FoldChangeForm> Constructor { get; private set; }
-
-            public static FormConstructor MakeFormConstructor<T>(Func<T> constructor) where T:FoldChangeForm
-            {
-                return new FormConstructor
-                {
-                    FormType = typeof (T),
-                    Constructor = constructor
-                };
-            }
-        }
-
         private void FoldChangeForm_KeyDown(object sender, KeyEventArgs e)
         {
             switch (e.KeyCode)

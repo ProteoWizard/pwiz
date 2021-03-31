@@ -21,6 +21,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using AutoQC;
@@ -36,7 +37,6 @@ namespace AutoQCTest
         [TestMethod]
         public void TestSelectConfig()
         {
-            TestUtils.ClearSavedConfigurations();
             var testConfigManager = TestUtils.GetTestConfigManager();
             try
             {
@@ -82,23 +82,22 @@ namespace AutoQCTest
         [TestMethod]
         public void TestAddInsertConfig()
         {
-            TestUtils.ClearSavedConfigurations();
-            var testConfigManager = new ConfigManager();
+            var testConfigManager = new AutoQcConfigManager();
             Assert.IsTrue(!testConfigManager.HasConfigs());
             var addedConfig = TestUtils.GetTestConfig("one");
-            testConfigManager.AddConfiguration(addedConfig);
+            testConfigManager.UserAddConfig(addedConfig);
             var oneConfig = TestUtils.ConfigListFromNames(new [] { "one" });
             Assert.IsTrue(testConfigManager.ConfigListEquals(oneConfig));
 
-            testConfigManager.AddConfiguration(TestUtils.GetTestConfig("two"));
-            testConfigManager.AddConfiguration(TestUtils.GetTestConfig("three"));
+            testConfigManager.UserAddConfig(TestUtils.GetTestConfig("two"));
+            testConfigManager.UserAddConfig(TestUtils.GetTestConfig("three"));
             var threeConfigs = TestUtils.ConfigListFromNames(new[] { "one", "two", "three" });
             Assert.IsTrue(testConfigManager.ConfigListEquals(threeConfigs));
 
             var addedDuplicateConfig = false;
             try
             {
-                testConfigManager.AddConfiguration(addedConfig);
+                testConfigManager.UserAddConfig(addedConfig);
                 addedDuplicateConfig = true;
             }
             catch (ArgumentException e)
@@ -112,10 +111,9 @@ namespace AutoQCTest
         [TestMethod]
         public void TestRemoveConfig()
         {
-            TestUtils.ClearSavedConfigurations();
             var configManager = TestUtils.GetTestConfigManager();
             configManager.SelectConfig(0);
-            configManager.RemoveSelected();
+            configManager.UserRemoveSelected();
             Assert.AreEqual(0, configManager.SelectedConfig);
             var oneRemoved = TestUtils.ConfigListFromNames(new [] { "two", "three" });
             Assert.IsTrue(configManager.ConfigListEquals(oneRemoved));
@@ -124,7 +122,7 @@ namespace AutoQCTest
             var removedNonexistantConfig = false;
             try
             {
-                configManager.RemoveSelected();
+                configManager.UserRemoveSelected();
                 removedNonexistantConfig = true;
             }
             catch (IndexOutOfRangeException e)
@@ -138,7 +136,6 @@ namespace AutoQCTest
         [TestMethod]
         public void TestSortConfigs()
         {
-            TestUtils.ClearSavedConfigurations();
             var configManager = TestUtils.GetTestConfigManager(TestUtils.ConfigListFromNames(new [] {"b", "c", "a"}));
             configManager.SortByValue(0);
             Assert.IsTrue(configManager.ConfigOrderEquals(new[] { "a", "b", "c" }));
@@ -171,7 +168,6 @@ namespace AutoQCTest
         [TestMethod]
         public void TestReplaceConfig()
         {
-            TestUtils.ClearSavedConfigurations();
             var configManager = TestUtils.GetTestConfigManager();
             configManager.SelectConfig(0);
             configManager.ReplaceSelectedConfig(TestUtils.GetTestConfig("oneReplaced"));
@@ -197,7 +193,6 @@ namespace AutoQCTest
         [TestMethod]
         public void TestEnableInvalid()
         {
-            TestUtils.ClearSavedConfigurations();
             var configManager = TestUtils.GetTestConfigManager();
             configManager.Import(TestUtils.GetTestFilePath("bad.xml"));
             configManager.SelectConfig(3);
@@ -214,7 +209,6 @@ namespace AutoQCTest
         [TestMethod]
         public void TestImportExport()
         {
-            TestUtils.ClearSavedConfigurations();
             var configsXmlPath = TestUtils.GetTestFilePath("configs.xml");
             var configManager = TestUtils.GetTestConfigManager();
             configManager.ExportConfigs(configsXmlPath, new [] {0,1,2});
@@ -222,7 +216,7 @@ namespace AutoQCTest
             while (configManager.HasConfigs() && i < 4)
             {
                 configManager.SelectConfig(0);
-                configManager.RemoveSelected();
+                configManager.UserRemoveSelected();
                 i++;
             }
             Assert.IsFalse(i == 4, "Failed to remove all configs.");
@@ -232,7 +226,7 @@ namespace AutoQCTest
             Assert.IsTrue(configManager.ConfigListEquals(testingConfigs));
 
             configManager.SelectConfig(2);
-            configManager.RemoveSelected();
+            configManager.UserRemoveSelected();
             configManager.Import(TestUtils.GetTestFilePath("configs.xml"));
             Assert.IsTrue(configManager.ConfigListEquals(testingConfigs));
 
@@ -242,12 +236,13 @@ namespace AutoQCTest
         [TestMethod]
         public void TestCloseReopenConfigs()
         {
-            TestUtils.ClearSavedConfigurations();
             var configManager = TestUtils.GetTestConfigManager();
-            configManager.AddConfiguration(TestUtils.GetTestConfig("four"));
+            configManager.UserAddConfig(TestUtils.GetTestConfig("four"));
             var testingConfigs = TestUtils.ConfigListFromNames(new [] { "one", "two", "three", "four" });
             configManager.Close();
-            var testConfigManager = new ConfigManager();
+            var testConfigManager = new AutoQcConfigManager();
+            // Simulate loading saved configs from file
+            testConfigManager.Import(ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath);
             Assert.IsTrue(testConfigManager.ConfigListEquals(testingConfigs));
         }
 

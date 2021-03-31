@@ -145,6 +145,11 @@ void testXICGenerator()
     */
 }
 
+void testDiaUmpire()
+{
+
+}
+
 int main(int argc, char* argv[])
 {
     TEST_PROLOG_EX(argc, argv, "_CLI")
@@ -154,7 +159,9 @@ int main(int argc, char* argv[])
         testFilter();
         testPeakFilter();
         //FIXME: testSorter();
-        testXICGenerator();
+        //testXICGenerator();
+
+        testDiaUmpire();
     }
     catch (exception& e)
     {
