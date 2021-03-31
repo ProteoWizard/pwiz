@@ -1380,4 +1380,68 @@ namespace pwiz.Skyline.Model
 
         bool AutoManageChildren { get; }
     }
+
+    public class DocNodePath
+    {
+        public PeptideGroupDocNode Protein { get; private set; }
+        public PeptideDocNode Peptide { get; private set; }
+        public TransitionGroupDocNode Precursor {get; private set; }
+        public TransitionDocNode Transition { get; private set; }
+        public SrmDocument Document { get; private set; }
+
+        private DocNodePath(Identity id, SrmDocument doc)
+        {
+            Document = doc;
+            switch (id)
+            {
+                case Transition idTransition:
+                    GetProtein( idTransition.Group.Peptide);
+                    Precursor = Peptide.FindNode(idTransition.Group) as TransitionGroupDocNode;
+                    Assume.IsNotNull(Precursor);
+                    Transition = Precursor?.FindNode(idTransition) as TransitionDocNode;
+                    Assume.IsNotNull(Transition);
+                    break;
+                case TransitionGroup idTransitionGroup:
+                    GetProtein(idTransitionGroup.Peptide);
+                    Precursor = Peptide.FindNode(idTransitionGroup) as TransitionGroupDocNode;
+                    Assume.IsNotNull(Precursor);
+                    break;
+                case Peptide idPeptide:
+                    GetProtein(idPeptide);
+                    break;
+                case PeptideGroup idPeptideGroup:
+                    Protein = Document.FindNode(idPeptideGroup) as PeptideGroupDocNode;
+                    Assume.IsNotNull(Protein);
+                    break;
+            }
+        }
+
+        private void GetProtein(Peptide idPeptide)
+        {
+            foreach (PeptideGroupDocNode prot in Document.Children)
+            {
+                Peptide = prot.FindNode(idPeptide) as PeptideDocNode;
+                if (Peptide != null)
+                {
+                    Protein = prot;
+                    break;
+                }
+            }
+            Assume.IsNotNull(Protein);
+            Assume.IsNotNull(Peptide);
+        }
+
+        public static DocNodePath GetNodePath(Identity id, SrmDocument doc)
+        {
+            try
+            {
+                return new DocNodePath(id, doc);
+            }
+            catch (AssumptionException)
+            {
+                return null;
+            }
+        
+        }
+    }
 }

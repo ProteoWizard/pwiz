@@ -117,6 +117,9 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <metadata name="ModeUIExtender.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="sequenceTree.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
@@ -125,8 +128,11 @@
   <data name="sequenceTree.Location" type="System.Drawing.Point, System.Drawing">
     <value>-1, -1</value>
   </data>
+  <data name="sequenceTree.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 4, 4, 4</value>
+  </data>
   <data name="sequenceTree.Size" type="System.Drawing.Size, System.Drawing">
-    <value>301, 552</value>
+    <value>401, 651</value>
   </data>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="sequenceTree.TabIndex" type="System.Int32, mscorlib">
@@ -136,7 +142,7 @@
     <value>sequenceTree</value>
   </data>
   <data name="&gt;&gt;sequenceTree.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.SequenceTree, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.SequenceTree, Skyline-daily, Version=20.2.1.370, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;sequenceTree.Parent" xml:space="preserve">
     <value>panel1</value>
@@ -145,10 +151,10 @@
     <value>0</value>
   </data>
   <metadata name="toolBarResults.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
+    <value>184, 17</value>
   </metadata>
   <data name="labelResults.Size" type="System.Drawing.Size, System.Drawing">
-    <value>63, 22</value>
+    <value>80, 25</value>
   </data>
   <data name="labelResults.Text" xml:space="preserve">
     <value>&amp;Replicates:</value>
@@ -160,13 +166,13 @@
     <value>12</value>
   </data>
   <data name="comboResults.Size" type="System.Drawing.Size, System.Drawing">
-    <value>160, 23</value>
+    <value>212, 28</value>
   </data>
   <data name="toolBarResults.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 0</value>
   </data>
   <data name="toolBarResults.Size" type="System.Drawing.Size, System.Drawing">
-    <value>299, 25</value>
+    <value>399, 28</value>
   </data>
   <data name="toolBarResults.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -190,10 +196,13 @@
     <value>Fill</value>
   </data>
   <data name="panel1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 0</value>
+    <value>0, 28</value>
+  </data>
+  <data name="panel1.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 4, 4, 4</value>
   </data>
   <data name="panel1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>299, 550</value>
+    <value>399, 649</value>
   </data>
   <data name="panel1.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -214,10 +223,10 @@
     <value>True</value>
   </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
-    <value>6, 13</value>
+    <value>8, 16</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>299, 550</value>
+    <value>399, 677</value>
   </data>
   <data name="$this.Icon" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
@@ -433,8 +442,17 @@
         AAD44AAAAA8AAP3gAAAAHwAA/eAAAAA/AAD9//////8AAA==
 </value>
   </data>
+  <data name="$this.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 4, 4, 4</value>
+  </data>
   <data name="$this.TabText" xml:space="preserve">
     <value>Targets</value>
+  </data>
+  <data name="&gt;&gt;ModeUIExtender.Name" xml:space="preserve">
+    <value>ModeUIExtender</value>
+  </data>
+  <data name="&gt;&gt;ModeUIExtender.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=20.2.1.370, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;labelResults.Name" xml:space="preserve">
     <value>labelResults</value>
@@ -452,6 +470,6 @@
     <value>SequenceTreeForm</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.DockableFormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.DockableFormEx, Skyline-daily, Version=20.2.1.370, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

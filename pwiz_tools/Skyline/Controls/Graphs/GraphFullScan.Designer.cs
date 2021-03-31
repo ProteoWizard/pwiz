@@ -44,6 +44,7 @@
             this.filterBtn = new System.Windows.Forms.ToolStripButton();
             this.lblScanId = new System.Windows.Forms.ToolStripLabel();
             this.btnIsolationWindow = new System.Windows.Forms.ToolStripButton();
+            this.toolStripButtonShowAnnotations = new System.Windows.Forms.ToolStripButton();
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.showScanNumberContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.GraphPanel.SuspendLayout();
@@ -101,7 +102,8 @@
             this.spectrumBtn,
             this.filterBtn,
             this.lblScanId,
-            this.btnIsolationWindow});
+            this.btnIsolationWindow,
+            this.toolStripButtonShowAnnotations});
             resources.ApplyResources(this.toolBar, "toolBar");
             this.toolBar.Name = "toolBar";
             // 
@@ -191,6 +193,16 @@
             this.btnIsolationWindow.Name = "btnIsolationWindow";
             this.btnIsolationWindow.Click += new System.EventHandler(this.btnIsolationWindow_Click);
             // 
+            // toolStripButtonShowAnnotations
+            // 
+            this.toolStripButtonShowAnnotations.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.toolStripButtonShowAnnotations.CheckOnClick = true;
+            this.toolStripButtonShowAnnotations.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolStripButtonShowAnnotations.Image = global::pwiz.Skyline.Properties.Resources.AnnotatedSpectum;
+            resources.ApplyResources(this.toolStripButtonShowAnnotations, "toolStripButtonShowAnnotations");
+            this.toolStripButtonShowAnnotations.Name = "toolStripButtonShowAnnotations";
+            this.toolStripButtonShowAnnotations.Click += new System.EventHandler(this.toolStripButtonShowAnnotations_Click);
+            // 
             // contextMenuStrip1
             // 
             this.contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -240,7 +252,6 @@
         private System.Windows.Forms.ToolStripButton filterBtn;
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
         private System.Windows.Forms.ToolStripMenuItem showScanNumberContextMenuItem;
-
-
+        private System.Windows.Forms.ToolStripButton toolStripButtonShowAnnotations;
     }
 }

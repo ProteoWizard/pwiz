@@ -702,6 +702,8 @@ namespace pwiz.Skyline
             
             if (_graphSpectrum != null && _graphSpectrum.Visible)
                 listUpdateGraphs.Add(_graphSpectrum);
+            if (_graphFullScan != null && _graphFullScan.Visible)
+                listUpdateGraphs.Add(_graphFullScan);
             listUpdateGraphs.AddRange(_listGraphRetentionTime.Where(g => g.Visible));
             listUpdateGraphs.AddRange(_listGraphPeakArea.Where(g => g.Visible));
             listUpdateGraphs.AddRange(_listGraphMassError.Where(g => g.Visible));

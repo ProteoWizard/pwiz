@@ -606,6 +606,8 @@ namespace ZedGraph
 				base.OnPaint( e );
 
 				// Add a try/catch pair since the users of the control can't catch this one
+                //CONSIDER: Log the exception. Otherwise it can lead to some very hard to 
+                //  diagnose problems.
 				try
 				{
 					_masterPane.Draw(e.Graphics);

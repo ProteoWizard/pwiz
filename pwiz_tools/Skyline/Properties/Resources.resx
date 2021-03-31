@@ -5589,7 +5589,7 @@ If you prefer you can choose to report anonymously.</value>
   <data name="ExportMethodDlg_comboInstrument_SelectedIndexChanged_Export_of_DIA_isolation_lists_is_not_yet_supported_for__0__" xml:space="preserve">
     <value>Export of DIA isolation lists is not yet supported for {0}.</value>
   </data>
-  <data name="MassListRowReader_NextRow_No_peptide_sequence_column_specified">
+  <data name="MassListRowReader_NextRow_No_peptide_sequence_column_specified" xml:space="preserve">
     <value>No peptide modified sequence column specified</value>
   </data>
   <data name="MassListRowReader_NextRow_Invalid_peptide_sequence__0__found" xml:space="preserve">
@@ -8254,6 +8254,10 @@ Please contact the Panorama server administrator to upgrade the server.</value>
     <value>{0}  ({1:F2} min)</value>
     <comment>"min" stands for "minutes"</comment>
   </data>
+  <data name="GraphFullScan_CreateGraph__Fragment_Title" xml:space="preserve">
+    <value>{0} {2}/{3} ({1:F2} min)</value>
+    <comment>"min" stands for "minutes"</comment>
+  </data>
   <data name="LinearModelParams_RescaleParameters_Every_calculator_in_the_model_either_has_an_unknown_value__or_takes_on_only_one_value_" xml:space="preserve">
     <value>Every calculator in the model either has an unknown value, or takes on only one value.</value>
   </data>
@@ -9679,7 +9683,7 @@ Recognized isotopes include: {2}</value>
   <data name="SmallMoleculeLibraryAttributes_KeyValuePairs_OtherIDs" xml:space="preserve">
     <value>OtherIDs</value>
   </data>
-  <data name="ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column">
+  <data name="ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column" xml:space="preserve">
     <value>Ignore Column</value>
   </data>
   <data name="ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Decoy" xml:space="preserve">
@@ -10959,7 +10963,6 @@ Invalid peptide sequence at position 18
   <data name="DetectionPlotPane_EmptyPlotCanceled_Label" xml:space="preserve">
     <value>Operation canceled.</value>
   </data>
-  
   <data name="DetectionPlotData_NoDataLoaded_Label" xml:space="preserve">
     <value>No data loaded.</value>
   </data>
@@ -10981,7 +10984,6 @@ Invalid peptide sequence at position 18
   <data name="DetectionPlotData_DataRetrieved_Label" xml:space="preserve">
     <value>"Data retrieved successfully."</value>
   </data>
-
   <data name="DetectionHistogramPane_XAxis_Name" xml:space="preserve">
     <value>Replicate Count</value>
   </data>
@@ -11243,7 +11245,7 @@ Invalid peptide sequence at position 18
   </data>
   <data name="ImportTransitionListErrorDlg_ImportTransitionListErrorDlg_This_transition_list_cannot_be_imported_as_it_does_not_provide_values_for_" xml:space="preserve">
     <value>This transition list cannot be imported as it does not provide values for:</value>
-   </data>
+  </data>
   <data name="HierarchicalClusterGraph_zedGraphControl1_ContextMenuBuilder_Show_Selection" xml:space="preserve">
     <value>Show Selection</value>
   </data>
@@ -11318,5 +11320,8 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
   </data>
   <data name="SmallMoleculeTransitionListReader_GetMoleculeTransitionGroup_Inconsistent_molecule_description" xml:space="preserve">
     <value>Inconsistent molecule description</value>
+  </data>
+  <data name="AnnotatedSpectum" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\AnnotatedSpectum.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
 </root>

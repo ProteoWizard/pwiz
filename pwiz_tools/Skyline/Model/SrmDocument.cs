@@ -657,6 +657,35 @@ namespace pwiz.Skyline.Model
             return null;
         }
 
+        public IdentityPath FindTransitionIdentityPath(Transition transition)
+        {
+            var peptide = transition.Group.Peptide;
+            foreach (PeptideGroupDocNode protein in Children)
+            {
+                int peptideIndex = protein.FindNodeIndex(peptide);
+                if (peptideIndex >= 0)
+                {
+                    return new IdentityPath(protein.Id, peptide, transition.Group, transition);
+                }
+            }
+
+            return null;
+        }
+
+        public IdentityPath FindPeptideIdentityPath(Peptide peptide)
+        {
+            foreach (PeptideGroupDocNode protein in Children)
+            {
+                int peptideIndex = protein.FindNodeIndex(peptide);
+                if (peptideIndex >= 0)
+                {
+                    return new IdentityPath(protein.Id, peptide);
+                }
+            }
+
+            return null;
+        }
+
         public IdentityPath LastNodePath
         {
             get

@@ -46,6 +46,7 @@
             this.sequenceTree.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.sequenceTree.Cursor = System.Windows.Forms.Cursors.Arrow;
             this.sequenceTree.HideSelection = false;
+            this.sequenceTree.IgnoreFocus = false;
             this.sequenceTree.ItemHeight = 16;
             this.sequenceTree.LabelEdit = true;
             this.sequenceTree.LockDefaultExpansion = false;
@@ -56,6 +57,7 @@
             // toolBarResults
             // 
             this.toolBarResults.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
+            this.toolBarResults.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.toolBarResults.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.labelResults,
             this.comboResults});
