@@ -470,9 +470,16 @@ namespace pwiz.Skyline.EditUI
             for (int i = 0; i < _peptideRows.Count; i++)
             {
                 var peptideRow = _peptideRows[i];
-                if (i == _peptideRows.Count - 1 && string.IsNullOrEmpty(peptideRow.Sequence))
+                if (string.IsNullOrEmpty(peptideRow.Sequence))
                 {
-                    continue;
+                    if (i == _peptideRows.Count - 1)
+                    {
+                        // ignore the last row if it is blank
+                        continue;
+                    }
+                    MessageDlg.Show(this, Resources.PasteDlg_ListPeptideSequences_The_peptide_sequence_cannot_be_blank);
+                    SetGridFocus(dataGridViewLinkedPeptides, i, colPeptideSequence);
+                    return;
                 }
                 Peptide peptide;
                 try
