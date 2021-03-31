@@ -57,8 +57,16 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             transition_settings_page,
             full_scan_settings_page,
             import_fasta_page,
+            converter_settings_page,
             dda_search_settings_page,
             dda_search_page
+        }
+
+        public enum InputFile
+        {
+            search_result,
+            dda_raw,
+            dia_raw
         }
 
         public enum Workflow
@@ -76,12 +84,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public class Ms1FullScanPage : IFormView { }
         public class Ms2FullScanPage : IFormView { }
         public class FastaPage : IFormView { }
+        public class ConverterSettingsPage : IFormView { }
         public class DDASearchSettingsPage : IFormView { }
         public class DDASearchPage : IFormView { }
 
         private static readonly IFormView[] TAB_PAGES =
         {
-            new SpectraPage(), new ChromatogramsPage(), new MatchModsPage(), new TransitionSettingsPage(), new Ms1FullScanPage(), new FastaPage(), new DDASearchSettingsPage(), new DDASearchPage()
+            new SpectraPage(), new ChromatogramsPage(), new MatchModsPage(), new TransitionSettingsPage(), new Ms1FullScanPage(), new FastaPage(), new ConverterSettingsPage(), new DDASearchSettingsPage(), new DDASearchPage()
         };
 
         private readonly Stack<SrmDocument> _documents;
@@ -135,20 +144,22 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             };
             transitionSettingsUiPage.Controls.Add(TransitionSettingsControl);
 
-            FullScanSettingsControl = new FullScanSettingsControl(this)
-            {
-                Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
-                Location = new Point(18, 50)
-            };
-            ms1FullScanSettingsPage.Controls.Add(FullScanSettingsControl);
-            FullScanSettingsControl.FullScanEnabledChanged += OnFullScanEnabledChanged; // Adjusts ion settings when full scan settings change
+            MakeFullScanSettingsControl();
 
-            ImportResultsControl = new ImportResultsControl(ImportPeptideSearch, DocumentFilePath)
+            ImportResultsDDAControl = new ImportResultsControl(ImportPeptideSearch, DocumentFilePath)
             {
                 Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
                 Location = new Point(2, 60)
             };
-            getChromatogramsPage.Controls.Add((Control) ImportResultsControl);
+            getChromatogramsPage.Controls.Add(ImportResultsDDAControl);
+            ImportResultsControl = ImportResultsDDAControl;
+
+            ConverterSettingsControl = new ConverterSettingsControl(this, ImportPeptideSearch, () => { return FullScanSettingsControl; })
+            {
+                Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
+                Location = new Point(18, 50)
+            };
+            converterSettingsPage.Controls.Add(ConverterSettingsControl);
 
             SearchSettingsControl = new SearchSettingsControl(this, ImportPeptideSearch)
             {
@@ -165,6 +176,21 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             ddaSearch.Controls.Add(SearchControl);
 
             _pagesToSkip = new HashSet<Pages>();
+        }
+
+        private void MakeFullScanSettingsControl()
+        {
+            if (FullScanSettingsControl != null)
+            {
+                ms1FullScanSettingsPage.Controls.Remove(FullScanSettingsControl);
+            }
+            FullScanSettingsControl = new FullScanSettingsControl(this)
+            {
+                Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
+                Location = new Point(18, 50)
+            };
+            ms1FullScanSettingsPage.Controls.Add(FullScanSettingsControl);
+            FullScanSettingsControl.FullScanEnabledChanged += OnFullScanEnabledChanged; // Adjusts ion settings when full scan settings change
         }
 
         public SrmDocument Document
@@ -233,6 +259,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     MatchModificationsControl.ModificationSettings,
                     skippedTransitionPage ? null : TransitionSettingsControl.FilterAndLibrariesSettings, FullScanSettingsControl.FullScan,
                     ImportFastaControl.ImportSettings,
+                    ImportPeptideSearch.IsDDASearch ? SearchSettingsControl.SearchSettings : null,
+                    ConverterSettingsControl.ConverterSettings,
                     ModeUI);
             }
         }
@@ -250,6 +278,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 MatchModificationsControl.MatchModificationsSettings modificationsSettings,
                 TransitionSettingsControl.TransitionFilterAndLibrariesSettings filterAndLibSettings,
                 TransitionFullScan fullScanSettings, ImportFastaControl.ImportFastaSettings importFastaSettings,
+                SearchSettingsControl.DdaSearchSettings ddaSearchSettings,
+                ConverterSettingsControl.DdaConverterSettings ddaConverterSettings,
                 SrmDocument.DOCUMENT_TYPE docType)
             {
                 ImportResultsSettings = importResultsSettings;
@@ -257,6 +287,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 FilterAndLibrariesSettings = filterAndLibSettings;
                 FullScanSettings = fullScanSettings;
                 ImportFastaSettings = importFastaSettings;
+                DdaSearchSettings = ddaSearchSettings;
+                DdaConverterSettings = ddaConverterSettings;
                 _docType = docType;
             }
 
@@ -280,6 +312,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             [TrackChildren]
             public ImportFastaControl.ImportFastaSettings ImportFastaSettings { get; private set; }
 
+            // DDA search settings
+            [TrackChildren]
+            public SearchSettingsControl.DdaSearchSettings DdaSearchSettings { get; private set; }
+
+            // DDA converter settings
+            [TrackChildren]
+            public ConverterSettingsControl.DdaConverterSettings DdaConverterSettings { get; private set; }
+
             public object GetDefaultObject(ObjectInfo<object> info)
             {
                 var doc = info.OldRootObject as SrmDocument;
@@ -292,6 +332,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     TransitionSettingsControl.TransitionFilterAndLibrariesSettings.GetDefault(doc.Settings.TransitionSettings),
                     doc.Settings.TransitionSettings.FullScan,
                     ImportFastaControl.ImportFastaSettings.GetDefault(doc.Settings.PeptideSettings),
+                    null,
+                    null,
                     SrmDocument.DOCUMENT_TYPE.proteomic);
             }
         }
@@ -323,6 +365,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private bool _modificationSettingsChanged;
         private bool _transitionSettingsChanged;
         private bool _fullScanSettingsChanged;
+        private bool _expandedDdaSearchLog;
 
         public bool HasPeakBoundaries { get; private set; }
 
@@ -332,14 +375,20 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public FullScanSettingsControl FullScanSettingsControl { get; private set; }
         public IImportResultsControl ImportResultsControl { get; private set; }
         public MatchModificationsControl MatchModificationsControl { get; private set; }
+        public ConverterSettingsControl ConverterSettingsControl { get; private set; }
         public SearchSettingsControl SearchSettingsControl { get; private set; }
         public DDASearchControl SearchControl { get; private set; }
+
+        public ImportResultsControl ImportResultsDDAControl { get; private set; }
+        public ImportResultsDIAControl ImportResultsDIAControl { get; private set; }
 
 
         public Workflow WorkflowType
         {
             get { return BuildPepSearchLibControl.WorkflowType; }
         }
+
+        public InputFile InputFileType => BuildPepSearchLibControl.InputFileType;
 
         private bool FastaOptional
         {
@@ -422,7 +471,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         }
 
                         var eCancel = new CancelEventArgs();
-                        if (!BuildPeptideSearchLibrary(eCancel))
+                        if (!BuildPepSearchLibControl.PerformDDASearch && !BuildPeptideSearchLibrary(eCancel))
                         {
                             // Page shows error
                             if (eCancel.Cancel)
@@ -444,12 +493,21 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                             : Resources.ImportPeptideSearchDlg_NextPage_Import_FASTA__required_;
 
                         // The next page is going to be the chromatograms page.
-                        var oldImportResultsControl = (ImportResultsControl) ImportResultsControl;
+                        var oldImportResultsControl = (Control) ImportResultsControl;
+                        getChromatogramsPage.Controls.Remove(oldImportResultsControl);
 
                         if (WorkflowType != Workflow.dia || HasPeakBoundaries)
                         {
-                            oldImportResultsControl.InitializeChromatogramsPage(Document);
+                            if (!(ImportResultsControl is ImportResultsControl))
+                            {
+                                ImportResultsControl = new ImportResultsControl(ImportPeptideSearch, DocumentFilePath)
+                                {
+                                    Anchor = oldImportResultsControl.Anchor,
+                                    Location = oldImportResultsControl.Location
+                                };
+                            }
 
+                            ((ImportResultsControl) ImportResultsControl).InitializeChromatogramsPage(Document);
                             if (WorkflowType == Workflow.dda)
                             {
                                 _pagesToSkip.Add(Pages.transition_settings_page);
@@ -458,22 +516,33 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         else
                         {
                             // DIA workflow, replace old ImportResultsControl
-                            ImportResultsControl = new ImportResultsDIAControl(this)
+                            if (!(ImportResultsControl is ImportResultsDIAControl))
                             {
-                                Anchor = oldImportResultsControl.Anchor,
-                                Location = oldImportResultsControl.Location
-                            };
-                            getChromatogramsPage.Controls.Remove(oldImportResultsControl);
-                            getChromatogramsPage.Controls.Add((Control) ImportResultsControl);
+                                ImportResultsDIAControl = new ImportResultsDIAControl(this)
+                                {
+                                    Anchor = oldImportResultsControl.Anchor,
+                                    Location = oldImportResultsControl.Location
+                                };
+                                ImportResultsControl = ImportResultsDIAControl;
+                            }
+
+                            if (BuildPepSearchLibControl.PerformDDASearch)
+                                ImportResultsDIAControl.FoundResultsFiles = BuildPepSearchLibControl.DdaSearchDataSources.Select(o =>
+                                    new ImportPeptideSearch.FoundResultsFile(o.GetFileName(), o.GetFilePath())).ToList();
                         }
+                        getChromatogramsPage.Controls.Add((Control)ImportResultsControl);
+
+                        TransitionSettingsControl.Initialize(WorkflowType);
 
                         if (!BuildPepSearchLibControl.PerformDDASearch)
                         {
                             ImportResultsControl.ResultsFilesChanged += ImportResultsControl_OnResultsFilesChanged;
-                            TransitionSettingsControl.Initialize(WorkflowType);
                         }
                         else
                         {
+                            if (WorkflowType == Workflow.dda || !BuildPepSearchLibControl.DIAConversionNeeded)
+                                _pagesToSkip.Add(Pages.converter_settings_page);
+
                             ImportPeptideSearch.SpectrumSourceFiles.Clear();
 
                             // in PerformDDA mode, set SpectrumSourceFiles and offer to remove prefix
@@ -503,6 +572,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                             _pagesToSkip.Add(Pages.import_fasta_page);
                         if (!BuildPepSearchLibControl.PerformDDASearch)
                         {
+                            _pagesToSkip.Add(Pages.converter_settings_page);
                             _pagesToSkip.Add(Pages.dda_search_page);
                             _pagesToSkip.Add(Pages.dda_search_settings_page);
                         }
@@ -522,16 +592,34 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                             CloseWizard(DialogResult.Cancel);
                         }
 
-                        if (ImportResultsControl.ResultsFilesMissing)
+                        var anyResults = ImportResultsControl.FoundResultsFiles.Any();
+                        if (!anyResults)
                         {
-                            if (MessageBox.Show(this, Resources.ImportPeptideSearchDlg_NextPage_Some_results_files_are_still_missing__Are_you_sure_you_want_to_continue_,
-                                Program.Name, MessageBoxButtons.OKCancel) == DialogResult.Cancel)
+                            using (var dlg = new MultiButtonMsgDlg(
+                                Resources.ImportPeptideSearchDlg_NextPage_No_results_files_were_specified__Are_you_sure_you_want_to_continue__Continuing_will_create_a_template_document_with_no_imported_results_,
+                                MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false))
                             {
-                                return;
+                                if (dlg.ShowDialog(this) == DialogResult.No)
+                                {
+                                    return;
+                                }
+                            }
+                        }
+                        else if (ImportResultsControl.ResultsFilesMissing)
+                        {
+                            using (var dlg = new MultiButtonMsgDlg(
+                                Resources.ImportPeptideSearchDlg_NextPage_Some_results_files_are_still_missing__Are_you_sure_you_want_to_continue_,
+                                MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false))
+                            {
+                                if (dlg.ShowDialog(this) == DialogResult.No)
+                                {
+                                    return;
+                                }
                             }
                         }
 
                         ShowRemovePrefixDialog();
+                        ImportFastaControl.IsImportingResults = anyResults;
                     }
                     break;
 
@@ -569,15 +657,15 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     {
                         if (!File.Exists(ImportFastaControl.FastaFile)) 
                         {
-                            MessageBox.Show(this, Resources.ImportPeptideSearchDlg_NextPage_FastFileMissing_DDASearch,
-                                Program.Name, MessageBoxButtons.OK);
-                            
+                            MessageDlg.Show(this, Resources.ImportPeptideSearchDlg_NextPage_FastFileMissing_DDASearch);
                             return;
                         }
 
                         ImportPeptideSearch.SearchEngine?.Dispose();
                         ImportPeptideSearch.SearchEngine = new MSAmandaSearchWrapper();
                         SearchSettingsControl.InitializeEngine();
+                        if (WorkflowType == Workflow.dia && BuildPepSearchLibControl.DIAConversionNeeded)
+                            ConverterSettingsControl.InitializeProtocol(ConverterSettingsControl.Protocol.dia_umpire);
                         break;
                     }
                     else
@@ -588,6 +676,19 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         }
                         return;
                     }
+                case Pages.converter_settings_page:
+                    if (WorkflowType == Workflow.dia && BuildPepSearchLibControl.DIAConversionNeeded)
+                    {
+                        if (FullScanSettingsControl.IsolationScheme.PrespecifiedIsolationWindows.Count == 0)
+                        {
+                            MessageDlg.Show(this, Resources.ImportPeptideSearchDlg_NextPage_No_isolation_windows_are_configured__);
+
+                            return;
+                        }
+                        else
+                            ImportPeptideSearch.DdaConverter = ConverterSettingsControl.GetDiaUmpireConverter();
+                    }
+                    break;
                 case Pages.dda_search_settings_page:
                     bool valid = SearchSettingsControl.SaveAllSettings();
                     if (!valid) return;
@@ -598,34 +699,38 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     btnNext.Enabled = false;
                     btnCancel.Enabled = false;
                     btnBack.Enabled = false;
+                    ControlBox = false;
+
+                    if (!_expandedDdaSearchLog)
+                    {
+                        Width = Math.Min(Screen.FromControl(this).WorkingArea.Width, Width * 2); // give more space for search log
+                        _expandedDdaSearchLog = true;
+                    }
+
                     SearchControl.RunSearch();
                     break;
 
                 case Pages.dda_search_page: // this is really the last page
                     var eCancel2 = new CancelEventArgs();
                     //change search files to result files
-                    BuildPepSearchLibControl.PerformDDASearch = false;
-                    ImportPeptideSearch.SearchFilenames = new string[BuildPepSearchLibControl.DdaSearchDataSources.Length];
-                    for(int i=0; i < BuildPepSearchLibControl.DdaSearchDataSources.Length; ++i)
+                    var ddaSearchDataSources = ImportPeptideSearch.SearchEngine.SpectrumFileNames; // DdaConverter may change the input filenames (and thus output filenames of the search)
+                    ImportPeptideSearch.SearchFilenames = new string[ddaSearchDataSources.Length];
+                    for(int i=0; i < ddaSearchDataSources.Length; ++i)
                     {
-                        var ddaSource = BuildPepSearchLibControl.DdaSearchDataSources[i];
+                        var ddaSource = ddaSearchDataSources[i];
                         var outFilePath = ImportPeptideSearch.SearchEngine.GetSearchResultFilepath(ddaSource);
                         ImportPeptideSearch.SearchFilenames[i] = outFilePath;
                     }
                     BuildPepSearchLibControl.AddSearchFiles(ImportPeptideSearch.SearchFilenames);
-                    ImportPeptideSearch.SearchEngine.Dispose();
 
                     if (!BuildPeptideSearchLibrary(eCancel2))
-                    {
-                        // Page shows error
-                        if (eCancel2.Cancel)
                             return;
-                        CloseWizard(DialogResult.Cancel);
-                    }
 
                     //load proteins after search
                     if (!ImportFastaControl.ImportFasta(ImportPeptideSearch.IrtStandard))
                         return;
+
+                    ImportPeptideSearch.SearchEngine.Dispose();
 
                     WizardFinish();
                     return;
@@ -682,6 +787,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             btnCancel.Enabled = true;
             btnBack.Enabled = true;
+            ControlBox = true;
             if (success)
                 btnNext.Enabled = true;
         }
@@ -706,7 +812,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 default:
                     return;
                 case Pages.spectra_page:
-                    FullScanSettingsControl.Initialize(); // reset UI to default
+                    MakeFullScanSettingsControl(); // reset UI to default
                     break;
                 case Pages.chromatograms_page:
                     // This page doesn't modify the document, no undo needed
@@ -1041,9 +1147,19 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public void CloseWizard(DialogResult result)
         {
+            DialogResult = result;
+        }
+
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
             // Close file handles to the peptide search library
             ImportPeptideSearch.ClosePeptideSearchLibraryStreams(Document);
-            DialogResult = result;
+
+            // Cancel and dispose DDA SearchEngine
+            SearchControl?.Cancel();
+            ImportPeptideSearch.SearchEngine?.Dispose();
+
+            base.OnFormClosing(e);
         }
 
         private void BuildPepSearchLibForm_OnInputFilesChanged(object sender,

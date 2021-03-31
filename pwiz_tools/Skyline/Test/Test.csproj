@@ -140,6 +140,8 @@
     <Compile Include="BilinearCurveFitTest.cs" />
     <Compile Include="BookmarkEnumeratorTest.cs" />
     <Compile Include="ChromatogramExporterTest.cs" />
+    <Compile Include="StripePainterTest.cs" />
+    <Compile Include="ComplexFragmentIonTest.cs" />
     <Compile Include="ObjectSizeTest.cs" />
     <Compile Include="ChromPeakTest.cs" />
     <Compile Include="ChromTransitionTest.cs" />
@@ -195,6 +197,7 @@
     <Compile Include="MSstats\WithRunQuantification\GroupComparisonRunQuantificationTest.cs" />
     <Compile Include="NormalizeProductIonTest.cs" />
     <Compile Include="PasteTest.cs" />
+    <Compile Include="PcaTest.cs" />
     <Compile Include="PeakBoundaryTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PropertySettingsTest.cs" />
@@ -227,6 +230,7 @@
     <Compile Include="UndoManagerTest.cs" />
     <Compile Include="UniModTest.cs" />
     <Compile Include="UniquePrefixTest.cs" />
+    <Compile Include="MassListInputsTest.cs" />
     <Compile Include="UtilTest.cs" />
     <Compile Include="VariableModTest.cs" />
     <Compile Include="WebEnabledFastaImporterTest.cs" />

@@ -163,6 +163,7 @@ Build Spectral Library > iRT standard peptides is None
 Build Spectral Library > Include ambiguous matches is False
 Build Spectral Library > Filter for document peptides is True
 Build Spectral Library > Workflow is "PRM"
+Build Spectral Library > Input File Type is "Search results (build library directly)"
 Extra Info: Cut-off score = "0,99",
 Search files = 
 [
@@ -172,7 +173,8 @@ Search files =
 iRT standard peptides = None,
 Include ambiguous matches = False,
 Filter for document peptides = True,
-Workflow = "PRM"
+Workflow = "PRM",
+Input File Type = "Search results (build library directly)"
 
 Undo Redo : Imported a peptide search
 Summary   : Imported a peptide search

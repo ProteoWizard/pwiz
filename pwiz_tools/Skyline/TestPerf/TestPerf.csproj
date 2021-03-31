@@ -136,6 +136,7 @@
   <ItemGroup>
     <Compile Include="AreaCVHistogramQValueAndRatioTest.cs" />
     <Compile Include="DdaTutorialTest.cs" />
+    <Compile Include="DiaUmpireTutorialTest.cs" />
     <Compile Include="DiaSwathTutorialTest.cs" />
     <Compile Include="PerfImportHundredsOfReplicatesTest.cs" />
     <Compile Include="HiResMetabolomicsTutorial.cs" />
@@ -165,6 +166,7 @@
     <Compile Include="PerfPeakTest.cs" />
     <Compile Include="PerfPeakViewConvert.cs" />
     <Compile Include="PerfThermoFAIMSTest.cs" />
+    <Compile Include="PerfThermoNegativeFAIMSTest.cs" />
     <Compile Include="PerfTicAreaTest.cs" />
     <Compile Include="PerfUniquePeptidesTest.cs" />
     <Compile Include="SmallMolDriftTimePredictorTest.cs" />

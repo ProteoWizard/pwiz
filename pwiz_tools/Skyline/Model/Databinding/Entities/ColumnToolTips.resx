@@ -105,6 +105,9 @@
   <data name="AbsLog2FoldChange">
     <value>Absolute value of the log base 2 of the fold change</value>
   </data>
+  <data name="Abundance">
+    <value>The value for this replicate which was used to calculate the fold change. The number depends on the normalization method, and whether the fold change is being calculated at the protein or peptide level.</value>
+  </data>
   <data name="AdjustedPValue">
     <value>P-value adjusted for the multiple comparisons within this group comparison across the multiple peptides or proteins. The adjustment is done using the Benjamini-Hochberg procedure.</value>
   </data>
@@ -836,6 +839,9 @@ Edit menu</value>
   <data name="PointsAcrossPeak">
     <value>Number of chromatogram points between the start and end time of the integrated peak.</value>
   </data>
+  <data name="CycleTimeAcrossPeak">
+    <value>Cycle time (in seconds) across the integrated peak.</value>
+  </data>
   <data name="Precursor">
     <value>Precursor</value>
   </data>
@@ -1060,12 +1066,24 @@ measured.</value>
   <data name="Replicate">
     <value>Replicate</value>
   </data>
+  <data name="ReplicateAbundance">
+    <value>Information about the values from the replicate which were used to calculate the fold change</value>
+  </data>
+  <data name="ReplicateAbundances">
+    <value>A collection of values from individual replicates which were used to calculate the fold change</value>
+  </data>
   <data name="ReplicateCalibrationCurve">
     <value>The calibration curve made using the replicates that have the same Batch Name as this replicate.
 If the Precursor Concentration is specified on any of the Precursors in this Peptide then the Calibration Curve will be an isotopolog response curve.</value>
   </data>
   <data name="ReplicateCount">
     <value>Number of replicates that had valid intensities and contributed to the result.</value>
+  </data>
+  <data name="ReplicateGroup">
+    <value>The cohort to which the Replicate Abundance belongs</value>
+  </data>
+  <data name="ReplicateSampleIdentity">
+    <value>The biological replicate for the Replicate Abundance</value>
   </data>
   <data name="ReplicateErrorMessage">
     <value>Text of the error message, if any, which occurred while trying to fit the Replicate Calibration Curve</value>

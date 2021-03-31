@@ -18,106 +18,173 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
+using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SkylineBatch;
+using SharedBatch;
+using System.Configuration;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace SkylineBatchTest
 {
-    class TestLogger: ISkylineBatchLogger
-    {
-        private readonly StringBuilder _log = new StringBuilder();
-        private readonly  StringBuilder _programLog = new StringBuilder();
-
-
-
-
-
-        public void Log(string message, object[] args)
-        {
-            AddToLog(message, args);
-        }
-
-        public void LogError(string message, object[] args)
-        {
-            AddToLog(message, args);
-        }
-
-        public void LogProgramError(string message, params object[] args)
-        {
-            AddToProgramLog(message, args);
-        }
-
-        public void LogException(Exception exception, string message, params object[] args)
-        {
-            AddToLog(message, args);
-        }
-
-        public string GetFile()
-        {
-            throw new NotImplementedException();
-        }
-
-        public string GetFileName()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void DisableUiLogging()
-        {
-            throw new NotImplementedException();
-        }
-
-        public SkylineBatchLogger Archive()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void LogToUi(IMainUiControl mainUi)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void DisplayLog()
-        {
-            throw new NotImplementedException();
-        }
-
-        private void AddToLog(string message, params object[] args)
-        {
-            _log.Append(string.Format(message, args)).AppendLine();
-            System.Diagnostics.Debug.WriteLine(message, args);
-        }
-
-        private void AddToProgramLog(string message, params object[] args)
-        {
-            _programLog.Append(string.Format(message, args)).AppendLine();
-        }
-
-        public string GetLog()
-        {
-            return _log.ToString();
-        }
-
-        public void Clear()
-        {
-            _log.Clear();
-        }
-    }
-
-
     public class TestUtils
     {
         public static string GetTestFilePath(string fileName)
         {
             var currentPath = Directory.GetCurrentDirectory();
-            var batchTestPath = Path.GetDirectoryName(Path.GetDirectoryName(currentPath));
-            return batchTestPath + "\\Test\\" + fileName;
+            if (File.Exists(Path.Combine(currentPath, "SkylineCmd.exe")))
+                currentPath = Path.Combine(currentPath, "..", "..", "..", "Executables", "SkylineBatch", "SkylineBatchTest");
+            else
+                currentPath = Path.Combine(currentPath, "..", "..");
+
+            var batchTestPath = Path.Combine(currentPath, "Test");
+            if (!Directory.Exists(batchTestPath))
+                throw new DirectoryNotFoundException("Unable to find test data directory at: " + batchTestPath);
+            return Path.Combine(batchTestPath, fileName);
+        }
+
+        public static SkylineBatchConfig GetChangedConfig(SkylineBatchConfig baseConfig, Dictionary<string, object> changedVariables)
+        {
+            var name = baseConfig.Name;
+            var enabled = baseConfig.Enabled;
+            var modified = baseConfig.Modified;
+            foreach (var variable in changedVariables.Keys)
+            {
+                if ("Name".Equals(variable))
+                    name = (string) changedVariables[variable];
+                else if ("Enabled".Equals(variable))
+                    enabled = (bool)changedVariables[variable];
+                else if ("Modified".Equals(variable))
+                    modified = (DateTime)changedVariables[variable];
+            }
+            
+            return new SkylineBatchConfig(name, enabled, modified, GetChangedMainSettings(baseConfig.MainSettings, changedVariables), 
+                GetChangedFileSettings(baseConfig.FileSettings, changedVariables),
+                GetChangedRefineSettings(baseConfig.RefineSettings, changedVariables), GetChangedReportSettings(baseConfig.ReportSettings, changedVariables),
+                GetChangedSkylineSettings(baseConfig.SkylineSettings, changedVariables));
+        }
+
+        public static MainSettings GetChangedMainSettings(MainSettings baseSettings, Dictionary<string, object> changedVariables)
+        {
+            var template = baseSettings.TemplateFilePath;
+            var analysisFolder = baseSettings.AnalysisFolderPath;
+            var dataFolder = baseSettings.DataFolderPath;
+            var annotationsFile = baseSettings.AnnotationsFilePath;
+            var namingPattern = baseSettings.ReplicateNamingPattern;
+            var dependentConfig = baseSettings.DependentConfigName;
+
+            foreach (var variable in changedVariables.Keys)
+            {
+                if ("TemplateFilePath".Equals(variable))
+                    template = (string)changedVariables[variable];
+                else if ("AnalysisFolderPath".Equals(variable))
+                    analysisFolder = (string)changedVariables[variable];
+                else if ("DataFolderPath".Equals(variable))
+                    dataFolder = (string)changedVariables[variable];
+                else if ("AnnotationsFilePath".Equals(variable))
+                    annotationsFile = (string)changedVariables[variable];
+                else if ("ReplicateNamingPattern".Equals(variable))
+                    namingPattern = (string)changedVariables[variable];
+                else if ("DependentConfigName".Equals(variable))
+                    dependentConfig = (string)changedVariables[variable];
+            }
+            return new MainSettings(template, analysisFolder, dataFolder, annotationsFile, namingPattern, dependentConfig);
+        }
+
+        public static FileSettings GetChangedFileSettings(FileSettings baseSettings,
+            Dictionary<string, object> changedVariables)
+        {
+            var msOneResolvingPower = baseSettings.MsOneResolvingPower;
+            var msMsResolvingPower = baseSettings.MsMsResolvingPower;
+            var retentionTime = baseSettings.RetentionTime;
+            var addDecoys = baseSettings.AddDecoys;
+            var shuffleDecoys = baseSettings.ShuffleDecoys;
+            var trainMProphet = baseSettings.TrainMProphet;
+
+            foreach (var variable in changedVariables.Keys)
+            {
+                if ("MsOneResolvingPower".Equals(variable))
+                    msOneResolvingPower = (string) changedVariables[variable];
+                else if ("MsMsResolvingPower".Equals(variable))
+                    msMsResolvingPower = (string) changedVariables[variable];
+                else if ("RetentionTime".Equals(variable))
+                    retentionTime = (string) changedVariables[variable];
+                else if ("AddDecoys".Equals(variable))
+                    addDecoys = (bool) changedVariables[variable];
+                else if ("ShuffleDecoys".Equals(variable))
+                    shuffleDecoys = (bool) changedVariables[variable];
+                else if ("TrainMProphet".Equals(variable))
+                    trainMProphet = (bool) changedVariables[variable];
+            }
+            return new FileSettings(msOneResolvingPower, msMsResolvingPower, retentionTime, addDecoys, shuffleDecoys,
+                trainMProphet);
+        }
+
+        public static ReportSettings GetChangedReportSettings(ReportSettings baseSettings,
+            Dictionary<string, object> changedVariables)
+        {
+            var reports = baseSettings.Reports.ToList();
+
+            foreach (var variable in changedVariables.Keys)
+            {
+                if ("Reports".Equals(variable))
+                    reports = (List<ReportInfo>)changedVariables[variable];
+            }
+            return new ReportSettings(reports);
+        }
+
+        public static RefineSettings GetChangedRefineSettings(RefineSettings baseSettings,
+            Dictionary<string, object> changedVariables)
+        {
+            var commandValues = baseSettings.CommandValues.ToList();
+            var removeDecoys = baseSettings.RemoveDecoys;
+            var removeResults = baseSettings.RemoveResults;
+            var outputFilePath = baseSettings.OutputFilePath;
+
+            foreach (var variable in changedVariables.Keys)
+            {
+                if ("CommandValues".Equals(variable))
+                    commandValues = (List<Tuple<RefineVariable,string>>)changedVariables[variable];
+                else if ("RemoveDecoys".Equals(variable))
+                    removeDecoys = (bool)changedVariables[variable];
+                else if ("RemoveResults".Equals(variable))
+                    removeResults = (bool)changedVariables[variable];
+                else if ("OutputFilePath".Equals(variable))
+                    outputFilePath = (string)changedVariables[variable];
+            }
+            return new RefineSettings(commandValues, removeDecoys, removeResults, outputFilePath);
+        }
+
+        public static SkylineSettings GetChangedSkylineSettings(SkylineSettings baseSettings,
+            Dictionary<string, object> changedVariables)
+        {
+            var type = baseSettings.Type;
+            var cmdPath = baseSettings.CmdPath;
+
+            foreach (var variable in changedVariables.Keys)
+            {
+                if ("Type".Equals(variable))
+                    type = (SkylineType)changedVariables[variable];
+                else if ("CmdPath".Equals(variable))
+                    cmdPath = (string)changedVariables[variable];
+            }
+            return new SkylineSettings(type, cmdPath);
         }
 
         public static MainSettings GetTestMainSettings()
         {
-            return new MainSettings(GetTestFilePath("emptyTemplate.sky"), GetTestFilePath("analysis"), GetTestFilePath("emptyData"), "");
+            return new MainSettings(GetTestFilePath("emptyTemplate.sky"), GetTestFilePath("analysis"), GetTestFilePath("emptyData"), string.Empty,  string.Empty, string.Empty);
+        }
+
+        public static FileSettings GetTestFileSettings()
+        {
+            return new FileSettings(string.Empty, string.Empty, string.Empty, false, false, true);
+        }
+
+        public static RefineSettings GetTestRefineSettings()
+        {
+            return new RefineSettings(new List<Tuple<RefineVariable, string>>(), false, false, string.Empty);
         }
 
         public static ReportSettings GetTestReportSettings()
@@ -129,22 +196,64 @@ namespace SkylineBatchTest
         public static ReportInfo GetTestReportInfo()
         {
             return new ReportInfo("UniqueReport", GetTestFilePath("UniqueReport.skyr"),
-                new List<Tuple<string, string>> {new Tuple<string, string>(GetTestFilePath("testScript.r"), "4.0.3")});
+                new List<Tuple<string, string>> {new Tuple<string, string>(GetTestFilePath("testScript.r"), "4.0.3")}, false);
+        }
+
+        public static SkylineSettings GetTestSkylineSettings()
+        {
+            return new SkylineSettings(SkylineType.Custom, GetSkylineDir());
         }
 
         public static SkylineBatchConfig GetTestConfig(string name = "name")
         {
-            return new SkylineBatchConfig(name, DateTime.MinValue, DateTime.MinValue, GetTestMainSettings(), GetTestReportSettings(), new SkylineSettings(SkylineType.Custom, "C:\\Program Files\\Skyline"));
+            return new SkylineBatchConfig(name, true, DateTime.MinValue, GetTestMainSettings(), GetTestFileSettings(), 
+                GetTestRefineSettings(), GetTestReportSettings(), GetTestSkylineSettings());
+        }
+
+        public static SkylineBatchConfig GetTestDependentConfig(string name, SkylineBatchConfig baseConfig)
+        {
+            if (string.IsNullOrEmpty(baseConfig.RefineSettings.OutputFilePath))
+                throw new Exception("Config does not have refine output path and will not create dependency");
+            var newMainSettings = GetTestMainSettings()
+                .UpdateDependent(baseConfig.Name, baseConfig.RefineSettings.OutputFilePath);
+            var populatedRefineSettings = new RefineSettings(new List<Tuple<RefineVariable, string>>(), true, true, GetTestFilePath("test.sky"));
+
+            return new SkylineBatchConfig(name, true, DateTime.MinValue, newMainSettings, GetTestFileSettings(),
+                populatedRefineSettings, GetTestReportSettings(), GetTestSkylineSettings());
+        }
+
+        public static SkylineBatchConfig GetFullyPopulatedConfig(string name = "TestConfig")
+        {
+            var main = new MainSettings(GetTestFilePath("emptyTemplate.sky"), GetTestFilePath("analysis"),
+                GetTestFilePath("emptyData"), GetTestFilePath("fakeAnnotations.csv"), "testNamingPattern", string.Empty);
+            var file = new FileSettings("5", "4", "3", true, true, true);
+            var refine = new RefineSettings(new List<Tuple<RefineVariable, string>>()
+                {
+                    new Tuple<RefineVariable, string>(RefineVariable.cv_remove_above_cutoff, "20"),
+                    new Tuple<RefineVariable, string>(RefineVariable.cv_global_normalize, "equalize_medians"),
+                    new Tuple<RefineVariable, string>(RefineVariable.qvalue_cutoff, "0.01"),
+                    new Tuple<RefineVariable, string>(RefineVariable.cv_transitions_count, "2"),
+
+                },  false, false, GetTestFilePath("RefineOutput.sky"));
+
+            var reportList = new List<ReportInfo>();
+            var script = new List<Tuple<string, string>>()
+                {new Tuple<string, string>(GetTestFilePath("testScript.R"), "4.0.2")};
+            reportList.Add(new ReportInfo("Unique Report", GetTestFilePath("uniqueReport.skyr"), script, false));
+            reportList.Add(new ReportInfo("Another Unique Report", GetTestFilePath("uniqueReport.skyr"), script, true));
+            var reports = new ReportSettings(reportList);
+            var skyline = GetTestSkylineSettings();
+            return new SkylineBatchConfig(name, true, DateTime.Now, main, file, refine, reports, skyline);
         }
 
         public static ConfigRunner GetTestConfigRunner(string configName = "name")
         {
-            return new ConfigRunner(GetTestConfig(configName), new SkylineBatchLogger(GetTestFilePath("TestLog.log")));
+            return new ConfigRunner(GetTestConfig(configName), GetTestLogger());
         }
 
-        public static List<SkylineBatchConfig> ConfigListFromNames(List<string> names)
+        public static List<IConfig> ConfigListFromNames(List<string> names)
         {
-            var configList = new List<SkylineBatchConfig>();
+            var configList = new List<IConfig>();
             foreach (var name in names)
             {
                 configList.Add(GetTestConfig(name));
@@ -152,40 +261,48 @@ namespace SkylineBatchTest
             return configList;
         }
 
-        public static ConfigManager GetTestConfigManager()
+        public static SkylineBatchConfigManager GetTestConfigManager()
         {
-            var testConfigManager = new ConfigManager(new SkylineBatchLogger(GetTestFilePath("TestLog.log")));
-            while (testConfigManager.HasConfigs())
-            {
-                testConfigManager.SelectConfig(0);
-                testConfigManager.RemoveSelected();
-            }
-            testConfigManager.AddConfiguration(GetTestConfig("one"));
-            testConfigManager.AddConfiguration(GetTestConfig("two"));
-            testConfigManager.AddConfiguration(GetTestConfig("three"));
+            var testConfigManager = new SkylineBatchConfigManager(GetTestLogger());
+            testConfigManager.UserAddConfig(GetTestConfig("one"));
+            testConfigManager.UserAddConfig(GetTestConfig("two"));
+            testConfigManager.UserAddConfig(GetTestConfig("three"));
             return testConfigManager;
         }
 
-        public static void InitializeInstallations()
+        public static string GetSkylineDir()
         {
-            Assert.IsTrue(Installations.FindRDirectory());
-            Assert.IsTrue(Installations.FindSkyline());
+            return GetProjectDirectory("bin\\x64\\Release");
         }
 
-            public static void ClearSavedConfigurations()
+        public static string GetProjectDirectory(string relativePath)
         {
-            var testConfigManager = new ConfigManager(new SkylineBatchLogger(TestUtils.GetTestFilePath("TestLog.log")));
-            while (testConfigManager.HasConfigs())
+            for (String directory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                directory != null && directory.Length > 10;
+                directory = Path.GetDirectoryName(directory))
             {
-                testConfigManager.SelectConfig(0);
-                testConfigManager.RemoveSelected();
+                if (File.Exists(Path.Combine(directory, "Skyline.sln")))
+                    return Path.Combine(directory, relativePath);
             }
-            testConfigManager.Close();
+
+            return null;
+        }
+
+        public static Logger GetTestLogger(string logFolder = "")
+        {
+            logFolder = string.IsNullOrEmpty(logFolder) ? GetTestFilePath("OldLogs") : logFolder;
+            var logName = "TestLog" + DateTime.Now.ToString("_HHmmssfff") + ".log";
+            return new Logger(Path.Combine(logFolder, logName), logName);
+        }
+
+        public static void InitializeRInstallation()
+        {
+            Assert.IsTrue(RInstallations.FindRDirectory());
         }
 
         public static List<string> GetAllLogFiles(string directory = null)
         {
-            directory = directory == null ? GetTestFilePath("") : directory;
+            directory = directory == null ? GetTestFilePath("OldLogs\\TestTinyLog") : directory;
             var files = Directory.GetFiles(directory);
             var logFiles = new List<string>();
             foreach (var fullName in files)
@@ -197,11 +314,18 @@ namespace SkylineBatchTest
             return logFiles;
         }
 
-        public static void DeleteAllLogFiles()
+        public delegate bool ConditionDelegate();
+
+        public static async Task WaitForCondition(ConditionDelegate condition, int timeout, int timestep, string errorMessage)
         {
-            var logFiles = GetAllLogFiles();
-            foreach (var file in logFiles)
-                File.Delete(file);
+            var ticksPerMillisecond = 10000;
+            var millisecondStartTime = DateTime.Now.Ticks / ticksPerMillisecond;
+            while ((DateTime.Now.Ticks / ticksPerMillisecond) - millisecondStartTime < timeout)
+            {
+                if (condition()) return;
+                await Task.Delay(timestep);
+            }
+            throw new Exception(errorMessage);
         }
     }
 }

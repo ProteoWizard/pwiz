@@ -123,6 +123,9 @@
   <data name="AbsLog2FoldChange">
     <value>Absolute Log 2 Fold Change</value>
   </data>
+  <data name="Abundance">
+    <value>Abundance</value>
+  </data>
   <data name="Accuracy">
     <value>Accuracy</value>
   </data>
@@ -816,6 +819,9 @@
   <data name="PointsAcrossPeak">
     <value>Points Across Peak</value>
   </data>
+  <data name="CycleTimeAcrossPeak">
+    <value>Cycle Time Across Peak</value>
+  </data>
   <data name="Precursor">
     <value>Precursor</value>
   </data>
@@ -1014,11 +1020,20 @@
   <data name="Replicate">
     <value>Replicate</value>
   </data>
+  <data name="ReplicateAbundance">
+    <value>Replicate Abundance</value>
+  </data>
+  <data name="ReplicateAbundances">
+    <value>Replicate Abundances</value>
+  </data>
   <data name="ReplicateCalibrationCurve">
     <value>Replicate Calibration Curve</value>
   </data>
   <data name="ReplicateCount">
     <value>Replicate Count</value>
+  </data>
+  <data name="ReplicateGroup">
+    <value>Replicate Group</value>
   </data>
   <data name="ReplicateErrorMessage">
     <value>Replicate Error Message</value>
@@ -1046,6 +1061,9 @@
   </data>
   <data name="ReplicateRSquared">
     <value>Replicate R Squared</value>
+  </data>
+  <data name="ReplicateSampleIdentity">
+    <value>Replicate Sample Identity</value>
   </data>
   <data name="ReplicateSlope">
     <value>Replicate Slope</value>

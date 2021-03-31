@@ -21,7 +21,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
@@ -721,35 +720,25 @@ namespace pwiz.Skyline.Model
                 return result;
             }
         }
-
-        public bool HasAnyCrosslinks(ImmutableSortedList<ModificationSite, LinkedPeptide> crosslinks)
+        public bool IncludesAaIndex(int aaIndex)
         {
-            return HasAnyCrosslinks(IonType, CleavageOffset, crosslinks);
-        }
-
-        public static bool HasAnyCrosslinks(IonType ionType, int cleavageOffset,
-            ImmutableSortedList<ModificationSite, LinkedPeptide> crosslinks)
-        {
-            if (crosslinks == null || crosslinks.Count == 0)
-            {
-                return false;
-            }
-            switch (ionType)
+            switch (IonType)
             {
                 case IonType.precursor:
                     return true;
                 case IonType.a:
                 case IonType.b:
                 case IonType.c:
-                    return cleavageOffset >= crosslinks.Keys[0].IndexAa;
+                    return CleavageOffset >= aaIndex;
                 case IonType.x:
                 case IonType.y:
                 case IonType.z:
-                    return cleavageOffset < crosslinks.Keys[crosslinks.Count - 1].IndexAa;
+                    return CleavageOffset < aaIndex;
                 default:
-                    return false;
+                    return true;
             }
         }
+
 
         #region object overrides
 
@@ -826,13 +815,12 @@ namespace pwiz.Skyline.Model
 
     public sealed class TransitionLossKey
     {
-
         public TransitionLossKey(TransitionGroupDocNode parent, TransitionDocNode transition, TransitionLosses losses)
         {
             Transition = transition.Transition;
             Losses = losses;
             ComplexFragmentIonName = transition.ComplexFragmentIon.GetName();
-            if (Transition.IsCustom())
+            if (Transition.IsCustom() && !transition.ComplexFragmentIon.IsCrosslinked)
             {
                 if (!string.IsNullOrEmpty(transition.PrimaryCustomIonEquivalenceKey))
                     CustomIonEquivalenceTestValue = transition.PrimaryCustomIonEquivalenceKey;
@@ -845,21 +833,21 @@ namespace pwiz.Skyline.Model
             }
             else
             {
-               CustomIonEquivalenceTestValue = null;
+                CustomIonEquivalenceTestValue = null;
             }
         }
 
         public Transition Transition { get; private set; }
         public TransitionLosses Losses { get; private set; }
         public string CustomIonEquivalenceTestValue { get; private set;  }
-        public ComplexFragmentIonName ComplexFragmentIonName { get; private set; }
+        public IonChain ComplexFragmentIonName { get; private set; }
 
         public bool Equivalent(TransitionLossKey other)
         {
             return Equals(CustomIonEquivalenceTestValue, other.CustomIonEquivalenceTestValue) &&
-                other.Transition.Equivalent(Transition) &&
-                Equals(other.Losses, Losses) &&
-                Equals(other.ComplexFragmentIonName, ComplexFragmentIonName);
+                   other.Transition.Equivalent(Transition) &&
+                   Equals(other.Losses, Losses) &&
+                   Equals(other.ComplexFragmentIonName, ComplexFragmentIonName);
         }
 
         #region object overrides
@@ -884,7 +872,10 @@ namespace pwiz.Skyline.Model
         {
             unchecked
             {
-                return (Transition.GetHashCode()*397) ^ (Losses != null ? Losses.GetHashCode() : 0);
+                int result = Transition.GetHashCode();
+                result = (result * 397) ^ (Losses != null ? Losses.GetHashCode() : 0);
+                result = (result * 397) ^ (ComplexFragmentIonName != null ? ComplexFragmentIonName.GetHashCode() : 0);
+                return result;
             }
         }
 

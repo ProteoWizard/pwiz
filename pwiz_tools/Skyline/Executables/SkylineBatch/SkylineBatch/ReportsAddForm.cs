@@ -18,10 +18,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Drawing;
-using System.IO;
+using System.Linq;
 using System.Windows.Forms;
+using SharedBatch;
 using SkylineBatch.Properties;
 
 namespace SkylineBatch
@@ -29,50 +29,70 @@ namespace SkylineBatch
     public partial class ReportsAddForm : Form
     {
         private readonly IMainUiControl _uiControl;
-       // private readonly Dictionary<string,string> rScriptVersions;
-        public ReportsAddForm(IMainUiControl uiControl, ReportInfo editingReport = null)
+        private readonly RDirectorySelector _rDirectorySelector;
+        public ReportsAddForm(IMainUiControl uiControl, RDirectorySelector rDirectorySelector, bool hasRefineFile, ReportInfo editingReport = null)
         {
             InitializeComponent();
             _uiControl = uiControl;
-            //rScriptVersions = SkylineSettings.GetRscriptExeList();
+            _rDirectorySelector = rDirectorySelector;
+            radioResultsFile.Checked = true;
+            radioRefinedFile.Enabled = hasRefineFile;
 
             if (editingReport != null)
             {
                 textReportName.Text = editingReport.Name;
                 textReportPath.Text = editingReport.ReportPath;
-                //var rScripts = editingReport.GetRScripts();
+                radioRefinedFile.Checked = editingReport.UseRefineFile;
                 foreach (var scriptAndVersion in editingReport.RScripts)
                 {
-                    dataGridScripts.Rows.Add(new[] { scriptAndVersion.Item1, scriptAndVersion.Item2});
+                    dataGridScripts.Rows.Add(scriptAndVersion.Item1, scriptAndVersion.Item2);
                 }
             }
-
-            foreach (var version in Settings.Default.RVersions.Keys)
-            {
-                rVersionsDropDown.Items.Add(version);
-            }
-            //rVersionsDropDown.Items.AddRange(SkylineSettings.GetRscriptExeList());
-
+            UpdateRVersionDropDown();
         }
+
         public ReportInfo NewReportInfo { get; private set; }
 
-        private void btnAddRScript_Click(object sender, EventArgs e)
+        private void btnAdd_Click(object sender, EventArgs e)
         {
-            var openDialog = new OpenFileDialog();
-            openDialog.Filter = Resources.ReportsAddForm_R_file_extension;
-            openDialog.Title = Resources.ReportsAddForm_Open_R_Script;
-            openDialog.Multiselect = true;
-            openDialog.ShowDialog();
-            foreach (var fileName in openDialog.FileNames)
+            if (Settings.Default.RVersions.Count == 0)
             {
-                dataGridScripts.Rows.Add(new []{ fileName, rVersionsDropDown.Items[rVersionsDropDown.Items.Count - 1].AccessibilityObject.Name});
+                if (!AddRDirectory())
+                    return;
             }
-            
+
+            var fileNames = OpenRScript(textReportPath.Text, true);
+            foreach (var fileName in fileNames)
+            {
+                dataGridScripts.Rows.Add(fileName, rVersionsDropDown.Items[rVersionsDropDown.Items.Count - 1].AccessibilityObject.Name);
+            }
         }
 
-        private void btnRemove_Click(object sender, EventArgs e)
+        private void dataGridScripts_CellContentDoubleClick(object sender, DataGridViewCellEventArgs e)
         {
-            //dataGridScripts.SelectedCells[0].RowIndex;
+            if (e.ColumnIndex != 0 || string.IsNullOrEmpty((string)dataGridScripts.SelectedCells[0].Value))
+                return;
+            var selectedCell = dataGridScripts.SelectedCells[0];
+            var fileNames = OpenRScript((string)selectedCell.Value, false);
+            if (fileNames.Length > 0)
+            {
+                selectedCell.Value = fileNames[0];
+            }
+        }
+
+        private string[] OpenRScript(string path, bool allowMultiSelect)
+        {
+            var openDialog = new OpenFileDialog();
+            openDialog.Filter = TextUtil.FILTER_R;
+            openDialog.Multiselect = allowMultiSelect;
+            openDialog.InitialDirectory = TextUtil.GetInitialDirectory(path);
+            if (openDialog.ShowDialog() != DialogResult.OK)
+                return new string[]{};
+            return openDialog.FileNames;
+        }
+
+        private void btnDelete_Click(object sender, EventArgs e)
+        {
             if (dataGridScripts.SelectedCells.Count > 0)
             {
                 dataGridScripts.Rows.RemoveAt(dataGridScripts.SelectedCells[0].RowIndex);
@@ -82,8 +102,8 @@ namespace SkylineBatch
         private void btnReportPath_Click(object sender, EventArgs e)
         {
             OpenFileDialog openDialog = new OpenFileDialog();
-            openDialog.Filter = Resources.ReportsAddForm_Skyr_file_extension;
-            openDialog.Title = Resources.ReportsAddForm_Open_Report;
+            openDialog.Filter = TextUtil.FILTER_SKYR;
+            openDialog.InitialDirectory = TextUtil.GetInitialDirectory(textReportPath.Text);
             openDialog.ShowDialog();
             textReportPath.Text = openDialog.FileName;
         }
@@ -92,12 +112,12 @@ namespace SkylineBatch
         {
             try
             {
-                NewReportInfo = new ReportInfo(textReportName.Text, textReportPath.Text, GetScriptsFromUi());
+                NewReportInfo = new ReportInfo(textReportName.Text, textReportPath.Text, GetScriptsFromUi(), radioRefinedFile.Checked);
                 NewReportInfo.Validate();
             }
             catch (ArgumentException ex)
             {
-                _uiControl.DisplayError("Error", ex.Message);
+                _uiControl.DisplayError(ex.Message);
                 return;
             }
             DialogResult = DialogResult.OK;
@@ -115,19 +135,17 @@ namespace SkylineBatch
             }
             return scripts;
         }
-
         
-
         private void dataGridScripts_SelectionChanged(object sender, EventArgs e)
         {
             rVersionsDropDown.Hide();
             if (dataGridScripts.SelectedCells.Count == 0)
             {
-                btnRemove.Enabled = false;
+                btnDelete.Enabled = false;
                 return;
             }
 
-            btnRemove.Enabled = dataGridScripts.SelectedCells[0].ColumnIndex == 0;
+            btnDelete.Enabled = dataGridScripts.SelectedCells[0].ColumnIndex == 0;
         }
 
         private void SelectRVersion(string version)
@@ -138,6 +156,23 @@ namespace SkylineBatch
             }
         }
 
+        private void UpdateRVersionDropDown()
+        {
+            rVersionsDropDown.Items.Clear();
+            var sortedRVersions = Settings.Default.RVersions.Keys.ToList();
+            sortedRVersions.Sort();
+            foreach (var version in sortedRVersions)
+                rVersionsDropDown.Items.Add(version);
+        }
+
+        private bool AddRDirectory()
+        {
+            if (!_rDirectorySelector.RequiredDirectoryAdded())
+                return false;
+            UpdateRVersionDropDown();
+            return true;
+        }
+
         private void dataGridScripts_CellClick(object sender, DataGridViewCellEventArgs e)
         {
             if (e.ColumnIndex == 1 && e.RowIndex > -1 && !string.IsNullOrEmpty((string)dataGridScripts.SelectedCells[0].Value))
@@ -145,7 +180,11 @@ namespace SkylineBatch
                 var rectangle = dataGridScripts.GetCellDisplayRectangle(e.ColumnIndex, e.RowIndex, true);
                 var showLocation = new Point(rectangle.X, rectangle.Bottom);
                 SelectRVersion((string)dataGridScripts.Rows[e.RowIndex].Cells[e.ColumnIndex].Value);
-                rVersionsDropDown.Show(dataGridScripts, showLocation);
+                var dropDown = true;
+                if (Settings.Default.RVersions.Count == 0)
+                    dropDown = AddRDirectory();
+                if (dropDown)
+                    rVersionsDropDown.Show(dataGridScripts, showLocation);
             }
         }
 
@@ -153,24 +192,6 @@ namespace SkylineBatch
         {
             SelectRVersion(e.ClickedItem.Name);
             dataGridScripts.SelectedCells[0].Value = e.ClickedItem.AccessibilityObject.Name;
-        }
-
-        private void dataGridScripts_CellContentDoubleClick(object sender, DataGridViewCellEventArgs e)
-        {
-            if (e.ColumnIndex != 0 || string.IsNullOrEmpty((string) dataGridScripts.SelectedCells[0].Value))
-                return;
-               
-            var selectedCell = dataGridScripts.SelectedCells[0];
-            var openDialog = new OpenFileDialog();
-            openDialog.Filter = Resources.ReportsAddForm_R_file_extension;
-            openDialog.Title = Resources.ReportsAddForm_Open_R_Script;
-            openDialog.Multiselect = false;
-            openDialog.InitialDirectory = Path.GetDirectoryName((string)selectedCell.Value);
-            openDialog.ShowDialog();
-            if (!string.IsNullOrEmpty(openDialog.FileName))
-            {
-                selectedCell.Value = openDialog.FileName;
-            }
         }
     }
 }

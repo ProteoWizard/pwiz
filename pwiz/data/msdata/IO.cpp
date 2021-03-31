@@ -2367,7 +2367,7 @@ void write(minimxml::XMLWriter& writer, const SpectrumList& spectrumList, const 
 
         if (iterationListenerRegistry)
             status = iterationListenerRegistry->broadcastUpdateMessage(
-                IterationListener::UpdateMessage(i, spectrumList.size(), "converting spectra"));
+                IterationListener::UpdateMessage(i, spectrumList.size(), "writing spectra"));
 
         if (status == IterationListener::Status_Cancel)
             break;
@@ -2471,7 +2471,7 @@ void write(minimxml::XMLWriter& writer, const ChromatogramList& chromatogramList
 
         if (iterationListenerRegistry)
             status = iterationListenerRegistry->broadcastUpdateMessage(
-                IterationListener::UpdateMessage(i, chromatogramList.size(), "converting chromatograms"));
+                IterationListener::UpdateMessage(i, chromatogramList.size(), "writing chromatograms"));
 
         if (status == IterationListener::Status_Cancel)
             break;

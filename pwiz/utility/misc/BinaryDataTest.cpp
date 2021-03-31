@@ -201,12 +201,12 @@ void test()
 
     // test sort_together
     {
-        std::vector<T> expectedV1{ 3,  2,  5,  1,  6,  4 };
-        std::vector<T> expectedV2{ 5, 10, 15, 20, 30, 50 };
+        std::vector<T> expectedV1{ 3,  2,  5,  7,  1,  8,  6,  4 };
+        std::vector<T> expectedV2{ 5, 10, 15, 15, 20, 20, 30, 50 };
 
         {
-            std::vector<T> v1 = {  1,  2, 3,  4,  5,  6 };
-            std::vector<T> v2 = { 20, 10, 5, 50, 15, 30 };
+            std::vector<T> v1 = {  1,  2, 3,  4,  5,  6,  7,  8 };
+            std::vector<T> v2 = { 20, 10, 5, 50, 15, 30, 15, 20 };
 
             vector<boost::iterator_range<typename std::vector<T>::iterator>> cov = { v1 };
             pwiz::util::sort_together(v2, cov.begin(), cov.end());
@@ -219,14 +219,27 @@ void test()
         }
 
         {
-            std::vector<T> v1 = {  1,  2, 3,  4,  5,  6 };
-            std::vector<T> v2 = { 20, 10, 5, 50, 15, 30 };
-            std::vector<T> v3 = {  6,  5, 4,  3,  2,  1 };
+            std::vector<T> v1 = { 1,  2, 3,  4,  5,  6,  7,  8 };
+            std::vector<T> v2 = { 20, 10, 5, 50, 15, 30, 15, 20 };
+
+            pwiz::util::sort_together(v2, v1);
+
+            for (size_t i = 0; i < v1.size(); ++i)
+            {
+                unit_assert_operator_equal(expectedV1[i], v1[i]);
+                unit_assert_operator_equal(expectedV2[i], v2[i]);
+            }
+        }
+
+        {
+            std::vector<T> v1 = {  1,  2, 3,  4,  5,  6,  7,  8 };
+            std::vector<T> v2 = { 20, 10, 5, 50, 15, 30, 15, 20 };
+            std::vector<T> v3 = {  6,  5, 4,  3,  2,  1,  0, -1 };
 
             vector<boost::iterator_range<typename std::vector<T>::iterator>> cov = { v1, v3 };
             pwiz::util::sort_together(v2, cov.begin(), cov.end());
 
-            std::vector<T> expectedV3{ 4, 5, 2, 6, 1, 3 };
+            std::vector<T> expectedV3{ 4, 5, 2, 0, 6, -1, 1, 3 };
             for (size_t i = 0; i < v1.size(); ++i)
             {
                 unit_assert_operator_equal(expectedV1[i], v1[i]);
@@ -236,14 +249,14 @@ void test()
         }
 
         {
-            std::vector<T> v1 = {  1,  2, 3,  4,  5,  6 };
-            std::vector<T> v2 = { 20, 10, 5, 50, 15, 30 };
-            std::vector<T> v3 = {  6,  5, 4,  3,  2,  1 };
+            std::vector<T> v1 = {  1,  2, 3,  4,  5,  6,  7,  8 };
+            std::vector<T> v2 = { 20, 10, 5, 50, 15, 30, 15, 20 };
+            std::vector<T> v3 = {  6,  5, 4,  3,  2,  1,  0, -1 };
 
             vector<boost::iterator_range<typename std::vector<T>::iterator>> cov = { v1, v3 };
             pwiz::util::sort_together(v2, cov);
 
-            std::vector<T> expectedV3{ 4, 5, 2, 6, 1, 3 };
+            std::vector<T> expectedV3{ 4, 5, 2, 0, 6, -1, 1, 3 };
             for (size_t i = 0; i < v1.size(); ++i)
             {
                 unit_assert_operator_equal(expectedV1[i], v1[i]);

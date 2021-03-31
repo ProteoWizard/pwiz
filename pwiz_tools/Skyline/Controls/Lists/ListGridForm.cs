@@ -63,5 +63,12 @@ namespace pwiz.Skyline.Controls.Lists
             }
         }
 
+        public override DataGridId DataGridId
+        {
+            get
+            {
+                return new DataGridId(DataGridType.LIST, ListName);
+            }
+        }
     }
 }

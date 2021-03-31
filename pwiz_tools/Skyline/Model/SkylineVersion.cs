@@ -52,7 +52,7 @@ namespace pwiz.Skyline.Model
             CacheFormatVersion.Fourteen, DocumentFormat.VERSION_20_1);
         public static readonly SkylineVersion V20_2 = new SkylineVersion(() => Resources.SkylineVersion_V20_2_Skyline_20_2,
             @"Skyline 20.2",
-            CacheFormatVersion.Fourteen, DocumentFormat.VERSION_20_1);
+            CacheFormatVersion.Fourteen, DocumentFormat.VERSION_20_2);
 
         private SkylineVersion(Func<String> getLabelFunc, String versionName, CacheFormatVersion cacheFormatVersion,
             DocumentFormat srmDocumentVersion) : base(versionName, getLabelFunc)
@@ -94,7 +94,7 @@ namespace pwiz.Skyline.Model
 
         public static String GetCurrentVersionName()
         {
-            String labelFormat = Resources.SkylineVersion_GetCurrentVersionName_Current___0__;
+            String labelFormat = Resources.SkylineVersion_GetCurrentVersionName_Latest___0__;
 
             if (Install.Type == Install.InstallType.developer)
             {

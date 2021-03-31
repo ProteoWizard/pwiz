@@ -96,8 +96,9 @@ namespace pwiz.SkylineTestFunctional
             }
             var openDataSourceDialog = ShowDialog<OpenDataSourceDialog>(importResultsDlg.OkDialog);
             RunUI(() => openDataSourceDialog.SelectFile(TestFilesDir.GetTestPath("ChromDataSetMatchingTest.mzML")));
+            var docChange = SkylineWindow.Document;
             OkDialog(openDataSourceDialog, openDataSourceDialog.Open);
-            WaitForDocumentLoaded();
+            WaitForDocumentChangeLoaded(docChange);
         }
 
         private void RemoveAllResults()

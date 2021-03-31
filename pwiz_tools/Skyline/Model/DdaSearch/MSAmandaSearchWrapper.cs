@@ -33,6 +33,7 @@ using MSAmandaSettings = MSAmanda.InOutput.Settings;
 using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Results;
 using MSAmandaEnzyme = MSAmanda.Utils.Enzyme;
 using OperationCanceledException = System.OperationCanceledException;
 using pwiz.Skyline.Properties;
@@ -49,6 +50,8 @@ namespace pwiz.Skyline.Model.DdaSearch
         private MSAmandaSearch SearchEngine;
         private OutputParameters _outputParameters;
         private MSAmandaSpectrumParser amandaInputParser;
+        private IProgressStatus _progressStatus;
+        private bool _success;
 
         public int CurrentFile { get; private set; }
         public int TotalFiles => SpectrumFileNames.Length;
@@ -62,6 +65,7 @@ namespace pwiz.Skyline.Model.DdaSearch
 
         private const string MAX_LOADED_PROTEINS_AT_ONCE = "MaxLoadedProteinsAtOnce";
         private const string MAX_LOADED_SPECTRA_AT_ONCE = "MaxLoadedSpectraAtOnce";
+        private const string CONSIDERED_CHARGES = "ConsideredCharges";
 
         private readonly TemporaryDirectory _baseDir = new TemporaryDirectory(tempPrefix: @"~SK_MSAmanda/");
 
@@ -93,8 +97,9 @@ namespace pwiz.Skyline.Model.DdaSearch
 
             AdditionalSettings = new Dictionary<string, Setting>
             {
-                {MAX_LOADED_PROTEINS_AT_ONCE, new Setting(MAX_LOADED_PROTEINS_AT_ONCE, 100000, 10, int.MaxValue)},
-                {MAX_LOADED_SPECTRA_AT_ONCE, new Setting(MAX_LOADED_SPECTRA_AT_ONCE, 10000, 100, int.MaxValue)}
+                {MAX_LOADED_PROTEINS_AT_ONCE, new Setting(MAX_LOADED_PROTEINS_AT_ONCE, 100000, 10)},
+                {MAX_LOADED_SPECTRA_AT_ONCE, new Setting(MAX_LOADED_SPECTRA_AT_ONCE, 10000, 100)},
+                {CONSIDERED_CHARGES, new Setting(CONSIDERED_CHARGES, @"2,3")}
             };
 
             CurrentFile = 0;
@@ -111,13 +116,19 @@ namespace pwiz.Skyline.Model.DdaSearch
 
         private void Helper_SearchProgressChanged(string message)
         {
-            int percentProgress = 0;
-            if (amandaInputParser != null && amandaInputParser.TotalSpectra > 0 && TotalFiles > 0)
+            if (message.Contains(@"Identifying Peptides") || message.Contains(@"decoy peptide hits"))
+                return;
+
+            if (message.Contains(@"Search failed"))
             {
-                percentProgress = CurrentFile * 100 / TotalFiles;
-                percentProgress += amandaInputParser.CurrentSpectrum * 100 / amandaInputParser.TotalSpectra / TotalFiles;
+                SearchProgressChanged?.Invoke(this, _progressStatus.ChangeMessage(message));
+                _success = false;
             }
-            SearchProgressChanged?.Invoke(this, new ProgressStatus(message).ChangePercentComplete(percentProgress));
+            else if (amandaInputParser != null && amandaInputParser.TotalSpectra > 0 && TotalFiles > 0)
+            {
+                int percentProgress = amandaInputParser.CurrentSpectrum * 100 / amandaInputParser.TotalSpectra;
+                SearchProgressChanged?.Invoke(this, _progressStatus.ChangeMessage(message).ChangePercentComplete(percentProgress));
+            }
         }
 
         public override void SetEnzyme(DocSettings.Enzyme enzyme, int maxMissedCleavages)
@@ -197,10 +208,15 @@ namespace pwiz.Skyline.Model.DdaSearch
             _outputParameters.SpectraFiles = new List<string>() { spectrumFileName};
             Settings.GenerateDecoyDb = true;
             Settings.ConsideredCharges.Clear();
-            Settings.ConsideredCharges.Add(2);
-            Settings.ConsideredCharges.Add(3);
+            foreach(var chargeStr in AdditionalSettings[CONSIDERED_CHARGES].Value.ToString().Split(','))
+                Settings.ConsideredCharges.Add(Convert.ToInt32(chargeStr));
             Settings.ChemicalData.UseMonoisotopicMass = true;
             Settings.ReportBothBestHitsForTD = false;
+            Settings.CombineConsideredCharges = false;
+            //Settings.WriteResultsTwice = true;
+            //Settings.ForceTargetDecoyMode = false;
+            //Console.WriteLine("\nReportBothBestHitsForTD CombineConsideredCharges WriteResultsTwice ForceTargetDecoyMode");
+            //Console.WriteLine($@"{Settings.ReportBothBestHitsForTD}       {Settings.CombineConsideredCharges}        {Settings.WriteResultsTwice}       {Settings.ForceTargetDecoyMode}");
             mzID.Settings = Settings;
             SearchEngine = new MSAmandaSearch(helper, _baseDir.DirPath, _outputParameters, Settings, token);
             SearchEngine.InitializeOutputMZ(mzID);
@@ -208,9 +224,11 @@ namespace pwiz.Skyline.Model.DdaSearch
             Settings.LoadedSpectraAtOnce = (int) AdditionalSettings[MAX_LOADED_SPECTRA_AT_ONCE].Value;
         }
     
-        public override bool Run(CancellationTokenSource tokenSource)
+        public override bool Run(CancellationTokenSource tokenSource, IProgressStatus status)
         {
-            bool success = true;
+            _progressStatus = status;
+
+            _success = true;
             try
             {
                 using (var c = new CurrentCultureSetter(CultureInfo.InvariantCulture))
@@ -221,6 +239,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                         tokenSource.Token.ThrowIfCancellationRequested();
                         try
                         {
+                            // CONSIDER: move this to base.Run()?
                             string outputFilepath = GetSearchResultFilepath(rawFileName);
                             if (File.Exists(outputFilepath))
                             {
@@ -231,6 +250,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                                 {
                                     helper.WriteMessage($"Re-using existing mzIdentML file for {rawFileName.GetSampleOrFileName()}", true);
                                     CurrentFile++;
+                                    _progressStatus = _progressStatus.NextSegment();
                                     continue;
                                 }
                                 else*/
@@ -242,6 +262,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                             SearchEngine.SetInputParser(amandaInputParser);
                             SearchEngine.PerformSearch(_outputParameters.DBFile);
                             CurrentFile++;
+                            _progressStatus = _progressStatus.NextSegment();
                         }
                         finally
                         {
@@ -260,17 +281,17 @@ namespace pwiz.Skyline.Model.DdaSearch
                 }
                 else
                     Program.ReportException(e);
-                success = false;
+                _success = false;
             }
             catch (OperationCanceledException)
             {
                 helper.WriteMessage(Resources.DdaSearch_Search_is_canceled, true);
-                success = false;
+                _success = false;
             }
             catch (Exception ex)
             {
                 helper.WriteMessage(string.Format(Resources.DdaSearch_Search_failed__0, ex.Message), true);
-                success = false;
+                _success = false;
             }
             finally
             {
@@ -278,9 +299,9 @@ namespace pwiz.Skyline.Model.DdaSearch
             }
 
             if (tokenSource.IsCancellationRequested)
-                success = false;
+                _success = false;
             
-            return success;
+            return _success;
         }
 
         public override void SetModifications(IEnumerable<StaticMod> modifications, int maxVariableMods)
@@ -312,6 +333,12 @@ namespace pwiz.Skyline.Model.DdaSearch
                     Settings.SelectedModifications.AddRange(GenerateNewModificationsForEveryAA(item));
                 }
             }
+
+        }
+
+        public override string GetSearchResultFilepath(MsDataFileUri searchFilepath)
+        {
+            return Path.ChangeExtension(searchFilepath.GetFilePath(), @".mzid.gz");
         }
 
         private List<Modification> GenerateNewModificationsForEveryAA(StaticMod mod)
@@ -319,7 +346,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             List<Modification> mods = new List<Modification>();
             if (mod.AAs != null)
                 foreach (var a in mod.AAs)
-                    mods.Add(GenerateNewModification(mod, a));
+                mods.Add(GenerateNewModification(mod, a));
             else
                 mods.Add(GenerateNewModification(mod, ' '));
             return mods;

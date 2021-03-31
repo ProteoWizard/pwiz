@@ -93,7 +93,7 @@ namespace pwiz.Skyline.Menus
                 var message = TextUtil.LineSeparate(Resources.SkylineWindow_generateDecoysMenuItem_Click_This_operation_will_replace_the_existing_decoys,
                                                     Resources.SkylineWindow_generateDecoysMenuItem_Click_Are_you_sure_you_want_to_continue);
                 // Warn about removing existing decoys
-                var result = MessageBox.Show(SkylineWindow, message, Program.Name, MessageBoxButtons.OKCancel);
+                var result = MultiButtonMsgDlg.Show(SkylineWindow, message, MessageBoxButtons.OKCancel);
                 if (result == DialogResult.Cancel)
                     return;
             }

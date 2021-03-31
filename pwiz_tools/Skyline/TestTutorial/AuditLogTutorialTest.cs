@@ -73,7 +73,7 @@ namespace pwiz.SkylineTestTutorial
         {
             // Set true to look at tutorial screenshots.
 //            IsPauseForScreenShots = true;
-//            PauseStartPage = 16;
+//            PauseStartingPage = 16;
 //            IsCoverShotMode = true;
             CoverShotName = "AuditLog";
 
@@ -470,7 +470,7 @@ namespace pwiz.SkylineTestTutorial
                 OkDialog(loginDialog, loginDialog.CancelButton.PerformClick);
             else
             {
-                PauseTest("Enter password. (manual) No screen shot.");
+                PauseForManualTutorialStep("MANUAL STEP (no screenshot). Enter password in the Edit Server dialog but DO NOT click OK. Close this window instead to proceed.");
 
                 var publishDialog = ShowDialog<PublishDocumentDlg>(loginDialog.OkDialog);
                 WaitForCondition(() => publishDialog.IsLoaded);

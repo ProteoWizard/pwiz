@@ -1,0 +1,219 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="_refine_add_label_type" xml:space="preserve">
+    <value>Add label type</value>
+  </data>
+  <data name="_refine_auto_select_peptides" xml:space="preserve">
+    <value>Auto-select peptides</value>
+  </data>
+  <data name="_refine_auto_select_precursors" xml:space="preserve">
+    <value>Auto-select precursors</value>
+  </data>
+  <data name="_refine_auto_select_transitions" xml:space="preserve">
+    <value>Auto-select transitions</value>
+  </data>
+  <data name="_refine_cv_global_normalize" xml:space="preserve">
+    <value>CV global normalize</value>
+  </data>
+  <data name="_refine_cv_ms_level" xml:space="preserve">
+    <value>CV ms level</value>
+  </data>
+  <data name="_refine_cv_reference_normalize" xml:space="preserve">
+    <value>CV reference normalize</value>
+  </data>
+  <data name="_refine_cv_remove_above_cutoff" xml:space="preserve">
+    <value>CV remove above cuttoff</value>
+  </data>
+  <data name="_refine_cv_transitions" xml:space="preserve">
+    <value>CV transitions</value>
+  </data>
+  <data name="_refine_cv_transitions_count" xml:space="preserve">
+    <value>CV transitions count</value>
+  </data>
+  <data name="_refine_gc_fold_change_cutoff" xml:space="preserve">
+    <value>Group comparison fold change cuttoff</value>
+  </data>
+  <data name="_refine_gc_ms_level" xml:space="preserve">
+    <value>MS level</value>
+  </data>
+  <data name="_refine_gc_name" xml:space="preserve">
+    <value>Group comparison name</value>
+  </data>
+  <data name="_refine_gc_p_value_cutoff" xml:space="preserve">
+    <value>Group comparison p value cuttoff</value>
+  </data>
+  <data name="_refine_label_type" xml:space="preserve">
+    <value>Label type</value>
+  </data>
+  <data name="_refine_max_peak_found_ratio" xml:space="preserve">
+    <value>Maximum peak found ratio</value>
+  </data>
+  <data name="_refine_max_peptide_peak_rank" xml:space="preserve">
+    <value>Maximum peptide peak rank</value>
+  </data>
+  <data name="_refine_max_precursor_only" xml:space="preserve">
+    <value>Maximum precursor only</value>
+  </data>
+  <data name="_refine_max_transition_peak_rank" xml:space="preserve">
+    <value>Maximum transition peak rank</value>
+  </data>
+  <data name="_refine_minimum_detections" xml:space="preserve">
+    <value>Minimum detections</value>
+  </data>
+  <data name="_refine_min_dotp" xml:space="preserve">
+    <value>Minimum dot-product</value>
+  </data>
+  <data name="_refine_min_idotp" xml:space="preserve">
+    <value>Minimum idotp</value>
+  </data>
+  <data name="_refine_min_peak_found_ratio" xml:space="preserve">
+    <value>Minimum peak found ratio</value>
+  </data>
+  <data name="_refine_min_peptides" xml:space="preserve">
+    <value>Minimum peptides</value>
+  </data>
+  <data name="_refine_min_time_correlation" xml:space="preserve">
+    <value>Minimum time correlation</value>
+  </data>
+  <data name="_refine_min_transitions" xml:space="preserve">
+    <value>Minimum transitions</value>
+  </data>
+  <data name="_refine_missing_library" xml:space="preserve">
+    <value>Missing library</value>
+  </data>
+  <data name="_refine_missing_results" xml:space="preserve">
+    <value>Missing results</value>
+  </data>
+  <data name="_refine_prefer_larger_products" xml:space="preserve">
+    <value>Prefer larger products</value>
+  </data>
+  <data name="_refine_qvalue_cutoff" xml:space="preserve">
+    <value>Q value cutoff</value>
+  </data>
+  <data name="_refine_remove_duplicates" xml:space="preserve">
+    <value>Remove duplicates</value>
+  </data>
+  <data name="_refine_remove_repeats" xml:space="preserve">
+    <value>Remove repeats</value>
+  </data>
+  <data name="_refine_use_best_result" xml:space="preserve">
+    <value>Use best result</value>
+  </data>
+</root>

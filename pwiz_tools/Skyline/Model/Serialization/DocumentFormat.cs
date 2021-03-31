@@ -19,6 +19,8 @@
 using System;
 using System.Diagnostics.Contracts;
 using System.Globalization;
+using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Serialization
 {
@@ -80,7 +82,11 @@ namespace pwiz.Skyline.Model.Serialization
         public static readonly DocumentFormat VERSION_20_14 = new DocumentFormat(20.14); // Moves ion mobility settings from PeptideSettings to TransitionSettings, introduces ion mobility libraries (.imsdb files)
         public static readonly DocumentFormat TRANSITION_SETTINGS_ION_MOBILITY = VERSION_20_14; // First version with ion mobility settings moved from PeptideSettings to TransitionSettings, and using .imsdb IMS libraries
         public static readonly DocumentFormat VERSION_20_2 = new DocumentFormat(20.2); // Release format
-        public static readonly DocumentFormat CURRENT = VERSION_20_2;
+        public static readonly DocumentFormat VERSION_20_21 = new DocumentFormat(20.21); // Sequential audit log hash calculation
+        public static readonly DocumentFormat VERSION_20_22 = new DocumentFormat(20.22); // Flat crosslinks
+        public static readonly DocumentFormat SEQUENTIAL_LOG_HASH = VERSION_20_21;
+        public static readonly DocumentFormat FLAT_CROSSLINKS = VERSION_20_22;
+        public static readonly DocumentFormat CURRENT = VERSION_20_22;
 
 
         private readonly double _versionNumber;
@@ -120,6 +126,27 @@ namespace pwiz.Skyline.Model.Serialization
         public override string ToString()
         {
             return _versionNumber.ToString(CultureInfo.InvariantCulture);
+        }
+
+        /// <summary>
+        /// Return the name of the Skyline version corresponding to this format.
+        /// If this format is not an official Skyline release then it will be just "Version: " and the number.
+        /// </summary>
+        public string GetDescription()
+        {
+            foreach (var skylineVersion in SkylineVersion.SupportedForSharing())
+            {
+                if (Equals(skylineVersion.SrmDocumentVersion))
+                {
+                    if (Equals(SkylineVersion.CURRENT, skylineVersion) && Install.Type == Install.InstallType.developer)
+                    {
+                        break;
+                    }
+                    return skylineVersion.Label;
+                }
+            }
+
+            return string.Format(Resources.SpectrumLibraryInfoDlg_SetDetailsText_Version__0__, ToString());
         }
     }
 }

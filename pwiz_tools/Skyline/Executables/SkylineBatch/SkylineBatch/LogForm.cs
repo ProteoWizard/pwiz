@@ -24,12 +24,14 @@ namespace SkylineBatch
 {
     public partial class LogForm : Form
     {
-        private readonly ConfigManager _configManager;
-        public LogForm(ConfigManager configManager)
-        {
-            _configManager = configManager;
-            InitializeComponent();
+        // Delete Logs Form
+        // User selects logs to delete using checkboxes
 
+        private readonly SkylineBatchConfigManager _configManager;
+        public LogForm(SkylineBatchConfigManager configManager)
+        {
+            InitializeComponent();
+            _configManager = configManager;
             if (_configManager.HasOldLogs())
                 checkedListLogs.Items.AddRange(_configManager.GetOldLogFiles());
         }

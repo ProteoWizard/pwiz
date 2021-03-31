@@ -29,6 +29,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
@@ -110,6 +111,7 @@ namespace pwiz.SkylineTestFunctional
         {
             var docEmpty = NewDocument();
 
+            TestInconsistentMoleculeDescriptions();
             TestProductNeutralLoss();
             TestUnsortedMzPrecursors();
             TestNameCollisions();
@@ -1593,5 +1595,22 @@ namespace pwiz.SkylineTestFunctional
             Assume.AreEqual(0, transitions.Count(t => !t.IsMs1));
             NewDocument();
         }
-    }  
+
+        private void TestInconsistentMoleculeDescriptions()
+        {
+            // Check that we handle items with same name but different InChiKey, which is legitimate
+            var input =
+                "Molecule List Name, Precursor Name,Precursor Formula, Precursor Adduct,Precursor Charge, Product m/z,Product Charge, Explicit Retention Time, Explicit Collision Energy, InChiKey, Explicit Declustering potential\n" +
+                "bob,D-Erythrose 4-phosphate,C4H9O7P,[M-H],-1,97,-1,,8,NGHMDNPXVRFFGS-IUYQGCFVSA-N,60\n" +
+                "bob,D-Erythrose 4-phosphate,C4H9O7P,[M+H],1,99,1,,8,,60\n";
+            var docOrig = NewDocument();
+            SetClipboardText(input);
+
+            // Paste directly into targets area
+            var errDlg = ShowDialog<MessageDlg>(() => SkylineWindow.Paste());
+            AssertEx.IsTrue(errDlg.Message.Contains(Resources.SmallMoleculeTransitionListReader_GetMoleculeTransitionGroup_Inconsistent_molecule_description));
+            OkDialog(errDlg, errDlg.OkDialog);
+        }
+
+    }
 }

@@ -196,6 +196,42 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Chebyshev.
+        /// </summary>
+        public static string ClusterMetricType_chebyshev {
+            get {
+                return ResourceManager.GetString("ClusterMetricType_chebyshev", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Euclidean.
+        /// </summary>
+        public static string ClusterMetricType_euclidean {
+            get {
+                return ResourceManager.GetString("ClusterMetricType_euclidean", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to City block.
+        /// </summary>
+        public static string ClusterMetricType_manhattan {
+            get {
+                return ResourceManager.GetString("ClusterMetricType_manhattan", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Pearson.
+        /// </summary>
+        public static string ClusterMetricType_pearson {
+            get {
+                return ResourceManager.GetString("ClusterMetricType_pearson", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Count.
         /// </summary>
         public static string CountImpl_Count {
@@ -489,6 +525,60 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string ImportResultsSimultaneousFileOptions_several {
             get {
                 return ResourceManager.GetString("ImportResultsSimultaneousFileOptions_several", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to DDA raw (search and build library).
+        /// </summary>
+        public static string InputFile_dda_raw {
+            get {
+                return ResourceManager.GetString("InputFile_dda_raw", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to DIA raw (deconvolute, search, and build library).
+        /// </summary>
+        public static string InputFile_dia_raw {
+            get {
+                return ResourceManager.GetString("InputFile_dia_raw", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Search results (build library directly).
+        /// </summary>
+        public static string InputFile_search_result {
+            get {
+                return ResourceManager.GetString("InputFile_search_result", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Orbitrap LTQ.
+        /// </summary>
+        public static string InstrumentPreset_OrbitrapLTQ {
+            get {
+                return ResourceManager.GetString("InstrumentPreset_OrbitrapLTQ", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Q Exactive.
+        /// </summary>
+        public static string InstrumentPreset_QExactive {
+            get {
+                return ResourceManager.GetString("InstrumentPreset_QExactive", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to TripleTOF.
+        /// </summary>
+        public static string InstrumentPreset_TripleTOF {
+            get {
+                return ResourceManager.GetString("InstrumentPreset_TripleTOF", resourceCulture);
             }
         }
         
@@ -1083,6 +1173,33 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string PointSymbol_XCross {
             get {
                 return ResourceManager.GetString("PointSymbol_XCross", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to DIA-Umpire.
+        /// </summary>
+        public static string Protocol_dia_umpire {
+            get {
+                return ResourceManager.GetString("Protocol_dia_umpire", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to MSConvert.
+        /// </summary>
+        public static string Protocol_msconvert {
+            get {
+                return ResourceManager.GetString("Protocol_msconvert", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to None.
+        /// </summary>
+        public static string Protocol_none {
+            get {
+                return ResourceManager.GetString("Protocol_none", resourceCulture);
             }
         }
         

@@ -509,7 +509,7 @@ namespace pwiz.Skyline.Menus
                 }
                 else if (text.Contains(@"."))
                 {
-                    MessageBox.Show(SkylineWindow, Resources.SkylineWindow_Paste_Unexpected_character_period_found);
+                    MessageDlg.Show(SkylineWindow, Resources.SkylineWindow_Paste_Unexpected_character_period_found);
                     return;
                 }
 
@@ -547,7 +547,7 @@ namespace pwiz.Skyline.Menus
                     continue;
                 if (pepSeqClean.Contains(@"."))
                 {
-                    MessageBox.Show(SkylineWindow, string.Format(Resources.SkylineWindow_Unexpected_character__0__found_on_line__1__, @".", i + 1));
+                    MessageDlg.Show(SkylineWindow, string.Format(Resources.SkylineWindow_Unexpected_character__0__found_on_line__1__, @".", i + 1));
                     return null;
                 }
 
@@ -659,11 +659,6 @@ namespace pwiz.Skyline.Menus
         {
             SkylineWindow.FindNext(reverse);
         }
-
-        private IEnumerable<FindResult> FindAll(ILongWaitBroker longWaitBroker, FindPredicate findPredicate)
-        {
-            return findPredicate.FindAll(longWaitBroker, Document);
-        }
         #endregion
         private void editNoteMenuItem_Click(object sender, EventArgs e) { EditNote(); }
         public void EditNote()
@@ -727,7 +722,7 @@ namespace pwiz.Skyline.Menus
 
         public void EditToolStripMenuItemDropDownOpening()
         {
-            SkylineWindow.CanApplyOrRemovePeak(null, null, out var canApply, out var canRemove);
+            CanApplyOrRemovePeak(null, null, out var canApply, out var canRemove);
             if (!canApply && !canRemove)
             {
                 integrationToolStripMenuItem.Enabled = false;
@@ -749,16 +744,10 @@ namespace pwiz.Skyline.Menus
                     }
                     var i = 0;
                     AddGroupByMenuItems(null, groupApplyToByToolStripMenuItem, replicateValue => Settings.Default.GroupApplyToBy = replicateValue?.ToPersistedString(), false, Settings.Default.GroupApplyToBy, ref i);
-                    SkylineWindow.GroupApplyToByGraphMenuItem.Visible = true;
-                }
-                else
-                {
-                    SkylineWindow.GroupApplyToByGraphMenuItem.Visible = false;
                 }
                 removePeakToolStripMenuItem.Enabled = canRemove;
                 integrationToolStripMenuItem.Enabled = true;
             }
-
         }
 
         #region Peaks
@@ -779,7 +768,7 @@ namespace pwiz.Skyline.Menus
 
         public void ApplyPeak(bool subsequent, bool group)
         {
-            SkylineWindow.CanApplyOrRemovePeak(null, null, out var canApply, out _);
+            CanApplyOrRemovePeak(null, null, out var canApply, out _);
             if (!canApply)
                 return;
 
@@ -834,10 +823,10 @@ namespace pwiz.Skyline.Menus
             RemovePeak(false);
         }
 
-        public void RemovePeak(bool removePeakByContextMenu)
+        public void RemovePeak(bool removePeakBySequenceTreeContextMenu)
         {
             var chromFileInfoId = SkylineWindow.GetSelectedChromFileId();
-            SkylineWindow.CanApplyOrRemovePeak(null, null, out _, out var canRemove);
+            CanApplyOrRemovePeak(null, null, out _, out var canRemove);
             if (!canRemove)
                 return;
 
@@ -860,7 +849,7 @@ namespace pwiz.Skyline.Menus
             }
 
             TransitionDocNode nodeTran = null;
-            if (removePeakByContextMenu)
+            if (removePeakBySequenceTreeContextMenu)
             {
                 var nodeTranTree = SelectedNode as TransitionTreeNode;
                 if (nodeTranTree != null)

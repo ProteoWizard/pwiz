@@ -53,7 +53,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         [TestMethod]
         public void MeasuredInverseK0ValuesPerfTest()
         {
-            TestFilesZip = "https://skyline.gs.washington.edu/perftests/PerfMeasuredInverseK0_v3.zip";
+            TestFilesZip = GetPerfTestDataURL(@"PerfMeasuredInverseK0_v3.zip");
             TestFilesPersistent = new[] { BSA_50fmol_TIMS_InfusionESI_10precd, bsaFmolTimsInfusionesiPrecMz5Mz5 }; // list of files that we'd like to unzip alongside parent zipFile, and (re)use in place
 
             RunFunctionalTest();

@@ -698,6 +698,12 @@ namespace pwiz.Skyline.Model.Results
                 raw = new RawData(CacheFormat.EMPTY);
                 return 0;
             }
+
+            if (cacheHeader.IsCorrupted(stream.Length))
+            {
+                throw new InvalidDataException(Resources.ChromatogramCache_LoadStructs_FileCorrupted);
+            }
+
             var formatVersion = cacheHeader.formatVersion;
             CacheFormat cacheFormat = CacheFormat.FromCacheHeader(cacheHeader);
             raw = new RawData(cacheFormat);
@@ -1332,7 +1338,7 @@ namespace pwiz.Skyline.Model.Results
                                 }
                                 else
                                 {
-                                    chromPeakSerializer.WriteItems(fsPeaks.FileStream, peaks.Skip(startIndex).Take(count));    
+                                    chromPeakSerializer.WriteItems(fsPeaks.FileStream, ReadOnlyList.Create(count, index => peaks[startIndex + index]));    
                                 }
                             },
                             start,

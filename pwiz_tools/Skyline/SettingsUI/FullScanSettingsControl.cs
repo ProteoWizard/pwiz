@@ -892,9 +892,14 @@ namespace pwiz.Skyline.SettingsUI
             usercontrolIonMobilityFiltering.InitializeSettings(_documentContainer);
         }
 
+        private ImportPeptideSearchDlg.Workflow? _lastPeptideSearchWorkflow;
         public void ModifyOptionsForImportPeptideSearchWizard(ImportPeptideSearchDlg.Workflow workflow, bool libIonMobilities)
         {
             var settings = _documentContainer.Document.Settings;
+
+            if (_lastPeptideSearchWorkflow == workflow)
+                return;
+            _lastPeptideSearchWorkflow = workflow;
 
             // Reduce MS1 filtering groupbox
             int sepMS1FromMS2 = groupBoxMS2.Top - groupBoxMS1.Bottom;
@@ -953,7 +958,9 @@ namespace pwiz.Skyline.SettingsUI
 
                 ProductMassAnalyzer = PrecursorMassAnalyzer;
 
-                if (workflow == ImportPeptideSearchDlg.Workflow.dia && Settings.Default.IsolationSchemeList.Count > 1)
+                // If there is no isolation scheme set, select the 2nd item if it exists.
+                if (workflow == ImportPeptideSearchDlg.Workflow.dia && Settings.Default.IsolationSchemeList.Count >= 2 &&
+                    settings.TransitionSettings.FullScan.IsolationScheme == null)
                 {
                     comboIsolationScheme.SelectedIndex = 1;
                 }

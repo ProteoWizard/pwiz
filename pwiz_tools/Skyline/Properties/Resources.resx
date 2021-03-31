@@ -2525,6 +2525,9 @@ Are you sure you want to continue?</value>
   <data name="SkylineWindow_ImportMassList__0__transitions_contained_errors__Skip_these__0__transitions_and_import_the_rest_" xml:space="preserve">
     <value>{0} transitions contained errors. Skip these {0} transitions and import the rest?</value>
   </data>
+  <data name="SkylineWindow_ImportMassList__0__transitions_contained_errors_" xml:space="preserve">
+    <value>{0} transitions contained errors.</value>
+  </data>
   <data name="EditStaticModDlg_OkDialog_The_modification__0__already_exists" xml:space="preserve">
     <value>The modification '{0}' already exists.</value>
   </data>
@@ -3370,6 +3373,9 @@ Are you sure you want to continue?</value>
   </data>
   <data name="PopupBtn" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\popupbtn.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="ImportTransitionListErrorDlg_ImportTransitionListErrorDlg_A_transition_contained_an_error_" xml:space="preserve">
+    <value>A transition contained an error.</value>
   </data>
   <data name="ImportTransitionListErrorDlg_ImportTransitionListErrorDlg_A_transition_contained_an_error__Skip_this_transition_and_import_the_rest_" xml:space="preserve">
     <value>A transition contained an error. Skip this transition and import the rest?</value>
@@ -5209,6 +5215,9 @@ If you prefer you can choose to report anonymously.</value>
   <data name="EditCustomMoleculeDlg_OkDialog_Custom_molecules_must_have_a_mass_greater_than_or_equal_to__0__" xml:space="preserve">
     <value>Custom molecules must have a mass greater than or equal to {0}.</value>
   </data>
+  <data name="EditCustomMoleculeDlg_OkDialog_Please_specify_the_ion_mobility_units_" xml:space="preserve">
+    <value>Please specify the ion mobility units.</value>
+  </data>
   <data name="AddZipToolHelper_ShouldOverwrite_Overwriting_tool___0_" xml:space="preserve">
     <value>Overwriting tool: {0}</value>
   </data>
@@ -5579,6 +5588,9 @@ If you prefer you can choose to report anonymously.</value>
   </data>
   <data name="ExportMethodDlg_comboInstrument_SelectedIndexChanged_Export_of_DIA_isolation_lists_is_not_yet_supported_for__0__" xml:space="preserve">
     <value>Export of DIA isolation lists is not yet supported for {0}.</value>
+  </data>
+  <data name="MassListRowReader_NextRow_No_peptide_sequence_column_specified">
+    <value>No peptide modified sequence column specified</value>
   </data>
   <data name="MassListRowReader_NextRow_Invalid_peptide_sequence__0__found" xml:space="preserve">
     <value>Invalid peptide sequence {0} found</value>
@@ -8594,6 +8606,9 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   <data name="InsertSmallMoleculeTransitionList_InsertSmallMoleculeTransitionList_Error_on_line__0___column_1____2_" xml:space="preserve">
     <value>Error on line {0}, column{1}: {2}</value>
   </data>
+  <data name="InsertSmallMoleculeTransitionList_InsertSmallMoleculeTransitionList_Error_on_line__0__1_" xml:space="preserve">
+    <value>Error on line {0}: {1}</value>
+  </data>
   <data name="SmallMoleculeTransitionListReader_SmallMoleculeTransitionListReader_" xml:space="preserve">
     <value>Error reading molecule column headers, did not recognize:
 {0}
@@ -8927,8 +8942,8 @@ If your transition list format combines formulas and adducts in a single column 
   <data name="EditIsolationSchemeDlg_ReadIsolationRanges_No_repeating_isolation_scheme_found_in__0_" xml:space="preserve">
     <value>No repeating isolation scheme found in {0}</value>
   </data>
-  <data name="SkylineVersion_GetCurrentVersionName_Current___0__" xml:space="preserve">
-    <value>Current ({0})</value>
+  <data name="SkylineVersion_GetCurrentVersionName_Latest___0__" xml:space="preserve">
+    <value>Latest ({0})</value>
   </data>
   <data name="SkylineVersion_GetCurrentVersionName_Developer_Build" xml:space="preserve">
     <value>Developer Build</value>
@@ -9663,6 +9678,33 @@ Recognized isotopes include: {2}</value>
   </data>
   <data name="SmallMoleculeLibraryAttributes_KeyValuePairs_OtherIDs" xml:space="preserve">
     <value>OtherIDs</value>
+  </data>
+  <data name="ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column">
+    <value>Ignore Column</value>
+  </data>
+  <data name="ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Decoy" xml:space="preserve">
+    <value>Decoy</value>
+  </data>
+  <data name="ImportTransitionListColumnSelectDlg_PopulateComboBoxes_iRT" xml:space="preserve">
+    <value>iRT</value>
+  </data>
+  <data name="ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type" xml:space="preserve">
+    <value>Label Type</value>
+  </data>
+  <data name="ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Library_Intensity" xml:space="preserve">
+    <value>Library Intensity</value>
+  </data>
+  <data name="ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence" xml:space="preserve">
+    <value>Peptide Modified Sequence</value>
+  </data>
+  <data name="ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z" xml:space="preserve">
+    <value>Precursor m/z</value>
+  </data>
+  <data name="ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z" xml:space="preserve">
+    <value>Product m/z</value>
+  </data>
+  <data name="ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name" xml:space="preserve">
+    <value>Protein Name</value>
   </data>
   <data name="ToolOptionsUI_btnResetSettings_Click_Are_you_sure_you_want_to_clear_all_saved_settings__This_will_immediately_return__0__to_its_original_configuration_and_cannot_be_undone_" xml:space="preserve">
     <value>Are you sure you want to clear all saved settings? This will immediately return {0} to its original configuration and cannot be undone.</value>
@@ -10917,7 +10959,6 @@ Invalid peptide sequence at position 18
   <data name="DetectionPlotPane_EmptyPlotCanceled_Label" xml:space="preserve">
     <value>Operation canceled.</value>
   </data>
-  
   <data name="DetectionPlotData_NoDataLoaded_Label" xml:space="preserve">
     <value>No data loaded.</value>
   </data>
@@ -10939,7 +10980,6 @@ Invalid peptide sequence at position 18
   <data name="DetectionPlotData_DataRetrieved_Label" xml:space="preserve">
     <value>"Data retrieved successfully."</value>
   </data>
-
   <data name="DetectionHistogramPane_XAxis_Name" xml:space="preserve">
     <value>Replicate Count</value>
   </data>
@@ -11078,6 +11118,12 @@ Invalid peptide sequence at position 18
   <data name="RefineDlg_NormalizationMethod_Total_ion_current" xml:space="preserve">
     <value>Total ion current</value>
   </data>
+  <data name="ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Fragment_Name" xml:space="preserve">
+    <value>Fragment Name</value>
+  </data>
+  <data name="ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge" xml:space="preserve">
+    <value>Precursor Charge</value>
+  </data>
   <data name="CommandLine_ImportSearchInternal_The_iRT_standard_name___0___is_invalid_" xml:space="preserve">
     <value>The iRT standard name '{0}' is invalid.</value>
   </data>
@@ -11156,7 +11202,212 @@ Invalid peptide sequence at position 18
   <data name="RTScheduleGraphPane_UpdateGraph_Concurrent_Accumulations" xml:space="preserve">
     <value>Concurrent Accumulations</value>
   </data>
+  <data name="GraphFullScan_CreateGraph_IM__0_" xml:space="preserve">
+    <value>IM={0}</value>
+    <comment>"IM" stands for "Ion Mobility" - used for displaying ion mobility in raw scan view</comment>
+  </data>
+  <data name="PcaPlot_UpdateGraph_Principal_Component__0_" xml:space="preserve">
+    <value>Principal Component {0}</value>
+  </data>
+  <data name="PcaPlot_UpdateGraph_PCA_on_rows" xml:space="preserve">
+    <value>PCA on rows</value>
+  </data>
+  <data name="PcaPlot_UpdateGraph__Across_" xml:space="preserve">
+    <value> Across </value>
+  </data>
+  <data name="HierarchicalClusterGraph_zedGraphControl1_ContextMenuBuilder_X_Axis_Labels" xml:space="preserve">
+    <value>X-Axis Labels</value>
+  </data>
+  <data name="HierarchicalClusterGraph_zedGraphControl1_ContextMenuBuilder_Y_Axis_Labels" xml:space="preserve">
+    <value>Y-Axis Labels</value>
+  </data>
+  <data name="DataboundGridControl_DataboundGridControl_Show_Heat_Map" xml:space="preserve">
+    <value>Show Heat Map</value>
+  </data>
+  <data name="DataboundGridControl_DataboundGridControl_Show_PCA_Plot" xml:space="preserve">
+    <value>Show PCA Plot</value>
+  </data>
+  <data name="DataboundGridControl_GetClusteredResults_An_error_occured_while_performing_clustering_" xml:space="preserve">
+    <value>An error occured while performing clustering.</value>
+  </data>
+  <data name="DataboundGridControl_GetClusteredResults_Unable_to_choose_a_set_of_columns_to_use_for_hierarchical_clustering_" xml:space="preserve">
+    <value>Unable to choose a set of columns to use for hierarchical clustering.</value>
+  </data>
+  <data name="HierarchicalClusterGraph_zedGraphControl1_ContextMenuBuilder_Select" xml:space="preserve">
+    <value>Select</value>
+  </data>
   <data name="CalibrateIrtDlg_OkDialog_Please_enter_at_least__0__standard_peptides_" xml:space="preserve">
     <value>Please enter at least {0} standard peptides.</value>
+  </data>
+  <data name="ImportTransitionListErrorDlg_ImportTransitionListErrorDlg_This_transition_list_cannot_be_imported_as_it_does_not_provide_values_for_" xml:space="preserve">
+    <value>This transition list cannot be imported as it does not provide values for:</value>
+  </data>
+  <data name="HierarchicalClusterGraph_zedGraphControl1_ContextMenuBuilder_Show_Selection" xml:space="preserve">
+    <value>Show Selection</value>
+  </data>
+  <data name="ChromatogramCache_LoadStructs_FileCorrupted" xml:space="preserve">
+    <value>The file appears to be corrupted and cannot be read.
+It is recommended that you delete this file so that Skyline can create a new file by again extracting chromatograms from the raw data files.</value>
+  </data>
+  <data name="ImportTransitionListColumnSelectDlg_DisplayData_This_column_is_labeled_with_the_header___0___in_the_input_text__Use_the_dropdown_control_to_assign_its_meaning_for_import_" xml:space="preserve">
+    <value>This column is labeled with the header '{0}' in the input text. Use the dropdown control to assign its meaning for import.</value>
+  </data>
+  <data name="ImportTransitionListColumnSelectDlg_DisplayData_The_input_text_did_not_appear_to_contain_column_headers__Use_the_dropdown_control_to_assign_column_meanings_for_import_" xml:space="preserve">
+    <value>The input text did not appear to contain column headers. Use the dropdown control to assign column meanings for import.</value>
+  </data>
+  <data name="EditPepModsDlg_OkDialog_One_or_more_of_the_crosslinked_peptides_are_no_longer_attached_to_this_peptide__" xml:space="preserve">
+    <value>One or more of the crosslinked peptides are no longer attached to this peptide. </value>
+  </data>
+  <data name="EditPepModsDlg_GetTooltip_Invalid_crosslink___0_" xml:space="preserve">
+    <value>Invalid crosslink: {0}</value>
+  </data>
+  <data name="EditPepModsDlg_GetTooltip_Looplink___0____1__" xml:space="preserve">
+    <value>Looplink: {0} [{1}]</value>
+    <comment>{0} is a single amino acid letter and {1} is a number
+Example: Looplink: T [4]
+</comment>
+  </data>
+  <data name="EditPepModsDlg_GetTooltip_Crosslink_to__0____1____2__" xml:space="preserve">
+    <value>Crosslink to {0}: {1} [{2}]</value>
+    <comment>{0} is a peptide sequence, {1} is an amino acid letter and {2} is a number
+Example: Crosslink to PEPTIDE: T [4]</comment>
+  </data>
+  <data name="EditPepModsDlg_EnsureLinkedPeptide_Discard_or_edit_disconnected_crosslinks" xml:space="preserve">
+    <value>Removing the crosslink on this amino acid will result in a crosslinked peptide no longer being connected. Would you like to edit the crosslinks now or discard the disconnected peptides?</value>
+  </data>
+  <data name="EditPepModsDlg_EnsureLinkedPeptide_ButtonText_Edit_Crosslinks" xml:space="preserve">
+    <value>Edit Crosslinks</value>
+    <comment>This should match one of the options presented in EditPepModsDlg_EnsureLinkedPeptide_Discard_or_edit_disconnected_crosslinks</comment>
+  </data>
+  <data name="EditPepModsDlg_EnsureLinkedPeptide_ButtonText_Discard" xml:space="preserve">
+    <value>Discard</value>
+    <comment>This should match one of the options presented in EditPepModsDlg_EnsureLinkedPeptide_Discard_or_edit_disconnected_crosslinks</comment>
+  </data>
+  <data name="EditLinkedPeptidesDlg_OkDialog_Some_crosslinked_peptides_are_not_connected_" xml:space="preserve">
+    <value>Some crosslinked peptides are not connected.</value>
+  </data>
+  <data name="EditLinkedPeptidesDlg_MakeCrosslink_Invalid_crosslinker" xml:space="preserve">
+    <value>Invalid crosslinker</value>
+  </data>
+  <data name="EditLinkedPeptidesDlg_MakeCrosslink_This_peptide_is_not_valid_" xml:space="preserve">
+    <value>This peptide is not valid.</value>
+  </data>
+  <data name="EditLinkedPeptidesDlg_MakeCrosslink_This_amino_acid_position_cannot_be_blank_" xml:space="preserve">
+    <value>This amino acid position cannot be blank.</value>
+  </data>
+  <data name="EditLinkedPeptidesDlg_MakeCrosslink_This_is_not_a_valid_amino_acid_position_in_this_peptide_" xml:space="preserve">
+    <value>This is not a valid amino acid position in this peptide.</value>
+  </data>
+  <data name="EditLinkedPeptidesDlg_MakeCrosslink_The_crosslinker___0___cannot_attach_to_this_amino_acid_position_" xml:space="preserve">
+    <value>The crosslinker '{0}' cannot attach to this amino acid position.</value>
+  </data>
+  <data name="EditLinkedPeptidesDlg_MakeCrosslink_Both_ends_of_this_crosslink_cannot_be_the_same_" xml:space="preserve">
+    <value>Both ends of this crosslink cannot be the same.</value>
+  </data>
+  <data name="EditLinkedPeptidesDlg_MakeCrosslink_This_amino_acid_position_in_this_peptide_is_already_being_used_by_another_crosslink_" xml:space="preserve">
+    <value>This amino acid position in this peptide is already being used by another crosslink.</value>
+  </data>
+  <data name="DocumentWriter_WritePeptideXml_Unable_to_convert_crosslinks_in__0__to_document_format__1__" xml:space="preserve">
+    <value>Unable to convert crosslinks in {0} to document format {1}.</value>
+    <comment>{0} is a peptide sequence, and {1} is a version number (e.g. 20.2)</comment>
+  </data>
+  <data name="EditLinkedPeptidesDlg_dataGridViewLinkedPeptides_CellToolTipTextNeeded_Edit_Modifications" xml:space="preserve">
+    <value>Edit Modifications</value>
+  </data>
+  <data name="SmallMoleculeTransitionListReader_GetMoleculeTransitionGroup_Inconsistent_molecule_description" xml:space="preserve">
+    <value>Inconsistent molecule description</value>
+  </data>
+  <data name="ImportPeptideSearchDlg_NextPage_No_results_files_were_specified__Are_you_sure_you_want_to_continue__Continuing_will_create_a_template_document_with_no_imported_results_" xml:space="preserve">
+    <value>No results files were specified. Are you sure you want to continue? Continuing will create a template document with no imported results.</value>
+  </data>
+  <data name="ImportFastaControl_cbAutoTrain_CheckedChanged_Cannot_automatically_train_mProphet_model_since_no_results_files_are_being_imported__Continue_without_automatically_training_an_mProphet_model__or_go_back_and_add_at_least_one_results_file_" xml:space="preserve">
+    <value>Cannot automatically train mProphet model since no results files are being imported. Continue without automatically training an mProphet model, or go back and add at least one results file.</value>
+  </data>
+  <data name="SkylineWindow_HasFileToOpen_The_path_to_the_file_to_open_is_too_long_" xml:space="preserve">
+    <value>The path to the file to open is too long.</value>
+  </data>
+  <data name="ShareTypeDlg_ShareTypeDlg_Current_saved_file___0__" xml:space="preserve">
+    <value>Current saved file ({0})</value>
+  </data>
+  <data name="MissingFileDlg_ValidateFilePath_You_must_choose_a_file_with_the___0___filename_extension_" xml:space="preserve">
+    <value>You must choose a file with the '{0}' filename extension.</value>
+  </data>
+  <data name="BuildLibraryDlg_AddInputFiles_The_file__0__is_a_library_file_and_does_not_need_to_be_built__Would_you_like_to_add_this_library_to_the_document_" xml:space="preserve">
+    <value>The file {0} is a library file and does not need to be built. Would you like to add this library to the document?</value>
+  </data>
+  <data name="BuildLibraryDlg_AddInputFiles_These_files_are_library_files_and_do_not_need_to_be_built__Edit_the_list_of_libraries_to_add_them_directly_" xml:space="preserve">
+    <value>These files are library files and do not need to be built. Edit the list of libraries to add them directly.</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_Analyzing_input__0_" xml:space="preserve">
+    <value>Analyzing input {0}</value>
+  </data>
+  <data name="ImportTransitionListColumnSelectDlg_CheckForErrors_Checking_for_errors___" xml:space="preserve">
+    <value>Checking for errors...</value>
+  </data>
+  <data name="ModificationMatcher_CreateMatches_Matching_modifications" xml:space="preserve">
+    <value>Matching modifications</value>
+  </data>
+  <data name="HeatMapGraph_RefreshData_Heat_Map" xml:space="preserve">
+    <value>Heat Map</value>
+  </data>
+  <data name="PcaPlot_RefreshData_PCA_Plot" xml:space="preserve">
+    <value>PCA Plot</value>
+  </data>
+  <data name="HeatMapGraph_zedGraphControl1_ContextMenuBuilder_Refresh" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
+  <data name="DataboundGraph_AttachToOwner_Disconnected" xml:space="preserve">
+    <value>Disconnected</value>
+  </data>
+  <data name="DataboundGraph_AttachToOwner_Waiting_for_data" xml:space="preserve">
+    <value>Waiting for data</value>
+  </data>
+  <data name="DataGridType_DOCUMENT_GRID_Document_Grid" xml:space="preserve">
+    <value>Document Grid</value>
+  </data>
+  <data name="DataGridType_RESULTS_GRID_Results_Grid" xml:space="preserve">
+    <value>Results Grid</value>
+  </data>
+  <data name="DataGridType_GROUP_COMPARISON_Group_Comparison" xml:space="preserve">
+    <value>Group Comparison</value>
+  </data>
+  <data name="DataGridType_LIST_List" xml:space="preserve">
+    <value>List</value>
+  </data>
+  <data name="DataGridType_AUDIT_LOG_Audit_Log" xml:space="preserve">
+    <value>Audit Log</value>
+  </data>
+  <data name="DiaUmpireDdaConverter_Run_Starting_DIA_Umpire_conversion" xml:space="preserve">
+    <value>Starting DIA-Umpire conversion</value>
+  </data>
+  <data name="Setting_Validate_The_value___0___is_not_valid_for_the_argument__1__which_must_be_either__True__or__False__" xml:space="preserve">
+    <value>The value '{0}' is not valid for the argument {1} which must be either 'True' or 'False'.</value>
+  </data>
+  <data name="ImportPeptideSearchDlg_NextPage_No_isolation_windows_are_configured__" xml:space="preserve">
+    <value>No isolation windows are configured, but are required for deconvoluting DIA raw files by DIA-Umpire in preparation for DDA search. Go back to full scan settings to configure the isolation scheme.</value>
+  </data>
+  <data name="DDASearchControl_RunSearch_Conversion_cancelled_" xml:space="preserve">
+    <value>Conversion cancelled.</value>
+  </data>
+  <data name="DDASearchControl_RunSearch_Conversion_failed_" xml:space="preserve">
+    <value>Conversion failed.</value>
+  </data>
+  <data name="DDASearchControl_RunSearch_Conversion_finished_" xml:space="preserve">
+    <value>Conversion finished.</value>
+  </data>
+  <data name="DiaUmpireDdaConverter_Run_Re_using_existing_DiaUmpire_file__with_equivalent_settings__for__0_" xml:space="preserve">
+    <value>Re-using existing DIA-Umpire file (with equivalent settings) for {0}</value>
+  </data>
+  <data name="CommandArgs_WarnArgRequirementText_Use_of_the_argument__0__requires_one_of_the_following_arguments_" xml:space="preserve">
+    <value>Use of the argument {0} requires one of the following arguments:</value>
+  </data>
+  <data name="CommandLine_MinimizeResults_Minimizing_results_to__0_" xml:space="preserve">
+    <value>Minimizing results to {0}</value>
+  </data>
+  <data name="CommandLine_MinimizeResults_Removing_unused_chromatograms___" xml:space="preserve">
+    <value>Removing unused chromatograms...</value>
+  </data>
+  <data name="CommandLine_MinimizeResults_Limiting_chromatogram_noise_to______0__minutes_around_peak___" xml:space="preserve">
+    <value>Limiting chromatogram noise to +/- {0} minutes around peak...</value>
   </data>
 </root>

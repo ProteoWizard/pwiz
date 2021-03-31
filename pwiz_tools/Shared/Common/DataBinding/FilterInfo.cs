@@ -53,7 +53,7 @@ namespace pwiz.Common.DataBinding
                 }
                 return null;
             }
-            if (rowItem.PivotKeys.Count == 0)
+            if (rowItem.PivotKeyCount == 0)
             {
                 return FilterSpec.Predicate.FilterOperation == FilterOperations.OP_IS_BLANK ? rowItem : null;
             }
@@ -75,7 +75,7 @@ namespace pwiz.Common.DataBinding
                     }
                 }
             }
-            if (newPivotKeys.Count == rowItem.PivotKeys.Count)
+            if (newPivotKeys.Count == rowItem.PivotKeyCount)
             {
                 return rowItem;
             }

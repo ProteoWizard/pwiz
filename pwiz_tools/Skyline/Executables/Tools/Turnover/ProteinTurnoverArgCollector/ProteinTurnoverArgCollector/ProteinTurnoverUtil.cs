@@ -9,13 +9,16 @@
     {
         public const string TRUE_STRING = "1"; // Not L10N             
         public const string FALSE_STRING = "0"; // Not L10N              
-        public const int ARGUMENT_COUNT = 4;
+        public const int ARGUMENT_COUNT = 7;
     }
     public enum ArgumentIndices
     {
         diet_enrichment,
         average_turnover,
         IDP,
-        folder_name
+        folder_name,
+        reference_group,
+        Q_value,
+        has_Q_values
     }
 }

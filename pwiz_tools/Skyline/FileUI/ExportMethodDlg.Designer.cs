@@ -80,7 +80,6 @@
             this.panelBrukerTimsTof = new System.Windows.Forms.Panel();
             this.textMs1RepetitionTime = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.panelThermoColumns.SuspendLayout();
             this.panelAbSciexTOF.SuspendLayout();
             this.panelTriggered.SuspendLayout();
@@ -425,6 +424,7 @@
             // 
             resources.ApplyResources(this.textMs1RepetitionTime, "textMs1RepetitionTime");
             this.textMs1RepetitionTime.Name = "textMs1RepetitionTime";
+            this.helpTip.SetToolTip(this.textMs1RepetitionTime, resources.GetString("textMs1RepetitionTime.ToolTip"));
             // 
             // label1
             // 
@@ -479,7 +479,6 @@
             this.Name = "ExportMethodDlg";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             this.panelThermoColumns.ResumeLayout(false);
             this.panelThermoColumns.PerformLayout();
             this.panelAbSciexTOF.ResumeLayout(false);

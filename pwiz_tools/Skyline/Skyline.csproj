@@ -50,8 +50,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>286</ApplicationRevision>
-    <ApplicationVersion>20.2.1.286</ApplicationVersion>
+    <ApplicationRevision>404</ApplicationRevision>
+    <ApplicationVersion>20.2.1.404</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -154,6 +154,7 @@
     <Reference Condition="'$(Platform)' == 'x64'" Include="MethodConverter">
       <HintPath>Method\Shimadzu\x64\MethodConverter.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.CSharp" />
     <Reference Include="PrmPasefScheduler, Version=0.0.0.0, Culture=neutral, processorArchitecture=AnyCPU">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Shared\ProteowizardWrapper\obj\$(Platform)\PrmPasefScheduler.dll</HintPath>
@@ -191,6 +192,7 @@
       <HintPath>..\Shared\Lib\System.Memory.dll</HintPath>
     </Reference>
     <Reference Include="System.Net.Http" />
+    <Reference Include="System.Numerics" />
     <Reference Include="System.Runtime.CompilerServices.Unsafe">
       <HintPath>..\Shared\Lib\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
     </Reference>
@@ -331,15 +333,6 @@
     <Compile Include="Alerts\UpgradeLicenseDlg.designer.cs">
       <DependentUpon>UpgradeLicenseDlg.cs</DependentUpon>
     </Compile>
-    <Compile Include="AlgLib\alglibinternal.cs" />
-    <Compile Include="AlgLib\alglibmisc.cs" />
-    <Compile Include="AlgLib\ap.cs" />
-    <Compile Include="AlgLib\dataanalysis.cs" />
-    <Compile Include="AlgLib\linalg.cs" />
-    <Compile Include="AlgLib\optimization.cs" />
-    <Compile Include="AlgLib\solvers.cs" />
-    <Compile Include="AlgLib\specialfunctions.cs" />
-    <Compile Include="AlgLib\statistics.cs" />
     <Compile Include="CommandArgUsage.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -351,6 +344,27 @@
     <Compile Include="Controls\AuditLog\AuditLogExtraInfoForm.Designer.cs">
       <DependentUpon>AuditLogExtraInfoForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\Clustering\BoundGraphDataCalculator.cs" />
+    <Compile Include="Controls\Clustering\ClusterInput.cs" />
+    <Compile Include="Controls\Clustering\ClusteredHeatMapItem.cs" />
+    <Compile Include="Controls\Clustering\DataboundGraph.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Controls\Clustering\HeatMapGraph.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Controls\Clustering\HeatMapGraph.Designer.cs">
+      <DependentUpon>HeatMapGraph.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\Clustering\ClusterGraphResults.cs" />
+    <Compile Include="Controls\Clustering\PcaPlot.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Controls\Clustering\PcaPlot.Designer.cs">
+      <DependentUpon>PcaPlot.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\Clustering\StripePainter.cs" />
+    <Compile Include="Controls\Databinding\IDataboundGridForm.cs" />
     <Compile Include="Controls\Graphs\ExportMethodScheduleGraph.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -374,6 +388,8 @@
     <Compile Include="Controls\Graphs\DetectionToolbarProperties.Designer.cs">
       <DependentUpon>DetectionToolbarProperties.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\Graphs\GraphDataCalculator.cs" />
+    <Compile Include="Controls\Graphs\PaneProgressBar.cs" />
     <Compile Include="Controls\Graphs\ReplicateGroupOp.cs" />
     <Compile Include="Controls\Graphs\ReplicateValue.cs" />
     <Compile Include="Controls\ImageListBox.cs">
@@ -392,11 +408,11 @@
       <DependentUpon>TutorialTextResources.resx</DependentUpon>
     </Compile>
     <Compile Include="Controls\TargetColumn.cs" />
-    <Compile Include="EditUI\EditLinkedPeptideDlg.cs">
+    <Compile Include="EditUI\EditLinkedPeptidesDlg.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="EditUI\EditLinkedPeptideDlg.Designer.cs">
-      <DependentUpon>EditLinkedPeptideDlg.cs</DependentUpon>
+    <Compile Include="EditUI\EditLinkedPeptidesDlg.Designer.cs">
+      <DependentUpon>EditLinkedPeptidesDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="EditUI\PermuteIsotopeModificationsDlg.designer.cs">
       <DependentUpon>PermuteIsotopeModificationsDlg.cs</DependentUpon>
@@ -418,6 +434,12 @@
       <DependentUpon>DocumentChangeLogEntryDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="Controls\Graphs\AreaCVGraphData.cs" />
+    <Compile Include="Menus\ChromatogramContextMenu.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Menus\ChromatogramContextMenu.Designer.cs">
+      <DependentUpon>ChromatogramContextMenu.cs</DependentUpon>
+    </Compile>
     <Compile Include="Menus\EditMenu.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -441,6 +463,13 @@
     </Compile>
     <Compile Include="Model\AbstractDdaSearchEngine.cs" />
     <Compile Include="Model\AreaCVRefinementData.cs" />
+    <Compile Include="FileUI\PeptideSearch\ConverterSettingsControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FileUI\PeptideSearch\ConverterSettingsControl.Designer.cs">
+      <DependentUpon>ConverterSettingsControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Model\AbstractDdaConverter.cs" />
     <Compile Include="Model\AuditLog\AuditLogObject.cs" />
     <Compile Include="Model\AuditLog\AuditLogStrings.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -450,6 +479,12 @@
     <Compile Include="Model\AuditLog\AuditLogToStringHelper.cs" />
     <Compile Include="Model\AuditLog\BlockHash.cs" />
     <Compile Include="Model\AuditLog\Databinding\AuditLogColumn.cs" />
+    <Compile Include="FileUI\ImportTransitionListColumnSelectDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FileUI\ImportTransitionListColumnSelectDlg.Designer.cs">
+      <DependentUpon>ImportTransitionListColumnSelectDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="Model\AuditLog\Databinding\AuditLogDetailRow.cs" />
     <Compile Include="Model\AuditLog\Databinding\AuditLogRow.cs" />
     <Compile Include="Model\AuditLog\CustomPropertyLocalizer.cs" />
@@ -475,12 +510,24 @@
     <Compile Include="Model\AuditLog\ReflectorEnumerator.cs" />
     <Compile Include="Model\AuditLog\ReflectorToString.cs" />
     <Compile Include="Model\Crosslinking\ComplexFragmentIon.cs" />
+    <Compile Include="Model\Crosslinking\CrosslinkStructure.cs" />
+    <Compile Include="Model\Crosslinking\IonChain.cs" />
+    <Compile Include="Model\Crosslinking\CrosslinkedSequence.cs" />
+    <Compile Include="Model\Crosslinking\CrosslinkPeptideBuilder.cs" />
+    <Compile Include="Model\Crosslinking\IonOrdinal.cs" />
     <Compile Include="Model\Crosslinking\CrosslinkBuilder.cs" />
-    <Compile Include="Model\Crosslinking\ComplexFragmentIonName.cs" />
-    <Compile Include="Model\Crosslinking\CrosslinkerDef.cs" />
+    <Compile Include="Model\Crosslinking\LegacyComplexFragmentIonName.cs" />
+    <Compile Include="Model\Crosslinking\NeutralFragmentIon.cs" />
+    <Compile Include="Model\Crosslinking\CrosslinkerSettings.cs" />
+    <Compile Include="Model\Crosslinking\Crosslink.cs" />
     <Compile Include="Model\Crosslinking\CrosslinkSequenceParser.cs" />
+    <Compile Include="Model\Crosslinking\CrosslinkSite.cs" />
     <Compile Include="Model\Crosslinking\ModificationSite.cs" />
-    <Compile Include="Model\Crosslinking\LinkedPeptide.cs" />
+    <Compile Include="Model\Crosslinking\LegacyLinkedPeptide.cs" />
+    <Compile Include="Model\Crosslinking\PeptideStructure.cs" />
+    <Compile Include="Model\Crosslinking\SimpleFragmentIon.cs" />
+    <Compile Include="Model\Databinding\CellLocator.cs" />
+    <Compile Include="Model\Databinding\DataGridId.cs" />
     <Compile Include="Model\Databinding\Entities\ColumnCaptions.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -499,6 +546,7 @@
     <Compile Include="Model\Databinding\RowActions\DeleteNodesAction.cs" />
     <Compile Include="Model\Databinding\RowActions\RemovePeaksAction.cs" />
     <Compile Include="Model\Databinding\RowActions\RowAction.cs" />
+    <Compile Include="Model\DiaUmpireDdaConverter.cs" />
     <Compile Include="Model\DocSettings\AbsoluteQuantification\ValueStatus.cs" />
     <Compile Include="Model\DocSettings\AnnotationCalculator.cs" />
     <Compile Include="Model\DocSettings\AnnotationExpression.cs" />
@@ -540,12 +588,15 @@
     <Compile Include="Model\IonMobility\ValidatingIonMobilityPrecursor.cs" />
     <Compile Include="Model\Irt\IrtPeptidePicker.cs" />
     <Compile Include="Model\Irt\Regression.cs" />
+    <Compile Include="Model\LegacyCrosslinkConverter.cs" />
     <Compile Include="Model\Lib\BlibData\DbRefSpectraPeakAnnotations.cs" />
     <Compile Include="Model\Lib\ExplicitPeakBounds.cs" />
     <Compile Include="Model\Lib\LibKeyIndex.cs" />
     <Compile Include="Model\Lib\SpectralLibraryExporter.cs" />
     <Compile Include="Model\Lib\SpectrumRanker.cs" />
-    <Compile Include="Model\Lib\ViewLibraryPepInfoList.cs" />
+    <Compile Include="Model\MinimizeResults.cs" />
+    <Compile Include="Model\ProteomicSequence.cs" />
+    <Compile Include="SettingsUI\ViewLibraryPepInfoList.cs" />
     <Compile Include="Model\Lib\LibKeyMap.cs" />
     <Compile Include="Model\Lib\LibraryKey.cs" />
     <Compile Include="Model\Lists\ListExceptionDetail.cs" />
@@ -557,6 +608,7 @@
     <Compile Include="Model\DdaSearch\MsgfPlusSearchEngine.cs" />
     <Compile Include="Model\IsotopeModificationPermuter.cs" />
     <Compile Include="Model\Optimization\OptimizationDictionary.cs" />
+    <Compile Include="Model\ProgressMonitor.cs" />
     <Compile Include="Model\Prosit\Config\PrositConfig.cs" />
     <Compile Include="Model\Prosit\Models\PrositIntensityModel.cs" />
     <Compile Include="Model\Prosit\Models\PrositModel.cs" />
@@ -696,6 +748,8 @@
     <Compile Include="FileUI\PeptideSearch\DDASearchControl.Designer.cs">
       <DependentUpon>DDASearchControl.cs</DependentUpon>
     </Compile>
+    <Compile Include="Util\FormGroup.cs" />
+    <Compile Include="Util\PersistentString.cs" />
     <Compile Include="Util\UiModes.cs" />
     <Compile Include="ToolsUI\ColorGrid.cs">
       <SubType>UserControl</SubType>
@@ -2100,6 +2154,12 @@
     <EmbeddedResource Include="Controls\AuditLog\AuditLogForm.resx">
       <DependentUpon>AuditLogForm.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Clustering\HeatMapGraph.resx">
+      <DependentUpon>HeatMapGraph.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Clustering\PcaPlot.resx">
+      <DependentUpon>PcaPlot.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\Databinding\ChooseFormatDlg.ja.resx">
       <DependentUpon>ChooseFormatDlg.cs</DependentUpon>
     </EmbeddedResource>
@@ -2416,14 +2476,8 @@
       <DependentUpon>ComparePeakPickingDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="EditUI\EditLinkedPeptideDlg.ja.resx">
-      <DependentUpon>EditLinkedPeptideDlg.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="EditUI\EditLinkedPeptideDlg.resx">
-      <DependentUpon>EditLinkedPeptideDlg.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="EditUI\EditLinkedPeptideDlg.zh-CHS.resx">
-      <DependentUpon>EditLinkedPeptideDlg.cs</DependentUpon>
+    <EmbeddedResource Include="EditUI\EditLinkedPeptidesDlg.resx">
+      <DependentUpon>EditLinkedPeptidesDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\MassErrorChartPropertyDlg.ja.resx">
       <DependentUpon>MassErrorChartPropertyDlg.cs</DependentUpon>
@@ -2480,6 +2534,10 @@
       <DependentUpon>ImportResultsLockMassDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\ImportTransitionListColumnSelectDlg.resx">
+      <DependentUpon>ImportTransitionListColumnSelectDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ImportTransitionListErrorDlg.ja.resx">
       <DependentUpon>ImportTransitionListErrorDlg.cs</DependentUpon>
     </EmbeddedResource>
@@ -2509,6 +2567,9 @@
     <EmbeddedResource Include="FileUI\PeptideSearch\ImportResultsDIAControl.zh-CHS.resx">
       <DependentUpon>ImportResultsDIAControl.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\PeptideSearch\ConverterSettingsControl.resx">
+      <DependentUpon>ConverterSettingsControl.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\SearchSettingsControl.ja.resx">
       <DependentUpon>SearchSettingsControl.cs</DependentUpon>
     </EmbeddedResource>
@@ -2529,6 +2590,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ChooseIrtStandardPeptidesDlg.resx">
       <DependentUpon>ChooseIrtStandardPeptidesDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Menus\ChromatogramContextMenu.resx">
+      <DependentUpon>ChromatogramContextMenu.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Menus\EditMenu.resx">
       <DependentUpon>EditMenu.cs</DependentUpon>
@@ -5211,7 +5275,7 @@
       <Name>ProteowizardWrapper</Name>
     </ProjectReference>
     <ProjectReference Include="..\Shared\zedgraph\ZedGraph.csproj">
-      <Project>{B99650EE-AF46-47B4-A4A9-212ADE7809B7}</Project>
+      <Project>{b99650ee-af46-47b4-a4a9-212ade7809b7}</Project>
       <Name>ZedGraph</Name>
     </ProjectReference>
     <ProjectReference Include="SkylineCmd\SkylineCmd.csproj">
@@ -5391,7 +5455,7 @@
     <Exec Command="SignAfterPublish.bat &quot;$(ProjectDir)University of Washington (MacCoss Lab).pfx&quot; password &quot;$(ProjectDir)bin\$(Platform)\$(ConfigurationName)\app.publish&quot; $(TargetName)" />
   </Target>
   <PropertyGroup>
-    <PreBuildEvent>$(ProjectDir)ProtocolBuffers\generatecode.bat &amp;&amp; $(ProjectDir)Model\Prosit\Config\UpdatePrositConfiguration.bat</PreBuildEvent>
+    <PreBuildEvent>$(ProjectDir)ProtocolBuffers\generatecode.bat</PreBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
     <PostBuildEvent>

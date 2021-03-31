@@ -106,6 +106,20 @@ namespace pwiz.SkylineTestUtil
             get { return ("TestPerf".Equals(GetType().Namespace)); }
         }
 
+        /// <summary>
+        /// True if the test is being run by MSTest, i.e. inside Visual Studio or through MSBuild.
+        /// </summary>
+        public bool IsMsTestRun
+        {
+            // Lots of properties with MSTest which are not supplied by TestRunner. Not sure this is the best one.
+            get { return TestContext.Properties.Contains("DeploymentDirectory"); }
+        }
+
+        public static string GetPerfTestDataURL(string filename)
+        {
+            return @"https://panoramaweb.org/_webdav/MacCoss/software/%40files/perftests/" + filename;
+        }
+
         protected bool GetBoolValue(string property, bool defaultValue)
         {
             var value = TestContext.Properties[property];

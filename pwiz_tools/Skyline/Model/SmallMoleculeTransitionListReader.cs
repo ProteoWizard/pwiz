@@ -27,7 +27,6 @@ using System.Threading;
 using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
-using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -1766,7 +1765,16 @@ namespace pwiz.Skyline.Model
 
             var customIon = moleculeInfo.ToCustomMolecule();
             var isotopeLabelType = moleculeInfo.IsotopeLabelType ?? IsotopeLabelType.light;
-            Assume.IsTrue(Equals(pep.CustomMolecule.PrimaryEquivalenceKey, customIon.PrimaryEquivalenceKey));  // TODO(bspratt) error handling here
+            if (!Equals(pep.CustomMolecule.PrimaryEquivalenceKey, customIon.PrimaryEquivalenceKey))
+            {
+                ShowTransitionError(new PasteError
+                {
+                    Column = -1, 
+                    Line = row.Index,
+                    Message = Resources.SmallMoleculeTransitionListReader_GetMoleculeTransitionGroup_Inconsistent_molecule_description
+                });
+                return null;
+            }
             var adduct = moleculeInfo.Adduct;
             if (!Equals(pep.CustomMolecule.MonoisotopicMass, customIon.MonoisotopicMass) && !adduct.HasIsotopeLabels)
             {
@@ -1878,22 +1886,10 @@ namespace pwiz.Skyline.Model
 
         public SmallMoleculeTransitionListCSVReader(IList<string> csvText)
         {
-            // Accept either true CSV or currentculture equivalent
-            Type[] columnTypes;
-            IFormatProvider formatProvider;
-            char separator;
-            var header = csvText[0];
-            // Skip over header line to deduce decimal format
-            string line = csvText.Count > 1 ? csvText[1] : header;
-            MassListImporter.IsColumnar(line, out formatProvider, out separator, out columnTypes);
-            // Double check that separator - does it appear in header row, or was it just an unlucky hit in a text field?
-            if (!header.Contains(separator))
-            {
-                // Try again, this time without the distraction of a plausible but clearly incorrect seperator
-                MassListImporter.IsColumnar(line.Replace(separator,'_'), out formatProvider, out separator, out columnTypes);
-            }
-            _cultureInfo = formatProvider;
-            _csvReader = new DsvFileReader(new StringListReader(csvText), separator, SmallMoleculeTransitionListColumnHeaders.KnownHeaderSynonyms);
+            // Ask MassListInputs to figure out the column and decimal separators
+            var inputs = new MassListInputs(csvText);
+            _cultureInfo = inputs.FormatProvider;
+            _csvReader = new DsvFileReader(new StringListReader(csvText), inputs.Separator, SmallMoleculeTransitionListColumnHeaders.KnownHeaderSynonyms);
             // Do we recognize all the headers?
             var badHeaders =
                 _csvReader.FieldNames.Where(
@@ -1970,12 +1966,22 @@ namespace pwiz.Skyline.Model
 
         public override void ShowTransitionError(PasteError error)
         {
-            throw new LineColNumberedIoException(
-                string.Format(
-                    Resources
-                        .InsertSmallMoleculeTransitionList_InsertSmallMoleculeTransitionList_Error_on_line__0___column_1____2_,
-                    error.Line + 1, error.Column + 1, error.Message),
+            if (error.Column >= 0)
+            {
+                throw new LineColNumberedIoException(
+                    string.Format(
+                        Resources.InsertSmallMoleculeTransitionList_InsertSmallMoleculeTransitionList_Error_on_line__0___column_1____2_,
+                        error.Line + 1, error.Column + 1, error.Message),
                     error.Line + 1, error.Column + 1);
+            }
+            else
+            {
+                throw new LineColNumberedIoException(
+                    string.Format(
+                        Resources.InsertSmallMoleculeTransitionList_InsertSmallMoleculeTransitionList_Error_on_line__0__1_,
+                        error.Line + 1, error.Message),
+                    error.Line + 1, error.Column);
+            }
         }
 
         public override int ColumnIndex(string columnName)
@@ -2129,5 +2135,13 @@ namespace pwiz.Skyline.Model
             Thread.CurrentThread.CurrentUICulture = currentUICulture;
             KnownHeaderSynonyms = knownColumnHeadersAllCultures;
         }
+    }
+
+    public class PasteError
+    {
+        public String Message { get; set; }
+        public int Line { get; set; }
+        public int Column { get; set; }
+        public int Length { get; set; }
     }
 }

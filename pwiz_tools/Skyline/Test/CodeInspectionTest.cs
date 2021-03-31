@@ -28,6 +28,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Controls;
@@ -51,6 +52,27 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void CodeInspection()
         {
+            // Looking for uses of MessageBox where we should really be using MessageDlg
+            AddTextInspection(@"*.cs", // Examine files with this mask
+                Inspection.Forbidden, // This is a test for things that should NOT be in such files
+                Level.Error, // Any failure is treated as an error, and overall test fails
+                NonSkylineDirectories(), // We only care about this in Skyline code
+                string.Empty, // No file content required for inspection
+                @"MessageBox.Show", // Forbidden pattern
+                false, // Pattern is not a regular expression
+                @"use MessageDlg.Show instead - this ensures proper interaction with automated tests, small molecule interface operation, and other enhancements", // Explanation for prohibition, appears in report
+                @"// Purposely using MessageBox here"); // There is one legitimate use of this, look for this comment and ignore the violation when found
+
+            // Looking for forgotten PauseTest() calls that will mess up automated tests
+            AddTextInspection(@"*.cs", // Examine files with this mask
+                Inspection.Forbidden, // This is a test for things that should NOT be in such files
+                Level.Error, // Any failure is treated as an error, and overall test fails
+                new[] { @"TestFunctional.cs" }, // Only these files should contain this
+                string.Empty, // No file content required for inspection
+                @"^\s*PauseTest\(", // Forbidden pattern (uncommented PauseTest)
+                true, // Pattern is not a regular expression
+                @"This appears to be temporary debugging code that should not be checked in."); // Explanation for prohibition, appears in report
+
             // Looking for non-standard image scaling
             AddTextInspection(@"*.Designer.cs", // Examine files with this mask
                 Inspection.Forbidden, // This is a test for things that should NOT be in such files
@@ -58,6 +80,7 @@ namespace pwiz.SkylineTest
                 null, // There are no parts of the codebase that should skip this check
                 string.Empty, // No file content required for inspection
                 @".ImageScalingSize = new System.Drawing.Size(", // Forbidden pattern
+                false, // Pattern is not a regular expression
                 @"causes blurry icon issues on HD monitors"); // Explanation for prohibition, appears in report
 
             // Looking for unlocalized dialogs
@@ -66,17 +89,29 @@ namespace pwiz.SkylineTest
                 Level.Error, // Any failure is treated as an error, and overall test fails
                 NonLocalizedFiles(), // Ignore violations in files or directories we don't localize
                 string.Empty, // No file content required for inspection
-                @"System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager", // Required pattern
+                @".*(new global::System.Resources.ResourceManager|System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager).*", // Required pattern
+                true, // Pattern is a regular expression
                 @"ensures that every dialog is localizable"); // Explanation for requirement, appears in report
 
             // Looking for non-standard scaling in form designer
             AddTextInspection(@"*.resx", // Examine files with this mask
                 Inspection.Required,  // This is a test for things that MUST be in such files
-                Level.Warn, // Any failure is treated as a warning, and does not cause overall test failure
+                Level.Error, // Any failure is treated as an error, and overall test fails
                 null, // There are no parts of the codebase that should skip this check
                 "<data name=\"$this.AutoScaleDimensions\" type=\"System.Drawing.SizeF, System.Drawing\">", // Only worry about it when this appears in file
                 "<data name=\"$this.AutoScaleDimensions\" type=\"System.Drawing.SizeF, System.Drawing\">\n<value>6, 13</value>", // Required pattern (two lines)
+                false, // Pattern is not a regular expression
                 @"nonstandard {0} found instead"); // Explanation for requirement, appears in report
+
+            // Looking for Model code depending on UI code
+            AddTextInspection(@"*.cs", // Examine files with this mask
+                Inspection.Forbidden, // This is a test for things that should NOT be in such files
+                Level.Warn, // Any failure is treated as an error, and overall test fails
+                null, // There are no parts of the codebase that should skip this check
+                @"namespace pwiz.Skyline.Model", // If the file contains this, then check for forbidden pattern
+                @".*using.*pwiz\.Skyline\.(Alerts|Controls|.*UI);.*", // Forbidden pattern
+                true, // Pattern is a regular expression
+                @"Skyline model code must not depend on UI code"); // Explanation for prohibition, appears in report
 
             // A few lines of fake tests that can be useful in development of this mechanism
             // AddInspection(@"*.Designer.cs", Inspection.Required, Level.Error, null, "Windows Form Designer generated code", @"DetectionsToolbar", @"fake, debug purposes only"); // Uncomment for debug purposes
@@ -263,19 +298,19 @@ namespace pwiz.SkylineTest
 
                     var errors = new List<string>();
                     var warnings = new List<string>();
-                    var multiLinePatternFaults = new Dictionary<string, string>();
-                    var multiLinePatternFaultLocations = new Dictionary<string, int>();
+                    var multiLinePatternFaults = new Dictionary<Pattern, string>();
+                    var multiLinePatternFaultLocations = new Dictionary<Pattern, int>();
 
                     foreach (var line in lines)
                     {
                         lineNum++;
                         if (forbiddenPatternsForThisFile != null)
                         {
-                            // Watch for multi-line forbidden patterns
-                            foreach (var pattern in forbiddenPatternsForThisFile.Keys.Where(p => line.Contains(p.Split('\n')[0])))
+                            foreach (var pattern in forbiddenPatternsForThisFile.Keys.Where(p => p.IsMatch(line)))
                             {
-                                var parts = pattern.Split('\n');
+                                var parts = pattern.PatternString.Split('\n');
                                 var matched = true;
+                                // Watch for multi-line forbidden patterns
                                 for (var i = 1; i < parts.Length; i++)
                                 {
                                     if (!lines[lineNum + i - 1].Contains(parts[i].Trim()))
@@ -290,7 +325,7 @@ namespace pwiz.SkylineTest
                                     var why = patternDetails.Reason;
                                     var result = patternDetails.FailureType == Level.Error ? errors : warnings;
                                     result.Add(@"Found prohibited use of");
-                                    result.Add(@"""" + pattern.Replace("\n","\\n") + @"""");
+                                    result.Add(@"""" + pattern.PatternString.Replace("\n","\\n") + @"""");
                                     result.Add("(" + why + ") at");
                                     result.Add(filename + "(" + lineNum + @")");
                                     result.Add(line);
@@ -303,10 +338,10 @@ namespace pwiz.SkylineTest
                         {
                             foreach (var pattern in requiredPatternsObservedInThisFile.Keys)
                             {
-                                // Watch for multi-line patterns - we may match first line of pattern but not next, and we want to report that
-                                var parts = pattern.Split('\n');
-                                if (line.Contains(parts[0].Trim()))
+                                if (pattern.IsMatch(line))
                                 {
+                                    // Watch for multi-line patterns - we may match first line of pattern but not next, and we want to report that
+                                    var parts = pattern.PatternString.Split('\n');
                                     requiredPatternsObservedInThisFile[pattern] = true;
                                     for (var i = 1; i < parts.Length; i++)
                                     {
@@ -334,7 +369,7 @@ namespace pwiz.SkylineTest
                                 patternDetails.FailureType == Level.Error ? errors : warnings;
 
                             result.Add(@"Did not find required use of");
-                            result.Add(@"""" + requirement.Key.Replace("\n","\\n") + @"""");
+                            result.Add(@"""" + requirement.Key.PatternString.Replace("\n","\\n") + @"""");
                             if (multiLinePatternFaultLocations.TryGetValue(requirement.Key, out var lineNumber))
                             {
                                 result.Add("(" + why + ") at");
@@ -385,31 +420,71 @@ namespace pwiz.SkylineTest
             }
         }
 
+        public class Pattern
+        {
+            public string PatternString;
+            public Regex RegExPattern;
+            public string PatternExceptionString; // Pattern does not hit if the line includes this string
+
+            public Pattern(string patternString, bool isRegEx, string patternExceptionString)
+            {
+                PatternString = patternString;
+                RegExPattern = isRegEx ? new Regex(patternString, RegexOptions.CultureInvariant | RegexOptions.CultureInvariant) : null;
+                PatternExceptionString = patternExceptionString;
+            }
+
+            public bool IsRegEx => RegExPattern != null;
+
+            public bool IsMatch(string s)
+            {
+                if (RegExPattern?.IsMatch(s) ?? s.Contains(PatternString.Split('\n')[0].Trim())) // Watch for multiline string matches
+                {
+                    return string.IsNullOrEmpty(PatternExceptionString) || !s.Contains(PatternExceptionString);
+                }
+
+                return false;
+            }
+        }
 
         public class PatternDetails
         {
             public string Cue; // If non-empty, pattern only applies to files containing this cue
             public string Reason; // Note to show on failure
-            public string[] IgnoredDirectories; // Don't flag on hits in these directories
+            public string[] IgnoredFileMasks; // Don't flag on hits in files that contain these strings in their full paths
             public Level FailureType;  // Is failure an error, or just a warning?
+
+            public PatternDetails(string cue, string reason, string[] ignoredFileMasks, Level failureType)
+            {
+                Cue = cue;
+                Reason = reason;
+                IgnoredFileMasks = ignoredFileMasks;
+                FailureType = failureType;
+            }
 
             public bool IgnorePath(string path)
             {
                 return string.IsNullOrEmpty(path) ||
-                       IgnoredDirectories != null && IgnoredDirectories.Any(d => path.ToLowerInvariant().Contains(d.ToLowerInvariant()));
+                       IgnoredFileMasks != null && IgnoredFileMasks.Any(d => path.ToLowerInvariant().Contains(d.ToLowerInvariant()));
             }
         }
-        private readonly Dictionary<string, Dictionary<string, PatternDetails>> forbiddenPatternsByFileMask = new Dictionary<string, Dictionary<string, PatternDetails>>();
-        private readonly Dictionary<string, Dictionary<string, PatternDetails>> requiredPatternsByFileMask = new Dictionary<string, Dictionary<string, PatternDetails>>();
+        private readonly Dictionary<string, Dictionary<Pattern, PatternDetails>> forbiddenPatternsByFileMask = new Dictionary<string, Dictionary<Pattern, PatternDetails>>();
+        private readonly Dictionary<string, Dictionary<Pattern, PatternDetails>> requiredPatternsByFileMask = new Dictionary<string, Dictionary<Pattern, PatternDetails>>();
 
         private enum Inspection { Forbidden, Required }
         public enum Level { Warn, Error }
 
         private HashSet<string> allFileMasks = new HashSet<string>();
 
+        // Return a list of directories that we don't care about from a strictly Skyline point of view
+        private string[] NonSkylineDirectories()
+        {
+            return new[] {@"TestRunner", @"SkylineTester", @"SkylineNightly", "Executables", "CommonTest" };
+        }
+
         // Prepare a list of files that we never need to deal with for L10N
         // Uses the information found in our KeepResx L10N development tool,
         // along with a hardcoded list herein.
+
         private string[] NonLocalizedFiles()
         {
             var root = GetCodeBaseRoot(out var thisFile);
@@ -455,6 +530,7 @@ namespace pwiz.SkylineTest
             result.Add("Executables\\Tools\\QuaSAR");
             result.Add("Executables\\Tools\\SProCoP");
             result.Add("Executables\\Tools\\TestArgCollector");
+            result.Add("Executables\\Tools\\ExampleInteractiveTool");
             return result.ToArray();
         }
 
@@ -465,16 +541,18 @@ namespace pwiz.SkylineTest
             string[] ignoredDirectories, // Areas to disregard
             string cue, // If non-empty, only perform the inspection if file contains this cue
             string pattern,  // What we're looking out for (may contain \n)
-            string reason) // Explanation on failure
+            bool isRegEx, // Is the pattern a regular expression?
+            string reason, // Explanation on failure
+            string patternException = null) // Optional string which exempts a pattern match if found in matching line
         {
             allFileMasks.Add(fileMask);
             var rules = inspectionType == Inspection.Forbidden ? forbiddenPatternsByFileMask : requiredPatternsByFileMask;
             if (!rules.ContainsKey(fileMask))
             {
-                rules.Add(fileMask, new Dictionary<string, PatternDetails>());
+                rules.Add(fileMask, new Dictionary<Pattern, PatternDetails>());
             }
             var patterns = rules[fileMask];
-            patterns.Add(pattern, new PatternDetails { Cue = cue, Reason = reason, IgnoredDirectories = ignoredDirectories, FailureType = failureType});
+            patterns.Add(new Pattern(pattern, isRegEx, patternException), new PatternDetails(cue, reason, ignoredDirectories, failureType));
         }
     }
 }
