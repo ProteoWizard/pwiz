@@ -465,12 +465,15 @@ namespace pwiz.Skyline.EditUI
         public ExplicitMods ExplicitMods { get; private set; }
         public void OkDialog()
         {
-            var peptideSequences = GetPeptideSequences();
             var linkedPeptides = new List<Peptide>();
             var linkedExplicitMods = new List<ExplicitMods>();
             for (int i = 0; i < _peptideRows.Count; i++)
             {
                 var peptideRow = _peptideRows[i];
+                if (i == _peptideRows.Count - 1 && string.IsNullOrEmpty(peptideRow.Sequence))
+                {
+                    continue;
+                }
                 Peptide peptide;
                 try
                 {
