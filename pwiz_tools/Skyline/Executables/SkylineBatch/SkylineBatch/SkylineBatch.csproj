@@ -28,8 +28,8 @@
     <PublisherName>University of Washington</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>447</ApplicationRevision>
-    <ApplicationVersion>20.2.0.447</ApplicationVersion>
+    <ApplicationRevision>457</ApplicationRevision>
+    <ApplicationVersion>20.2.0.457</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -87,6 +87,7 @@
   <PropertyGroup />
   <PropertyGroup />
   <ItemGroup>
+    <None Include="Resources\downtriangle.png" />
     <Content Include="SkylineDailyRunner.exe">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
