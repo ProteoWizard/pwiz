@@ -950,23 +950,35 @@
   <data name="listViewConfigs.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
-  <data name="listViewConfigName.Text" xml:space="preserve">
+  <data name="columnConfigName.Text" xml:space="preserve">
     <value>Configuration</value>
   </data>
-  <data name="listViewConfigName.Width" type="System.Int32, mscorlib">
+  <data name="columnConfigName.Width" type="System.Int32, mscorlib">
     <value>241</value>
   </data>
-  <data name="listViewModified.Text" xml:space="preserve">
+  <data name="columnModified.Text" xml:space="preserve">
     <value>Modified</value>
   </data>
-  <data name="listViewModified.Width" type="System.Int32, mscorlib">
-    <value>108</value>
+  <data name="columnModified.Width" type="System.Int32, mscorlib">
+    <value>75</value>
   </data>
-  <data name="listViewStatus.Text" xml:space="preserve">
+  <data name="columnStatus.Text" xml:space="preserve">
     <value>Status</value>
   </data>
-  <data name="listViewStatus.Width" type="System.Int32, mscorlib">
-    <value>117</value>
+  <data name="columnStatus.Width" type="System.Int32, mscorlib">
+    <value>58</value>
+  </data>
+  <data name="columnStartTime.Text" xml:space="preserve">
+    <value>Start Time</value>
+  </data>
+  <data name="columnStartTime.Width" type="System.Int32, mscorlib">
+    <value>65</value>
+  </data>
+  <data name="columnRunTime.Text" xml:space="preserve">
+    <value>Run Time</value>
+  </data>
+  <data name="columnRunTime.Width" type="System.Int32, mscorlib">
+    <value>62</value>
   </data>
   <data name="listViewConfigs.Location" type="System.Drawing.Point, System.Drawing">
     <value>7, 24</value>
@@ -1906,22 +1918,34 @@
   <data name="&gt;&gt;startFromStepFour.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;listViewConfigName.Name" xml:space="preserve">
-    <value>listViewConfigName</value>
+  <data name="&gt;&gt;columnConfigName.Name" xml:space="preserve">
+    <value>columnConfigName</value>
   </data>
-  <data name="&gt;&gt;listViewConfigName.Type" xml:space="preserve">
+  <data name="&gt;&gt;columnConfigName.Type" xml:space="preserve">
     <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;listViewModified.Name" xml:space="preserve">
-    <value>listViewModified</value>
+  <data name="&gt;&gt;columnModified.Name" xml:space="preserve">
+    <value>columnModified</value>
   </data>
-  <data name="&gt;&gt;listViewModified.Type" xml:space="preserve">
+  <data name="&gt;&gt;columnModified.Type" xml:space="preserve">
     <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;listViewStatus.Name" xml:space="preserve">
-    <value>listViewStatus</value>
+  <data name="&gt;&gt;columnStatus.Name" xml:space="preserve">
+    <value>columnStatus</value>
   </data>
-  <data name="&gt;&gt;listViewStatus.Type" xml:space="preserve">
+  <data name="&gt;&gt;columnStatus.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;columnStartTime.Name" xml:space="preserve">
+    <value>columnStartTime</value>
+  </data>
+  <data name="&gt;&gt;columnStartTime.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;columnRunTime.Name" xml:space="preserve">
+    <value>columnRunTime</value>
+  </data>
+  <data name="&gt;&gt;columnRunTime.Type" xml:space="preserve">
     <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnUpArrow.Name" xml:space="preserve">

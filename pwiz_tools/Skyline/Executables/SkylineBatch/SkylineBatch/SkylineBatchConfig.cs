@@ -84,10 +84,13 @@ namespace SkylineBatch
 
         public ListViewItem AsListViewItem(IConfigRunner runner)
         {
+            var configRunner = (ConfigRunner) runner;
             var lvi = new ListViewItem(Name);
             lvi.Checked = Enabled;
             lvi.SubItems.Add(Modified.ToShortDateString());
-            lvi.SubItems.Add(((ConfigRunner)runner).GetDisplayStatus());//_configRunners[config.Name].GetDisplayStatus());
+            lvi.SubItems.Add(configRunner.GetDisplayStatus());
+            lvi.SubItems.Add(configRunner.StartTime);
+            lvi.SubItems.Add(configRunner.RunTime);
             return lvi;
         }
 

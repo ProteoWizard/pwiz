@@ -17,6 +17,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Threading.Tasks;
 using SharedBatch;
@@ -26,7 +27,7 @@ namespace SkylineBatch
 {
     public class ConfigRunner : IConfigRunner
     {
-        public static readonly string ALLOW_NEWLINE_SAVE_VERSION = "20.2.1.415"; // TODO(Ali): Make sure this matches future Skyline-daily release with --save fix
+        public static readonly string ALLOW_NEWLINE_SAVE_VERSION = "20.2.1.454";
 
 
         private readonly IMainUiControl _uiControl;
@@ -35,13 +36,16 @@ namespace SkylineBatch
         private readonly object _lock = new object();
         private RunnerStatus _runnerStatus;
         private readonly ProcessRunner _processRunner;
+        private List<string> _batchCommandsToLog;
 
         public ConfigRunner(SkylineBatchConfig config, Logger logger, IMainUiControl uiControl = null)
         {
             _runnerStatus = RunnerStatus.Stopped;
             Config = config;
+            StartTime = RunTime = String.Empty;
             _uiControl = uiControl;
             _logger = logger;
+            _batchCommandsToLog = new List<string>();
 
             _processRunner = new ProcessRunner()
             {
@@ -56,6 +60,8 @@ namespace SkylineBatch
         }
         
         public SkylineBatchConfig Config { get; }
+        public string StartTime { get; private set; }
+        public string RunTime { get; private set; }
 
         public IConfig GetConfig()
         {
@@ -108,19 +114,26 @@ namespace SkylineBatch
                 return;
             }
 
-            ChangeStatus(RunnerStatus.Running);
             var startTime = DateTime.Now;
+            StartTime = startTime.ToString("hh:mm:ss");
+            RunTime = string.Empty;
+            ChangeStatus(RunnerStatus.Running);
             Config.MainSettings.CreateAnalysisFolderIfNonexistent();
-
+            string commandFile = null;
             if (startStep != 5)
             {
                 var multiLine = await Config.SkylineSettings.HigherVersion(ALLOW_NEWLINE_SAVE_VERSION, _processRunner);
                 if (IsRunning())
                 {
                     // Writes the batch commands for steps 1-4 to a file
-                    var commandFile = WriteBatchCommandsToFile(startStep, multiLine);
+                    var commandWriter = new CommandWriter(_logger, multiLine);
+                    WriteBatchCommandsToFile(commandWriter, startStep);
+                    _batchCommandsToLog = commandWriter.LogLines;
+                    // Runs steps 1-4
+                    commandFile = commandWriter.GetCommandFile();
                     var command = string.Format("--batch-commands=\"{0}\"", commandFile);
                     await _processRunner.Run(Config.SkylineSettings.CmdPath, command);
+                    // Consider: deleting tmp command file
                 }
             }
 
@@ -136,16 +149,14 @@ namespace SkylineBatch
             if (IsCanceling()) ChangeStatus(RunnerStatus.Canceled);
             var endTime = DateTime.Now;
             var delta = endTime - startTime;
-            var timeString = delta.Hours > 0 ? delta.ToString(@"hh\:mm\:ss") : string.Format("{0} minutes", delta.ToString(@"mm\:ss"));
+            RunTime = delta.Hours > 0 ? delta.ToString(@"hh\:mm\:ss") : delta.ToString(@"mm\:ss");
             LogToUi(string.Format(Resources.ConfigRunner_Run_________________________________0____1_________________________________, Config.Name, GetStatus()));
-            LogToUi(string.Format(Resources.ConfigRunner_Run_________________________________0____1_________________________________, "Runtime", timeString));
+            LogToUi(string.Format(Resources.ConfigRunner_Run_________________________________0____1_________________________________, "Runtime", RunTime));
+            _uiControl?.UpdateUiConfigurations();
         }
 
-        public string WriteBatchCommandsToFile(int startStep, bool multiLine)
+        public void WriteBatchCommandsToFile(CommandWriter commandWriter, int startStep)
         {
-            // Writes commands to the log and a file for batch processing
-            var commandWriter = new CommandWriter(_logger, multiLine);
-
             // STEP 1: open skyline file and save copy to analysis folder
             if (startStep == 1)
             {
@@ -155,7 +166,6 @@ namespace SkylineBatch
                 Config.WriteRetentionTimeCommand(commandWriter);
                 Config.WriteAddDecoysCommand(commandWriter);
                 Config.WriteSaveToResultsFile(commandWriter);
-                Config.WriteSaveSettingsCommand(commandWriter);
                 commandWriter.EndCommandGroup();
             }
             else if (startStep < 4)
@@ -176,11 +186,8 @@ namespace SkylineBatch
             }
 
             // STEP 3: refine file and save to new location
-            if (startStep <= 3)
-            {
+            if (startStep <= 3 && Config.RefineSettings.WillRefine())
                 Config.WriteRefineCommands(commandWriter);
-                commandWriter.EndCommandGroup();
-            }
 
             // STEP 4: output report(s) for completed analysis
             if (startStep <= 4)
@@ -195,8 +202,6 @@ namespace SkylineBatch
                     Config.WriteOpenSkylineResultsCommand(commandWriter);
                 Config.WriteResultsFileReportCommands(commandWriter);
             }
-
-            return commandWriter.ReturnCommandFile();
         }
 
         private void DataReceived(string data)
@@ -207,6 +212,13 @@ namespace SkylineBatch
                     _logger.LogError(data);
                 else
                     _logger.Log(data);
+
+                if (data.StartsWith("--batch-commands"))
+                {
+                    foreach (var line in _batchCommandsToLog)
+                        _logger.Log(line);
+                    _batchCommandsToLog = new List<string();
+                }
             }
         }
 

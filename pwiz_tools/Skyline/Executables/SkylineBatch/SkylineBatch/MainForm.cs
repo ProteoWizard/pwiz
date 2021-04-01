@@ -45,7 +45,6 @@ namespace SkylineBatch
             var localFolder = Path.Combine(Path.GetDirectoryName(roamingFolder) ?? throw new InvalidOperationException(), "local");
             var logPath= Path.Combine(localFolder, Program.AppName(), Program.AppName() + TextUtil.EXT_LOG);
             _skylineBatchLogger = new Logger(logPath, Program.AppName() + TextUtil.EXT_LOG, this);
-            btnRunOptions.Text = char.ConvertFromUtf32(0x2BC6);
             toolStrip1.Items.Insert(3,new ToolStripSeparator());
             _listViewColumnWidths = new ColumnWidthCalculator(listViewConfigs);
             listViewConfigs.ColumnWidthChanged += listViewConfigs_ColumnWidthChanged;
@@ -93,11 +92,6 @@ namespace SkylineBatch
         #region Manipulating configuration list
         
         private void btnNewConfig_Click(object sender, EventArgs e)
-        {
-            HandleNewConfigClick();
-        }
-
-        public void HandleNewConfigClick()
         {
             ProgramLog.Info(Resources.MainForm_btnNewConfig_Click_Creating_a_new_configuration_);
             var initialConfigValues = (SkylineBatchConfig)_configManager.GetLastModified();
@@ -191,17 +185,21 @@ namespace SkylineBatch
             UpdateRunBatchSteps();
         }
 
-        private void listViewConfigs_MouseUp(object sender, MouseEventArgs e)
+        private void SelectConfig(int index)
         {
-            // Select configuration through _configManager
-            var index = listViewConfigs.GetItemAt(e.X, e.Y) != null ? listViewConfigs.GetItemAt(e.X, e.Y).Index : -1;
-
             if (index < 0)
             {
                 _configManager.DeselectConfig();
                 return;
             }
             _configManager.SelectConfig(index);
+        }
+
+        private void listViewConfigs_MouseUp(object sender, MouseEventArgs e)
+        {
+            // Select configuration through _configManager
+            var index = listViewConfigs.GetItemAt(e.X, e.Y) != null ? listViewConfigs.GetItemAt(e.X, e.Y).Index : -1;
+            SelectConfig(index);
         }
         
         private void listViewConfigs_PreventItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
@@ -522,12 +520,16 @@ namespace SkylineBatch
 
         private void ScrollToLogEnd(bool forceScroll = false)
         {
-            // Only scroll to end if forced or user is already scrolled to bottom of log
-            if (forceScroll || textBoxLog.GetPositionFromCharIndex(textBoxLog.Text.Length - 1).Y <= textBoxLog.Height)
+            RunUi(() =>
             {
-                textBoxLog.SelectionStart = textBoxLog.Text.Length;
-                textBoxLog.ScrollToCaret();
-            }
+                // Only scroll to end if forced or user is already scrolled to bottom of log
+                if (forceScroll || textBoxLog.GetPositionFromCharIndex(textBoxLog.Text.Length - 1).Y <=
+                    textBoxLog.Height)
+                {
+                    textBoxLog.SelectionStart = textBoxLog.Text.Length;
+                    textBoxLog.ScrollToCaret();
+                }
+            });
         }
 
         private void btnDeleteLogs_Click(object sender, EventArgs e)
@@ -712,6 +714,27 @@ namespace SkylineBatch
         {
             return listViewConfigs.Items.Count;
         }
+
+        public string SelectedConfigName()
+        {
+            return _configManager.GetSelectedConfig().GetName();
+        }
+
+        public string ConfigName(int index)
+        {
+            return _configManager.GetConfig(index).GetName();
+        }
+
+        public void ClickAdd() => btnNewConfig_Click(new object(), new EventArgs());
+        public void ClickEdit() => HandleEditEvent(new object(), new EventArgs());
+        public void ClickCopy() => btnCopy_Click(new object(), new EventArgs());
+        public void ClickDelete() => btnDelete_Click(new object(), new EventArgs());
+        public void ClickUp() => btnUpArrow_Click(new object(), new EventArgs());
+        public void ClickDown() => btnDownArrow_Click(new object(), new EventArgs());
+        public void ClickImport() => btnImport_Click(new object(), new EventArgs());
+        public void ClickShare() => btnExport_Click(new object(), new EventArgs());
+
+        public void ClickConfig(int index) => SelectConfig(index);
 
         #endregion
     }

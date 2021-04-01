@@ -87,6 +87,7 @@
   <PropertyGroup />
   <PropertyGroup />
   <ItemGroup>
+    <None Include="Resources\downtriangle.png" />
     <Content Include="SkylineDailyRunner.exe">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

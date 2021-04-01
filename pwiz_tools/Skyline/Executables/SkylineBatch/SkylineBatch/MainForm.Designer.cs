@@ -51,9 +51,11 @@
             this.textBoxLog = new System.Windows.Forms.RichTextBox();
             this.tabConfigs = new System.Windows.Forms.TabPage();
             this.listViewConfigs = new SkylineBatch.MyListView();
-            this.listViewConfigName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.listViewModified = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.listViewStatus = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnConfigName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnModified = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnStatus = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnStartTime = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnRunTime = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.labelSavedConfigurations = new System.Windows.Forms.Label();
             this.panel2 = new System.Windows.Forms.Panel();
             this.btnRunOptions = new System.Windows.Forms.Button();
@@ -228,9 +230,11 @@
             resources.ApplyResources(this.listViewConfigs, "listViewConfigs");
             this.listViewConfigs.CheckBoxes = true;
             this.listViewConfigs.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.listViewConfigName,
-            this.listViewModified,
-            this.listViewStatus});
+            this.columnConfigName,
+            this.columnModified,
+            this.columnStatus,
+            this.columnStartTime,
+            this.columnRunTime});
             this.listViewConfigs.FullRowSelect = true;
             this.listViewConfigs.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
             this.listViewConfigs.HideSelection = false;
@@ -243,17 +247,25 @@
             this.listViewConfigs.DoubleClick += new System.EventHandler(this.HandleEditEvent);
             this.listViewConfigs.MouseUp += new System.Windows.Forms.MouseEventHandler(this.listViewConfigs_MouseUp);
             // 
-            // listViewConfigName
+            // columnConfigName
             // 
-            resources.ApplyResources(this.listViewConfigName, "listViewConfigName");
+            resources.ApplyResources(this.columnConfigName, "columnConfigName");
             // 
-            // listViewModified
+            // columnModified
             // 
-            resources.ApplyResources(this.listViewModified, "listViewModified");
+            resources.ApplyResources(this.columnModified, "columnModified");
             // 
-            // listViewStatus
+            // columnStatus
             // 
-            resources.ApplyResources(this.listViewStatus, "listViewStatus");
+            resources.ApplyResources(this.columnStatus, "columnStatus");
+            // 
+            // columnStartTime
+            // 
+            resources.ApplyResources(this.columnStartTime, "columnStartTime");
+            // 
+            // columnRunTime
+            // 
+            resources.ApplyResources(this.columnRunTime, "columnRunTime");
             // 
             // labelSavedConfigurations
             // 
@@ -272,6 +284,7 @@
             // 
             // btnRunOptions
             // 
+            this.btnRunOptions.Image = global::SkylineBatch.Properties.Resources.downtriangle1;
             resources.ApplyResources(this.btnRunOptions, "btnRunOptions");
             this.btnRunOptions.Name = "btnRunOptions";
             this.btnRunOptions.UseVisualStyleBackColor = true;
@@ -456,8 +469,10 @@
         private System.Windows.Forms.ToolStripButton btnOpenTemplate;
         private System.Windows.Forms.ToolStripButton btnOpenResults;
         private MyListView listViewConfigs;
-        private System.Windows.Forms.ColumnHeader listViewConfigName;
-        private System.Windows.Forms.ColumnHeader listViewModified;
-        private System.Windows.Forms.ColumnHeader listViewStatus;
+        private System.Windows.Forms.ColumnHeader columnConfigName;
+        private System.Windows.Forms.ColumnHeader columnModified;
+        private System.Windows.Forms.ColumnHeader columnStatus;
+        private System.Windows.Forms.ColumnHeader columnStartTime;
+        private System.Windows.Forms.ColumnHeader columnRunTime;
     }
 }
