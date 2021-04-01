@@ -520,11 +520,26 @@
   <data name="Key">
     <value>Key</value>
   </data>
+  <data name="LibraryCollisionCrossSection">
+    <value>Collision Cross Section</value>
+  </data>
   <data name="LibraryDotProduct">
     <value>Library Dot Product</value>
   </data>
+  <data name="LibraryHighEnergyOffset">
+    <value>Library High Energy Offset</value>
+  </data>
   <data name="LibraryIntensity">
     <value>Library Intensity</value>
+  </data>
+  <data name="LibraryIonMobility">
+    <value>Library Ion Mobility</value>
+  </data>
+  <data name="LibraryIonMobilityUnits">
+    <value>Library Ion Mobility Units</value>
+  </data>
+  <data name="LibraryIonMobilityValue">
+    <value>Library Ion Mobility Value</value>
   </data>
   <data name="LibraryName">
     <value>Library Name</value>
