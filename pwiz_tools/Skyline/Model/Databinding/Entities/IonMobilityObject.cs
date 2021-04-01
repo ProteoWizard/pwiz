@@ -22,7 +22,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         [Format(Formats.IonMobility, NullValue = TextUtil.EXCEL_NA)]
         public double? HighEnergyOffset { get; private set; }
 
-        public static IonMobilityObject FromIonMobilityAndCCS(IonMobilityAndCCS ionMobilityAndCcs)
+        public static IonMobilityObject FromIonMobilityAndCCS(IonMobilityAndCCS ionMobilityAndCcs, double? ccs)
         {
             if (ionMobilityAndCcs == null || ionMobilityAndCcs.IsEmpty)
             {
@@ -32,7 +32,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             {
                 IonMobilityValue = ionMobilityAndCcs.IonMobility?.Mobility,
                 _units = ionMobilityAndCcs.IonMobility?.Units ?? eIonMobilityUnits.none,
-                CollisionCrossSection = ionMobilityAndCcs.CollisionalCrossSectionSqA,
+                CollisionCrossSection = ccs ?? ionMobilityAndCcs.CollisionalCrossSectionSqA,
                 HighEnergyOffset = ionMobilityAndCcs.HighEnergyIonMobilityValueOffset
             };
         }

@@ -420,7 +420,12 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 var libKey = DocNode.GetLibKey(SrmDocument.Settings, Peptide.DocNode);
                 var imInfo = SrmDocument.Settings.GetIonMobilities(new[] { libKey }, null);
                 var im = imInfo.GetLibraryMeasuredIonMobilityAndCCS(libKey, DocNode.PrecursorMz, null);
-                return IonMobilityObject.FromIonMobilityAndCCS(im);
+                if (im == null || im.IsEmpty)
+                {
+                    return null;
+                }
+                var ccs = imInfo.GetLibraryMeasuredCollisionalCrossSection(libKey);
+                return IonMobilityObject.FromIonMobilityAndCCS(im, ccs);
             }
         }
 
