@@ -201,7 +201,7 @@
             this.toolStripButtonShowAnnotations.Image = global::pwiz.Skyline.Properties.Resources.AnnotatedSpectum;
             resources.ApplyResources(this.toolStripButtonShowAnnotations, "toolStripButtonShowAnnotations");
             this.toolStripButtonShowAnnotations.Name = "toolStripButtonShowAnnotations";
-            this.toolStripButtonShowAnnotations.Click += new System.EventHandler(this.toolStripButtonShowAnnotations_Click);
+            this.toolStripButtonShowAnnotations.CheckedChanged += new System.EventHandler(this.toolStripButtonShowAnnotations_CheckedChanged);
             // 
             // contextMenuStrip1
             // 

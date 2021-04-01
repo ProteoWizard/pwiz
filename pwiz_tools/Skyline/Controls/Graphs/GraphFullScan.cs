@@ -22,9 +22,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
-using NHibernate.Engine;
 using pwiz.Common.Chemistry;
-using pwiz.Common.Collections;
 using pwiz.MSGraph;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Alerts;
@@ -58,13 +56,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private LibraryRankedSpectrumInfo _rmis;
         private int[] _transitionIndex;
 
-        public enum TransitionColorScheme
-        {
-            product /*Based on chromatogram color*/,
-            ionSeries
-        }
-
-        private bool _showIonSeriesAnnotations = false;
+        private bool _showIonSeriesAnnotations;
 
         public GraphFullScan(IDocumentUIContainer documentUIContainer)
         {
@@ -134,7 +126,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 ZoomYAxis();
             }
 
-            //CreateGraph();
             UpdateUI();
         }
 
@@ -456,7 +447,7 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         private SpectrumGraphItem RankScan(IList<double> mzs, IList<double> intensities, SrmSettings settings, 
-           TransitionGroupDocNode precursor, TransitionDocNode transitionNode)
+            TransitionGroupDocNode precursor, TransitionDocNode transitionNode)
         {
             var stateProvider = (GraphSpectrum.IStateProvider)Program.MainWindow;
             var group = precursor.TransitionGroup;
@@ -526,8 +517,8 @@ namespace pwiz.Skyline.Controls.Graphs
                             {
                                 var t = (transitions[j].Id as Transition);
                                 return rankedPeak.MatchedIons.Any(ion =>
-                                    ion.IonType == t?.IonType && ion.Ordinal == t?.Ordinal &&
-                                    ion.Charge.AdductCharge == t?.Charge);
+                                    ion.IonType == t?.IonType && ion.Ordinal == t.Ordinal &&
+                                    ion.Charge.AdductCharge == t.Charge);
                             });
                             _transitionIndex[rankedPeak.Rank] = tIndex;
                         }
@@ -619,8 +610,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 assignedPointList.Add(mz, intensity);
             }
 
-            var selection =
-                GraphSpectrum.SpectrumNodeSelection.GetCurrent(Program.MainWindow as GraphSpectrum.IStateProvider);
+            var selection = GraphSpectrum.SpectrumNodeSelection.GetCurrent(Program.MainWindow);
             //find out if the current selection belongs to the same precursor as the loaded MS spectrum
             var dataPrecursor = _msDataFileScanHelper.ScanProvider.Transitions.FirstOrDefault(t => (t.Id as Transition)?.IonType == IonType.precursor);
             var selectionMatch = ReferenceEquals(selection.Precursor.Id, (dataPrecursor?.Id as Transition)?.Group);
@@ -663,7 +653,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     var curveItem = _graphHelper.GraphControl.AddGraphItem(GraphPane, item, false);
                     curveItem.Label.IsVisible = false;
                 }
-                }
+            }
 
             GraphPane.SetScale(CreateGraphics());
         }
@@ -1115,6 +1105,19 @@ namespace pwiz.Skyline.Controls.Graphs
             spectrumBtn.Checked = isChecked;
         }
 
+        public void SetShowAnnotations(bool isChecked)
+        {
+            toolStripButtonShowAnnotations.Checked = isChecked;
+        }
+
+        public void SetMzRange(double mzMin, double mzMax)
+        {
+            GraphPane.XAxis.Scale.Min = Math.Max(0, mzMin);
+            GraphPane.XAxis.Scale.Max = Math.Min(_maxMz * 1.1, mzMax);
+            ZoomYAxis();
+            UpdateUI();
+        }
+
         #endregion Test support
 
         private void showScanNumberToolStripMenuItem_Click(object sender, EventArgs e)
@@ -1123,7 +1126,7 @@ namespace pwiz.Skyline.Controls.Graphs
             UpdateUI();
         }
 
-        private void toolStripButtonShowAnnotations_Click(object sender, EventArgs e)
+        private void toolStripButtonShowAnnotations_CheckedChanged(object sender, EventArgs e)
         {
             _showIonSeriesAnnotations = toolStripButtonShowAnnotations.Checked;
             UpdateUI();

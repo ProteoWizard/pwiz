@@ -14,7 +14,7 @@
   
   <MSTest>
     <ForcedLegacyMode>True</ForcedLegacyMode>
-    <SettingsFile>TestSettings_x64-template.testsettings</SettingsFile>
+    <SettingsFile>TestSettings_x64.testsettings</SettingsFile>
     <MapInconclusiveToFailed>True</MapInconclusiveToFailed>
     <CaptureTraceOutput>False</CaptureTraceOutput>
     <DeleteDeploymentDirectoryAfterTestRunIsComplete>False</DeleteDeploymentDirectoryAfterTestRunIsComplete>

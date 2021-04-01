@@ -17,11 +17,13 @@
  * limitations under the License.
  */
 
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
+using ZedGraph;
 
 namespace pwiz.SkylineTestFunctional
 {
@@ -97,6 +99,17 @@ namespace pwiz.SkylineTestFunctional
             ClickFullScan(517, 1000);
             TestScale(516, 520, 0, 80);
 
+            //Check the rank and annotate functionality
+            SetShowAnnotations(true);
+            TestAnnotations(new []{ "y4 (rank 9)" });
+            SetZoom(false);
+            TestAnnotations(new[] { "y1 (rank 1)", "y1++ (rank 2)", "y5++ (rank 3)", "y7 (rank 6)", "y11 (rank 21)" });
+            RunUI(() => SkylineWindow.GraphFullScan.SetMzRange(500, 700));
+            ClickFullScan(618, 120);
+            TestScale(617, 621, 0, 60);
+            SetShowAnnotations(false);
+            TestAnnotations(new[] { "y4" });
+
             // Check split graph
             ShowSplitChromatogramGraph(true);
             ClickChromatogram(33.11, 15.055, PaneKey.PRODUCTS);
@@ -152,6 +165,17 @@ namespace pwiz.SkylineTestFunctional
             CheckFullScanSelection(x, y);
         }
 
+        private static void SetShowAnnotations(bool isChecked)
+        {
+            RunUI(() => SkylineWindow.GraphFullScan.SetShowAnnotations(isChecked));
+        }
+
+        private static void TestAnnotations(string[] annotationText)
+        {
+            var graphLabels = SkylineWindow.GraphFullScan.ZedGraphControl.GraphPane.GraphObjList.OfType<TextObj>()
+                .Select(label => label.Text).ToList();
+            Assert.IsTrue(annotationText.All(txt => graphLabels.Contains(txt)));
+        }
         private static void SetFilter(bool isChecked)
         {
             RunUI(() => SkylineWindow.GraphFullScan.SetFilter(isChecked));
