@@ -188,10 +188,15 @@ namespace SkylineBatch
                         commandWriter.Write(command);
                 }
 
-                if (!commandWriter.MultiLine && (RemoveResults || RemoveDecoys))
+                if (RemoveResults || RemoveDecoys)
                 {
-                    commandWriter.Write(SkylineBatchConfig.SAVE_AS_NEW_FILE_COMMAND, OutputFilePath);
-                    commandWriter.EndCommandGroup();
+                    if (commandWriter.MultiLine)
+                        commandWriter.NewLine();
+                    else
+                    {
+                        commandWriter.Write(SkylineBatchConfig.SAVE_AS_NEW_FILE_COMMAND, OutputFilePath);
+                        commandWriter.EndCommandGroup();
+                    }
                 }
 
                 if (RemoveDecoys) commandWriter.Write(REMOVE_DECOYS_COMMAND);
