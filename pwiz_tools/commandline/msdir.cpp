@@ -239,7 +239,7 @@ string getStringFromTimeT(time_t time)
 }
 
 
-bool processPath(const bfs::path& path, const Config& config, const ReaderList& readers)
+bool processPath(const bfs::path& path, const Config& config, const ReaderList& readers, int longestPath)
 {
     string head;
     if (bfs::is_regular_file(path))
@@ -269,6 +269,10 @@ bool processPath(const bfs::path& path, const Config& config, const ReaderList& 
     boost::uintmax_t pathSize = calculatePathSize(path);
     string pathLastModified = getStringFromTimeT(bfs::last_write_time(path));
 
+    Reader::Config readerConfig;
+    readerConfig.acceptZeroLengthSpectra = true;
+    readerConfig.ignoreZeroIntensityPoints = true;
+
     switch (config.verbosityLevel)
     {
         case VerbosityLevel_Brief:
@@ -283,35 +287,47 @@ bool processPath(const bfs::path& path, const Config& config, const ReaderList& 
         case VerbosityLevel_Detailed:
             try
             {
-                MSDataFile source(path.string(), &readers);
-                size_t spectraCount = source.run.spectrumListPtr->size();
-                cout << (format("\n%|1$-14| %|15t| %|2$+8| %|24t| %3% %|42t| %|4$+6| %|50t| %5%")
+                vector<MSDataPtr> msdList;
+                readers.read(path.string(), head, msdList, readerConfig);
+                for (const auto& msd : msdList)
+                {
+                    const auto& source = *msd;
+                    size_t spectraCount = source.run.spectrumListPtr->size();
+                    cout << (format("\n%|1$-14| %|15t| %|2$+8| %|24t| %3% %|42t| %|4$+6| %|50t| %|" + lexical_cast<string>(longestPath+3) + "t| %6%")
                         % pathType
                         % abbreviate_byte_size(pathSize)
                         % pathLastModified
                         % spectraCount
                         % path.leaf()
+                        % source.run.id
                         ).str() << flush;
+                }
             }
             catch(exception& e)
             {
-                cout << (format("\n%|1$-14| %|15t| %|2$+8| %|24t| %3% %|42t| %|4$+6| %|50t| %5%")
+                cout << (format("\n%|1$-14| %|15t| %|2$+8| %|24t| %3% %|42t| %|4$+6| %|50t| %|" + lexical_cast<string>(longestPath + 3) + "t| %6%")
                         % pathType
                         % abbreviate_byte_size(pathSize)
                         % pathLastModified
                         % "error"
                         % path.leaf()
+                        % "error"
                         ).str() << endl << e.what() << endl; 
             }
             break;
 
         case VerbosityLevel_Full:
             {
-                // display all source-level metadata
-                cout << "Source-level metadata for \"" << path.string() << "\"" << endl;
-                MSDataFile source(path.string(), &readers);
-                TextWriter(cout, 0)(source, true);
-                cout << endl << endl;
+                vector<MSDataPtr> msdList;
+                readers.read(path.string(), head, msdList, readerConfig);
+                for (const auto& msd : msdList)
+                {
+                    const auto& source = *msd;
+                    // display all source-level metadata
+                    cout << "Source-level metadata for \"" << path.string() << " (" << source.run.id << ")\"" << endl;
+                    TextWriter(cout, 0)(source, true);
+                    cout << endl << endl;
+                }
             }
             break;
     }
@@ -339,12 +355,17 @@ void go(const Config& config)
             break;
     }
 
+    int longestPath = 0;
+    BOOST_FOREACH(const bfs::path& path, config.paths)
+        if (path.size() > longestPath)
+            longestPath = path.size();
+
     size_t sourcesFound = 0;
     BOOST_FOREACH(const bfs::path& path, config.paths)
     {
         try
         {
-            if (processPath(path, config, readers))
+            if (processPath(path, config, readers, longestPath))
                 ++sourcesFound;
         }
         catch(bfs::filesystem_error& e)
