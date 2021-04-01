@@ -116,6 +116,22 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
+        public bool TransitionResultIsQuantitative
+        {
+            get
+            {
+                return Transition.DocNode.IsQuantitative(SrmDocument.Settings);
+            }
+        }
+
+        public bool TransitionResultIsMs1
+        {
+            get
+            {
+                return SrmDocument.Settings.GetChromSource(Transition.DocNode) == ChromSource.ms1;
+            }
+        }
+
         public override void SetAnnotation(AnnotationDef annotationDef, object value)
         {
             ChangeChromInfo(EditDescription.SetAnnotation(annotationDef, value), 

@@ -1276,6 +1276,12 @@ using the Results Grid.</value>
   <data name="TransitionResult">
     <value>Transition Result</value>
   </data>
+  <data name="TransitionResultIsMs1">
+    <value>Whether this result was obtained from an MS1 scan.</value>
+  </data>
+  <data name="TransitionResultIsQuantitative">
+    <value>Whether this result is treated as quantitative, based on the user-modifiable Quantitative property of the Transition and whether the MS/MS Full Scan Acquisition Method is DDA which treats all fragment ions as non-quantitative.</value>
+  </data>
   <data name="TransitionResultLocator">
     <value>Unique identifier of the transition result within the document. This begins with "TransitionResult:" and usually ends with the replicate name, but may have additional attributes for the optimization step and result file.</value>
     <comment>Do not translate "TransitionResult:".</comment>

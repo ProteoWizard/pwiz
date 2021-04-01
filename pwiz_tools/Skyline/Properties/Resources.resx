@@ -1311,9 +1311,6 @@
   <data name="SkylineWindow_ShowExportEspFeaturesDialog_Export_ESP_Features" xml:space="preserve">
     <value>Export ESP Features</value>
   </data>
-  <data name="StaticMod_Validate_Loss_only_modifications_may_not_be_explicit" xml:space="preserve">
-    <value>Loss-only modifications may not be explicit.</value>
-  </data>
   <data name="AddZipToolHelper_ShouldOverwrite_Error__There_is_a_conflicting_tool" xml:space="preserve">
     <value>Error: There is a conflicting tool</value>
   </data>
@@ -2804,6 +2801,9 @@ Are you sure you want to continue?</value>
   </data>
   <data name="StaticMod_Validate_Loss_only_modifications_may_not_be_variable" xml:space="preserve">
     <value>Loss-only modifications may not be variable.</value>
+  </data>
+  <data name="StaticMod_Validate_Loss_only_modifications_may_not_be_explicit" xml:space="preserve">
+    <value>Loss-only modifications may not be explicit.</value>
   </data>
   <data name="ComparePeakPickingDlg_InitializeGraphPanes_Add_models_files_for_comparison_to_see_a_ROC_plot_" xml:space="preserve">
     <value>Add models/files for comparison to see a ROC plot.</value>
@@ -8254,10 +8254,6 @@ Please contact the Panorama server administrator to upgrade the server.</value>
     <value>{0}  ({1:F2} min)</value>
     <comment>"min" stands for "minutes"</comment>
   </data>
-  <data name="GraphFullScan_CreateGraph__Fragment_Title" xml:space="preserve">
-    <value>{0} {2}/{3} ({1:F2} min)</value>
-    <comment>"min" stands for "minutes"</comment>
-  </data>
   <data name="LinearModelParams_RescaleParameters_Every_calculator_in_the_model_either_has_an_unknown_value__or_takes_on_only_one_value_" xml:space="preserve">
     <value>Every calculator in the model either has an unknown value, or takes on only one value.</value>
   </data>
@@ -11209,6 +11205,10 @@ Invalid peptide sequence at position 18
   <data name="GraphFullScan_CreateGraph_IM__0_" xml:space="preserve">
     <value>IM={0}</value>
     <comment>"IM" stands for "Ion Mobility" - used for displaying ion mobility in raw scan view</comment>
+  </data>
+  <data name="GraphFullScan_CreateGraph__Fragment_Title" xml:space="preserve">
+    <value>{0} {2}/{3} ({1:F2} min)</value>
+    <comment>"min" stands for "minutes"</comment>
   </data>
   <data name="PcaPlot_UpdateGraph_Principal_Component__0_" xml:space="preserve">
     <value>Principal Component {0}</value>
