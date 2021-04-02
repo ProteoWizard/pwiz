@@ -843,23 +843,35 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (Settings.Default.ShowCollisionCrossSection && 
                     ionMobilityfilter.IonMobilityUnits != eIonMobilityUnits.compensation_V) // CCS isn't measurable with FAIMS
                 {
-                    var ccsString = ionMobilityfilter.CollisionalCrossSectionSqA.HasValue ?
-                        string.Format("CCS {0:F02} Å²", ionMobilityfilter.CollisionalCrossSectionSqA.Value) :
-                        "CCS unknown"; // Should never happen, except for very old data
+                    var ccsString = FormatCollisionCrossSectionValue(ionMobilityfilter);
                     lines.Add(ccsString);
                 }
                 if (Settings.Default.ShowIonMobility)
                 {
-                    var imString = ionMobilityfilter.IonMobility.HasValue ?
-                        string.Format("{0:F02} {1}",
-                            ionMobilityfilter.IonMobility.Mobility, IonMobilityValue.GetUnitsString(ionMobilityfilter.IonMobilityUnits)) :
-                        "IM unknown"; // Should never happen
-                    lines.Add(string.Format("IM {0}", imString)); 
+                    var imString = FormatIonMobilityValue(ionMobilityfilter);
+                    lines.Add(string.Format("IM {0}", imString));
                 }
             }
 
             // ReSharper restore LocalizableElement
             return TextUtil.LineSeparate(lines);
+        }
+
+        public static string FormatIonMobilityValue(IonMobilityFilter ionMobilityFilter)
+        {
+            var imString = ionMobilityFilter.IonMobility.HasValue
+                ? string.Format(@"{0:F02} {1}",
+                    ionMobilityFilter.IonMobility.Mobility, IonMobilityValue.GetUnitsString(ionMobilityFilter.IonMobilityUnits))
+                : @"IM unknown"; // Should never happen
+            return imString;
+        }
+
+        public static string FormatCollisionCrossSectionValue(IonMobilityFilter ionMobilityFilter)
+        {
+            var ccsString = ionMobilityFilter.CollisionalCrossSectionSqA.HasValue
+                ? string.Format(@"CCS {0:F02} Å²", ionMobilityFilter.CollisionalCrossSectionSqA.Value)
+                : @"CCS unknown"; // Should never happen, except for very old data
+            return ccsString;
         }
 
         public IdentityPath FindIdentityPath(TextObj label)
