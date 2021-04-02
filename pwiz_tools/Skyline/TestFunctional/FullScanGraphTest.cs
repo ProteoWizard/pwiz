@@ -99,16 +99,21 @@ namespace pwiz.SkylineTestFunctional
             ClickFullScan(517, 1000);
             TestScale(516, 520, 0, 80);
 
-            //Check the rank and annotate functionality
-            SetShowAnnotations(true);
-            TestAnnotations(new []{ "y4 (rank 9)" });
-            SetZoom(false);
-            TestAnnotations(new[] { "y1 (rank 1)", "y1++ (rank 2)", "y5++ (rank 3)", "y7 (rank 6)", "y11 (rank 21)" });
-            RunUI(() => SkylineWindow.GraphFullScan.SetMzRange(500, 700));
-            ClickFullScan(618, 120);
-            TestScale(617, 621, 0, 60);
-            SetShowAnnotations(false);
-            TestAnnotations(new[] { "y4" });
+            //Check the rank and annotate functionality if we run in 
+            //onscreen mode
+            if (!Skyline.Program.SkylineOffscreen)
+            {
+                SetShowAnnotations(true);
+                TestAnnotations(new []{ "y4 (rank 9)" });
+                SetZoom(false);
+                TestAnnotations(new[]
+                    {"y1 (rank 1)", "y1++ (rank 2)", "y5++ (rank 3)", "y7 (rank 6)", "y11 (rank 21)"});
+                RunUI(() => SkylineWindow.GraphFullScan.SetMzRange(500, 700));
+                ClickFullScan(618, 120);
+                TestScale(617, 621, 0, 60);
+                SetShowAnnotations(false);
+                TestAnnotations(new[] {"y4"});
+            }
 
             // Check split graph
             ShowSplitChromatogramGraph(true);
@@ -172,9 +177,9 @@ namespace pwiz.SkylineTestFunctional
 
         private static void TestAnnotations(string[] annotationText)
         {
-            var graphLabels = SkylineWindow.GraphFullScan.ZedGraphControl.GraphPane.GraphObjList.OfType<TextObj>()
-                .Select(label => label.Text).ToList();
-            Assert.IsTrue(annotationText.All(txt => graphLabels.Contains(txt)));
+                var graphLabels = SkylineWindow.GraphFullScan.ZedGraphControl.GraphPane.GraphObjList.OfType<TextObj>()
+                    .Select(label => label.Text).ToList();
+                Assert.IsTrue(annotationText.All(txt => graphLabels.Contains(txt)));
         }
         private static void SetFilter(bool isChecked)
         {
