@@ -75,6 +75,8 @@ class WiffFileImpl : public WiffFile
     mutable msclr::auto_gcroot<Clearcore2::Data::DataAccess::SampleData::Sample^> sample;
     mutable msclr::auto_gcroot<MassSpectrometerSample^> msSample;
 
+    virtual std::string getWiffPath() const { return wiffpath; }
+
     virtual int getSampleCount() const;
     virtual int getPeriodCount(int sample) const;
     virtual int getExperimentCount(int sample, int period) const;
@@ -105,6 +107,7 @@ class WiffFileImpl : public WiffFile
     private:
     // on first access, sample names are made unique (giving duplicates a count suffix) and cached
     mutable vector<string> sampleNames;
+    string wiffpath;
 };
 
 typedef boost::shared_ptr<WiffFileImpl> WiffFileImplPtr;
@@ -236,7 +239,7 @@ typedef boost::shared_ptr<SpectrumImpl> SpectrumImplPtr;
 
 
 WiffFileImpl::WiffFileImpl(const string& wiffpath)
-: currentSample(-1), currentPeriod(-1), currentExperiment(-1), currentCycle(-1)
+: currentSample(-1), currentPeriod(-1), currentExperiment(-1), currentCycle(-1), wiffpath(wiffpath)
 {
     try
     {
