@@ -252,6 +252,9 @@
   <data name="Coeluting">
     <value>Coeluting</value>
   </data>
+  <data name="CollisionCrossSection">
+    <value>Collision Cross Section</value>
+  </data>
   <data name="CollisionalCrossSection">
     <value>Collisional Cross Section</value>
   </data>
@@ -484,8 +487,14 @@
   <data name="IonMobilityFragment">
     <value>Ion Mobility Fragment</value>
   </data>
+  <data name="IonMobilityHighEnergyOffset">
+    <value>Ion Mobility High Energy Offset</value>
+  </data>
   <data name="IonMobilityMS1">
     <value>Ion Mobility MS1</value>
+  </data>
+  <data name="IonMobilityValue">
+    <value>Ion Mobility Value</value>
   </data>
   <data name="IonMobilityWindow">
     <value>Ion Mobility Window</value>
