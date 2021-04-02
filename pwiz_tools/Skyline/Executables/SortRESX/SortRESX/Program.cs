@@ -53,7 +53,7 @@ namespace SortRESX
             }
             Console.Error.WriteLine("Sorting resx files in {0}", string.Join(",", startingFolders));
             var resxSorter = new ResxSorter();
-            RecurseDirectories(resxSorter.ProcessFile, Directory.GetCurrentDirectory());
+            RecurseDirectories(resxSorter.ProcessFile, startingFolders.ToArray());
         }
 
         static void RecurseDirectories(Func<string, bool> fileAction, params string[] startingDirectories)
