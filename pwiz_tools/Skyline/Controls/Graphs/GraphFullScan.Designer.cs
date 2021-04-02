@@ -54,19 +54,19 @@
             // 
             // toolStripLabel1
             // 
-            this.toolStripLabel1.Name = "toolStripLabel1";
             resources.ApplyResources(this.toolStripLabel1, "toolStripLabel1");
+            this.toolStripLabel1.Name = "toolStripLabel1";
             // 
             // comboSpectrum
             // 
-            this.comboSpectrum.Name = "comboSpectrum";
             resources.ApplyResources(this.comboSpectrum, "comboSpectrum");
+            this.comboSpectrum.Name = "comboSpectrum";
             // 
             // GraphPanel
             // 
+            resources.ApplyResources(this.GraphPanel, "GraphPanel");
             this.GraphPanel.Controls.Add(this.graphControl);
             this.GraphPanel.Controls.Add(this.toolBar);
-            resources.ApplyResources(this.GraphPanel, "GraphPanel");
             this.GraphPanel.Name = "GraphPanel";
             // 
             // graphControl
@@ -92,7 +92,9 @@
             // 
             // toolBar
             // 
+            resources.ApplyResources(this.toolBar, "toolBar");
             this.toolBar.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
+            this.toolBar.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.toolBar.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripLabel2,
             this.comboBoxScanType,
@@ -104,116 +106,116 @@
             this.lblScanId,
             this.btnIsolationWindow,
             this.toolStripButtonShowAnnotations});
-            resources.ApplyResources(this.toolBar, "toolBar");
             this.toolBar.Name = "toolBar";
             // 
             // toolStripLabel2
             // 
-            this.toolStripLabel2.Name = "toolStripLabel2";
             resources.ApplyResources(this.toolStripLabel2, "toolStripLabel2");
+            this.toolStripLabel2.Name = "toolStripLabel2";
             // 
             // comboBoxScanType
             // 
+            resources.ApplyResources(this.comboBoxScanType, "comboBoxScanType");
             this.comboBoxScanType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBoxScanType.Items.AddRange(new object[] {
             resources.GetString("comboBoxScanType.Items"),
             resources.GetString("comboBoxScanType.Items1"),
             resources.GetString("comboBoxScanType.Items2")});
-            resources.ApplyResources(this.comboBoxScanType, "comboBoxScanType");
             this.comboBoxScanType.Name = "comboBoxScanType";
             this.comboBoxScanType.Overflow = System.Windows.Forms.ToolStripItemOverflow.Never;
             this.comboBoxScanType.SelectedIndexChanged += new System.EventHandler(this.comboBoxScanType_SelectedIndexChanged);
             // 
             // rightButton
             // 
+            resources.ApplyResources(this.rightButton, "rightButton");
             this.rightButton.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
             this.rightButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.rightButton.Image = global::pwiz.Skyline.Properties.Resources.Icojam_Blueberry_Basic_Arrow_right;
-            resources.ApplyResources(this.rightButton, "rightButton");
             this.rightButton.Name = "rightButton";
             this.rightButton.Click += new System.EventHandler(this.rightButton_Click);
             // 
             // leftButton
             // 
+            resources.ApplyResources(this.leftButton, "leftButton");
             this.leftButton.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
             this.leftButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.leftButton.Image = global::pwiz.Skyline.Properties.Resources.Icojam_Blueberry_Basic_Arrow_left;
-            resources.ApplyResources(this.leftButton, "leftButton");
             this.leftButton.Name = "leftButton";
             this.leftButton.Click += new System.EventHandler(this.leftButton_Click);
             // 
             // magnifyBtn
             // 
+            resources.ApplyResources(this.magnifyBtn, "magnifyBtn");
             this.magnifyBtn.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
             this.magnifyBtn.Checked = true;
             this.magnifyBtn.CheckOnClick = true;
             this.magnifyBtn.CheckState = System.Windows.Forms.CheckState.Checked;
             this.magnifyBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.magnifyBtn.Image = global::pwiz.Skyline.Properties.Resources.magnifier_zoom_in;
-            resources.ApplyResources(this.magnifyBtn, "magnifyBtn");
             this.magnifyBtn.Margin = new System.Windows.Forms.Padding(0, 1, 10, 2);
             this.magnifyBtn.Name = "magnifyBtn";
             this.magnifyBtn.CheckedChanged += new System.EventHandler(this.magnifyBtn_CheckedChanged);
             // 
             // spectrumBtn
             // 
+            resources.ApplyResources(this.spectrumBtn, "spectrumBtn");
             this.spectrumBtn.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
             this.spectrumBtn.Checked = true;
             this.spectrumBtn.CheckOnClick = true;
             this.spectrumBtn.CheckState = System.Windows.Forms.CheckState.Checked;
             this.spectrumBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.spectrumBtn.Image = global::pwiz.Skyline.Properties.Resources.DataProcessing;
-            resources.ApplyResources(this.spectrumBtn, "spectrumBtn");
             this.spectrumBtn.Name = "spectrumBtn";
             this.spectrumBtn.CheckedChanged += new System.EventHandler(this.spectrumBtn_CheckedChanged);
             // 
             // filterBtn
             // 
+            resources.ApplyResources(this.filterBtn, "filterBtn");
             this.filterBtn.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
             this.filterBtn.CheckOnClick = true;
             this.filterBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.filterBtn.Image = global::pwiz.Skyline.Properties.Resources.Filter;
-            resources.ApplyResources(this.filterBtn, "filterBtn");
             this.filterBtn.Margin = new System.Windows.Forms.Padding(10, 1, 0, 2);
             this.filterBtn.Name = "filterBtn";
             this.filterBtn.CheckedChanged += new System.EventHandler(this.filterBtn_CheckedChanged);
             // 
             // lblScanId
             // 
+            resources.ApplyResources(this.lblScanId, "lblScanId");
             this.lblScanId.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
             this.lblScanId.Name = "lblScanId";
-            resources.ApplyResources(this.lblScanId, "lblScanId");
             // 
             // btnIsolationWindow
             // 
+            resources.ApplyResources(this.btnIsolationWindow, "btnIsolationWindow");
             this.btnIsolationWindow.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
             this.btnIsolationWindow.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            resources.ApplyResources(this.btnIsolationWindow, "btnIsolationWindow");
             this.btnIsolationWindow.Margin = new System.Windows.Forms.Padding(0, 1, 10, 2);
             this.btnIsolationWindow.Name = "btnIsolationWindow";
             this.btnIsolationWindow.Click += new System.EventHandler(this.btnIsolationWindow_Click);
             // 
             // toolStripButtonShowAnnotations
             // 
+            resources.ApplyResources(this.toolStripButtonShowAnnotations, "toolStripButtonShowAnnotations");
             this.toolStripButtonShowAnnotations.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
             this.toolStripButtonShowAnnotations.CheckOnClick = true;
             this.toolStripButtonShowAnnotations.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.toolStripButtonShowAnnotations.Image = global::pwiz.Skyline.Properties.Resources.AnnotatedSpectum;
-            resources.ApplyResources(this.toolStripButtonShowAnnotations, "toolStripButtonShowAnnotations");
             this.toolStripButtonShowAnnotations.Name = "toolStripButtonShowAnnotations";
             this.toolStripButtonShowAnnotations.CheckedChanged += new System.EventHandler(this.toolStripButtonShowAnnotations_CheckedChanged);
             // 
             // contextMenuStrip1
             // 
+            resources.ApplyResources(this.contextMenuStrip1, "contextMenuStrip1");
+            this.contextMenuStrip1.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.showScanNumberContextMenuItem});
             this.contextMenuStrip1.Name = "contextMenuStrip1";
-            resources.ApplyResources(this.contextMenuStrip1, "contextMenuStrip1");
             // 
             // showScanNumberContextMenuItem
             // 
-            this.showScanNumberContextMenuItem.Name = "showScanNumberContextMenuItem";
             resources.ApplyResources(this.showScanNumberContextMenuItem, "showScanNumberContextMenuItem");
+            this.showScanNumberContextMenuItem.Name = "showScanNumberContextMenuItem";
             this.showScanNumberContextMenuItem.Click += new System.EventHandler(this.showScanNumberToolStripMenuItem_Click);
             // 
             // GraphFullScan

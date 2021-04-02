@@ -336,7 +336,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             double retentionTime = _msDataFileScanHelper.MsDataSpectra[0].RetentionTime ?? _msDataFileScanHelper.ScanProvider.Times[_msDataFileScanHelper.ScanIndex];
-            var result = _documentContainer.Document.Settings.MeasuredResults.Chromatograms.FirstOrDefault(
+            var result = _documentContainer.DocumentUI.Settings.MeasuredResults.Chromatograms.FirstOrDefault(
                 chr => chr.IndexOfPath(_msDataFileScanHelper.ScanProvider.DataFilePath) >= 0);
             if (_msDataFileScanHelper.Source == ChromSource.fragment)
             {
@@ -449,7 +449,8 @@ namespace pwiz.Skyline.Controls.Graphs
         private SpectrumGraphItem RankScan(IList<double> mzs, IList<double> intensities, SrmSettings settings, 
             TransitionGroupDocNode precursor, TransitionDocNode transitionNode)
         {
-            var stateProvider = (GraphSpectrum.IStateProvider)Program.MainWindow;
+            if (!(_documentContainer is SkylineWindow)) return null;
+            var stateProvider = (GraphSpectrum.IStateProvider) _documentContainer;
             var group = precursor.TransitionGroup;
             var types = stateProvider.ShowIonTypes(group.IsProteomic);
             var adducts =
@@ -510,19 +511,20 @@ namespace pwiz.Skyline.Controls.Graphs
                     _transitionIndex = Enumerable.Repeat(-1, Enumerable.Max(_rmis.PeaksRanked.Select(p => p.Rank)) + 1).ToArray();
                     foreach (var rankedPeak in _rmis.PeaksRanked)
                     {
-                        try
+                        var transitions = _msDataFileScanHelper.ScanProvider.Transitions;
+                        var tIndex = -1;
+                        for(var j = 0; j < transitions.Length; j++)
                         {
-                            var transitions = _msDataFileScanHelper.ScanProvider.Transitions;
-                            var tIndex = Enumerable.Range(0, transitions.Length).First(j =>
+                            var t = (transitions[j].Id as Transition);
+                            if(rankedPeak.MatchedIons.Any(ion =>
+                                ion.IonType == t?.IonType && ion.Ordinal == t.Ordinal &&
+                                ion.Charge.AdductCharge == t.Charge))
                             {
-                                var t = (transitions[j].Id as Transition);
-                                return rankedPeak.MatchedIons.Any(ion =>
-                                    ion.IonType == t?.IonType && ion.Ordinal == t.Ordinal &&
-                                    ion.Charge.AdductCharge == t.Charge);
-                            });
-                            _transitionIndex[rankedPeak.Rank] = tIndex;
+                                tIndex = j;
+                                break;
+                            }
                         }
-                        catch (InvalidOperationException){}
+                        _transitionIndex[rankedPeak.Rank] = tIndex;
                     }
                 }
 
@@ -610,10 +612,15 @@ namespace pwiz.Skyline.Controls.Graphs
                 assignedPointList.Add(mz, intensity);
             }
 
-            var selection = GraphSpectrum.SpectrumNodeSelection.GetCurrent(Program.MainWindow);
-            //find out if the current selection belongs to the same precursor as the loaded MS spectrum
-            var dataPrecursor = _msDataFileScanHelper.ScanProvider.Transitions.FirstOrDefault(t => (t.Id as Transition)?.IonType == IonType.precursor);
-            var selectionMatch = ReferenceEquals(selection.Precursor.Id, (dataPrecursor?.Id as Transition)?.Group);
+            GraphSpectrum.SpectrumNodeSelection selection = null;
+            var selectionMatch = false;
+            if (_documentContainer is SkylineWindow stateProvider)
+            {
+                selection = GraphSpectrum.SpectrumNodeSelection.GetCurrent(stateProvider);
+                //find out if the current selection belongs to the same precursor as the loaded MS spectrum
+                var dataPrecursor = _msDataFileScanHelper.ScanProvider.Transitions.FirstOrDefault(t => (t.Id as Transition)?.IonType == IonType.precursor);
+                selectionMatch = ReferenceEquals(selection.Precursor?.Id, (dataPrecursor?.Id as Transition)?.Group);
+            }
 
             var currentTransition =
                 _msDataFileScanHelper.ScanProvider.Transitions[_msDataFileScanHelper.TransitionIndex];
@@ -622,7 +629,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 var nodePath = DocNodePath.GetNodePath(currentTransition.Id, _documentContainer.DocumentUI);
 
-                var graphItem = RankScan(mzs, intensities, _documentContainer.Document.Settings, nodePath.Precursor,
+                var graphItem = RankScan(mzs, intensities, _documentContainer.DocumentUI.Settings, nodePath.Precursor,
                     selectionMatch ? selection.Transition : null);
                 _graphHelper.AddSpectrum(graphItem, false);
             }
@@ -964,7 +971,6 @@ namespace pwiz.Skyline.Controls.Graphs
             Settings.Default.AutoZoomFullScanGraph = magnifyBtn.Checked = zoom;
             ZoomXAxis();
             ZoomYAxis();
-            //CreateGraph();
             UpdateUI();
         }
 
@@ -972,7 +978,6 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             HeatMapGraphPane.ShowHeatMap = !spectrumBtn.Checked;
             Settings.Default.SumScansFullScan = spectrumBtn.Checked;
-            //CreateGraph();
             UpdateUI();
             ZoomYAxis();
             graphControl.Invalidate();

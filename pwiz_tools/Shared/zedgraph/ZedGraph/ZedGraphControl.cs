@@ -25,6 +25,7 @@ using System.Drawing.Text;
 using System.Drawing.Imaging;
 using System.Drawing.Printing;
 using System.Data;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Resources;
@@ -606,19 +607,22 @@ namespace ZedGraph
 				base.OnPaint( e );
 
 				// Add a try/catch pair since the users of the control can't catch this one
-                //CONSIDER: Log the exception. Otherwise it can lead to some very hard to 
-                //  diagnose problems.
-				try
-				{
-					_masterPane.Draw(e.Graphics);
-					if (_isZooming)
-					{
-						Rectangle rect = CalcScreenRect(_dragStartPt, _dragEndPt);
-						Pen p = new Pen(Color.Black) {DashStyle = DashStyle.Dash};
-						e.Graphics.DrawRectangle(p, rect);
-					}
-				}
-				catch { }
+                try
+                {
+                    _masterPane.Draw(e.Graphics);
+                    if (_isZooming)
+                    {
+                        Rectangle rect = CalcScreenRect(_dragStartPt, _dragEndPt);
+                        Pen p = new Pen(Color.Black) {DashStyle = DashStyle.Dash};
+                        e.Graphics.DrawRectangle(p, rect);
+                    }
+                }
+                catch (Exception exception)
+                {
+                    //Without this exceptions in the custom paint code are hard to debug. You just get
+                    //an emty graph without any visble error message.
+                    Trace.TraceWarning(@"Error when painting a zedGraph:{0}", exception);
+                }
 			}
 
 /*

@@ -3352,7 +3352,6 @@
     <Content Include="percolator\xerces-c_3_1.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <None Include="Resources\Annotate_Spectrum.bmp" />
     <None Include="Resources\AnnotatedSpectum.png" />
     <Content Include="SkylineDocPointer.ico" />
     <EmbeddedResource Include="Resources\prosit_logo_dark_blue.png" />

@@ -1389,59 +1389,74 @@ namespace pwiz.Skyline.Model
         public TransitionDocNode Transition { get; private set; }
         public SrmDocument Document { get; private set; }
 
-        private DocNodePath(Identity id, SrmDocument doc)
+        private DocNodePath(PeptideGroupDocNode prot, PeptideDocNode pep, TransitionGroupDocNode pre, TransitionDocNode trans, SrmDocument doc)
         {
             Document = doc;
-            switch (id)
-            {
-                case Transition idTransition:
-                    GetProtein( idTransition.Group.Peptide);
-                    Precursor = Peptide.FindNode(idTransition.Group) as TransitionGroupDocNode;
-                    Assume.IsNotNull(Precursor);
-                    Transition = Precursor?.FindNode(idTransition) as TransitionDocNode;
-                    Assume.IsNotNull(Transition);
-                    break;
-                case TransitionGroup idTransitionGroup:
-                    GetProtein(idTransitionGroup.Peptide);
-                    Precursor = Peptide.FindNode(idTransitionGroup) as TransitionGroupDocNode;
-                    Assume.IsNotNull(Precursor);
-                    break;
-                case Peptide idPeptide:
-                    GetProtein(idPeptide);
-                    break;
-                case PeptideGroup idPeptideGroup:
-                    Protein = Document.FindNode(idPeptideGroup) as PeptideGroupDocNode;
-                    Assume.IsNotNull(Protein);
-                    break;
-            }
+            Protein = prot;
+            Peptide = pep;
+            Precursor = pre;
+            Transition = trans;
         }
 
-        private void GetProtein(Peptide idPeptide)
+        private static PeptideGroupDocNode GetProtein(SrmDocument doc, Peptide idPeptide, out PeptideDocNode peptide)
         {
-            foreach (PeptideGroupDocNode prot in Document.Children)
+            foreach (PeptideGroupDocNode prot in doc.Children)
             {
-                Peptide = prot.FindNode(idPeptide) as PeptideDocNode;
-                if (Peptide != null)
+                peptide = prot.FindNode(idPeptide) as PeptideDocNode;
+                if (peptide != null)
                 {
-                    Protein = prot;
-                    break;
+                    return prot;
                 }
             }
-            Assume.IsNotNull(Protein);
-            Assume.IsNotNull(Peptide);
+            peptide = null;
+            return null;
         }
 
         public static DocNodePath GetNodePath(Identity id, SrmDocument doc)
         {
-            try
+            DocNodePath res = null;
+            switch (id)
             {
-                return new DocNodePath(id, doc);
+                case Transition idTransition:
+                {
+                    var prot = GetProtein(doc, idTransition.Group.Peptide, out var pep);
+                    if (prot != null && pep != null)
+                    {
+                        var pre = pep.FindNode(idTransition.Group) as TransitionGroupDocNode;
+                        var trans = pre?.FindNode(idTransition) as TransitionDocNode;
+                        if (pre != null && trans != null)
+                            res = new DocNodePath(prot, pep, pre, trans, doc);
+                    }
+                }
+                    break;
+                case TransitionGroup idTransitionGroup:
+                {
+                    var prot = GetProtein(doc, idTransitionGroup.Peptide, out var pep);
+                    if (prot != null && pep != null)
+                    {
+                        var pre = pep.FindNode(idTransitionGroup) as TransitionGroupDocNode;
+                        if (pre != null)
+                            res = new DocNodePath(prot, pep, pre, null, doc);
+                    }
+                }
+                    break;
+                case Peptide idPeptide:
+                {
+                    var prot = GetProtein(doc, idPeptide, out var pep);
+                    if (prot != null && pep != null)
+                        res = new DocNodePath(prot, pep, null, null, doc);
+                }
+                    break;
+                case PeptideGroup idPeptideGroup:
+                {
+                    var prot = doc.FindNode(idPeptideGroup) as PeptideGroupDocNode;
+                    if (prot != null)
+                        res = new DocNodePath(prot, null, null, null, doc);
+                }
+                    break;
             }
-            catch (AssumptionException)
-            {
-                return null;
-            }
-        
+
+            return res;
         }
     }
 }
