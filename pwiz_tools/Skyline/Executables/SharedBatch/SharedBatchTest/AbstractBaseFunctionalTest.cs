@@ -273,7 +273,7 @@ namespace SharedBatchTest
                 Thread.Sleep(SLEEP_INTERVAL);
             }
 
-            Assert.Fail(@"Timeout {0} seconds exceeded in WaitForClosedForm. Open forms: {1}", waitCycles * SLEEP_INTERVAL / 1000, GetOpenFormsString());
+            Assert.Fail(@"Timeout {0} seconds exceeded in WaitForShownForm. Open forms: {1}", waitCycles * SLEEP_INTERVAL / 1000, GetOpenFormsString());
         }
 
         public static bool IsFormOpen(Form form)

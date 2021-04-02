@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SkylineBatch;
 using SharedBatchTest;
+using SkylineBatch.Properties;
 
 namespace SkylineBatchTest
 {
@@ -11,6 +13,20 @@ namespace SkylineBatchTest
     /// </summary>
     public abstract class AbstractSkylineBatchFunctionalTest : AbstractBaseFunctionalTest
     {
+
+        public new string TestFilesZip
+        {
+            get
+            {
+                return base.TestFilesZip;
+            }
+            set
+            {
+                base.TestFilesZip = @"Executables\SkylineBatch\" + value;
+            }
+        }
+
+
         protected override Form MainFormWindow()
         {
             return Program.MainWindow;
@@ -18,7 +34,7 @@ namespace SkylineBatchTest
 
         protected override void ResetSettings()
         {
-            SkylineBatch.Properties.Settings.Default.Reset();
+            Settings.Default.Reset();
         }
 
         protected override void InitProgram()

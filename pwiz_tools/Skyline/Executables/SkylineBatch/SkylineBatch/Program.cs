@@ -49,28 +49,36 @@ namespace SkylineBatch
         {
             ProgramLog.Init("SkylineBatch");
             Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-            Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
-            // Handle exceptions on the UI thread.
-            Application.ThreadException += ((sender, e) => ProgramLog.Error(e.Exception.Message, e.Exception));
-            // Handle exceptions on the non-UI thread.
-            AppDomain.CurrentDomain.UnhandledException += ((sender, e) =>
+
+            if (!FunctionalTest)
             {
-                try
+                Application.SetCompatibleTextRenderingDefault(false);
+                Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
+                // Handle exceptions on the UI thread.
+                Application.ThreadException += ((sender, e) => ProgramLog.Error(e.Exception.Message, e.Exception));
+                // Handle exceptions on the non-UI thread.
+                AppDomain.CurrentDomain.UnhandledException += ((sender, e) =>
                 {
-                    ProgramLog.Error(Resources.Program_Main_An_unexpected_error_occured_during_initialization_, (Exception)e.ExceptionObject);
-                    MessageBox.Show(Resources.Program_Main_An_unexpected_error_occured_during_initialization_ + Environment.NewLine +
-                                    string.Format(Resources.Program_Main_Error_details_may_be_found_in_the_file__0_,
-                                        Path.Combine(Path.GetDirectoryName(Application.ExecutablePath) ?? string.Empty, "SkylineBatchProgram.log")) + Environment.NewLine +
-                                    Environment.NewLine +
-                                    ((Exception)e.ExceptionObject).Message
-                    );
-                }
-                finally
-                {
-                    Application.Exit();
-                }
-            });
+                    try
+                    {
+                        ProgramLog.Error(Resources.Program_Main_An_unexpected_error_occured_during_initialization_,
+                            (Exception) e.ExceptionObject);
+                        MessageBox.Show(Resources.Program_Main_An_unexpected_error_occured_during_initialization_ +
+                                        Environment.NewLine +
+                                        string.Format(Resources.Program_Main_Error_details_may_be_found_in_the_file__0_,
+                                            Path.Combine(
+                                                Path.GetDirectoryName(Application.ExecutablePath) ?? string.Empty,
+                                                "SkylineBatchProgram.log")) + Environment.NewLine +
+                                        Environment.NewLine +
+                                        ((Exception) e.ExceptionObject).Message
+                        );
+                    }
+                    finally
+                    {
+                        Application.Exit();
+                    }
+                });
+            }
 
             using (var mutex = new Mutex(false, $"University of Washington {AppName()}"))
             {

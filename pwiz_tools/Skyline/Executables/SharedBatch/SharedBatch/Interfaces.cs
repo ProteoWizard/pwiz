@@ -81,6 +81,9 @@ namespace SharedBatch
 
         // Uses Validator to determine if variable is valid
         bool IsValid(out string errorMessage);
+
+        // For testing, sets the text in a control
+        void SetText(string value);
     }
 
     // Possible actions a user is taking when opening a configuration in the edit configuration form 

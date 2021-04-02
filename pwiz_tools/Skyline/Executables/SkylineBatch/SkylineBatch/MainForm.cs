@@ -345,7 +345,8 @@ namespace SkylineBatch
         private void btnCancel_Click(object sender, EventArgs e)
         {
             _configManager.CancelRunners();
-            btnCancel.Enabled = false;
+            btnStop.Enabled = false;
+            btnLogStop.Enabled = false;
         }
 
         #endregion
@@ -394,7 +395,8 @@ namespace SkylineBatch
             {
                 btnRunBatch.Enabled = canStart;
                 btnRunOptions.Enabled = btnRunBatch.Enabled;
-                btnCancel.Enabled = canStop;
+                btnStop.Enabled = canStop;
+                btnLogStop.Enabled = canStop;
             });
         }
 
@@ -459,14 +461,16 @@ namespace SkylineBatch
             var dialog = new OpenFileDialog();
             dialog.Filter = TextUtil.FILTER_BCFG;
             if (dialog.ShowDialog(this) != DialogResult.OK) return;
+            DoImport(dialog.FileName);
+        }
 
-            var filePath = dialog.FileName;
-
+        public void DoImport(string filePath)
+        {
             _configManager.Import(filePath);
             UpdateUiConfigurations();
 
             if (!_rDirectorySelector.ShownDialog)
-                 _rDirectorySelector.AddIfNecassary();
+                _rDirectorySelector.AddIfNecassary();
         }
 
         private void btnExport_Click(object sender, EventArgs e)
@@ -715,6 +719,11 @@ namespace SkylineBatch
             return listViewConfigs.Items.Count;
         }
 
+        public int InvalidConfigCount()
+        {
+            return _configManager.InvalidConfigCount();
+        }
+
         public string SelectedConfigName()
         {
             return _configManager.GetSelectedConfig().GetName();
@@ -731,7 +740,6 @@ namespace SkylineBatch
         public void ClickDelete() => btnDelete_Click(new object(), new EventArgs());
         public void ClickUp() => btnUpArrow_Click(new object(), new EventArgs());
         public void ClickDown() => btnDownArrow_Click(new object(), new EventArgs());
-        public void ClickImport() => btnImport_Click(new object(), new EventArgs());
         public void ClickShare() => btnExport_Click(new object(), new EventArgs());
 
         public void ClickConfig(int index) => SelectConfig(index);

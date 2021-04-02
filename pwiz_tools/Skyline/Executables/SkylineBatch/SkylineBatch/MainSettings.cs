@@ -118,7 +118,7 @@ namespace SkylineBatch
             var analysisFolderDirectory = Path.GetDirectoryName(analysisFolder);
             if (!Directory.Exists(analysisFolderDirectory))
             {
-                throw new ArgumentException(string.Format(Resources.MainSettings_ValidateAnalysisFolder_The_analysis_folder__0__does_not_exist_, analysisFolderDirectory) + Environment.NewLine +
+                throw new ArgumentException(string.Format(Resources.MainSettings_ValidateAnalysisFolder_The__parent_directory_of_the_analysis_folder__0__does_not_exist_, analysisFolderDirectory) + Environment.NewLine +
                                             Resources.MainSettings_ValidateAnalysisFolder_Please_provide_a_valid_folder_);
             }
         }

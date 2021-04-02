@@ -70,11 +70,9 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
-    <Compile Include="AbstractBatchFunctionalTest.cs" />
     <Compile Include="AbstractBaseFunctionalTest.cs" />
     <Compile Include="AbstractUnitTest.cs" />
     <Compile Include="AssertEx.cs" />
-    <Compile Include="AutoQCLoaderTest.cs" />
     <Compile Include="ExtensionTestContext.cs" />
     <Compile Include="NormalizedValueCalculatorVerifier.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

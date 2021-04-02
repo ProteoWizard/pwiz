@@ -40,11 +40,12 @@ namespace SkylineBatch
         public void Write(string command, params Object[] args)
         {
             command = string.Format(command, args);
-            if (!command.StartsWith(IN_COMMAND) && !string.IsNullOrEmpty(_commandHolder))
+            if (!string.IsNullOrEmpty(_commandHolder))
             {
                 var reopenCommand = _commandHolder;
                 _commandHolder = string.Empty;
-                Write(reopenCommand);
+                if (!command.StartsWith(IN_COMMAND))
+                    Write(reopenCommand);
             }
             UpdateCurrentFile(command);
             _writer.Write(command + " ");
@@ -73,12 +74,17 @@ namespace SkylineBatch
             return path;
         }
 
+        public void NewLine()
+        {
+            _writer.WriteLine();
+            LogLines.Add(string.Empty);
+        }
+
         public void EndCommandGroup()
         {
             if (string.IsNullOrEmpty(_commandHolder))
             {
-                _writer.WriteLine();
-                LogLines.Add(string.Empty);
+                NewLine();
                 if (!MultiLine)
                     _commandHolder = string.Format(SkylineBatchConfig.OPEN_SKYLINE_FILE_COMMAND, CurrentSkylineFile);
             }

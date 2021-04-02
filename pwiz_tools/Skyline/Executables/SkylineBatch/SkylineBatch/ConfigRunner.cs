@@ -116,7 +116,6 @@ namespace SkylineBatch
 
             var startTime = DateTime.Now;
             StartTime = startTime.ToString("hh:mm:ss");
-            RunTime = string.Empty;
             ChangeStatus(RunnerStatus.Running);
             Config.MainSettings.CreateAnalysisFolderIfNonexistent();
             string commandFile = null;
@@ -186,7 +185,7 @@ namespace SkylineBatch
             }
 
             // STEP 3: refine file and save to new location
-            if (startStep <= 3 && Config.RefineSettings.WillRefine())
+            if (startStep <= 3)
                 Config.WriteRefineCommands(commandWriter);
 
             // STEP 4: output report(s) for completed analysis
@@ -217,7 +216,7 @@ namespace SkylineBatch
                 {
                     foreach (var line in _batchCommandsToLog)
                         _logger.Log(line);
-                    _batchCommandsToLog = new List<string();
+                    _batchCommandsToLog = new List<string>();
                 }
             }
         }
@@ -227,9 +226,9 @@ namespace SkylineBatch
             lock (_lock)
             {
                 if (_runnerStatus == runnerStatus)
-                {
                     return;
-                }
+                if (runnerStatus == RunnerStatus.Waiting)
+                    StartTime = RunTime = String.Empty;
                 _runnerStatus = runnerStatus;
             }
             _uiControl?.UpdateUiConfigurations();

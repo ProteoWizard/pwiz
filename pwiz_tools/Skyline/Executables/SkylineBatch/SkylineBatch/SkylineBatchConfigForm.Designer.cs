@@ -30,9 +30,9 @@
         {
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(SkylineBatchConfigForm));
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle5 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle6 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.linkLabelRegex = new System.Windows.Forms.LinkLabel();
             this.label5 = new System.Windows.Forms.Label();
@@ -73,7 +73,7 @@
             this.splitContainer2 = new System.Windows.Forms.SplitContainer();
             this.gridRefineInputs = new System.Windows.Forms.PropertyGrid();
             this.btnRefinedFilePath = new System.Windows.Forms.Button();
-            this.textBoxRefinedFilePath = new System.Windows.Forms.TextBox();
+            this.textRefinedFilePath = new System.Windows.Forms.TextBox();
             this.tabReports = new System.Windows.Forms.TabPage();
             this.toolBar = new System.Windows.Forms.ToolStrip();
             this.btnAddReport = new System.Windows.Forms.ToolStripButton();
@@ -380,7 +380,7 @@
             this.tabRefine.Controls.Add(this.gridRefineInputs);
             this.tabRefine.Controls.Add(this.label8);
             this.tabRefine.Controls.Add(this.btnRefinedFilePath);
-            this.tabRefine.Controls.Add(this.textBoxRefinedFilePath);
+            this.tabRefine.Controls.Add(this.textRefinedFilePath);
             resources.ApplyResources(this.tabRefine, "tabRefine");
             this.tabRefine.Name = "tabRefine";
             this.tabRefine.UseVisualStyleBackColor = true;
@@ -414,11 +414,11 @@
             this.btnRefinedFilePath.UseVisualStyleBackColor = true;
             this.btnRefinedFilePath.Click += new System.EventHandler(this.btnRefinedFilePath_Click);
             // 
-            // textBoxRefinedFilePath
+            // textRefinedFilePath
             // 
-            resources.ApplyResources(this.textBoxRefinedFilePath, "textBoxRefinedFilePath");
-            this.textBoxRefinedFilePath.Name = "textBoxRefinedFilePath";
-            this.textBoxRefinedFilePath.TextChanged += new System.EventHandler(this.textBoxRefinedFilePath_TextChanged);
+            resources.ApplyResources(this.textRefinedFilePath, "textRefinedFilePath");
+            this.textRefinedFilePath.Name = "textRefinedFilePath";
+            this.textRefinedFilePath.TextChanged += new System.EventHandler(this.textBoxRefinedFilePath_TextChanged);
             // 
             // tabReports
             // 
@@ -471,38 +471,38 @@
             this.gridReportSettings.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
             this.gridReportSettings.AutoSizeRowsMode = System.Windows.Forms.DataGridViewAutoSizeRowsMode.DisplayedCells;
             this.gridReportSettings.CellBorderStyle = System.Windows.Forms.DataGridViewCellBorderStyle.Raised;
-            dataGridViewCellStyle4.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle4.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle4.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle4.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle4.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle4.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle4.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.gridReportSettings.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle4;
+            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.gridReportSettings.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
             this.gridReportSettings.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.gridReportSettings.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.columnName,
             this.columnPath,
             this.columnScripts,
             this.columnFile});
-            dataGridViewCellStyle5.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle5.BackColor = System.Drawing.SystemColors.Window;
-            dataGridViewCellStyle5.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle5.ForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle5.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle5.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle5.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.gridReportSettings.DefaultCellStyle = dataGridViewCellStyle5;
+            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.gridReportSettings.DefaultCellStyle = dataGridViewCellStyle2;
             this.gridReportSettings.EditMode = System.Windows.Forms.DataGridViewEditMode.EditProgrammatically;
             this.gridReportSettings.Name = "gridReportSettings";
-            dataGridViewCellStyle6.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle6.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle6.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle6.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle6.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle6.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle6.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.gridReportSettings.RowHeadersDefaultCellStyle = dataGridViewCellStyle6;
+            dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle3.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle3.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle3.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle3.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.gridReportSettings.RowHeadersDefaultCellStyle = dataGridViewCellStyle3;
             this.gridReportSettings.RowHeadersVisible = false;
             this.gridReportSettings.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.gridReportSettings.TabStop = false;
@@ -667,11 +667,11 @@
         private System.Windows.Forms.TextBox textAnnotationsFile;
         private System.Windows.Forms.TabPage tabRefine;
         private System.Windows.Forms.PropertyGrid gridRefineInputs;
-        private System.Windows.Forms.CheckBox checkBoxRemoveData;
-        private System.Windows.Forms.CheckBox checkBoxRemoveDecoys;
+        public System.Windows.Forms.CheckBox checkBoxRemoveData;
+        public System.Windows.Forms.CheckBox checkBoxRemoveDecoys;
         private System.Windows.Forms.Label label8;
         private System.Windows.Forms.Button btnRefinedFilePath;
-        private System.Windows.Forms.TextBox textBoxRefinedFilePath;
+        public System.Windows.Forms.TextBox textRefinedFilePath;
         private System.Windows.Forms.SplitContainer splitContainer2;
         private System.Windows.Forms.DataGridViewTextBoxColumn columnName;
         private System.Windows.Forms.DataGridViewTextBoxColumn columnPath;

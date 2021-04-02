@@ -108,5 +108,11 @@ namespace SharedBatch
             textSkylineInstallationPath.Enabled = radioButtonSpecifySkylinePath.Checked;
             btnBrowse.Enabled = radioButtonSpecifySkylinePath.Checked;
         }
+
+        public void SetText(string value)
+        {
+            radioButtonSpecifySkylinePath.Checked = true;
+            textSkylineInstallationPath.Text = value;
+        }
     }
 }

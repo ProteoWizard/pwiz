@@ -564,6 +564,14 @@ namespace SharedBatch
             }
         }
 
+        public int InvalidConfigCount()
+        {
+            var invalidCount = 0;
+            foreach (var validation in _configValidation.Values)
+                invalidCount += validation ? 0 : 1;
+            return invalidCount;
+        }
+
         #endregion
 
 

@@ -108,5 +108,10 @@ namespace SharedBatch
             _path = textFilePath.Text;
             _lastUsedPath = textFilePath.Text;
         }
+
+        public void SetText(string value)
+        {
+            textFilePath.Text = value;
+        }
     }
 }

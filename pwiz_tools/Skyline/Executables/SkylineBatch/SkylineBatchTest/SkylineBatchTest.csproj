@@ -60,6 +60,9 @@
   </Choose>
   <ItemGroup>
     <Compile Include="AbstractSkylineBatchFunctionalTest.cs" />
+    <Compile Include="ImportFunctionalTest.cs" />
+    <Compile Include="ConfigFormFunctionalTest.cs" />
+    <Compile Include="MainFormFunctionalTest.cs" />
     <Compile Include="TemplateFileDependencyTest.cs" />
     <Compile Include="SkylineSettingsTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -69,7 +72,6 @@
     <Compile Include="SkylineBatchLoggerTest.cs" />
     <Compile Include="ConfigManagerTest.cs" />
     <Compile Include="ConfigManagerThreadingTest.cs" />
-    <Compile Include="FunctionalTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\SharedBatch\SharedBatch\SharedBatch.csproj">

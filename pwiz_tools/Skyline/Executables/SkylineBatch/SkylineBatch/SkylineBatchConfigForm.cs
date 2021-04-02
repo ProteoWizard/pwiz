@@ -283,13 +283,13 @@ namespace SkylineBatch
                 var refineSettings = config.RefineSettings;
                 checkBoxRemoveData.Checked = refineSettings.RemoveResults;
                 checkBoxRemoveDecoys.Checked = refineSettings.RemoveDecoys;
-                textBoxRefinedFilePath.Text = refineSettings.OutputFilePath;
+                textRefinedFilePath.Text = refineSettings.OutputFilePath;
             }
         }
 
         private void textBoxRefinedFilePath_TextChanged(object sender, EventArgs e)
         {
-            ToggleRefineEnabled(!string.IsNullOrEmpty(textBoxRefinedFilePath.Text));
+            ToggleRefineEnabled(!string.IsNullOrEmpty(textRefinedFilePath.Text));
         }
 
         private void ToggleRefineEnabled(bool enabled)
@@ -306,13 +306,13 @@ namespace SkylineBatch
         {
             var removeDecoys = checkBoxRemoveDecoys.Checked;
             var removeData = checkBoxRemoveData.Checked;
-            var outputFilePath = textBoxRefinedFilePath.Text;
+            var outputFilePath = textRefinedFilePath.Text;
             return new RefineSettings(_refineInput.AsCommandList(), removeDecoys, removeData, outputFilePath);
         }
 
         private void btnRefinedFilePath_Click(object sender, EventArgs e)
         {
-            OpenFile(textBoxRefinedFilePath, TextUtil.FILTER_SKY, true);
+            OpenFile(textRefinedFilePath, TextUtil.FILTER_SKY, true);
         }
 
         #endregion
@@ -339,7 +339,7 @@ namespace SkylineBatch
 
         private void ShowAddReportDialog(int addingIndex, ReportInfo editingReport = null)
         {
-            var addReportsForm = new ReportsAddForm(_mainControl, _rDirectorySelector, !string.IsNullOrEmpty(textBoxRefinedFilePath.Text), editingReport);
+            var addReportsForm = new ReportsAddForm(_mainControl, _rDirectorySelector, !string.IsNullOrEmpty(textRefinedFilePath.Text), editingReport);
             var addReportResult = addReportsForm.ShowDialog();
 
             if (addReportResult == DialogResult.OK)

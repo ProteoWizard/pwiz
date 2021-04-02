@@ -24,6 +24,8 @@ namespace SkylineBatch
 
         private bool _askedAboutRootReplacement; // if the user has been asked about replacing path roots for this configuration
 
+        private TaskCompletionSource<bool> clickNextButton; // allows awaiting btnNext click
+
         public InvalidConfigSetupForm(IMainUiControl mainControl, SkylineBatchConfig invalidConfig, SkylineBatchConfigManager configManager, RDirectorySelector rDirectorySelector)
         {
             InitializeComponent();
@@ -35,6 +37,8 @@ namespace SkylineBatch
         }
 
         public SkylineBatchConfig Config { get; private set; }
+
+        public IValidatorControl CurrentControl { get; private set; }
 
         private MainSettings mainSettings => _invalidConfig.MainSettings;
         private RefineSettings refineSettings => _invalidConfig.RefineSettings;
@@ -163,7 +167,8 @@ namespace SkylineBatch
             AddControl((UserControl)control);
             while (!valid)
             {
-                await btnNext;
+                clickNextButton = new TaskCompletionSource<bool>();
+                await clickNextButton.Task;
                 valid = control.IsValid(out errorMessage);
                 if (!valid)
                     AlertDlg.ShowError(this, Program.AppName(), errorMessage);
@@ -171,6 +176,11 @@ namespace SkylineBatch
             // remove the control and return the valid variable
             if (removeControl) RemoveControl((UserControl)control);
             return control.GetVariable();
+        }
+
+        private void btnNext_Click(object sender, EventArgs e)
+        {
+            clickNextButton.TrySetResult(true);
         }
 
         #endregion
@@ -216,50 +226,14 @@ namespace SkylineBatch
             control.Dock = DockStyle.Fill;
             control.Show();
             panel1.Controls.Add(control);
+            CurrentControl = (IValidatorControl)control;
         }
 
         private void RemoveControl(UserControl control)
         {
             control.Hide();
             panel1.Controls.Remove(control);
-        }
-    }
-
-    // Class that lets you wait for button click (ex: "await btnNext")
-    public static class ButtonAwaiterExtensions
-    {
-        public static ButtonAwaiter GetAwaiter(this Button button)
-        {
-            return new ButtonAwaiter()
-            {
-                Button = button
-            };
-        }
-    }
-    
-    public class ButtonAwaiter : INotifyCompletion
-    {
-
-        public bool IsCompleted
-        {
-            get { return false; }
-        }
-        
-        public void GetResult()
-        {
-        }
-        
-        public Button Button { get; set; }
-
-        public void OnCompleted(Action continuation)
-        {
-            EventHandler h = null;
-            h = (o, e) =>
-            {
-                Button.Click -= h;
-                continuation();
-            };
-            Button.Click += h;
+            CurrentControl = null;
         }
     }
 }
