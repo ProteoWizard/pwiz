@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
@@ -32,13 +33,31 @@ namespace pwiz.Skyline.Model
     public class ModificationMatcher : AbstractModificationMatcher
     {
         private IEnumerator<string> _sequences;
-
+        private int _sequenceCurrent;
+        private int _sequenceCount;
+        private IProgressMonitor _progressMonitor;
+        private IProgressStatus _status;
         private const int DEFAULT_ROUNDING_DIGITS = 6;
 
         public void CreateMatches(SrmSettings settings, IEnumerable<string> sequences,
-            MappedList<string, StaticMod> defSetStatic, MappedList<string, StaticMod> defSetHeavy)
+            MappedList<string, StaticMod> defSetStatic, MappedList<string, StaticMod> defSetHeavy, 
+            IProgressMonitor progressMonitor = null, IProgressStatus status = null)
         {
+            _progressMonitor = progressMonitor;
+            if (progressMonitor != null)
+            {
+                _status = (status ?? new ProgressStatus()).ChangeMessage(Resources.ModificationMatcher_CreateMatches_Matching_modifications);
+                var countable = sequences as ICollection<string>;
+                if (countable == null)
+                {
+                    countable = sequences.ToArray();
+                    sequences = countable;
+                }
+                _sequenceCount = countable.Count;
+            }
+
             _sequences = sequences.GetEnumerator();
+
             InitMatcherSettings(settings, defSetStatic, defSetHeavy);
             if (UnmatchedSequences.Count > 0)
             {
@@ -51,7 +70,7 @@ namespace pwiz.Skyline.Model
 
         public override bool MoveNextSequence()
         {
-            if(!_sequences.MoveNext())
+            if(!MoveNextSingleSequence())
                 return false;
             // Skip sequences that can be created from the current settings.
             TransitionGroupDocNode nodeGroup;
@@ -59,9 +78,26 @@ namespace pwiz.Skyline.Model
             while (!HasMods(_sequences.Current) ||
                    CreateDocNodeFromSettings(new Target(_sequences.Current), null, DIFF_GROUPS, out nodeGroup) != null)
             {
-                if (!_sequences.MoveNext())
+                if (!MoveNextSingleSequence())
                     return false;
             }
+            return true;
+        }
+
+        private bool MoveNextSingleSequence()
+        {
+            if (!_sequences.MoveNext())
+                return false;
+
+            if (_progressMonitor != null)
+            {
+                _sequenceCurrent++;
+                if (_progressMonitor.IsCanceled)
+                    return false;
+                if (_sequenceCount > 0)
+                    _progressMonitor.UpdateProgress(_status = _status.UpdatePercentCompleteProgress(_progressMonitor, _sequenceCurrent, _sequenceCount));
+            }
+
             return true;
         }
 

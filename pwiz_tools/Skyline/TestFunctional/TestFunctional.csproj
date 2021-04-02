@@ -166,6 +166,7 @@
     <Compile Include="CrosslinkChromatogramTest.cs" />
     <Compile Include="CrosslinkingTest.cs" />
     <Compile Include="CrosslinkNeutralLossTest.cs" />
+    <Compile Include="DiaSearchTest.cs" />
     <Compile Include="DdaSearchTest.cs" />
     <Compile Include="DetectionsPlotTest.cs" />
     <Compile Include="DirtyDocumentSharingTest.cs" />
@@ -354,6 +355,7 @@
     <Compile Include="ToolServiceTest.cs" />
     <Compile Include="ToolStoreDlgTest.cs" />
     <Compile Include="ToolUpdatesTest.cs" />
+    <Compile Include="TransitionResultQuantitativeTest.cs" />
     <Compile Include="TreeRestorationTest.cs" />
     <Compile Include="ReintegrateDlgTest.cs" />
     <Compile Include="AssayLibraryImportTest.cs" />
@@ -435,6 +437,7 @@
     <None Include="ConfigureToolsDlgTest.zip" />
     <None Include="CopyPasteTest.zip" />
     <None Include="CrosslinkingTest.zip" />
+    <None Include="DdaSearchTest.zip" />
     <None Include="DetectionsPlotTest.zip" />
     <None Include="DocumentGridChromatogramDataTest.zip" />
     <None Include="DocumentGridTest.zip" />
@@ -546,6 +549,7 @@
     <None Include="ToolServiceTest.zip" />
     <None Include="ToolStoreDlgTest.zip" />
     <None Include="ToolUpdatesTest.zip" />
+    <None Include="TransitionResultQuantitativeTest.zip" />
     <None Include="TreeRestorationTest.zip" />
     <None Include="TriggeredAcquisitionTest.zip" />
     <None Include="UIModeTest.zip" />

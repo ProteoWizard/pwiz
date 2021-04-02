@@ -193,9 +193,9 @@ namespace TestPerf
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.dda_search_settings_page);
-                importPeptideSearchDlg.SearchSettingsControl.SetPrecursorTolerance(new MzTolerance(5, MzTolerance.Units.ppm));
-                importPeptideSearchDlg.SearchSettingsControl.SetFragmentTolerance(new MzTolerance(10, MzTolerance.Units.ppm));
-                importPeptideSearchDlg.SearchSettingsControl.SetFragmentIons("b, y");
+                importPeptideSearchDlg.SearchSettingsControl.PrecursorTolerance = new MzTolerance(5, MzTolerance.Units.ppm);
+                importPeptideSearchDlg.SearchSettingsControl.FragmentTolerance = new MzTolerance(10, MzTolerance.Units.ppm);
+                importPeptideSearchDlg.SearchSettingsControl.FragmentIons = "b, y";
 
                 importPeptideSearchDlg.SearchControl.OnSearchFinished += (success) => searchSucceeded = success;
             });
@@ -209,7 +209,7 @@ namespace TestPerf
 
             // Wait for search to finish
             WaitForConditionUI(60000 * 60, () => searchSucceeded.HasValue);
-            Assert.IsTrue(searchSucceeded.Value);
+            RunUI(() => Assert.IsTrue(searchSucceeded.Value, importPeptideSearchDlg.SearchControl.LogText));
             if (IsCoverShotMode)
             {
                 _searchLogImage = ScreenshotManager.TakeNextShot(importPeptideSearchDlg);
@@ -217,7 +217,7 @@ namespace TestPerf
             }
 
             // clicking 'Finish' (Next) will run ImportFasta
-            var ambiguousDlg = ShowDialog<MessageDlg>(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
+            var ambiguousDlg = ShowDialog<MessageDlg>(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()), 60000 * 10);
             PauseForScreenShot<MessageDlg>("Import Peptide Search - Ambiguous Peptides dialog", tutorialPage++);
             RunUI(() => AssertEx.Contains(ambiguousDlg.Message,
                 Resources.BiblioSpecLiteBuilder_AmbiguousMatches_The_library_built_successfully__Spectra_matching_the_following_peptides_had_multiple_ambiguous_peptide_matches_and_were_excluded_));

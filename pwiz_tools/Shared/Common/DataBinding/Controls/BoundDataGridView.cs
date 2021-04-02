@@ -30,6 +30,7 @@ using pwiz.Common.DataBinding.Attributes;
 using pwiz.Common.DataBinding.Clustering;
 using pwiz.Common.DataBinding.Internal;
 using pwiz.Common.DataBinding.Layout;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.DataBinding.Controls
 {
@@ -46,6 +47,7 @@ namespace pwiz.Common.DataBinding.Controls
         private IViewContext _viewContext;
         private ItemProperties _itemProperties;
         private ImmutableList<ColumnFormat> _columnFormats;
+        private CancellationTokenSource _colorSchemeCancellationTokenSource;
 
         public BoundDataGridView()
         {
@@ -357,39 +359,45 @@ namespace pwiz.Common.DataBinding.Controls
             var color = ReportColorScheme.GetColor(propertyDescriptor, reportResults.RowItems[e.RowIndex]);
             if (color.HasValue)
             {
-                e.CellStyle.BackColor = LightenColor(color.Value);
-            }
-        }
-
-        private bool use_hsv = false;
-        public Color LightenColor(Color color)
-        {
-            if (use_hsv)
-            {
-                ColorPalettes.ColorToHSV(color, out double hue, out double saturation, out double value);
-                var newSaturation = saturation < .5 ? saturation : (saturation + .5) / 2;
-                var newValue = value > .5 ? value : (value + .5) / 2;
-                if (newSaturation == saturation && newValue == value)
+                e.CellStyle.BackColor = color.Value;
+                var linkColumn = column as DataGridViewLinkColumn;
+                if (ColorPalettes.GetColorBrightness(color.Value) < .5)
                 {
-                    return color;
+                    e.CellStyle.ForeColor = Color.White;
+                    if (linkColumn != null)
+                    {
+                        var row = Rows[e.RowIndex];
+                        // "row" has now been unshared, and we can safely change its LinkColor
+                        var linkCell = row.Cells[e.ColumnIndex] as DataGridViewLinkCell;
+                        if (linkCell != null)
+                        {
+                            linkCell.LinkColor = Color.White;
+                        }
+                    }
                 }
-                return ColorPalettes.ColorFromHSV(hue, saturation / 2, (1 + value) / 2);
+                else
+                {
+                    if (linkColumn != null)
+                    {
+                        var sharedRow = Rows.SharedRow(e.RowIndex);
+                        // If the row has been unshared (i.e. its index is not -1), then we might need to set its LinkColor back to its original value
+                        if (sharedRow.Index != -1)
+                        {
+                            var linkCell = sharedRow.Cells[e.ColumnIndex] as DataGridViewLinkCell;
+                            if (linkCell != null)
+                            {
+                                linkCell.LinkColor = linkColumn.LinkColor;
+                            }
+                        }
+                    }
+                }
             }
-            return Color.FromArgb(color.A, LightenRgbComponent(color.R), LightenRgbComponent(color.G), LightenRgbComponent(color.B));
-        }
-
-        private int LightenRgbComponent(int component)
-        {
-            if (component > 255)
-            {
-                return component;
-            }
-
-            return (component + 255) / 2;
         }
 
         public void UpdateColorScheme()
         {
+            _colorSchemeCancellationTokenSource?.Cancel();
+            _colorSchemeCancellationTokenSource = null;
             var reportResults = (DataSource as BindingListSource)?.ReportResults as ClusteredReportResults;
             if (reportResults == null)
             {
@@ -397,7 +405,43 @@ namespace pwiz.Common.DataBinding.Controls
             }
             else
             {
-                ReportColorScheme = ReportColorScheme.FromClusteredResults(CancellationToken.None, reportResults);
+                var dataSchema = (DataSource as BindingListSource)?.ViewInfo?.DataSchema;
+                if (dataSchema == null)
+                {
+                    return;
+                }
+
+                _colorSchemeCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(dataSchema.QueryLock.CancellationToken);
+                var cancellationToken = _colorSchemeCancellationTokenSource.Token;
+                CommonActionUtil.RunAsync(() =>
+                {
+                    using (dataSchema.QueryLock.GetReadLock())
+                    {
+                        GetColorScheme(cancellationToken, reportResults);
+                    }
+                });
+            }
+        }
+
+        private void GetColorScheme(CancellationToken cancellationToken, ClusteredReportResults reportResults)
+        {
+            try
+            {
+                var reportColorScheme = ReportColorScheme.FromClusteredResults(cancellationToken, reportResults);
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    CommonActionUtil.SafeBeginInvoke(this, () =>
+                    {
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            ReportColorScheme = reportColorScheme;
+                            Invalidate();
+                        }
+                    });
+                }
+            }
+            catch (OperationCanceledException)
+            {
             }
         }
 

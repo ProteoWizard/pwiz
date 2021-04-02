@@ -257,6 +257,8 @@ PWIZ_API_DECL void SpectrumList_ABI::createIndex() const
     ExperimentAndCycleByTime experimentAndCycleByTime;
     vector<double> times, intensities;
 
+    bool wiff2 = bal::iends_with(wifffile_->getWiffPath(), ".wiff2");
+
     int periodCount = wifffile_->getPeriodCount(sample);
     for (int period=1; period <= periodCount; ++period)
     {
@@ -275,7 +277,7 @@ PWIZ_API_DECL void SpectrumList_ABI::createIndex() const
                 msExperiment->getTIC(times, intensities);
 
                 for (int i = 0, end = (int) times.size(); i < end; ++i)
-                //    if (intensities[i] > 0)
+                    if (!wiff2 || intensities[i] > 0)
                         experimentAndCycleByTime.insert(make_pair(times[i], make_pair(msExperiment, i + 1)));
             }
             else

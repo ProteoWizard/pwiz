@@ -392,6 +392,15 @@ namespace SharedBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error:.
+        /// </summary>
+        internal static string Logger_LogError_Error_ {
+            get {
+                return ResourceManager.GetString("Logger_LogError_Error_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to ERROR: {0}.
         /// </summary>
         internal static string Logger_LogErrorToFile_ERROR___0_ {
@@ -483,6 +492,15 @@ namespace SharedBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unable to start {0}..
+        /// </summary>
+        internal static string ProcessRunner_StartException_Unable_to_start__0__ {
+            get {
+                return ResourceManager.GetString("ProcessRunner_StartException_Unable_to_start__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Could not find {0} at this location: {1}.
         /// </summary>
         internal static string SkylineSettings_Validate_Could_not_find__0__at_this_location___1_ {
@@ -548,11 +566,29 @@ namespace SharedBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Skyline Batch Configuration Files.
+        /// </summary>
+        internal static string TextUtil_FILTER_BCFG_Skyline_Batch_Configuration_Files {
+            get {
+                return ResourceManager.GetString("TextUtil_FILTER_BCFG_Skyline_Batch_Configuration_Files", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to CSV Files.
         /// </summary>
         internal static string TextUtil_FILTER_CSV_CSV_Files {
             get {
                 return ResourceManager.GetString("TextUtil_FILTER_CSV_CSV_Files", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to AutoQC Configuration Files.
+        /// </summary>
+        internal static string TextUtil_FILTER_QCFG_AutoQC_Configuration_Files {
+            get {
+                return ResourceManager.GetString("TextUtil_FILTER_QCFG_AutoQC_Configuration_Files", resourceCulture);
             }
         }
         
@@ -571,6 +607,15 @@ namespace SharedBatch.Properties {
         internal static string TextUtil_FILTER_SKY_Skyline_Files {
             get {
                 return ResourceManager.GetString("TextUtil_FILTER_SKY_Skyline_Files", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Skyline Configuration Files.
+        /// </summary>
+        internal static string TextUtil_FILTER_SKYC_Skyline_Configuration_Files {
+            get {
+                return ResourceManager.GetString("TextUtil_FILTER_SKYC_Skyline_Configuration_Files", resourceCulture);
             }
         }
         

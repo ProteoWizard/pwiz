@@ -49,7 +49,7 @@
             this.label1 = new System.Windows.Forms.Label();
             this.comboLogList = new System.Windows.Forms.ComboBox();
             this.textBoxLog = new System.Windows.Forms.RichTextBox();
-            this.tabFront = new System.Windows.Forms.TabPage();
+            this.tabConfigs = new System.Windows.Forms.TabPage();
             this.listViewConfigs = new SkylineBatch.MyListView();
             this.listViewConfigName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.listViewModified = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -73,7 +73,7 @@
             this.tabMain = new System.Windows.Forms.TabControl();
             this.batchRunDropDown.SuspendLayout();
             this.tabLog.SuspendLayout();
-            this.tabFront.SuspendLayout();
+            this.tabConfigs.SuspendLayout();
             this.panel2.SuspendLayout();
             this.panel1.SuspendLayout();
             this.toolStrip1.SuspendLayout();
@@ -191,6 +191,7 @@
             this.tabLog.Controls.Add(this.textBoxLog);
             resources.ApplyResources(this.tabLog, "tabLog");
             this.tabLog.Name = "tabLog";
+            this.tabLog.Enter += new System.EventHandler(this.tabLog_Enter);
             // 
             // label1
             // 
@@ -211,15 +212,16 @@
             this.textBoxLog.Name = "textBoxLog";
             this.textBoxLog.ReadOnly = true;
             // 
-            // tabFront
+            // tabConfigs
             // 
-            this.tabFront.BackColor = System.Drawing.Color.Transparent;
-            this.tabFront.Controls.Add(this.listViewConfigs);
-            this.tabFront.Controls.Add(this.labelSavedConfigurations);
-            this.tabFront.Controls.Add(this.panel2);
-            this.tabFront.Controls.Add(this.panel1);
-            resources.ApplyResources(this.tabFront, "tabFront");
-            this.tabFront.Name = "tabFront";
+            this.tabConfigs.BackColor = System.Drawing.Color.Transparent;
+            this.tabConfigs.Controls.Add(this.listViewConfigs);
+            this.tabConfigs.Controls.Add(this.labelSavedConfigurations);
+            this.tabConfigs.Controls.Add(this.panel2);
+            this.tabConfigs.Controls.Add(this.panel1);
+            resources.ApplyResources(this.tabConfigs, "tabConfigs");
+            this.tabConfigs.Name = "tabConfigs";
+            this.tabConfigs.Enter += new System.EventHandler(this.tabConfigs_Enter);
             // 
             // listViewConfigs
             // 
@@ -234,14 +236,12 @@
             this.listViewConfigs.HideSelection = false;
             this.listViewConfigs.MultiSelect = false;
             this.listViewConfigs.Name = "listViewConfigs";
-            this.listViewConfigs.Scrollable = false;
             this.listViewConfigs.UseCompatibleStateImageBehavior = false;
             this.listViewConfigs.View = System.Windows.Forms.View.Details;
             this.listViewConfigs.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.listViewConfigs_ItemCheck);
             this.listViewConfigs.ItemSelectionChanged += new System.Windows.Forms.ListViewItemSelectionChangedEventHandler(this.listViewConfigs_PreventItemSelectionChanged);
             this.listViewConfigs.DoubleClick += new System.EventHandler(this.HandleEditEvent);
             this.listViewConfigs.MouseUp += new System.Windows.Forms.MouseEventHandler(this.listViewConfigs_MouseUp);
-            this.listViewConfigs.Resize += new System.EventHandler(this.listViewConfigs_Resize);
             // 
             // listViewConfigName
             // 
@@ -388,7 +388,7 @@
             // tabMain
             // 
             resources.ApplyResources(this.tabMain, "tabMain");
-            this.tabMain.Controls.Add(this.tabFront);
+            this.tabMain.Controls.Add(this.tabConfigs);
             this.tabMain.Controls.Add(this.tabLog);
             this.tabMain.Name = "tabMain";
             this.tabMain.SelectedIndex = 0;
@@ -400,11 +400,12 @@
             this.Controls.Add(this.tabMain);
             this.Name = "MainForm";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
+            this.Resize += new System.EventHandler(this.MainForm_Resize);
             this.batchRunDropDown.ResumeLayout(false);
             this.tabLog.ResumeLayout(false);
             this.tabLog.PerformLayout();
-            this.tabFront.ResumeLayout(false);
-            this.tabFront.PerformLayout();
+            this.tabConfigs.ResumeLayout(false);
+            this.tabConfigs.PerformLayout();
             this.panel2.ResumeLayout(false);
             this.panel2.PerformLayout();
             this.panel1.ResumeLayout(false);
@@ -430,7 +431,7 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.ComboBox comboLogList;
         private System.Windows.Forms.RichTextBox textBoxLog;
-        private System.Windows.Forms.TabPage tabFront;
+        private System.Windows.Forms.TabPage tabConfigs;
         private System.Windows.Forms.Label labelSavedConfigurations;
         private System.Windows.Forms.Panel panel2;
         private System.Windows.Forms.Button btnRunOptions;

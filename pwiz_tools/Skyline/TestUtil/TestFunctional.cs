@@ -885,7 +885,7 @@ namespace pwiz.SkylineTestUtil
             return WaitForDocumentLoaded(millis);
         }
 
-        public static bool WaitForCondition(Func<bool> func)
+        public static bool WaitForCondition([InstantHandle] Func<bool> func)
         {
             return WaitForCondition(WAIT_TIME, func);
         }
@@ -2036,28 +2036,32 @@ namespace pwiz.SkylineTestUtil
 
         private static void ImportAssayLibraryOrTransitionList(string csvPath, bool isAssayLibrary, ICollection<string> errorList, bool proceedWithErrors = true)
         {
-            var transitionSelectdgl = isAssayLibrary ?
+            var transitionSelectDlg = isAssayLibrary ?
                 ShowDialog<ImportTransitionListColumnSelectDlg>(() =>  SkylineWindow.ImportAssayLibrary(csvPath)) :
                 ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.ImportMassList(csvPath));
-            if (errorList != null)
+            if (errorList == null)
+            {
+                OkDialog(transitionSelectDlg, transitionSelectDlg.OkDialog);
+            }
+            else
             {
                 // We're expecting errors, collect them then move on
-                RunUI(() => transitionSelectdgl.AcceptButton.PerformClick());
-                var errDlg = WaitForOpenForm<ImportTransitionListErrorDlg>();
+                var errDlg = ShowDialog<ImportTransitionListErrorDlg>(transitionSelectDlg.OkDialog);
                 errorList.Clear();
                 foreach (var err in errDlg.ErrorList)
                 {
                     errorList.Add(err.ErrorMessage);
                 }
-                OkDialog(errDlg, () => errDlg.DialogResult = proceedWithErrors ? DialogResult.OK : DialogResult.Cancel); // Closes the error dialog, and the import dialog too if we're accepting errors
-                if (!proceedWithErrors)
+                if (proceedWithErrors)
                 {
-                    OkDialog(transitionSelectdgl, () => transitionSelectdgl.CancelButton.PerformClick()); // Canceling the error dialog drops us back into the import dialog
+                    OkDialog(errDlg, errDlg.AcceptButton.PerformClick);
+                    WaitForClosedForm(transitionSelectDlg);
                 }
-            }
-            else
-            {
-                OkDialog(transitionSelectdgl, () => transitionSelectdgl.AcceptButton.PerformClick());
+                else
+                {
+                    OkDialog(errDlg, errDlg.Close);
+                    OkDialog(transitionSelectDlg, transitionSelectDlg.CancelDialog); // Canceling the error dialog drops us back into the import dialog
+                }
             }
         }
 
@@ -2072,7 +2076,7 @@ namespace pwiz.SkylineTestUtil
             {
                 var columnSelectDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
                 WaitForConditionUI(() => columnSelectDlg.WindowShown); // Avoids possible race condition in code coverage tests
-                OkDialog(columnSelectDlg, () => columnSelectDlg.AcceptButton.PerformClick());
+                OkDialog(columnSelectDlg, columnSelectDlg.OkDialog);
             }
             else
             {
@@ -2086,7 +2090,7 @@ namespace pwiz.SkylineTestUtil
             {
                 var columnSelectDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste(text));
                 WaitForConditionUI(() => columnSelectDlg.WindowShown); // Avoids possible race condition in code coverage tests
-                OkDialog(columnSelectDlg, () => columnSelectDlg.AcceptButton.PerformClick());
+                OkDialog(columnSelectDlg, columnSelectDlg.OkDialog);
             }
             else
             {

@@ -3578,6 +3578,24 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Whether this result was obtained from an MS1 scan..
+        /// </summary>
+        public static string TransitionResultIsMs1 {
+            get {
+                return ResourceManager.GetString("TransitionResultIsMs1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Whether this result is treated as quantitative, based on the user-modifiable Quantitative property of the Transition and whether the MS/MS Full Scan Acquisition Method is DDA which treats all fragment ions as non-quantitative..
+        /// </summary>
+        public static string TransitionResultIsQuantitative {
+            get {
+                return ResourceManager.GetString("TransitionResultIsQuantitative", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unique identifier of the transition result within the document. This begins with &quot;TransitionResult:&quot; and usually ends with the replicate name, but may have additional attributes for the optimization step and result file..
         /// </summary>
         public static string TransitionResultLocator {

@@ -892,9 +892,14 @@ namespace pwiz.Skyline.SettingsUI
             usercontrolIonMobilityFiltering.InitializeSettings(_documentContainer);
         }
 
+        private ImportPeptideSearchDlg.Workflow? _lastPeptideSearchWorkflow;
         public void ModifyOptionsForImportPeptideSearchWizard(ImportPeptideSearchDlg.Workflow workflow, bool libIonMobilities)
         {
             var settings = _documentContainer.Document.Settings;
+
+            if (_lastPeptideSearchWorkflow == workflow)
+                return;
+            _lastPeptideSearchWorkflow = workflow;
 
             // Reduce MS1 filtering groupbox
             int sepMS1FromMS2 = groupBoxMS2.Top - groupBoxMS1.Bottom;
