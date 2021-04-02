@@ -16,12 +16,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
-using System.Linq;
+using System.Collections.Generic;
 using System.IO;
-using System.Text;
-using System.Xml;
-using System.Xml.Linq;
+using System.Threading;
 
 namespace SortRESX
 {
@@ -40,105 +39,64 @@ namespace SortRESX
     {
         static void Main(string[] args)
         {
-            XmlReader inputStream = null;
-            FileSaver fileSaver = null;
-            if (args.Length > 1)
+            List<string> startingFolders = new List<string>();
+            if (args.Length == 0)
             {
-                ShowHelp();
-                return;
+                startingFolders.Add(Directory.GetCurrentDirectory());
             }
+            else
+            {
+                foreach (var arg in args)
+                {
+                    startingFolders.Add(Path.GetFullPath(arg));
+                }
+            }
+            Console.Error.WriteLine("Sorting resx files in {0}", string.Join(",", startingFolders));
+            var resxSorter = new ResxSorter();
+            RecurseDirectories(resxSorter.ProcessFile, Directory.GetCurrentDirectory());
+        }
 
-            if (args.Length == 0) // Input resx is coming from stdin
+        static void RecurseDirectories(Func<string, bool> fileAction, params string[] startingDirectories)
+        {
+            int startedCount = 0;
+            int completedCount = 0;
+            int directoryCount = 0;
+            int changeCount = 0;
+            var startingTime = DateTime.UtcNow;
+            Stack<string> dirs = new Stack<string>(startingDirectories);
+            while (dirs.Count > 0)
             {
-                try 
+                var directory = dirs.Pop();
+                directoryCount++;
+                foreach (var file in Directory.GetFiles(directory))
                 {
-                    Stream s = Console.OpenStandardInput();
-                    inputStream = XmlReader.Create(s);
-                }
-                catch (Exception ex) 
-                {
-                    Console.WriteLine("Error reading from stdin: {0}", ex.Message);
-                    return;
-                }
-            }
-            else // Input resx is from file specified by first argument 
-            {
-                string arg0 = args[0].ToLower();
-                if( arg0.StartsWith(@"/h") || arg0.StartsWith(@"/?"))
-                {
-                    ShowHelp();
-                    return;
-                }
-
-                string path = Path.GetFullPath(args[0]);
-                try
-                {
-                    inputStream = XmlReader.Create(path);
-                }
-                catch(Exception ex)
-                {
-                    Console.WriteLine("Error opening file '{0}': {1}", path, ex.Message);
-                    return;
-                }
-                fileSaver = new FileSaver(path);
-            }
-            try
-            {
-                XDocument sortedDoc = null;
-                using (inputStream)
-                {
-                    XDocument doc = XDocument.Load(inputStream);
-                    // Create a sorted version of the XML
-                    sortedDoc = SortDataByName(doc);
-                    // Save it to the target
-                    Console.OutputEncoding = Encoding.UTF8;
-                }
-                // Create a linq XML document from the source.
-                if (fileSaver != null)
-                {
-                    using (fileSaver)
+                    startedCount++;
+                    new Action(() =>
                     {
-                        sortedDoc.Save(fileSaver.SafeName);
-                        fileSaver.Commit();
-                    }
+                        bool result = fileAction(file);
+                        if (result)
+                        {
+                            changeCount++;
+                            Console.Error.WriteLine("Modified file {0}", file);
+                        }
+                    }).BeginInvoke(ar =>
+                    {
+                        Interlocked.Increment(ref completedCount);
+                    }, null);
                 }
-                else
+                foreach (var subdirectory in Directory.GetDirectories(directory))
                 {
-                    sortedDoc.Save(Console.Out);
+                    dirs.Push(subdirectory);
                 }
             }
-            catch (Exception ex)
+            while (completedCount < startedCount)
             {
-                Console.Error.WriteLine(ex);
+                Thread.Sleep(100);
             }
-            return;
-        }
 
-        //
-        // Use Linq to sort the elements.  The comment, schema, resheader, assembly, metadata, data appear in that order, 
-        // with resheader, assembly, metadata and data elements sorted by name attribute.
-        private static XDocument SortDataByName(XDocument resx)
-        {
-            return new XDocument(
-                new XElement(resx.Root.Name,
-                    from comment in resx.Root.Nodes() where comment.NodeType == XmlNodeType.Comment select comment,
-                    from schema in resx.Root.Elements() where schema.Name.LocalName == "schema" select schema,
-                    from resheader in resx.Root.Elements("resheader") orderby (string) resheader.Attribute("name") select resheader,
-                    from assembly in resx.Root.Elements("assembly") orderby (string) assembly.Attribute("name") select assembly,
-                    from metadata in resx.Root.Elements("metadata") orderby (string)metadata.Attribute("name") select metadata,
-                    from data in resx.Root.Elements("data") orderby (string)data.Attribute("name") select data
-                )
-            );
-        }
-
-        //
-        // Write invocation instructions to stderr.
-        //
-        private static void ShowHelp()
-        {
-            Console.Error.WriteLine(
-                "0 arguments ==> Input from STDIN.  Output to STDOUT.\n" +
-                "1 argument  ==> Input from specified .resx file.  Output to specified .resx file.\n");
+            var endingTime = DateTime.UtcNow;
+            var duration = endingTime.Subtract(startingTime);
+            Console.Error.WriteLine("Modified {0} files in {1} directories in {2}", changeCount, directoryCount, duration);
         }
     }
 }
