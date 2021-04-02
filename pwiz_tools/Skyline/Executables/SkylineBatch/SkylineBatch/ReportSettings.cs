@@ -320,7 +320,7 @@ namespace SkylineBatch
             commandWriter.Write(ADD_REPORT_OVERWRITE_COMMAND, ReportPath);
             commandWriter.Write(EXPORT_REPORT_COMMAND, Name, Path.Combine(analysisFolder, Name + TextUtil.EXT_CSV));
             commandWriter.Write(SAVE_SETTINGS_COMMAND);
-            commandWriter.NewLine();
+            commandWriter.EndCommandGroup();
         }
 
         public List<Dictionary<RRunInfo, string>> GetScriptArguments(string analysisFolder)
