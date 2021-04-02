@@ -1294,7 +1294,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Collision Cross Section.
+        ///   Looks up a localized string similar to Library Collision Cross Section.
         /// </summary>
         public static string LibraryCollisionCrossSection {
             get {
@@ -1308,15 +1308,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string LibraryDotProduct {
             get {
                 return ResourceManager.GetString("LibraryDotProduct", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Library High Energy Offset.
-        /// </summary>
-        public static string LibraryHighEnergyOffset {
-            get {
-                return ResourceManager.GetString("LibraryHighEnergyOffset", resourceCulture);
             }
         }
         
@@ -1335,6 +1326,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string LibraryIonMobility {
             get {
                 return ResourceManager.GetString("LibraryIonMobility", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Library Ion Mobility High Energy Offset.
+        /// </summary>
+        public static string LibraryIonMobilityHighEnergyOffset {
+            get {
+                return ResourceManager.GetString("LibraryIonMobilityHighEnergyOffset", resourceCulture);
             }
         }
         

@@ -3,6 +3,7 @@ using pwiz.Common.Chemistry;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Hibernate;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
@@ -17,14 +18,14 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             get { return IonMobilityFilter.IonMobilityUnitsL10NString(_units); }
         }
 
-        [Format(Formats.IonMobility, NullValue = TextUtil.EXCEL_NA)]
+        [Format(Formats.CCS, NullValue = TextUtil.EXCEL_NA)]
         public double? CollisionCrossSection { get; private set; }
         [Format(Formats.IonMobility, NullValue = TextUtil.EXCEL_NA)]
-        public double? HighEnergyOffset { get; private set; }
+        public double? IonMobilityHighEnergyOffset { get; private set; }
 
-        public static IonMobilityObject FromIonMobilityAndCCS(IonMobilityAndCCS ionMobilityAndCcs, double? ccs)
+        public static IonMobilityObject FromIonMobilityAndCCS(IonMobilityAndCCS ionMobilityAndCcs)
         {
-            if (ionMobilityAndCcs == null || ionMobilityAndCcs.IsEmpty)
+            if (IonMobilityAndCCS.IsNullOrEmpty(ionMobilityAndCcs))
             {
                 return null;
             }
@@ -32,8 +33,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             {
                 IonMobilityValue = ionMobilityAndCcs.IonMobility?.Mobility,
                 _units = ionMobilityAndCcs.IonMobility?.Units ?? eIonMobilityUnits.none,
-                CollisionCrossSection = ccs ?? ionMobilityAndCcs.CollisionalCrossSectionSqA,
-                HighEnergyOffset = ionMobilityAndCcs.HighEnergyIonMobilityValueOffset
+                CollisionCrossSection = ionMobilityAndCcs.CollisionalCrossSectionSqA,
+                IonMobilityHighEnergyOffset = ionMobilityAndCcs.HighEnergyIonMobilityValueOffset
             };
         }
 
@@ -43,14 +44,24 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             if (IonMobilityValue.HasValue)
             {
                 parts.Add(IonMobilityValue.Value.ToString(Formats.IonMobility));
+                if (_units != eIonMobilityUnits.none)
+                {
+                    parts.Add(Common.Chemistry.IonMobilityValue.GetUnitsString(_units));
+                }
             }
 
-            if (_units != eIonMobilityUnits.none)
+            if ((IonMobilityHighEnergyOffset ?? 0) != 0)
             {
-                parts.Add(IonMobilityUnits);
+                parts.Add(Resources.IonMobilityObject_ToString_HEO_); // Compact representation of "HIgh Energy Ion Mobility Offset"
+                parts.Add(IonMobilityHighEnergyOffset.Value.ToString(Formats.IonMobility));
             }
 
-            // Consider: maybe include CollisionCrossSection and HighEnergyOffset if present?
+            if ((CollisionCrossSection ?? 0) != 0)
+            {
+                parts.Add(Resources.IonMobilityObject_ToString_CCS_); // Compact representation of "Collision Cross Section"
+                parts.Add(CollisionCrossSection.Value.ToString(Formats.CCS));
+            }
+
             return TextUtil.SpaceSeparate(parts);
         }
     }

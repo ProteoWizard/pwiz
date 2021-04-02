@@ -424,8 +424,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 {
                     return null;
                 }
-                var ccs = imInfo.GetLibraryMeasuredCollisionalCrossSection(libKey);
-                return IonMobilityObject.FromIonMobilityAndCCS(im, ccs);
+                return IonMobilityObject.FromIonMobilityAndCCS(im);
             }
         }
 
