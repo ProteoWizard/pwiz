@@ -587,7 +587,7 @@ namespace pwiz.SkylineTest
             AssertEx.DeserializeError<StaticMod>("<static_modification name=\"Mod\" variable=\"true\" />");
             // Loss only failures
             AssertEx.DeserializeError<StaticMod>("<static_modification name=\"Loss-only\" aminoacid=\"K, R, Q, N\" variable=\"true\"><potential_loss formula=\"NH3\"/></static_modification>");
-            AssertEx.DeserializeError<StaticMod>("<static_modification name=\"Loss-only\" aminoacid=\"K, R, Q, N\" explicit_decl=\"true\"><potential_loss formula=\"NH3\"/></static_modification>");
+            AssertEx.DeserializeNoError<StaticMod>("<static_modification name=\"Loss-only\" aminoacid=\"K, R, Q, N\" explicit_decl=\"true\"><potential_loss formula=\"NH3\"/></static_modification>", true, true, structuralModificationType);
             AssertEx.DeserializeError<StaticMod>("<static_modification name=\"LossInclusion\" aminoacid=\"T, S\" formula=\"HPO3\"><potential_loss formula=\"HP3O4\" inclusion=\"Sometimes\"/></static_modification>");
         }
 
