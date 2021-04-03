@@ -104,6 +104,8 @@ namespace pwiz.Skyline.Controls.Graphs
         private void SetSpectraUI(MsDataSpectrum[] spectra)
         {
             _msDataFileScanHelper.MsDataSpectra = spectra;
+            _rmis = null;
+
             _heatMapData = null;
             if (_msDataFileScanHelper.MsDataSpectra == null)
                 return;
@@ -160,7 +162,6 @@ namespace pwiz.Skyline.Controls.Graphs
         public void ShowSpectrum(IScanProvider scanProvider, int transitionIndex, int scanIndex)
         {
             _msDataFileScanHelper.UpdateScanProvider(scanProvider, transitionIndex, scanIndex);
-            _rmis = null;
             if (scanProvider != null)
             {
 
@@ -1028,15 +1029,20 @@ namespace pwiz.Skyline.Controls.Graphs
                 return;
             //if the spectrum is annotated with ion series the label tags have peak rank, not transition index
             //translating rank into index here to make sure the label click event works correctly
+            var transitionIndex = -1;
             if (_showIonSeriesAnnotations)
-                _msDataFileScanHelper.TransitionIndex = _transitionIndex[(int)nearestLabel.Tag];
+                transitionIndex = _transitionIndex[(int)nearestLabel.Tag];
             else
-                _msDataFileScanHelper.TransitionIndex = (int) nearestLabel.Tag;
+                transitionIndex = (int) nearestLabel.Tag;
 
-            magnifyBtn.Checked = true;
-            UpdateUI();
-            ZoomXAxis();
-            ZoomYAxis();
+            if (transitionIndex >= 0)
+            {
+                _msDataFileScanHelper.TransitionIndex = transitionIndex;
+                magnifyBtn.Checked = true;
+                UpdateUI();
+                ZoomXAxis();
+                ZoomYAxis();
+            }
         }
 
         private bool graphControl_MouseMove(ZedGraphControl sender, MouseEventArgs e)
