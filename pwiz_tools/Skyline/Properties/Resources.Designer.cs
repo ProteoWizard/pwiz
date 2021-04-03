@@ -16174,6 +16174,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to CCS:.
+        /// </summary>
+        public static string IonMobilityObject_ToString_CCS_ {
+            get {
+                return ResourceManager.GetString("IonMobilityObject_ToString_CCS_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to HEO:.
+        /// </summary>
+        public static string IonMobilityObject_ToString_HEO_ {
+            get {
+                return ResourceManager.GetString("IonMobilityObject_ToString_HEO_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Ion mobility predictors using an ion mobility library must include per-charge regression values..
         /// </summary>
         public static string IonMobilityPredictor_Validate_Ion_mobility_predictors_using_an_ion_mobility_library_must_include_per_charge_regression_values_ {

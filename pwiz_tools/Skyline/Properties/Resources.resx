@@ -11407,4 +11407,12 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
   <data name="CommandLine_MinimizeResults_Limiting_chromatogram_noise_to______0__minutes_around_peak___" xml:space="preserve">
     <value>Limiting chromatogram noise to +/- {0} minutes around peak...</value>
   </data>
+  <data name="IonMobilityObject_ToString_CCS_" xml:space="preserve">
+    <value>CCS:</value>
+    <comment>Compact representation of "Collision Cross Section"</comment>
+  </data>
+  <data name="IonMobilityObject_ToString_HEO_" xml:space="preserve">
+    <value>HEO:</value>
+    <comment>Compact representation of "High Energy Ion Mobility Offset Offset"</comment>
+  </data>
 </root>
