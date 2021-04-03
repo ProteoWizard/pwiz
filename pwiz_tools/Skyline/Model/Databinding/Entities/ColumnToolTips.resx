@@ -454,7 +454,8 @@ between the peak integration boundaries.</value>
   </data>
   <data name="IonMobilityHighEnergyOffset">
     <value>The high energy offset for the precursor from the ion mobility library</value>
-  </data>  <data name="IonMobilityValue">
+  </data>
+  <data name="IonMobilityValue">
     <value>The ion mobility of the precursor</value>
   </data>
   <data name="IonName">
