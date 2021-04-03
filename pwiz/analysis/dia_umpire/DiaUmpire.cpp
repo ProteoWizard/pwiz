@@ -874,11 +874,17 @@ namespace DiaUmpire {
                 }
         }
 #endif
-
-        for (const ScanCollectionPtr& scanCollection : scanCollections)
+        try
         {
-            //Detect mz trace peak curves for each ScanCollection
-            FindAllMzTracePeakCurves(*scanCollection, ms1PeakCurves_, config_.instrumentParameters.MS1PPM, 1, 0, 0, DiaUmpireStep::BuildPeakCurves);
+            for (const ScanCollectionPtr& scanCollection : scanCollections)
+            {
+                //Detect mz trace peak curves for each ScanCollection
+                FindAllMzTracePeakCurves(*scanCollection, ms1PeakCurves_, config_.instrumentParameters.MS1PPM, 1, 0, 0, DiaUmpireStep::BuildPeakCurves);
+            }
+        }
+        catch (exception& e)
+        {
+            throw runtime_error("[DiaUmpire::MS1PeakDetection] " + string(e.what()));
         }
 
         //Perform peak smoothing for each detected peak curve
@@ -933,10 +939,21 @@ namespace DiaUmpire {
 
                 //cout << "Processing DIA MS2 (mz range):" << DIAwindow.DIA_MZ_Range.getX() << "_" << DIAwindow.DIA_MZ_Range.getY() << "( " << (count++) << "/" diaWindows_.size() << " )";
 
-                DiaUmpireStep buildPeakCurvesStep = multithreadWindows ? DiaUmpireStep::InlineStep : DiaUmpireStep::BuildPeakCurves;
-                FindAllMzTracePeakCurves(*scanCollectionAllMs2, diaWindow.peakCurves, config_.instrumentParameters.MS2PPM, 2, windowsProcessed, diaWindows_.size(), buildPeakCurvesStep, diaWindow.spectraInRange);
+                try
+                {
+                    DiaUmpireStep buildPeakCurvesStep = multithreadWindows ? DiaUmpireStep::InlineStep : DiaUmpireStep::BuildPeakCurves;
+                    FindAllMzTracePeakCurves(*scanCollectionAllMs2, diaWindow.peakCurves, config_.instrumentParameters.MS2PPM, 2, windowsProcessed, diaWindows_.size(), buildPeakCurvesStep, diaWindow.spectraInRange);
+                }
+                catch (exception& e)
+                {
+                    throw runtime_error("[DiaUmpire::DIAMS2PeakDetection] " + string(e.what()));
+                }
+
                 PeakCurveSmoothing(diaWindow.peakCurves, windowsProcessed, diaWindows_.size(), !multithreadWindows);
                 PeakCurveCorrClustering(diaWindow.mzRange, diaWindow.peakCurves, diaWindow.peakClusters, 2, windowsProcessed, diaWindows_.size(), !multithreadWindows);
+
+                if (iterateAndCheckCancellation(windowsProcessed, diaWindows_.size(), progressMessage, DiaUmpireStep::ProcessDiaWindows))
+                    return false;
 
                 if (diaWindow.peakCurves.empty())
                 {
