@@ -17,8 +17,12 @@
  * limitations under the License.
  */
 
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Chemistry;
+using pwiz.MSGraph;
 using pwiz.Skyline.Controls.Graphs;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
@@ -43,6 +47,25 @@ namespace pwiz.SkylineTestFunctional
             WaitForGraphs();
 
             CloseSpectrumGraph();
+
+            // Check ion mobility details display
+            var expectedIonMobility =
+                IonMobilityFilter.GetIonMobilityFilter(3.48, eIonMobilityUnits.drift_time_msec, 0, null);
+            for (var loop = 0; loop < 4; loop++)
+            {
+                bool wantCCS = loop < 2;
+                bool wantIM = loop % 2 == 0;
+                RunUI(() => SkylineWindow.ShowIonMobility = wantIM);
+                RunUI(() => SkylineWindow.ShowCollisionCrossSection = wantCCS);
+                WaitForGraphs();
+                var graphChrom = SkylineWindow.GetGraphChrom("ID12692_01_UCA168_3727_040714");
+                var pane = graphChrom.GraphItem as MSGraphPane;
+                var annotation = pane?.GetAnnotationLabelStrings().First() ?? string.Empty;
+                AssertEx.AreEqual(wantIM, annotation.Contains(ChromGraphItem.FormatIonMobilityValue(expectedIonMobility)),
+                    "did not find expected IMS information display");
+                AssertEx.AreEqual(wantCCS, annotation.Contains(ChromGraphItem.FormatCollisionCrossSectionValue(expectedIonMobility)),
+                    " did not find expected CCS information display");
+            }
 
             // Simulate click on a peak in GraphChromatogram form.
             ClickChromatogram(32.95, 134.6);
