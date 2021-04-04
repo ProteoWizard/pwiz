@@ -180,6 +180,7 @@
     <Compile Include="LongWaitDlgResizeTest.cs" />
     <Compile Include="MetadataRuleTest.cs" />
     <Compile Include="ModificationPermuterTest.cs" />
+    <Compile Include="ModifyMoleculeTest.cs" />
     <Compile Include="MultiSampleImportPeakBoundariesTest.cs" />
     <Compile Include="NeutralLossModificationDisplayTest.cs" />
     <Compile Include="NoQuantitativeTransitionsTest.cs" />
@@ -495,6 +496,7 @@
     <None Include="MidasModificationTest.zip" />
     <None Include="MidasTest.zip" />
     <None Include="ModifiedAreaProportionTest.zip" />
+    <None Include="ModifyMoleculeTest.zip" />
     <None Include="MultiSelectRetentionTimeTest.zip" />
     <None Include="NegativeIonChromatogramsTest.zip" />
     <None Include="NeutralLossLibraryTest.zip" />
