@@ -117,7 +117,19 @@ namespace pwiz.Skyline
         public const string ARG_VALUE_PARALLEL = "parallel";
 
         public static readonly Argument ARG_IN = new DocArgument(@"in", PATH_TO_DOCUMENT,
-            (c, p) => c.SkylineFile = p.ValueFullPath);
+            (c, p) =>
+            {
+                if (!p.Value.EndsWith(SrmDocument.EXT))
+                {
+                    c.WriteLine(
+                        string.Format(
+                            Resources.CommandArgs_ARG_IN_The_specified_input_file__0__is_not_supported__Only_Skyline_files_with_the__1__extension_are_accepted_,
+                            p.Value, SrmDocument.EXT));
+                    return false;
+                }
+                c.SkylineFile = p.ValueFullPath;
+                return true;
+            });
         public static readonly Argument ARG_SAVE = new DocArgument(@"save", (c, p) => { c.Saving = true; });
         public static readonly Argument ARG_SAVE_SETTINGS = new DocArgument(@"save-settings", (c, p) => c.SaveSettings = true);
         public static readonly Argument ARG_OUT = new DocArgument(@"out", PATH_TO_DOCUMENT,
