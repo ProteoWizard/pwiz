@@ -472,6 +472,9 @@ namespace pwiz.SkylineTest
                 var resultsCount = results.Count;
                 results.Insert(0, string.Empty);
                 results.Insert(0, string.Format("{0} code inspection failures found:", resultsCount));
+                results.Add(string.Empty);
+                results.Add(
+                    "Help may be available on the Skyline developer Wiki at https://skyline.ms/wiki/home/development/page.view?name=Skyline%20Custom%20Code%20Inspections");
                 AssertEx.Fail(string.Join(Environment.NewLine, results));
             }
         }
@@ -510,7 +513,7 @@ namespace pwiz.SkylineTest
             public Level FailureType;  // Is failure an error, or just a warning?
             public int NumberOfToleratedIncidents; // Some inspections we won't fix yet, but we don't want to see any new ones either
 
-            public PatternDetails(string cue,string reason, string[] ignoredDirectories, Level failureType, int numberOfToleratedIncidents) 
+            public PatternDetails(string cue,string reason, string[] ignoredFileMasks, Level failureType, int numberOfToleratedIncidents) 
             {
                 Cue = cue;
                 Reason = reason;
