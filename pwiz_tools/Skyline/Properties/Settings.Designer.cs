@@ -3045,5 +3045,41 @@ namespace pwiz.Skyline.Properties {
                 this["DetectionsShowLegend"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("-1")]
+        public string AreaCVRatioIndex {
+            get {
+                return ((string)(this["AreaCVRatioIndex"]));
+            }
+            set {
+                this["AreaCVRatioIndex"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool ShowIonMobility {
+            get {
+                return ((bool)(this["ShowIonMobility"]));
+            }
+            set {
+                this["ShowIonMobility"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool ShowCollisionCrossSection {
+            get {
+                return ((bool)(this["ShowCollisionCrossSection"]));
+            }
+            set {
+                this["ShowCollisionCrossSection"] = value;
+            }
+        }
     }
 }
