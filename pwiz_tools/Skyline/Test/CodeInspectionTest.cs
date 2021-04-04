@@ -52,6 +52,27 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void CodeInspection()
         {
+            // Looking for uses of MessageBox where we should really be using MessageDlg
+            AddTextInspection(@"*.cs", // Examine files with this mask
+                Inspection.Forbidden, // This is a test for things that should NOT be in such files
+                Level.Error, // Any failure is treated as an error, and overall test fails
+                NonSkylineDirectories(), // We only care about this in Skyline code
+                string.Empty, // No file content required for inspection
+                @"MessageBox.Show", // Forbidden pattern
+                false, // Pattern is not a regular expression
+                @"use MessageDlg.Show instead - this ensures proper interaction with automated tests, small molecule interface operation, and other enhancements", // Explanation for prohibition, appears in report
+                @"// Purposely using MessageBox here"); // There is one legitimate use of this, look for this comment and ignore the violation when found
+
+            // Looking for forgotten PauseTest() calls that will mess up automated tests
+            AddTextInspection(@"*.cs", // Examine files with this mask
+                Inspection.Forbidden, // This is a test for things that should NOT be in such files
+                Level.Error, // Any failure is treated as an error, and overall test fails
+                new[] { @"TestFunctional.cs" }, // Only these files should contain this
+                string.Empty, // No file content required for inspection
+                @"^\s*PauseTest\(", // Forbidden pattern (uncommented PauseTest)
+                true, // Pattern is not a regular expression
+                @"This appears to be temporary debugging code that should not be checked in."); // Explanation for prohibition, appears in report
+
             // Looking for non-standard image scaling
             AddTextInspection(@"*.Designer.cs", // Examine files with this mask
                 Inspection.Forbidden, // This is a test for things that should NOT be in such files
@@ -68,8 +89,8 @@ namespace pwiz.SkylineTest
                 Level.Error, // Any failure is treated as an error, and overall test fails
                 NonLocalizedFiles(), // Ignore violations in files or directories we don't localize
                 string.Empty, // No file content required for inspection
-                @"System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager", // Required pattern
-                false, // Pattern is not a regular expression
+                @".*(new global::System.Resources.ResourceManager|System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager).*", // Required pattern
+                true, // Pattern is a regular expression
                 @"ensures that every dialog is localizable"); // Explanation for requirement, appears in report
 
             // Looking for non-standard scaling in form designer
@@ -91,7 +112,8 @@ namespace pwiz.SkylineTest
                 @".*using.*pwiz\.Skyline\.(Alerts|Controls|.*UI);.*", // Forbidden pattern
                 true, // Pattern is a regular expression
                 @"Skyline model code must not depend on UI code", // Explanation for prohibition, appears in report
-                13); // Number of existing known failures that we'll tolerate as warnings instead of errors
+                null, // No explicit exceptions to this rule
+                13); // Number of existing known failures that we'll tolerate as warnings instead of errors, so no more get added while we wait to fix the rest
 
             // A few lines of fake tests that can be useful in development of this mechanism
             // AddInspection(@"*.Designer.cs", Inspection.Required, Level.Error, null, "Windows Form Designer generated code", @"DetectionsToolbar", @"fake, debug purposes only"); // Uncomment for debug purposes
@@ -458,18 +480,25 @@ namespace pwiz.SkylineTest
         {
             public string PatternString;
             public Regex RegExPattern;
+            public string PatternExceptionString; // Pattern does not hit if the line includes this string
 
-            public Pattern(string patternString, bool isRegEx)
+            public Pattern(string patternString, bool isRegEx, string patternExceptionString)
             {
                 PatternString = patternString;
                 RegExPattern = isRegEx ? new Regex(patternString, RegexOptions.CultureInvariant | RegexOptions.CultureInvariant) : null;
+                PatternExceptionString = patternExceptionString;
             }
 
             public bool IsRegEx => RegExPattern != null;
 
             public bool IsMatch(string s)
             {
-                return RegExPattern?.IsMatch(s) ?? s.Contains(PatternString.Split('\n')[0].Trim()); // Watch for multiline string matches
+                if (RegExPattern?.IsMatch(s) ?? s.Contains(PatternString.Split('\n')[0].Trim())) // Watch for multiline string matches
+                {
+                    return string.IsNullOrEmpty(PatternExceptionString) || !s.Contains(PatternExceptionString);
+                }
+
+                return false;
             }
         }
 
@@ -477,7 +506,7 @@ namespace pwiz.SkylineTest
         {
             public string Cue; // If non-empty, pattern only applies to files containing this cue
             public string Reason; // Note to show on failure
-            public string[] IgnoredDirectories; // Don't flag on hits in these directories
+            public string[] IgnoredFileMasks; // Don't flag on hits in files that contain these strings in their full paths
             public Level FailureType;  // Is failure an error, or just a warning?
             public int NumberOfToleratedIncidents; // Some inspections we won't fix yet, but we don't want to see any new ones either
 
@@ -485,7 +514,7 @@ namespace pwiz.SkylineTest
             {
                 Cue = cue;
                 Reason = reason;
-                IgnoredDirectories = ignoredDirectories;
+                IgnoredFileMasks = ignoredFileMasks;
                 FailureType = failureType;
                 NumberOfToleratedIncidents = numberOfToleratedIncidents;
             }
@@ -493,7 +522,7 @@ namespace pwiz.SkylineTest
             public bool IgnorePath(string path)
             {
                 return string.IsNullOrEmpty(path) ||
-                       IgnoredDirectories != null && IgnoredDirectories.Any(d => path.ToLowerInvariant().Contains(d.ToLowerInvariant()));
+                       IgnoredFileMasks != null && IgnoredFileMasks.Any(d => path.ToLowerInvariant().Contains(d.ToLowerInvariant()));
             }
         }
         private readonly Dictionary<string, Dictionary<Pattern, PatternDetails>> forbiddenPatternsByFileMask = new Dictionary<string, Dictionary<Pattern, PatternDetails>>();
@@ -504,9 +533,16 @@ namespace pwiz.SkylineTest
 
         private HashSet<string> allFileMasks = new HashSet<string>();
 
+        // Return a list of directories that we don't care about from a strictly Skyline point of view
+        private string[] NonSkylineDirectories()
+        {
+            return new[] {@"TestRunner", @"SkylineTester", @"SkylineNightly", "Executables", "CommonTest" };
+        }
+
         // Prepare a list of files that we never need to deal with for L10N
         // Uses the information found in our KeepResx L10N development tool,
         // along with a hardcoded list herein.
+
         private string[] NonLocalizedFiles()
         {
             var root = GetCodeBaseRoot(out var thisFile);
@@ -565,6 +601,7 @@ namespace pwiz.SkylineTest
             string pattern,  // What we're looking out for (may contain \n)
             bool isRegEx, // Is the pattern a regular expression?
             string reason, // Explanation on failure
+            string patternException = null, // Optional string which exempts a pattern match if found in matching line
             int numberToleratedAsWarnings = 0) // Some inspections we won't fix yet, but we don't want to see any new ones either
         {
             allFileMasks.Add(fileMask);
@@ -574,7 +611,7 @@ namespace pwiz.SkylineTest
                 rules.Add(fileMask, new Dictionary<Pattern, PatternDetails>());
             }
             var patterns = rules[fileMask];
-            patterns.Add(new Pattern(pattern, isRegEx), new PatternDetails(cue, reason, ignoredDirectories, failureType, numberToleratedAsWarnings));
+            patterns.Add(new Pattern(pattern, isRegEx, patternException), new PatternDetails(cue, reason, ignoredDirectories, failureType, numberToleratedAsWarnings));
         }
     }
 }

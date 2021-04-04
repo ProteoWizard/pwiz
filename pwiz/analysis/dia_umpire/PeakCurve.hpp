@@ -628,6 +628,9 @@ class PeakCurve
         else if (SmoothData.PointCount() > 0) {
             Width = SmoothData.Data.at(SmoothData.PointCount() - 1).getX() - SmoothData.Data.at(0).getX();
         }
+        if (Width < 0)
+            throw runtime_error("[DiaUmpire::PeakCurve::RTWidth] peak times out of order");
+
         return Width;
     }
 
@@ -669,6 +672,9 @@ class PeakCurve
 
     void AddPeak(XYZData xYZPoint)
     {
+        if (!PeakList.empty() && xYZPoint.getX() < PeakList.back().getX())
+            throw runtime_error("[DiaUmpire::PeakCurve::AddPeak] scan time is not monotonically increasing");
+
         PeakList.emplace_back(xYZPoint);
         TotalIntMzF += xYZPoint.getY() * xYZPoint.getZ() * xYZPoint.getZ();
         TotalIntF += xYZPoint.getZ() * xYZPoint.getZ();

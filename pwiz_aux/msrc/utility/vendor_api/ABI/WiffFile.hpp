@@ -216,6 +216,8 @@ class PWIZ_API_DECL WiffFile
     typedef boost::shared_ptr<WiffFile> Ptr;
     static Ptr create(const std::string& wiffpath);
 
+    virtual std::string getWiffPath() const = 0;
+
     virtual int getSampleCount() const = 0;
     virtual int getPeriodCount(int sample) const = 0;
     virtual int getExperimentCount(int sample, int period) const = 0;

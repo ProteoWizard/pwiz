@@ -735,6 +735,19 @@ namespace pwiz.Skyline.SettingsUI
             {
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
+                    if (!string.IsNullOrEmpty(dlg.AddLibraryFile))
+                    {
+                        using (var editLibDlg = new EditLibraryDlg(Settings.Default.SpectralLibraryList) {LibraryPath = dlg.AddLibraryFile})
+                        {
+                            if (editLibDlg.ShowDialog(this) == DialogResult.OK)
+                            {
+                                _driverLibrary.List.Add(editLibDlg.LibrarySpec);
+                                _driverLibrary.LoadList(_driverLibrary.Chosen.Concat(new[] {editLibDlg.LibrarySpec}).ToArray());
+                            }
+                        }
+                        return;
+                    }
+
                     IsBuildingLibrary = true;
 
                     var builder = dlg.Builder;
@@ -923,7 +936,7 @@ namespace pwiz.Skyline.SettingsUI
                     var message = TextUtil.LineSeparate(string.Format(Resources.PeptideSettingsUI_comboRank_SelectedIndexChanged_Not_all_libraries_chosen_support_the__0__ranking_for_peptides,
                                                                       rankId),
                                                         Resources.PeptideSettingsUI_comboRank_SelectedIndexChanged_Do_you_want_to_uncheck_the_ones_that_do_not);
-                    if (MessageBox.Show(this, message, Program.Name, MessageBoxButtons.OKCancel) == DialogResult.OK)
+                    if (MultiButtonMsgDlg.Show(this, message, MessageBoxButtons.OKCancel) == DialogResult.OK)
                     {
                         foreach (int i in listLibraries.CheckedIndices)
                         {

@@ -21,24 +21,42 @@ using System;
 using System.Windows.Forms;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
+using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Util;
 
 // This code is associated with the DocumentGrid.
 
 namespace pwiz.Skyline.Controls.Databinding
 {
-    public partial class DataboundGridForm : DockableFormEx
+    public partial class DataboundGridForm : DockableFormEx, IDataboundGridForm
     {
         public DataboundGridForm()
         {
             InitializeComponent();
-
         }
 
         protected override void OnClosed(EventArgs e)
         {
             base.OnClosed(e);
             Dispose();
+        }
+
+        public virtual DataGridId DataGridId
+        {
+            get
+            {
+                return null;
+            }
+        }
+
+        public ViewName? GetViewName()
+        {
+            return DataboundGridControl?.GetViewName();
+        }
+
+        DataboundGridControl IDataboundGridForm.GetDataboundGridControl()
+        {
+            return DataboundGridControl;
         }
 
         #region Methods exposed for testing

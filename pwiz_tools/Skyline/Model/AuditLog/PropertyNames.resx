@@ -1577,10 +1577,10 @@
   <data name="MetadataRuleSet_Rules" xml:space="preserve">
     <value>Rules</value>
   </data>
-  <data name="QuantificationSettings_QualitativeIonRatioThreshold">
+  <data name="QuantificationSettings_QualitativeIonRatioThreshold" xml:space="preserve">
     <value>Qualitative ion ratio threshold</value>
   </data>
-  <data name="QuantificationSettings_SimpleRatios">
+  <data name="QuantificationSettings_SimpleRatios" xml:space="preserve">
     <value>Simple ratios</value>
   </data>
   <data name="ViewLayout_ClusterSpec">
@@ -1606,5 +1606,38 @@
   </data>
   <data name="CrosslinkStructure_Crosslinks">
     <value>Crosslinks</value>
+  </data>
+  <data name="BuildPeptideSearchLibrarySettings_InputFileType" xml:space="preserve">
+    <value>Input File Type</value>
+  </data>
+  <data name="ImportFastaSettings_FastaImportTargetsFile" xml:space="preserve">
+    <value>FASTA file for importing targets</value>
+  </data>
+  <data name="DdaConverterSettings_InstrumentPreset" xml:space="preserve">
+    <value>Instrument preset</value>
+  </data>
+  <data name="DdaSearchSettings_FragmentIons" xml:space="preserve">
+    <value>Fragment ion types</value>
+  </data>
+  <data name="DdaSearchSettings_FragmentTolerance" xml:space="preserve">
+    <value>Fragment tolerance</value>
+  </data>
+  <data name="DdaSearchSettings_MaxVariableMods" xml:space="preserve">
+    <value>Max variable mods per peptide</value>
+  </data>
+  <data name="DdaSearchSettings_PrecursorTolerance" xml:space="preserve">
+    <value>Precursor tolerance</value>
+  </data>
+  <data name="ImportPeptideSearchSettings_DdaConverterSettings" xml:space="preserve">
+    <value>DDA converter settings</value>
+  </data>
+  <data name="ImportPeptideSearchSettings_DdaSearchSettings" xml:space="preserve">
+    <value>DDA search settings</value>
+  </data>
+  <data name="DdaConverterSettings_NonDefaultAdditionalSettings" xml:space="preserve">
+    <value>DDA conversion non-default settings</value>
+  </data>
+  <data name="DdaConverterSettings_Protocol" xml:space="preserve">
+    <value>DDA conversion protocol</value>
   </data>
 </root>

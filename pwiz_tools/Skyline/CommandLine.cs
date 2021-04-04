@@ -132,7 +132,9 @@ namespace pwiz.Skyline
             }
             if (commandArgs.RunningBatchCommands)
             {
-                RunBatchCommands(commandArgs.BatchCommandsPath);
+                var exitCode = RunBatchCommands(commandArgs.BatchCommandsPath);
+                if (exitCode != Program.EXIT_CODE_SUCCESS)
+                    return exitCode;
                 anyAction = true;
             }
             if (commandArgs.ImportingSkyr)
@@ -282,6 +284,12 @@ namespace pwiz.Skyline
             }
 
             WaitForDocumentLoaded();
+
+            if (commandArgs.Minimizing)
+            {
+                if (!MinimizeResults(commandArgs))
+                    return false;
+            }
 
             if (commandArgs.RemovingResults && commandArgs.RemoveBeforeDate.HasValue)
             {
@@ -1717,6 +1725,34 @@ namespace pwiz.Skyline
             }
         }
 
+        public bool MinimizeResults(CommandArgs commandArgs)
+        {
+            if (!_doc.Settings.HasResults)
+            {
+                _out.WriteLine(Resources.CommandLine_ReintegratePeaks_Error__You_must_first_import_results_into_the_document_before_reintegrating_);
+                return false;
+            }
+
+            var saveFile = commandArgs.SaveFile ?? _skylineFile;
+            _out.WriteLine(Resources.CommandLine_MinimizeResults_Minimizing_results_to__0_, saveFile);
+            if (commandArgs.ChromatogramsDiscard)
+                _out.WriteLine(Resources.CommandLine_MinimizeResults_Removing_unused_chromatograms___);
+            if (commandArgs.LimitNoise.HasValue)
+                _out.WriteLine(Resources.CommandLine_MinimizeResults_Limiting_chromatogram_noise_to______0__minutes_around_peak___, commandArgs.LimitNoise);
+
+            var minimizeResults = Model.MinimizeResults.MinimizeResultsFromDocument(Document, ((statistics, sizeCalculator) =>
+            {
+                _out.WriteLine(statistics.PercentComplete + @"%");
+            }));
+            minimizeResults.Settings = minimizeResults.Settings
+                .ChangeDiscardUnmatchedChromatograms(commandArgs.ChromatogramsDiscard)
+                .ChangeNoiseTimeRange(commandArgs.LimitNoise);
+            minimizeResults.MinimizeToFile(saveFile);
+            _doc = minimizeResults.Document;
+            _skylineFile = saveFile;
+            return true;
+        }
+
         private bool ImportSearch(CommandArgs commandArgs)
         {
             var doc = Document;
@@ -2841,11 +2877,12 @@ namespace pwiz.Skyline
         }
 
         // A function for running each line of a text file like a SkylineRunner command
-        public void RunBatchCommands(string path)
+        public int RunBatchCommands(string path)
         {
             if (!File.Exists(path))
             {
                 _out.WriteLine(Resources.CommandLine_RunBatchCommands_Error___0__does_not_exist____batch_commands_failed_, path);
+                return Program.EXIT_CODE_RAN_WITH_ERRORS;
             }
             else
             {
@@ -2859,7 +2896,9 @@ namespace pwiz.Skyline
                         {
                             // Parse the line and run it.
                             string[] args = ParseArgs(input);
-                            Run(args);
+                            int exitCode = Run(args);
+                            if (exitCode != Program.EXIT_CODE_SUCCESS)
+                                return exitCode;
                         }
                     }
                 }
@@ -2868,6 +2907,7 @@ namespace pwiz.Skyline
                     _out.WriteLine(Resources.CommandLine_RunBatchCommands_Error__failed_to_open_file__0____batch_commands_command_failed_, path);
                 }
             }            
+            return Program.EXIT_CODE_SUCCESS;
         }
         
         /// <summary>

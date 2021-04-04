@@ -226,6 +226,9 @@ maximum intensity for the precursor.</value>
     <value>Type of scans from which the chromatogram was extracted: one of "fragment", "sim", "ms1", or "unknown"</value>
     <comment>Keep the english form of "fragment", "sim", "ms1", or "unknown" because that is what users see in the Document Grid. However, maybe put the localized translation in parentheses: "fragment" (translation of fragment), "sim" (translation of selected ion monitoring), etc. </comment>
   </data>
+  <data name="CollisionCrossSection">
+    <value>The collision cross section of the precursor</value>
+  </data>
   <data name="Coeluting">
     <value>True if this transition's peak has similar apex and extents as the other transitions within the peak group.</value>
   </data>
@@ -449,6 +452,12 @@ between the peak integration boundaries.</value>
   <data name="IonFormula">
     <value>An atomic chemical formula for the fully charged (and possibly isotope labeled) ion to be measured in a mass spectrometer.</value>
   </data>
+  <data name="IonMobilityHighEnergyOffset">
+    <value>The high energy offset for the precursor from the ion mobility library</value>
+  </data>
+  <data name="IonMobilityValue">
+    <value>The ion mobility of the precursor</value>
+  </data>
   <data name="IonName">
     <value>The name of the precursor.</value>
   </data>
@@ -481,6 +490,21 @@ indicating which isotope modifications are applied</value>
   </data>
   <data name="Key">
     <value>Key</value>
+  </data>
+  <data name="LibraryCollisionCrossSection">
+    <value>The collision cross section for the precursor from the ion mobility library</value>
+  </data>
+  <data name="LibraryIonMobility">
+    <value>The ion mobility information for the precursor from the ion mobility library</value>
+  </data>
+  <data name="LibraryIonMobilityHighEnergyOffset">
+    <value>The high energy offset for the precursor from the ion mobility library</value>
+  </data>
+  <data name="LibraryIonMobilityUnits">
+    <value>The units of the Library Ion Mobility Value</value>
+  </data>
+  <data name="LibraryIonMobilityValue">
+    <value>The ion mobility of the precursor from the ion mobility library</value>
   </data>
   <data name="LibraryDotProduct">
     <value>The dot-product between the individual transition peak areas
@@ -1275,6 +1299,12 @@ using the Results Grid.</value>
   </data>
   <data name="TransitionResult">
     <value>Transition Result</value>
+  </data>
+  <data name="TransitionResultIsMs1">
+    <value>Whether this result was obtained from an MS1 scan.</value>
+  </data>
+  <data name="TransitionResultIsQuantitative">
+    <value>Whether this result is treated as quantitative, based on the user-modifiable Quantitative property of the Transition and whether the MS/MS Full Scan Acquisition Method is DDA which treats all fragment ions as non-quantitative.</value>
   </data>
   <data name="TransitionResultLocator">
     <value>Unique identifier of the transition result within the document. This begins with "TransitionResult:" and usually ends with the replicate name, but may have additional attributes for the optimization step and result file.</value>

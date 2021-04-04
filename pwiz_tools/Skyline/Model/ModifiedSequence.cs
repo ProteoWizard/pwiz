@@ -129,7 +129,7 @@ namespace pwiz.Skyline.Model
                     explicitMods.Add(ResolveModification(settings, labelType, unmodifiedSequence, new ExplicitMod(i, staticMod)));
                 }
             }
-            return new ModifiedSequence(unmodifiedSequence, explicitMods, settings.TransitionSettings.Prediction.PrecursorMassType);
+            return new ModifiedSequence(unmodifiedSequence, explicitMods.Where(mod=>!mod.IsZeroMass), settings.TransitionSettings.Prediction.PrecursorMassType);
         }
         
         private readonly string _unmodifiedSequence;
@@ -387,6 +387,14 @@ namespace pwiz.Skyline.Model
                     hashCode = (hashCode * 397) ^ MonoisotopicMass.GetHashCode();
                     hashCode = (hashCode * 397) ^ AverageMass.GetHashCode();
                     return hashCode;
+                }
+            }
+
+            public bool IsZeroMass
+            {
+                get
+                {
+                    return AverageMass == 0 && MonoisotopicMass == 0;
                 }
             }
         }
