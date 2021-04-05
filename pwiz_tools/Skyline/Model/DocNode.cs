@@ -1414,7 +1414,6 @@ namespace pwiz.Skyline.Model
 
         public static DocNodePath GetNodePath(Identity id, SrmDocument doc)
         {
-            DocNodePath res = null;
             switch (id)
             {
                 case Transition idTransition:
@@ -1425,7 +1424,7 @@ namespace pwiz.Skyline.Model
                         var pre = pep.FindNode(idTransition.Group) as TransitionGroupDocNode;
                         var trans = pre?.FindNode(idTransition) as TransitionDocNode;
                         if (pre != null && trans != null)
-                            res = new DocNodePath(prot, pep, pre, trans, doc);
+                            return new DocNodePath(prot, pep, pre, trans, doc);
                     }
                 }
                     break;
@@ -1436,7 +1435,7 @@ namespace pwiz.Skyline.Model
                     {
                         var pre = pep.FindNode(idTransitionGroup) as TransitionGroupDocNode;
                         if (pre != null)
-                            res = new DocNodePath(prot, pep, pre, null, doc);
+                            return new DocNodePath(prot, pep, pre, null, doc);
                     }
                 }
                     break;
@@ -1444,19 +1443,19 @@ namespace pwiz.Skyline.Model
                 {
                     var prot = GetProtein(doc, idPeptide, out var pep);
                     if (prot != null && pep != null)
-                        res = new DocNodePath(prot, pep, null, null, doc);
+                        return new DocNodePath(prot, pep, null, null, doc);
                 }
                     break;
                 case PeptideGroup idPeptideGroup:
                 {
                     var prot = doc.FindNode(idPeptideGroup) as PeptideGroupDocNode;
                     if (prot != null)
-                        res = new DocNodePath(prot, null, null, null, doc);
+                        return new DocNodePath(prot, null, null, null, doc);
                 }
                     break;
             }
 
-            return res;
+            return null;
         }
     }
 }

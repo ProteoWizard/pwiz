@@ -1020,6 +1020,7 @@ namespace pwiz.Skyline.Controls.Graphs
             showScanNumberContextMenuItem.Checked = Settings.Default.ShowFullScanNumber;
             menuStrip.Items.Add(new ToolStripSeparator());
             menuStrip.Items.Add(showScanNumberContextMenuItem);
+            menuStrip.Items.Add(showIonTypesRanksToolStripMenuItem);
         }
 
         private void graphControl_MouseClick(object sender, MouseEventArgs e)
@@ -1140,6 +1141,14 @@ namespace pwiz.Skyline.Controls.Graphs
         private void toolStripButtonShowAnnotations_CheckedChanged(object sender, EventArgs e)
         {
             _showIonSeriesAnnotations = toolStripButtonShowAnnotations.Checked;
+            showIonTypesRanksToolStripMenuItem.Checked = _showIonSeriesAnnotations;
+            UpdateUI();
+        }
+
+        private void showIonTypesRanksToolStripMenuItem_CheckedChanged(object sender, EventArgs e)
+        {
+            _showIonSeriesAnnotations = showIonTypesRanksToolStripMenuItem.Checked;
+            toolStripButtonShowAnnotations.Checked = _showIonSeriesAnnotations;
             UpdateUI();
         }
     }

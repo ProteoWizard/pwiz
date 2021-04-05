@@ -47,6 +47,7 @@
             this.toolStripButtonShowAnnotations = new System.Windows.Forms.ToolStripButton();
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.showScanNumberContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.showIonTypesRanksToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.GraphPanel.SuspendLayout();
             this.toolBar.SuspendLayout();
             this.contextMenuStrip1.SuspendLayout();
@@ -206,7 +207,8 @@
             // contextMenuStrip1
             // 
             this.contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.showScanNumberContextMenuItem});
+            this.showScanNumberContextMenuItem,
+            this.showIonTypesRanksToolStripMenuItem});
             this.contextMenuStrip1.Name = "contextMenuStrip1";
             resources.ApplyResources(this.contextMenuStrip1, "contextMenuStrip1");
             // 
@@ -215,6 +217,13 @@
             this.showScanNumberContextMenuItem.Name = "showScanNumberContextMenuItem";
             resources.ApplyResources(this.showScanNumberContextMenuItem, "showScanNumberContextMenuItem");
             this.showScanNumberContextMenuItem.Click += new System.EventHandler(this.showScanNumberToolStripMenuItem_Click);
+            // 
+            // showIonTypesRanksToolStripMenuItem
+            // 
+            this.showIonTypesRanksToolStripMenuItem.CheckOnClick = true;
+            this.showIonTypesRanksToolStripMenuItem.Name = "showIonTypesRanksToolStripMenuItem";
+            resources.ApplyResources(this.showIonTypesRanksToolStripMenuItem, "showIonTypesRanksToolStripMenuItem");
+            this.showIonTypesRanksToolStripMenuItem.CheckedChanged += new System.EventHandler(this.showIonTypesRanksToolStripMenuItem_CheckedChanged);
             // 
             // GraphFullScan
             // 
@@ -253,5 +262,6 @@
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
         private System.Windows.Forms.ToolStripMenuItem showScanNumberContextMenuItem;
         private System.Windows.Forms.ToolStripButton toolStripButtonShowAnnotations;
+        private System.Windows.Forms.ToolStripMenuItem showIonTypesRanksToolStripMenuItem;
     }
 }

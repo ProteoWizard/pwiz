@@ -101,9 +101,9 @@ namespace pwiz.SkylineTestFunctional
 
             //Check the rank and annotate functionality if we run in 
             //onscreen mode
+            SetShowAnnotations(true);
             if (!Skyline.Program.SkylineOffscreen)
             {
-                SetShowAnnotations(true);
                 TestAnnotations(new []{ "y4 (rank 9)" });
                 SetZoom(false);
                 TestAnnotations(new[]
@@ -114,6 +114,7 @@ namespace pwiz.SkylineTestFunctional
                 SetShowAnnotations(false);
                 TestAnnotations(new[] {"y4"});
             }
+            SetShowAnnotations(false);
 
             // Check split graph
             ShowSplitChromatogramGraph(true);
@@ -177,9 +178,9 @@ namespace pwiz.SkylineTestFunctional
 
         private static void TestAnnotations(string[] annotationText)
         {
-                var graphLabels = SkylineWindow.GraphFullScan.ZedGraphControl.GraphPane.GraphObjList.OfType<TextObj>()
-                    .Select(label => label.Text).ToList();
-                Assert.IsTrue(annotationText.All(txt => graphLabels.Contains(txt)));
+            var graphLabels = SkylineWindow.GraphFullScan.ZedGraphControl.GraphPane.GraphObjList.OfType<TextObj>()
+                .Select(label => label.Text).ToHashSet();
+            Assert.IsTrue(annotationText.All(txt => graphLabels.Contains(txt)));
         }
         private static void SetFilter(bool isChecked)
         {

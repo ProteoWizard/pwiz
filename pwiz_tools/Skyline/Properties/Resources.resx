@@ -2802,9 +2802,6 @@ Are you sure you want to continue?</value>
   <data name="StaticMod_Validate_Loss_only_modifications_may_not_be_variable" xml:space="preserve">
     <value>Loss-only modifications may not be variable.</value>
   </data>
-  <data name="StaticMod_Validate_Loss_only_modifications_may_not_be_explicit" xml:space="preserve">
-    <value>Loss-only modifications may not be explicit.</value>
-  </data>
   <data name="ComparePeakPickingDlg_InitializeGraphPanes_Add_models_files_for_comparison_to_see_a_ROC_plot_" xml:space="preserve">
     <value>Add models/files for comparison to see a ROC plot.</value>
   </data>

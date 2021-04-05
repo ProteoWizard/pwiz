@@ -619,8 +619,6 @@ namespace ZedGraph
                 }
                 catch (Exception exception)
                 {
-                    //Without this exceptions in the custom paint code are hard to debug. You just get
-                    //an emty graph without any visble error message.
                     Trace.TraceWarning(@"Error when painting a zedGraph:{0}", exception);
                 }
 			}
