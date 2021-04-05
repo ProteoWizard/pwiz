@@ -109,7 +109,6 @@ namespace pwiz.Skyline.Controls.Graphs
             _heatMapData = null;
             if (_msDataFileScanHelper.MsDataSpectra == null)
                 return;
-
             // Find max values.
             _maxMz = 0;
             _maxIntensity = 0;
