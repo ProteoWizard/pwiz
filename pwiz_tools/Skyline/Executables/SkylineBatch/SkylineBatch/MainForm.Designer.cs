@@ -272,6 +272,7 @@
             // 
             // btnRunOptions
             // 
+            this.btnRunOptions.Image = global::SkylineBatch.Properties.Resources.downtriangle;
             resources.ApplyResources(this.btnRunOptions, "btnRunOptions");
             this.btnRunOptions.Name = "btnRunOptions";
             this.btnRunOptions.UseVisualStyleBackColor = true;
