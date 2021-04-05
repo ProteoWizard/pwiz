@@ -248,14 +248,17 @@ namespace SkylineBatch
 
         public static MainSettings ReadXml(XmlReader reader)
         {
-            var templateFilePath = reader.GetAttribute(Attr.TemplateFilePath);
+            var templateFilePath = GetPath(reader.GetAttribute(Attr.TemplateFilePath));
             var dependentConfigName = reader.GetAttribute(Attr.DependentConfigName);
-            var analysisFolderPath = reader.GetAttribute(Attr.AnalysisFolderPath);
-            var dataFolderPath = reader.GetAttribute(Attr.DataFolderPath);
-            var annotationsFilePath = reader.GetAttribute(Attr.AnnotationsFilePath);
+            var analysisFolderPath = GetPath(reader.GetAttribute(Attr.AnalysisFolderPath));
+            var dataFolderPath = GetPath(reader.GetAttribute(Attr.DataFolderPath));
+            var annotationsFilePath = GetPath(reader.GetAttribute(Attr.AnnotationsFilePath));
             var replicateNamingPattern = reader.GetAttribute(Attr.ReplicateNamingPattern);
             return new MainSettings(templateFilePath, analysisFolderPath, dataFolderPath, annotationsFilePath, replicateNamingPattern, dependentConfigName);
         }
+
+        private static string GetPath(string path) =>
+            TextUtil.GetTestPath(Program.FunctionalTest, Program.TestDirectory, path);
 
         public void WriteXml(XmlWriter writer)
         {

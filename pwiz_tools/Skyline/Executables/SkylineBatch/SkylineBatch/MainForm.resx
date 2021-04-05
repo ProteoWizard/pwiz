@@ -993,25 +993,25 @@
     <value>Configuration</value>
   </data>
   <data name="columnConfigName.Width" type="System.Int32, mscorlib">
-    <value>241</value>
+    <value>196</value>
   </data>
   <data name="columnModified.Text" xml:space="preserve">
     <value>Modified</value>
   </data>
   <data name="columnModified.Width" type="System.Int32, mscorlib">
-    <value>75</value>
+    <value>84</value>
   </data>
   <data name="columnStatus.Text" xml:space="preserve">
     <value>Status</value>
   </data>
   <data name="columnStatus.Width" type="System.Int32, mscorlib">
-    <value>58</value>
+    <value>75</value>
   </data>
   <data name="columnStartTime.Text" xml:space="preserve">
     <value>Start Time</value>
   </data>
   <data name="columnStartTime.Width" type="System.Int32, mscorlib">
-    <value>65</value>
+    <value>69</value>
   </data>
   <data name="columnRunTime.Text" xml:space="preserve">
     <value>Run Time</value>
@@ -1911,9 +1911,6 @@
         Af4AAAAH/AAH/gAAAB//wD/+AAAAf/+AP/4AAAH//4A//gAAB///4H/+AAAf///x//4AAH////n//gAB
         ////+f/+AAf////5//4AH/////n//gB/////+f/+Af/////5//4H//////v//h/////////+f////w==
 </value>
-  </data>
-  <data name="$this.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
   </data>
   <data name="$this.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>

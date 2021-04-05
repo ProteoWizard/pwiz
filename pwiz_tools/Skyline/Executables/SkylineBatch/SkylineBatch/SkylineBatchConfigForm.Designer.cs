@@ -304,8 +304,8 @@
             // 
             // comboTemplateFile
             // 
-            this.comboTemplateFile.FormattingEnabled = true;
             resources.ApplyResources(this.comboTemplateFile, "comboTemplateFile");
+            this.comboTemplateFile.FormattingEnabled = true;
             this.comboTemplateFile.Name = "comboTemplateFile";
             // 
             // btnAnnotationsFile
@@ -677,6 +677,6 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn columnPath;
         private System.Windows.Forms.DataGridViewTextBoxColumn columnScripts;
         private System.Windows.Forms.DataGridViewTextBoxColumn columnFile;
-        private System.Windows.Forms.ComboBox comboTemplateFile;
+        public System.Windows.Forms.ComboBox comboTemplateFile;
     }
 }

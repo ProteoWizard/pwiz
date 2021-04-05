@@ -109,14 +109,12 @@ namespace SkylineBatch
             _configManager.UserAddConfig(config);
             UpdateUiConfigurations();
             ListViewSizeChanged();
-            UpdateUiLogFiles();
         }
 
         public void ReplaceSelectedConfig(IConfig config)
         {
             _configManager.UserReplaceSelected(config);
             UpdateUiConfigurations();
-            UpdateUiLogFiles();
         }
 
         private void HandleEditEvent(object sender, EventArgs e)
@@ -467,7 +465,6 @@ namespace SkylineBatch
         public void DoImport(string filePath)
         {
             _configManager.Import(filePath);
-            UpdateUiConfigurations();
 
             if (!_rDirectorySelector.ShownDialog)
                 _rDirectorySelector.AddIfNecassary();
@@ -482,6 +479,8 @@ namespace SkylineBatch
         #endregion
         
         #region Logging
+
+        private bool _isScrolling = true;
 
         private void btnViewLog_Click(object sender, EventArgs e)
         {
@@ -524,16 +523,22 @@ namespace SkylineBatch
 
         private void ScrollToLogEnd(bool forceScroll = false)
         {
-            RunUi(() =>
+            if (forceScroll)
+                _isScrolling = true;
+            else if(WindowState != FormWindowState.Minimized)
             {
-                // Only scroll to end if forced or user is already scrolled to bottom of log
-                if (forceScroll || textBoxLog.GetPositionFromCharIndex(textBoxLog.Text.Length - 1).Y <=
-                    textBoxLog.Height)
+                _isScrolling = textBoxLog.GetPositionFromCharIndex(textBoxLog.Text.Length - 1).Y <=
+                               textBoxLog.Height;
+            }
+
+            if (_isScrolling)
+            {
+                RunUi(() =>
                 {
                     textBoxLog.SelectionStart = textBoxLog.Text.Length;
                     textBoxLog.ScrollToCaret();
-                }
-            });
+                });
+            }
         }
 
         private void btnDeleteLogs_Click(object sender, EventArgs e)
@@ -721,7 +726,11 @@ namespace SkylineBatch
 
         public int InvalidConfigCount()
         {
-            return _configManager.InvalidConfigCount();
+            var count = 0;
+            foreach (ListViewItem lvi in listViewConfigs.Items)
+                if (lvi.ForeColor == Color.Red)
+                    count++;
+            return count;
         }
 
         public string SelectedConfigName()

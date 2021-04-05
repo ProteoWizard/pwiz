@@ -14,7 +14,7 @@ namespace SkylineBatchTest
         [TestMethod]
         public void AddConfigErrorsTest()
         {
-            TestFilesZip = @"SkylineBatchTest\ConfigFormFunctionalTest.zip";
+            TestFilesZip = @"SkylineBatchTest\TestConfigurationFiles.zip";
             RunFunctionalTest();
         }
 
@@ -29,22 +29,12 @@ namespace SkylineBatchTest
             
         }
 
-
-        private void PopulateNewConfigForm(SkylineBatchConfigForm newConfigForm, string name = "TestName")
-        {
-            WaitForShownForm(newConfigForm);
-            newConfigForm.textConfigName.Text = name;
-            newConfigForm.textTemplateFile.Text = Path.Combine(TestFilesDirs[0].FullPath, "emptyTemplate.sky");
-            newConfigForm.textAnalysisPath.Text = Path.Combine(TestFilesDirs[0].FullPath, "analysisFolder");
-            newConfigForm.textDataPath.Text = Path.Combine(TestFilesDirs[0].FullPath, "emptyData");
-        }
-
         public void TestAddInvalidConfiguration(MainForm mainForm)
         {
             var newConfigForm = ShowDialog<SkylineBatchConfigForm>(() => mainForm.ClickAdd());
             RunUI(() =>
             {
-                PopulateNewConfigForm(newConfigForm, string.Empty);
+                FunctionalTestUtil.PopulateConfigForm(newConfigForm, string.Empty, TestFilesDirs[0].FullPath, this);
             });
 
             RunDlg<AlertDlg>(() => newConfigForm.Save(),
@@ -56,10 +46,10 @@ namespace SkylineBatchTest
                     dlg.ClickOk();
                 });
 
-            var nonexistentTemplate = TestUtils.GetTestFilePath("nonexistent.sky");
+            var nonexistentTemplate = Path.Combine(TestFilesDirs[0].FullPath, "nonexistent.sky");
             RunUI(() =>
             {
-                PopulateNewConfigForm(newConfigForm, @"TestConfig");
+                FunctionalTestUtil.PopulateConfigForm(newConfigForm, @"TestConfig", TestFilesDirs[0].FullPath, this);
                 newConfigForm.textTemplateFile.Text = nonexistentTemplate;
             });
 
@@ -72,11 +62,11 @@ namespace SkylineBatchTest
                     dlg.ClickOk();
                 });
 
-            var nonexistentData = TestUtils.GetTestFilePath("nonexistentData");
+            var nonexistentData = Path.Combine(TestFilesDirs[0].FullPath, "nonexistentData");
             RunUI(() =>
             {
-                PopulateNewConfigForm(newConfigForm, @"TestConfig");
-                newConfigForm.textDataPath.Text = nonexistentData;
+                FunctionalTestUtil.PopulateConfigForm(newConfigForm, @"TestConfig", TestFilesDirs[0].FullPath, this);
+                newConfigForm.textDataPath.Text = Path.Combine(TestFilesDirs[0].FullPath, "nonexistentData");
             });
 
             RunDlg<AlertDlg>(() => newConfigForm.Save(),
@@ -88,10 +78,10 @@ namespace SkylineBatchTest
                     dlg.ClickOk();
                 });
 
-            var nonexistentAnalysis = TestUtils.GetTestFilePath("nonexistentFolderOne\\nonexistentFolderTwo");
+            var nonexistentAnalysis = Path.Combine(TestFilesDirs[0].FullPath, "nonexistentFolderOne\\nonexistentFolderTwo");
             RunUI(() =>
             {
-                PopulateNewConfigForm(newConfigForm, @"TestConfig");
+                FunctionalTestUtil.PopulateConfigForm(newConfigForm, @"TestConfig", TestFilesDirs[0].FullPath, this);
                 newConfigForm.textAnalysisPath.Text = nonexistentAnalysis;
             });
 
@@ -106,8 +96,8 @@ namespace SkylineBatchTest
 
             RunUI(() =>
             {
-                PopulateNewConfigForm(newConfigForm, @"TestConfig");
-                newConfigForm.textRefinedFilePath.Text = TestUtils.GetTestFilePath("refinedOutput.sky");
+                FunctionalTestUtil.PopulateConfigForm(newConfigForm, @"TestConfig", TestFilesDirs[0].FullPath, this);
+                newConfigForm.textRefinedFilePath.Text = Path.Combine(TestFilesDirs[0].FullPath, "refinedOutput.sky");
                 newConfigForm.checkBoxRemoveData.Checked = false;
                 newConfigForm.checkBoxRemoveDecoys.Checked = false;
             });
@@ -123,7 +113,6 @@ namespace SkylineBatchTest
 
             RunUI(() => { newConfigForm.CancelButton.PerformClick(); });
             WaitForClosedForm(newConfigForm);
-
         }
 
         

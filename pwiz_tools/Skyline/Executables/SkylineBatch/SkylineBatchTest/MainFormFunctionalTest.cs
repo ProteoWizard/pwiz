@@ -12,7 +12,7 @@ namespace SkylineBatchTest
         [TestMethod]
         public void ManipulateListViewTest()
         {
-            TestFilesZip = @"SkylineBatchTest\MainFormFunctionalTest.zip";
+            TestFilesZip = @"SkylineBatchTest\TestConfigurationFiles.zip";
             RunFunctionalTest();
         }
 
@@ -29,17 +29,6 @@ namespace SkylineBatchTest
 
             TestDeleteConfigurations(mainForm);
 
-            
-        }
-
-
-        private void PopulateNewConfigForm(SkylineBatchConfigForm newConfigForm, string name = "TestName")
-        {
-            WaitForShownForm(newConfigForm);
-            newConfigForm.textConfigName.Text = name;
-            newConfigForm.textTemplateFile.Text = Path.Combine(TestFilesDirs[0].FullPath, "emptyTemplate.sky");
-            newConfigForm.textAnalysisPath.Text = Path.Combine(TestFilesDirs[0].FullPath, "analysisFolder");
-            newConfigForm.textDataPath.Text = Path.Combine(TestFilesDirs[0].FullPath, "emptyData");
         }
 
         public void TestAddValidConfigurations(MainForm mainForm)
@@ -47,7 +36,7 @@ namespace SkylineBatchTest
             var newConfigForm = ShowDialog<SkylineBatchConfigForm>(() => mainForm.ClickAdd());
             RunUI(() =>
             {
-                PopulateNewConfigForm(newConfigForm, @"One");
+                FunctionalTestUtil.PopulateConfigForm(newConfigForm, @"One", TestFilesDirs[0].FullPath, this);
                 newConfigForm.Save();
             });
 

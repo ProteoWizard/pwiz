@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Windows.Forms;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SkylineBatch;
 using SharedBatchTest;
 using SkylineBatch.Properties;
@@ -13,16 +13,23 @@ namespace SkylineBatchTest
     /// </summary>
     public abstract class AbstractSkylineBatchFunctionalTest : AbstractBaseFunctionalTest
     {
+        public const string SKYLINE_BATCH_FOLDER = @"Executables\SkylineBatch\";
 
         public new string TestFilesZip
         {
-            get
-            {
-                return base.TestFilesZip;
-            }
+            get => base.TestFilesZip;
+            set => base.TestFilesZip = SKYLINE_BATCH_FOLDER + value;
+        }
+
+        public new string[] TestFilesZipPaths
+        {
+            get => base.TestFilesZipPaths;
             set
             {
-                base.TestFilesZip = @"Executables\SkylineBatch\" + value;
+                var testFilesZipPaths = value;
+                for (int i = 0; i < testFilesZipPaths.Length; i++)
+                    testFilesZipPaths[i] = SKYLINE_BATCH_FOLDER + testFilesZipPaths[i];
+                base.TestFilesZipPaths = testFilesZipPaths;
             }
         }
 
@@ -43,6 +50,7 @@ namespace SkylineBatchTest
 
         protected override void StartProgram()
         {
+            Program.TestDirectory = Path.GetDirectoryName(TestFilesDirs[0].FullPath);
             Program.Main();
         }
 

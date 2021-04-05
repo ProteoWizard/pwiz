@@ -88,7 +88,7 @@ namespace SkylineBatch
             lock (_lock)
             {
                 var configs = base.LoadConfigList();
-                configs = AssignDependencies(configs);
+                configs = AssignDependencies(configs, out string warningMessage); // ignore warning
                 foreach (var config in configs)
                     ProgramaticallyAddConfig(config);
                 DisableInvalidConfigs();
@@ -97,8 +97,9 @@ namespace SkylineBatch
 
         #region Add/Remove Configs
 
-        public List<IConfig> AssignDependencies(List<IConfig> newConfigs, bool showWarning = true)
+        public List<IConfig> AssignDependencies(List<IConfig> newConfigs, out string warningMessage)
         {
+            warningMessage = null;
             var configDictionary = new Dictionary<string, IConfig>();
             foreach (var existingConfig in _configList)
                 configDictionary.Add(existingConfig.GetName(), existingConfig);
@@ -132,10 +133,10 @@ namespace SkylineBatch
                 }
             }
 
-            if (errorConfigs.Count != 0 && showWarning)
-                DisplayWarning(Resources.SkylineBatchConfigManager_AssignDependencies_The_following_configurations_use_refined_template_files_from_other_configurations_that_do_not_exist_ + Environment.NewLine +
+            if (errorConfigs.Count != 0)
+                warningMessage = Resources.SkylineBatchConfigManager_AssignDependencies_The_following_configurations_use_refined_template_files_from_other_configurations_that_do_not_exist_ + Environment.NewLine +
                                TextUtil.LineSeparate(errorConfigs) + Environment.NewLine +
-                               Resources.SkylineBatchConfigManager_AssignDependencies_You_may_want_to_update_the_template_file_paths_);
+                               Resources.SkylineBatchConfigManager_AssignDependencies_You_may_want_to_update_the_template_file_paths_;
             return configsWithDependency;
         }
 
@@ -742,10 +743,13 @@ namespace SkylineBatch
         public void Import(string filePath)
         {
             var importedConfigs = ImportFrom(filePath);
-            importedConfigs = AssignDependencies(importedConfigs);
+            importedConfigs = AssignDependencies(importedConfigs, out string warningMessage);
             foreach (var config in importedConfigs)
                 ProgramaticallyAddConfig(config);
             DisableInvalidConfigs();
+            _uiControl?.UpdateUiConfigurations();
+            if (warningMessage != null)
+                DisplayWarning(warningMessage);
         }
 
         private void DisableInvalidConfigs()

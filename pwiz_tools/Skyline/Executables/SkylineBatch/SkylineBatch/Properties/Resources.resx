@@ -193,9 +193,6 @@
     <value>Creating new report.</value>
   </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="downtriangle2" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\downtriangle2.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
   <data name="ConfigManager_CheckConfigAtIndex_Please_wait_until___0___has_finished_running_" xml:space="preserve">
     <value>Please wait until "{0}" has finished running.</value>
   </data>
@@ -228,9 +225,6 @@
   </data>
   <data name="RefineSettings_ValidateOutputFile_Please_provide_a_valid_output_file_path_" xml:space="preserve">
     <value>Please provide a valid output file path.</value>
-  </data>
-  <data name="downtriangle" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\downtriangle.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="Program_Main_Another_instance_of__0__is_already_running_" xml:space="preserve">
     <value>Another instance of {0} is already running.</value>

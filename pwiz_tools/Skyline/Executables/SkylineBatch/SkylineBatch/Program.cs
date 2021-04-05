@@ -40,6 +40,8 @@ namespace SkylineBatch
         public static MainForm MainWindow { get; private set; }     // Accessed by functional tests
         // Parameters for running tests
         public static bool FunctionalTest { get; set; }             // Set to true by AbstractFunctionalTest
+        public static string TestDirectory { get; set; }       
+
         public static List<Exception> TestExceptions { get; set; }  // To avoid showing unexpected exception UI during tests and instead log them as failures
         // public static IList<string> PauseForms { get; set; }        // List of forms to pause after displaying.
         #endregion

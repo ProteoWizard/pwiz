@@ -115,7 +115,7 @@ namespace SkylineBatch
             }
 
             var startTime = DateTime.Now;
-            StartTime = startTime.ToString("hh:mm:ss");
+            StartTime = startTime.ToString("T");
             ChangeStatus(RunnerStatus.Running);
             Config.MainSettings.CreateAnalysisFolderIfNonexistent();
             string commandFile = null;

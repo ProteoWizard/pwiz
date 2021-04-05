@@ -114,6 +114,12 @@ namespace SharedBatch
             return safeName; // .TrimStart('.').TrimEnd('.');
         }
 
+        public static string GetTestPath(bool isTest, string testFolder, string path)
+        {
+            if (path != null && isTest && path.StartsWith("\\"))
+                path = testFolder + path;
+            return path;
+        }
 
         /// <summary>
         /// Returns a filter string suitable for a common file dialog (e.g. "CSV (Comma delimited) (*.csv)|*.csv")

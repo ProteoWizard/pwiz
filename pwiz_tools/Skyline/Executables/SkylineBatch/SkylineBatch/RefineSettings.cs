@@ -136,7 +136,7 @@ namespace SkylineBatch
             }
             var removeDecoys = reader.GetBoolAttribute(Attr.RemoveDecoys);
             var removeResults = reader.GetBoolAttribute(Attr.RemoveResults);
-            var outputFilePath = reader.GetAttribute(Attr.OutputFilePath);
+            var outputFilePath = TextUtil.GetTestPath(Program.FunctionalTest, Program.TestDirectory, reader.GetAttribute(Attr.OutputFilePath));
             var commandList = new List<Tuple<RefineVariable, string>>();
             while (reader.IsStartElement() && !reader.IsEmptyElement)
             {

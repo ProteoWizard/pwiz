@@ -274,7 +274,7 @@ namespace SkylineBatch
         public static ReportInfo ReadXml(XmlReader reader)
         {
             var name = reader.GetAttribute(Attr.Name);
-            var reportPath = reader.GetAttribute(Attr.Path);
+            var reportPath = GetPath(reader.GetAttribute(Attr.Path));
             var resultsFile = reader.GetNullableBoolAttribute(Attr.UseRefineFile);
             var rScripts = new List<Tuple<string, string>>();
             while (reader.IsStartElement() && !reader.IsEmptyElement)
@@ -282,7 +282,7 @@ namespace SkylineBatch
                 if (reader.Name == "script_path")
                 {
                     var tupleItems = reader.ReadElementContentAsString().Split(new[]{ '(', ',', ')' }, StringSplitOptions.RemoveEmptyEntries);
-                    rScripts.Add(new Tuple<string,string>(tupleItems[0].Trim(), tupleItems[1].Trim()));
+                    rScripts.Add(new Tuple<string,string>(GetPath(tupleItems[0].Trim()), tupleItems[1].Trim()));
                 }
                 else
                 {
@@ -292,7 +292,10 @@ namespace SkylineBatch
 
             return new ReportInfo(name, reportPath, rScripts, resultsFile?? false);
         }
-        
+
+        private static string GetPath(string path) =>
+            TextUtil.GetTestPath(Program.FunctionalTest, Program.TestDirectory, path);
+
         public void WriteXml(XmlWriter writer)
         {
             writer.WriteStartElement("report_info");
