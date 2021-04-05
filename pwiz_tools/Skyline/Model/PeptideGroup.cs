@@ -295,6 +295,32 @@ namespace pwiz.Skyline.Model
             }
         }
 
+        /// <summary>
+        /// Returns the fraction of amino acids in the protein sequence which could belong to one
+        /// or more of the peptide sequences. If the protein sequence has repeats, and a particular
+        /// peptide sequence can be found within it multiple times, the peptide is considered to
+        /// cover all of its repeats.
+        /// </summary>
+        public static double CalculateSequenceCoverage(string proteinSequence, IEnumerable<string> peptideSequences)
+        {
+            var bools = new bool[proteinSequence.Length];
+            foreach (var peptide in peptideSequences)
+            {
+                if (string.IsNullOrEmpty(peptide))
+                {
+                    continue;
+                }
+                int ichNext = -1;
+                while ((ichNext = proteinSequence.IndexOf(peptide, ichNext + 1, StringComparison.Ordinal)) >= 0)
+                {
+                    ReadOnlyList.Create(peptide.Length, i => true).CopyTo(bools, ichNext);
+                }
+            }
+
+            double coveredCount = bools.Count(b => b);
+            return coveredCount / proteinSequence.Length;
+        }
+
         private void Validate()
         {
             ValidateSequence(Sequence);
