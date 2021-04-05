@@ -446,6 +446,7 @@ namespace pwiz.Skyline.Model.Databinding
                 {
                     columnsToRemove.Add(PropertyPath.Root.Property("Name"));
                     columnsToRemove.Add(PropertyPath.Root.Property(nameof(Protein.AutoSelectPeptides)));
+                    columnsToRemove.Add(PropertyPath.Root.Property(nameof(Protein.ProteinSequenceCoverage)));
                     if (docHasOnlyCustomIons)
                     {
                         // Peptide-oriented fields that make no sense in a small molecule context
