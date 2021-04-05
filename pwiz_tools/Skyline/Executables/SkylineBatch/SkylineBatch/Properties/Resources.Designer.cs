@@ -278,6 +278,16 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap downtriangle {
+            get {
+                object obj = ResourceManager.GetObject("downtriangle", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Ms/Ms filtering res/accuracy.
         /// </summary>
         internal static string FileSettings_Validate_Ms_Ms_filtering_res_accuracy {
