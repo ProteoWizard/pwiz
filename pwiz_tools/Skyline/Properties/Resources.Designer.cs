@@ -3531,6 +3531,51 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Collision Cross Section.
+        /// </summary>
+        public static string ChromatogramContextMenu_Collision_Cross_Section {
+            get {
+                return ResourceManager.GetString("ChromatogramContextMenu_Collision_Cross_Section", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Compensation Voltage.
+        /// </summary>
+        public static string ChromatogramContextMenu_InsertIonMobilityMenuItems_Compensation_Voltage {
+            get {
+                return ResourceManager.GetString("ChromatogramContextMenu_InsertIonMobilityMenuItems_Compensation_Voltage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Drift Time.
+        /// </summary>
+        public static string ChromatogramContextMenu_InsertIonMobilityMenuItems_Drift_Time {
+            get {
+                return ResourceManager.GetString("ChromatogramContextMenu_InsertIonMobilityMenuItems_Drift_Time", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Inverse Ion Mobility.
+        /// </summary>
+        public static string ChromatogramContextMenu_InsertIonMobilityMenuItems_Inverse_Ion_Mobility {
+            get {
+                return ResourceManager.GetString("ChromatogramContextMenu_InsertIonMobilityMenuItems_Inverse_Ion_Mobility", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ion Mobility.
+        /// </summary>
+        public static string ChromatogramContextMenu_InsertIonMobilityMenuItems_Ion_Mobility {
+            get {
+                return ResourceManager.GetString("ChromatogramContextMenu_InsertIonMobilityMenuItems_Ion_Mobility", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to This import appears to be taking longer than expected. If importing from a network drive, consider canceling this import, copying to local disk and retrying..
         /// </summary>
         public static string ChromatogramDataProvider_GetChromatogram_This_import_appears_to_be_taking_longer_than_expected__If_importing_from_a_network_drive__consider_canceling_this_import__copying_to_local_disk_and_retrying_ {
