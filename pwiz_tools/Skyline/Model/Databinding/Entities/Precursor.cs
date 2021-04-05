@@ -412,6 +412,22 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
+        [ChildDisplayName("Library{0}")]
+        public IonMobilityObject LibraryIonMobility
+        {
+            get
+            {
+                var libKey = DocNode.GetLibKey(SrmDocument.Settings, Peptide.DocNode);
+                var imInfo = SrmDocument.Settings.GetIonMobilities(new[] { libKey }, null);
+                var im = imInfo.GetLibraryMeasuredIonMobilityAndCCS(libKey, DocNode.PrecursorMz, null);
+                if (im == null || im.IsEmpty)
+                {
+                    return null;
+                }
+                return IonMobilityObject.FromIonMobilityAndCCS(im);
+            }
+        }
+
         [InvariantDisplayName("PrecursorNote")]
         [Importable]
         public string Note

@@ -3521,6 +3521,51 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Collision Cross Section.
+        /// </summary>
+        public static string ChromatogramContextMenu_Collision_Cross_Section {
+            get {
+                return ResourceManager.GetString("ChromatogramContextMenu_Collision_Cross_Section", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Compensation Voltage.
+        /// </summary>
+        public static string ChromatogramContextMenu_InsertIonMobilityMenuItems_Compensation_Voltage {
+            get {
+                return ResourceManager.GetString("ChromatogramContextMenu_InsertIonMobilityMenuItems_Compensation_Voltage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Drift Time.
+        /// </summary>
+        public static string ChromatogramContextMenu_InsertIonMobilityMenuItems_Drift_Time {
+            get {
+                return ResourceManager.GetString("ChromatogramContextMenu_InsertIonMobilityMenuItems_Drift_Time", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Inverse Ion Mobility.
+        /// </summary>
+        public static string ChromatogramContextMenu_InsertIonMobilityMenuItems_Inverse_Ion_Mobility {
+            get {
+                return ResourceManager.GetString("ChromatogramContextMenu_InsertIonMobilityMenuItems_Inverse_Ion_Mobility", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ion Mobility.
+        /// </summary>
+        public static string ChromatogramContextMenu_InsertIonMobilityMenuItems_Ion_Mobility {
+            get {
+                return ResourceManager.GetString("ChromatogramContextMenu_InsertIonMobilityMenuItems_Ion_Mobility", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to This import appears to be taking longer than expected. If importing from a network drive, consider canceling this import, copying to local disk and retrying..
         /// </summary>
         public static string ChromatogramDataProvider_GetChromatogram_This_import_appears_to_be_taking_longer_than_expected__If_importing_from_a_network_drive__consider_canceling_this_import__copying_to_local_disk_and_retrying_ {
@@ -4783,6 +4828,16 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("CommandArgs_ValidateReintegrateArgs_Error__Model_cutoffs_cannot_be_applied_in_cal" +
                         "ibrating_the_Skyline_default_model_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use of the argument {0} requires one of the following arguments:.
+        /// </summary>
+        public static string CommandArgs_WarnArgRequirementText_Use_of_the_argument__0__requires_one_of_the_following_arguments_ {
+            get {
+                return ResourceManager.GetString("CommandArgs_WarnArgRequirementText_Use_of_the_argument__0__requires_one_of_the_fo" +
+                        "llowing_arguments_", resourceCulture);
             }
         }
         
@@ -6056,6 +6111,34 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("CommandLine_MakeReplicateNamesUnique_Replicate___0___already_exists_in_the_docume" +
                         "nt__using___1___instead_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Limiting chromatogram noise to +/- {0} minutes around peak....
+        /// </summary>
+        public static string CommandLine_MinimizeResults_Limiting_chromatogram_noise_to______0__minutes_around_peak___ {
+            get {
+                return ResourceManager.GetString("CommandLine_MinimizeResults_Limiting_chromatogram_noise_to______0__minutes_around" +
+                        "_peak___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Minimizing results to {0}.
+        /// </summary>
+        public static string CommandLine_MinimizeResults_Minimizing_results_to__0_ {
+            get {
+                return ResourceManager.GetString("CommandLine_MinimizeResults_Minimizing_results_to__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Removing unused chromatograms....
+        /// </summary>
+        public static string CommandLine_MinimizeResults_Removing_unused_chromatograms___ {
+            get {
+                return ResourceManager.GetString("CommandLine_MinimizeResults_Removing_unused_chromatograms___", resourceCulture);
             }
         }
         
@@ -16132,6 +16215,24 @@ namespace pwiz.Skyline.Properties {
         public static string IonMobilityLibraryList_Title_Edit_Ion_Mobility_Libraries {
             get {
                 return ResourceManager.GetString("IonMobilityLibraryList_Title_Edit_Ion_Mobility_Libraries", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to CCS:.
+        /// </summary>
+        public static string IonMobilityObject_ToString_CCS_ {
+            get {
+                return ResourceManager.GetString("IonMobilityObject_ToString_CCS_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to HEO:.
+        /// </summary>
+        public static string IonMobilityObject_ToString_HEO_ {
+            get {
+                return ResourceManager.GetString("IonMobilityObject_ToString_HEO_", resourceCulture);
             }
         }
         
@@ -30750,15 +30851,6 @@ namespace pwiz.Skyline.Properties {
         public static string StaticMod_Validate_Invalid_amino_acid___0___ {
             get {
                 return ResourceManager.GetString("StaticMod_Validate_Invalid_amino_acid___0___", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Loss-only modifications may not be explicit..
-        /// </summary>
-        public static string StaticMod_Validate_Loss_only_modifications_may_not_be_explicit {
-            get {
-                return ResourceManager.GetString("StaticMod_Validate_Loss_only_modifications_may_not_be_explicit", resourceCulture);
             }
         }
         

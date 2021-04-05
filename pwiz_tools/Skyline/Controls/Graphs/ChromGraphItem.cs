@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
+using pwiz.Common.Chemistry;
 using pwiz.MSGraph;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -361,7 +362,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         }
                         else
                         {
-                            string label = FormatTimeLabel(timeBest.DisplayTime, massError, dotProduct);
+                            string label = FormatTimeLabel(timeBest.DisplayTime, massError, dotProduct, Chromatogram.GetIonMobilityFilter());
 
                             text = new TextObj(label, timeBest.DisplayTime, intensityLabel,
                                 CoordType.AxisXYScale, AlignH.Center, AlignV.Bottom)
@@ -817,7 +818,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     float? massError = null;
                     if (Settings.Default.ShowMassError)
                         massError = Chromatogram.GetPeak(indexPeak).MassError;
-                    string label = FormatTimeLabel(point.X, massError, dotProduct);
+                    string label = FormatTimeLabel(point.X, massError, dotProduct, IonMobilityFilter.EMPTY);
                     return new PointAnnotation(label, FontSpec);
                 }
             }
@@ -825,16 +826,54 @@ namespace pwiz.Skyline.Controls.Graphs
             return null;
         }
 
-        public string FormatTimeLabel(double time, float? massError, double dotProduct)
+        public string FormatTimeLabel(double time, float? massError, double dotProduct, IonMobilityFilter ionMobilityfilter)
         {
-            string label = string.Format(@"{0:F01}", time);
+            // ReSharper disable LocalizableElement
+            var lines = new List<string> {string.Format("{0:F01}", time)};
             if (massError.HasValue && !_isSummary)
-                // ReSharper disable LocalizableElement
-                label += string.Format("\n{0}{1} ppm", (massError.Value > 0 ? "+" : string.Empty), massError.Value);
+                lines.Add(string.Format("{0}{1} ppm", (massError.Value > 0 ? "+" : string.Empty), massError.Value));
             if (dotProduct != 0)
-                label += string.Format("\n({0} {1:F02})", _isFullScanMs ? "idotp" : "dotp", dotProduct);
-                // ReSharper restore LocalizableElement
-            return label;
+                lines.Add(string.Format("({0} {1:F02})", _isFullScanMs ? "idotp" : "dotp", dotProduct));
+
+            // Ion mobility values
+            if (ionMobilityfilter.IonMobility.HasValue && !_isSummary && 
+                (Settings.Default.ShowCollisionCrossSection || Settings.Default.ShowIonMobility))
+            {
+                if (Settings.Default.ShowCollisionCrossSection && 
+                    ionMobilityfilter.IonMobilityUnits != eIonMobilityUnits.compensation_V) // CCS isn't measurable with FAIMS
+                {
+                    var ccsString = FormatCollisionCrossSectionValue(ionMobilityfilter);
+                    lines.Add(ccsString);
+                }
+                if (Settings.Default.ShowIonMobility)
+                {
+                    var imString = FormatIonMobilityValue(ionMobilityfilter);
+                    lines.Add(string.Format("IM {0}", imString));
+                }
+            }
+
+            // N.B.you might expect use of TextUtil.LineSeparate() here, but this string is parsed
+            // elsewhere with the expectation of \n as separator rather than \r\n
+            return string.Join("\n", lines); 
+
+            // ReSharper restore LocalizableElement
+        }
+
+        public static string FormatIonMobilityValue(IonMobilityFilter ionMobilityFilter)
+        {
+            var imString = ionMobilityFilter.IonMobility.HasValue
+                ? string.Format(@"{0:F02} {1}",
+                    ionMobilityFilter.IonMobility.Mobility, IonMobilityValue.GetUnitsString(ionMobilityFilter.IonMobilityUnits))
+                : @"IM unknown"; // Should never happen
+            return imString;
+        }
+
+        public static string FormatCollisionCrossSectionValue(IonMobilityFilter ionMobilityFilter)
+        {
+            var ccsString = ionMobilityFilter.CollisionalCrossSectionSqA.HasValue
+                ? string.Format(@"CCS {0:F02} Å²", ionMobilityFilter.CollisionalCrossSectionSqA.Value)
+                : @"CCS unknown"; // Should never happen, except for very old data
+            return ccsString;
         }
 
         public IdentityPath FindIdentityPath(TextObj label)
