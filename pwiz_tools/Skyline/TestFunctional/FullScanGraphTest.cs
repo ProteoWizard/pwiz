@@ -20,8 +20,12 @@
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.Graphs;
+using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 using ZedGraph;
 
@@ -104,10 +108,22 @@ namespace pwiz.SkylineTestFunctional
             SetShowAnnotations(true);
             if (!Skyline.Program.SkylineOffscreen)
             {
-                TestAnnotations(new []{ "y4 (rank 9)" });
+                var ions1 = new []
+                {
+                    "y4" + TextUtil.SEPARATOR_SPACE + string.Format(@"({0})",string.Format(Resources.AbstractSpectrumGraphItem_GetLabel_rank__0__, 9))
+                };
+                var ions2 = new[]
+                {
+                    "y1" + TextUtil.SEPARATOR_SPACE + string.Format(@"({0})",string.Format(Resources.AbstractSpectrumGraphItem_GetLabel_rank__0__, 1)),
+                    "y1++" + TextUtil.SEPARATOR_SPACE + string.Format(@"({0})",string.Format(Resources.AbstractSpectrumGraphItem_GetLabel_rank__0__, 2)),
+                    "y5++" + TextUtil.SEPARATOR_SPACE + string.Format(@"({0})",string.Format(Resources.AbstractSpectrumGraphItem_GetLabel_rank__0__, 3)),
+                    "y7" + TextUtil.SEPARATOR_SPACE + string.Format(@"({0})",string.Format(Resources.AbstractSpectrumGraphItem_GetLabel_rank__0__, 6)),
+                    "y11" + TextUtil.SEPARATOR_SPACE + string.Format(@"({0})",string.Format(Resources.AbstractSpectrumGraphItem_GetLabel_rank__0__, 21))
+                };
+
+                TestAnnotations(ions1);
                 SetZoom(false);
-                TestAnnotations(new[]
-                    {"y1 (rank 1)", "y1++ (rank 2)", "y5++ (rank 3)", "y7 (rank 6)", "y11 (rank 21)"});
+                TestAnnotations(ions2);
                 RunUI(() => SkylineWindow.GraphFullScan.SetMzRange(500, 700));
                 ClickFullScan(618, 120);
                 TestScale(617, 621, 0, 60);
