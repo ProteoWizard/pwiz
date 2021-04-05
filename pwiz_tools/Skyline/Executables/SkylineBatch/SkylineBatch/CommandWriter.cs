@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Deployment.Application;
+using System.Collections.Generic;
 using System.IO;
-using System.Threading.Tasks;
-using log4net.Config;
 using SharedBatch;
 using SkylineBatch.Properties;
 
@@ -13,26 +11,27 @@ namespace SkylineBatch
         private static readonly string IN_COMMAND = "--in=";
         private static readonly string OUT_COMMAND = "--out=";
 
+        private string _commandHolder;
         private readonly StreamWriter _writer;
         private readonly string _commandFile;
-        private readonly Logger _logger;
-        private bool _reopenFile; // If the Skyline file needs to be reopened with --in (true if _multiLine is false and a line has ended)
+        public List<string> LogLines { get; private set; }
 
         public CommandWriter(Logger logger, bool multiLine)
         {
             _commandFile = Path.GetTempFileName();
+            _commandHolder = string.Empty;
             CurrentSkylineFile = string.Empty;
-            _logger = logger;
+            LogLines = new List<string>() {string.Empty};
             _writer = new StreamWriter(_commandFile);
 
             MultiLine = multiLine;
-            // TODO (Ali): Uncomment this when Skyline-daily comes out with these changes
-            /*if (!MultiLine)
+
+            if (!MultiLine)
             {
-                _logger.Log(string.Empty);
-                _logger.Log(string.Format(Resources.CommandWriter_Start_Notice__For_faster_Skyline_Batch_runs__use_Skyline_version__0__or_higher_, ConfigRunner.ALLOW_NEWLINE_SAVE_VERSION));
-                _logger.Log(string.Empty);
-            }*/
+                logger.Log(string.Empty);
+                logger.Log(string.Format(Resources.CommandWriter_Start_Notice__For_faster_Skyline_Batch_runs__use_Skyline_version__0__or_higher_, ConfigRunner.ALLOW_NEWLINE_SAVE_VERSION));
+                logger.Log(string.Empty);
+            }
         }
 
         public string CurrentSkylineFile { get; private set; } // Filepath of last opened Skyline file with --in or --out
@@ -41,16 +40,16 @@ namespace SkylineBatch
         public void Write(string command, params Object[] args)
         {
             command = string.Format(command, args);
-            if (_reopenFile)
+            if (!string.IsNullOrEmpty(_commandHolder))
             {
-                _reopenFile = false;
+                var reopenCommand = _commandHolder;
+                _commandHolder = string.Empty;
                 if (!command.StartsWith(IN_COMMAND))
-                    Write(SkylineBatchConfig.OPEN_SKYLINE_FILE_COMMAND, CurrentSkylineFile);
+                    Write(reopenCommand);
             }
             UpdateCurrentFile(command);
-            _logger.Log(command);
-            if (MultiLine) _writer.WriteLine(command);
-            else _writer.Write(command + " ");
+            _writer.Write(command + " ");
+            LogLines[LogLines.Count - 1] += command + " ";
         }
 
         public void UpdateCurrentFile(string command)
@@ -75,22 +74,27 @@ namespace SkylineBatch
             return path;
         }
 
-        public void EndCommandGroup()
+        public void NewLine()
         {
-            if (!MultiLine)
-                ReopenSkylineResultsFile();
+            _writer.WriteLine();
+            LogLines.Add(string.Empty);
         }
 
-        public string ReturnCommandFile()
+        public void EndCommandGroup()
+        {
+            if (string.IsNullOrEmpty(_commandHolder))
+            {
+                NewLine();
+                if (!MultiLine)
+                    _commandHolder = string.Format(SkylineBatchConfig.OPEN_SKYLINE_FILE_COMMAND, CurrentSkylineFile);
+            }
+        }
+
+        public string GetCommandFile()
         {
             _writer.Close();
             return _commandFile;
         }
 
-        public void ReopenSkylineResultsFile()
-        {
-            if (!_reopenFile) _writer.WriteLine();
-            _reopenFile = true;
-        }
     }
 }
