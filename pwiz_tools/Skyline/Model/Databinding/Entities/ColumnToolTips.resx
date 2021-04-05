@@ -1027,6 +1027,9 @@ Edit menu</value>
 sequence files the full protein sequence is accessible. You can see the protein sequence
 also when you hover over the protein name in the peptide tree view.</value>
   </data>
+  <data name="ProteinSequenceCoverage">
+    <value>The fraction of amino acids in the protein sequence which could be part of one or more of the sequences of the child peptides.</value>
+  </data>
   <data name="ProteinSpecies">
     <value>Protein Species</value>
   </data>
