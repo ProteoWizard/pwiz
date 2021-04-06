@@ -173,6 +173,7 @@ namespace SkylineBatch
         {
             var tab = "      ";
             message = new StringBuilder(configHeader);
+            CreateAnalysisFolderIfNonexistent();
             var analysisFolderName = Path.GetFileName(AnalysisFolderPath);
             switch (startStep)
             {
@@ -219,7 +220,6 @@ namespace SkylineBatch
             }
             return false;
         }
-
 
         private List<string> GetFilesInFolder(string folder, string fileType)
         {

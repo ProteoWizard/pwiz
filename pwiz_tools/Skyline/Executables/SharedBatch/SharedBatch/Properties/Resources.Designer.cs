@@ -29,14 +29,14 @@ namespace SharedBatch.Properties {
         private static global::System.Globalization.CultureInfo resourceCulture;
         
         [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        internal Resources() {
+        public Resources() {
         }
         
         /// <summary>
         ///   Returns the cached ResourceManager instance used by this class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Resources.ResourceManager ResourceManager {
+        public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
                     global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("SharedBatch.Properties.Resources", typeof(Resources).Assembly);
@@ -51,7 +51,7 @@ namespace SharedBatch.Properties {
         ///   resource lookups using this strongly typed resource class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Globalization.CultureInfo Culture {
+        public static global::System.Globalization.CultureInfo Culture {
             get {
                 return resourceCulture;
             }
@@ -553,6 +553,16 @@ namespace SharedBatch.Properties {
         public static string SkylineSettings_Validate_Please_try_a_different_Skyline_option_ {
             get {
                 return ResourceManager.GetString("SkylineSettings_Validate_Please_try_a_different_Skyline_option_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No existing Skyline type selected. Please select a Skyline installation that exists on this computer..
+        /// </summary>
+        public static string SkylineTypeControl_Type_No_existing_Skyline_type_selected__Please_select_a_Skyline_installation_that_exists_on_this_computer_ {
+            get {
+                return ResourceManager.GetString("SkylineTypeControl_Type_No_existing_Skyline_type_selected__Please_select_a_Skylin" +
+                        "e_installation_that_exists_on_this_computer_", resourceCulture);
             }
         }
         

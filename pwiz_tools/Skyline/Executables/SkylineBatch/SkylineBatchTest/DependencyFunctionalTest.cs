@@ -10,6 +10,9 @@ namespace SkylineBatchTest
     [TestClass]
     public class DependencyFunctionalTest : AbstractSkylineBatchFunctionalTest
     {
+        public static string CONFIG_FOLDER;
+        public static string BCFG_FOLDER;
+
         [TestMethod]
         public void DependencyTest()
         {
@@ -21,24 +24,28 @@ namespace SkylineBatchTest
 
         protected override void DoTest()
         {
+            BCFG_FOLDER = TestFilesDirs[0].FullPath;
+            CONFIG_FOLDER = TestFilesDirs[1].FullPath;
             var mainWindow = MainFormWindow();
             var mainForm = mainWindow as MainForm;
             Assert.IsNotNull(mainForm, "Main program window is not an instance of MainForm.");
             RunUI(() => { FunctionalTestUtil.CheckConfigs(0, 0, mainForm); });
 
-            RInstallations.AddRDirectory(Path.Combine(TestFilesDirs[1].FullPath, "R"));
+            RInstallations.AddRDirectory(Path.Combine(CONFIG_FOLDER, "R"));
 
             TestCreateDependency(mainForm);
 
             TestImportDependency(mainForm);
 
-            //TestRunDependency(mainForm);*/
+            TestUpdateDependent(mainForm);
+
+            TestRunDependency(mainForm);
 
         }
 
         public void TestCreateDependency(MainForm mainForm)
         {
-            var baseConfigFile = Path.Combine(TestFilesDirs[0].FullPath, "BaseConfiguration.bcfg");
+            var baseConfigFile = Path.Combine(BCFG_FOLDER, "BaseConfiguration.bcfg");
             mainForm.DoImport(baseConfigFile);
 
             RunUI(() => { FunctionalTestUtil.CheckConfigs(1, 0, mainForm); });
@@ -54,9 +61,9 @@ namespace SkylineBatchTest
             Assert.AreEqual(true, addConfigForm.comboTemplateFile.Visible);
             RunUI(() =>
             {
-                FunctionalTestUtil.PopulateConfigForm(addConfigForm, "DependentConfig", TestFilesDirs[1].FullPath, this);
-                addConfigForm.comboTemplateFile.Text = Path.Combine(TestFilesDirs[1].FullPath, "RefinedOutput.sky");
-                addConfigForm.Save();
+                FunctionalTestUtil.PopulateConfigForm(addConfigForm, "DependentConfig", CONFIG_FOLDER, this);
+                addConfigForm.comboTemplateFile.Text = Path.Combine(CONFIG_FOLDER, "RefinedOutput.sky");
+                addConfigForm.btnSaveConfig.PerformClick();
             });
             WaitForClosedForm(addConfigForm);
             RunUI(() => { FunctionalTestUtil.CheckConfigs(2, 0, mainForm); });
@@ -83,14 +90,14 @@ namespace SkylineBatchTest
         public void TestImportDependency(MainForm mainForm)
         {
             RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
-            var baseConfigFile = Path.Combine(TestFilesDirs[0].FullPath, "BaseConfiguration.bcfg");
+            var baseConfigFile = Path.Combine(BCFG_FOLDER, "BaseConfiguration.bcfg");
             mainForm.DoImport(baseConfigFile);
             RunUI(() => { FunctionalTestUtil.CheckConfigs(1, 0, mainForm); });
 
-            var validDependentConfigFile = Path.Combine(TestFilesDirs[0].FullPath, "ValidDependentConfiguration.bcfg");
+            var validDependentConfigFile = Path.Combine(BCFG_FOLDER, "ValidDependentConfiguration.bcfg");
             mainForm.DoImport(validDependentConfigFile);
             RunUI(() => { FunctionalTestUtil.CheckConfigs(2, 0, mainForm); });
-
+            AssertDependentMatches(mainForm, Path.Combine(CONFIG_FOLDER, "RefinedOutput.sky"), 1);
 
             RunUI(() => { mainForm.ClickConfig(0); });
             RunDlg<AlertDlg>(() => mainForm.ClickDelete(),
@@ -103,6 +110,132 @@ namespace SkylineBatchTest
                     dlg.ClickYes();
                 });
             RunUI(() => { FunctionalTestUtil.CheckConfigs(1, 1, mainForm); });
+
+            RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
+            mainForm.DoImport(baseConfigFile);
+            RunUI(() => { FunctionalTestUtil.CheckConfigs(1, 0, mainForm); });
+            var invalidDependentConfigsFile = Path.Combine(BCFG_FOLDER, "InvalidDependentConfigurations.bcfg");
+            RunDlg<AlertDlg>(() => mainForm.DoImport(invalidDependentConfigsFile),
+                dlg =>
+                {
+                    Assert.AreEqual(string.Format(SkylineBatch.Properties.Resources.SkylineBatchConfigManager_AssignDependencies_The_following_configurations_use_refined_template_files_from_other_configurations_that_do_not_exist_, "BaseConfiguration") + Environment.NewLine +
+                                    "ValidPathInvalidDependent" + Environment.NewLine +
+                                    "InvalidPathInvalidDependent" + Environment.NewLine +
+                                    string.Format(SkylineBatch.Properties.Resources.SkylineBatchConfigManager_AssignDependencies_You_may_want_to_update_the_template_file_paths_, "BaseConfiguration"),
+                        dlg.Message);
+                    dlg.ClickOk();
+                });
+            RunUI(() =>
+            {
+                FunctionalTestUtil.CheckConfigs(3, 1, mainForm);
+                mainForm.ClickConfig(0);
+                mainForm.ClickDelete();
+                FunctionalTestUtil.CheckConfigs(2, 1, mainForm);
+                mainForm.ClickConfig(1);
+                mainForm.ClickDelete();
+                FunctionalTestUtil.CheckConfigs(1, 0, mainForm);
+            });
         }
+
+        public void TestUpdateDependent(MainForm mainForm)
+        {
+            RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
+            var baseConfigFile = Path.Combine(BCFG_FOLDER, "BaseConfiguration.bcfg");
+            mainForm.DoImport(baseConfigFile);
+            RunUI(() => { FunctionalTestUtil.CheckConfigs(1, 0, mainForm); });
+
+            var validDependentConfigFile = Path.Combine(BCFG_FOLDER, "ValidDependentConfiguration.bcfg");
+            mainForm.DoImport(validDependentConfigFile);
+            RunUI(() => { FunctionalTestUtil.CheckConfigs(2, 0, mainForm); });
+
+            var newTemplate = Path.Combine(CONFIG_FOLDER, "NewRefinedOutput.sky");
+            ChangePath(mainForm, 0, newTemplate, false, false);
+            RunUI(() => { FunctionalTestUtil.CheckConfigs(2, 0, mainForm); });
+            AssertDependentMatches(mainForm, newTemplate, 1);
+
+            var independentTemplate = Path.Combine(CONFIG_FOLDER, "emptyTemplate.sky");
+            ChangePath(mainForm, 1, independentTemplate, true, true);
+            ChangePath(mainForm, 0, Path.Combine(CONFIG_FOLDER, "Nonexistent.sky"), false, false);
+            AssertDependentMatches(mainForm, independentTemplate, 1);
+        }
+
+        public void TestRunDependency(MainForm mainForm)
+        {
+            RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
+            var baseConfigFile = Path.Combine(BCFG_FOLDER, "BaseConfiguration.bcfg");
+            mainForm.DoImport(baseConfigFile);
+            RunUI(() => { FunctionalTestUtil.CheckConfigs(1, 0, mainForm); });
+
+            var validDependentConfigFile = Path.Combine(BCFG_FOLDER, "ValidDependentConfiguration.bcfg");
+            mainForm.DoImport(validDependentConfigFile);
+            RunUI(() =>
+            {
+                FunctionalTestUtil.CheckConfigs(2, 0, mainForm);
+                mainForm.ConfigEnabled(1, true);
+            });
+            RunDlg<AlertDlg>(() => mainForm.ClickRun(),
+                dlg =>
+                {
+                    Assert.AreEqual(string.Format(SkylineBatch.Properties.Resources.SkylineBatchConfigManager_StartBatchRun_Configuration__0__must_be_run_before__1__to_generate_its_template_file_, "BaseConfiguration", "ValidDependent") + Environment.NewLine +
+                                    string.Format(SkylineBatch.Properties.Resources.SkylineBatchConfigManager_StartBatchRun_Please_reorder_the_configurations_so__0__runs_first_, "BaseConfiguration"),
+                        dlg.Message);
+                    dlg.ClickOk();
+                });
+            RunUI(() =>
+            {
+                mainForm.ClickConfig(0);
+                mainForm.ConfigEnabled(0, true);
+                mainForm.ClickDown();
+            });
+            RunDlg<AlertDlg>(() => mainForm.ClickRun(),
+                dlg =>
+                {
+                    Assert.AreEqual(string.Format(SkylineBatch.Properties.Resources.SkylineBatchConfigManager_StartBatchRun_Configuration__0__must_be_run_before__1__to_generate_its_template_file_, "BaseConfiguration", "ValidDependent") + Environment.NewLine +
+                                    string.Format(SkylineBatch.Properties.Resources.SkylineBatchConfigManager_StartBatchRun_Please_reorder_the_configurations_so__0__runs_first_, "BaseConfiguration"),
+                        dlg.Message);
+                    dlg.ClickOk();
+                });
+            RunUI(() =>
+            {
+                mainForm.ClickConfig(1);
+                mainForm.ClickUp();
+                mainForm.ClickRun();
+            });
+        }
+
+        private void AssertDependentMatches(MainForm mainForm, string expectedTemplate, int dependentIndex)
+        {
+            RunUI(() => mainForm.ClickConfig(dependentIndex));
+            var editConfigForm = ShowDialog<SkylineBatchConfigForm>(() => mainForm.ClickEdit());
+            RunUI(() =>
+            {
+                Assert.AreEqual(true, editConfigForm.comboTemplateFile.Visible);
+                Assert.AreEqual(expectedTemplate, editConfigForm.comboTemplateFile.Text);
+                editConfigForm.CancelButton.PerformClick();
+            });
+            WaitForClosedForm(editConfigForm);
+        }
+
+        private void ChangePath(MainForm mainForm, int configIndex, string newPath, bool templatePath, bool comboVisible)
+        {
+            RunUI(() => mainForm.ClickConfig(configIndex));
+            var editConfigForm = ShowDialog<SkylineBatchConfigForm>(() => mainForm.ClickEdit());
+            RunUI(() =>
+            {
+                Assert.AreEqual(comboVisible, editConfigForm.comboTemplateFile.Visible);
+                if (templatePath)
+                {
+                    if (comboVisible) editConfigForm.comboTemplateFile.Text = newPath;
+                    else editConfigForm.textTemplateFile.Text = newPath;
+                }
+                else
+                {
+                    editConfigForm.textRefinedFilePath.Text = newPath;
+                }
+                editConfigForm.btnSaveConfig.PerformClick();
+            });
+            WaitForClosedForm(editConfigForm);
+        }
+
     }
 }

@@ -37,7 +37,11 @@ namespace SkylineBatchTest
 
             TestImportInvalidDependentConfigurations(mainForm);
 
+            TestImportInvalidSkylineConfigurations(mainForm);
+
             TestRootReplacement(mainForm);
+
+            TestDriveRootReplacement(mainForm);
 
         }
 
@@ -149,6 +153,48 @@ namespace SkylineBatchTest
 
         }
 
+        public void TestImportInvalidSkylineConfigurations(MainForm mainForm)
+        {
+            RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
+            var invalidConfigFile = Path.Combine(TestFilesDirs[0].FullPath, "InvalidSkylineConfigurations.bcfg");
+            mainForm.DoImport(invalidConfigFile);
+            RunUI(() =>
+            {
+                FunctionalTestUtil.CheckConfigs(3, 3, mainForm);
+                mainForm.ClickConfig(0);
+            });
+            var invalidConfigForm = ShowDialog<InvalidConfigSetupForm>(() => {mainForm.ClickEdit();});
+            RunUI(() => invalidConfigForm.CurrentControl.SetText(TestUtils.GetSkylineDir()) );
+            RunDlg<AlertDlg>(() => invalidConfigForm.btnNext.PerformClick(),
+                dlg =>
+                {
+                    Assert.AreEqual(SkylineBatch.Properties.Resources.MainForm_ReplaceAllSkylineVersions_Do_you_want_to_use_this_Skyline_version_for_all_configurations_,
+                        dlg.Message);
+                    dlg.ClickNo();
+                });
+
+            var editConfigForm = ShowDialog<SkylineBatchConfigForm>(() => { });
+            RunUI(() => editConfigForm.btnSaveConfig.PerformClick());
+            WaitForClosedForm(editConfigForm);
+
+            RunUI(() =>
+            {
+                FunctionalTestUtil.CheckConfigs(3, 2, mainForm);
+                mainForm.ClickConfig(1);
+            });
+            invalidConfigForm = ShowDialog<InvalidConfigSetupForm>(() => { mainForm.ClickEdit(); });
+            editConfigForm = ShowDialog<SkylineBatchConfigForm>(() => { invalidConfigForm.btnSkip.PerformClick(); });
+            RunUI(() =>
+            {
+                editConfigForm.tabsConfig.SelectedIndex = 4;
+                editConfigForm.SkylineTypeControl.SetText(TestUtils.GetSkylineDir());
+            });
+            RunDlg<AlertDlg>(() => editConfigForm.btnSaveConfig.PerformClick(),
+                dlg => { dlg.ClickYes(); });
+            WaitForClosedForm(editConfigForm);
+            RunUI(() => FunctionalTestUtil.CheckConfigs(3, 0, mainForm));
+        }
+
         public void TestRootReplacement(MainForm mainForm)
         {
             RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
@@ -183,6 +229,42 @@ namespace SkylineBatchTest
              RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
              mainForm.DoImport(invalidConfigFile);
              RunUI(() => { FunctionalTestUtil.CheckConfigs(3, 0, mainForm); });
+        }
+
+        public void TestDriveRootReplacement(MainForm mainForm)
+        {
+            RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
+            var invalidConfigFile = Path.Combine(TestFilesDirs[0].FullPath, "InvalidRootConfigurations.bcfg");
+            mainForm.DoImport(invalidConfigFile);
+            RunUI(() => { FunctionalTestUtil.CheckConfigs(3, 3, mainForm); });
+
+            RunUI(() => { mainForm.ClickConfig(0); });
+            var invalidConfigForm = ShowDialog<InvalidConfigSetupForm>(() => mainForm.ClickEdit());
+            RunUI(() =>
+            {
+                invalidConfigForm.CurrentControl.SetText(
+                    Path.Combine(TestFilesDirs[1].FullPath, "emptyTemplate.sky"));
+            });
+
+            RunDlg<AlertDlg>(() => invalidConfigForm.btnNext.PerformClick(),
+                dlg =>
+                {
+                    Assert.AreEqual(string.Format(
+                            SkylineBatch.Properties.Resources
+                                .InvalidConfigSetupForm_GetValidPath_Would_you_like_to_replace__0__with__1___,
+                            "Z:",
+                            Path.GetDirectoryName(TestFilesDirs[1].FullPath)),
+                        dlg.Message);
+                    dlg.ClickYes();
+                });
+            var editConfigForm = ShowDialog<SkylineBatchConfigForm>(() => { });
+            RunUI(() => { editConfigForm.CancelButton.PerformClick(); });
+            WaitForClosedForm(editConfigForm);
+            RunUI(() => { FunctionalTestUtil.CheckConfigs(3, 0, mainForm); });
+
+            RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
+            mainForm.DoImport(invalidConfigFile);
+            RunUI(() => { FunctionalTestUtil.CheckConfigs(3, 0, mainForm); });
         }
 
 

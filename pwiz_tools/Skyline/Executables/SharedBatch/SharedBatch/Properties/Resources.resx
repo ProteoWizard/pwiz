@@ -309,4 +309,7 @@
   <data name="ProcessRunner_StartException_Unable_to_start__0__" xml:space="preserve">
     <value>Unable to start {0}.</value>
   </data>
+  <data name="SkylineTypeControl_Type_No_existing_Skyline_type_selected__Please_select_a_Skyline_installation_that_exists_on_this_computer_" xml:space="preserve">
+    <value>No existing Skyline type selected. Please select a Skyline installation that exists on this computer.</value>
+  </data>
 </root>

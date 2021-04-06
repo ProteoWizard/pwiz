@@ -64,7 +64,7 @@ namespace SharedBatch
                     return SkylineType.SkylineDaily;
                 if (radioButtonSpecifySkylinePath.Checked)
                     return SkylineType.Custom;
-                throw new ArgumentException("No valid skyline type selected.");
+                throw new ArgumentException(Resources.SkylineTypeControl_Type_No_existing_Skyline_type_selected__Please_select_a_Skyline_installation_that_exists_on_this_computer_);
             }
         }
 

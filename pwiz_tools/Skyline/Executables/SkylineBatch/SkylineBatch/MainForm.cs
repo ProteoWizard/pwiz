@@ -751,7 +751,14 @@ namespace SkylineBatch
         public void ClickDown() => btnDownArrow_Click(new object(), new EventArgs());
         public void ClickShare() => btnExport_Click(new object(), new EventArgs());
 
+        public void ClickRun(int startStep = 0)
+        {
+            CheckDropDownOption(startStep);
+            RunBatch();
+        }
+
         public void ClickConfig(int index) => SelectConfig(index);
+        public void ConfigEnabled(int index, bool newValue) => listViewConfigs.Items[index].Checked = newValue;
 
         #endregion
     }

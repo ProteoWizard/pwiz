@@ -622,10 +622,10 @@
 
         private System.Windows.Forms.ToolTip toolTip1;
         private System.Windows.Forms.SplitContainer splitContainer1;
-        private System.Windows.Forms.Button btnSaveConfig;
+        public System.Windows.Forms.Button btnSaveConfig;
         private System.Windows.Forms.Button btnCancelConfig;
         private System.Windows.Forms.Label lblConfigRunning;
-        private System.Windows.Forms.TabControl tabsConfig;
+        public System.Windows.Forms.TabControl tabsConfig;
         private System.Windows.Forms.TabPage tabFiles;
         public System.Windows.Forms.TextBox textConfigName;
         private System.Windows.Forms.Label labelConfigName;

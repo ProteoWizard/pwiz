@@ -27,9 +27,9 @@ namespace SkylineBatchTest
             configForm.textDataPath.Text = Path.Combine(directory, "emptyData");
         }
 
-        public static void CheckConfigs(int number, int invalid, MainForm mainForm)
+        public static void CheckConfigs(int total, int invalid, MainForm mainForm)
         {
-            Assert.AreEqual(number, mainForm.ConfigCount());
+            Assert.AreEqual(total, mainForm.ConfigCount());
             Assert.AreEqual(invalid, mainForm.InvalidConfigCount());
         }
 

@@ -37,7 +37,7 @@ namespace SkylineBatchTest
             RunUI(() =>
             {
                 FunctionalTestUtil.PopulateConfigForm(newConfigForm, @"One", TestFilesDirs[0].FullPath, this);
-                newConfigForm.Save();
+                newConfigForm.btnSaveConfig.PerformClick();
             });
 
             WaitForClosedForm(newConfigForm);
@@ -51,7 +51,7 @@ namespace SkylineBatchTest
             {
                 WaitForShownForm(newConfigForm);
                 newConfigForm.textConfigName.Text = @"Two";
-                newConfigForm.Save();
+                newConfigForm.btnSaveConfig.PerformClick();
             });
             WaitForClosedForm(newConfigForm);
             Assert.AreEqual(2, mainForm.ConfigCount());
@@ -65,7 +65,7 @@ namespace SkylineBatchTest
             {
                 WaitForShownForm(newConfigForm);
                 newConfigForm.textConfigName.Text = @"Three";
-                newConfigForm.Save();
+                newConfigForm.btnSaveConfig.PerformClick();
             });
             WaitForClosedForm(newConfigForm);
             Assert.AreEqual(3, mainForm.ConfigCount());

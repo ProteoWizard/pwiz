@@ -28,7 +28,7 @@ using SkylineBatch;
 namespace SkylineBatchTest
 {
     [TestClass]
-    public class TemplateFIleDependencyTest
+    public class TemplateFileDependencyTest
     {
 
         #region ConfigList Operations

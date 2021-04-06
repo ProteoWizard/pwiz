@@ -37,7 +37,7 @@ namespace SkylineBatchTest
                 FunctionalTestUtil.PopulateConfigForm(newConfigForm, string.Empty, TestFilesDirs[0].FullPath, this);
             });
 
-            RunDlg<AlertDlg>(() => newConfigForm.Save(),
+            RunDlg<AlertDlg>(() => newConfigForm.btnSaveConfig.PerformClick(),
                 dlg =>
                 {
                     Assert.AreEqual(string.Format(SkylineBatch.Properties.Resources.SkylineBatchConfig_SkylineBatchConfig___0___is_not_a_valid_name_for_the_configuration_, string.Empty) + Environment.NewLine +
@@ -53,7 +53,7 @@ namespace SkylineBatchTest
                 newConfigForm.textTemplateFile.Text = nonexistentTemplate;
             });
 
-            RunDlg<AlertDlg>(() => newConfigForm.Save(),
+            RunDlg<AlertDlg>(() => newConfigForm.btnSaveConfig.PerformClick(),
                 dlg =>
                 {
                     Assert.AreEqual(string.Format(SkylineBatch.Properties.Resources.MainSettings_ValidateSkylineFile_The_Skyline_template_file__0__does_not_exist_, nonexistentTemplate) + Environment.NewLine +
@@ -69,7 +69,7 @@ namespace SkylineBatchTest
                 newConfigForm.textDataPath.Text = Path.Combine(TestFilesDirs[0].FullPath, "nonexistentData");
             });
 
-            RunDlg<AlertDlg>(() => newConfigForm.Save(),
+            RunDlg<AlertDlg>(() => newConfigForm.btnSaveConfig.PerformClick(),
                 dlg =>
                 {
                     Assert.AreEqual(string.Format(SkylineBatch.Properties.Resources.MainSettings_ValidateDataFolder_The_data_folder__0__does_not_exist_, nonexistentData) + Environment.NewLine +
@@ -85,7 +85,7 @@ namespace SkylineBatchTest
                 newConfigForm.textAnalysisPath.Text = nonexistentAnalysis;
             });
 
-            RunDlg<AlertDlg>(() => newConfigForm.Save(),
+            RunDlg<AlertDlg>(() => newConfigForm.btnSaveConfig.PerformClick(),
                 dlg =>
                 {
                     Assert.AreEqual(string.Format(SkylineBatch.Properties.Resources.MainSettings_ValidateAnalysisFolder_The__parent_directory_of_the_analysis_folder__0__does_not_exist_, Path.GetDirectoryName(nonexistentAnalysis)) + Environment.NewLine +
@@ -102,7 +102,7 @@ namespace SkylineBatchTest
                 newConfigForm.checkBoxRemoveDecoys.Checked = false;
             });
 
-            RunDlg<AlertDlg>(() => newConfigForm.Save(),
+            RunDlg<AlertDlg>(() => newConfigForm.btnSaveConfig.PerformClick(),
                 dlg =>
                 {
                     Assert.AreEqual(string.Format(SkylineBatch.Properties.Resources.RefineSettings_Validate_No_refine_commands_have_been_selected_, Path.GetDirectoryName(nonexistentAnalysis)) + Environment.NewLine +

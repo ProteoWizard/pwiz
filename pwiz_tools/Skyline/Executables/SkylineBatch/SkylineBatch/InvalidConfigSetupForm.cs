@@ -207,7 +207,7 @@ namespace SkylineBatch
                 matchingEndFolders++;
             }
             // the first time a path is changed, ask if user wants all path roots replaced
-            if (!_askedAboutRootReplacement && oldRoot.Length > 0 && !Directory.Exists(oldRoot) && !_configManager.RootReplacement.ContainsKey(oldRoot))
+            if (!_askedAboutRootReplacement && oldRoot.Length > 0 && !_configManager.RootReplacement.ContainsKey(oldRoot))
             {
                 var replaceRoot = AlertDlg.ShowQuestion(this, Program.AppName(), string.Format(Resources.InvalidConfigSetupForm_GetValidPath_Would_you_like_to_replace__0__with__1___, oldRoot, newRoot)) == DialogResult.Yes;
                 _askedAboutRootReplacement = true;

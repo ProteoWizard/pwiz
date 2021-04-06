@@ -42,8 +42,7 @@ namespace SkylineBatch
         private readonly Dictionary<string, string> _possibleTemplates;
         private TabPage _lastSelectedTab;
         private SkylineSettings _currentSkylineSettings;
-
-        private SkylineTypeControl _skylineTypeControl;
+        
         private string _lastEnteredPath;
 
         public SkylineBatchConfigForm(IMainUiControl mainControl, RDirectorySelector rDirectorySelector, SkylineBatchConfig config, ConfigAction action, bool isBusy, Dictionary<string, string> possibleTemplates)
@@ -77,6 +76,8 @@ namespace SkylineBatch
 
             ActiveControl = textConfigName;
         }
+
+        public SkylineTypeControl SkylineTypeControl { get; private set; }
 
         private bool ShowTemplateComboBox => _possibleTemplates.Count > 0 && !_isBusy;
 
@@ -394,17 +395,24 @@ namespace SkylineBatch
             }
 
             if (config != null)
-                _skylineTypeControl = new SkylineTypeControl(_mainControl, config.UsesSkyline, config.UsesSkylineDaily, config.UsesCustomSkylinePath, config.SkylineSettings.CmdPath);
+                SkylineTypeControl = new SkylineTypeControl(_mainControl, config.UsesSkyline, config.UsesSkylineDaily, config.UsesCustomSkylinePath, config.SkylineSettings.CmdPath);
             else
             {
                 // Default to the first existing Skyline installation (Skyline, Skyline-daily, custom path)
-                _skylineTypeControl = new SkylineTypeControl();
+                SkylineTypeControl = new SkylineTypeControl();
             }
 
-            _skylineTypeControl.Dock = DockStyle.Fill;
-            _skylineTypeControl.Show();
-            panelSkylineSettings.Controls.Add(_skylineTypeControl);
-            _currentSkylineSettings = GetSkylineSettingsFromUi();
+            SkylineTypeControl.Dock = DockStyle.Fill;
+            SkylineTypeControl.Show();
+            panelSkylineSettings.Controls.Add(SkylineTypeControl);
+            try
+            {
+                _currentSkylineSettings = GetSkylineSettingsFromUi();
+            }
+            catch (ArgumentException)
+            {
+                _currentSkylineSettings = null;
+            }
         }
 
         private void TabEnter(object sender, EventArgs e)
@@ -420,8 +428,16 @@ namespace SkylineBatch
         private void CheckIfSkylineChanged()
         {
             if (_isBusy) return; // can't change Skyline settings if config is running
-            var changedSkylineSettings = GetSkylineSettingsFromUi();
-            if (!changedSkylineSettings.Equals(_currentSkylineSettings))
+            SkylineSettings changedSkylineSettings;
+            try
+            {
+                changedSkylineSettings = GetSkylineSettingsFromUi();
+            }
+            catch (ArgumentException)
+            {
+                changedSkylineSettings = null;
+            }
+            if (changedSkylineSettings != null && !changedSkylineSettings.Equals(_currentSkylineSettings))
             {
                 _currentSkylineSettings = changedSkylineSettings;
                 _mainControl.ReplaceAllSkylineVersions(_currentSkylineSettings);
@@ -433,7 +449,7 @@ namespace SkylineBatch
             if (SkylineInstallations.HasLocalSkylineCmd)
                 return new SkylineSettings(SkylineType.Local);
             
-            return (SkylineSettings)_skylineTypeControl.GetVariable();
+            return (SkylineSettings)SkylineTypeControl.GetVariable();
         }
 
         #endregion
@@ -459,7 +475,7 @@ namespace SkylineBatch
             return new SkylineBatchConfig(name, enabled, DateTime.Now, mainSettings, fileSettings, refineSettings, reportSettings, skylineSettings);
         }
 
-        public void Save()
+        private void Save()
         {
             SkylineBatchConfig newConfig;
             try
