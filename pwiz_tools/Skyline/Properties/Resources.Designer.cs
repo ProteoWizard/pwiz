@@ -14604,15 +14604,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} {2}/{3} ({1:F2} min).
-        /// </summary>
-        public static string GraphFullScan_CreateGraph__Fragment_Title {
-            get {
-                return ResourceManager.GetString("GraphFullScan_CreateGraph__Fragment_Title", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to IM={0}.
         /// </summary>
         public static string GraphFullScan_CreateGraph_IM__0_ {

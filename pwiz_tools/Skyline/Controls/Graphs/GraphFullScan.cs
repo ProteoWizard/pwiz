@@ -23,6 +23,7 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Chemistry;
+using pwiz.Common.Collections;
 using pwiz.MSGraph;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Alerts;
@@ -85,6 +86,8 @@ namespace pwiz.Skyline.Controls.Graphs
             magnifyBtn.Checked = Settings.Default.AutoZoomFullScanGraph;
             spectrumBtn.Checked = Settings.Default.SumScansFullScan;
             filterBtn.Checked = Settings.Default.FilterIonMobilityFullScan;
+            toolStripButtonShowAnnotations.Checked = Settings.Default.ShowFullScanAnnotations;
+            _showIonSeriesAnnotations = Settings.Default.ShowFullScanAnnotations;
 
             spectrumBtn.Visible = false;
             filterBtn.Visible = false;
@@ -265,6 +268,15 @@ namespace pwiz.Skyline.Controls.Graphs
             graphControl.IsEnableVPan = graphControl.IsEnableVZoom = useHeatMap;
             GraphPane.Legend.IsVisible = useHeatMap;
 
+            if (spectrumBtn.Visible)
+                toolStripButtonShowAnnotations.Visible = (_msDataFileScanHelper.Source == ChromSource.fragment) &&
+                                                         (!spectrumBtn.Visible ||
+                                                          spectrumBtn.Visible && spectrumBtn.Checked);
+            else
+                toolStripButtonShowAnnotations.Visible = (_msDataFileScanHelper.Source == ChromSource.fragment);
+
+            _showIonSeriesAnnotations = toolStripButtonShowAnnotations.Visible && Settings.Default.ShowFullScanAnnotations;
+
             if (hasIonMobilityDimension)
             {
                 // Is there actually any drift time filtering available?
@@ -313,7 +325,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             // Add labels.
-            if (_rmis == null)
+            if (!_showIonSeriesAnnotations)
             {
                 for (int i = 0; i < _msDataFileScanHelper.ScanProvider.Transitions.Length; i++)
                 {
@@ -338,16 +350,8 @@ namespace pwiz.Skyline.Controls.Graphs
             double retentionTime = _msDataFileScanHelper.MsDataSpectra[0].RetentionTime ?? _msDataFileScanHelper.ScanProvider.Times[_msDataFileScanHelper.ScanIndex];
             var result = _documentContainer.DocumentUI.Settings.MeasuredResults.Chromatograms.FirstOrDefault(
                 chr => chr.IndexOfPath(_msDataFileScanHelper.ScanProvider.DataFilePath) >= 0);
-            if (_msDataFileScanHelper.Source == ChromSource.fragment)
-            {
-                var currentTransition = (_msDataFileScanHelper.ScanProvider
-                    .Transitions[_msDataFileScanHelper.TransitionIndex].Id as Transition);
-                var transitionPath = DocNodePath.GetNodePath(currentTransition, DocumentUI);
-                GraphPane.Title.Text = string.Format(Resources.GraphFullScan_CreateGraph__Fragment_Title, 
-                    result?.Name ?? _msDataFileScanHelper.FileName, retentionTime, transitionPath.Peptide.AuditLogText, transitionPath.Precursor.AuditLogText);
-            }
-            else
-                GraphPane.Title.Text = string.Format(Resources.GraphFullScan_CreateGraph__0_____1_F2__min_, result?.Name ?? _msDataFileScanHelper.FileName, retentionTime);
+
+            GraphPane.Title.Text = string.Format(Resources.GraphFullScan_CreateGraph__0_____1_F2__min_, _msDataFileScanHelper.FileName, retentionTime);
 
             if (Settings.Default.ShowFullScanNumber && _msDataFileScanHelper.MsDataSpectra.Any())
             {
@@ -508,24 +512,31 @@ namespace pwiz.Skyline.Controls.Graphs
                         null);
 
                     //create an map of transition indices vs. peak rank to use in the mouse click and mouse move handlers.
-                    _transitionIndex = Enumerable.Repeat(-1, Enumerable.Max(_rmis.PeaksRanked.Select(p => p.Rank)) + 1).ToArray();
-                    foreach (var rankedPeak in _rmis.PeaksRanked)
+                    if (!_rmis.PeaksRanked.IsNullOrEmpty())
                     {
-                        var transitions = _msDataFileScanHelper.ScanProvider.Transitions;
-                        var tIndex = -1;
-                        for(var j = 0; j < transitions.Length; j++)
+                        _transitionIndex = Enumerable
+                            .Repeat(-1, Enumerable.Max(_rmis.PeaksRanked.Select(p => p.Rank)) + 1).ToArray();
+                        foreach (var rankedPeak in _rmis.PeaksRanked)
                         {
-                            var t = (transitions[j].Id as Transition);
-                            if(rankedPeak.MatchedIons.Any(ion =>
-                                ion.IonType == t?.IonType && ion.Ordinal == t.Ordinal &&
-                                ion.Charge.AdductCharge == t.Charge))
+                            var transitions = _msDataFileScanHelper.ScanProvider.Transitions;
+                            var tIndex = -1;
+                            for (var j = 0; j < transitions.Length; j++)
                             {
-                                tIndex = j;
-                                break;
+                                var t = (transitions[j].Id as Transition);
+                                if (rankedPeak.MatchedIons.Any(ion =>
+                                    ion.IonType == t?.IonType && ion.Ordinal == t.Ordinal &&
+                                    ion.Charge.AdductCharge == t.Charge))
+                                {
+                                    tIndex = j;
+                                    break;
+                                }
                             }
+
+                            _transitionIndex[rankedPeak.Rank] = tIndex;
                         }
-                        _transitionIndex[rankedPeak.Rank] = tIndex;
                     }
+                    else
+                        _transitionIndex = new int[]{};
                 }
 
                 var graphItem = new SpectrumGraphItem(precursorNodePath.Peptide, precursor, transitionNode, _rmis, "")
@@ -862,11 +873,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 return;
             GraphHelper.FormatGraphPane(graphControl.GraphPane);
 
-            if (spectrumBtn.Visible)
-                toolStripButtonShowAnnotations.Visible = (_msDataFileScanHelper.Source == ChromSource.fragment) && (!spectrumBtn.Visible || spectrumBtn.Visible && spectrumBtn.Checked);
-            if (!toolStripButtonShowAnnotations.Visible)
-                toolStripButtonShowAnnotations.Checked =_showIonSeriesAnnotations = false;
-
             if (selectionChanged) CreateGraph();
 
             if (_msDataFileScanHelper.MsDataSpectra != null)
@@ -1140,14 +1146,14 @@ namespace pwiz.Skyline.Controls.Graphs
         private void toolStripButtonShowAnnotations_CheckedChanged(object sender, EventArgs e)
         {
             _showIonSeriesAnnotations = toolStripButtonShowAnnotations.Checked;
-            showIonTypesRanksToolStripMenuItem.Checked = _showIonSeriesAnnotations;
+            showIonTypesRanksToolStripMenuItem.Checked = Settings.Default.ShowFullScanAnnotations = _showIonSeriesAnnotations;
             UpdateUI();
         }
 
         private void showIonTypesRanksToolStripMenuItem_CheckedChanged(object sender, EventArgs e)
         {
             _showIonSeriesAnnotations = showIonTypesRanksToolStripMenuItem.Checked;
-            toolStripButtonShowAnnotations.Checked = _showIonSeriesAnnotations;
+            toolStripButtonShowAnnotations.Checked = Settings.Default.ShowFullScanAnnotations = _showIonSeriesAnnotations;
             UpdateUI();
         }
     }
