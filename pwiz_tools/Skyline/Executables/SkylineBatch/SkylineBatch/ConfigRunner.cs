@@ -118,7 +118,6 @@ namespace SkylineBatch
             StartTime = startTime.ToString("T");
             ChangeStatus(RunnerStatus.Running);
             Config.MainSettings.CreateAnalysisFolderIfNonexistent();
-            string commandFile = null;
             if (startStep != 5)
             {
                 var multiLine = await Config.SkylineSettings.HigherVersion(ALLOW_NEWLINE_SAVE_VERSION, _processRunner);
@@ -129,8 +128,7 @@ namespace SkylineBatch
                     WriteBatchCommandsToFile(commandWriter, startStep);
                     _batchCommandsToLog = commandWriter.LogLines;
                     // Runs steps 1-4
-                    commandFile = commandWriter.GetCommandFile();
-                    var command = string.Format("--batch-commands=\"{0}\"", commandFile);
+                    var command = string.Format("--batch-commands=\"{0}\"", commandWriter.GetCommandFile());
                     await _processRunner.Run(Config.SkylineSettings.CmdPath, command);
                     // Consider: deleting tmp command file
                 }
@@ -148,9 +146,9 @@ namespace SkylineBatch
             if (IsCanceling()) ChangeStatus(RunnerStatus.Canceled);
             var endTime = DateTime.Now;
             var delta = endTime - startTime;
-            RunTime = delta.Hours > 0 ? delta.ToString(@"hh\:mm\:ss") : delta.ToString(@"mm\:ss");
+            RunTime = delta.Hours > 0 ? delta.ToString(@"hh\:mm\:ss") : "     " + delta.ToString(@"mm\:ss");
             LogToUi(string.Format(Resources.ConfigRunner_Run_________________________________0____1_________________________________, Config.Name, GetStatus()));
-            LogToUi(string.Format(Resources.ConfigRunner_Run_________________________________0____1_________________________________, "Runtime", RunTime));
+            LogToUi(string.Format(Resources.ConfigRunner_Run_________________________________0____1_________________________________, "Runtime", RunTime.Trim()));
             _uiControl?.UpdateUiConfigurations();
         }
 
