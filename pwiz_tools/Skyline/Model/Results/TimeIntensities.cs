@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -30,10 +31,13 @@ namespace pwiz.Skyline.Model.Results
         public static readonly TimeIntensities EMPTY = new TimeIntensities(ImmutableList<float>.EMPTY, ImmutableList<float>.EMPTY, null, null);
         public TimeIntensities(IEnumerable<float> times, IEnumerable<float> intensities, IEnumerable<float> massErrors, IEnumerable<int> scanIds)
         {
-            Times = ImmutableList<float>.ValueOf(times);
+            Times = ImmutableList.ValueOf(times);
             Intensities = ImmutableList.ValueOf(intensities);
-            MassErrors = ImmutableList<float>.ValueOf(massErrors);
-            ScanIds = ImmutableList<int>.ValueOf(scanIds);
+            MassErrors = ImmutableList.ValueOf(massErrors);
+            ScanIds = ImmutableList.ValueOf(scanIds);
+            Assume.IsTrue(Times.Count == Intensities.Count);
+            Assume.IsTrue(MassErrors == null || MassErrors.Count == Times.Count);
+            Assume.IsTrue(ScanIds == null || ScanIds.Count == Times.Count);
         }
 
         public ImmutableList<float> Times { get; private set; }
@@ -57,7 +61,16 @@ namespace pwiz.Skyline.Model.Results
             return ChangeProp(ImClone(this), im => im.Intensities = ImmutableList.ValueOf(intensities));
         }
 
-        public TimeIntensities Interpolate(IList<float> timesNew, bool inferZeros)
+        private TimeIntensities ChangePoints(IList<TimeIntensityPoint> newPoints)
+        {
+            return new TimeIntensities(newPoints.Select(p => (float)p.Time),
+                newPoints.Select(p => (float)p.Intensity),
+                MassErrors == null ? null : newPoints.Select(p => (float)p.MassError),
+                ScanIds == null ? null : newPoints.Select(p => p.ScanIndex));
+        }
+
+
+        public TimeIntensities OldInterpolate(IList<float> timesNew, bool inferZeros)
         {
             if (timesNew.Count == 0)
                 return this;
@@ -205,6 +218,79 @@ namespace pwiz.Skyline.Model.Results
             }
             return new TimeIntensities(timesNew, intensNew, massErrorsNewTruncated, scanIndexesNew);
         }
+
+        /// <summary>
+        /// Returns a new TimeIntensities which uses the new set of times.
+        /// Points outside of the current time range are extrapolated using the
+        /// closest point (either the first or last point in this TimeIntensities).
+        /// When <param name="inferZeroes"/> is true, then if there are three or more
+        /// points get interpolated without having an existing point between them,
+        /// then the middle interpolated points get replace with zeroes.
+        /// </summary>
+        public TimeIntensities Interpolate(IList<float> newTimes, bool inferZeroes)
+        {
+            return ReplaceTimes(newTimes, inferZeroes, false);
+        }
+
+        /// <summary>
+        /// Returns a new TimeIntensities that uses the specified new times.
+        /// <param name="newTimes">New times to use</param>
+        /// <param name="inferZeroes">Whether within the interpolation to set points to zero if they are not next to an existing point.</param>
+        /// <param name="extrapolateZeroes">Whether points before this start time or end time should be replaced by zero.</param>
+        /// </summary>
+        public TimeIntensities ReplaceTimes(IList<float> newTimes, bool inferZeroes,
+            bool extrapolateZeroes)
+        {
+            var doubleTimes = new double[newTimes.Count];
+            for (int i = 0; i < doubleTimes.Length; i++)
+            {
+                doubleTimes[i] = newTimes[i];
+            }
+            List<TimeIntensityPoint> points = TimeIntensityPoint.AddTimes(ToPointsArray(), doubleTimes, inferZeroes, extrapolateZeroes);
+            if (points.Count >= 1)
+            {
+                List<int> indexesToRemove = IndexesOfPointsToBeRemoved(doubleTimes, points);
+                Assume.IsTrue(points.Count - indexesToRemove.Count == newTimes.Count);
+                points = TimeIntensityPoint.RemovePointsAt(points, indexesToRemove);
+            }
+            return new TimeIntensities(newTimes,
+                points.Select(p => (float)p.Intensity),
+                MassErrors == null ? null : points.Select(p => (float)p.MassError),
+                ScanIds == null ? null : points.Select(p => p.ScanIndex));
+        }
+
+        private static List<int> IndexesOfPointsToBeRemoved(double[] timesToKeep, IList<TimeIntensityPoint> points)
+        {
+            List<int> indexesToRemove = new List<int>(points.Count - timesToKeep.Length);
+            int iPoint = 0, iTime = 0;
+            while (iPoint < points.Count)
+            {
+                int compare;
+                if (iTime >= timesToKeep.Length)
+                {
+                    compare = -1;
+                }
+                else
+                {
+                    compare = points[iPoint].Time.CompareTo(timesToKeep[iTime]);
+                }
+                if (compare < 0)
+                {
+                    indexesToRemove.Add(iPoint);
+                    iPoint++;
+                }
+                else
+                {
+                    iTime++;
+                    if (compare == 0)
+                    {
+                        iPoint++;
+                    }
+                }
+            }
+            return indexesToRemove;
+        }
+
         private static float AddMassError(ICollection<float> massErrors, double massError)
         {
             if (massErrors != null)
@@ -223,7 +309,7 @@ namespace pwiz.Skyline.Model.Results
         {
             if (!Times.Equals(other.Times))
             {
-                other = other.Interpolate(Times, false);
+                other = other.ReplaceTimes(Times, false, true);
             }
             float[] newIntensities = new float[Times.Count];
             for (int i = 0; i < Times.Count; i++)
@@ -251,7 +337,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 return AddIntensities(other);
             }
-            return Interpolate(mergedTimes, false).AddIntensities(other);
+            return ReplaceTimes(mergedTimes, false, true).AddIntensities(other);
         }
 
         public TimeIntensities Truncate(double minRetentionTime, double maxRetentionTime)
@@ -277,6 +363,67 @@ namespace pwiz.Skyline.Model.Results
                 SubList(Intensities, firstIndex, lastIndex),
                 SubList(MassErrors, firstIndex, lastIndex),
                 SubList(ScanIds, firstIndex, lastIndex));
+        }
+
+        public TimeIntensityPoint GetPoint(int index)
+        {
+            return new TimeIntensityPoint(Times[index], Intensities[index],
+                MassErrors == null ? 0 : MassErrors[index],
+                ScanIds == null ? 0 : ScanIds[index]);
+        }
+
+        public List<TimeIntensityPoint> GetPointsInRange(double minTime, double maxTime)
+        {
+            var list = new List<TimeIntensityPoint>();
+            if (maxTime < minTime)
+            {
+                return list;
+            }
+
+            int index = CollectionUtil.BinarySearch(Times, (float)minTime);
+            if (index >= 0 && index < NumPoints)
+            {
+                list.Add(GetPoint(index).ChangeTime(minTime));
+                index++;
+            }
+            else
+            {
+                list.Add(GetInterpolatedPoint(minTime));
+                index = ~index;
+            }
+            while (index < NumPoints)
+            {
+                if (Times[index] > maxTime)
+                {
+                    break;
+                }
+                list.Add(GetPoint(index).ChangeTime(Math.Min(Times[index], maxTime)));
+                index++;
+            }
+            if (list[list.Count - 1].Time < maxTime)
+            {
+                list.Add(GetInterpolatedPoint(maxTime));
+            }
+            for (int i = 1; i < list.Count; i++)
+            {
+                Assume.IsTrue(list[i].Time > list[i - 1].Time);
+            }
+            return list;
+        }
+
+        public TimeIntensityPoint GetInterpolatedPoint(double time)
+        {
+            int index = CollectionUtil.BinarySearch(Times, (float)time);
+            if (index >= 0)
+            {
+                return GetPoint(index).ChangeTime(time);
+            }
+            index = ~index;
+            if (index <= 0 || index >= NumPoints)
+            {
+                return TimeIntensityPoint.Zero(time);
+            }
+            return TimeIntensityPoint.Interpolate(GetPoint(index - 1), GetPoint(index), time);
         }
 
         private static IEnumerable<T> SubList<T>(IList<T> list, int firstIndex, int lastIndex)
@@ -316,6 +463,44 @@ namespace pwiz.Skyline.Model.Results
                     iTime--;
             }
             return iTime;
+        }
+        public void Integrate(double startTime, double endTime, out double area, out double massError)
+        {
+            area = 0;
+            massError = 0;
+            if (NumPoints == 0)
+            {
+                return;
+            }
+            startTime = Math.Max(startTime, Times[0]);
+            endTime = Math.Min(endTime, Times[Times.Count - 1]);
+            if (endTime <= startTime)
+            {
+                return;
+            }
+            var points = GetPointsInRange(startTime, endTime);
+            if (points.Count == 0)
+            {
+                return;
+            }
+            var integral = TimeIntensityPoint.Integrate(startTime, endTime, points);
+            area = integral.Intensity;
+            massError = integral.MassError;
+        }
+
+        public IEnumerable<TimeIntensityPoint> ToPoints()
+        {
+            return Enumerable.Range(0, NumPoints).Select(GetPoint);
+        }
+
+        public TimeIntensityPoint[] ToPointsArray()
+        {
+            var result = new TimeIntensityPoint[NumPoints];
+            for (int i = 0; i < result.Length; i++)
+            {
+                result[i] = new TimeIntensityPoint(Times[i], Intensities[i], MassErrors == null ? 0 : MassErrors[i], ScanIds == null ? 0 : ScanIds[i]);
+            }
+            return result;
         }
     }
 }
