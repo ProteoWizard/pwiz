@@ -1311,9 +1311,6 @@
   <data name="SkylineWindow_ShowExportEspFeaturesDialog_Export_ESP_Features" xml:space="preserve">
     <value>Export ESP Features</value>
   </data>
-  <data name="StaticMod_Validate_Loss_only_modifications_may_not_be_explicit" xml:space="preserve">
-    <value>Loss-only modifications may not be explicit.</value>
-  </data>
   <data name="AddZipToolHelper_ShouldOverwrite_Error__There_is_a_conflicting_tool" xml:space="preserve">
     <value>Error: There is a conflicting tool</value>
   </data>
@@ -11326,6 +11323,21 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
   <data name="SkylineWindow_HasFileToOpen_The_path_to_the_file_to_open_is_too_long_" xml:space="preserve">
     <value>The path to the file to open is too long.</value>
   </data>
+  <data name="ChromatogramContextMenu_Collision_Cross_Section" xml:space="preserve">
+    <value>Collision Cross Section</value>
+  </data>
+  <data name="ChromatogramContextMenu_InsertIonMobilityMenuItems_Drift_Time" xml:space="preserve">
+    <value>Drift Time</value>
+  </data>
+  <data name="ChromatogramContextMenu_InsertIonMobilityMenuItems_Inverse_Ion_Mobility" xml:space="preserve">
+    <value>Inverse Ion Mobility</value>
+  </data>
+  <data name="ChromatogramContextMenu_InsertIonMobilityMenuItems_Compensation_Voltage" xml:space="preserve">
+    <value>Compensation Voltage</value>
+  </data>
+  <data name="ChromatogramContextMenu_InsertIonMobilityMenuItems_Ion_Mobility" xml:space="preserve">
+    <value>Ion Mobility</value>
+  </data>
   <data name="ShareTypeDlg_ShareTypeDlg_Current_saved_file___0__" xml:space="preserve">
     <value>Current saved file ({0})</value>
   </data>
@@ -11397,5 +11409,28 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
   </data>
   <data name="DiaUmpireDdaConverter_Run_Re_using_existing_DiaUmpire_file__with_equivalent_settings__for__0_" xml:space="preserve">
     <value>Re-using existing DIA-Umpire file (with equivalent settings) for {0}</value>
+  </data>
+  <data name="CommandArgs_WarnArgRequirementText_Use_of_the_argument__0__requires_one_of_the_following_arguments_" xml:space="preserve">
+    <value>Use of the argument {0} requires one of the following arguments:</value>
+  </data>
+  <data name="CommandLine_MinimizeResults_Minimizing_results_to__0_" xml:space="preserve">
+    <value>Minimizing results to {0}</value>
+  </data>
+  <data name="CommandLine_MinimizeResults_Removing_unused_chromatograms___" xml:space="preserve">
+    <value>Removing unused chromatograms...</value>
+  </data>
+  <data name="CommandLine_MinimizeResults_Limiting_chromatogram_noise_to______0__minutes_around_peak___" xml:space="preserve">
+    <value>Limiting chromatogram noise to +/- {0} minutes around peak...</value>
+  </data>
+  <data name="AnnotatedSpectum" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\AnnotatedSpectum.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="IonMobilityObject_ToString_CCS_" xml:space="preserve">
+    <value>CCS:</value>
+    <comment>Compact representation of "Collision Cross Section"</comment>
+  </data>
+  <data name="IonMobilityObject_ToString_HEO_" xml:space="preserve">
+    <value>HEO:</value>
+    <comment>Compact representation of "High Energy Ion Mobility Offset Offset"</comment>
   </data>
 </root>

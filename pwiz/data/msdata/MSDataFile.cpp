@@ -256,6 +256,7 @@ PWIZ_API_DECL void calculateSourceFileSHA1(SourceFile& sourceFile)
 {
     if (sourceFile.hasCVParam(MS_SHA_1)) return;
 
+
     const string uriPrefix = "file://";
     if (!bal::istarts_with(sourceFile.location, uriPrefix)) return;
     string location = sourceFile.location.substr(uriPrefix.size());
@@ -263,20 +264,25 @@ PWIZ_API_DECL void calculateSourceFileSHA1(SourceFile& sourceFile)
     bfs::path p(location);
     p /= sourceFile.name;
 
-    try
+    static map<string, string> cachedHashBySourcePath;
+    auto& sha1 = cachedHashBySourcePath[p.string()];
+    if (sha1.empty())
     {
-        bfs::file_status status = bfs::status(p);
-        if (!bfs::exists(status) || bfs::is_directory(status))
-            // TODO: log warning about source file not available
+        try
+        {
+            bfs::file_status status = bfs::status(p);
+            if (!bfs::exists(status) || bfs::is_directory(status))
+                // TODO: log warning about source file not available
+                return;
+        }
+        catch (exception&)
+        {
+            // TODO: log warning about filesystem error
             return;
-    }
-    catch (exception&)
-    {
-        // TODO: log warning about filesystem error
-        return;
-    }
+        }
 
-    string sha1 = SHA1Calculator::hashFile(p.string());
+        sha1 = SHA1Calculator::hashFile(p.string());
+    }
     sourceFile.set(MS_SHA_1, sha1); 
 }
 

@@ -312,12 +312,14 @@ namespace SkylineBatch
         public const string ADD_REPORT_OVERWRITE_COMMAND =
             "--report-add=\"{0}\" --report-conflict-resolution=overwrite";
         public const string EXPORT_REPORT_COMMAND = "--report-name=\"{0}\" --report-file=\"{1}\" --report-invariant";
+        public const string SAVE_SETTINGS_COMMAND = "--save-settings";
         public const string RUN_R_ARGUMENT = "\"{0}\" \"{1}\"";
 
         public void WriteAddExportReportCommand(CommandWriter commandWriter, string analysisFolder)
         {
             commandWriter.Write(ADD_REPORT_OVERWRITE_COMMAND, ReportPath);
             commandWriter.Write(EXPORT_REPORT_COMMAND, Name, Path.Combine(analysisFolder, Name + TextUtil.EXT_CSV));
+            commandWriter.Write(SAVE_SETTINGS_COMMAND);
             commandWriter.EndCommandGroup();
         }
 

@@ -181,6 +181,7 @@
     <Compile Include="LongWaitDlgResizeTest.cs" />
     <Compile Include="MetadataRuleTest.cs" />
     <Compile Include="ModificationPermuterTest.cs" />
+    <Compile Include="ModifyMoleculeTest.cs" />
     <Compile Include="MultiSampleImportPeakBoundariesTest.cs" />
     <Compile Include="NeutralLossModificationDisplayTest.cs" />
     <Compile Include="NoQuantitativeTransitionsTest.cs" />
@@ -188,6 +189,7 @@
     <Compile Include="PeptideSettingsTooltipTest.cs" />
     <Compile Include="ProxlTest.cs" />
     <Compile Include="QualitativeIonRatioTest.cs" />
+    <Compile Include="QuantitativePeakAreaTest.cs" />
     <Compile Include="ReimportPeakBoundariesTest.cs" />
     <Compile Include="RescoreImportDocumentTest.cs" />
     <Compile Include="RescoreRawChromatogramsTest.cs" />
@@ -356,6 +358,7 @@
     <Compile Include="ToolServiceTest.cs" />
     <Compile Include="ToolStoreDlgTest.cs" />
     <Compile Include="ToolUpdatesTest.cs" />
+    <Compile Include="TransitionResultQuantitativeTest.cs" />
     <Compile Include="TreeRestorationTest.cs" />
     <Compile Include="ReintegrateDlgTest.cs" />
     <Compile Include="AssayLibraryImportTest.cs" />
@@ -437,6 +440,7 @@
     <None Include="ConfigureToolsDlgTest.zip" />
     <None Include="CopyPasteTest.zip" />
     <None Include="CrosslinkingTest.zip" />
+    <None Include="DdaSearchTest.zip" />
     <None Include="DetectionsPlotTest.zip" />
     <None Include="DocumentGridChromatogramDataTest.zip" />
     <None Include="DocumentGridTest.zip" />
@@ -493,6 +497,7 @@
     <None Include="MidasModificationTest.zip" />
     <None Include="MidasTest.zip" />
     <None Include="ModifiedAreaProportionTest.zip" />
+    <None Include="ModifyMoleculeTest.zip" />
     <None Include="MultiSelectRetentionTimeTest.zip" />
     <None Include="NegativeIonChromatogramsTest.zip" />
     <None Include="NeutralLossLibraryTest.zip" />
@@ -510,6 +515,7 @@
     <None Include="ProteinMetadataFunctionalTest.zip" />
     <None Include="ProxlTest.zip" />
     <None Include="QualitativeIonRatioTest.zip" />
+    <None Include="QuantitativePeakAreaTest.zip" />
     <None Include="QuantitativeTest.zip" />
     <None Include="ReimportPeakBoundariesTest.zip" />
     <None Include="ReintegrateDlgTest.zip" />
@@ -548,6 +554,7 @@
     <None Include="ToolServiceTest.zip" />
     <None Include="ToolStoreDlgTest.zip" />
     <None Include="ToolUpdatesTest.zip" />
+    <None Include="TransitionResultQuantitativeTest.zip" />
     <None Include="TreeRestorationTest.zip" />
     <None Include="TriggeredAcquisitionTest.zip" />
     <None Include="UIModeTest.zip" />
