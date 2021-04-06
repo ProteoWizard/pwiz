@@ -984,6 +984,9 @@
   <data name="ProteinSequence">
     <value>Protein Sequence</value>
   </data>
+  <data name="ProteinSequenceCoverage">
+    <value>Protein Sequence Coverage</value>
+  </data>
   <data name="ProteinSpecies">
     <value>Protein Species</value>
   </data>
