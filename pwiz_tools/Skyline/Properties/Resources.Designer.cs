@@ -1416,6 +1416,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap AnnotatedSpectum {
+            get {
+                object obj = ResourceManager.GetObject("AnnotatedSpectum", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Annotation: .
         /// </summary>
         public static string Annotation_DisambiguationPrefix_Annotation__ {

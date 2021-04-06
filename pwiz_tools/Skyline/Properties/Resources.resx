@@ -11422,6 +11422,9 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
   <data name="CommandLine_MinimizeResults_Limiting_chromatogram_noise_to______0__minutes_around_peak___" xml:space="preserve">
     <value>Limiting chromatogram noise to +/- {0} minutes around peak...</value>
   </data>
+  <data name="AnnotatedSpectum" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\AnnotatedSpectum.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="IonMobilityObject_ToString_CCS_" xml:space="preserve">
     <value>CCS:</value>
     <comment>Compact representation of "Collision Cross Section"</comment>
