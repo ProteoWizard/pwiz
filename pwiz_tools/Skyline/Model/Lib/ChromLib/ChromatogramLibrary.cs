@@ -405,8 +405,8 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
                 var item = _libraryEntries.Index.ItemsMatching(key.LibraryKey, true).FirstOrDefault();
                 _libraryEntries.TryGetValue(key, out var spectrumInfo);
                 var files = LibraryDetails.DataFiles.ToList();
-                var file = spectrumInfo.SampleFileId < files.Count ?
-                    files[spectrumInfo.SampleFileId].FilePath :
+                var file = spectrumInfo.SampleFileId > 0 && spectrumInfo.SampleFileId <= files.Count ?
+                    files[spectrumInfo.SampleFileId-1].FilePath :
                     null;
                 yield return new SpectrumInfoLibrary(this, labelType, file,
                     null,  
