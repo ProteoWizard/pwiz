@@ -636,7 +636,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             {
                 double? calculatedConcentration = GetCalculatedConcentration(calibrationCurve, new CalibrationPoint(replicateIndex, null));
                 result = result.ChangeCalculatedConcentration(calculatedConcentration);
-                double? expectedConcentration = GetPeptideConcentration(replicateIndex);
+                double? expectedConcentration = GetPeptideConcentration(replicateIndex) * GetChromatogramSet(replicateIndex)?.SampleDilutionFactor;
                 result = result.ChangeAccuracy(calculatedConcentration / expectedConcentration);
                 result = result.ChangeUnits(QuantificationSettings.Units);
             }
