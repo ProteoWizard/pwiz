@@ -1873,7 +1873,7 @@ namespace pwiz.Skyline.SettingsUI
                 if (!Equals(pepInfo, _lastTipNode))
                 {
                     _lastTipNode = pepInfo;
-                    _lastTipProvider = new PeptideTipProvider(pepInfo, _matcher);
+                    _lastTipProvider = new PeptideTipProvider(pepInfo, _matcher, _selectedLibrary);
                 }
                 tipProvider = _lastTipProvider;
             }
@@ -2035,7 +2035,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public PeptideTipProvider GetTipProvider(int i)
         {
-            return new PeptideTipProvider(GetPepInfo(i), _matcher);
+            return new PeptideTipProvider(GetPepInfo(i), _matcher, _selectedLibrary);
         }
 
         private ViewLibraryPepInfo GetPepInfo(int i)
@@ -2232,8 +2232,10 @@ namespace pwiz.Skyline.SettingsUI
             private readonly List<KeyValuePair<string, string>> _smallMoleculePartsToDraw;
             private readonly SrmSettings _settings;
             private readonly double _mz;
+            private readonly IonMobilityAndCCS _ionMobility;
 
-            public PeptideTipProvider(ViewLibraryPepInfo pepInfo, LibKeyModificationMatcher matcher)
+            public PeptideTipProvider(ViewLibraryPepInfo pepInfo, LibKeyModificationMatcher matcher,
+                Library selectedLibrary)
             {
                 ExplicitMods mods;
                 TransitionGroupDocNode transitionGroup;
@@ -2250,6 +2252,7 @@ namespace pwiz.Skyline.SettingsUI
                     // Get a list of things like Name:caffeine, Formula:C8H10N4O2, InChIKey:RYYVLZVUVIJVGH-UHFFFAOYSA-N MoleculeIds: CAS:58-08-2\tKEGG:D00528
                     _smallMoleculePartsToDraw = smallMolInfo.LocalizedKeyValuePairs;
                 }
+
                 if (_pepInfo.Target != null)
                 {
                     // build mz range parts to draw
@@ -2266,6 +2269,14 @@ namespace pwiz.Skyline.SettingsUI
                     {
                         _mz = precursorKey.Mz;
                     }
+                }
+
+                // Ion mobility
+                var bestSpectrum = selectedLibrary.GetSpectra(_pepInfo.Key,
+                    IsotopeLabelType.light, LibraryRedundancy.best).FirstOrDefault();
+                if (bestSpectrum != null)
+                {
+                    _ionMobility = bestSpectrum.IonMobilityInfo;
                 }
             }
 
@@ -2298,6 +2309,23 @@ namespace pwiz.Skyline.SettingsUI
                     
                     // Draw mz
                     tableMz.AddDetailRow(Resources.PeptideTipProvider_RenderTip_Precursor_m_z, string.Format(@"{0:F04}", _mz), rt);
+
+                    // Draw ion mobility
+                    if (!IonMobilityAndCCS.IsNullOrEmpty(_ionMobility))
+                    {
+                        if (_ionMobility.HasIonMobilityValue)
+                        {
+                            var details = string.Format(@"{0:F04} {1}", _ionMobility.IonMobility.Mobility.Value,
+                                _ionMobility.IonMobility.UnitsString);
+                            tableMz.AddDetailRow(Resources.PeptideTipProvider_RenderTip_Ion_Mobility, details, rt);
+                        }
+                        if (_ionMobility.HasCollisionalCrossSection)
+                        { 
+                            var details = string.Format(@"{0:F04}", _ionMobility.CollisionalCrossSectionSqA.Value);
+                            tableMz.AddDetailRow(Resources.PeptideTipProvider_RenderTip_CCS, details, rt);
+                        }
+                    }
+
                     sizeMz = tableMz.CalcDimensions(g);
                     sizeSeq.Height += 2;    // Spacing between details and fragments
 
