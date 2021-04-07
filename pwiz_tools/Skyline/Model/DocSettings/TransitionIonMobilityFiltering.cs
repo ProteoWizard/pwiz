@@ -803,6 +803,26 @@ namespace pwiz.Skyline.Model.DocSettings
         public bool IsEmpty { get { return !HasIonMobilityValue && !HasCollisionalCrossSection; } }
         public static bool IsNullOrEmpty(IonMobilityAndCCS val) {  return val == null || val.IsEmpty; }
 
+        public void Write(Stream stream)
+        {
+            PrimitiveArrays.WriteOneValue(stream, IonMobility.Mobility ?? 0);
+            PrimitiveArrays.WriteOneValue(stream, (int)IonMobility.Units);
+            PrimitiveArrays.WriteOneValue(stream, CollisionalCrossSectionSqA ?? 0);
+            PrimitiveArrays.WriteOneValue(stream, HighEnergyIonMobilityValueOffset ?? 0);
+        }
+
+        public static IonMobilityAndCCS Read(Stream stream)
+        {
+            double ionMobility = PrimitiveArrays.ReadOneValue<double>(stream);
+            eIonMobilityUnits units = (eIonMobilityUnits)PrimitiveArrays.ReadOneValue<int>(stream);
+            double collisionalCrossSectionSqA = PrimitiveArrays.ReadOneValue<double>(stream);
+            double highEnergyOffset = PrimitiveArrays.ReadOneValue<double>(stream);
+            return ionMobility == 0 && collisionalCrossSectionSqA == 0 && highEnergyOffset == 0 ?
+                EMPTY :
+                GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(ionMobility != 0 ? ionMobility : (double?)null, units), 
+                    collisionalCrossSectionSqA > 0 ? collisionalCrossSectionSqA : (double?)null, highEnergyOffset);
+        }
+
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
