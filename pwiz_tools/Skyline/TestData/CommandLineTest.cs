@@ -117,14 +117,6 @@ namespace pwiz.SkylineTestData
 
             var outFilesDir = new TestFilesDir(TestContext, outPath);
             AssertEx.FileExists(outFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky"));
-
-            // Only .sky files are accepted with the --in argument
-            var output = RunCommand("--in=" + outPath);
-            Assert.IsTrue(output.Contains(string.Format(
-                Resources
-                    .CommandArgs_ARG_IN_The_specified_input_file__0__is_not_supported__Only_Skyline_files_with_the__1__extension_are_accepted_,
-                outPath,
-                SrmDocument.EXT)));
         }
 
         [TestMethod]
