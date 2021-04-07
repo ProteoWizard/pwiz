@@ -51,7 +51,7 @@ namespace SkylineBatchTest
         protected override void StartProgram()
         {
             Program.TestDirectory = Path.GetDirectoryName(TestFilesDirs[0].FullPath);
-            Program.Main();
+            Program.Main(new string[0]);
         }
 
         protected override void InitTestExceptions()

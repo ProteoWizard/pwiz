@@ -24,6 +24,7 @@ using System.Deployment.Application;
 using System.Drawing;
 using System.IO;
 using System.Net;
+using System.Reflection;
 using System.Threading;
 using System.Windows.Forms;
 using log4net.Config;
@@ -47,10 +48,12 @@ namespace SkylineBatch
         #endregion
 
         [STAThread]
-        public static void Main()
+        public static void Main(string[] args)
         {
             ProgramLog.Init("SkylineBatch");
             Application.EnableVisualStyles();
+
+            AddFileTypesToRegistry();
 
             if (!FunctionalTest)
             {
@@ -108,7 +111,8 @@ namespace SkylineBatch
                 if (!InitSkylineSettings()) return;
                 RInstallations.FindRDirectory();
 
-                MainWindow = new MainForm();
+                var openFile = args.Length > 0 ? args[0] : null;
+                MainWindow = new MainForm(openFile);
                 // CurrentDeployment is null if it isn't network deployed.
                 _version = ApplicationDeployment.IsNetworkDeployed
                     ? ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString()
@@ -135,6 +139,14 @@ namespace SkylineBatch
             return false;
         }
 
+        private static void AddFileTypesToRegistry()
+        {
+            var baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            var configFileIconPath = Path.Combine(baseDirectory, "SkylineBatch_configs.ico");
+            FileRegistry.AddFileType(".bcfg", "SkylineBatch.Configuration.0", @"Skyline Batch Configuration File", 
+                Assembly.GetExecutingAssembly().Location, configFileIconPath);
+        }
+        
         public static string Version()
         {
             return $"{AppName()} {_version}";

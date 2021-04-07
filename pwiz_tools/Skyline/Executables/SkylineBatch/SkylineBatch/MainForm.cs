@@ -38,7 +38,7 @@ namespace SkylineBatch
         private readonly ColumnWidthCalculator _listViewColumnWidths;
         private bool _showRefineStep;
 
-        public MainForm()
+        public MainForm(string openFile)
         {
             InitializeComponent();
             var roamingFolder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
@@ -60,6 +60,8 @@ namespace SkylineBatch
             {
                 _loaded = true;
                 _rDirectorySelector.AddIfNecassary();
+                if (!string.IsNullOrEmpty(openFile))
+                    FileOpenedImport(openFile);
             });
         }
 
@@ -462,6 +464,14 @@ namespace SkylineBatch
             DoImport(dialog.FileName);
         }
 
+        public void FileOpenedImport(string filePath)
+        {
+            var importFromFile = DialogResult.Yes == DisplayQuestion(string.Format("Do you want to import configurations from {0}?",
+                Path.GetFileName(filePath)));
+            if (importFromFile)
+                DoImport(filePath);
+        }
+
         public void DoImport(string filePath)
         {
             _configManager.Import(filePath);
@@ -481,12 +491,6 @@ namespace SkylineBatch
         #region Logging
 
         private bool _isScrolling = true;
-
-        private void btnViewLog_Click(object sender, EventArgs e)
-        {
-            comboLogList.SelectedIndex = 0;
-            tabMain.SelectTab(tabLog);
-        }
 
         private void tabLog_Enter(object sender, EventArgs e)
         {

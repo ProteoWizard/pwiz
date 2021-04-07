@@ -61,6 +61,7 @@
     <Compile Include="FilePathControl.Designer.cs">
       <DependentUpon>FilePathControl.cs</DependentUpon>
     </Compile>
+    <Compile Include="FileRegistry.cs" />
     <Compile Include="FindSkylineForm.cs">
       <SubType>Form</SubType>
     </Compile>

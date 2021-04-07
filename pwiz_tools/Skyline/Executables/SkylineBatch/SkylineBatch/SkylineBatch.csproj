@@ -29,8 +29,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>463</ApplicationRevision>
-    <ApplicationVersion>20.2.0.463</ApplicationVersion>
+    <ApplicationRevision>469</ApplicationRevision>
+    <ApplicationVersion>20.2.0.469</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -89,7 +89,6 @@
   <PropertyGroup />
   <ItemGroup>
     <None Include="Resources\downtriangle.png" />
-    <Content Include="SkylineBatchConfigFileTest.ico" />
     <Content Include="SkylineDailyRunner.exe">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -100,6 +99,9 @@
     <None Include="Resources\SkylineData.ico" />
     <None Include="Resources\SkylineDoc.ico" />
     <Content Include="SkylineBatch_release.ico">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="SkylineBatch_configs.ico">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <EmbeddedResource Include="CommandArgNames.resx">
@@ -304,14 +306,7 @@
       <Name>SharedBatch</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <FileAssociation Include=".bcfg">
-      <Visible>False</Visible>
-      <Description>Skyline Batch Configuration File</Description>
-      <Progid>SkylineBatch.Configuration.0</Progid>
-      <DefaultIcon>SkylineBatchConfigFileTest.ico</DefaultIcon>
-    </FileAssociation>
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>
