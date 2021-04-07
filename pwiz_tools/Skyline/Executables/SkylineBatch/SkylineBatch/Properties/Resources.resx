@@ -192,7 +192,6 @@
   <data name="SkylineBatchConfigForm_btnAddReport_Click_Creating_new_report_" xml:space="preserve">
     <value>Creating new report.</value>
   </data>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="ConfigManager_CheckConfigAtIndex_Please_wait_until___0___has_finished_running_" xml:space="preserve">
     <value>Please wait until "{0}" has finished running.</value>
   </data>
@@ -292,6 +291,7 @@
   <data name="RefineSettings_ValidateNumberInput__0__is_out_of_range_for_the__1__" xml:space="preserve">
     <value>{0} is out of range for the {1}.</value>
   </data>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="Delete" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Delete.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
@@ -513,12 +513,6 @@
   </data>
   <data name="SkylineBatchConfigManager_StartBatchRun_Running_the_enabled_configurations_from_step__0__would_overwrite_the_following__1__" xml:space="preserve">
     <value>Running the enabled configurations from step {0} would overwrite the following {1}:</value>
-  </data>
-  <data name="InvalidConfigSetupForm_GetValidPath_Would_you_like_to_replace__0__with__1___" xml:space="preserve">
-    <value>Would you like to replace:
-{0}
-with:
-{1}?</value>
   </data>
   <data name="SkylineBatchConfigManager_StartBatchRun_Please_reorder_the_configurations_so__0__runs_first_" xml:space="preserve">
     <value>Please reorder the configurations so {0} runs first.</value>

@@ -155,18 +155,18 @@ namespace SkylineBatch
             var templateReplaced = false;
             var replacedTemplatePath = TemplateFilePath;
             if (DependentConfigName == null)
-                templateReplaced = TextUtil.TryReplaceStart(oldRoot, newRoot, TemplateFilePath, out replacedTemplatePath);
+                templateReplaced = TextUtil.SuccessfulReplace(ValidateTemplateFile, oldRoot, newRoot, TemplateFilePath, out replacedTemplatePath);
             var analysisReplaced =
-                TextUtil.TryReplaceStart(oldRoot, newRoot, AnalysisFolderPath, out string replacedAnalysisPath);
+                TextUtil.SuccessfulReplace(ValidateAnalysisFolder, oldRoot, newRoot, AnalysisFolderPath, out string replacedAnalysisPath);
             var dataReplaced =
-                TextUtil.TryReplaceStart(oldRoot, newRoot, DataFolderPath, out string replacedDataPath);
-            // annotations replaced
-            TextUtil.TryReplaceStart(oldRoot, newRoot, AnnotationsFilePath, out string replacedAnnotationsPath);
+                TextUtil.SuccessfulReplace(ValidateDataFolder, oldRoot, newRoot, DataFolderPath, out string replacedDataPath);
+            var annotationsReplaced =
+                TextUtil.SuccessfulReplace(ValidateAnnotationsFile, oldRoot, newRoot, AnnotationsFilePath, out string replacedAnnotationsPath);
 
             pathReplacedMainSettings = new MainSettings(replacedTemplatePath, replacedAnalysisPath, replacedDataPath,
                     replacedAnnotationsPath, ReplicateNamingPattern, DependentConfigName);
 
-            return templateReplaced || analysisReplaced || dataReplaced;
+            return templateReplaced || analysisReplaced || dataReplaced || annotationsReplaced;
         }
 
         public bool RunWillOverwrite(int startStep, string configHeader, out StringBuilder message)

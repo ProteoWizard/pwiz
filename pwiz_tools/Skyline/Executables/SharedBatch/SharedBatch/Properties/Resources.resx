@@ -312,4 +312,10 @@
   <data name="SkylineTypeControl_Type_No_existing_Skyline_type_selected__Please_select_a_Skyline_installation_that_exists_on_this_computer_" xml:space="preserve">
     <value>No existing Skyline type selected. Please select a Skyline installation that exists on this computer.</value>
   </data>
+  <data name="InvalidConfigSetupForm_GetValidPath_Would_you_like_to_replace__0__with__1___" xml:space="preserve">
+    <value>Would you like to replace:
+{0}
+with:
+{1}?</value>
+  </data>
 </root>

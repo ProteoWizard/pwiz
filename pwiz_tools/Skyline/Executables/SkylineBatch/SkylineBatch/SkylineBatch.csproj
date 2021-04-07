@@ -24,12 +24,13 @@
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>false</MapFileExtensions>
     <InstallUrl>http://skyline.gs.washington.edu/software/SkylineBatch-test/</InstallUrl>
+    <SupportUrl>https://skyline.ms/support.url</SupportUrl>
     <ProductName>Skyline Batch</ProductName>
-    <PublisherName>University of Washington</PublisherName>
+    <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>462</ApplicationRevision>
-    <ApplicationVersion>20.2.0.462</ApplicationVersion>
+    <ApplicationRevision>463</ApplicationRevision>
+    <ApplicationVersion>20.2.0.463</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -88,6 +89,7 @@
   <PropertyGroup />
   <ItemGroup>
     <None Include="Resources\downtriangle.png" />
+    <Content Include="SkylineBatchConfigFileTest.ico" />
     <Content Include="SkylineDailyRunner.exe">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -301,6 +303,14 @@
       <Project>{9660e7b1-a0ad-4c2b-a395-350d4055640a}</Project>
       <Name>SharedBatch</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <FileAssociation Include=".bcfg">
+      <Visible>False</Visible>
+      <Description>Skyline Batch Configuration File</Description>
+      <Progid>SkylineBatch.Configuration.0</Progid>
+      <DefaultIcon>SkylineBatchConfigFileTest.ico</DefaultIcon>
+    </FileAssociation>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

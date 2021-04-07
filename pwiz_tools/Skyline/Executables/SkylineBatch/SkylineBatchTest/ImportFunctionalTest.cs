@@ -214,7 +214,7 @@ namespace SkylineBatchTest
                  dlg =>
                  {
                      Assert.AreEqual(string.Format(
-                             SkylineBatch.Properties.Resources
+                             SharedBatch.Properties.Resources
                                  .InvalidConfigSetupForm_GetValidPath_Would_you_like_to_replace__0__with__1___,
                              Path.GetDirectoryName(TestFilesDirs[1].FullPath) + "\\nonexistentFolder\\nonexistentFolderTwo",
                              Path.GetDirectoryName(TestFilesDirs[1].FullPath)),
@@ -250,7 +250,7 @@ namespace SkylineBatchTest
                 dlg =>
                 {
                     Assert.AreEqual(string.Format(
-                            SkylineBatch.Properties.Resources
+                            SharedBatch.Properties.Resources
                                 .InvalidConfigSetupForm_GetValidPath_Would_you_like_to_replace__0__with__1___,
                             "Z:",
                             Path.GetDirectoryName(TestFilesDirs[1].FullPath)),

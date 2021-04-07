@@ -110,7 +110,7 @@ namespace SkylineBatch
 
         public bool TryPathReplace(string oldRoot, string newRoot, out RefineSettings pathReplacedRefineSettings)
         {
-            var didReplace = TextUtil.TryReplaceStart(oldRoot, newRoot, OutputFilePath, out string replacedOutputPath);
+            var didReplace = TextUtil.SuccessfulReplace(ValidateOutputFile, oldRoot, newRoot, OutputFilePath, out string replacedOutputPath);
             pathReplacedRefineSettings =
                 new RefineSettings(CommandValues, RemoveDecoys, RemoveResults, replacedOutputPath);
             return didReplace;

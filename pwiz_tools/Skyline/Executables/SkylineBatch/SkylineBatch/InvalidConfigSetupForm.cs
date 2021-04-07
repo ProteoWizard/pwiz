@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using SharedBatch;
@@ -143,9 +141,18 @@ namespace SkylineBatch
             if (path.Equals(invalidPath))
                 return path;
             _lastInputPath = path;
-
-            GetNewRoot(invalidPath, path);
             
+            if (!_askedAboutRootReplacement)
+            {
+                var doReplacement = _configManager.AddRootReplacement(invalidPath, path, true, out string oldRoot, 
+                    out _askedAboutRootReplacement);
+                if (doReplacement)
+                {
+                    _configManager.RootReplaceConfigs(oldRoot);
+                    _invalidConfig = _configManager.GetSelectedConfig();
+                }
+            }
+
             RemoveControl(folderControl);
             return path;
         }
@@ -181,42 +188,6 @@ namespace SkylineBatch
         private void btnNext_Click(object sender, EventArgs e)
         {
             clickNextButton.TrySetResult(true);
-        }
-
-        #endregion
-        
-        #region Find Path Root
-
-        private void GetNewRoot(string oldPath, string newPath)
-        {
-            var oldPathFolders = oldPath.Split('\\');
-            var newPathFolders = newPath.Split('\\');
-            string oldRoot = string.Empty;
-            string newRoot = string.Empty;
-
-            var matchingEndFolders = 2;
-            while (matchingEndFolders <= Math.Min(oldPathFolders.Length, newPathFolders.Length))
-            {
-                // If path folders do not match we cannot replace root
-                if (!oldPathFolders[oldPathFolders.Length - matchingEndFolders]
-                    .Equals(newPathFolders[newPathFolders.Length - matchingEndFolders]))
-                    break;
-
-                oldRoot = string.Join("\\", oldPathFolders.Take(oldPathFolders.Length - matchingEndFolders).ToArray());
-                newRoot = string.Join("\\", newPathFolders.Take(newPathFolders.Length - matchingEndFolders).ToArray());
-                matchingEndFolders++;
-            }
-            // the first time a path is changed, ask if user wants all path roots replaced
-            if (!_askedAboutRootReplacement && oldRoot.Length > 0 && !_configManager.RootReplacement.ContainsKey(oldRoot))
-            {
-                var replaceRoot = AlertDlg.ShowQuestion(this, Program.AppName(), string.Format(Resources.InvalidConfigSetupForm_GetValidPath_Would_you_like_to_replace__0__with__1___, oldRoot, newRoot)) == DialogResult.Yes;
-                _askedAboutRootReplacement = true;
-                if (replaceRoot)
-                {
-                    _configManager.AddRootReplacement(oldRoot, newRoot);
-                    _invalidConfig = _configManager.GetSelectedConfig();
-                }
-            }
         }
 
         #endregion

@@ -396,6 +396,12 @@ namespace SharedBatch
                 {
                     using (var reader = XmlReader.Create(stream))
                     {
+                        while (!reader.Name.Equals("ConfigList"))
+                            reader.Read();
+                        var oldPath = reader.GetAttribute(Attr.SavedConfigsFilePath);
+                        if (!string.IsNullOrEmpty(oldPath))
+                            AddRootReplacement(oldPath, filePath, false, out _, out _);
+
                         while (!reader.Name.EndsWith("_config"))
                         {
                             if (reader.Name == "userSettings" && !reader.IsStartElement())
@@ -524,6 +530,7 @@ namespace SharedBatch
                     using (XmlWriter writer = XmlWriter.Create(streamWriter, settings))
                     {
                         writer.WriteStartElement("ConfigList");
+                        writer.WriteAttributeString(Attr.SavedConfigsFilePath, filePath);
                         foreach (int index in indiciesToSave)
                             _configList[index].WriteXml(writer);
                         writer.WriteEndElement();
@@ -532,6 +539,10 @@ namespace SharedBatch
             }
         }
 
+        enum Attr
+        {
+            SavedConfigsFilePath
+        }
 
         #endregion
         
@@ -614,10 +625,51 @@ namespace SharedBatch
             }
         }
 
-        protected List<Tuple<int, IConfig>> GetRootReplacement(string oldRoot, string newRoot)
+        #endregion
+
+        #region Root Replacement
+
+        public bool AddRootReplacement(string oldPath, string newPath, bool askAboutRootReplacement, 
+            out string oldRoot, out bool askedAboutRootReplacement)
+        {
+            var oldPathFolders = oldPath.Split('\\');
+            var newPathFolders = newPath.Split('\\');
+            oldRoot = string.Empty;
+            string newRoot = string.Empty;
+            askedAboutRootReplacement = false;
+
+            var matchingEndFolders = 2;
+            while (matchingEndFolders <= Math.Min(oldPathFolders.Length, newPathFolders.Length))
+            {
+                // If path folders do not match we cannot replace root
+                if (!oldPathFolders[oldPathFolders.Length - matchingEndFolders]
+                    .Equals(newPathFolders[newPathFolders.Length - matchingEndFolders]))
+                    break;
+
+                oldRoot = string.Join("\\", oldPathFolders.Take(oldPathFolders.Length - matchingEndFolders).ToArray());
+                newRoot = string.Join("\\", newPathFolders.Take(newPathFolders.Length - matchingEndFolders).ToArray());
+                matchingEndFolders++;
+            }
+
+            var replaceRoot = false;
+            if (oldRoot.Length > 0 && !RootReplacement.ContainsKey(oldRoot))
+            {
+                replaceRoot = true;
+                if (askAboutRootReplacement)
+                {
+                    replaceRoot = DisplayQuestion(string.Format(Resources.InvalidConfigSetupForm_GetValidPath_Would_you_like_to_replace__0__with__1___, oldRoot, newRoot)) == DialogResult.Yes;
+                    askedAboutRootReplacement = true;
+                }
+                if (replaceRoot)
+                    RootReplacement.Add(oldRoot, newRoot);
+            }
+            return replaceRoot;
+        }
+
+        protected List<Tuple<int, IConfig>> GetRootReplacedConfigs(string oldRoot)
         {
             var replacingConfigs = new List<Tuple<int, IConfig>>();
-            RootReplacement.Add(oldRoot, newRoot);
+            var newRoot = RootReplacement[oldRoot];
             lock (_lock)
             {
                 for (int i = 0; i < _configList.Count; i++)

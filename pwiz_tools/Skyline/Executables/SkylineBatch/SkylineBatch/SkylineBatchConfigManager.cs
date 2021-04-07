@@ -430,9 +430,9 @@ namespace SkylineBatch
             }
         }
 
-        public void AddRootReplacement(string oldRoot, string newRoot)
+        public void RootReplaceConfigs(string oldRoot)
         {
-            var replacingConfigs = GetRootReplacement(oldRoot, newRoot);
+            var replacingConfigs = GetRootReplacedConfigs(oldRoot);
             foreach (var indexAndConfig in replacingConfigs)
             {
                 ProgramaticallyRemoveAt(indexAndConfig.Item1);

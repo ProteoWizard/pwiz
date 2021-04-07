@@ -252,12 +252,12 @@ namespace SkylineBatch
 
         public bool TryPathReplace(string oldRoot, string newRoot, out ReportInfo pathReplacedReportInfo)
         {
-            var reportReplaced = TextUtil.TryReplaceStart(oldRoot, newRoot, ReportPath, out string replacedReportPath);
+            var reportReplaced = TextUtil.SuccessfulReplace(ValidateReportPath, oldRoot, newRoot, ReportPath, out string replacedReportPath);
             var replacedRScripts = new List<Tuple<string, string>>();
             var anyScriptReplaced = false;
             foreach (var rScriptAndVersion in RScripts)
             {
-                anyScriptReplaced = TextUtil.TryReplaceStart(oldRoot, newRoot, rScriptAndVersion.Item1, out string replacedRScript) || anyScriptReplaced;
+                anyScriptReplaced = TextUtil.SuccessfulReplace(ValidateRScriptPath, oldRoot, newRoot, rScriptAndVersion.Item1, out string replacedRScript) || anyScriptReplaced;
                 replacedRScripts.Add(new Tuple<string, string>(replacedRScript, rScriptAndVersion.Item2));
             }
             pathReplacedReportInfo = new ReportInfo(Name, replacedReportPath, replacedRScripts, UseRefineFile);

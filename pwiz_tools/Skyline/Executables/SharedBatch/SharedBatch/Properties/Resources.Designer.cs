@@ -356,6 +356,18 @@ namespace SharedBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Would you like to replace:
+        ///{0}
+        ///with:
+        ///{1}?.
+        /// </summary>
+        public static string InvalidConfigSetupForm_GetValidPath_Would_you_like_to_replace__0__with__1___ {
+            get {
+                return ResourceManager.GetString("InvalidConfigSetupForm_GetValidPath_Would_you_like_to_replace__0__with__1___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to ... Log truncated ... Full log is in {0}.
         /// </summary>
         public static string Logger_DisplayLog_____Log_truncated_____Full_log_is_in__0_ {

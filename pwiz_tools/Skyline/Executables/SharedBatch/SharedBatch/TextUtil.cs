@@ -62,16 +62,39 @@ namespace SharedBatch
         }
 
 
-
-
-
-        public static bool TryReplaceStart(string oldText, string newText, string originalString, out string replacedString)
+        public static bool SuccessfulReplace(Validator validate, string oldText, string newText, string originalString, out string replacedString)
         {
-            replacedString = originalString;
-            if (!originalString.StartsWith(oldText))
+            var oldPath = originalString;
+            var newPath = TryReplaceStart(oldText, newText, originalString);
+            replacedString = oldPath;
+
+            try
+            {
+                validate(oldPath);
                 return false;
-            replacedString = newText + originalString.Substring(oldText.Length);
+            }
+            catch (ArgumentException)
+            {
+                // Pass - expect oldPath to be invalid
+            }
+
+            replacedString = newPath;
+            try
+            {
+                validate(newPath);
+            }
+            catch (ArgumentException)
+            {
+                return false;
+            }
             return true;
+        }
+
+        private static string TryReplaceStart(string oldText, string newText, string originalString)
+        {
+            if (!originalString.StartsWith(oldText))
+                return originalString;
+            return newText + originalString.Substring(oldText.Length);
         }
 
         // Extension of Path.GetDirectoryName that handles null file paths
