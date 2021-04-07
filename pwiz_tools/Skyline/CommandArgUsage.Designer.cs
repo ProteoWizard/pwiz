@@ -133,6 +133,24 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Discard all unused chromatograms from the document..
+        /// </summary>
+        internal static string _chromatograms_discard_unused {
+            get {
+                return ResourceManager.GetString("_chromatograms_discard_unused", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Limits the length of the chromatagrams to a number of minutes around the chromatogram peak, i.e. ± minutes..
+        /// </summary>
+        internal static string _chromatograms_limit_noise {
+            get {
+                return ResourceManager.GetString("_chromatograms_limit_noise", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Add decoys to a template document for reintegrate model generation with mProphet. (decoy generation method is optional and defaults to “reverse”).
         /// </summary>
         internal static string _decoys_add {
@@ -1766,6 +1784,15 @@ namespace pwiz.Skyline {
         internal static string CommandArgs_GROUP_METHOD_Exporting_native_instrument_methods {
             get {
                 return ResourceManager.GetString("CommandArgs_GROUP_METHOD_Exporting_native_instrument_methods", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Minimizing results file size.
+        /// </summary>
+        internal static string CommandArgs_GROUP_MINIMIZE_RESULTS_Minimizing_results_file_size {
+            get {
+                return ResourceManager.GetString("CommandArgs_GROUP_MINIMIZE_RESULTS_Minimizing_results_file_size", resourceCulture);
             }
         }
         

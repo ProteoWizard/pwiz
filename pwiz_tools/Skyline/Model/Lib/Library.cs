@@ -1436,6 +1436,15 @@ namespace pwiz.Skyline.Model.Lib
                     {
                         ccs = ionMobilityFunctionsProvider.CCSFromIonMobility(ionMobility, mz, chargedPeptide.Charge);
                     }
+                    else // No mobility -> conversion provided, just return median CCS
+                    {
+                        var ccsValues = ionMobilityInfos.Where(im => im.HasCollisionalCrossSection)
+                            .Select(im => im.CollisionalCrossSectionSqA.Value).ToArray();
+                        if (ccsValues.Any())
+                        {
+                            ccs = new Statistics(ccsValues).Median(); // Median is more tolerant of errors than Average
+                        }
+                    }
                 }
             }
             if (!ionMobility.HasValue)

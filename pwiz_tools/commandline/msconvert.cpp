@@ -732,12 +732,24 @@ void stripSoftwareVersion(MSData& msd)
 class UserFeedbackIterationListener : public IterationListener
 {
     std::streamoff longestMessage;
+    std::hash<string> hasher;
+    size_t lastMessageHash;
+
+    bool updateHashIfNewMessage(const string& newMessage)
+    {
+        size_t newMessageHash = hasher(newMessage);
+        if (newMessageHash == lastMessageHash)
+            return false;
+        lastMessageHash = newMessageHash;
+        return true;
+    }
 
     public:
 
     UserFeedbackIterationListener()
     {
         longestMessage = 0;
+        lastMessageHash = 0;
     }
 
     virtual Status update(const UpdateMessage& updateMessage)
@@ -754,7 +766,7 @@ class UserFeedbackIterationListener : public IterationListener
         *os_ << updateString.str() << "\r" << flush;
 
         // spectrum and chromatogram lists both iterate; put them on different lines
-        if (updateMessage.iterationIndex+1 == updateMessage.iterationCount)
+        if (updateMessage.iterationIndex+1 == updateMessage.iterationCount && updateHashIfNewMessage(updateMessage.message))
             *os_ << endl;
         return Status_Ok;
     }
