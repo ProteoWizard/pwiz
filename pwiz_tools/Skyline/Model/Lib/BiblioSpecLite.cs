@@ -1100,7 +1100,7 @@ namespace pwiz.Skyline.Model.Lib
                         int numPeaks = PrimitiveArrays.ReadOneValue<int>(stream);
                         int id = PrimitiveArrays.ReadOneValue<int>(stream);
                         int proteinLength = PrimitiveArrays.ReadOneValue<int>(stream);
-                        string proteinOrMoleculeList = ReadString(stream, proteinLength);
+                        var proteinOrMoleculeList = proteinLength == 0 ? null : ReadString(stream, proteinLength);
 
                         var scoreTypeId = PrimitiveArrays.ReadOneValue<int>(stream);
                         var score = (double?) PrimitiveArrays.ReadOneValue<double>(stream);
@@ -2470,6 +2470,8 @@ namespace pwiz.Skyline.Model.Lib
             _ionMobilityById = ImmutableSortedList.FromValues(timesById);
         }
 
+        public bool IsEmpty => _ionMobilityById == null || _ionMobilityById.Count == 0;
+
         public IonMobilityAndCCS[] AllValuesSorted
         {
             get
@@ -2506,10 +2508,7 @@ namespace pwiz.Skyline.Model.Lib
                 PrimitiveArrays.WriteOneValue(stream, idTimesPair.Value.Length);
                 foreach (var driftTimeInfo in idTimesPair.Value)
                 {
-                    PrimitiveArrays.WriteOneValue(stream, driftTimeInfo.IonMobility.Mobility ?? 0);
-                    PrimitiveArrays.WriteOneValue(stream, (int)driftTimeInfo.IonMobility.Units);
-                    PrimitiveArrays.WriteOneValue(stream, driftTimeInfo.CollisionalCrossSectionSqA ?? 0);
-                    PrimitiveArrays.WriteOneValue(stream, driftTimeInfo.HighEnergyIonMobilityValueOffset ?? 0);
+                    driftTimeInfo.Write(stream);
                 }
             }
         }
@@ -2529,13 +2528,7 @@ namespace pwiz.Skyline.Model.Lib
                 var driftTimes = new List<IonMobilityAndCCS>();
                 for (int j = 0; j < driftTimeCount; j++)
                 {
-                    double ionMobility = PrimitiveArrays.ReadOneValue<double>(stream);
-                    eIonMobilityUnits units = (eIonMobilityUnits)PrimitiveArrays.ReadOneValue<int>(stream);
-                    double collisionalCrossSectionSqA = PrimitiveArrays.ReadOneValue<double>(stream);
-                    double highEnergyOffset = PrimitiveArrays.ReadOneValue<double>(stream);
-                    var ionMobilityInfo = ionMobility == 0 && collisionalCrossSectionSqA == 0 && highEnergyOffset == 0 ?
-                        IonMobilityAndCCS.EMPTY : 
-                         IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(ionMobility != 0 ? ionMobility : (double?)null, units) , collisionalCrossSectionSqA > 0 ?  collisionalCrossSectionSqA :(double?) null, highEnergyOffset);
+                    var ionMobilityInfo = IonMobilityAndCCS.Read(stream);
                     driftTimes.Add(ionMobilityInfo);
                 }
                 keyValuePairs[i] = new KeyValuePair<int, IonMobilityAndCCS[]>(id, driftTimes.ToArray());

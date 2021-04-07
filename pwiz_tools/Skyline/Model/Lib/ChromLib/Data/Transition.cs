@@ -26,7 +26,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib.Data
         public virtual Precursor Precursor { get; set; }
         public virtual double Mz { get; set; }
         public virtual int Charge { get; set; }
-        public virtual Adduct GetAdduct() {  return Adduct.FromChargeProtonated(Charge);}
+        public virtual Adduct GetAdduct() {  return Adduct.FromChargeProtonated(Charge); }  // N.B. see Format1Dot3.GetAdduct() override for newer format versions
         public virtual double NeutralMass { get; set; }
         public virtual double NeutralLossMass { get; set; }
         public virtual string FragmentType { get; set; }

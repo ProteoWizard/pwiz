@@ -421,6 +421,7 @@
     <None Include="AccessServerTest.zip" />
     <None Include="AddAllPeptidesWithModificationsTest.zip" />
     <None Include="AddLibraryTest.zip" />
+    <None Include="AddMixedLibraryTest.zip" />
     <None Include="AnnotationTest.zip" />
     <None Include="AreaCVHistogramTest.zip" />
     <None Include="AssayLibraryImportTest.zip" />

@@ -22,6 +22,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using JetBrains.Annotations;
+using pwiz.Common.Chemistry;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -41,6 +43,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib.Data
         public virtual string IsotopeLabel { get; set; }
         public virtual double Mz { get; set; }
         public virtual int Charge { get; set; }
+        public virtual int SampleFileId { get; set; }
         public virtual Adduct GetAdduct() { return Adduct.FromChargeProtonated(Charge); }
         public virtual double NeutralMass { get; set; }
         public virtual string ModifiedSequence { get; set; }  // CONSIDER: bspratt/nicksh More appropriately called TextId?
@@ -152,6 +155,30 @@ namespace pwiz.Skyline.Model.Lib.ChromLib.Data
             public virtual double IonMobilityFragment { get; set; }
             public virtual double IonMobilityWindow { get; set; }
             public virtual string IonMobilityType { get; set; }
+
+            public virtual IonMobilityAndCCS GetIonMobilityAndCCS()
+            {
+                // Favor any explicit values, since those are what would have been used in chromatogram extraction
+                var units = Helpers.ParseEnum(ExplicitIonMobility != 0 ? ExplicitIonMobilityUnits : IonMobilityType, eIonMobilityUnits.none);
+                var ionMobility = ExplicitIonMobility != 0 ? ExplicitIonMobility : IonMobilityMS1;
+                if (units == eIonMobilityUnits.compensation_V && ExplicitCompensationVoltage != 0)
+                {
+                    ionMobility = ExplicitCompensationVoltage;
+                }
+                if (ionMobility == 0)
+                {
+                    return IonMobilityAndCCS.EMPTY;
+                }
+                var ionMobilityMS2 = ExplicitIonMobility != 0 ? ExplicitIonMobility : 
+                    IonMobilityFragment != 0 ? IonMobilityFragment : ionMobility;
+                double? ccs = ExplicitCcsSqa != 0 ? ExplicitCcsSqa : CCS;
+                if (ccs == 0)
+                {
+                    ccs = null;
+                }
+                double? highEnergyOffset = ionMobilityMS2 - ionMobility;
+                return IonMobilityAndCCS.GetIonMobilityAndCCS(ionMobility, units, ccs, highEnergyOffset);
+            }
         }
     }
 }

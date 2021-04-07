@@ -860,7 +860,7 @@ namespace pwiz.Skyline.Properties
             // Null return is valid for this list, and means no retention time
             // calculation should be applied.
             RetentionTimeRegression regression = null;
-            if (name != null && RetentionTimeList.TryGetValue(name, out regression))
+            if (!string.IsNullOrEmpty(name) && RetentionTimeList.TryGetValue(name, out regression))
             {
                 if (regression.GetKey() == RetentionTimeList.GetDefault().GetKey())
                     regression = null;

@@ -123,9 +123,6 @@ namespace pwiz.Skyline.Model.Lib
             }
         }
 
-        public override string Protein => null; // Only .blib provides protein accessions / molecule list names
-
-
         #region Implementation of IXmlSerializable
 
         /// <summary>

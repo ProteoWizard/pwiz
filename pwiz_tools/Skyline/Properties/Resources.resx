@@ -11398,4 +11398,11 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
   <data name="DiaUmpireDdaConverter_Run_Re_using_existing_DiaUmpire_file__with_equivalent_settings__for__0_" xml:space="preserve">
     <value>Re-using existing DIA-Umpire file (with equivalent settings) for {0}</value>
   </data>
+  <data name="PeptideTipProvider_RenderTip_Ion_Mobility" xml:space="preserve">
+    <value>Ion Mobility</value>
+  </data>
+  <data name="PeptideTipProvider_RenderTip_CCS" xml:space="preserve">
+    <value>CCS</value>
+    <comment>compact form of Collision Cross Section</comment>
+  </data>
 </root>

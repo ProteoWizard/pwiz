@@ -1698,8 +1698,7 @@ namespace pwiz.Skyline.Model.Lib
         }
 
         public abstract IEnumerable<KeyValuePair<PeptideRankId, string>> RankValues { get; }
-        public abstract string Protein { get; } // Some .blib files provide a protein accession (or Molecule List Name for small molecules)
-
+        public string Protein { get; protected set; } // Some .blib and .clib files provide a protein accession (or Molecule List Name for small molecules)
 
         #region Implementation of IXmlSerializable
 
@@ -1712,7 +1711,8 @@ namespace pwiz.Skyline.Model.Lib
 
         private enum ATTR
         {
-            library_name
+            library_name,
+            protein
         }
 
         public XmlSchema GetSchema()
@@ -1724,12 +1724,14 @@ namespace pwiz.Skyline.Model.Lib
         {
             // Read tag attributes
             LibraryName = reader.GetAttribute(ATTR.library_name);
+            Protein = reader.GetAttribute(ATTR.protein);
         }
 
         public virtual void WriteXml(XmlWriter writer)
         {
             // Write tag attributes
             writer.WriteAttributeString(ATTR.library_name, LibraryName);
+            writer.WriteAttributeIfString(ATTR.protein, Protein);
         }
 
         #endregion
@@ -1740,7 +1742,8 @@ namespace pwiz.Skyline.Model.Lib
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return Equals(obj.LibraryName, LibraryName);
+            return Equals(obj.LibraryName, LibraryName) &&
+                   Equals(obj.Protein, Protein);
         }
 
         public override bool Equals(object obj)

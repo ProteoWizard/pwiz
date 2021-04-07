@@ -26,7 +26,7 @@
     <property name="Label2H" />
     <property name="UnimodId" />
   </class>
-  <class name="Peptide">
+  <class name="Peptide" polymorphism="explicit">
     <id name="Id">
       <generator class="native"/>
     </id>
@@ -85,6 +85,7 @@
     <property name="NumPoints" />
     <property name="AverageMassErrorPPM"/>
     <property name="Chromatogram" />
+    <property name="SampleFileId" />
     <many-to-one class="SampleFile" name="SampleFile" column="SampleFileId"/>
     <bag name="Transitions">
       <key column="PrecursorId"/>
@@ -92,7 +93,7 @@
     </bag>
   </class>
   <!-- Schema format 1.2 added "ChromatogramFormat" and "UncompressedSize" to Precursor table-->
-  <class name="Precursor+Format1Dot2" table="Precursor">
+  <class name="Precursor+Format1Dot2" polymorphism="explicit" table="Precursor">
     <id name="Id">
       <generator class="native"/>
     </id>
@@ -155,7 +156,7 @@
       <one-to-many class="Transition"/>
     </bag>
   </class>
-  <class name="Transition">
+  <class name="Transition" polymorphism="explicit">
     <id name="Id">
       <generator class="native"/>
     </id>

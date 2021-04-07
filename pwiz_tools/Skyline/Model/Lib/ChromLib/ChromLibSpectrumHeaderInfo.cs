@@ -29,7 +29,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
         public ChromLibSpectrumHeaderInfo(string libraryName, double peakArea, string proteinName) : base(libraryName)
         {
             PeakArea = peakArea;
-            _protein = proteinName;
+            Protein = proteinName;
         }
 
         public double PeakArea { get; private set; }
@@ -55,10 +55,6 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
                     };
             }
         }
-
-        public override string Protein => _protein; // Some .clib files provide a protein accession (or Molecule List Name for small molecules)
-
-        private string _protein; // Using a backing variable so that we can set Protein (which abstract parent class declares readonly) in XML deserialization.
 
         #region Implementation of IXmlSerializable
 
