@@ -849,9 +849,8 @@ namespace pwiz.SkylineTestData
             string rawPath = testFilesDir.GetTestPath("ah_20101011y_BSA_MS-MS_only_5-2" +
                 ExtensionTestContext.ExtThermoRaw);
 
-
             //Error: file does not exist
-            string output = RunCommand("--in=" + bogusPath);
+            var output = RunCommand("--in=" + bogusPath);
             Assert.IsTrue(output.Contains(string.Format(Resources.CommandLine_OpenSkyFile_Error__The_Skyline_file__0__does_not_exist_, bogusPath)));
 
             //Error: no raw file
