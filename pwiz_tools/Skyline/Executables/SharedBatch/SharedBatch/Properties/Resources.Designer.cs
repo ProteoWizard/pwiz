@@ -347,11 +347,29 @@ namespace SharedBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to root folder.
+        /// </summary>
+        public static string FileOpenedForm_FileOpenedForm_root_folder {
+            get {
+                return ResourceManager.GetString("FileOpenedForm_FileOpenedForm_root_folder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Please enter an existing directory..
         /// </summary>
         public static string FileOpenedForm_RootFolderValidator_Please_enter_an_existing_directory_ {
             get {
                 return ResourceManager.GetString("FileOpenedForm_RootFolderValidator_Please_enter_an_existing_directory_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to root folder.
+        /// </summary>
+        public static string FileOpenedForm_RootFolderValidator_root_folder {
+            get {
+                return ResourceManager.GetString("FileOpenedForm_RootFolderValidator_root_folder", resourceCulture);
             }
         }
         

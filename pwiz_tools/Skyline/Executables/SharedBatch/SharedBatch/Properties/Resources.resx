@@ -330,4 +330,10 @@ with:
   <data name="FileOpenedForm_FileOpenedForm_Please_specify_a_root_folder_for_the_configurations_" xml:space="preserve">
     <value>Please specify a root folder for the configurations:</value>
   </data>
+  <data name="FileOpenedForm_FileOpenedForm_root_folder" xml:space="preserve">
+    <value>root folder</value>
+  </data>
+  <data name="FileOpenedForm_RootFolderValidator_root_folder" xml:space="preserve">
+    <value>root folder</value>
+  </data>
 </root>

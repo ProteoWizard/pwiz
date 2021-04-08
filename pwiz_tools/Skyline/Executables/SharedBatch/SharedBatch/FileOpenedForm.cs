@@ -19,7 +19,7 @@ namespace SharedBatch
             
             Icon = icon;
             _mainControl = mainControl;
-            _filePathControl = new FilePathControl("root folder", string.Empty, string.Empty, RootFolderValidator, PathDialogOptions.Folder);
+            _filePathControl = new FilePathControl(Resources.FileOpenedForm_FileOpenedForm_root_folder, FileUtil.GetInitialDirectory(filePath), string.Empty, RootFolderValidator, PathDialogOptions.Folder);
             _filePathControl.label1.Text = string.Format(Resources.FileOpenedForm_FileOpenedForm_Preparing_to_import_configurations_from__0_, Path.GetFileName(filePath));
             _filePathControl.label2.Text = Resources.FileOpenedForm_FileOpenedForm_Please_specify_a_root_folder_for_the_configurations_;
             _filePathControl.Dock = DockStyle.Fill;
@@ -46,6 +46,7 @@ namespace SharedBatch
                     throw new ArgumentException(string.Format(Resources.FileOpenedForm_RootFolderValidator_The_directory__0__does_not_exist_, path) + Environment.NewLine +
                                                 Resources.FileOpenedForm_RootFolderValidator_Please_enter_an_existing_directory_);
             }
+            FileUtil.ValidateNotInDownloads(path, Resources.FileOpenedForm_RootFolderValidator_root_folder);
         }
 
         private void btnOK_Click(object sender, EventArgs e)
