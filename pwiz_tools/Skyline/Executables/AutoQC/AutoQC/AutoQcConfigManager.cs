@@ -46,68 +46,21 @@ namespace AutoQC
 
             Init();
         }
-        
-
-        public enum SortColumn
-        {
-            Name,
-            User,
-            Created,
-            RunnerStatus
-        }
 
         private new void LoadConfigList()
         {
-            base.LoadConfigList();
-            foreach (var config in _configList)
+            var configs = base.LoadConfigList();
+            foreach (var iconfig in configs)
             {
-                var autoQcConfig = (AutoQcConfig)config;
-                if (autoQcConfig.IsEnabled && !Settings.Default.KeepAutoQcRunning)
+                var config = (AutoQcConfig)iconfig;
+                if (config.IsEnabled && !Settings.Default.KeepAutoQcRunning)
                 {
                     // If the config was running last time AutoQC Loader was running (and properties saved), but we are not 
                     // automatically starting configs on startup, change its IsEnabled state
-                    autoQcConfig.IsEnabled = false;
+                    config.IsEnabled = false;
                 }
-                AddConfigLoggerAndRunner(config);
+                ProgramaticallyAddConfig(iconfig);
             }
-        }
-
-
-        private void AddConfigLoggerAndRunner(IConfig iConfig)
-        {
-            var config = (AutoQcConfig) iConfig;
-            if (_configRunners.ContainsKey(config.Name))
-                throw new Exception("Config runner already exists.");
-
-            var directory = Path.GetDirectoryName(config.MainSettings.SkylineFilePath);
-            if (directory == null) throw new Exception("Cannot have a null Skyline file directory.");
-            var logFile = Path.Combine(directory, TextUtil.GetSafeName(config.GetName()), "AutoQC.log");
-
-            var logger = new Logger(logFile, config.Name, _uiControl);
-            _logList.Add(logger);
-            var runner = new ConfigRunner(config, logger, _uiControl);
-            _configRunners.Add(config.Name, runner);
-        }
-
-        private void AddConfigLoggerAndRunner(List<IConfig> configs)
-        {
-            foreach(var config in configs)
-                AddConfigLoggerAndRunner(config);
-        }
-
-        private void RemoveConfigLoggerAndRunner(AutoQcConfig config)
-        {
-            if (!_configRunners.ContainsKey(config.Name))
-                throw new Exception("Config runner does not exist.");
-            int i = 0;
-            while (i < _logList.Count)
-            {
-                if (_logList[i].Name.Equals(config.Name)) break;
-                i++;
-            }
-            _logList.RemoveAt(i);
-            if (SelectedLog == _logList.Count) SelectLog(_logList.Count - 1);
-            _configRunners.Remove(config.Name);
         }
 
         public void ChangeKeepRunningState(bool enable)
@@ -122,23 +75,72 @@ namespace AutoQC
             }
         }
 
-        #region Configs
-
-        public new AutoQcConfig GetSelectedConfig()
+        public void ReplaceSelectedConfig(IConfig newConfig)
         {
-            return (AutoQcConfig)base.GetSelectedConfig();
+            var index = SelectedConfig;
+            var config = GetSelectedConfig();
+            ProgramaticallyRemoveAt(index);
+            try
+            {
+                UserInsertConfig(newConfig, index);
+            }
+            catch (ArgumentException)
+            {
+                UserInsertConfig(config, index);
+                throw;
+            }
         }
 
-        public List<ListViewItem> ConfigsListViewItems()
+        #region Add Configs
+
+        public void UserAddConfig(IConfig iconfig) => UserInsertConfig(iconfig, _configList.Count);
+
+        public new void UserInsertConfig(IConfig iconfig, int index)
         {
-            return ConfigsListViewItems(_configRunners);
+            base.UserInsertConfig(iconfig, index);
+            AddConfig(iconfig);
+            SelectConfig(index);
         }
 
-        public new void RemoveSelected()
+        private void ProgramaticallyAddConfig(IConfig iconfig) => ProgramaticallyInsertConfig(iconfig, _configList.Count);
+
+        private new void ProgramaticallyInsertConfig(IConfig iconfig, int index)
+        {
+            base.ProgramaticallyInsertConfig(iconfig, index);
+            AddConfig(iconfig);
+        }
+
+        private void AddConfig(IConfig iconfig)
+        {
+            var config = (AutoQcConfig)iconfig;
+            if (_configRunners.ContainsKey(config.Name))
+                throw new Exception("Config runner already exists.");
+
+            var directory = Path.GetDirectoryName(config.MainSettings.SkylineFilePath);
+            if (directory == null) throw new Exception("Cannot have a null Skyline file directory.");
+            var logFile = Path.Combine(directory, TextUtil.GetSafeName(config.GetName()), "AutoQC.log");
+
+            var logger = new Logger(logFile, config.Name, _uiControl);
+            _logList.Add(logger);
+            var runner = new ConfigRunner(config, logger, _uiControl);
+            _configRunners.Add(config.Name, runner);
+        }
+
+        #endregion
+
+        #region Remove Configs
+
+        public void UserRemoveSelected()
+        {
+            AssertConfigSelected();
+            UserRemoveAt(SelectedConfig);
+        }
+
+        public new void UserRemoveAt(int index)
         {
             lock (_lock)
             {
-                var configRunner = GetSelectedConfigRunner();
+                var configRunner = (ConfigRunner)_configRunners[_configList[index].GetName()];
                 if (configRunner.IsBusy())
                 {
                     string message = null;
@@ -160,29 +162,74 @@ namespace AutoQC
                     return;
                 }
                 // remove config
-                if (base.RemoveSelected()) RemoveConfigLoggerAndRunner(configRunner.Config);
+                base.UserRemoveAt(index);
+                RemoveConfig(configRunner.Config);
             }
         }
-
-        public void AddConfiguration(IConfig config)
+        
+        private new void ProgramaticallyRemoveAt(int index)
         {
-            InsertConfiguration(config, _configList.Count);
-            AddConfigLoggerAndRunner(config);
-            SelectConfig(GetConfigIndex(config.GetName()));
+            var config = _configList[index];
+            base.ProgramaticallyRemoveAt(index);
+            RemoveConfig(config);
         }
 
-        public new void ReplaceSelectedConfig(IConfig newConfig)
+        private void RemoveConfig(IConfig iconfig)
         {
-            var oldConfig = GetSelectedConfig();
-            base.ReplaceSelectedConfig(newConfig);
-            RemoveConfigLoggerAndRunner(oldConfig);
-            AddConfigLoggerAndRunner(newConfig);
+            var config = (AutoQcConfig) iconfig;
+            if (!_configRunners.ContainsKey(config.Name))
+                throw new Exception("Config runner does not exist.");
+            int i = 0;
+            while (i < _logList.Count)
+            {
+                if (_logList[i].Name.Equals(config.Name)) break;
+                i++;
+            }
+            _logList.RemoveAt(i);
+            if (SelectedLog == _logList.Count) SelectLog(_logList.Count - 1);
+            _configRunners.Remove(config.Name);
         }
 
         #endregion
+        
+        #region Configs
 
+        public new AutoQcConfig GetSelectedConfig()
+        {
+            return (AutoQcConfig)base.GetSelectedConfig();
+        }
 
+        public List<ListViewItem> ConfigsListViewItems()
+        {
+            return ConfigsListViewItems(_configRunners);
+        }
+
+        public void ReplaceSkylineSettings(SkylineSettings skylineSettings)
+        {
+            var runningConfigs = ConfigsRunning();
+            var replacedConfigs = GetReplacedSkylineSettings(skylineSettings, runningConfigs);
+            foreach (var indexAndConfig in replacedConfigs)
+            {
+                ProgramaticallyRemoveAt(indexAndConfig.Item1);
+                ProgramaticallyInsertConfig(indexAndConfig.Item2, indexAndConfig.Item1);
+            }
+            if (runningConfigs.Count > 0)
+                throw new ArgumentException(Resources.AutoQcConfigManager_ReplaceSkylineSettings_The_following_configurations_are_running_and_could_not_be_updated_
+                                            + Environment.NewLine +
+                                            TextUtil.LineSeparate(runningConfigs));
+        }
+
+        #endregion
+        
         #region Sort configs
+
+        public enum SortColumn
+        {
+            Name,
+            User,
+            Created,
+            RunnerStatus
+        }
 
         public void SortByValue(int columnIndex)
         {
@@ -286,7 +333,6 @@ namespace AutoQC
 
         #endregion
         
-
         #region Run Configs
 
         public ConfigRunner GetSelectedConfigRunner()
@@ -379,9 +425,19 @@ namespace AutoQC
             }
         }
 
+        public List<string> ConfigsRunning()
+        {
+            var runningConfigs = new List<string>();
+            foreach (var configRunner in _configRunners.Values)
+            {
+                if (configRunner.IsBusy())
+                    runningConfigs.Add(configRunner.GetConfigName());
+            }
+            return runningConfigs;
+        }
+
         #endregion
-
-
+        
         #region Logging
 
         public void SelectLog(int selected)
@@ -417,16 +473,15 @@ namespace AutoQC
             return -1;
         }
 
-
         #endregion
-
 
         #region Import/Export
 
         public void Import(string filePath)
         {
             var addedConfigs = ImportFrom(filePath);
-            AddConfigLoggerAndRunner(addedConfigs);
+            foreach (var config in addedConfigs)
+                ProgramaticallyAddConfig(config);
         }
 
         #endregion

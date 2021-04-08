@@ -89,8 +89,8 @@ namespace pwiz.SkylineTest
                 Level.Error, // Any failure is treated as an error, and overall test fails
                 NonLocalizedFiles(), // Ignore violations in files or directories we don't localize
                 string.Empty, // No file content required for inspection
-                @"System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager", // Required pattern
-                false, // Pattern is not a regular expression
+                @".*(new global::System.Resources.ResourceManager|System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager).*", // Required pattern
+                true, // Pattern is a regular expression
                 @"ensures that every dialog is localizable"); // Explanation for requirement, appears in report
 
             // Looking for non-standard scaling in form designer

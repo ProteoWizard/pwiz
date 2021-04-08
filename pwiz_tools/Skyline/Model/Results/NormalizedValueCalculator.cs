@@ -73,10 +73,6 @@ namespace pwiz.Skyline.Model.Results
 
         public double? GetTransitionValue(NormalizationMethod normalizationMethod, PeptideDocNode peptideDocNode, TransitionGroupDocNode transitionGroupDocNode, TransitionDocNode transitionDocNode, TransitionChromInfo transitionChromInfo)
         {
-            if (!transitionDocNode.IsQuantitative(Document.Settings))
-            {
-                return null;
-            }
             if (transitionChromInfo == null || transitionChromInfo.IsEmpty)
             {
                 return null;
@@ -90,6 +86,10 @@ namespace pwiz.Skyline.Model.Results
 
             if (normalizationMethod is NormalizationMethod.RatioToLabel ratioToLabel)
             {
+                if (!transitionDocNode.IsQuantitative(Document.Settings))
+                {
+                    return null;
+                }
                 if (ratioToLabel.IsotopeLabelTypeName == transitionGroupDocNode.LabelType.Name)
                 {
                     return null;

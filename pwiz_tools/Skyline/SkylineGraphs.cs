@@ -707,6 +707,8 @@ namespace pwiz.Skyline
             
             if (_graphSpectrum != null && _graphSpectrum.Visible)
                 listUpdateGraphs.Add(_graphSpectrum);
+            if (_graphFullScan != null && _graphFullScan.Visible)
+                listUpdateGraphs.Add(_graphFullScan);
             listUpdateGraphs.AddRange(_listGraphRetentionTime.Where(g => g.Visible));
             listUpdateGraphs.AddRange(_listGraphPeakArea.Where(g => g.Visible));
             listUpdateGraphs.AddRange(_listGraphMassError.Where(g => g.Visible));
@@ -2124,6 +2126,34 @@ namespace pwiz.Skyline
         {
             Settings.Default.ShowQuantitativeOnly = showOnlyQuantitative;
             UpdateGraphPanes();
+        }
+
+        public bool ShowIonMobility
+        {
+            get { return Settings.Default.ShowIonMobility; }
+            set
+            {
+                if (value == Settings.Default.ShowIonMobility)
+                {
+                    return;
+                }
+                Settings.Default.ShowIonMobility = value;
+                UpdateGraphPanes();
+            }
+        }
+
+        public bool ShowCollisionCrossSection
+        {
+            get { return Settings.Default.ShowCollisionCrossSection; }
+            set
+            {
+                if (value == Settings.Default.ShowCollisionCrossSection)
+                {
+                    return;
+                }
+                Settings.Default.ShowCollisionCrossSection = value;
+                UpdateGraphPanes();
+            }
         }
 
         /// <summary>

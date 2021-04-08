@@ -213,7 +213,6 @@ namespace TestPerf
         [Timeout(int.MaxValue)] // These can take a long time
         public void TestDiaQeDiaUmpireTutorial()
         {
-            RunPerfTests = true;
             _analysisValues = new AnalysisValues
             {
                 KeepPrecursors = false,

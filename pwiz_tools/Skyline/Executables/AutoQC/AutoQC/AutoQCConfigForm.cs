@@ -35,6 +35,8 @@ namespace AutoQC
 
         private SkylineTypeControl _skylineTypeControl;
         private string _lastEnteredPath;
+        private TabPage _lastSelectedTab;
+        private SkylineSettings _currentSkylineSettings;
 
         public AutoQcConfigForm(IMainUiControl mainControl, AutoQcConfig config, ConfigAction action, bool isBusy)
         {
@@ -237,13 +239,34 @@ namespace AutoQC
         private void InitSkylineTab(AutoQcConfig config)
         {
             if (config != null)
-                _skylineTypeControl = new SkylineTypeControl(config.UsesSkyline, config.UsesSkylineDaily, config.UsesCustomSkylinePath, config.SkylineSettings.CmdPath);
+                _skylineTypeControl = new SkylineTypeControl(_mainControl, config.UsesSkyline, config.UsesSkylineDaily, config.UsesCustomSkylinePath, config.SkylineSettings.CmdPath);
             else
                 _skylineTypeControl = new SkylineTypeControl();
 
             _skylineTypeControl.Dock = DockStyle.Fill;
             _skylineTypeControl.Show();
             panelSkylineSettings.Controls.Add(_skylineTypeControl);
+            _currentSkylineSettings = GetSkylineSettingsFromUi();
+        }
+
+        private void TabEnter(object sender, EventArgs e)
+        {
+            // Ask if the user wants to update all SkylineSettings if they are leaving the Skyline tab
+            // after changing settings
+            var selectingTab = tabControl.SelectedTab;
+            if (tabSkylineSettings.Equals(_lastSelectedTab) && !tabSkylineSettings.Equals(selectingTab))
+                CheckIfSkylineChanged();
+            _lastSelectedTab = selectingTab;
+        }
+
+        private void CheckIfSkylineChanged()
+        {
+            var changedSkylineSettings = GetSkylineSettingsFromUi();
+            if (!changedSkylineSettings.Equals(_currentSkylineSettings))
+            {
+                _currentSkylineSettings = changedSkylineSettings;
+                _mainControl.ReplaceAllSkylineVersions(_currentSkylineSettings);
+            }
         }
 
         private SkylineSettings GetSkylineSettingsFromUi()
@@ -253,11 +276,12 @@ namespace AutoQC
 
         #endregion
 
-
         #region Save config
 
         private void btnSaveConfig_Click(object sender, EventArgs e)
         {
+            if (tabControl.SelectedTab.Equals(tabSkylineSettings))
+                CheckIfSkylineChanged();
             Save();
         }
 
@@ -276,16 +300,19 @@ namespace AutoQC
             var newConfig = GetConfigFromUi();
             try
             {
-                if (_action == ConfigAction.Edit)
-                    _mainControl.ReplaceSelectedConfig(newConfig);
-                else
-                    _mainControl.AddConfiguration(newConfig);
+                _mainControl.AssertUniqueConfigName(newConfig.Name, _action == ConfigAction.Edit);
+                newConfig.Validate();
             }
             catch (ArgumentException e)
             {
                 AlertDlg.ShowError(this, Program.AppName, e.Message);
                 return;
             }
+
+            if (_action == ConfigAction.Edit)
+                _mainControl.ReplaceSelectedConfig(newConfig);
+            else
+                _mainControl.AddConfiguration(newConfig);
 
             Close();
         }

@@ -32,6 +32,7 @@
             this.labelMessage = new System.Windows.Forms.Label();
             this.comboRVersions = new System.Windows.Forms.ComboBox();
             this.labelTitle = new System.Windows.Forms.Label();
+            this.btnAddDirectory = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // labelMessage
@@ -52,10 +53,18 @@
             resources.ApplyResources(this.labelTitle, "labelTitle");
             this.labelTitle.Name = "labelTitle";
             // 
+            // btnAddDirectory
+            // 
+            resources.ApplyResources(this.btnAddDirectory, "btnAddDirectory");
+            this.btnAddDirectory.Name = "btnAddDirectory";
+            this.btnAddDirectory.UseVisualStyleBackColor = true;
+            this.btnAddDirectory.Click += new System.EventHandler(this.btnAddDirectory_Click);
+            // 
             // RVersionControl
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.btnAddDirectory);
             this.Controls.Add(this.labelTitle);
             this.Controls.Add(this.comboRVersions);
             this.Controls.Add(this.labelMessage);
@@ -70,5 +79,6 @@
         private System.Windows.Forms.Label labelMessage;
         private System.Windows.Forms.ComboBox comboRVersions;
         private System.Windows.Forms.Label labelTitle;
+        private System.Windows.Forms.Button btnAddDirectory;
     }
 }
