@@ -94,6 +94,14 @@ namespace SkylineBatch
             return lvi;
         }
 
+        /*public HashSet<string> GetFolders(string pathRoot)
+        {
+            var allFiles = MainSettings.GetFolders(pathRoot);
+            allFiles.UnionWith(RefineSettings.GetFolders(pathRoot));
+            allFiles.UnionWith(ReportSettings.GetFolders(pathRoot));
+            return allFiles;
+        }*/
+
         public SkylineBatchConfig WithoutDependency()
         {
             return new SkylineBatchConfig(Name, Enabled, DateTime.Now, MainSettings.WithoutDependency(),

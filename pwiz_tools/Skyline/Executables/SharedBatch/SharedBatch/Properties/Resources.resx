@@ -318,4 +318,16 @@
 with:
 {1}?</value>
   </data>
+  <data name="FileOpenedForm_RootFolderValidator_The_directory__0__does_not_exist_" xml:space="preserve">
+    <value>The directory {0} does not exist.</value>
+  </data>
+  <data name="FileOpenedForm_RootFolderValidator_Please_enter_an_existing_directory_" xml:space="preserve">
+    <value>Please enter an existing directory.</value>
+  </data>
+  <data name="FileOpenedForm_FileOpenedForm_Preparing_to_import_configurations_from__0_" xml:space="preserve">
+    <value>Preparing to import configurations from {0}</value>
+  </data>
+  <data name="FileOpenedForm_FileOpenedForm_Please_specify_a_root_folder_for_the_configurations_" xml:space="preserve">
+    <value>Please specify a root folder for the configurations:</value>
+  </data>
 </root>

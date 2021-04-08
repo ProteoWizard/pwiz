@@ -384,8 +384,24 @@ namespace SharedBatch
 
         #region Import/Export
 
-        protected List<IConfig> ImportFrom(string filePath)
+
+        public delegate DialogResult ShowDownloadedFileForm(string filePath, out string copiedDestination);
+
+        protected List<IConfig> ImportFrom(string filePath, ShowDownloadedFileForm showDownloadedFileForm)
         {
+            var copiedDestination = string.Empty;
+            var copiedConfigFile = string.Empty;
+            if (filePath.Contains(FileUtil.DOWNLOADS_FOLDER))
+            {
+                var dialogResult = showDownloadedFileForm(filePath, out copiedDestination);
+                if (dialogResult != DialogResult.Yes)
+                    return new List<IConfig>();
+                var downloadsRoot = filePath.Substring(0, filePath.IndexOf(FileUtil.DOWNLOADS_FOLDER)) + FileUtil.DOWNLOADS_FOLDER;
+                var folderName = FileUtil.GetNextFolder(downloadsRoot, filePath);
+                copiedConfigFile = TextUtil.TryReplaceStart(downloadsRoot, copiedDestination, filePath);
+                FileUtil.DirectoryDeepCopy(Path.Combine(downloadsRoot, folderName), Path.Combine(copiedDestination, folderName));
+            }
+
             var readConfigs = new List<IConfig>();
             var addedConfigs = new List<IConfig>();
             var readXmlErrors = new List<string>();
@@ -400,7 +416,12 @@ namespace SharedBatch
                             reader.Read();
                         var oldPath = reader.GetAttribute(Attr.SavedConfigsFilePath);
                         if (!string.IsNullOrEmpty(oldPath))
-                            AddRootReplacement(oldPath, filePath, false, out _, out _);
+                        {
+                            if (!string.IsNullOrEmpty(copiedDestination))
+                                AddRootReplacement(oldPath, copiedConfigFile, false, out _, out _);
+                            else
+                                AddRootReplacement(oldPath, filePath, false, out _, out _);
+                        }
 
                         while (!reader.Name.EndsWith("_config"))
                         {
@@ -652,7 +673,7 @@ namespace SharedBatch
             }
 
             var replaceRoot = false;
-            if (oldRoot.Length > 0 && !RootReplacement.ContainsKey(oldRoot))
+            if (oldRoot.Length > 0)
             {
                 replaceRoot = true;
                 if (askAboutRootReplacement)
@@ -661,7 +682,12 @@ namespace SharedBatch
                     askedAboutRootReplacement = true;
                 }
                 if (replaceRoot)
-                    RootReplacement.Add(oldRoot, newRoot);
+                {
+                    if (RootReplacement.ContainsKey(oldRoot))
+                        RootReplacement[oldRoot] = newRoot;
+                    else
+                        RootReplacement.Add(oldRoot, newRoot);
+                }
             }
             return replaceRoot;
         }

@@ -61,7 +61,7 @@ namespace SkylineBatch
                 _loaded = true;
                 _rDirectorySelector.AddIfNecassary();
                 if (!string.IsNullOrEmpty(openFile))
-                    FileOpenedImport(openFile);
+                    FileOpened(openFile);
             });
         }
 
@@ -464,17 +464,31 @@ namespace SkylineBatch
             DoImport(dialog.FileName);
         }
 
-        public void FileOpenedImport(string filePath)
+        public void FileOpened(string filePath)
         {
-            var importFromFile = DialogResult.Yes == DisplayQuestion(string.Format("Do you want to import configurations from {0}?",
-                Path.GetFileName(filePath)));
-            if (importFromFile)
+            var importConfigs = false;
+            var inDownloadsFolder = filePath.Contains(FileUtil.DOWNLOADS_FOLDER);
+            if (!inDownloadsFolder) // Only show dialog if configs are not in downloads folder
+            {
+                importConfigs = DialogResult.Yes == DisplayQuestion(string.Format(
+                    Resources.MainForm_FileOpenedImport_Do_you_want_to_import_configurations_from__0__,
+                    Path.GetFileName(filePath)));
+            }
+            if (importConfigs || inDownloadsFolder)
                 DoImport(filePath);
+        }
+
+        public DialogResult ShowDownloadedFileForm(string filePath, out string newRootDirectory)
+        {
+            var fileOpenedForm = new FileOpenedForm(this, filePath, Program.Icon());
+            var dialogResult = fileOpenedForm.ShowDialog(this);
+            newRootDirectory = fileOpenedForm.NewRootDirectory;
+            return dialogResult;
         }
 
         public void DoImport(string filePath)
         {
-            _configManager.Import(filePath);
+            _configManager.Import(filePath, ShowDownloadedFileForm);
 
             if (!_rDirectorySelector.ShownDialog)
                 _rDirectorySelector.AddIfNecassary();

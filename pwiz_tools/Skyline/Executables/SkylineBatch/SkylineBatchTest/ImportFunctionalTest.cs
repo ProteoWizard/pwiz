@@ -9,6 +9,9 @@ namespace SkylineBatchTest
     [TestClass]
     public class ImportFunctionalTest : AbstractSkylineBatchFunctionalTest
     {
+        public static string CONFIG_FOLDER;
+        public static string TEST_FOLDER;
+
         [TestMethod]
         public void ImportTest()
         {
@@ -20,12 +23,15 @@ namespace SkylineBatchTest
 
         protected override void DoTest()
         {
+            TEST_FOLDER = TestFilesDirs[0].FullPath;
+            CONFIG_FOLDER = TestFilesDirs[1].FullPath;
+
             var mainWindow = MainFormWindow();
             var mainForm = mainWindow as MainForm;
             Assert.IsNotNull(mainForm, "Main program window is not an instance of MainForm.");
             Assert.AreEqual(0, mainForm.ConfigCount());
 
-            RInstallations.AddRDirectory(Path.Combine(TestFilesDirs[1].FullPath, "R"));
+            RInstallations.AddRDirectory(Path.Combine(CONFIG_FOLDER, "R"));
 
             TestImportValidConfigurations(mainForm);
 
@@ -47,7 +53,7 @@ namespace SkylineBatchTest
 
         public void TestImportValidConfigurations(MainForm mainForm)
         {
-            var validConfigFile = Path.Combine(TestFilesDirs[0].FullPath, "ValidConfigurations.bcfg");
+            var validConfigFile = Path.Combine(TEST_FOLDER, "ValidConfigurations.bcfg");
             mainForm.DoImport(validConfigFile);
             RunUI(() => { FunctionalTestUtil.CheckConfigs(3, 0, mainForm); });
 
@@ -61,7 +67,7 @@ namespace SkylineBatchTest
         public void TestImportDuplicateConfigurations(MainForm mainForm)
         {
             RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
-            var validConfigFile = Path.Combine(TestFilesDirs[0].FullPath, "ValidConfigurations.bcfg");
+            var validConfigFile = Path.Combine(TEST_FOLDER, "ValidConfigurations.bcfg");
             mainForm.DoImport(validConfigFile);
             RunUI(() => { FunctionalTestUtil.CheckConfigs(3, 0, mainForm); });
 
@@ -84,7 +90,7 @@ namespace SkylineBatchTest
         public void TestImportInvalidConfigurations(MainForm mainForm)
         {
             RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
-            var invalidPathsFile = Path.Combine(TestFilesDirs[0].FullPath, "InvalidPathConfigurations.bcfg");
+            var invalidPathsFile = Path.Combine(TEST_FOLDER, "InvalidPathConfigurations.bcfg");
             mainForm.DoImport(invalidPathsFile);
             RunUI(() => { FunctionalTestUtil.CheckConfigs(3, 3, mainForm); });
 
@@ -97,7 +103,7 @@ namespace SkylineBatchTest
             WaitForClosedForm(invalidConfigForm);
 
             RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
-            var invalidConfigFile = Path.Combine(TestFilesDirs[0].FullPath, "InvalidSkylineConfigurations.bcfg");
+            var invalidConfigFile = Path.Combine(TEST_FOLDER, "InvalidSkylineConfigurations.bcfg");
             mainForm.DoImport(invalidConfigFile);
             RunUI(() => { FunctionalTestUtil.CheckConfigs(3, 3, mainForm); });
 
@@ -113,7 +119,7 @@ namespace SkylineBatchTest
         public void TestImportInvalidRConfigurations(MainForm mainForm)
         {
             RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
-            var invalidConfigFile = Path.Combine(TestFilesDirs[0].FullPath, "InvalidRConfigurations.bcfg");
+            var invalidConfigFile = Path.Combine(TEST_FOLDER, "InvalidRConfigurations.bcfg");
 
             RunDlg<AlertDlg>(() => mainForm.DoImport(invalidConfigFile),
                 dlg =>
@@ -138,7 +144,7 @@ namespace SkylineBatchTest
         public void TestImportInvalidDependentConfigurations(MainForm mainForm)
         {
             RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
-            var invalidConfigFile = Path.Combine(TestFilesDirs[0].FullPath, "InvalidDependentConfigurations.bcfg");
+            var invalidConfigFile = Path.Combine(TEST_FOLDER, "InvalidDependentConfigurations.bcfg");
             RunDlg<AlertDlg>(() => mainForm.DoImport(invalidConfigFile),
                 dlg =>
                 {
@@ -156,7 +162,7 @@ namespace SkylineBatchTest
         public void TestImportInvalidSkylineConfigurations(MainForm mainForm)
         {
             RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
-            var invalidConfigFile = Path.Combine(TestFilesDirs[0].FullPath, "InvalidSkylineConfigurations.bcfg");
+            var invalidConfigFile = Path.Combine(TEST_FOLDER, "InvalidSkylineConfigurations.bcfg");
             mainForm.DoImport(invalidConfigFile);
             RunUI(() =>
             {
@@ -198,7 +204,7 @@ namespace SkylineBatchTest
         public void TestRootReplacement(MainForm mainForm)
         {
             RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
-            var invalidConfigFile = Path.Combine(TestFilesDirs[0].FullPath, "InvalidPathConfigurations.bcfg");
+            var invalidConfigFile = Path.Combine(TEST_FOLDER, "InvalidPathConfigurations.bcfg");
             mainForm.DoImport(invalidConfigFile);
             RunUI(() => { FunctionalTestUtil.CheckConfigs(3, 3, mainForm); });
 
@@ -207,7 +213,7 @@ namespace SkylineBatchTest
             RunUI(() =>
             {
                 invalidConfigForm.CurrentControl.SetText(
-                    Path.Combine(TestFilesDirs[1].FullPath, "emptyTemplate.sky"));
+                    Path.Combine(CONFIG_FOLDER, "emptyTemplate.sky"));
             });
             
              RunDlg<AlertDlg>(() => invalidConfigForm.btnNext.PerformClick(),
@@ -216,8 +222,8 @@ namespace SkylineBatchTest
                      Assert.AreEqual(string.Format(
                              SharedBatch.Properties.Resources
                                  .InvalidConfigSetupForm_GetValidPath_Would_you_like_to_replace__0__with__1___,
-                             Path.GetDirectoryName(TestFilesDirs[1].FullPath) + "\\nonexistentFolder\\nonexistentFolderTwo",
-                             Path.GetDirectoryName(TestFilesDirs[1].FullPath)),
+                             Path.GetDirectoryName(CONFIG_FOLDER) + "\\nonexistentFolder\\nonexistentFolderTwo",
+                             Path.GetDirectoryName(CONFIG_FOLDER)),
                          dlg.Message);
                      dlg.ClickYes();
                  });
@@ -234,7 +240,7 @@ namespace SkylineBatchTest
         public void TestDriveRootReplacement(MainForm mainForm)
         {
             RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
-            var invalidConfigFile = Path.Combine(TestFilesDirs[0].FullPath, "InvalidRootConfigurations.bcfg");
+            var invalidConfigFile = Path.Combine(TEST_FOLDER, "InvalidRootConfigurations.bcfg");
             mainForm.DoImport(invalidConfigFile);
             RunUI(() => { FunctionalTestUtil.CheckConfigs(3, 3, mainForm); });
 
@@ -243,7 +249,7 @@ namespace SkylineBatchTest
             RunUI(() =>
             {
                 invalidConfigForm.CurrentControl.SetText(
-                    Path.Combine(TestFilesDirs[1].FullPath, "emptyTemplate.sky"));
+                    Path.Combine(CONFIG_FOLDER, "emptyTemplate.sky"));
             });
 
             RunDlg<AlertDlg>(() => invalidConfigForm.btnNext.PerformClick(),
@@ -253,7 +259,7 @@ namespace SkylineBatchTest
                             SharedBatch.Properties.Resources
                                 .InvalidConfigSetupForm_GetValidPath_Would_you_like_to_replace__0__with__1___,
                             "Z:",
-                            Path.GetDirectoryName(TestFilesDirs[1].FullPath)),
+                            Path.GetDirectoryName(CONFIG_FOLDER)),
                         dlg.Message);
                     dlg.ClickYes();
                 });

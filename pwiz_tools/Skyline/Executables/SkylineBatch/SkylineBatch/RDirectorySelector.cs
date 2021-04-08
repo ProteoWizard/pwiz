@@ -48,7 +48,7 @@ namespace SkylineBatch
         {
             // TODO(Ali): handle R installation after dialog appears
             var dialog = new FolderBrowserDialog();
-            var initialPath = Settings.Default.RDirs.Count > 0 ? TextUtil.GetInitialDirectory(Settings.Default.RDirs[Settings.Default.RDirs.Count - 1]) : null;
+            var initialPath = Settings.Default.RDirs.Count > 0 ? FileUtil.GetInitialDirectory(Settings.Default.RDirs[Settings.Default.RDirs.Count - 1]) : null;
             dialog.SelectedPath = initialPath;
             var directoryAdded = false;
             DialogResult result = dialog.ShowDialog();

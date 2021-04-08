@@ -15,6 +15,7 @@ namespace SkylineBatchTest
     {
         public const string SKYLINE_BATCH_FOLDER = @"Executables\SkylineBatch\";
 
+
         public new string TestFilesZip
         {
             get => base.TestFilesZip;

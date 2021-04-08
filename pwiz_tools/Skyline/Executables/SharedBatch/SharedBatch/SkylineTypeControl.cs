@@ -95,7 +95,7 @@ namespace SharedBatch
             using (var folderBrowserDlg = new FolderBrowserDialog())
             {
                 folderBrowserDlg.ShowNewFolderButton = false;
-                folderBrowserDlg.SelectedPath = TextUtil.GetInitialDirectory(textSkylineInstallationPath.Text, Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles));
+                folderBrowserDlg.SelectedPath = FileUtil.GetInitialDirectory(textSkylineInstallationPath.Text, Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles));
                 if (folderBrowserDlg.ShowDialog() == DialogResult.OK)
                 {
                     textSkylineInstallationPath.Text = folderBrowserDlg.SelectedPath;

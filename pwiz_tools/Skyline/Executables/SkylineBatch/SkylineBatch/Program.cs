@@ -143,7 +143,7 @@ namespace SkylineBatch
         {
             var baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
             var configFileIconPath = Path.Combine(baseDirectory, "SkylineBatch_configs.ico");
-            FileRegistry.AddFileType(".bcfg", "SkylineBatch.Configuration.0", @"Skyline Batch Configuration File", 
+            FileUtil.AddFileType(".bcfg", "SkylineBatch.Configuration.0", @"Skyline Batch Configuration File", 
                 Assembly.GetExecutingAssembly().Location, configFileIconPath);
         }
         

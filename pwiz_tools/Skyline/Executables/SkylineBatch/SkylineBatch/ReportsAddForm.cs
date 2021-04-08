@@ -85,7 +85,7 @@ namespace SkylineBatch
             var openDialog = new OpenFileDialog();
             openDialog.Filter = TextUtil.FILTER_R;
             openDialog.Multiselect = allowMultiSelect;
-            openDialog.InitialDirectory = TextUtil.GetInitialDirectory(path);
+            openDialog.InitialDirectory = FileUtil.GetInitialDirectory(path);
             if (openDialog.ShowDialog() != DialogResult.OK)
                 return new string[]{};
             return openDialog.FileNames;
@@ -103,7 +103,7 @@ namespace SkylineBatch
         {
             OpenFileDialog openDialog = new OpenFileDialog();
             openDialog.Filter = TextUtil.FILTER_SKYR;
-            openDialog.InitialDirectory = TextUtil.GetInitialDirectory(textReportPath.Text);
+            openDialog.InitialDirectory = FileUtil.GetInitialDirectory(textReportPath.Text);
             openDialog.ShowDialog();
             textReportPath.Text = openDialog.FileName;
         }

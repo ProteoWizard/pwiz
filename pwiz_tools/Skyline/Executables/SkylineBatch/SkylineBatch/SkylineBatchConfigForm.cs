@@ -205,7 +205,7 @@ namespace SkylineBatch
         private void OpenFile(Control textBox, string filter, bool save = false)
         {
             FileDialog dialog = save ? (FileDialog)new SaveFileDialog() : new OpenFileDialog();
-            var initialDirectory = TextUtil.GetInitialDirectory(textBox.Text, _lastEnteredPath);
+            var initialDirectory = FileUtil.GetInitialDirectory(textBox.Text, _lastEnteredPath);
             dialog.InitialDirectory = initialDirectory;
             dialog.Filter = filter;
             DialogResult result = dialog.ShowDialog();
@@ -219,7 +219,7 @@ namespace SkylineBatch
         private void OpenFolder(TextBox textbox)
         {
             var dialog = new FolderBrowserDialog();
-            var initialPath = TextUtil.GetInitialDirectory(textbox.Text, _lastEnteredPath);
+            var initialPath = FileUtil.GetInitialDirectory(textbox.Text, _lastEnteredPath);
             dialog.SelectedPath = initialPath;
             DialogResult result = dialog.ShowDialog();
             if (result == DialogResult.OK)

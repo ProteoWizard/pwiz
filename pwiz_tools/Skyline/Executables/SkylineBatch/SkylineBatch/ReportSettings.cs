@@ -80,6 +80,14 @@ namespace SkylineBatch
             return anyReplaced;
         }
 
+        /*public HashSet<string> GetFolders(string pathRoot)
+        {
+            var allFiles = new HashSet<string>();
+            foreach(var report in Reports)
+                allFiles.UnionWith(report.GetFolders(pathRoot));
+            return allFiles;
+        }*/
+
         public static ReportSettings ReadXml(XmlReader reader)
         {
             var reports = new List<ReportInfo>();
@@ -230,17 +238,21 @@ namespace SkylineBatch
 
         public static void ValidateReportPath(string reportPath)
         {
+            FileUtil.ValidateNotEmptyPath(reportPath, Resources.ReportInfo_ValidateReportPath_report_path);
             if (!File.Exists(reportPath))
                 throw new ArgumentException(string.Format(Resources.ReportInfo_ValidateReportPath_Report_path__0__is_not_a_valid_path_, reportPath) + Environment.NewLine +
                                             Resources.ReportInfo_Validate_Please_enter_a_path_to_an_existing_file_);
+            FileUtil.ValidateNotInDownloads(reportPath, Resources.ReportInfo_ValidateReportPath_report_path);
         }
 
         public static void ValidateRScriptPath(string rScriptPath)
         {
+            FileUtil.ValidateNotEmptyPath(rScriptPath, Resources.ReportInfo_ValidateRScriptPath_R_script);
             if (!File.Exists(rScriptPath))
                 throw new ArgumentException(string.Format(Resources.ReportInfo_ValidateRScriptPath_R_script_path__0__is_not_a_valid_path_,
                                                 rScriptPath) + Environment.NewLine +
                                             Resources.ReportInfo_Validate_Please_enter_a_path_to_an_existing_file_);
+            FileUtil.ValidateNotInDownloads(rScriptPath, Resources.ReportInfo_ValidateRScriptPath_R_script);
         }
 
         public static void ValidateRVersion(string rVersion)
@@ -263,7 +275,15 @@ namespace SkylineBatch
             pathReplacedReportInfo = new ReportInfo(Name, replacedReportPath, replacedRScripts, UseRefineFile);
             return reportReplaced || anyScriptReplaced;
         }
-        
+
+        public HashSet<string> GetFolders(string pathRoot)
+        {
+            var allFiles = new HashSet<string>() { FileUtil.GetNextFolder(pathRoot, ReportPath)};
+            foreach (var scriptAndVersion in RScripts)
+                FileUtil.GetNextFolder(pathRoot, scriptAndVersion.Item1);
+            return allFiles;
+        }
+
         private enum Attr
         {
             Name,
@@ -294,7 +314,7 @@ namespace SkylineBatch
         }
 
         private static string GetPath(string path) =>
-            TextUtil.GetTestPath(Program.FunctionalTest, Program.TestDirectory, path);
+            FileUtil.GetTestPath(Program.FunctionalTest, Program.TestDirectory, path);
 
         public void WriteXml(XmlWriter writer)
         {

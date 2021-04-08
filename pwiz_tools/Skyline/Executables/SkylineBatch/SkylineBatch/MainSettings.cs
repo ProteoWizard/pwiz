@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net.NetworkInformation;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
@@ -77,6 +78,20 @@ namespace SkylineBatch
                 ReplicateNamingPattern, newName);
         }
 
+        /*public HashSet<string> GetFolders(string pathRoot)
+        {
+            var folders = new HashSet<string>()
+            {
+                FileUtil.GetNextFolder(pathRoot, AnalysisFolderPath),
+                FileUtil.GetNextFolder(pathRoot, DataFolderPath)
+            };
+            if (string.IsNullOrEmpty(DependentConfigName))
+                FileUtil.GetNextFolder(pathRoot, TemplateFilePath);
+            if (!string.IsNullOrEmpty(AnnotationsFilePath))
+                folders.Add(FileUtil.GetNextFolder(pathRoot, AnnotationsFilePath));
+            return folders;
+        }*/
+
         public void CreateAnalysisFolderIfNonexistent()
         {
             if(!Directory.Exists(AnalysisFolderPath)) Directory.CreateDirectory(AnalysisFolderPath);
@@ -104,49 +119,45 @@ namespace SkylineBatch
         public static void ValidateTemplateFile(string templateFile)
         {
 
-            CheckIfEmptyPath(templateFile, Resources.MainSettings_ValidateSkylineFile_Skyline_file);
+            FileUtil.ValidateNotEmptyPath(templateFile, Resources.MainSettings_ValidateSkylineFile_Skyline_file);
             if (!File.Exists(templateFile))
             
                 throw new ArgumentException(string.Format(Resources.MainSettings_ValidateSkylineFile_The_Skyline_template_file__0__does_not_exist_, templateFile) + Environment.NewLine +
                                             Resources.MainSettings_ValidateSkylineFile_Please_provide_a_valid_file_);
-            
+            FileUtil.ValidateNotInDownloads(templateFile, Resources.MainSettings_ValidateSkylineFile_Skyline_file);
         }
 
         public static void ValidateAnalysisFolder(string analysisFolder)
         {
-            CheckIfEmptyPath(analysisFolder, Resources.MainSettings_ValidateAnalysisFolder_analysis_folder);
+            FileUtil.ValidateNotEmptyPath(analysisFolder, Resources.MainSettings_ValidateAnalysisFolder_analysis_folder);
             var analysisFolderDirectory = Path.GetDirectoryName(analysisFolder);
             if (!Directory.Exists(analysisFolderDirectory))
             {
                 throw new ArgumentException(string.Format(Resources.MainSettings_ValidateAnalysisFolder_The__parent_directory_of_the_analysis_folder__0__does_not_exist_, analysisFolderDirectory) + Environment.NewLine +
                                             Resources.MainSettings_ValidateAnalysisFolder_Please_provide_a_valid_folder_);
             }
+            FileUtil.ValidateNotInDownloads(analysisFolder, Resources.MainSettings_ValidateAnalysisFolder_analysis_folder);
         }
 
         public static void ValidateDataFolder(string dataFolder)
         {
-            CheckIfEmptyPath(dataFolder, Resources.MainSettings_ValidateDataFolder_data_folder);
+            FileUtil.ValidateNotEmptyPath(dataFolder, Resources.MainSettings_ValidateDataFolder_data_folder);
             if (!Directory.Exists(dataFolder))
             {
                 throw new ArgumentException(string.Format(Resources.MainSettings_ValidateDataFolder_The_data_folder__0__does_not_exist_, dataFolder) + Environment.NewLine +
                                             Resources.MainSettings_ValidateAnalysisFolder_Please_provide_a_valid_folder_);
             }
+            FileUtil.ValidateNotInDownloads(dataFolder, Resources.MainSettings_ValidateDataFolder_data_folder);
         }
 
         public static void ValidateAnnotationsFile(string annotationsFilePath)
         {
-            if (!string.IsNullOrWhiteSpace(annotationsFilePath) && !File.Exists(annotationsFilePath))
+            if (!string.IsNullOrWhiteSpace(annotationsFilePath))
             {
-                throw new ArgumentException(string.Format(Resources.MainSettings_ValidateAnnotationsFolder_The_annotations_file__0__does_not_exist_, annotationsFilePath) + Environment.NewLine +
+                if (!File.Exists(annotationsFilePath))
+                    throw new ArgumentException(string.Format(Resources.MainSettings_ValidateAnnotationsFolder_The_annotations_file__0__does_not_exist_, annotationsFilePath) + Environment.NewLine +
                                             Resources.MainSettings_ValidateAnnotationsFolder_Please_enter_a_valid_file_path__or_no_text_if_you_do_not_wish_to_include_annotations_);
-            }
-        }
-
-        public static void CheckIfEmptyPath(string input, string name)
-        {
-            if (string.IsNullOrWhiteSpace(input))
-            {
-                throw new ArgumentException(string.Format(Resources.MainSettings_CheckIfEmptyPath_Please_specify_a_path_to__0_, name));
+                FileUtil.ValidateNotInDownloads(annotationsFilePath, Resources.MainSettings_ValidateAnnotationsFile_annotations_file);
             }
         }
 
@@ -258,7 +269,7 @@ namespace SkylineBatch
         }
 
         private static string GetPath(string path) =>
-            TextUtil.GetTestPath(Program.FunctionalTest, Program.TestDirectory, path);
+            FileUtil.GetTestPath(Program.FunctionalTest, Program.TestDirectory, path);
 
         public void WriteXml(XmlWriter writer)
         {

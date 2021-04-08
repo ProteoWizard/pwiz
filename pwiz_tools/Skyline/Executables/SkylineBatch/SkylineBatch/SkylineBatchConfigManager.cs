@@ -740,9 +740,27 @@ namespace SkylineBatch
 
         #region Import/Export
 
-        public void Import(string filePath)
+        public void Import(string filePath, ShowDownloadedFileForm showDownloadedFileForm)
         {
-            var importedConfigs = ImportFrom(filePath);
+            var importedConfigs = ImportFrom(filePath, showDownloadedFileForm);
+            HandleImportedConfigs(importedConfigs);
+            /*importedConfigs = AssignDependencies(importedConfigs, out string warningMessage);
+            foreach (var config in importedConfigs)
+                ProgramaticallyAddConfig(config);
+            DisableInvalidConfigs();
+            _uiControl?.UpdateUiConfigurations();
+            if (warningMessage != null)
+                DisplayWarning(warningMessage);*/
+        }
+
+        /*public new void CopyAndImport(string filePath, string newRootDirectory)
+        {
+            var importedConfigs = base.CopyAndImport(filePath, newRootDirectory);
+            HandleImportedConfigs(importedConfigs);
+        }*/
+
+        private void HandleImportedConfigs(List<IConfig> importedConfigs)
+        {
             importedConfigs = AssignDependencies(importedConfigs, out string warningMessage);
             foreach (var config in importedConfigs)
                 ProgramaticallyAddConfig(config);

@@ -328,6 +328,43 @@ namespace SharedBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Please specify a root folder for the configurations:.
+        /// </summary>
+        public static string FileOpenedForm_FileOpenedForm_Please_specify_a_root_folder_for_the_configurations_ {
+            get {
+                return ResourceManager.GetString("FileOpenedForm_FileOpenedForm_Please_specify_a_root_folder_for_the_configurations" +
+                        "_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Preparing to import configurations from {0}.
+        /// </summary>
+        public static string FileOpenedForm_FileOpenedForm_Preparing_to_import_configurations_from__0_ {
+            get {
+                return ResourceManager.GetString("FileOpenedForm_FileOpenedForm_Preparing_to_import_configurations_from__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please enter an existing directory..
+        /// </summary>
+        public static string FileOpenedForm_RootFolderValidator_Please_enter_an_existing_directory_ {
+            get {
+                return ResourceManager.GetString("FileOpenedForm_RootFolderValidator_Please_enter_an_existing_directory_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The directory {0} does not exist..
+        /// </summary>
+        public static string FileOpenedForm_RootFolderValidator_The_directory__0__does_not_exist_ {
+            get {
+                return ResourceManager.GetString("FileOpenedForm_RootFolderValidator_The_directory__0__does_not_exist_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Could not find the {0}..
         /// </summary>
         public static string FilePathControl_FilePathControl_Could_not_find_the__0__ {

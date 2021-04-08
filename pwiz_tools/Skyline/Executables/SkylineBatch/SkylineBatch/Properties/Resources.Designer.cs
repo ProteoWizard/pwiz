@@ -460,6 +460,15 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Do you want to import configurations from {0}?.
+        /// </summary>
+        public static string MainForm_FileOpenedImport_Do_you_want_to_import_configurations_from__0__ {
+            get {
+                return ResourceManager.GetString("MainForm_FileOpenedImport_Do_you_want_to_import_configurations_from__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cannot enable &quot;{0}&quot; while it is invalid..
         /// </summary>
         public static string MainForm_listViewConfigs_ItemCheck_Cannot_enable___0___while_it_is_invalid_ {
@@ -579,15 +588,6 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Please specify a path to {0}.
-        /// </summary>
-        public static string MainSettings_CheckIfEmptyPath_Please_specify_a_path_to__0_ {
-            get {
-                return ResourceManager.GetString("MainSettings_CheckIfEmptyPath_Please_specify_a_path_to__0_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to analysis folder.
         /// </summary>
         public static string MainSettings_ValidateAnalysisFolder_analysis_folder {
@@ -612,6 +612,15 @@ namespace SkylineBatch.Properties {
             get {
                 return ResourceManager.GetString("MainSettings_ValidateAnalysisFolder_The__parent_directory_of_the_analysis_folder_" +
                         "_0__does_not_exist_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to annotations file.
+        /// </summary>
+        public static string MainSettings_ValidateAnnotationsFile_annotations_file {
+            get {
+                return ResourceManager.GetString("MainSettings_ValidateAnnotationsFile_annotations_file", resourceCulture);
             }
         }
         
@@ -903,6 +912,15 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to refined output file.
+        /// </summary>
+        public static string RefineSettings_ValidateOutputFile_refined_output_file {
+            get {
+                return ResourceManager.GetString("RefineSettings_ValidateOutputFile_refined_output_file", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Refined.
         /// </summary>
         public static string ReportInfo_AsObjectArray_Refined {
@@ -957,11 +975,29 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to report path.
+        /// </summary>
+        public static string ReportInfo_ValidateReportPath_report_path {
+            get {
+                return ResourceManager.GetString("ReportInfo_ValidateReportPath_report_path", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Report path {0} is not a valid path..
         /// </summary>
         public static string ReportInfo_ValidateReportPath_Report_path__0__is_not_a_valid_path_ {
             get {
                 return ResourceManager.GetString("ReportInfo_ValidateReportPath_Report_path__0__is_not_a_valid_path_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to R script.
+        /// </summary>
+        public static string ReportInfo_ValidateRScriptPath_R_script {
+            get {
+                return ResourceManager.GetString("ReportInfo_ValidateRScriptPath_R_script", resourceCulture);
             }
         }
         

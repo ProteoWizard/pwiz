@@ -195,9 +195,6 @@
   <data name="ConfigManager_CheckConfigAtIndex_Please_wait_until___0___has_finished_running_" xml:space="preserve">
     <value>Please wait until "{0}" has finished running.</value>
   </data>
-  <data name="MainSettings_CheckIfEmptyPath_Please_specify_a_path_to__0_" xml:space="preserve">
-    <value>Please specify a path to {0}</value>
-  </data>
   <data name="FileSettings_ValidateIntTextField__0__is_not_a_valid_value_for__1__" xml:space="preserve">
     <value>{0} is not a valid value for {1}.</value>
   </data>
@@ -552,5 +549,20 @@
   </data>
   <data name="RDirectorySelector_AddIfNecassary_Would_you_like_to_add_an_R_installation_directory_" xml:space="preserve">
     <value>Would you like to add an R installation directory?</value>
+  </data>
+  <data name="MainForm_FileOpenedImport_Do_you_want_to_import_configurations_from__0__" xml:space="preserve">
+    <value>Do you want to import configurations from {0}?</value>
+  </data>
+  <data name="MainSettings_ValidateAnnotationsFile_annotations_file" xml:space="preserve">
+    <value>annotations file</value>
+  </data>
+  <data name="RefineSettings_ValidateOutputFile_refined_output_file" xml:space="preserve">
+    <value>refined output file</value>
+  </data>
+  <data name="ReportInfo_ValidateRScriptPath_R_script" xml:space="preserve">
+    <value>R script</value>
+  </data>
+  <data name="ReportInfo_ValidateReportPath_report_path" xml:space="preserve">
+    <value>report path</value>
   </data>
 </root>

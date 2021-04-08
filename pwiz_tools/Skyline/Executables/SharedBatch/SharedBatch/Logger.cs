@@ -56,7 +56,7 @@ using SharedBatch.Properties;
         
         public Logger(string logFilePath, string logName, IMainUiControl mainUi = null)
         {
-            var logFolder = TextUtil.GetDirectory(logFilePath);
+            var logFolder = FileUtil.GetDirectory(logFilePath);
             if (!Directory.Exists(logFolder))
             {
                 Directory.CreateDirectory(logFolder);
@@ -321,7 +321,7 @@ using SharedBatch.Properties;
                 File.Copy(GetFile(), timestampFileName);
                 File.Delete(_filePath);
                 Init();
-                var newFilePath = Path.Combine(TextUtil.GetDirectory(_filePath), timestampFileName);
+                var newFilePath = Path.Combine(FileUtil.GetDirectory(_filePath), timestampFileName);
                 return new Logger(newFilePath, timestampFileName, _mainUi);
             }
 
