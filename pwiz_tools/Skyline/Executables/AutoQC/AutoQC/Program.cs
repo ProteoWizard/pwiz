@@ -23,6 +23,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Reflection;
 using System.Threading;
 using System.Windows.Forms;
 using AutoQC.Properties;
@@ -46,6 +47,9 @@ namespace AutoQC
         {
             ProgramLog.Init("AutoQC");
             Application.EnableVisualStyles();
+
+            AddFileTypesToRegistry();
+
             Application.SetCompatibleTextRenderingDefault(false);
             Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
             // Handle exceptions on the UI thread.
@@ -101,7 +105,8 @@ namespace AutoQC
                 }
 
                 // Thread.CurrentThread.CurrentUICulture = new CultureInfo("ja");
-                var form = new MainForm();
+                var openFile = args.Length > 0 ? args[0] : null;
+                var form = new MainForm(openFile);
 
                 // CurrentDeployment is null if it isn't network deployed.
                 _version = ApplicationDeployment.IsNetworkDeployed
@@ -144,6 +149,14 @@ namespace AutoQC
             }
             
             return true;
+        }
+
+        private static void AddFileTypesToRegistry()
+        {
+            var baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            var configFileIconPath = Path.Combine(baseDirectory, "AutoQC_configs.ico");
+            FileUtil.AddFileType(".qcfg", "AutoQC.Configuration.0", @"AutoQC Configuration File",
+                Assembly.GetExecutingAssembly().Location, configFileIconPath);
         }
 
         private static void UpdateAutoQcStarter(object sender, DoWorkEventArgs e)

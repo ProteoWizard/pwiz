@@ -131,21 +131,16 @@ namespace SharedBatch
         public static void AddFileType(string extension, string id, string description, string exePath, string iconPath)
         {
             // Register file/exe/icon associations.
-            var checkRegistry = Registry.GetValue(
-                $@"HKEY_CURRENT_USER\Software\Classes\{id}\shell\open\command", null, null);
-
+            
             Registry.SetValue($@"HKEY_CURRENT_USER\Software\Classes\{id}", null, description);
 
             Registry.SetValue($@"HKEY_CURRENT_USER\Software\Classes\{id}\DefaultIcon", null,
                 $"\"{iconPath}\"");
 
-            Registry.SetValue(@"HKEY_CURRENT_USER\Software\Classes\SkylineBatch.Configuration.0\shell\open\command", null,
+            Registry.SetValue($@"HKEY_CURRENT_USER\Software\Classes\{id}\shell\open\command", null,
                 $"\"{exePath}\" \"%1\"");
             Registry.SetValue($@"HKEY_CURRENT_USER\Software\Classes\{extension}", null, id);
-
-
-            if (checkRegistry == null)
-                SHChangeNotify(0x08000000, 0x0000, IntPtr.Zero, IntPtr.Zero);
+            SHChangeNotify(0x08000000, 0x0000, IntPtr.Zero, IntPtr.Zero);
 
         }
 
