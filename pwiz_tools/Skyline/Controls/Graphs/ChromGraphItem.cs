@@ -28,7 +28,6 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Themes;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.Util.Extensions;
 using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Graphs
@@ -852,8 +851,11 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
 
+            // N.B.you might expect use of TextUtil.LineSeparate() here, but this string is parsed
+            // elsewhere with the expectation of \n as separator rather than \r\n
+            return string.Join("\n", lines); 
+
             // ReSharper restore LocalizableElement
-            return TextUtil.LineSeparate(lines);
         }
 
         public static string FormatIonMobilityValue(IonMobilityFilter ionMobilityFilter)

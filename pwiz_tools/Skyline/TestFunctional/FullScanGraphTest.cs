@@ -25,7 +25,9 @@ using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
+using ZedGraph;
 
 namespace pwiz.SkylineTestFunctional
 {
@@ -120,6 +122,35 @@ namespace pwiz.SkylineTestFunctional
             ClickFullScan(517, 1000);
             TestScale(516, 520, 0, 80);
 
+            //Check the rank and annotate functionality if we run in 
+            //onscreen mode
+            SetShowAnnotations(true);
+            if (!Skyline.Program.SkylineOffscreen)
+            {
+                var ions1 = new []
+                {
+                    "y4" + TextUtil.SEPARATOR_SPACE + string.Format(@"({0})",string.Format(Resources.AbstractSpectrumGraphItem_GetLabel_rank__0__, 9))
+                };
+                var ions2 = new[]
+                {
+                    "y1" + TextUtil.SEPARATOR_SPACE + string.Format(@"({0})",string.Format(Resources.AbstractSpectrumGraphItem_GetLabel_rank__0__, 1)),
+                    "y1++" + TextUtil.SEPARATOR_SPACE + string.Format(@"({0})",string.Format(Resources.AbstractSpectrumGraphItem_GetLabel_rank__0__, 2)),
+                    "y5++" + TextUtil.SEPARATOR_SPACE + string.Format(@"({0})",string.Format(Resources.AbstractSpectrumGraphItem_GetLabel_rank__0__, 3)),
+                    "y7" + TextUtil.SEPARATOR_SPACE + string.Format(@"({0})",string.Format(Resources.AbstractSpectrumGraphItem_GetLabel_rank__0__, 6)),
+                    "y11" + TextUtil.SEPARATOR_SPACE + string.Format(@"({0})",string.Format(Resources.AbstractSpectrumGraphItem_GetLabel_rank__0__, 21))
+                };
+
+                TestAnnotations(ions1);
+                SetZoom(false);
+                TestAnnotations(ions2);
+                RunUI(() => SkylineWindow.GraphFullScan.SetMzRange(500, 700));
+                ClickFullScan(618, 120);
+                TestScale(617, 621, 0, 60);
+                SetShowAnnotations(false);
+                TestAnnotations(new[] {"y4"});
+            }
+            SetShowAnnotations(false);
+
             // Check split graph
             ShowSplitChromatogramGraph(true);
             ClickChromatogram(33.11, 15.055, PaneKey.PRODUCTS);
@@ -175,6 +206,17 @@ namespace pwiz.SkylineTestFunctional
             CheckFullScanSelection(x, y);
         }
 
+        private static void SetShowAnnotations(bool isChecked)
+        {
+            RunUI(() => SkylineWindow.GraphFullScan.SetShowAnnotations(isChecked));
+        }
+
+        private static void TestAnnotations(string[] annotationText)
+        {
+            var graphLabels = SkylineWindow.GraphFullScan.ZedGraphControl.GraphPane.GraphObjList.OfType<TextObj>()
+                .Select(label => label.Text).ToHashSet();
+            Assert.IsTrue(annotationText.All(txt => graphLabels.Contains(txt)));
+        }
         private static void SetFilter(bool isChecked)
         {
             RunUI(() => SkylineWindow.GraphFullScan.SetFilter(isChecked));

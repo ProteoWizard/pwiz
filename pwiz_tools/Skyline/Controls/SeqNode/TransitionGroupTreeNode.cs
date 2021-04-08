@@ -198,7 +198,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             {
                 if (sb.Length > len)
                     sb.Append(CS_SEPARATOR);
-                if (!double.IsNaN(ratio.StdDev))
+                if (ratio.HasDotProduct)
                 {
                     sb.Append(string.Format(@"rdotp {0}", ratio.DotProduct.ToString(DOTP_FORMAT)));
                     sb.Append(CS_SEPARATOR);
