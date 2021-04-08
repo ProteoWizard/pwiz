@@ -11440,4 +11440,12 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
     <value>CCS</value>
     <comment>compact form of Collision Cross Section</comment>
   </data>
+  <data name="ViewLibraryDlg_UpdateUI_IM__" xml:space="preserve">
+    <value>IM: </value>
+    <comment>>IM is abbreviation for Ion Mobility</comment>
+  </data>
+  <data name="ViewLibraryDlg_UpdateUI_CCS__" xml:space="preserve">
+    <value>CCS: </value>
+    <comment>CCS is abbreviation for Collision Cross Section</comment>
+  </data>
 </root>

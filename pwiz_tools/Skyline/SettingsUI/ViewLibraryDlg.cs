@@ -713,7 +713,7 @@ namespace pwiz.Skyline.SettingsUI
                                                                           rankTypes,
                                                                           (spectrumInfo?.SpectrumHeaderInfo as BiblioSpecSpectrumHeaderInfo)?.Score);
                         LibraryChromGroup libraryChromGroup = null;
-                        if (spectrumInfo != null && _showChromatograms)
+                        if (spectrumInfo != null)
                         {
                             libraryChromGroup = _selectedLibrary.LoadChromatogramData(spectrumInfo.SpectrumKey);
                         }
@@ -737,7 +737,7 @@ namespace pwiz.Skyline.SettingsUI
                             IsotopeLabelType.light, LibraryRedundancy.best).FirstOrDefault();
                         if (bestSpectrum != null)
                         {
-                            double? rt = bestSpectrum.RetentionTime;
+                            double? rt = libraryChromGroup?.RetentionTime ?? bestSpectrum.RetentionTime;
                             string filename = bestSpectrum.FileName;
 
                             if (!string.IsNullOrEmpty(filename))
@@ -752,16 +752,17 @@ namespace pwiz.Skyline.SettingsUI
                             if (dt != null && !dt.IsEmpty)
                             {
                                 var dtText = string.Empty;
-                                if (dt.HasCollisionalCrossSection)
-                                    dtText = @"CCS" + COLON_SEP + string.Format(@"{0:F4} ", dt.CollisionalCrossSectionSqA.Value);
+                                var ccs = libraryChromGroup?.CCS ?? dt.CollisionalCrossSectionSqA;
+                                if (ccs.HasValue)
+                                    dtText = Resources.ViewLibraryDlg_UpdateUI_CCS__ + string.Format(@"{0:F4} ", ccs.Value);
                                 if (dt.HasIonMobilityValue)
-                                    dtText += @"IM" + COLON_SEP + string.Format(@"{0:F4}{1}", dt.IonMobility.Mobility, dt.IonMobility.UnitsString);
+                                    dtText += Resources.ViewLibraryDlg_UpdateUI_IM__ + string.Format(@"{0:F4}{1}", dt.IonMobility.Mobility, dt.IonMobility.UnitsString);
                                 if (dt.HighEnergyIonMobilityValueOffset != 0) // Show the high energy value (as in Waters MSe) if different
                                     dtText += String.Format(@"({0:F4})", dt.HighEnergyIonMobilityValueOffset);
                                 labelRT.Text = TextUtil.SpaceSeparate(labelRT.Text, dtText);
                             }
                         }
-                        if (null == libraryChromGroup)
+                        if (!_showChromatograms || null == libraryChromGroup)
                         {
                             _graphHelper.ResetForSpectrum(null);
                             _graphHelper.AddSpectrum(GraphItem);

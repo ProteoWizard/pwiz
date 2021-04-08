@@ -2477,6 +2477,7 @@ namespace pwiz.Skyline.Model.Lib
         public double StartTime { get; set; }
         public double EndTime { get; set; }
         public double RetentionTime { get; set; }
+        public double? CCS { get; set; }
         public float[] Times { get; set; }
         public IList<ChromData> ChromDatas { get { return _chromDatas; } set { _chromDatas = ImmutableList.ValueOf(value); } }
 
@@ -2484,6 +2485,7 @@ namespace pwiz.Skyline.Model.Lib
         {
             return ArrayUtil.EqualsDeep(_chromDatas, other._chromDatas) && StartTime.Equals(other.StartTime) &&
                    EndTime.Equals(other.EndTime) && RetentionTime.Equals(other.RetentionTime) &&
+                   Equals(CCS, other.CCS) &&
                    ArrayUtil.EqualsDeep(Times, other.Times);
         }
 
@@ -2503,6 +2505,7 @@ namespace pwiz.Skyline.Model.Lib
                 hashCode = (hashCode * 397) ^ StartTime.GetHashCode();
                 hashCode = (hashCode * 397) ^ EndTime.GetHashCode();
                 hashCode = (hashCode * 397) ^ RetentionTime.GetHashCode();
+                hashCode = (hashCode * 397) ^ (CCS??0).GetHashCode();
                 hashCode = (hashCode * 397) ^ (Times != null ? Times.GetHashCode() : 0);
                 return hashCode;
             }

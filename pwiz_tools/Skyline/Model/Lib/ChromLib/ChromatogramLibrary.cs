@@ -145,9 +145,12 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
                         endTime = precursorRetentionTime.EndTime;
                         retentionTime = precursorRetentionTime.RetentionTime;
                     }
+
+                    var ccs = precursor13?.CCS ?? 0;
                     return new LibraryChromGroup
                         {
                             RetentionTime = retentionTime,
+                            CCS = (ccs == 0) ? (double?)null : ccs,
                             StartTime = startTime,
                             EndTime = endTime,
                             Times = timeIntensities?.Times ?? new float[0],

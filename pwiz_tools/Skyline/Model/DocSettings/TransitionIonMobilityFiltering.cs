@@ -707,7 +707,7 @@ namespace pwiz.Skyline.Model.DocSettings
             double? highEnergyIonMobilityValueOffset)
         {
             IonMobility = ionMobility;
-            CollisionalCrossSectionSqA = collisionalCrossSectionSqA;
+            CollisionalCrossSectionSqA = collisionalCrossSectionSqA == 0 ? null : collisionalCrossSectionSqA;
             HighEnergyIonMobilityValueOffset = highEnergyIonMobilityValueOffset;
         }
 
@@ -721,7 +721,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public static IonMobilityAndCCS GetIonMobilityAndCCS(IonMobilityValue ionMobilityValue,
             double? collisionalCrossSectionSqA, double? highEnergyIonMobilityValueOffset)
         {
-            return ionMobilityValue.HasValue || collisionalCrossSectionSqA.HasValue
+            return ionMobilityValue.HasValue || (collisionalCrossSectionSqA??0) != 0
                 ? new IonMobilityAndCCS(ionMobilityValue, collisionalCrossSectionSqA, highEnergyIonMobilityValueOffset)
                 : EMPTY;
         }
@@ -908,7 +908,7 @@ namespace pwiz.Skyline.Model.DocSettings
             double? ionMobilityExtractionWindowWidth,
             double? collisionalCrossSectionSqA)
         {
-            if (!ionMobility.HasValue
+            if (IonMobilityValue.IsNullOrEmpty(ionMobility)
                 && !ionMobilityExtractionWindowWidth.HasValue)
             {
                 return EMPTY;
