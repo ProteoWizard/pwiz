@@ -772,6 +772,7 @@ namespace pwiz.Skyline.Model.Lib
         private static readonly Regex REGEX_MODS = new Regex(@" Mods=([^ ]+) ", NOCASE);
         private static readonly Regex REGEX_TF_RATIO = new Regex(@" Tfratio=([^ ]+) ", NOCASE);
         private static readonly Regex REGEX_RT = new Regex(@" RetentionTime=([^ ,]+)", NOCASE); // In a comment
+        private static readonly Regex REGEX_RTINSECONDS = new Regex(@" RTINSECONDS=([^ ,]+)", NOCASE); // In a comment
         private static readonly Regex REGEX_RT_LINE = new Regex(@"^RetentionTime(Mins)*: ([^ ]+)", NOCASE); // On its own line
         private static readonly Regex REGEX_IRT = new Regex(@" iRT=([^ ,]+)", NOCASE);
         private static readonly Regex REGEX_RI = new Regex(@"^Retention_index: ([^ ]+)", NOCASE); // Retention Index for GC
@@ -1000,6 +1001,12 @@ namespace pwiz.Skyline.Model.Lib
                             match = REGEX_RT.Match(line);
                             if (match.Success)
                                 rt = GetRetentionTime(match.Groups[1].Value, false);
+                            else
+                            {
+                                match = REGEX_RTINSECONDS.Match(line);
+                                if (match.Success)
+                                    rt = GetRetentionTime(match.Groups[1].Value, false);
+                            }
 
                             match = REGEX_IRT.Match(line);
                             if (match.Success)
