@@ -118,14 +118,14 @@ namespace SharedBatch
 
         #region Configs
 
-        protected List<ListViewItem> ConfigsListViewItems(Dictionary<string, IConfigRunner> configRunners)
+        protected List<ListViewItem> ConfigsListViewItems(Dictionary<string, IConfigRunner> configRunners, Graphics graphics)
         {
             lock (_lock)
             {
                 var listViewConfigs = new List<ListViewItem>();
                 foreach (var config in _configList)
                 {
-                    var lvi = config.AsListViewItem(configRunners[config.GetName()]);
+                    var lvi = config.AsListViewItem(configRunners[config.GetName()], graphics);
                     if (!_configValidation[config.GetName()])
                         lvi.ForeColor = Color.Red;
                     if (HasSelectedConfig() && _configList[SelectedConfig].GetName().Equals(config.GetName()))

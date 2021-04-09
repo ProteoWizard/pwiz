@@ -18,6 +18,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
 using System.Xml;
@@ -82,15 +83,39 @@ namespace SkylineBatch
 
         public DateTime GetModified()  { return Modified; }
 
-        public ListViewItem AsListViewItem(IConfigRunner runner)
+        private string hoursWhitespace; // spaces added to the front of runtime strings to align the
+
+        public ListViewItem AsListViewItem(IConfigRunner runner, Graphics graphics)
         {
             var configRunner = (ConfigRunner) runner;
             var lvi = new ListViewItem(Name);
             lvi.Checked = Enabled;
             lvi.SubItems.Add(Modified.ToShortDateString());
             lvi.SubItems.Add(configRunner.GetDisplayStatus());
-            lvi.SubItems.Add(configRunner.StartTime);
-            lvi.SubItems.Add(configRunner.RunTime);
+            lvi.SubItems.Add(configRunner.StartTime != null
+                ? ((DateTime)configRunner.StartTime).ToString("T")
+                : string.Empty);
+
+            // calculate space needed for hours in runtime column
+            if (hoursWhitespace == null)
+            {
+                var hoursSize = graphics.MeasureString("00:", lvi.Font).Width;
+                hoursWhitespace = "          .";
+                while (hoursSize < graphics.MeasureString(hoursWhitespace, lvi.Font).Width)
+                    hoursWhitespace = hoursWhitespace.Substring(1);
+                hoursWhitespace = hoursWhitespace.Replace('.', ' ');
+            }
+            if (configRunner.RunTime != null)
+            {
+                TimeSpan runTime = (TimeSpan)configRunner.RunTime;
+                var runTimeString = runTime.Hours > 0
+                    ? runTime.ToString(@"hh\:mm\:ss")
+                    : hoursWhitespace + runTime.ToString(@"mm\:ss");
+                lvi.SubItems.Add(runTimeString);
+            }
+            else
+                lvi.SubItems.Add(string.Empty);
+
             return lvi;
         }
 

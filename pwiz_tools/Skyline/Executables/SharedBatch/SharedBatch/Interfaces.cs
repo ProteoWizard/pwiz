@@ -35,7 +35,7 @@ namespace SharedBatch
         void WriteXml(XmlWriter writer);
 
         // Returns a listViewItem displaying information about the configuration for the UI
-        ListViewItem AsListViewItem(IConfigRunner runner);
+        ListViewItem AsListViewItem(IConfigRunner runner, Graphics graphics);
     }
 
     // Possible status' the ConfigRunner may have. A ConfigRunner does not need to use every status, 

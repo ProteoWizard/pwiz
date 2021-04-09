@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -199,9 +200,9 @@ namespace AutoQC
             return (AutoQcConfig)base.GetSelectedConfig();
         }
 
-        public List<ListViewItem> ConfigsListViewItems()
+        public List<ListViewItem> ConfigsListViewItems(Graphics graphics)
         {
-            return ConfigsListViewItems(_configRunners);
+            return ConfigsListViewItems(_configRunners, graphics);
         }
 
         public void ReplaceSkylineSettings(SkylineSettings skylineSettings)

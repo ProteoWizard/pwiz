@@ -183,7 +183,7 @@ namespace SkylineBatch
         public ReportInfo(string name, string path, List<Tuple<string, string>> rScripts, bool useRefineFile)
         {
             Name = name;
-            ReportPath = path;
+            ReportPath = path ?? string.Empty;
             RScripts = ImmutableList.Create<Tuple<string,string>>().AddRange(rScripts);
             UseRefineFile = useRefineFile;
 

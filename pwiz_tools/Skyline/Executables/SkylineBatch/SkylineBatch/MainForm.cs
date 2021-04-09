@@ -360,7 +360,7 @@ namespace SkylineBatch
                 ProgramLog.Info("Updating configurations");
                 var topItemIndex = listViewConfigs.TopItem != null ? listViewConfigs.TopItem.Index : -1;
                 listViewConfigs.ItemCheck -= listViewConfigs_ItemCheck;
-                var listViewItems = _configManager.ConfigsListViewItems();
+                var listViewItems = _configManager.ConfigsListViewItems(listViewConfigs.CreateGraphics());
                 listViewConfigs.Items.Clear();
                 foreach (var lvi in listViewItems)
                     listViewConfigs.Items.Add(lvi);

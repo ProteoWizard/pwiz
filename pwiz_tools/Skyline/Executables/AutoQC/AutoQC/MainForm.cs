@@ -307,7 +307,7 @@ namespace AutoQC
             RunUi(() =>
             {
                 var topItemIndex = listViewConfigs.TopItem != null ? listViewConfigs.TopItem.Index : -1;
-                var listViewItems = _configManager.ConfigsListViewItems();
+                var listViewItems = _configManager.ConfigsListViewItems(listViewConfigs.CreateGraphics());
                 listViewConfigs.Items.Clear();
                 foreach (var lvi in listViewItems)
                     listViewConfigs.Items.Add(lvi);
