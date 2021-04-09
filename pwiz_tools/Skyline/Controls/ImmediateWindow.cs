@@ -102,14 +102,18 @@ namespace pwiz.Skyline.Controls
                     {                        
                         //CONSIDER: multiple tools running. eg. two tools titled "Tool" and "ToolTest" if you enter ToolTest then both tools will run.
                         try
-                        {                            
+                        {
                             tool.RunTool(_parent.Document, _parent, _textBoxStreamWriter.WriterHelper, _parent, _parent);
+                        }
+                        catch (ToolDeprecatedException e)
+                        {
+                            MessageDlg.Show(_parent, e.Message);
                         }
                         catch (WebToolException e)
                         {
                             WebHelpers.ShowLinkFailure(_parent, e.Link);
                         }
-                        catch(Exception e)
+                        catch (Exception e)
                         {
                             MessageDlg.ShowException(_parent, e);
                         }
