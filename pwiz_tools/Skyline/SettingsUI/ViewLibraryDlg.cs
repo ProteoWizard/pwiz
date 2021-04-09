@@ -751,15 +751,16 @@ namespace pwiz.Skyline.SettingsUI
                             IonMobilityAndCCS dt = bestSpectrum.IonMobilityInfo;
                             if (dt != null && !dt.IsEmpty)
                             {
-                                var dtText = string.Empty;
+                                var ccsText = string.Empty;
+                                var imText = string.Empty;
                                 var ccs = libraryChromGroup?.CCS ?? dt.CollisionalCrossSectionSqA;
                                 if (ccs.HasValue)
-                                    dtText = Resources.ViewLibraryDlg_UpdateUI_CCS__ + string.Format(@"{0:F4} ", ccs.Value);
+                                    ccsText = Resources.ViewLibraryDlg_UpdateUI_CCS__ + string.Format(@"{0:F4} ", ccs.Value);
                                 if (dt.HasIonMobilityValue)
-                                    dtText += Resources.ViewLibraryDlg_UpdateUI_IM__ + string.Format(@"{0:F4}{1}", dt.IonMobility.Mobility, dt.IonMobility.UnitsString);
+                                    imText = Resources.ViewLibraryDlg_UpdateUI_IM__ + string.Format(@"{0:F4}{1}", dt.IonMobility.Mobility, dt.IonMobility.UnitsString);
                                 if (dt.HighEnergyIonMobilityValueOffset != 0) // Show the high energy value (as in Waters MSe) if different
-                                    dtText += String.Format(@"({0:F4})", dt.HighEnergyIonMobilityValueOffset);
-                                labelRT.Text = TextUtil.SpaceSeparate(labelRT.Text, dtText);
+                                    imText += String.Format(@"({0:F4})", dt.HighEnergyIonMobilityValueOffset);
+                                labelRT.Text = TextUtil.TextSeparate(@"  ", labelRT.Text, ccsText, imText);
                             }
                         }
                         if (!_showChromatograms || null == libraryChromGroup)
