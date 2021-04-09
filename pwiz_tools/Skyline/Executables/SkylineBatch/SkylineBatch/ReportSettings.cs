@@ -209,7 +209,8 @@ namespace SkylineBatch
                 scriptsString += Path.GetFileName(script.Item1) + Environment.NewLine;
             }
             var fileString = !UseRefineFile ? Resources.ReportInfo_AsObjectArray_Results : Resources.ReportInfo_AsObjectArray_Refined;
-            return new object[] {Name, ReportPath, scriptsString, fileString};
+            return new object[] { Name, scriptsString, fileString };
+
         }
 
         public HashSet<string> RVersions()
@@ -238,11 +239,13 @@ namespace SkylineBatch
 
         public static void ValidateReportPath(string reportPath)
         {
-            FileUtil.ValidateNotEmptyPath(reportPath, Resources.ReportInfo_ValidateReportPath_report_path);
-            if (!File.Exists(reportPath))
-                throw new ArgumentException(string.Format(Resources.ReportInfo_ValidateReportPath_Report_path__0__is_not_a_valid_path_, reportPath) + Environment.NewLine +
-                                            Resources.ReportInfo_Validate_Please_enter_a_path_to_an_existing_file_);
-            FileUtil.ValidateNotInDownloads(reportPath, Resources.ReportInfo_ValidateReportPath_report_path);
+            if (!string.IsNullOrEmpty(reportPath))
+            {
+                if (!File.Exists(reportPath))
+                    throw new ArgumentException(string.Format(Resources.ReportInfo_ValidateReportPath_Report_path__0__is_not_a_valid_path_, reportPath) + Environment.NewLine +
+                                                Resources.ReportInfo_Validate_Please_enter_a_path_to_an_existing_file_);
+                FileUtil.ValidateNotInDownloads(reportPath, Resources.ReportInfo_ValidateReportPath_report_path);
+            }
         }
 
         public static void ValidateRScriptPath(string rScriptPath)
@@ -340,9 +343,12 @@ namespace SkylineBatch
 
         public void WriteAddExportReportCommand(CommandWriter commandWriter, string analysisFolder)
         {
-            commandWriter.Write(ADD_REPORT_OVERWRITE_COMMAND, ReportPath);
+            if (!string.IsNullOrEmpty(ReportPath))
+            {
+                commandWriter.Write(ADD_REPORT_OVERWRITE_COMMAND, ReportPath);
+                commandWriter.Write(SAVE_SETTINGS_COMMAND);
+            }
             commandWriter.Write(EXPORT_REPORT_COMMAND, Name, Path.Combine(analysisFolder, Name + TextUtil.EXT_CSV));
-            commandWriter.Write(SAVE_SETTINGS_COMMAND);
             commandWriter.EndCommandGroup();
         }
 

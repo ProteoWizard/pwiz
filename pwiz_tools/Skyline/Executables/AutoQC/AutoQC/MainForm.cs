@@ -258,8 +258,8 @@ namespace AutoQC
         private void btnOpenResults_Click(object sender, EventArgs e)
         {
             var config = _configManager.GetSelectedConfig();
-            if (MainFormUtils.CanOpen(config.Name, _configManager.IsSelectedConfigValid(), 
-                Resources.MainForm_btnOpenResults_Click_Skyline_file, this))
+            if (MainFormUtils.CanOpen(config.Name, _configManager.IsSelectedConfigValid(),
+                config.MainSettings.SkylineFilePath, Resources.MainForm_btnOpenResults_Click_Skyline_file, this))
             {
                 SkylineInstallations.OpenSkylineFile(config.MainSettings.SkylineFilePath, config.SkylineSettings);
             }
@@ -269,7 +269,7 @@ namespace AutoQC
         {
             var config = _configManager.GetSelectedConfig();
             if (MainFormUtils.CanOpen(config.Name, _configManager.IsSelectedConfigValid(), 
-                Resources.MainForm_btnOpenPanoramaFolder_Click_Panorama_folder, this))
+                string.Empty, Resources.MainForm_btnOpenPanoramaFolder_Click_Panorama_folder, this))
             {
                 var uri = new Uri(config.PanoramaSettings.PanoramaServerUri + config.PanoramaSettings.PanoramaFolder);
                 Process.Start(uri.AbsoluteUri);
@@ -284,9 +284,9 @@ namespace AutoQC
         private void toolStripFolderToWatch_Click(object sender, EventArgs e)
         {
             var config = _configManager.GetSelectedConfig();
-            MainFormUtils.OpenFileExplorer(config.Name, _configManager.IsSelectedConfigValid(), 
-                Resources.MainForm_toolStripFolderToWatch_Click_folder_to_watch,
-                config.MainSettings.FolderToWatch, this);
+            MainFormUtils.OpenFileExplorer(config.Name, _configManager.IsSelectedConfigValid(),
+                config.MainSettings.FolderToWatch,
+                Resources.MainForm_toolStripFolderToWatch_Click_folder_to_watch, this);
         }
 
         private void toolStripLogFolder_Click(object sender, EventArgs e)
@@ -294,8 +294,8 @@ namespace AutoQC
             var config = _configManager.GetSelectedConfig();
             var logger = _configManager.GetLogger(config.Name);
             MainFormUtils.OpenFileExplorer(config.Name, _configManager.IsSelectedConfigValid(),
-                Resources.MainForm_toolStripLogFolder_Click_log_folder,
-                logger.GetDirectory(), this);
+                logger.GetDirectory(), 
+                Resources.MainForm_toolStripLogFolder_Click_log_folder, this);
         }
 
         #endregion

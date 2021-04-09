@@ -251,14 +251,13 @@ namespace SkylineBatch
             var config = _configManager.GetSelectedConfig();
             config.MainSettings.CreateAnalysisFolderIfNonexistent();
             MainFormUtils.OpenFileExplorer(config.Name, _configManager.IsSelectedConfigValid(),
-                Resources.MainForm_btnOpenAnalysis_Click_analysis_folder,
-                config.MainSettings.AnalysisFolderPath, this);
+                config.MainSettings.AnalysisFolderPath, Resources.MainForm_btnOpenAnalysis_Click_analysis_folder, this);
         }
 
         private void btnOpenTemplate_Click(object sender, EventArgs e)
         {
             var config = _configManager.GetSelectedConfig();
-            if (MainFormUtils.CanOpen(config.Name, _configManager.IsSelectedConfigValid(),
+            if (MainFormUtils.CanOpen(config.Name, _configManager.IsSelectedConfigValid(), config.MainSettings.TemplateFilePath,
                 Resources.MainForm_btnOpenTemplate_Click_Skyline_template_file, this))
             {
                 SkylineInstallations.OpenSkylineFile(config.MainSettings.TemplateFilePath, config.SkylineSettings);
@@ -270,7 +269,7 @@ namespace SkylineBatch
             var config = _configManager.GetSelectedConfig();
             var resultsFile = config.MainSettings.GetResultsFilePath();
 
-            if (MainFormUtils.CanOpen(config.Name, _configManager.IsSelectedConfigValid(),
+            if (MainFormUtils.CanOpen(config.Name, _configManager.IsSelectedConfigValid(), resultsFile,
                 Resources.MainForm_btnOpenResults_Click_Skyline_results_file, this))
             {
                 if (File.Exists(resultsFile))
@@ -508,6 +507,7 @@ namespace SkylineBatch
 
         private void tabLog_Enter(object sender, EventArgs e)
         {
+            textBoxLog.Refresh();
             if (_configManager.SelectedLog == 0)
                 ScrollToLogEnd(true);
         }

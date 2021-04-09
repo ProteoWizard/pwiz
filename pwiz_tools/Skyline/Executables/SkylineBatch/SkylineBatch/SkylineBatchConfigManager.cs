@@ -88,7 +88,7 @@ namespace SkylineBatch
             lock (_lock)
             {
                 var configs = base.LoadConfigList();
-                configs = AssignDependencies(configs, out string warningMessage); // ignore warning
+                configs = AssignDependencies(configs, true, out string warningMessage); // ignore warning
                 foreach (var config in configs)
                     ProgramaticallyAddConfig(config);
                 DisableInvalidConfigs();
@@ -97,12 +97,15 @@ namespace SkylineBatch
 
         #region Add/Remove Configs
 
-        public List<IConfig> AssignDependencies(List<IConfig> newConfigs, out string warningMessage)
+        public List<IConfig> AssignDependencies(List<IConfig> newConfigs, bool checkExistingConfigs, out string warningMessage)
         {
             warningMessage = null;
             var configDictionary = new Dictionary<string, IConfig>();
-            foreach (var existingConfig in _configList)
-                configDictionary.Add(existingConfig.GetName(), existingConfig);
+            if (checkExistingConfigs)
+            {
+                foreach (var existingConfig in _configList)
+                    configDictionary.Add(existingConfig.GetName(), existingConfig);
+            }
             foreach (var newConfig in newConfigs)
                 configDictionary.Add(newConfig.GetName(), newConfig);
             var errorConfigs = new List<string>();
@@ -432,11 +435,13 @@ namespace SkylineBatch
 
         public void RootReplaceConfigs(string oldRoot)
         {
-            var replacingConfigs = GetRootReplacedConfigs(oldRoot);
-            foreach (var indexAndConfig in replacingConfigs)
+            var replacedConfigs = GetRootReplacedConfigs(oldRoot);
+            replacedConfigs = AssignDependencies(replacedConfigs, false, out _);
+            foreach (var config in replacedConfigs)
             {
-                ProgramaticallyRemoveAt(indexAndConfig.Item1);
-                ProgramaticallyInsertConfig(indexAndConfig.Item2, indexAndConfig.Item1);
+                var configIndex = GetConfigIndex(config.GetName());
+                ProgramaticallyRemoveAt(configIndex);
+                ProgramaticallyInsertConfig(config, configIndex);
             }
         }
 
@@ -761,7 +766,7 @@ namespace SkylineBatch
 
         private void HandleImportedConfigs(List<IConfig> importedConfigs)
         {
-            importedConfigs = AssignDependencies(importedConfigs, out string warningMessage);
+            importedConfigs = AssignDependencies(importedConfigs, true, out string warningMessage);
             foreach (var config in importedConfigs)
                 ProgramaticallyAddConfig(config);
             DisableInvalidConfigs();

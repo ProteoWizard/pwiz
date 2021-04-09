@@ -41,7 +41,8 @@ namespace SkylineBatch
             if (editingReport != null)
             {
                 textReportName.Text = editingReport.Name;
-                textReportPath.Text = editingReport.ReportPath;
+                textReportPath.Text = editingReport.ReportPath ?? string.Empty;
+                checkBoxImport.Checked = !string.IsNullOrEmpty(editingReport.ReportPath);
                 radioRefinedFile.Checked = editingReport.UseRefineFile;
                 foreach (var scriptAndVersion in editingReport.RScripts)
                 {
@@ -110,9 +111,10 @@ namespace SkylineBatch
 
         private void btnOk_Click(object sender, EventArgs e)
         {
+            var reportPath = checkBoxImport.Checked ? textReportPath.Text : string.Empty;
             try
             {
-                NewReportInfo = new ReportInfo(textReportName.Text, textReportPath.Text, GetScriptsFromUi(), radioRefinedFile.Checked);
+                NewReportInfo = new ReportInfo(textReportName.Text, reportPath, GetScriptsFromUi(), radioRefinedFile.Checked);
                 NewReportInfo.Validate();
             }
             catch (ArgumentException ex)
@@ -192,6 +194,13 @@ namespace SkylineBatch
         {
             SelectRVersion(e.ClickedItem.Name);
             dataGridScripts.SelectedCells[0].Value = e.ClickedItem.AccessibilityObject.Name;
+        }
+
+        private void checkBoxImport_CheckedChanged(object sender, EventArgs e)
+        {
+            labelReportPath.Enabled = checkBoxImport.Checked;
+            textReportPath.Enabled = checkBoxImport.Checked;
+            btnReportPath.Enabled = checkBoxImport.Checked;
         }
     }
 }

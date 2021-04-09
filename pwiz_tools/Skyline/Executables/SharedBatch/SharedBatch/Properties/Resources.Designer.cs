@@ -541,20 +541,20 @@ namespace SharedBatch.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cannot open the {0} of an invalid configuration..
+        ///   Looks up a localized string similar to The {0} is not valid for {1}..
         /// </summary>
-        public static string MainFormUtils_OpenFileExplorer_Cannot_open_the__0__of_an_invalid_configuration_ {
+        public static string MainFormUtils_CanOpen_The__0__is_not_valid_for__1__ {
             get {
-                return ResourceManager.GetString("MainFormUtils_OpenFileExplorer_Cannot_open_the__0__of_an_invalid_configuration_", resourceCulture);
+                return ResourceManager.GetString("MainFormUtils_CanOpen_The__0__is_not_valid_for__1__", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Please fix &quot;{0}&quot; and try again..
+        ///   Looks up a localized string similar to Please fix {0} and try again..
         /// </summary>
-        public static string MainFormUtils_OpenFileExplorer_Please_fix___0___and_try_again_ {
+        public static string MainFormUtils_OpenFileExplorer_Please_fix__0__and_try_again_ {
             get {
-                return ResourceManager.GetString("MainFormUtils_OpenFileExplorer_Please_fix___0___and_try_again_", resourceCulture);
+                return ResourceManager.GetString("MainFormUtils_OpenFileExplorer_Please_fix__0__and_try_again_", resourceCulture);
             }
         }
         

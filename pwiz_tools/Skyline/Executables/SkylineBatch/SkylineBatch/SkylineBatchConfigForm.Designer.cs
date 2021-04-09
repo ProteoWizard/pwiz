@@ -80,10 +80,6 @@
             this.btnDeleteReport = new System.Windows.Forms.ToolStripButton();
             this.btnEditReport = new System.Windows.Forms.ToolStripButton();
             this.gridReportSettings = new System.Windows.Forms.DataGridView();
-            this.columnName = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.columnPath = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.columnScripts = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.columnFile = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.tabSkyline = new System.Windows.Forms.TabPage();
             this.panelSkylineSettings = new System.Windows.Forms.Panel();
             this.btnCancelConfig = new System.Windows.Forms.Button();
@@ -91,6 +87,9 @@
             this.btnSaveConfig = new System.Windows.Forms.Button();
             this.btnOkConfig = new System.Windows.Forms.Button();
             this.imageListToolbarIcons = new System.Windows.Forms.ImageList(this.components);
+            this.columnName = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.columnScripts = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.columnFile = new System.Windows.Forms.DataGridViewTextBoxColumn();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -482,7 +481,6 @@
             this.gridReportSettings.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.gridReportSettings.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.columnName,
-            this.columnPath,
             this.columnScripts,
             this.columnFile});
             dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
@@ -507,30 +505,6 @@
             this.gridReportSettings.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.gridReportSettings.TabStop = false;
             this.gridReportSettings.SelectionChanged += new System.EventHandler(this.gridReportSettings_SelectionChanged);
-            // 
-            // columnName
-            // 
-            this.columnName.FillWeight = 128.5841F;
-            resources.ApplyResources(this.columnName, "columnName");
-            this.columnName.Name = "columnName";
-            // 
-            // columnPath
-            // 
-            this.columnPath.FillWeight = 101.5228F;
-            resources.ApplyResources(this.columnPath, "columnPath");
-            this.columnPath.Name = "columnPath";
-            // 
-            // columnScripts
-            // 
-            this.columnScripts.FillWeight = 108.0281F;
-            resources.ApplyResources(this.columnScripts, "columnScripts");
-            this.columnScripts.Name = "columnScripts";
-            // 
-            // columnFile
-            // 
-            this.columnFile.FillWeight = 61.86493F;
-            resources.ApplyResources(this.columnFile, "columnFile");
-            this.columnFile.Name = "columnFile";
             // 
             // tabSkyline
             // 
@@ -578,6 +552,24 @@
             this.imageListToolbarIcons.TransparentColor = System.Drawing.Color.Transparent;
             this.imageListToolbarIcons.Images.SetKeyName(0, "AddedIcon.ico");
             this.imageListToolbarIcons.Images.SetKeyName(1, "DeletedIcon.ico");
+            // 
+            // columnName
+            // 
+            this.columnName.FillWeight = 128.5841F;
+            resources.ApplyResources(this.columnName, "columnName");
+            this.columnName.Name = "columnName";
+            // 
+            // columnScripts
+            // 
+            this.columnScripts.FillWeight = 108.0281F;
+            resources.ApplyResources(this.columnScripts, "columnScripts");
+            this.columnScripts.Name = "columnScripts";
+            // 
+            // columnFile
+            // 
+            this.columnFile.FillWeight = 61.86493F;
+            resources.ApplyResources(this.columnFile, "columnFile");
+            this.columnFile.Name = "columnFile";
             // 
             // SkylineBatchConfigForm
             // 
@@ -673,10 +665,9 @@
         private System.Windows.Forms.Button btnRefinedFilePath;
         public System.Windows.Forms.TextBox textRefinedFilePath;
         private System.Windows.Forms.SplitContainer splitContainer2;
+        public System.Windows.Forms.ComboBox comboTemplateFile;
         private System.Windows.Forms.DataGridViewTextBoxColumn columnName;
-        private System.Windows.Forms.DataGridViewTextBoxColumn columnPath;
         private System.Windows.Forms.DataGridViewTextBoxColumn columnScripts;
         private System.Windows.Forms.DataGridViewTextBoxColumn columnFile;
-        public System.Windows.Forms.ComboBox comboTemplateFile;
     }
 }

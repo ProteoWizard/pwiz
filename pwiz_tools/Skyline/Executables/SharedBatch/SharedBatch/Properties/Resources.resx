@@ -234,11 +234,8 @@
   <data name="Logger_WriteToFile_Exception_stack_trace__" xml:space="preserve">
     <value>Exception stack trace: </value>
   </data>
-  <data name="MainFormUtils_OpenFileExplorer_Cannot_open_the__0__of_an_invalid_configuration_" xml:space="preserve">
-    <value>Cannot open the {0} of an invalid configuration.</value>
-  </data>
-  <data name="MainFormUtils_OpenFileExplorer_Please_fix___0___and_try_again_" xml:space="preserve">
-    <value>Please fix "{0}" and try again.</value>
+  <data name="MainFormUtils_OpenFileExplorer_Please_fix__0__and_try_again_" xml:space="preserve">
+    <value>Please fix {0} and try again.</value>
   </data>
   <data name="SkylineSettings_Validate_Could_not_find_a_Skyline_daily_installation_on_this_computer_" xml:space="preserve">
     <value>Could not find a Skyline-daily installation on this computer.</value>
@@ -335,5 +332,8 @@ with:
   </data>
   <data name="FileOpenedForm_RootFolderValidator_root_folder" xml:space="preserve">
     <value>root folder</value>
+  </data>
+  <data name="MainFormUtils_CanOpen_The__0__is_not_valid_for__1__" xml:space="preserve">
+    <value>The {0} is not valid for {1}.</value>
   </data>
 </root>

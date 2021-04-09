@@ -692,9 +692,9 @@ namespace SharedBatch
             return replaceRoot;
         }
 
-        protected List<Tuple<int, IConfig>> GetRootReplacedConfigs(string oldRoot)
+        protected List<IConfig> GetRootReplacedConfigs(string oldRoot)
         {
-            var replacingConfigs = new List<Tuple<int, IConfig>>();
+            var replacingConfigs = new List<IConfig>();
             var newRoot = RootReplacement[oldRoot];
             lock (_lock)
             {
@@ -706,7 +706,7 @@ namespace SharedBatch
                         var pathsReplaced = config.TryPathReplace(oldRoot, newRoot, out IConfig replacedPathConfig);
                         if (pathsReplaced)
                         {
-                            replacingConfigs.Add(new Tuple<int, IConfig>(i, replacedPathConfig));
+                            replacingConfigs.Add(replacedPathConfig);
                         }
                     }
                 }
