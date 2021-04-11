@@ -1122,7 +1122,7 @@ namespace pwiz.SkylineTestData
             {
                 string arg = string.Format("--{0}", name);
                 string output = RunCommand(getCommandLineForArg(arg));
-                Assert.IsTrue(CountErrors(output, allowUnlocalizedErrors) > 0, string.Format("No error for argument {0}", arg));
+                Assert.AreEqual(1, CountErrors(output, allowUnlocalizedErrors), string.Format("No error for argument {0}", arg));
                 Assert.AreEqual(1, CountInstances(arg, output), string.Format("Missing expected argument {0}", arg));
             }
         }

@@ -4236,6 +4236,9 @@
   <data name="PythonInstaller_InstallPip_Pip_installation_failed__Error_log_output_in_immediate_window__" xml:space="preserve">
     <value>Pipのインストールに失敗しました。即時ウィンドウ内のログ出力エラー。</value>
   </data>
+  <data name="CommandLine_Run_Exiting___" xml:space="preserve">
+    <value>終了中...</value>
+  </data>
   <data name="AddIrtCalculatorDlgOkDialogThe_file__0__does_not_exist" xml:space="preserve">
     <value>ファイル{0}は存在しません。</value>
   </data>
