@@ -89,8 +89,13 @@ namespace pwiz.Skyline
             if(!commandArgs.ParseArgs(args))
             {
                 if (!commandArgs.UsageShown)
-                    _out.WriteLine(Resources.CommandLine_Run_Exiting___);
-                return Program.EXIT_CODE_FAILURE_TO_START;
+                {
+                    return LogErrorAndReturnExitCodeFailureToStart(_out);
+                }
+                else
+                {
+                    return Program.EXIT_CODE_FAILURE_TO_START;
+                }
             }
 
             if (!string.IsNullOrEmpty(commandArgs.LogFile))
@@ -107,7 +112,7 @@ namespace pwiz.Skyline
                 catch (Exception)
                 {
                     oldOut.WriteLine(Resources.CommandLine_Run_Error__Failed_to_open_log_file__0_, commandArgs.LogFile);
-                    return Program.EXIT_CODE_FAILURE_TO_START;
+                    return LogErrorAndReturnExitCodeFailureToStart(oldOut);
                 }
                 using (oldOut)
                 {
@@ -140,7 +145,10 @@ namespace pwiz.Skyline
             if (commandArgs.ImportingSkyr)
             {
                 if (!ImportSkyr(commandArgs.SkyrPath, commandArgs.ResolveSkyrConflictsBySkipping))
-                    return Program.EXIT_CODE_RAN_WITH_ERRORS;
+                {
+                    return LogErrorAndReturnExitCodeRanWithErrors(_out);
+                }
+
                 anyAction = true;
             }
             if (!commandArgs.RequiresSkylineDocument)
@@ -156,8 +164,7 @@ namespace pwiz.Skyline
             if ((skylineFile != null && !OpenSkyFile(skylineFile)) ||
                 (skylineFile == null && _doc == null))
             {
-                _out.WriteLine(Resources.CommandLine_Run_Exiting___);
-                return Program.EXIT_CODE_RAN_WITH_ERRORS;
+                return LogErrorAndReturnExitCodeRanWithErrors(_out);
             }
 
             if (skylineFile != null)
@@ -190,6 +197,25 @@ namespace pwiz.Skyline
                 DocContainer = null;
             }
             return Program.EXIT_CODE_SUCCESS;
+        }
+
+        private static int LogErrorAndReturnExitCodeRanWithErrors(CommandStatusWriter writer)
+        {
+            return LogErrorAndReturnExitCode(Resources.CommandLine_Run_Error__A_failure_occurred__Exiting___, Program.EXIT_CODE_RAN_WITH_ERRORS, writer);
+        }
+
+        private static int LogErrorAndReturnExitCodeFailureToStart(CommandStatusWriter writer)
+        {
+            return LogErrorAndReturnExitCode(Resources.CommandLine_Run_Error__Failed_to_start__Exiting___, Program.EXIT_CODE_FAILURE_TO_START, writer);
+        }
+
+        private static int LogErrorAndReturnExitCode(string errorMsg, int exitCode, CommandStatusWriter writer)
+        {
+            // Log an error message starting with "Error:".  SkylineRunner does not have a way of knowing the
+            // exit code from Skyline so it looks for output lines starting with "Error:" to determine that an
+            // error occurred while running Skyline, and return a non-zero exit code.
+            writer.WriteLine(errorMsg);
+            return exitCode;
         }
 
         private bool ProcessDocument(CommandArgs commandArgs)
@@ -2882,7 +2908,7 @@ namespace pwiz.Skyline
             if (!File.Exists(path))
             {
                 _out.WriteLine(Resources.CommandLine_RunBatchCommands_Error___0__does_not_exist____batch_commands_failed_, path);
-                return Program.EXIT_CODE_RAN_WITH_ERRORS;
+                return LogErrorAndReturnExitCodeRanWithErrors(_out);
             }
             else
             {

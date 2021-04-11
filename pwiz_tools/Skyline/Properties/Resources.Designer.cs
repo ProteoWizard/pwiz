@@ -6292,6 +6292,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error: A failure occurred. Exiting....
+        /// </summary>
+        public static string CommandLine_Run_Error__A_failure_occurred__Exiting___ {
+            get {
+                return ResourceManager.GetString("CommandLine_Run_Error__A_failure_occurred__Exiting___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error: Failed importing the file {0}. {1}.
         /// </summary>
         public static string CommandLine_Run_Error__Failed_importing_the_file__0____1_ {
@@ -6327,13 +6336,13 @@ namespace pwiz.Skyline.Properties {
                         "ethod___Neither_will_be_exported__", resourceCulture);
             }
         }
-        
+
         /// <summary>
-        ///   Looks up a localized string similar to Exiting....
+        ///   Looks up a localized string similar to Error: Failed to start. Exiting....
         /// </summary>
-        public static string CommandLine_Run_Exiting___ {
+        public static string CommandLine_Run_Error__Failed_to_start__Exiting___ {
             get {
-                return ResourceManager.GetString("CommandLine_Run_Exiting___", resourceCulture);
+                return ResourceManager.GetString("CommandLine_Run_Error__Failed_to_start__Exiting___", resourceCulture);
             }
         }
         

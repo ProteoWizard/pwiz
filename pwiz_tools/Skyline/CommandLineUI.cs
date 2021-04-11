@@ -38,7 +38,7 @@ namespace pwiz.Skyline
             _commandArgs = new CommandArgs(consoleOut, false);
             if (!_commandArgs.ParseArgs(args))
             {
-                consoleOut.WriteLine(Resources.CommandLine_Run_Exiting___);
+                consoleOut.WriteLine(Resources.CommandLine_Run_Error__Failed_to_start__Exiting___);
                 return;
             }
 
