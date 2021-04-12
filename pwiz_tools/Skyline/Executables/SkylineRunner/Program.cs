@@ -116,7 +116,7 @@ namespace pwiz.SkylineRunner
                     //While (!done reading)
                     while ((line = sr.ReadLine()) != null)
                     {
-                        if (line.StartsWith("Error:"))
+                        if (line.StartsWith(Resources.Program_Run_Error_, StringComparison.CurrentCulture))
                         {
                             exitCode = 2;
                         }
