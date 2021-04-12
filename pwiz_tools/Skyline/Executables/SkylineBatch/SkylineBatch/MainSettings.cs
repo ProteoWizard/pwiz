@@ -78,20 +78,6 @@ namespace SkylineBatch
                 ReplicateNamingPattern, newName);
         }
 
-        /*public HashSet<string> GetFolders(string pathRoot)
-        {
-            var folders = new HashSet<string>()
-            {
-                FileUtil.GetNextFolder(pathRoot, AnalysisFolderPath),
-                FileUtil.GetNextFolder(pathRoot, DataFolderPath)
-            };
-            if (string.IsNullOrEmpty(DependentConfigName))
-                FileUtil.GetNextFolder(pathRoot, TemplateFilePath);
-            if (!string.IsNullOrEmpty(AnnotationsFilePath))
-                folders.Add(FileUtil.GetNextFolder(pathRoot, AnnotationsFilePath));
-            return folders;
-        }*/
-
         public void CreateAnalysisFolderIfNonexistent()
         {
             if(!Directory.Exists(AnalysisFolderPath)) Directory.CreateDirectory(AnalysisFolderPath);

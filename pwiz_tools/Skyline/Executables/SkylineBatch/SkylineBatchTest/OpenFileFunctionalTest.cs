@@ -24,7 +24,7 @@ namespace SkylineBatchTest
             RunFunctionalTest();
         }
 
-        protected override async void DoTest()
+        protected override void DoTest()
         {
             TEST_FOLDER = TestFilesDirs[0].FullPath;
             CONFIG_FOLDER = TestFilesDirs[1].FullPath;
@@ -39,11 +39,7 @@ namespace SkylineBatchTest
 
             TestFileAutomaticReplace(mainForm);
 
-            await TestDownloadedFileCopy(mainForm);
-
-            //TestFileNonexistentPaths(mainForm);
-
-            //TestFileInDownloads(mainForm);
+            //await TestDownloadedConfiguration(mainForm);
 
         }
 
@@ -85,17 +81,17 @@ namespace SkylineBatchTest
 
         }
 
-        public async Task TestDownloadedFileCopy(MainForm mainForm)
+        /*public async Task TestDownloadedConfiguration(MainForm mainForm)
         {
             RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
-            var openedFileForm = ShowDialog<FileOpenedForm>(() => mainForm.FileOpened(Path.Combine(TEST_FOLDER, "Downloads\\Folder\\DownloadedConfig.bcfg")));
+            var openedFileForm = ShowDialog<FileOpenedForm>(() => mainForm.FileOpened(Path.Combine(TEST_FOLDER, "Downloads\\DownloadedConfig.bcfg")));
             RunUI(() =>
             {
                 openedFileForm.SetPath(TEST_FOLDER);
                 openedFileForm.btnCancel.PerformClick();
             });
             RunUI(() => { FunctionalTestUtil.CheckConfigs(0, 0, mainForm); });
-            Assert.AreEqual(false, File.Exists(Path.Combine(TEST_FOLDER, "emptyTemplate.sky")));
+            Assert.AreEqual(false, File.Exists(Path.Combine(TEST_FOLDER, "DownloadedConfig.bcfg")));
 
             openedFileForm = ShowDialog<FileOpenedForm>(() => mainForm.FileOpened(Path.Combine(TEST_FOLDER, "Downloads\\Folder\\DownloadedConfig.bcfg")));
             RunUI(() =>
@@ -105,8 +101,8 @@ namespace SkylineBatchTest
             });
             await Task.Delay(5000);
             RunUI(() => { FunctionalTestUtil.CheckConfigs(1, 0, mainForm); });
-            Assert.AreEqual(true, File.Exists(Path.Combine(TEST_FOLDER, "emptyTemplate.sky")));
-        }
+            Assert.AreEqual(true, File.Exists(Path.Combine(TEST_FOLDER, "DownloadedConfig.bcfg")));
+        }*/
         
     }
 }

@@ -391,16 +391,18 @@ namespace SharedBatch
         {
             var copiedDestination = string.Empty;
             var copiedConfigFile = string.Empty;
+            // TODO (Ali) uncomment this when data and templates can be downloaded
+            /*
             if (filePath.Contains(FileUtil.DOWNLOADS_FOLDER))
             {
                 var dialogResult = showDownloadedFileForm(filePath, out copiedDestination);
                 if (dialogResult != DialogResult.Yes)
                     return new List<IConfig>();
-                var downloadsRoot = filePath.Substring(0, filePath.IndexOf(FileUtil.DOWNLOADS_FOLDER)) + FileUtil.DOWNLOADS_FOLDER;
-                var folderName = FileUtil.GetNextFolder(downloadsRoot, filePath);
-                copiedConfigFile = TextUtil.TryReplaceStart(downloadsRoot, copiedDestination, filePath);
-                FileUtil.DirectoryDeepCopy(Path.Combine(downloadsRoot, folderName), Path.Combine(copiedDestination, folderName));
-            }
+                copiedConfigFile = Path.Combine(copiedDestination, Path.GetFileName(filePath));
+                var file = new FileInfo(filePath);
+                if (!File.Exists(copiedConfigFile))
+                    file.CopyTo(copiedConfigFile, false);
+            }*/
 
             var readConfigs = new List<IConfig>();
             var addedConfigs = new List<IConfig>();

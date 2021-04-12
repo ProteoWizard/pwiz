@@ -80,14 +80,6 @@ namespace SkylineBatch
             return anyReplaced;
         }
 
-        /*public HashSet<string> GetFolders(string pathRoot)
-        {
-            var allFiles = new HashSet<string>();
-            foreach(var report in Reports)
-                allFiles.UnionWith(report.GetFolders(pathRoot));
-            return allFiles;
-        }*/
-
         public static ReportSettings ReadXml(XmlReader reader)
         {
             var reports = new List<ReportInfo>();
@@ -277,14 +269,6 @@ namespace SkylineBatch
             }
             pathReplacedReportInfo = new ReportInfo(Name, replacedReportPath, replacedRScripts, UseRefineFile);
             return reportReplaced || anyScriptReplaced;
-        }
-
-        public HashSet<string> GetFolders(string pathRoot)
-        {
-            var allFiles = new HashSet<string>() { FileUtil.GetNextFolder(pathRoot, ReportPath)};
-            foreach (var scriptAndVersion in RScripts)
-                FileUtil.GetNextFolder(pathRoot, scriptAndVersion.Item1);
-            return allFiles;
         }
 
         private enum Attr

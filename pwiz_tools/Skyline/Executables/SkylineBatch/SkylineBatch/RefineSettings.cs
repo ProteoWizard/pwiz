@@ -117,13 +117,6 @@ namespace SkylineBatch
             return didReplace;
         }
 
-        /*public HashSet<string> GetFolders(string pathRoot)
-        {
-            if (!WillRefine())
-                return new HashSet<string>();
-            return new HashSet<string>() { FileUtil.GetNextFolder(pathRoot, OutputFilePath) };
-        }*/
-
         #region Read/Write XML
 
         private enum Attr
