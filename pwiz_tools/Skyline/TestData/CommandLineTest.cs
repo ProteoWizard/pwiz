@@ -2999,7 +2999,7 @@ namespace pwiz.SkylineTestData
             Assert.IsTrue(
                 buffer.ToString()
                     .Contains(
-                        string.Format(Resources.PanoramaHelper_ValidateServer_, "GetServerState threw an exception")));
+                        string.Format(Resources.PanoramaHelper_ValidateServer_Exception_, "GetServerState threw an exception")));
             buffer.Clear();
 
             
