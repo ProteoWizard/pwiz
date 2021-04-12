@@ -1018,7 +1018,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 groupBoxRetentionTimeToKeep.Enabled = true;
             }
-            if (radioKeepAllTime.Checked && !disabled)
+            if (radioKeepAllTime.Checked && !disabled && AcquisitionMethod != FullScanAcquisitionMethod.Targeted)
             {
                 radioKeepAllTime.ForeColor = Color.Red;
                 toolTip.SetToolTip(radioKeepAllTime,
