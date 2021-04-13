@@ -117,6 +117,11 @@ namespace pwiz.Skyline.Menus
         public void UpdateTargetsDisplayMode(ProteinMetadataManager.ProteinDisplayMode mode)
         {
             Settings.Default.ShowPeptidesDisplayMode = mode.ToString();
+            ShowTargetsWindow();
+        }
+
+        private void ShowTargetsWindow()
+        {
             Settings.Default.ShowPeptides = true;
             SkylineWindow.ShowSequenceTreeForm(true, true);
 
@@ -827,6 +832,7 @@ namespace pwiz.Skyline.Menus
         }
         public void ViewMenuDropDownOpening()
         {
+            viewTargetsMenuItem.Enabled = !Settings.Default.ShowPeptides;
             viewModificationsMenuItem.DropDownItems.Clear();
             var currentOption = DisplayModificationOption.Current;
             foreach (var opt in DisplayModificationOption.All)
@@ -951,5 +957,9 @@ namespace pwiz.Skyline.Menus
             SkylineWindow.ShowQc(qcTraceItem.Text);
         }
 
+        private void viewTargetsMenuItem_click(object sender, EventArgs e)
+        {
+            ShowTargetsWindow();
+        }
     }
 }
