@@ -28,9 +28,9 @@ namespace SkylineBatch
             configurationRVersions.ExceptWith(Settings.Default.RVersions.Keys);
             ShownDialog = true;
             var addDirectory = DialogResult.Yes == _mainUiControl.DisplayQuestion(
-                string.Format("The following R installations were not found by {0}:", Program.AppName()) + Environment.NewLine +
+                string.Format(Resources.RDirectorySelector_AddIfNecassary_The_following_R_installations_were_not_found_by__0__, Program.AppName()) + Environment.NewLine +
                 TextUtil.LineSeparate(configurationRVersions) + Environment.NewLine +
-                "Would you like to add an R installation directory?");
+                Resources.RDirectorySelector_AddIfNecassary_Would_you_like_to_add_an_R_installation_directory_);
             if (addDirectory)
                 ShowAddDirectoryDialog();
         }
@@ -46,8 +46,9 @@ namespace SkylineBatch
         
         public bool ShowAddDirectoryDialog()
         {
+            // TODO(Ali): handle R installation after dialog appears
             var dialog = new FolderBrowserDialog();
-            var initialPath = Settings.Default.RDirs.Count > 0 ? TextUtil.GetInitialDirectory(Settings.Default.RDirs[Settings.Default.RDirs.Count - 1]) : null;
+            var initialPath = Settings.Default.RDirs.Count > 0 ? FileUtil.GetInitialDirectory(Settings.Default.RDirs[Settings.Default.RDirs.Count - 1]) : null;
             dialog.SelectedPath = initialPath;
             var directoryAdded = false;
             DialogResult result = dialog.ShowDialog();

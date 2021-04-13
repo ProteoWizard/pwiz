@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using SharedBatch;
@@ -24,6 +22,8 @@ namespace SkylineBatch
 
         private bool _askedAboutRootReplacement; // if the user has been asked about replacing path roots for this configuration
 
+        private TaskCompletionSource<bool> clickNextButton; // allows awaiting btnNext click
+
         public InvalidConfigSetupForm(IMainUiControl mainControl, SkylineBatchConfig invalidConfig, SkylineBatchConfigManager configManager, RDirectorySelector rDirectorySelector)
         {
             InitializeComponent();
@@ -35,6 +35,8 @@ namespace SkylineBatch
         }
 
         public SkylineBatchConfig Config { get; private set; }
+
+        public IValidatorControl CurrentControl { get; private set; }
 
         private MainSettings mainSettings => _invalidConfig.MainSettings;
         private RefineSettings refineSettings => _invalidConfig.RefineSettings;
@@ -139,9 +141,18 @@ namespace SkylineBatch
             if (path.Equals(invalidPath))
                 return path;
             _lastInputPath = path;
-
-            GetNewRoot(invalidPath, path);
             
+            if (!_askedAboutRootReplacement)
+            {
+                var doReplacement = _configManager.AddRootReplacement(invalidPath, path, true, out string oldRoot, 
+                    out _askedAboutRootReplacement);
+                if (doReplacement)
+                {
+                    _configManager.RootReplaceConfigs(oldRoot);
+                    _invalidConfig = _configManager.GetSelectedConfig();
+                }
+            }
+
             RemoveControl(folderControl);
             return path;
         }
@@ -163,7 +174,8 @@ namespace SkylineBatch
             AddControl((UserControl)control);
             while (!valid)
             {
-                await btnNext;
+                clickNextButton = new TaskCompletionSource<bool>();
+                await clickNextButton.Task;
                 valid = control.IsValid(out errorMessage);
                 if (!valid)
                     AlertDlg.ShowError(this, Program.AppName(), errorMessage);
@@ -173,40 +185,9 @@ namespace SkylineBatch
             return control.GetVariable();
         }
 
-        #endregion
-        
-        #region Find Path Root
-
-        private void GetNewRoot(string oldPath, string newPath)
+        private void btnNext_Click(object sender, EventArgs e)
         {
-            var oldPathFolders = oldPath.Split('\\');
-            var newPathFolders = newPath.Split('\\');
-            string oldRoot = string.Empty;
-            string newRoot = string.Empty;
-
-            var matchingEndFolders = 2;
-            while (matchingEndFolders <= Math.Min(oldPathFolders.Length, newPathFolders.Length))
-            {
-                // If path folders do not match we cannot replace root
-                if (!oldPathFolders[oldPathFolders.Length - matchingEndFolders]
-                    .Equals(newPathFolders[newPathFolders.Length - matchingEndFolders]))
-                    break;
-
-                oldRoot = string.Join("\\", oldPathFolders.Take(oldPathFolders.Length - matchingEndFolders).ToArray());
-                newRoot = string.Join("\\", newPathFolders.Take(newPathFolders.Length - matchingEndFolders).ToArray());
-                matchingEndFolders++;
-            }
-            // the first time a path is changed, ask if user wants all path roots replaced
-            if (!_askedAboutRootReplacement && oldRoot.Length > 0 && !Directory.Exists(oldRoot) && !_configManager.RootReplacement.ContainsKey(oldRoot))
-            {
-                var replaceRoot = AlertDlg.ShowQuestion(this, Program.AppName(), string.Format(Resources.InvalidConfigSetupForm_GetValidPath_Would_you_like_to_replace__0__with__1___, oldRoot, newRoot)) == DialogResult.Yes;
-                _askedAboutRootReplacement = true;
-                if (replaceRoot)
-                {
-                    _configManager.AddRootReplacement(oldRoot, newRoot);
-                    _invalidConfig = _configManager.GetSelectedConfig();
-                }
-            }
+            clickNextButton.TrySetResult(true);
         }
 
         #endregion
@@ -216,50 +197,14 @@ namespace SkylineBatch
             control.Dock = DockStyle.Fill;
             control.Show();
             panel1.Controls.Add(control);
+            CurrentControl = (IValidatorControl)control;
         }
 
         private void RemoveControl(UserControl control)
         {
             control.Hide();
             panel1.Controls.Remove(control);
-        }
-    }
-
-    // Class that lets you wait for button click (ex: "await btnNext")
-    public static class ButtonAwaiterExtensions
-    {
-        public static ButtonAwaiter GetAwaiter(this Button button)
-        {
-            return new ButtonAwaiter()
-            {
-                Button = button
-            };
-        }
-    }
-    
-    public class ButtonAwaiter : INotifyCompletion
-    {
-
-        public bool IsCompleted
-        {
-            get { return false; }
-        }
-        
-        public void GetResult()
-        {
-        }
-        
-        public Button Button { get; set; }
-
-        public void OnCompleted(Action continuation)
-        {
-            EventHandler h = null;
-            h = (o, e) =>
-            {
-                Button.Click -= h;
-                continuation();
-            };
-            Button.Click += h;
+            CurrentControl = null;
         }
     }
 }

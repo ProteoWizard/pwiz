@@ -42,8 +42,7 @@ namespace SkylineBatch
         private readonly Dictionary<string, string> _possibleTemplates;
         private TabPage _lastSelectedTab;
         private SkylineSettings _currentSkylineSettings;
-
-        private SkylineTypeControl _skylineTypeControl;
+        
         private string _lastEnteredPath;
 
         public SkylineBatchConfigForm(IMainUiControl mainControl, RDirectorySelector rDirectorySelector, SkylineBatchConfig config, ConfigAction action, bool isBusy, Dictionary<string, string> possibleTemplates)
@@ -77,6 +76,8 @@ namespace SkylineBatch
 
             ActiveControl = textConfigName;
         }
+
+        public SkylineTypeControl SkylineTypeControl { get; private set; }
 
         private bool ShowTemplateComboBox => _possibleTemplates.Count > 0 && !_isBusy;
 
@@ -204,7 +205,7 @@ namespace SkylineBatch
         private void OpenFile(Control textBox, string filter, bool save = false)
         {
             FileDialog dialog = save ? (FileDialog)new SaveFileDialog() : new OpenFileDialog();
-            var initialDirectory = TextUtil.GetInitialDirectory(textBox.Text, _lastEnteredPath);
+            var initialDirectory = FileUtil.GetInitialDirectory(textBox.Text, _lastEnteredPath);
             dialog.InitialDirectory = initialDirectory;
             dialog.Filter = filter;
             DialogResult result = dialog.ShowDialog();
@@ -218,7 +219,7 @@ namespace SkylineBatch
         private void OpenFolder(TextBox textbox)
         {
             var dialog = new FolderBrowserDialog();
-            var initialPath = TextUtil.GetInitialDirectory(textbox.Text, _lastEnteredPath);
+            var initialPath = FileUtil.GetInitialDirectory(textbox.Text, _lastEnteredPath);
             dialog.SelectedPath = initialPath;
             DialogResult result = dialog.ShowDialog();
             if (result == DialogResult.OK)
@@ -283,13 +284,13 @@ namespace SkylineBatch
                 var refineSettings = config.RefineSettings;
                 checkBoxRemoveData.Checked = refineSettings.RemoveResults;
                 checkBoxRemoveDecoys.Checked = refineSettings.RemoveDecoys;
-                textBoxRefinedFilePath.Text = refineSettings.OutputFilePath;
+                textRefinedFilePath.Text = refineSettings.OutputFilePath;
             }
         }
 
         private void textBoxRefinedFilePath_TextChanged(object sender, EventArgs e)
         {
-            ToggleRefineEnabled(!string.IsNullOrEmpty(textBoxRefinedFilePath.Text));
+            ToggleRefineEnabled(!string.IsNullOrEmpty(textRefinedFilePath.Text));
         }
 
         private void ToggleRefineEnabled(bool enabled)
@@ -306,13 +307,13 @@ namespace SkylineBatch
         {
             var removeDecoys = checkBoxRemoveDecoys.Checked;
             var removeData = checkBoxRemoveData.Checked;
-            var outputFilePath = textBoxRefinedFilePath.Text;
+            var outputFilePath = textRefinedFilePath.Text;
             return new RefineSettings(_refineInput.AsCommandList(), removeDecoys, removeData, outputFilePath);
         }
 
         private void btnRefinedFilePath_Click(object sender, EventArgs e)
         {
-            OpenFile(textBoxRefinedFilePath, TextUtil.FILTER_SKY, true);
+            OpenFile(textRefinedFilePath, TextUtil.FILTER_SKY, true);
         }
 
         #endregion
@@ -339,7 +340,7 @@ namespace SkylineBatch
 
         private void ShowAddReportDialog(int addingIndex, ReportInfo editingReport = null)
         {
-            var addReportsForm = new ReportsAddForm(_mainControl, _rDirectorySelector, !string.IsNullOrEmpty(textBoxRefinedFilePath.Text), editingReport);
+            var addReportsForm = new ReportsAddForm(_mainControl, _rDirectorySelector, !string.IsNullOrEmpty(textRefinedFilePath.Text), editingReport);
             var addReportResult = addReportsForm.ShowDialog();
 
             if (addReportResult == DialogResult.OK)
@@ -394,17 +395,24 @@ namespace SkylineBatch
             }
 
             if (config != null)
-                _skylineTypeControl = new SkylineTypeControl(_mainControl, config.UsesSkyline, config.UsesSkylineDaily, config.UsesCustomSkylinePath, config.SkylineSettings.CmdPath);
+                SkylineTypeControl = new SkylineTypeControl(_mainControl, config.UsesSkyline, config.UsesSkylineDaily, config.UsesCustomSkylinePath, config.SkylineSettings.CmdPath);
             else
             {
                 // Default to the first existing Skyline installation (Skyline, Skyline-daily, custom path)
-                _skylineTypeControl = new SkylineTypeControl();
+                SkylineTypeControl = new SkylineTypeControl();
             }
 
-            _skylineTypeControl.Dock = DockStyle.Fill;
-            _skylineTypeControl.Show();
-            panelSkylineSettings.Controls.Add(_skylineTypeControl);
-            _currentSkylineSettings = GetSkylineSettingsFromUi();
+            SkylineTypeControl.Dock = DockStyle.Fill;
+            SkylineTypeControl.Show();
+            panelSkylineSettings.Controls.Add(SkylineTypeControl);
+            try
+            {
+                _currentSkylineSettings = GetSkylineSettingsFromUi();
+            }
+            catch (ArgumentException)
+            {
+                _currentSkylineSettings = null;
+            }
         }
 
         private void TabEnter(object sender, EventArgs e)
@@ -420,8 +428,16 @@ namespace SkylineBatch
         private void CheckIfSkylineChanged()
         {
             if (_isBusy) return; // can't change Skyline settings if config is running
-            var changedSkylineSettings = GetSkylineSettingsFromUi();
-            if (!changedSkylineSettings.Equals(_currentSkylineSettings))
+            SkylineSettings changedSkylineSettings;
+            try
+            {
+                changedSkylineSettings = GetSkylineSettingsFromUi();
+            }
+            catch (ArgumentException)
+            {
+                changedSkylineSettings = null;
+            }
+            if (changedSkylineSettings != null && !changedSkylineSettings.Equals(_currentSkylineSettings))
             {
                 _currentSkylineSettings = changedSkylineSettings;
                 _mainControl.ReplaceAllSkylineVersions(_currentSkylineSettings);
@@ -433,7 +449,7 @@ namespace SkylineBatch
             if (SkylineInstallations.HasLocalSkylineCmd)
                 return new SkylineSettings(SkylineType.Local);
             
-            return (SkylineSettings)_skylineTypeControl.GetVariable();
+            return (SkylineSettings)SkylineTypeControl.GetVariable();
         }
 
         #endregion

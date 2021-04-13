@@ -154,7 +154,7 @@ namespace AutoQC
             var dialog = new OpenFileDialog
             {
                 Filter = TextUtil.FILTER_SKY,
-                InitialDirectory = TextUtil.GetInitialDirectory(textSkylinePath.Text, _lastEnteredPath)
+                InitialDirectory = FileUtil.GetInitialDirectory(textSkylinePath.Text, _lastEnteredPath)
             };
             if (dialog.ShowDialog(this) == DialogResult.OK)
             {
@@ -166,7 +166,7 @@ namespace AutoQC
         private void btnFolderToWatch_Click(object sender, EventArgs e)
         {
             var dialog = new FolderBrowserDialog();
-            dialog.SelectedPath = TextUtil.GetInitialDirectory(textFolderToWatchPath.Text, _lastEnteredPath);
+            dialog.SelectedPath = FileUtil.GetInitialDirectory(textFolderToWatchPath.Text, _lastEnteredPath);
             if (dialog.ShowDialog(this) == DialogResult.OK)
             {
                 textFolderToWatchPath.Text = dialog.SelectedPath;

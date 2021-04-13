@@ -41,7 +41,8 @@ namespace SkylineBatch
             if (editingReport != null)
             {
                 textReportName.Text = editingReport.Name;
-                textReportPath.Text = editingReport.ReportPath;
+                textReportPath.Text = editingReport.ReportPath ?? string.Empty;
+                checkBoxImport.Checked = !string.IsNullOrEmpty(editingReport.ReportPath);
                 radioRefinedFile.Checked = editingReport.UseRefineFile;
                 foreach (var scriptAndVersion in editingReport.RScripts)
                 {
@@ -85,7 +86,7 @@ namespace SkylineBatch
             var openDialog = new OpenFileDialog();
             openDialog.Filter = TextUtil.FILTER_R;
             openDialog.Multiselect = allowMultiSelect;
-            openDialog.InitialDirectory = TextUtil.GetInitialDirectory(path);
+            openDialog.InitialDirectory = FileUtil.GetInitialDirectory(path);
             if (openDialog.ShowDialog() != DialogResult.OK)
                 return new string[]{};
             return openDialog.FileNames;
@@ -103,16 +104,17 @@ namespace SkylineBatch
         {
             OpenFileDialog openDialog = new OpenFileDialog();
             openDialog.Filter = TextUtil.FILTER_SKYR;
-            openDialog.InitialDirectory = TextUtil.GetInitialDirectory(textReportPath.Text);
+            openDialog.InitialDirectory = FileUtil.GetInitialDirectory(textReportPath.Text);
             openDialog.ShowDialog();
             textReportPath.Text = openDialog.FileName;
         }
 
         private void btnOk_Click(object sender, EventArgs e)
         {
+            var reportPath = checkBoxImport.Checked ? textReportPath.Text : string.Empty;
             try
             {
-                NewReportInfo = new ReportInfo(textReportName.Text, textReportPath.Text, GetScriptsFromUi(), radioRefinedFile.Checked);
+                NewReportInfo = new ReportInfo(textReportName.Text, reportPath, GetScriptsFromUi(), radioRefinedFile.Checked);
                 NewReportInfo.Validate();
             }
             catch (ArgumentException ex)
@@ -192,6 +194,13 @@ namespace SkylineBatch
         {
             SelectRVersion(e.ClickedItem.Name);
             dataGridScripts.SelectedCells[0].Value = e.ClickedItem.AccessibilityObject.Name;
+        }
+
+        private void checkBoxImport_CheckedChanged(object sender, EventArgs e)
+        {
+            labelReportPath.Enabled = checkBoxImport.Checked;
+            textReportPath.Enabled = checkBoxImport.Checked;
+            btnReportPath.Enabled = checkBoxImport.Checked;
         }
     }
 }
