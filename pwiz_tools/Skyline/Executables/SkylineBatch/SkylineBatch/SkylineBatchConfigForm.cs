@@ -40,12 +40,13 @@ namespace SkylineBatch
         private readonly RefineInputObject _refineInput;
         private readonly List<ReportInfo> _newReportList;
         private readonly Dictionary<string, string> _possibleTemplates;
+        private readonly SkylineBatchConfigManager _configManager;
         private TabPage _lastSelectedTab;
         private SkylineSettings _currentSkylineSettings;
         
         private string _lastEnteredPath;
 
-        public SkylineBatchConfigForm(IMainUiControl mainControl, RDirectorySelector rDirectorySelector, SkylineBatchConfig config, ConfigAction action, bool isBusy, Dictionary<string, string> possibleTemplates)
+        public SkylineBatchConfigForm(IMainUiControl mainControl, RDirectorySelector rDirectorySelector, SkylineBatchConfig config, ConfigAction action, bool isBusy, SkylineBatchConfigManager configManager)
         {
             InitializeComponent();
             _action = action;
@@ -53,12 +54,18 @@ namespace SkylineBatch
             _newReportList = new List<ReportInfo>();
             _rDirectorySelector = rDirectorySelector;
             _mainControl = mainControl;
-            _possibleTemplates = possibleTemplates;
-            if (_action == ConfigAction.Edit && _possibleTemplates.ContainsKey(config.Name))
+            _configManager = configManager;
+            _possibleTemplates = configManager.GetRefinedTemplates();
+            if (_action == ConfigAction.Edit && config != null && _possibleTemplates.ContainsKey(config.Name))
                 _possibleTemplates.Remove(config.Name);
             if (config != null)
                 _configEnabled = config.Enabled;
             _isBusy = isBusy;
+
+            var dataServers = configManager.GetServerNames;
+            foreach (var serverName in dataServers)
+                comboDataServer.Items.Add(serverName);
+            comboDataServer.Items.Add("<Add>");
 
             InitInputFieldsFromConfig(config);
 
@@ -140,7 +147,13 @@ namespace SkylineBatch
             else
             {
                 textAnalysisPath.Text = mainSettings.AnalysisFolderPath;
-                textNamingPattern.Text = mainSettings.ReplicateNamingPattern;
+                textReplicateNamingPattern.Text = mainSettings.ReplicateNamingPattern;
+                if (mainSettings.WillDownloadData)
+                {
+                    checkBoxDownloadData.Checked = true;
+                    comboDataServer.SelectedIndex = comboDataServer.Items.IndexOf(mainSettings.Server.Name);
+                    textDataNamingPatten.Text = mainSettings.DataNamingPattern;
+                }
             }
 
             if (ShowTemplateComboBox)
@@ -166,9 +179,20 @@ namespace SkylineBatch
             
             var analysisFolderPath = textAnalysisPath.Text;
             var dataFolderPath = textDataPath.Text;
+            var server = checkBoxDownloadData.Checked ? _configManager.GetServer(comboDataServer.Text) : null;
+            var dataNamingPattern = textDataNamingPatten.Text;
             var annotationsFilePath = textAnnotationsFile.Text;
-            var replicateNamingPattern = textNamingPattern.Text;
-            return new MainSettings(templateFilePath, analysisFolderPath, dataFolderPath, annotationsFilePath, replicateNamingPattern, dependentConfig);
+            var replicateNamingPattern = textReplicateNamingPattern.Text;
+            
+            return new MainSettings(templateFilePath, analysisFolderPath, dataFolderPath, server, dataNamingPattern, annotationsFilePath, replicateNamingPattern, dependentConfig);
+        }
+
+        private void checkBoxDownloadData_CheckedChanged(object sender, EventArgs e)
+        {
+            //labelDataUrl.Enabled = checkBoxDownloadData.Checked;
+            labelDataNamingPattern.Enabled = checkBoxDownloadData.Checked;
+            comboDataServer.Enabled = checkBoxDownloadData.Checked;
+            textDataNamingPatten.Enabled = checkBoxDownloadData.Checked;
         }
 
         private void textConfigName_TextChanged(object sender, EventArgs e)
@@ -200,6 +224,26 @@ namespace SkylineBatch
         private void btnDataPath_Click(object sender, EventArgs e)
         {
             OpenFolder(textDataPath);
+        }
+
+        private void comboDataServer_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (comboDataServer.SelectedIndex == comboDataServer.Items.Count - 1)
+            {
+                comboDataServer.SelectedIndexChanged -= comboDataServer_SelectedIndexChanged;
+                var addServerForm = new AddServerForm();
+                if (DialogResult.OK == addServerForm.ShowDialog(this))
+                {
+                    _configManager.AddValidServer(addServerForm.Server);
+                    comboDataServer.Items.Insert(comboDataServer.Items.Count - 1, addServerForm.Server.Name);
+                    comboDataServer.SelectedItem = addServerForm.Server.Name;
+                }
+                else
+                {
+                    comboDataServer.SelectedIndex = -1;
+                }
+                comboDataServer.SelectedIndexChanged += comboDataServer_SelectedIndexChanged;
+            }
         }
 
         private void OpenFile(Control textBox, string filter, bool save = false)
@@ -477,6 +521,12 @@ namespace SkylineBatch
 
         private void Save()
         {
+            if (checkBoxDownloadData.Checked && string.IsNullOrEmpty(comboDataServer.Text))
+            {
+                AlertDlg.ShowError(this, Program.AppName(), Resources.SkylineBatchConfigForm_Save_A_server_is_required_to_download_data__Please_select_a_server__or_uncheck_the_download_data_checkbox_);
+                return;
+            }
+
             SkylineBatchConfig newConfig;
             try
             {

@@ -88,6 +88,7 @@
   <PropertyGroup />
   <PropertyGroup />
   <ItemGroup>
+    <None Include="packages.config" />
     <None Include="Resources\downtriangle.png" />
     <Content Include="SkylineDailyRunner.exe">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -104,6 +105,9 @@
     <Content Include="SkylineBatch_configs.ico">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <EmbeddedResource Include="AddServerForm.resx">
+      <DependentUpon>AddServerForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="CommandArgNames.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>CommandArgNames.Designer.cs</LastGenOutput>
@@ -153,6 +157,12 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AddServerForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="AddServerForm.Designer.cs">
+      <DependentUpon>AddServerForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="RDirectorySelector.cs" />
     <Compile Include="CommandArgNames.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -227,6 +237,9 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="FluentFTP, Version=33.1.6.0, Culture=neutral, PublicKeyToken=f4af092b1d8df44f, processorArchitecture=MSIL">
+      <HintPath>..\packages\FluentFTP.33.1.6\lib\net45\FluentFTP.dll</HintPath>
+    </Reference>
     <Reference Include="log4net">
       <HintPath>..\..\..\..\Shared\Lib\log4net.dll</HintPath>
     </Reference>
@@ -248,6 +261,7 @@
     <Reference Include="System.Management" />
     <Reference Include="System.Numerics" />
     <Reference Include="System.Security" />
+    <Reference Include="System.Web" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
   </ItemGroup>

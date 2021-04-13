@@ -19,10 +19,13 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Net;
 using System.Net.NetworkInformation;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
+using FluentFTP;
 using SharedBatch;
 using SkylineBatch.Properties;
 
@@ -35,16 +38,33 @@ namespace SkylineBatch
         // IMMUTABLE - all fields are readonly strings
         // Holds file locations and naming pattern to use when running the configuration
 
+        private string _fileNamesResponse;
 
         public MainSettings(string templateFilePath, string analysisFolderPath, string dataFolderPath,
-            string annotationsFilePath, string replicateNamingPattern, string dependentConfigName)
+            ServerInfo server, string dataNamingPattern, string annotationsFilePath, string replicateNamingPattern, string dependentConfigName)
         {
             TemplateFilePath = templateFilePath;
             DependentConfigName = !string.IsNullOrEmpty(dependentConfigName) ? dependentConfigName : null;
             AnalysisFolderPath = analysisFolderPath;
             DataFolderPath = dataFolderPath;
+            Server = server;
+            DataNamingPattern = dataNamingPattern ?? string.Empty;
             AnnotationsFilePath = annotationsFilePath ?? string.Empty;
             ReplicateNamingPattern = replicateNamingPattern ?? string.Empty;
+            
+            if (Server != null)
+            {
+                try
+                {
+                    if (Directory.Exists(Path.GetDirectoryName(DataFolderPath)))
+                        Directory.CreateDirectory(DataFolderPath);
+                }
+                catch (Exception)
+                {
+                    // pass - will be invalidated later
+                }
+
+            }
         }
 
 
@@ -56,9 +76,15 @@ namespace SkylineBatch
 
         public readonly string DataFolderPath;
 
+        public readonly ServerInfo Server;
+
+        public readonly string DataNamingPattern;
+
         public readonly string AnnotationsFilePath;
 
         public readonly string ReplicateNamingPattern;
+
+        public bool WillDownloadData => Server != null;
 
         public string GetResultsFilePath()
         {
@@ -67,15 +93,15 @@ namespace SkylineBatch
 
         public MainSettings WithoutDependency()
         {
-            return new MainSettings(TemplateFilePath, AnalysisFolderPath, DataFolderPath, AnnotationsFilePath,
-                ReplicateNamingPattern, string.Empty);
+            return new MainSettings(TemplateFilePath, AnalysisFolderPath, DataFolderPath, Server, DataNamingPattern, 
+                AnnotationsFilePath, ReplicateNamingPattern, string.Empty);
         }
 
         public MainSettings UpdateDependent(string newName, string newTemplate)
         {
             if (string.IsNullOrEmpty(newTemplate)) return WithoutDependency();
-            return new MainSettings(newTemplate, AnalysisFolderPath, DataFolderPath, AnnotationsFilePath,
-                ReplicateNamingPattern, newName);
+            return new MainSettings(newTemplate, AnalysisFolderPath, DataFolderPath, Server, DataNamingPattern, 
+                 AnnotationsFilePath, ReplicateNamingPattern, newName);
         }
 
         public void CreateAnalysisFolderIfNonexistent()
@@ -100,6 +126,8 @@ namespace SkylineBatch
             ValidateDataFolder(DataFolderPath);
             ValidateAnalysisFolder(AnalysisFolderPath);
             ValidateAnnotationsFile(AnnotationsFilePath);
+            if (WillDownloadData && string.IsNullOrEmpty(DataNamingPattern))
+                throw new ArgumentException("A data naming pattern is required for downloaded data. Please add a data naming pattern.");
         }
 
         public static void ValidateTemplateFile(string templateFile)
@@ -161,7 +189,7 @@ namespace SkylineBatch
                 TextUtil.SuccessfulReplace(ValidateAnnotationsFile, oldRoot, newRoot, AnnotationsFilePath, out string replacedAnnotationsPath);
 
             pathReplacedMainSettings = new MainSettings(replacedTemplatePath, replacedAnalysisPath, replacedDataPath,
-                    replacedAnnotationsPath, ReplicateNamingPattern, DependentConfigName);
+                Server, DataNamingPattern, replacedAnnotationsPath, ReplicateNamingPattern, DependentConfigName);
 
             return templateReplaced || analysisReplaced || dataReplaced || annotationsReplaced;
         }
@@ -239,6 +267,8 @@ namespace SkylineBatch
             DependentConfigName,
             AnalysisFolderPath,
             DataFolderPath,
+            DataUrl,
+            DataNamingPattern,
             AnnotationsFilePath,
             ReplicateNamingPattern,
         };
@@ -249,9 +279,13 @@ namespace SkylineBatch
             var dependentConfigName = reader.GetAttribute(Attr.DependentConfigName);
             var analysisFolderPath = GetPath(reader.GetAttribute(Attr.AnalysisFolderPath));
             var dataFolderPath = GetPath(reader.GetAttribute(Attr.DataFolderPath));
+            //var dataUrl = reader.GetAttribute(Attr.DataUrl);
+            var dataNamingPattern = reader.GetAttribute(Attr.DataNamingPattern);
             var annotationsFilePath = GetPath(reader.GetAttribute(Attr.AnnotationsFilePath));
             var replicateNamingPattern = reader.GetAttribute(Attr.ReplicateNamingPattern);
-            return new MainSettings(templateFilePath, analysisFolderPath, dataFolderPath, annotationsFilePath, replicateNamingPattern, dependentConfigName);
+            var server = ServerInfo.ReadXml(reader);
+            return new MainSettings(templateFilePath, analysisFolderPath, dataFolderPath, server, 
+                dataNamingPattern, annotationsFilePath, replicateNamingPattern, dependentConfigName);
         }
 
         private static string GetPath(string path) =>
@@ -264,8 +298,11 @@ namespace SkylineBatch
             writer.WriteAttributeIfString(Attr.DependentConfigName, DependentConfigName);
             writer.WriteAttributeIfString(Attr.AnalysisFolderPath, AnalysisFolderPath);
             writer.WriteAttributeIfString(Attr.DataFolderPath, DataFolderPath);
+            writer.WriteAttributeIfString(Attr.DataNamingPattern, DataNamingPattern);
+            
             writer.WriteAttributeIfString(Attr.AnnotationsFilePath, AnnotationsFilePath);
             writer.WriteAttributeIfString(Attr.ReplicateNamingPattern, ReplicateNamingPattern);
+            if (Server != null) Server.WriteXml(writer);
             writer.WriteEndElement();
         }
         #endregion
@@ -340,4 +377,117 @@ namespace SkylineBatch
                    ReplicateNamingPattern.GetHashCode();
         }
     }
+
+    public class ServerInfo
+    {
+        private Dictionary<string, FtpListItem> _serverFiles;
+        
+        public ServerInfo(string url, string userName, string password) : this(url, "", userName, password)
+        {
+            if (url.StartsWith("ftp://")) Url = url.Substring(6);
+            if (Url.Contains("/"))
+            {
+                var slashIndex = Url.IndexOf("/");
+                Folder = Url.Substring(slashIndex + 1);
+                Url = Url.Substring(0, slashIndex);
+            }
+            SetName();
+        }
+
+        private ServerInfo(string url, string folder, string userName, string password)
+        {
+            Url = url.Trim();
+            Folder = folder ?? string.Empty;
+            UserName = userName ?? string.Empty;
+            Password = password ?? string.Empty;
+            SetName();
+        }
+
+        public string Name { get; private set; }
+        public bool Validated { get; private set; }
+        public readonly string Url;
+        public readonly string Folder;
+        public readonly string UserName;
+        public readonly string Password;
+
+        private void SetName()
+        {
+            Name = Url;
+            Name += !string.IsNullOrEmpty(Folder) ? "/" + Folder : string.Empty;
+            Name += !string.IsNullOrEmpty(UserName) ? " " + UserName : string.Empty;
+        }
+
+        public string FilePath(string fileName) =>
+            string.IsNullOrEmpty(Folder) ? fileName : Path.Combine(Folder, fileName);
+
+        public Dictionary<string, FtpListItem> GetServerFiles => new Dictionary<string, FtpListItem>(_serverFiles);
+
+        public FtpClient GetFtpClient()
+        {
+            var client = new FtpClient(Url);
+
+            if (!string.IsNullOrEmpty(Password))
+            {
+                if (!string.IsNullOrEmpty(UserName))
+                    client.Credentials = new NetworkCredential(UserName, Password);
+                else
+                    client.Credentials = new NetworkCredential("anonymous", Password);
+            }
+
+            return client;
+        }
+
+
+        public void Validate()
+        {
+            _serverFiles = new Dictionary<string, FtpListItem>();
+            var client = GetFtpClient();
+            try
+            {
+                client.Connect();
+                foreach (FtpListItem item in client.GetListing(Folder))
+                {
+                    _serverFiles.Add(item.Name, item);
+                }
+            }
+            catch (Exception e)
+            {
+                throw new ArgumentException(
+                    string.Format("There was an error connecting to {0}: {1}", Url, e.Message));
+            }
+            client.Disconnect();
+            Validated = true;
+        }
+
+        private enum Attr
+        {
+            ServerUrl,
+            ServerFolder,
+            ServerUserName,
+            ServerPassword,
+        };
+
+        public void WriteXml(XmlWriter writer)
+        {
+            writer.WriteAttributeIfString(Attr.ServerUrl, Url);
+            writer.WriteAttributeIfString(Attr.ServerFolder, Folder);
+            writer.WriteAttributeIfString(Attr.ServerUserName, UserName);
+            writer.WriteAttributeIfString(Attr.ServerPassword, Password);
+        }
+
+        public static ServerInfo ReadXml(XmlReader reader)
+        {
+            var url = reader.GetAttribute(Attr.ServerUrl);
+            if (string.IsNullOrEmpty(url))
+                return null;
+            var folder = reader.GetAttribute(Attr.ServerFolder);
+            var username = reader.GetAttribute(Attr.ServerUserName);
+            var password = reader.GetAttribute(Attr.ServerPassword);
+            return new ServerInfo(url, folder, username, password);
+        }
+
+    }
+
+
+
 }

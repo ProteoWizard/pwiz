@@ -19,7 +19,12 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
+using System.Linq;
+using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
+using FluentFTP;
 using SharedBatch;
 using SkylineBatch.Properties;
 
@@ -38,6 +43,8 @@ namespace SkylineBatch
         private readonly ProcessRunner _processRunner;
         private List<string> _batchCommandsToLog;
 
+        private List<CancellationTokenSource> _runningCancellationTokens;
+
         public ConfigRunner(SkylineBatchConfig config, Logger logger, IMainUiControl uiControl = null)
         {
             _runnerStatus = RunnerStatus.Stopped;
@@ -45,6 +52,7 @@ namespace SkylineBatch
             _uiControl = uiControl;
             _logger = logger;
             _batchCommandsToLog = new List<string>();
+            _runningCancellationTokens = new List<CancellationTokenSource>();
 
             _processRunner = new ProcessRunner()
             {
@@ -116,7 +124,13 @@ namespace SkylineBatch
             StartTime = DateTime.Now;
             ChangeStatus(RunnerStatus.Running);
             Config.MainSettings.CreateAnalysisFolderIfNonexistent();
-            if (startStep != 5)
+
+            if (startStep == 1 && Config.MainSettings.WillDownloadData)
+            {
+                await DownloadData();
+            }
+            
+            if (startStep != 5 && IsRunning())
             {
                 var multiLine = await Config.SkylineSettings.HigherVersion(ALLOW_NEWLINE_SAVE_VERSION, _processRunner);
                 if (IsRunning())
@@ -143,6 +157,7 @@ namespace SkylineBatch
             if (IsRunning()) ChangeStatus(RunnerStatus.Completed);
             if (IsCanceling()) ChangeStatus(RunnerStatus.Canceled);
             var endTime = DateTime.Now;
+            // ReSharper disable once PossibleInvalidOperationException - StartTime is always defined here
             var delta = endTime - (DateTime)StartTime;
             RunTime = delta;
             var runTimeString = delta.Hours > 0 ? delta.ToString(@"hh\:mm\:ss") : delta.ToString(@"mm\:ss");
@@ -200,6 +215,73 @@ namespace SkylineBatch
             }
         }
 
+        private async Task DownloadData()
+        {
+            var mainSettings = Config.MainSettings;
+            var server = mainSettings.Server;
+            if (!server.Validated)
+                server.Validate();
+
+            var allFiles = server.GetServerFiles;
+            var fileNames = allFiles.Keys;
+            var existingDataFiles = Directory.GetFiles(mainSettings.DataFolderPath).Length;
+            var dataFilter = new Regex(mainSettings.DataNamingPattern);
+            var downloadingFilesEnum =
+                from name in fileNames
+                where dataFilter.IsMatch(name)
+                select name;
+            var downloadingFiles = downloadingFilesEnum.ToList();
+            if (downloadingFiles.Count == existingDataFiles) return;
+
+            _logger.Log(string.Format(Resources.ConfigRunner_DownloadData_Downloading__0__data_files_from__1__, downloadingFiles.Count, server.Url));
+            foreach (var file in downloadingFiles)
+                _logger.Log(file);
+
+            long totalSize = 0;
+            foreach (var fileName in downloadingFiles)
+                totalSize += allFiles[fileName].Size;
+            long downloadedSize = 0;
+            var ftpClient = server.GetFtpClient();
+            var source = new CancellationTokenSource();
+            CancellationToken token = source.Token;
+            _runningCancellationTokens.Add(source);
+            ftpClient.Connect();
+            foreach (var fileName in downloadingFiles)
+            {
+                if (!IsRunning()) break;
+                var currentFileSize = (double) allFiles[fileName].Size;
+                var size = downloadedSize;
+                Progress<FtpProgress> progress = new Progress<FtpProgress>(p =>
+                {
+                    var fileSizeDownloaded = currentFileSize * p.Progress / 100;
+                    var currentPercentComplete = Math.Floor((size + fileSizeDownloaded) / totalSize * 100);
+                    _logger.Log(string.Format("{0}%", currentPercentComplete));
+                });
+                try
+                {
+                    await ftpClient.DownloadFileAsync(Path.Combine(mainSettings.DataFolderPath, fileName),
+                        server.FilePath(fileName), token: token, existsMode: FtpLocalExists.Overwrite, progress: progress);
+                }
+                catch (OperationCanceledException)
+                {
+                    // pass
+                }
+                catch (Exception e)
+                {
+                    _logger.LogException(e, Resources.ConfigRunner_DownloadData_An_error_occurred_while_downloading_the_data_files_);
+                    ChangeStatus(RunnerStatus.Error);
+                }
+                
+                downloadedSize += allFiles[fileName].Size;
+            }
+            ftpClient.Disconnect();
+
+            if (IsRunning())
+                _logger.Log(string.Format("{0}%", 100));
+        }
+
+        
+
         private void DataReceived(string data)
         {
             if ((IsRunning() || IsCanceling()) && data != null && _logger != null)
@@ -229,6 +311,9 @@ namespace SkylineBatch
                     StartTime = null;
                     RunTime = null;
                 }
+                if (IsRunning())
+                    foreach (var token in _runningCancellationTokens)
+                        token.Cancel();
                 _runnerStatus = runnerStatus;
             }
             _uiControl?.UpdateUiConfigurations();

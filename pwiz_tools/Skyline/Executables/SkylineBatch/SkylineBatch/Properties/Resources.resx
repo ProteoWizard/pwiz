@@ -565,4 +565,16 @@
   <data name="ReportInfo_ValidateReportPath_report_path" xml:space="preserve">
     <value>report path</value>
   </data>
+  <data name="SkylineBatchConfigForm_Save_A_server_is_required_to_download_data__Please_select_a_server__or_uncheck_the_download_data_checkbox_" xml:space="preserve">
+    <value>A server is required to download data. Please select a server, or uncheck the download data checkbox.</value>
+  </data>
+  <data name="ConfigRunner_DownloadData_An_error_occurred_while_downloading_the_data_files_" xml:space="preserve">
+    <value>An error occurred while downloading the data files.</value>
+  </data>
+  <data name="ConfigRunner_DownloadData_Downloading__0__data_files_from__1__" xml:space="preserve">
+    <value>Downloading {0} data files from {1}:</value>
+  </data>
+  <data name="AddServerForm_btnAdd_Click_Verifying" xml:space="preserve">
+    <value>Verifying</value>
+  </data>
 </root>

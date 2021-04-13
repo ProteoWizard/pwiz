@@ -81,16 +81,23 @@ namespace SkylineBatchTest
             int timeout = 5000;
             int timestep = 500;
             var cancelErrorMessage = "Timeout - configuration took too long to cancel";
+            var startErrorMessage = "Timeout - configuration took too long to start running";
+
             configManager = testConfigManager;
 
             // Run and cancel three times creates two old logs
             Assert.IsTrue(testConfigManager.StartBatchRun(5), "Failed to start config");
+            await TestUtils.WaitForCondition(ConfigRunnersStarted, timeout, timestep, startErrorMessage);
             testConfigManager.CancelRunners();
             await TestUtils.WaitForCondition(ConfigRunnersStopped, timeout, timestep, cancelErrorMessage);
+
             Assert.IsTrue(testConfigManager.StartBatchRun(5), "Failed to start config");
+            await TestUtils.WaitForCondition(ConfigRunnersStarted, timeout, timestep, startErrorMessage);
             testConfigManager.CancelRunners();
             await TestUtils.WaitForCondition(ConfigRunnersStopped, timeout, timestep, cancelErrorMessage);
+
             Assert.IsTrue(testConfigManager.StartBatchRun(5), "Failed to start config");
+            await TestUtils.WaitForCondition(ConfigRunnersStarted, timeout, timestep, startErrorMessage);
             testConfigManager.CancelRunners();
             await TestUtils.WaitForCondition(ConfigRunnersStopped, timeout, timestep, cancelErrorMessage);
 
@@ -117,7 +124,12 @@ namespace SkylineBatchTest
 
         private bool ConfigRunnersStopped()
         {
-            return configManager.ConfigsRunning().Count == 0;
+            return configManager.ConfigsBusy().Count == 0;
+        }
+
+        private bool ConfigRunnersStarted()
+        {
+            return configManager.ConfigRunning();
         }
     }
 }

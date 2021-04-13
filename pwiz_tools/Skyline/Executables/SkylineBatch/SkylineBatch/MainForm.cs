@@ -97,7 +97,7 @@ namespace SkylineBatch
         {
             ProgramLog.Info(Resources.MainForm_btnNewConfig_Click_Creating_a_new_configuration_);
             var initialConfigValues = (SkylineBatchConfig)_configManager.GetLastModified();
-            var configForm = new SkylineBatchConfigForm(this, _rDirectorySelector, initialConfigValues, ConfigAction.Add, false, _configManager.GetRefinedTemplates());
+            var configForm = new SkylineBatchConfigForm(this, _rDirectorySelector, initialConfigValues, ConfigAction.Add, false, _configManager);
             configForm.ShowDialog();
         }
 
@@ -123,11 +123,7 @@ namespace SkylineBatch
         {
             var configRunner = _configManager.GetSelectedConfigRunner();
             var config = (SkylineBatchConfig)configRunner.GetConfig();
-            try
-            {
-                config.Validate();
-            }
-            catch (ArgumentException)
+            if (!_configManager.IsSelectedConfigValid())
             {
                 if (configRunner.IsRunning()) throw new Exception("Invalid configuration cannot be running.");
                 var validateConfigForm = new InvalidConfigSetupForm(this, config, _configManager, _rDirectorySelector);
@@ -136,13 +132,13 @@ namespace SkylineBatch
                 if (validateConfigForm.DialogResult != DialogResult.OK)
                     return;
             }
-            var configForm = new SkylineBatchConfigForm(this, _rDirectorySelector, _configManager.GetSelectedConfig(), ConfigAction.Edit, configRunner.IsBusy(), _configManager.GetRefinedTemplates());
+            var configForm = new SkylineBatchConfigForm(this, _rDirectorySelector, _configManager.GetSelectedConfig(), ConfigAction.Edit, configRunner.IsBusy(), _configManager);
             configForm.ShowDialog();
         }
 
         private void btnCopy_Click(object sender, EventArgs e)
         {
-            var configForm = new SkylineBatchConfigForm(this, _rDirectorySelector, _configManager.GetSelectedConfig(), ConfigAction.Copy, false, _configManager.GetRefinedTemplates());
+            var configForm = new SkylineBatchConfigForm(this, _rDirectorySelector, _configManager.GetSelectedConfig(), ConfigAction.Copy, false, _configManager);
             configForm.ShowDialog();
         }
 
@@ -507,7 +503,6 @@ namespace SkylineBatch
 
         private void tabLog_Enter(object sender, EventArgs e)
         {
-            textBoxLog.Refresh();
             if (_configManager.SelectedLog == 0)
                 ScrollToLogEnd(true);
         }
@@ -546,7 +541,7 @@ namespace SkylineBatch
             else if(WindowState != FormWindowState.Minimized)
             {
                 _isScrolling = textBoxLog.GetPositionFromCharIndex(textBoxLog.Text.Length - 1).Y <=
-                               textBoxLog.Height;
+                               textBoxLog.Height + 30;
             }
 
             if (_isScrolling)

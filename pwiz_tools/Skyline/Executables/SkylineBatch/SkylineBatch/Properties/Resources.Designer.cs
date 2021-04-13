@@ -71,6 +71,15 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Verifying.
+        /// </summary>
+        public static string AddServerForm_btnAdd_Click_Verifying {
+            get {
+                return ResourceManager.GetString("AddServerForm_btnAdd_Click_Verifying", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Notice: For faster Skyline Batch runs, use Skyline version {0} or higher..
         /// </summary>
         public static string CommandWriter_Start_Notice__For_faster_Skyline_Batch_runs__use_Skyline_version__0__or_higher_ {
@@ -178,6 +187,24 @@ namespace SkylineBatch.Properties {
         public static string ConfigManager_SelectLog_No_log_at_index__ {
             get {
                 return ResourceManager.GetString("ConfigManager_SelectLog_No_log_at_index__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An error occurred while downloading the data files..
+        /// </summary>
+        public static string ConfigRunner_DownloadData_An_error_occurred_while_downloading_the_data_files_ {
+            get {
+                return ResourceManager.GetString("ConfigRunner_DownloadData_An_error_occurred_while_downloading_the_data_files_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Downloading {0} data files from {1}:.
+        /// </summary>
+        public static string ConfigRunner_DownloadData_Downloading__0__data_files_from__1__ {
+            get {
+                return ResourceManager.GetString("ConfigRunner_DownloadData_Downloading__0__data_files_from__1__", resourceCulture);
             }
         }
         
@@ -1182,6 +1209,16 @@ namespace SkylineBatch.Properties {
         public static string SkylineBatchConfigForm_btnEditReport_Click_Editing_report_ {
             get {
                 return ResourceManager.GetString("SkylineBatchConfigForm_btnEditReport_Click_Editing_report_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A server is required to download data. Please select a server, or uncheck the download data checkbox..
+        /// </summary>
+        public static string SkylineBatchConfigForm_Save_A_server_is_required_to_download_data__Please_select_a_server__or_uncheck_the_download_data_checkbox_ {
+            get {
+                return ResourceManager.GetString("SkylineBatchConfigForm_Save_A_server_is_required_to_download_data__Please_select_" +
+                        "a_server__or_uncheck_the_download_data_checkbox_", resourceCulture);
             }
         }
         

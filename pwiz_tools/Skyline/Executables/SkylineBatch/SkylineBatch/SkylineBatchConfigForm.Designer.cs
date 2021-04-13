@@ -59,10 +59,14 @@
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.tabsConfig = new System.Windows.Forms.TabControl();
             this.tabFiles = new System.Windows.Forms.TabPage();
+            this.comboDataServer = new System.Windows.Forms.ComboBox();
+            this.textDataNamingPatten = new System.Windows.Forms.TextBox();
+            this.labelDataNamingPattern = new System.Windows.Forms.Label();
+            this.checkBoxDownloadData = new System.Windows.Forms.CheckBox();
             this.comboTemplateFile = new System.Windows.Forms.ComboBox();
             this.btnAnnotationsFile = new System.Windows.Forms.Button();
             this.textAnnotationsFile = new System.Windows.Forms.TextBox();
-            this.textNamingPattern = new System.Windows.Forms.TextBox();
+            this.textReplicateNamingPattern = new System.Windows.Forms.TextBox();
             this.textConfigName = new System.Windows.Forms.TextBox();
             this.btnDataPath = new System.Windows.Forms.Button();
             this.btnAnalysisPath = new System.Windows.Forms.Button();
@@ -80,6 +84,9 @@
             this.btnDeleteReport = new System.Windows.Forms.ToolStripButton();
             this.btnEditReport = new System.Windows.Forms.ToolStripButton();
             this.gridReportSettings = new System.Windows.Forms.DataGridView();
+            this.columnName = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.columnScripts = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.columnFile = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.tabSkyline = new System.Windows.Forms.TabPage();
             this.panelSkylineSettings = new System.Windows.Forms.Panel();
             this.btnCancelConfig = new System.Windows.Forms.Button();
@@ -87,9 +94,6 @@
             this.btnSaveConfig = new System.Windows.Forms.Button();
             this.btnOkConfig = new System.Windows.Forms.Button();
             this.imageListToolbarIcons = new System.Windows.Forms.ImageList(this.components);
-            this.columnName = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.columnScripts = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.columnFile = new System.Windows.Forms.DataGridViewTextBoxColumn();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -280,11 +284,15 @@
             // tabFiles
             // 
             this.tabFiles.BackColor = System.Drawing.Color.WhiteSmoke;
+            this.tabFiles.Controls.Add(this.comboDataServer);
+            this.tabFiles.Controls.Add(this.textDataNamingPatten);
+            this.tabFiles.Controls.Add(this.labelDataNamingPattern);
+            this.tabFiles.Controls.Add(this.checkBoxDownloadData);
             this.tabFiles.Controls.Add(this.comboTemplateFile);
             this.tabFiles.Controls.Add(this.label7);
             this.tabFiles.Controls.Add(this.btnAnnotationsFile);
             this.tabFiles.Controls.Add(this.textAnnotationsFile);
-            this.tabFiles.Controls.Add(this.textNamingPattern);
+            this.tabFiles.Controls.Add(this.textReplicateNamingPattern);
             this.tabFiles.Controls.Add(this.linkLabelRegex);
             this.tabFiles.Controls.Add(this.textConfigName);
             this.tabFiles.Controls.Add(this.labelConfigName);
@@ -300,6 +308,31 @@
             resources.ApplyResources(this.tabFiles, "tabFiles");
             this.tabFiles.Name = "tabFiles";
             this.tabFiles.Enter += new System.EventHandler(this.TabEnter);
+            // 
+            // comboDataServer
+            // 
+            this.comboDataServer.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            resources.ApplyResources(this.comboDataServer, "comboDataServer");
+            this.comboDataServer.FormattingEnabled = true;
+            this.comboDataServer.Name = "comboDataServer";
+            this.comboDataServer.SelectedIndexChanged += new System.EventHandler(this.comboDataServer_SelectedIndexChanged);
+            // 
+            // textDataNamingPatten
+            // 
+            resources.ApplyResources(this.textDataNamingPatten, "textDataNamingPatten");
+            this.textDataNamingPatten.Name = "textDataNamingPatten";
+            // 
+            // labelDataNamingPattern
+            // 
+            resources.ApplyResources(this.labelDataNamingPattern, "labelDataNamingPattern");
+            this.labelDataNamingPattern.Name = "labelDataNamingPattern";
+            // 
+            // checkBoxDownloadData
+            // 
+            resources.ApplyResources(this.checkBoxDownloadData, "checkBoxDownloadData");
+            this.checkBoxDownloadData.Name = "checkBoxDownloadData";
+            this.checkBoxDownloadData.UseVisualStyleBackColor = true;
+            this.checkBoxDownloadData.CheckedChanged += new System.EventHandler(this.checkBoxDownloadData_CheckedChanged);
             // 
             // comboTemplateFile
             // 
@@ -319,10 +352,10 @@
             resources.ApplyResources(this.textAnnotationsFile, "textAnnotationsFile");
             this.textAnnotationsFile.Name = "textAnnotationsFile";
             // 
-            // textNamingPattern
+            // textReplicateNamingPattern
             // 
-            resources.ApplyResources(this.textNamingPattern, "textNamingPattern");
-            this.textNamingPattern.Name = "textNamingPattern";
+            resources.ApplyResources(this.textReplicateNamingPattern, "textReplicateNamingPattern");
+            this.textReplicateNamingPattern.Name = "textReplicateNamingPattern";
             // 
             // textConfigName
             // 
@@ -506,6 +539,24 @@
             this.gridReportSettings.TabStop = false;
             this.gridReportSettings.SelectionChanged += new System.EventHandler(this.gridReportSettings_SelectionChanged);
             // 
+            // columnName
+            // 
+            this.columnName.FillWeight = 128.5841F;
+            resources.ApplyResources(this.columnName, "columnName");
+            this.columnName.Name = "columnName";
+            // 
+            // columnScripts
+            // 
+            this.columnScripts.FillWeight = 108.0281F;
+            resources.ApplyResources(this.columnScripts, "columnScripts");
+            this.columnScripts.Name = "columnScripts";
+            // 
+            // columnFile
+            // 
+            this.columnFile.FillWeight = 61.86493F;
+            resources.ApplyResources(this.columnFile, "columnFile");
+            this.columnFile.Name = "columnFile";
+            // 
             // tabSkyline
             // 
             this.tabSkyline.BackColor = System.Drawing.Color.WhiteSmoke;
@@ -552,24 +603,6 @@
             this.imageListToolbarIcons.TransparentColor = System.Drawing.Color.Transparent;
             this.imageListToolbarIcons.Images.SetKeyName(0, "AddedIcon.ico");
             this.imageListToolbarIcons.Images.SetKeyName(1, "DeletedIcon.ico");
-            // 
-            // columnName
-            // 
-            this.columnName.FillWeight = 128.5841F;
-            resources.ApplyResources(this.columnName, "columnName");
-            this.columnName.Name = "columnName";
-            // 
-            // columnScripts
-            // 
-            this.columnScripts.FillWeight = 108.0281F;
-            resources.ApplyResources(this.columnScripts, "columnScripts");
-            this.columnScripts.Name = "columnScripts";
-            // 
-            // columnFile
-            // 
-            this.columnFile.FillWeight = 61.86493F;
-            resources.ApplyResources(this.columnFile, "columnFile");
-            this.columnFile.Name = "columnFile";
             // 
             // SkylineBatchConfigForm
             // 
@@ -640,7 +673,7 @@
         private System.Windows.Forms.ToolStripButton btnEditReport;
         private System.Windows.Forms.Button btnOkConfig;
         private System.Windows.Forms.TabPage tabSkyline;
-        private System.Windows.Forms.TextBox textNamingPattern;
+        private System.Windows.Forms.TextBox textReplicateNamingPattern;
         private System.Windows.Forms.TabPage tabSettings;
         private System.Windows.Forms.TextBox textMsOneResolvingPower;
         private System.Windows.Forms.TextBox textRetentionTime;
@@ -669,5 +702,9 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn columnName;
         private System.Windows.Forms.DataGridViewTextBoxColumn columnScripts;
         private System.Windows.Forms.DataGridViewTextBoxColumn columnFile;
+        private System.Windows.Forms.Label labelDataNamingPattern;
+        private System.Windows.Forms.CheckBox checkBoxDownloadData;
+        private System.Windows.Forms.TextBox textDataNamingPatten;
+        private System.Windows.Forms.ComboBox comboDataServer;
     }
 }

@@ -158,7 +158,7 @@ namespace SkylineBatch
             DateTime modified;
             DateTime.TryParse(reader.GetAttribute(Attr.Modified), out modified);
 
-                ReadUntilElement(reader);
+            ReadUntilElement(reader);
             MainSettings mainSettings = null;
             RefineSettings refineSettings = null;
             FileSettings fileSettings = null;

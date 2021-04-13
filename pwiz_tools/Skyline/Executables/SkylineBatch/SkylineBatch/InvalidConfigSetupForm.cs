@@ -86,7 +86,8 @@ namespace SkylineBatch
             var validAnnotationsFilePath = await GetValidPath(Resources.InvalidConfigSetupForm_FixInvalidMainSettings_annotations_file, mainSettings.AnnotationsFilePath,
                 MainSettings.ValidateAnnotationsFile, PathDialogOptions.File);
 
-            return new MainSettings(validTemplateFilePath, validAnalysisFolderPath, validDataFolderPath, validAnnotationsFilePath, mainSettings.ReplicateNamingPattern, mainSettings.DependentConfigName);
+            return new MainSettings(validTemplateFilePath, validAnalysisFolderPath, validDataFolderPath, mainSettings.Server, mainSettings.DataNamingPattern,
+                validAnnotationsFilePath, mainSettings.ReplicateNamingPattern, mainSettings.DependentConfigName);
         }
 
         private async Task<RefineSettings> FixInvalidRefineSettings()
