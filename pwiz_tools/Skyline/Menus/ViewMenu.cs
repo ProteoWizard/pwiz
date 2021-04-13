@@ -832,7 +832,7 @@ namespace pwiz.Skyline.Menus
         }
         public void ViewMenuDropDownOpening()
         {
-            viewTargetsMenuItem.Enabled = !Settings.Default.ShowPeptides;
+            viewTargetsMenuItem.Checked = Settings.Default.ShowPeptides;
             viewModificationsMenuItem.DropDownItems.Clear();
             var currentOption = DisplayModificationOption.Current;
             foreach (var opt in DisplayModificationOption.All)

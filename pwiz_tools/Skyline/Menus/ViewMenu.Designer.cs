@@ -189,6 +189,9 @@
             // 
             // viewTargetsMenuItem
             // 
+            this.viewTargetsMenuItem.Checked = true;
+            this.viewTargetsMenuItem.CheckOnClick = true;
+            this.viewTargetsMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
             this.viewTargetsMenuItem.Name = "viewTargetsMenuItem";
             resources.ApplyResources(this.viewTargetsMenuItem, "viewTargetsMenuItem");
             this.modeUIHandler.SetUIMode(this.viewTargetsMenuItem, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.small_mol);
