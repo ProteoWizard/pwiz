@@ -191,6 +191,24 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} ({1} of {2}).
+        /// </summary>
+        public static string ConfigRunner_DownloadData__0____1__of__2__ {
+            get {
+                return ResourceManager.GetString("ConfigRunner_DownloadData__0____1__of__2__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Already downloaded. Skipping..
+        /// </summary>
+        public static string ConfigRunner_DownloadData_Already_downloaded__Skipping_ {
+            get {
+                return ResourceManager.GetString("ConfigRunner_DownloadData_Already_downloaded__Skipping_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to An error occurred while downloading the data files..
         /// </summary>
         public static string ConfigRunner_DownloadData_An_error_occurred_while_downloading_the_data_files_ {
@@ -200,11 +218,38 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Downloading {0} data files from {1}:.
+        ///   Looks up a localized string similar to Found {0} matching data files on {1}:.
         /// </summary>
-        public static string ConfigRunner_DownloadData_Downloading__0__data_files_from__1__ {
+        public static string ConfigRunner_DownloadData_Found__0__matching_data_files_on__1__ {
             get {
-                return ResourceManager.GetString("ConfigRunner_DownloadData_Downloading__0__data_files_from__1__", resourceCulture);
+                return ResourceManager.GetString("ConfigRunner_DownloadData_Found__0__matching_data_files_on__1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Skipping {0}. Already downloaded.
+        /// </summary>
+        public static string ConfigRunner_DownloadData_Skipping__0___Already_downloaded {
+            get {
+                return ResourceManager.GetString("ConfigRunner_DownloadData_Skipping__0___Already_downloaded", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Starting download....
+        /// </summary>
+        public static string ConfigRunner_DownloadData_Starting_download___ {
+            get {
+                return ResourceManager.GetString("ConfigRunner_DownloadData_Starting_download___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Trying again....
+        /// </summary>
+        public static string ConfigRunner_DownloadData_Trying_again___ {
+            get {
+                return ResourceManager.GetString("ConfigRunner_DownloadData_Trying_again___", resourceCulture);
             }
         }
         

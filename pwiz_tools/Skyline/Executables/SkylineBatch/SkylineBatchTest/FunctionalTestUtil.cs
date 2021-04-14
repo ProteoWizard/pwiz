@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.Remoting.Messaging;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SkylineBatch;
@@ -16,7 +19,19 @@ namespace SkylineBatchTest
     {
 
 
+        public delegate bool ConditionDelegate(MainForm mainForm, bool expectedValue);
 
+        public static void WaitForCondition(ConditionDelegate condition, MainForm mainForm, bool expectedValue, TimeSpan timeout, int timestep, string errorMessage)
+        {
+            var ticksPerMillisecond = 10000;
+            var startTime = DateTime.Now;
+            while (DateTime.Now - startTime < timeout)
+            {
+                if (condition(mainForm, expectedValue)) return;
+                Thread.Sleep(timestep);
+            }
+            throw new Exception(errorMessage);
+        }
 
         public static void PopulateConfigForm(SkylineBatchConfigForm configForm, string configName, string directory, AbstractSkylineBatchFunctionalTest caller)
         {

@@ -336,4 +336,7 @@ with:
   <data name="MainFormUtils_CanOpen_The__0__is_not_valid_for__1__" xml:space="preserve">
     <value>The {0} is not valid for {1}.</value>
   </data>
+  <data name="Logger_LogPercent__0__" xml:space="preserve">
+    <value>{0}%</value>
+  </data>
 </root>

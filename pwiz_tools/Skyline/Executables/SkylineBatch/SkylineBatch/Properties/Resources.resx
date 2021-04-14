@@ -571,10 +571,25 @@
   <data name="ConfigRunner_DownloadData_An_error_occurred_while_downloading_the_data_files_" xml:space="preserve">
     <value>An error occurred while downloading the data files.</value>
   </data>
-  <data name="ConfigRunner_DownloadData_Downloading__0__data_files_from__1__" xml:space="preserve">
-    <value>Downloading {0} data files from {1}:</value>
-  </data>
   <data name="AddServerForm_btnAdd_Click_Verifying" xml:space="preserve">
     <value>Verifying</value>
+  </data>
+  <data name="ConfigRunner_DownloadData_Skipping__0___Already_downloaded" xml:space="preserve">
+    <value>Skipping {0}. Already downloaded</value>
+  </data>
+  <data name="ConfigRunner_DownloadData_Trying_again___" xml:space="preserve">
+    <value>Trying again...</value>
+  </data>
+  <data name="ConfigRunner_DownloadData_Already_downloaded__Skipping_" xml:space="preserve">
+    <value>Already downloaded. Skipping.</value>
+  </data>
+  <data name="ConfigRunner_DownloadData__0____1__of__2__" xml:space="preserve">
+    <value>{0} ({1} of {2})</value>
+  </data>
+  <data name="ConfigRunner_DownloadData_Starting_download___" xml:space="preserve">
+    <value>Starting download...</value>
+  </data>
+  <data name="ConfigRunner_DownloadData_Found__0__matching_data_files_on__1__" xml:space="preserve">
+    <value>Found {0} matching data files on {1}:</value>
   </data>
 </root>

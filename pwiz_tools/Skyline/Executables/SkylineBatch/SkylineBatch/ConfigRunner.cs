@@ -231,36 +231,51 @@ namespace SkylineBatch
                 where dataFilter.IsMatch(name)
                 select name;
             var downloadingFiles = downloadingFilesEnum.ToList();
-            if (downloadingFiles.Count == existingDataFiles) return;
+            if (downloadingFiles.Count == existingDataFiles && !Program.FunctionalTest) return;
 
-            _logger.Log(string.Format(Resources.ConfigRunner_DownloadData_Downloading__0__data_files_from__1__, downloadingFiles.Count, server.Url));
+            _logger.Log(string.Format(Resources.ConfigRunner_DownloadData_Found__0__matching_data_files_on__1__, downloadingFiles.Count, server.Url));
             foreach (var file in downloadingFiles)
                 _logger.Log(file);
-
-            long totalSize = 0;
-            foreach (var fileName in downloadingFiles)
-                totalSize += allFiles[fileName].Size;
-            long downloadedSize = 0;
+            _logger.Log(Resources.ConfigRunner_DownloadData_Starting_download___);
+            
             var ftpClient = server.GetFtpClient();
             var source = new CancellationTokenSource();
             CancellationToken token = source.Token;
             _runningCancellationTokens.Add(source);
-            ftpClient.Connect();
-            foreach (var fileName in downloadingFiles)
+            var i = 0;
+            int triesOnFile = 0;
+            while ( i < downloadingFiles.Count && IsRunning())
             {
-                if (!IsRunning()) break;
+                var fileName = downloadingFiles[i];
+                if (triesOnFile == 0)
+                {
+                    _logger.Log(string.Format(Resources.ConfigRunner_DownloadData__0____1__of__2__, fileName, i + 1, downloadingFiles.Count));
+                }
+                
+                var localFileDestination = Path.Combine(mainSettings.DataFolderPath, fileName);
                 var currentFileSize = (double) allFiles[fileName].Size;
-                var size = downloadedSize;
+
+                if (File.Exists(localFileDestination) && new FileInfo(localFileDestination).Length == currentFileSize)
+                {
+                    _logger.Log(Resources.ConfigRunner_DownloadData_Already_downloaded__Skipping_);
+                    triesOnFile = 0;
+                    i++;
+                    continue;
+                }
+
+                _logger.StartLogPercent();
                 Progress<FtpProgress> progress = new Progress<FtpProgress>(p =>
                 {
-                    var fileSizeDownloaded = currentFileSize * p.Progress / 100;
-                    var currentPercentComplete = Math.Floor((size + fileSizeDownloaded) / totalSize * 100);
-                    _logger.Log(string.Format("{0}%", currentPercentComplete));
+                    _logger.LogPercent((int)Math.Floor(p.Progress));
                 });
                 try
                 {
-                    await ftpClient.DownloadFileAsync(Path.Combine(mainSettings.DataFolderPath, fileName),
+                    await ftpClient.ConnectAsync(token);
+                    await ftpClient.DownloadFileAsync(localFileDestination,
                         server.FilePath(fileName), token: token, existsMode: FtpLocalExists.Overwrite, progress: progress);
+                    await ftpClient.DisconnectAsync(token);
+                    triesOnFile = 0;
+                    i++;
                 }
                 catch (OperationCanceledException)
                 {
@@ -268,16 +283,21 @@ namespace SkylineBatch
                 }
                 catch (Exception e)
                 {
-                    _logger.LogException(e, Resources.ConfigRunner_DownloadData_An_error_occurred_while_downloading_the_data_files_);
-                    ChangeStatus(RunnerStatus.Error);
+                    _logger.Log(e.Message);
+                    if (triesOnFile < 3)
+                    {
+                        _logger.Log(Resources.ConfigRunner_DownloadData_Trying_again___);
+                        triesOnFile++;
+                    }
+                    else
+                    {
+                        _logger.LogException(e,
+                            Resources.ConfigRunner_DownloadData_An_error_occurred_while_downloading_the_data_files_);
+                        ChangeStatus(RunnerStatus.Error);
+                    }
                 }
-                
-                downloadedSize += allFiles[fileName].Size;
+                _logger.EndLogPercent(IsRunning());
             }
-            ftpClient.Disconnect();
-
-            if (IsRunning())
-                _logger.Log(string.Format("{0}%", 100));
         }
 
         

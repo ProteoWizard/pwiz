@@ -20,7 +20,10 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using SharedBatch.Properties;
 
  namespace SharedBatch
@@ -294,6 +297,55 @@ using SharedBatch.Properties;
             {
                 _mainUi.LogErrorToUi(Name, GetDate() + line);
             }
+        }
+        
+        private int LastPercent;
+        private DateTime LastLogTime;
+        private CancellationTokenSource cancelToken;
+        private bool logging;
+        private const int MIN_SECONDS_BETWEEN_LOGS = 6;
+
+        public void StartLogPercent()
+        {
+            logging = false;
+            LastPercent = 0;
+            LastLogTime = DateTime.Now;
+            cancelToken = new CancellationTokenSource();
+            _ = DelayedLogPercent(cancelToken.Token);
+        }
+
+        public void LogPercent(int percent)
+        {
+            if (percent == LastPercent) return;
+            LastPercent = percent;
+            if ((DateTime.Now - LastLogTime) > new TimeSpan(0, 0, MIN_SECONDS_BETWEEN_LOGS))
+            {
+                LastLogTime = DateTime.Now;
+                if (logging)
+                    Log(string.Format(Resources.Logger_LogPercent__0__, percent));
+            }
+        }
+
+        public void EndLogPercent(bool completed)
+        {
+            cancelToken.Cancel();
+            if (logging && completed)
+                Log(string.Format(Resources.Logger_LogPercent__0__, 100));
+        }
+
+        private async Task DelayedLogPercent(CancellationToken token)
+        {
+            try
+            {
+                await Task.Delay(MIN_SECONDS_BETWEEN_LOGS * 1000, token);
+            }
+            catch (TaskCanceledException)
+            {
+                return;
+            }
+            Log(string.Format(Resources.Logger_LogPercent__0__, 0));
+            LastLogTime = DateTime.Now;
+            logging = true;
         }
 
         public void Delete()

@@ -746,6 +746,18 @@ namespace SkylineBatch
             return count;
         }
 
+        public bool ConfigRunning(string name)
+        {
+            foreach (ListViewItem lvi in listViewConfigs.Items)
+            {
+                if (lvi.Text.Equals(name))
+                {
+                    return lvi.SubItems[2].Text.Equals("Running");
+                }
+            }
+            throw new Exception("Configuration not found");
+        }
+
         public string SelectedConfigName()
         {
             return _configManager.GetSelectedConfig().GetName();

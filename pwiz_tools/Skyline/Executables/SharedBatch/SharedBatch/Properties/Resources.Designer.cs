@@ -477,6 +477,15 @@ namespace SharedBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0}%.
+        /// </summary>
+        public static string Logger_LogPercent__0__ {
+            get {
+                return ResourceManager.GetString("Logger_LogPercent__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to !!! LOG BUFFER IS FULL !!!.
         /// </summary>
         public static string Logger_WriteToBuffer_____LOG_BUFFER_IS_FULL____ {
