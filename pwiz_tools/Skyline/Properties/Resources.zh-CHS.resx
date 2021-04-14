@@ -11047,4 +11047,7 @@ Invalid peptide sequence at position 18
   <data name="MetadataRuleSetList_Label_Rule_Set" xml:space="preserve">
     <value>规则集</value>
   </data>
+  <data name="CommandStatusWriter_WriteLine_Error_" xml:space="preserve">
+    <value>错误：</value>
+  </data>
 </root>

@@ -3676,11 +3676,22 @@ namespace pwiz.Skyline
             _writer.WriteLine(message);
             Flush();
 
-            if (value != null && !IsErrorReported && 
-                value.StartsWith(Resources.CommandStatusWriter_WriteLine_Error_, StringComparison.CurrentCulture))
+            if (IsErrorMessage(value))
             {
                 IsErrorReported = true;
             }
+        }
+
+        private bool IsErrorMessage(string message)
+        {
+            if (message != null && !IsErrorReported)
+            {
+                return message.StartsWith(@"Error:", StringComparison.InvariantCulture) ||  // In Skyline-daily any message might not be localized
+                       message.StartsWith(Resources.CommandStatusWriter_WriteLine_Error_,
+                           StringComparison.CurrentCulture);
+            }
+
+            return false;
         }
 
         private string MemStamp(long memUsed)

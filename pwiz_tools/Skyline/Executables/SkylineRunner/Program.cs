@@ -116,7 +116,7 @@ namespace pwiz.SkylineRunner
                     //While (!done reading)
                     while ((line = sr.ReadLine()) != null)
                     {
-                        if (line.StartsWith(Resources.Program_Run_Error_, StringComparison.CurrentCulture))
+                        if (IsErrorLine(line))   // In case of Skyline-daily with untranslated text
                         {
                             exitCode = 2;
                         }
@@ -125,6 +125,24 @@ namespace pwiz.SkylineRunner
                 }
                 return exitCode;
             }
+        }
+
+        // We want to be able to distribute SkylineRunner as a single EXE file. So, requiring
+        // resource DLLs for language translation is not possible.
+        private static readonly string[] INTL_ERROR_PREFIXES =
+        {
+            "エラー：", // ja
+            "错误："    // zh-CHS
+        };
+
+        private bool IsErrorLine(string line)
+        {
+            // The English prefix can happen in any culture when running Skyline-daily with a new
+            // untranslated error message.
+            if (line.StartsWith("Error:", StringComparison.InvariantCulture))
+                return true;
+
+            return INTL_ERROR_PREFIXES.Any(p => line.StartsWith(p, StringComparison.CurrentCulture));
         }
 
         private bool WaitForConnection(NamedPipeServerStream serverStream, string inPipeName)
