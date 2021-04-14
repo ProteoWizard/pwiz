@@ -96,7 +96,7 @@ namespace AutoQC
 
         private async Task<string> GetValidPath(string variableName, string invalidPath, Validator validator, params PathDialogOptions[] pathDialogOptions)
         {
-            TextUtil.TryReplaceStart(_oldRoot, _newRoot, invalidPath, out string path);
+            string path = TextUtil.TryReplaceStart(_oldRoot, _newRoot, invalidPath);
 
             var folderControl = new FilePathControl(variableName, path, _lastInputPath, validator, pathDialogOptions);
             path = (string)await GetValidVariable(folderControl, false);

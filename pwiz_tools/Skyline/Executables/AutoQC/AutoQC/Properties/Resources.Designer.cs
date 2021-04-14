@@ -829,6 +829,15 @@ namespace AutoQC.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Do you want to import configurations from {0}?.
+        /// </summary>
+        internal static string MainForm_FileOpened_Do_you_want_to_import_configurations_from__0__ {
+            get {
+                return ResourceManager.GetString("MainForm_FileOpened_Do_you_want_to_import_configurations_from__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Loading configurations from saved settings..
         /// </summary>
         internal static string MainForm_MainForm_Loading_configurations_from_saved_settings_ {

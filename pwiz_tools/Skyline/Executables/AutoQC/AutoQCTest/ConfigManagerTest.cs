@@ -194,7 +194,7 @@ namespace AutoQCTest
         public void TestEnableInvalid()
         {
             var configManager = TestUtils.GetTestConfigManager();
-            configManager.Import(TestUtils.GetTestFilePath("bad.xml"));
+            configManager.Import(TestUtils.GetTestFilePath("bad.xml"), null);
             configManager.SelectConfig(3);
             configManager.UpdateSelectedEnabled(true);
             Assert.IsTrue(!configManager.GetSelectedConfig().IsEnabled);
@@ -222,12 +222,12 @@ namespace AutoQCTest
             Assert.IsFalse(i == 4, "Failed to remove all configs.");
 
             var testingConfigs = TestUtils.ConfigListFromNames(new[] { "one", "two", "three" });
-            configManager.Import(configsXmlPath);
+            configManager.Import(configsXmlPath, null);
             Assert.IsTrue(configManager.ConfigListEquals(testingConfigs));
 
             configManager.SelectConfig(2);
             configManager.UserRemoveSelected();
-            configManager.Import(TestUtils.GetTestFilePath("configs.xml"));
+            configManager.Import(TestUtils.GetTestFilePath("configs.xml"), null);
             Assert.IsTrue(configManager.ConfigListEquals(testingConfigs));
 
             File.Delete(configsXmlPath);
@@ -242,7 +242,7 @@ namespace AutoQCTest
             configManager.Close();
             var testConfigManager = new AutoQcConfigManager();
             // Simulate loading saved configs from file
-            testConfigManager.Import(ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath);
+            testConfigManager.Import(ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath, null);
             Assert.IsTrue(testConfigManager.ConfigListEquals(testingConfigs));
         }
 

@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -88,7 +89,7 @@ namespace SkylineBatch
             lock (_lock)
             {
                 var configs = base.LoadConfigList();
-                configs = AssignDependencies(configs);
+                configs = AssignDependencies(configs, true, out string warningMessage); // ignore warning
                 foreach (var config in configs)
                     ProgramaticallyAddConfig(config);
                 DisableInvalidConfigs();
@@ -97,11 +98,15 @@ namespace SkylineBatch
 
         #region Add/Remove Configs
 
-        public List<IConfig> AssignDependencies(List<IConfig> newConfigs, bool showWarning = true)
+        public List<IConfig> AssignDependencies(List<IConfig> newConfigs, bool checkExistingConfigs, out string warningMessage)
         {
+            warningMessage = null;
             var configDictionary = new Dictionary<string, IConfig>();
-            foreach (var existingConfig in _configList)
-                configDictionary.Add(existingConfig.GetName(), existingConfig);
+            if (checkExistingConfigs)
+            {
+                foreach (var existingConfig in _configList)
+                    configDictionary.Add(existingConfig.GetName(), existingConfig);
+            }
             foreach (var newConfig in newConfigs)
                 configDictionary.Add(newConfig.GetName(), newConfig);
             var errorConfigs = new List<string>();
@@ -132,10 +137,10 @@ namespace SkylineBatch
                 }
             }
 
-            if (errorConfigs.Count != 0 && showWarning)
-                DisplayWarning(Resources.SkylineBatchConfigManager_AssignDependencies_The_following_configurations_use_refined_template_files_from_other_configurations_that_do_not_exist_ + Environment.NewLine +
+            if (errorConfigs.Count != 0)
+                warningMessage = Resources.SkylineBatchConfigManager_AssignDependencies_The_following_configurations_use_refined_template_files_from_other_configurations_that_do_not_exist_ + Environment.NewLine +
                                TextUtil.LineSeparate(errorConfigs) + Environment.NewLine +
-                               Resources.SkylineBatchConfigManager_AssignDependencies_You_may_want_to_update_the_template_file_paths_);
+                               Resources.SkylineBatchConfigManager_AssignDependencies_You_may_want_to_update_the_template_file_paths_;
             return configsWithDependency;
         }
 
@@ -365,11 +370,11 @@ namespace SkylineBatch
             return (SkylineBatchConfig)base.GetConfig(index);
         }
 
-        public List<ListViewItem> ConfigsListViewItems()
+        public List<ListViewItem> ConfigsListViewItems(Graphics graphics)
         {
             lock (_lock)
             {
-                return ConfigsListViewItems(_configRunners);
+                return ConfigsListViewItems(_configRunners, graphics);
             }
         }
 
@@ -429,13 +434,15 @@ namespace SkylineBatch
             }
         }
 
-        public void AddRootReplacement(string oldRoot, string newRoot)
+        public void RootReplaceConfigs(string oldRoot)
         {
-            var replacingConfigs = GetRootReplacement(oldRoot, newRoot);
-            foreach (var indexAndConfig in replacingConfigs)
+            var replacedConfigs = GetRootReplacedConfigs(oldRoot);
+            replacedConfigs = AssignDependencies(replacedConfigs, false, out _);
+            foreach (var config in replacedConfigs)
             {
-                ProgramaticallyRemoveAt(indexAndConfig.Item1);
-                ProgramaticallyInsertConfig(indexAndConfig.Item2, indexAndConfig.Item1);
+                var configIndex = GetConfigIndex(config.GetName());
+                ProgramaticallyRemoveAt(configIndex);
+                ProgramaticallyInsertConfig(config, configIndex);
             }
         }
 
@@ -739,13 +746,34 @@ namespace SkylineBatch
 
         #region Import/Export
 
-        public void Import(string filePath)
+        public void Import(string filePath, ShowDownloadedFileForm showDownloadedFileForm)
         {
-            var importedConfigs = ImportFrom(filePath);
-            importedConfigs = AssignDependencies(importedConfigs);
+            var importedConfigs = ImportFrom(filePath, showDownloadedFileForm);
+            HandleImportedConfigs(importedConfigs);
+            /*importedConfigs = AssignDependencies(importedConfigs, out string warningMessage);
             foreach (var config in importedConfigs)
                 ProgramaticallyAddConfig(config);
             DisableInvalidConfigs();
+            _uiControl?.UpdateUiConfigurations();
+            if (warningMessage != null)
+                DisplayWarning(warningMessage);*/
+        }
+
+        /*public new void CopyAndImport(string filePath, string newRootDirectory)
+        {
+            var importedConfigs = base.CopyAndImport(filePath, newRootDirectory);
+            HandleImportedConfigs(importedConfigs);
+        }*/
+
+        private void HandleImportedConfigs(List<IConfig> importedConfigs)
+        {
+            importedConfigs = AssignDependencies(importedConfigs, true, out string warningMessage);
+            foreach (var config in importedConfigs)
+                ProgramaticallyAddConfig(config);
+            DisableInvalidConfigs();
+            _uiControl?.UpdateUiConfigurations();
+            if (warningMessage != null)
+                DisplayWarning(warningMessage);
         }
 
         private void DisableInvalidConfigs()
