@@ -2998,7 +2998,6 @@ namespace pwiz.Skyline
         {
             if (show)
             {
-                Settings.Default.ShowPeptides = true;
                 if (_sequenceTreeForm != null)
                 {
                     if (forceUpdate)
