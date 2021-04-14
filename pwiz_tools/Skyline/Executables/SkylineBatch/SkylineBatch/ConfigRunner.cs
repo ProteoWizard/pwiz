@@ -42,7 +42,6 @@ namespace SkylineBatch
         {
             _runnerStatus = RunnerStatus.Stopped;
             Config = config;
-            StartTime = RunTime = String.Empty;
             _uiControl = uiControl;
             _logger = logger;
             _batchCommandsToLog = new List<string>();
@@ -60,8 +59,8 @@ namespace SkylineBatch
         }
         
         public SkylineBatchConfig Config { get; }
-        public string StartTime { get; private set; }
-        public string RunTime { get; private set; }
+        public DateTime? StartTime { get; private set; }
+        public TimeSpan? RunTime { get; private set; }
 
         public IConfig GetConfig()
         {
@@ -114,12 +113,9 @@ namespace SkylineBatch
                 return;
             }
 
-            var startTime = DateTime.Now;
-            StartTime = startTime.ToString("hh:mm:ss");
-            RunTime = string.Empty;
+            StartTime = DateTime.Now;
             ChangeStatus(RunnerStatus.Running);
             Config.MainSettings.CreateAnalysisFolderIfNonexistent();
-            string commandFile = null;
             if (startStep != 5)
             {
                 var multiLine = await Config.SkylineSettings.HigherVersion(ALLOW_NEWLINE_SAVE_VERSION, _processRunner);
@@ -130,8 +126,7 @@ namespace SkylineBatch
                     WriteBatchCommandsToFile(commandWriter, startStep);
                     _batchCommandsToLog = commandWriter.LogLines;
                     // Runs steps 1-4
-                    commandFile = commandWriter.GetCommandFile();
-                    var command = string.Format("--batch-commands=\"{0}\"", commandFile);
+                    var command = string.Format("--batch-commands=\"{0}\"", commandWriter.GetCommandFile());
                     await _processRunner.Run(Config.SkylineSettings.CmdPath, command);
                     // Consider: deleting tmp command file
                 }
@@ -148,10 +143,11 @@ namespace SkylineBatch
             if (IsRunning()) ChangeStatus(RunnerStatus.Completed);
             if (IsCanceling()) ChangeStatus(RunnerStatus.Canceled);
             var endTime = DateTime.Now;
-            var delta = endTime - startTime;
-            RunTime = delta.Hours > 0 ? delta.ToString(@"hh\:mm\:ss") : delta.ToString(@"mm\:ss");
+            var delta = endTime - (DateTime)StartTime;
+            RunTime = delta;
+            var runTimeString = delta.Hours > 0 ? delta.ToString(@"hh\:mm\:ss") : delta.ToString(@"mm\:ss");
             LogToUi(string.Format(Resources.ConfigRunner_Run_________________________________0____1_________________________________, Config.Name, GetStatus()));
-            LogToUi(string.Format(Resources.ConfigRunner_Run_________________________________0____1_________________________________, "Runtime", RunTime));
+            LogToUi(string.Format(Resources.ConfigRunner_Run_________________________________0____1_________________________________, "Runtime", runTimeString));
             _uiControl?.UpdateUiConfigurations();
         }
 
@@ -227,8 +223,11 @@ namespace SkylineBatch
             lock (_lock)
             {
                 if (_runnerStatus == runnerStatus)
-                {
                     return;
+                if (runnerStatus == RunnerStatus.Waiting)
+                {
+                    StartTime = null;
+                    RunTime = null;
                 }
                 _runnerStatus = runnerStatus;
             }

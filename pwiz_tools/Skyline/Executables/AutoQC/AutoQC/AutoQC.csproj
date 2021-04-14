@@ -81,6 +81,9 @@
     <Content Include="AutoQCStarter.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="AutoQC_configs.ico">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="SkylineDailyRunner.exe">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

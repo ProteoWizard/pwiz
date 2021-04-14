@@ -84,7 +84,7 @@ namespace SharedBatch
             {
                 using (FolderBrowserDialog dlg = new FolderBrowserDialog
                 {
-                    SelectedPath = TextUtil.GetInitialDirectory(_lastUsedPath)
+                    SelectedPath = FileUtil.GetInitialDirectory(_lastUsedPath)
             })
                 {
                     if (dlg.ShowDialog(this) == DialogResult.OK)
@@ -97,7 +97,7 @@ namespace SharedBatch
                 FileDialog dialog = saveFileDialog ? (FileDialog)new SaveFileDialog() : new OpenFileDialog();
                 dialog.CheckFileExists = !saveFileDialog && !_pathDialogOptions.Contains(PathDialogOptions.ExistingOptional);
                 dialog.Filter = _filter;
-                dialog.InitialDirectory = TextUtil.GetInitialDirectory(_lastUsedPath);
+                dialog.InitialDirectory = FileUtil.GetInitialDirectory(_lastUsedPath);
                 if (dialog.ShowDialog() == DialogResult.OK)
                     textFilePath.Text = dialog.FileName;
             }
@@ -107,6 +107,11 @@ namespace SharedBatch
         {
             _path = textFilePath.Text;
             _lastUsedPath = textFilePath.Text;
+        }
+
+        public void SetText(string value)
+        {
+            textFilePath.Text = value;
         }
     }
 }
