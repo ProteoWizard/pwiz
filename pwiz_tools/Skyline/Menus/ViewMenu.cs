@@ -122,7 +122,6 @@ namespace pwiz.Skyline.Menus
 
         private void ShowTargetsWindow()
         {
-            Settings.Default.ShowPeptides = true;
             SkylineWindow.ShowSequenceTreeForm(true, true);
 
             CollectionUtil.ForEach(FormUtil.OpenForms.OfType<FoldChangeBarGraph>(), b => b.QueueUpdateGraph());
@@ -832,7 +831,7 @@ namespace pwiz.Skyline.Menus
         }
         public void ViewMenuDropDownOpening()
         {
-            viewTargetsMenuItem.Checked = Settings.Default.ShowPeptides;
+            viewTargetsMenuItem.Checked = SkylineWindow.SequenceTreeFormIsVisible;
             viewModificationsMenuItem.DropDownItems.Clear();
             var currentOption = DisplayModificationOption.Current;
             foreach (var opt in DisplayModificationOption.All)
