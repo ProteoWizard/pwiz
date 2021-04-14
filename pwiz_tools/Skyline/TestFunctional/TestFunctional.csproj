@@ -171,6 +171,7 @@
     <Compile Include="DetectionsPlotTest.cs" />
     <Compile Include="DirtyDocumentSharingTest.cs" />
     <Compile Include="DocumentFileLockingTest.cs" />
+    <Compile Include="DuplicateSmallMoleculePrecursorTest.cs" />
     <Compile Include="ExplicitAnalyteConcentrationTest.cs" />
     <Compile Include="GroupComparisonRefineTest.cs" />
     <Compile Include="InvalidPeptideRankIdTest.cs" />
@@ -444,6 +445,7 @@
     <None Include="DocumentGridChromatogramDataTest.zip" />
     <None Include="DocumentGridTest.zip" />
     <None Include="DocumentSizeErrorTest.zip" />
+    <None Include="DuplicateSmallMoleculePrecursorTest.zip" />
     <None Include="DuplicateTransitionGroupTest.zip" />
     <None Include="EditNoteTest.zip" />
     <None Include="EncyclopeDiaScoreTest.zip" />
