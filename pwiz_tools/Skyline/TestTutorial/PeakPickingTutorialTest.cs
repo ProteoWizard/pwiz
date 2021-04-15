@@ -509,7 +509,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 RTLinearRegressionGraphPane pane;
-                Assert.IsTrue(SkylineWindow.RTGraphController.GraphSummary.TryGetGraphPane(out pane));
+                Assert.IsTrue(SkylineWindow.GraphRetentionTime.TryGetGraphPane(out pane));
                 Assert.AreEqual(expectedPoints, pane.StatisticsRefined.ListRetentionTimes.Count);
             });
         }

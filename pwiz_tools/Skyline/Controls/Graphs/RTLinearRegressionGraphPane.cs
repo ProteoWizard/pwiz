@@ -229,6 +229,14 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
+        public RetentionTimeRegression RegressionIfRefined
+        {
+            get
+            {
+                return IsRefined ? Data?.RegressionRefined : null;
+            }
+        }
+
         public RetentionTimeStatistics StatisticsRefined
         {
             get

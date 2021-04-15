@@ -99,7 +99,7 @@ namespace pwiz.SkylineTestTutorial
                       {
                           SkylineWindow.ArrangeGraphsTiled();
                           SkylineWindow.ShowRTPeptideGraph();
-                          using (var enumLabels = SkylineWindow.RTGraphController.GraphSummary.Categories.GetEnumerator())
+                          using (var enumLabels = SkylineWindow.GraphRetentionTime.Categories.GetEnumerator())
                           {
                               foreach (var nodePep in docCalibrate.Peptides)
                               {
@@ -127,8 +127,8 @@ namespace pwiz.SkylineTestTutorial
 
             RunUI(() =>
                       {
-                          Assert.AreEqual(3, SkylineWindow.RTGraphController.GraphSummary.CurveCount);
-                          Assert.AreEqual(2, SkylineWindow.RTGraphController.GraphSummary.Categories.Count());
+                          Assert.AreEqual(3, SkylineWindow.GraphRetentionTime.CurveCount);
+                          Assert.AreEqual(2, SkylineWindow.GraphRetentionTime.Categories.Count());
                           var chromGraphs = SkylineWindow.GraphChromatograms.ToArray();
                           Assert.AreEqual(2, chromGraphs.Length);
                           Assert.AreEqual(11.3, chromGraphs[0].GraphItems.First().BestPeakTime, 0.05);
@@ -340,7 +340,7 @@ namespace pwiz.SkylineTestTutorial
                       {
                           VerifyRTRegression(0.15, 15.09, 0.9991);
                           Assert.AreEqual(11, SkylineWindow.DocumentUI.PeptideCount -
-                              SkylineWindow.RTGraphController.Outliers.Length);
+                              SkylineWindow.RTLinearRegressionGraphPane.Outliers.Length);
                       });
 
             // Find all unintegrated transitions, p. 14-15
@@ -433,7 +433,7 @@ namespace pwiz.SkylineTestTutorial
             {
                 WaitForConditionUI(() =>
                     SkylineWindow.IsGraphRetentionTimeShown(GraphTypeSummary.score_to_run_regression) &&
-                    SkylineWindow.RTGraphController.RegressionRefined != null);
+                    SkylineWindow.RTLinearRegressionGraphPane.RegressionIfRefined != null);
 
                 var editIrtCalc2 = ShowDialog<EditIrtCalcDlg>(SkylineWindow.ShowEditCalculatorDlg);
                 RunUI(() => Assert.AreEqual(0, editIrtCalc2.LibraryPeptideCount));
@@ -470,7 +470,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
                       {
                           VerifyRTRegression(0.15, 15.09, 0.99985);
-                          Assert.AreEqual(0, SkylineWindow.RTGraphController.Outliers.Length);
+                          Assert.AreEqual(0, SkylineWindow.RTLinearRegressionGraphPane.Outliers.Length);
 
                           SkylineWindow.SaveDocument();
                           SkylineWindow.HideFindResults();
@@ -514,7 +514,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
                       {
                           VerifyRTRegression(0.40, 24.77, 0.9998);
-                          Assert.AreEqual(147, SkylineWindow.RTGraphController.Outliers.Length);
+                          Assert.AreEqual(147, SkylineWindow.RTLinearRegressionGraphPane.Outliers.Length);
                       });
 
             // Check scheduling graph, p. 20
@@ -568,7 +568,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
                       {
                           VerifyRTRegression(0.358, 25.920, 0.91606);
-                          Assert.AreEqual(0, SkylineWindow.RTGraphController.Outliers.Length);
+                          Assert.AreEqual(0, SkylineWindow.RTLinearRegressionGraphPane.Outliers.Length);
                       });
 
             RunDlg<RegressionRTThresholdDlg>(SkylineWindow.ShowRegressionRTThresholdDlg, thresholdDlg =>
@@ -580,7 +580,7 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot<GraphSummary.RTGraphView>("RT Regression graph metafile", 27);
 
             // Verify 2 outliers highlighted and removed, p. 25
-            WaitForConditionUI(() => SkylineWindow.RTGraphController.Outliers.Length == 2);
+            WaitForConditionUI(() => SkylineWindow.RTLinearRegressionGraphPane.Outliers.Length == 2);
             RunUI(() =>
                       {
                           VerifyRTRegression(0.393, 24.85, 0.9989);
@@ -631,7 +631,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
                       {
                           VerifyRTRegression(0.393, 24.85, 0.9989);
-                          Assert.AreEqual(0, SkylineWindow.RTGraphController.Outliers.Length);
+                          Assert.AreEqual(0, SkylineWindow.RTLinearRegressionGraphPane.Outliers.Length);
                       });
 
             RunUI(() =>
@@ -667,7 +667,7 @@ namespace pwiz.SkylineTestTutorial
             {
                 WaitForConditionUI(() =>
                     SkylineWindow.IsGraphRetentionTimeShown(GraphTypeSummary.score_to_run_regression) &&
-                    SkylineWindow.RTGraphController.RegressionRefined != null);
+                    SkylineWindow.RTLinearRegressionGraphPane.RegressionIfRefined != null);
 
                 var editIrtCalc = ShowDialog<EditIrtCalcDlg>(SkylineWindow.ShowEditCalculatorDlg);
                 var addLibraryDlg = ShowDialog<AddIrtSpectralLibrary>(editIrtCalc.AddLibrary);
@@ -823,11 +823,11 @@ namespace pwiz.SkylineTestTutorial
         // Always called in RunUI
         private static void VerifyRTRegression(double slope, double intercept, double r)
         {
-            WaitForCondition(() => SkylineWindow.RTGraphController.RegressionRefined != null);
-            var regressionRT = (RegressionLineElement) SkylineWindow.RTGraphController.RegressionRefined.Conversion;
+            WaitForCondition(() => SkylineWindow.RTLinearRegressionGraphPane.RegressionIfRefined != null);
+            var regressionRT = (RegressionLineElement) SkylineWindow.RTLinearRegressionGraphPane.RegressionIfRefined.Conversion;
             Assert.AreEqual(slope, regressionRT.Slope, 0.005);
             Assert.AreEqual(intercept, regressionRT.Intercept, 0.005);
-            Assert.AreEqual(r, SkylineWindow.RTGraphController.StatisticsRefined.R, 0.00005);
+            Assert.AreEqual(r, SkylineWindow.RTLinearRegressionGraphPane.StatisticsRefined.R, 0.00005);
         }
 
         private static void CheckIrtStandardPeptides(DbIrtPeptide[] standardPeptidesArray, string irtDefText, double threshold)

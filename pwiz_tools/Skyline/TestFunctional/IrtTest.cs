@@ -355,8 +355,8 @@ namespace pwiz.SkylineTestFunctional
             WaitForRegression();
             RunUI(() =>
             {
-                stats = SkylineWindow.RTGraphController.RegressionRefined.CalcStatistics(docPeptides, null);
-                line = SkylineWindow.RTGraphController.RegressionRefined.Conversion as RegressionLineElement;
+                stats = SkylineWindow.RTLinearRegressionGraphPane.RegressionIfRefined.CalcStatistics(docPeptides, null);
+                line = SkylineWindow.RTLinearRegressionGraphPane.RegressionIfRefined.Conversion as RegressionLineElement;
             });
             Assert.IsNotNull(stats);
             Assert.IsTrue(stats.R > 0.999);
@@ -368,7 +368,7 @@ namespace pwiz.SkylineTestFunctional
 
             RunUI(() => SkylineWindow.ChooseCalculator(ssrCalc));
             WaitForRegression();
-            RunUI(() => stats = SkylineWindow.RTGraphController.RegressionRefined.CalcStatistics(docPeptides, null));
+            RunUI(() => stats = SkylineWindow.RTLinearRegressionGraphPane.RegressionIfRefined.CalcStatistics(docPeptides, null));
 
             Assert.IsNotNull(stats);
             Assert.IsTrue(Math.Abs(stats.R - 0.97) < 0.01);

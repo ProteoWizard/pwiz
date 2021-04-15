@@ -80,15 +80,12 @@ namespace pwiz.Skyline
         private ChromFileInfoId _alignToFile;
         private bool _alignToPrediction;
 
-        public RTGraphController RTGraphController
+        public RTLinearRegressionGraphPane RTLinearRegressionGraphPane
         {
             get
             {
-                var active = _listGraphRetentionTime.FirstOrDefault();
-
-                if (active == null)
-                    return null;
-                return active.Controller as RTGraphController;
+                return _listGraphRetentionTime.SelectMany(g => g.GraphPanes).OfType<RTLinearRegressionGraphPane>()
+                    .FirstOrDefault();
             }
         }
 
@@ -2553,12 +2550,14 @@ namespace pwiz.Skyline
                         });
                     }
                 }
-                var regressionRT = controller.RegressionRefined;
+
+                var rtLinearRegressionGraphPane = RTLinearRegressionGraphPane;
+                var regressionRT = rtLinearRegressionGraphPane?.RegressionIfRefined;
                 createRTRegressionContextMenuItem.Enabled = (regressionRT != null) && !runToRun;
                 updateCalculatorContextMenuItem.Visible = (regressionRT != null &&
                     Settings.Default.RTScoreCalculatorList.CanEditItem(regressionRT.Calculator) && !runToRun);
-                bool showDelete = controller.ShowDelete(mousePt);
-                bool showDeleteOutliers = controller.ShowDeleteOutliers;
+                bool showDelete = rtLinearRegressionGraphPane?.AllowDeletePoint(mousePt) ?? false;
+                bool showDeleteOutliers = rtLinearRegressionGraphPane?.HasOutliers ?? false;
                 if (showDelete || showDeleteOutliers)
                 {
                     menuStrip.Items.Insert(iInsert++, toolStripSeparator23);
@@ -2943,7 +2942,7 @@ namespace pwiz.Skyline
         public void CreateRegression()
         {
             var listRegression = Settings.Default.RetentionTimeList;
-            var regression = RTGraphController.RegressionRefined;
+            var regression = RTLinearRegressionGraphPane?.RegressionIfRefined;
             string name = Path.GetFileNameWithoutExtension(DocumentFilePath);
             if (listRegression.ContainsKey(name))
             {
@@ -3022,7 +3021,7 @@ namespace pwiz.Skyline
         public void ShowEditCalculatorDlg()
         {
             var list = Settings.Default.RTScoreCalculatorList;
-            var regressionRT = RTGraphController.RegressionRefined;
+            var regressionRT = RTLinearRegressionGraphPane?.RegressionIfRefined;
             if (regressionRT != null && list.CanEditItem(regressionRT.Calculator))
             {
                 var calcOld = regressionRT.Calculator;
@@ -3050,7 +3049,7 @@ namespace pwiz.Skyline
 
         public void RemoveRTOutliers()
         {
-            var outliers = RTGraphController.Outliers;
+            var outliers = RTLinearRegressionGraphPane.Outliers;
             var outlierIds = new HashSet<int>();
             foreach (var outlier in outliers)
                 outlierIds.Add(outlier.Id.GlobalIndex);
@@ -3058,7 +3057,7 @@ namespace pwiz.Skyline
             ModifyDocument(Resources.SkylineWindow_RemoveRTOutliers_Remove_retention_time_outliers,
                 doc => (SrmDocument) doc.RemoveAll(outlierIds),
                 docPair => AuditLogEntry.CreateCountChangeEntry(MessageType.removed_rt_outlier,
-                    MessageType.removed_rt_outliers, docPair.OldDocumentType, RTGraphController.Outliers, outlier =>  MessageArgs.Create(AuditLogEntry.GetNodeName(docPair.OldDoc, outlier)), null));
+                    MessageType.removed_rt_outliers, docPair.OldDocumentType, outliers, outlier =>  MessageArgs.Create(AuditLogEntry.GetNodeName(docPair.OldDoc, outlier)), null));
         }
 
         private void removeRTContextMenuItem_Click(object sender, EventArgs e)

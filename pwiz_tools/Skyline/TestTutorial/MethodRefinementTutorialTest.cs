@@ -226,7 +226,7 @@ namespace pwiz.SkylineTestTutorial
             // Missing Data, p. 10
             RunUI(() =>
                 {
-                    SkylineWindow.RTGraphController.SelectPeptide(SkylineWindow.Document.GetPathTo(1, 163));
+                    SkylineWindow.RTLinearRegressionGraphPane.SelectPeptide(SkylineWindow.Document.GetPathTo(1, 163));
                     Assert.AreEqual("YLAEVASEDR", SkylineWindow.SequenceTree.SelectedNode.Text); // Not L10N
                 });
             RestoreViewOnScreen(12);
@@ -558,7 +558,7 @@ namespace pwiz.SkylineTestTutorial
             RTLinearRegressionGraphPane pane;
             RunUI(() =>
             {
-                Assert.IsTrue(SkylineWindow.RTGraphController.GraphSummary.TryGetGraphPane(out pane));
+                Assert.IsTrue(SkylineWindow.GraphRetentionTime.TryGetGraphPane(out pane));
                 Assert.AreEqual(Resources.GraphData_GraphResiduals_Time_from_Regression,
                     pane.YAxis.Title.Text);
                 SkylineWindow.ShowPlotType(PlotTypeRT.correlation);
@@ -566,7 +566,7 @@ namespace pwiz.SkylineTestTutorial
             WaitForGraphs();
             RunUI(() =>
             {
-                Assert.IsTrue(SkylineWindow.RTGraphController.GraphSummary.TryGetGraphPane(out pane));
+                Assert.IsTrue(SkylineWindow.GraphRetentionTime.TryGetGraphPane(out pane));
                 Assert.AreEqual(Resources.RTLinearRegressionGraphPane_RTLinearRegressionGraphPane_Measured_Time,
                     pane.YAxis.Title.Text);
             });

@@ -207,8 +207,8 @@ namespace pwiz.SkylineTestUtil
         public void WaitForRegression()
         {
             WaitForGraphs();
-            WaitForConditionUI(() => SkylineWindow.RTGraphController != null);
-            WaitForPaneCondition<RTLinearRegressionGraphPane>(SkylineWindow.RTGraphController.GraphSummary, pane => !pane.IsCalculating);
+            WaitForConditionUI(() => SkylineWindow.GraphRetentionTime != null);
+            WaitForPaneCondition<RTLinearRegressionGraphPane>(SkylineWindow.GraphRetentionTime, pane => !pane.IsCalculating);
         }
 
         /// <summary>

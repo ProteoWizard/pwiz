@@ -574,8 +574,8 @@ namespace pwiz.SkylineTestTutorial
             Assert.IsNotNull(graphChrom);
             Assert.IsTrue(graphChrom.BestPeakTime.HasValue);
             Assert.AreEqual(20.9, graphChrom.BestPeakTime.Value, 0.05);
-            Assert.AreEqual(rtCurveCount, SkylineWindow.RTGraphController.GraphSummary.CurveCount);
-            Assert.AreEqual(9, SkylineWindow.RTGraphController.GraphSummary.Categories.Count());
+            Assert.AreEqual(rtCurveCount, SkylineWindow.GraphRetentionTime.CurveCount);
+            Assert.AreEqual(9, SkylineWindow.GraphRetentionTime.Categories.Count());
             Assert.AreEqual(areaCurveCount, SkylineWindow.GraphPeakArea.Controller.GraphSummary.CurveCount);
             Assert.AreEqual(9, SkylineWindow.GraphPeakArea.Controller.GraphSummary.Categories.Count());
         }

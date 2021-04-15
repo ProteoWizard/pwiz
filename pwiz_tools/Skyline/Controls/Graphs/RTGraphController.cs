@@ -23,7 +23,6 @@ using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.Controls;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -110,42 +109,6 @@ namespace pwiz.Skyline.Controls.Graphs
             foreach (var regressionGraphPane in GraphSummary.GraphPanes.OfType<RTLinearRegressionGraphPane>())
             {
                 regressionGraphPane.SelectPeptide(peptidePath);
-            }
-        }
-
-        public bool ShowDeleteOutliers
-        {
-            get
-            {
-                var regressionGraphPane = GraphSummary.GraphPanes.FirstOrDefault() as RTLinearRegressionGraphPane;
-                return (regressionGraphPane != null && regressionGraphPane.HasOutliers);
-            }
-        }
-
-        public PeptideDocNode[] Outliers
-        {
-            get
-            {
-                var regressionGraphPane = GraphSummary.GraphPanes.FirstOrDefault() as RTLinearRegressionGraphPane;
-                return (regressionGraphPane != null ? regressionGraphPane.Outliers : null);
-            }
-        }
-
-        public RetentionTimeRegression RegressionRefined
-        {
-            get
-            {
-                var regressionGraphPane = GraphSummary.GraphPanes.FirstOrDefault() as RTLinearRegressionGraphPane;
-                return (regressionGraphPane != null && regressionGraphPane.IsRefined ? regressionGraphPane.RegressionRefined : null);
-            }
-        }
-
-        public RetentionTimeStatistics StatisticsRefined
-        {
-            get
-            {
-                var regressionGraphPane = GraphSummary.GraphPanes.FirstOrDefault() as RTLinearRegressionGraphPane;
-                return (regressionGraphPane != null ? regressionGraphPane.StatisticsRefined : null);
             }
         }
 
