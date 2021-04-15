@@ -18,8 +18,10 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Model.DocSettings;
@@ -38,10 +40,12 @@ namespace pwiz.Skyline.Model.Databinding.Entities
     {
         private readonly CachedValue<TransitionGroupChromInfo> _chromInfo;
         private readonly CachedValue<PrecursorQuantificationResult> _quantificationResult;
+        private readonly CachedValue<IList<CandidatePeakGroup>> _candidatePeaks;
         public PrecursorResult(Precursor precursor, ResultFile file) : base(precursor, file)
         {
             _chromInfo = CachedValue.Create(DataSchema, ()=>GetResultFile().FindChromInfo(precursor.DocNode.Results));
             _quantificationResult = CachedValue.Create(DataSchema, GetQuantification);
+            _candidatePeaks = CachedValue.Create(DataSchema, GetCandidatePeakGroups);
         }
 
         [HideWhen(AncestorOfType = typeof(Precursor))]
@@ -249,6 +253,22 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             var calibrationCurveFitter = PeptideResult.GetCalibrationCurveFitter();
             return calibrationCurveFitter.GetPrecursorQuantificationResult(GetResultFile().Replicate.ReplicateIndex,
                 Precursor.DocNode);
+        }
+
+        public IList<CandidatePeakGroup> CandidatePeakGroups
+        {
+            get
+            {
+                return _candidatePeaks.Value;
+            }
+        }
+
+        private IList<CandidatePeakGroup> GetCandidatePeakGroups()
+        {
+            var chromatogramGroup = new ChromatogramGroup(this);
+            var chromatogramGroupInfo = chromatogramGroup.ChromatogramGroupInfo;
+            return ImmutableList.ValueOf(Enumerable.Range(0, chromatogramGroupInfo.NumPeaks)
+                .Select(peakIndex => new CandidatePeakGroup(chromatogramGroup, peakIndex)));
         }
     }
 }

@@ -478,6 +478,13 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
+        public void ZoomToPeak(double rtStart, double rtEnd)
+        {
+            _graphHelper.ZoomToPeak(rtStart, rtEnd);
+            graphControl.AxisChange();
+            graphControl.Invalidate();
+        }
+
         public ZoomState ZoomState
         {
             get { return new ZoomState(GraphPanes.First(), ZoomState.StateType.Zoom); }

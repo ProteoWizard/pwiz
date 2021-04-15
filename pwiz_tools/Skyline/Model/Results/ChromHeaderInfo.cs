@@ -2308,6 +2308,12 @@ namespace pwiz.Skyline.Model.Results
                 yield return _allPeaks[i];
         }
 
+        public IList<ChromPeak> GetPeakGroup(int peakIndex)
+        {
+            return ReadOnlyList.Create(_groupHeaderInfo.NumTransitions, transitionIndex =>
+                _allPeaks[_groupHeaderInfo.StartPeakIndex + transitionIndex * _groupHeaderInfo.NumPeaks + peakIndex]);
+        }
+
         public ChromatogramInfo GetTransitionInfo(int index)
         {
             return GetTransitionInfo(index, TransformChrom.interpolated);

@@ -529,6 +529,7 @@
     <Compile Include="Model\Crosslinking\SimpleFragmentIon.cs" />
     <Compile Include="Model\Databinding\CellLocator.cs" />
     <Compile Include="Model\Databinding\DataGridId.cs" />
+    <Compile Include="Model\Databinding\Entities\CandidatePeak.cs" />
     <Compile Include="Model\Databinding\Entities\ColumnCaptions.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -540,6 +541,7 @@
       <DependentUpon>ColumnToolTips.resx</DependentUpon>
     </Compile>
     <Compile Include="Model\Databinding\Entities\IonMobilityObject.cs" />
+    <Compile Include="Model\Databinding\Entities\PeakScores.cs" />
     <Compile Include="Model\Databinding\ListColumnPropertyDescriptor.cs" />
     <Compile Include="Model\Databinding\ListLookupDataGridViewColumn.cs" />
     <Compile Include="Model\Databinding\ListLookupPropertyDescriptor.cs" />

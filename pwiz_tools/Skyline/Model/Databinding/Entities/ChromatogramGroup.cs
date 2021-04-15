@@ -1,11 +1,13 @@
 ﻿using System;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.Results.Scoring;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
 {
     public class ChromatogramGroup : SkylineObject
     {
         private readonly Lazy<ChromatogramGroupInfo> _chromatogramGroupInfo;
+        private readonly Lazy<PeakFeatureEnumerator.SummaryPeptidePeakData> _summaryPeptidePeakData;
         public ChromatogramGroup(PrecursorResult precursorResult) : base(precursorResult.DataSchema)
         {
             PrecursorResult = precursorResult;
@@ -37,6 +39,11 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 PrecursorResult.GetResultFile().Replicate.ChromatogramSet,
                 PrecursorResult.GetResultFile().ChromFileInfo.FilePath, PrecursorResult.Precursor.IdentityPath,
                 loadPoints);
+        }
+
+        private PeakFeatureEnumerator.SummaryPeptidePeakData GetSummaryPeakData()
+        {
+
         }
     }
 }
