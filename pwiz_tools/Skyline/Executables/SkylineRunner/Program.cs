@@ -139,10 +139,20 @@ namespace pwiz.SkylineRunner
         {
             // The English prefix can happen in any culture when running Skyline-daily with a new
             // untranslated error message.
-            if (line.StartsWith("Error:", StringComparison.InvariantCulture))
+            if (HasErrorPrefix(line, "Error:", StringComparison.InvariantCulture))
                 return true;
 
-            return INTL_ERROR_PREFIXES.Any(p => line.StartsWith(p, StringComparison.CurrentCulture));
+            return INTL_ERROR_PREFIXES.Any(p => HasErrorPrefix(line, p, StringComparison.CurrentCulture));
+        }
+
+        private static bool HasErrorPrefix(string line, string prefix, StringComparison comparisonType)
+        {
+            int prefixIndex = line.IndexOf(prefix, comparisonType);
+            if (prefixIndex == -1)
+                return false;
+            // The prefix could start the line or it could be preceded by a tab character
+            // if the output includes a timestamp or memory stamp.
+            return prefixIndex == 0 || line[prefixIndex - 1] == '\t';
         }
 
         private bool WaitForConnection(NamedPipeServerStream serverStream, string inPipeName)
