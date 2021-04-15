@@ -791,6 +791,15 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Skyline Batch Configuration File.
+        /// </summary>
+        internal static string Program_AddFileTypesToRegistry_Skyline_Batch_Configuration_File {
+            get {
+                return ResourceManager.GetString("Program_AddFileTypesToRegistry_Skyline_Batch_Configuration_File", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} requires Skyline to run..
         /// </summary>
         public static string Program_InitSkylineSettings__0__requires_Skyline_to_run_ {

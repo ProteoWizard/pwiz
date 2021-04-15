@@ -592,4 +592,7 @@
   <data name="ConfigRunner_DownloadData_Found__0__matching_data_files_on__1__" xml:space="preserve">
     <value>Found {0} matching data files on {1}:</value>
   </data>
+  <data name="Program_AddFileTypesToRegistry_Skyline_Batch_Configuration_File" xml:space="preserve">
+    <value>Skyline Batch Configuration File</value>
+  </data>
 </root>

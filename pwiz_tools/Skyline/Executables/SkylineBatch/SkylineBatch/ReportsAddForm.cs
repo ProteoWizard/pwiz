@@ -33,6 +33,7 @@ namespace SkylineBatch
         public ReportsAddForm(IMainUiControl uiControl, RDirectorySelector rDirectorySelector, bool hasRefineFile, ReportInfo editingReport = null)
         {
             InitializeComponent();
+            Icon = Program.Icon();
             _uiControl = uiControl;
             _rDirectorySelector = rDirectorySelector;
             radioResultsFile.Checked = true;

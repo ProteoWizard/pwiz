@@ -41,6 +41,7 @@ namespace SkylineBatch
         public MainForm(string openFile)
         {
             InitializeComponent();
+            Icon = Program.Icon();
             var roamingFolder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
             var localFolder = Path.Combine(Path.GetDirectoryName(roamingFolder) ?? throw new InvalidOperationException(), "local");
             var logPath= Path.Combine(localFolder, Program.AppName(), Program.AppName() + TextUtil.EXT_LOG);

@@ -29,8 +29,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>477</ApplicationRevision>
-    <ApplicationVersion>20.2.0.477</ApplicationVersion>
+    <ApplicationRevision>504</ApplicationRevision>
+    <ApplicationVersion>20.2.1.504</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -90,6 +90,12 @@
   <ItemGroup>
     <None Include="packages.config" />
     <None Include="Resources\downtriangle.png" />
+    <Content Include="LaunchBatch.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="SkylineBatch_daily.ico">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="SkylineDailyRunner.exe">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -325,6 +331,12 @@
   <PropertyGroup>
     <PostBuildEvent>
     </PostBuildEvent>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PreBuildEvent>cd..\..
+del LaunchBatch.exe
+cd..\..
+copy SharedBatch\LaunchBatch\bin\Debug\LaunchBatch.exe SkylineBatch\SkylineBatch\LaunchBatch.exe</PreBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

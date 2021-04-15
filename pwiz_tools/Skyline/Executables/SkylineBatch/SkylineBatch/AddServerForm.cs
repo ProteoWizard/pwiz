@@ -10,6 +10,7 @@ namespace SkylineBatch
         public AddServerForm()
         {
             InitializeComponent();
+            Icon = Program.Icon();
         }
 
         public ServerInfo Server;

@@ -27,6 +27,7 @@ namespace SkylineBatch
         public InvalidConfigSetupForm(IMainUiControl mainControl, SkylineBatchConfig invalidConfig, SkylineBatchConfigManager configManager, RDirectorySelector rDirectorySelector)
         {
             InitializeComponent();
+            Icon = Program.Icon();
             _invalidConfig = invalidConfig;
             _configManager = configManager;
             _rDirectorySelector = rDirectorySelector;

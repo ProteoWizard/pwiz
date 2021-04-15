@@ -49,6 +49,7 @@ namespace SkylineBatch
         public SkylineBatchConfigForm(IMainUiControl mainControl, RDirectorySelector rDirectorySelector, SkylineBatchConfig config, ConfigAction action, bool isBusy, SkylineBatchConfigManager configManager)
         {
             InitializeComponent();
+            Icon = Program.Icon();
             _action = action;
             _refineInput = config != null ? new RefineInputObject(config.RefineSettings.CommandValues) : new RefineInputObject();
             _newReportList = new List<ReportInfo>();

@@ -24,7 +24,7 @@ using System.Deployment.Application;
 using System.Drawing;
 using System.IO;
 using System.Net;
-using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
 using log4net.Config;
@@ -52,8 +52,6 @@ namespace SkylineBatch
         {
             ProgramLog.Init("SkylineBatch");
             Application.EnableVisualStyles();
-
-            AddFileTypesToRegistry();
 
             if (!FunctionalTest)
             {
@@ -111,17 +109,43 @@ namespace SkylineBatch
                 if (!InitSkylineSettings()) return;
                 RInstallations.FindRDirectory();
 
-                var openFile = args.Length > 0 ? args[0] : null;
+                AddFileTypesToRegistry();
+                InitializeVersion();
+                var openFile = GetFirstArg(args);
+
                 MainWindow = new MainForm(openFile);
-                // CurrentDeployment is null if it isn't network deployed.
-                _version = ApplicationDeployment.IsNetworkDeployed
-                    ? ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString()
-                    : string.Empty;
                 MainWindow.Text = Version();
                 Application.Run(MainWindow);
 
                 mutex.ReleaseMutex();
             }
+        }
+
+        private static void InitializeVersion()
+        {
+            _version = ApplicationDeployment.IsNetworkDeployed
+                ? ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString()
+                : string.Empty;
+        }
+
+        private static string GetFirstArg(string[] args)
+        {
+            string arg;
+            if (ApplicationDeployment.IsNetworkDeployed)
+            {
+                _version = ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString();
+                var activationData = AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData;
+                arg = activationData != null && activationData.Length > 0
+                    ? activationData[0]
+                    : string.Empty;
+            }
+            else
+            {
+                _version = string.Empty;
+                arg = args.Length > 0 ? args[0] : string.Empty;
+            }
+
+            return arg;
         }
         
         private static bool InitSkylineSettings()
@@ -141,10 +165,24 @@ namespace SkylineBatch
 
         private static void AddFileTypesToRegistry()
         {
+            var appReference = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\Microsoft\\Windows\\Start Menu\\Programs\\MacCoss Lab, UW\\" + AppName() + TextUtil.EXT_APPREF;
+            var appExe = Application.ExecutablePath;
+
             var baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
             var configFileIconPath = Path.Combine(baseDirectory, "SkylineBatch_configs.ico");
-            FileUtil.AddFileType(".bcfg", "SkylineBatch.Configuration.0", @"Skyline Batch Configuration File", 
-                Assembly.GetExecutingAssembly().Location, configFileIconPath);
+
+            if (ApplicationDeployment.IsNetworkDeployed)
+            {
+                FileUtil.AddFileTypeClickOnce(TextUtil.EXT_BCFG, "SkylineBatch.Configuration.0",
+                    Resources.Program_AddFileTypesToRegistry_Skyline_Batch_Configuration_File,
+                    appReference, configFileIconPath);
+            }
+            else
+            {
+                FileUtil.AddFileTypeAdminInstall(TextUtil.EXT_BCFG, "SkylineBatch.Configuration.0",
+                    Resources.Program_AddFileTypesToRegistry_Skyline_Batch_Configuration_File,
+                    appExe, configFileIconPath);
+            }
         }
         
         public static string Version()
@@ -160,7 +198,9 @@ namespace SkylineBatch
         public static Icon Icon()
         {
             var baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
-            var iconPath = Path.Combine(baseDirectory, "SkylineBatch_release.ico");
+            var dailyRegex = new Regex("[0-9]*.[0-9]*.[19].[0-9]*");
+            var iconName = dailyRegex.IsMatch(_version) ? "SkylineBatch_daily.ico" : "SkylineBatch_release.ico";
+            var iconPath = Path.Combine(baseDirectory, iconName);
             return System.Drawing.Icon.ExtractAssociatedIcon(iconPath);
         }
 

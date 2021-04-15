@@ -19,6 +19,7 @@ namespace SharedBatch
         public const string EXT_R = ".R";
         public const string EXT_CSV = ".csv";
         public const string EXT_LOG = ".log";
+        public const string EXT_APPREF = ".appref-ms";
 
         public static string FILTER_XML
         {
