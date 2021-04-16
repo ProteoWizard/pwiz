@@ -396,11 +396,11 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Please enter a number..
+        ///   Looks up a localized string similar to Please enter an integer..
         /// </summary>
-        public static string FileSettings_ValidateIntTextField_Please_enter_a_number_ {
+        public static string FileSettings_ValidateIntTextField_Please_enter_an_integer_ {
             get {
-                return ResourceManager.GetString("FileSettings_ValidateIntTextField_Please_enter_a_number_", resourceCulture);
+                return ResourceManager.GetString("FileSettings_ValidateIntTextField_Please_enter_an_integer_", resourceCulture);
             }
         }
         
@@ -793,7 +793,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Skyline Batch Configuration File.
         /// </summary>
-        internal static string Program_AddFileTypesToRegistry_Skyline_Batch_Configuration_File {
+        public static string Program_AddFileTypesToRegistry_Skyline_Batch_Configuration_File {
             get {
                 return ResourceManager.GetString("Program_AddFileTypesToRegistry_Skyline_Batch_Configuration_File", resourceCulture);
             }
@@ -1125,6 +1125,25 @@ namespace SkylineBatch.Properties {
             get {
                 return ResourceManager.GetString("ReportsAddForm_btnAddRScript_Click_Please_install_R_before_adding_R_scripts_to_th" +
                         "is_configuration_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A culture-invariant report ensures a CSV file with period decimal points and full-precision numbers..
+        /// </summary>
+        public static string ReportsAddForm_checkBoxCultureSpecific_CheckedChanged_A_culture_invariant_report_ensures_a_CSV_file_with_period_decimal_points_and_full_precision_numbers_ {
+            get {
+                return ResourceManager.GetString("ReportsAddForm_checkBoxCultureSpecific_CheckedChanged_A_culture_invariant_report_" +
+                        "ensures_a_CSV_file_with_period_decimal_points_and_full_precision_numbers_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Do you want to continue?.
+        /// </summary>
+        public static string ReportsAddForm_checkBoxCultureSpecific_CheckedChanged_Do_you_want_to_continue_ {
+            get {
+                return ResourceManager.GetString("ReportsAddForm_checkBoxCultureSpecific_CheckedChanged_Do_you_want_to_continue_", resourceCulture);
             }
         }
         

@@ -724,9 +724,9 @@ namespace SkylineBatch
             return AlertDlg.ShowQuestion(this, Program.AppName(), message);
         }
 
-        public DialogResult DisplayLargeQuestion(string message)
+        public DialogResult DisplayLargeOkCancel(string message)
         {
-            return AlertDlg.ShowLargeQuestion(this, Program.AppName(), message);
+            return AlertDlg.ShowLargeOkCancel(this, Program.AppName(), message);
         }
 
         #endregion

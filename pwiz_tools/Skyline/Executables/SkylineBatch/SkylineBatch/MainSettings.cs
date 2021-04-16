@@ -19,9 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net;
-using System.Net.NetworkInformation;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
@@ -267,7 +265,6 @@ namespace SkylineBatch
             DependentConfigName,
             AnalysisFolderPath,
             DataFolderPath,
-            DataUrl,
             DataNamingPattern,
             AnnotationsFilePath,
             ReplicateNamingPattern,
@@ -279,7 +276,6 @@ namespace SkylineBatch
             var dependentConfigName = reader.GetAttribute(Attr.DependentConfigName);
             var analysisFolderPath = GetPath(reader.GetAttribute(Attr.AnalysisFolderPath));
             var dataFolderPath = GetPath(reader.GetAttribute(Attr.DataFolderPath));
-            //var dataUrl = reader.GetAttribute(Attr.DataUrl);
             var dataNamingPattern = reader.GetAttribute(Attr.DataNamingPattern);
             var annotationsFilePath = GetPath(reader.GetAttribute(Attr.AnnotationsFilePath));
             var replicateNamingPattern = reader.GetAttribute(Attr.ReplicateNamingPattern);

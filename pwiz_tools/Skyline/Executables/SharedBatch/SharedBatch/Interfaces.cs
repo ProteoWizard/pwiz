@@ -121,6 +121,6 @@ namespace SharedBatch
         void DisplayInfo(string message);
         void DisplayErrorWithException(string message, Exception exception);
         DialogResult DisplayQuestion(string message);
-        DialogResult DisplayLargeQuestion(string message);
+        DialogResult DisplayLargeOkCancel(string message);
     }
 }

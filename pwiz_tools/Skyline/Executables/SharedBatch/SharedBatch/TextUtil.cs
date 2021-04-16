@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -140,6 +141,30 @@ namespace SharedBatch
         public static string LineSeparate(params string[] lines)
         {
             return LineSeparate(lines.AsEnumerable());
+        }
+
+        public static string ParseInvariantCultureInteger(string integer)
+        {
+            if (string.IsNullOrWhiteSpace(integer)) return string.Empty;
+            return int.Parse(integer, CultureInfo.InvariantCulture).ToString(CultureInfo.CurrentCulture);
+        }
+
+        public static string ParseInvariantCultureDouble(string doubleString)
+        {
+            if (string.IsNullOrWhiteSpace(doubleString)) return string.Empty;
+            return Double.Parse(doubleString, CultureInfo.InvariantCulture).ToString(CultureInfo.CurrentCulture);
+        }
+
+        public static string ToInvariantCultureInteger(string integer)
+        {
+            if (string.IsNullOrWhiteSpace(integer)) return string.Empty;
+            return int.Parse(integer, CultureInfo.CurrentCulture).ToString(CultureInfo.InvariantCulture);
+        }
+
+        public static string ToInvariantCultureDouble(string doubleString)
+        {
+            if (string.IsNullOrWhiteSpace(doubleString)) return string.Empty;
+            return Double.Parse(doubleString, CultureInfo.CurrentCulture).ToString(CultureInfo.InvariantCulture);
         }
     }
 }

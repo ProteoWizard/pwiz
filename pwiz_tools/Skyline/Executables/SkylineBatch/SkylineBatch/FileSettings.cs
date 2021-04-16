@@ -55,9 +55,9 @@ namespace SkylineBatch
             int parsedInt;
             if (!Int32.TryParse(textToParse, out parsedInt))
             {
-                throw new ArgumentException(string.Format(Resources.FileSettings_ValidateIntTextField__0__is_not_a_valid_value_for__1__, fieldName,
-                    textToParse) + Environment.NewLine +
-                                            Resources.FileSettings_ValidateIntTextField_Please_enter_a_number_);
+                throw new ArgumentException(string.Format(Resources.FileSettings_ValidateIntTextField__0__is_not_a_valid_value_for__1__, textToParse, 
+                                                fieldName) + Environment.NewLine +
+                                            Resources.FileSettings_ValidateIntTextField_Please_enter_an_integer_);
             }
             return parsedInt;
         }
@@ -93,9 +93,9 @@ namespace SkylineBatch
 
         public static FileSettings ReadXml(XmlReader reader)
         {
-            var msOneResolvingPower = reader.GetAttribute(Attr.MsOneResolvingPower);
-            var msMsResolvingPower = reader.GetAttribute(Attr.MsMsResolvingPower);
-            var retentionTime = reader.GetAttribute(Attr.RetentionTime);
+            var msOneResolvingPower = TextUtil.ParseInvariantCultureInteger(reader.GetAttribute(Attr.MsOneResolvingPower));
+            var msMsResolvingPower = TextUtil.ParseInvariantCultureInteger(reader.GetAttribute(Attr.MsMsResolvingPower));
+            var retentionTime = TextUtil.ParseInvariantCultureInteger(reader.GetAttribute(Attr.RetentionTime));
             var addDecoys = reader.GetBoolAttribute(Attr.AddDecoys);
             var shuffleDecoys = reader.GetBoolAttribute(Attr.ShuffleDecoys);
             var trainMProphet = reader.GetBoolAttribute(Attr.TrainMProphet);
@@ -105,9 +105,12 @@ namespace SkylineBatch
         public void WriteXml(XmlWriter writer)
         {
             writer.WriteStartElement("file_settings");
-            writer.WriteAttributeIfString(Attr.MsOneResolvingPower, MsOneResolvingPower);
-            writer.WriteAttributeIfString(Attr.MsMsResolvingPower, MsMsResolvingPower);
-            writer.WriteAttributeIfString(Attr.RetentionTime, RetentionTime);
+            writer.WriteAttributeIfString(Attr.MsOneResolvingPower,
+                TextUtil.ToInvariantCultureInteger(MsOneResolvingPower));
+            writer.WriteAttributeIfString(Attr.MsMsResolvingPower, 
+                TextUtil.ToInvariantCultureInteger(MsMsResolvingPower));
+            writer.WriteAttributeIfString(Attr.RetentionTime, 
+                TextUtil.ToInvariantCultureInteger(RetentionTime));
             writer.WriteAttribute(Attr.AddDecoys, AddDecoys);
             writer.WriteAttribute(Attr.ShuffleDecoys, ShuffleDecoys);
             writer.WriteAttribute(Attr.TrainMProphet, TrainMProphet);

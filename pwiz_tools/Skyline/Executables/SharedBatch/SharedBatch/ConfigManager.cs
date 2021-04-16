@@ -359,11 +359,11 @@ namespace SharedBatch
             return _uiControl.DisplayQuestion(message);
         }
 
-        protected DialogResult DisplayLargeQuestion(string message)
+        protected DialogResult DisplayLargeOkCancel(string message)
         {
             if (!_runningUi)
                 return DialogResult.Yes;
-            return _uiControl.DisplayLargeQuestion(message);
+            return _uiControl.DisplayLargeOkCancel(message);
         }
 
         protected void UpdateUiLogs()

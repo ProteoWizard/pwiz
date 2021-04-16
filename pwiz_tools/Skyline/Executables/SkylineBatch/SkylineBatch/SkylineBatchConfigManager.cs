@@ -574,7 +574,7 @@ namespace SkylineBatch
                 overwriteMessage.Append(Resources.SkylineBatchConfigManager_StartBatchRun_Do_you_want_to_continue_);
                 if (showOverwriteMessage)
                 {
-                    if (DisplayLargeQuestion(overwriteMessage.ToString()) != DialogResult.Yes)
+                    if (DisplayLargeOkCancel(overwriteMessage.ToString()) != DialogResult.OK)
                         return false;
                 }
 

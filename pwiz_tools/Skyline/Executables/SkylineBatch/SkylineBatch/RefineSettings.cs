@@ -34,20 +34,15 @@ namespace SkylineBatch
 
         // IMMUTABLE - all fields are readonly literals or in an immutable list
         // Holds information for refining the skyline file after data import
-        
-        public RefineSettings(List<Tuple<RefineVariable, string>> commandValues, bool removeDecoys, bool removeResults,
-            string outputFilePath) : this(ImmutableList.Create<Tuple<RefineVariable, string>>().AddRange(commandValues), 
-            removeDecoys, removeResults, outputFilePath)
-        {
-        }
 
-        public RefineSettings(ImmutableList<Tuple<RefineVariable, string>> commandValues, bool removeDecoys, bool removeResults,
+
+        public RefineSettings(ICollection<Tuple<RefineVariable, string>> commandValues, bool removeDecoys, bool removeResults,
             string outputFilePath)
         {
             RemoveDecoys = removeDecoys;
             RemoveResults = removeResults;
             OutputFilePath = outputFilePath ?? string.Empty;
-            CommandValues = commandValues;
+            CommandValues = ImmutableList.Create<Tuple<RefineVariable, string>>().AddRange(commandValues);
         }
 
         public readonly ImmutableList<Tuple<RefineVariable, string>> CommandValues;
@@ -145,6 +140,10 @@ namespace SkylineBatch
                     var tupleItems = reader.ReadElementContentAsString().Split(new[] { '(', ',', ')' }, StringSplitOptions.RemoveEmptyEntries);
                     var variable = (RefineVariable)Enum.Parse(typeof(RefineVariable), tupleItems[0].Trim());
                     var value = tupleItems[1].Trim();
+                    if (RefineInputObject.IsInteger(variable))
+                        value = TextUtil.ParseInvariantCultureInteger(value);
+                    else if (RefineInputObject.IsDouble(variable))
+                        value = TextUtil.ParseInvariantCultureDouble(value);
                     commandList.Add(new Tuple<RefineVariable, string>(variable, value));
                 }
                 else
@@ -163,7 +162,14 @@ namespace SkylineBatch
             writer.WriteAttributeIfString(Attr.OutputFilePath, OutputFilePath);
             foreach (var commandValue in CommandValues)
             {
-                writer.WriteElementString("command_value", commandValue);
+                var value = commandValue.Item2;
+                if (RefineInputObject.IsDouble(commandValue.Item1))
+                    value = TextUtil.ToInvariantCultureDouble(value);
+                else if (RefineInputObject.IsInteger(commandValue.Item1))
+                    value = TextUtil.ToInvariantCultureInteger(value);
+                var cultureInvariantCommandValue = new Tuple<RefineVariable, string>(commandValue.Item1, value);
+                writer.WriteElementString("command_value", cultureInvariantCommandValue);
+                
             }
             writer.WriteEndElement();
         }

@@ -499,8 +499,8 @@
   <data name="MainForm_TryExecuteOperation_Cannot_add___0___because_there_is_another_configuration_with_the_same_name_" xml:space="preserve">
     <value>Cannot add "{0}" because there is another configuration with the same name.</value>
   </data>
-  <data name="FileSettings_ValidateIntTextField_Please_enter_a_number_" xml:space="preserve">
-    <value>Please enter a number.</value>
+  <data name="FileSettings_ValidateIntTextField_Please_enter_an_integer_" xml:space="preserve">
+    <value>Please enter an integer.</value>
   </data>
   <data name="ReportInfo_Validate_Report__0__" xml:space="preserve">
     <value>Report {0}:</value>
@@ -594,5 +594,11 @@
   </data>
   <data name="Program_AddFileTypesToRegistry_Skyline_Batch_Configuration_File" xml:space="preserve">
     <value>Skyline Batch Configuration File</value>
+  </data>
+  <data name="ReportsAddForm_checkBoxCultureSpecific_CheckedChanged_Do_you_want_to_continue_" xml:space="preserve">
+    <value>Do you want to continue?</value>
+  </data>
+  <data name="ReportsAddForm_checkBoxCultureSpecific_CheckedChanged_A_culture_invariant_report_ensures_a_CSV_file_with_period_decimal_points_and_full_precision_numbers_" xml:space="preserve">
+    <value>A culture-invariant report ensures a CSV file with period decimal points and full-precision numbers.</value>
   </data>
 </root>

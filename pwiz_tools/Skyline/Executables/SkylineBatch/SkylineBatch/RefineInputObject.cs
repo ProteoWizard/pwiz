@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 
 namespace SkylineBatch
 {
@@ -8,6 +9,36 @@ namespace SkylineBatch
     {
         // prefix for all refine labels in CommandArgName.resx and refine descriptions in CommandArgUsage.resx
         public static readonly string REFINE_RESOURCE_KEY_PREFIX = "_refine_";
+
+        public static bool IsDouble(RefineVariable variable)
+        {
+            return new[]
+            {
+                RefineVariable.min_peak_found_ratio,
+                RefineVariable.max_peak_found_ratio,
+                RefineVariable.min_time_correlation,
+                RefineVariable.min_dotp,
+                RefineVariable.min_idotp,
+                RefineVariable.cv_remove_above_cutoff,
+                RefineVariable.qvalue_cutoff,
+                RefineVariable.gc_p_value_cutoff,
+                RefineVariable.gc_fold_change_cutoff,
+                RefineVariable.gc_ms_level
+            }.Contains(variable);
+        }
+
+        public static bool IsInteger(RefineVariable variable)
+        {
+            return new[]
+            {
+                RefineVariable.min_peptides,
+                RefineVariable.min_transitions,
+                RefineVariable.max_peptide_peak_rank,
+                RefineVariable.max_transition_peak_rank,
+                RefineVariable.cv_transitions_count,
+                RefineVariable.minimum_detections
+            }.Contains(variable);
+        }
 
 
         public RefineInputObject(ImmutableList<Tuple<RefineVariable, string>> initialValues = null)

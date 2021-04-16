@@ -118,7 +118,7 @@ namespace SkylineBatch
                     
                     validScripts.Add(new Tuple<string, string>(validRScript, validVersion));
                 }
-                validReports.Add(new ReportInfo(report.Name, validReportPath, validScripts, report.UseRefineFile));
+                validReports.Add(new ReportInfo(report.Name, report.CultureSpecific, validReportPath, validScripts, report.UseRefineFile));
             }
             return new ReportSettings(validReports);
         }
