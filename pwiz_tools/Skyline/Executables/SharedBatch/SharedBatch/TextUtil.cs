@@ -143,28 +143,71 @@ namespace SharedBatch
             return LineSeparate(lines.AsEnumerable());
         }
 
-        public static string ParseInvariantCultureInteger(string integer)
+        # region Parsing numbers from different cultures
+
+        public static int? GetNullableIntFromUiString(string integer, string inputName)
         {
-            if (string.IsNullOrWhiteSpace(integer)) return string.Empty;
-            return int.Parse(integer, CultureInfo.InvariantCulture).ToString(CultureInfo.CurrentCulture);
+            if (!TryGetNullableIntFromString(integer, CultureInfo.CurrentCulture, out int? result))
+                throw new ArgumentException(string.Format(Resources.TextUtil_GetOptionalIntegerFromString__0__is_not_a_valid_value_for__1___Please_enter_an_integer_, integer, inputName));
+            return result;
         }
 
-        public static string ParseInvariantCultureDouble(string doubleString)
+        public static int? GetNullableIntFromInvariantString(string integer)
         {
-            if (string.IsNullOrWhiteSpace(doubleString)) return string.Empty;
-            return Double.Parse(doubleString, CultureInfo.InvariantCulture).ToString(CultureInfo.CurrentCulture);
+            if (!TryGetNullableIntFromString(integer, CultureInfo.InvariantCulture, out int? result))
+                throw new Exception(string.Format(Resources.TextUtil_GetOptionalIntegerFromInvariantString_Cound_not_parse___0___as_type___1__, integer, typeof(int?)));
+            return result;
         }
 
-        public static string ToInvariantCultureInteger(string integer)
+        public static int? GetNullableIntFromString(string integer, CultureInfo culture)
         {
-            if (string.IsNullOrWhiteSpace(integer)) return string.Empty;
-            return int.Parse(integer, CultureInfo.CurrentCulture).ToString(CultureInfo.InvariantCulture);
+            if (!TryGetNullableIntFromString(integer, culture, out int? result))
+                throw new Exception(string.Format(Resources.TextUtil_GetOptionalIntegerFromInvariantString_Cound_not_parse___0___as_type___1__, integer, typeof(int?)));
+            return result;
         }
 
-        public static string ToInvariantCultureDouble(string doubleString)
+        private static bool TryGetNullableIntFromString(string integer, CultureInfo culture, out int? result)
         {
-            if (string.IsNullOrWhiteSpace(doubleString)) return string.Empty;
-            return Double.Parse(doubleString, CultureInfo.CurrentCulture).ToString(CultureInfo.InvariantCulture);
+            result = null;
+            if (string.IsNullOrEmpty(integer)) return true;
+            var success = int.TryParse(integer, NumberStyles.Integer, culture, out int parsed);
+            result = parsed;
+            return success;
         }
+
+        public static double? GetNullableDoubleFromString(string doubleString, CultureInfo culture)
+        {
+            if (!TryGetNullableDoubleFromString(doubleString, culture, out double? result))
+                throw new Exception(string.Format(Resources.TextUtil_GetOptionalIntegerFromInvariantString_Cound_not_parse___0___as_type___1__, doubleString, typeof(double?)));
+            return result;
+        }
+
+        private static bool TryGetNullableDoubleFromString(string doubleString, CultureInfo culture, out double? result)
+        {
+            result = null;
+            if (string.IsNullOrEmpty(doubleString)) return true;
+            var success = Double.TryParse(doubleString, NumberStyles.AllowDecimalPoint, culture, out double parsed);
+            result = parsed;
+            return success;
+        }
+
+        public static string ToInvariantCultureString(int? optionalInt)
+        {
+            if (optionalInt == null) return string.Empty;
+            return ((int)optionalInt).ToString(CultureInfo.InvariantCulture);
+        }
+
+        public static string ToUiString(int integer)
+        {
+            return integer.ToString(CultureInfo.CurrentCulture);
+        }
+
+        public static string ToUiString(int? optionalInt)
+        {
+            if (optionalInt == null) return string.Empty;
+            return ((int)optionalInt).ToString(CultureInfo.CurrentCulture);
+        }
+
+        #endregion
     }
 }

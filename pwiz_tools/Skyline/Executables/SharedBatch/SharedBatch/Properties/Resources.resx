@@ -342,4 +342,10 @@ with:
   <data name="ConfigManager_ImportFrom_The_following_configurations_already_exist_" xml:space="preserve">
     <value>The following configurations already exist:</value>
   </data>
+  <data name="TextUtil_GetOptionalIntegerFromString__0__is_not_a_valid_value_for__1___Please_enter_an_integer_" xml:space="preserve">
+    <value>{0} is not a valid value for {1}. Please enter an integer.</value>
+  </data>
+  <data name="TextUtil_GetOptionalIntegerFromInvariantString_Cound_not_parse___0___as_type___1__" xml:space="preserve">
+    <value>Cound not parse "{0}" as type "{1}"</value>
+  </data>
 </root>

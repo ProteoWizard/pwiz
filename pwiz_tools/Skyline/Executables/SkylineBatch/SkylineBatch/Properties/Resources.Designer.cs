@@ -423,20 +423,20 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} is not a valid value for {1}..
+        ///   Looks up a localized string similar to Please enter a positive integer..
         /// </summary>
-        public static string FileSettings_ValidateIntTextField__0__is_not_a_valid_value_for__1__ {
+        public static string FileSettings_ValidateNonNegative_Please_enter_a_positive_integer_ {
             get {
-                return ResourceManager.GetString("FileSettings_ValidateIntTextField__0__is_not_a_valid_value_for__1__", resourceCulture);
+                return ResourceManager.GetString("FileSettings_ValidateNonNegative_Please_enter_a_positive_integer_", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Please enter an integer..
+        ///   Looks up a localized string similar to The {0} cannot be less than zero..
         /// </summary>
-        public static string FileSettings_ValidateIntTextField_Please_enter_an_integer_ {
+        public static string FileSettings_ValidateNonNegative_The__0__cannot_be_less_than_zero_ {
             get {
-                return ResourceManager.GetString("FileSettings_ValidateIntTextField_Please_enter_an_integer_", resourceCulture);
+                return ResourceManager.GetString("FileSettings_ValidateNonNegative_The__0__cannot_be_less_than_zero_", resourceCulture);
             }
         }
         

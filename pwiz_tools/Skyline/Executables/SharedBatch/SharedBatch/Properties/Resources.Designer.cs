@@ -739,5 +739,25 @@ namespace SharedBatch.Properties {
                 return ResourceManager.GetString("TextUtil_GetDirectory_Could_not_get_the_directory_of_a_null_file_path_", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cound not parse &quot;{0}&quot; as type &quot;{1}&quot;.
+        /// </summary>
+        public static string TextUtil_GetOptionalIntegerFromInvariantString_Cound_not_parse___0___as_type___1__ {
+            get {
+                return ResourceManager.GetString("TextUtil_GetOptionalIntegerFromInvariantString_Cound_not_parse___0___as_type___1_" +
+                        "_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} is not a valid value for {1}. Please enter an integer..
+        /// </summary>
+        public static string TextUtil_GetOptionalIntegerFromString__0__is_not_a_valid_value_for__1___Please_enter_an_integer_ {
+            get {
+                return ResourceManager.GetString("TextUtil_GetOptionalIntegerFromString__0__is_not_a_valid_value_for__1___Please_en" +
+                        "ter_an_integer_", resourceCulture);
+            }
+        }
     }
 }

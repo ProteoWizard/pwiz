@@ -51,7 +51,7 @@ namespace SkylineBatch
             InitializeComponent();
             Icon = Program.Icon();
             _action = action;
-            _refineInput = config != null ? new RefineInputObject(config.RefineSettings.CommandValues) : new RefineInputObject();
+            _refineInput = config != null ? config.RefineSettings.CommandValuesCopy : new RefineInputObject();
             _newReportList = new List<ReportInfo>();
             _rDirectorySelector = rDirectorySelector;
             _mainControl = mainControl;
@@ -288,12 +288,13 @@ namespace SkylineBatch
         private void SetInitialFileSettings(SkylineBatchConfig config)
         {
             if (_action == ConfigAction.Add) return;
+            var fileSettings = config.FileSettings;
             if (config.FileSettings.MsOneResolvingPower != null)
-                textMsOneResolvingPower.Text = config.FileSettings.MsOneResolvingPower;
+                textMsOneResolvingPower.Text = TextUtil.ToUiString(fileSettings.MsOneResolvingPower);
             if (config.FileSettings.MsMsResolvingPower != null)
-                textMsMsResolvingPower.Text = config.FileSettings.MsMsResolvingPower;
+                textMsMsResolvingPower.Text = TextUtil.ToUiString(fileSettings.MsMsResolvingPower);
             if (config.FileSettings.RetentionTime != null)
-                textRetentionTime.Text = config.FileSettings.RetentionTime;
+                textRetentionTime.Text = TextUtil.ToUiString(fileSettings.RetentionTime);
             checkBoxDecoys.Checked = config.FileSettings.AddDecoys;
             radioShuffleDecoys.Checked = config.FileSettings.ShuffleDecoys;
             checkBoxMProphet.Checked = config.FileSettings.TrainMProphet;
@@ -307,7 +308,7 @@ namespace SkylineBatch
 
         private FileSettings GetFileSettingsFromUi()
         {
-            return new FileSettings(textMsOneResolvingPower.Text, textMsMsResolvingPower.Text, textRetentionTime.Text, 
+            return FileSettings.FromUi(textMsOneResolvingPower.Text, textMsMsResolvingPower.Text, textRetentionTime.Text, 
                 checkBoxDecoys.Checked, radioShuffleDecoys.Enabled && radioShuffleDecoys.Checked, checkBoxMProphet.Checked);
         }
 
@@ -355,7 +356,7 @@ namespace SkylineBatch
             var removeDecoys = checkBoxRemoveDecoys.Checked;
             var removeData = checkBoxRemoveData.Checked;
             var outputFilePath = textRefinedFilePath.Text;
-            return new RefineSettings(_refineInput.AsCommandList(), removeDecoys, removeData, outputFilePath);
+            return new RefineSettings(_refineInput, removeDecoys, removeData, outputFilePath);
         }
 
         private void btnRefinedFilePath_Click(object sender, EventArgs e)

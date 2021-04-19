@@ -95,7 +95,7 @@ namespace SkylineBatch
         {
             var validOutputPath = await GetValidPath(Resources.InvalidConfigSetupForm_FixInvalidRefineSettings_path_to_the_refined_output_file,
                 refineSettings.OutputFilePath, RefineSettings.ValidateOutputFile, PathDialogOptions.File, PathDialogOptions.Save);
-            return new RefineSettings(refineSettings.CommandValues, refineSettings.RemoveDecoys, refineSettings.RemoveResults, validOutputPath);
+            return RefineSettings.GetPathChanged(refineSettings, validOutputPath);
         }
 
         private async Task<ReportSettings> FixInvalidReportSettings()

@@ -195,9 +195,6 @@
   <data name="ConfigManager_CheckConfigAtIndex_Please_wait_until___0___has_finished_running_" xml:space="preserve">
     <value>Please wait until "{0}" has finished running.</value>
   </data>
-  <data name="FileSettings_ValidateIntTextField__0__is_not_a_valid_value_for__1__" xml:space="preserve">
-    <value>{0} is not a valid value for {1}.</value>
-  </data>
   <data name="MainForm_UpdateRunBatchSteps_Run_from_step_4__run_R_scripts" xml:space="preserve">
     <value>Run from step 4: run R scripts</value>
   </data>
@@ -499,9 +496,6 @@
   <data name="MainForm_TryExecuteOperation_Cannot_add___0___because_there_is_another_configuration_with_the_same_name_" xml:space="preserve">
     <value>Cannot add "{0}" because there is another configuration with the same name.</value>
   </data>
-  <data name="FileSettings_ValidateIntTextField_Please_enter_an_integer_" xml:space="preserve">
-    <value>Please enter an integer.</value>
-  </data>
   <data name="ReportInfo_Validate_Report__0__" xml:space="preserve">
     <value>Report {0}:</value>
   </data>
@@ -612,5 +606,11 @@
   </data>
   <data name="ConfigRunner_Run_Saving__0_" xml:space="preserve">
     <value>Saving {0}</value>
+  </data>
+  <data name="FileSettings_ValidateNonNegative_The__0__cannot_be_less_than_zero_" xml:space="preserve">
+    <value>The {0} cannot be less than zero.</value>
+  </data>
+  <data name="FileSettings_ValidateNonNegative_Please_enter_a_positive_integer_" xml:space="preserve">
+    <value>Please enter a positive integer.</value>
   </data>
 </root>
