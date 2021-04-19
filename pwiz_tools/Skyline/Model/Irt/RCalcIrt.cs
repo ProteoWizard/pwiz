@@ -151,7 +151,7 @@ namespace pwiz.Skyline.Model.Irt
 
             if (!IsAcceptableStandardCount(databaseCount, returnCount))
             {
-                Console.Out.WriteLine(@"Database standards: {0}", string.Join(@"; ", _database.StandardPeptides.Select(pep => pep.ToString())));
+                Console.Out.WriteLine(@"Database standards: {0}", string.Join(@"; ", _database.StandardPeptides));
                 Console.Out.WriteLine(@"Chosen ({0}): {1}", pepArr.Length, string.Join(@"; ", pepArr.Select(pep => pep.ToString())));
                 throw new IncompleteStandardException(this);
             }
