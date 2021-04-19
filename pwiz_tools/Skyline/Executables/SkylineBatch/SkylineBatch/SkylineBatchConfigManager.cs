@@ -784,24 +784,11 @@ namespace SkylineBatch
         public void Import(string filePath, ShowDownloadedFileForm showDownloadedFileForm)
         {
             var importedConfigs = ImportFrom(filePath, showDownloadedFileForm);
-            HandleImportedConfigs(importedConfigs);
-            /*importedConfigs = AssignDependencies(importedConfigs, out string warningMessage);
             foreach (var config in importedConfigs)
-                ProgramaticallyAddConfig(config);
-            DisableInvalidConfigs();
-            _uiControl?.UpdateUiConfigurations();
-            if (warningMessage != null)
-                DisplayWarning(warningMessage);*/
-        }
-
-        /*public new void CopyAndImport(string filePath, string newRootDirectory)
-        {
-            var importedConfigs = base.CopyAndImport(filePath, newRootDirectory);
-            HandleImportedConfigs(importedConfigs);
-        }*/
-
-        private void HandleImportedConfigs(List<IConfig> importedConfigs)
-        {
+            {
+                if (_configRunners.ContainsKey(config.GetName()))
+                    ProgramaticallyRemoveAt(GetConfigIndex(config.GetName()));
+            }
             importedConfigs = AssignDependencies(importedConfigs, true, out string warningMessage);
             foreach (var config in importedConfigs)
                 ProgramaticallyAddConfig(config);

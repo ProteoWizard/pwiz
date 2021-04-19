@@ -330,6 +330,42 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Converting {0} to invariant format....
+        /// </summary>
+        public static string ConfigRunner_Run_Converting__0__to_invariant_format___ {
+            get {
+                return ResourceManager.GetString("ConfigRunner_Run_Converting__0__to_invariant_format___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Reading {0}.
+        /// </summary>
+        public static string ConfigRunner_Run_Reading__0_ {
+            get {
+                return ResourceManager.GetString("ConfigRunner_Run_Reading__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Saving {0}.
+        /// </summary>
+        public static string ConfigRunner_Run_Saving__0_ {
+            get {
+                return ResourceManager.GetString("ConfigRunner_Run_Saving__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Updating {0}.
+        /// </summary>
+        public static string ConfigRunner_Run_Updating__0_ {
+            get {
+                return ResourceManager.GetString("ConfigRunner_Run_Updating__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         public static System.Drawing.Bitmap Delete {

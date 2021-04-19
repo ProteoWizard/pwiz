@@ -226,21 +226,29 @@ namespace SharedBatch.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Please remove the configurations you would like to import..
+        ///   Looks up a localized string similar to Do you want to overwrite these configurations?.
         /// </summary>
-        public static string ConfigManager_Import_Please_remove_the_configurations_you_would_like_to_import_ {
+        public static string ConfigManager_ImportFrom_Do_you_want_to_overwrite_these_configurations_ {
             get {
-                return ResourceManager.GetString("ConfigManager_Import_Please_remove_the_configurations_you_would_like_to_import_", resourceCulture);
+                return ResourceManager.GetString("ConfigManager_ImportFrom_Do_you_want_to_overwrite_these_configurations_", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to These configurations already exist and could not be imported:.
+        ///   Looks up a localized string similar to Overwriting....
         /// </summary>
-        public static string ConfigManager_Import_These_configurations_already_exist_and_could_not_be_imported_ {
+        public static string ConfigManager_ImportFrom_Overwriting_ {
             get {
-                return ResourceManager.GetString("ConfigManager_Import_These_configurations_already_exist_and_could_not_be_imported" +
-                        "_", resourceCulture);
+                return ResourceManager.GetString("ConfigManager_ImportFrom_Overwriting_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The following configurations already exist:.
+        /// </summary>
+        public static string ConfigManager_ImportFrom_The_following_configurations_already_exist_ {
+            get {
+                return ResourceManager.GetString("ConfigManager_ImportFrom_The_following_configurations_already_exist_", resourceCulture);
             }
         }
         

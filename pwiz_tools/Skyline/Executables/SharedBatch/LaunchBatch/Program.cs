@@ -10,6 +10,7 @@ using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
+using LaunchBatch.Properties;
 
 namespace LaunchBatch
 {
@@ -32,7 +33,7 @@ namespace LaunchBatch
 
             if (!File.Exists(appReferencePath))
             {
-                MessageBox.Show("Failed to start application. Try launching the application from the start menu.", "Error");
+                MessageBox.Show(Resources.Program_Main_Failed_to_start_application_Try_launching_the_application_from_the_start_menu, Resources.Program_Main_Error);
                 return;
             }
 
@@ -43,7 +44,7 @@ namespace LaunchBatch
             }
             catch (Exception e)
             {
-                MessageBox.Show(e.Message, "Error");
+                MessageBox.Show(e.Message, Resources.Program_Main_Error);
             }
         }
     }

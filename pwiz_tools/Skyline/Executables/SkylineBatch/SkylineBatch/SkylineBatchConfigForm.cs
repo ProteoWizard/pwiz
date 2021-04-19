@@ -108,6 +108,8 @@ namespace SkylineBatch
 
             if (parentControl is TextBoxBase @base)
                 @base.ReadOnly = true;
+            if (parentControl is ComboBox comboBox)
+                comboBox.Enabled = false;
             if (parentControl is ButtonBase buttonBase && !buttonBase.Text.Equals(btnOkConfig.Text))
                 buttonBase.Enabled = false;
             if (parentControl is ToolStrip strip)

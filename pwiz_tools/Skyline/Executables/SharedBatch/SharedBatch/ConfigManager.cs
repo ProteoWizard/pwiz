@@ -468,36 +468,43 @@ namespace SharedBatch
                 return addedConfigs;
             }
 
-            var duplicateConfigs = new List<string>();
-            var numAdded = 0;
+            var duplicateConfigNames = new List<string>();
             foreach (IConfig config in readConfigs)
             {
                 // Make sure that the configuration name is unique
                 if (_configValidation.Keys.Contains(config.GetName()))
-                {
-                    duplicateConfigs.Add(config.GetName());
-                    continue;
-                }
+                    duplicateConfigNames.Add(config.GetName());
+            }
 
+            var message = new StringBuilder();
+            if (duplicateConfigNames.Count > 0)
+            {
+                var duplicateMessage = new StringBuilder(Resources.ConfigManager_ImportFrom_The_following_configurations_already_exist_)
+                    .Append(Environment.NewLine);
+                foreach (var name in duplicateConfigNames)
+                    duplicateMessage.Append("\"").Append(name).Append("\"").Append(Environment.NewLine);
+
+                message.Append(duplicateMessage).Append(Environment.NewLine);
+                duplicateMessage.Append(Resources.ConfigManager_ImportFrom_Do_you_want_to_overwrite_these_configurations_);
+                if (DialogResult.Yes == DisplayQuestion(duplicateMessage.ToString()))
+                {
+                    message.Append(Resources.ConfigManager_ImportFrom_Overwriting_).Append(Environment.NewLine); ;
+                    duplicateConfigNames.Clear();
+                }
+            }
+            
+            var numAdded = 0;
+
+            foreach (IConfig config in readConfigs)
+            {
+                if (duplicateConfigNames.Contains(config.GetName())) continue;
                 var addingConfig = RunRootReplacement(config);
                 addedConfigs.Add(addingConfig);
                 numAdded++;
             }
-            var message = new StringBuilder(Resources.ConfigManager_Import_Number_of_configurations_imported_);
+            message.Append(Resources.ConfigManager_Import_Number_of_configurations_imported_);
             message.Append(numAdded).Append(Environment.NewLine);
-            if (duplicateConfigs.Count > 0)
-            {
-                var duplicateMessage = new StringBuilder(Resources.ConfigManager_Import_These_configurations_already_exist_and_could_not_be_imported_)
-                    .Append(Environment.NewLine);
-                foreach (var name in duplicateConfigs)
-                {
-                    duplicateMessage.Append("\"").Append(name).Append("\"").Append(Environment.NewLine);
-                }
 
-                duplicateMessage.Append(Resources.ConfigManager_Import_Please_remove_the_configurations_you_would_like_to_import_);
-                message.Append(duplicateMessage);
-                DisplayError(duplicateMessage.ToString());
-            }
             if (readXmlErrors.Count > 0)
             {
                 var errorMessage = new StringBuilder(Resources.ConfigManager_Import_Number_of_configurations_with_errors_that_could_not_be_imported_)

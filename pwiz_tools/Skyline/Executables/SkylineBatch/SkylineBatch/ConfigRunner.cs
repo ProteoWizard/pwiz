@@ -33,6 +33,7 @@ namespace SkylineBatch
     public class ConfigRunner : IConfigRunner
     {
         public static readonly string ALLOW_NEWLINE_SAVE_VERSION = "20.2.1.454";
+        public static readonly string REPORT_INVARIANT_VERSION = "21.1.0.0"; // TODO(Ali): replace this with release version name
 
 
         private readonly IMainUiControl _uiControl;
@@ -133,16 +134,35 @@ namespace SkylineBatch
             if (startStep != 5 && IsRunning())
             {
                 var multiLine = await Config.SkylineSettings.HigherVersion(ALLOW_NEWLINE_SAVE_VERSION, _processRunner);
+                var invariantReport = await Config.SkylineSettings.HigherVersion(REPORT_INVARIANT_VERSION);
                 if (IsRunning())
                 {
                     // Writes the batch commands for steps 1-4 to a file
-                    var commandWriter = new CommandWriter(_logger, multiLine);
-                    WriteBatchCommandsToFile(commandWriter, startStep);
+                    var commandWriter = new CommandWriter(_logger, multiLine, invariantReport);
+                    WriteBatchCommandsToFile(commandWriter, startStep, invariantReport);
                     _batchCommandsToLog = commandWriter.LogLines;
                     // Runs steps 1-4
                     var command = string.Format("--batch-commands=\"{0}\"", commandWriter.GetCommandFile());
                     await _processRunner.Run(Config.SkylineSettings.CmdPath, command);
                     // Consider: deleting tmp command file
+                }
+                if (!invariantReport && IsRunning())
+                {
+                    foreach (var report in Config.ReportSettings.Reports)
+                    {
+                        _logger.Log(string.Format(Resources.ConfigRunner_Run_Converting__0__to_invariant_format___, report.Name));
+                        if (!report.CultureSpecific)
+                        {
+                            var reportPath = Path.Combine(Config.MainSettings.AnalysisFolderPath,
+                                report.Name + TextUtil.EXT_CSV);
+                            _logger.Log(string.Format(Resources.ConfigRunner_Run_Reading__0_, report.Name + TextUtil.EXT_CSV));
+                            string text = File.ReadAllText(reportPath);
+                            _logger.Log(string.Format(Resources.ConfigRunner_Run_Updating__0_, report.Name + TextUtil.EXT_CSV));
+                            text = text.Replace(';', ',');
+                            _logger.Log(string.Format(Resources.ConfigRunner_Run_Saving__0_, report.Name + TextUtil.EXT_CSV));
+                            File.WriteAllText(reportPath, text);
+                        }
+                    }
                 }
             }
 
@@ -166,7 +186,7 @@ namespace SkylineBatch
             _uiControl?.UpdateUiConfigurations();
         }
 
-        public void WriteBatchCommandsToFile(CommandWriter commandWriter, int startStep)
+        public void WriteBatchCommandsToFile(CommandWriter commandWriter, int startStep, bool invariantReport)
         {
             // STEP 1: open skyline file and save copy to analysis folder
             if (startStep == 1)
@@ -255,7 +275,7 @@ namespace SkylineBatch
                 var localFileDestination = Path.Combine(mainSettings.DataFolderPath, fileName);
                 var currentFileSize = (double) allFiles[fileName].Size;
 
-                if (File.Exists(localFileDestination) && new FileInfo(localFileDestination).Length == currentFileSize)
+                if (File.Exists(localFileDestination) && Math.Abs(new FileInfo(localFileDestination).Length - currentFileSize) < 0.0001)
                 {
                     _logger.Log(Resources.ConfigRunner_DownloadData_Already_downloaded__Skipping_);
                     triesOnFile = 0;

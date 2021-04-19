@@ -601,4 +601,16 @@
   <data name="ReportsAddForm_checkBoxCultureSpecific_CheckedChanged_A_culture_invariant_report_ensures_a_CSV_file_with_period_decimal_points_and_full_precision_numbers_" xml:space="preserve">
     <value>A culture-invariant report ensures a CSV file with period decimal points and full-precision numbers.</value>
   </data>
+  <data name="ConfigRunner_Run_Converting__0__to_invariant_format___" xml:space="preserve">
+    <value>Converting {0} to invariant format...</value>
+  </data>
+  <data name="ConfigRunner_Run_Reading__0_" xml:space="preserve">
+    <value>Reading {0}</value>
+  </data>
+  <data name="ConfigRunner_Run_Updating__0_" xml:space="preserve">
+    <value>Updating {0}</value>
+  </data>
+  <data name="ConfigRunner_Run_Saving__0_" xml:space="preserve">
+    <value>Saving {0}</value>
+  </data>
 </root>

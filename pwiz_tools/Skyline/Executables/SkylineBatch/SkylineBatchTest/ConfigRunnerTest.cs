@@ -67,14 +67,14 @@ namespace SkylineBatchTest
             var testRunner = new ConfigRunner(TestUtils.GetFullyPopulatedConfig(), logger);
             Assert.IsTrue(testRunner.IsStopped());
             var expectedNewVersionCommandFile = TestUtils.GetTestFilePath("RunFile_PopulatedConfig_MultiLineCommands.tmp");
-            var newVersionWriter = new CommandWriter(logger, true);
-            testRunner.WriteBatchCommandsToFile(newVersionWriter, 1);
+            var newVersionWriter = new CommandWriter(logger, true, true);
+            testRunner.WriteBatchCommandsToFile(newVersionWriter, 1, true);
             var actualNewVersionCommandFile = newVersionWriter.GetCommandFile();
             CompareFiles(expectedNewVersionCommandFile, actualNewVersionCommandFile);
 
             var expectedOldVersionCommandFile = TestUtils.GetTestFilePath("RunFile_PopulatedConfig_SingleLineCommands.tmp");
-            var oldVersionWriter = new CommandWriter(logger, false);
-            testRunner.WriteBatchCommandsToFile(oldVersionWriter, 1);
+            var oldVersionWriter = new CommandWriter(logger, false, false);
+            testRunner.WriteBatchCommandsToFile(oldVersionWriter, 1, false);
             var actualOldVersionCommandFile = oldVersionWriter.GetCommandFile();
 
             CompareFiles(expectedOldVersionCommandFile, actualOldVersionCommandFile);

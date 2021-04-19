@@ -24,6 +24,7 @@ using SkylineBatch;
 using SharedBatch;
 using System.Configuration;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace SkylineBatchTest
@@ -316,14 +317,13 @@ namespace SkylineBatchTest
 
         public delegate bool ConditionDelegate();
 
-        public static async Task WaitForCondition(ConditionDelegate condition, int timeout, int timestep, string errorMessage)
+        public static void WaitForCondition(ConditionDelegate condition, TimeSpan timeout, int timestep, string errorMessage)
         {
-            var ticksPerMillisecond = 10000;
-            var millisecondStartTime = DateTime.Now.Ticks / ticksPerMillisecond;
-            while ((DateTime.Now.Ticks / ticksPerMillisecond) - millisecondStartTime < timeout)
+            var startTime = DateTime.Now;
+            while (DateTime.Now - startTime < timeout)
             {
                 if (condition()) return;
-                await Task.Delay(timestep);
+                Thread.Sleep(timestep);
             }
             throw new Exception(errorMessage);
         }

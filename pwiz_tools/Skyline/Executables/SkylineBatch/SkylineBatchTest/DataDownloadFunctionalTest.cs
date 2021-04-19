@@ -68,7 +68,8 @@ namespace SkylineBatchTest
             FunctionalTestUtil.WaitForCondition(ConfigStopped, mainForm, false, oneMinute, 1000,
                 "Config ran past timeout");
             Assert.AreEqual(true, File.Exists(Path.Combine(dataDirectory, "nselevse_L120412_003_SW.wiff")));
-            
+            Assert.AreEqual(12427264, new FileInfo(Path.Combine(dataDirectory, "nselevse_L120412_003_SW.wiff")).Length);
+
         }
 
     }

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using System.Xml;
@@ -18,6 +17,8 @@ namespace SharedBatch
     public class SkylineSettings
     {
         // The skyline installation to use when a configuration is run
+
+        private int[] _version;
 
         public SkylineSettings(SkylineType type, string folderPath = "")
         {
@@ -145,11 +146,12 @@ namespace SharedBatch
         {
             baseProcessRunner = baseProcessRunner ?? new ProcessRunner();
             var cutoff = ParseVersionFromString(versionCutoff);
-            var version = await GetVersion(baseProcessRunner);
-            if (version == null) return false; // could not parse version
+            if (_version == null)
+                _version = await GetVersion(baseProcessRunner);
+            if (_version == null) return false; // could not parse version
             for (int i = 0; i < cutoff.Length; i++)
             {
-                if (version[i] != cutoff[i]) return version[i] > cutoff[i];
+                if (_version[i] != cutoff[i]) return _version[i] > cutoff[i];
             }
             return true; // version is equal to cutoff
         }
