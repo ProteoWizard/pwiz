@@ -299,8 +299,6 @@ namespace pwiz.Skyline.Model
 
         private IList<string> _lines;
 
-        private bool? _plausibleSmallMolecules;
-
         public MassListInputs(string initText, bool fullText = false)
         {
             if (fullText)
