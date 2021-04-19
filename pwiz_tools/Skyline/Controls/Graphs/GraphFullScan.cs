@@ -451,6 +451,25 @@ namespace pwiz.Skyline.Controls.Graphs
             heatMapGraphPane.SetPoints(_heatMapData, minDrift, maxDrift);
         }
 
+        private class RankingContext:IComparable<RankingContext>
+        {
+            public TransitionGroupDocNode precursor;
+            public ImmutableList<IonType> types;
+            public ImmutableList<int> charges;
+            public ImmutableList<Adduct> rankAdducts;
+            public ImmutableList<IonType> rankTypes;
+
+            public int CompareTo(RankingContext other)
+            {
+                var res = ReferenceEquals(precursor.Id, other.precursor.Id) && types.SequenceEqual(other.types) 
+                          && charges.SequenceEqual(other.charges) 
+                          && rankAdducts.SequenceEqual(other.rankAdducts) && rankTypes.SequenceEqual(other.rankTypes);
+                return res ? 0 : 1;
+            }
+        }
+
+        private RankingContext rankContext { get; set; }
+
         private SpectrumGraphItem RankScan(IList<double> mzs, IList<double> intensities, SrmSettings settings, 
             TransitionGroupDocNode precursor, TransitionDocNode transitionNode)
         {
@@ -498,8 +517,13 @@ namespace pwiz.Skyline.Controls.Graphs
                 var spectrumInfo = new SpectrumPeaksInfo(Enumerable.Range(0, mzs.Count).Select(j => new SpectrumPeaksInfo.MI()
                     {Mz = mzs[j], Intensity = (float)intensities[j]}).ToArray());
 
-                if (_rmis == null)
+                var newRankingContext = new RankingContext(){precursor = precursor,
+                    types = ImmutableList.ValueOf(types), charges = ImmutableList.ValueOf(charges),
+                    rankTypes = ImmutableList.ValueOf(rankTypes), rankAdducts = ImmutableList.ValueOf(rankAdducts)};
+
+                if (_rmis == null || rankContext == null || rankContext.Equals(newRankingContext))
                 {
+                    rankContext = newRankingContext;
                     _rmis = LibraryRankedSpectrumInfo.NewLibraryRankedSpectrumInfo(spectrumInfo,
                         precursor.LabelType,
                         precursor,
@@ -874,7 +898,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 return;
             GraphHelper.FormatGraphPane(graphControl.GraphPane);
 
-            if (selectionChanged) CreateGraph();
+            CreateGraph();
 
             if (_msDataFileScanHelper.MsDataSpectra != null)
             {
@@ -1022,11 +1046,16 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void graphControl_ContextMenuBuilder(ZedGraphControl sender, ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
         {
-            ZedGraphHelper.BuildContextMenu(graphControl, menuStrip, true);
+            //ZedGraphHelper.BuildContextMenu(graphControl, menuStrip, true);
             showScanNumberContextMenuItem.Checked = Settings.Default.ShowFullScanNumber;
-            menuStrip.Items.Add(new ToolStripSeparator());
             menuStrip.Items.Add(showScanNumberContextMenuItem);
             menuStrip.Items.Add(showIonTypesRanksToolStripMenuItem);
+
+            var currentTransition =
+                _msDataFileScanHelper.ScanProvider.Transitions[_msDataFileScanHelper.TransitionIndex];
+            var isProteomic = (currentTransition.Id as Transition)?.Group.IsProteomic;
+            (_documentContainer as GraphSpectrum.IStateProvider)
+                ?.BuildSpectrumMenu(isProteomic.GetValueOrDefault(), sender, menuStrip);
         }
 
         private void graphControl_MouseClick(object sender, MouseEventArgs e)

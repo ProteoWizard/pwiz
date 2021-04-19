@@ -1198,6 +1198,7 @@ namespace pwiz.Skyline
         {
             if (_graphSpectrum != null)
                 _graphSpectrum.UpdateUI(selectionChanged);
+            _graphFullScan?.UpdateUI(selectionChanged);
         }
 
 //        private static bool SameChargeGroups(PeptideTreeNode nodeTree)

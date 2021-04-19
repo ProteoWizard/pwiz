@@ -970,7 +970,7 @@ namespace pwiz.Skyline.Controls.Graphs
                             return;
                         }
 
-                        var spectrumChanged = !Equals(_spectrum, spectrum);
+                        var spectrumChanged = _spectrum?.CompareTo(spectrum) != 0;
                         _spectrum = spectrum;
 
                         ClearGraphPane();
