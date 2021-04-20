@@ -299,9 +299,18 @@ namespace pwiz.Skyline.Controls.Graphs
                     }
                     else
                     {
-                        BrukerTimsTofMethodExporter.GetScheduling(document,
-                            new ExportDlgProperties(new ExportMethodDlg(document, ExportFileType.Method), new CancellationToken()) { MethodType = ExportMethodType.Scheduled },
-                            input.BrukerTemplateFileValue, new SilentProgressMonitor(cancellationToken), out brukerPoints);
+                        try
+                        {
+                            BrukerTimsTofMethodExporter.GetScheduling(document,
+                                new ExportDlgProperties(new ExportMethodDlg(document, ExportFileType.Method),
+                                    new CancellationToken()) {MethodType = ExportMethodType.Scheduled},
+                                input.BrukerTemplateFileValue, new SilentProgressMonitor(cancellationToken),
+                                out brukerPoints);
+                        }
+                        catch (Exception)
+                        {
+                            // ignore "Scheduling failure (no points)" error
+                        }
                     }
 
                     return brukerPoints;
@@ -359,7 +368,7 @@ namespace pwiz.Skyline.Controls.Graphs
             public static IEnumerable<KeyValuePair<double, double>> GetOverlapCounts(
                 IEnumerable<PrecursorScheduleBase> schedules, double minTime, double maxTime, double stepSize)
             {
-                if (maxTime < minTime)
+                if (maxTime < minTime || double.IsNaN(maxTime) || double.IsNaN(minTime))
                 {
                     return Enumerable.Empty<KeyValuePair<double, double>>();
                 }

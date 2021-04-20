@@ -19,8 +19,6 @@
 using System;
 using System.Threading;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Alerts;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using ZedGraph;
@@ -98,35 +96,17 @@ namespace pwiz.Skyline.Controls.Graphs
             var cancellationToken = cancellationTokenSource.Token;
             ActionUtil.RunAsync(() =>
             {
-                Exception exception = null;
-                TResults results = default(TResults);
-                try
-                {
-                    results = CalculateResults(input, cancellationToken);
+                var results = CalculateResults(input, cancellationToken);
                     if (Equals(results, default(TResults)))
                     {
                         return;
                     }
-                }
-                catch (Exception x)
-                {
-                    exception = x;
-                }
-
-                BeginInvoke(cancellationToken, () =>
-                {
+                BeginInvoke(cancellationToken, ()=> {
                     Assume.IsTrue(ReferenceEquals(_progressTuple.Item1, cancellationTokenSource));
                     _progressTuple.Item2.Dispose();
                     _progressTuple = null;
-                    if (exception == null)
-                    {
                         Results = results;
                         ResultsAvailable();
-                    }
-                    else
-                    {
-                        HandleException(exception);
-                    }
                 });
             });
         }
@@ -157,12 +137,6 @@ namespace pwiz.Skyline.Controls.Graphs
         protected abstract TResults CalculateResults(TInput input, CancellationToken cancellationToken);
 
         protected abstract void ResultsAvailable();
-
-        protected virtual void HandleException(Exception exception)
-        {
-            MessageDlg.ShowWithException(FormUtil.FindTopLevelOwner(ZedGraphControl),
-                TextUtil.LineSeparate(Resources.ShareListDlg_OkDialog_An_error_occurred, exception.Message), exception);
-        }
 
         protected void BeginInvoke(CancellationToken cancellationToken, Action action)
         {

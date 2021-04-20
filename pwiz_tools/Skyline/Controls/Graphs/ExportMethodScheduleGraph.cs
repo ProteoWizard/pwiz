@@ -24,6 +24,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
@@ -164,6 +165,11 @@ namespace pwiz.Skyline.Controls.Graphs
                 graphControl.Visible = false;
                 dataGridView.Visible = true;
             }
+        }
+
+        public ZedGraphControl GraphControl
+        {
+            get { return graphControl; }
         }
     }
 }
