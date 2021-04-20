@@ -327,7 +327,8 @@ namespace pwiz.SkylineTestFunctional
                 importPeptideSearchDlg.SearchControl.Cancel();
             });
 
-            WaitForConditionUI(60000, () => searchSucceeded.HasValue);
+            WaitForConditionUI(60000, () => searchSucceeded.HasValue, 
+                () => importPeptideSearchDlg.SearchControl.LogText);
             RunUI(() => Assert.IsFalse(searchSucceeded.Value, importPeptideSearchDlg.SearchControl.LogText));
             searchSucceeded = null;
 
@@ -381,7 +382,8 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // now on search progress
             });
 
-            WaitForConditionUI(360000, () => searchSucceeded.HasValue);
+            WaitForConditionUI(120000, () => searchSucceeded.HasValue, () => importPeptideSearchDlg.SearchControl.LogText);
+
             RunUI(() => Assert.IsTrue(searchSucceeded.Value, importPeptideSearchDlg.SearchControl.LogText));
 
             RunDlg<PeptidesPerProteinDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck, emptyProteinsDlg =>
