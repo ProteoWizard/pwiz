@@ -1615,6 +1615,9 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(errDlg, errDlg.OkDialog);
         }
 
+        /// <summary>
+        /// Verify handling of small molecule transition lists in File>Import>TransitionLIst
+        /// </summary>
         void TestFileImportTransitionList(string knownGood)
         {
             var filename = TestFilesDir.GetTestPath("known_good.csv");
