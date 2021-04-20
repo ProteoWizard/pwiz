@@ -342,7 +342,10 @@ namespace pwiz.SkylineTestFunctional
                 TestTransitionListOutput(docTest, "PasteMoleculeTinyTest.csv", "PasteMoleculeTinyTestExpected.csv", ExportFileType.IsolationList);
                 // Does serialization of imported values work properly?
                 AssertEx.Serializable(docTest);
-                
+
+                // Verify that this text can be imported as a file with File > Import > Transition List
+                TestFileImportTransitionList(line1);
+
             }
             // Reset
             var docOrig = NewDocument();
@@ -1610,6 +1613,32 @@ namespace pwiz.SkylineTestFunctional
             var errDlg = ShowDialog<MessageDlg>(() => SkylineWindow.Paste());
             AssertEx.IsTrue(errDlg.Message.Contains(Resources.SmallMoleculeTransitionListReader_GetMoleculeTransitionGroup_Inconsistent_molecule_description));
             OkDialog(errDlg, errDlg.OkDialog);
+        }
+
+        void TestFileImportTransitionList(string knownGood)
+        {
+            var filename = TestFilesDir.GetTestPath("known_good.csv");
+            var headers = Settings.Default.CustomMoleculeTransitionInsertColumnsList.Select(header => header.ToString()).ToArray();
+            var contents = string.Join("\t", 
+                               headers.Take(headers.Length-1)) + // Leave off the product neutral loss column
+                           Environment.NewLine + knownGood;
+            File.WriteAllText(filename, contents);
+            RunUI(() =>
+            {
+                SkylineWindow.NewDocument(true);
+                SkylineWindow.ImportMassList(filename);
+            });
+            WaitForCondition(() => 0 != SkylineWindow.Document.MoleculeCount);
+
+            // Now verify error handling
+            filename = TestFilesDir.GetTestPath("known_bad.csv");
+            File.WriteAllText(filename, @"foo"+contents);
+            RunUI(() =>
+            {
+                SkylineWindow.NewDocument(true);
+            });
+            var messageDlg = ShowDialog<ImportTransitionListErrorDlg>(() => SkylineWindow.ImportMassList(filename));
+            OkDialog(messageDlg, messageDlg.AcceptButton.PerformClick); // Acknowledge the error
         }
 
     }
