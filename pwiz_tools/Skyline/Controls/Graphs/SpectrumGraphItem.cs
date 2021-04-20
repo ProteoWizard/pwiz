@@ -55,11 +55,22 @@ namespace pwiz.Skyline.Controls.Graphs
             return ((TransitionNode != null) && (predictedMz == TransitionNode.Mz));
         }
 
-        public static string GetTitle(PeptideDocNode peptideDocNode, TransitionGroupDocNode transitionGroupDocNode, IsotopeLabelType labelType)
+        public static string GetLibraryPrefix(string libraryName)
         {
-            string libraryNamePrefix = string.Empty;
-            //if (!string.IsNullOrEmpty(libraryNamePrefix))
-            //    libraryNamePrefix += @" - ";
+            return !string.IsNullOrEmpty(libraryName) ? libraryName + @" - " : string.Empty;
+        }
+
+        public static string RemoveLibraryPrefix(string title, string libraryName)
+        {
+            string libraryNamePrefix = GetLibraryPrefix(libraryName);
+            if (!string.IsNullOrEmpty(libraryNamePrefix) && title.StartsWith(libraryNamePrefix))
+                return title.Substring(libraryNamePrefix.Length);
+            return title;
+        }
+
+        public static string GetTitle(string libraryName, PeptideDocNode peptideDocNode, TransitionGroupDocNode transitionGroupDocNode, IsotopeLabelType labelType)
+        {
+            string libraryNamePrefix = GetLibraryPrefix(libraryName);
 
             TransitionGroup transitionGroup = transitionGroupDocNode.TransitionGroup;
             string sequence;
@@ -90,7 +101,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public override string Title
         {
-            get { return GetTitle(PeptideDocNode, TransitionGroupNode, SpectrumInfo.LabelType); }
+            get { return GetTitle(LibraryName, PeptideDocNode, TransitionGroupNode, SpectrumInfo.LabelType); }
         }
     }
     
