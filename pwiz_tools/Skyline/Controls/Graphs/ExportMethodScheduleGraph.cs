@@ -72,7 +72,7 @@ namespace pwiz.Skyline.Controls.Graphs
             masterPane.PaneList.Clear();
             masterPane.Border.IsVisible = false;
 
-            _pane = new RTScheduleGraphPane(null, true);
+            _pane = new RTScheduleGraphPane(null, graphControl, true);
             _pane.BrukerMetrics = brukerMetrics;
 
             // Save existing settings

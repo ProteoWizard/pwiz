@@ -19,6 +19,8 @@
 using System;
 using System.Threading;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using ZedGraph;
@@ -38,20 +40,18 @@ namespace pwiz.Skyline.Controls.Graphs
         private Tuple<CancellationTokenSource, PaneProgressBar> _progressTuple;
 
 
-        public GraphDataCalculator(CancellationToken parentCancellationToken, ZedGraphControl zedGraphControl)
+        public GraphDataCalculator(CancellationToken parentCancellationToken, ZedGraphControl zedGraphControl, GraphPane graphPane)
         {
             ParentCancellationToken = parentCancellationToken;
             ZedGraphControl = zedGraphControl;
+            GraphPane = graphPane;
         }
 
         public CancellationToken ParentCancellationToken { get; }
 
-        public ZedGraphControl ZedGraphControl { get; private set; }
+        public ZedGraphControl ZedGraphControl { get; }
 
-        public virtual GraphPane GraphPane
-        {
-            get { return ZedGraphControl.GraphPane; }
-        }
+        public virtual GraphPane GraphPane { get; }
 
         public TInput Input
         {
@@ -98,17 +98,35 @@ namespace pwiz.Skyline.Controls.Graphs
             var cancellationToken = cancellationTokenSource.Token;
             ActionUtil.RunAsync(() =>
             {
-                var results = CalculateResults(input, cancellationToken);
-                if (Equals(results, default(TResults)))
+                Exception exception = null;
+                TResults results = default(TResults);
+                try
                 {
-                    return;
+                    results = CalculateResults(input, cancellationToken);
+                    if (Equals(results, default(TResults)))
+                    {
+                        return;
+                    }
                 }
-                BeginInvoke(cancellationToken, ()=> {
+                catch (Exception x)
+                {
+                    exception = x;
+                }
+
+                BeginInvoke(cancellationToken, () =>
+                {
                     Assume.IsTrue(ReferenceEquals(_progressTuple.Item1, cancellationTokenSource));
                     _progressTuple.Item2.Dispose();
                     _progressTuple = null;
-                    Results = results;
-                    ResultsAvailable();
+                    if (exception == null)
+                    {
+                        Results = results;
+                        ResultsAvailable();
+                    }
+                    else
+                    {
+                        HandleException(exception);
+                    }
                 });
             });
         }
@@ -139,6 +157,12 @@ namespace pwiz.Skyline.Controls.Graphs
         protected abstract TResults CalculateResults(TInput input, CancellationToken cancellationToken);
 
         protected abstract void ResultsAvailable();
+
+        protected virtual void HandleException(Exception exception)
+        {
+            MessageDlg.ShowWithException(FormUtil.FindTopLevelOwner(ZedGraphControl),
+                TextUtil.LineSeparate(Resources.ShareListDlg_OkDialog_An_error_occurred, exception.Message), exception);
+        }
 
         protected void BeginInvoke(CancellationToken cancellationToken, Action action)
         {
