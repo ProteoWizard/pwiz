@@ -363,6 +363,7 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
             <conditional>@msvc-dotnet-requirement
             <assembly>../../pwiz/utility/bindings/CLI//pwiz_data_cli
             <assembly>../../pwiz/utility/bindings/CLI/timstof_prm_scheduler//PrmPasefScheduler
+            <dependency>../../pwiz_tools/commandline//msconvert/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
             <assembly>TestDiagnostics//TestDiagnostics
             <conditional>@build-location
             <conditional>@install-vendor-api-dependencies
