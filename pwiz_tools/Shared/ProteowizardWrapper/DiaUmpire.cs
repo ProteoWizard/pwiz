@@ -18,6 +18,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using pwiz.CLI.analysis;
@@ -29,13 +30,15 @@ namespace pwiz.ProteowizardWrapper
 {
     public class DiaUmpire : MsDataFileImpl
     {
-        private SpectrumList_DiaUmpire.Config _diaUmpireConfig;
-        private IterationListenerToMonitor _ilrMonitor;
+        private readonly SpectrumList_DiaUmpire.Config _diaUmpireConfig;
+        private readonly IterationListenerToMonitor _ilrMonitor;
 
         public enum WindowScheme
         {
+            // ReSharper disable InconsistentNaming
             SWATH_Variable = SpectrumList_DiaUmpire.Config.TargetWindow.Scheme.SWATH_Variable,
             SWATH_Fixed = SpectrumList_DiaUmpire.Config.TargetWindow.Scheme.SWATH_Fixed
+            // ReSharper restore InconsistentNaming
         }
 
         public struct TargetWindow
@@ -51,6 +54,8 @@ namespace pwiz.ProteowizardWrapper
 
         public class Config
         {
+            public WindowScheme WindowScheme;
+            public IEnumerable<TargetWindow> VariableWindows;
             public IDictionary<string, object> Parameters { get; }
             public bool UseMzMlSpillFile { get; set; }
 
@@ -66,9 +71,11 @@ namespace pwiz.ProteowizardWrapper
 
             public enum InstrumentPreset
             {
+                // ReSharper disable InconsistentNaming
                 TripleTOF,
                 QExactive,
-                OrbitrapLTQ,
+                OrbitrapLTQ
+                // ReSharper restore InconsistentNaming
             }
 
             public static Config GetDefaultsForInstrument(InstrumentPreset preset)
@@ -148,6 +155,33 @@ namespace pwiz.ProteowizardWrapper
                 });
             }
 
+            /// <summary>
+            /// writes config in a format compatible with DIA-Umpire (both Java and ProteoWizard implementations)
+            /// </summary>
+            public void WriteConfigToFile(string filepath)
+            {
+                using (var configFile = new StreamWriter(filepath))
+                {
+                    foreach(var p in Parameters)
+                        configFile.WriteLine($"{p.Key} = {p.Value}");
+
+                    var windowTypeStrings = new Dictionary<WindowScheme, string>
+                    {
+                        {WindowScheme.SWATH_Variable, @"V_SWATH"},
+                        {WindowScheme.SWATH_Fixed, @"SWATH" }
+                    };
+                    configFile.WriteLine($"WindowType = {windowTypeStrings[WindowScheme]}");
+
+                    if (WindowScheme != WindowScheme.SWATH_Variable)
+                        return;
+
+                    configFile.WriteLine(@"==window setting begin");
+                    foreach(var window in VariableWindows)
+                        configFile.WriteLine($"{window.Start}\t{window.End}");
+                    configFile.WriteLine(@"==window setting end");
+                }
+            }
+
             internal static IEnumerable<string> GetDiaUmpireParameters()
             {
                 return typeof(SpectrumList_DiaUmpire.Config.InstrumentParameter).GetFields().Select(f => f.Name);
@@ -163,28 +197,33 @@ namespace pwiz.ProteowizardWrapper
                     {
                         case float f:
                         case double d:
-                            prop.SetValue(config.instrumentParameters, Convert.ToSingle(Parameters[prop.Name]));
+                            prop.SetValue(config.instrumentParameters, Convert.ToSingle(Parameters[prop.Name], CultureInfo.InvariantCulture));
                             break;
                         case int i:
-                            prop.SetValue(config.instrumentParameters, Convert.ToInt32(Parameters[prop.Name]));
+                            prop.SetValue(config.instrumentParameters, Convert.ToInt32(Parameters[prop.Name], CultureInfo.InvariantCulture));
                             break;
                         case bool b:
-                            prop.SetValue(config.instrumentParameters, Convert.ToBoolean(Parameters[prop.Name]));
+                            prop.SetValue(config.instrumentParameters, Parameters[prop.Name].ToString().ToLowerInvariant() == "true" ||
+                                                                       Parameters[prop.Name].ToString() == "1");
                             break;
                         default:
                             throw new InvalidDataException(@"unexpected type in SpectrumList_DiaUmpire.Config.InstrumentParameter");
                     }
                 }
 
+                config.maxThreads = Convert.ToInt32(Parameters["Thread"]);
                 config.spillFileFormat = UseMzMlSpillFile ? MSDataFile.Format.Format_mzML : MSDataFile.Format.Format_MZ5;
+                config.exportMs1ClusterTable = config.exportMs2ClusterTable = true;
+
+                config.diaTargetWindowScheme = (SpectrumList_DiaUmpire.Config.TargetWindow.Scheme) WindowScheme;
+                foreach (var window in VariableWindows.Select(w => new SpectrumList_DiaUmpire.Config.TargetWindow(w.Start, w.End)))
+                    config.diaVariableWindows.Add(window);
 
                 return config;
             }
         }
 
         public DiaUmpire(string path, int sampleIndex,
-                         WindowScheme windowScheme,
-                         IEnumerable<TargetWindow> targetWindows,
                          Config diaUmpireConfig,
                          LockMassParameters lockmassParameters = null,
                          bool simAsSpectra = false, bool srmAsSpectra = false, bool acceptZeroLengthSpectra = true,
@@ -199,9 +238,6 @@ namespace pwiz.ProteowizardWrapper
                 combineIonMobilitySpectra, trimNativeId)
         {
             _diaUmpireConfig = diaUmpireConfig.GetDiaUmpireConfig();
-            _diaUmpireConfig.diaTargetWindowScheme = (SpectrumList_DiaUmpire.Config.TargetWindow.Scheme) windowScheme;
-            foreach (var window in targetWindows.Select(w => new SpectrumList_DiaUmpire.Config.TargetWindow(w.Start, w.End)))
-                _diaUmpireConfig.diaVariableWindows.Add(window);
 
             if (progressMonitor != null)
                 _ilrMonitor = new IterationListenerToMonitor(progressMonitor);
@@ -235,6 +271,7 @@ namespace pwiz.ProteowizardWrapper
             var ilr = new IterationListenerRegistry();
             if (_ilrMonitor != null)
                 ilr.addListenerWithTimer(_ilrMonitor, 5);
+            //_msDataFile.run.id += "-inprocess";
             _msDataFile.run.spectrumList = SpectrumList;
             MSDataFile.write(_msDataFile, outputFilepath, config, ilr);
         }
