@@ -456,7 +456,8 @@ namespace pwiz.SkylineTest
                 try
                 {
                     var inputs = new MassListInputs(actualList, CultureInfo.InvariantCulture, TextUtil.SEPARATOR_CSV);
-                    docImport = docImport.ImportMassList(inputs, null, IdentityPath.ROOT, out pathAdded);
+                    var importer = docImport.PreImportMassList(inputs, null, false);
+                    docImport = docImport.ImportMassList(inputs, importer, IdentityPath.ROOT, out pathAdded);
                 }
                 catch
                 {

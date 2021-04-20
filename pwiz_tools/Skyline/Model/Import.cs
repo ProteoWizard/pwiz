@@ -297,7 +297,7 @@ namespace pwiz.Skyline.Model
         private readonly string _inputText;
         public string InputText { get { return _inputText; } }
 
-        private IList<string> _lines; 
+        private IList<string> _lines;
 
         public MassListInputs(string initText, bool fullText = false)
         {
@@ -424,6 +424,7 @@ namespace pwiz.Skyline.Model
         public MassListInputs Inputs { get; private set; }
         public IFormatProvider FormatProvider { get { return Inputs.FormatProvider; } }
         public char Separator { get { return Inputs.Separator; } }
+        public bool IsSmallMoleculeInput { get; private set; }
 
         public PeptideModifications GetModifications(SrmDocument document)
         {
@@ -446,6 +447,14 @@ namespace pwiz.Skyline.Model
             var lines = new List<string>(Inputs.ReadLines(progressMonitor, status));
             status = status.NextSegment();
             _linesSeen = 0;
+
+            if (SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(lines))
+            {
+                IsSmallMoleculeInput = true;
+                if (progressMonitor != null)
+                    progressMonitor.UpdateProgress(status.Complete());
+                return true;
+            }
 
             if (progressMonitor != null)
             {
