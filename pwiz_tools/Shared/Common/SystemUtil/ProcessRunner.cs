@@ -29,9 +29,10 @@ namespace pwiz.Common.SystemUtil
     {
         string StatusPrefix { get; set; }
         string HideLinePrefix { get; set; }
-        void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref IProgressStatus status);
         void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref IProgressStatus status,
-                 TextWriter writer);
+            ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal);
+        void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref IProgressStatus status,
+                 TextWriter writer, ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal);
     }
 
     public class ProcessRunner : IProcessRunner
@@ -51,12 +52,14 @@ namespace pwiz.Common.SystemUtil
         /// </summary>
         public string HideLinePrefix { get; set; }
 
-        public void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref IProgressStatus status)
+        public void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref IProgressStatus status,
+            ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal)
         {
-            Run(psi, stdin, progress,ref status, null);
+            Run(psi, stdin, progress,ref status, null, priorityClass);
         }
 
-        public void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref IProgressStatus status, TextWriter writer)
+        public void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref IProgressStatus status, TextWriter writer,
+            ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal)
         {
             // Make sure required streams are redirected.
             psi.RedirectStandardOutput = true;
@@ -70,6 +73,7 @@ namespace pwiz.Common.SystemUtil
             var proc = Process.Start(psi);
             if (proc == null)
                 throw new IOException(string.Format(@"Failure starting {0} command.", psi.FileName));
+            proc.PriorityClass = priorityClass;
             if (stdin != null)
             {
                 try
@@ -176,12 +180,14 @@ namespace pwiz.Common.SystemUtil
             public bool shouldCancel { get; set; }
             public string StatusPrefix { get; set; }
             public string HideLinePrefix { get; set; }
-            public void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref IProgressStatus status)
+            public void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref IProgressStatus status,
+                ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal)
             {
-                Run(psi, stdin, progress, ref status, null);
+                Run(psi, stdin, progress, ref status, null, priorityClass);
             }
 
-            public void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref IProgressStatus status, TextWriter writer)
+            public void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref IProgressStatus status, TextWriter writer,
+                ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal)
             {
                 if (shouldCancel)
                 {
