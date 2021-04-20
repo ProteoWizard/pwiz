@@ -163,7 +163,7 @@ namespace pwiz.ProteowizardWrapper
                 using (var configFile = new StreamWriter(filepath))
                 {
                     foreach(var p in Parameters)
-                        configFile.WriteLine($"{p.Key} = {p.Value}");
+                        configFile.WriteLine($"{p.Key} = {Convert.ToString(p.Value, CultureInfo.InvariantCulture)}");
 
                     var windowTypeStrings = new Dictionary<WindowScheme, string>
                     {
@@ -177,7 +177,7 @@ namespace pwiz.ProteowizardWrapper
 
                     configFile.WriteLine(@"==window setting begin");
                     foreach(var window in VariableWindows)
-                        configFile.WriteLine($"{window.Start}\t{window.End}");
+                        configFile.WriteLine($"{window.Start.ToString(CultureInfo.InvariantCulture)}\t{window.End.ToString(CultureInfo.InvariantCulture)}");
                     configFile.WriteLine(@"==window setting end");
                 }
             }
