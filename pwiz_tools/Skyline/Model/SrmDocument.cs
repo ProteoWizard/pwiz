@@ -1434,16 +1434,17 @@ namespace pwiz.Skyline.Model
             firstAdded = null;
 
             // Is this a small molecule transition list, or trying to be?
-            var lines = inputs.ReadLines(progressMonitor);
-            if (SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(lines))
+            if (importer != null && importer.IsSmallMoleculeInput)
             {
                 try
                 {
+                    var lines = inputs.ReadLines(progressMonitor);
                     var reader = new SmallMoleculeTransitionListCSVReader(lines);
                     docNew = reader.CreateTargets(this, to, out firstAdded);
                 }
                 catch (LineColNumberedIoException x)
                 {
+                    // TODO(brianp): Better to return a complete list of all rows with errors and allow skipping
                     errorList.Add(new TransitionImportErrorInfo(x.PlainMessage, x.ColumnIndex, x.LineNumber, null));  // CONSIDER: worth the effort to pull row and column info from error message?
                 }
             }
