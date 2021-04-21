@@ -1875,14 +1875,15 @@ namespace pwiz.Skyline
         {
             SrmTreeNode nodePaste = SequenceTree.SelectedNode as SrmTreeNode;
             IdentityPath insertPath = nodePaste != null ? nodePaste.Path : null;
-            IdentityPath selectPath;
-            List<MeasuredRetentionTime> irtPeptides;
-            List<SpectrumMzInfo> librarySpectra;
-            List<PeptideGroupDocNode> peptideGroups;
+            IdentityPath selectPath = null;
+            List<MeasuredRetentionTime> irtPeptides = new List<MeasuredRetentionTime>();
+            List<SpectrumMzInfo> librarySpectra = new List<SpectrumMzInfo>();
+            List<TransitionImportErrorInfo> errorList = new List<TransitionImportErrorInfo>();
+            List<PeptideGroupDocNode> peptideGroups = new List<PeptideGroupDocNode>();
             var docCurrent = DocumentUI;
             SrmDocument docNew = null;
             MassListImporter importer = null;
-            var analyzingMessage = string.Format( Resources.SkylineWindow_ImportMassList_Analyzing_input__0_, inputs.InputFilename ?? string.Empty);
+            var analyzingMessage = string.Format(Resources.SkylineWindow_ImportMassList_Analyzing_input__0_, inputs.InputFilename ?? string.Empty);
             using (var longWaitDlg0 = new LongWaitDlg(this)
             {
                 Text = analyzingMessage,
@@ -1892,6 +1893,12 @@ namespace pwiz.Skyline
                 {
                     // PreImport of mass list
                     importer = docCurrent.PreImportMassList(inputs, longWaitBroker, true);
+                    if (importer != null && !longWaitBroker.IsCanceled && importer.IsSmallMoleculeInput)
+                    {
+                        docCurrent = docCurrent.ImportMassList(inputs, importer, longWaitBroker,
+                            insertPath, out selectPath, out irtPeptides, out librarySpectra, out errorList,
+                            out peptideGroups);
+                    }
                 });
                 if (importer == null || status.IsCanceled)
                 {
@@ -1899,17 +1906,32 @@ namespace pwiz.Skyline
                 }
             }
 
-            using (var columnDlg = new ImportTransitionListColumnSelectDlg(importer, docCurrent, inputs, insertPath))
+            if (importer.IsSmallMoleculeInput)
             {
-                if (columnDlg.ShowDialog(this) != DialogResult.OK)
-                    return;
+                if (errorList.Any())
+                {
+                    // Currently small molecules show just one error with no ability to continue.
+                    using (var errorDlg = new ImportTransitionListErrorDlg(errorList, true, false))
+                    {
+                        errorDlg.ShowDialog(this);
+                        return;
+                    }
+                }
+            }
+            else
+            {
+                using (var columnDlg = new ImportTransitionListColumnSelectDlg(importer, docCurrent, inputs, insertPath))
+                {
+                    if (columnDlg.ShowDialog(this) != DialogResult.OK)
+                        return;
 
-                var insParams = columnDlg.InsertionParams;
-                docNew = insParams.Document;
-                selectPath = insParams.SelectPath;
-                irtPeptides = insParams.IrtPeptides;
-                librarySpectra = insParams.LibrarySpectra;
-                peptideGroups = insParams.PeptideGroups;
+                    var insParams = columnDlg.InsertionParams;
+                    docNew = insParams.Document;
+                    selectPath = insParams.SelectPath;
+                    irtPeptides = insParams.IrtPeptides;
+                    librarySpectra = insParams.LibrarySpectra;
+                    peptideGroups = insParams.PeptideGroups;
+                }
             }
 
             if (assayLibrary)
