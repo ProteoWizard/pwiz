@@ -33,7 +33,7 @@
 #include "parse.h"
 #include "rules.h"
 #include "search.h"
-#include "strings.h"
+#include "jam_strings.h"
 #include "variable.h"
 #include "output.h"
 

@@ -3,9 +3,15 @@
 # (See accompanying file LICENSE_1_0.txt or copy at
 # http://www.boost.org/LICENSE_1_0.txt)
 
-# Used to select a specific variant of C++ ABI if the compiler supports several.
-
 import feature ;
+
+#| tag::doc[]
+
+[[bbv2.builtin.features.cxxabi]]`c++abi`::
+Selects a specific variant of C++ ABI if the compiler supports several.
+
+
+|# # end::doc[]
 
 feature.feature c++abi
     :
