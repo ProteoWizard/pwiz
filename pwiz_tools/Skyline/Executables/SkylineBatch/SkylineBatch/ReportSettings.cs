@@ -329,6 +329,7 @@ namespace SkylineBatch
             "--report-add=\"{0}\" --report-conflict-resolution=overwrite";
         public const string EXPORT_REPORT_COMMAND = "--report-name=\"{0}\" --report-file=\"{1}\"";
         public const string REPORT_INVARIANT_COMMAND = "--report-invariant";
+        public const string REPORT_TSV_COMMAND = "--report-format=tsv";
         public const string SAVE_SETTINGS_COMMAND = "--save-settings";
         public const string RUN_R_ARGUMENT = "\"{0}\" \"{1}\"";
 
@@ -341,7 +342,11 @@ namespace SkylineBatch
             }
             commandWriter.Write(EXPORT_REPORT_COMMAND, Name, Path.Combine(analysisFolder, Name + TextUtil.EXT_CSV));
             if (!CultureSpecific)
+            {
                 commandWriter.Write(REPORT_INVARIANT_COMMAND);
+                if (!commandWriter.ExportsInvariantReport)
+                    commandWriter.Write(REPORT_TSV_COMMAND);
+            }
             commandWriter.EndCommandGroup();
         }
 

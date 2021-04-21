@@ -240,7 +240,7 @@ namespace SkylineBatchTest
             var script = new List<Tuple<string, string>>()
                 {new Tuple<string, string>(GetTestFilePath("testScript.R"), "4.0.2")};
             reportList.Add(new ReportInfo("Unique Report", false, GetTestFilePath("uniqueReport.skyr"), script, false));
-            reportList.Add(new ReportInfo("Another Unique Report", false, GetTestFilePath("uniqueReport.skyr"), script, true));
+            reportList.Add(new ReportInfo("Another Unique Report", true, GetTestFilePath("uniqueReport.skyr"), script, true));
             var reports = new ReportSettings(reportList);
             var skyline = GetTestSkylineSettings();
             return new SkylineBatchConfig(name, true, DateTime.Now, main, file, refine, reports, skyline);

@@ -416,13 +416,16 @@ namespace SharedBatch
                     {
                         while (!reader.Name.Equals("ConfigList"))
                             reader.Read();
-                        var oldPath = reader.GetAttribute(Attr.SavedConfigsFilePath);
-                        if (!string.IsNullOrEmpty(oldPath))
+                        var oldConfigFile = reader.GetAttribute(Attr.SavedConfigsFilePath);
+                        var oldFolder = reader.GetAttribute(Attr.SavedPathRoot);
+                        if (!string.IsNullOrEmpty(oldConfigFile) && string.IsNullOrEmpty(oldFolder))
+                            oldFolder = Path.GetDirectoryName(oldConfigFile);
+                        if (!string.IsNullOrEmpty(oldFolder))
                         {
-                            if (!string.IsNullOrEmpty(copiedDestination))
-                                AddRootReplacement(oldPath, copiedConfigFile, false, out _, out _);
-                            else
-                                AddRootReplacement(oldPath, filePath, false, out _, out _);
+                            var newFolder = string.IsNullOrEmpty(copiedDestination)
+                                ? Path.GetDirectoryName(filePath)
+                                : Path.GetDirectoryName(copiedConfigFile);
+                            AddRootReplacement(oldFolder, newFolder, false, out _, out _);
                         }
 
                         while (!reader.Name.EndsWith("_config"))
@@ -488,7 +491,7 @@ namespace SharedBatch
                 duplicateMessage.Append(Resources.ConfigManager_ImportFrom_Do_you_want_to_overwrite_these_configurations_);
                 if (DialogResult.Yes == DisplayQuestion(duplicateMessage.ToString()))
                 {
-                    message.Append(Resources.ConfigManager_ImportFrom_Overwriting_).Append(Environment.NewLine); ;
+                    message.Append(Resources.ConfigManager_ImportFrom_Overwriting_).Append(Environment.NewLine); 
                     duplicateConfigNames.Clear();
                 }
             }
@@ -530,7 +533,7 @@ namespace SharedBatch
 
         public void ExportConfigs(string filePath, int[] indiciesToSave)
         {
-            var directory = Path.GetDirectoryName(filePath) ?? string.Empty;
+            var directory = string.Empty;
             // Exception if no configurations are selected to export
             if (indiciesToSave.Length == 0)
             {
@@ -543,6 +546,7 @@ namespace SharedBatch
             }
             catch (ArgumentException)
             {
+                // pass
             }
             // Exception if file folder does not exist
             if (!Directory.Exists(directory))
@@ -560,7 +564,7 @@ namespace SharedBatch
                     using (XmlWriter writer = XmlWriter.Create(streamWriter, settings))
                     {
                         writer.WriteStartElement("ConfigList");
-                        writer.WriteAttributeString(Attr.SavedConfigsFilePath, filePath);
+                        writer.WriteAttributeString(Attr.SavedPathRoot, directory);
                         foreach (int index in indiciesToSave)
                             _configList[index].WriteXml(writer);
                         writer.WriteEndElement();
@@ -571,7 +575,8 @@ namespace SharedBatch
 
         enum Attr
         {
-            SavedConfigsFilePath
+            SavedConfigsFilePath, // deprecated since SkylineBatch release 20.2.0.475
+            SavedPathRoot
         }
 
         #endregion
@@ -668,7 +673,7 @@ namespace SharedBatch
             string newRoot = string.Empty;
             askedAboutRootReplacement = false;
 
-            var matchingEndFolders = 2;
+            var matchingEndFolders = 1;
             while (matchingEndFolders <= Math.Min(oldPathFolders.Length, newPathFolders.Length))
             {
                 // If path folders do not match we cannot replace root
@@ -676,10 +681,12 @@ namespace SharedBatch
                     .Equals(newPathFolders[newPathFolders.Length - matchingEndFolders]))
                     break;
 
-                oldRoot = string.Join("\\", oldPathFolders.Take(oldPathFolders.Length - matchingEndFolders).ToArray());
-                newRoot = string.Join("\\", newPathFolders.Take(newPathFolders.Length - matchingEndFolders).ToArray());
                 matchingEndFolders++;
             }
+
+            matchingEndFolders--;
+            oldRoot = string.Join("\\", oldPathFolders.Take(oldPathFolders.Length - matchingEndFolders).ToArray());
+            newRoot = string.Join("\\", newPathFolders.Take(newPathFolders.Length - matchingEndFolders).ToArray());
 
             var replaceRoot = false;
             if (oldRoot.Length > 0)

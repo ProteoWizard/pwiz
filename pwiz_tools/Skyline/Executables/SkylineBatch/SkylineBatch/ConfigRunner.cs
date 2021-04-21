@@ -158,7 +158,7 @@ namespace SkylineBatch
                             _logger.Log(string.Format(Resources.ConfigRunner_Run_Reading__0_, report.Name + TextUtil.EXT_CSV));
                             string text = File.ReadAllText(reportPath);
                             _logger.Log(string.Format(Resources.ConfigRunner_Run_Updating__0_, report.Name + TextUtil.EXT_CSV));
-                            text = text.Replace(';', ',');
+                            text = text.Replace('\t', ',');
                             _logger.Log(string.Format(Resources.ConfigRunner_Run_Saving__0_, report.Name + TextUtil.EXT_CSV));
                             File.WriteAllText(reportPath, text);
                         }
@@ -283,7 +283,6 @@ namespace SkylineBatch
                     continue;
                 }
 
-                _logger.StartLogPercent();
                 Progress<FtpProgress> progress = new Progress<FtpProgress>(p =>
                 {
                     _logger.LogPercent((int)Math.Floor(p.Progress));
@@ -299,10 +298,11 @@ namespace SkylineBatch
                 }
                 catch (OperationCanceledException)
                 {
-                    // pass
+                    _logger.LogPercent(-1); // Stop logging percent
                 }
                 catch (Exception e)
                 {
+                    _logger.LogPercent(-1);
                     _logger.Log(e.Message);
                     if (triesOnFile < 3)
                     {
@@ -316,7 +316,6 @@ namespace SkylineBatch
                         ChangeStatus(RunnerStatus.Error);
                     }
                 }
-                _logger.EndLogPercent(IsRunning());
             }
         }
 

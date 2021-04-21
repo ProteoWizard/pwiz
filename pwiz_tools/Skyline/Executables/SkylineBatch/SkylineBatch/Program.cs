@@ -165,6 +165,7 @@ namespace SkylineBatch
 
         private static void AddFileTypesToRegistry()
         {
+            if (FunctionalTest) return;
             var appReference = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\Microsoft\\Windows\\Start Menu\\Programs\\MacCoss Lab, UW\\" + AppName() + TextUtil.EXT_APPREF;
             var appExe = Application.ExecutablePath;
 

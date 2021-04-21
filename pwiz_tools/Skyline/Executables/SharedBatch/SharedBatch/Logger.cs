@@ -256,10 +256,8 @@ using SharedBatch.Properties;
             var exStr = ex != null ? ex.ToString() : string.Empty;
             if (_mainUi != null)
             {
-                line = GetDate() + line;
-
                 _mainUi.LogErrorLinesToUi(Name,
-                        new List<string> { line, exStr });
+                        new List<string> { GetDate() + line, exStr });
             }
 
             LogErrorToFile(string.Format("{0}\n{1}", line, exStr));
@@ -303,49 +301,35 @@ using SharedBatch.Properties;
         private DateTime LastLogTime;
         private CancellationTokenSource cancelToken;
         private bool logging;
-        private const int MIN_SECONDS_BETWEEN_LOGS = 6;
+        private const int MIN_SECONDS_BETWEEN_LOGS = 4;
 
-        public void StartLogPercent()
-        {
-            logging = false;
-            LastPercent = 0;
-            LastLogTime = DateTime.Now;
-            cancelToken = new CancellationTokenSource();
-            _ = DelayedLogPercent(cancelToken.Token);
-        }
 
         public void LogPercent(int percent)
         {
-            if (percent == LastPercent) return;
-            LastPercent = percent;
-            if ((DateTime.Now - LastLogTime) > new TimeSpan(0, 0, MIN_SECONDS_BETWEEN_LOGS))
+            if (percent < 0)
             {
-                LastLogTime = DateTime.Now;
-                if (logging)
+                LastPercent = percent;
+            }
+            if ((DateTime.Now - LastLogTime) > new TimeSpan(0, 0, MIN_SECONDS_BETWEEN_LOGS) &&
+                percent != LastPercent)
+            {
+                if (percent == 0 && LastPercent < 0)
+                {
+                    LastLogTime = DateTime.Now;
+                    LastPercent = 0;
+                }
+                else if (percent == 100)
+                {
+                    if (LastPercent != 0) Log(string.Format(Resources.Logger_LogPercent__0__, percent));
+                    LastPercent = -1;
+                }
+                else
+                {
+                    LastLogTime = DateTime.Now;
                     Log(string.Format(Resources.Logger_LogPercent__0__, percent));
-            }
-        }
+                }
 
-        public void EndLogPercent(bool completed)
-        {
-            cancelToken.Cancel();
-            if (logging && completed)
-                Log(string.Format(Resources.Logger_LogPercent__0__, 100));
-        }
-
-        private async Task DelayedLogPercent(CancellationToken token)
-        {
-            try
-            {
-                await Task.Delay(MIN_SECONDS_BETWEEN_LOGS * 1000, token);
             }
-            catch (TaskCanceledException)
-            {
-                return;
-            }
-            Log(string.Format(Resources.Logger_LogPercent__0__, 0));
-            LastLogTime = DateTime.Now;
-            logging = true;
         }
 
         public void Delete()

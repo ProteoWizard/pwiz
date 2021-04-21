@@ -66,17 +66,26 @@ namespace SkylineBatchTest
             var logger = TestUtils.GetTestLogger();
             var testRunner = new ConfigRunner(TestUtils.GetFullyPopulatedConfig(), logger);
             Assert.IsTrue(testRunner.IsStopped());
-            var expectedNewVersionCommandFile = TestUtils.GetTestFilePath("RunFile_PopulatedConfig_MultiLineCommands.tmp");
-            var newVersionWriter = new CommandWriter(logger, true, true);
-            testRunner.WriteBatchCommandsToFile(newVersionWriter, 1, true);
-            var actualNewVersionCommandFile = newVersionWriter.GetCommandFile();
-            CompareFiles(expectedNewVersionCommandFile, actualNewVersionCommandFile);
 
-            var expectedOldVersionCommandFile = TestUtils.GetTestFilePath("RunFile_PopulatedConfig_SingleLineCommands.tmp");
+            // Skyline versions after 21.1.0.0
+            var expectedInvariantReportCommandFile = TestUtils.GetTestFilePath("CommandFile_Skyline_21_1_0_0.txt");
+            var invariantReportWriter = new CommandWriter(logger, true, true);
+            testRunner.WriteBatchCommandsToFile(invariantReportWriter, 1, true);
+            var actualInvariantReportCommandFile = invariantReportWriter.GetCommandFile();
+            CompareFiles(expectedInvariantReportCommandFile, actualInvariantReportCommandFile);
+
+            // Skyline versions after 20.2.1.454
+            var expectedMultiLineCommandFile = TestUtils.GetTestFilePath("CommandFile_Skyline_20_2_1_454.txt");
+            var multiLineWriter = new CommandWriter(logger, true, false);
+            testRunner.WriteBatchCommandsToFile(multiLineWriter, 1, true);
+            var actualMultiLineCommandFile = multiLineWriter.GetCommandFile();
+            CompareFiles(expectedMultiLineCommandFile, actualMultiLineCommandFile);
+
+            // Skyline versions after 20.2.0.0
+            var expectedOldVersionCommandFile = TestUtils.GetTestFilePath("CommandFile_Skyline_20_2_0_0.txt");
             var oldVersionWriter = new CommandWriter(logger, false, false);
             testRunner.WriteBatchCommandsToFile(oldVersionWriter, 1, false);
             var actualOldVersionCommandFile = oldVersionWriter.GetCommandFile();
-
             CompareFiles(expectedOldVersionCommandFile, actualOldVersionCommandFile);
         }
 

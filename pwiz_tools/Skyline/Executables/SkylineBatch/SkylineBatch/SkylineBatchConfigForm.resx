@@ -656,7 +656,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>NoControl</value>
   </data>
   <data name="label8.Location" type="System.Drawing.Point, System.Drawing">
-    <value>7, 15</value>
+    <value>7, 16</value>
   </data>
   <data name="label8.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 0, 2, 0</value>
@@ -1187,7 +1187,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>3, 3, 3, 3</value>
   </data>
   <data name="tabFiles.Size" type="System.Drawing.Size, System.Drawing">
-    <value>445, 401</value>
+    <value>445, 394</value>
   </data>
   <data name="tabFiles.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -1244,7 +1244,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>3, 3, 3, 3</value>
   </data>
   <data name="tabSettings.Size" type="System.Drawing.Size, System.Drawing">
-    <value>445, 400</value>
+    <value>445, 401</value>
   </data>
   <data name="tabSettings.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -1322,7 +1322,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>10, 73</value>
   </data>
   <data name="gridRefineInputs.Size" type="System.Drawing.Size, System.Drawing">
-    <value>427, 327</value>
+    <value>427, 328</value>
   </data>
   <data name="gridRefineInputs.TabIndex" type="System.Int32, mscorlib">
     <value>10</value>
@@ -1346,7 +1346,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>NoControl</value>
   </data>
   <data name="btnRefinedFilePath.Location" type="System.Drawing.Point, System.Drawing">
-    <value>406, 28</value>
+    <value>406, 29</value>
   </data>
   <data name="btnRefinedFilePath.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -1376,7 +1376,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>Bottom, Left, Right</value>
   </data>
   <data name="textRefinedFilePath.Location" type="System.Drawing.Point, System.Drawing">
-    <value>10, 30</value>
+    <value>10, 31</value>
   </data>
   <data name="textRefinedFilePath.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -1403,7 +1403,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>4, 22</value>
   </data>
   <data name="tabRefine.Size" type="System.Drawing.Size, System.Drawing">
-    <value>445, 400</value>
+    <value>445, 401</value>
   </data>
   <data name="tabRefine.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -1535,7 +1535,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>2, 2, 2, 2</value>
   </data>
   <data name="gridReportSettings.Size" type="System.Drawing.Size, System.Drawing">
-    <value>415, 392</value>
+    <value>415, 393</value>
   </data>
   <data name="gridReportSettings.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1562,7 +1562,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>2, 2, 2, 2</value>
   </data>
   <data name="tabReports.Size" type="System.Drawing.Size, System.Drawing">
-    <value>445, 400</value>
+    <value>445, 401</value>
   </data>
   <data name="tabReports.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -1589,7 +1589,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>8, 6</value>
   </data>
   <data name="panelSkylineSettings.Size" type="System.Drawing.Size, System.Drawing">
-    <value>438, 395</value>
+    <value>438, 396</value>
   </data>
   <data name="panelSkylineSettings.TabIndex" type="System.Int32, mscorlib">
     <value>24</value>
@@ -1613,7 +1613,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>3, 3, 3, 3</value>
   </data>
   <data name="tabSkyline.Size" type="System.Drawing.Size, System.Drawing">
-    <value>445, 400</value>
+    <value>445, 401</value>
   </data>
   <data name="tabSkyline.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -1643,7 +1643,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>2, 2, 2, 2</value>
   </data>
   <data name="tabsConfig.Size" type="System.Drawing.Size, System.Drawing">
-    <value>453, 427</value>
+    <value>453, 420</value>
   </data>
   <data name="tabsConfig.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1676,7 +1676,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>Bottom, Right</value>
   </data>
   <data name="btnCancelConfig.Location" type="System.Drawing.Point, System.Drawing">
-    <value>371, 4</value>
+    <value>367, 4</value>
   </data>
   <data name="btnCancelConfig.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -1743,7 +1743,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>Microsoft Sans Serif, 9pt</value>
   </data>
   <data name="btnSaveConfig.Location" type="System.Drawing.Point, System.Drawing">
-    <value>292, 4</value>
+    <value>288, 4</value>
   </data>
   <data name="btnSaveConfig.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -1776,7 +1776,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>NoControl</value>
   </data>
   <data name="btnOkConfig.Location" type="System.Drawing.Point, System.Drawing">
-    <value>370, 3</value>
+    <value>367, 4</value>
   </data>
   <data name="btnOkConfig.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -1821,7 +1821,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>453, 458</value>
   </data>
   <data name="splitContainer1.SplitterDistance" type="System.Int32, mscorlib">
-    <value>427</value>
+    <value>420</value>
   </data>
   <data name="splitContainer1.SplitterWidth" type="System.Int32, mscorlib">
     <value>3</value>
@@ -1849,7 +1849,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
         AAEAAAD/////AQAAAAAAAAAMAgAAAFdTeXN0ZW0uV2luZG93cy5Gb3JtcywgVmVyc2lvbj00LjAuMC4w
         LCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODkFAQAAACZTeXN0
         ZW0uV2luZG93cy5Gb3Jtcy5JbWFnZUxpc3RTdHJlYW1lcgEAAAAERGF0YQcCAgAAAAkDAAAADwMAAACw
-        CgAAAk1TRnQBSQFMAgEBAgEAAWABAgFgAQIBHgEAAR4BAAT/AQkBAAj/AUIBTQE2AQQGAAE2AQQCAAEo
+        CgAAAk1TRnQBSQFMAgEBAgEAAWgBAgFoAQIBHgEAAR4BAAT/AQkBAAj/AUIBTQE2AQQGAAE2AQQCAAEo
         AwABeAMAAR4DAAEBAQABCAUAARABDhgAAYACAAGAAwACgAEAAYADAAGAAQABgAEAAoACAAPAAQABwAHc
         AcABAAHwAcoBpgEAATMFAAEzAQABMwEAATMBAAIzAgADFgEAAxwBAAMiAQADKQEAA1UBAANNAQADQgEA
         AzkBAAGAAXwB/wEAAlAB/wEAAZMBAAHWAQAB/wHsAcwBAAHGAdYB7wEAAdYC5wEAAZABqQGtAgAB/wEz

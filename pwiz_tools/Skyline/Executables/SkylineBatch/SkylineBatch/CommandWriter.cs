@@ -25,17 +25,20 @@ namespace SkylineBatch
             _writer = new StreamWriter(_commandFile);
 
             MultiLine = multiLine;
+            ExportsInvariantReport = invariantReport;
 
-            if (!invariantReport)
+            // TODO(Ali): Change this to invariant report release after 21.1
+            if (!MultiLine)
             {
                 logger.Log(string.Empty);
-                logger.Log(string.Format(Resources.CommandWriter_Start_Notice__For_faster_Skyline_Batch_runs__use_Skyline_version__0__or_higher_, ConfigRunner.REPORT_INVARIANT_VERSION));
+                logger.Log(string.Format(Resources.CommandWriter_Start_Notice__For_faster_Skyline_Batch_runs__use_Skyline_version__0__or_higher_, ConfigRunner.ALLOW_NEWLINE_SAVE_VERSION));
                 logger.Log(string.Empty);
             }
         }
 
         public string CurrentSkylineFile { get; private set; } // Filepath of last opened Skyline file with --in or --out
         public readonly bool MultiLine; // If the Skyline version does not support --save on a new line (true for versions before 20.2.1.415)
+        public readonly bool ExportsInvariantReport; // If the Skyline version does not guarantee a comma separated invariant exported report
 
         public void Write(string command, params Object[] args)
         {
