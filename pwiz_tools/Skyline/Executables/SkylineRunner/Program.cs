@@ -135,6 +135,11 @@ namespace pwiz.SkylineRunner
             "错误："    // zh-CHS
         };
 
+        // ----------------------------------------------------------------------------------------------
+        // NOTE: This code is tested in the SkylineRunnerErrorDetectionTest in CommandLineTest.cs. 
+        // The code was copied to CommandLineTest.cs.  If any changes are made here, they should be copied
+        // over to make sure that the test passes.
+        // ---------------------------------------------------------------------------------------------------
         private bool IsErrorLine(string line)
         {
             // The English prefix can happen in any culture when running Skyline-daily with a new

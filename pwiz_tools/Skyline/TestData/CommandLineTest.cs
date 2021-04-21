@@ -2966,6 +2966,7 @@ namespace pwiz.SkylineTestData
                     .Contains(
                         string.Format(Resources.EditServerDlg_OkDialog_Unknown_error_connecting_to_the_server__0__,
                             serverUri.AbsoluteUri)));
+            TestOutputHasErrorLine(buffer.ToString());
             buffer.Clear();
 
 
@@ -2978,6 +2979,7 @@ namespace pwiz.SkylineTestData
                     .Contains(
                         string.Format(Resources.EditServerDlg_OkDialog_The_server__0__is_not_a_Panorama_server,
                             serverUri.AbsoluteUri)));
+            TestOutputHasErrorLine(buffer.ToString());
             buffer.Clear();
 
 
@@ -2990,6 +2992,7 @@ namespace pwiz.SkylineTestData
                     .Contains(
                         Resources
                             .EditServerDlg_OkDialog_The_username_and_password_could_not_be_authenticated_with_the_panorama_server));
+            TestOutputHasErrorLine(buffer.ToString());
             buffer.Clear();
 
 
@@ -3000,6 +3003,7 @@ namespace pwiz.SkylineTestData
                 buffer.ToString()
                     .Contains(
                         string.Format(Resources.PanoramaHelper_ValidateServer_Exception_, "GetServerState threw an exception")));
+            TestOutputHasErrorLine(buffer.ToString());
             buffer.Clear();
 
             
@@ -3014,6 +3018,7 @@ namespace pwiz.SkylineTestData
                         string.Format(
                             Resources.PanoramaUtil_VerifyFolder_Folder__0__does_not_exist_on_the_Panorama_server__1_,
                             folder, client.ServerUri)));
+            TestOutputHasErrorLine(buffer.ToString());
             buffer.Clear();
 
 
@@ -3027,6 +3032,7 @@ namespace pwiz.SkylineTestData
                         string.Format(
                             Resources.PanoramaUtil_VerifyFolder_User__0__does_not_have_permissions_to_upload_to_the_Panorama_folder__1_,
                             "user", folder)));
+            TestOutputHasErrorLine(buffer.ToString());
             buffer.Clear();
 
 
@@ -3038,9 +3044,98 @@ namespace pwiz.SkylineTestData
                 buffer.ToString()
                     .Contains(string.Format(Resources.PanoramaUtil_VerifyFolder__0__is_not_a_Panorama_folder,
                         folder)));
-
+            TestOutputHasErrorLine(buffer.ToString());
 
         }
+
+        [TestMethod]
+        public void SkylineRunnerErrorDetectionTest()
+        {
+            TestSkylineRunnerErrorDetection(null);
+            TestSkylineRunnerErrorDetection(new CultureInfo("ja"));
+            TestSkylineRunnerErrorDetection(new CultureInfo("zh-CHS"));
+        }
+
+        private void TestSkylineRunnerErrorDetection(CultureInfo ci)
+        {
+            TestDetectError(false, false, ci); // no timestamp or memstamp
+            TestDetectError(true, false, ci);  // only timestamp
+            TestDetectError(false, true, ci);  // only memstamp
+            TestDetectError(true, true, ci);   // both timestamp and memstamp
+        }
+
+        private void TestDetectError(bool timestamp, bool memstamp, CultureInfo cultureInfo)
+        {
+            // --timestamp, --memstamp and --culture arguments have to be before the --in argument
+            var command =
+                $"{(timestamp ? "--timestamp" : "")} " +
+                $"{(memstamp ? "--memstamp" : "")} " +
+                $"{(cultureInfo != null ? $" --culture={cultureInfo.Name}" : "")} " +
+                "--in";
+            var argsArray = command.Split(new[] {' '}, StringSplitOptions.RemoveEmptyEntries);
+            var output = RunCommand(argsArray);
+            var errorLine = TestOutputHasErrorLine(output);
+
+            // The error should be about the missing value for the --in argument
+            var resourceErrString = cultureInfo == null
+                ? Resources.ValueMissingException_ValueMissingException_ // Resource string for the culture that the test is running under
+                : Resources.ResourceManager.GetString(@"ValueMissingException_ValueMissingException_", cultureInfo); // Resource string for the culture that was
+                                                                                                                     // specified with the --culture argument to
+                                                                                                                     // Skyline command line 
+            Assert.IsNotNull(resourceErrString, "Expected to find a resources string for culture '{0}'.",
+                cultureInfo == null ? CultureInfo.CurrentCulture.Name : cultureInfo.Name);
+            Assert.IsTrue(errorLine.Contains(string.Format(resourceErrString, "--in")));
+        }
+
+        private string TestOutputHasErrorLine(string output)
+        {
+            var outputLines = output.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+
+            // The IsErrorLine method from SkylineRunner should detect an error
+            var errorLine = outputLines.FirstOrDefault(IsErrorLine);
+            Assert.IsFalse(string.IsNullOrEmpty(errorLine),
+                string.Format("Expected to find an error line in output: {0}", output));
+            return errorLine;
+        }
+
+        // --------------------------------------------------------------------------------------
+        // BEGIN: Code copied from the SkylineRunner project (Program.cs)
+        // SkylineRunner returns a non-zero error code when it sees "Error:" in the output from
+        // Skyline command-line.
+        // The code below is copied here so that we can test that SkylineRunner can detect error
+        // messages
+        // -- when output lines begin with timestamp or memstamp prefixes
+        // -- with Japanese and Chinese translations
+        // SkylineRunner cannot be localized since it is distributed as a single EXE.
+        // --------------------------------------------------------------------------------------
+        private static readonly string[] INTL_ERROR_PREFIXES =
+        {
+            "エラー：", // ja
+            "错误："    // zh-CHS
+        };
+
+        private bool IsErrorLine(string line)
+        {
+            // The English prefix can happen in any culture when running Skyline-daily with a new
+            // untranslated error message.
+            if (HasErrorPrefix(line, "Error:", StringComparison.InvariantCulture))
+                return true;
+
+            return INTL_ERROR_PREFIXES.Any(p => HasErrorPrefix(line, p, StringComparison.CurrentCulture));
+        }
+
+        private static bool HasErrorPrefix(string line, string prefix, StringComparison comparisonType)
+        {
+            int prefixIndex = line.IndexOf(prefix, comparisonType);
+            if (prefixIndex == -1)
+                return false;
+            // The prefix could start the line or it could be preceded by a tab character
+            // if the output includes a timestamp or memory stamp.
+            return prefixIndex == 0 || line[prefixIndex - 1] == '\t';
+        }
+        // --------------------------------------------------------------------------------------
+        // END: Code copied from the SkylineRunner project (Program.cs)
+        // --------------------------------------------------------------------------------------
 
         private static string GetTitleHelper()
         {
