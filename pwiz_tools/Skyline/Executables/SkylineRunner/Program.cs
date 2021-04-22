@@ -116,7 +116,7 @@ namespace pwiz.SkylineRunner
                     //While (!done reading)
                     while ((line = sr.ReadLine()) != null)
                     {
-                        if (IsErrorLine(line))   // In case of Skyline-daily with untranslated text
+                        if (ErrorChecker.IsErrorLine(line))   // In case of Skyline-daily with untranslated text
                         {
                             exitCode = 2;
                         }
@@ -125,39 +125,6 @@ namespace pwiz.SkylineRunner
                 }
                 return exitCode;
             }
-        }
-
-        // We want to be able to distribute SkylineRunner as a single EXE file. So, requiring
-        // resource DLLs for language translation is not possible.
-        private static readonly string[] INTL_ERROR_PREFIXES =
-        {
-            "エラー：", // ja
-            "错误："    // zh-CHS
-        };
-
-        // ----------------------------------------------------------------------------------------------
-        // NOTE: This code is tested in the SkylineRunnerErrorDetectionTest in CommandLineTest.cs. 
-        // The code was copied to CommandLineTest.cs.  If any changes are made here, they should be copied
-        // over to make sure that the test passes.
-        // ---------------------------------------------------------------------------------------------------
-        private bool IsErrorLine(string line)
-        {
-            // The English prefix can happen in any culture when running Skyline-daily with a new
-            // untranslated error message.
-            if (HasErrorPrefix(line, "Error:", StringComparison.InvariantCulture))
-                return true;
-
-            return INTL_ERROR_PREFIXES.Any(p => HasErrorPrefix(line, p, StringComparison.CurrentCulture));
-        }
-
-        private static bool HasErrorPrefix(string line, string prefix, StringComparison comparisonType)
-        {
-            int prefixIndex = line.IndexOf(prefix, comparisonType);
-            if (prefixIndex == -1)
-                return false;
-            // The prefix could start the line or it could be preceded by a tab character
-            // if the output includes a timestamp or memory stamp.
-            return prefixIndex == 0 || line[prefixIndex - 1] == '\t';
         }
 
         private bool WaitForConnection(NamedPipeServerStream serverStream, string inPipeName)

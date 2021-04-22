@@ -39,6 +39,7 @@ using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using pwiz.SkylineRunner;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestData
@@ -3091,51 +3092,12 @@ namespace pwiz.SkylineTestData
         {
             var outputLines = output.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
 
-            // The IsErrorLine method from SkylineRunner should detect an error
-            var errorLine = outputLines.FirstOrDefault(IsErrorLine);
+            // The IsErrorLine method from ErrorChecker.cs in the SkylineRunner project should detect an error
+            var errorLine = outputLines.FirstOrDefault(ErrorChecker.IsErrorLine);
             Assert.IsFalse(string.IsNullOrEmpty(errorLine),
                 string.Format("Expected to find an error line in output: {0}", output));
             return errorLine;
         }
-
-        // --------------------------------------------------------------------------------------
-        // BEGIN: Code copied from the SkylineRunner project (Program.cs)
-        // SkylineRunner returns a non-zero error code when it sees "Error:" in the output from
-        // Skyline command-line.
-        // The code below is copied here so that we can test that SkylineRunner can detect error
-        // messages
-        // -- when output lines begin with timestamp or memstamp prefixes
-        // -- with Japanese and Chinese translations
-        // SkylineRunner cannot be localized since it is distributed as a single EXE.
-        // --------------------------------------------------------------------------------------
-        private static readonly string[] INTL_ERROR_PREFIXES =
-        {
-            "エラー：", // ja
-            "错误："    // zh-CHS
-        };
-
-        private bool IsErrorLine(string line)
-        {
-            // The English prefix can happen in any culture when running Skyline-daily with a new
-            // untranslated error message.
-            if (HasErrorPrefix(line, "Error:", StringComparison.InvariantCulture))
-                return true;
-
-            return INTL_ERROR_PREFIXES.Any(p => HasErrorPrefix(line, p, StringComparison.CurrentCulture));
-        }
-
-        private static bool HasErrorPrefix(string line, string prefix, StringComparison comparisonType)
-        {
-            int prefixIndex = line.IndexOf(prefix, comparisonType);
-            if (prefixIndex == -1)
-                return false;
-            // The prefix could start the line or it could be preceded by a tab character
-            // if the output includes a timestamp or memory stamp.
-            return prefixIndex == 0 || line[prefixIndex - 1] == '\t';
-        }
-        // --------------------------------------------------------------------------------------
-        // END: Code copied from the SkylineRunner project (Program.cs)
-        // --------------------------------------------------------------------------------------
 
         private static string GetTitleHelper()
         {
