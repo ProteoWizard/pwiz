@@ -183,6 +183,21 @@ void file_dirscan( OBJECT * dir, scanback func, void * closure )
 
 
 /*
+ * file_free_all() - frees cached information for all files
+ */
+
+void file_free_all()
+{
+    if ( filecache_hash )
+    {
+        hashenumerate( filecache_hash, free_file_info, (void *)0 );
+        hashdone( filecache_hash );
+        filecache_hash = hashinit( sizeof( file_info_t ), "file_info" );
+    }
+}
+
+
+/*
  * file_done() - module cleanup called on shutdown
  */
 

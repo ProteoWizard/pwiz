@@ -120,6 +120,9 @@ int filelist_empty( FILELIST * list );
 /* Internal utility worker functions. */
 void file_query_posix_( file_info_t * const );
 
+/* Frees cached information for all files. */
+void file_free_all();
+
 void file_done();
 
 #endif
