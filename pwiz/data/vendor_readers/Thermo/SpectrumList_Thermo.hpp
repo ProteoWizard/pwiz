@@ -26,13 +26,6 @@
 
 
 #include "pwiz/utility/misc/Export.hpp"
-#include "pwiz/data/msdata/SpectrumListBase.hpp"
-#include "pwiz/utility/misc/IntegerSet.hpp"
-#include "pwiz/utility/misc/Container.hpp"
-#include "pwiz/utility/misc/String.hpp"
-#include "pwiz/utility/misc/Stream.hpp"
-#include "pwiz/data/msdata/Reader.hpp"
-#include <boost/container/flat_map.hpp>
 
 
 #ifdef PWIZ_READER_THERMO
@@ -43,6 +36,13 @@
 using namespace pwiz::vendor_api::Thermo;
 #endif // PWIZ_READER_THERMO
 
+#include "pwiz/data/msdata/SpectrumListBase.hpp"
+#include "pwiz/utility/misc/IntegerSet.hpp"
+#include "pwiz/utility/misc/Container.hpp"
+#include "pwiz/utility/misc/String.hpp"
+#include "pwiz/utility/misc/Stream.hpp"
+#include "pwiz/data/msdata/Reader.hpp"
+#include <boost/container/flat_map.hpp>
 
 namespace pwiz {
 namespace msdata {
