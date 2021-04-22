@@ -1,5 +1,5 @@
 /*
-Copyright Rene Rivera 2011-2013
+Copyright Rene Rivera 2011-2015
 Distributed under the Boost Software License, Version 1.0.
 (See accompanying file LICENSE_1_0.txt or copy at
 http://www.boost.org/LICENSE_1_0.txt)
@@ -11,20 +11,21 @@ http://www.boost.org/LICENSE_1_0.txt)
 #include <boost/predef/version_number.h>
 #include <boost/predef/make.h>
 
-/*`
-[heading `BOOST_OS_VMS`]
+/* tag::reference[]
+= `BOOST_OS_VMS`
 
-[@http://en.wikipedia.org/wiki/Vms VMS] operating system.
+http://en.wikipedia.org/wiki/Vms[VMS] operating system.
 
-[table
-    [[__predef_symbol__] [__predef_version__]]
+[options="header"]
+|===
+| {predef_symbol} | {predef_version}
 
-    [[`VMS`] [__predef_detection__]]
-    [[`__VMS`] [__predef_detection__]]
+| `VMS` | {predef_detection}
+| `+__VMS+` | {predef_detection}
 
-    [[`__VMS_VER`] [V.R.P]]
-    ]
- */
+| `+__VMS_VER+` | V.R.P
+|===
+*/ // end::reference[]
 
 #define BOOST_OS_VMS BOOST_VERSION_NUMBER_NOT_AVAILABLE
 
@@ -46,8 +47,7 @@ http://www.boost.org/LICENSE_1_0.txt)
 
 #define BOOST_OS_VMS_NAME "VMS"
 
+#endif
+
 #include <boost/predef/detail/test.h>
 BOOST_PREDEF_DECLARE_TEST(BOOST_OS_VMS,BOOST_OS_VMS_NAME)
-
-
-#endif

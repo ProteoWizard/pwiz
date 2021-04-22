@@ -56,7 +56,7 @@ jobs:
             name: "macOS Latest Clang",
             os: macos-latest,
             compiler: 'latest clang',
-            toolset: 'toolset=gcc'
+            toolset: 'toolset=darwin'
           }
  
     # Using the value from the matrix above we select the platform (operating system) to run on
@@ -104,4 +104,4 @@ jobs:
 
       - name: Build
         shell: bash
-        run: ./quickbuild.sh --abbreviate-paths -j${{ steps.cpu-count.outputs.count }} pwiz executables ${{ matrix.config.toolset }}
+        run: ./quickbuild.sh --abbreviate-paths -j${{ steps.cpu-count.outputs.count }} address-model=64 pwiz executables ${{ matrix.config.toolset }}
