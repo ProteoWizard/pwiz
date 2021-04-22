@@ -209,6 +209,17 @@ static void free_timestamps( void * xbinding, void * data )
 }
 
 
+void time_free_all()
+{
+    if ( bindhash )
+    {
+        hashenumerate( bindhash, free_timestamps, 0 );
+    }
+    /*timestamp_done();
+    bindhash = hashinit( sizeof( BINDING ), "bindings" );*/
+}
+
+
 /*
  * timestamp_done() - free timestamp tables
  */
