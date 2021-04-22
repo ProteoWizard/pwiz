@@ -77,12 +77,14 @@ namespace pwiz.Skyline.Controls.Graphs
         public BrukerTimsTofMethodExporter.Metrics BrukerMetrics { get; set; }
 
         private bool _exportMethodDlg;
+        private ZedGraphControl _graphControl;
 
-        public RTScheduleGraphPane(GraphSummary graphSummary, bool isExportMethodDlg = false)
+        public RTScheduleGraphPane(GraphSummary graphSummary, ZedGraphControl graphControl, bool isExportMethodDlg = false)
             : base(graphSummary)
         {
             _exportMethodDlg = isExportMethodDlg;
-            _dataCalculator = new SchedulingDataCalculator(this);
+            _graphControl = graphControl;
+            _dataCalculator = new SchedulingDataCalculator(this, graphControl);
 
             XAxis.Title.Text = Resources.RTScheduleGraphPane_RTScheduleGraphPane_Scheduled_Time;
             YAxis.Scale.MinAuto = false;
@@ -148,7 +150,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             AxisChange();
-            GraphSummary.GraphControl.Invalidate();
+            _graphControl.Invalidate();
         }
 
         public void AddSchedulingCurve(string label, IPointList points, Color color)
@@ -250,12 +252,14 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private class SchedulingDataCalculator : GraphDataCalculator<InputData, Results>
         {
-            public SchedulingDataCalculator(RTScheduleGraphPane graphPane) : base(CancellationToken.None, graphPane.GraphSummary.GraphControl)
+            public SchedulingDataCalculator(RTScheduleGraphPane graphPane, ZedGraphControl graphControl) : base(CancellationToken.None, graphControl, graphPane)
             {
-                GraphPane = graphPane;
             }
 
-            public new RTScheduleGraphPane GraphPane { get; }
+            public new RTScheduleGraphPane GraphPane
+            {
+                get { return (RTScheduleGraphPane) base.GraphPane; }
+            }
 
             protected override Results CalculateResults(InputData input, CancellationToken cancellationToken)
             {
@@ -295,9 +299,18 @@ namespace pwiz.Skyline.Controls.Graphs
                     }
                     else
                     {
-                        BrukerTimsTofMethodExporter.GetScheduling(document,
-                            new ExportDlgProperties(new ExportMethodDlg(document, ExportFileType.Method), new CancellationToken()) { MethodType = ExportMethodType.Scheduled },
-                            input.BrukerTemplateFileValue, new SilentProgressMonitor(cancellationToken), out brukerPoints);
+                        try
+                        {
+                            BrukerTimsTofMethodExporter.GetScheduling(document,
+                                new ExportDlgProperties(new ExportMethodDlg(document, ExportFileType.Method),
+                                    new CancellationToken()) {MethodType = ExportMethodType.Scheduled},
+                                input.BrukerTemplateFileValue, new SilentProgressMonitor(cancellationToken),
+                                out brukerPoints);
+                        }
+                        catch (Exception)
+                        {
+                            // ignore "Scheduling failure (no points)" error
+                        }
                     }
 
                     return brukerPoints;
@@ -355,7 +368,7 @@ namespace pwiz.Skyline.Controls.Graphs
             public static IEnumerable<KeyValuePair<double, double>> GetOverlapCounts(
                 IEnumerable<PrecursorScheduleBase> schedules, double minTime, double maxTime, double stepSize)
             {
-                if (maxTime < minTime)
+                if (maxTime < minTime || double.IsNaN(maxTime) || double.IsNaN(minTime))
                 {
                     return Enumerable.Empty<KeyValuePair<double, double>>();
                 }
