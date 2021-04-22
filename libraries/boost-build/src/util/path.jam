@@ -502,6 +502,7 @@ rule makedirs ( path )
             }
         }
     }
+    RESCAN ;
     return $(result) ;
 }
 
