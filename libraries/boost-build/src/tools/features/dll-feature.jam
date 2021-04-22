@@ -18,7 +18,7 @@ in <<Frequently Asked Questions>> for details.
 
 feature.feature dll-path
     :
-    : free path ;
+    : free ;
 
 #| tag::hardcode-doc[]
 
