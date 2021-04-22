@@ -232,6 +232,7 @@ import toolset ;
 import type ;
 import virtual-target ;
 import version ;
+import targets ;
 
 
 type.register MANIFEST : manifest ;
@@ -275,6 +276,7 @@ and controls whether a manifest should be embedded via linker or manifest tool.
 feature.feature embed-manifest-via : mt linker : incidental propagated ;
 
 type.register PDB : pdb ;
+type.register CSPROJ : csproj ;
 
 
 ################################################################################
@@ -737,12 +739,23 @@ toolset.flags msvc YLOPTION : "-Yl" ;
 #
 actions compile-c-c++ bind PDB_NAME PCH_HEADER
 {
-    $(.SETUP) $(.CC) @($(<[1]:W).rsp:O=FC:<=@":>=":E="$(>[1]:W)" -c -Fo"$(<[1]:W)" $(PDB_CFLAG)"$(PDB_NAME)" -FI"$(PCH_HEADER)" -Yu"$(>[3]:D=)" -Fp"$(>[2]:W)" $(CC_RSPLINE)) $(.CC.FILTER)
+    $(.SETUP) $(.CC) @($(<[1]:W).rsp:O=FC:<=@":>=":E="$(>[1]:W)" -c -Fo"$(<[1]:W)" $(PDB_CFLAG)"$(PDB_NAME)" -FI"$(PCH_HEADER)" -Yu"$(>[3]:D=)" -Fp"$(>[2]:W)" $(CC_RSPLINE)) $(.CC.FILTER) > "$(<[1]:W).out"
+    set status=%ERRORLEVEL%
+    findstr /V /X "$(>[1]:D=)" "$(<[1]:W).out"
+    exit %status%
 }
 
 actions preprocess-c-c++ bind PDB_NAME PCH_HEADER
 {
     $(.SETUP) $(.CC) @($(<[1]:W).rsp:O=FC:<=@":>=":E="$(>[1]:W)" -P -Fi"$(<[1]:W)" $(PDB_CFLAG)"$(PDB_NAME)" -FI"$(PCH_HEADER)" -Yu"$(>[3]:D=)" -Fp"$(>[2]:W)" $(CC_RSPLINE))
+}
+
+actions compile-c++clr
+{
+    $(.SETUP) $(.CC) @($(<[1]:W).rsp:O=FC:<=@":>=":E="$(>[1]:W)" -c -Fo"$(<[1]:W)" -Yu"$(>[3]:D=)" -Fp"$(>[2]:W)" /clr $(ASSEMBLY_INCLUDE_PATHS) $(ASSEMBLIES) $(CC_RSPLINE)) $(.CC.FILTER)" > "$(<[1]:W).out"
+    set status=%ERRORLEVEL%
+    findstr /V /X "$(>[1]:D=)" "$(<[1]:W).out"
+    exit %status%
 }
 
 rule compile-c-c++ ( targets + : sources * )
@@ -769,7 +782,10 @@ rule preprocess-c-c++ ( targets + : sources * )
 # syntax highlighting in the messy N-quoted code below.
 actions compile-c-c++-pch
 {
-    $(.SETUP) $(.CC) @($(<[1]:W).rsp:O=FC:<=@":>=":E="$(>[2]:W)" -c -Fo"$(<[2]:W)" -Yc"$(>[1]:D=)" $(YLOPTION)"__bjam_pch_symbol_$(>[1]:D=)" -Fp"$(<[1]:W)" $(CC_RSPLINE)) @($(<[1]:W).cpp:<=":>=":E=$(.hash)include $(.escaped-double-quote)$(>[1]:D=)$(.escaped-double-quote)$(.nl)) $(.CC.FILTER)
+    $(.SETUP) $(.CC) @($(<[1]:W).rsp:O=FC:<=@":>=":E="$(>[2]:W)" -c -Fo"$(<[2]:W)" -Yc"$(>[1]:D=)" $(YLOPTION)"__bjam_pch_symbol_$(>[1]:D=)" -Fp"$(<[1]:W)" $(CC_RSPLINE)) @($(<[1]:W).cpp:<=":>=":E=$(.hash)include $(.escaped-double-quote)$(>[1]:D=)$(.escaped-double-quote)$(.nl)) $(.CC.FILTER) > "$(<[1]:W).out"
+    set status=%ERRORLEVEL%
+    findstr /V /X "$(>[1]:D=)" "$(<[1]:W).out"
+    exit %status%
 }
 
 
@@ -778,7 +794,10 @@ actions compile-c-c++-pch
 # given as one of the source parameters.
 actions compile-c-c++-pch-s
 {
-    $(.SETUP) $(.CC) @($(<[1]:W).rsp:O=FC:<=@":>=":E="$(>[2]:W)" -c -Fo"$(<[2]:W)" -Yc"$(>[1]:D=)" $(YLOPTION)"__bjam_pch_symbol_$(>[1]:D=)" -Fp"$(<[1]:W)" $(CC_RSPLINE)) $(.CC.FILTER)
+    $(.SETUP) $(.CC) @($(<[1]:W).rsp:O=FC:<=@":>=":E="$(>[2]:W)" -c -Fo"$(<[2]:W)" -Yc"$(>[1]:D=)" $(YLOPTION)"__bjam_pch_symbol_$(>[1]:D=)" -Fp"$(<[1]:W)" $(CC_RSPLINE)) $(.CC.FILTER) > "$(<[1]:W).out"
+    set status=%ERRORLEVEL%
+    findstr /V /X "$(>[1]:D=)" "$(<[1]:W).out"
+    exit %status%
 }
 
 
@@ -794,6 +813,62 @@ rule compile.c++.preprocess ( targets + : sources * : properties * )
     set-setup-command $(targets) : $(properties) ;
     get-rspline $(targets) : -TP C++FLAGS ;
     preprocess-c-c++ $(<) : $(>) [ on $(<) return $(PCH_FILE) ] [ on $(<) return $(PCH_HEADER) ] ;
+}
+
+import sequence ;
+rule set-assemblies ( target : properties * )
+{
+    local assemblies-string ;
+    local assemblies = [ feature.get-values <assembly> : $(properties) ] ;
+    if $(assemblies)
+    {
+        for local assembly in $(assemblies)
+        {
+            local assembly-path = [ $(assembly).name ] ;
+            if $(assembly-path:S) != ".pdb"
+            {
+                if ! [ path.is-rooted $(assembly-path) ]
+                {
+                    assembly-path = [ path.join [ $(assembly).path ] $(assembly-path:D=) ] ;
+                }
+                assembly-path = [ path.native $(assembly-path) ] ;
+                assemblies-string += " /FU\"$(assembly-path)\"" ;
+            }
+        }
+    }
+    ASSEMBLIES on $(target) = $(assemblies-string) ;
+
+    # add /AI flags for each assembly-dependency's (unique) directory
+    local assembly-include-string ;
+    local assembly-dependencies = [ feature.get-values <assembly-dependency> : $(properties) ] ;
+    if $(assembly-dependencies)
+    {
+        local assembly-include-paths ;
+        for local dependency in $(assembly-dependencies)
+        {
+            local dependency-path = [ $(dependency).name ] ;
+            if ! [ path.is-rooted $(dependency-path) ]
+            {
+                dependency-path = [ path.join [ $(dependency).path ] $(dependency-path:D=) ] ;
+            }
+            dependency-path = [ path.native $(dependency-path) ] ;
+            dependency-path = $(dependency-path:D) ;
+            if ! $(dependency-path) in $(assembly-include-paths)
+            {
+                assembly-include-paths += $(dependency-path) ;
+                assembly-include-string += " /AI\"$(dependency-path)\"" ;
+            }
+        }
+    }
+    ASSEMBLY_INCLUDE_PATHS on $(target) = $(assembly-include-string) ;
+}
+
+rule compile.c++clr ( targets + : sources * : properties * )
+{
+    set-setup-command $(targets) : $(properties) ;
+    set-assemblies $(<[1]) : $(properties) ;
+    get-rspline $(targets) : -TP C++FLAGS ;
+    compile-c++clr $(<) : $(>) [ on $(<) return $(PCH_FILE) ] [ on $(<) return $(PCH_HEADER) ] ;
 }
 
 
@@ -839,6 +914,39 @@ actions compile.mc
 }
 
 
+rule compile.msbuild ( targets + : sources * : properties * )
+{
+    set-setup-command $(targets) : $(properties) ;
+    if <variant>debug in $(properties)
+    {
+        CONFIGURATION on $(<[1]) = "Debug" ;
+    }
+    else
+    {
+        CONFIGURATION on $(<[1]) = "Release" ;
+    }
+    
+    if <address-model>64 in $(properties)
+    {
+        PLATFORM on $(<[1]) = "x64" ;
+    }
+    else
+    {
+        PLATFORM on $(<[1]) = "x86" ;
+    }
+
+    location = [ path.make [ feature.get-values location : $(properties) ] ] ;
+    OUTPUT_PATH on $(<[1]) = [ path.native $(location) ] ; # OutDir requires trailing slash
+    #INTERMEDIATE_PATH on $(<[1]) = [ path.native "$(location)/../obj" ] ; ";BaseIntermediateOutputPath=$(INTERMEDIATE_PATH)\"
+    JAM_SEMAPHORE on $(targets) = "dotNetSemaphore" ;
+}
+
+actions compile.msbuild bind CONFIGURATION PLATFORM INTERMEDIATE_PATH OUTPUT_PATH
+{
+    $(.SETUP) $(.MSBUILD) "$(>)" /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH)\ /nologo /verbosity:minimal
+}
+
+
 rule compile.rc ( targets + : sources * : properties * )
 {
     set-setup-command $(targets) : $(properties) ;
@@ -851,9 +959,137 @@ actions compile.rc
 
 toolset.uses-features msvc.link : <embed-manifest> <embed-manifest-file> ;
 
+rule copy-assemblies ( target : properties * )
+{
+    # .NET assemblies and their native DLL dependencies must be copied to the target's directory
+    local assemblies = [ feature.get-values <assembly> : $(properties) ] ;
+    assemblies += [ feature.get-values <assembly-dependency> : $(properties) ] ;
+    if $(assemblies)
+    {
+        local target-path = [ on $(target) return $(LOCATE) ] ;
+        for local assembly in $(assemblies)
+        {
+            local assembly-path = [ $(assembly).name ] ;
+            if ! [ path.is-rooted $(assembly-path) ]
+            {
+                assembly-path = [ path.join [ $(assembly).path ] $(assembly-path:D=) ] ;
+            }
+            assembly-path = [ path.native $(assembly-path) ] ;
+            local assembly-at-target-filepath = [ path.native [ path.join $(target-path) $(assembly-path:D=) ] ] ;
+
+            if $(assembly-at-target-filepath:L) != $(assembly-path:L) &&
+               ! ( $(assembly-at-target-filepath:L) in $(.unique-targets) )
+            {
+                .unique-targets += $(assembly-at-target-filepath:L) ;
+                if ! [ CHECK_IF_FILE $(assembly-at-target-filepath:L) ]
+                {
+                    common.hard-link $(assembly-at-target-filepath) : $(assembly-path) ;
+                    DEPENDS $(assembly-at-target-filepath) : $(target-path) [ $(assembly).actualize ] ;
+                    DEPENDS $(target) : $(assembly-at-target-filepath) ;
+                    #JAM_SEMAPHORE on $(target-filepath) = "dotNetSemaphore" ;
+                    #JAM_SEMAPHORE on $(target) = "dotNetSemaphore" ;
+                }
+            }
+        }
+    }
+
+    # TODO: figure out a better way to specify subdirectories for assembly-dependencies
+    local assemblies-ex = [ feature.get-values <assembly-dependency-ex> : $(properties) ] ;
+    if $(assemblies-ex)
+    {
+        local target-path = [ on $(target) return $(LOCATE) ] ;
+        for local assembly in $(assemblies-ex)
+        {
+            local assembly-parts = [ SPLIT_BY_CHARACTERS $(assembly) : "|" ] ;
+            local assembly-path = $(assembly-parts[1]) ;
+            if ( $(assembly-parts[2]) )
+            {
+                local features = [ feature.split $(assembly-parts[2]) ] ;
+                this-target-path = [ path.native [ path.join $(target-path) [ feature.get-values <location-prefix> : $(features) ] ] ] ;
+            }
+
+            if ! [ path.is-rooted $(assembly-path) ]
+            {
+                # error?
+            }
+
+            assembly-path = [ path.native $(assembly-path) ] ;
+            local assembly-at-target-filepath = [ path.native [ path.join $(this-target-path) $(assembly-path:D=) ] ] ;
+            
+            if $(this-target-path) != $(assembly-path) &&
+               ! ( $(this-target-path) in $(.unique-targets) )
+            {
+                .unique-targets += $(this-target-path) ;
+                common.mkdir $(this-target-path) ;
+            }
+
+            if $(assembly-at-target-filepath) != $(assembly-path) &&
+               ! ( $(assembly-at-target-filepath) in $(.unique-targets) )
+            {
+                .unique-targets += $(assembly-at-target-filepath) ;
+                if ! [ CHECK_IF_FILE $(assembly-at-target-filepath) ]
+                {
+                    common.hard-link $(assembly-at-target-filepath) : $(assembly-path) ;
+                    DEPENDS $(assembly-at-target-filepath) : $(this-target-path) $(assembly-path) ;
+                    DEPENDS $(target) : $(assembly-at-target-filepath) ;
+                    #JAM_SEMAPHORE on $(target-filepath) = "dotNetSemaphore" ;
+                    #JAM_SEMAPHORE on $(target) = "dotNetSemaphore" ;
+                }
+            }
+        }
+    }
+
+    # .NET applications may need a side-by-side configuration file that must be named like $(target).exe.config
+    local configuration-file = [ feature.get-values <configuration-file> : $(properties) ] ;
+    if $(configuration-file)
+    {
+        local target-path = [ on $(target) return $(LOCATE) ] ;
+        local configuration-file-path = [ $(configuration-file).name ] ;
+        if ! [ path.is-rooted $(configuration-file-path) ]
+        {
+            configuration-file-path = [ path.join [ $(configuration-file).path ] $(configuration-file-path:D=) ] ;
+        }
+        configuration-file-path = [ path.native $(configuration-file-path) ] ;
+        local target-filepath = [ path.native [ path.join $(target-path) $(configuration-file-path:D=) ] ] ;
+        if $(target-filepath) != $(configuration-file-path) &&
+           ! ( $(configuration-file-path) in $(.unique-targets) )
+        {
+            .unique-targets += $(configuration-file-path) ;
+            common.hard-link $(target-filepath) : $(configuration-file-path) ;
+            DEPENDS $(target-filepath) : $(target-path) ;
+            DEPENDS $(target) : $(target-filepath) ;
+            #JAM_SEMAPHORE on $(target-filepath) = "dotNetSemaphore" ;
+            #JAM_SEMAPHORE on $(target) = "dotNetSemaphore" ;
+        }
+    }
+}
+
+local rule set-manifest-dependencies ( target : properties * )
+{
+    local manifest-dependencies-string ;
+    local manifest-dependencies = [ feature.get-values <manifest-dependency> : $(properties) ] ;
+    if $(manifest-dependencies)
+    {
+        # type='win32' name='<assembly_basename>' version='<assembly_version>'
+        for local dependency in $(manifest-dependencies)
+        {
+            local dependency-path = [ path.native [ $(dependency).name ] ] ;
+            local dependency-version = [ MATCH "FileVersion:     ([0-9\\.]+)" : [ SHELL "ShowVer.exe $(dependency-path)" ] ] ;
+            
+            # unknown version will cause a runtime-error; is there a better solution?
+            dependency-version ?= "unknown" ;
+            
+            # the name of the manifest can not match the basename of the DLL because of a Windows XP loader bug
+            manifest-dependencies-string += " /MANIFESTDEPENDENCY:\"type='win32' name='$(dependency-path:B).SxS' version='$(dependency-version)'\"" ;
+        }
+    }
+    MANIFEST_DEPENDENCIES on $(target) = $(manifest-dependencies-string) ;
+}
+
 rule link ( targets + : sources * : properties * )
 {
     set-setup-command $(targets) : $(properties) ;
+    set-manifest-dependencies $(<[1]) : $(properties) ;
     if <embed-manifest>on in $(properties) && <embed-manifest-via>mt in $(properties)
     {
         if [ feature.get-values <embed-manifest-file> : $(properties) ]
@@ -866,11 +1102,13 @@ rule link ( targets + : sources * : properties * )
             msvc.manifest $(targets) : $(sources) : $(properties) ;
         }
     }
+    copy-assemblies $(<[1]) : $(properties) ;
 }
 
 rule link.dll ( targets + : sources * : properties * )
 {
     set-setup-command $(targets) : $(properties) ;
+    set-manifest-dependencies $(<[1]) : $(properties) ;
     DEPENDS $(<) : [ on $(<) return $(DEF_FILE) ] ;
     local import-lib ;
     if ! <suppress-import-lib>true in $(properties)
@@ -900,6 +1138,19 @@ rule link.dll ( targets + : sources * : properties * )
             msvc.manifest.dll $(targets) : $(sources) : $(properties) ;
         }
     }
+    copy-assemblies $(<[1]) : $(properties) ;
+}
+
+rule link.clr.dll ( targets + : sources * : properties * )
+{
+    set-setup-command $(targets) : $(properties) ;
+    set-manifest-dependencies $(<[1]) : $(properties) ;
+    DEPENDS $(<) : [ on $(<) return $(DEF_FILE) ] ;
+    if <embed-manifest>on in $(properties)
+    {
+        msvc.manifest.dll $(targets) : $(sources) : $(properties) ;
+    }
+    copy-assemblies $(<[1]) : $(properties) ;
 }
 
 # Incremental linking a DLL causes no end of problems: if the actual exports do
@@ -915,7 +1166,7 @@ rule link.dll ( targets + : sources * : properties * )
 {
     actions link bind DEF_FILE LIBRARIES_MENTIONED_BY_FILE MANIFEST_FILE
     {
-        $(.SETUP) $(.LD) @($(<[1]:W).rsp:O=FC:<=@":>=":E="$(>)" $(LIBRARIES_MENTIONED_BY_FILE) $(LIBRARIES) "$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" "$(LIBRARY_OPTION)$(FINDLIBS_SA).lib") $(LINKOPT) $(LINKFLAGS) /out:"$(<[1]:W)" /LIBPATH:"$(LINKPATH:W)" /MANIFESTINPUT:"$(MANIFEST_FILE)"
+        $(.SETUP) $(.LD) @($(<[1]:W).rsp:O=FC:<=@":>=":E="$(>)" $(LIBRARIES_MENTIONED_BY_FILE) $(LIBRARIES) "$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" "$(LIBRARY_OPTION)$(FINDLIBS_SA).lib") $(LINKOPT) $(LINKFLAGS) /out:"$(<[1]:W)" /LIBPATH:"$(LINKPATH:W)" /MANIFESTINPUT:"$(MANIFEST_FILE)" $(MANIFEST_DEPENDENCIES)
     }
 
     actions manifest
@@ -928,14 +1179,22 @@ rule link.dll ( targets + : sources * : properties * )
         $(.SETUP) $(.MT) -manifest "$(EMBED_MANIFEST_FILE)" "-outputresource:$(<[1]);1"
     }
 
+
     actions link.dll bind IMPORT_LIB DEF_FILE LIBRARIES_MENTIONED_BY_FILE MANIFEST_FILE
     {
-        $(.SETUP) $(.LD) @($(<[1]:W).rsp:O=FC:<=@":>=":E="$(>)" $(LIBRARIES_MENTIONED_BY_FILE) $(LIBRARIES) "$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" "$(LIBRARY_OPTION)$(FINDLIBS_SA).lib") $(LINKOPT) $(LINKFLAGS) /out:"$(<[1]:W)" /LIBPATH:"$(LINKPATH:W)" /MANIFESTINPUT:"$(MANIFEST_FILE)" /DLL /IMPLIB:"$(IMPORT_LIB:W)" /def:"$(DEF_FILE)"
+        $(.SETUP) $(.LD) @($(<[1]:W).rsp:O=FC:<=@":>=":E="$(>)" $(LIBRARIES_MENTIONED_BY_FILE) $(LIBRARIES) "$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" "$(LIBRARY_OPTION)$(FINDLIBS_SA).lib") $(LINKOPT) $(LINKFLAGS) /out:"$(<[1]:W)" /LIBPATH:"$(LINKPATH:W)" /MANIFESTINPUT:"$(MANIFEST_FILE)" /DLL /IMPLIB:"$(IMPORT_LIB:W)" /def:"$(DEF_FILE)" $(MANIFEST_DEPENDENCIES)
+    }
+
+    actions link.clr.dll bind DEF_FILE LIBRARIES_MENTIONED_BY_FILE MANIFEST_FILE
+    {
+        $(.SETUP) $(.LD) @($(<[1]:W).rsp:O=FC:<=@":>=":E="$(>)" $(LIBRARIES_MENTIONED_BY_FILE) $(LIBRARIES) "$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" "$(LIBRARY_OPTION)$(FINDLIBS_SA).lib") $(LINKOPT) $(LINKFLAGS) /out:"$(<[1]:W)" /LIBPATH:"$(LINKPATH:W)" /MANIFESTINPUT:"$(MANIFEST_FILE)" /DLL /def:"$(DEF_FILE)" $(MANIFEST_DEPENDENCIES)
     }
 
     actions manifest.dll
     {
+        if exist "$(<[1]).manifest" (
         $(.SETUP) $(.MT) -manifest "$(<[1]).manifest" "-outputresource:$(<[1]);2"
+        )
     }
 
     actions manifest.dll.user bind EMBED_MANIFEST_FILE
@@ -1639,6 +1898,7 @@ local rule configure-really ( version ? : options * )
                 toolset.flags msvc.compile .RC  <windows-api>$(api)/$(cpu-conditions) : $(resource-compiler) ;
                 toolset.flags msvc.compile .IDL <windows-api>$(api)/$(cpu-conditions) : $(idl-compiler) ;
                 toolset.flags msvc.compile .MC  <windows-api>$(api)/$(cpu-conditions) : $(mc-compiler) ;
+                toolset.flags msvc.compile .MSBUILD <windows-api>$(api)/$(cpu-conditions) : msbuild ;
                 toolset.flags msvc.link    .MT  <windows-api>$(api)/$(cpu-conditions) : $(manifest-tool) -nologo ;
 
                 if $(api) = desktop
@@ -1839,6 +2099,31 @@ class msvc-linking-generator : linking-generator
     }
 }
 
+class msvc-msbuild-generator : linking-generator
+{
+    rule generated-targets ( sources + : property-set : project name ? )
+    {
+        local result = [ linking-generator.generated-targets $(sources)
+          : $(property-set) : $(project) $(name) ] ;
+        return $(result) ;
+    }
+}
+
+rule msbuild ( name : sources * : requirements * : default-build * : usage-requirements * )
+{
+    local project = [ project.current ] ;
+
+    requirements += <allow>msvc.compile.msbuild ;
+
+    targets.main-target-alternative
+        [ new typed-target $(name) : $(project) : EXE
+            : [ targets.main-target-sources $(sources) : $(name) ]
+            : [ targets.main-target-requirements $(requirements) : $(project) ]
+            : [ targets.main-target-default-build $(default-build) : $(project) ]
+        ] ;
+}
+IMPORT msvc : msbuild : : msbuild ;
+
 
 # Unsafe worker rule for the register-toolset() rule. Must not be called
 # multiple times.
@@ -1863,8 +2148,22 @@ local rule register-toolset-really ( )
     # Declare msvc toolset specific features.
     {
         feature.feature debug-store : object database : propagated ;
+        feature.feature debug-store-compress : on off : propagated ;
         feature.feature pch-source  :                 : dependency free ;
+        feature.feature secure-scl          : default on off        : propagated ;
+        feature.feature iterator-debugging  : default on off        : propagated ;
+        feature.feature runtime-checks      : off on                : propagated ;
+        feature.feature assembly            :                       : free dependency ;
+        feature.feature assembly-dependency :                       : free dependency ;
+        feature.feature assembly-dependency-ex :                    : free ;
+        feature.feature manifest-dependency :                       : free dependency ;
+        feature.feature configuration-file  :                       : free dependency ;
+        feature.feature using-clr           : false true            : composite ;
+        feature.compose <using-clr>true     : <asynch-exceptions>on <runtime-link>shared ;
     }
+
+    toolset.add-requirements <runtime-checks>on:<optimization>off ;
+    toolset.add-requirements <using-clr>true:<runtime-checks>off ;
 
     # Declare generators.
     {
@@ -1879,9 +2178,14 @@ local rule register-toolset-really ( )
         generators.register [ new msvc-linking-generator msvc.link.dll :
             OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB : SHARED_LIB :
             <toolset>msvc <suppress-import-lib>true ] ;
+        generators.register [ new msvc-linking-generator 
+            msvc.link.clr.dll : OBJ SEARCHED_LIB STATIC_LIB : SHARED_LIB : <toolset>msvc <using-clr>true ] ;
+        generators.override msvc.link.clr.dll : msvc.link.dll ;
 
         generators.register-archiver msvc.archive : OBJ : STATIC_LIB : <toolset>msvc ;
         generators.register-c-compiler msvc.compile.c++ : CPP : OBJ : <toolset>msvc ;
+        generators.register-c-compiler msvc.compile.c++clr : CPP : OBJ : <toolset>msvc <using-clr>true ;
+        generators.override msvc.compile.c++clr : msvc.compile.c++ ;
         generators.register-c-compiler msvc.compile.c : C : OBJ : <toolset>msvc ;
         generators.register-c-compiler msvc.compile.c++.preprocess : CPP : PREPROCESSED_CPP : <toolset>msvc ;
         generators.register-c-compiler msvc.compile.c.preprocess : C : PREPROCESSED_C : <toolset>msvc ;
@@ -1896,6 +2200,9 @@ local rule register-toolset-really ( )
 
         generators.register-standard msvc.compile.mc : MC : H RC : <toolset>msvc ;
         generators.override msvc.compile.mc : mc.compile ;
+
+        generators.register [ new msvc-msbuild-generator msvc.compile.msbuild : CSPROJ : EXE : <toolset>msvc <allow>msvc.compile.msbuild ] ;
+        generators.override msvc.compile.msbuild : msvc.link ;
 
         # Note: the 'H' source type will catch both '.h' and '.hpp' headers as
         # the latter have their HPP type derived from H. The type of compilation
@@ -1915,11 +2222,21 @@ local rule register-toolset-really ( )
     # Declare flags for compilation.
     #
 
+    # By default 10.0 sets _SECURE_SCL=0 for release builds while prior versions set _SECURE_SCL=1.
+    # We enable or disable it explicitly so we do not have to depend on this
+    # default behaviour.
+    toolset.flags msvc.compile OPTIONS <secure-scl>on/<debug-symbols>off : -D_SECURE_SCL=1 ;
+    toolset.flags msvc.compile OPTIONS <secure-scl>off : -D_SECURE_SCL=0 ;
+
+    toolset.flags msvc.compile OPTIONS  <iterator-debugging>default : ;
+    toolset.flags msvc.compile OPTIONS  <iterator-debugging>on/<variant>debug : -D_ITERATOR_DEBUG_LEVEL=1 ;
+    toolset.flags msvc.compile OPTIONS  <iterator-debugging>on/<variant>release : -D_ITERATOR_DEBUG_LEVEL=2 ;
+    toolset.flags msvc.compile OPTIONS  <iterator-debugging>off : -D_ITERATOR_DEBUG_LEVEL=0 ;
+
+    toolset.flags msvc.compile OPTIONS <runtime-checks>on : "/RTCs /bigobj" ;
+
     toolset.flags msvc.compile OPTIONS <optimization>speed : /O2 ;
     toolset.flags msvc.compile OPTIONS <optimization>space : /O1 ;
-
-    toolset.flags msvc.compile OPTIONS $(.cpu-arch-ia64)/<instruction-set>$(.cpu-type-itanium) : /G1 ;
-    toolset.flags msvc.compile OPTIONS $(.cpu-arch-ia64)/<instruction-set>$(.cpu-type-itanium2) : /G2 ;
 
     toolset.flags msvc.compile OPTIONS <debug-symbols>on/<debug-store>object : /Z7 ;
     toolset.flags msvc.compile OPTIONS <debug-symbols>on/<debug-store>database : /Zi ;
@@ -1958,6 +2275,7 @@ local rule register-toolset-really ( )
 
     toolset.flags msvc.compile CFLAGS <cflags> : ;
     toolset.flags msvc.compile.c++ C++FLAGS <cxxflags> : ;
+    toolset.flags msvc.compile.c++clr C++FLAGS <cxxflags> : ;
 
     toolset.flags msvc.compile PDB_CFLAG <debug-symbols>on/<debug-store>database : /Fd ;
 
@@ -1965,6 +2283,7 @@ local rule register-toolset-really ( )
     toolset.flags msvc.compile UNDEFS <undef> ;
     toolset.flags msvc.compile INCLUDES <include> ;
     toolset.flags msvc.compile FORCE_INCLUDES <force-include> ;
+    toolset.flags msvc.compile ASSEMBLIES <assembly> ;
 
     # Declare flags for the assembler.
     toolset.flags msvc.compile.asm USER_ASMFLAGS <asmflags> ;
@@ -1982,8 +2301,10 @@ local rule register-toolset-really ( )
     {
         toolset.flags msvc.link PDB_LINKFLAG <debug-symbols>on/<debug-store>database : "/PDB:" ;  # not used yet
         toolset.flags msvc.link LINKFLAGS <debug-symbols>on : /DEBUG ;
+        toolset.flags msvc.link LINKFLAGS <debug-store-compress>on : /PDBCOMPRESS ;
         toolset.flags msvc.link DEF_FILE <def-file> ;
         toolset.flags msvc.link MANIFEST_FILE <embed-manifest-via>linker : <embed-manifest-file> ;
+        toolset.flags msvc.link ASSEMBLIES <assembly> ;
 
         # The linker disables the default optimizations when using /DEBUG so we
         # have to enable them manually for release builds with debug symbols.
