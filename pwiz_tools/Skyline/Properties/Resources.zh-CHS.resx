@@ -1607,10 +1607,6 @@
   <data name="ToolMacros__listArguments_Document_Path" xml:space="preserve">
     <value>文档路径</value>
   </data>
-  <data name="PanoramaHelper_ValidateServer_" xml:space="preserve">
-    <value>在尝试验证 Panorama 服务器信息时出现未知错误。
-{0}</value>
-  </data>
   <data name="SkylineViewContext_GetDocumentGridRowSources_Precursors" xml:space="preserve">
     <value>母离子</value>
   </data>
@@ -5156,10 +5152,6 @@
   </data>
   <data name="SkylineWindow_ImportMassList_Finishing_up_import" xml:space="preserve">
     <value>正在完成导入</value>
-  </data>
-  <data name="PanoramaHelper_ValidateFolder_" xml:space="preserve">
-    <value>尝试验证访问服务器 {1} 上的 Panorama 文件夹 {0} 时发生未知错误。
-{2}</value>
   </data>
   <data name="DoconvolutionMethod_NONE_None" xml:space="preserve">
     <value>无</value>
@@ -10010,10 +10002,6 @@
     <value>尝试上传至 Panorama 时出现未知错误。
 {0}</value>
   </data>
-  <data name="CommandArgs_PanoramaArgsComplete_plural_" xml:space="preserve">
-    <value>请为向 Panorma 上传文档时需要的以下参数指定一个值：
-{0}</value>
-  </data>
   <data name="SkylineWindow_ShowPublishDlg_The_document_must_be_fully_loaded_before_it_can_be_uploaded_" xml:space="preserve">
     <value>文档必须在可以上传之前完全加载。</value>
   </data>
@@ -10034,10 +10022,6 @@
   </data>
   <data name="PublishDocumentDlg_btnBrowse_Click_Upload_Document" xml:space="preserve">
     <value>上传文档</value>
-  </data>
-  <data name="CommandArgs_PanoramaArgsComplete_" xml:space="preserve">
-    <value>请为向 Panorma 上传文档时需要的以下参数指定一个值：
-{0}</value>
   </data>
   <data name="FullScanAcquisitionMethod_FromName__0__is_not_a_valid_Full_Scan_Acquisition_Method" xml:space="preserve">
     <value>{0} 不是有效的全扫描采集方法</value>
@@ -11062,5 +11046,8 @@ Invalid peptide sequence at position 18
   </data>
   <data name="MetadataRuleSetList_Label_Rule_Set" xml:space="preserve">
     <value>规则集</value>
+  </data>
+  <data name="CommandStatusWriter_WriteLine_Error_" xml:space="preserve">
+    <value>错误：</value>
   </data>
 </root>
