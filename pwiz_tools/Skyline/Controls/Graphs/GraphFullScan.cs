@@ -41,7 +41,7 @@ using Transition = pwiz.Skyline.Model.Transition;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    public partial class GraphFullScan : DockableFormEx, IGraphContainer
+    public partial class GraphFullScan : DockableFormEx, IGraphContainer, IMzScaleCopyable
     {
         private const int MIN_DOT_RADIUS = 4;
         private const int MAX_DOT_RADIUS = 13;
@@ -57,6 +57,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private readonly MsDataFileScanHelper _msDataFileScanHelper;
         private LibraryRankedSpectrumInfo _rmis;
         private int[] _transitionIndex;
+        private MzRange _requestedRange;
 
         private bool _showIonSeriesAnnotations;
 
@@ -118,6 +119,7 @@ namespace pwiz.Skyline.Controls.Graphs
             _maxIntensity = 0;
             GetMaxMzIntensity(out _maxMz, out _maxIntensity);
             GetMaxMobility(out _maxIonMobility);
+            _requestedRange = new MzRange() {Min = 0, Max = _maxMz * 1.1};
 
             if (_zoomXAxis)
             {
@@ -839,9 +841,24 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             else
             {
-                xScale.Min = 0;
-                xScale.Max = _maxMz * 1.1;
+                xScale.Min = _requestedRange.Min;
+                xScale.Max = _requestedRange.Max;
             }
+        }
+
+        public void SetMzScale(MzRange range)
+        {
+            _requestedRange = range;
+            if(magnifyBtn.Checked)
+                magnifyBtn.Checked = false;
+            else
+                ZoomXAxis();
+            _requestedRange = new MzRange(){Min = 0, Max = _maxMz * 1.1};
+            graphControl.Invalidate();
+        }
+        public MzRange Range
+        {
+            get { return new MzRange() {Min = GraphPane.XAxis.Scale.Min, Max = GraphPane.XAxis.Scale.Max}; }
         }
 
         private void ZoomYAxis()
@@ -1047,9 +1064,11 @@ namespace pwiz.Skyline.Controls.Graphs
         private void graphControl_ContextMenuBuilder(ZedGraphControl sender, ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
         {
             //ZedGraphHelper.BuildContextMenu(graphControl, menuStrip, true);
+            menuStrip.Tag = this;
             showScanNumberContextMenuItem.Checked = Settings.Default.ShowFullScanNumber;
-            menuStrip.Items.Add(showScanNumberContextMenuItem);
-            menuStrip.Items.Add(showIonTypesRanksToolStripMenuItem);
+            menuStrip.Items.Insert(0, showScanNumberContextMenuItem);
+            menuStrip.Items.Insert(1, showIonTypesRanksToolStripMenuItem);
+            menuStrip.Items.Insert(2, toolStripSeparator1);
 
             var currentTransition =
                 _msDataFileScanHelper.ScanProvider.Transitions[_msDataFileScanHelper.TransitionIndex];

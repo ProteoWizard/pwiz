@@ -57,7 +57,13 @@ namespace pwiz.Skyline.Controls.Graphs
         void LockYAxis(bool lockY);
     }
 
-    public partial class GraphSpectrum : DockableFormEx, IGraphContainer
+    public interface IMzScaleCopyable
+    {
+        void SetMzScale(MzRange range);
+        MzRange Range { get; }
+    }
+    
+    public partial class GraphSpectrum : DockableFormEx, IGraphContainer, IMzScaleCopyable
     {
 
         private static readonly double YMAX_SCALE = 1.25;
@@ -1245,6 +1251,20 @@ namespace pwiz.Skyline.Controls.Graphs
             graphControl.Refresh();
         }
 
+        public void SetMzScale(MzRange range)
+        {
+            ZoomXAxis(GraphPane.XAxis, range.Min, range.Max);
+            graphControl.Invalidate();
+        }
+        public MzRange Range
+        {
+            get {return new MzRange() {Min = GraphPane.XAxis.Scale.Min, Max = GraphPane.XAxis.Scale.Max};}
+        }
+
+        public double MzMax
+        {
+            get { return GraphPane.XAxis.Scale.Max; }
+        }
 
 // ReSharper disable SuggestBaseTypeForParameter
         private static TransitionGroupDocNode[] GetChargeGroups(PeptideTreeNode nodeTree, bool requireLibInfo)
@@ -1267,6 +1287,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private void graphControl_ContextMenuBuilder(ZedGraphControl sender,
             ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
         {
+            menuStrip.Tag = this;
             var isProteomic = _nodeGroup == null || !_nodeGroup.IsCustomIon;
             _stateProvider.BuildSpectrumMenu(isProteomic, sender, menuStrip);
         }
@@ -1602,5 +1623,10 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public SpectrumDisplayInfo Spectrum { get; private set; }
         public bool IsUserAction { get; private set; }
+    }
+    public sealed class MzRange
+    {
+        public double Min;
+        public double Max;
     }
 }

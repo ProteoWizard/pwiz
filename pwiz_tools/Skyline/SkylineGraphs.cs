@@ -907,6 +907,27 @@ namespace pwiz.Skyline
         {
             _graphSpectrumSettings.ShowCharge4 = !_graphSpectrumSettings.ShowCharge4;
         }
+        private void synchMzScaleToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (_graphFullScan == null || !_graphFullScan.Visible || _graphSpectrum == null || !_graphSpectrum.Visible) return;
+            IMzScaleCopyable source = (IMzScaleCopyable)synchMzScaleToolStripMenuItem.Owner.Tag;
+
+            if (sender is IMzScaleCopyable)         //testing support
+                source = (IMzScaleCopyable) sender;
+
+            IMzScaleCopyable target = _graphSpectrum;
+            if (source is GraphSpectrum)
+                target = _graphFullScan;
+            target?.SetMzScale(source.Range);
+        }
+
+        public void SynchMzScale(bool direction = false)
+        {
+            if(direction)
+                synchMzScaleToolStripMenuItem_Click(_graphSpectrum, EventArgs.Empty);
+            else
+                synchMzScaleToolStripMenuItem_Click(_graphFullScan, EventArgs.Empty);
+        }
 
         public void chargesMenuItem_DropDownOpening(object sender, EventArgs e)
         {
@@ -1038,7 +1059,7 @@ namespace pwiz.Skyline
             menuStrip.Items.Insert(iInsert++, toolStripSeparator14);
 
             // Need to test small mol
-            if (isProteomic)
+            if (isProteomic && menuStrip.Tag is GraphSpectrum)
             {
                 prositLibMatchItem.Checked = Settings.Default.Prosit;
                 menuStrip.Items.Insert(iInsert++, prositLibMatchItem);
@@ -1048,8 +1069,14 @@ namespace pwiz.Skyline
             }
 
             menuStrip.Items.Insert(iInsert++, spectrumPropsContextMenuItem);
-            showLibraryChromatogramsSpectrumContextMenuItem.Checked = set.ShowLibraryChromatograms;
-            menuStrip.Items.Insert(iInsert++, showLibraryChromatogramsSpectrumContextMenuItem);
+            if (menuStrip.Tag is GraphSpectrum)
+            {
+                showLibraryChromatogramsSpectrumContextMenuItem.Checked = set.ShowLibraryChromatograms;
+                menuStrip.Items.Insert(iInsert++, showLibraryChromatogramsSpectrumContextMenuItem);
+            }
+
+            if(_graphFullScan != null && _graphFullScan.Visible && _graphSpectrum != null && _graphSpectrum.Visible)
+                menuStrip.Items.Insert(iInsert++, synchMzScaleToolStripMenuItem);
             menuStrip.Items.Insert(iInsert, toolStripSeparator15);
 
             // Remove some ZedGraph menu items not of interest
@@ -1059,6 +1086,7 @@ namespace pwiz.Skyline
                 if (tag == @"set_default" || tag == @"show_val")
                     menuStrip.Items.Remove(item);
             }
+
             CopyEmfToolStripMenuItem.AddToContextMenu(zedGraphControl, menuStrip);
         }
 
