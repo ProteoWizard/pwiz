@@ -84,7 +84,7 @@ ExportLiveReportDlg,TestReportSummary
 ExportMethodDlg.IsolationListView,TestExportDiaList
 ExportMethodDlg.MethodView,TestExportDiaList
 ExportMethodDlg.TransitionListView,TestExportMethodDlg
-ExportMethodScheduleGraph,TODO (KaipoT)
+ExportMethodScheduleGraph,TestExportMethodDlg
 FilterMatchedPeptidesDlg,TestInsert
 FilterMidasLibraryDlg,TestMidas
 FindColumnDlg,TestFindColumn

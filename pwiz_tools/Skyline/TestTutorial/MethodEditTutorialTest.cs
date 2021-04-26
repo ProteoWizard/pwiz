@@ -250,6 +250,9 @@ namespace pwiz.SkylineTestTutorial
                     () =>
                         SkylineWindow.Document.Settings.PeptideSettings.Libraries.IsLoaded &&
                             SkylineWindow.Document.Settings.PeptideSettings.Libraries.Libraries.Count > 0));
+                // The tutorial tells the reader they can see the library name in the spectrum graph title
+                VerifyPrecursorLibrary(12, YEAST_GPM);
+                VerifyPrecursorLibrary(13, YEAST_ATLAS);
             }
 
             using (new CheckDocumentState(35, 47, 47, 223, 2, true))    // Wait for change loaded, and expect 2 document revisions.
@@ -485,6 +488,16 @@ namespace pwiz.SkylineTestTutorial
                 }
             }
         }
+
+        private void VerifyPrecursorLibrary(int indexPrecursor, string libraryName)
+        {
+            RunUI(() => SkylineWindow.SelectPath(
+                SkylineWindow.DocumentUI.GetPathTo((int)SrmDocument.Level.TransitionGroups, indexPrecursor)));
+            WaitForGraphs();
+            RunUI(() => Assert.IsTrue(SkylineWindow.GraphSpectrum.GraphTitle.StartsWith(libraryName),
+                string.Format("Graph title '{0}' does not start with {1}", SkylineWindow.GraphSpectrum.GraphTitle, libraryName)));
+        }
+
         private void ShowNodeTip(string nodeText)
         {
             RunUI(() =>
