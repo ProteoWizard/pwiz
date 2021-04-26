@@ -121,7 +121,7 @@ void parse_name(const string& line, Term& term)
 
 void parse_def(const string& line, Term& term)
 {
-    static const bxp::sregex e = bxp::sregex::compile("def:\\s*\"(OBSOLETE )?(.*)\"\\s*\\[.*\\].*");
+    static const bxp::sregex e = bxp::sregex::compile("def:\\s*\"(OBSOLETE )?(.*)\"(\\s*\\[.*\\].*)?");
 
     bxp::smatch what; 
     if (!bxp::regex_match(line, what, e))
