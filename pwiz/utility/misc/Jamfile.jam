@@ -48,6 +48,7 @@ lib pwiz_utility_misc
         Filesystem.cpp
         random_access_compressed_ifstream.cpp
         SHA1Calculator.cpp
+        String.cpp
         TabReader.cpp
         MSIHandler.cpp
         SHA1

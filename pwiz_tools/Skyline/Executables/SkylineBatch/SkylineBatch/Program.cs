@@ -18,11 +18,13 @@
 
 
 using System;
+using System.Collections.Generic;
 using System.Configuration;
 using System.Deployment.Application;
 using System.Drawing;
 using System.IO;
 using System.Net;
+using System.Reflection;
 using System.Threading;
 using System.Windows.Forms;
 using log4net.Config;
@@ -31,37 +33,57 @@ using SharedBatch;
 
 namespace SkylineBatch
 {
-    class Program
+    public class Program
     {
         private static string _version;
-        
+
+        #region For tests
+        public static MainForm MainWindow { get; private set; }     // Accessed by functional tests
+        // Parameters for running tests
+        public static bool FunctionalTest { get; set; }             // Set to true by AbstractFunctionalTest
+        public static string TestDirectory { get; set; }       
+
+        public static List<Exception> TestExceptions { get; set; }  // To avoid showing unexpected exception UI during tests and instead log them as failures
+        // public static IList<string> PauseForms { get; set; }        // List of forms to pause after displaying.
+        #endregion
+
         [STAThread]
         public static void Main(string[] args)
         {
             ProgramLog.Init("SkylineBatch");
             Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-            Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
-            // Handle exceptions on the UI thread.
-            Application.ThreadException += ((sender, e) => ProgramLog.Error(e.Exception.Message, e.Exception));
-            // Handle exceptions on the non-UI thread.
-            AppDomain.CurrentDomain.UnhandledException += ((sender, e) =>
+
+            AddFileTypesToRegistry();
+
+            if (!FunctionalTest)
             {
-                try
+                Application.SetCompatibleTextRenderingDefault(false);
+                Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
+                // Handle exceptions on the UI thread.
+                Application.ThreadException += ((sender, e) => ProgramLog.Error(e.Exception.Message, e.Exception));
+                // Handle exceptions on the non-UI thread.
+                AppDomain.CurrentDomain.UnhandledException += ((sender, e) =>
                 {
-                    ProgramLog.Error(Resources.Program_Main_An_unexpected_error_occured_during_initialization_, (Exception)e.ExceptionObject);
-                    MessageBox.Show(Resources.Program_Main_An_unexpected_error_occured_during_initialization_ + Environment.NewLine +
-                                    string.Format(Resources.Program_Main_Error_details_may_be_found_in_the_file__0_,
-                                        Path.Combine(Path.GetDirectoryName(Application.ExecutablePath) ?? string.Empty, "SkylineBatchProgram.log")) + Environment.NewLine +
-                                    Environment.NewLine +
-                                    ((Exception)e.ExceptionObject).Message
-                    );
-                }
-                finally
-                {
-                    Application.Exit();
-                }
-            });
+                    try
+                    {
+                        ProgramLog.Error(Resources.Program_Main_An_unexpected_error_occured_during_initialization_,
+                            (Exception) e.ExceptionObject);
+                        MessageBox.Show(Resources.Program_Main_An_unexpected_error_occured_during_initialization_ +
+                                        Environment.NewLine +
+                                        string.Format(Resources.Program_Main_Error_details_may_be_found_in_the_file__0_,
+                                            Path.Combine(
+                                                Path.GetDirectoryName(Application.ExecutablePath) ?? string.Empty,
+                                                "SkylineBatchProgram.log")) + Environment.NewLine +
+                                        Environment.NewLine +
+                                        ((Exception) e.ExceptionObject).Message
+                        );
+                    }
+                    finally
+                    {
+                        Application.Exit();
+                    }
+                });
+            }
 
             using (var mutex = new Mutex(false, $"University of Washington {AppName()}"))
             {
@@ -88,14 +110,15 @@ namespace SkylineBatch
                 
                 if (!InitSkylineSettings()) return;
                 RInstallations.FindRDirectory();
-                
-                var form = new MainForm();
+
+                var openFile = args.Length > 0 ? args[0] : null;
+                MainWindow = new MainForm(openFile);
                 // CurrentDeployment is null if it isn't network deployed.
                 _version = ApplicationDeployment.IsNetworkDeployed
                     ? ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString()
                     : string.Empty;
-                form.Text = Version();
-                Application.Run(form);
+                MainWindow.Text = Version();
+                Application.Run(MainWindow);
 
                 mutex.ReleaseMutex();
             }
@@ -116,6 +139,14 @@ namespace SkylineBatch
             return false;
         }
 
+        private static void AddFileTypesToRegistry()
+        {
+            var baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            var configFileIconPath = Path.Combine(baseDirectory, "SkylineBatch_configs.ico");
+            FileUtil.AddFileType(".bcfg", "SkylineBatch.Configuration.0", @"Skyline Batch Configuration File", 
+                Assembly.GetExecutingAssembly().Location, configFileIconPath);
+        }
+        
         public static string Version()
         {
             return $"{AppName()} {_version}";
@@ -137,6 +168,14 @@ namespace SkylineBatch
         {
             // Make sure we can negotiate with HTTPS servers that demand TLS 1.2 (default in dotNet 4.6, but has to be turned on in 4.5)
             ServicePointManager.SecurityProtocol |= (SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12);  
+        }
+
+        public static void AddTestException(Exception exception)
+        {
+            lock (TestExceptions)
+            {
+                TestExceptions.Add(exception);
+            }
         }
     }
 }

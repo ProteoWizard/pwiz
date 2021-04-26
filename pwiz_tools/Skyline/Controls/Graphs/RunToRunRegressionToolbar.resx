@@ -129,7 +129,7 @@
     <value>System.Windows.Forms.ToolStripComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.Graphs.GraphSummaryToolbar, Skyline-daily, Version=20.2.1.365, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.Graphs.GraphSummaryToolbar, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="toolStripComboOriginalReplicates.Size" type="System.Drawing.Size, System.Drawing">
     <value>299, 23</value>

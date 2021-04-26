@@ -49,12 +49,19 @@
             this.label3 = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
+            this.label7 = new System.Windows.Forms.Label();
+            this.label8 = new System.Windows.Forms.Label();
+            this.checkBoxRemoveDecoys = new System.Windows.Forms.CheckBox();
+            this.checkBoxRemoveData = new System.Windows.Forms.CheckBox();
             this.textAnalysisPath = new System.Windows.Forms.TextBox();
-            this.textSkylinePath = new System.Windows.Forms.TextBox();
+            this.textTemplateFile = new System.Windows.Forms.TextBox();
             this.textDataPath = new System.Windows.Forms.TextBox();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.tabsConfig = new System.Windows.Forms.TabControl();
             this.tabFiles = new System.Windows.Forms.TabPage();
+            this.comboTemplateFile = new System.Windows.Forms.ComboBox();
+            this.btnAnnotationsFile = new System.Windows.Forms.Button();
+            this.textAnnotationsFile = new System.Windows.Forms.TextBox();
             this.textNamingPattern = new System.Windows.Forms.TextBox();
             this.textConfigName = new System.Windows.Forms.TextBox();
             this.btnDataPath = new System.Windows.Forms.Button();
@@ -62,23 +69,27 @@
             this.btnSkylineFilePath = new System.Windows.Forms.Button();
             this.tabSettings = new System.Windows.Forms.TabPage();
             this.label6 = new System.Windows.Forms.Label();
+            this.tabRefine = new System.Windows.Forms.TabPage();
+            this.splitContainer2 = new System.Windows.Forms.SplitContainer();
+            this.gridRefineInputs = new System.Windows.Forms.PropertyGrid();
+            this.btnRefinedFilePath = new System.Windows.Forms.Button();
+            this.textRefinedFilePath = new System.Windows.Forms.TextBox();
             this.tabReports = new System.Windows.Forms.TabPage();
             this.toolBar = new System.Windows.Forms.ToolStrip();
             this.btnAddReport = new System.Windows.Forms.ToolStripButton();
             this.btnDeleteReport = new System.Windows.Forms.ToolStripButton();
             this.btnEditReport = new System.Windows.Forms.ToolStripButton();
             this.gridReportSettings = new System.Windows.Forms.DataGridView();
-            this.columnName = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.columnPath = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.columnScripts = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.tabSkyline = new System.Windows.Forms.TabPage();
             this.panelSkylineSettings = new System.Windows.Forms.Panel();
-            this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.btnCancelConfig = new System.Windows.Forms.Button();
-            this.btnSaveConfig = new System.Windows.Forms.Button();
             this.lblConfigRunning = new System.Windows.Forms.Label();
+            this.btnSaveConfig = new System.Windows.Forms.Button();
             this.btnOkConfig = new System.Windows.Forms.Button();
             this.imageListToolbarIcons = new System.Windows.Forms.ImageList(this.components);
+            this.columnName = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.columnScripts = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.columnFile = new System.Windows.Forms.DataGridViewTextBoxColumn();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -86,11 +97,15 @@
             this.tabsConfig.SuspendLayout();
             this.tabFiles.SuspendLayout();
             this.tabSettings.SuspendLayout();
+            this.tabRefine.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer2)).BeginInit();
+            this.splitContainer2.Panel1.SuspendLayout();
+            this.splitContainer2.Panel2.SuspendLayout();
+            this.splitContainer2.SuspendLayout();
             this.tabReports.SuspendLayout();
             this.toolBar.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.gridReportSettings)).BeginInit();
             this.tabSkyline.SuspendLayout();
-            this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
             // linkLabelRegex
@@ -193,15 +208,41 @@
             this.label2.Name = "label2";
             this.toolTip1.SetToolTip(this.label2, resources.GetString("label2.ToolTip"));
             // 
+            // label7
+            // 
+            resources.ApplyResources(this.label7, "label7");
+            this.label7.Name = "label7";
+            this.toolTip1.SetToolTip(this.label7, resources.GetString("label7.ToolTip"));
+            // 
+            // label8
+            // 
+            resources.ApplyResources(this.label8, "label8");
+            this.label8.Name = "label8";
+            this.toolTip1.SetToolTip(this.label8, resources.GetString("label8.ToolTip"));
+            // 
+            // checkBoxRemoveDecoys
+            // 
+            resources.ApplyResources(this.checkBoxRemoveDecoys, "checkBoxRemoveDecoys");
+            this.checkBoxRemoveDecoys.Name = "checkBoxRemoveDecoys";
+            this.toolTip1.SetToolTip(this.checkBoxRemoveDecoys, resources.GetString("checkBoxRemoveDecoys.ToolTip"));
+            this.checkBoxRemoveDecoys.UseVisualStyleBackColor = true;
+            // 
+            // checkBoxRemoveData
+            // 
+            resources.ApplyResources(this.checkBoxRemoveData, "checkBoxRemoveData");
+            this.checkBoxRemoveData.Name = "checkBoxRemoveData";
+            this.toolTip1.SetToolTip(this.checkBoxRemoveData, resources.GetString("checkBoxRemoveData.ToolTip"));
+            this.checkBoxRemoveData.UseVisualStyleBackColor = true;
+            // 
             // textAnalysisPath
             // 
             resources.ApplyResources(this.textAnalysisPath, "textAnalysisPath");
             this.textAnalysisPath.Name = "textAnalysisPath";
             // 
-            // textSkylinePath
+            // textTemplateFile
             // 
-            resources.ApplyResources(this.textSkylinePath, "textSkylinePath");
-            this.textSkylinePath.Name = "textSkylinePath";
+            resources.ApplyResources(this.textTemplateFile, "textTemplateFile");
+            this.textTemplateFile.Name = "textTemplateFile";
             // 
             // textDataPath
             // 
@@ -220,12 +261,16 @@
             // 
             // splitContainer1.Panel2
             // 
-            this.splitContainer1.Panel2.Controls.Add(this.groupBox1);
+            this.splitContainer1.Panel2.Controls.Add(this.btnCancelConfig);
+            this.splitContainer1.Panel2.Controls.Add(this.lblConfigRunning);
+            this.splitContainer1.Panel2.Controls.Add(this.btnSaveConfig);
+            this.splitContainer1.Panel2.Controls.Add(this.btnOkConfig);
             // 
             // tabsConfig
             // 
             this.tabsConfig.Controls.Add(this.tabFiles);
             this.tabsConfig.Controls.Add(this.tabSettings);
+            this.tabsConfig.Controls.Add(this.tabRefine);
             this.tabsConfig.Controls.Add(this.tabReports);
             this.tabsConfig.Controls.Add(this.tabSkyline);
             resources.ApplyResources(this.tabsConfig, "tabsConfig");
@@ -235,6 +280,10 @@
             // tabFiles
             // 
             this.tabFiles.BackColor = System.Drawing.Color.WhiteSmoke;
+            this.tabFiles.Controls.Add(this.comboTemplateFile);
+            this.tabFiles.Controls.Add(this.label7);
+            this.tabFiles.Controls.Add(this.btnAnnotationsFile);
+            this.tabFiles.Controls.Add(this.textAnnotationsFile);
             this.tabFiles.Controls.Add(this.textNamingPattern);
             this.tabFiles.Controls.Add(this.linkLabelRegex);
             this.tabFiles.Controls.Add(this.textConfigName);
@@ -247,9 +296,28 @@
             this.tabFiles.Controls.Add(this.btnAnalysisPath);
             this.tabFiles.Controls.Add(this.btnSkylineFilePath);
             this.tabFiles.Controls.Add(this.label2);
-            this.tabFiles.Controls.Add(this.textSkylinePath);
+            this.tabFiles.Controls.Add(this.textTemplateFile);
             resources.ApplyResources(this.tabFiles, "tabFiles");
             this.tabFiles.Name = "tabFiles";
+            this.tabFiles.Enter += new System.EventHandler(this.TabEnter);
+            // 
+            // comboTemplateFile
+            // 
+            resources.ApplyResources(this.comboTemplateFile, "comboTemplateFile");
+            this.comboTemplateFile.FormattingEnabled = true;
+            this.comboTemplateFile.Name = "comboTemplateFile";
+            // 
+            // btnAnnotationsFile
+            // 
+            resources.ApplyResources(this.btnAnnotationsFile, "btnAnnotationsFile");
+            this.btnAnnotationsFile.Name = "btnAnnotationsFile";
+            this.btnAnnotationsFile.UseVisualStyleBackColor = true;
+            this.btnAnnotationsFile.Click += new System.EventHandler(this.btnAnnotationsFile_Click);
+            // 
+            // textAnnotationsFile
+            // 
+            resources.ApplyResources(this.textAnnotationsFile, "textAnnotationsFile");
+            this.textAnnotationsFile.Name = "textAnnotationsFile";
             // 
             // textNamingPattern
             // 
@@ -298,11 +366,58 @@
             this.tabSettings.Controls.Add(this.textRetentionTime);
             resources.ApplyResources(this.tabSettings, "tabSettings");
             this.tabSettings.Name = "tabSettings";
+            this.tabSettings.Enter += new System.EventHandler(this.TabEnter);
             // 
             // label6
             // 
             resources.ApplyResources(this.label6, "label6");
             this.label6.Name = "label6";
+            // 
+            // tabRefine
+            // 
+            this.tabRefine.Controls.Add(this.splitContainer2);
+            this.tabRefine.Controls.Add(this.gridRefineInputs);
+            this.tabRefine.Controls.Add(this.label8);
+            this.tabRefine.Controls.Add(this.btnRefinedFilePath);
+            this.tabRefine.Controls.Add(this.textRefinedFilePath);
+            resources.ApplyResources(this.tabRefine, "tabRefine");
+            this.tabRefine.Name = "tabRefine";
+            this.tabRefine.UseVisualStyleBackColor = true;
+            this.tabRefine.Enter += new System.EventHandler(this.TabEnter);
+            // 
+            // splitContainer2
+            // 
+            resources.ApplyResources(this.splitContainer2, "splitContainer2");
+            this.splitContainer2.Name = "splitContainer2";
+            // 
+            // splitContainer2.Panel1
+            // 
+            this.splitContainer2.Panel1.Controls.Add(this.checkBoxRemoveData);
+            // 
+            // splitContainer2.Panel2
+            // 
+            this.splitContainer2.Panel2.Controls.Add(this.checkBoxRemoveDecoys);
+            // 
+            // gridRefineInputs
+            // 
+            resources.ApplyResources(this.gridRefineInputs, "gridRefineInputs");
+            this.gridRefineInputs.CommandsForeColor = System.Drawing.SystemColors.ControlText;
+            this.gridRefineInputs.Name = "gridRefineInputs";
+            this.gridRefineInputs.PropertySort = System.Windows.Forms.PropertySort.Categorized;
+            this.gridRefineInputs.ToolbarVisible = false;
+            // 
+            // btnRefinedFilePath
+            // 
+            resources.ApplyResources(this.btnRefinedFilePath, "btnRefinedFilePath");
+            this.btnRefinedFilePath.Name = "btnRefinedFilePath";
+            this.btnRefinedFilePath.UseVisualStyleBackColor = true;
+            this.btnRefinedFilePath.Click += new System.EventHandler(this.btnRefinedFilePath_Click);
+            // 
+            // textRefinedFilePath
+            // 
+            resources.ApplyResources(this.textRefinedFilePath, "textRefinedFilePath");
+            this.textRefinedFilePath.Name = "textRefinedFilePath";
+            this.textRefinedFilePath.TextChanged += new System.EventHandler(this.textBoxRefinedFilePath_TextChanged);
             // 
             // tabReports
             // 
@@ -311,6 +426,7 @@
             this.tabReports.Controls.Add(this.gridReportSettings);
             resources.ApplyResources(this.tabReports, "tabReports");
             this.tabReports.Name = "tabReports";
+            this.tabReports.Enter += new System.EventHandler(this.TabEnter);
             // 
             // toolBar
             // 
@@ -365,8 +481,8 @@
             this.gridReportSettings.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.gridReportSettings.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.columnName,
-            this.columnPath,
-            this.columnScripts});
+            this.columnScripts,
+            this.columnFile});
             dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
             dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Window;
             dataGridViewCellStyle2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
@@ -390,46 +506,18 @@
             this.gridReportSettings.TabStop = false;
             this.gridReportSettings.SelectionChanged += new System.EventHandler(this.gridReportSettings_SelectionChanged);
             // 
-            // columnName
-            // 
-            this.columnName.FillWeight = 90.63071F;
-            resources.ApplyResources(this.columnName, "columnName");
-            this.columnName.Name = "columnName";
-            // 
-            // columnPath
-            // 
-            this.columnPath.FillWeight = 133.2271F;
-            resources.ApplyResources(this.columnPath, "columnPath");
-            this.columnPath.Name = "columnPath";
-            // 
-            // columnScripts
-            // 
-            this.columnScripts.FillWeight = 76.14214F;
-            resources.ApplyResources(this.columnScripts, "columnScripts");
-            this.columnScripts.Name = "columnScripts";
-            // 
             // tabSkyline
             // 
             this.tabSkyline.BackColor = System.Drawing.Color.WhiteSmoke;
             this.tabSkyline.Controls.Add(this.panelSkylineSettings);
             resources.ApplyResources(this.tabSkyline, "tabSkyline");
             this.tabSkyline.Name = "tabSkyline";
+            this.tabSkyline.Enter += new System.EventHandler(this.TabEnter);
             // 
             // panelSkylineSettings
             // 
             resources.ApplyResources(this.panelSkylineSettings, "panelSkylineSettings");
             this.panelSkylineSettings.Name = "panelSkylineSettings";
-            // 
-            // groupBox1
-            // 
-            this.groupBox1.BackColor = System.Drawing.SystemColors.ControlLight;
-            this.groupBox1.Controls.Add(this.btnCancelConfig);
-            this.groupBox1.Controls.Add(this.btnSaveConfig);
-            this.groupBox1.Controls.Add(this.lblConfigRunning);
-            this.groupBox1.Controls.Add(this.btnOkConfig);
-            resources.ApplyResources(this.groupBox1, "groupBox1");
-            this.groupBox1.Name = "groupBox1";
-            this.groupBox1.TabStop = false;
             // 
             // btnCancelConfig
             // 
@@ -438,18 +526,18 @@
             this.btnCancelConfig.Name = "btnCancelConfig";
             this.btnCancelConfig.UseVisualStyleBackColor = true;
             // 
+            // lblConfigRunning
+            // 
+            resources.ApplyResources(this.lblConfigRunning, "lblConfigRunning");
+            this.lblConfigRunning.ForeColor = System.Drawing.Color.DarkRed;
+            this.lblConfigRunning.Name = "lblConfigRunning";
+            // 
             // btnSaveConfig
             // 
             resources.ApplyResources(this.btnSaveConfig, "btnSaveConfig");
             this.btnSaveConfig.Name = "btnSaveConfig";
             this.btnSaveConfig.UseVisualStyleBackColor = true;
             this.btnSaveConfig.Click += new System.EventHandler(this.btnSaveConfig_Click);
-            // 
-            // lblConfigRunning
-            // 
-            resources.ApplyResources(this.lblConfigRunning, "lblConfigRunning");
-            this.lblConfigRunning.ForeColor = System.Drawing.Color.DarkRed;
-            this.lblConfigRunning.Name = "lblConfigRunning";
             // 
             // btnOkConfig
             // 
@@ -465,6 +553,24 @@
             this.imageListToolbarIcons.Images.SetKeyName(0, "AddedIcon.ico");
             this.imageListToolbarIcons.Images.SetKeyName(1, "DeletedIcon.ico");
             // 
+            // columnName
+            // 
+            this.columnName.FillWeight = 128.5841F;
+            resources.ApplyResources(this.columnName, "columnName");
+            this.columnName.Name = "columnName";
+            // 
+            // columnScripts
+            // 
+            this.columnScripts.FillWeight = 108.0281F;
+            resources.ApplyResources(this.columnScripts, "columnScripts");
+            this.columnScripts.Name = "columnScripts";
+            // 
+            // columnFile
+            // 
+            this.columnFile.FillWeight = 61.86493F;
+            resources.ApplyResources(this.columnFile, "columnFile");
+            this.columnFile.Name = "columnFile";
+            // 
             // SkylineBatchConfigForm
             // 
             this.AcceptButton = this.btnSaveConfig;
@@ -478,6 +584,7 @@
             this.ShowInTaskbar = false;
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.Panel2.ResumeLayout(false);
+            this.splitContainer1.Panel2.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
             this.splitContainer1.ResumeLayout(false);
             this.tabsConfig.ResumeLayout(false);
@@ -485,14 +592,20 @@
             this.tabFiles.PerformLayout();
             this.tabSettings.ResumeLayout(false);
             this.tabSettings.PerformLayout();
+            this.tabRefine.ResumeLayout(false);
+            this.tabRefine.PerformLayout();
+            this.splitContainer2.Panel1.ResumeLayout(false);
+            this.splitContainer2.Panel1.PerformLayout();
+            this.splitContainer2.Panel2.ResumeLayout(false);
+            this.splitContainer2.Panel2.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer2)).EndInit();
+            this.splitContainer2.ResumeLayout(false);
             this.tabReports.ResumeLayout(false);
             this.tabReports.PerformLayout();
             this.toolBar.ResumeLayout(false);
             this.toolBar.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.gridReportSettings)).EndInit();
             this.tabSkyline.ResumeLayout(false);
-            this.groupBox1.ResumeLayout(false);
-            this.groupBox1.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -501,23 +614,22 @@
 
         private System.Windows.Forms.ToolTip toolTip1;
         private System.Windows.Forms.SplitContainer splitContainer1;
-        private System.Windows.Forms.Button btnSaveConfig;
-        private System.Windows.Forms.GroupBox groupBox1;
+        public System.Windows.Forms.Button btnSaveConfig;
         private System.Windows.Forms.Button btnCancelConfig;
         private System.Windows.Forms.Label lblConfigRunning;
-        private System.Windows.Forms.TabControl tabsConfig;
+        public System.Windows.Forms.TabControl tabsConfig;
         private System.Windows.Forms.TabPage tabFiles;
-        private System.Windows.Forms.TextBox textConfigName;
+        public System.Windows.Forms.TextBox textConfigName;
         private System.Windows.Forms.Label labelConfigName;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Button btnSkylineFilePath;
-        private System.Windows.Forms.TextBox textSkylinePath;
+        public System.Windows.Forms.TextBox textTemplateFile;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Button btnAnalysisPath;
-        private System.Windows.Forms.TextBox textAnalysisPath;
+        public System.Windows.Forms.TextBox textAnalysisPath;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Button btnDataPath;
-        private System.Windows.Forms.TextBox textDataPath;
+        public System.Windows.Forms.TextBox textDataPath;
         private System.Windows.Forms.LinkLabel linkLabelRegex;
         private System.Windows.Forms.TabPage tabReports;
         private System.Windows.Forms.DataGridView gridReportSettings;
@@ -539,11 +651,23 @@
         private System.Windows.Forms.RadioButton radioShuffleDecoys;
         private System.Windows.Forms.RadioButton radioReverseDecoys;
         private System.Windows.Forms.CheckBox checkBoxDecoys;
-        private System.Windows.Forms.DataGridViewTextBoxColumn columnName;
-        private System.Windows.Forms.DataGridViewTextBoxColumn columnPath;
-        private System.Windows.Forms.DataGridViewTextBoxColumn columnScripts;
         private System.Windows.Forms.Label label9;
         private System.Windows.Forms.TextBox textMsMsResolvingPower;
         private System.Windows.Forms.CheckBox checkBoxMProphet;
+        private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.Button btnAnnotationsFile;
+        private System.Windows.Forms.TextBox textAnnotationsFile;
+        private System.Windows.Forms.TabPage tabRefine;
+        private System.Windows.Forms.PropertyGrid gridRefineInputs;
+        public System.Windows.Forms.CheckBox checkBoxRemoveData;
+        public System.Windows.Forms.CheckBox checkBoxRemoveDecoys;
+        private System.Windows.Forms.Label label8;
+        private System.Windows.Forms.Button btnRefinedFilePath;
+        public System.Windows.Forms.TextBox textRefinedFilePath;
+        private System.Windows.Forms.SplitContainer splitContainer2;
+        public System.Windows.Forms.ComboBox comboTemplateFile;
+        private System.Windows.Forms.DataGridViewTextBoxColumn columnName;
+        private System.Windows.Forms.DataGridViewTextBoxColumn columnScripts;
+        private System.Windows.Forms.DataGridViewTextBoxColumn columnFile;
     }
 }

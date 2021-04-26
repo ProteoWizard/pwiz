@@ -35,8 +35,8 @@ Settings > Transition Settings -- Full-Scan > Retention time filter length chang
 Settings > Transition Settings -- Ion mobility > Ion mobility library changed from "None" to "BSA"
 Settings > Transition Settings -- Ion mobility > Ion mobility library > File path is "BSA.imsdb"
 Settings > Transition Settings -- Ion mobility > Ion mobility library > Contents changed > Items added is "38"
-Settings > Transition Settings -- Ion mobility > Ion mobility library > Contents changed > LSID is "urn:lsid:proteome.gs.washington.edu:ion_mobility_library:skyline:BSA:6a83348b-b172-4531-9f59-2a4336f0de52:1.1"
-Settings > Transition Settings -- Ion mobility > Ion mobility library > Contents changed > Timestamp is "2020-07-10T10:40:03Z"
+Settings > Transition Settings -- Ion mobility > Ion mobility library > Contents changed > LSID is "urn:lsid:proteome.gs.washington.edu:ion_mobility_library:skyline:BSA:93620637-80e3-4d97-a8ee-8689854084aa:1.1"
+Settings > Transition Settings -- Ion mobility > Ion mobility library > Contents changed > Timestamp is "2020-11-20T13:43:01-05:00"
 Settings > Transition Settings -- Ion mobility > Ion mobility filter window width calculation type changed from "None" to "Resolving power"
 Settings > Transition Settings -- Ion mobility > Resolving power changed from "0" to "50"
 

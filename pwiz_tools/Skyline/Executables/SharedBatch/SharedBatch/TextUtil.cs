@@ -14,10 +14,11 @@ namespace SharedBatch
         public const string EXT_SKY_ZIP = ".sky.zip";
         public const string EXT_SKYR = ".skyr";
         public const string EXT_SKYD = ".skyd";
+        public const string EXT_QCFG = ".qcfg";
+        public const string EXT_BCFG = ".bcfg";
         public const string EXT_R = ".R";
         public const string EXT_CSV = ".csv";
         public const string EXT_LOG = ".log";
-
 
         public static string FILTER_XML
         {
@@ -32,6 +33,16 @@ namespace SharedBatch
         public static string FILTER_SKYR
         {
             get { return FileDialogFilter(Resources.TextUtil_FILTER_SKYR_Skyline_Reports, EXT_SKYR); }
+        }
+
+        public static string FILTER_BCFG
+        {
+            get { return FileDialogFilter(Resources.TextUtil_FILTER_BCFG_Skyline_Batch_Configuration_Files, EXT_BCFG); }
+        }
+
+        public static string FILTER_QCFG
+        {
+            get { return FileDialogFilter(Resources.TextUtil_FILTER_QCFG_AutoQC_Configuration_Files, EXT_QCFG); }
         }
 
         public static string FILTER_CSV
@@ -50,54 +61,40 @@ namespace SharedBatch
         }
 
 
-
-
-
-        public static bool TryReplaceStart(string oldText, string newText, string originalString, out string replacedString)
+        public static bool SuccessfulReplace(Validator validate, string oldText, string newText, string originalString, out string replacedString)
         {
-            replacedString = originalString;
-            if (!originalString.StartsWith(oldText))
+            var oldPath = originalString;
+            var newPath = TryReplaceStart(oldText, newText, originalString);
+            replacedString = oldPath;
+
+            try
+            {
+                validate(oldPath);
                 return false;
-            replacedString = newText + originalString.Substring(oldText.Length);
+            }
+            catch (ArgumentException)
+            {
+                // Pass - expect oldPath to be invalid
+            }
+
+            replacedString = newPath;
+            try
+            {
+                validate(newPath);
+            }
+            catch (ArgumentException)
+            {
+                return false;
+            }
             return true;
         }
 
-        // Extension of Path.GetDirectoryName that handles null file paths
-        public static string GetDirectory(string path)
+        public static string TryReplaceStart(string oldText, string newText, string originalString)
         {
-            if (path == null) throw new ArgumentNullException(nameof(path), Resources.TextUtil_GetDirectory_Could_not_get_the_directory_of_a_null_file_path_);
-            return Path.GetDirectoryName(path);
+            if (!originalString.StartsWith(oldText))
+                return originalString;
+            return newText + originalString.Substring(oldText.Length);
         }
-
-        // Find an existing initial directory to use in a file/folder browser dialog, can be null (dialog will use a default)
-        public static string GetInitialDirectory(string directory, string lastEnteredPath = "")
-        {
-            if (Directory.Exists(directory))
-                return directory;
-
-            string directoryName;
-            try
-            {
-                directoryName = Path.GetDirectoryName(directory);
-            }
-            catch (Exception) 
-            {
-                if (!string.IsNullOrEmpty(lastEnteredPath))
-                    return GetInitialDirectory(lastEnteredPath);
-                return null;
-            }
-            return GetInitialDirectory(directoryName);
-        }
-
-        public static string GetSafeName(string name)
-        {
-            var invalidChars = new List<char>();
-            invalidChars.AddRange(Path.GetInvalidFileNameChars());
-            invalidChars.AddRange(Path.GetInvalidPathChars());
-            var safeName = string.Join("_", name.Split(invalidChars.ToArray()));
-            return safeName; // .TrimStart('.').TrimEnd('.');
-        }
-
 
         /// <summary>
         /// Returns a filter string suitable for a common file dialog (e.g. "CSV (Comma delimited) (*.csv)|*.csv")

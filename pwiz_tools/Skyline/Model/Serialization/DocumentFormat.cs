@@ -19,6 +19,8 @@
 using System;
 using System.Diagnostics.Contracts;
 using System.Globalization;
+using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Serialization
 {
@@ -124,6 +126,27 @@ namespace pwiz.Skyline.Model.Serialization
         public override string ToString()
         {
             return _versionNumber.ToString(CultureInfo.InvariantCulture);
+        }
+
+        /// <summary>
+        /// Return the name of the Skyline version corresponding to this format.
+        /// If this format is not an official Skyline release then it will be just "Version: " and the number.
+        /// </summary>
+        public string GetDescription()
+        {
+            foreach (var skylineVersion in SkylineVersion.SupportedForSharing())
+            {
+                if (Equals(skylineVersion.SrmDocumentVersion))
+                {
+                    if (Equals(SkylineVersion.CURRENT, skylineVersion) && Install.Type == Install.InstallType.developer)
+                    {
+                        break;
+                    }
+                    return skylineVersion.Label;
+                }
+            }
+
+            return string.Format(Resources.SpectrumLibraryInfoDlg_SetDetailsText_Version__0__, ToString());
         }
     }
 }

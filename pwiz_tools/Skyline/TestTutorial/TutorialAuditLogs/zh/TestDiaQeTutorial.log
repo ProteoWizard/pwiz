@@ -14,6 +14,7 @@ All Info  :
 建立谱图库 > 包含不明确匹配项 是 假
 建立谱图库 > 文档肽段筛选器 是 假
 建立谱图库 > 工作流程 是 "DIA（数据非依赖性采集）"
+建立谱图库 > Input File Type 是 "Search results (build library directly)"
 Extra Info: 截止值 = "0.95",
 搜索文件 = 
 [
@@ -22,7 +23,8 @@ Extra Info: 截止值 = "0.95",
 iRT 标准肽段 = "Biognosys-11 (iRT-C18)",
 包含不明确匹配项 = 假,
 文档肽段筛选器 = 假,
-工作流程 = "DIA（数据非依赖性采集）"
+工作流程 = "DIA（数据非依赖性采集）",
+Input File Type = "Search results (build library directly)"
 
 Undo Redo : 已导入肽段搜索
 Summary   : 已导入肽段搜索

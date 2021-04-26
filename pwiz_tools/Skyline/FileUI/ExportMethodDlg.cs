@@ -1938,6 +1938,11 @@ namespace pwiz.Skyline.FileUI
         
         private void btnGraph_Click(object sender, EventArgs e)
         {
+            ShowSchedulingGraph();
+        }
+
+        public void ShowSchedulingGraph()
+        {
             var brukerTemplate = Equals(InstrumentType, ExportInstrumentType.BRUKER_TIMSTOF)
                 ? textTemplateFile.Text
                 : null;

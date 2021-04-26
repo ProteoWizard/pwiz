@@ -35,7 +35,7 @@ namespace AutoQC
             CreateValidConfig();
         }
 
-        public AutoQcConfig ValidConfig { get; private set; }
+        public AutoQcConfig Config { get; private set; }
 
 
         private async void CreateValidConfig()
@@ -45,13 +45,12 @@ namespace AutoQC
             var validPanoramaSettings = FixInvalidPanoramaSettings();
             var validSkylineSettings = await FixInvalidSkylineSettings();
             // create valid configuration
-            ValidConfig = new AutoQcConfig(_invalidConfig.Name, _invalidConfig.IsEnabled, _invalidConfig.Created, DateTime.Now, 
+            Config = new AutoQcConfig(_invalidConfig.Name, _invalidConfig.IsEnabled, _invalidConfig.Created, DateTime.Now,
                 validMainSettings, validPanoramaSettings, validSkylineSettings);
-            // save invalid configuration
-            _configManager.ReplaceSelectedConfig(ValidConfig);
+            // replace old configuration
+            _configManager.ReplaceSelectedConfig(Config);
             _mainControl.UpdateUiConfigurations();
-            DialogResult = DialogResult.OK;
-            Close();
+            CloseSetup();
         }
 
         #region Fix Configuration Settings
@@ -60,9 +59,9 @@ namespace AutoQC
         {
             var mainSettings = _invalidConfig.MainSettings;
             var validSkylinePath = await GetValidPath("Skyline file",
-                mainSettings.SkylineFilePath, false, MainSettings.ValidateSkylineFile);
+                mainSettings.SkylineFilePath, MainSettings.ValidateSkylineFile, PathDialogOptions.File);
             var validFolderToWatch = await GetValidPath("folder to watch",
-                mainSettings.FolderToWatch, false, MainSettings.ValidateFolderToWatch);
+                mainSettings.FolderToWatch, MainSettings.ValidateFolderToWatch, PathDialogOptions.Folder);
             return new MainSettings(validSkylinePath, validFolderToWatch, mainSettings.IncludeSubfolders, mainSettings.QcFileFilter, mainSettings.RemoveResults, 
                 mainSettings.ResultsWindow.ToString(), mainSettings.InstrumentType, mainSettings.AcquisitionTime.ToString());
         }
@@ -87,7 +86,7 @@ namespace AutoQC
 
         private async Task<SkylineSettings> FixInvalidSkylineSettings()
         {
-            var skylineTypeControl = new SkylineTypeControl(_invalidConfig.UsesSkyline, _invalidConfig.UsesSkylineDaily, _invalidConfig.UsesCustomSkylinePath, _invalidConfig.SkylineSettings.CmdPath);
+            var skylineTypeControl = new SkylineTypeControl(_mainControl, _invalidConfig.UsesSkyline, _invalidConfig.UsesSkylineDaily, _invalidConfig.UsesCustomSkylinePath, _invalidConfig.SkylineSettings.CmdPath);
             return (SkylineSettings)await GetValidVariable(skylineTypeControl);
         }
 
@@ -95,11 +94,11 @@ namespace AutoQC
 
         #region Get Valid Variables
 
-        private async Task<string> GetValidPath(string variableName, string invalidPath, bool folder, Validator validator)
+        private async Task<string> GetValidPath(string variableName, string invalidPath, Validator validator, params PathDialogOptions[] pathDialogOptions)
         {
-            TextUtil.TryReplaceStart(_oldRoot, _newRoot, invalidPath, out string path);
+            string path = TextUtil.TryReplaceStart(_oldRoot, _newRoot, invalidPath);
 
-            var folderControl = new FilePathControl(variableName, path, _lastInputPath, folder, validator);
+            var folderControl = new FilePathControl(variableName, path, _lastInputPath, validator, pathDialogOptions);
             path = (string)await GetValidVariable(folderControl, false);
 
             if (path.Equals(invalidPath))
@@ -182,6 +181,18 @@ namespace AutoQC
         {
             control.Hide();
             panel1.Controls.Remove(control);
+        }
+
+        private void btnSkip_Click(object sender, EventArgs e)
+        {
+            Config = _invalidConfig;
+            CloseSetup();
+        }
+
+        private void CloseSetup()
+        {
+            DialogResult = DialogResult.OK;
+            Close();
         }
     }
 

@@ -1,9 +1,19 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Windows.Forms;
 using SharedBatch.Properties;
 
 namespace SharedBatch
 {
+    public enum PathDialogOptions
+    {
+        File,  // the desired path is a file path
+        Folder,  // the desired path is a folder path
+        Save,  // use a save file dialog
+        ExistingOptional  // do not check if file exists
+    }
+
     public partial class FilePathControl : UserControl, IValidatorControl
     {
         // A control used by the InvalidConfigSetupForm to correct invalid file/folder paths
@@ -14,19 +24,18 @@ namespace SharedBatch
 
         private string _path; // the current path displayed in the textFilePath TextBox
         private string _lastUsedPath; // the last path the user navigated to in a open File or open folder dialog
-        private readonly bool _folder; // if the desired path is a folder path (true) or a file path (false)
         private readonly string _filter; // the filter to use in a OpenFileDialog. Has no impact when _folder == true.
-
+        private readonly PathDialogOptions[] _pathDialogOptions;
         private readonly Validator _pathValidator; // the validator to use on the path. Throws an ArgumentException if the path is invalid.
         
-        public FilePathControl(string variableName, string invalidPath, string lastInputPath, bool folder, Validator pathValidator)
+        public FilePathControl(string variableName, string invalidPath, string lastInputPath, Validator pathValidator, params PathDialogOptions[] dialogOptions)
         {
             InitializeComponent();
             _path = invalidPath;
             _lastUsedPath = lastInputPath ?? invalidPath;
             _pathValidator = pathValidator;
-            _folder = folder;
-            if (!folder)
+            _pathDialogOptions = dialogOptions;
+            if (_pathDialogOptions.Contains(PathDialogOptions.File))
             {
                 var suffix = invalidPath.Contains(".") ? 
                     invalidPath.Substring(invalidPath.LastIndexOf(".", StringComparison.Ordinal)) : 
@@ -71,11 +80,11 @@ namespace SharedBatch
 
         private void btnBrowse_Click(object sender, EventArgs e)
         {
-            if (_folder)
+            if (_pathDialogOptions.Contains(PathDialogOptions.Folder))
             {
                 using (FolderBrowserDialog dlg = new FolderBrowserDialog
                 {
-                    SelectedPath = TextUtil.GetInitialDirectory(_lastUsedPath)
+                    SelectedPath = FileUtil.GetInitialDirectory(_lastUsedPath)
             })
                 {
                     if (dlg.ShowDialog(this) == DialogResult.OK)
@@ -84,11 +93,13 @@ namespace SharedBatch
             }
             else
             {
-                OpenFileDialog openDialog = new OpenFileDialog();
-                openDialog.Filter = _filter;
-                openDialog.InitialDirectory = TextUtil.GetInitialDirectory(_lastUsedPath);
-                if (openDialog.ShowDialog() == DialogResult.OK)
-                    textFilePath.Text = openDialog.FileName;
+                var saveFileDialog = _pathDialogOptions.Contains(PathDialogOptions.Save);
+                FileDialog dialog = saveFileDialog ? (FileDialog)new SaveFileDialog() : new OpenFileDialog();
+                dialog.CheckFileExists = !saveFileDialog && !_pathDialogOptions.Contains(PathDialogOptions.ExistingOptional);
+                dialog.Filter = _filter;
+                dialog.InitialDirectory = FileUtil.GetInitialDirectory(_lastUsedPath);
+                if (dialog.ShowDialog() == DialogResult.OK)
+                    textFilePath.Text = dialog.FileName;
             }
         }
 
@@ -96,6 +107,11 @@ namespace SharedBatch
         {
             _path = textFilePath.Text;
             _lastUsedPath = textFilePath.Text;
+        }
+
+        public void SetText(string value)
+        {
+            textFilePath.Text = value;
         }
     }
 }

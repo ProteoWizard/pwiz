@@ -67,7 +67,7 @@ struct PrecursorFragmentPairEdge : public PeakOverlapRegion
 {
     float FragmentMz;
     float Intensity;
-    float ApexDelta;
+    float DeltaApex;
     float RTOverlapP;
     int FragmentMS1Rank = 0;
     float FragmentMS1RankScore = 1.f;
@@ -89,6 +89,7 @@ class PeakCluster
     mutable float conflictCorr = -1;
     mutable float mass = 0;
     const ChiSquareGOF& chiSquaredGof;
+    const pwiz::msdata::MSData& msd;
 
     public:
 
@@ -121,7 +122,7 @@ class PeakCluster
     float MS1ScoreProbability;
     string SpectrumKey;
 
-    PeakCluster(int IsotopicNum, int Charge, const ChiSquareGOF& chiSquaredGof) : chiSquaredGof(chiSquaredGof)
+    PeakCluster(int IsotopicNum, int Charge, const ChiSquareGOF& chiSquaredGof, const pwiz::msdata::MSData& msd) : chiSquaredGof(chiSquaredGof), msd(msd)
     {
         IsoPeaksCurves.resize(IsotopicNum);
         Corrs.resize(IsotopicNum - 1);
@@ -386,6 +387,7 @@ class PeakCurveClusteringCorrKDtree
     const PeakCurveSearchTree& peakCurveSearchTree;
     const IsotopePatternMap& isotopePatternMap;
     const ChiSquareGOF& chiSquaredGof;
+    const pwiz::msdata::MSData& msd;
     int MaxNoOfClusters;
     int MinNoOfClusters;
     int StartCharge;
@@ -397,9 +399,9 @@ class PeakCurveClusteringCorrKDtree
 
 
     PeakCurveClusteringCorrKDtree(vector<PeakCurvePtr> const& peakCurves, size_t targetCurveIndex, const PeakCurveSearchTree& peakCurveSearchTree, InstrumentParameter& parameter,
-                                  const IsotopePatternMap& isotopePatternMap, const ChiSquareGOF& chiSquaredGof,
+                                  const IsotopePatternMap& isotopePatternMap, const ChiSquareGOF& chiSquaredGof, const pwiz::msdata::MSData& msd,
                                   int StartCharge, int EndCharge, int MaxNoClusters, int MinNoClusters)
-        : peakCurves(peakCurves), targetCurveIndex(targetCurveIndex), parameter(parameter), peakCurveSearchTree(peakCurveSearchTree), isotopePatternMap(isotopePatternMap), chiSquaredGof(chiSquaredGof)
+        : peakCurves(peakCurves), targetCurveIndex(targetCurveIndex), parameter(parameter), peakCurveSearchTree(peakCurveSearchTree), isotopePatternMap(isotopePatternMap), chiSquaredGof(chiSquaredGof), msd(msd)
     {
         this->MaxNoOfClusters = MaxNoClusters;
         this->MinNoOfClusters = MinNoClusters;
@@ -415,8 +417,8 @@ class PeakCurveClusteringCorrKDtree
     void operator()()
     {
         auto const& peakA = peakCurves[targetCurveIndex];
-        float lowrt = peakA->ApexRT - parameter.ApexDelta - 1e-4;
-        float highrt = peakA->ApexRT + parameter.ApexDelta + 1e-4;
+        float lowrt = peakA->ApexRT - parameter.DeltaApex - 1e-4;
+        float highrt = peakA->ApexRT + parameter.DeltaApex + 1e-4;
         float lowmz = InstrumentParameter::GetMzByPPM(peakA->TargetMz - 1e-4, 1, parameter.MS1PPM);
         float highmz = InstrumentParameter::GetMzByPPM((peakA->TargetMz + 1e-4 + ((float)MaxNoOfClusters / StartCharge)), 1, -parameter.MS1PPM);
 
@@ -427,7 +429,7 @@ class PeakCurveClusteringCorrKDtree
 #ifdef DIAUMPIRE_DEBUG
         if (peakA->MsLevel == 2)
         {
-            std::ofstream peakSearchTreeLog("DiaUmpireCpp-peakSearchTreeLog.txt", std::ios::app);
+            std::ofstream peakSearchTreeLog(("DiaUmpireCpp-peakSearchTreeLog-" + msd.run.id + ".txt").c_str(), std::ios::app);
             peakSearchTreeLog << (boost::format("%d %.4f-%.4f %.4f-%.4f") % peakA->Index % lowrt % highrt % lowmz % highmz).str();
             boost::format peakFormat(" %.4f");
             for (auto& itr : PeakCurveListMZ)
@@ -445,13 +447,16 @@ class PeakCurveClusteringCorrKDtree
             if (mass<parameter.MinPrecursorMass || mass>parameter.MaxPrecursorMass || (parameter.MassDefectFilter && !MD.InMassDefectRange(mass, parameter.MassDefectOffset))) {
                 continue;
             }
-            PeakClusterPtr peakClusterPtr(new PeakCluster(MaxNoOfClusters, charge, chiSquaredGof));
+            PeakClusterPtr peakClusterPtr(new PeakCluster(MaxNoOfClusters, charge, chiSquaredGof, msd));
             PeakCluster& peakCluster = *peakClusterPtr;
             peakCluster.IsoPeaksCurves[0] = peakA;
             peakCluster.MonoIsotopePeak = peakA;
             vector<XYData> Ranges(MaxNoOfClusters - 1);
             for (int i = 0; i < MaxNoOfClusters - 1; i++)
             {
+                if (isotopePatternMap[i].empty())
+                    throw runtime_error("empty isotopePatternMap");
+
                 auto findItr = isotopePatternMap[i].upper_bound(peakCluster.NeutralMass());
                 if (findItr == isotopePatternMap[i].end()) {
                     findItr = --isotopePatternMap[i].end();
@@ -616,8 +621,8 @@ class CorrCalcCluster2Curve
     void operator()()
     {
         //Get Start and End indices of peak curves which are in the RT range
-        auto startRTitr = PeakCurveSortedListApexRT.lower_bound(MS1PeakCluster->PeakHeightRT[0] - parameter.ApexDelta);
-        auto endRTitr = PeakCurveSortedListApexRT.lower_bound(MS1PeakCluster->PeakHeightRT[0] + parameter.ApexDelta);
+        auto startRTitr = PeakCurveSortedListApexRT.lower_bound(MS1PeakCluster->PeakHeightRT[0] - parameter.DeltaApex);
+        auto endRTitr = PeakCurveSortedListApexRT.lower_bound(MS1PeakCluster->PeakHeightRT[0] + parameter.DeltaApex);
         PeakCurve const& targetMS1Curve = *MS1PeakCluster->MonoIsotopePeak;
 
         //Calculate RT range of the peak cluster
@@ -649,7 +654,7 @@ class CorrCalcCluster2Curve
                 OverlapP = 1;
             }
 
-            if (OverlapP > parameter.RTOverlapThreshold
+            if (OverlapP > parameter.RTOverlap
                 && targetMS1Curve.ApexRT >= peakCurve.StartRT()
                 && targetMS1Curve.ApexRT <= peakCurve.EndRT()
                 && peakCurve.ApexRT >= targetMS1Curve.StartRT()
@@ -670,7 +675,7 @@ class CorrCalcCluster2Curve
                     PrecursorFragmentPair.FragmentMz = peakCurve.TargetMz;
                     PrecursorFragmentPair.Intensity = peakCurve.ApexInt;
                     PrecursorFragmentPair.RTOverlapP = OverlapP;
-                    PrecursorFragmentPair.ApexDelta = ApexDiff;
+                    PrecursorFragmentPair.DeltaApex = ApexDiff;
                     //FragmentPeaks.put(peakCurve.Index, peakCurve);
                     GroupedFragmentList.push_back(PrecursorFragmentPair);
                     if (PrecursorFragmentPair.Correlation > parameter.HighCorrThreshold)
@@ -860,7 +865,7 @@ class PseudoMSMSProcessing
                 fragment.ComplementaryFragment = true;
                 fragment.Intensity = bestfragment->Intensity * growth;
                 fragment.Correlation = bestfragment->Correlation;
-                fragment.ApexDelta = bestfragment->ApexDelta;
+                fragment.DeltaApex = bestfragment->DeltaApex;
                 fragment.RTOverlapP = bestfragment->RTOverlapP;
                 fragment.FragmentMS1Rank = bestfragment->FragmentMS1Rank;
                 fragment.FragmentMS1RankScore = bestfragment->FragmentMS1RankScore;

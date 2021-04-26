@@ -120,9 +120,6 @@
   <data name="SkylineSettings_Unable_to_find_Skyline_Daily_installation_" xml:space="preserve">
     <value>Unable to find Skyline-daily installation.</value>
   </data>
-  <data name="AlertDlg_GetDefaultButtonText_OK" xml:space="preserve">
-    <value>OK</value>
-  </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="Delete" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Delete.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -130,29 +127,14 @@
   <data name="SkylineSettings_Unable_to_find_Skyline_installation_at__0__" xml:space="preserve">
     <value>Unable to find Skyline installation at {0}</value>
   </data>
-  <data name="AlertDlg_GetDefaultButtonText_Ignore" xml:space="preserve">
-    <value>Ignore</value>
-  </data>
   <data name="Program_Main_Another_instance_of__0__is_already_running_" xml:space="preserve">
     <value>Another instance of {0} is already running.</value>
   </data>
   <data name="SkylineData" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\SkylineData.ico;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="AlertDlg_TruncateMessage_Message_truncated__Press_Ctrl_C_to_copy_entire_message_to_the_clipboard_" xml:space="preserve">
-    <value>Message truncated. Press Ctrl+C to copy entire message to the clipboard.</value>
-  </data>
-  <data name="AlertDlg_GetDefaultButtonText_Abort" xml:space="preserve">
-    <value>Abort</value>
-  </data>
   <data name="SkylineDoc" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\SkylineDoc.ico;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="AlertDlg_GetDefaultButtonText_Retry" xml:space="preserve">
-    <value>Retry</value>
-  </data>
-  <data name="AlertDlg_GetDefaultButtonText_Yes" xml:space="preserve">
-    <value>Yes</value>
   </data>
   <data name="MainForm_ViewLog_Log_Truncated" xml:space="preserve">
     <value>... Log truncated ...</value>
@@ -165,9 +147,6 @@
   </data>
   <data name="add" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\add.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="AlertDlg_GetDefaultButtonText_No" xml:space="preserve">
-    <value>No</value>
   </data>
   <data name="MainForm_btnDelete_Click_Configuration___0___is_running__Please_stop_the_configuration_and_try_again__" xml:space="preserve">
     <value>Configuration "{0}" is running. Please stop the configuration and try again. </value>
@@ -190,9 +169,6 @@
   <data name="Program_Main_AutoQC_Loader_encountered_an_unexpected_error__Error_details_may_be_found_in_the__0__file_in_this_directory___" xml:space="preserve">
     <value>AutoQC Loader encountered an unexpected error. Error details may be found in the {0} file in this directory : </value>
   </data>
-  <data name="AlertDlg_GetDefaultButtonText_Cancel" xml:space="preserve">
-    <value>Cancel</value>
-  </data>
   <data name="Panorama" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Panorama.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
@@ -202,8 +178,8 @@
   <data name="AutoQcConfig_AutoQcConfig_Please_enter_a_name_" xml:space="preserve">
     <value>Please enter a name.</value>
   </data>
-  <data name="AutoQCFileSystemWatcher_Restart_FileSystemWatcher_cancelled_" xml:space="preserve">
-    <value>FileSystemWatcher cancelled.</value>
+  <data name="AutoQCFileSystemWatcher_Restart_FileSystemWatcher_canceled_" xml:space="preserve">
+    <value>FileSystemWatcher canceled.</value>
   </data>
   <data name="AutoQCFileSystemWatcher_Restart_Re_initializing_FileSystemWatcher___" xml:space="preserve">
     <value>Re-initializing FileSystemWatcher...</value>
@@ -337,8 +313,8 @@
   <data name="ConfigRunner_ProcessFilesCompleted_An_error_occurred__Stopping_configuration_" xml:space="preserve">
     <value>An error occurred. Stopping configuration.</value>
   </data>
-  <data name="ConfigRunner_ProcessFilesCompleted_Cancelled_configuration_" xml:space="preserve">
-    <value>Cancelled configuration.</value>
+  <data name="ConfigRunner_ProcessFilesCompleted_Canceled_configuration_" xml:space="preserve">
+    <value>Canceled configuration.</value>
   </data>
   <data name="ConfigRunner_ProcessFilesCompleted_There_was_an_error_uploading_the_document_to_Panorama__Stopping_configuration_" xml:space="preserve">
     <value>There was an error uploading the document to Panorama. Stopping configuration.</value>
@@ -570,5 +546,11 @@ with:
   </data>
   <data name="Program_InitSkylineSettings__0__requires_Skyline_to_run_" xml:space="preserve">
     <value>{0} requires Skyline to run.</value>
+  </data>
+  <data name="AutoQcConfigManager_ReplaceSkylineSettings_The_following_configurations_are_running_and_could_not_be_updated_" xml:space="preserve">
+    <value>The following configurations are running and could not be updated:</value>
+  </data>
+  <data name="MainForm_FileOpened_Do_you_want_to_import_configurations_from__0__" xml:space="preserve">
+    <value>Do you want to import configurations from {0}?</value>
   </data>
 </root>

@@ -86,19 +86,19 @@ namespace SkylineBatchTest
         {
             var testConfigManager = new SkylineBatchConfigManager(TestUtils.GetTestLogger());
             var addedConfig = TestUtils.GetTestConfig("one");
-            testConfigManager.AddConfiguration(addedConfig);
+            testConfigManager.UserAddConfig(addedConfig);
             var oneConfig = TestUtils.ConfigListFromNames(new List<string> { "one" });
             Assert.IsTrue(testConfigManager.ConfigListEquals(oneConfig));
 
-            testConfigManager.AddConfiguration(TestUtils.GetTestConfig("two"));
-            testConfigManager.AddConfiguration(TestUtils.GetTestConfig("three"));
+            testConfigManager.UserAddConfig(TestUtils.GetTestConfig("two"));
+            testConfigManager.UserAddConfig(TestUtils.GetTestConfig("three"));
             var threeConfigs = TestUtils.ConfigListFromNames(new List<string> { "one", "two", "three" });
             Assert.IsTrue(testConfigManager.ConfigListEquals(threeConfigs));
 
             var addedDuplicateConfig = false;
             try
             {
-                testConfigManager.AddConfiguration(addedConfig);
+                testConfigManager.UserAddConfig(addedConfig);
                 addedDuplicateConfig = true;
             }
             catch (ArgumentException e)
@@ -115,7 +115,7 @@ namespace SkylineBatchTest
         {
             var configManager = TestUtils.GetTestConfigManager();
             configManager.SelectConfig(0);
-            configManager.RemoveSelected();
+            configManager.UserRemoveSelected();
             Assert.IsTrue(configManager.SelectedConfig == 0);
             var oneRemoved = TestUtils.ConfigListFromNames(new List<string> { "two", "three" });
             Assert.IsTrue(configManager.ConfigListEquals(oneRemoved));
@@ -124,7 +124,7 @@ namespace SkylineBatchTest
             var removedNonexistantConfig = false;
             try
             {
-                configManager.RemoveSelected();
+                configManager.UserRemoveSelected();
                 removedNonexistantConfig = true;
             }
             catch (IndexOutOfRangeException e)
@@ -158,7 +158,7 @@ namespace SkylineBatchTest
             TestUtils.InitializeRInstallation();
             var configManager = TestUtils.GetTestConfigManager();
             configManager.SelectConfig(0);
-            configManager.ReplaceSelectedConfig(TestUtils.GetTestConfig("oneReplaced"));
+            configManager.UserReplaceSelected(TestUtils.GetTestConfig("oneReplaced"));
             var expectedOneReplaced = TestUtils.ConfigListFromNames(new List<string> { "oneReplaced", "two", "three" });
             Assert.IsTrue(configManager.ConfigListEquals(expectedOneReplaced));
 
@@ -166,7 +166,7 @@ namespace SkylineBatchTest
             try
             {
                 configManager.SelectConfig(1);
-                configManager.ReplaceSelectedConfig(TestUtils.GetTestConfig("oneReplaced"));
+                configManager.UserReplaceSelected(TestUtils.GetTestConfig("oneReplaced"));
                 replacedWithDuplicate = true;
             }
             catch (ArgumentException e)
@@ -189,6 +189,7 @@ namespace SkylineBatchTest
         [TestMethod]
         public void TestImportExport()
         {
+            TestUtils.InitializeRInstallation();
             var configsXmlPath = TestUtils.GetTestFilePath("configs.xml");
             var configManager = TestUtils.GetTestConfigManager();
             configManager.ExportConfigs(configsXmlPath, new [] {0,1,2});
@@ -196,18 +197,18 @@ namespace SkylineBatchTest
             while (configManager.HasConfigs() && i < 4)
             {
                 configManager.SelectConfig(0);
-                configManager.RemoveSelected();
+                configManager.UserRemoveSelected();
                 i++;
             }
             Assert.IsFalse(i == 4, "Failed to remove all configs.");
 
             var testingConfigs = TestUtils.ConfigListFromNames(new List<string> { "one", "two", "three" });
-            configManager.Import(configsXmlPath);
+            configManager.Import(configsXmlPath, null);
             Assert.IsTrue(configManager.ConfigListEquals(testingConfigs));
 
             configManager.SelectConfig(2);
-            configManager.RemoveSelected();
-            configManager.Import(TestUtils.GetTestFilePath("configs.xml"));
+            configManager.UserRemoveSelected();
+            configManager.Import(TestUtils.GetTestFilePath("configs.xml"), null);
             Assert.IsTrue(configManager.ConfigListEquals(testingConfigs));
 
             configManager.GetSelectedLogger().Delete();
@@ -219,13 +220,13 @@ namespace SkylineBatchTest
         {
             TestUtils.InitializeRInstallation();
             var configManager = TestUtils.GetTestConfigManager();
-            configManager.AddConfiguration(TestUtils.GetTestConfig("four"));
+            configManager.UserAddConfig(TestUtils.GetTestConfig("four"));
             var testingConfigs = TestUtils.ConfigListFromNames(new List<string> { "one", "two", "three", "four" });
             configManager.Close();
             configManager.GetSelectedLogger().Delete();
             var testConfigManager = new SkylineBatchConfigManager(TestUtils.GetTestLogger());
             // Simulate loading saved configs from file
-            testConfigManager.Import(ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath);
+            testConfigManager.Import(ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath, null);
             Assert.IsTrue(testConfigManager.ConfigListEquals(testingConfigs));
             testConfigManager.GetSelectedLogger().Delete();
         }

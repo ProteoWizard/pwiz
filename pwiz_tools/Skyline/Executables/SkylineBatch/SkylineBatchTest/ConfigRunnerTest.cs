@@ -17,8 +17,7 @@
  */
 
 
-using System.Collections.Generic;
-using System.ComponentModel;
+using System;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -41,7 +40,7 @@ namespace SkylineBatchTest
            var singleCommand = string.Format("--in=\"{0}\" --out=\"{1}\"", config.MainSettings.TemplateFilePath,
                TestUtils.GetTestFilePath("Copy.sky"));
             testRunner.ChangeStatus(RunnerStatus.Running);
-           await testRunner.ExecuteProcess(config.SkylineSettings.CmdPath, singleCommand);
+           await new ProcessRunner().Run(config.SkylineSettings.CmdPath, singleCommand);
            logger.Delete();
            Assert.IsTrue(testRunner.IsRunning(), "Expected no errors or cancellations.");
            Assert.IsTrue(File.Exists(TestUtils.GetTestFilePath("Copy.sky")));
@@ -58,6 +57,61 @@ namespace SkylineBatchTest
             await testRunner.Run(4);
             logger.Delete();
             Assert.IsTrue(testRunner.IsCompleted(), "Expected runner to have status \"Completed\" but was: " + testRunner.GetStatus());
+        }
+
+        [TestMethod]
+        public async Task TestGenerateCommandFile()
+        {
+            TestUtils.InitializeRInstallation();
+            var logger = TestUtils.GetTestLogger();
+            var testRunner = new ConfigRunner(TestUtils.GetFullyPopulatedConfig(), logger);
+            Assert.IsTrue(testRunner.IsStopped());
+            var expectedNewVersionCommandFile = TestUtils.GetTestFilePath("RunFile_PopulatedConfig_MultiLineCommands.tmp");
+            var newVersionWriter = new CommandWriter(logger, true);
+            testRunner.WriteBatchCommandsToFile(newVersionWriter, 1);
+            var actualNewVersionCommandFile = newVersionWriter.GetCommandFile();
+            CompareFiles(expectedNewVersionCommandFile, actualNewVersionCommandFile);
+
+            var expectedOldVersionCommandFile = TestUtils.GetTestFilePath("RunFile_PopulatedConfig_SingleLineCommands.tmp");
+            var oldVersionWriter = new CommandWriter(logger, false);
+            testRunner.WriteBatchCommandsToFile(oldVersionWriter, 1);
+            var actualOldVersionCommandFile = oldVersionWriter.GetCommandFile();
+
+            CompareFiles(expectedOldVersionCommandFile, actualOldVersionCommandFile);
+        }
+
+
+        private void CompareFiles(string expectedFilePath, string actualFilePath)
+        {
+            using (var expectedReader = new StreamReader(expectedFilePath))
+            using (var actualReader = new StreamReader(actualFilePath))
+            {
+                int line = 0;
+                while (line < 1000)
+                {
+                    if (expectedReader.EndOfStream != actualReader.EndOfStream)
+                        Assert.Fail($"Line {line}: Expected end of stream value to be {expectedReader.EndOfStream} but instead was {actualReader.EndOfStream}.");
+                    var expectedLine = expectedReader.ReadLine();
+                    var actualLine = actualReader.ReadLine();
+                    if (expectedLine == null || actualLine == null)
+                    {
+                        Assert.IsTrue(expectedLine == actualLine,
+                            actualFilePath + Environment.NewLine +
+                            $"Line {line}: Expected reached end of file to be {expectedLine == null} but instead was {actualLine == null}.");
+                        return;
+                    }
+
+                    Assert.IsTrue(expectedLine.Equals(actualLine),
+                        actualFilePath + Environment.NewLine +
+                        $"Line {line} does not match" + Environment.NewLine +
+                                                                   "Expected:" + Environment.NewLine +
+                                                                   expectedLine + Environment.NewLine +
+                                                                   "Actual:" + Environment.NewLine +
+                                                                   actualLine);
+                    line++;
+                }
+                throw new Exception("Test Error: should never reach 1000 lines");
+            }
         }
 
         // CONSIDER: add tests for configRunner.run

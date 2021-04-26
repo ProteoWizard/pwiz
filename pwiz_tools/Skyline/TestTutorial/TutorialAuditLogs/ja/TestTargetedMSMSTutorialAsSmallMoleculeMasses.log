@@ -163,6 +163,7 @@ All Info  :
 スペクトルライブラリを構築>曖昧な一致を含めるは偽です
 スペクトルライブラリを構築>ドキュメント内の分子をフィルタリングは真です
 スペクトルライブラリを構築>ワークフローは"PRM"です
+スペクトルライブラリを構築>Input File Typeは"Search results (build library directly)"です
 Extra Info: カットオフスコア = "0.99",
 ファイルを検索 = 
 [
@@ -172,7 +173,8 @@ Extra Info: カットオフスコア = "0.99",
 iRT標準分子 = なし,
 曖昧な一致を含める = 偽,
 ドキュメント内の分子をフィルタリング = 真,
-ワークフロー = "PRM"
+ワークフロー = "PRM",
+Input File Type = "Search results (build library directly)"
 
 Undo Redo : 分子検索がインポートされました
 Summary   : 分子検索がインポートされました
