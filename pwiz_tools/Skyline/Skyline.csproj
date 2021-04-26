@@ -4774,6 +4774,14 @@
       <Link>BaseDataAccess.dll.config</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\ProteowizardWrapper\obj\x86\msconvert.exe">
+      <Link>msconvert.exe</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\ProteowizardWrapper\obj\x64\msconvert.exe">
+      <Link>msconvert.exe</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\BiblioSpec\obj\x86\BlibBuild.exe">
       <Link>BlibBuild.exe</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

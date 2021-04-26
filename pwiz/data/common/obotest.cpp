@@ -211,7 +211,7 @@ void test()
     // test term with [stuff to ignore]
     ++term;
     unit_assert(term->id == 9999999);
-    unit_assert(term->def == "description");
+    unit_assert_operator_equal("description", term->def);
  
     ++term;
     // test property values
