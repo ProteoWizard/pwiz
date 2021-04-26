@@ -1604,10 +1604,6 @@
   <data name="ToolMacros__listArguments_Document_Path" xml:space="preserve">
     <value>Document Path</value>
   </data>
-  <data name="PanoramaHelper_ValidateServer_" xml:space="preserve">
-    <value>An unknown error occurred trying to verify Panorama server information.
-{0}</value>
-  </data>
   <data name="SkylineViewContext_GetDocumentGridRowSources_Precursors" xml:space="preserve">
     <value>Precursors</value>
   </data>
@@ -5159,10 +5155,6 @@ If you prefer you can choose to report anonymously.</value>
   </data>
   <data name="SkylineWindow_ImportMassList_Finishing_up_import" xml:space="preserve">
     <value>Finishing up import</value>
-  </data>
-  <data name="PanoramaHelper_ValidateFolder_" xml:space="preserve">
-    <value>An unknown error occurred trying to verify access to Panorama folder {0} on the server {1}.
-{2}</value>
   </data>
   <data name="DoconvolutionMethod_NONE_None" xml:space="preserve">
     <value>None</value>
@@ -10037,10 +10029,6 @@ Recognized isotopes include: {2}</value>
     <value>Unknown error attempting to upload to Panorama.
 {0}</value>
   </data>
-  <data name="CommandArgs_PanoramaArgsComplete_plural_" xml:space="preserve">
-    <value>Please specify a value for the following arguments required to upload the document to Panorma:
-{0}</value>
-  </data>
   <data name="SkylineWindow_ShowPublishDlg_The_document_must_be_fully_loaded_before_it_can_be_uploaded_" xml:space="preserve">
     <value>The document must be fully loaded before it can be uploaded.</value>
   </data>
@@ -10061,10 +10049,6 @@ Recognized isotopes include: {2}</value>
   </data>
   <data name="PublishDocumentDlg_btnBrowse_Click_Upload_Document" xml:space="preserve">
     <value>Upload Document</value>
-  </data>
-  <data name="CommandArgs_PanoramaArgsComplete_" xml:space="preserve">
-    <value>Please specify a value for the following argument required to upload the document to Panorma:
-{0}</value>
   </data>
   <data name="FullScanAcquisitionMethod_FromName__0__is_not_a_valid_Full_Scan_Acquisition_Method" xml:space="preserve">
     <value>{0} is not a valid Full Scan Acquisition Method</value>
@@ -11432,5 +11416,35 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
   <data name="IonMobilityObject_ToString_HEO_" xml:space="preserve">
     <value>HEO:</value>
     <comment>Compact representation of "High Energy Ion Mobility Offset Offset"</comment>
+  </data>
+  <data name="CommandLine_Run_Error__Failure_occurred__Exiting___" xml:space="preserve">
+    <value>Error: Failure occurred. Exiting...</value>
+  </data>
+  <data name="CommandStatusWriter_WriteLine_Error_" xml:space="preserve">
+    <value>Error:</value>
+  </data>
+  <data name="CommandArgs_PanoramaArgsComplete_" xml:space="preserve">
+    <value>Error: A value is required for the following argument to upload the document to Panorama:
+{0}</value>
+  </data>
+  <data name="CommandArgs_PanoramaArgsComplete_plural_" xml:space="preserve">
+    <value>Error: A value is required for the following arguments to upload the document to Panorama:
+{0}</value>
+  </data>
+  <data name="PanoramaHelper_ValidateServer_PanoramaServerException_" xml:space="preserve">
+    <value>Error: Unable to verify Panorama server information.
+{0}</value>
+  </data>
+  <data name="PanoramaHelper_ValidateServer_Exception_" xml:space="preserve">
+    <value>Error: An unknown error occurred trying to verify Panorama server information.
+{0}</value>
+  </data>
+  <data name="PanoramaHelper_ValidateFolder_PanoramaServerException_" xml:space="preserve">
+    <value>Error: Unable to verify access to Panorama folder.
+{0}</value>
+  </data>
+  <data name="PanoramaHelper_ValidateFolder_Exception_" xml:space="preserve">
+    <value>Error: An unknown error occurred trying to verify access to Panorama folder '{0}' on the server {1}.
+{2}</value>
   </data>
 </root>

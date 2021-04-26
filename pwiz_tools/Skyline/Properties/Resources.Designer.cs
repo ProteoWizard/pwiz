@@ -6319,6 +6319,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error: Failure occurred. Exiting....
+        /// </summary>
+        public static string CommandLine_Run_Error__Failure_occurred__Exiting___ {
+            get {
+                return ResourceManager.GetString("CommandLine_Run_Error__Failure_occurred__Exiting___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error: You cannot simultaneously export a transition list and a method.  Neither will be exported. Please change the command line parameters..
         /// </summary>
         public static string CommandLine_Run_Error__You_cannot_simultaneously_export_a_transition_list_and_a_method___Neither_will_be_exported__ {
@@ -6668,6 +6677,15 @@ namespace pwiz.Skyline.Properties {
         public static string CommandProgressMonitor_UpdateProgressInternal_Message__ {
             get {
                 return ResourceManager.GetString("CommandProgressMonitor_UpdateProgressInternal_Message__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error:.
+        /// </summary>
+        public static string CommandStatusWriter_WriteLine_Error_ {
+            get {
+                return ResourceManager.GetString("CommandStatusWriter_WriteLine_Error_", resourceCulture);
             }
         }
         
@@ -20547,19 +20565,39 @@ namespace pwiz.Skyline.Properties {
         ///   Looks up a localized string similar to An unknown error occurred trying to verify access to Panorama folder {0} on the server {1}.
         ///{2}.
         /// </summary>
-        public static string PanoramaHelper_ValidateFolder_ {
+        public static string PanoramaHelper_ValidateFolder_Exception_ {
             get {
-                return ResourceManager.GetString("PanoramaHelper_ValidateFolder_", resourceCulture);
+                return ResourceManager.GetString("PanoramaHelper_ValidateFolder_Exception_", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to An unknown error occurred trying to verify Panorama server information.
+        ///   Looks up a localized string similar to Error: Unable to verify access to Panorama folder.
         ///{0}.
         /// </summary>
-        public static string PanoramaHelper_ValidateServer_ {
+        public static string PanoramaHelper_ValidateFolder_PanoramaServerException_ {
             get {
-                return ResourceManager.GetString("PanoramaHelper_ValidateServer_", resourceCulture);
+                return ResourceManager.GetString("PanoramaHelper_ValidateFolder_PanoramaServerException_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: An unknown error occurred trying to verify Panorama server information.
+        ///{0}.
+        /// </summary>
+        public static string PanoramaHelper_ValidateServer_Exception_ {
+            get {
+                return ResourceManager.GetString("PanoramaHelper_ValidateServer_Exception_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: Unable to verify Panorama server information.
+        ///{0}.
+        /// </summary>
+        public static string PanoramaHelper_ValidateServer_PanoramaServerException_ {
+            get {
+                return ResourceManager.GetString("PanoramaHelper_ValidateServer_PanoramaServerException_", resourceCulture);
             }
         }
         
