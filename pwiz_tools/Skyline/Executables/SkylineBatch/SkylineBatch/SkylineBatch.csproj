@@ -24,12 +24,13 @@
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>false</MapFileExtensions>
     <InstallUrl>http://skyline.gs.washington.edu/software/SkylineBatch-test/</InstallUrl>
+    <SupportUrl>https://skyline.ms/support.url</SupportUrl>
     <ProductName>Skyline Batch</ProductName>
-    <PublisherName>University of Washington</PublisherName>
+    <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>417</ApplicationRevision>
-    <ApplicationVersion>20.2.0.417</ApplicationVersion>
+    <ApplicationRevision>475</ApplicationRevision>
+    <ApplicationVersion>20.2.0.475</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -87,6 +88,7 @@
   <PropertyGroup />
   <PropertyGroup />
   <ItemGroup>
+    <None Include="Resources\downtriangle.png" />
     <Content Include="SkylineDailyRunner.exe">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -99,6 +101,32 @@
     <Content Include="SkylineBatch_release.ico">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="SkylineBatch_configs.ico">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <EmbeddedResource Include="CommandArgNames.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>CommandArgNames.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\..\CommandArgUsage.ja.resx">
+      <Link>CommandArgUsage.ja.resx</Link>
+      <LogicalName>pwiz.Skyline.CommandArgUsage.resources</LogicalName>
+      <DependentUpon>CommandArgUsage.resx</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\..\CommandArgUsage.resx">
+      <Link>CommandArgUsage.resx</Link>
+      <LogicalName>pwiz.Skyline.CommandArgUsage.resources</LogicalName>
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>CommandArgUsage.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\..\CommandArgUsage.zh-CHS.resx">
+      <Link>CommandArgUsage.zh-CHS.resx</Link>
+      <LogicalName>pwiz.Skyline.CommandArgUsage.resources</LogicalName>
+      <DependentUpon>CommandArgUsage.resx</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="InvalidConfigSetupForm.resx">
       <DependentUpon>InvalidConfigSetupForm.cs</DependentUpon>
     </EmbeddedResource>
@@ -121,10 +149,26 @@
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
     </None>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="RDirectorySelector.cs" />
+    <Compile Include="CommandArgNames.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>CommandArgNames.resx</DependentUpon>
+    </Compile>
+    <Compile Include="..\..\..\CommandArgUsage.Designer.cs">
+      <Link>CommandArgUsage.Designer.cs</Link>
+      <DependentUpon>CommandArgUsage.resx</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </Compile>
     <Compile Include="CommandWriter.cs" />
+    <Compile Include="RefineInputLocalization.cs" />
+    <Compile Include="RefineInputObject.cs" />
+    <Compile Include="RefineSettings.cs" />
     <Compile Include="SkylineBatchConfigManager.cs" />
     <Compile Include="FileSettings.cs" />
     <Compile Include="InvalidConfigSetupForm.cs">
@@ -262,6 +306,7 @@
       <Name>SharedBatch</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>

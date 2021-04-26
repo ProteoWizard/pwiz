@@ -285,6 +285,12 @@ namespace pwiz.Skyline
 
             WaitForDocumentLoaded();
 
+            if (commandArgs.Minimizing)
+            {
+                if (!MinimizeResults(commandArgs))
+                    return false;
+            }
+
             if (commandArgs.RemovingResults && commandArgs.RemoveBeforeDate.HasValue)
             {
                 // We are given a remove-before date. Remove results AFTER all results have been imported. 
@@ -1719,6 +1725,34 @@ namespace pwiz.Skyline
             }
         }
 
+        public bool MinimizeResults(CommandArgs commandArgs)
+        {
+            if (!_doc.Settings.HasResults)
+            {
+                _out.WriteLine(Resources.CommandLine_ReintegratePeaks_Error__You_must_first_import_results_into_the_document_before_reintegrating_);
+                return false;
+            }
+
+            var saveFile = commandArgs.SaveFile ?? _skylineFile;
+            _out.WriteLine(Resources.CommandLine_MinimizeResults_Minimizing_results_to__0_, saveFile);
+            if (commandArgs.ChromatogramsDiscard)
+                _out.WriteLine(Resources.CommandLine_MinimizeResults_Removing_unused_chromatograms___);
+            if (commandArgs.LimitNoise.HasValue)
+                _out.WriteLine(Resources.CommandLine_MinimizeResults_Limiting_chromatogram_noise_to______0__minutes_around_peak___, commandArgs.LimitNoise);
+
+            var minimizeResults = Model.MinimizeResults.MinimizeResultsFromDocument(Document, ((statistics, sizeCalculator) =>
+            {
+                _out.WriteLine(statistics.PercentComplete + @"%");
+            }));
+            minimizeResults.Settings = minimizeResults.Settings
+                .ChangeDiscardUnmatchedChromatograms(commandArgs.ChromatogramsDiscard)
+                .ChangeNoiseTimeRange(commandArgs.LimitNoise);
+            minimizeResults.MinimizeToFile(saveFile);
+            _doc = minimizeResults.Document;
+            _skylineFile = saveFile;
+            return true;
+        }
+
         private bool ImportSearch(CommandArgs commandArgs)
         {
             var doc = Document;
@@ -2231,7 +2265,8 @@ namespace pwiz.Skyline
 
             var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(string.Empty));
             var inputs = new MassListInputs(commandArgs.TransitionListPath);
-            var docNew = _doc.ImportMassList(inputs, null, progressMonitor, null,
+            var importer = _doc.PreImportMassList(inputs, progressMonitor, false);
+            var docNew = _doc.ImportMassList(inputs, importer, progressMonitor, null,
                 out selectPath, out irtPeptides, out librarySpectra, out errorList, out peptideGroups);
 
             // If nothing was imported (e.g. operation was canceled or zero error-free transitions) and also no errors, just return
@@ -2599,6 +2634,9 @@ namespace pwiz.Skyline
             var viewContext = DocumentGridViewContext.CreateDocumentGridViewContext(_doc, reportInvariant
                 ? DataSchemaLocalizer.INVARIANT
                 : SkylineDataSchema.GetLocalizedSchemaLocalizer());
+            // Make sure invariant report format uses a true comma if a tab separator was not specified.
+            if (reportInvariant && reportColSeparator != TextUtil.SEPARATOR_TSV)
+                reportColSeparator = TextUtil.SEPARATOR_CSV;
             var viewInfo = viewContext.GetViewInfo(PersistedViews.MainGroup.Id.ViewName(reportName));
             if (null == viewInfo)
             {

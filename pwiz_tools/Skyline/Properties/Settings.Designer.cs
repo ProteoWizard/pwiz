@@ -12,7 +12,7 @@ namespace pwiz.Skyline.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "15.9.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "15.8.0.0")]
     public sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
         
         private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
@@ -3043,6 +3043,54 @@ namespace pwiz.Skyline.Properties {
             }
             set {
                 this["DetectionsShowLegend"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("-1")]
+        public string AreaCVRatioIndex {
+            get {
+                return ((string)(this["AreaCVRatioIndex"]));
+            }
+            set {
+                this["AreaCVRatioIndex"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool ShowIonMobility {
+            get {
+                return ((bool)(this["ShowIonMobility"]));
+            }
+            set {
+                this["ShowIonMobility"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool ShowCollisionCrossSection {
+            get {
+                return ((bool)(this["ShowCollisionCrossSection"]));
+            }
+            set {
+                this["ShowCollisionCrossSection"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ShowFullScanAnnotations {
+            get {
+                return ((bool)(this["ShowFullScanAnnotations"]));
+            }
+            set {
+                this["ShowFullScanAnnotations"] = value;
             }
         }
     }

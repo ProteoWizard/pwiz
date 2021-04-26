@@ -163,6 +163,7 @@ All Info  :
 建立谱图库 > 包含不明确匹配项 是 假
 建立谱图库 > 文档肽段筛选器 是 真
 建立谱图库 > 工作流程 是 "PRM（并行反应离子监测）"
+建立谱图库 > Input File Type 是 "Search results (build library directly)"
 Extra Info: 截止值 = "0.99",
 搜索文件 = 
 [
@@ -172,7 +173,8 @@ Extra Info: 截止值 = "0.99",
 iRT 标准肽段 = 无,
 包含不明确匹配项 = 假,
 文档肽段筛选器 = 真,
-工作流程 = "PRM（并行反应离子监测）"
+工作流程 = "PRM（并行反应离子监测）",
+Input File Type = "Search results (build library directly)"
 
 Undo Redo : 已导入肽段搜索
 Summary   : 已导入肽段搜索

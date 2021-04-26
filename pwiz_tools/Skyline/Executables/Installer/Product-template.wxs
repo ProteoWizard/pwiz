@@ -322,6 +322,9 @@
       <Component Id="SkylineTool.pdb">
         <File Source="$(var.Skyline.TargetDir)/SkylineTool.pdb" KeyPath="yes"/>
       </Component>
+      <Component Id="System.Collections.Immutable.dll">
+        <File Source="$(var.Skyline.TargetDir)/System.Collections.Immutable.dll" KeyPath="yes"/>
+      </Component>
       <Component Id="System.Interactive.Async.dll">
         <File Source="$(var.Skyline.TargetDir)/System.Interactive.Async.dll" KeyPath="yes"/>
       </Component>

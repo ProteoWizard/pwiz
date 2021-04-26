@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Threading.Tasks;
 using System.Xml;
 using SharedBatch.Properties;
 
@@ -82,6 +83,9 @@ namespace SharedBatch
         
         public static SkylineSettings ReadXml(XmlReader reader)
         {
+            // always use local Skyline if it exists
+            if (SkylineInstallations.HasLocalSkylineCmd)
+                return new SkylineSettings(SkylineType.Local);
             var type = Enum.Parse(typeof(SkylineType), reader.GetAttribute(Attr.Type), false);
             var cmdPath = Path.GetDirectoryName(reader.GetAttribute(Attr.CmdPath));
             return new SkylineSettings((SkylineType)type, cmdPath);
@@ -95,31 +99,34 @@ namespace SharedBatch
             writer.WriteEndElement();
         }
 
-        public int[] GetVersion()
+        public async Task<int[]> GetVersion(ProcessRunner baseProcessRunner)
         {
             var output = "";
-            Process cmd = new Process();
-            cmd.StartInfo.FileName = CmdPath;
-            cmd.StartInfo.Arguments = "--version";
-            cmd.StartInfo.RedirectStandardInput = true;
-            cmd.StartInfo.RedirectStandardOutput = true;
-            cmd.StartInfo.UseShellExecute = false;
-            cmd.StartInfo.CreateNoWindow = true;
-            cmd.EnableRaisingEvents = true;
-            cmd.OutputDataReceived += (s, e) =>
+            var error = false;
+            var versionCommand = "--version";
+            //var processRunner = baseProcessRunner.Copy();
+            var processRunner = new ProcessRunner()
             {
-                if (e.Data != null && string.IsNullOrEmpty(output))
+                OnDataReceived = (data) =>
                 {
-                    output += e.Data;
-                }
+                    if (baseProcessRunner.OnDataReceived != null) baseProcessRunner.OnDataReceived(data);
+                    if (data != null && !data.Contains(versionCommand) && string.IsNullOrEmpty(output))
+                        output += data;
+                },
+                OnError = () =>
+                {
+                    if (baseProcessRunner.OnError != null) baseProcessRunner.OnError();
+                    error = true;
+                },
+                OnException = baseProcessRunner.OnException
             };
-            cmd.Start();
-            cmd.BeginOutputReadLine();
-            cmd.WaitForExit();
             
+            await processRunner.Run(CmdPath, versionCommand);
             var versionString = output.Split(' ');
+            if (error) return null;
+
             int i = 0;
-            while (i < versionString.Length && !Int32.TryParse(versionString[i].Substring(0,1), out _)) i++;
+            while (i < versionString.Length && !Int32.TryParse(versionString[i].Substring(0, 1), out _)) i++;
             if (i == versionString.Length) throw new Exception("No parsable Skyline version found.");
             return ParseVersionFromString(versionString[i]);
         }
@@ -134,15 +141,17 @@ namespace SharedBatch
             return versionNumbers;
         }
 
-        public bool HigherVersion(string versionCutoff)
+        public async Task <bool> HigherVersion(string versionCutoff, ProcessRunner baseProcessRunner = null)
         {
+            baseProcessRunner = baseProcessRunner ?? new ProcessRunner();
             var cutoff = ParseVersionFromString(versionCutoff);
-            var version = GetVersion();
+            var version = await GetVersion(baseProcessRunner);
+            if (version == null) return false; // could not parse version
             for (int i = 0; i < cutoff.Length; i++)
             {
-                if (version[i] < cutoff[i]) return false;
+                if (version[i] != cutoff[i]) return version[i] > cutoff[i];
             }
-            return true;
+            return true; // version is equal to cutoff
         }
 
         protected bool Equals(SkylineSettings other)

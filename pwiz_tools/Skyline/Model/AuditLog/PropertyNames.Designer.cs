@@ -277,6 +277,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Input File Type.
+        /// </summary>
+        public static string BuildPeptideSearchLibrarySettings_InputFileType {
+            get {
+                return ResourceManager.GetString("BuildPeptideSearchLibrarySettings_InputFileType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Search files.
         /// </summary>
         public static string BuildPeptideSearchLibrarySettings_SearchFileNames {
@@ -588,6 +597,69 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string DataSettings_PanoramaPublishUri {
             get {
                 return ResourceManager.GetString("DataSettings_PanoramaPublishUri", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Instrument preset.
+        /// </summary>
+        public static string DdaConverterSettings_InstrumentPreset {
+            get {
+                return ResourceManager.GetString("DdaConverterSettings_InstrumentPreset", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to DDA conversion non-default settings.
+        /// </summary>
+        public static string DdaConverterSettings_NonDefaultAdditionalSettings {
+            get {
+                return ResourceManager.GetString("DdaConverterSettings_NonDefaultAdditionalSettings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to DDA conversion protocol.
+        /// </summary>
+        public static string DdaConverterSettings_Protocol {
+            get {
+                return ResourceManager.GetString("DdaConverterSettings_Protocol", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Fragment ion types.
+        /// </summary>
+        public static string DdaSearchSettings_FragmentIons {
+            get {
+                return ResourceManager.GetString("DdaSearchSettings_FragmentIons", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Fragment tolerance.
+        /// </summary>
+        public static string DdaSearchSettings_FragmentTolerance {
+            get {
+                return ResourceManager.GetString("DdaSearchSettings_FragmentTolerance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Max variable mods per peptide.
+        /// </summary>
+        public static string DdaSearchSettings_MaxVariableMods {
+            get {
+                return ResourceManager.GetString("DdaSearchSettings_MaxVariableMods", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Precursor tolerance.
+        /// </summary>
+        public static string DdaSearchSettings_PrecursorTolerance {
+            get {
+                return ResourceManager.GetString("DdaSearchSettings_PrecursorTolerance", resourceCulture);
             }
         }
         
@@ -1330,6 +1402,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to FASTA file for importing targets.
+        /// </summary>
+        public static string ImportFastaSettings_FastaImportTargetsFile {
+            get {
+                return ResourceManager.GetString("ImportFastaSettings_FastaImportTargetsFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to FASTA text.
         /// </summary>
         public static string ImportFastaSettings_FastaText {
@@ -1371,6 +1452,24 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string ImportPeptideSearchSettings_BuildPeptideSearchLibrarySettings {
             get {
                 return ResourceManager.GetString("ImportPeptideSearchSettings_BuildPeptideSearchLibrarySettings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to DDA converter settings.
+        /// </summary>
+        public static string ImportPeptideSearchSettings_DdaConverterSettings {
+            get {
+                return ResourceManager.GetString("ImportPeptideSearchSettings_DdaConverterSettings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to DDA search settings.
+        /// </summary>
+        public static string ImportPeptideSearchSettings_DdaSearchSettings {
+            get {
+                return ResourceManager.GetString("ImportPeptideSearchSettings_DdaSearchSettings", resourceCulture);
             }
         }
         

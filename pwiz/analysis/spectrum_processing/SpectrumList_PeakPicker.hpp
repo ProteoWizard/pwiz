@@ -61,6 +61,7 @@ class PWIZ_API_DECL SpectrumList_PeakPicker : public msdata::SpectrumListWrapper
     PeakDetectorPtr algorithm_;
     const util::IntegerSet msLevelsToPeakPick_;
     std::string noVendorCentroidingWarningMessage_;
+    mutable msdata::DetailLevel minDetailLevel_;
     int mode_;
 };
 

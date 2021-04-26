@@ -33,6 +33,7 @@
 #include "InstrumentParameter.hpp"
 #include "ScanData.hpp"
 #include "DiaUmpireMath.hpp"
+#include "pwiz/data/msdata/MSData.hpp"
 
 namespace DiaUmpire {
 
@@ -91,6 +92,7 @@ class PeakCurve
     float MzVar = -1;
     vector<float> RegionRidge;
     const InstrumentParameter& parameter;
+    const pwiz::msdata::MSData& msd;
 
     public:
 
@@ -388,7 +390,7 @@ class PeakCurve
 
         //Generate a peak curve for each detected region
         for (size_t i = 0; i < GetPeakRegionList().size(); i++) {
-            tempArrayList.emplace_back(new PeakCurve(parameter));
+            tempArrayList.emplace_back(new PeakCurve(parameter, msd));
             PeakCurvePtr& peakCurve = tempArrayList.back();
             peakCurve->Index = this->Index;
             peakCurve->RegionRidge = NoRidgeRegion.at(i);
@@ -424,7 +426,7 @@ class PeakCurve
 #ifdef DIAUMPIRE_DEBUG
         if (MsLevel == 1)
         {
-            ofstream peakRegionLog("DiaUmpireCpp-peakRegion.txt", std::ios::app);
+            ofstream peakRegionLog(("DiaUmpireCpp-peakRegion-" + msd.run.id + ".txt").c_str(), std::ios::app);
             boost::format pointFormat(" (%.2f, %.2f, %.2f)");
             boost::format floatFormat(" %.2f");
             peakRegionLog << Index << " PeakRegionList";
@@ -433,12 +435,12 @@ class PeakCurve
             peakRegionLog << "\n";
         }
 
-        ofstream peakComparisonLog("DiaUmpireCpp-peakComparisons.txt", std::ios::app);
+        ofstream peakComparisonLog(("DiaUmpireCpp-peakComparisons-" + msd.run.id + ".txt").c_str(), std::ios::app);
         boost::format pointFormat(" (%.6f, %.6f, %.6f, %d)");
 
         vector<vector<string>> comparisonsByRegion(GetPeakRegionList().size());
 
-        ofstream peakLog("DiaUmpireCpp-ms1-peaks-at-separate-by-region.txt", std::ios::app);
+        ofstream peakLog(("DiaUmpireCpp-ms1-peaks-at-separate-by-region-" + msd.run.id + ".txt").c_str(), std::ios::app);
         boost::format float6Format(" %.6f");
         if (MsLevel == 1)
             peakLog << Index;
@@ -508,7 +510,7 @@ class PeakCurve
         return returnArrayList;
     }
 
-    PeakCurve(const InstrumentParameter& parameter) : parameter(parameter) {}
+    PeakCurve(const InstrumentParameter& parameter, const pwiz::msdata::MSData& msd) : parameter(parameter), msd(msd) {}
 
     float StartInt() const {
         if (startint == 0) {
@@ -628,6 +630,9 @@ class PeakCurve
         else if (SmoothData.PointCount() > 0) {
             Width = SmoothData.Data.at(SmoothData.PointCount() - 1).getX() - SmoothData.Data.at(0).getX();
         }
+        if (Width < 0)
+            throw runtime_error("[DiaUmpire::PeakCurve::RTWidth] peak times out of order");
+
         return Width;
     }
 
@@ -669,6 +674,9 @@ class PeakCurve
 
     void AddPeak(XYZData xYZPoint)
     {
+        if (!PeakList.empty() && xYZPoint.getX() < PeakList.back().getX())
+            throw runtime_error("[DiaUmpire::PeakCurve::AddPeak] scan time is not monotonically increasing: new time " + pwiz::util::toString(xYZPoint.getX()) + " < last added time " + pwiz::util::toString(PeakList.back().getX()));
+
         PeakList.emplace_back(xYZPoint);
         TotalIntMzF += xYZPoint.getY() * xYZPoint.getZ() * xYZPoint.getZ();
         TotalIntF += xYZPoint.getZ() * xYZPoint.getZ();

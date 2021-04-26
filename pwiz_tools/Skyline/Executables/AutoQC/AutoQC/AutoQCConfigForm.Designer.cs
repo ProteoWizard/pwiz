@@ -70,13 +70,13 @@ namespace AutoQC
             this.lblPanoramaEmail = new System.Windows.Forms.Label();
             this.textPanoramaEmail = new System.Windows.Forms.TextBox();
             this.tabSkylineSettings = new System.Windows.Forms.TabPage();
+            this.panelSkylineSettings = new System.Windows.Forms.Panel();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.lblConfigRunning = new System.Windows.Forms.Label();
             this.btnCancelConfig = new System.Windows.Forms.Button();
             this.btnSaveConfig = new System.Windows.Forms.Button();
             this.btnOkConfig = new System.Windows.Forms.Button();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-            this.panelSkylineSettings = new System.Windows.Forms.Panel();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -120,6 +120,7 @@ namespace AutoQC
             this.tabSettings.Controls.Add(this.groupBoxMain);
             resources.ApplyResources(this.tabSettings, "tabSettings");
             this.tabSettings.Name = "tabSettings";
+            this.tabSettings.Enter += new System.EventHandler(this.TabEnter);
             // 
             // textConfigName
             // 
@@ -292,6 +293,7 @@ namespace AutoQC
             this.tabPanoramaSettings.Controls.Add(this.groupBoxPanorama);
             resources.ApplyResources(this.tabPanoramaSettings, "tabPanoramaSettings");
             this.tabPanoramaSettings.Name = "tabPanoramaSettings";
+            this.tabPanoramaSettings.Enter += new System.EventHandler(this.TabEnter);
             // 
             // cbPublishToPanorama
             // 
@@ -361,6 +363,12 @@ namespace AutoQC
             this.tabSkylineSettings.Controls.Add(this.panelSkylineSettings);
             resources.ApplyResources(this.tabSkylineSettings, "tabSkylineSettings");
             this.tabSkylineSettings.Name = "tabSkylineSettings";
+            this.tabSkylineSettings.Enter += new System.EventHandler(this.TabEnter);
+            // 
+            // panelSkylineSettings
+            // 
+            resources.ApplyResources(this.panelSkylineSettings, "panelSkylineSettings");
+            this.panelSkylineSettings.Name = "panelSkylineSettings";
             // 
             // groupBox1
             // 
@@ -399,11 +407,6 @@ namespace AutoQC
             this.btnOkConfig.Name = "btnOkConfig";
             this.btnOkConfig.UseVisualStyleBackColor = true;
             this.btnOkConfig.Click += new System.EventHandler(this.btnOkConfig_Click);
-            // 
-            // panelSkylineSettings
-            // 
-            resources.ApplyResources(this.panelSkylineSettings, "panelSkylineSettings");
-            this.panelSkylineSettings.Name = "panelSkylineSettings";
             // 
             // AutoQcConfigForm
             // 

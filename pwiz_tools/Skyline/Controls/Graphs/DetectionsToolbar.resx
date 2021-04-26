@@ -250,7 +250,7 @@
     <value>toolStripAtLeastN</value>
   </data>
   <data name="&gt;&gt;toolStripAtLeastN.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.ToolStripNumericUpDown, Skyline-daily, Version=20.1.1.222, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.ToolStripNumericUpDown, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;toolStripLabel3.Name" xml:space="preserve">
     <value>toolStripLabel3</value>

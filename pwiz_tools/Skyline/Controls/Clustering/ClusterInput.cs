@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Threading;
 using pwiz.Common.DataAnalysis.Clustering;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Clustering;
@@ -28,29 +29,23 @@ using pwiz.Skyline.Model.Databinding;
 
 namespace pwiz.Skyline.Controls.Clustering
 {
-    public class ClusterInput
+    public class ClusterInput : DataSchemaInput
     {
-        public ClusterInput(DataSchemaLocalizer dataSchemaLocalizer, ReportResults reportResults,
-            ClusteringSpec clusteringSpec)
+        public ClusterInput(DataSchema dataSchema, ReportResults reportResults,
+            ClusteringSpec clusteringSpec, ReportColorScheme lastColorScheme) : base(dataSchema)
         {
-            DataSchemaLocalizer = dataSchemaLocalizer;
             ReportResults = reportResults;
             ClusteringSpec = clusteringSpec;
+            LastColorScheme = lastColorScheme;
         }
 
-        public DataSchemaLocalizer DataSchemaLocalizer { get; private set; }
         public ReportResults ReportResults { get; private set; }
         public ClusteringSpec ClusteringSpec { get; private set; }
 
-        public ClusterGraphResults GetClusterGraphResults(ProgressHandler progressHandler)
+        public ReportColorScheme LastColorScheme { get; private set; }
+
+        public ClusterGraphResults GetClusterGraphResults(CancellationToken cancellationToken, ClusteredReportResults clusteredResults, ReportColorScheme colorScheme)
         {
-            var tuple = GetClusterResultsTuple(progressHandler);
-            if (tuple == null)
-            {
-                return null;
-            }
-            var clusteredResults = tuple.Item2;
-            var colorScheme = tuple.Item3;
             var points = new List<ClusterGraphResults.Point>();
             var rowHeaders = new List<ClusterGraphResults.Header>();
             var columnValues = new List<PivotedProperties.Series>();
@@ -58,6 +53,7 @@ namespace pwiz.Skyline.Controls.Clustering
             var cellLocators = new List<CellLocator>();
             for (int iGroup = 0; iGroup < clusteredResults.PivotedProperties.SeriesGroups.Count; iGroup++)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 var group = clusteredResults.PivotedProperties.SeriesGroups[iGroup];
 
                 var groupColumnHeaders = clusteredResults.ClusteredProperties.GetColumnHeaders(group).ToList();
@@ -93,6 +89,7 @@ namespace pwiz.Skyline.Controls.Clustering
             }
             for (int iRow = 0; iRow < clusteredResults.RowCount; iRow++)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 var rowItem = clusteredResults.RowItems[iRow];
                 var rowColors = new List<Color>();
                 var rowHeaderParts = new List<object>();
@@ -130,7 +127,7 @@ namespace pwiz.Skyline.Controls.Clustering
             return new ClusterGraphResults(clusteredResults.RowDendrogramData?.DendrogramData, rowHeaders, columnGroups, points);
         }
 
-        public Tuple<Clusterer, ClusteredReportResults, ReportColorScheme> GetClusterResultsTuple(ProgressHandler progressHandler)
+        public Tuple<Clusterer, ClusteredReportResults> GetClusterResultsTuple(ProgressHandler progressHandler)
         {
             var clusterer = Clusterer.CreateClusterer(progressHandler.CancellationToken, ClusteringSpec ?? ClusteringSpec.DEFAULT, ReportResults);
             if (clusterer == null)
@@ -139,8 +136,7 @@ namespace pwiz.Skyline.Controls.Clustering
             }
 
             var results = clusterer.GetClusteredResults(progressHandler);
-            var colorScheme = ReportColorScheme.FromClusteredResults(progressHandler.CancellationToken, results);
-            return Tuple.Create(clusterer, results, colorScheme);
+            return Tuple.Create(clusterer, results);
         }
     }
 }

@@ -370,8 +370,7 @@ pwiz::util::IterationListener::Status ReferenceWrite_mz5::readAndWriteSpectra(
             status = pwiz::util::IterationListener::Status_Ok;
             if (iterationListenerRegistry)
                 status = iterationListenerRegistry->broadcastUpdateMessage(
-                        pwiz::util::IterationListener::UpdateMessage(i,
-                                sl->size()));
+                        pwiz::util::IterationListener::UpdateMessage(i, sl->size(), "writing spectra"));
             if (status == pwiz::util::IterationListener::Status_Cancel)
                 break;
 
@@ -435,8 +434,7 @@ pwiz::util::IterationListener::Status ReferenceWrite_mz5::readAndWriteChromatogr
                 status = pwiz::util::IterationListener::Status_Ok;
                 if (iterationListenerRegistry)
                     status = iterationListenerRegistry->broadcastUpdateMessage(
-                            pwiz::util::IterationListener::UpdateMessage(i,
-                                    cl->size()));
+                            pwiz::util::IterationListener::UpdateMessage(i, cl->size(), "writing chromatograms"));
                 if (status == pwiz::util::IterationListener::Status_Cancel)
                     break;
                 cp = cl->chromatogram(i, true);

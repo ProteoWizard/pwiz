@@ -290,11 +290,10 @@ namespace pwiz.Skyline
             }
             // If the parent directory ends with .zip and lives in AppData\Local\Temp
             // then the user has double-clicked a file in Windows Explorer inside a ZIP file
-            if (parentDir != null && PathEx.HasExtension(parentDir, @".zip") &&
-                parentDir.ToLower().Contains(@"appdata\local\temp"))
+            if (DirectoryEx.IsTempZipFolder(parentDir, out string zipFileName))
             {
                 MessageDlg.Show(this, TextUtil.LineSeparate(Resources.SkylineWindow_HasFileToOpen_Opening_a_document_inside_a_ZIP_file_is_not_supported_,
-                    string.Format(Resources.SkylineWindow_HasFileToOpen_Unzip_the_file__0__first_and_then_open_the_extracted_file__1__, Path.GetFileName(parentDir), Path.GetFileName(_fileToOpen))));
+                    string.Format(Resources.SkylineWindow_HasFileToOpen_Unzip_the_file__0__first_and_then_open_the_extracted_file__1__, zipFileName, Path.GetFileName(_fileToOpen))));
                 return false;
             }
 
@@ -1349,7 +1348,7 @@ namespace pwiz.Skyline
             var bookmark = new Bookmark(startPath);
             if (_resultsGridForm != null && _resultsGridForm.Visible)
             {
-                var liveResultsGrid = _resultsGridForm as LiveResultsGrid;
+                var liveResultsGrid = _resultsGridForm;
                 if (null != liveResultsGrid)
                 {
                     bookmark = bookmark.ChangeChromFileInfoId(liveResultsGrid.GetCurrentChromFileInfoId());
@@ -1464,7 +1463,7 @@ namespace pwiz.Skyline
             if (isAnnotationOrNote && findResult.Bookmark.ChromFileInfoId != null)
             {
                 ShowResultsGrid(true);
-                LiveResultsGrid liveResultGrid = _resultsGridForm as LiveResultsGrid;
+                LiveResultsGrid liveResultGrid = _resultsGridForm;
                 if (null != liveResultGrid)
                 {
                     liveResultGrid.HighlightFindResult(findResult);
@@ -2830,6 +2829,10 @@ namespace pwiz.Skyline
                         _tool.RunTool(_parent.Document, _parent, null, _parent, _parent);
                     }
                 }
+                catch (ToolDeprecatedException e)
+                {
+                    MessageDlg.Show(_parent, e.Message);
+                }
                 catch (WebToolException e)
                 {
                     WebHelpers.ShowLinkFailure(_parent, e.Link);
@@ -2984,6 +2987,11 @@ namespace pwiz.Skyline
         #endregion
 
         #region SequenceTree events
+
+        public bool SequenceTreeFormIsVisible
+        {
+            get { return _sequenceTreeForm != null && _sequenceTreeForm.Visible; }
+        }
 
         public void ShowSequenceTreeForm(bool show, bool forceUpdate = false)
         {
@@ -3652,7 +3660,7 @@ namespace pwiz.Skyline
             SetResultIndexOnGraphs(_listGraphMassError, false);
             SetResultIndexOnGraphs(_listGraphDetections, false);
 
-            var liveResultsGrid = (LiveResultsGrid)_resultsGridForm;
+            var liveResultsGrid = _resultsGridForm;
             if (null != liveResultsGrid)
             {
                 liveResultsGrid.SetReplicateIndex(ComboResults.SelectedIndex);

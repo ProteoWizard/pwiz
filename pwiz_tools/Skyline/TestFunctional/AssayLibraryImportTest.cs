@@ -1071,7 +1071,7 @@ namespace pwiz.SkylineTestFunctional
             var irtCsvFile = TestFilesDir.GetTestPath("OpenSWATH_SM4_iRT.csv");
             var overwriteDlg = ShowDialog<MultiButtonMsgDlg>(() => SkylineWindow.ImportAssayLibrary(csvFile)); 
             var transitionSelectdgl = ShowDialog<ImportTransitionListColumnSelectDlg>(overwriteDlg.BtnYesClick); // Expect a confirmation of column selections
-            var chooseIrt2 = ShowDialog<ChooseIrtStandardPeptidesDlg>(transitionSelectdgl.AcceptButton.PerformClick);
+            var chooseIrt2 = ShowDialog<ChooseIrtStandardPeptidesDlg>(transitionSelectdgl.OkDialog);
             OkDialog(chooseIrt2, () => chooseIrt2.OkDialogFile(irtCsvFile));
             doc = WaitForDocumentChange(doc);
             AssertEx.IsDocumentState(doc, null, 24, 294, 1170);
@@ -1104,7 +1104,8 @@ namespace pwiz.SkylineTestFunctional
             var chooseStandard = IrtStandard.BIOGNOSYS_11;
             var overwriteDlg2 = ShowDialog<MultiButtonMsgDlg>(() => SkylineWindow.ImportAssayLibrary(TestFilesDir.GetTestPath("cirts.tsv")));
             transitionSelectdgl = ShowDialog<ImportTransitionListColumnSelectDlg>(overwriteDlg2.BtnYesClick);  // Expect a confirmation of column selections
-            var transitionErrs2 = ShowDialog<ImportTransitionListErrorDlg>(() => transitionSelectdgl.AcceptButton.PerformClick()); // Expect an error report
+            var transitionErrs2 = ShowDialog<ImportTransitionListErrorDlg>(transitionSelectdgl.OkDialog); // Expect an error report
+            RunUI(() => Assert.IsTrue(transitionErrs2.AcceptButton.DialogResult == DialogResult.OK));
             var chooseIrt4 = ShowDialog<ChooseIrtStandardPeptidesDlg>(transitionErrs2.AcceptButton.PerformClick);
             OkDialog(chooseIrt4, () => chooseIrt4.OkDialogStandard(chooseStandard));
             doc = WaitForDocumentChange(doc);
@@ -1143,13 +1144,21 @@ namespace pwiz.SkylineTestFunctional
         public static void PasteTransitionListSkipColumnSelectWithMessage(string expectedFirstMessage, int expectedMessageCount, bool proceedWithErrors)
         {
 
-            var transitionSelectdgl = ShowDialog<ImportTransitionListColumnSelectDlg>(SkylineWindow.Paste);
+            var transitionSelectDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(SkylineWindow.Paste);
             // We're expecting errors, collect them then move on
-            RunUI(() => transitionSelectdgl.AcceptButton.PerformClick());
-            var errDlg = WaitForOpenForm<ImportTransitionListErrorDlg>();
-            AssertEx.AreEqual(expectedMessageCount, errDlg.ErrorList.Count);
-            AssertEx.AreEqual(expectedFirstMessage, errDlg.ErrorList.First().ErrorMessage);
-            OkDialog(errDlg, () => errDlg.DialogResult = DialogResult.OK);
+            bool errorsAccepted = false;
+            RunDlg<ImportTransitionListErrorDlg>(transitionSelectDlg.OkDialog, errDlg =>
+            {
+                AssertEx.AreEqual(expectedMessageCount, errDlg.ErrorList.Count);
+                AssertEx.AreEqual(expectedFirstMessage, errDlg.ErrorList.First().ErrorMessage);
+                if (errDlg.AcceptButton.DialogResult == DialogResult.OK)
+                    errorsAccepted = true;
+                errDlg.AcceptButton.PerformClick();
+            });
+            if (errorsAccepted)
+                WaitForClosedForm(transitionSelectDlg);
+            else
+                OkDialog(transitionSelectDlg, transitionSelectDlg.CancelDialog);
         }
 
         public static RCalcIrt ValidateDocAndIrt(int peptides, int irtTotal, int irtStandards)

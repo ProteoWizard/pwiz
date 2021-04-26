@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net.NetworkInformation;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
@@ -36,25 +37,45 @@ namespace SkylineBatch
 
 
         public MainSettings(string templateFilePath, string analysisFolderPath, string dataFolderPath,
-            string replicateNamingPattern)
+            string annotationsFilePath, string replicateNamingPattern, string dependentConfigName)
         {
             TemplateFilePath = templateFilePath;
+            DependentConfigName = !string.IsNullOrEmpty(dependentConfigName) ? dependentConfigName : null;
             AnalysisFolderPath = analysisFolderPath;
             DataFolderPath = dataFolderPath;
+            AnnotationsFilePath = annotationsFilePath ?? string.Empty;
             ReplicateNamingPattern = replicateNamingPattern ?? string.Empty;
         }
 
+
         public readonly string TemplateFilePath;
+
+        public readonly string DependentConfigName;
 
         public readonly string AnalysisFolderPath;
 
         public readonly string DataFolderPath;
+
+        public readonly string AnnotationsFilePath;
 
         public readonly string ReplicateNamingPattern;
 
         public string GetResultsFilePath()
         {
             return Path.Combine(AnalysisFolderPath, Path.GetFileName(TemplateFilePath));
+        }
+
+        public MainSettings WithoutDependency()
+        {
+            return new MainSettings(TemplateFilePath, AnalysisFolderPath, DataFolderPath, AnnotationsFilePath,
+                ReplicateNamingPattern, string.Empty);
+        }
+
+        public MainSettings UpdateDependent(string newName, string newTemplate)
+        {
+            if (string.IsNullOrEmpty(newTemplate)) return WithoutDependency();
+            return new MainSettings(newTemplate, AnalysisFolderPath, DataFolderPath, AnnotationsFilePath,
+                ReplicateNamingPattern, newName);
         }
 
         public void CreateAnalysisFolderIfNonexistent()
@@ -72,68 +93,84 @@ namespace SkylineBatch
             return sb.ToString();
         }
 
-        public void Validate()
+        public void Validate(List<string> generatedSkylineFiles = null)
         {
-            ValidateSkylineFile(TemplateFilePath);
+            if (DependentConfigName == null)
+                ValidateTemplateFile(TemplateFilePath);
             ValidateDataFolder(DataFolderPath);
             ValidateAnalysisFolder(AnalysisFolderPath);
+            ValidateAnnotationsFile(AnnotationsFilePath);
         }
 
-        public static void ValidateSkylineFile(string skylineFile)
+        public static void ValidateTemplateFile(string templateFile)
         {
-            CheckIfEmptyPath(skylineFile, Resources.MainSettings_ValidateSkylineFile_Skyline_file);
-            if (!File.Exists(skylineFile))
-            {
-                throw new ArgumentException(string.Format(Resources.MainSettings_ValidateSkylineFile_The_Skyline_template_file__0__does_not_exist_, skylineFile) + Environment.NewLine +
+
+            FileUtil.ValidateNotEmptyPath(templateFile, Resources.MainSettings_ValidateSkylineFile_Skyline_file);
+            if (!File.Exists(templateFile))
+            
+                throw new ArgumentException(string.Format(Resources.MainSettings_ValidateSkylineFile_The_Skyline_template_file__0__does_not_exist_, templateFile) + Environment.NewLine +
                                             Resources.MainSettings_ValidateSkylineFile_Please_provide_a_valid_file_);
-            }
+            FileUtil.ValidateNotInDownloads(templateFile, Resources.MainSettings_ValidateSkylineFile_Skyline_file);
         }
 
         public static void ValidateAnalysisFolder(string analysisFolder)
         {
-            CheckIfEmptyPath(analysisFolder, Resources.MainSettings_ValidateAnalysisFolder_analysis_folder);
+            FileUtil.ValidateNotEmptyPath(analysisFolder, Resources.MainSettings_ValidateAnalysisFolder_analysis_folder);
             var analysisFolderDirectory = Path.GetDirectoryName(analysisFolder);
             if (!Directory.Exists(analysisFolderDirectory))
             {
-                throw new ArgumentException(string.Format(Resources.MainSettings_ValidateAnalysisFolder_The_analysis_folder__0__does_not_exist_, analysisFolderDirectory) + Environment.NewLine +
+                throw new ArgumentException(string.Format(Resources.MainSettings_ValidateAnalysisFolder_The__parent_directory_of_the_analysis_folder__0__does_not_exist_, analysisFolderDirectory) + Environment.NewLine +
                                             Resources.MainSettings_ValidateAnalysisFolder_Please_provide_a_valid_folder_);
             }
+            FileUtil.ValidateNotInDownloads(analysisFolder, Resources.MainSettings_ValidateAnalysisFolder_analysis_folder);
         }
 
         public static void ValidateDataFolder(string dataFolder)
         {
-            CheckIfEmptyPath(dataFolder, Resources.MainSettings_ValidateDataFolder_data_folder);
+            FileUtil.ValidateNotEmptyPath(dataFolder, Resources.MainSettings_ValidateDataFolder_data_folder);
             if (!Directory.Exists(dataFolder))
             {
                 throw new ArgumentException(string.Format(Resources.MainSettings_ValidateDataFolder_The_data_folder__0__does_not_exist_, dataFolder) + Environment.NewLine +
                                             Resources.MainSettings_ValidateAnalysisFolder_Please_provide_a_valid_folder_);
             }
+            FileUtil.ValidateNotInDownloads(dataFolder, Resources.MainSettings_ValidateDataFolder_data_folder);
         }
 
-        public static void CheckIfEmptyPath(string input, string name)
+        public static void ValidateAnnotationsFile(string annotationsFilePath)
         {
-            if (string.IsNullOrWhiteSpace(input))
+            if (!string.IsNullOrWhiteSpace(annotationsFilePath))
             {
-                throw new ArgumentException(string.Format(Resources.MainSettings_CheckIfEmptyPath_Please_specify_a_path_to__0_, name));
+                if (!File.Exists(annotationsFilePath))
+                    throw new ArgumentException(string.Format(Resources.MainSettings_ValidateAnnotationsFolder_The_annotations_file__0__does_not_exist_, annotationsFilePath) + Environment.NewLine +
+                                            Resources.MainSettings_ValidateAnnotationsFolder_Please_enter_a_valid_file_path__or_no_text_if_you_do_not_wish_to_include_annotations_);
+                FileUtil.ValidateNotInDownloads(annotationsFilePath, Resources.MainSettings_ValidateAnnotationsFile_annotations_file);
             }
         }
 
         public bool TryPathReplace(string oldRoot, string newRoot, out MainSettings pathReplacedMainSettings)
         {
-            var templateReplaced =
-                TextUtil.TryReplaceStart(oldRoot, newRoot, TemplateFilePath, out string replacedTemplatePath);
+            var templateReplaced = false;
+            var replacedTemplatePath = TemplateFilePath;
+            if (DependentConfigName == null)
+                templateReplaced = TextUtil.SuccessfulReplace(ValidateTemplateFile, oldRoot, newRoot, TemplateFilePath, out replacedTemplatePath);
             var analysisReplaced =
-                TextUtil.TryReplaceStart(oldRoot, newRoot, AnalysisFolderPath, out string replacedAnalysisPath);
+                TextUtil.SuccessfulReplace(ValidateAnalysisFolder, oldRoot, newRoot, AnalysisFolderPath, out string replacedAnalysisPath);
             var dataReplaced =
-                TextUtil.TryReplaceStart(oldRoot, newRoot, DataFolderPath, out string replacedDataPath);
-            pathReplacedMainSettings = new MainSettings(replacedTemplatePath, replacedAnalysisPath, replacedDataPath, ReplicateNamingPattern);
-            return templateReplaced || analysisReplaced || dataReplaced;
+                TextUtil.SuccessfulReplace(ValidateDataFolder, oldRoot, newRoot, DataFolderPath, out string replacedDataPath);
+            var annotationsReplaced =
+                TextUtil.SuccessfulReplace(ValidateAnnotationsFile, oldRoot, newRoot, AnnotationsFilePath, out string replacedAnnotationsPath);
+
+            pathReplacedMainSettings = new MainSettings(replacedTemplatePath, replacedAnalysisPath, replacedDataPath,
+                    replacedAnnotationsPath, ReplicateNamingPattern, DependentConfigName);
+
+            return templateReplaced || analysisReplaced || dataReplaced || annotationsReplaced;
         }
 
         public bool RunWillOverwrite(int startStep, string configHeader, out StringBuilder message)
         {
             var tab = "      ";
             message = new StringBuilder(configHeader);
+            CreateAnalysisFolderIfNonexistent();
             var analysisFolderName = Path.GetFileName(AnalysisFolderPath);
             switch (startStep)
             {
@@ -161,7 +198,7 @@ namespace SkylineBatch
                         return true;
                     }
                     break;
-                case 3:
+                case 4:
                     var reportFiles = GetFilesInFolder(AnalysisFolderPath, TextUtil.EXT_CSV);
                     if (reportFiles.Count > 0)
                     {
@@ -172,7 +209,7 @@ namespace SkylineBatch
                         return true;
                     }
                     break;
-                case 4:
+                case 5:
                     // pass
                     break;
                 default:
@@ -180,7 +217,6 @@ namespace SkylineBatch
             }
             return false;
         }
-
 
         private List<string> GetFilesInFolder(string folder, string fileType)
         {
@@ -200,38 +236,92 @@ namespace SkylineBatch
         private enum Attr
         {
             TemplateFilePath,
+            DependentConfigName,
             AnalysisFolderPath,
             DataFolderPath,
+            AnnotationsFilePath,
             ReplicateNamingPattern,
         };
 
         public static MainSettings ReadXml(XmlReader reader)
         {
-            var templateFilePath = reader.GetAttribute(Attr.TemplateFilePath);
-            var analysisFolderPath = reader.GetAttribute(Attr.AnalysisFolderPath);
-            var dataFolderPath = reader.GetAttribute(Attr.DataFolderPath);
+            var templateFilePath = GetPath(reader.GetAttribute(Attr.TemplateFilePath));
+            var dependentConfigName = reader.GetAttribute(Attr.DependentConfigName);
+            var analysisFolderPath = GetPath(reader.GetAttribute(Attr.AnalysisFolderPath));
+            var dataFolderPath = GetPath(reader.GetAttribute(Attr.DataFolderPath));
+            var annotationsFilePath = GetPath(reader.GetAttribute(Attr.AnnotationsFilePath));
             var replicateNamingPattern = reader.GetAttribute(Attr.ReplicateNamingPattern);
-            return new MainSettings(templateFilePath, analysisFolderPath, dataFolderPath, replicateNamingPattern);
+            return new MainSettings(templateFilePath, analysisFolderPath, dataFolderPath, annotationsFilePath, replicateNamingPattern, dependentConfigName);
         }
+
+        private static string GetPath(string path) =>
+            FileUtil.GetTestPath(Program.FunctionalTest, Program.TestDirectory, path);
 
         public void WriteXml(XmlWriter writer)
         {
             writer.WriteStartElement("main_settings");
             writer.WriteAttributeIfString(Attr.TemplateFilePath, TemplateFilePath);
+            writer.WriteAttributeIfString(Attr.DependentConfigName, DependentConfigName);
             writer.WriteAttributeIfString(Attr.AnalysisFolderPath, AnalysisFolderPath);
             writer.WriteAttributeIfString(Attr.DataFolderPath, DataFolderPath);
+            writer.WriteAttributeIfString(Attr.AnnotationsFilePath, AnnotationsFilePath);
             writer.WriteAttributeIfString(Attr.ReplicateNamingPattern, ReplicateNamingPattern);
             writer.WriteEndElement();
         }
         #endregion
 
+        #region Batch Commands
+
+        public const string IMPORT_DATA_COMMAND = "--import-all=\"{0}\"";
+        public const string IMPORT_NAMING_PATTERN_COMMAND = "--import-naming-pattern=\"{0}\"";
+        public const string IMPORT_ANNOTATIONS_COMMAND = "--import-annotations=\"{0}\"";
+
+        public void WriteOpenSkylineTemplateCommand(CommandWriter commandWriter)
+        {
+            commandWriter.Write(SkylineBatchConfig.OPEN_SKYLINE_FILE_COMMAND, TemplateFilePath);
+        }
+
+        public void WriteSaveToResultsFile(CommandWriter commandWriter)
+        {
+            commandWriter.Write(SkylineBatchConfig.SAVE_AS_NEW_FILE_COMMAND, GetResultsFilePath());
+        }
+
+        public void WriteOpenSkylineResultsCommand(CommandWriter commandWriter)
+        {
+            commandWriter.Write(SkylineBatchConfig.OPEN_SKYLINE_FILE_COMMAND, GetResultsFilePath());
+        }
+
+        public void WriteImportDataCommand(CommandWriter commandWriter)
+        {
+            commandWriter.Write(IMPORT_DATA_COMMAND, DataFolderPath);
+        }
+
+        public void WriteImportNamingPatternCommand(CommandWriter commandWriter)
+        {
+            if (!string.IsNullOrEmpty(ReplicateNamingPattern))
+                commandWriter.Write(IMPORT_NAMING_PATTERN_COMMAND, ReplicateNamingPattern);
+        }
+
+        public void WriteImportAnnotationsCommand(CommandWriter commandWriter)
+        {
+            if (!string.IsNullOrEmpty(AnnotationsFilePath))
+                commandWriter.Write(IMPORT_ANNOTATIONS_COMMAND, AnnotationsFilePath);
+        }
+
+        #endregion
+
         protected bool Equals(MainSettings other)
         {
+            // checks if annotation paths are both empty or equal
+            if (!(string.IsNullOrWhiteSpace(AnnotationsFilePath) && string.IsNullOrWhiteSpace(other.AnnotationsFilePath)))
+            {
+                if (!other.AnnotationsFilePath.Equals(AnnotationsFilePath)) return false;
+            }
 
-            return (other.TemplateFilePath == TemplateFilePath &&
-                    other.AnalysisFolderPath == AnalysisFolderPath &&
-                    other.DataFolderPath == DataFolderPath &&
-                    other.ReplicateNamingPattern == ReplicateNamingPattern);
+            return (other.TemplateFilePath.Equals(TemplateFilePath) &&
+                    other.AnalysisFolderPath.Equals(AnalysisFolderPath) &&
+                    other.DataFolderPath.Equals(DataFolderPath) &&
+                    other.ReplicateNamingPattern.Equals(ReplicateNamingPattern));
         }
 
         public override bool Equals(object obj)

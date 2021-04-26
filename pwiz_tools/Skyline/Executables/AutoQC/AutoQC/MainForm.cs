@@ -36,27 +36,21 @@ namespace AutoQC
         // Flag that gets set to true in the "Shown" event handler. 
         // ItemCheck and ItemChecked events on the listview are ignored until then.
         private bool _loaded;
-        private ColumnWidthCalculator _listViewColumnWidths;
-        private bool _resizing;
+        private readonly ColumnWidthCalculator _listViewColumnWidths;
 
-        public MainForm()
+        public MainForm(string openFile)
         {
             InitializeComponent();
             
             toolStrip.Items.Insert(1,new ToolStripSeparator());
-            _listViewColumnWidths = new ColumnWidthCalculator(new []
-            {
-                columnName.Width,
-                columnUser.Width,
-                columnCreated.Width,
-                columnStatus.Width
-            });
+            _listViewColumnWidths = new ColumnWidthCalculator(listViewConfigs);
             listViewConfigs.ColumnWidthChanged += listViewConfigs_ColumnWidthChanged;
 
             ProgramLog.Info(Resources.MainForm_MainForm_Loading_configurations_from_saved_settings_);
             _configManager = new AutoQcConfigManager(this);
 
             UpdateUiConfigurations();
+            ListViewSizeChanged();
             UpdateUiLogFiles();
             UpdateSettingsTab();
 
@@ -65,6 +59,8 @@ namespace AutoQC
                 _loaded = true;
                 if (Settings.Default.KeepAutoQcRunning)
                     _configManager.RunEnabled();
+                if (!string.IsNullOrEmpty(openFile))
+                    FileOpened(openFile);
             });
 
         }
@@ -105,9 +101,8 @@ namespace AutoQC
                 var validateConfigForm = new InvalidConfigSetupForm(config, _configManager, this);
                 if (validateConfigForm.ShowDialog() != DialogResult.OK)
                     return;
-                config = validateConfigForm.ValidConfig;
             }
-            var configForm = new AutoQcConfigForm(this, config, ConfigAction.Edit, configRunner.IsBusy());
+            var configForm = new AutoQcConfigForm(this, _configManager.GetSelectedConfig(), ConfigAction.Edit, configRunner.IsBusy());
             configForm.ShowDialog();
         }
 
@@ -117,10 +112,16 @@ namespace AutoQC
             configForm.ShowDialog();
         }
 
+        public void AssertUniqueConfigName(string newName, bool replacing)
+        {
+            _configManager.AssertUniqueName(newName, replacing);
+        }
+
         public void AddConfiguration(IConfig config)
         {
-            _configManager.AddConfiguration(config);
+            _configManager.UserAddConfig(config);
             UpdateUiConfigurations();
+            ListViewSizeChanged();
             UpdateUiLogFiles();
         }
 
@@ -131,29 +132,82 @@ namespace AutoQC
             UpdateUiLogFiles();
         }
 
+        public void ReplaceAllSkylineVersions(SkylineSettings skylineSettings)
+        {
+            try
+            {
+                skylineSettings.Validate();
+            }
+            catch (ArgumentException)
+            {
+                // Only ask to replace Skyline settings if new settings are valid
+                return;
+            }
+            if (DialogResult.Yes ==
+                DisplayQuestion("Do you want to use this Skyline version for all configurations?"))
+            {
+                try
+                {
+                    _configManager.ReplaceSkylineSettings(skylineSettings);
+                }
+                catch (ArgumentException e)
+                {
+                    DisplayError(e.Message);
+                }
+                UpdateUiConfigurations();
+            }
+        }
+
         private void btnDelete_Click(object sender, EventArgs e)
         {
-            _configManager.RemoveSelected();
+            _configManager.UserRemoveSelected();
             UpdateUiConfigurations();
+            ListViewSizeChanged();
             UpdateUiLogFiles();
+        }
+
+        public void FileOpened(string filePath)
+        {
+            var importConfigs = false;
+            var inDownloadsFolder = filePath.Contains(FileUtil.DOWNLOADS_FOLDER);
+            if (!inDownloadsFolder) // Only show dialog if configs are not in downloads folder
+            {
+                importConfigs = DialogResult.Yes == DisplayQuestion(string.Format(
+                    Resources.MainForm_FileOpened_Do_you_want_to_import_configurations_from__0__,
+                    Path.GetFileName(filePath)));
+            }
+            if (importConfigs || inDownloadsFolder)
+                DoImport(filePath);
         }
 
         private void btnImport_Click(object sender, EventArgs e)
         {
             var dialog = new OpenFileDialog();
-            dialog.Filter = TextUtil.FILTER_XML;
+            dialog.Filter = TextUtil.FILTER_QCFG;
             if (dialog.ShowDialog(this) != DialogResult.OK)
                 return;
 
-            var filePath = dialog.FileName;
-            _configManager.Import(filePath);
+            DoImport(dialog.FileName);
+        }
+
+        public void DoImport(string filePath)
+        {
+            _configManager.Import(filePath, ShowDownloadedFileForm);
             UpdateUiConfigurations();
             UpdateUiLogFiles();
         }
 
+        public DialogResult ShowDownloadedFileForm(string filePath, out string newRootDirectory)
+        {
+            var fileOpenedForm = new FileOpenedForm(this, filePath, Program.Icon());
+            var dialogResult = fileOpenedForm.ShowDialog(this);
+            newRootDirectory = fileOpenedForm.NewRootDirectory;
+            return dialogResult;
+        }
+
         private void btnExport_Click(object sender, EventArgs e)
         {
-            var shareForm = new ShareConfigsForm(this, _configManager, Program.Icon());
+            var shareForm = new ShareConfigsForm(this, _configManager, TextUtil.FILTER_QCFG, Program.Icon());
             shareForm.ShowDialog();
         }
 
@@ -204,8 +258,8 @@ namespace AutoQC
         private void btnOpenResults_Click(object sender, EventArgs e)
         {
             var config = _configManager.GetSelectedConfig();
-            if (MainFormUtils.CanOpen(config.Name, _configManager.IsSelectedConfigValid(), 
-                Resources.MainForm_btnOpenResults_Click_Skyline_file, this))
+            if (MainFormUtils.CanOpen(config.Name, _configManager.IsSelectedConfigValid(),
+                config.MainSettings.SkylineFilePath, Resources.MainForm_btnOpenResults_Click_Skyline_file, this))
             {
                 SkylineInstallations.OpenSkylineFile(config.MainSettings.SkylineFilePath, config.SkylineSettings);
             }
@@ -215,7 +269,7 @@ namespace AutoQC
         {
             var config = _configManager.GetSelectedConfig();
             if (MainFormUtils.CanOpen(config.Name, _configManager.IsSelectedConfigValid(), 
-                Resources.MainForm_btnOpenPanoramaFolder_Click_Panorama_folder, this))
+                string.Empty, Resources.MainForm_btnOpenPanoramaFolder_Click_Panorama_folder, this))
             {
                 var uri = new Uri(config.PanoramaSettings.PanoramaServerUri + config.PanoramaSettings.PanoramaFolder);
                 Process.Start(uri.AbsoluteUri);
@@ -230,9 +284,9 @@ namespace AutoQC
         private void toolStripFolderToWatch_Click(object sender, EventArgs e)
         {
             var config = _configManager.GetSelectedConfig();
-            MainFormUtils.OpenFileExplorer(config.Name, _configManager.IsSelectedConfigValid(), 
-                Resources.MainForm_toolStripFolderToWatch_Click_folder_to_watch,
-                config.MainSettings.FolderToWatch, this);
+            MainFormUtils.OpenFileExplorer(config.Name, _configManager.IsSelectedConfigValid(),
+                config.MainSettings.FolderToWatch,
+                Resources.MainForm_toolStripFolderToWatch_Click_folder_to_watch, this);
         }
 
         private void toolStripLogFolder_Click(object sender, EventArgs e)
@@ -240,8 +294,8 @@ namespace AutoQC
             var config = _configManager.GetSelectedConfig();
             var logger = _configManager.GetLogger(config.Name);
             MainFormUtils.OpenFileExplorer(config.Name, _configManager.IsSelectedConfigValid(),
-                Resources.MainForm_toolStripLogFolder_Click_log_folder,
-                logger.GetDirectory(), this);
+                logger.GetDirectory(), 
+                Resources.MainForm_toolStripLogFolder_Click_log_folder, this);
         }
 
         #endregion
@@ -252,10 +306,13 @@ namespace AutoQC
         {
             RunUi(() =>
             {
+                var topItemIndex = listViewConfigs.TopItem != null ? listViewConfigs.TopItem.Index : -1;
+                var listViewItems = _configManager.ConfigsListViewItems(listViewConfigs.CreateGraphics());
                 listViewConfigs.Items.Clear();
-                var listViewItems = _configManager.ConfigsListViewItems();
                 foreach (var lvi in listViewItems)
                     listViewConfigs.Items.Add(lvi);
+                if (topItemIndex != -1 && listViewConfigs.Items.Count > topItemIndex)
+                    listViewConfigs.TopItem = listViewConfigs.Items[topItemIndex];
                 UpdateLabelVisibility();
                 UpdateButtonsEnabled();
             });
@@ -322,6 +379,11 @@ namespace AutoQC
             tabMain.SelectTab(tabLog);
         }
 
+        private void tabLog_Enter(object sender, EventArgs e)
+        {
+            ScrollToLogEnd(true);
+        }
+
         private void comboConfigs_SelectedIndexChanged(object sender, EventArgs e)
         {
             _configManager.SelectLog(comboConfigs.SelectedIndex);
@@ -348,13 +410,17 @@ namespace AutoQC
                 DisplayErrorWithException(Resources.MainForm_SwitchLogger_Error_reading_log_ + Environment.NewLine + ex.Message, ex);
             }
 
-            ScrollToLogEnd();
+            ScrollToLogEnd(true);
         }
 
-        private void ScrollToLogEnd()
+        private void ScrollToLogEnd(bool forceScroll = false)
         {
-            textBoxLog.SelectionStart = textBoxLog.Text.Length;
-            textBoxLog.ScrollToCaret();
+            // Only scroll to end if forced or user is already scrolled to bottom of log
+            if (forceScroll || textBoxLog.GetPositionFromCharIndex(textBoxLog.Text.Length - 1).Y <= textBoxLog.Height)
+            {
+                textBoxLog.SelectionStart = textBoxLog.Text.Length;
+                textBoxLog.ScrollToCaret();
+            }
         }
 
         private void btnOpenLogFolder_Click(object sender, EventArgs e)
@@ -375,7 +441,7 @@ namespace AutoQC
             Process.Start("explorer.exe", arg);
         }
 
-        public void LogToUi(string name, string text, bool scrollToEnd, bool trim)
+        public void LogToUi(string name, string text, bool trim)
         {
             RunUi(() =>
             {
@@ -388,9 +454,7 @@ namespace AutoQC
                 
                 textBoxLog.AppendText(text);
                 textBoxLog.AppendText(Environment.NewLine);
-
-                if (!scrollToEnd) return;
-
+                
                 ScrollToLogEnd();
             });
         }
@@ -414,7 +478,7 @@ namespace AutoQC
             }
         }
 
-        public void LogErrorToUi(string name, string text, bool scrollToEnd, bool trim)
+        public void LogErrorToUi(string name, string text, bool trim)
         {
             RunUi(() =>
             {
@@ -428,7 +492,7 @@ namespace AutoQC
                 textBoxLog.SelectionStart = textBoxLog.TextLength;
                 textBoxLog.SelectionLength = 0;
                 textBoxLog.SelectionColor = Color.Red;
-                LogToUi(name, text, scrollToEnd,
+                LogToUi(name, text,
                     false); // Already trimmed
                 textBoxLog.SelectionColor = textBoxLog.ForeColor;
             });
@@ -521,45 +585,10 @@ namespace AutoQC
 
         #region Form event handlers and errors
 
-        private void listViewConfigs_Resize(object sender, EventArgs e)
-        {
-            _listViewColumnWidths.ListViewContainerResize(listViewConfigs.Width);
-            UpdateListViewColumns();
-        }
-
-        private void UpdateListViewColumns()
-        {
-            // keeps the same column width ratios when the form is resized
-            _resizing = true;
-            columnName.Width = _listViewColumnWidths.Get(0);
-            columnUser.Width = _listViewColumnWidths.Get(1);
-            columnCreated.Width = _listViewColumnWidths.Get(2);
-            columnStatus.Width = -2;
-            _resizing = false;
-        }
-
-        private void listViewConfigs_ColumnWidthChanged(object sender, ColumnWidthChangedEventArgs e)
-        {
-            if (_resizing) return;
-            _listViewColumnWidths.WidthsChangedByUser(new[]
-            {
-                columnName.Width,
-                columnUser.Width,
-                columnCreated.Width,
-                columnStatus.Width
-            });
-            UpdateListViewColumns();
-        }
-
-        private void systray_icon_MouseDoubleClick(object sender, MouseEventArgs e)
-        {
-            Show();
-            WindowState = FormWindowState.Normal;
-            systray_icon.Visible = false;
-        }
-
         private void MainForm_Resize(object sender, EventArgs e)
         {
+            ListViewSizeChanged();
+
             //If the form is minimized hide it from the task bar  
             //and show the system tray icon (represented by the NotifyIcon control)  
             if (WindowState == FormWindowState.Minimized && Settings.Default.MinimizeToSystemTray)
@@ -567,6 +596,39 @@ namespace AutoQC
                 Hide();
                 systray_icon.Visible = true;
             }
+        }
+
+        private void tabConfigs_Enter(object sender, EventArgs e)
+        {
+            // only toggle paint event when switching to main tab
+            tabConfigs.Paint += tabConfigs_Paint;
+        }
+
+        private void tabConfigs_Paint(object sender, PaintEventArgs e)
+        {
+            ListViewSizeChanged();
+            tabConfigs.Paint -= tabConfigs_Paint;
+        }
+
+        private void ListViewSizeChanged()
+        {
+            listViewConfigs.ColumnWidthChanged -= listViewConfigs_ColumnWidthChanged;
+            _listViewColumnWidths.ListViewContainerResize();
+            listViewConfigs.ColumnWidthChanged += listViewConfigs_ColumnWidthChanged;
+        }
+
+        private void listViewConfigs_ColumnWidthChanged(object sender, ColumnWidthChangedEventArgs e)
+        {
+            listViewConfigs.ColumnWidthChanged -= listViewConfigs_ColumnWidthChanged;
+            _listViewColumnWidths.WidthsChangedByUser();
+            listViewConfigs.ColumnWidthChanged += listViewConfigs_ColumnWidthChanged;
+        }
+
+        private void systray_icon_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            Show();
+            WindowState = FormWindowState.Normal;
+            systray_icon.Visible = false;
         }
 
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
