@@ -37,12 +37,12 @@
             this.textPassword = new System.Windows.Forms.TextBox();
             this.textUserName = new System.Windows.Forms.TextBox();
             this.btnCancel = new System.Windows.Forms.Button();
-            this.btnAdd = new System.Windows.Forms.Button();
+            this.btnSave = new System.Windows.Forms.Button();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.textNamingPattern = new System.Windows.Forms.TextBox();
-            this.label4 = new System.Windows.Forms.Label();
             this.btnRemoveServer = new System.Windows.Forms.Button();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            this.linkLabelRegex = new System.Windows.Forms.LinkLabel();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -87,12 +87,12 @@
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
-            // btnAdd
+            // btnSave
             // 
-            resources.ApplyResources(this.btnAdd, "btnAdd");
-            this.btnAdd.Name = "btnAdd";
-            this.btnAdd.UseVisualStyleBackColor = true;
-            this.btnAdd.Click += new System.EventHandler(this.btnAdd_Click);
+            resources.ApplyResources(this.btnSave, "btnSave");
+            this.btnSave.Name = "btnSave";
+            this.btnSave.UseVisualStyleBackColor = true;
+            this.btnSave.Click += new System.EventHandler(this.btnAdd_Click);
             // 
             // splitContainer1
             // 
@@ -114,34 +114,36 @@
             resources.ApplyResources(this.textNamingPattern, "textNamingPattern");
             this.textNamingPattern.Name = "textNamingPattern";
             // 
-            // label4
-            // 
-            resources.ApplyResources(this.label4, "label4");
-            this.label4.Name = "label4";
-            this.toolTip1.SetToolTip(this.label4, resources.GetString("label4.ToolTip"));
-            // 
             // btnRemoveServer
             // 
             resources.ApplyResources(this.btnRemoveServer, "btnRemoveServer");
             this.btnRemoveServer.Name = "btnRemoveServer";
             this.toolTip1.SetToolTip(this.btnRemoveServer, resources.GetString("btnRemoveServer.ToolTip"));
             this.btnRemoveServer.UseVisualStyleBackColor = true;
-            this.btnRemoveServer.Click += new System.EventHandler(this.btnRemoveServer_Click);
+            this.btnRemoveServer.MouseDown += new System.Windows.Forms.MouseEventHandler(this.btnRemoveServer_MouseDown);
+            // 
+            // linkLabelRegex
+            // 
+            resources.ApplyResources(this.linkLabelRegex, "linkLabelRegex");
+            this.linkLabelRegex.Name = "linkLabelRegex";
+            this.linkLabelRegex.TabStop = true;
+            this.toolTip1.SetToolTip(this.linkLabelRegex, resources.GetString("linkLabelRegex.ToolTip"));
+            this.linkLabelRegex.UseCompatibleTextRendering = true;
             // 
             // AddServerForm
             // 
-            this.AcceptButton = this.btnAdd;
+            this.AcceptButton = this.btnSave;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
             this.Controls.Add(this.btnRemoveServer);
             this.Controls.Add(this.textNamingPattern);
-            this.Controls.Add(this.label4);
             this.Controls.Add(this.splitContainer1);
-            this.Controls.Add(this.btnAdd);
+            this.Controls.Add(this.btnSave);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.textUrl);
             this.Controls.Add(this.label1);
+            this.Controls.Add(this.linkLabelRegex);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "AddServerForm";
@@ -166,11 +168,11 @@
         private System.Windows.Forms.TextBox textPassword;
         private System.Windows.Forms.TextBox textUserName;
         private System.Windows.Forms.Button btnCancel;
-        private System.Windows.Forms.Button btnAdd;
+        private System.Windows.Forms.Button btnSave;
         private System.Windows.Forms.SplitContainer splitContainer1;
         private System.Windows.Forms.TextBox textNamingPattern;
-        private System.Windows.Forms.Label label4;
         private System.Windows.Forms.ToolTip toolTip1;
         private System.Windows.Forms.Button btnRemoveServer;
+        private System.Windows.Forms.LinkLabel linkLabelRegex;
     }
 }

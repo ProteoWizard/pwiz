@@ -256,7 +256,7 @@ namespace SkylineBatch
             var downloadingFiles = downloadingFilesEnum.ToList();
             if (downloadingFiles.Count == existingDataFiles && !Program.FunctionalTest) return;
 
-            _logger.Log(string.Format(Resources.ConfigRunner_DownloadData_Found__0__matching_data_files_on__1__, downloadingFiles.Count, server.Url));
+            _logger.Log(string.Format(Resources.ConfigRunner_DownloadData_Found__0__matching_data_files_on__1__, downloadingFiles.Count, server.GetUrl()));
             foreach (var file in downloadingFiles)
                 _logger.Log(file);
             _logger.Log(Resources.ConfigRunner_DownloadData_Starting_download___);

@@ -366,6 +366,35 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to There was an error connecting to {0}: {1}.
+        /// </summary>
+        public static string DataServerInfo_Validate_There_was_an_error_connecting_to__0____1_ {
+            get {
+                return ResourceManager.GetString("DataServerInfo_Validate_There_was_an_error_connecting_to__0____1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There were no files found at {0}. Make sure the URL, username, and password are correct and try again..
+        /// </summary>
+        public static string DataServerInfo_Validate_There_were_no_files_found_at__0___Make_sure_the_URL__username__and_password_are_correct_and_try_again_ {
+            get {
+                return ResourceManager.GetString("DataServerInfo_Validate_There_were_no_files_found_at__0___Make_sure_the_URL__user" +
+                        "name__and_password_are_correct_and_try_again_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A data naming pattern is required for downloaded data. Please add a data naming pattern..
+        /// </summary>
+        public static string DataServerInfo_ValidateNamingPattern_A_data_naming_pattern_is_required_for_downloaded_data__Please_add_a_data_naming_pattern_ {
+            get {
+                return ResourceManager.GetString("DataServerInfo_ValidateNamingPattern_A_data_naming_pattern_is_required_for_downlo" +
+                        "aded_data__Please_add_a_data_naming_pattern_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         public static System.Drawing.Bitmap Delete {

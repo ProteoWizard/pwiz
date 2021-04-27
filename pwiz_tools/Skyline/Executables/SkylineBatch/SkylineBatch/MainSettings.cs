@@ -22,11 +22,15 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Text.RegularExpressions;
+using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Serialization;
 using FluentFTP;
+using IWshRuntimeLibrary;
 using SharedBatch;
 using SkylineBatch.Properties;
+using File = System.IO.File;
 
 namespace SkylineBatch
 {
@@ -124,7 +128,7 @@ namespace SkylineBatch
                 throw new ArgumentException("The data folder cannot be empty. Please choose a folder with at least one data file.");
             ValidateAnalysisFolder(AnalysisFolderPath);
             ValidateAnnotationsFile(AnnotationsFilePath);
-            if (WillDownloadData) DataServerInfo.ValidateNamingPattern(Server.DataNamingPattern);
+            if (Server != null) DataServerInfo.ValidateNamingPattern(Server.DataNamingPattern);
         }
 
         public static void ValidateTemplateFile(string templateFile)
@@ -376,51 +380,45 @@ namespace SkylineBatch
         
         public static DataServerInfo ServerFromUi(string url, string userName, string password, string namingPattern)
         {
-            var folder = string.Empty;
-            if (url.StartsWith("ftp://"))
-                url = url.Substring(6);
-            if (url.Contains("/"))
+            if (string.IsNullOrWhiteSpace(url))
+                throw new ArgumentException("The URL cannot be empty. Please enter a URL.");
+            Uri uri;
+            try
             {
-                var slashIndex = url.IndexOf("/");
-                folder = url.Substring(slashIndex + 1);
-                url = url.Substring(0, slashIndex);
+                uri = new Uri(url);
             }
-            return new DataServerInfo(url, folder, userName, password, namingPattern);
+            catch (Exception)
+            {
+                throw new ArgumentException("Error parsing the URL. Please correct the URL and try again.");
+            }
+            return new DataServerInfo(uri, userName, password, namingPattern);
         }
 
-        private DataServerInfo(string url, string folder, string userName, string password, string namingPattern)
+        private DataServerInfo(Uri server, string userName, string password, string namingPattern)
         {
-            Url = url.Trim();
-            Folder = folder ?? string.Empty;
+            Server = server;
             UserName = userName ?? string.Empty;
             Password = password ?? string.Empty;
             DataNamingPattern = namingPattern ?? string.Empty;
-            SetName();
         }
 
-        public string Name { get; private set; }
         public bool Validated { get; private set; }
-        public readonly string Url;
-        public readonly string Folder;
+        public readonly Uri Server;
         public readonly string UserName;
         public readonly string Password;
         public readonly string DataNamingPattern;
 
-        private void SetName()
-        {
-            Name = Url;
-            Name += !string.IsNullOrEmpty(Folder) ? "/" + Folder : string.Empty;
-            Name += !string.IsNullOrEmpty(UserName) ? " " + UserName : string.Empty;
-        }
+        public string GetUrl() => Server.AbsoluteUri;
+        
 
         public string FilePath(string fileName) =>
-            string.IsNullOrEmpty(Folder) ? fileName : Path.Combine(Folder, fileName);
+            string.IsNullOrEmpty(Server.AbsolutePath) ? fileName : Path.Combine(Server.AbsolutePath, fileName);
 
         public Dictionary<string, FtpListItem> GetServerFiles => new Dictionary<string, FtpListItem>(_serverFiles);
 
         public FtpClient GetFtpClient()
         {
-            var client = new FtpClient(Url);
+            var client = new FtpClient(Server.Host);
 
             if (!string.IsNullOrEmpty(Password))
             {
@@ -442,30 +440,35 @@ namespace SkylineBatch
             try
             {
                 client.Connect();
-                foreach (FtpListItem item in client.GetListing(Folder))
+                foreach (FtpListItem item in client.GetListing(Server.AbsolutePath))
                 {
-                    _serverFiles.Add(item.Name, item);
+                    if (item.Type == FtpFileSystemObjectType.File) _serverFiles.Add(item.Name, item);
                 }
             }
             catch (Exception e)
             {
                 throw new ArgumentException(
-                    string.Format("There was an error connecting to {0}: {1}", Url, e.Message));
+                    string.Format(Resources.DataServerInfo_Validate_There_was_an_error_connecting_to__0____1_, GetUrl(), e.Message));
             }
             client.Disconnect();
+            if (_serverFiles.Count == 0)
+                throw new ArgumentException(string.Format(
+                    Resources.DataServerInfo_Validate_There_were_no_files_found_at__0___Make_sure_the_URL__username__and_password_are_correct_and_try_again_,
+                    GetUrl()));
             Validated = true;
         }
 
         public static void ValidateNamingPattern(string dataNamingPattern)
         {
             if (string.IsNullOrEmpty(dataNamingPattern))
-                throw new ArgumentException("A data naming pattern is required for downloaded data. Please add a data naming pattern.");
+                throw new ArgumentException(Resources.DataServerInfo_ValidateNamingPattern_A_data_naming_pattern_is_required_for_downloaded_data__Please_add_a_data_naming_pattern_);
         }
 
         private enum Attr
         {
-            ServerUrl,
-            ServerFolder,
+            ServerUri,
+            ServerUrl, // deprecated
+            ServerFolder, // deprecated
             ServerUserName,
             ServerPassword,
             DataNamingPattern
@@ -473,8 +476,7 @@ namespace SkylineBatch
 
         public void WriteXml(XmlWriter writer)
         {
-            writer.WriteAttributeIfString(Attr.ServerUrl, Url);
-            writer.WriteAttributeIfString(Attr.ServerFolder, Folder);
+            writer.WriteAttributeIfString(Attr.ServerUri, Server.AbsoluteUri);
             writer.WriteAttributeIfString(Attr.ServerUserName, UserName);
             writer.WriteAttributeIfString(Attr.ServerPassword, Password);
             writer.WriteAttributeIfString(Attr.DataNamingPattern, DataNamingPattern);
@@ -482,14 +484,16 @@ namespace SkylineBatch
 
         public static DataServerInfo ReadXml(XmlReader reader)
         {
-            var url = reader.GetAttribute(Attr.ServerUrl);
-            if (string.IsNullOrEmpty(url))
+            var serverName = reader.GetAttribute(Attr.ServerUrl);
+            var uriString = reader.GetAttribute(Attr.ServerUri);
+            if (string.IsNullOrEmpty(serverName) && string.IsNullOrEmpty(uriString))
                 return null;
             var folder = reader.GetAttribute(Attr.ServerFolder);
+            var uri = !string.IsNullOrEmpty(uriString) ? new Uri(uriString) : new Uri($@"ftp://{serverName}/{folder}");
             var username = reader.GetAttribute(Attr.ServerUserName);
             var password = reader.GetAttribute(Attr.ServerPassword);
             var dataNamingPattern = reader.GetAttribute(Attr.DataNamingPattern);
-            return new DataServerInfo(url, folder, username, password, dataNamingPattern);
+            return new DataServerInfo(uri, username, password, dataNamingPattern);
         }
 
     }

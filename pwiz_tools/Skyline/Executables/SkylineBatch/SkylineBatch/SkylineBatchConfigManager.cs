@@ -38,7 +38,7 @@ namespace SkylineBatch
 
         private readonly Dictionary<string, IConfigRunner> _configRunners; // dictionary mapping from config name to that config's runner
         private readonly Dictionary<string, string> _refinedTemplates; // dictionary mapping from config name to it's refined output file (not included if no refinement occurs)
-        private readonly Dictionary<string, DataServerInfo> _dataServers; // dictionary mapping from config name to it's refined output file (not included if no refinement occurs)
+        //private readonly Dictionary<string, DataServerInfo> _dataServers; // dictionary mapping from config name to it's refined output file (not included if no refinement occurs)
 
         // Shared variables with ConfigManager:
         //  Protected -
@@ -66,7 +66,7 @@ namespace SkylineBatch
             _logList.Add(logger);
             _configRunners = new Dictionary<string, IConfigRunner>();
             _refinedTemplates = new Dictionary<string, string>();
-            _dataServers = new Dictionary<string, DataServerInfo>();
+            //_dataServers = new Dictionary<string, DataServerInfo>();
 
             _uiControl = uiControl;
             _runningUi = uiControl != null;
@@ -101,7 +101,7 @@ namespace SkylineBatch
             }
         }
 
-        public List<string> GetServerNames => _dataServers.Keys.ToList();
+        //public List<string> GetServerNames => _dataServers.Keys.ToList();
 
         #region Add/Remove Configs
 
@@ -242,8 +242,8 @@ namespace SkylineBatch
             if (config.RefineSettings.WillRefine())
                 _refinedTemplates.Add(config.Name, config.RefineSettings.OutputFilePath);
             var server = config.MainSettings.Server;
-            if (server != null && !_dataServers.ContainsKey(server.Url))
-                AddValidServer(server);
+            //if (server != null && !_dataServers.ContainsKey(server.Url))
+            //    AddValidServer(server);
         }
 
         private Dictionary<string, List<string>> GetDependencies()
@@ -766,7 +766,7 @@ namespace SkylineBatch
 
         #endregion
 
-        public void AddValidServer(DataServerInfo server)
+        /*public void AddValidServer(DataServerInfo server)
         {
             if (!_dataServers.ContainsKey(server.Name))
                 _dataServers.Add(server.Name, server);
@@ -775,7 +775,7 @@ namespace SkylineBatch
         public DataServerInfo GetServer(string name)
         {
             return _dataServers[name];
-        }
+        }*/
 
         #region Import/Export
 
