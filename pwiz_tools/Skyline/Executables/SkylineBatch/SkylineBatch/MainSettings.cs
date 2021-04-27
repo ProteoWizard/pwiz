@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Text;
 using System.Xml;
@@ -39,14 +40,13 @@ namespace SkylineBatch
         private string _fileNamesResponse;
 
         public MainSettings(string templateFilePath, string analysisFolderPath, string dataFolderPath,
-            ServerInfo server, string dataNamingPattern, string annotationsFilePath, string replicateNamingPattern, string dependentConfigName)
+            DataServerInfo server, string annotationsFilePath, string replicateNamingPattern, string dependentConfigName)
         {
             TemplateFilePath = templateFilePath;
             DependentConfigName = !string.IsNullOrEmpty(dependentConfigName) ? dependentConfigName : null;
             AnalysisFolderPath = analysisFolderPath;
             DataFolderPath = dataFolderPath;
             Server = server;
-            DataNamingPattern = dataNamingPattern ?? string.Empty;
             AnnotationsFilePath = annotationsFilePath ?? string.Empty;
             ReplicateNamingPattern = replicateNamingPattern ?? string.Empty;
             
@@ -74,9 +74,7 @@ namespace SkylineBatch
 
         public readonly string DataFolderPath;
 
-        public readonly ServerInfo Server;
-
-        public readonly string DataNamingPattern;
+        public readonly DataServerInfo Server;
 
         public readonly string AnnotationsFilePath;
 
@@ -91,14 +89,14 @@ namespace SkylineBatch
 
         public MainSettings WithoutDependency()
         {
-            return new MainSettings(TemplateFilePath, AnalysisFolderPath, DataFolderPath, Server, DataNamingPattern, 
+            return new MainSettings(TemplateFilePath, AnalysisFolderPath, DataFolderPath, Server, 
                 AnnotationsFilePath, ReplicateNamingPattern, string.Empty);
         }
 
         public MainSettings UpdateDependent(string newName, string newTemplate)
         {
             if (string.IsNullOrEmpty(newTemplate)) return WithoutDependency();
-            return new MainSettings(newTemplate, AnalysisFolderPath, DataFolderPath, Server, DataNamingPattern, 
+            return new MainSettings(newTemplate, AnalysisFolderPath, DataFolderPath, Server, 
                  AnnotationsFilePath, ReplicateNamingPattern, newName);
         }
 
@@ -122,10 +120,11 @@ namespace SkylineBatch
             if (DependentConfigName == null)
                 ValidateTemplateFile(TemplateFilePath);
             ValidateDataFolder(DataFolderPath);
+            if (Server == null && !Directory.GetFiles(DataFolderPath).Any())
+                throw new ArgumentException("The data folder cannot be empty. Please choose a folder with at least one data file.");
             ValidateAnalysisFolder(AnalysisFolderPath);
             ValidateAnnotationsFile(AnnotationsFilePath);
-            if (WillDownloadData && string.IsNullOrEmpty(DataNamingPattern))
-                throw new ArgumentException("A data naming pattern is required for downloaded data. Please add a data naming pattern.");
+            if (WillDownloadData) DataServerInfo.ValidateNamingPattern(Server.DataNamingPattern);
         }
 
         public static void ValidateTemplateFile(string templateFile)
@@ -187,7 +186,7 @@ namespace SkylineBatch
                 TextUtil.SuccessfulReplace(ValidateAnnotationsFile, oldRoot, newRoot, AnnotationsFilePath, out string replacedAnnotationsPath);
 
             pathReplacedMainSettings = new MainSettings(replacedTemplatePath, replacedAnalysisPath, replacedDataPath,
-                Server, DataNamingPattern, replacedAnnotationsPath, ReplicateNamingPattern, DependentConfigName);
+                Server, replacedAnnotationsPath, ReplicateNamingPattern, DependentConfigName);
 
             return templateReplaced || analysisReplaced || dataReplaced || annotationsReplaced;
         }
@@ -265,7 +264,6 @@ namespace SkylineBatch
             DependentConfigName,
             AnalysisFolderPath,
             DataFolderPath,
-            DataNamingPattern,
             AnnotationsFilePath,
             ReplicateNamingPattern,
         };
@@ -276,12 +274,11 @@ namespace SkylineBatch
             var dependentConfigName = reader.GetAttribute(Attr.DependentConfigName);
             var analysisFolderPath = GetPath(reader.GetAttribute(Attr.AnalysisFolderPath));
             var dataFolderPath = GetPath(reader.GetAttribute(Attr.DataFolderPath));
-            var dataNamingPattern = reader.GetAttribute(Attr.DataNamingPattern);
             var annotationsFilePath = GetPath(reader.GetAttribute(Attr.AnnotationsFilePath));
             var replicateNamingPattern = reader.GetAttribute(Attr.ReplicateNamingPattern);
-            var server = ServerInfo.ReadXml(reader);
+            var server = DataServerInfo.ReadXml(reader);
             return new MainSettings(templateFilePath, analysisFolderPath, dataFolderPath, server, 
-                dataNamingPattern, annotationsFilePath, replicateNamingPattern, dependentConfigName);
+                annotationsFilePath, replicateNamingPattern, dependentConfigName);
         }
 
         private static string GetPath(string path) =>
@@ -294,7 +291,6 @@ namespace SkylineBatch
             writer.WriteAttributeIfString(Attr.DependentConfigName, DependentConfigName);
             writer.WriteAttributeIfString(Attr.AnalysisFolderPath, AnalysisFolderPath);
             writer.WriteAttributeIfString(Attr.DataFolderPath, DataFolderPath);
-            writer.WriteAttributeIfString(Attr.DataNamingPattern, DataNamingPattern);
             
             writer.WriteAttributeIfString(Attr.AnnotationsFilePath, AnnotationsFilePath);
             writer.WriteAttributeIfString(Attr.ReplicateNamingPattern, ReplicateNamingPattern);
@@ -374,11 +370,11 @@ namespace SkylineBatch
         }
     }
 
-    public class ServerInfo
+    public class DataServerInfo
     {
         private Dictionary<string, FtpListItem> _serverFiles;
         
-        public static ServerInfo ServerFromUi(string url, string userName, string password)
+        public static DataServerInfo ServerFromUi(string url, string userName, string password, string namingPattern)
         {
             var folder = string.Empty;
             if (url.StartsWith("ftp://"))
@@ -389,15 +385,16 @@ namespace SkylineBatch
                 folder = url.Substring(slashIndex + 1);
                 url = url.Substring(0, slashIndex);
             }
-            return new ServerInfo(url, folder, userName, password);
+            return new DataServerInfo(url, folder, userName, password, namingPattern);
         }
 
-        private ServerInfo(string url, string folder, string userName, string password)
+        private DataServerInfo(string url, string folder, string userName, string password, string namingPattern)
         {
             Url = url.Trim();
             Folder = folder ?? string.Empty;
             UserName = userName ?? string.Empty;
             Password = password ?? string.Empty;
+            DataNamingPattern = namingPattern ?? string.Empty;
             SetName();
         }
 
@@ -407,6 +404,7 @@ namespace SkylineBatch
         public readonly string Folder;
         public readonly string UserName;
         public readonly string Password;
+        public readonly string DataNamingPattern;
 
         private void SetName()
         {
@@ -438,6 +436,7 @@ namespace SkylineBatch
 
         public void Validate()
         {
+            ValidateNamingPattern(DataNamingPattern);
             _serverFiles = new Dictionary<string, FtpListItem>();
             var client = GetFtpClient();
             try
@@ -457,12 +456,19 @@ namespace SkylineBatch
             Validated = true;
         }
 
+        public static void ValidateNamingPattern(string dataNamingPattern)
+        {
+            if (string.IsNullOrEmpty(dataNamingPattern))
+                throw new ArgumentException("A data naming pattern is required for downloaded data. Please add a data naming pattern.");
+        }
+
         private enum Attr
         {
             ServerUrl,
             ServerFolder,
             ServerUserName,
             ServerPassword,
+            DataNamingPattern
         };
 
         public void WriteXml(XmlWriter writer)
@@ -471,9 +477,10 @@ namespace SkylineBatch
             writer.WriteAttributeIfString(Attr.ServerFolder, Folder);
             writer.WriteAttributeIfString(Attr.ServerUserName, UserName);
             writer.WriteAttributeIfString(Attr.ServerPassword, Password);
+            writer.WriteAttributeIfString(Attr.DataNamingPattern, DataNamingPattern);
         }
 
-        public static ServerInfo ReadXml(XmlReader reader)
+        public static DataServerInfo ReadXml(XmlReader reader)
         {
             var url = reader.GetAttribute(Attr.ServerUrl);
             if (string.IsNullOrEmpty(url))
@@ -481,7 +488,8 @@ namespace SkylineBatch
             var folder = reader.GetAttribute(Attr.ServerFolder);
             var username = reader.GetAttribute(Attr.ServerUserName);
             var password = reader.GetAttribute(Attr.ServerPassword);
-            return new ServerInfo(url, folder, username, password);
+            var dataNamingPattern = reader.GetAttribute(Attr.DataNamingPattern);
+            return new DataServerInfo(url, folder, username, password, dataNamingPattern);
         }
 
     }

@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
 using SharedBatch;
@@ -44,6 +45,9 @@ namespace SkylineBatch
         private readonly Dictionary<string, string> _possibleTemplates;
         private readonly SkylineBatchConfigManager _configManager;
         private SkylineSettings _currentSkylineSettings;
+        private readonly Image _downloadImage;
+        private readonly Image _downloadSelectedImage;
+        private DataServerInfo _dataServer;
         public Control templateFileControl;
 
         private string _lastEnteredPath;
@@ -52,6 +56,9 @@ namespace SkylineBatch
         {
             InitializeComponent();
             Icon = Program.Icon();
+            _downloadImage = (Image)Resources.ResourceManager.GetObject("download");
+            _downloadSelectedImage = (Image)Resources.ResourceManager.GetObject("downloadSelected");
+
             _action = action;
             _refineInput = config != null ? config.RefineSettings.CommandValuesCopy : new RefineInputObject();
             _newReportList = new List<ReportInfo>();
@@ -65,10 +72,10 @@ namespace SkylineBatch
                 _configEnabled = config.Enabled;
             _isBusy = isBusy;
 
-            var dataServers = configManager.GetServerNames;
+            /*var dataServers = configManager.GetServerNames;
             foreach (var serverName in dataServers)
                 comboDataServer.Items.Add(serverName);
-            comboDataServer.Items.Add("<Add>");
+            comboDataServer.Items.Add("<Add>");*/
 
             InitInputFieldsFromConfig(config);
 
@@ -161,15 +168,22 @@ namespace SkylineBatch
                     textReplicateNamingPattern.Text = mainSettings.ReplicateNamingPattern;
                     if (mainSettings.WillDownloadData)
                     {
-                        checkBoxDownloadData.Checked = true;
-                        comboDataServer.SelectedIndex = comboDataServer.Items.IndexOf(mainSettings.Server.Name);
-                        textDataNamingPatten.Text = mainSettings.DataNamingPattern;
+                        _dataServer = mainSettings.Server;
+                        ToggleDownloadData(true);
+                        /*comboDataServer.SelectedIndex = comboDataServer.Items.IndexOf(mainSettings.Server.Name);
+                        textDataNamingPatten.Text = mainSettings.DataNamingPattern;*/
                     }
                 }
                 templateFileControl.Text = mainSettings.TemplateFilePath;
                 textDataPath.Text = mainSettings.DataFolderPath;
                 textAnnotationsFile.Text = mainSettings.AnnotationsFilePath;
             }
+        }
+
+        private void ToggleDownloadData(bool downloading)
+        {
+            btnDownloadData.BackColor = downloading ? Color.SteelBlue : Color.WhiteSmoke;
+            btnDownloadData.Image = downloading ? _downloadSelectedImage : _downloadImage;
         }
 
         private MainSettings GetMainSettingsFromUi()
@@ -187,20 +201,21 @@ namespace SkylineBatch
 
             var analysisFolderPath = textAnalysisPath.Text;
             var dataFolderPath = textDataPath.Text;
-            var server = checkBoxDownloadData.Checked ? _configManager.GetServer(comboDataServer.Text) : null;
-            var dataNamingPattern = textDataNamingPatten.Text;
+            var server = _dataServer; // null if none specified
             var annotationsFilePath = textAnnotationsFile.Text;
             var replicateNamingPattern = textReplicateNamingPattern.Text;
 
-            return new MainSettings(templateFilePath, analysisFolderPath, dataFolderPath, server, dataNamingPattern, annotationsFilePath, replicateNamingPattern, dependentConfig);
+            return new MainSettings(templateFilePath, analysisFolderPath, dataFolderPath, server, annotationsFilePath, replicateNamingPattern, dependentConfig);
         }
 
-        private void checkBoxDownloadData_CheckedChanged(object sender, EventArgs e)
+        private void btnDownloadData_Click(object sender, EventArgs e)
         {
-            //labelDataUrl.Enabled = checkBoxDownloadData.Checked;
-            labelDataNamingPattern.Enabled = checkBoxDownloadData.Checked;
-            comboDataServer.Enabled = checkBoxDownloadData.Checked;
-            textDataNamingPatten.Enabled = checkBoxDownloadData.Checked;
+            var addServerForm = new AddServerForm(_dataServer);
+            if (DialogResult.OK == addServerForm.ShowDialog(this))
+            {
+                _dataServer = addServerForm.Server;
+                ToggleDownloadData(_dataServer != null);
+            }
         }
 
         private void textConfigName_TextChanged(object sender, EventArgs e)
@@ -234,7 +249,7 @@ namespace SkylineBatch
             OpenFolder(textDataPath);
         }
 
-        private void comboDataServer_SelectedIndexChanged(object sender, EventArgs e)
+        /*private void comboDataServer_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (comboDataServer.SelectedIndex == comboDataServer.Items.Count - 1)
             {
@@ -253,7 +268,7 @@ namespace SkylineBatch
                 }
                 comboDataServer.SelectedIndexChanged += comboDataServer_SelectedIndexChanged;
             }
-        }
+        }*/
 
         private void OpenFile(Control textBox, string filter, bool save = false)
         {
@@ -536,11 +551,6 @@ namespace SkylineBatch
 
         private void Save()
         {
-            if (checkBoxDownloadData.Checked && string.IsNullOrEmpty(comboDataServer.Text))
-            {
-                AlertDlg.ShowError(this, Program.AppName(), Resources.SkylineBatchConfigForm_Save_A_server_is_required_to_download_data__Please_select_a_server__or_uncheck_the_download_data_checkbox_);
-                return;
-            }
 
             SkylineBatchConfig newConfig;
             try

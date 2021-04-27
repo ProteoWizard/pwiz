@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(AddServerForm));
             this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
@@ -38,6 +39,10 @@
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnAdd = new System.Windows.Forms.Button();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+            this.textNamingPattern = new System.Windows.Forms.TextBox();
+            this.label4 = new System.Windows.Forms.Label();
+            this.btnRemoveServer = new System.Windows.Forms.Button();
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -48,6 +53,7 @@
             // 
             resources.ApplyResources(this.label1, "label1");
             this.label1.Name = "label1";
+            this.toolTip1.SetToolTip(this.label1, resources.GetString("label1.ToolTip"));
             // 
             // label2
             // 
@@ -103,12 +109,34 @@
             this.splitContainer1.Panel2.Controls.Add(this.label3);
             this.splitContainer1.Panel2.Controls.Add(this.textPassword);
             // 
+            // textNamingPattern
+            // 
+            resources.ApplyResources(this.textNamingPattern, "textNamingPattern");
+            this.textNamingPattern.Name = "textNamingPattern";
+            // 
+            // label4
+            // 
+            resources.ApplyResources(this.label4, "label4");
+            this.label4.Name = "label4";
+            this.toolTip1.SetToolTip(this.label4, resources.GetString("label4.ToolTip"));
+            // 
+            // btnRemoveServer
+            // 
+            resources.ApplyResources(this.btnRemoveServer, "btnRemoveServer");
+            this.btnRemoveServer.Name = "btnRemoveServer";
+            this.toolTip1.SetToolTip(this.btnRemoveServer, resources.GetString("btnRemoveServer.ToolTip"));
+            this.btnRemoveServer.UseVisualStyleBackColor = true;
+            this.btnRemoveServer.Click += new System.EventHandler(this.btnRemoveServer_Click);
+            // 
             // AddServerForm
             // 
             this.AcceptButton = this.btnAdd;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.btnRemoveServer);
+            this.Controls.Add(this.textNamingPattern);
+            this.Controls.Add(this.label4);
             this.Controls.Add(this.splitContainer1);
             this.Controls.Add(this.btnAdd);
             this.Controls.Add(this.btnCancel);
@@ -140,5 +168,9 @@
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Button btnAdd;
         private System.Windows.Forms.SplitContainer splitContainer1;
+        private System.Windows.Forms.TextBox textNamingPattern;
+        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.ToolTip toolTip1;
+        private System.Windows.Forms.Button btnRemoveServer;
     }
 }

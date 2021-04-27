@@ -90,7 +90,7 @@ namespace SkylineBatchTest
                 else if ("DependentConfigName".Equals(variable))
                     dependentConfig = (string)changedVariables[variable];
             }
-            return new MainSettings(template, analysisFolder, dataFolder, null, string.Empty, annotationsFile, namingPattern, dependentConfig);
+            return new MainSettings(template, analysisFolder, dataFolder, null,  annotationsFile, namingPattern, dependentConfig);
         }
 
         public static FileSettings GetChangedFileSettings(FileSettings baseSettings,
@@ -175,7 +175,7 @@ namespace SkylineBatchTest
 
         public static MainSettings GetTestMainSettings()
         {
-            return new MainSettings(GetTestFilePath("emptyTemplate.sky"), GetTestFilePath("analysis"), GetTestFilePath("emptyData"), null, string.Empty, string.Empty,  string.Empty, string.Empty);
+            return new MainSettings(GetTestFilePath("emptyTemplate.sky"), GetTestFilePath("analysis"), GetTestFilePath("emptyData"), null, string.Empty,  string.Empty, string.Empty);
         }
 
         public static FileSettings GetTestFileSettings()
@@ -226,7 +226,7 @@ namespace SkylineBatchTest
         public static SkylineBatchConfig GetFullyPopulatedConfig(string name = "TestConfig")
         {
             var main = new MainSettings(GetTestFilePath("emptyTemplate.sky"), GetTestFilePath("analysis"),
-                GetTestFilePath("emptyData"), null, string.Empty, GetTestFilePath("fakeAnnotations.csv"), "testNamingPattern", string.Empty);
+                GetTestFilePath("emptyData"), null,  GetTestFilePath("fakeAnnotations.csv"), "testNamingPattern", string.Empty);
             var file = FileSettings.FromUi("5", "4", "3", true, true, true);
             var refine = new RefineSettings(new RefineInputObject() 
                 {

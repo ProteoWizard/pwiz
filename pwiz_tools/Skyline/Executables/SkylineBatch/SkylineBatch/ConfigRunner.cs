@@ -245,7 +245,7 @@ namespace SkylineBatch
             var allFiles = server.GetServerFiles;
             var fileNames = allFiles.Keys;
             var existingDataFiles = Directory.GetFiles(mainSettings.DataFolderPath).Length;
-            var dataFilter = new Regex(mainSettings.DataNamingPattern);
+            var dataFilter = new Regex(mainSettings.Server.DataNamingPattern);
             var downloadingFilesEnum =
                 from name in fileNames
                 where dataFilter.IsMatch(name)

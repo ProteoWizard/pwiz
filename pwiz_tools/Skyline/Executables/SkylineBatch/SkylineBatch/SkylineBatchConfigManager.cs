@@ -38,7 +38,7 @@ namespace SkylineBatch
 
         private readonly Dictionary<string, IConfigRunner> _configRunners; // dictionary mapping from config name to that config's runner
         private readonly Dictionary<string, string> _refinedTemplates; // dictionary mapping from config name to it's refined output file (not included if no refinement occurs)
-        private readonly Dictionary<string, ServerInfo> _dataServers; // dictionary mapping from config name to it's refined output file (not included if no refinement occurs)
+        private readonly Dictionary<string, DataServerInfo> _dataServers; // dictionary mapping from config name to it's refined output file (not included if no refinement occurs)
 
         // Shared variables with ConfigManager:
         //  Protected -
@@ -66,7 +66,7 @@ namespace SkylineBatch
             _logList.Add(logger);
             _configRunners = new Dictionary<string, IConfigRunner>();
             _refinedTemplates = new Dictionary<string, string>();
-            _dataServers = new Dictionary<string, ServerInfo>();
+            _dataServers = new Dictionary<string, DataServerInfo>();
 
             _uiControl = uiControl;
             _runningUi = uiControl != null;
@@ -766,13 +766,13 @@ namespace SkylineBatch
 
         #endregion
 
-        public void AddValidServer(ServerInfo server)
+        public void AddValidServer(DataServerInfo server)
         {
             if (!_dataServers.ContainsKey(server.Name))
                 _dataServers.Add(server.Name, server);
         }
 
-        public ServerInfo GetServer(string name)
+        public DataServerInfo GetServer(string name)
         {
             return _dataServers[name];
         }

@@ -130,7 +130,7 @@
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="linkLabelRegex.Location" type="System.Drawing.Point, System.Drawing">
-    <value>10, 309</value>
+    <value>10, 227</value>
   </data>
   <data name="linkLabelRegex.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 0, 2, 0</value>
@@ -157,7 +157,7 @@
     <value>tabFiles</value>
   </data>
   <data name="&gt;&gt;linkLabelRegex.ZOrder" xml:space="preserve">
-    <value>9</value>
+    <value>6</value>
   </data>
   <data name="label5.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -494,7 +494,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>tabFiles</value>
   </data>
   <data name="&gt;&gt;labelConfigName.ZOrder" xml:space="preserve">
-    <value>11</value>
+    <value>8</value>
   </data>
   <data name="label3.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -530,7 +530,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>tabFiles</value>
   </data>
   <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
-    <value>12</value>
+    <value>9</value>
   </data>
   <data name="label1.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -566,7 +566,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>tabFiles</value>
   </data>
   <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
-    <value>16</value>
+    <value>13</value>
   </data>
   <data name="label2.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -602,7 +602,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>tabFiles</value>
   </data>
   <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
-    <value>19</value>
+    <value>16</value>
   </data>
   <data name="label7.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -614,7 +614,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>NoControl</value>
   </data>
   <data name="label7.Location" type="System.Drawing.Point, System.Drawing">
-    <value>7, 266</value>
+    <value>7, 184</value>
   </data>
   <data name="label7.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 0, 2, 0</value>
@@ -641,10 +641,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>tabFiles</value>
   </data>
   <data name="&gt;&gt;label7.ZOrder" xml:space="preserve">
-    <value>5</value>
-  </data>
-  <data name="label8.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Left</value>
+    <value>2</value>
   </data>
   <data name="label8.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -656,7 +653,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>NoControl</value>
   </data>
   <data name="label8.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 10</value>
+    <value>7, 12</value>
   </data>
   <data name="label8.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 0, 2, 0</value>
@@ -779,7 +776,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>tabFiles</value>
   </data>
   <data name="&gt;&gt;textAnalysisPath.ZOrder" xml:space="preserve">
-    <value>15</value>
+    <value>12</value>
   </data>
   <data name="textTemplateFile.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -803,7 +800,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>tabFiles</value>
   </data>
   <data name="&gt;&gt;textTemplateFile.ZOrder" xml:space="preserve">
-    <value>20</value>
+    <value>17</value>
   </data>
   <data name="textDataPath.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -815,7 +812,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>2, 2, 2, 2</value>
   </data>
   <data name="textDataPath.Size" type="System.Drawing.Size, System.Drawing">
-    <value>392, 20</value>
+    <value>365, 20</value>
   </data>
   <data name="textDataPath.TabIndex" type="System.Int32, mscorlib">
     <value>9</value>
@@ -830,7 +827,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>tabFiles</value>
   </data>
   <data name="&gt;&gt;textDataPath.ZOrder" xml:space="preserve">
-    <value>14</value>
+    <value>11</value>
   </data>
   <data name="splitContainer1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
@@ -847,125 +844,20 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   <data name="splitContainer1.Orientation" type="System.Windows.Forms.Orientation, System.Windows.Forms">
     <value>Horizontal</value>
   </data>
-  <data name="comboDataServer.Enabled" type="System.Boolean, mscorlib">
-    <value>False</value>
+  <metadata name="toolStrip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>379, 17</value>
+  </metadata>
+  <data name="&gt;&gt;toolStrip1.Name" xml:space="preserve">
+    <value>toolStrip1</value>
   </data>
-  <data name="comboDataServer.Location" type="System.Drawing.Point, System.Drawing">
-    <value>33, 201</value>
+  <data name="&gt;&gt;toolStrip1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="comboDataServer.Size" type="System.Drawing.Size, System.Drawing">
-    <value>369, 21</value>
-  </data>
-  <data name="comboDataServer.TabIndex" type="System.Int32, mscorlib">
-    <value>23</value>
-  </data>
-  <data name="&gt;&gt;comboDataServer.Name" xml:space="preserve">
-    <value>comboDataServer</value>
-  </data>
-  <data name="&gt;&gt;comboDataServer.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;comboDataServer.Parent" xml:space="preserve">
+  <data name="&gt;&gt;toolStrip1.Parent" xml:space="preserve">
     <value>tabFiles</value>
   </data>
-  <data name="&gt;&gt;comboDataServer.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;toolStrip1.ZOrder" xml:space="preserve">
     <value>0</value>
-  </data>
-  <data name="textDataNamingPatten.Enabled" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
-  <data name="textDataNamingPatten.Location" type="System.Drawing.Point, System.Drawing">
-    <value>33, 241</value>
-  </data>
-  <data name="textDataNamingPatten.Size" type="System.Drawing.Size, System.Drawing">
-    <value>174, 20</value>
-  </data>
-  <data name="textDataNamingPatten.TabIndex" type="System.Int32, mscorlib">
-    <value>22</value>
-  </data>
-  <data name="&gt;&gt;textDataNamingPatten.Name" xml:space="preserve">
-    <value>textDataNamingPatten</value>
-  </data>
-  <data name="&gt;&gt;textDataNamingPatten.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textDataNamingPatten.Parent" xml:space="preserve">
-    <value>tabFiles</value>
-  </data>
-  <data name="&gt;&gt;textDataNamingPatten.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="labelDataNamingPattern.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="labelDataNamingPattern.Enabled" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
-  <data name="labelDataNamingPattern.Location" type="System.Drawing.Point, System.Drawing">
-    <value>30, 225</value>
-  </data>
-  <data name="labelDataNamingPattern.Size" type="System.Drawing.Size, System.Drawing">
-    <value>106, 13</value>
-  </data>
-  <data name="labelDataNamingPattern.TabIndex" type="System.Int32, mscorlib">
-    <value>19</value>
-  </data>
-  <data name="labelDataNamingPattern.Text" xml:space="preserve">
-    <value>Data naming pattern:</value>
-  </data>
-  <data name="&gt;&gt;labelDataNamingPattern.Name" xml:space="preserve">
-    <value>labelDataNamingPattern</value>
-  </data>
-  <data name="&gt;&gt;labelDataNamingPattern.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelDataNamingPattern.Parent" xml:space="preserve">
-    <value>tabFiles</value>
-  </data>
-  <data name="&gt;&gt;labelDataNamingPattern.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="checkBoxDownloadData.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="checkBoxDownloadData.Location" type="System.Drawing.Point, System.Drawing">
-    <value>10, 180</value>
-  </data>
-  <data name="checkBoxDownloadData.Size" type="System.Drawing.Size, System.Drawing">
-    <value>153, 17</value>
-  </data>
-  <data name="checkBoxDownloadData.TabIndex" type="System.Int32, mscorlib">
-    <value>17</value>
-  </data>
-  <data name="checkBoxDownloadData.Text" xml:space="preserve">
-    <value>Download data from server</value>
-  </data>
-  <data name="&gt;&gt;checkBoxDownloadData.Name" xml:space="preserve">
-    <value>checkBoxDownloadData</value>
-  </data>
-  <data name="&gt;&gt;checkBoxDownloadData.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;checkBoxDownloadData.Parent" xml:space="preserve">
-    <value>tabFiles</value>
-  </data>
-  <data name="&gt;&gt;checkBoxDownloadData.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="comboTemplateFile.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Left, Right</value>
-  </data>
-  <data name="comboTemplateFile.Location" type="System.Drawing.Point, System.Drawing">
-    <value>10, 69</value>
-  </data>
-  <data name="comboTemplateFile.Size" type="System.Drawing.Size, System.Drawing">
-    <value>392, 21</value>
-  </data>
-  <data name="comboTemplateFile.TabIndex" type="System.Int32, mscorlib">
-    <value>16</value>
-  </data>
-  <data name="comboTemplateFile.Visible" type="System.Boolean, mscorlib">
-    <value>False</value>
   </data>
   <data name="&gt;&gt;comboTemplateFile.Name" xml:space="preserve">
     <value>comboTemplateFile</value>
@@ -977,28 +869,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>tabFiles</value>
   </data>
   <data name="&gt;&gt;comboTemplateFile.ZOrder" xml:space="preserve">
-    <value>4</value>
-  </data>
-  <data name="btnAnnotationsFile.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Right</value>
-  </data>
-  <data name="btnAnnotationsFile.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="btnAnnotationsFile.Location" type="System.Drawing.Point, System.Drawing">
-    <value>406, 279</value>
-  </data>
-  <data name="btnAnnotationsFile.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
-  </data>
-  <data name="btnAnnotationsFile.Size" type="System.Drawing.Size, System.Drawing">
-    <value>32, 23</value>
-  </data>
-  <data name="btnAnnotationsFile.TabIndex" type="System.Int32, mscorlib">
-    <value>15</value>
-  </data>
-  <data name="btnAnnotationsFile.Text" xml:space="preserve">
-    <value>...</value>
+    <value>1</value>
   </data>
   <data name="&gt;&gt;btnAnnotationsFile.Name" xml:space="preserve">
     <value>btnAnnotationsFile</value>
@@ -1010,22 +881,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>tabFiles</value>
   </data>
   <data name="&gt;&gt;btnAnnotationsFile.ZOrder" xml:space="preserve">
-    <value>6</value>
-  </data>
-  <data name="textAnnotationsFile.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Left, Right</value>
-  </data>
-  <data name="textAnnotationsFile.Location" type="System.Drawing.Point, System.Drawing">
-    <value>10, 281</value>
-  </data>
-  <data name="textAnnotationsFile.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
-  </data>
-  <data name="textAnnotationsFile.Size" type="System.Drawing.Size, System.Drawing">
-    <value>392, 20</value>
-  </data>
-  <data name="textAnnotationsFile.TabIndex" type="System.Int32, mscorlib">
-    <value>14</value>
+    <value>3</value>
   </data>
   <data name="&gt;&gt;textAnnotationsFile.Name" xml:space="preserve">
     <value>textAnnotationsFile</value>
@@ -1037,16 +893,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>tabFiles</value>
   </data>
   <data name="&gt;&gt;textAnnotationsFile.ZOrder" xml:space="preserve">
-    <value>7</value>
-  </data>
-  <data name="textReplicateNamingPattern.Location" type="System.Drawing.Point, System.Drawing">
-    <value>10, 323</value>
-  </data>
-  <data name="textReplicateNamingPattern.Size" type="System.Drawing.Size, System.Drawing">
-    <value>197, 20</value>
-  </data>
-  <data name="textReplicateNamingPattern.TabIndex" type="System.Int32, mscorlib">
-    <value>12</value>
+    <value>4</value>
   </data>
   <data name="&gt;&gt;textReplicateNamingPattern.Name" xml:space="preserve">
     <value>textReplicateNamingPattern</value>
@@ -1058,22 +905,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>tabFiles</value>
   </data>
   <data name="&gt;&gt;textReplicateNamingPattern.ZOrder" xml:space="preserve">
-    <value>8</value>
-  </data>
-  <data name="textConfigName.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Left, Right</value>
-  </data>
-  <data name="textConfigName.Location" type="System.Drawing.Point, System.Drawing">
-    <value>10, 27</value>
-  </data>
-  <data name="textConfigName.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
-  </data>
-  <data name="textConfigName.Size" type="System.Drawing.Size, System.Drawing">
-    <value>392, 20</value>
-  </data>
-  <data name="textConfigName.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
+    <value>5</value>
   </data>
   <data name="&gt;&gt;textConfigName.Name" xml:space="preserve">
     <value>textConfigName</value>
@@ -1085,25 +917,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>tabFiles</value>
   </data>
   <data name="&gt;&gt;textConfigName.ZOrder" xml:space="preserve">
-    <value>10</value>
-  </data>
-  <data name="btnDataPath.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Right</value>
-  </data>
-  <data name="btnDataPath.Location" type="System.Drawing.Point, System.Drawing">
-    <value>406, 153</value>
-  </data>
-  <data name="btnDataPath.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
-  </data>
-  <data name="btnDataPath.Size" type="System.Drawing.Size, System.Drawing">
-    <value>32, 23</value>
-  </data>
-  <data name="btnDataPath.TabIndex" type="System.Int32, mscorlib">
-    <value>10</value>
-  </data>
-  <data name="btnDataPath.Text" xml:space="preserve">
-    <value>...</value>
+    <value>7</value>
   </data>
   <data name="&gt;&gt;btnDataPath.Name" xml:space="preserve">
     <value>btnDataPath</value>
@@ -1115,25 +929,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>tabFiles</value>
   </data>
   <data name="&gt;&gt;btnDataPath.ZOrder" xml:space="preserve">
-    <value>13</value>
-  </data>
-  <data name="btnAnalysisPath.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Right</value>
-  </data>
-  <data name="btnAnalysisPath.Location" type="System.Drawing.Point, System.Drawing">
-    <value>406, 111</value>
-  </data>
-  <data name="btnAnalysisPath.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
-  </data>
-  <data name="btnAnalysisPath.Size" type="System.Drawing.Size, System.Drawing">
-    <value>32, 23</value>
-  </data>
-  <data name="btnAnalysisPath.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
-  </data>
-  <data name="btnAnalysisPath.Text" xml:space="preserve">
-    <value>...</value>
+    <value>10</value>
   </data>
   <data name="&gt;&gt;btnAnalysisPath.Name" xml:space="preserve">
     <value>btnAnalysisPath</value>
@@ -1145,25 +941,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>tabFiles</value>
   </data>
   <data name="&gt;&gt;btnAnalysisPath.ZOrder" xml:space="preserve">
-    <value>17</value>
-  </data>
-  <data name="btnSkylineFilePath.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Right</value>
-  </data>
-  <data name="btnSkylineFilePath.Location" type="System.Drawing.Point, System.Drawing">
-    <value>406, 68</value>
-  </data>
-  <data name="btnSkylineFilePath.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
-  </data>
-  <data name="btnSkylineFilePath.Size" type="System.Drawing.Size, System.Drawing">
-    <value>32, 23</value>
-  </data>
-  <data name="btnSkylineFilePath.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
-  </data>
-  <data name="btnSkylineFilePath.Text" xml:space="preserve">
-    <value>...</value>
+    <value>14</value>
   </data>
   <data name="&gt;&gt;btnSkylineFilePath.Name" xml:space="preserve">
     <value>btnSkylineFilePath</value>
@@ -1175,7 +953,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>tabFiles</value>
   </data>
   <data name="&gt;&gt;btnSkylineFilePath.ZOrder" xml:space="preserve">
-    <value>18</value>
+    <value>15</value>
   </data>
   <data name="tabFiles.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
@@ -1184,7 +962,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>3, 3, 3, 3</value>
   </data>
   <data name="tabFiles.Size" type="System.Drawing.Size, System.Drawing">
-    <value>445, 362</value>
+    <value>445, 366</value>
   </data>
   <data name="tabFiles.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -1223,7 +1001,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>3, 3, 3, 3</value>
   </data>
   <data name="tabSettings.Size" type="System.Drawing.Size, System.Drawing">
-    <value>445, 361</value>
+    <value>445, 365</value>
   </data>
   <data name="tabSettings.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -1243,6 +1021,45 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   <data name="&gt;&gt;tabSettings.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
+  <data name="splitContainer2.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
+  <data name="splitContainer2.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 52</value>
+  </data>
+  <data name="&gt;&gt;splitContainer2.Panel1.Name" xml:space="preserve">
+    <value>splitContainer2.Panel1</value>
+  </data>
+  <data name="&gt;&gt;splitContainer2.Panel1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;splitContainer2.Panel1.Parent" xml:space="preserve">
+    <value>splitContainer2</value>
+  </data>
+  <data name="&gt;&gt;splitContainer2.Panel1.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;splitContainer2.Panel2.Name" xml:space="preserve">
+    <value>splitContainer2.Panel2</value>
+  </data>
+  <data name="&gt;&gt;splitContainer2.Panel2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;splitContainer2.Panel2.Parent" xml:space="preserve">
+    <value>splitContainer2</value>
+  </data>
+  <data name="&gt;&gt;splitContainer2.Panel2.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="splitContainer2.Size" type="System.Drawing.Size, System.Drawing">
+    <value>438, 15</value>
+  </data>
+  <data name="splitContainer2.SplitterDistance" type="System.Int32, mscorlib">
+    <value>206</value>
+  </data>
+  <data name="splitContainer2.TabIndex" type="System.Int32, mscorlib">
+    <value>11</value>
+  </data>
   <data name="&gt;&gt;splitContainer2.Name" xml:space="preserve">
     <value>splitContainer2</value>
   </data>
@@ -1254,6 +1071,18 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   </data>
   <data name="&gt;&gt;splitContainer2.ZOrder" xml:space="preserve">
     <value>0</value>
+  </data>
+  <data name="gridRefineInputs.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="gridRefineInputs.Location" type="System.Drawing.Point, System.Drawing">
+    <value>10, 73</value>
+  </data>
+  <data name="gridRefineInputs.Size" type="System.Drawing.Size, System.Drawing">
+    <value>427, 293</value>
+  </data>
+  <data name="gridRefineInputs.TabIndex" type="System.Int32, mscorlib">
+    <value>10</value>
   </data>
   <data name="&gt;&gt;gridRefineInputs.Name" xml:space="preserve">
     <value>gridRefineInputs</value>
@@ -1267,6 +1096,27 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   <data name="&gt;&gt;gridRefineInputs.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
+  <data name="btnRefinedFilePath.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="btnRefinedFilePath.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="btnRefinedFilePath.Location" type="System.Drawing.Point, System.Drawing">
+    <value>405, 25</value>
+  </data>
+  <data name="btnRefinedFilePath.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="btnRefinedFilePath.Size" type="System.Drawing.Size, System.Drawing">
+    <value>32, 23</value>
+  </data>
+  <data name="btnRefinedFilePath.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
+  </data>
+  <data name="btnRefinedFilePath.Text" xml:space="preserve">
+    <value>...</value>
+  </data>
   <data name="&gt;&gt;btnRefinedFilePath.Name" xml:space="preserve">
     <value>btnRefinedFilePath</value>
   </data>
@@ -1278,6 +1128,21 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   </data>
   <data name="&gt;&gt;btnRefinedFilePath.ZOrder" xml:space="preserve">
     <value>3</value>
+  </data>
+  <data name="textRefinedFilePath.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
+  <data name="textRefinedFilePath.Location" type="System.Drawing.Point, System.Drawing">
+    <value>10, 27</value>
+  </data>
+  <data name="textRefinedFilePath.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="textRefinedFilePath.Size" type="System.Drawing.Size, System.Drawing">
+    <value>392, 20</value>
+  </data>
+  <data name="textRefinedFilePath.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
   </data>
   <data name="&gt;&gt;textRefinedFilePath.Name" xml:space="preserve">
     <value>textRefinedFilePath</value>
@@ -1295,7 +1160,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>4, 22</value>
   </data>
   <data name="tabRefine.Size" type="System.Drawing.Size, System.Drawing">
-    <value>445, 361</value>
+    <value>445, 366</value>
   </data>
   <data name="tabRefine.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -1352,7 +1217,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>2, 2, 2, 2</value>
   </data>
   <data name="tabReports.Size" type="System.Drawing.Size, System.Drawing">
-    <value>445, 361</value>
+    <value>445, 365</value>
   </data>
   <data name="tabReports.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -1391,7 +1256,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>3, 3, 3, 3</value>
   </data>
   <data name="tabSkyline.Size" type="System.Drawing.Size, System.Drawing">
-    <value>445, 362</value>
+    <value>445, 365</value>
   </data>
   <data name="tabSkyline.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -1421,7 +1286,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>2, 2, 2, 2</value>
   </data>
   <data name="tabsConfig.Size" type="System.Drawing.Size, System.Drawing">
-    <value>453, 388</value>
+    <value>453, 392</value>
   </data>
   <data name="tabsConfig.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1454,7 +1319,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>Bottom, Right</value>
   </data>
   <data name="btnCancelConfig.Location" type="System.Drawing.Point, System.Drawing">
-    <value>367, 7</value>
+    <value>367, 4</value>
   </data>
   <data name="btnCancelConfig.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -1484,7 +1349,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>True</value>
   </data>
   <data name="lblConfigRunning.Location" type="System.Drawing.Point, System.Drawing">
-    <value>11, 12</value>
+    <value>11, 9</value>
   </data>
   <data name="lblConfigRunning.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 0, 2, 0</value>
@@ -1521,7 +1386,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>Microsoft Sans Serif, 9pt</value>
   </data>
   <data name="btnSaveConfig.Location" type="System.Drawing.Point, System.Drawing">
-    <value>288, 7</value>
+    <value>288, 4</value>
   </data>
   <data name="btnSaveConfig.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -1554,7 +1419,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>NoControl</value>
   </data>
   <data name="btnOkConfig.Location" type="System.Drawing.Point, System.Drawing">
-    <value>367, 7</value>
+    <value>367, 4</value>
   </data>
   <data name="btnOkConfig.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -1599,7 +1464,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>453, 429</value>
   </data>
   <data name="splitContainer1.SplitterDistance" type="System.Int32, mscorlib">
-    <value>388</value>
+    <value>392</value>
   </data>
   <data name="splitContainer1.SplitterWidth" type="System.Int32, mscorlib">
     <value>3</value>
@@ -1618,6 +1483,231 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   </data>
   <data name="&gt;&gt;splitContainer1.ZOrder" xml:space="preserve">
     <value>0</value>
+  </data>
+  <data name="comboTemplateFile.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
+  <data name="comboTemplateFile.Location" type="System.Drawing.Point, System.Drawing">
+    <value>10, 69</value>
+  </data>
+  <data name="comboTemplateFile.Size" type="System.Drawing.Size, System.Drawing">
+    <value>392, 21</value>
+  </data>
+  <data name="comboTemplateFile.TabIndex" type="System.Int32, mscorlib">
+    <value>16</value>
+  </data>
+  <data name="comboTemplateFile.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="&gt;&gt;comboTemplateFile.Name" xml:space="preserve">
+    <value>comboTemplateFile</value>
+  </data>
+  <data name="&gt;&gt;comboTemplateFile.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboTemplateFile.Parent" xml:space="preserve">
+    <value>tabFiles</value>
+  </data>
+  <data name="&gt;&gt;comboTemplateFile.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="btnAnnotationsFile.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="btnAnnotationsFile.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="btnAnnotationsFile.Location" type="System.Drawing.Point, System.Drawing">
+    <value>406, 197</value>
+  </data>
+  <data name="btnAnnotationsFile.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="btnAnnotationsFile.Size" type="System.Drawing.Size, System.Drawing">
+    <value>32, 23</value>
+  </data>
+  <data name="btnAnnotationsFile.TabIndex" type="System.Int32, mscorlib">
+    <value>15</value>
+  </data>
+  <data name="btnAnnotationsFile.Text" xml:space="preserve">
+    <value>...</value>
+  </data>
+  <data name="&gt;&gt;btnAnnotationsFile.Name" xml:space="preserve">
+    <value>btnAnnotationsFile</value>
+  </data>
+  <data name="&gt;&gt;btnAnnotationsFile.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnAnnotationsFile.Parent" xml:space="preserve">
+    <value>tabFiles</value>
+  </data>
+  <data name="&gt;&gt;btnAnnotationsFile.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="textAnnotationsFile.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
+  <data name="textAnnotationsFile.Location" type="System.Drawing.Point, System.Drawing">
+    <value>10, 199</value>
+  </data>
+  <data name="textAnnotationsFile.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="textAnnotationsFile.Size" type="System.Drawing.Size, System.Drawing">
+    <value>392, 20</value>
+  </data>
+  <data name="textAnnotationsFile.TabIndex" type="System.Int32, mscorlib">
+    <value>14</value>
+  </data>
+  <data name="&gt;&gt;textAnnotationsFile.Name" xml:space="preserve">
+    <value>textAnnotationsFile</value>
+  </data>
+  <data name="&gt;&gt;textAnnotationsFile.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textAnnotationsFile.Parent" xml:space="preserve">
+    <value>tabFiles</value>
+  </data>
+  <data name="&gt;&gt;textAnnotationsFile.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="textReplicateNamingPattern.Location" type="System.Drawing.Point, System.Drawing">
+    <value>10, 241</value>
+  </data>
+  <data name="textReplicateNamingPattern.Size" type="System.Drawing.Size, System.Drawing">
+    <value>197, 20</value>
+  </data>
+  <data name="textReplicateNamingPattern.TabIndex" type="System.Int32, mscorlib">
+    <value>12</value>
+  </data>
+  <data name="&gt;&gt;textReplicateNamingPattern.Name" xml:space="preserve">
+    <value>textReplicateNamingPattern</value>
+  </data>
+  <data name="&gt;&gt;textReplicateNamingPattern.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textReplicateNamingPattern.Parent" xml:space="preserve">
+    <value>tabFiles</value>
+  </data>
+  <data name="&gt;&gt;textReplicateNamingPattern.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="textConfigName.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
+  <data name="textConfigName.Location" type="System.Drawing.Point, System.Drawing">
+    <value>10, 27</value>
+  </data>
+  <data name="textConfigName.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="textConfigName.Size" type="System.Drawing.Size, System.Drawing">
+    <value>392, 20</value>
+  </data>
+  <data name="textConfigName.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;textConfigName.Name" xml:space="preserve">
+    <value>textConfigName</value>
+  </data>
+  <data name="&gt;&gt;textConfigName.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textConfigName.Parent" xml:space="preserve">
+    <value>tabFiles</value>
+  </data>
+  <data name="&gt;&gt;textConfigName.ZOrder" xml:space="preserve">
+    <value>7</value>
+  </data>
+  <data name="btnDataPath.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="btnDataPath.Location" type="System.Drawing.Point, System.Drawing">
+    <value>406, 153</value>
+  </data>
+  <data name="btnDataPath.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="btnDataPath.Size" type="System.Drawing.Size, System.Drawing">
+    <value>32, 23</value>
+  </data>
+  <data name="btnDataPath.TabIndex" type="System.Int32, mscorlib">
+    <value>10</value>
+  </data>
+  <data name="btnDataPath.Text" xml:space="preserve">
+    <value>...</value>
+  </data>
+  <data name="&gt;&gt;btnDataPath.Name" xml:space="preserve">
+    <value>btnDataPath</value>
+  </data>
+  <data name="&gt;&gt;btnDataPath.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnDataPath.Parent" xml:space="preserve">
+    <value>tabFiles</value>
+  </data>
+  <data name="&gt;&gt;btnDataPath.ZOrder" xml:space="preserve">
+    <value>10</value>
+  </data>
+  <data name="btnAnalysisPath.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="btnAnalysisPath.Location" type="System.Drawing.Point, System.Drawing">
+    <value>406, 111</value>
+  </data>
+  <data name="btnAnalysisPath.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="btnAnalysisPath.Size" type="System.Drawing.Size, System.Drawing">
+    <value>32, 23</value>
+  </data>
+  <data name="btnAnalysisPath.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
+  </data>
+  <data name="btnAnalysisPath.Text" xml:space="preserve">
+    <value>...</value>
+  </data>
+  <data name="&gt;&gt;btnAnalysisPath.Name" xml:space="preserve">
+    <value>btnAnalysisPath</value>
+  </data>
+  <data name="&gt;&gt;btnAnalysisPath.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnAnalysisPath.Parent" xml:space="preserve">
+    <value>tabFiles</value>
+  </data>
+  <data name="&gt;&gt;btnAnalysisPath.ZOrder" xml:space="preserve">
+    <value>14</value>
+  </data>
+  <data name="btnSkylineFilePath.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="btnSkylineFilePath.Location" type="System.Drawing.Point, System.Drawing">
+    <value>406, 68</value>
+  </data>
+  <data name="btnSkylineFilePath.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="btnSkylineFilePath.Size" type="System.Drawing.Size, System.Drawing">
+    <value>32, 23</value>
+  </data>
+  <data name="btnSkylineFilePath.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="btnSkylineFilePath.Text" xml:space="preserve">
+    <value>...</value>
+  </data>
+  <data name="&gt;&gt;btnSkylineFilePath.Name" xml:space="preserve">
+    <value>btnSkylineFilePath</value>
+  </data>
+  <data name="&gt;&gt;btnSkylineFilePath.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnSkylineFilePath.Parent" xml:space="preserve">
+    <value>tabFiles</value>
+  </data>
+  <data name="&gt;&gt;btnSkylineFilePath.ZOrder" xml:space="preserve">
+    <value>15</value>
   </data>
   <data name="label6.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1648,141 +1738,6 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   </data>
   <data name="&gt;&gt;label6.ZOrder" xml:space="preserve">
     <value>6</value>
-  </data>
-  <data name="splitContainer2.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Left, Right</value>
-  </data>
-  <data name="splitContainer2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 50</value>
-  </data>
-  <data name="&gt;&gt;splitContainer2.Panel1.Name" xml:space="preserve">
-    <value>splitContainer2.Panel1</value>
-  </data>
-  <data name="&gt;&gt;splitContainer2.Panel1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;splitContainer2.Panel1.Parent" xml:space="preserve">
-    <value>splitContainer2</value>
-  </data>
-  <data name="&gt;&gt;splitContainer2.Panel1.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;splitContainer2.Panel2.Name" xml:space="preserve">
-    <value>splitContainer2.Panel2</value>
-  </data>
-  <data name="&gt;&gt;splitContainer2.Panel2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;splitContainer2.Panel2.Parent" xml:space="preserve">
-    <value>splitContainer2</value>
-  </data>
-  <data name="&gt;&gt;splitContainer2.Panel2.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="splitContainer2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>438, 15</value>
-  </data>
-  <data name="splitContainer2.SplitterDistance" type="System.Int32, mscorlib">
-    <value>206</value>
-  </data>
-  <data name="splitContainer2.TabIndex" type="System.Int32, mscorlib">
-    <value>11</value>
-  </data>
-  <data name="&gt;&gt;splitContainer2.Name" xml:space="preserve">
-    <value>splitContainer2</value>
-  </data>
-  <data name="&gt;&gt;splitContainer2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.SplitContainer, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;splitContainer2.Parent" xml:space="preserve">
-    <value>tabRefine</value>
-  </data>
-  <data name="&gt;&gt;splitContainer2.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="gridRefineInputs.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Bottom, Left, Right</value>
-  </data>
-  <data name="gridRefineInputs.Location" type="System.Drawing.Point, System.Drawing">
-    <value>10, 73</value>
-  </data>
-  <data name="gridRefineInputs.Size" type="System.Drawing.Size, System.Drawing">
-    <value>427, 288</value>
-  </data>
-  <data name="gridRefineInputs.TabIndex" type="System.Int32, mscorlib">
-    <value>10</value>
-  </data>
-  <data name="&gt;&gt;gridRefineInputs.Name" xml:space="preserve">
-    <value>gridRefineInputs</value>
-  </data>
-  <data name="&gt;&gt;gridRefineInputs.Type" xml:space="preserve">
-    <value>System.Windows.Forms.PropertyGrid, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;gridRefineInputs.Parent" xml:space="preserve">
-    <value>tabRefine</value>
-  </data>
-  <data name="&gt;&gt;gridRefineInputs.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="btnRefinedFilePath.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Right</value>
-  </data>
-  <data name="btnRefinedFilePath.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="btnRefinedFilePath.Location" type="System.Drawing.Point, System.Drawing">
-    <value>406, 24</value>
-  </data>
-  <data name="btnRefinedFilePath.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
-  </data>
-  <data name="btnRefinedFilePath.Size" type="System.Drawing.Size, System.Drawing">
-    <value>32, 23</value>
-  </data>
-  <data name="btnRefinedFilePath.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
-  </data>
-  <data name="btnRefinedFilePath.Text" xml:space="preserve">
-    <value>...</value>
-  </data>
-  <data name="&gt;&gt;btnRefinedFilePath.Name" xml:space="preserve">
-    <value>btnRefinedFilePath</value>
-  </data>
-  <data name="&gt;&gt;btnRefinedFilePath.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnRefinedFilePath.Parent" xml:space="preserve">
-    <value>tabRefine</value>
-  </data>
-  <data name="&gt;&gt;btnRefinedFilePath.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="textRefinedFilePath.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Left, Right</value>
-  </data>
-  <data name="textRefinedFilePath.Location" type="System.Drawing.Point, System.Drawing">
-    <value>7, 25</value>
-  </data>
-  <data name="textRefinedFilePath.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
-  </data>
-  <data name="textRefinedFilePath.Size" type="System.Drawing.Size, System.Drawing">
-    <value>392, 20</value>
-  </data>
-  <data name="textRefinedFilePath.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
-  </data>
-  <data name="&gt;&gt;textRefinedFilePath.Name" xml:space="preserve">
-    <value>textRefinedFilePath</value>
-  </data>
-  <data name="&gt;&gt;textRefinedFilePath.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textRefinedFilePath.Parent" xml:space="preserve">
-    <value>tabRefine</value>
-  </data>
-  <data name="&gt;&gt;textRefinedFilePath.ZOrder" xml:space="preserve">
-    <value>4</value>
   </data>
   <metadata name="toolBar.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>288, 17</value>
@@ -1896,7 +1851,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>2, 2, 2, 2</value>
   </data>
   <data name="gridReportSettings.Size" type="System.Drawing.Size, System.Drawing">
-    <value>415, 353</value>
+    <value>415, 357</value>
   </data>
   <data name="gridReportSettings.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1920,7 +1875,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>8, 6</value>
   </data>
   <data name="panelSkylineSettings.Size" type="System.Drawing.Size, System.Drawing">
-    <value>438, 357</value>
+    <value>438, 360</value>
   </data>
   <data name="panelSkylineSettings.TabIndex" type="System.Int32, mscorlib">
     <value>24</value>
@@ -1945,7 +1900,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
         AAEAAAD/////AQAAAAAAAAAMAgAAAFdTeXN0ZW0uV2luZG93cy5Gb3JtcywgVmVyc2lvbj00LjAuMC4w
         LCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODkFAQAAACZTeXN0
         ZW0uV2luZG93cy5Gb3Jtcy5JbWFnZUxpc3RTdHJlYW1lcgEAAAAERGF0YQcCAgAAAAkDAAAADwMAAACw
-        CgAAAk1TRnQBSQFMAgEBAgEAAfgBAgH4AQIBHgEAAR4BAAT/AQkBAAj/AUIBTQE2AQQGAAE2AQQCAAEo
+        CgAAAk1TRnQBSQFMAgEBAgEAARgBAwEYAQMBHgEAAR4BAAT/AQkBAAj/AUIBTQE2AQQGAAE2AQQCAAEo
         AwABeAMAAR4DAAEBAQABCAUAARABDhgAAYACAAGAAwACgAEAAYADAAGAAQABgAEAAoACAAPAAQABwAHc
         AcABAAHwAcoBpgEAATMFAAEzAQABMwEAATMBAAIzAgADFgEAAxwBAAMiAQADKQEAA1UBAANNAQADQgEA
         AzkBAAGAAXwB/wEAAlAB/wEAAZMBAAHWAQAB/wHsAcwBAAHGAdYB7wEAAdYC5wEAAZABqQGtAgAB/wEz
@@ -1992,6 +1947,51 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
         AYABPwH/AfAIAAf/AfAIAAf/AfAIAAf/AfAIAAf/AfAIAAf/AfAIAAf/AfAIAAf/AfAIAAf/AfAIAAf/
         AfAIAAf/AfAIAAf/AfAIAAf/AfAIAAf/AfAIAAf/AfAIAAf/AfAIAAs=
 </value>
+  </data>
+  <metadata name="toolStrip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>379, 17</value>
+  </metadata>
+  <data name="toolStrip1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="toolStrip1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>None</value>
+  </data>
+  <data name="toolStrip1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>380, 154</value>
+  </data>
+  <data name="toolStrip1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>24, 25</value>
+  </data>
+  <data name="toolStrip1.TabIndex" type="System.Int32, mscorlib">
+    <value>25</value>
+  </data>
+  <data name="toolStrip1.Text" xml:space="preserve">
+    <value>toolStrip1</value>
+  </data>
+  <data name="&gt;&gt;toolStrip1.Name" xml:space="preserve">
+    <value>toolStrip1</value>
+  </data>
+  <data name="&gt;&gt;toolStrip1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;toolStrip1.Parent" xml:space="preserve">
+    <value>tabFiles</value>
+  </data>
+  <data name="&gt;&gt;toolStrip1.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="btnDownloadData.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
+  </data>
+  <data name="btnDownloadData.Size" type="System.Drawing.Size, System.Drawing">
+    <value>22, 20</value>
+  </data>
+  <data name="btnDownloadData.Text" xml:space="preserve">
+    <value>toolStripButton1</value>
+  </data>
+  <data name="btnDownloadData.ToolTipText" xml:space="preserve">
+    <value>Download data from an FTP server</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -2474,6 +2474,12 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   </data>
   <data name="&gt;&gt;imageListToolbarIcons.Type" xml:space="preserve">
     <value>System.Windows.Forms.ImageList, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnDownloadData.Name" xml:space="preserve">
+    <value>btnDownloadData</value>
+  </data>
+  <data name="&gt;&gt;btnDownloadData.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>SkylineBatchConfigForm</value>

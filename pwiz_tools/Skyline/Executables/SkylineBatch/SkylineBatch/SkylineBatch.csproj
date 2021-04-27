@@ -29,8 +29,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>512</ApplicationRevision>
-    <ApplicationVersion>20.2.9.512</ApplicationVersion>
+    <ApplicationRevision>513</ApplicationRevision>
+    <ApplicationVersion>20.2.9.513</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -93,6 +93,8 @@
     <Content Include="LaunchBatch.exe">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <None Include="Resources\download.png" />
+    <None Include="Resources\downloadSelected.png" />
     <Content Include="SkylineBatch_daily.ico">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

@@ -7,13 +7,21 @@ namespace SkylineBatch
 {
     public partial class AddServerForm : Form
     {
-        public AddServerForm()
+        public AddServerForm(DataServerInfo editingServerInfo)
         {
             InitializeComponent();
             Icon = Program.Icon();
+
+            if (editingServerInfo != null)
+            {
+                textUrl.Text = editingServerInfo.Url;
+                textUserName.Text = editingServerInfo.UserName;
+                textPassword.Text = editingServerInfo.Password;
+                textNamingPattern.Text = editingServerInfo.DataNamingPattern;
+            }
         }
 
-        public ServerInfo Server;
+        public DataServerInfo Server;
 
         private void btnAdd_Click(object sender, EventArgs e)
         {
@@ -44,9 +52,16 @@ namespace SkylineBatch
         
         }
 
-        private ServerInfo GetServerFromUi()
+        private DataServerInfo GetServerFromUi()
         {
-            return ServerInfo.ServerFromUi(textUrl.Text, textUserName.Text, textPassword.Text);
+            return DataServerInfo.ServerFromUi(textUrl.Text, textUserName.Text, textPassword.Text, textNamingPattern.Text);
+        }
+
+        private void btnRemoveServer_Click(object sender, EventArgs e)
+        {
+            Server = null;
+            DialogResult = DialogResult.OK;
+            Close();
         }
     }
 }
