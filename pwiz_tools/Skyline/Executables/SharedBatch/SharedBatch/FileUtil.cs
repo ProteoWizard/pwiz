@@ -53,6 +53,20 @@ namespace SharedBatch
             return Path.GetDirectoryName(path);
         }
 
+        public static bool DirectoryExists(string path)
+        {
+            var exists = false;
+            try
+            {
+                exists = Directory.Exists(Path.GetDirectoryName(path));
+            }
+            catch (Exception)
+            {
+                // pass incorrectly formatted paths
+            }
+            return exists;
+        }
+
         // Find an existing initial directory to use in a file/folder browser dialog, can be null (dialog will use a default)
         public static string GetInitialDirectory(string directory, string lastEnteredPath = "")
         {

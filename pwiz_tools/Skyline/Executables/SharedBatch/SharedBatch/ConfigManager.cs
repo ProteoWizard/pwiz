@@ -670,23 +670,21 @@ namespace SharedBatch
             var oldPathFolders = oldPath.Split('\\');
             var newPathFolders = newPath.Split('\\');
             oldRoot = string.Empty;
-            string newRoot = string.Empty;
             askedAboutRootReplacement = false;
 
             var matchingEndFolders = 1;
             while (matchingEndFolders <= Math.Min(oldPathFolders.Length, newPathFolders.Length))
             {
-                // If path folders do not match we cannot replace root
+                // Check how many end folders match
                 if (!oldPathFolders[oldPathFolders.Length - matchingEndFolders]
                     .Equals(newPathFolders[newPathFolders.Length - matchingEndFolders]))
                     break;
-
                 matchingEndFolders++;
             }
 
             matchingEndFolders--;
             oldRoot = string.Join("\\", oldPathFolders.Take(oldPathFolders.Length - matchingEndFolders).ToArray());
-            newRoot = string.Join("\\", newPathFolders.Take(newPathFolders.Length - matchingEndFolders).ToArray());
+            var newRoot = string.Join("\\", newPathFolders.Take(newPathFolders.Length - matchingEndFolders).ToArray());
 
             var replaceRoot = false;
             if (oldRoot.Length > 0)
