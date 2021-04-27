@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using SharedBatch.Properties;
@@ -31,6 +32,9 @@ using SharedBatch.Properties;
 
     public class Logger
     {
+
+        private static HashSet<Regex> _errorFormats;
+
         //public static string LOG_FOLDER;
 
         public const long MaxLogSize = 10 * 1024 * 1024; // 10MB
@@ -65,6 +69,12 @@ using SharedBatch.Properties;
                 Directory.CreateDirectory(logFolder);
             }
 
+            if (_errorFormats == null)
+            {
+                _errorFormats = new HashSet<Regex>();
+                AddErrorMatch(string.Format(Resources.Logger_LogErrorToFile_ERROR___0_, ".*"));
+            }
+
             _filePath = logFilePath;
             _mainUi = mainUi;
             Name = logName;
@@ -90,6 +100,12 @@ using SharedBatch.Properties;
             _streamReader = new StreamReader(logFileRead, Encoding.Default, false, 
                 StreamReaderDefaultBufferSize, true);
             _streamWriter = new StreamWriter(logFileWrite, Encoding.Default, StreamReaderDefaultBufferSize, true);
+        }
+
+        public void AddErrorMatch(string errorRegex)
+        {
+            var dateRegex = "[].*[] *";
+            _errorFormats.Add(new Regex(dateRegex + errorRegex));
         }
 
         public string GetDirectory()
@@ -266,19 +282,26 @@ using SharedBatch.Properties;
         public void LogError(string line, params object[] args)
         {
             if (args != null && args.Length > 0)
-            {
                 line = string.Format(line, args);
-            }
-
             if (line.StartsWith(Resources.Logger_LogError_Error_, StringComparison.CurrentCultureIgnoreCase))
                 line = line.Substring(Resources.Logger_LogError_Error_.Length);
             line = string.Format(Resources.Logger_LogErrorToFile_ERROR___0_, line);
+            LogErrorText(line);
+        }
 
+        public void LogErrorNoPrefix(string line, params object[] args)
+        {
+            if (args != null && args.Length > 0)
+                line = string.Format(line, args);
+            LogErrorText(line);
+        }
+
+        private void LogErrorText(string line)
+        {
             if (_mainUi != null)
             {
                 _mainUi.LogErrorToUi(Name,GetDate() + line);
             }
-
             LogErrorToFile(line);
         }
 
@@ -456,7 +479,11 @@ using SharedBatch.Properties;
 
                 foreach (var line in lines)
                 {
-                    if (line.Contains(string.Format(Resources.Logger_LogErrorToFile_ERROR___0_, string.Empty)))
+                    var isError = false;
+                    foreach(var errorFormat in _errorFormats)
+                        if (errorFormat.IsMatch(line))
+                            isError = true;
+                    if (isError)
                     {
                         if (!lastLineErr && toLog.Count > 0)
                         {

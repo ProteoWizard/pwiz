@@ -119,7 +119,7 @@ namespace SkylineBatch
             {
                 LogToUi("Error: " + e.Message);
                 ChangeStatus(RunnerStatus.Error);
-                LogToUi(string.Format(Resources.ConfigRunner_Run_________________________________0____1_________________________________, Config.Name, GetStatus()));
+                _logger?.LogErrorNoPrefix(string.Format(Resources.ConfigRunner_Run_________________________________0____1_________________________________, Config.Name, GetStatus()));
                 return;
             }
 
@@ -184,7 +184,10 @@ namespace SkylineBatch
             var delta = endTime - (DateTime)StartTime;
             RunTime = delta;
             var runTimeString = delta.Hours > 0 ? delta.ToString(@"hh\:mm\:ss") : delta.ToString(@"mm\:ss");
-            LogToUi(string.Format(Resources.ConfigRunner_Run_________________________________0____1_________________________________, Config.Name, GetStatus()));
+            if (!IsError())
+                LogToUi(string.Format(Resources.ConfigRunner_Run_________________________________0____1_________________________________, Config.Name, GetStatus()));
+            else
+                _logger?.LogErrorNoPrefix(string.Format(Resources.ConfigRunner_Run_________________________________0____1_________________________________, Config.Name, GetStatus()));
             LogToUi(string.Format(Resources.ConfigRunner_Run_________________________________0____1_________________________________, "Runtime", runTimeString));
             _uiControl?.UpdateUiConfigurations();
         }
