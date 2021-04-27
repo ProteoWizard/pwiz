@@ -555,6 +555,7 @@ SpectrumList_DiaUmpire::SpectrumList_DiaUmpire(msdata::MSData^ msd, msdata::Spec
     try { base_ = new b::SpectrumList_DiaUmpire(msd->base(), *inner->base_, config->base(), ilr ? &ilr->base() : nullptr); } CATCH_AND_FORWARD
     msdata::SpectrumList::base_ = new boost::shared_ptr<pwiz::msdata::SpectrumList>(base_);
     System::GC::KeepAlive(ilr);
+    System::GC::KeepAlive(inner);
     System::GC::KeepAlive(config);
     System::GC::KeepAlive(msd);
 }

@@ -85,9 +85,13 @@ namespace SharedBatch
             new AlertDlg(appName, message, SystemIcons.Error.ToBitmap()) { Exception = exception }.ShowAndDispose(parent, MessageBoxButtons.OK);
         }
 
-        private string Message
+        public string Message
         {
-            set
+            get
+            {
+                return _message;
+            }
+            private set
             {
                 _message = value;
                 labelMessage.Text = TruncateMessage(_message);

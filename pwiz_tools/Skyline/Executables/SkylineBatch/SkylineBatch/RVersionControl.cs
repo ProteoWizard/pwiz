@@ -96,5 +96,17 @@ namespace SkylineBatch
                     comboRVersions.SelectedItem = _oldVersion;
             }
         }
+
+        public void SetText(string value)
+        {
+            if (comboRVersions.Items.Contains(value))
+            {
+                comboRVersions.SelectedIndex = comboRVersions.Items.IndexOf(value);
+            }
+            else
+            {
+                throw new Exception($"Test could not set R version. {value} not found in list.");
+            }
+        }
     }
 }

@@ -89,6 +89,7 @@ namespace SkylineBatch
                 }
                 if (!validPath) throw new ArgumentException(string.Format(Resources.RefineSettings_Validate_Cannot_save_the_refined_file_to__0_, outputFilePath) + Environment.NewLine +
                                                             Resources.RefineSettings_ValidateOutputFile_Please_provide_a_valid_output_file_path_);
+                FileUtil.ValidateNotInDownloads(outputFilePath, Resources.RefineSettings_ValidateOutputFile_refined_output_file);
             }
         }
 
@@ -110,13 +111,12 @@ namespace SkylineBatch
 
         public bool TryPathReplace(string oldRoot, string newRoot, out RefineSettings pathReplacedRefineSettings)
         {
-            var didReplace = TextUtil.TryReplaceStart(oldRoot, newRoot, OutputFilePath, out string replacedOutputPath);
+            var didReplace = TextUtil.SuccessfulReplace(ValidateOutputFile, oldRoot, newRoot, OutputFilePath, out string replacedOutputPath);
             pathReplacedRefineSettings =
                 new RefineSettings(CommandValues, RemoveDecoys, RemoveResults, replacedOutputPath);
             return didReplace;
         }
 
-        
         #region Read/Write XML
 
         private enum Attr
@@ -136,7 +136,7 @@ namespace SkylineBatch
             }
             var removeDecoys = reader.GetBoolAttribute(Attr.RemoveDecoys);
             var removeResults = reader.GetBoolAttribute(Attr.RemoveResults);
-            var outputFilePath = reader.GetAttribute(Attr.OutputFilePath);
+            var outputFilePath = FileUtil.GetTestPath(Program.FunctionalTest, Program.TestDirectory, reader.GetAttribute(Attr.OutputFilePath));
             var commandList = new List<Tuple<RefineVariable, string>>();
             while (reader.IsStartElement() && !reader.IsEmptyElement)
             {

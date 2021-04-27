@@ -76,15 +76,18 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             string message = status.IsError ? status.ErrorException.ToString() : status.Message;
 
-            var newEntry = new ProgressEntry(DateTime.Now, message);
-            _progressTextItems.Add(newEntry);
-            txtSearchProgress.AppendText($@"{newEntry.ToString(showTimestampsCheckbox.Checked)}{Environment.NewLine}");
-
             if (status.IsError)
             {
                 MessageDlg.ShowWithException(Program.MainWindow, Resources.CommandLineTest_ConsoleAddFastaTest_Error, status.ErrorException);
                 return;
             }
+
+            if (_progressTextItems.Count > 0 && status.Message == _progressTextItems[_progressTextItems.Count - 1].Message)
+                return;
+
+            var newEntry = new ProgressEntry(DateTime.Now, message);
+            _progressTextItems.Add(newEntry);
+            txtSearchProgress.AppendText($@"{newEntry.ToString(showTimestampsCheckbox.Checked)}{Environment.NewLine}");
 
             int percentComplete = status.PercentComplete;
             if (status.SegmentCount > 0)

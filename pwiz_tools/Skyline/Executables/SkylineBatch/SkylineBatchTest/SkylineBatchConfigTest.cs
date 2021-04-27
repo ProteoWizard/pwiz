@@ -65,7 +65,8 @@ namespace SkylineBatchTest
             TestValidateMainSettings(invalidTemplatePath, validAnalysisFolder, validDataDir, validPattern,
                 string.Format("The Skyline template file {0} does not exist.\r\nPlease provide a valid file.", invalidTemplatePath));
             TestValidateMainSettings(validTemplatePath, invalidAnalysisFolder, validDataDir, validPattern,
-                string.Format("The analysis folder {0} does not exist.\r\nPlease provide a valid folder.", TestUtils.GetTestFilePath(string.Empty) + @"nonexistentOne\nonexistentTwo"));
+                string.Format(SkylineBatch.Properties.Resources.MainSettings_ValidateAnalysisFolder_The__parent_directory_of_the_analysis_folder__0__does_not_exist_, TestUtils.GetTestFilePath(string.Empty) + @"nonexistentOne\nonexistentTwo") + Environment.NewLine +
+                SkylineBatch.Properties.Resources.MainSettings_ValidateAnalysisFolder_Please_provide_a_valid_folder_);
             TestValidateMainSettings(validTemplatePath, validAnalysisFolder, invalidDataDir, validPattern,
                 string.Format("The data folder {0} does not exist.\r\nPlease provide a valid folder.", invalidDataDir));
             TestValidateMainSettings(invalidTemplatePath, invalidAnalysisFolder, invalidDataDir, validPattern,
@@ -178,22 +179,22 @@ namespace SkylineBatchTest
         public void TestConfigEquals()
         {
             TestUtils.InitializeRInstallation();
-            /*var testConfig = TestUtils.GetTestConfig();
+            var testConfig = TestUtils.GetTestConfig();
             Assert.IsTrue(Equals(testConfig, TestUtils.GetTestConfig()));
             Assert.IsFalse(Equals(testConfig, TestUtils.GetTestConfig("other")));
 
-            /*var differentReportSettings = new SkylineBatchConfig("name", false, DateTime.MinValue, 
+            var differentReportSettings = new SkylineBatchConfig("name", false, DateTime.MinValue, 
                 TestUtils.GetTestMainSettings(), TestUtils.GetTestFileSettings(), TestUtils.GetTestRefineSettings(), 
                 new ReportSettings(new List<ReportInfo>()), TestUtils.GetTestSkylineSettings());
             Assert.IsFalse(Equals(testConfig, differentReportSettings));
 
             var differentMain = new MainSettings(testConfig.MainSettings.TemplateFilePath,
                 TestUtils.GetTestFilePath(string.Empty), testConfig.MainSettings.DataFolderPath,
-                string.Empty, testConfig.MainSettings.ReplicateNamingPattern);
+                string.Empty, testConfig.MainSettings.ReplicateNamingPattern, string.Empty);
             var differentMainSettings = new SkylineBatchConfig("name", false, DateTime.MinValue, 
                 differentMain, TestUtils.GetTestFileSettings(), TestUtils.GetTestRefineSettings(), TestUtils.GetTestReportSettings(), 
                 new SkylineSettings(SkylineType.Skyline));
-            Assert.IsFalse(Equals(testConfig, differentMainSettings));*/
+            Assert.IsFalse(Equals(testConfig, differentMainSettings));
         }
     }
 }

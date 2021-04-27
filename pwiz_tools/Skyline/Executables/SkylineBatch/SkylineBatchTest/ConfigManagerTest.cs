@@ -203,12 +203,12 @@ namespace SkylineBatchTest
             Assert.IsFalse(i == 4, "Failed to remove all configs.");
 
             var testingConfigs = TestUtils.ConfigListFromNames(new List<string> { "one", "two", "three" });
-            configManager.Import(configsXmlPath);
+            configManager.Import(configsXmlPath, null);
             Assert.IsTrue(configManager.ConfigListEquals(testingConfigs));
 
             configManager.SelectConfig(2);
             configManager.UserRemoveSelected();
-            configManager.Import(TestUtils.GetTestFilePath("configs.xml"));
+            configManager.Import(TestUtils.GetTestFilePath("configs.xml"), null);
             Assert.IsTrue(configManager.ConfigListEquals(testingConfigs));
 
             configManager.GetSelectedLogger().Delete();
@@ -226,7 +226,7 @@ namespace SkylineBatchTest
             configManager.GetSelectedLogger().Delete();
             var testConfigManager = new SkylineBatchConfigManager(TestUtils.GetTestLogger());
             // Simulate loading saved configs from file
-            testConfigManager.Import(ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath);
+            testConfigManager.Import(ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath, null);
             Assert.IsTrue(testConfigManager.ConfigListEquals(testingConfigs));
             testConfigManager.GetSelectedLogger().Delete();
         }

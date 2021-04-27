@@ -38,7 +38,7 @@ namespace AutoQC
         private bool _loaded;
         private readonly ColumnWidthCalculator _listViewColumnWidths;
 
-        public MainForm()
+        public MainForm(string openFile)
         {
             InitializeComponent();
             
@@ -59,6 +59,8 @@ namespace AutoQC
                 _loaded = true;
                 if (Settings.Default.KeepAutoQcRunning)
                     _configManager.RunEnabled();
+                if (!string.IsNullOrEmpty(openFile))
+                    FileOpened(openFile);
             });
 
         }
@@ -164,6 +166,20 @@ namespace AutoQC
             UpdateUiLogFiles();
         }
 
+        public void FileOpened(string filePath)
+        {
+            var importConfigs = false;
+            var inDownloadsFolder = filePath.Contains(FileUtil.DOWNLOADS_FOLDER);
+            if (!inDownloadsFolder) // Only show dialog if configs are not in downloads folder
+            {
+                importConfigs = DialogResult.Yes == DisplayQuestion(string.Format(
+                    Resources.MainForm_FileOpened_Do_you_want_to_import_configurations_from__0__,
+                    Path.GetFileName(filePath)));
+            }
+            if (importConfigs || inDownloadsFolder)
+                DoImport(filePath);
+        }
+
         private void btnImport_Click(object sender, EventArgs e)
         {
             var dialog = new OpenFileDialog();
@@ -171,10 +187,22 @@ namespace AutoQC
             if (dialog.ShowDialog(this) != DialogResult.OK)
                 return;
 
-            var filePath = dialog.FileName;
-            _configManager.Import(filePath);
+            DoImport(dialog.FileName);
+        }
+
+        public void DoImport(string filePath)
+        {
+            _configManager.Import(filePath, ShowDownloadedFileForm);
             UpdateUiConfigurations();
             UpdateUiLogFiles();
+        }
+
+        public DialogResult ShowDownloadedFileForm(string filePath, out string newRootDirectory)
+        {
+            var fileOpenedForm = new FileOpenedForm(this, filePath, Program.Icon());
+            var dialogResult = fileOpenedForm.ShowDialog(this);
+            newRootDirectory = fileOpenedForm.NewRootDirectory;
+            return dialogResult;
         }
 
         private void btnExport_Click(object sender, EventArgs e)
@@ -230,8 +258,8 @@ namespace AutoQC
         private void btnOpenResults_Click(object sender, EventArgs e)
         {
             var config = _configManager.GetSelectedConfig();
-            if (MainFormUtils.CanOpen(config.Name, _configManager.IsSelectedConfigValid(), 
-                Resources.MainForm_btnOpenResults_Click_Skyline_file, this))
+            if (MainFormUtils.CanOpen(config.Name, _configManager.IsSelectedConfigValid(),
+                config.MainSettings.SkylineFilePath, Resources.MainForm_btnOpenResults_Click_Skyline_file, this))
             {
                 SkylineInstallations.OpenSkylineFile(config.MainSettings.SkylineFilePath, config.SkylineSettings);
             }
@@ -241,7 +269,7 @@ namespace AutoQC
         {
             var config = _configManager.GetSelectedConfig();
             if (MainFormUtils.CanOpen(config.Name, _configManager.IsSelectedConfigValid(), 
-                Resources.MainForm_btnOpenPanoramaFolder_Click_Panorama_folder, this))
+                string.Empty, Resources.MainForm_btnOpenPanoramaFolder_Click_Panorama_folder, this))
             {
                 var uri = new Uri(config.PanoramaSettings.PanoramaServerUri + config.PanoramaSettings.PanoramaFolder);
                 Process.Start(uri.AbsoluteUri);
@@ -256,9 +284,9 @@ namespace AutoQC
         private void toolStripFolderToWatch_Click(object sender, EventArgs e)
         {
             var config = _configManager.GetSelectedConfig();
-            MainFormUtils.OpenFileExplorer(config.Name, _configManager.IsSelectedConfigValid(), 
-                Resources.MainForm_toolStripFolderToWatch_Click_folder_to_watch,
-                config.MainSettings.FolderToWatch, this);
+            MainFormUtils.OpenFileExplorer(config.Name, _configManager.IsSelectedConfigValid(),
+                config.MainSettings.FolderToWatch,
+                Resources.MainForm_toolStripFolderToWatch_Click_folder_to_watch, this);
         }
 
         private void toolStripLogFolder_Click(object sender, EventArgs e)
@@ -266,8 +294,8 @@ namespace AutoQC
             var config = _configManager.GetSelectedConfig();
             var logger = _configManager.GetLogger(config.Name);
             MainFormUtils.OpenFileExplorer(config.Name, _configManager.IsSelectedConfigValid(),
-                Resources.MainForm_toolStripLogFolder_Click_log_folder,
-                logger.GetDirectory(), this);
+                logger.GetDirectory(), 
+                Resources.MainForm_toolStripLogFolder_Click_log_folder, this);
         }
 
         #endregion
@@ -279,7 +307,7 @@ namespace AutoQC
             RunUi(() =>
             {
                 var topItemIndex = listViewConfigs.TopItem != null ? listViewConfigs.TopItem.Index : -1;
-                var listViewItems = _configManager.ConfigsListViewItems();
+                var listViewItems = _configManager.ConfigsListViewItems(listViewConfigs.CreateGraphics());
                 listViewConfigs.Items.Clear();
                 foreach (var lvi in listViewItems)
                     listViewConfigs.Items.Add(lvi);

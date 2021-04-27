@@ -34,10 +34,10 @@
             this.btnDeleteLogs = new System.Windows.Forms.Button();
             this.btnExportConfigs = new System.Windows.Forms.Button();
             this.btnImportConfigs = new System.Windows.Forms.Button();
-            this.btnViewLog = new System.Windows.Forms.Button();
             this.btnRunBatch = new System.Windows.Forms.Button();
-            this.btnCancel = new System.Windows.Forms.Button();
+            this.btnStop = new System.Windows.Forms.Button();
             this.btnOpenFolder = new System.Windows.Forms.Button();
+            this.btnLogStop = new System.Windows.Forms.Button();
             this.systray_icon = new System.Windows.Forms.NotifyIcon(this.components);
             this.panelSkylineType = new System.Windows.Forms.Panel();
             this.batchRunDropDown = new System.Windows.Forms.ContextMenuStrip(this.components);
@@ -51,9 +51,11 @@
             this.textBoxLog = new System.Windows.Forms.RichTextBox();
             this.tabConfigs = new System.Windows.Forms.TabPage();
             this.listViewConfigs = new SkylineBatch.MyListView();
-            this.listViewConfigName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.listViewModified = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.listViewStatus = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnConfigName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnModified = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnStatus = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnStartTime = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnRunTime = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.labelSavedConfigurations = new System.Windows.Forms.Label();
             this.panel2 = new System.Windows.Forms.Panel();
             this.btnRunOptions = new System.Windows.Forms.Button();
@@ -104,14 +106,6 @@
             this.btnImportConfigs.UseVisualStyleBackColor = true;
             this.btnImportConfigs.Click += new System.EventHandler(this.btnImport_Click);
             // 
-            // btnViewLog
-            // 
-            resources.ApplyResources(this.btnViewLog, "btnViewLog");
-            this.btnViewLog.Name = "btnViewLog";
-            this.toolTip_MainForm.SetToolTip(this.btnViewLog, resources.GetString("btnViewLog.ToolTip"));
-            this.btnViewLog.UseVisualStyleBackColor = true;
-            this.btnViewLog.Click += new System.EventHandler(this.btnViewLog_Click);
-            // 
             // btnRunBatch
             // 
             resources.ApplyResources(this.btnRunBatch, "btnRunBatch");
@@ -120,13 +114,13 @@
             this.btnRunBatch.UseVisualStyleBackColor = true;
             this.btnRunBatch.Click += new System.EventHandler(this.btnRunBatch_Click);
             // 
-            // btnCancel
+            // btnStop
             // 
-            resources.ApplyResources(this.btnCancel, "btnCancel");
-            this.btnCancel.Name = "btnCancel";
-            this.toolTip_MainForm.SetToolTip(this.btnCancel, resources.GetString("btnCancel.ToolTip"));
-            this.btnCancel.UseVisualStyleBackColor = true;
-            this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
+            resources.ApplyResources(this.btnStop, "btnStop");
+            this.btnStop.Name = "btnStop";
+            this.toolTip_MainForm.SetToolTip(this.btnStop, resources.GetString("btnStop.ToolTip"));
+            this.btnStop.UseVisualStyleBackColor = true;
+            this.btnStop.Click += new System.EventHandler(this.btnCancel_Click);
             // 
             // btnOpenFolder
             // 
@@ -135,6 +129,14 @@
             this.toolTip_MainForm.SetToolTip(this.btnOpenFolder, resources.GetString("btnOpenFolder.ToolTip"));
             this.btnOpenFolder.UseVisualStyleBackColor = true;
             this.btnOpenFolder.Click += new System.EventHandler(this.btnOpenFolder_Click);
+            // 
+            // btnLogStop
+            // 
+            resources.ApplyResources(this.btnLogStop, "btnLogStop");
+            this.btnLogStop.Name = "btnLogStop";
+            this.toolTip_MainForm.SetToolTip(this.btnLogStop, resources.GetString("btnLogStop.ToolTip"));
+            this.btnLogStop.UseVisualStyleBackColor = true;
+            this.btnLogStop.Click += new System.EventHandler(this.btnCancel_Click);
             // 
             // systray_icon
             // 
@@ -184,6 +186,7 @@
             // tabLog
             // 
             this.tabLog.BackColor = System.Drawing.Color.Transparent;
+            this.tabLog.Controls.Add(this.btnLogStop);
             this.tabLog.Controls.Add(this.btnOpenFolder);
             this.tabLog.Controls.Add(this.btnDeleteLogs);
             this.tabLog.Controls.Add(this.label1);
@@ -228,9 +231,11 @@
             resources.ApplyResources(this.listViewConfigs, "listViewConfigs");
             this.listViewConfigs.CheckBoxes = true;
             this.listViewConfigs.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.listViewConfigName,
-            this.listViewModified,
-            this.listViewStatus});
+            this.columnConfigName,
+            this.columnModified,
+            this.columnStatus,
+            this.columnStartTime,
+            this.columnRunTime});
             this.listViewConfigs.FullRowSelect = true;
             this.listViewConfigs.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
             this.listViewConfigs.HideSelection = false;
@@ -243,17 +248,25 @@
             this.listViewConfigs.DoubleClick += new System.EventHandler(this.HandleEditEvent);
             this.listViewConfigs.MouseUp += new System.Windows.Forms.MouseEventHandler(this.listViewConfigs_MouseUp);
             // 
-            // listViewConfigName
+            // columnConfigName
             // 
-            resources.ApplyResources(this.listViewConfigName, "listViewConfigName");
+            resources.ApplyResources(this.columnConfigName, "columnConfigName");
             // 
-            // listViewModified
+            // columnModified
             // 
-            resources.ApplyResources(this.listViewModified, "listViewModified");
+            resources.ApplyResources(this.columnModified, "columnModified");
             // 
-            // listViewStatus
+            // columnStatus
             // 
-            resources.ApplyResources(this.listViewStatus, "listViewStatus");
+            resources.ApplyResources(this.columnStatus, "columnStatus");
+            // 
+            // columnStartTime
+            // 
+            resources.ApplyResources(this.columnStartTime, "columnStartTime");
+            // 
+            // columnRunTime
+            // 
+            resources.ApplyResources(this.columnRunTime, "columnRunTime");
             // 
             // labelSavedConfigurations
             // 
@@ -264,15 +277,14 @@
             // 
             resources.ApplyResources(this.panel2, "panel2");
             this.panel2.Controls.Add(this.btnRunOptions);
-            this.panel2.Controls.Add(this.btnViewLog);
-            this.panel2.Controls.Add(this.btnCancel);
+            this.panel2.Controls.Add(this.btnStop);
             this.panel2.Controls.Add(this.lblNoConfigs);
             this.panel2.Controls.Add(this.btnRunBatch);
             this.panel2.Name = "panel2";
             // 
             // btnRunOptions
             // 
-            this.btnRunOptions.Image = global::SkylineBatch.Properties.Resources.downtriangle;
+            this.btnRunOptions.Image = global::SkylineBatch.Properties.Resources.downtriangle1;
             resources.ApplyResources(this.btnRunOptions, "btnRunOptions");
             this.btnRunOptions.Name = "btnRunOptions";
             this.btnRunOptions.UseVisualStyleBackColor = true;
@@ -436,12 +448,11 @@
         private System.Windows.Forms.Label labelSavedConfigurations;
         private System.Windows.Forms.Panel panel2;
         private System.Windows.Forms.Button btnRunOptions;
-        private System.Windows.Forms.Button btnCancel;
+        private System.Windows.Forms.Button btnStop;
         private System.Windows.Forms.Label lblNoConfigs;
         private System.Windows.Forms.Button btnRunBatch;
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.Button button1;
-        private System.Windows.Forms.Button btnViewLog;
         private System.Windows.Forms.ToolStrip toolStrip1;
         private System.Windows.Forms.ToolStripButton btnUpArrow;
         private System.Windows.Forms.ToolStripButton btnDownArrow;
@@ -457,8 +468,11 @@
         private System.Windows.Forms.ToolStripButton btnOpenTemplate;
         private System.Windows.Forms.ToolStripButton btnOpenResults;
         private MyListView listViewConfigs;
-        private System.Windows.Forms.ColumnHeader listViewConfigName;
-        private System.Windows.Forms.ColumnHeader listViewModified;
-        private System.Windows.Forms.ColumnHeader listViewStatus;
+        private System.Windows.Forms.ColumnHeader columnConfigName;
+        private System.Windows.Forms.ColumnHeader columnModified;
+        private System.Windows.Forms.ColumnHeader columnStatus;
+        private System.Windows.Forms.ColumnHeader columnStartTime;
+        private System.Windows.Forms.ColumnHeader columnRunTime;
+        private System.Windows.Forms.Button btnLogStop;
     }
 }

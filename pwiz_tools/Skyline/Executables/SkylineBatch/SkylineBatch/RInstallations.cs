@@ -56,17 +56,37 @@ namespace SkylineBatch
 
         public static void AddRDirectory(string newRDir)
         {
+            // CONSIDER: Adding watch to R folders for new installations
             if (!Directory.Exists(newRDir))
                 throw new ArgumentException(string.Format(Resources.RInstallations_AddRDirectory_R_installation_directory_not_found___0_, newRDir) + Environment.NewLine +
                                             Resources.RInstallations_AddRDirectory_Please_enter_a_valid_directory_);
-            if (Settings.Default.RDirs.Contains(newRDir))
-                throw new ArgumentException(string.Format(Resources.RInstallations_AddRDirectory_The_R_directory_is_already_used_to_find_R_installations___0_, newRDir) + Environment.NewLine +
-                                                          Resources.RInstallations_AddRDirectory_Please_enter_a_different_directory_);
-            var newRVersions = GetRInstallationDict(new List<string> {newRDir}).Count;
-            if (newRVersions == 0)
-                throw new ArgumentException(string.Format(Resources.RInstallations_AddRDirectory_No_R_installations_were_found_in___0_, newRDir) + Environment.NewLine +
-                                                          Resources.RInstallations_AddRDirectory_Please_choose_a_directory_with_R_installations_);
-            Settings.Default.RDirs.Add(newRDir);
+            var RDirectoryFound = false;
+            var input = newRDir;
+            while (!RDirectoryFound)
+            {
+                var childFolderNames = Directory.GetDirectories(newRDir);
+                foreach (var folderName in childFolderNames)
+                    if (Path.GetFileName(folderName).StartsWith("R-"))
+                    {
+                        RDirectoryFound = true;
+                        break;
+                    }
+                if (RDirectoryFound) break;
+                try
+                {
+                    newRDir = Path.GetDirectoryName(newRDir);
+                }
+                catch (Exception)
+                {
+                    newRDir = null;
+                }
+                if (newRDir == null)
+                    throw new ArgumentException(string.Format(Resources.RInstallations_AddRDirectory_No_R_installations_were_found_in___0_, input) + Environment.NewLine +
+                                                Resources.RInstallations_AddRDirectory_Please_choose_a_directory_with_R_installations_);
+            }
+
+            if (!Settings.Default.RDirs.Contains(newRDir))
+                Settings.Default.RDirs.Add(newRDir);
             Settings.Default.RVersions = GetRInstallationDict(Settings.Default.RDirs);
             Settings.Default.Save();
         }
@@ -76,15 +96,9 @@ namespace SkylineBatch
             var rPaths = new Dictionary<string, string>();
             foreach (var RDir in RDirs)
             {
-                string[] rVersions;
-                try
-                {
-                    rVersions = Directory.GetDirectories(RDir);
-                }
-                catch (Exception)
-                {
-                    continue; // path was deleted/changed
-                }
+                if (!Directory.Exists(RDir))
+                    continue;
+                string[] rVersions = Directory.GetDirectories(RDir);
 
                 foreach (var rVersion in rVersions)
                 {

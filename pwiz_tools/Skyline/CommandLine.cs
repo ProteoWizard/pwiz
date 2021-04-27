@@ -82,6 +82,17 @@ namespace pwiz.Skyline
 
         public int Run(string[] args, bool withoutUsage = false)
         {
+            var exitStatus = RunInner(args, withoutUsage);
+            if (exitStatus != Program.EXIT_CODE_SUCCESS && !_out.IsErrorReported)
+            {
+                _out.WriteLine(Resources.CommandLine_Run_Error__Failure_occurred__Exiting___);
+            }
+
+            return exitStatus;
+        }
+
+        private int RunInner(string[] args, bool withoutUsage = false)
+        {
             _importedResults = false;
 
             var commandArgs = new CommandArgs(_out, _doc != null);
@@ -2265,7 +2276,8 @@ namespace pwiz.Skyline
 
             var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(string.Empty));
             var inputs = new MassListInputs(commandArgs.TransitionListPath);
-            var docNew = _doc.ImportMassList(inputs, null, progressMonitor, null,
+            var importer = _doc.PreImportMassList(inputs, progressMonitor, false);
+            var docNew = _doc.ImportMassList(inputs, importer, progressMonitor, null,
                 out selectPath, out irtPeptides, out librarySpectra, out errorList, out peptideGroups);
 
             // If nothing was imported (e.g. operation was canceled or zero error-free transitions) and also no errors, just return
@@ -2633,6 +2645,9 @@ namespace pwiz.Skyline
             var viewContext = DocumentGridViewContext.CreateDocumentGridViewContext(_doc, reportInvariant
                 ? DataSchemaLocalizer.INVARIANT
                 : SkylineDataSchema.GetLocalizedSchemaLocalizer());
+            // Make sure invariant report format uses a true comma if a tab separator was not specified.
+            if (reportInvariant && reportColSeparator != TextUtil.SEPARATOR_TSV)
+                reportColSeparator = TextUtil.SEPARATOR_CSV;
             var viewInfo = viewContext.GetViewInfo(PersistedViews.MainGroup.Id.ViewName(reportName));
             if (null == viewInfo)
             {
@@ -3606,12 +3621,14 @@ namespace pwiz.Skyline
         public CommandStatusWriter(TextWriter writer)
             : base(writer.FormatProvider)
         {
-            _writer = Synchronized(writer); // Make this thread safe for more predicitable console output
+            _writer = Synchronized(writer); // Make this thread safe for more predictable console output
         }
 
         public bool IsTimeStamped { get; set; }
 
         public bool IsMemStamped { get; set; }
+
+        public bool IsErrorReported { get; private set; }
 
         public override Encoding Encoding
         {
@@ -3662,6 +3679,23 @@ namespace pwiz.Skyline
             message.Append(value);
             _writer.WriteLine(message);
             Flush();
+
+            if (IsErrorMessage(value))
+            {
+                IsErrorReported = true;
+            }
+        }
+
+        private bool IsErrorMessage(string message)
+        {
+            if (message != null && !IsErrorReported)
+            {
+                return message.StartsWith(@"Error:", StringComparison.InvariantCulture) ||  // In Skyline-daily any message might not be localized
+                       message.StartsWith(Resources.CommandStatusWriter_WriteLine_Error_,
+                           StringComparison.CurrentCulture);
+            }
+
+            return false;
         }
 
         private string MemStamp(long memUsed)

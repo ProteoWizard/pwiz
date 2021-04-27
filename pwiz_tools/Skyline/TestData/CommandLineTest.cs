@@ -39,6 +39,7 @@ using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using pwiz.SkylineRunner;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestData
@@ -849,9 +850,8 @@ namespace pwiz.SkylineTestData
             string rawPath = testFilesDir.GetTestPath("ah_20101011y_BSA_MS-MS_only_5-2" +
                 ExtensionTestContext.ExtThermoRaw);
 
-
             //Error: file does not exist
-            string output = RunCommand("--in=" + bogusPath);
+            var output = RunCommand("--in=" + bogusPath);
             Assert.IsTrue(output.Contains(string.Format(Resources.CommandLine_OpenSkyFile_Error__The_Skyline_file__0__does_not_exist_, bogusPath)));
 
             //Error: no raw file
@@ -2967,6 +2967,7 @@ namespace pwiz.SkylineTestData
                     .Contains(
                         string.Format(Resources.EditServerDlg_OkDialog_Unknown_error_connecting_to_the_server__0__,
                             serverUri.AbsoluteUri)));
+            TestOutputHasErrorLine(buffer.ToString());
             buffer.Clear();
 
 
@@ -2979,6 +2980,7 @@ namespace pwiz.SkylineTestData
                     .Contains(
                         string.Format(Resources.EditServerDlg_OkDialog_The_server__0__is_not_a_Panorama_server,
                             serverUri.AbsoluteUri)));
+            TestOutputHasErrorLine(buffer.ToString());
             buffer.Clear();
 
 
@@ -2991,6 +2993,7 @@ namespace pwiz.SkylineTestData
                     .Contains(
                         Resources
                             .EditServerDlg_OkDialog_The_username_and_password_could_not_be_authenticated_with_the_panorama_server));
+            TestOutputHasErrorLine(buffer.ToString());
             buffer.Clear();
 
 
@@ -3000,7 +3003,8 @@ namespace pwiz.SkylineTestData
             Assert.IsTrue(
                 buffer.ToString()
                     .Contains(
-                        string.Format(Resources.PanoramaHelper_ValidateServer_, "GetServerState threw an exception")));
+                        string.Format(Resources.PanoramaHelper_ValidateServer_Exception_, "GetServerState threw an exception")));
+            TestOutputHasErrorLine(buffer.ToString());
             buffer.Clear();
 
             
@@ -3015,6 +3019,7 @@ namespace pwiz.SkylineTestData
                         string.Format(
                             Resources.PanoramaUtil_VerifyFolder_Folder__0__does_not_exist_on_the_Panorama_server__1_,
                             folder, client.ServerUri)));
+            TestOutputHasErrorLine(buffer.ToString());
             buffer.Clear();
 
 
@@ -3028,6 +3033,7 @@ namespace pwiz.SkylineTestData
                         string.Format(
                             Resources.PanoramaUtil_VerifyFolder_User__0__does_not_have_permissions_to_upload_to_the_Panorama_folder__1_,
                             "user", folder)));
+            TestOutputHasErrorLine(buffer.ToString());
             buffer.Clear();
 
 
@@ -3039,8 +3045,58 @@ namespace pwiz.SkylineTestData
                 buffer.ToString()
                     .Contains(string.Format(Resources.PanoramaUtil_VerifyFolder__0__is_not_a_Panorama_folder,
                         folder)));
+            TestOutputHasErrorLine(buffer.ToString());
 
+        }
 
+        [TestMethod]
+        public void SkylineRunnerErrorDetectionTest()
+        {
+            TestSkylineRunnerErrorDetection(null);
+            TestSkylineRunnerErrorDetection(new CultureInfo("ja"));
+            TestSkylineRunnerErrorDetection(new CultureInfo("zh-CHS"));
+        }
+
+        private void TestSkylineRunnerErrorDetection(CultureInfo ci)
+        {
+            TestDetectError(false, false, ci); // no timestamp or memstamp
+            TestDetectError(true, false, ci);  // only timestamp
+            TestDetectError(false, true, ci);  // only memstamp
+            TestDetectError(true, true, ci);   // both timestamp and memstamp
+        }
+
+        private void TestDetectError(bool timestamp, bool memstamp, CultureInfo cultureInfo)
+        {
+            // --timestamp, --memstamp and --culture arguments have to be before the --in argument
+            var command =
+                $"{(timestamp ? "--timestamp" : "")} " +
+                $"{(memstamp ? "--memstamp" : "")} " +
+                $"{(cultureInfo != null ? $" --culture={cultureInfo.Name}" : "")} " +
+                "--in";
+            var argsArray = command.Split(new[] {' '}, StringSplitOptions.RemoveEmptyEntries);
+            var output = RunCommand(argsArray);
+            var errorLine = TestOutputHasErrorLine(output);
+
+            // The error should be about the missing value for the --in argument
+            var resourceErrString = cultureInfo == null
+                ? Resources.ValueMissingException_ValueMissingException_ // Resource string for the culture that the test is running under
+                : Resources.ResourceManager.GetString(@"ValueMissingException_ValueMissingException_", cultureInfo); // Resource string for the culture that was
+                                                                                                                     // specified with the --culture argument to
+                                                                                                                     // Skyline command line 
+            Assert.IsNotNull(resourceErrString, "Expected to find a resources string for culture '{0}'.",
+                cultureInfo == null ? CultureInfo.CurrentCulture.Name : cultureInfo.Name);
+            Assert.IsTrue(errorLine.Contains(string.Format(resourceErrString, "--in")));
+        }
+
+        private string TestOutputHasErrorLine(string output)
+        {
+            var outputLines = output.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+
+            // The IsErrorLine method from ErrorChecker.cs in the SkylineRunner project should detect an error
+            var errorLine = outputLines.FirstOrDefault(ErrorChecker.IsErrorLine);
+            Assert.IsFalse(string.IsNullOrEmpty(errorLine),
+                string.Format("Expected to find an error line in output: {0}", output));
+            return errorLine;
         }
 
         private static string GetTitleHelper()
