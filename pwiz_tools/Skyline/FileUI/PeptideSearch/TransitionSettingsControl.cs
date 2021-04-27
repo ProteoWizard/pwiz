@@ -352,10 +352,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 settings.Instrument.MaxInclusions, settings.Instrument.MinTime, settings.Instrument.MaxTime);
             Helpers.AssignIfEquals(ref instrument, settings.Instrument);
 
+            // Preserve default for transition selection if user started with any libraries (i.e. there is at least one non-document library).
+            // Otherwise, set to TransitionLibraryPick.filter.
             var pick = settings.Libraries.Pick != TransitionLibraryPick.none && DocumentSettings.PeptideSettings.Libraries.LibrarySpecs.Any(lib => !lib.IsDocumentLibrary)
                 ? settings.Libraries.Pick
                 : TransitionLibraryPick.filter;
-            if (CountFinder != null && pick == TransitionLibraryPick.filter)
+            // If IonRangeTo is a specific ion count, then the range restriction needs to be ignored
+            // in the presence of a spectral library for choosing ions.
+            if (IonRangeCount != null && pick == TransitionLibraryPick.filter)
                 pick = TransitionLibraryPick.all;
             var libraries = new TransitionLibraries(ionMatchTolerance, minIonCount, ionCount, pick);
             Helpers.AssignIfEquals(ref libraries, settings.Libraries);
@@ -363,18 +367,28 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             return new TransitionSettings(settings.Prediction, filter, libraries, settings.Integration, instrument, settings.FullScan, settings.IonMobilityFiltering);
         }
 
-        private IEndCountFragmentFinder CountFinder => TransitionFilter.GetEndFragmentFinder(
-            TransitionFilter.GetEndFragmentNameFromLabel(IonFilter ? IonRangeTo : DocumentTransitionSettings.Filter.FragmentRangeLast.Label)
-        ) as IEndCountFragmentFinder;
+        // If transition selection is set to a specific ion count, return that number. Returns null otherwise.
+        private int? IonRangeCount
+        {
+            get
+            {
+                var fragmentName = TransitionFilter.GetEndFragmentNameFromLabel(IonFilter
+                    ? IonRangeTo
+                    : DocumentTransitionSettings.Filter.FragmentRangeLast.Label);
+                var countFinder = TransitionFilter.GetEndFragmentFinder(fragmentName) as IEndCountFragmentFinder;
+                return countFinder?.Count;
+            }
+        }
 
         private void comboRangeTo_SelectedIndexChanged(object sender, System.EventArgs e)
         {
-            var countFinder = CountFinder;
-            if (countFinder != null)
+            var ionRangeCount = IonRangeCount;
+            if (ionRangeCount != null)
             {
-                IonCount = countFinder.Count;
-                if (int.TryParse(txtMinIonCount.Text, out var minIon) && minIon > IonCount)
-                    MinIonCount = IonCount;
+                var ionCount = ionRangeCount.Value;
+                IonCount = ionRangeCount.Value;
+                if (int.TryParse(txtMinIonCount.Text, out var minIon) && minIon > ionCount)
+                    MinIonCount = ionRangeCount.Value;
             }
         }
     }
