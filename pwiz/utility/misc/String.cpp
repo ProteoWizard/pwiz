@@ -106,6 +106,7 @@ std::string pwiz::util::toString(double value, RealConvertPolicy policyFlags)
         case RealConvertPolicy::AutoNotation: return generateWithPolicy<double12_policy<double>>(value);
         case RealConvertPolicy::FixedNotation: return generateWithPolicy<double12_policy_fixed<double>>(value);
         case RealConvertPolicy::ScientificNotation: return generateWithPolicy<double12_policy_scientific<double>>(value);
+        default: throw std::runtime_error("[toString] unknown RealConvertPolicy");
     }
 }
 
@@ -122,6 +123,7 @@ std::string pwiz::util::toString(float value, RealConvertPolicy policyFlags)
         case RealConvertPolicy::AutoNotation: return generateWithPolicy<float5_policy<float>>(value);
         case RealConvertPolicy::FixedNotation: return generateWithPolicy<float5_policy_fixed<float>>(value);
         case RealConvertPolicy::ScientificNotation: return generateWithPolicy<float5_policy_scientific<float>>(value);
+        default: throw std::runtime_error("[toString] unknown RealConvertPolicy");
     }
 }
 
