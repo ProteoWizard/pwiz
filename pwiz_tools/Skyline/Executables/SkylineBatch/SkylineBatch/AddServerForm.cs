@@ -46,7 +46,7 @@ namespace SkylineBatch
 
         private ServerInfo GetServerFromUi()
         {
-            return new ServerInfo(textUrl.Text, textUserName.Text, textPassword.Text);
+            return ServerInfo.ServerFromUi(textUrl.Text, textUserName.Text, textPassword.Text);
         }
     }
 }

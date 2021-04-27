@@ -123,7 +123,7 @@ namespace SkylineBatch
             {
                 var config = (SkylineBatchConfig) iconfig;
                 var dependentName = config.MainSettings.DependentConfigName;
-                if (dependentName != null)
+                if (!string.IsNullOrEmpty(dependentName))
                 {
                     SkylineBatchConfig dependentConfig;
                     try
@@ -253,7 +253,7 @@ namespace SkylineBatch
             {
                 var config = (SkylineBatchConfig) iconfig;
                 var dependentConfigName = config.MainSettings.DependentConfigName;
-                if (dependentConfigName != null)
+                if (!string.IsNullOrEmpty(dependentConfigName))
                 {
                     if (!dependencies.ContainsKey(dependentConfigName))
                         dependencies.Add(dependentConfigName, new List<string>());

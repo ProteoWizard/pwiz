@@ -378,16 +378,18 @@ namespace SkylineBatch
     {
         private Dictionary<string, FtpListItem> _serverFiles;
         
-        public ServerInfo(string url, string userName, string password) : this(url, "", userName, password)
+        public static ServerInfo ServerFromUi(string url, string userName, string password)
         {
-            if (url.StartsWith("ftp://")) Url = url.Substring(6);
-            if (Url.Contains("/"))
+            var folder = string.Empty;
+            if (url.StartsWith("ftp://"))
+                url = url.Substring(6);
+            if (url.Contains("/"))
             {
-                var slashIndex = Url.IndexOf("/");
-                Folder = Url.Substring(slashIndex + 1);
-                Url = Url.Substring(0, slashIndex);
+                var slashIndex = url.IndexOf("/");
+                folder = url.Substring(slashIndex + 1);
+                url = url.Substring(0, slashIndex);
             }
-            SetName();
+            return new ServerInfo(url, folder, userName, password);
         }
 
         private ServerInfo(string url, string folder, string userName, string password)

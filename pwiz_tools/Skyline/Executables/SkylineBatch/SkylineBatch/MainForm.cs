@@ -505,7 +505,12 @@ namespace SkylineBatch
         private void tabLog_Enter(object sender, EventArgs e)
         {
             if (_configManager.SelectedLog == 0)
+            {
+                // Wait for repaint before scroll
+                var timer = new Timer { Interval = 50 };
+                timer.Start();
                 ScrollToLogEnd(true);
+            }
         }
 
         private void comboLogList_SelectedIndexChanged(object sender, EventArgs e)
