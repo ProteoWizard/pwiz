@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -134,7 +135,9 @@ namespace SkylineBatch
             if (startStep != 5 && IsRunning())
             {
                 var multiLine = await Config.SkylineSettings.HigherVersion(ALLOW_NEWLINE_SAVE_VERSION, _processRunner);
-                var invariantReport = await Config.SkylineSettings.HigherVersion(REPORT_INVARIANT_VERSION);
+                var numberFormat = CultureInfo.CurrentCulture.GetFormat(typeof(NumberFormatInfo)) as NumberFormatInfo;
+                var internationalSeparator = numberFormat != null && Equals(TextUtil.SEPARATOR_CSV.ToString(CultureInfo.InvariantCulture), numberFormat.NumberDecimalSeparator);
+                var invariantReport = !internationalSeparator || await Config.SkylineSettings.HigherVersion(REPORT_INVARIANT_VERSION);
                 if (IsRunning())
                 {
                     // Writes the batch commands for steps 1-4 to a file

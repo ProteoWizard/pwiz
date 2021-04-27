@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using System.Xml;
@@ -20,9 +21,12 @@ namespace SharedBatch
 
         private int[] _version;
 
+        private List<string> _versionOutput;
+
         public SkylineSettings(SkylineType type, string folderPath = "")
         {
             Type = type;
+            _versionOutput = new List<string>();
 
             bool skylineAdminInstallation = !string.IsNullOrEmpty(Settings.Default.SkylineAdminCmdPath);
             bool skylineWebInstallation = !string.IsNullOrEmpty(Settings.Default.SkylineRunnerPath);
@@ -110,7 +114,11 @@ namespace SharedBatch
             {
                 OnDataReceived = (data) =>
                 {
-                    if (baseProcessRunner.OnDataReceived != null) baseProcessRunner.OnDataReceived(data);
+                    if (baseProcessRunner.OnDataReceived != null)
+                    {
+                        baseProcessRunner.OnDataReceived(data);
+                        _versionOutput.Add(data);
+                    }
                     if (data != null && !data.Contains(versionCommand) && string.IsNullOrEmpty(output))
                         output += data;
                 },
@@ -148,6 +156,9 @@ namespace SharedBatch
             var cutoff = ParseVersionFromString(versionCutoff);
             if (_version == null)
                 _version = await GetVersion(baseProcessRunner);
+            // log version output if it's already loaded
+            else if (baseProcessRunner.OnDataReceived != null)
+                foreach (var data in _versionOutput) baseProcessRunner.OnDataReceived(data);
             if (_version == null) return false; // could not parse version
             for (int i = 0; i < cutoff.Length; i++)
             {

@@ -22,6 +22,8 @@ namespace SharedBatch
         public const string EXT_LOG = ".log";
         public const string EXT_APPREF = ".appref-ms";
 
+        public const char SEPARATOR_CSV = ',';
+
         public static string FILTER_XML
         {
             get { return FileDialogFilter(Resources.TextUtil_FILTER_XML_XML_Files, EXT_XML); }
