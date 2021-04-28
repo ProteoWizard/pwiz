@@ -60,7 +60,7 @@ namespace SkylineBatchTest
         }
 
         [TestMethod]
-        public async Task TestGenerateCommandFile()
+        public void TestGenerateCommandFile()
         {
             TestUtils.InitializeRInstallation();
             var logger = TestUtils.GetTestLogger();

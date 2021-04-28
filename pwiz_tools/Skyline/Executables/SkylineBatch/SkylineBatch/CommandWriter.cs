@@ -14,14 +14,12 @@ namespace SkylineBatch
         private string _commandHolder;
         private readonly StreamWriter _writer;
         private readonly string _commandFile;
-        public List<string> LogLines { get; private set; }
 
         public CommandWriter(Logger logger, bool multiLine, bool invariantReport)
         {
             _commandFile = Path.GetTempFileName();
             _commandHolder = string.Empty;
             CurrentSkylineFile = string.Empty;
-            LogLines = new List<string>() {string.Empty};
             _writer = new StreamWriter(_commandFile);
 
             MultiLine = multiLine;
@@ -52,7 +50,6 @@ namespace SkylineBatch
             }
             UpdateCurrentFile(command);
             _writer.Write(command + " ");
-            LogLines[LogLines.Count - 1] += command + " ";
         }
 
         public void UpdateCurrentFile(string command)
@@ -80,7 +77,6 @@ namespace SkylineBatch
         public void NewLine()
         {
             _writer.WriteLine();
-            LogLines.Add(string.Empty);
         }
 
         public void EndCommandGroup()

@@ -26,6 +26,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentFTP;
+using Microsoft.Win32.SafeHandles;
 using SharedBatch;
 using SkylineBatch.Properties;
 
@@ -43,7 +44,7 @@ namespace SkylineBatch
         private readonly object _lock = new object();
         private RunnerStatus _runnerStatus;
         private readonly ProcessRunner _processRunner;
-        private List<string> _batchCommandsToLog;
+        private string _batchFile;
 
         private List<CancellationTokenSource> _runningCancellationTokens;
 
@@ -53,7 +54,6 @@ namespace SkylineBatch
             Config = config;
             _uiControl = uiControl;
             _logger = logger;
-            _batchCommandsToLog = new List<string>();
             _runningCancellationTokens = new List<CancellationTokenSource>();
 
             _processRunner = new ProcessRunner()
@@ -143,9 +143,9 @@ namespace SkylineBatch
                     // Writes the batch commands for steps 1-4 to a file
                     var commandWriter = new CommandWriter(_logger, multiLine, invariantReport);
                     WriteBatchCommandsToFile(commandWriter, startStep, invariantReport);
-                    _batchCommandsToLog = commandWriter.LogLines;
+                    _batchFile = commandWriter.GetCommandFile();
                     // Runs steps 1-4
-                    var command = string.Format("--batch-commands=\"{0}\"", commandWriter.GetCommandFile());
+                    var command = string.Format("--batch-commands=\"{0}\"", _batchFile);
                     await _processRunner.Run(Config.SkylineSettings.CmdPath, command);
                     // Consider: deleting tmp command file
                 }
@@ -337,11 +337,16 @@ namespace SkylineBatch
                     _logger.Log(data);
 
                 if (data.StartsWith("--batch-commands"))
-                {
-                    foreach (var line in _batchCommandsToLog)
-                        _logger.Log(line);
-                    _batchCommandsToLog = new List<string>();
-                }
+                    LogBatchFile();
+            }
+        }
+
+        private void LogBatchFile()
+        {
+            using (var reader = new StreamReader(_batchFile))
+            {
+                while(!reader.EndOfStream)
+                    _logger.Log(reader.ReadLine());
             }
         }
 
