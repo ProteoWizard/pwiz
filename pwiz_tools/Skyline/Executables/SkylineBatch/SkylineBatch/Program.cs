@@ -24,6 +24,7 @@ using System.Deployment.Application;
 using System.Drawing;
 using System.IO;
 using System.Net;
+using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
@@ -198,11 +199,7 @@ namespace SkylineBatch
 
         public static Icon Icon()
         {
-            var baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
-            var dailyRegex = new Regex("[0-9]*.[0-9]*.[19].[0-9]*");
-            var iconName = dailyRegex.IsMatch(_version) ? "SkylineBatch_daily.ico" : "SkylineBatch_release.ico";
-            var iconPath = Path.Combine(baseDirectory, iconName);
-            return System.Drawing.Icon.ExtractAssociatedIcon(iconPath);
+            return System.Drawing.Icon.ExtractAssociatedIcon(Application.ExecutablePath);
         }
 
         private static void InitializeSecurityProtocol()

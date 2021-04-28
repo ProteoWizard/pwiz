@@ -29,8 +29,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>119</ApplicationRevision>
-    <ApplicationVersion>21.0.9.119</ApplicationVersion>
+    <ApplicationRevision>124</ApplicationRevision>
+    <ApplicationVersion>21.0.9.124</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -73,7 +73,7 @@
     <SignManifests>false</SignManifests>
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>SkylineBatch_release.ico</ApplicationIcon>
+    <ApplicationIcon>Resources\SkylineBatch_release.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup />
   <PropertyGroup />
@@ -95,9 +95,8 @@
     </Content>
     <None Include="Resources\download.png" />
     <None Include="Resources\downloadSelected.png" />
-    <Content Include="SkylineBatch_daily.ico">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
+    <None Include="Resources\SkylineBatch_daily.ico" />
+    <None Include="Resources\SkylineBatch_release.ico" />
     <Content Include="SkylineDailyRunner.exe">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -107,9 +106,6 @@
     <None Include="Resources\OpenFolder.bmp" />
     <None Include="Resources\SkylineData.ico" />
     <None Include="Resources\SkylineDoc.ico" />
-    <Content Include="SkylineBatch_release.ico">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
     <Content Include="SkylineBatch_configs.ico">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -154,9 +150,6 @@
       <DependentUpon>ReportsAddForm.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Content Include="FileAcquisitionTime.skyr">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <None Include="App.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
@@ -170,6 +163,11 @@
     </Compile>
     <Compile Include="AddServerForm.Designer.cs">
       <DependentUpon>AddServerForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="RDirectorySelector.cs" />
     <Compile Include="CommandArgNames.Designer.cs">
@@ -200,11 +198,6 @@
     </Compile>
     <Compile Include="RVersionControl.Designer.cs">
       <DependentUpon>RVersionControl.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="ReportSettings.cs" />
     <Compile Include="ReportsAddForm.cs">

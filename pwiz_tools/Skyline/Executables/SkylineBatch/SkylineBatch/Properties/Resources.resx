@@ -628,4 +628,10 @@
   <data name="DataServerInfo_Validate_There_was_an_error_connecting_to__0____1_" xml:space="preserve">
     <value>There was an error connecting to {0}: {1}</value>
   </data>
+  <data name="SkylineBatch_daily" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\SkylineBatch_daily.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="SkylineBatch_release" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\SkylineBatch_release.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
 </root>

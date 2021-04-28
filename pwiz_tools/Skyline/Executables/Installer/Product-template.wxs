@@ -295,12 +295,6 @@
       <Component Id="SkylineBatch.exe">
         <File Source="$(var.Skyline.TargetDir)/SkylineBatch.exe" KeyPath="yes" Id="SkylineBatch_exe"/>
       </Component>
-      <Component Id="SkylineBatch_release.ico">
-        <File Source="$(var.Skyline.TargetDir)/SkylineBatch_release.ico" KeyPath="yes"/>
-      </Component>
-      <Component Id="SkylineBatch_daily.ico">
-        <File Source="$(var.Skyline.TargetDir)/SkylineBatch_daily.ico" KeyPath="yes"/>
-      </Component>
       <Component Id="SkylineBatch_configs.ico">
         <File Source="$(var.Skyline.TargetDir)/SkylineBatch_configs.ico" KeyPath="yes"/>
       </Component>
