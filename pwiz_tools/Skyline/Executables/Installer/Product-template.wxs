@@ -301,6 +301,12 @@
       <Component Id="SkylineBatch.exe">
         <File Source="$(var.Skyline.TargetDir)/SkylineBatch.exe" KeyPath="yes" Id="SkylineBatch_exe"/>
       </Component>
+      <Component Id="SkylineBatch.exe.config">
+        <File Source="$(var.Skyline.TargetDir)/SkylineBatch.exe.config" KeyPath="yes" Id="SkylineBatch_exe_config"/>
+      </Component>
+      <Component Id="SkylineBatch.exe.manifest">
+        <File Source="$(var.Skyline.TargetDir)/SkylineBatch.exe.manifest" KeyPath="yes" Id="SkylineBatch_exe_manifest"/>
+      </Component>
       <Component Id="SkylineBatch_configs.ico">
         <File Source="$(var.Skyline.TargetDir)/SkylineBatch_configs.ico" KeyPath="yes"/>
       </Component>
