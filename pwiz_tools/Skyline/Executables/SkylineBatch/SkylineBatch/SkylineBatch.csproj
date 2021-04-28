@@ -146,10 +146,10 @@
       <DependentUpon>LogForm.cs</DependentUpon>
     </EmbeddedResource>
     <None Include="Resources\Comment.bmp" />
-    <Content Include="Resources\add.bmp" />
+    <None Include="Resources\add.bmp" />
     <None Include="Resources\Delete.bmp" />
-    <Content Include="Resources\downarrow.bmp" />
-    <Content Include="Resources\uparrow.bmp" />
+    <None Include="Resources\downarrow.bmp" />
+    <None Include="Resources\uparrow.bmp" />
     <EmbeddedResource Include="ReportsAddForm.resx">
       <DependentUpon>ReportsAddForm.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -245,8 +245,8 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="FluentFTP, Version=33.1.6.0, Culture=neutral, PublicKeyToken=f4af092b1d8df44f, processorArchitecture=MSIL">
-      <HintPath>..\packages\FluentFTP.33.1.6\lib\net45\FluentFTP.dll</HintPath>
+    <Reference Include="FluentFTP">
+      <HintPath>..\..\..\..\Shared\Lib\FluentFTP.dll</HintPath>
     </Reference>
     <Reference Include="log4net">
       <HintPath>..\..\..\..\Shared\Lib\log4net.dll</HintPath>
