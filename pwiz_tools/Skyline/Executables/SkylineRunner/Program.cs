@@ -116,7 +116,7 @@ namespace pwiz.SkylineRunner
                     //While (!done reading)
                     while ((line = sr.ReadLine()) != null)
                     {
-                        if (line.StartsWith("Error:"))
+                        if (ErrorChecker.IsErrorLine(line))   // In case of Skyline-daily with untranslated text
                         {
                             exitCode = 2;
                         }
