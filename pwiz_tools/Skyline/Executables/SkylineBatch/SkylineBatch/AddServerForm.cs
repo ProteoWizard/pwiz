@@ -55,7 +55,7 @@ namespace SkylineBatch
             return DataServerInfo.ServerFromUi(textUrl.Text, textUserName.Text, textPassword.Text, textNamingPattern.Text);
         }
 
-        private void btnRemoveServer_MouseDown(object sender, MouseEventArgs e)
+        private void btnRemoveServer_Click(object sender, EventArgs e)
         {
             Server = null;
             UpdateUiServer();

@@ -120,7 +120,7 @@
             this.btnRemoveServer.Name = "btnRemoveServer";
             this.toolTip1.SetToolTip(this.btnRemoveServer, resources.GetString("btnRemoveServer.ToolTip"));
             this.btnRemoveServer.UseVisualStyleBackColor = true;
-            this.btnRemoveServer.MouseDown += new System.Windows.Forms.MouseEventHandler(this.btnRemoveServer_MouseDown);
+            this.btnRemoveServer.Click += new System.EventHandler(this.btnRemoveServer_Click);
             // 
             // linkLabelRegex
             // 
@@ -129,6 +129,7 @@
             this.linkLabelRegex.TabStop = true;
             this.toolTip1.SetToolTip(this.linkLabelRegex, resources.GetString("linkLabelRegex.ToolTip"));
             this.linkLabelRegex.UseCompatibleTextRendering = true;
+            this.linkLabelRegex.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelRegex_LinkClicked);
             // 
             // AddServerForm
             // 

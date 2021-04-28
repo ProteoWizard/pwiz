@@ -26,7 +26,6 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentFTP;
-using Microsoft.Win32.SafeHandles;
 using SharedBatch;
 using SkylineBatch.Properties;
 
@@ -46,7 +45,7 @@ namespace SkylineBatch
         private readonly ProcessRunner _processRunner;
         private string _batchFile;
 
-        private List<CancellationTokenSource> _runningCancellationTokens;
+        private CancellationTokenSource _runningCancellationToken;
 
         public ConfigRunner(SkylineBatchConfig config, Logger logger, IMainUiControl uiControl = null)
         {
@@ -54,7 +53,6 @@ namespace SkylineBatch
             Config = config;
             _uiControl = uiControl;
             _logger = logger;
-            _runningCancellationTokens = new List<CancellationTokenSource>();
 
             _processRunner = new ProcessRunner()
             {
@@ -257,7 +255,15 @@ namespace SkylineBatch
                 where dataFilter.IsMatch(name)
                 select name;
             var downloadingFiles = downloadingFilesEnum.ToList();
-            if (downloadingFiles.Count == existingDataFiles && !Program.FunctionalTest) return;
+            var skippingFiles = new List<string>();
+            foreach (var downloadingFile in downloadingFiles)
+            {
+                var fileName = Path.Combine(mainSettings.DataFolderPath, downloadingFile);
+                if (File.Exists(fileName) && allFiles[downloadingFile].Size != new FileInfo(fileName).Length)
+                    skippingFiles.Add(downloadingFile);
+            }
+
+            if (skippingFiles.Count == downloadingFiles.Count) return;
 
             _logger.Log(string.Format(Resources.ConfigRunner_DownloadData_Found__0__matching_data_files_on__1__, downloadingFiles.Count, server.GetUrl()));
             foreach (var file in downloadingFiles)
@@ -267,7 +273,7 @@ namespace SkylineBatch
             var ftpClient = server.GetFtpClient();
             var source = new CancellationTokenSource();
             CancellationToken token = source.Token;
-            _runningCancellationTokens.Add(source);
+            _runningCancellationToken = source;
             var i = 0;
             int triesOnFile = 0;
             while ( i < downloadingFiles.Count && IsRunning())
@@ -278,10 +284,7 @@ namespace SkylineBatch
                     _logger.Log(string.Format(Resources.ConfigRunner_DownloadData__0____1__of__2__, fileName, i + 1, downloadingFiles.Count));
                 }
                 
-                var localFileDestination = Path.Combine(mainSettings.DataFolderPath, fileName);
-                var currentFileSize = (double) allFiles[fileName].Size;
-
-                if (File.Exists(localFileDestination) && Math.Abs(new FileInfo(localFileDestination).Length - currentFileSize) < 0.0001)
+                if (skippingFiles.Contains(fileName))
                 {
                     _logger.Log(Resources.ConfigRunner_DownloadData_Already_downloaded__Skipping_);
                     triesOnFile = 0;
@@ -296,7 +299,7 @@ namespace SkylineBatch
                 try
                 {
                     await ftpClient.ConnectAsync(token);
-                    await ftpClient.DownloadFileAsync(localFileDestination,
+                    await ftpClient.DownloadFileAsync(Path.Combine(mainSettings.DataFolderPath, fileName),
                         server.FilePath(fileName), token: token, existsMode: FtpLocalExists.Overwrite, progress: progress);
                     await ftpClient.DisconnectAsync(token);
                     triesOnFile = 0;
@@ -361,9 +364,8 @@ namespace SkylineBatch
                     StartTime = null;
                     RunTime = null;
                 }
-                if (IsRunning())
-                    foreach (var token in _runningCancellationTokens)
-                        token.Cancel();
+                if (IsRunning() && _runningCancellationToken != null)
+                    _runningCancellationToken.Cancel();
                 _runnerStatus = runnerStatus;
             }
             _uiControl?.UpdateUiConfigurations();
