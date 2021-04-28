@@ -125,6 +125,7 @@ namespace SharedBatch
                 OnError = () =>
                 {
                     if (baseProcessRunner.OnError != null) baseProcessRunner.OnError();
+                    _versionOutput.Clear();
                     error = true;
                 },
                 OnException = baseProcessRunner.OnException

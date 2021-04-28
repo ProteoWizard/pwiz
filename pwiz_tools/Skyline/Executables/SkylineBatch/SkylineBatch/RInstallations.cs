@@ -44,10 +44,14 @@ namespace SkylineBatch
                 {
                     // ignored
                 }
-                if (rKey == null)
-                    return false;
-                var latestRPath = rKey.GetValue(@"InstallPath") as string;
-                Settings.Default.RDirs.Add(Path.GetDirectoryName(latestRPath));
+
+                if (rKey != null)
+                {
+                    var latestRPath = rKey.GetValue(@"InstallPath") as string;
+                    Settings.Default.RDirs.Add(Path.GetDirectoryName(latestRPath));
+                }
+                string documentsRPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "R");
+                Settings.Default.RDirs.Add(documentsRPath);
             }
 
             Settings.Default.RVersions = GetRInstallationDict(Settings.Default.RDirs);
