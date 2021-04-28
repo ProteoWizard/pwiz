@@ -3068,13 +3068,15 @@ namespace pwiz.SkylineTestData
         private void TestDetectError(bool timestamp, bool memstamp, CultureInfo cultureInfo)
         {
             // --timestamp, --memstamp and --culture arguments have to be before the --in argument
-            var command =
-                $"{(timestamp ? "--timestamp" : "")} " +
-                $"{(memstamp ? "--memstamp" : "")} " +
-                $"{(cultureInfo != null ? $" --culture={cultureInfo.Name}" : "")} " +
-                "--in";
-            var argsArray = command.Split(new[] {' '}, StringSplitOptions.RemoveEmptyEntries);
-            var output = RunCommand(argsArray);
+            var listArgs = new List<string>();
+            if (timestamp)
+                listArgs.Add(CommandArgs.ARG_TIMESTAMP.ArgumentText);
+            if (memstamp)
+                listArgs.Add(CommandArgs.ARG_MEMSTAMP.ArgumentText);
+            if (cultureInfo != null)
+                listArgs.Add(CommandArgs.ARG_INTERNAL_CULTURE.GetArgumentTextWithValue(cultureInfo.Name));
+            listArgs.Add(CommandArgs.ARG_IN.ArgumentText);
+            var output = RunCommand(listArgs.ToArray());
             var errorLine = TestOutputHasErrorLine(output);
 
             // The error should be about the missing value for the --in argument
