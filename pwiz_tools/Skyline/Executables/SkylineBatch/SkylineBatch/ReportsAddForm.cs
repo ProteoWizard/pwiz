@@ -33,6 +33,7 @@ namespace SkylineBatch
         public ReportsAddForm(IMainUiControl uiControl, RDirectorySelector rDirectorySelector, bool hasRefineFile, ReportInfo editingReport = null)
         {
             InitializeComponent();
+            Icon = Program.Icon();
             _uiControl = uiControl;
             _rDirectorySelector = rDirectorySelector;
             radioResultsFile.Checked = true;
@@ -41,6 +42,7 @@ namespace SkylineBatch
             if (editingReport != null)
             {
                 textReportName.Text = editingReport.Name;
+                checkBoxCultureInvariant.Checked = !editingReport.CultureSpecific;
                 textReportPath.Text = editingReport.ReportPath ?? string.Empty;
                 checkBoxImport.Checked = !string.IsNullOrEmpty(editingReport.ReportPath);
                 radioRefinedFile.Checked = editingReport.UseRefineFile;
@@ -114,7 +116,8 @@ namespace SkylineBatch
             var reportPath = checkBoxImport.Checked ? textReportPath.Text : string.Empty;
             try
             {
-                NewReportInfo = new ReportInfo(textReportName.Text, reportPath, GetScriptsFromUi(), radioRefinedFile.Checked);
+                NewReportInfo = new ReportInfo(textReportName.Text, !checkBoxCultureInvariant.Checked,
+                    reportPath, GetScriptsFromUi(), radioRefinedFile.Checked);
                 NewReportInfo.Validate();
             }
             catch (ArgumentException ex)
@@ -201,6 +204,24 @@ namespace SkylineBatch
             labelReportPath.Enabled = checkBoxImport.Checked;
             textReportPath.Enabled = checkBoxImport.Checked;
             btnReportPath.Enabled = checkBoxImport.Checked;
+        }
+
+        private void checkBoxCultureInvariant_CheckedChanged(object sender, EventArgs e)
+        {
+            checkBoxCultureInvariant.CheckedChanged -= checkBoxCultureInvariant_CheckedChanged;
+            if (!checkBoxCultureInvariant.Checked)
+            {
+                var continueChecked = DialogResult.Cancel != AlertDlg.ShowOkCancel(this, Program.AppName(),
+                    Resources.ReportsAddForm_checkBoxCultureSpecific_CheckedChanged_A_culture_invariant_report_ensures_a_CSV_file_with_period_decimal_points_and_full_precision_numbers_ + Environment.NewLine + 
+                    Resources.ReportsAddForm_checkBoxCultureSpecific_CheckedChanged_Do_you_want_to_continue_);
+                if (!continueChecked)
+                    checkBoxCultureInvariant.Checked = true;
+            }
+        }
+
+        private void ReportsAddForm_Load(object sender, EventArgs e)
+        {
+            checkBoxCultureInvariant.CheckedChanged += checkBoxCultureInvariant_CheckedChanged;
         }
     }
 }

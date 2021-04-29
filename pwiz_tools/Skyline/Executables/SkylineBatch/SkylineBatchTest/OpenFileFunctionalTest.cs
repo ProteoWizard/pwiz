@@ -1,6 +1,4 @@
-﻿using System;
-using System.IO;
-using System.Threading.Tasks;
+﻿using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SharedBatch;
 using SkylineBatch;
@@ -69,14 +67,25 @@ namespace SkylineBatchTest
         public void TestFileAutomaticReplace(MainForm mainForm)
         {
             RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
-            RunDlg<AlertDlg>(() => mainForm.FileOpened(Path.Combine(TEST_FOLDER, "AutomaticPathReplaceConfig.bcfg")),
+            RunDlg<AlertDlg>(() => mainForm.FileOpened(Path.Combine(TEST_FOLDER, "AutomaticPathReplaceOldVersion.bcfg")),
                 dlg =>
                 {
-                    Assert.AreEqual(string.Format(SkylineBatch.Properties.Resources.MainForm_FileOpenedImport_Do_you_want_to_import_configurations_from__0__, "AutomaticPathReplaceConfig.bcfg"),
+                    Assert.AreEqual(string.Format(SkylineBatch.Properties.Resources.MainForm_FileOpenedImport_Do_you_want_to_import_configurations_from__0__, "AutomaticPathReplaceOldVersion.bcfg"),
                         dlg.Message);
                     dlg.ClickYes();
                 });
 
+            RunUI(() => { FunctionalTestUtil.CheckConfigs(1, 0, mainForm); });
+
+            RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
+            RunDlg<AlertDlg>(() => mainForm.FileOpened(Path.Combine(TEST_FOLDER, "AutomaticPathReplaceNewVersion.bcfg")),
+                dlg =>
+                {
+                    Assert.AreEqual(string.Format(SkylineBatch.Properties.Resources.MainForm_FileOpenedImport_Do_you_want_to_import_configurations_from__0__, "AutomaticPathReplaceNewVersion.bcfg"),
+                        dlg.Message);
+                    dlg.ClickYes();
+                });
+            
             RunUI(() => { FunctionalTestUtil.CheckConfigs(1, 0, mainForm); });
 
         }
