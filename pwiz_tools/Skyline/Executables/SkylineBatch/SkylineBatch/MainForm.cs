@@ -520,21 +520,16 @@ namespace SkylineBatch
         {
             ((Timer) sender).Stop();
             _blockUiLogging = false;
-            RunUi(() =>
-            {
-                // Load log messages since last paint
-                UpdateLog();
-                ScrollToLogEnd(true);
-            });
+            _isScrolling = true;
         }
 
         private void comboLogList_SelectedIndexChanged(object sender, EventArgs e)
         {
             _configManager.SelectLog(comboLogList.SelectedIndex);
-            UpdateLog();
+            SwitchLogger();
         }
 
-        private async void UpdateLog()
+        private async void SwitchLogger()
         {
             textBoxLog.Clear();
 
@@ -588,22 +583,23 @@ namespace SkylineBatch
             Process.Start("explorer.exe", arg);
         }
 
-        public void LogToUi(string name, string text, bool trim)
+        public bool LogToUi(string name, string text, bool trim)
         {
+            if (_blockUiLogging) return false;
             RunUi(() =>
             {
-                if (_configManager.SelectedLog != 0 || _blockUiLogging) return; // don't log if old log is displayed
-
-                if (trim)
+                if (_configManager.SelectedLog == 0)
                 {
-                    TrimDisplayedLog();
-                }
-                
-                textBoxLog.AppendText(text);
-                textBoxLog.AppendText(Environment.NewLine);
+                    if (trim)
+                        TrimDisplayedLog();
 
-                ScrollToLogEnd();
+                    textBoxLog.AppendText(text);
+                    textBoxLog.AppendText(Environment.NewLine);
+
+                    ScrollToLogEnd();
+                }
             });
+            return true;
         }
 
         private void TrimDisplayedLog()
@@ -625,8 +621,9 @@ namespace SkylineBatch
             }
         }
 
-        public void LogErrorToUi(string name, string text, bool trim)
+        public bool LogErrorToUi(string name, string text, bool trim)
         {
+            if (_blockUiLogging) return false;
             RunUi(() =>
             {
                 if (trim)
@@ -643,10 +640,12 @@ namespace SkylineBatch
 
                 ScrollToLogEnd();
             });
+            return true;
         }
 
-        public void LogLinesToUi(string name, List<string> lines)
+        public bool LogLinesToUi(string name, List<string> lines)
         {
+            if (_blockUiLogging) return false;
             RunUi(() =>
             {
                 foreach (var line in lines)
@@ -655,10 +654,12 @@ namespace SkylineBatch
                     textBoxLog.AppendText(Environment.NewLine);
                 }
             });
+            return true;
         }
 
-        public void LogErrorLinesToUi(string name, List<string> lines)
+        public bool LogErrorLinesToUi(string name, List<string> lines)
         {
+            if (_blockUiLogging) return false;
             RunUi(() =>
             {
                 var selectionStart = textBoxLog.SelectionStart;
@@ -671,6 +672,35 @@ namespace SkylineBatch
                 textBoxLog.Select(selectionStart, textBoxLog.TextLength);
                 textBoxLog.SelectionColor = Color.Red;
             });
+            return true;
+        }
+
+        public bool LogBacklog(string name, List<Tuple<string, bool>> lines)
+        {
+            if (_blockUiLogging) return false;
+            _blockUiLogging = true;
+            var success = true;
+            try
+            {
+                foreach (var lineInfo in lines)
+                {
+                    var error = lineInfo.Item2;
+                    if (error)
+                        success = LogErrorToUi(name, lineInfo.Item1, true);
+                    else
+                        success = LogToUi(name, lineInfo.Item1, true);
+                    if (!success) break;
+                }
+            }
+            catch (Exception)
+            {
+                success = false;
+            }
+            // if anything goes wrong reload the log
+            if (!success) RunUi(SwitchLogger);
+
+            _blockUiLogging = false;
+            return true;
         }
 
         #endregion

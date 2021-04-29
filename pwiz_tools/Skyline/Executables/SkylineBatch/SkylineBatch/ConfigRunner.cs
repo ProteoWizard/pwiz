@@ -248,7 +248,6 @@ namespace SkylineBatch
 
             var allFiles = server.GetServerFiles;
             var fileNames = allFiles.Keys;
-            var existingDataFiles = Directory.GetFiles(mainSettings.DataFolderPath).Length;
             var dataFilter = new Regex(mainSettings.Server.DataNamingPattern);
             var downloadingFilesEnum =
                 from name in fileNames
@@ -259,7 +258,7 @@ namespace SkylineBatch
             foreach (var downloadingFile in downloadingFiles)
             {
                 var fileName = Path.Combine(mainSettings.DataFolderPath, downloadingFile);
-                if (File.Exists(fileName) && allFiles[downloadingFile].Size != new FileInfo(fileName).Length)
+                if (File.Exists(fileName) && allFiles[downloadingFile].Size == new FileInfo(fileName).Length)
                     skippingFiles.Add(downloadingFile);
             }
 

@@ -111,10 +111,11 @@ namespace SharedBatch
         void ReplaceSelectedConfig(IConfig config);
         void ReplaceAllSkylineVersions(SkylineSettings skylineSettings);
 
-        void LogToUi(string filePath, string text, bool trim = true);
-        void LogErrorToUi(string filePath, string text, bool trim = true);
-        void LogLinesToUi(string filePath, List<string> lines);
-        void LogErrorLinesToUi(string filePath, List<string> lines);
+        bool LogToUi(string filePath, string text, bool trim = true);
+        bool LogErrorToUi(string filePath, string text, bool trim = true);
+        bool LogLinesToUi(string filePath, List<string> lines);
+        bool LogErrorLinesToUi(string filePath, List<string> lines);
+        bool LogBacklog(string filePath, List<Tuple<string, bool>> backlog);
 
         void DisplayError(string message);
         void DisplayWarning(string message);
