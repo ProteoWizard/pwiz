@@ -24,6 +24,7 @@ using SkylineBatch;
 using SharedBatch;
 using System.Configuration;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace SkylineBatchTest
@@ -89,7 +90,7 @@ namespace SkylineBatchTest
                 else if ("DependentConfigName".Equals(variable))
                     dependentConfig = (string)changedVariables[variable];
             }
-            return new MainSettings(template, analysisFolder, dataFolder, annotationsFile, namingPattern, dependentConfig);
+            return new MainSettings(template, analysisFolder, dataFolder, null,  annotationsFile, namingPattern, dependentConfig);
         }
 
         public static FileSettings GetChangedFileSettings(FileSettings baseSettings,
@@ -105,11 +106,11 @@ namespace SkylineBatchTest
             foreach (var variable in changedVariables.Keys)
             {
                 if ("MsOneResolvingPower".Equals(variable))
-                    msOneResolvingPower = (string) changedVariables[variable];
+                    msOneResolvingPower = (int?) changedVariables[variable];
                 else if ("MsMsResolvingPower".Equals(variable))
-                    msMsResolvingPower = (string) changedVariables[variable];
+                    msMsResolvingPower = (int?) changedVariables[variable];
                 else if ("RetentionTime".Equals(variable))
-                    retentionTime = (string) changedVariables[variable];
+                    retentionTime = (int?) changedVariables[variable];
                 else if ("AddDecoys".Equals(variable))
                     addDecoys = (bool) changedVariables[variable];
                 else if ("ShuffleDecoys".Equals(variable))
@@ -137,7 +138,7 @@ namespace SkylineBatchTest
         public static RefineSettings GetChangedRefineSettings(RefineSettings baseSettings,
             Dictionary<string, object> changedVariables)
         {
-            var commandValues = baseSettings.CommandValues.ToList();
+            var commandValues = baseSettings.CommandValuesCopy;
             var removeDecoys = baseSettings.RemoveDecoys;
             var removeResults = baseSettings.RemoveResults;
             var outputFilePath = baseSettings.OutputFilePath;
@@ -145,7 +146,7 @@ namespace SkylineBatchTest
             foreach (var variable in changedVariables.Keys)
             {
                 if ("CommandValues".Equals(variable))
-                    commandValues = (List<Tuple<RefineVariable,string>>)changedVariables[variable];
+                    commandValues = (RefineInputObject)changedVariables[variable];
                 else if ("RemoveDecoys".Equals(variable))
                     removeDecoys = (bool)changedVariables[variable];
                 else if ("RemoveResults".Equals(variable))
@@ -174,17 +175,17 @@ namespace SkylineBatchTest
 
         public static MainSettings GetTestMainSettings()
         {
-            return new MainSettings(GetTestFilePath("emptyTemplate.sky"), GetTestFilePath("analysis"), GetTestFilePath("emptyData"), string.Empty,  string.Empty, string.Empty);
+            return new MainSettings(GetTestFilePath("emptyTemplate.sky"), GetTestFilePath("analysis"), GetTestFilePath("emptyData"), null, string.Empty,  string.Empty, string.Empty);
         }
 
         public static FileSettings GetTestFileSettings()
         {
-            return new FileSettings(string.Empty, string.Empty, string.Empty, false, false, true);
+            return new FileSettings(null, null, null, false, false, true);
         }
 
         public static RefineSettings GetTestRefineSettings()
         {
-            return new RefineSettings(new List<Tuple<RefineVariable, string>>(), false, false, string.Empty);
+            return new RefineSettings(new RefineInputObject(), false, false, string.Empty);
         }
 
         public static ReportSettings GetTestReportSettings()
@@ -195,7 +196,7 @@ namespace SkylineBatchTest
 
         public static ReportInfo GetTestReportInfo()
         {
-            return new ReportInfo("UniqueReport", GetTestFilePath("UniqueReport.skyr"),
+            return new ReportInfo("UniqueReport", false, GetTestFilePath("UniqueReport.skyr"),
                 new List<Tuple<string, string>> {new Tuple<string, string>(GetTestFilePath("testScript.r"), "4.0.3")}, false);
         }
 
@@ -216,7 +217,7 @@ namespace SkylineBatchTest
                 throw new Exception("Config does not have refine output path and will not create dependency");
             var newMainSettings = GetTestMainSettings()
                 .UpdateDependent(baseConfig.Name, baseConfig.RefineSettings.OutputFilePath);
-            var populatedRefineSettings = new RefineSettings(new List<Tuple<RefineVariable, string>>(), true, true, GetTestFilePath("test.sky"));
+            var populatedRefineSettings = new RefineSettings(new RefineInputObject(), true, true, GetTestFilePath("test.sky"));
 
             return new SkylineBatchConfig(name, true, DateTime.MinValue, newMainSettings, GetTestFileSettings(),
                 populatedRefineSettings, GetTestReportSettings(), GetTestSkylineSettings());
@@ -225,22 +226,21 @@ namespace SkylineBatchTest
         public static SkylineBatchConfig GetFullyPopulatedConfig(string name = "TestConfig")
         {
             var main = new MainSettings(GetTestFilePath("emptyTemplate.sky"), GetTestFilePath("analysis"),
-                GetTestFilePath("emptyData"), GetTestFilePath("fakeAnnotations.csv"), "testNamingPattern", string.Empty);
-            var file = new FileSettings("5", "4", "3", true, true, true);
-            var refine = new RefineSettings(new List<Tuple<RefineVariable, string>>()
+                GetTestFilePath("emptyData"), null,  GetTestFilePath("fakeAnnotations.csv"), "testNamingPattern", string.Empty);
+            var file = FileSettings.FromUi("5", "4", "3", true, true, true);
+            var refine = new RefineSettings(new RefineInputObject() 
                 {
-                    new Tuple<RefineVariable, string>(RefineVariable.cv_remove_above_cutoff, "20"),
-                    new Tuple<RefineVariable, string>(RefineVariable.cv_global_normalize, "equalize_medians"),
-                    new Tuple<RefineVariable, string>(RefineVariable.qvalue_cutoff, "0.01"),
-                    new Tuple<RefineVariable, string>(RefineVariable.cv_transitions_count, "2"),
-
+                    cv_remove_above_cutoff = 20,
+                    cv_global_normalize = RefineInputObject.CvGlobalNormalizeValues.equalize_medians,
+                    qvalue_cutoff = 0.01,
+                    cv_transitions_count = 2
                 },  false, false, GetTestFilePath("RefineOutput.sky"));
 
             var reportList = new List<ReportInfo>();
             var script = new List<Tuple<string, string>>()
                 {new Tuple<string, string>(GetTestFilePath("testScript.R"), "4.0.2")};
-            reportList.Add(new ReportInfo("Unique Report", GetTestFilePath("uniqueReport.skyr"), script, false));
-            reportList.Add(new ReportInfo("Another Unique Report", GetTestFilePath("uniqueReport.skyr"), script, true));
+            reportList.Add(new ReportInfo("Unique Report", false, GetTestFilePath("uniqueReport.skyr"), script, false));
+            reportList.Add(new ReportInfo("Another Unique Report", true, GetTestFilePath("uniqueReport.skyr"), script, true));
             var reports = new ReportSettings(reportList);
             var skyline = GetTestSkylineSettings();
             return new SkylineBatchConfig(name, true, DateTime.Now, main, file, refine, reports, skyline);
@@ -316,14 +316,13 @@ namespace SkylineBatchTest
 
         public delegate bool ConditionDelegate();
 
-        public static async Task WaitForCondition(ConditionDelegate condition, int timeout, int timestep, string errorMessage)
+        public static void WaitForCondition(ConditionDelegate condition, TimeSpan timeout, int timestep, string errorMessage)
         {
-            var ticksPerMillisecond = 10000;
-            var millisecondStartTime = DateTime.Now.Ticks / ticksPerMillisecond;
-            while ((DateTime.Now.Ticks / ticksPerMillisecond) - millisecondStartTime < timeout)
+            var startTime = DateTime.Now;
+            while (DateTime.Now - startTime < timeout)
             {
                 if (condition()) return;
-                await Task.Delay(timestep);
+                Thread.Sleep(timestep);
             }
             throw new Exception(errorMessage);
         }

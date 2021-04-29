@@ -986,8 +986,110 @@
   <data name="&gt;&gt;textBoxLog.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
+  <data name="&gt;&gt;listViewConfigs.Name" xml:space="preserve">
+    <value>listViewConfigs</value>
+  </data>
+  <data name="&gt;&gt;listViewConfigs.Type" xml:space="preserve">
+    <value>SkylineBatch.MyListView, SkylineBatch, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="&gt;&gt;listViewConfigs.Parent" xml:space="preserve">
+    <value>tabConfigs</value>
+  </data>
+  <data name="&gt;&gt;listViewConfigs.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;labelSavedConfigurations.Name" xml:space="preserve">
+    <value>labelSavedConfigurations</value>
+  </data>
+  <data name="&gt;&gt;labelSavedConfigurations.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelSavedConfigurations.Parent" xml:space="preserve">
+    <value>tabConfigs</value>
+  </data>
+  <data name="&gt;&gt;labelSavedConfigurations.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;panel2.Name" xml:space="preserve">
+    <value>panel2</value>
+  </data>
+  <data name="&gt;&gt;panel2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;panel2.Parent" xml:space="preserve">
+    <value>tabConfigs</value>
+  </data>
+  <data name="&gt;&gt;panel2.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="&gt;&gt;panel1.Name" xml:space="preserve">
+    <value>panel1</value>
+  </data>
+  <data name="&gt;&gt;panel1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;panel1.Parent" xml:space="preserve">
+    <value>tabConfigs</value>
+  </data>
+  <data name="&gt;&gt;panel1.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="tabConfigs.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="tabConfigs.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="tabConfigs.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="tabConfigs.Size" type="System.Drawing.Size, System.Drawing">
+    <value>630, 455</value>
+  </data>
+  <data name="tabConfigs.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="tabConfigs.Text" xml:space="preserve">
+    <value>Configurations</value>
+  </data>
+  <data name="&gt;&gt;tabConfigs.Name" xml:space="preserve">
+    <value>tabConfigs</value>
+  </data>
+  <data name="&gt;&gt;tabConfigs.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabConfigs.Parent" xml:space="preserve">
+    <value>tabMain</value>
+  </data>
+  <data name="&gt;&gt;tabConfigs.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
   <data name="listViewConfigs.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="listViewConfigs.Location" type="System.Drawing.Point, System.Drawing">
+    <value>7, 23</value>
+  </data>
+  <data name="listViewConfigs.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="listViewConfigs.Size" type="System.Drawing.Size, System.Drawing">
+    <value>510, 382</value>
+  </data>
+  <data name="listViewConfigs.TabIndex" type="System.Int32, mscorlib">
+    <value>16</value>
+  </data>
+  <data name="&gt;&gt;listViewConfigs.Name" xml:space="preserve">
+    <value>listViewConfigs</value>
+  </data>
+  <data name="&gt;&gt;listViewConfigs.Type" xml:space="preserve">
+    <value>SkylineBatch.MyListView, SkylineBatch, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="&gt;&gt;listViewConfigs.Parent" xml:space="preserve">
+    <value>tabConfigs</value>
+  </data>
+  <data name="&gt;&gt;listViewConfigs.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
   <data name="columnConfigName.Text" xml:space="preserve">
     <value>Configuration</value>
@@ -1018,30 +1120,6 @@
   </data>
   <data name="columnRunTime.Width" type="System.Int32, mscorlib">
     <value>62</value>
-  </data>
-  <data name="listViewConfigs.Location" type="System.Drawing.Point, System.Drawing">
-    <value>7, 23</value>
-  </data>
-  <data name="listViewConfigs.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
-  </data>
-  <data name="listViewConfigs.Size" type="System.Drawing.Size, System.Drawing">
-    <value>510, 382</value>
-  </data>
-  <data name="listViewConfigs.TabIndex" type="System.Int32, mscorlib">
-    <value>16</value>
-  </data>
-  <data name="&gt;&gt;listViewConfigs.Name" xml:space="preserve">
-    <value>listViewConfigs</value>
-  </data>
-  <data name="&gt;&gt;listViewConfigs.Type" xml:space="preserve">
-    <value>SkylineBatch.MyListView, SkylineBatch, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
-  </data>
-  <data name="&gt;&gt;listViewConfigs.Parent" xml:space="preserve">
-    <value>tabConfigs</value>
-  </data>
-  <data name="&gt;&gt;listViewConfigs.ZOrder" xml:space="preserve">
-    <value>0</value>
   </data>
   <data name="labelSavedConfigurations.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1125,6 +1203,69 @@
     <value>tabConfigs</value>
   </data>
   <data name="&gt;&gt;panel2.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="btnRunOptions.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="btnRunOptions.Location" type="System.Drawing.Point, System.Drawing">
+    <value>172, 22</value>
+  </data>
+  <data name="btnRunOptions.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="btnRunOptions.Size" type="System.Drawing.Size, System.Drawing">
+    <value>19, 23</value>
+  </data>
+  <data name="btnRunOptions.TabIndex" type="System.Int32, mscorlib">
+    <value>12</value>
+  </data>
+  <data name="&gt;&gt;btnRunOptions.Name" xml:space="preserve">
+    <value>btnRunOptions</value>
+  </data>
+  <data name="&gt;&gt;btnRunOptions.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnRunOptions.Parent" xml:space="preserve">
+    <value>panel2</value>
+  </data>
+  <data name="&gt;&gt;btnRunOptions.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="lblNoConfigs.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblNoConfigs.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Microsoft Sans Serif, 9.75pt</value>
+  </data>
+  <data name="lblNoConfigs.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="lblNoConfigs.Location" type="System.Drawing.Point, System.Drawing">
+    <value>-3, 4</value>
+  </data>
+  <data name="lblNoConfigs.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 0, 2, 0</value>
+  </data>
+  <data name="lblNoConfigs.Size" type="System.Drawing.Size, System.Drawing">
+    <value>509, 16</value>
+  </data>
+  <data name="lblNoConfigs.TabIndex" type="System.Int32, mscorlib">
+    <value>9</value>
+  </data>
+  <data name="lblNoConfigs.Text" xml:space="preserve">
+    <value>There are no saved configurations. Click the add button to create a new configuration.</value>
+  </data>
+  <data name="&gt;&gt;lblNoConfigs.Name" xml:space="preserve">
+    <value>lblNoConfigs</value>
+  </data>
+  <data name="&gt;&gt;lblNoConfigs.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblNoConfigs.Parent" xml:space="preserve">
+    <value>panel2</value>
+  </data>
+  <data name="&gt;&gt;lblNoConfigs.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <metadata name="toolStrip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
@@ -1216,99 +1357,6 @@
   </data>
   <data name="&gt;&gt;panel1.ZOrder" xml:space="preserve">
     <value>3</value>
-  </data>
-  <data name="tabConfigs.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 22</value>
-  </data>
-  <data name="tabConfigs.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
-  </data>
-  <data name="tabConfigs.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
-  </data>
-  <data name="tabConfigs.Size" type="System.Drawing.Size, System.Drawing">
-    <value>630, 455</value>
-  </data>
-  <data name="tabConfigs.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="tabConfigs.Text" xml:space="preserve">
-    <value>Configurations</value>
-  </data>
-  <data name="&gt;&gt;tabConfigs.Name" xml:space="preserve">
-    <value>tabConfigs</value>
-  </data>
-  <data name="&gt;&gt;tabConfigs.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;tabConfigs.Parent" xml:space="preserve">
-    <value>tabMain</value>
-  </data>
-  <data name="&gt;&gt;tabConfigs.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="btnRunOptions.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="btnRunOptions.Location" type="System.Drawing.Point, System.Drawing">
-    <value>172, 22</value>
-  </data>
-  <data name="btnRunOptions.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
-  </data>
-  <data name="btnRunOptions.Size" type="System.Drawing.Size, System.Drawing">
-    <value>19, 23</value>
-  </data>
-  <data name="btnRunOptions.TabIndex" type="System.Int32, mscorlib">
-    <value>12</value>
-  </data>
-  <data name="&gt;&gt;btnRunOptions.Name" xml:space="preserve">
-    <value>btnRunOptions</value>
-  </data>
-  <data name="&gt;&gt;btnRunOptions.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnRunOptions.Parent" xml:space="preserve">
-    <value>panel2</value>
-  </data>
-  <data name="&gt;&gt;btnRunOptions.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="lblNoConfigs.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="lblNoConfigs.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Microsoft Sans Serif, 9.75pt</value>
-  </data>
-  <data name="lblNoConfigs.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="lblNoConfigs.Location" type="System.Drawing.Point, System.Drawing">
-    <value>-3, 4</value>
-  </data>
-  <data name="lblNoConfigs.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 0, 2, 0</value>
-  </data>
-  <data name="lblNoConfigs.Size" type="System.Drawing.Size, System.Drawing">
-    <value>509, 16</value>
-  </data>
-  <data name="lblNoConfigs.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
-  </data>
-  <data name="lblNoConfigs.Text" xml:space="preserve">
-    <value>There are no saved configurations. Click the add button to create a new configuration.</value>
-  </data>
-  <data name="&gt;&gt;lblNoConfigs.Name" xml:space="preserve">
-    <value>lblNoConfigs</value>
-  </data>
-  <data name="&gt;&gt;lblNoConfigs.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;lblNoConfigs.Parent" xml:space="preserve">
-    <value>panel2</value>
-  </data>
-  <data name="&gt;&gt;lblNoConfigs.ZOrder" xml:space="preserve">
-    <value>2</value>
   </data>
   <data name="button1.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>

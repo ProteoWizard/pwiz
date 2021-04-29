@@ -27,6 +27,7 @@ namespace SkylineBatch
         public InvalidConfigSetupForm(IMainUiControl mainControl, SkylineBatchConfig invalidConfig, SkylineBatchConfigManager configManager, RDirectorySelector rDirectorySelector)
         {
             InitializeComponent();
+            Icon = Program.Icon();
             _invalidConfig = invalidConfig;
             _configManager = configManager;
             _rDirectorySelector = rDirectorySelector;
@@ -86,14 +87,15 @@ namespace SkylineBatch
             var validAnnotationsFilePath = await GetValidPath(Resources.InvalidConfigSetupForm_FixInvalidMainSettings_annotations_file, mainSettings.AnnotationsFilePath,
                 MainSettings.ValidateAnnotationsFile, PathDialogOptions.File);
 
-            return new MainSettings(validTemplateFilePath, validAnalysisFolderPath, validDataFolderPath, validAnnotationsFilePath, mainSettings.ReplicateNamingPattern, mainSettings.DependentConfigName);
+            return new MainSettings(validTemplateFilePath, validAnalysisFolderPath, validDataFolderPath, mainSettings.Server, 
+                validAnnotationsFilePath, mainSettings.ReplicateNamingPattern, mainSettings.DependentConfigName);
         }
 
         private async Task<RefineSettings> FixInvalidRefineSettings()
         {
             var validOutputPath = await GetValidPath(Resources.InvalidConfigSetupForm_FixInvalidRefineSettings_path_to_the_refined_output_file,
                 refineSettings.OutputFilePath, RefineSettings.ValidateOutputFile, PathDialogOptions.File, PathDialogOptions.Save);
-            return new RefineSettings(refineSettings.CommandValues, refineSettings.RemoveDecoys, refineSettings.RemoveResults, validOutputPath);
+            return RefineSettings.GetPathChanged(refineSettings, validOutputPath);
         }
 
         private async Task<ReportSettings> FixInvalidReportSettings()
@@ -116,7 +118,7 @@ namespace SkylineBatch
                     
                     validScripts.Add(new Tuple<string, string>(validRScript, validVersion));
                 }
-                validReports.Add(new ReportInfo(report.Name, validReportPath, validScripts, report.UseRefineFile));
+                validReports.Add(new ReportInfo(report.Name, report.CultureSpecific, validReportPath, validScripts, report.UseRefineFile));
             }
             return new ReportSettings(validReports);
         }
