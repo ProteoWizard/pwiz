@@ -1569,6 +1569,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public int CompareTo(SpectrumDisplayInfo other)
         {
+            if (other == null) return 1;
             int i = Comparer.Default.Compare(FileOrder, other.FileOrder);
             if (i == 0)
             {
