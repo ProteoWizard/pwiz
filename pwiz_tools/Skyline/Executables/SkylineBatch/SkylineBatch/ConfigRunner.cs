@@ -259,7 +259,7 @@ namespace SkylineBatch
             foreach (var downloadingFile in downloadingFiles)
             {
                 var fileName = Path.Combine(mainSettings.DataFolderPath, downloadingFile);
-                if (File.Exists(fileName) && allFiles[downloadingFile].Size != new FileInfo(fileName).Length)
+                if (File.Exists(fileName) && allFiles[downloadingFile].Size == new FileInfo(fileName).Length)
                     skippingFiles.Add(downloadingFile);
             }
 
