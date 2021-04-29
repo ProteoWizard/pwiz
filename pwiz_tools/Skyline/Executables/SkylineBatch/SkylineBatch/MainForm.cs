@@ -502,25 +502,39 @@ namespace SkylineBatch
         #region Logging
 
         private bool _isScrolling = true;
+        private bool _blockUiLogging = false;
 
         private void tabLog_Enter(object sender, EventArgs e)
         {
             if (_configManager.SelectedLog == 0)
             {
-                // Wait for repaint before scroll
+                // Wait for repaint before logging
+                _blockUiLogging = true;
                 var timer = new Timer { Interval = 50 };
+                timer.Tick += AddScrollToQueue;
                 timer.Start();
-                ScrollToLogEnd(true);
             }
+        }
+
+        private void AddScrollToQueue(object sender, EventArgs e)
+        {
+            ((Timer) sender).Stop();
+            _blockUiLogging = false;
+            RunUi(() =>
+            {
+                // Load log messages since last paint
+                UpdateLog();
+                ScrollToLogEnd(true);
+            });
         }
 
         private void comboLogList_SelectedIndexChanged(object sender, EventArgs e)
         {
             _configManager.SelectLog(comboLogList.SelectedIndex);
-            SwitchLogger();
+            UpdateLog();
         }
 
-        private async void SwitchLogger()
+        private async void UpdateLog()
         {
             textBoxLog.Clear();
 
@@ -578,7 +592,7 @@ namespace SkylineBatch
         {
             RunUi(() =>
             {
-                if (_configManager.SelectedLog != 0) return; // don't log if old log is displayed
+                if (_configManager.SelectedLog != 0 || _blockUiLogging) return; // don't log if old log is displayed
 
                 if (trim)
                 {

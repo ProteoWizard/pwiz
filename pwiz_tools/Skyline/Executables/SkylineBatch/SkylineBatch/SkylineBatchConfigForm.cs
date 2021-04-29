@@ -182,7 +182,7 @@ namespace SkylineBatch
 
         private void ToggleDownloadData(bool downloading)
         {
-            btnDownloadData.BackColor = downloading ? Color.SteelBlue : Color.WhiteSmoke;
+            btnDownloadData.BackColor = downloading ? Color.SteelBlue : Color.Transparent;
             btnDownloadData.Image = downloading ? _downloadSelectedImage : _downloadImage;
         }
 
