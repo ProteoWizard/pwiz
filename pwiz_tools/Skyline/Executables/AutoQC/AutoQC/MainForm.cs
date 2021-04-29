@@ -379,7 +379,6 @@ namespace AutoQC
             tabMain.SelectTab(tabLog);
         }
 
-        //TODO (Ali): fix log paint bug and add timer
         private void tabLog_Enter(object sender, EventArgs e)
         {
             ScrollToLogEnd(true);
@@ -442,7 +441,7 @@ namespace AutoQC
             Process.Start("explorer.exe", arg);
         }
 
-        public bool LogToUi(string name, string text, bool trim)
+        public void LogToUi(string name, string text, bool trim)
         {
             RunUi(() =>
             {
@@ -458,7 +457,6 @@ namespace AutoQC
                 
                 ScrollToLogEnd();
             });
-            return true;
         }
 
         private void TrimDisplayedLog()
@@ -480,7 +478,7 @@ namespace AutoQC
             }
         }
 
-        public bool LogErrorToUi(string name, string text, bool trim)
+        public void LogErrorToUi(string name, string text, bool trim)
         {
             RunUi(() =>
             {
@@ -498,10 +496,9 @@ namespace AutoQC
                     false); // Already trimmed
                 textBoxLog.SelectionColor = textBoxLog.ForeColor;
             });
-            return true;
         }
 
-        public bool LogLinesToUi(string name, List<string> lines)
+        public void LogLinesToUi(string name, List<string> lines)
         {
             RunUi(() =>
             {
@@ -513,10 +510,9 @@ namespace AutoQC
                     textBoxLog.AppendText(Environment.NewLine);
                 }
             });
-            return true;
         }
 
-        public bool LogErrorLinesToUi(string name, List<string> lines)
+        public void LogErrorLinesToUi(string name, List<string> lines)
         {
             RunUi(() =>
             {
@@ -531,13 +527,6 @@ namespace AutoQC
                 textBoxLog.Select(selectionStart, textBoxLog.TextLength);
                 textBoxLog.SelectionColor = Color.Red;
             });
-            return true;
-        }
-
-        public bool LogBacklog(string name, List<Tuple<string, bool>> lines)
-        {
-            return true;
-            //TODO(Ali) implement this
         }
 
         #endregion

@@ -42,7 +42,6 @@ using SharedBatch.Properties;
         public const int MaxLogLines = 10000;
         public static string LogTruncatedMessage = Resources.Logger_DisplayLog_____Log_truncated_____Full_log_is_in__0_;
 
-        private List<Tuple<string, bool>> _uiBacklog;
 
         private string _lastMessage = string.Empty; // To avoid logging duplicate messages.
 
@@ -79,7 +78,6 @@ using SharedBatch.Properties;
             _filePath = logFilePath;
             _mainUi = mainUi;
             Name = logName;
-            _uiBacklog = new List<Tuple<string, bool>>();
             Init();
         }
         
@@ -255,7 +253,10 @@ using SharedBatch.Properties;
             }
             _lastMessage = line;
 
-            LogToUi(Name, line, false);
+            if (_mainUi != null)
+            {
+                _mainUi.LogToUi(Name, GetDate() + line);
+            }
 
             WriteToFile(line);
         }
@@ -269,7 +270,11 @@ using SharedBatch.Properties;
             line = string.Format(Resources.Logger_LogErrorToFile_ERROR___0_, line);
 
             var exStr = ex != null ? ex.ToString() : string.Empty;
-            LogToUi(Name, new List<string> { GetDate() + line, exStr }, true);
+            if (_mainUi != null)
+            {
+                _mainUi.LogErrorLinesToUi(Name,
+                        new List<string> { GetDate() + line, exStr });
+            }
 
             LogErrorToFile(string.Format("{0}\n{1}", line, exStr));
         }
@@ -293,7 +298,10 @@ using SharedBatch.Properties;
 
         private void LogErrorText(string line)
         {
-            LogToUi(Name, line, true);
+            if (_mainUi != null)
+            {
+                _mainUi.LogErrorToUi(Name,GetDate() + line);
+            }
             LogErrorToFile(line);
         }
 
@@ -306,7 +314,10 @@ using SharedBatch.Properties;
 
             ProgramLog.Error(line);
 
-            LogToUi(Name, line, true);
+            if (_mainUi != null)
+            {
+                _mainUi.LogErrorToUi(Name, GetDate() + line);
+            }
         }
         
         private int LastPercent;
@@ -376,35 +387,9 @@ using SharedBatch.Properties;
             return null;
         }
 
-        public void LogToUi(string name, string line, bool error, bool trim = true)
+        public void LogToUi(IMainUiControl mainUi)
         {
-            if (_mainUi == null) return;
-            if (_mainUi.LogBacklog(name, _uiBacklog)) _uiBacklog.Clear();
-            var dateLine = GetDate() + line;
-            bool logSuccess;
-            if (error)
-                logSuccess = _mainUi.LogErrorToUi(Name, dateLine, trim);
-            else
-                logSuccess = _mainUi.LogToUi(Name, dateLine, trim);
-            
-            if (!logSuccess)
-                _uiBacklog.Add(new Tuple<string, bool>(dateLine, error));
-        }
-
-        public void LogToUi(string name, List<string> lines, bool error)
-        {
-            if (_mainUi == null || lines.Count == 0) return;
-            lines[0] = GetDate() + lines[0];
-            if (_mainUi.LogBacklog(name, _uiBacklog)) _uiBacklog.Clear();
-            bool logSuccess;
-            if (error)
-                logSuccess = _mainUi.LogErrorLinesToUi(Name, lines);
-            else
-                logSuccess = _mainUi.LogLinesToUi(Name, lines);
-
-            if (!logSuccess)
-                foreach(var line in lines)
-                    _uiBacklog.Add(new Tuple<string, bool>(line, error));
+            _mainUi = mainUi;
         }
 
         public void Close()
@@ -425,18 +410,22 @@ using SharedBatch.Properties;
             return Path.GetFileName(_filePath);
         }
 
+        public void DisableUiLogging()
+        {
+            _mainUi = null;
+        }
+
         public void DisplayLog()
         {
             lock (_lock)
             {
-                _uiBacklog.Clear();
                 if (!File.Exists(_filePath))
                 {
                     // If the log file is not accessible, display the contents of the in memory buffer and anything saved in the log buffer
-                    LogToUi(_filePath, string.Format(Resources.Logger_DisplayLog_Could_not_read_the_log_file___0___File_does_not_exist_, _filePath), true, false);
+                    _mainUi.LogErrorToUi(_filePath, string.Format(Resources.Logger_DisplayLog_Could_not_read_the_log_file___0___File_does_not_exist_, _filePath), false);
                     if (_memLogMessages != null && _memLogMessages.Count > 0)
                     {
-                        LogToUi(_filePath, string.Format(Resources.Logger_DisplayLog_Displaying_last__0__saved_log_messages_, _memLogMessages.Count), true, false);
+                        _mainUi.LogErrorToUi(_filePath, string.Format(Resources.Logger_DisplayLog_Displaying_last__0__saved_log_messages_, _memLogMessages.Count), false);
                         string[] arr = _memLogMessages.ToArray();
                         foreach (var s in arr)
                         {
@@ -446,8 +435,8 @@ using SharedBatch.Properties;
 
                     if (_logBuffer != null && _logBuffer.Length > 0)
                     {
-                        LogToUi(_filePath, Resources.Logger_DisplayLog_Displaying_messages_since_log_file_became_unavailable_, true, false);
-                        LogToUi(_filePath, _logBuffer.ToString(), false, false);
+                        _mainUi.LogErrorToUi(_filePath, Resources.Logger_DisplayLog_Displaying_messages_since_log_file_became_unavailable_, false);
+                        _mainUi.LogToUi(_filePath, _logBuffer.ToString(), false);
                     }
                     return;
                 }
@@ -482,7 +471,7 @@ using SharedBatch.Properties;
                 }
                 if (truncated)
                 {
-                    LogToUi(_filePath, string.Format(Resources.Logger_DisplayLog_____Log_truncated_____Full_log_is_in__0_, GetFile()), true, false);
+                    _mainUi.LogErrorToUi(_filePath, string.Format(Resources.Logger_DisplayLog_____Log_truncated_____Full_log_is_in__0_, GetFile()), false);
                 }
 
                 var toLog = new List<string>();
@@ -498,7 +487,7 @@ using SharedBatch.Properties;
                     {
                         if (!lastLineErr && toLog.Count > 0)
                         {
-                            LogToUi(Name, toLog, false);
+                            _mainUi.LogLinesToUi(Name, toLog);
                             toLog.Clear();
                         }
                         lastLineErr = true;
@@ -508,7 +497,7 @@ using SharedBatch.Properties;
                     {
                         if (lastLineErr && toLog.Count > 0)
                         {
-                            LogToUi(Name, toLog, true);
+                            _mainUi.LogErrorLinesToUi(Name, toLog);
                             toLog.Clear();
                         }
                         lastLineErr = false;
@@ -519,11 +508,11 @@ using SharedBatch.Properties;
                 {
                     if (lastLineErr)
                     {
-                        LogToUi(Name, toLog, true);
+                        _mainUi.LogErrorLinesToUi(Name, toLog);
                     }
                     else
                     {
-                        LogToUi(Name, toLog, false);
+                        _mainUi.LogLinesToUi(Name, toLog);
                     }
                 }
             }
