@@ -46,6 +46,7 @@ class user_error : public std::runtime_error
 } // namespace pwiz
 
 
+#ifdef _WIN32
 // preprocessed prototype of SetErrorMode so windows.h doesn't have to be included;
 // this requires linking to the shared runtime but pwiz always does that on Windows
 extern "C" __declspec(dllimport) unsigned int __stdcall SetErrorMode(unsigned int uMode);
@@ -118,6 +119,7 @@ struct ReportHooker
 #endif // _DEBUG
 
 static ReportHooker reportHooker;
+#endif
 
 
 // make Boost assertions throw exceptions
