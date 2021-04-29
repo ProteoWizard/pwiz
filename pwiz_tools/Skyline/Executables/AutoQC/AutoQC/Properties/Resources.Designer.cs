@@ -1285,6 +1285,15 @@ namespace AutoQC.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to AutoQC Configuration File.
+        /// </summary>
+        internal static string Program_AddFileTypesToRegistry_AutoQC_Configuration_File {
+            get {
+                return ResourceManager.GetString("Program_AddFileTypesToRegistry_AutoQC_Configuration_File", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} requires Skyline to run..
         /// </summary>
         internal static string Program_InitSkylineSettings__0__requires_Skyline_to_run_ {
