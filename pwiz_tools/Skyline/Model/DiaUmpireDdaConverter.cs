@@ -134,7 +134,15 @@ namespace pwiz.Skyline.Model
                             spectrumSource.ToString().Quote()
                     };
 
-                    pr.Run(psi, null, this, ref _progressStatus, ProcessPriorityClass.BelowNormal);
+                    try
+                    {
+                        pr.Run(psi, null, this, ref _progressStatus, ProcessPriorityClass.BelowNormal);
+                    }
+                    catch (IOException e)
+                    {
+                        progressMonitor?.UpdateProgress(status.ChangeMessage(e.Message));
+                        return false;
+                    }
 
                     FileEx.SafeDelete(tmpParams, true);
 

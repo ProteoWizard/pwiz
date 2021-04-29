@@ -46,6 +46,10 @@ class user_error : public std::runtime_error
 } // namespace pwiz
 
 
+// preprocessed prototype of SetErrorMode so windows.h doesn't have to be included;
+// this requires linking to the shared runtime but pwiz always does that on Windows
+extern "C" __declspec(dllimport) unsigned int __stdcall SetErrorMode(unsigned int uMode);
+
 // make debug assertions throw exceptions in MSVC
 #ifdef _DEBUG
 #include <crtdbg.h>
@@ -53,9 +57,6 @@ class user_error : public std::runtime_error
 #include <locale>
 #include <sstream>
 
-// preprocessed prototype of SetErrorMode so windows.h doesn't have to be included;
-// this requires linking to the shared runtime but pwiz always does that on Windows
-extern "C" __declspec(dllimport) unsigned int __stdcall SetErrorMode(unsigned int uMode);
 
 namespace {
 
@@ -106,8 +107,17 @@ struct ReportHooker
         _CrtSetReportHookW2(_CRT_RPTHOOK_REMOVE, &CrtReportHookW);
     }
 };
-static ReportHooker reportHooker;
+#else
+struct ReportHooker
+{
+    ReportHooker()
+    {
+        SetErrorMode(SetErrorMode(0) | 0x0002); // SEM_NOGPFAULTERRORBOX
+    }
+};
 #endif // _DEBUG
+
+static ReportHooker reportHooker;
 
 
 // make Boost assertions throw exceptions
