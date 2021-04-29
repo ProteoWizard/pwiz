@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -19,6 +20,9 @@ namespace SharedBatch
         public const string EXT_R = ".R";
         public const string EXT_CSV = ".csv";
         public const string EXT_LOG = ".log";
+        public const string EXT_APPREF = ".appref-ms";
+
+        public const char SEPARATOR_CSV = ',';
 
         public static string FILTER_XML
         {
@@ -140,5 +144,72 @@ namespace SharedBatch
         {
             return LineSeparate(lines.AsEnumerable());
         }
+
+        # region Parsing numbers from different cultures
+
+        public static int? GetNullableIntFromUiString(string integer, string inputName)
+        {
+            if (!TryGetNullableIntFromString(integer, CultureInfo.CurrentCulture, out int? result))
+                throw new ArgumentException(string.Format(Resources.TextUtil_GetOptionalIntegerFromString__0__is_not_a_valid_value_for__1___Please_enter_an_integer_, integer, inputName));
+            return result;
+        }
+
+        public static int? GetNullableIntFromInvariantString(string integer)
+        {
+            if (!TryGetNullableIntFromString(integer, CultureInfo.InvariantCulture, out int? result))
+                throw new Exception(string.Format(Resources.TextUtil_GetOptionalIntegerFromInvariantString_Cound_not_parse___0___as_type___1__, integer, typeof(int?)));
+            return result;
+        }
+
+        public static int? GetNullableIntFromString(string integer, CultureInfo culture)
+        {
+            if (!TryGetNullableIntFromString(integer, culture, out int? result))
+                throw new Exception(string.Format(Resources.TextUtil_GetOptionalIntegerFromInvariantString_Cound_not_parse___0___as_type___1__, integer, typeof(int?)));
+            return result;
+        }
+
+        private static bool TryGetNullableIntFromString(string integer, CultureInfo culture, out int? result)
+        {
+            result = null;
+            if (string.IsNullOrEmpty(integer)) return true;
+            var success = int.TryParse(integer, NumberStyles.Integer, culture, out int parsed);
+            result = parsed;
+            return success;
+        }
+
+        public static double? GetNullableDoubleFromString(string doubleString, CultureInfo culture)
+        {
+            if (!TryGetNullableDoubleFromString(doubleString, culture, out double? result))
+                throw new Exception(string.Format(Resources.TextUtil_GetOptionalIntegerFromInvariantString_Cound_not_parse___0___as_type___1__, doubleString, typeof(double?)));
+            return result;
+        }
+
+        private static bool TryGetNullableDoubleFromString(string doubleString, CultureInfo culture, out double? result)
+        {
+            result = null;
+            if (string.IsNullOrEmpty(doubleString)) return true;
+            var success = Double.TryParse(doubleString, NumberStyles.AllowDecimalPoint, culture, out double parsed);
+            result = parsed;
+            return success;
+        }
+
+        public static string ToInvariantCultureString(int? optionalInt)
+        {
+            if (optionalInt == null) return string.Empty;
+            return ((int)optionalInt).ToString(CultureInfo.InvariantCulture);
+        }
+
+        public static string ToUiString(int integer)
+        {
+            return integer.ToString(CultureInfo.CurrentCulture);
+        }
+
+        public static string ToUiString(int? optionalInt)
+        {
+            if (optionalInt == null) return string.Empty;
+            return ((int)optionalInt).ToString(CultureInfo.CurrentCulture);
+        }
+
+        #endregion
     }
 }
