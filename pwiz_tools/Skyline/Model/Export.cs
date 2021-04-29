@@ -186,7 +186,8 @@ namespace pwiz.Skyline.Model
         public const string THERMO_FUSION = "Thermo Fusion";
         public const string THERMO_LTQ = "Thermo LTQ";
         public const string THERMO_Q_EXACTIVE = "Thermo Q Exactive";
-        public const string THERMO_SUREQUANT = "Thermo SureQuant";
+        public const string THERMO_EXPLORIS_SUREQUANT = "Thermo Exploris (SureQuant)";
+        public const string THERMO_FUSION_LUMOS_SUREQUANT = "Thermo Fusion Lumos (SureQuant)";
         public const string WATERS = "Waters";
         public const string WATERS_XEVO_TQ = "Waters Xevo TQ";
         public const string WATERS_XEVO_QTOF = "Waters Xevo QTOF";
@@ -216,7 +217,8 @@ namespace pwiz.Skyline.Model
                 THERMO_ALTIS,
                 THERMO_FUSION,
                 THERMO_QUANTIVA,
-                THERMO_SUREQUANT,
+                THERMO_EXPLORIS_SUREQUANT,
+                THERMO_FUSION_LUMOS_SUREQUANT,
                 WATERS_XEVO_TQ,
                 WATERS_QUATTRO_PREMIER,
             };
@@ -261,7 +263,8 @@ namespace pwiz.Skyline.Model
                                        {THERMO_QUANTIVA, EXT_THERMO},
                                        {THERMO_ALTIS, EXT_THERMO},
                                        {THERMO_FUSION, EXT_THERMO},
-                                       {THERMO_SUREQUANT, EXT_THERMO},
+                                       {THERMO_EXPLORIS_SUREQUANT, EXT_THERMO},
+                                       {THERMO_FUSION_LUMOS_SUREQUANT, EXT_THERMO},
                                        {WATERS_XEVO_TQ, EXT_WATERS},
                                        {WATERS_QUATTRO_PREMIER, EXT_WATERS}
                                    };
@@ -482,8 +485,9 @@ namespace pwiz.Skyline.Model
                     }
                     else
                         return ExportThermoFusionMethod(doc, path, template);
-                case ExportInstrumentType.THERMO_SUREQUANT:
-                    return ExportThermoSureQuantMethod(doc, path, template);
+                case ExportInstrumentType.THERMO_EXPLORIS_SUREQUANT:
+                case ExportInstrumentType.THERMO_FUSION_LUMOS_SUREQUANT:
+                    return ExportThermoSureQuantMethod(doc, path, template, instrumentType);
                 case ExportInstrumentType.SHIMADZU:
                     if (type == ExportFileType.List)
                         return ExportShimadzuCsv(doc, path);
@@ -768,9 +772,9 @@ namespace pwiz.Skyline.Model
             PerformLongExport(m => exporter.ExportIsolationList(fileName, m));
         }
 
-        public AbstractMassListExporter ExportThermoSureQuantMethod(SrmDocument document, string fileName, string templateName)
+        public AbstractMassListExporter ExportThermoSureQuantMethod(SrmDocument document, string fileName, string templateName, string instrumentType)
         {
-            var exporter = InitExporter(new ThermoSureQuantMethodExporter(document));
+            var exporter = InitExporter(new ThermoSureQuantMethodExporter(document, instrumentType));
             if (MethodType == ExportMethodType.Standard)
                 exporter.RunLength = RunLength;
             exporter.RetentionStartAndEnd = RetentionStartAndEnd;
@@ -1895,12 +1899,15 @@ namespace pwiz.Skyline.Model
 
     public class ThermoSureQuantMethodExporter : ThermoMassListExporter
     {
-        public ThermoSureQuantMethodExporter(SrmDocument document)
+        public ThermoSureQuantMethodExporter(SrmDocument document, string instrumentType)
             : base(document)
         {
+            _instrumentType = instrumentType;
         }
 
-        protected override string InstrumentType => ExportInstrumentType.THERMO_SUREQUANT;
+        private readonly string _instrumentType;
+
+        protected override string InstrumentType => _instrumentType;
 
         public override bool HasHeaders => true;
 
@@ -2044,7 +2051,15 @@ namespace pwiz.Skyline.Model
                 return;
 
             var argv = new List<string>();
-            argv.Add(@"-p");
+            switch (_instrumentType)
+            {
+                case ExportInstrumentType.THERMO_EXPLORIS_SUREQUANT:
+                    argv.Add(@"-p");
+                    break;
+                case ExportInstrumentType.THERMO_FUSION_LUMOS_SUREQUANT:
+                    argv.Add(@"-l");
+                    break;
+            }
             MethodExporter.ExportMethod(EXE_BUILD_METHOD, argv, fileName, templateName, MemoryOutput, progressMonitor);
         }
     }
