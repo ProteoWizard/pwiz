@@ -230,6 +230,8 @@ namespace SkylineBatch
 
         public bool RunWillOverwrite(int startStep, string configurationHeader, out StringBuilder message)
         {
+            message = new StringBuilder();
+            if (startStep > 5) return false;
             if (startStep != 3)
                 return MainSettings.RunWillOverwrite(startStep, configurationHeader, out message);
             return RefineSettings.RunWillOverwrite(startStep, configurationHeader, out message);

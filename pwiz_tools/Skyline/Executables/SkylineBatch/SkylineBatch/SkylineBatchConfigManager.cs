@@ -496,7 +496,7 @@ namespace SkylineBatch
             return (SkylineBatchConfig) _configRunners[name].GetConfig();
         }
 
-        public bool StartBatchRun(int startStep)
+        public bool StartBatchRun(int startStep, bool downloadFilesOnly)
         {
             // Check that no configs are currently running
             var configsRunning = ConfigsBusy();
@@ -587,12 +587,12 @@ namespace SkylineBatch
                 if (oldLogger != null)
                     _logList.Insert(1, oldLogger);
             }
-            new Thread(() => _ = RunAsync(startStep)).Start();
+            new Thread(() => _ = RunAsync(startStep, downloadFilesOnly)).Start();
             return true;
         }
 
 
-        public async Task RunAsync(int startStep)
+        public async Task RunAsync(int startStep, bool downloadFilesOnly)
         {
             UpdateUiLogs();
             UpdateIsRunning(false, true);
@@ -607,7 +607,7 @@ namespace SkylineBatch
 
                 try
                 {
-                    await startingConfigRunner.Run(startStep);
+                    await startingConfigRunner.Run(startStep, downloadFilesOnly);
                 }
                 catch (Exception e)
                 {

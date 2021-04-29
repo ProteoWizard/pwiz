@@ -106,7 +106,7 @@ namespace SkylineBatch
                 _logger.Log(line);
         }
 
-        public async Task Run(int startStep)
+        public async Task Run(int startStep, bool downloadFilesOnly)
         {
             LogToUi(string.Format(Resources.ConfigRunner_Run________________________________Starting_Configuration___0_________________________________, Config.Name));
             try
@@ -125,12 +125,12 @@ namespace SkylineBatch
             ChangeStatus(RunnerStatus.Running);
             Config.MainSettings.CreateAnalysisFolderIfNonexistent();
 
-            if (startStep == 1 && Config.MainSettings.WillDownloadData)
+            if ((startStep == 1 || downloadFilesOnly) && Config.MainSettings.WillDownloadData)
             {
                 await DownloadData();
             }
             
-            if (startStep != 5 && IsRunning())
+            if (startStep < 5 && IsRunning())
             {
                 var multiLine = await Config.SkylineSettings.HigherVersion(ALLOW_NEWLINE_SAVE_VERSION, _processRunner);
                 var numberFormat = CultureInfo.CurrentCulture.GetFormat(typeof(NumberFormatInfo)) as NumberFormatInfo;
@@ -168,11 +168,13 @@ namespace SkylineBatch
             }
 
             // STEP 5: run r scripts using csv files
-            var rScriptsRunInformation = Config.GetScriptArguments();
-            foreach(var rScript in rScriptsRunInformation)
-                if (IsRunning())
-                    await _processRunner.Run(rScript[RRunInfo.ExePath], rScript[RRunInfo.Arguments]);
-            
+            if (startStep <= 5)
+            {
+                var rScriptsRunInformation = Config.GetScriptArguments();
+                foreach (var rScript in rScriptsRunInformation)
+                    if (IsRunning())
+                        await _processRunner.Run(rScript[RRunInfo.ExePath], rScript[RRunInfo.Arguments]);
+            }
 
             // Runner is still running if no errors or cancellations
             if (IsRunning()) ChangeStatus(RunnerStatus.Completed);

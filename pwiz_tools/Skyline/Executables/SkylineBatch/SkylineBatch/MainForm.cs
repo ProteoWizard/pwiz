@@ -309,7 +309,10 @@ namespace SkylineBatch
             }
             ((ToolStripMenuItem)batchRunDropDown.Items[index]).Checked = true;
             btnRunBatch.TextAlign = index == 0 ? ContentAlignment.MiddleCenter : ContentAlignment.MiddleLeft;
-            btnRunBatch.Text = batchRunDropDown.Items[index].Text.Insert(1, "&");
+            if (index == 1)
+                btnRunBatch.Text = batchRunDropDown.Items[index].Text.Insert(2, "&");
+            else
+                btnRunBatch.Text = batchRunDropDown.Items[index].Text.Insert(1, "&");
         }
 
         private void btnRunBatch_Click(object sender, EventArgs e)
@@ -325,9 +328,15 @@ namespace SkylineBatch
                 if (((ToolStripMenuItem)batchRunDropDown.Items[i - 1]).Checked)
                 {
                     var stepNumber = i;
-                    if (!_showRefineStep && i > 2)
-                         stepNumber += 1; // step 3 and 4 become step 4 and 5 when refine step is hidden
-                    running = _configManager.StartBatchRun(stepNumber);
+                    if (!_showRefineStep && i > 3)
+                        stepNumber += 1; // step 3 and 4 become step 4 and 5 when refine step is hidden
+
+                    var downloadFilesOnly = stepNumber == 2;
+                    if (downloadFilesOnly) // download files only
+                        stepNumber = 1000;
+                    if (stepNumber > 2) stepNumber--;
+                    
+                    running = _configManager.StartBatchRun(stepNumber, downloadFilesOnly);
                     break;
                 }
             }
@@ -424,8 +433,9 @@ namespace SkylineBatch
                         break;
                     }
                 }
-                    batchRunDropDown.Items.Clear();
+                batchRunDropDown.Items.Clear();
                 batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Run_All_Steps);
+                batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Download_data_only);
                 batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Run_from_step_2__data_import);
                 if (_showRefineStep)
                 {
@@ -442,7 +452,7 @@ namespace SkylineBatch
                 var newChecked = oldChecked;
                 if (oldChecked == 2 && _showRefineStep)
                     newChecked += 1;
-                else if (newChecked >= 3)
+                else if (newChecked >= 4)
                     newChecked = _showRefineStep ? oldChecked + 1 : oldChecked - 1;
                 
                 CheckDropDownOption(newChecked);

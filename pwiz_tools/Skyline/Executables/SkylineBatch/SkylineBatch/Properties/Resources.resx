@@ -634,4 +634,7 @@
   <data name="SkylineBatch_release" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\SkylineBatch_release.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="MainForm_UpdateRunBatchSteps_Download_data_only" xml:space="preserve">
+    <value>Download files only</value>
+  </data>
 </root>

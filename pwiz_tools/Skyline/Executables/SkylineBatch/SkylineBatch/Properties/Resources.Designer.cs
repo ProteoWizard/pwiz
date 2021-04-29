@@ -682,6 +682,15 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Download files only.
+        /// </summary>
+        public static string MainForm_UpdateRunBatchSteps_Download_data_only {
+            get {
+                return ResourceManager.GetString("MainForm_UpdateRunBatchSteps_Download_data_only", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Run All Steps.
         /// </summary>
         public static string MainForm_UpdateRunBatchSteps_Run_All_Steps {
