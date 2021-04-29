@@ -170,6 +170,9 @@ namespace pwiz.Skyline.Model
         public bool IsCanceled => _parentProgressMonitor?.IsCanceled == true;
         public bool HasUI => false;
 
+        private int _stepCount = 0;
+        private int _lastPercentComplete = 0;
+
         public UpdateProgressResponse UpdateProgress(IProgressStatus status)
         {
             if (_parentProgressMonitor == null)
@@ -178,12 +181,36 @@ namespace pwiz.Skyline.Model
             if (_parentProgressMonitor.IsCanceled)
                 return UpdateProgressResponse.cancel;
 
-            if (!Regex.Match(status.Message, @"\d+/\d+").Success)
+            var iterationMatcher = Regex.Match(status.Message, @"(?<iterationIndex>\d+)/(?<iterationCount>\d+)");
+            if (!iterationMatcher.Success)
                 return UpdateProgressResponse.normal;
 
             string currentSourceName = OriginalSpectrumSources[_currentSourceIndex].GetSampleOrFileName();
-            string sourceSpecificProgress = $@"[{currentSourceName} ({_currentSourceIndex+1} of {OriginalSpectrumSources.Length})] {status.Message}";
-            return _parentProgressMonitor.UpdateProgress(status.ChangeMessage(sourceSpecificProgress).ChangeSegments(_currentSourceIndex, OriginalSpectrumSources.Length * 2));
+            string sourceSpecificProgress = $@"[{currentSourceName} ({_currentSourceIndex + 1} of {OriginalSpectrumSources.Length})] {status.Message}";
+            status = status.ChangeMessage(sourceSpecificProgress).ChangeSegments(_currentSourceIndex, OriginalSpectrumSources.Length * 2);
+
+            int iterationIndex = Convert.ToInt32(iterationMatcher.Groups["iterationIndex"].Value);
+            int iterationCount = Math.Max(iterationIndex+1, Convert.ToInt32(iterationMatcher.Groups["iterationCount"].Value));
+
+            var stepMatcher = Regex.Match(status.Message, @"\[step (?<step>\d+) of (?<count>\d+)]");
+            int stepProgress = 0;
+            if (stepMatcher.Success)
+            {
+                if (_stepCount == 0)
+                    _stepCount = Convert.ToInt32(stepMatcher.Groups["count"].Value) + 1; // writing spectra is an extra step to consider
+                stepProgress = (Convert.ToInt32(stepMatcher.Groups["step"].Value) - 1) * 100 / _stepCount;
+            }
+            //else if (status.Message.StartsWith(@"writing chromatograms"))
+            //    stepProgress = stepCount * 100 / (stepCount + 2);
+            else if (status.Message.StartsWith(@"writing spectra"))
+                stepProgress = (_stepCount - 1) * 100 / _stepCount;
+            else
+                return _parentProgressMonitor.UpdateProgress(status.ChangePercentComplete(_lastPercentComplete)); // no change to percentComplete
+
+            _lastPercentComplete = stepProgress + (iterationIndex * 100 / iterationCount) / _stepCount;
+            status = status.ChangePercentComplete(_lastPercentComplete);
+
+            return _parentProgressMonitor.UpdateProgress(status);
         }
 
         private static bool AreValuesEquivalent(string lhs, string rhs)

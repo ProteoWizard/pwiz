@@ -189,7 +189,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 }
                 else
                 {
-                    status = status.ChangePercentComplete(status.SegmentCount * 100);
+                    status = status.ChangeSegments(0, 0).Complete();
                     UpdateSearchEngineProgress(status.ChangeMessage(Resources.DDASearchControl_SearchProgress_Search_done));
                 }
             }
