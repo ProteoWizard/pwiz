@@ -20,7 +20,11 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 using SharedBatch.Properties;
 
  namespace SharedBatch
@@ -28,6 +32,9 @@ using SharedBatch.Properties;
 
     public class Logger
     {
+
+        private static HashSet<Regex> _errorFormats;
+
         //public static string LOG_FOLDER;
 
         public const long MaxLogSize = 10 * 1024 * 1024; // 10MB
@@ -62,6 +69,12 @@ using SharedBatch.Properties;
                 Directory.CreateDirectory(logFolder);
             }
 
+            if (_errorFormats == null)
+            {
+                _errorFormats = new HashSet<Regex>();
+                AddErrorMatch(string.Format(Resources.Logger_LogErrorToFile_ERROR___0_, ".*"));
+            }
+
             _filePath = logFilePath;
             _mainUi = mainUi;
             Name = logName;
@@ -87,6 +100,12 @@ using SharedBatch.Properties;
             _streamReader = new StreamReader(logFileRead, Encoding.Default, false, 
                 StreamReaderDefaultBufferSize, true);
             _streamWriter = new StreamWriter(logFileWrite, Encoding.Default, StreamReaderDefaultBufferSize, true);
+        }
+
+        public void AddErrorMatch(string errorRegex)
+        {
+            var dateRegex = "[].*[] *";
+            _errorFormats.Add(new Regex(dateRegex + errorRegex));
         }
 
         public string GetDirectory()
@@ -253,10 +272,8 @@ using SharedBatch.Properties;
             var exStr = ex != null ? ex.ToString() : string.Empty;
             if (_mainUi != null)
             {
-                line = GetDate() + line;
-
                 _mainUi.LogErrorLinesToUi(Name,
-                        new List<string> { line, exStr });
+                        new List<string> { GetDate() + line, exStr });
             }
 
             LogErrorToFile(string.Format("{0}\n{1}", line, exStr));
@@ -265,19 +282,26 @@ using SharedBatch.Properties;
         public void LogError(string line, params object[] args)
         {
             if (args != null && args.Length > 0)
-            {
                 line = string.Format(line, args);
-            }
-
             if (line.StartsWith(Resources.Logger_LogError_Error_, StringComparison.CurrentCultureIgnoreCase))
                 line = line.Substring(Resources.Logger_LogError_Error_.Length);
             line = string.Format(Resources.Logger_LogErrorToFile_ERROR___0_, line);
+            LogErrorText(line);
+        }
 
+        public void LogErrorNoPrefix(string line, params object[] args)
+        {
+            if (args != null && args.Length > 0)
+                line = string.Format(line, args);
+            LogErrorText(line);
+        }
+
+        private void LogErrorText(string line)
+        {
             if (_mainUi != null)
             {
                 _mainUi.LogErrorToUi(Name,GetDate() + line);
             }
-
             LogErrorToFile(line);
         }
 
@@ -293,6 +317,41 @@ using SharedBatch.Properties;
             if (_mainUi != null)
             {
                 _mainUi.LogErrorToUi(Name, GetDate() + line);
+            }
+        }
+        
+        private int LastPercent;
+        private DateTime LastLogTime;
+        private CancellationTokenSource cancelToken;
+        private bool logging;
+        private const int MIN_SECONDS_BETWEEN_LOGS = 4;
+
+
+        public void LogPercent(int percent)
+        {
+            if (percent < 0)
+            {
+                LastPercent = percent;
+            }
+            if ((DateTime.Now - LastLogTime) > new TimeSpan(0, 0, MIN_SECONDS_BETWEEN_LOGS) &&
+                percent != LastPercent)
+            {
+                if (percent == 0 && LastPercent < 0)
+                {
+                    LastLogTime = DateTime.Now;
+                    LastPercent = 0;
+                }
+                else if (percent == 100)
+                {
+                    if (LastPercent != 0) Log(string.Format(Resources.Logger_LogPercent__0__, percent));
+                    LastPercent = -1;
+                }
+                else
+                {
+                    LastLogTime = DateTime.Now;
+                    Log(string.Format(Resources.Logger_LogPercent__0__, percent));
+                }
+
             }
         }
 
@@ -420,7 +479,11 @@ using SharedBatch.Properties;
 
                 foreach (var line in lines)
                 {
-                    if (line.Contains(string.Format(Resources.Logger_LogErrorToFile_ERROR___0_, string.Empty)))
+                    var isError = false;
+                    foreach(var errorFormat in _errorFormats)
+                        if (errorFormat.IsMatch(line))
+                            isError = true;
+                    if (isError)
                     {
                         if (!lastLineErr && toLog.Count > 0)
                         {
