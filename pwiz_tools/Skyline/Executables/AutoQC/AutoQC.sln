@@ -4,6 +4,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 15.0.27703.2026
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoQC", "AutoQC\AutoQC.csproj", "{87D6B185-C2D3-48A9-95B3-A0F528F3F446}"
+	ProjectSection(ProjectDependencies) = postProject
+		{9660E7B1-A0AD-4C2B-A395-350D4055640A} = {9660E7B1-A0AD-4C2B-A395-350D4055640A}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoQCTest", "AutoQCTest\AutoQCTest.csproj", "{4955F974-381E-4902-8BAD-BAC7174CFC9F}"
 EndProject
