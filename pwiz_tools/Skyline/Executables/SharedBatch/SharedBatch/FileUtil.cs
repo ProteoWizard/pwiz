@@ -112,7 +112,7 @@ namespace SharedBatch
             // Register ClickOnce exe/icon/description associations.
             var launchExe = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "LaunchBatch.exe");
             Registry.SetValue($@"HKEY_CURRENT_USER\Software\Classes\{id}\shell\open\command", null,
-                $"\"{launchExe}\" \"{applicationReference}\" \"%1\"");
+                $"\"{launchExe}\" \"{applicationReference}\" \"\\\"%1\\\"\"");
             AddFileType(extension, id, description, iconPath);
         }
 
