@@ -385,6 +385,11 @@ namespace TestPerf
             // Add the test xml file to the search files list and try to 
             // build the document library.
             string diaDir = GetTestPath("DIA");
+
+            // delete -diaumpire files so they get regenerated instead of reused
+            foreach (var file in Directory.GetFiles(diaDir, "*-diaumpire.*"))
+                FileEx.SafeDelete(file);
+
             string[] searchFiles = DiaFiles.Select(p => Path.Combine(diaDir, p)).Take(_analysisValues.IsWholeProteome ? DiaFiles.Length : 2).ToArray();
             foreach (var searchFile in searchFiles)
                 Assert.IsTrue(File.Exists(searchFile), string.Format("File {0} does not exist.", searchFile));

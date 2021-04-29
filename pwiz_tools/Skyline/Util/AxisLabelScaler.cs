@@ -216,7 +216,7 @@ namespace pwiz.Skyline.Util
             }
             else
             {
-                Axis.Scale.FontSpec.Angle = 0;
+                Axis.Scale.FontSpec.Angle = AxisIsHorizontal ? 0 : 90;
                 Axis.Scale.Align = AlignP.Center;
             }
         }

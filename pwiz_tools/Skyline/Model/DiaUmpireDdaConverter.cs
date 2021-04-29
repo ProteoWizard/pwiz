@@ -17,9 +17,10 @@
  */
 
 using System;
-using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using MathNet.Numerics;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
@@ -27,13 +28,15 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model
 {
     public class DiaUmpireDdaConverter : AbstractDdaConverter, IProgressMonitor
     {
-        private readonly DiaUmpire.WindowScheme _windowScheme;
-        private readonly IEnumerable<DiaUmpire.TargetWindow> _variableWindows;
+        private const string MSCONVERT_EXE = "msconvert";
+        private const string DIAUMPIRE_OUTPUT_SUFFIX = "-diaumpire";
+
         private readonly DiaUmpire.Config _diaUmpireConfig;
         private IProgressMonitor _parentProgressMonitor;
         private IProgressStatus _progressStatus;
@@ -45,24 +48,22 @@ namespace pwiz.Skyline.Model
             var windowSizes = isolationWindows.Skip(1).Select(w => Math.Round(w.End - w.Start, 1));
             bool fixedSizeWindows = windowSizes.Distinct().Count() == 1;
 
-            _windowScheme = DiaUmpire.WindowScheme.SWATH_Variable;
+            diaUmpireConfig.WindowScheme = DiaUmpire.WindowScheme.SWATH_Variable;
             if (fixedSizeWindows)
-                _windowScheme = DiaUmpire.WindowScheme.SWATH_Fixed;
+                diaUmpireConfig.WindowScheme = DiaUmpire.WindowScheme.SWATH_Fixed;
 
-            _variableWindows = isolationWindows.Select(w => new DiaUmpire.TargetWindow { Start = w.Start, End = w.End });
+            diaUmpireConfig.VariableWindows = isolationWindows.Select(w => new DiaUmpire.TargetWindow { Start = w.Start, End = w.End });
             _diaUmpireConfig = diaUmpireConfig;
             _parentProgressMonitor = null;
 
-            if (_windowScheme == DiaUmpire.WindowScheme.SWATH_Variable)
-                Assume.IsTrue(_variableWindows.Any());
+            if (diaUmpireConfig.WindowScheme == DiaUmpire.WindowScheme.SWATH_Variable)
+                Assume.IsTrue(diaUmpireConfig.VariableWindows.Any());
         }
 
         public DiaUmpire.Config DiaUmpireConfig => _diaUmpireConfig;
-
-        public string DiaUmpireFileSuffix
-        {
-            get { return @"-diaumpire." + (_diaUmpireConfig.UseMzMlSpillFile ? @"mzML" : @"mz5"); }
-        }
+        public string MsConvertOutputExtension => _diaUmpireConfig.UseMzMlSpillFile ? @".mzML" : @".mz5";
+        public string MsConvertOutputFormatParam => _diaUmpireConfig.UseMzMlSpillFile ? @"--mzML" : @"--mz5";
+        public string DiaUmpireFileSuffix => DIAUMPIRE_OUTPUT_SUFFIX + MsConvertOutputExtension;
 
         public override bool Run(IProgressMonitor progressMonitor, IProgressStatus status)
         {
@@ -114,18 +115,28 @@ namespace pwiz.Skyline.Model
                     if (File.Exists(outputFilepath))
                         FileEx.SafeDelete(outputFilepath);
 
-                    string tmpFilepath = Path.GetTempFileName();
+                    string tmpFilepath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName() + MsConvertOutputExtension);
+                    string tmpParams = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName() + @".params");
+                    //_diaUmpireConfig.Parameters["Thread"] = 1; // needed to compare DIAUMPIRE_DEBUG output
+                    _diaUmpireConfig.WriteConfigToFile(tmpParams);
 
-                    using (var diaUmpire = new DiaUmpire(spectrumSource.GetFilePath(),
-                        Math.Max(spectrumSource.GetSampleIndex(), 0),
-                        _windowScheme, _variableWindows, _diaUmpireConfig,
-                        spectrumSource.GetLockMassParameters(), true,
-                        requireVendorCentroidedMS1: true,
-                        requireVendorCentroidedMS2: true,
-                        progressMonitor: this))
+                    var pr = new ProcessRunner();
+                    var psi = new ProcessStartInfo(MSCONVERT_EXE)
                     {
-                        diaUmpire.WriteToFile(tmpFilepath, !_diaUmpireConfig.UseMzMlSpillFile);
-                    }
+                        CreateNoWindow = true,
+                        UseShellExecute = false,
+                        Arguments =
+                            $"-v --32 -z {MsConvertOutputFormatParam} " +
+                            $"-o {Path.GetDirectoryName(tmpFilepath).Quote()} " +
+                            $"--outfile {Path.GetFileName(tmpFilepath)} " +
+                            //" --filter \"peakPicking true 1-\"" + 
+                            " --filter " + $@"diaUmpire params={tmpParams}".Quote() + " " +
+                            spectrumSource.ToString().Quote()
+                    };
+
+                    pr.Run(psi, null, this, ref _progressStatus, ProcessPriorityClass.BelowNormal);
+
+                    FileEx.SafeDelete(tmpParams, true);
 
                     if (progressMonitor?.IsCanceled == true)
                     {
@@ -143,8 +154,7 @@ namespace pwiz.Skyline.Model
             }
             catch (Exception e)
             {
-                if (!e.Message.Contains(@"cancel"))
-                    progressMonitor?.UpdateProgress(status.ChangeErrorException(e));
+                progressMonitor?.UpdateProgress(status.ChangeErrorException(e));
                 return false;
             }
         }
@@ -157,12 +167,18 @@ namespace pwiz.Skyline.Model
             if (_parentProgressMonitor == null)
                 throw new InvalidOperationException(@"null _parentProgressMonitor");
 
+            if (_parentProgressMonitor.IsCanceled)
+                return UpdateProgressResponse.cancel;
+
+            if (!Regex.Match(status.Message, @"\d+/\d+").Success)
+                return UpdateProgressResponse.normal;
+
             string currentSourceName = OriginalSpectrumSources[_currentSourceIndex].GetSampleOrFileName();
             string sourceSpecificProgress = $@"[{currentSourceName} ({_currentSourceIndex+1} of {OriginalSpectrumSources.Length})] {status.Message}";
             return _parentProgressMonitor.UpdateProgress(status.ChangeMessage(sourceSpecificProgress).ChangeSegments(_currentSourceIndex, OriginalSpectrumSources.Length * 2));
         }
 
-        private bool AreValuesEquivalent(string lhs, string rhs)
+        private static bool AreValuesEquivalent(string lhs, string rhs)
         {
             lhs = lhs.ToLowerInvariant().Replace(@"true", @"1").Replace(@"false", @"0");
             rhs = rhs.ToLowerInvariant().Replace(@"true", @"1").Replace(@"false", @"0");

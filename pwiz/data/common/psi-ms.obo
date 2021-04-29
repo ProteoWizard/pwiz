@@ -1,7 +1,7 @@
 format-version: 1.2
-data-version: 4.1.41
-date: 30:07:2020 18:25
-saved-by: Matt Chambers
+data-version: 4.1.51
+date: 24:03:2021 00:00
+saved-by: Eric Deutsch
 auto-generated-by: OBO-Edit 2.3.1
 import: http://ontologies.berkeleybop.org/pato.obo
 import: http://ontologies.berkeleybop.org/uo.obo
@@ -11,6 +11,7 @@ namespace-id-rule: * PEFF:$sequence(7,0,9999999)$
 remark: namespace: MS
 remark: namespace: PEFF
 remark: coverage: Mass spectrometer output files and spectra interpretation
+remark: creator: Yasset Perez-Riverol <yperez <-at-> ebi.ac.uk>
 remark: creator: Matt Chambers <matt.chambers <-at-> vanderbilt.edu>
 remark: creator: Andreas Bertsch <bertsch <-at-> informatik.uni-tuebingen.de>
 remark: creator: Marius Kallhardt <Marius.Kallhardt <-at-> bdal.de>
@@ -1868,12 +1869,12 @@ is_obsolete: true
 [Term]
 id: MS:1000266
 name: Laser Desorption
-alt_id: MS:1000393
 def: "OBSOLETE The formation of ions through the interaction of a laser with a material or with gas-phase ions or molecules." [PSI:MS]
 comment: This term was made obsolete because it was replaced by laser desorption ionization (MS:1000393).
 synonym: "Laser Ionization MERGE" EXACT []
 synonym: "LD" EXACT []
 is_obsolete: true
+replaced_by: MS:1000393
 
 [Term]
 id: MS:1000267
@@ -3931,14 +3932,14 @@ is_a: MS:1000560 ! mass spectrometer file format
 [Term]
 id: MS:1000568
 name: MD5
-def: "MD5 (Message-Digest algorithm 5) is a cryptographic hash function with a 128-bit hash value used to check the integrity of files." [PSI:MS]
+def: "MD5 (Message-Digest algorithm 5) is a (now deprecated) cryptographic hash function with a 128-bit hash value used to check the integrity of files." [PSI:MS]
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1000561 ! data file checksum type
 
 [Term]
 id: MS:1000569
 name: SHA-1
-def: "SHA-1 (Secure Hash Algorithm-1) is a cryptographic hash function designed by the National Security Agency (NSA) and published by the NIST as a U. S. government standard. It is also used to verify file integrity." [PSI:MS]
+def: "SHA-1 (Secure Hash Algorithm-1) is a cryptographic hash function designed by the National Security Agency (NSA). It is also used to verify file integrity. Since 2011 it has been deprecated by the NIST as a U. S. government standard." [PSI:MS]
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1000561 ! data file checksum type
 
@@ -10012,8 +10013,10 @@ is_a: MS:1001143 ! PSM-level search engine specific statistic
 id: MS:1001581
 name: FAIMS compensation voltage
 def: "The DC potential applied to the asymmetric waveform in FAIMS that compensates for the difference between high and low field mobility of an ion." [PSI:MS]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
 synonym: "FAIMS CV" EXACT []
 is_a: MS:1002892 ! ion mobility attribute
+relationship: has_units UO:0000218 ! volt
 
 [Term]
 id: MS:1001582
@@ -14721,7 +14724,7 @@ relationship: has_units UO:0000218 ! volt
 
 [Term]
 id: MS:1002274
-name: SQ Detector 2	
+name: SQ Detector 2
 def: "Waters quadrupole based SQ Detector 2." [PSI:MS]
 is_a: MS:1000126 ! Waters instrument model
 
@@ -16342,7 +16345,7 @@ is_a: MS:1002363 ! search engine specific score for proteins
 
 [Term]
 id: MS:1002513
-name: molecules per cell 
+name: molecules per cell
 def: "The absolute abundance of protein in a cell." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
 is_a: MS:1001805 ! quantification datatype
@@ -16567,7 +16570,7 @@ relationship: has_order MS:1002108 ! higher score better
 
 [Term]
 id: MS:1002546
-name: Skyline mzQuantML converter 
+name: Skyline mzQuantML converter
 def: "A software package to convert Skyline report to mzQuantML." [PSI:PI, http://code.google.com/p/srm-mzquantml-convertor/]
 is_a: MS:1001139 ! quantitation software name
 is_a: MS:1001456 ! analysis software
@@ -16581,7 +16584,7 @@ is_a: MS:1001805 ! quantification datatype
 [Term]
 id: MS:1002548
 name: distributed normalized spectral abundance factor
-def: "A distributed normalized spectral abundance factor (dNSAF)." [DOI:10.1021/ac9023999, PMID:20166708] 
+def: "A distributed normalized spectral abundance factor (dNSAF)." [DOI:10.1021/ac9023999, PMID:20166708]
 is_a: MS:1001805 ! quantification datatype
 
 [Term]
@@ -17792,7 +17795,7 @@ def: "A data array of parallel, independent m/z values for a sampling of noise a
 xref: binary-data-type:MS\:1000521 "32-bit float"
 xref: binary-data-type:MS\:1000523 "64-bit float"
 is_a: MS:1000513 ! binary data array
-relationship: has_units MS:1000040 ! m/z 
+relationship: has_units MS:1000040 ! m/z
 
 [Term]
 id: MS:1002744
@@ -19494,7 +19497,7 @@ is_a: MS:1001547 ! Bruker Daltonics maXis series
 id: MS:1003005
 name: timsTOF Pro
 def: "Bruker Daltonics' timsTOF Pro." [PSI:MS]
-is_a: MS:1000122 ! Bruker Daltonics instrument model
+is_a: MS:1003123 ! Bruker Daltonics timsTOF series
 
 [Term]
 id: MS:1003006
@@ -19525,7 +19528,7 @@ relationship: has_units MS:1002814 ! volt-second per square centimeter
 id: MS:1003009
 name: Shimadzu Biotech LCD format
 def: "Shimadzu Biotech LCD file format." [PSI:PI]
-is_a: MS:1000560 ! mass spectrometer file format 
+is_a: MS:1000560 ! mass spectrometer file format
 
 [Term]
 id: MS:1003010
@@ -19630,7 +19633,7 @@ def: "The OpenPepXL score for a cross-link spectrum match." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
 is_a: MS:1001143 ! PSM-level search engine specific statistic
 is_a: MS:1001153 ! search engine specific score
-relationship: has_order MS:1002108 ! higher score better 
+relationship: has_order MS:1002108 ! higher score better
 
 [Term]
 id: MS:1003025
@@ -20040,7 +20043,7 @@ is_a: MS:1000572 ! binary data compression type
 id: MS:1003090
 name: truncation, linear prediction and zlib compression
 def: "Data array compression using mantissa bit truncation, linear prediction and zlib compression." [https://github.com/biospi/pwiz]
-is_a: MS:1000572 ! binary data compression type 
+is_a: MS:1000572 ! binary data compression type
 
 [Term]
 id: MS:1003091
@@ -20183,8 +20186,286 @@ is_a: MS:1001139 ! quantitation software name
 [Term]
 id: MS:1003112
 name: Orbitrap ID-X
-def: "Thermo Scientific Orbitrap ID-X mass spectrometer with Tribrid architecture consisting of quadrupole mass filter, linear ion trap and Orbitrap mass analyzers." [PSI:PI]
+def: "Thermo Scientific Orbitrap ID-X mass spectrometer with Tribrid architecture consisting of quadrupole mass filter, linear ion trap and Orbitrap mass analyzers." [PSI:MS]
 is_a: MS:1000494 ! Thermo Scientific instrument model
+
+[Term]
+id: MS:1003113
+name: OpenMS:ConsensusID PEP
+def: "The OpenMS ConsesusID tool posterior error probability" [PSI:MS]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: MS:1001143 ! PSM-level search engine specific statistic
+
+[Term]
+id: MS:1003114
+name: OpenMS:Best PSM Score
+def: "The score of the best PSM selected by the underlying identification tool" [PSI:MS]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: MS:1002358 ! search engine specific peptide sequence-level identification statistic
+
+[Term]
+id: MS:1003115
+name: OpenMS:Target-decoy PSM q-value
+def: "The OpenMS Target-decoy q-values at PSM level" [PSI:MS]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: MS:1001143 ! PSM-level search engine specific statistic
+
+[Term]
+id: MS:1003116
+name: OpenMS:Target-decoy peptide q-value
+def: "The OpenMS Target-decoy q-values at peptide sequence level" [PSI:MS]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: MS:1002358 ! search engine specific peptide sequence-level identification statistic
+
+[Term]
+id: MS:1003117
+name: OpenMS:Target-decoy protein q-value
+def: "The OpenMS Target-decoy q-values at protein level" [PSI:MS]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: MS:1002363 ! search engine specific score for proteins
+
+[Term]
+id: MS:1003118
+name: EPIFANY
+def: "A Method for Efficient High-Confidence Protein Inference. The tool is part of the OpenMS framework" [PSI:MS]
+is_a: MS:1001456 ! analysis software
+is_a: MS:1000752 ! TOPP software
+
+[Term]
+id: MS:1003119
+name: EPIFANY:Protein posterior probability
+def: "Protein Posterior probability calculated by EPIFANY protein inference algorithm" [PSI:MS]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: MS:1002363 ! search engine specific score for proteins
+
+[Term]
+id: MS:1003120
+name: OpenMS:LFQ intensity
+def: "The data type LFQ intensity produced by OpenMS." [PSI:MS]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: MS:1001805 ! quantification datatype
+
+[Term]
+id: MS:1003121
+name: OpenMS:LFQ spectral count
+def: "The data type LFQ spectral count produced by OpenMS." [PSI:MS]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: MS:1001805 ! quantification datatype
+
+[Term]
+id: MS:1003122
+name: rapifleX
+def: "Bruker Daltonics' rapiflex: MALDI TOF/TOF." [PSI:MS]
+is_a: MS:1001534 ! Bruker Daltonics flex series
+
+[Term]
+id: MS:1003123
+name: Bruker Daltonics timsTOF series
+def: "Bruker Daltonics timsTOF series" [PSI:MS]
+is_a: MS:1000122 ! Bruker Daltonics instrument model
+
+[Term]
+id: MS:1003124
+name: timsTOF fleX
+def: "Bruker Daltonics' timsTOF fleX" [PSI:MS]
+is_a: MS:1003123 ! Bruker Daltonics timsTOF series
+
+[Term]
+id: MS:1003125
+name: ProSight:spectral Q-value
+def: "ProSight spectrum-level Q-value." [PSI:MS]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: MS:1002354 ! PSM-level q-value
+is_a: MS:1001143 ! PSM-level search engine specific statistic
+relationship: has_order MS:1002109 ! lower score better
+
+[Term]
+id: MS:1003126
+name: ProSight:spectral P-score
+def: "ProSight spectrum-level P-score." [PSI:MS]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: MS:1001143 ! PSM-level search engine specific statistic
+relationship: has_order MS:1002109 ! lower score better
+
+[Term]
+id: MS:1003127
+name: ProSight:spectral E-value
+def: "ProSight spectrum-level E-value." [PSI:MS]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: MS:1002353 ! PSM-level e-value
+is_a: MS:1001143 ! PSM-level search engine specific statistic
+relationship: has_order MS:1002109 ! lower score better
+
+[Term]
+id: MS:1003128
+name: ProSight:spectral C-score
+def: "ProSight spectrum-level C-score." [PSI:MS]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: MS:1001143 ! PSM-level search engine specific statistic
+relationship: has_order MS:1002108 ! higher score better
+
+[Term]
+id: MS:1003129
+name: proteoform-level Q-value
+def: "Estimation of the Q-value for proteoforms." [PSI:MS]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: MS:1002905 ! proteoform-level identification statistic
+relationship: has_domain MS:1002305 ! value between 0 and 1 inclusive
+relationship: has_order MS:1002109 ! lower score better
+
+[Term]
+id: MS:1003130
+name: ProSight:proteoform Q-value
+def: "ProSight proteoform-level Q-value." [PSI:MS]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: MS:1003129 ! proteoform-level Q-value
+relationship: has_order MS:1002109 ! lower score better
+
+[Term]
+id: MS:1003131
+name: isoform-level identification attribute
+def: "Isoform level information." [PSI:MS]
+is_a: MS:1002694 ! single identification result attribute
+
+[Term]
+id: MS:1003132
+name: isoform-level identification statistic
+def: "Identification confidence metric for a isoform." [PSI:MS]
+is_a: MS:1003131 ! isoform-level identification attribute
+
+[Term]
+id: MS:1003133
+name: isoform-level Q-value
+def: "Estimation of the Q-value for isoforms." [PSI:MS]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: MS:1003132 ! isoform-level identification statistic
+relationship: has_domain MS:1002305 ! value between 0 and 1 inclusive
+
+[Term]
+id: MS:1003134
+name: ProSight:isoform Q-value
+def: "ProSight isoform-level Q-value." [PSI:MS]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: MS:1003133 ! isoform-level Q-value
+relationship: has_order MS:1002109 ! lower score better
+
+[Term]
+id: MS:1003135
+name: ProSight:protein Q-value
+def: "ProSight protein-level Q-value." [PSI:MS]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: MS:1001869 ! protein-level q-value
+relationship: has_order MS:1002109 ! lower score better
+
+[Term]
+id: MS:1003136
+name: ProSight input parameter
+def: "Search engine input parameters specific to ProSight." [PSI:MS]
+is_a: MS:1001302 ! search engine specific input parameter
+
+[Term]
+id: MS:1003137
+name: TDPortal input parameter
+def: "Search engine input parameters specific to TDPortal." [PSI:MS]
+is_a: MS:1001302 ! search engine specific input parameter
+
+[Term]
+id: MS:1003138
+name: ProSight:Run delta m mode
+def: "If true, runs delta m mode in ProSight." [PSI:MS]
+xref: value-type:xsd\:boolean "The allowed value-type for this CV term."
+is_a: MS:1003136 ! ProSight input parameter
+is_a: MS:1003137 ! TDPortal input parameter
+
+[Term]
+id: MS:1003139
+name: ProSight:Run Subsequence Search mode
+def: "If true, runs Subsequence Search mode in ProSight." [PSI:MS]
+xref: value-type:xsd\:boolean "The allowed value-type for this CV term."
+is_a: MS:1003136 ! ProSight input parameter
+is_a: MS:1003137 ! TDPortal input parameter
+
+[Term]
+id: MS:1003140
+name: ProSight:Run Annotated Proteoform Search mode
+def: "If true, runs Annotated Proteoform Search mode in ProSight." [PSI:MS]
+xref: value-type:xsd\:boolean "The allowed value-type for this CV term."
+is_a: MS:1003136 ! ProSight input parameter
+is_a: MS:1003137 ! TDPortal input parameter
+
+[Term]
+id: MS:1003141
+name: ProSight
+def: "ProSight: Database search engine for top-down proteomics." [PSI:MS]
+is_a: MS:1001456 ! analysis software
+
+[Term]
+id: MS:1003142
+name: TDPortal
+def: "TDPortal: Database search engine for top-down proteomics." [PSI:MS]
+is_a: MS:1001456 ! analysis software
+
+[Term]
+id: MS:1003143
+name: mass array
+def: "A data array of mass values." [PSI:MS]
+xref: binary-data-type:MS\:1000521 "32-bit float"
+xref: binary-data-type:MS\:1000523 "64-bit float"
+is_a: MS:1000513 ! binary data array
+relationship: has_units UO:0000221 ! dalton
+
+[Term]
+id: MS:1003144
+name: Triple Quad 7500
+def: "SCIEX Triple Quad 7500." [PSI:MS]
+is_a: MS:1000121 ! SCIEX instrument model
+
+[Term]
+id: MS:1003145
+name: ThermoRawFileParser
+def: "Cross-platform software to convert Thermo RAW files to a number of open formats." [DOI:10.1021/acs.jproteome.9b00328, PMID:31755270]
+is_a: MS:1001457 ! data processing software
+
+[Term]
+id: MS:1003146
+name: pyteomics
+def: "Python module that helps handling various proteomics data analysis tasks." [DOI:10.1021/acs.jproteome.8b00717, PMID:30576148]
+is_a: MS:1001456 ! analysis software
+
+[Term]
+id: MS:1003147
+name: PTMProphet probability
+def: "Probability that one mass modification has been correctly localized to a specific residue as computed by PTMProphet." [DOI:10.1021/acs.jproteome.9b00205, PMID:31290668]
+is_a: MS:1001968 ! PTM localization PSM-level statistic
+relationship: has_regexp MS:1002505 ! regular expression for modification localization scoring
+
+[Term]
+id: MS:1003148
+name: PTMProphet mean best probability
+def: "PSM-specific average of the m best site probabilities over all potential sites where m is the number of modifications of a specific type, as computed by PTMProphet." [DOI:10.1021/acs.jproteome.9b00205, PMID:31290668]
+is_a: MS:1001968 ! PTM localization PSM-level statistic
+relationship: has_regexp MS:1002505 ! regular expression for modification localization scoring
+
+[Term]
+id: MS:1003149
+name: PTMProphet normalized information content
+def: " PTMProphet-computed PSM-specific normalized (0.0 – 1.0) measure of information content across all modifications of a specific type." [DOI:10.1021/acs.jproteome.9b00205, PMID:31290668]
+is_a: MS:1001968 ! PTM localization PSM-level statistic
+relationship: has_regexp MS:1002505 ! regular expression for modification localization scoring
+
+[Term]
+id: MS:1003150
+name: PTMProphet information content
+def: " PTMProphet-computed PSM-specific measure of information content per modification type ranging from 0 to m, where m is the number of modifications of a specific type." [DOI:10.1021/acs.jproteome.9b00205, PMID:31290668]
+is_a: MS:1001968 ! PTM localization PSM-level statistic
+relationship: has_regexp MS:1002505 ! regular expression for modification localization scoring
+
+[Term]
+id: MS:1003151
+name: SHA-256
+def: "SHA-256 (member of Secure Hash Algorithm-2 family) is a cryptographic hash function designed by the National Security Agency (NSA) and published by the NIST as a U. S. government standard. It is also used to verify file integrity." [PSI:MS]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
+is_a: MS:1000561 ! data file checksum type
 
 [Term]
 id: PEFF:0000001
