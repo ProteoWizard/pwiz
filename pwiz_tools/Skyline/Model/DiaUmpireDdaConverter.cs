@@ -170,8 +170,8 @@ namespace pwiz.Skyline.Model
         public bool IsCanceled => _parentProgressMonitor?.IsCanceled == true;
         public bool HasUI => false;
 
-        private int _stepCount = 0;
-        private int _lastPercentComplete = 0;
+        private int _stepCount;
+        private int _lastPercentComplete;
 
         public UpdateProgressResponse UpdateProgress(IProgressStatus status)
         {

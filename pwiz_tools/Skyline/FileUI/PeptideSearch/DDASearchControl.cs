@@ -189,8 +189,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 }
                 else
                 {
-                    status = status.ChangeSegments(0, 0).Complete();
-                    UpdateSearchEngineProgress(status.ChangeMessage(Resources.DDASearchControl_SearchProgress_Search_done));
+                    UpdateSearchEngineProgress(status.ChangeMessage(Resources.DDASearchControl_SearchProgress_Search_done).ChangeSegments(0, 0).Complete());
                 }
             }
             UpdateTaskbarProgress(TaskbarProgress.TaskbarStates.NoProgress, 0);
