@@ -384,7 +384,6 @@ namespace pwiz.Skyline.Model
         private void AddDocumentAndAuditLog(ZipFileShare zip, string docFilePath)
         {
             zip.AddFile(docFilePath);
-            zip.AddFile(docFilePath);
             var auditLogPath = SrmDocument.GetAuditLogPath(docFilePath);
             if (File.Exists(auditLogPath))
             {
