@@ -3065,6 +3065,11 @@ namespace pwiz.SkylineTestData
             TestDetectError(true, true, ci);   // both timestamp and memstamp
         }
 
+        /// <summary>
+        /// Tests that "IsErrorLine" works when the commandline is invoked in a particular culture.
+        /// Note that this code uses LocalizationHelper.CallWithCulture instead of the "--culture" commandline
+        /// argument because the latter does not set the culture back to its original value.
+        /// </summary>
         private void TestDetectError(bool timestamp, bool memstamp, CultureInfo cultureInfo)
         {
             Func<string> testFunc = () =>
