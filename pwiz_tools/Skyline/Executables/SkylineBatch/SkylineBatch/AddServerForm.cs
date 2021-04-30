@@ -25,20 +25,35 @@ namespace SkylineBatch
             btnSave.Text = Resources.AddServerForm_btnAdd_Click_Verifying;
             btnSave.Enabled = false;
 
+            Exception validationException = null;
+            try
+            {
+                Server = GetServerFromUi();
+            }
+            catch (ArgumentException ex)
+            {
+                validationException = ex;
+                Server = null;
+            }
+
             if (Server != null)
             {
                 try
                 {
-                    Server = GetServerFromUi();
                     Server.Validate();
                 }
                 catch (ArgumentException ex)
                 {
-                    AlertDlg.ShowError(this, Program.AppName(), ex.Message);
-                    btnSave.Enabled = true;
-                    btnSave.Text = addText;
-                    return;
+                    validationException = ex;
                 }
+            }
+
+            if (validationException != null)
+            {
+                AlertDlg.ShowError(this, Program.AppName(), validationException.Message);
+                btnSave.Enabled = true;
+                btnSave.Text = addText;
+                return;
             }
 
             DialogResult = DialogResult.OK;
