@@ -3067,24 +3067,28 @@ namespace pwiz.SkylineTestData
 
         private void TestDetectError(bool timestamp, bool memstamp, CultureInfo cultureInfo)
         {
-            // --timestamp, --memstamp and --culture arguments have to be before the --in argument
-            var command =
-                $"{(timestamp ? "--timestamp" : "")} " +
-                $"{(memstamp ? "--memstamp" : "")} " +
-                $"{(cultureInfo != null ? $" --culture={cultureInfo.Name}" : "")} " +
-                "--in";
-            var argsArray = command.Split(new[] {' '}, StringSplitOptions.RemoveEmptyEntries);
-            var output = RunCommand(argsArray);
+            Func<string> testFunc = () =>
+            {
+                // --timestamp, --memstamp and arguments have to be before the --in argument
+                var command =
+                    $"{(timestamp ? "--timestamp" : "")} " +
+                    $"{(memstamp ? "--memstamp" : "")} " +
+                    "--in";
+                var argsArray = command.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                return RunCommand(argsArray);
+            };
+            string output = cultureInfo == null
+                ? testFunc()
+                : LocalizationHelper.CallWithCulture(cultureInfo, testFunc);
             var errorLine = TestOutputHasErrorLine(output);
 
             // The error should be about the missing value for the --in argument
             var resourceErrString = cultureInfo == null
                 ? Resources.ValueMissingException_ValueMissingException_ // Resource string for the culture that the test is running under
-                : Resources.ResourceManager.GetString(@"ValueMissingException_ValueMissingException_", cultureInfo); // Resource string for the culture that was
-                                                                                                                     // specified with the --culture argument to
-                                                                                                                     // Skyline command line 
+                : Resources.ResourceManager.GetString(@"ValueMissingException_ValueMissingException_", cultureInfo);
+
             Assert.IsNotNull(resourceErrString, "Expected to find a resources string for culture '{0}'.",
-                cultureInfo == null ? CultureInfo.CurrentCulture.Name : cultureInfo.Name);
+                (cultureInfo ?? CultureInfo.CurrentUICulture).Name);
             Assert.IsTrue(errorLine.Contains(string.Format(resourceErrString, "--in")));
         }
 
