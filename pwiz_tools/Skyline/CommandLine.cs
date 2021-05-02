@@ -80,7 +80,7 @@ namespace pwiz.Skyline
 
         public ResultsMemoryDocumentContainer DocContainer { get; private set; }
 
-        public int Run(string[] args, bool withoutUsage = false)
+        public int Run(string[] args, bool withoutUsage = false, bool test = false)
         {
             var exitStatus = RunInner(args, withoutUsage);
 
@@ -89,13 +89,15 @@ namespace pwiz.Skyline
             if (exitStatus == Program.EXIT_CODE_SUCCESS)
             {
                 if (_out.IsErrorReported)
-                    return Program.EXIT_CODE_RAN_WITH_ERRORS;
+                {
+                    return test ? exitStatus : Program.EXIT_CODE_RAN_WITH_ERRORS;
+                }
             }
-            else if (!_out.IsErrorReported)
+            else if (!_out.IsErrorReported && !test)
             {
                 _out.WriteLine(Resources.CommandLine_Run_Error__Failure_occurred__Exiting___);
             }
-
+            
             return exitStatus;
         }
 
@@ -2601,7 +2603,7 @@ namespace pwiz.Skyline
                 return true;
             }
 
-            // We will not do this chech for files over 100KB
+            // We will not do this check for files over 100KB
             if(fileInfo.Length > (100 * 1024))
             {
                 return true;
@@ -3698,7 +3700,7 @@ namespace pwiz.Skyline
             }
         }
 
-        private bool IsErrorMessage(string message)
+        public virtual bool IsErrorMessage(string message)
         {
             if (message != null && !IsErrorReported)
             {

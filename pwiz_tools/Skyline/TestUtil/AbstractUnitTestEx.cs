@@ -25,6 +25,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Util.Extensions;
 
 
 namespace pwiz.SkylineTestUtil
@@ -38,8 +39,25 @@ namespace pwiz.SkylineTestUtil
         protected static string RunCommand(params string[] inputArgs)
         {
             var consoleBuffer = new StringBuilder();
-            var consoleOutput = new CommandStatusWriter(new StringWriter(consoleBuffer));
-            CommandLineRunner.RunCommand(inputArgs, consoleOutput);
+            var consoleOutput = new TestCommandStatusWriter(new StringWriter(consoleBuffer));
+            int exitStatus = CommandLineRunner.RunCommand(inputArgs, consoleOutput, true);
+
+            if (exitStatus == Program.EXIT_CODE_SUCCESS && consoleOutput.IsErrorReported)
+            {
+                var message = string.Format("Error reported but exit status was {0}.", exitStatus);
+                if (consoleOutput.Errors.Count > 0)
+                {
+                    message = TextUtil.LineSeparate(message, "Errors reported: ",
+                        TextUtil.LineSeparate(consoleOutput.Errors));
+                }
+                Assert.Fail(message);
+            }
+            else if (exitStatus != Program.EXIT_CODE_SUCCESS && !consoleOutput.IsErrorReported)
+            {
+                var message = string.Format("No error reported but exit status was {0}.", exitStatus);
+                Assert.Fail(message);
+            }
+
             return consoleBuffer.ToString();
         }
 
@@ -107,6 +125,26 @@ namespace pwiz.SkylineTestUtil
             }
             AssertEx.ConvertedSmallMoleculeDocumentIsSimilar(docOriginal, doc, Path.GetDirectoryName(docPath), mode);
             return doc;
+        }
+    }
+
+    public class TestCommandStatusWriter : CommandStatusWriter
+    {
+        public List<string> Errors { get; }
+
+        public TestCommandStatusWriter(TextWriter writer) : base(writer)
+        {
+            Errors = new List<string>();
+        }
+
+        public override bool IsErrorMessage(string message)
+        {
+            bool isError = base.IsErrorMessage(message);
+            if (isError)
+            {
+                Errors.Add(message);
+            }
+            return isError;
         }
     }
 }

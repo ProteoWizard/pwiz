@@ -670,11 +670,11 @@ namespace pwiz.Skyline
             return arg.Length > COMMAND_PREFIX.Length ? arg.Substring(COMMAND_PREFIX.Length) : string.Empty;
         }
 
-        public static int RunCommand(string[] inputArgs, CommandStatusWriter consoleOut)
+        public static int RunCommand(string[] inputArgs, CommandStatusWriter consoleOut, bool test = false)
         {
             using (CommandLine cmd = new CommandLine(consoleOut))
             {
-                return cmd.Run(inputArgs);
+                return cmd.Run(inputArgs, false, test);
             }
         }
 
