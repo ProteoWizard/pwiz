@@ -519,7 +519,7 @@ namespace pwiz.Skyline
             }
             catch (Exception x)
             {
-                _out.WriteLine(x.Message);
+                _out.WriteLine(Resources.CommandLine_GeneralException_Error___0_, x.Message);
                 return false;
             }
         }
