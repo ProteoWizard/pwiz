@@ -69,8 +69,9 @@ namespace pwiz.SkylineTestFunctional
             foreach (var reportInfo in ListTestReportInfos())
             {
                 Settings.Default.PersistedViews.Clear();
-                StringWriter stringWriter = new StringWriter();
-                CommandLineRunner.RunCommand(new[]{"--report-add=" + reportInfo.Path}, new CommandStatusWriter(stringWriter));
+                // StringWriter stringWriter = new StringWriter();
+                RunCommand(new[] {"--report-add=" + reportInfo.Path});
+                // CommandLineRunner.RunCommand(new[]{"--report-add=" + reportInfo.Path}, new CommandStatusWriter(stringWriter), true);
                 VerifyReportsImported(PersistedViews.MainGroup, reportInfo);
             }
         }
