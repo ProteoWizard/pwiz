@@ -1694,12 +1694,17 @@ namespace pwiz.Skyline
             var targetSkyd = ChromatogramCache.PartPathForName(_skylineFile, replicateFile);
             if (!File.Exists(targetSkyd))
             {
-                // Hack for un-readable RAW files from Thermo instruments.
-                if (!CanReadFile(replicateFile))
+                if (!PathExists(replicateFile))
+                {
+                    // _out.WriteLine(Resources.CommandLine_ImportResultsFile_Warning__Cannot_read_file__0____Ignoring___, replicateFile);
+                    return false;
+                }
+
+                if (IsBadThermoFile(replicateFile))
                 {
                     _out.WriteLine(Resources.CommandLine_ImportResultsFile_Warning__Cannot_read_file__0____Ignoring___, replicateFile);
                     return true;
-                }  
+                }
             } 
 
             if (disableJoining)
@@ -2573,16 +2578,13 @@ namespace pwiz.Skyline
             return true;
         }
 
-        
-		// This is a hack for un-readable RAW files from Thermo instruments.
-        // These files are usually 78KB.  Presumably they are
-        // temporary files that, for some reason, do not get deleted.
-        private bool CanReadFile(MsDataFileUri msDataFileUri)
+        private bool PathExists(MsDataFileUri msDataFileUri)
         {
             MsDataFilePath msDataFilePath = msDataFileUri as MsDataFilePath;
             if (null == msDataFilePath)
             {
-                return true;
+                _out.WriteLine("Error: Cannot convert to MsDataFilePath {0}.", msDataFileUri.GetFileName());
+                return false;
             }
             string replicatePath = msDataFilePath.FilePath;
             if (!File.Exists(replicatePath) && !Directory.Exists(replicatePath))
@@ -2591,38 +2593,45 @@ namespace pwiz.Skyline
                 return false;
             }
 
-            // Make sure this is a Thermo RAW file
-            FileInfo fileInfo = new FileInfo(replicatePath);
-            // We will not do this check for a directory source
-            if(!fileInfo.Exists)
-            {
-                return true;
-            }
-            if(DataSourceUtil.GetSourceType(fileInfo) != DataSourceUtil.TYPE_THERMO_RAW)
-            {
-                return true;
-            }
+            return true;
+        }
 
-            // We will not do this check for files over 100KB
-            if(fileInfo.Length > (100 * 1024))
+        // This is a hack for un-readable RAW files from Thermo instruments.
+        // These files are usually 78KB.  Presumably they are
+        // temporary files that, for some reason, do not get deleted.
+        private bool IsBadThermoFile(MsDataFileUri msDataFileUri)
+        {
+            MsDataFilePath msDataFilePath = msDataFileUri as MsDataFilePath;
+            if (null != msDataFilePath)
             {
-                return true;
-            }
-
-            // Try to read the file
-            try
-            {
-                using (new MsDataFileImpl(replicatePath))
+                string replicatePath = msDataFilePath.FilePath;
+                if (File.Exists(replicatePath))
                 {
+                    // Make sure this is a Thermo RAW file
+                    FileInfo fileInfo = new FileInfo(replicatePath);
+                    // We will not do this check for a directory source
+                    if (fileInfo.Exists && DataSourceUtil.GetSourceType(fileInfo) == DataSourceUtil.TYPE_THERMO_RAW)
+                    {
+                        // We will not do this check for files over 100KB
+                        if (fileInfo.Length <= (100 * 1024))
+                        {
+                            // Try to read the file
+                            try
+                            {
+                                using (new MsDataFileImpl(replicatePath))
+                                {
+                                }
+                            }
+                            catch (Exception e)
+                            {
+                                _out.WriteLine(e.Message);
+                                return true;
+                            }
+                        }
+                    }
                 }
             }
-            catch(Exception e)
-            {
-                _out.WriteLine(e.Message);
-                return false;
-            }
-            
-            return true;
+            return false;
         }
 
         public bool SaveFile(string saveFile)
