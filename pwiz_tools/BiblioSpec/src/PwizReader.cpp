@@ -383,7 +383,7 @@ size_t PwizReader::getSpecIndex(int identifier,
  */
 void PwizReader::addCharges(BiblioSpec::Spectrum& returnSpectrum, 
                             SpectrumPtr foundSpec){
-    
+    int polarity = foundSpec->hasCVParam(MS_negative_scan) ? -1 : 1;
     // for each precursor
     for(size_t prec_i = 0; prec_i < foundSpec->precursors.size(); prec_i++){
         const Precursor& cur_prec = foundSpec->precursors[prec_i];
@@ -395,9 +395,9 @@ void PwizReader::addCharges(BiblioSpec::Spectrum& returnSpectrum,
             for(size_t param_i=0; param_i < cur_ion.cvParams.size(); param_i++){
                 const CVParam& param = cur_ion.cvParams[param_i];
                 if( param.cvid == MS_possible_charge_state ){
-                    returnSpectrum.addCharge(param.valueAs<int>());
+                    returnSpectrum.addCharge(polarity * param.valueAs<int>());
                 } else if( param.cvid == MS_charge_state ){
-                    returnSpectrum.addCharge(param.valueAs<int>());
+                    returnSpectrum.addCharge(polarity * param.valueAs<int>());
                 }
             } // next param
         } // next selected ion
