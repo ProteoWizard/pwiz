@@ -169,6 +169,7 @@ namespace AutoQC
             try
             {
                 CreateConfigDir();
+                LogStartMessage();
             }
             catch (Exception)
             {
@@ -177,6 +178,14 @@ namespace AutoQC
             }
             
             RunBackgroundWorker(RunConfiguration, ProcessFilesCompleted);
+        }
+
+        private void LogStartMessage()
+        {
+            var msg = new StringBuilder("Starting configuration...").AppendLine();
+            msg.AppendLine(string.Format("Version: {0}", Program.Version()));
+            msg.Append(Config).AppendLine();
+            _logger.Log(msg.ToString());
         }
 
         public void ChangeStatus(RunnerStatus runnerStatus)
