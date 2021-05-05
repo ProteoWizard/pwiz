@@ -88,7 +88,14 @@ void Reportfile::writeHeader()
     "bp-raw\t"
     "lbp-mz-raw\t"
     "num-peaks\t" 
-    "matched-ions";
+    "matched-ions\t"
+	//New additions to support/enhance small molecule blibs
+	"query-rt\t"
+	"lib-molecule-name\t"
+	"lib-chemical-formula\t"
+	"lib-adduct\t"
+	"lib-inchikey\t"
+	"lib-otherkeys";
   /*
   //"TIC-proc\t"
   //"bp-proc\t"
@@ -224,6 +231,12 @@ void Reportfile::writeMatches(const vector<Match>& results)
         file_ << "\t" << refSpec->getNumRawPeaks();
         */
         file_ << "\t" << curMatch.getScore(MATCHED_IONS);
+		file_ << "\t" << querySpec->getRetentionTime();
+		file_ << "\t" << refSpec->getMoleculeName();
+		file_ << "\t" << refSpec->getChemicalFormula();
+		file_ << "\t" << refSpec->getAdduct();
+		file_ << "\t" << refSpec->getInchiKey();
+		file_ << "\t" << refSpec->getotherKeys();
         file_ << endl;
         
     }// next match

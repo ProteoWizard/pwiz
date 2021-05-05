@@ -446,3 +446,11 @@ SkylineTester Results
 /pwiz_tools/Skyline/TestRunner/Properties/AssemblyInfo.cs
 /pwiz_tools/Skyline/Executables/Installer/FileList64.txt
 /pwiz_tools/Skyline/TestSettings_x??.testsettings
+/BrowseOnly/.NETFramework,Version=4.7.2.AssemblyAttributes.cpp
+/libraries/boost_aux/tools/bcp/out/build/x64-Debug/.cmake/api/v1/query/client-MicrosoftVS/query.json
+/libraries/boost_aux/tools/bcp/out/build/x64-Debug/CMakeFiles/3.19.20122902-MSVC_2/CompilerIdC/CMakeCCompilerId.c
+/libraries/boost_aux/tools/bcp/out/build/x64-Debug/CMakeFiles/3.19.20122902-MSVC_2/CompilerIdCXX/CMakeCXXCompilerId.cpp
+/libraries/boost_aux/tools/bcp/out/build/x64-Debug/CMakeFiles/3.19.20122902-MSVC_2/CMakeCCompiler.cmake
+/libraries/boost_aux/tools/bcp/out/build/x64-Debug/CMakeFiles/3.19.20122902-MSVC_2/CMakeCXXCompiler.cmake
+/libraries/boost_aux/tools/bcp/out/build/x64-Debug
+/x64/BrowseOnly
