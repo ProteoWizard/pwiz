@@ -50,6 +50,7 @@ namespace AutoQC
         private bool _documentImportFailed;
         private bool _panoramaUploadFailed;
         private bool _errorLogged;
+        private bool _fileImportIgnored;
 
         public ProcessRunner(Logger logger)
         {
@@ -94,6 +95,11 @@ namespace AutoQC
                 {
                     LogException(e, string.Format(Resources.ProcessRunner_RunProcess_There_was_an_exception_running_the_process__0_, _procInfo.ExeName));
                     return ProcStatus.Error;
+                }
+
+                if (_fileImportIgnored)
+                {
+                    return ProcStatus.Success;
                 }
 
                 if (exitCode != 0)
@@ -162,9 +168,15 @@ namespace AutoQC
                 return false;
             }
 
+            if (message.Contains("The file has already been imported. Ignoring..."))
+            {
+                _fileImportIgnored = true; // SkylineRunner will return an exit code of 2 which will cause the file to be put 
+                // on the reimport queue. We don't want that.
+                return false;
+            }
+
             if (message.Contains("Failed importing"))
             {
-                // TODO: fix in Skyline? These do not start with "Error"
                 _documentImportFailed = true;
                 return true;
             }
