@@ -23,6 +23,7 @@ using System.Text;
 using AutoQC.Properties;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using SharedBatch;
 
 namespace AutoQC
 {
@@ -357,6 +358,8 @@ namespace AutoQC
 
     public class WebPanoramaClient : IPanoramaClient
     {
+        private Csrf _csrfToken;
+
         public Uri ServerUri { get; private set; }
 
         public WebPanoramaClient(Uri server)
@@ -520,17 +523,23 @@ namespace AutoQC
 
                 using (var webClient = new WebClientWithCredentials(ServerUri, username, password))
                 {
-                    webClient.Post(uri, "");
+                    if (_csrfToken == null)
+                    {
+                        // Look at CSRFUtil.validate() in the LabKey code.
+                        // We need both a X-LABKEY-CSRF header and a cookie
+                        _csrfToken = webClient.GetCsrfToken();
+                    }
+                    webClient.Post(uri, "", _csrfToken); // Try to reuse the CSRF token
                 }
             }
             catch (WebException ex)
             {
                 var response = ex.Response as HttpWebResponse;
-                if (response != null && response.StatusCode == HttpStatusCode.NotFound)
+                if (response != null && response.StatusCode == HttpStatusCode.Unauthorized)
                 {
-                    return false;
+                    _csrfToken = null;  // Get a new CSRF token for the next request
                 }
-                else throw;
+                throw;
             }
             return true;
         }
@@ -648,6 +657,19 @@ namespace AutoQC
         }
     }
 
+    internal class Csrf
+    {
+        public Csrf(string csrfToken, CookieContainer cookies)
+        {
+            CsrfToken = csrfToken;
+            Cookies = cookies;
+        }
+
+        public string CsrfToken { get; }
+
+        public CookieContainer Cookies { get; }
+    }
+
     internal class WebClientWithCredentials : UTF8WebClient
     {
         private CookieContainer _cookies = new CookieContainer();
@@ -679,13 +701,32 @@ namespace AutoQC
             return JObject.Parse(response);
         }
 
+        public JObject Post(Uri uri, string postData, Csrf csrfToken)
+        {
+            _csrfToken = csrfToken.CsrfToken;
+            _cookies = csrfToken.Cookies;
+            return Post(uri, postData);
+        }
+
         public JObject Post(Uri uri, string postData)
         {
             if (string.IsNullOrEmpty(_csrfToken))
             {
-                // After this the client should have the X-LABKEY-CSRF token 
-                DownloadString(new Uri(_serverUri, PanoramaUtil.ENSURE_LOGIN_PATH));
+                GetCsrfToken();
             }
+
+            return DoPost(uri, postData);
+        }
+
+        public Csrf GetCsrfToken()
+        {
+            // After this the client should have the X-LABKEY-CSRF token 
+            DownloadString(new Uri(_serverUri, PanoramaUtil.ENSURE_LOGIN_PATH));
+            return new Csrf(_csrfToken, _cookies);
+        }
+
+        private JObject DoPost(Uri uri, string postData)
+        {
             Headers.Add(HttpRequestHeader.ContentType, "application/json");
             var response = UploadString(uri, PanoramaUtil.FORM_POST, postData);
             return JObject.Parse(response);

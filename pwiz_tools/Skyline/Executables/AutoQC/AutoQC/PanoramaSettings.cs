@@ -47,28 +47,28 @@ namespace AutoQC
             PublishToPanorama = false;
         }
 
-        public PanoramaSettings(bool publishToPanorama, string panoramaServerUrl, string panoramaUserEmail, string panoramaPassword, string panoramaFolder, Uri panoramaServerUri = null)
+        public PanoramaSettings(bool publishToPanorama, string panoramaServerUrl, string panoramaUserEmail, string panoramaPassword, string panoramaFolder)
         {
             PublishToPanorama = publishToPanorama;
             PanoramaServerUrl = panoramaServerUrl;
             PanoramaUserEmail = panoramaUserEmail;
             PanoramaPassword = panoramaPassword;
             PanoramaFolder = panoramaFolder;
-            PanoramaServerUri = panoramaServerUri;
 
             if (!PublishToPanorama)
                 return;
 
-            if (PanoramaServerUri == null)
+            try
             {
-                try
-                {
-                    PanoramaServerUri = new Uri(PanoramaUtil.ServerNameToUrl(PanoramaServerUrl));
-                }
-                catch (UriFormatException)
-                {
-                    ProgramLog.Error(Resources.PanoramaSettings_PanoramaSettings_Panorama_server_name_is_invalid__Please_enter_a_different_Panorama_server_name_);
-                }
+                var pServer = new PanoramaServer(new Uri(PanoramaUtil.ServerNameToUrl(PanoramaServerUrl)),
+                    panoramaUserEmail, panoramaPassword);
+                PanoramaServerUri = pServer.ServerUri;
+                PanoramaServerUrl = PanoramaServerUri.OriginalString;
+            }
+            catch (UriFormatException)
+            {
+                ProgramLog.Error(Resources
+                    .PanoramaSettings_PanoramaSettings_Panorama_server_name_is_invalid__Please_enter_a_different_Panorama_server_name_);
             }
         }
 
@@ -116,7 +116,7 @@ namespace AutoQC
             }
             catch (Exception ex)
             {
-                throw new ArgumentException(ex.Message);
+                throw new ArgumentException(TextUtil.LineSeparate("Error verifying server information.", ex.Message));
             }
             try
             {
@@ -127,7 +127,7 @@ namespace AutoQC
             }
             catch (Exception ex)
             {
-                throw new ArgumentException(ex.Message);
+                throw new ArgumentException(TextUtil.LineSeparate("Error verifying Panorama folder information.", ex.Message));
             }
         }
 
@@ -227,8 +227,7 @@ namespace AutoQC
             var panoramaUserEmail = reader.GetAttribute(Attr.panorama_user_email);
             var panoramaPassword = DecryptPassword(reader.GetAttribute(Attr.panorama_user_password));
             var panoramaFolder = reader.GetAttribute(Attr.panorama_folder);
-            var panoramaServerUri = publishToPanorama ? new Uri(PanoramaUtil.ServerNameToUrl(panoramaServerUrl)) : null;
-            return new PanoramaSettings(publishToPanorama, panoramaServerUrl, panoramaUserEmail, panoramaPassword, panoramaFolder, panoramaServerUri);
+            return new PanoramaSettings(publishToPanorama, panoramaServerUrl, panoramaUserEmail, panoramaPassword, panoramaFolder);
         }
 
         public void WriteXml(XmlWriter writer)
@@ -303,6 +302,8 @@ namespace AutoQC
         private readonly Logger _logger;
         private short _status; //1 = success; 2 = fail
         private Timer _timer;
+        private IPanoramaClient _panoramaClient;
+        private string _exceptionMessage;
 
         public PanoramaPinger(PanoramaSettings panoramaSettings, Logger logger)
         {
@@ -316,38 +317,33 @@ namespace AutoQC
 
             if (!_panoramaSettings.PublishToPanorama || panoramaServerUri == null) return;
 
-            var panoramaClient = new WebPanoramaClient(panoramaServerUri);
             try
             {
-                var success = panoramaClient.PingPanorama(_panoramaSettings.PanoramaFolder,
+                _panoramaClient.PingPanorama(_panoramaSettings.PanoramaFolder,
                     _panoramaSettings.PanoramaUserEmail,
                     _panoramaSettings.PanoramaPassword
                      );
 
-                if (success && _status != 1)
+                if (_status != 1)
                 {
                     _logger.Log(Resources.PanoramaPinger_PingPanoramaServer_Successfully_pinged_Panorama_server_);
                     _status = 1;
                 }
-                if (!success && _status != 2)
-                {
-//                        _logger.LogErrorToFile("Error pinging Panorama server.  Please confirm that " + panoramaServerUri +
-//                                 " is running LabKey Server 16.1 or higher.");
-                    _status = 2;
-                }
             }
             catch (Exception ex)
             {
-                if (_status != 2)
+                if (_status != 2 || !string.Equals(ex.Message, _exceptionMessage))
                 {
                     _logger.LogException(ex, Resources.PanoramaPinger_PingPanoramaServer_Error_pinging_Panorama_server_ + panoramaServerUri);
                     _status = 2;
+                    _exceptionMessage = ex.Message;
                 }
             }
         }
 
         public void Init()
         {
+            _panoramaClient = new WebPanoramaClient(_panoramaSettings.PanoramaServerUri);
             _timer = new Timer(e => { PingPanoramaServer(); });
             _timer.Change(TimeSpan.FromSeconds(10), TimeSpan.FromMinutes(5)); // Ping Panorama every 5 minutes.
         }
