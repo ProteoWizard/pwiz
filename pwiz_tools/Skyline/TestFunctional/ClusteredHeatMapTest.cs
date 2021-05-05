@@ -26,6 +26,7 @@ using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.GroupComparison;
+using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -52,10 +53,11 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsNotNull(documentGrid);
             RunUI(()=>documentGrid.ChooseView("PeptideResultValues"));
             WaitForCondition(() => documentGrid.IsComplete);
-            var heatMap = ShowDialog<HierarchicalClusterGraph>(()=>documentGrid.DataboundGridControl.ShowHeatMap());
+            RunUI(()=> documentGrid.DataboundGridControl.ShowHeatMap());
+            var heatMap = FindOpenForm<HeatMapGraph>();
+            WaitForConditionUI(() => null != heatMap.GraphResults);
             var heatMapResults = heatMap.GraphResults;
             Assert.IsNotNull(heatMap);
-            PauseForScreenShot("Normal heat map");
             OkDialog(heatMap, heatMap.Close);
 
             RunUI(()=>documentGrid.BindingListSource.ClusteringSpec = ClusteringSpec.DEFAULT);
@@ -72,8 +74,8 @@ namespace pwiz.SkylineTestFunctional
 
             RunUI(()=>documentGrid.ChooseView("ThreeColumnGroups"));
             WaitForCondition(() => documentGrid.IsComplete);
-            heatMap = ShowDialog<HierarchicalClusterGraph>(()=>documentGrid.DataboundGridControl.ShowHeatMap());
-            PauseForScreenShot("Heat map with three column groups");
+            heatMap = ShowDialog<HeatMapGraph>(()=>documentGrid.DataboundGridControl.ShowHeatMap());
+            WaitForConditionUI(() => null != heatMap.GraphResults);
             Assert.AreEqual(6, heatMap.GraphResults.ColumnGroups.Count);
             OkDialog(heatMap, heatMap.Close);
         }
@@ -97,10 +99,56 @@ namespace pwiz.SkylineTestFunctional
             WaitForCondition(() => grid.DataboundGridControl.IsComplete);
             RunUI(()=>grid.DataboundGridControl.ChooseView("Clustered"));
             WaitForCondition(() => grid.DataboundGridControl.IsComplete && 0 != grid.DataboundGridControl.RowCount);
-            var heatMap = ShowDialog<HierarchicalClusterGraph>(()=>grid.DataboundGridControl.ShowHeatMap());
-            var pcaPlot = ShowDialog<PcaPlot>(() => grid.DataboundGridControl.ShowPcaPlot());
-            OkDialog(heatMap, heatMap.Close);
-            OkDialog(pcaPlot, pcaPlot.Close);
+            RunUI(()=>grid.DataboundGridControl.ShowHeatMap());
+            var heatMap = FindOpenForm<HeatMapGraph>();
+            WaitForConditionUI(() => heatMap.IsComplete);
+            string expectedHeatMapTitle = DataboundGraph.MakeTitle(Resources.HeatMapGraph_RefreshData_Heat_Map,
+                new DataGridId(DataGridType.GROUP_COMPARISON, PER_PROTEIN_NAME),
+                ViewGroup.BUILT_IN.Id.ViewName("Clustered"));
+            Assert.AreEqual(expectedHeatMapTitle, heatMap.TabText);
+            var expectedPointCount = heatMap.GraphControl.GraphPane.CurveList.OfType<ClusteredHeatMapItem>().First().Points.Count;
+            var filePath = SkylineWindow.DocumentFilePath;
+            RunUI(()=>
+            {
+                SkylineWindow.SaveDocument();
+                SkylineWindow.NewDocument();
+                heatMap.Close();
+            });
+            Assert.IsNull(FindOpenForm<HeatMapGraph>());
+            RunUI(()=>SkylineWindow.OpenFile(filePath));
+            heatMap = FindOpenForm<HeatMapGraph>();
+            Assert.IsNotNull(heatMap);
+            WaitForConditionUI(() => heatMap.IsComplete && heatMap.TabText == expectedHeatMapTitle);
+            var pointCount = heatMap.GraphControl.GraphPane.CurveList.OfType<ClusteredHeatMapItem>().First().Points
+                .Count;
+            Assert.AreEqual(expectedPointCount, pointCount);
+            grid = FindOpenForm<FoldChangeGrid>();
+            Assert.IsNotNull(grid);
+            RunUI(()=>grid.DataboundGridControl.ShowPcaPlot());
+            var pcaPlot = FindOpenForm<PcaPlot>();
+            Assert.IsNotNull(pcaPlot);
+            var pcaChoice = new PcaPlot.PcaChoice(2, 3, 1);
+            RunUI(()=>pcaPlot.PcaChoiceValue = pcaChoice);
+            WaitForConditionUI(() => pcaPlot.IsComplete);
+            var expectedPcaPlotTitle = DataboundGraph.MakeTitle(Resources.PcaPlot_RefreshData_PCA_Plot,
+                new DataGridId(DataGridType.GROUP_COMPARISON, PER_PROTEIN_NAME),
+                ViewGroup.BUILT_IN.Id.ViewName("Clustered"));
+
+            int curveCount = pcaPlot.GraphControl.GraphPane.CurveList.Count;
+            Assert.AreNotEqual(0, curveCount);
+            Assert.AreEqual(expectedPcaPlotTitle, pcaPlot.TabText);
+            RunUI(() =>
+            {
+                SkylineWindow.SaveDocument();
+                SkylineWindow.NewDocument();
+                heatMap.Close();
+                pcaPlot.Close();
+            });
+            Assert.IsNull(FindOpenForm<PcaPlot>());
+            RunUI(()=>SkylineWindow.OpenFile(filePath));
+            pcaPlot = FindOpenForm<PcaPlot>();
+            WaitForConditionUI(() => pcaPlot.IsComplete && pcaPlot.TabText == expectedPcaPlotTitle);
+            Assert.AreEqual(curveCount, pcaPlot.GraphControl.GraphPane.CurveList.Count);
         }
     }
 }

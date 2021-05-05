@@ -818,7 +818,7 @@ Results time window is a rolling window and only results acquired within the las
     <value>2, 2, 2, 2</value>
   </data>
   <data name="groupBoxMain.Size" type="System.Drawing.Size, System.Drawing">
-    <value>433, 326</value>
+    <value>433, 332</value>
   </data>
   <data name="groupBoxMain.TabIndex" type="System.Int32, mscorlib">
     <value>53</value>
@@ -836,13 +836,13 @@ Results time window is a rolling window and only results acquired within the las
     <value>2</value>
   </data>
   <data name="tabSettings.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 28</value>
+    <value>4, 22</value>
   </data>
   <data name="tabSettings.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>3, 3, 3, 3</value>
   </data>
   <data name="tabSettings.Size" type="System.Drawing.Size, System.Drawing">
-    <value>445, 377</value>
+    <value>445, 383</value>
   </data>
   <data name="tabSettings.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -866,7 +866,7 @@ Results time window is a rolling window and only results acquired within the las
     <value>True</value>
   </data>
   <data name="cbPublishToPanorama.Location" type="System.Drawing.Point, System.Drawing">
-    <value>14, 29</value>
+    <value>7, 13</value>
   </data>
   <data name="cbPublishToPanorama.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -902,7 +902,7 @@ Results time window is a rolling window and only results acquired within the las
     <value>NoControl</value>
   </data>
   <data name="labelPanoramaFolder.Location" type="System.Drawing.Point, System.Drawing">
-    <value>10, 158</value>
+    <value>2, 152</value>
   </data>
   <data name="labelPanoramaFolder.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 0, 2, 0</value>
@@ -929,7 +929,7 @@ Results time window is a rolling window and only results acquired within the las
     <value>0</value>
   </data>
   <data name="textPanoramaFolder.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 174</value>
+    <value>4, 168</value>
   </data>
   <data name="textPanoramaFolder.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -938,7 +938,7 @@ Results time window is a rolling window and only results acquired within the las
     <value>Vertical</value>
   </data>
   <data name="textPanoramaFolder.Size" type="System.Drawing.Size, System.Drawing">
-    <value>284, 20</value>
+    <value>202, 20</value>
   </data>
   <data name="textPanoramaFolder.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -962,7 +962,7 @@ Results time window is a rolling window and only results acquired within the las
     <value>NoControl</value>
   </data>
   <data name="lblPanoramaUrl.Location" type="System.Drawing.Point, System.Drawing">
-    <value>10, 26</value>
+    <value>1, 20</value>
   </data>
   <data name="lblPanoramaUrl.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 0, 2, 0</value>
@@ -989,7 +989,7 @@ Results time window is a rolling window and only results acquired within the las
     <value>2</value>
   </data>
   <data name="textPanoramaUrl.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 42</value>
+    <value>4, 35</value>
   </data>
   <data name="textPanoramaUrl.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -998,7 +998,7 @@ Results time window is a rolling window and only results acquired within the las
     <value>Vertical</value>
   </data>
   <data name="textPanoramaUrl.Size" type="System.Drawing.Size, System.Drawing">
-    <value>284, 20</value>
+    <value>345, 20</value>
   </data>
   <data name="textPanoramaUrl.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1019,7 +1019,7 @@ Results time window is a rolling window and only results acquired within the las
     <value>3</value>
   </data>
   <data name="textPanoramaPasswd.Location" type="System.Drawing.Point, System.Drawing">
-    <value>13, 129</value>
+    <value>5, 123</value>
   </data>
   <data name="textPanoramaPasswd.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -1028,7 +1028,7 @@ Results time window is a rolling window and only results acquired within the las
     <value>*</value>
   </data>
   <data name="textPanoramaPasswd.Size" type="System.Drawing.Size, System.Drawing">
-    <value>156, 20</value>
+    <value>201, 20</value>
   </data>
   <data name="textPanoramaPasswd.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -1052,7 +1052,7 @@ Results time window is a rolling window and only results acquired within the las
     <value>NoControl</value>
   </data>
   <data name="lblPanoramaPasswd.Location" type="System.Drawing.Point, System.Drawing">
-    <value>10, 113</value>
+    <value>2, 107</value>
   </data>
   <data name="lblPanoramaPasswd.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 0, 2, 0</value>
@@ -1085,7 +1085,7 @@ Results time window is a rolling window and only results acquired within the las
     <value>NoControl</value>
   </data>
   <data name="lblPanoramaEmail.Location" type="System.Drawing.Point, System.Drawing">
-    <value>10, 70</value>
+    <value>2, 64</value>
   </data>
   <data name="lblPanoramaEmail.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 0, 2, 0</value>
@@ -1112,13 +1112,13 @@ Results time window is a rolling window and only results acquired within the las
     <value>6</value>
   </data>
   <data name="textPanoramaEmail.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 86</value>
+    <value>4, 80</value>
   </data>
   <data name="textPanoramaEmail.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
   </data>
   <data name="textPanoramaEmail.Size" type="System.Drawing.Size, System.Drawing">
-    <value>156, 20</value>
+    <value>202, 20</value>
   </data>
   <data name="textPanoramaEmail.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -1136,7 +1136,7 @@ Results time window is a rolling window and only results acquired within the las
     <value>7</value>
   </data>
   <data name="groupBoxPanorama.Location" type="System.Drawing.Point, System.Drawing">
-    <value>14, 60</value>
+    <value>7, 34</value>
   </data>
   <data name="groupBoxPanorama.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -1145,7 +1145,7 @@ Results time window is a rolling window and only results acquired within the las
     <value>2, 2, 2, 2</value>
   </data>
   <data name="groupBoxPanorama.Size" type="System.Drawing.Size, System.Drawing">
-    <value>427, 313</value>
+    <value>434, 345</value>
   </data>
   <data name="groupBoxPanorama.TabIndex" type="System.Int32, mscorlib">
     <value>56</value>
@@ -1166,7 +1166,7 @@ Results time window is a rolling window and only results acquired within the las
     <value>1</value>
   </data>
   <data name="tabPanoramaSettings.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 28</value>
+    <value>4, 22</value>
   </data>
   <data name="tabPanoramaSettings.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -1175,7 +1175,7 @@ Results time window is a rolling window and only results acquired within the las
     <value>2, 2, 2, 2</value>
   </data>
   <data name="tabPanoramaSettings.Size" type="System.Drawing.Size, System.Drawing">
-    <value>445, 377</value>
+    <value>445, 383</value>
   </data>
   <data name="tabPanoramaSettings.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -1195,191 +1195,38 @@ Results time window is a rolling window and only results acquired within the las
   <data name="&gt;&gt;tabPanoramaSettings.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
-  <data name="textSkylineInstallationPath.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Left, Right</value>
+  <data name="panelSkylineSettings.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
   </data>
-  <data name="textSkylineInstallationPath.Enabled" type="System.Boolean, mscorlib">
-    <value>False</value>
+  <data name="panelSkylineSettings.Location" type="System.Drawing.Point, System.Drawing">
+    <value>8, 6</value>
   </data>
-  <data name="textSkylineInstallationPath.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 76</value>
+  <data name="panelSkylineSettings.Size" type="System.Drawing.Size, System.Drawing">
+    <value>438, 384</value>
   </data>
-  <data name="textSkylineInstallationPath.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
-  </data>
-  <data name="textSkylineInstallationPath.Size" type="System.Drawing.Size, System.Drawing">
-    <value>377, 20</value>
-  </data>
-  <data name="textSkylineInstallationPath.TabIndex" type="System.Int32, mscorlib">
-    <value>24</value>
-  </data>
-  <data name="textSkylineInstallationPath.Text" xml:space="preserve">
-    <value>C:\Program Files\Skyline</value>
-  </data>
-  <data name="&gt;&gt;textSkylineInstallationPath.Name" xml:space="preserve">
-    <value>textSkylineInstallationPath</value>
-  </data>
-  <data name="&gt;&gt;textSkylineInstallationPath.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textSkylineInstallationPath.Parent" xml:space="preserve">
-    <value>tabSkylineSettings</value>
-  </data>
-  <data name="&gt;&gt;textSkylineInstallationPath.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="radioButtonSkylineDaily.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="radioButtonSkylineDaily.CheckAlign" type="System.Drawing.ContentAlignment, System.Drawing">
-    <value>TopLeft</value>
-  </data>
-  <data name="radioButtonSkylineDaily.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="radioButtonSkylineDaily.Location" type="System.Drawing.Point, System.Drawing">
-    <value>7, 34</value>
-  </data>
-  <data name="radioButtonSkylineDaily.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
-  </data>
-  <data name="radioButtonSkylineDaily.Size" type="System.Drawing.Size, System.Drawing">
-    <value>105, 17</value>
-  </data>
-  <data name="radioButtonSkylineDaily.TabIndex" type="System.Int32, mscorlib">
-    <value>28</value>
-  </data>
-  <data name="radioButtonSkylineDaily.Text" xml:space="preserve">
-    <value>Use Skyline-&amp;daily</value>
-  </data>
-  <data name="&gt;&gt;radioButtonSkylineDaily.Name" xml:space="preserve">
-    <value>radioButtonSkylineDaily</value>
-  </data>
-  <data name="&gt;&gt;radioButtonSkylineDaily.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;radioButtonSkylineDaily.Parent" xml:space="preserve">
-    <value>tabSkylineSettings</value>
-  </data>
-  <data name="&gt;&gt;radioButtonSkylineDaily.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="radioButtonSpecifySkylinePath.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="radioButtonSpecifySkylinePath.CheckAlign" type="System.Drawing.ContentAlignment, System.Drawing">
-    <value>BottomLeft</value>
-  </data>
-  <data name="radioButtonSpecifySkylinePath.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="radioButtonSpecifySkylinePath.Location" type="System.Drawing.Point, System.Drawing">
-    <value>7, 55</value>
-  </data>
-  <data name="radioButtonSpecifySkylinePath.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
-  </data>
-  <data name="radioButtonSpecifySkylinePath.Size" type="System.Drawing.Size, System.Drawing">
-    <value>192, 17</value>
-  </data>
-  <data name="radioButtonSpecifySkylinePath.TabIndex" type="System.Int32, mscorlib">
-    <value>26</value>
-  </data>
-  <data name="radioButtonSpecifySkylinePath.Text" xml:space="preserve">
-    <value>&amp;Specify Skyline installation directory</value>
-  </data>
-  <data name="&gt;&gt;radioButtonSpecifySkylinePath.Name" xml:space="preserve">
-    <value>radioButtonSpecifySkylinePath</value>
-  </data>
-  <data name="&gt;&gt;radioButtonSpecifySkylinePath.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;radioButtonSpecifySkylinePath.Parent" xml:space="preserve">
-    <value>tabSkylineSettings</value>
-  </data>
-  <data name="&gt;&gt;radioButtonSpecifySkylinePath.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="radioButtonSkyline.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="radioButtonSkyline.CheckAlign" type="System.Drawing.ContentAlignment, System.Drawing">
-    <value>TopLeft</value>
-  </data>
-  <data name="radioButtonSkyline.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="radioButtonSkyline.Location" type="System.Drawing.Point, System.Drawing">
-    <value>7, 13</value>
-  </data>
-  <data name="radioButtonSkyline.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
-  </data>
-  <data name="radioButtonSkyline.Size" type="System.Drawing.Size, System.Drawing">
-    <value>81, 17</value>
-  </data>
-  <data name="radioButtonSkyline.TabIndex" type="System.Int32, mscorlib">
+  <data name="panelSkylineSettings.TabIndex" type="System.Int32, mscorlib">
     <value>25</value>
   </data>
-  <data name="radioButtonSkyline.Text" xml:space="preserve">
-    <value>&amp;Use Skyline</value>
+  <data name="&gt;&gt;panelSkylineSettings.Name" xml:space="preserve">
+    <value>panelSkylineSettings</value>
   </data>
-  <data name="&gt;&gt;radioButtonSkyline.Name" xml:space="preserve">
-    <value>radioButtonSkyline</value>
+  <data name="&gt;&gt;panelSkylineSettings.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;radioButtonSkyline.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;radioButtonSkyline.Parent" xml:space="preserve">
+  <data name="&gt;&gt;panelSkylineSettings.Parent" xml:space="preserve">
     <value>tabSkylineSettings</value>
   </data>
-  <data name="&gt;&gt;radioButtonSkyline.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="btnBrowse.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Right</value>
-  </data>
-  <data name="btnBrowse.Enabled" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
-  <data name="btnBrowse.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="btnBrowse.Location" type="System.Drawing.Point, System.Drawing">
-    <value>406, 74</value>
-  </data>
-  <data name="btnBrowse.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
-  </data>
-  <data name="btnBrowse.Size" type="System.Drawing.Size, System.Drawing">
-    <value>32, 23</value>
-  </data>
-  <data name="btnBrowse.TabIndex" type="System.Int32, mscorlib">
-    <value>27</value>
-  </data>
-  <data name="btnBrowse.Text" xml:space="preserve">
-    <value>...</value>
-  </data>
-  <data name="&gt;&gt;btnBrowse.Name" xml:space="preserve">
-    <value>btnBrowse</value>
-  </data>
-  <data name="&gt;&gt;btnBrowse.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnBrowse.Parent" xml:space="preserve">
-    <value>tabSkylineSettings</value>
-  </data>
-  <data name="&gt;&gt;btnBrowse.ZOrder" xml:space="preserve">
-    <value>4</value>
+  <data name="&gt;&gt;panelSkylineSettings.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
   <data name="tabSkylineSettings.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 28</value>
+    <value>4, 22</value>
   </data>
   <data name="tabSkylineSettings.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>3, 3, 3, 3</value>
   </data>
   <data name="tabSkylineSettings.Size" type="System.Drawing.Size, System.Drawing">
-    <value>445, 377</value>
+    <value>445, 383</value>
   </data>
   <data name="tabSkylineSettings.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -1402,14 +1249,14 @@ Results time window is a rolling window and only results acquired within the las
   <data name="tabControl.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
   </data>
+  <data name="tabControl.ItemSize" type="System.Drawing.Size, System.Drawing">
+    <value>42, 18</value>
+  </data>
   <data name="tabControl.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 0</value>
   </data>
   <data name="tabControl.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
-  </data>
-  <data name="tabControl.Padding" type="System.Drawing.Point, System.Drawing">
-    <value>20, 6</value>
   </data>
   <data name="tabControl.Size" type="System.Drawing.Size, System.Drawing">
     <value>453, 409</value>
@@ -2068,5 +1915,8 @@ Results time window is a rolling window and only results acquired within the las
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
     <value>System.Windows.Forms.Form, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="MainForm_FileOpened_Do_you_want_to_import_configurations_from__0__" xml:space="preserve">
+    <value>Do you want to import configurations from {0}?</value>
   </data>
 </root>

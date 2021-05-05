@@ -198,6 +198,11 @@ namespace pwiz.Skyline.Controls.Databinding
             }
         }
 
+        public ViewName? GetViewName()
+        {
+            return BindingListSource?.ViewInfo?.ViewGroup?.Id.ViewName(BindingListSource.ViewInfo.Name);
+        }
+
         public void ChooseView(string viewName)
         {
             var groups = new[] {ViewGroup.BUILT_IN}.Concat(BindingListSource.ViewContext.ViewGroups);
@@ -663,149 +668,34 @@ namespace pwiz.Skyline.Controls.Databinding
             ShowHeatMap();
         }
 
+        public ClusterInput CreateClusterInput()
+        {
+            return new ClusterInput(BindingListSource.ViewInfo.DataSchema, BindingListSource.ReportResults,
+                BindingListSource.ClusteringSpec, DataGridView.ReportColorScheme);
+        }
+
         public bool ShowHeatMap()
         {
-            Tuple<Clusterer, ClusteredReportResults, ReportColorScheme> resultsTuple = GetClusteredResults();
-            if (resultsTuple == null)
+            var formGroup = FormGroup.FromControl(this);
+            var heatMap = formGroup.SiblingForms.OfType<HeatMapGraph>().FirstOrDefault();
+            if (heatMap != null)
             {
-                return false;
+                heatMap.OwnerGridForm = DataboundGridForm;
+                heatMap.RefreshData();
+                heatMap.Activate();
+                return true;
             }
-
-            var clusteredResults = resultsTuple.Item2;
-            var colorScheme = resultsTuple.Item3;
-            var points = new List<ClusterGraphResults.Point>();
-            var rowHeaders = new List<ClusterGraphResults.Header>();
-            var columnValues = new List<PivotedProperties.Series>();
-            var columnGroups = new List<ClusterGraphResults.ColumnGroup>();
-            var dataSchemaLocalizer = BindingListSource.ViewInfo.DataSchema.DataSchemaLocalizer;
-            var cellLocators = new List<CellLocator>();
-            for (int iGroup = 0; iGroup < clusteredResults.PivotedProperties.SeriesGroups.Count; iGroup++)
-            {
-                var group = clusteredResults.PivotedProperties.SeriesGroups[iGroup];
-
-                var groupColumnHeaders = clusteredResults.ClusteredProperties.GetColumnHeaders(group).ToList();
-                var groupHeaders = new List<ClusterGraphResults.Header>();
-                for (int iPivotKey = 0; iPivotKey < group.PivotKeys.Count; iPivotKey++)
-                {
-                    var colors = new List<Color>();
-                    foreach (var series in groupColumnHeaders)
-                    {
-                        var pd = series.PropertyDescriptors[iPivotKey];
-                        colors.Add(colorScheme.GetColumnColor(pd) ?? Color.Transparent);
-                    }
-                    groupHeaders.Add(new ClusterGraphResults.Header(group.PivotCaptions[iPivotKey].GetCaption(dataSchemaLocalizer), colors));
-                }
-                foreach (var series in group.SeriesList)
-                {
-                    var transform = clusteredResults.ClusteredProperties.GetColumnRole(series) as ClusterRole.Transform;
-                    if (transform == null)
-                    {
-                        continue;
-                    }
-                    columnValues.Add(series);
-                    columnGroups.Add(new ClusterGraphResults.ColumnGroup(
-                        clusteredResults.ColumnGroupDendrogramDatas[iGroup].DendrogramData, groupHeaders));
-                    for (int iProperty = 0; iProperty < series.PropertyIndexes.Count; iProperty++)
-                    {
-                        var columnHeaders = groupColumnHeaders.Prepend(series)
-                            .Select(s => s.PropertyDescriptors[iProperty]).ToList();
-                        var cellLocator = CellLocator.ForColumn(columnHeaders, clusteredResults.ItemProperties);
-                        cellLocators.Add(cellLocator);
-                    }
-                }
-            }
-            for (int iRow = 0; iRow < clusteredResults.RowCount; iRow++)
-            {
-                var rowItem = clusteredResults.RowItems[iRow];
-                var rowColors = new List<Color>();
-                var rowHeaderParts = new List<object>();
-                foreach (var rowHeader in clusteredResults.ClusteredProperties.RowHeaders)
-                {
-                    rowHeaderParts.Add(rowHeader.GetValue(rowItem));
-                    rowColors.Add(colorScheme.GetColor(rowHeader, rowItem) ?? Color.Transparent);
-                }
-
-                string rowCaption = CaptionComponentList.SpaceSeparate(rowHeaderParts)
-                    .GetCaption(DataSchemaLocalizer.INVARIANT);
-                rowHeaders.Add(new ClusterGraphResults.Header(rowCaption, rowColors));
-                int iCol = 0;
-                foreach (var series in columnValues)
-                {
-                    foreach (var color in colorScheme.GetSeriesColors(series, rowItem))
-                    {
-                        var point = new ClusterGraphResults.Point(iRow, iCol, color);
-                        var skylineDocNode = cellLocators[iCol].GetSkylineDocNode(rowItem);
-                        if (skylineDocNode != null)
-                        {
-                            point = point.ChangeIdentityPath(skylineDocNode.IdentityPath);
-                        }
-
-                        var replicate = cellLocators[iCol].GetReplicate(rowItem);
-                        if (replicate != null)
-                        {
-                            point = point.ChangeReplicateName(replicate.Name);
-                        }
-                        points.Add(point);
-                        iCol++;
-                    }
-                }
-            }
-            var graphResults = new ClusterGraphResults(clusteredResults.RowDendrogramData?.DendrogramData, rowHeaders, columnGroups, points);
-            var heatMapGraph = new HierarchicalClusterGraph()
+            heatMap = new HeatMapGraph
             {
                 SkylineWindow = DataSchemaSkylineWindow,
-                GraphResults = graphResults
+                OwnerGridForm = DataboundGridForm,
             };
-            heatMapGraph.Show(FormUtil.FindTopLevelOwner(this));
+            heatMap.RefreshData();
+
+            formGroup.ShowSibling(heatMap);
             return true;
         }
 
-        public Tuple<Clusterer, ClusteredReportResults, ReportColorScheme> GetClusteredResults()
-        {
-
-            Tuple<Clusterer, ClusteredReportResults, ReportColorScheme> resultsTuple = null;
-            try
-            {
-                using (var longWaitDlg = new LongWaitDlg())
-                {
-                    longWaitDlg.PerformWork(FormUtil.FindTopLevelOwner(this), 1000,
-                        broker => { resultsTuple = GetClusteredResultsBackground(broker); });
-                    if (longWaitDlg.IsCanceled)
-                    {
-                        return null;
-                    }
-                }
-            }
-            catch (Exception exception)
-            {
-                MessageDlg.ShowWithException(FormUtil.FindTopLevelOwner(this), Resources.DataboundGridControl_GetClusteredResults_An_error_occured_while_performing_clustering_, exception);
-                return null;
-            }
-
-            if (resultsTuple == null)
-            {
-                MessageDlg.Show(FormUtil.FindTopLevelOwner(this),
-                    Resources.DataboundGridControl_GetClusteredResults_Unable_to_choose_a_set_of_columns_to_use_for_hierarchical_clustering_);
-                return null;
-
-            }
-
-            return resultsTuple;
-        }
-
-        private Tuple<Clusterer, ClusteredReportResults, ReportColorScheme> GetClusteredResultsBackground(ILongWaitBroker longWaitBroker)
-        {
-            var clusterer = Clusterer.CreateClusterer(longWaitBroker.CancellationToken, BindingListSource.ClusteringSpec ?? ClusteringSpec.DEFAULT,
-                BindingListSource.ReportResults);
-            if (clusterer == null)
-            {
-                return null;
-            }
-
-            var results = clusterer.GetClusteredResults();
-            var colorScheme = ReportColorScheme.FromClusteredResults(longWaitBroker.CancellationToken, results);
-            return Tuple.Create(clusterer, results, colorScheme);
-        }
         private void boundDataGridView_DataBindingComplete(object sender, DataGridViewBindingCompleteEventArgs e)
         {
             UpdateDendrograms();
@@ -962,15 +852,34 @@ namespace pwiz.Skyline.Controls.Databinding
             ShowPcaPlot();
         }
 
+        public IDataboundGridForm DataboundGridForm
+        {
+            get
+            {
+                return (ParentForm as IDataboundGridForm);
+            }
+        }
+
         public void ShowPcaPlot()
         {
-            var resultsTuple = GetClusteredResults();
-            var pcaPlot = new PcaPlot()
+            var formGroup = FormGroup.FromControl(this);
+            var pcaPlot = formGroup.SiblingForms.OfType<PcaPlot>()
+                .FirstOrDefault(form => ReferenceEquals(form.DataboundGridControl, this));
+            if (pcaPlot != null)
             {
-                SkylineWindow = DataSchemaSkylineWindow
+                pcaPlot.OwnerGridForm = DataboundGridForm;
+                pcaPlot.ClusterInput = CreateClusterInput();
+                pcaPlot.Activate();
+                return;
+            }
+            pcaPlot = new PcaPlot
+            {
+                SkylineWindow = DataSchemaSkylineWindow,
+                OwnerGridForm = DataboundGridForm,
+                ClusterInput = CreateClusterInput()
             };
-            pcaPlot.SetData(resultsTuple.Item1, resultsTuple.Item3);
-            pcaPlot.Show(FormUtil.FindTopLevelOwner(this));
+            formGroup.ShowSibling(pcaPlot);
+            pcaPlot.ClusterInput = CreateClusterInput();
         }
     }
 }

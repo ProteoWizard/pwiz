@@ -13,7 +13,7 @@
     <FileAlignment>512</FileAlignment>
     <IsWebBootstrapper>true</IsWebBootstrapper>
     <TargetFrameworkProfile />
-    <PublishUrl>X:\labkey\static\software\AutoQC\</PublishUrl>
+    <PublishUrl>Z:\labkey\static\software\AutoQC-test\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Web</InstallFrom>
     <UpdateEnabled>true</UpdateEnabled>
@@ -23,13 +23,14 @@
     <UpdatePeriodically>false</UpdatePeriodically>
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>false</MapFileExtensions>
-    <InstallUrl>http://skyline.gs.washington.edu/software/AutoQC/</InstallUrl>
+    <InstallUrl>http://skyline.gs.washington.edu/software/AutoQC-test/</InstallUrl>
+    <SupportUrl>https://skyline.ms/support.url</SupportUrl>
     <ProductName>AutoQC</ProductName>
-    <PublisherName>University of Washington</PublisherName>
+    <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>0</ApplicationRevision>
-    <ApplicationVersion>1.0.0.0</ApplicationVersion>
+    <ApplicationRevision>5</ApplicationRevision>
+    <ApplicationVersion>1.0.0.5</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -59,7 +60,7 @@
     <StartupObject />
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>828D97D15AA50E99C25127B6A71E0A6DFC12027E</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>19870CA6C934F1DFEADFC678B704FD5CEF4C7F0B</ManifestCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup>
     <ManifestKeyFile>
@@ -69,7 +70,7 @@
     <GenerateManifests>true</GenerateManifests>
   </PropertyGroup>
   <PropertyGroup>
-    <SignManifests>false</SignManifests>
+    <SignManifests>true</SignManifests>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>AutoQC.ico</ApplicationIcon>
@@ -81,20 +82,20 @@
     <Content Include="AutoQCStarter.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <EmbeddedResource Include="FilePathControl.resx">
-      <DependentUpon>FilePathControl.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="FindSkylineForm.resx">
-      <DependentUpon>FindSkylineForm.cs</DependentUpon>
-    </EmbeddedResource>
+    <Content Include="AutoQC_configs.ico">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="LaunchBatch.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="SkylineDailyRunner.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="SkylineRunner.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <EmbeddedResource Include="InvalidConfigSetupForm.resx">
       <DependentUpon>InvalidConfigSetupForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="ShareConfigsForm.resx">
-      <DependentUpon>ShareConfigsForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="SkylineTypeControl.resx">
-      <DependentUpon>SkylineTypeControl.cs</DependentUpon>
     </EmbeddedResource>
     <None Include="Resources\Copy.bmp" />
     <None Include="Resources\add.bmp" />
@@ -103,20 +104,13 @@
     <None Include="Resources\SkylineData.ico" />
     <None Include="Resources\SkylineDoc.ico" />
     <None Include="Resources\Panorama.bmp" />
-    <Content Include="SkylineDailyRunner.exe">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="SkylineRunner.exe">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <None Include="App.config">
       <SubType>Designer</SubType>
     </None>
-    <EmbeddedResource Include="AlertDlg.resx">
-      <DependentUpon>AlertDlg.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
     <EmbeddedResource Include="AutoQC-daily.ico" />
+    <Content Include="AutoQC_release.ico">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="FileAcquisitionTime.skyr">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -126,46 +120,13 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AlertDlg.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="AlertDlg.Designer.cs">
-      <DependentUpon>AlertDlg.cs</DependentUpon>
-    </Compile>
     <Compile Include="AutoQcConfig.cs" />
-    <Compile Include="AutoQcLogger.cs" />
-    <Compile Include="ConfigManager.cs" />
-    <Compile Include="FilePathControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="FilePathControl.Designer.cs">
-      <DependentUpon>FilePathControl.cs</DependentUpon>
-    </Compile>
-    <Compile Include="FindSkylineForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="FindSkylineForm.Designer.cs">
-      <DependentUpon>FindSkylineForm.cs</DependentUpon>
-    </Compile>
+    <Compile Include="AutoQcConfigManager.cs" />
     <Compile Include="InvalidConfigSetupForm.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="InvalidConfigSetupForm.Designer.cs">
       <DependentUpon>InvalidConfigSetupForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="ShareConfigsForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="ShareConfigsForm.Designer.cs">
-      <DependentUpon>ShareConfigsForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Installations.cs" />
-    <Compile Include="SkylineSettings.cs" />
-    <Compile Include="SkylineTypeControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="SkylineTypeControl.Designer.cs">
-      <DependentUpon>SkylineTypeControl.cs</DependentUpon>
     </Compile>
     <Compile Include="StartupManager.cs" />
     <Compile Include="MainForm.cs">
@@ -202,7 +163,6 @@
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
     <Compile Include="Program.cs" />
-    <Compile Include="TextUtil.cs" />
     <Compile Include="XmlUtil.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -210,6 +170,10 @@
       <HintPath>..\..\..\..\Shared\Lib\log4net.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL" />
+    <Reference Include="SharedBatch, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\SharedBatch\SharedBatch\bin\Debug\SharedBatch.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Configuration.Install" />
@@ -270,7 +234,6 @@
       <Install>false</Install>
     </BootstrapperPackage>
   </ItemGroup>
-  <ItemGroup />
   <ItemGroup>
     <COMReference Include="IWshRuntimeLibrary">
       <Guid>{F935DC20-1CF0-11D0-ADB9-00C04FD58A0B}</Guid>
@@ -283,6 +246,12 @@
     </COMReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PreBuildEvent>cd..\..
+del LaunchBatch.exe
+cd..\..
+copy SharedBatch\LaunchBatch\bin\Debug\LaunchBatch.exe AutoQC\AutoQC\LaunchBatch.exe</PreBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

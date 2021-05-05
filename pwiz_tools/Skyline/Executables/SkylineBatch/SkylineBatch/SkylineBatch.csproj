@@ -13,7 +13,7 @@
     <FileAlignment>512</FileAlignment>
     <IsWebBootstrapper>true</IsWebBootstrapper>
     <TargetFrameworkProfile />
-    <PublishUrl>Z:\labkey\static\software\SkylineBatch-test\</PublishUrl>
+    <PublishUrl>Z:\labkey\static\software\SkylineBatch-daily\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Web</InstallFrom>
     <UpdateEnabled>true</UpdateEnabled>
@@ -23,13 +23,14 @@
     <UpdatePeriodically>false</UpdatePeriodically>
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>false</MapFileExtensions>
-    <InstallUrl>http://skyline.gs.washington.edu/software/SkylineBatch-test/</InstallUrl>
+    <InstallUrl>http://skyline.gs.washington.edu/software/SkylineBatch-daily/</InstallUrl>
+    <SupportUrl>https://skyline.ms/support.url</SupportUrl>
     <ProductName>Skyline Batch</ProductName>
-    <PublisherName>University of Washington</PublisherName>
+    <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>398</ApplicationRevision>
-    <ApplicationVersion>20.2.0.398</ApplicationVersion>
+    <ApplicationRevision>127</ApplicationRevision>
+    <ApplicationVersion>21.0.9.127</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -72,7 +73,7 @@
     <SignManifests>false</SignManifests>
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>SkylineBatch_release.ico</ApplicationIcon>
+    <ApplicationIcon>Resources\SkylineBatch_daily.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup />
   <PropertyGroup />
@@ -84,26 +85,55 @@
     <AssemblyOriginatorKeyFile>
     </AssemblyOriginatorKeyFile>
   </PropertyGroup>
+  <PropertyGroup />
+  <PropertyGroup />
   <ItemGroup>
+    <None Include="packages.config" />
+    <None Include="Resources\downtriangle.png" />
+    <Content Include="LaunchBatch.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <None Include="Resources\download.png" />
+    <None Include="Resources\downloadSelected.png" />
+    <None Include="Resources\SkylineBatch_daily.ico" />
+    <None Include="Resources\SkylineBatch_release.ico" />
+    <Content Include="SkylineDailyRunner.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="SkylineRunner.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <None Include="Resources\OpenFolder.bmp" />
     <None Include="Resources\SkylineData.ico" />
     <None Include="Resources\SkylineDoc.ico" />
-    <Content Include="SkylineBatch_release.ico" />
-    <Content Include="SkylineDailyRunner.exe">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <Content Include="SkylineBatch_configs.ico">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="SkylineRunner.exe">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <EmbeddedResource Include="AlertDlg.resx">
-      <DependentUpon>AlertDlg.cs</DependentUpon>
+    <EmbeddedResource Include="AddServerForm.resx">
+      <DependentUpon>AddServerForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="CommandArgNames.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>CommandArgNames.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\..\CommandArgUsage.ja.resx">
+      <Link>CommandArgUsage.ja.resx</Link>
+      <LogicalName>pwiz.Skyline.CommandArgUsage.resources</LogicalName>
+      <DependentUpon>CommandArgUsage.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="FilePathControl.resx">
-      <DependentUpon>FilePathControl.cs</DependentUpon>
+    <EmbeddedResource Include="..\..\..\CommandArgUsage.resx">
+      <Link>CommandArgUsage.resx</Link>
+      <LogicalName>pwiz.Skyline.CommandArgUsage.resources</LogicalName>
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>CommandArgUsage.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="FindSkylineForm.resx">
-      <DependentUpon>FindSkylineForm.cs</DependentUpon>
+    <EmbeddedResource Include="..\..\..\CommandArgUsage.zh-CHS.resx">
+      <Link>CommandArgUsage.zh-CHS.resx</Link>
+      <LogicalName>pwiz.Skyline.CommandArgUsage.resources</LogicalName>
+      <DependentUpon>CommandArgUsage.resx</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="InvalidConfigSetupForm.resx">
       <DependentUpon>InvalidConfigSetupForm.cs</DependentUpon>
@@ -111,48 +141,52 @@
     <EmbeddedResource Include="LogForm.resx">
       <DependentUpon>LogForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="SkylineTypeControl.resx">
-      <DependentUpon>SkylineTypeControl.cs</DependentUpon>
-    </EmbeddedResource>
     <None Include="Resources\Comment.bmp" />
-    <Content Include="Resources\add.bmp" />
+    <None Include="Resources\add.bmp" />
     <None Include="Resources\Delete.bmp" />
-    <Content Include="Resources\downarrow.bmp" />
-    <Content Include="Resources\uparrow.bmp" />
+    <None Include="Resources\downarrow.bmp" />
+    <None Include="Resources\uparrow.bmp" />
     <EmbeddedResource Include="ReportsAddForm.resx">
       <DependentUpon>ReportsAddForm.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Content Include="FileAcquisitionTime.skyr">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <None Include="App.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AlertDlg.cs">
+    <Compile Include="AddServerForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="AlertDlg.Designer.cs">
-      <DependentUpon>AlertDlg.cs</DependentUpon>
+    <Compile Include="AddServerForm.Designer.cs">
+      <DependentUpon>AddServerForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="ConfigManager.cs" />
-    <Compile Include="FilePathControl.cs">
-      <SubType>UserControl</SubType>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Include="FilePathControl.Designer.cs">
-      <DependentUpon>FilePathControl.cs</DependentUpon>
+    <Compile Include="RDirectorySelector.cs" />
+    <Compile Include="CommandArgNames.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>CommandArgNames.resx</DependentUpon>
     </Compile>
+    <Compile Include="..\..\..\CommandArgUsage.Designer.cs">
+      <Link>CommandArgUsage.Designer.cs</Link>
+      <DependentUpon>CommandArgUsage.resx</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <Compile Include="CommandWriter.cs" />
+    <Compile Include="RefineInputLocalization.cs" />
+    <Compile Include="RefineInputObject.cs" />
+    <Compile Include="RefineSettings.cs" />
+    <Compile Include="SkylineBatchConfigManager.cs" />
     <Compile Include="FileSettings.cs" />
-    <Compile Include="FindSkylineForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="FindSkylineForm.Designer.cs">
-      <DependentUpon>FindSkylineForm.cs</DependentUpon>
-    </Compile>
     <Compile Include="InvalidConfigSetupForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -165,24 +199,12 @@
     <Compile Include="RVersionControl.Designer.cs">
       <DependentUpon>RVersionControl.cs</DependentUpon>
     </Compile>
-    <Compile Include="SkylineSettings.cs" />
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
     <Compile Include="ReportSettings.cs" />
     <Compile Include="ReportsAddForm.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="ReportsAddForm.Designer.cs">
       <DependentUpon>ReportsAddForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="ShareConfigsForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="ShareConfigsForm.Designer.cs">
-      <DependentUpon>ShareConfigsForm.cs</DependentUpon>
     </Compile>
     <Compile Include="SkylineBatchConfig.cs" />
     <Compile Include="MainForm.cs">
@@ -207,24 +229,18 @@
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
     <Compile Include="Program.cs" />
-    <Compile Include="SkylineBatchLogger.cs" />
-    <Compile Include="Installations.cs" />
+    <Compile Include="RInstallations.cs" />
     <Compile Include="LogForm.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="LogForm.Designer.cs">
       <DependentUpon>LogForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="SkylineTypeControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="SkylineTypeControl.Designer.cs">
-      <DependentUpon>SkylineTypeControl.cs</DependentUpon>
-    </Compile>
-    <Compile Include="TextUtil.cs" />
-    <Compile Include="XMLUtil.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="FluentFTP">
+      <HintPath>..\..\..\..\Shared\Lib\FluentFTP.dll</HintPath>
+    </Reference>
     <Reference Include="log4net">
       <HintPath>..\..\..\..\Shared\Lib\log4net.dll</HintPath>
     </Reference>
@@ -246,6 +262,7 @@
     <Reference Include="System.Management" />
     <Reference Include="System.Numerics" />
     <Reference Include="System.Security" />
+    <Reference Include="System.Web" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
   </ItemGroup>
@@ -256,10 +273,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="RVersionControl.resx">
       <DependentUpon>RVersionControl.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="ShareConfigsForm.resx">
-      <DependentUpon>ShareConfigsForm.cs</DependentUpon>
-      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SkylineBatchConfigForm.resx">
       <DependentUpon>SkylineBatchConfigForm.cs</DependentUpon>
@@ -291,7 +304,6 @@
       <Install>false</Install>
     </BootstrapperPackage>
   </ItemGroup>
-  <ItemGroup />
   <ItemGroup>
     <COMReference Include="IWshRuntimeLibrary">
       <Guid>{F935DC20-1CF0-11D0-ADB9-00C04FD58A0B}</Guid>
@@ -303,10 +315,21 @@
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </COMReference>
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\SharedBatch\SharedBatch\SharedBatch.csproj">
+      <Project>{9660e7b1-a0ad-4c2b-a395-350d4055640a}</Project>
+      <Name>SharedBatch</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>
     </PostBuildEvent>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PreBuildEvent>
+    </PreBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

@@ -89,6 +89,22 @@ inline std::string::const_iterator findUnicodeBytes(const std::string& str)
 }
 
 
+enum class RealConvertPolicy
+{
+    AutoNotation,
+    FixedNotation,
+    ScientificNotation
+};
+
+/// uses boost::spirit::karma to do fast, fixed-precision conversion of floats to string (avoids lexical_cast's tendency to make values like 123.000007)
+std::string toString(float value, RealConvertPolicy policyFlags = RealConvertPolicy::AutoNotation);
+
+/// uses boost::spirit::karma to do fast, fixed-precision conversion of doubles to string (avoids lexical_cast's tendency to make values like 123.00000000007)
+std::string toString(double value, RealConvertPolicy policyFlags = RealConvertPolicy::AutoNotation);
+
+/// uses boost::spirit::karma to do faster conversion (relative to lexical_cast) of int to string
+std::string toString(int value);
+
 } // namespace util
 } // namespace pwiz
 

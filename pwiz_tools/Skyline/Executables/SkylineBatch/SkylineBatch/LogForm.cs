@@ -27,10 +27,11 @@ namespace SkylineBatch
         // Delete Logs Form
         // User selects logs to delete using checkboxes
 
-        private readonly ConfigManager _configManager;
-        public LogForm(ConfigManager configManager)
+        private readonly SkylineBatchConfigManager _configManager;
+        public LogForm(SkylineBatchConfigManager configManager)
         {
             InitializeComponent();
+            Icon = Program.Icon();
             _configManager = configManager;
             if (_configManager.HasOldLogs())
                 checkedListLogs.Items.AddRange(_configManager.GetOldLogFiles());

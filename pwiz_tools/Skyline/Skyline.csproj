@@ -50,8 +50,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>404</ApplicationRevision>
-    <ApplicationVersion>20.2.1.404</ApplicationVersion>
+    <ApplicationRevision>105</ApplicationRevision>
+    <ApplicationVersion>21.0.9.105</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -154,6 +154,7 @@
     <Reference Condition="'$(Platform)' == 'x64'" Include="MethodConverter">
       <HintPath>Method\Shimadzu\x64\MethodConverter.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.CSharp" />
     <Reference Include="PrmPasefScheduler, Version=0.0.0.0, Culture=neutral, processorArchitecture=AnyCPU">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Shared\ProteowizardWrapper\obj\$(Platform)\PrmPasefScheduler.dll</HintPath>
@@ -191,6 +192,7 @@
       <HintPath>..\Shared\Lib\System.Memory.dll</HintPath>
     </Reference>
     <Reference Include="System.Net.Http" />
+    <Reference Include="System.Numerics" />
     <Reference Include="System.Runtime.CompilerServices.Unsafe">
       <HintPath>..\Shared\Lib\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
     </Reference>
@@ -342,12 +344,17 @@
     <Compile Include="Controls\AuditLog\AuditLogExtraInfoForm.Designer.cs">
       <DependentUpon>AuditLogExtraInfoForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\Clustering\BoundGraphDataCalculator.cs" />
+    <Compile Include="Controls\Clustering\ClusterInput.cs" />
     <Compile Include="Controls\Clustering\ClusteredHeatMapItem.cs" />
-    <Compile Include="Controls\Clustering\HierarchicalClusterGraph.cs">
+    <Compile Include="Controls\Clustering\DataboundGraph.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Controls\Clustering\HierarchicalClusterGraph.Designer.cs">
-      <DependentUpon>HierarchicalClusterGraph.cs</DependentUpon>
+    <Compile Include="Controls\Clustering\HeatMapGraph.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Controls\Clustering\HeatMapGraph.Designer.cs">
+      <DependentUpon>HeatMapGraph.cs</DependentUpon>
     </Compile>
     <Compile Include="Controls\Clustering\ClusterGraphResults.cs" />
     <Compile Include="Controls\Clustering\PcaPlot.cs">
@@ -356,6 +363,8 @@
     <Compile Include="Controls\Clustering\PcaPlot.Designer.cs">
       <DependentUpon>PcaPlot.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\Clustering\StripePainter.cs" />
+    <Compile Include="Controls\Databinding\IDataboundGridForm.cs" />
     <Compile Include="Controls\Graphs\ExportMethodScheduleGraph.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -379,6 +388,7 @@
     <Compile Include="Controls\Graphs\DetectionToolbarProperties.Designer.cs">
       <DependentUpon>DetectionToolbarProperties.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\Graphs\GraphDataCalculator.cs" />
     <Compile Include="Controls\Graphs\PaneProgressBar.cs" />
     <Compile Include="Controls\Graphs\ReplicateGroupOp.cs" />
     <Compile Include="Controls\Graphs\ReplicateValue.cs" />
@@ -424,6 +434,7 @@
       <DependentUpon>DocumentChangeLogEntryDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="Controls\Graphs\AreaCVGraphData.cs" />
+    <Compile Include="FileUI\SkypSupport.cs" />
     <Compile Include="Menus\ChromatogramContextMenu.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -453,6 +464,13 @@
     </Compile>
     <Compile Include="Model\AbstractDdaSearchEngine.cs" />
     <Compile Include="Model\AreaCVRefinementData.cs" />
+    <Compile Include="FileUI\PeptideSearch\ConverterSettingsControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FileUI\PeptideSearch\ConverterSettingsControl.Designer.cs">
+      <DependentUpon>ConverterSettingsControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Model\AbstractDdaConverter.cs" />
     <Compile Include="Model\AuditLog\AuditLogObject.cs" />
     <Compile Include="Model\AuditLog\AuditLogStrings.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -510,9 +528,10 @@
     <Compile Include="Model\Crosslinking\PeptideStructure.cs" />
     <Compile Include="Model\Crosslinking\SimpleFragmentIon.cs" />
     <Compile Include="Model\Databinding\CellLocator.cs" />
+    <Compile Include="Model\Databinding\DataGridId.cs" />
     <Compile Include="Model\Databinding\Entities\ColumnCaptions.Designer.cs">
-      <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
       <DependentUpon>ColumnCaptions.resx</DependentUpon>
     </Compile>
     <Compile Include="Model\Databinding\Entities\ColumnToolTips.Designer.cs">
@@ -520,6 +539,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>ColumnToolTips.resx</DependentUpon>
     </Compile>
+    <Compile Include="Model\Databinding\Entities\IonMobilityObject.cs" />
     <Compile Include="Model\Databinding\ListColumnPropertyDescriptor.cs" />
     <Compile Include="Model\Databinding\ListLookupDataGridViewColumn.cs" />
     <Compile Include="Model\Databinding\ListLookupPropertyDescriptor.cs" />
@@ -528,6 +548,7 @@
     <Compile Include="Model\Databinding\RowActions\DeleteNodesAction.cs" />
     <Compile Include="Model\Databinding\RowActions\RemovePeaksAction.cs" />
     <Compile Include="Model\Databinding\RowActions\RowAction.cs" />
+    <Compile Include="Model\DiaUmpireDdaConverter.cs" />
     <Compile Include="Model\DocSettings\AbsoluteQuantification\ValueStatus.cs" />
     <Compile Include="Model\DocSettings\AnnotationCalculator.cs" />
     <Compile Include="Model\DocSettings\AnnotationExpression.cs" />
@@ -575,6 +596,7 @@
     <Compile Include="Model\Lib\LibKeyIndex.cs" />
     <Compile Include="Model\Lib\SpectralLibraryExporter.cs" />
     <Compile Include="Model\Lib\SpectrumRanker.cs" />
+    <Compile Include="Model\MinimizeResults.cs" />
     <Compile Include="Model\ProteomicSequence.cs" />
     <Compile Include="SettingsUI\ViewLibraryPepInfoList.cs" />
     <Compile Include="Model\Lib\LibKeyMap.cs" />
@@ -729,6 +751,8 @@
       <DependentUpon>DDASearchControl.cs</DependentUpon>
     </Compile>
     <Compile Include="Util\DocumentCancellationToken.cs" />
+    <Compile Include="Util\FormGroup.cs" />
+    <Compile Include="Util\PersistentString.cs" />
     <Compile Include="Util\UiModes.cs" />
     <Compile Include="ToolsUI\ColorGrid.cs">
       <SubType>UserControl</SubType>
@@ -2133,8 +2157,8 @@
     <EmbeddedResource Include="Controls\AuditLog\AuditLogForm.resx">
       <DependentUpon>AuditLogForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Controls\Clustering\HierarchicalClusterGraph.resx">
-      <DependentUpon>HierarchicalClusterGraph.cs</DependentUpon>
+    <EmbeddedResource Include="Controls\Clustering\HeatMapGraph.resx">
+      <DependentUpon>HeatMapGraph.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Clustering\PcaPlot.resx">
       <DependentUpon>PcaPlot.cs</DependentUpon>
@@ -2545,6 +2569,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\ImportResultsDIAControl.zh-CHS.resx">
       <DependentUpon>ImportResultsDIAControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\PeptideSearch\ConverterSettingsControl.resx">
+      <DependentUpon>ConverterSettingsControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\SearchSettingsControl.ja.resx">
       <DependentUpon>SearchSettingsControl.cs</DependentUpon>
@@ -3328,6 +3355,7 @@
     <Content Include="percolator\xerces-c_3_1.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Include="Resources\AnnotatedSpectum.png" />
     <Content Include="SkylineDocPointer.ico" />
     <EmbeddedResource Include="Resources\prosit_logo_dark_blue.png" />
     <Content Include="SkylineProcessRunner.exe">
@@ -4747,6 +4775,14 @@
       <Link>BaseDataAccess.dll.config</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\ProteowizardWrapper\obj\x86\msconvert.exe">
+      <Link>msconvert.exe</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\ProteowizardWrapper\obj\x64\msconvert.exe">
+      <Link>msconvert.exe</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\BiblioSpec\obj\x86\BlibBuild.exe">
       <Link>BlibBuild.exe</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -5251,7 +5287,7 @@
       <Name>ProteowizardWrapper</Name>
     </ProjectReference>
     <ProjectReference Include="..\Shared\zedgraph\ZedGraph.csproj">
-      <Project>{B99650EE-AF46-47B4-A4A9-212ADE7809B7}</Project>
+      <Project>{b99650ee-af46-47b4-a4a9-212ade7809b7}</Project>
       <Name>ZedGraph</Name>
     </ProjectReference>
     <ProjectReference Include="SkylineCmd\SkylineCmd.csproj">

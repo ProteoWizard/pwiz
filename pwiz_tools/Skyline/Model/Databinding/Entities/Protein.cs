@@ -26,8 +26,10 @@ using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.GroupComparison;
+using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
 {
@@ -162,6 +164,23 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
                     return docNode;
                 });
+            }
+        }
+
+        [Format(Formats.Percent, NullValue = TextUtil.EXCEL_NA)]
+        [Hidden(InUiMode = UiModes.SMALL_MOLECULES)]
+        public double? ProteinSequenceCoverage
+        {
+            get
+            {
+                string proteinSequence = DocNode.PeptideGroup.Sequence;
+                if (string.IsNullOrEmpty(proteinSequence))
+                {
+                    return null;
+                }
+
+                var peptideSequences = DocNode.Peptides.Select(p => p.Peptide.Sequence).Distinct();
+                return FastaSequence.CalculateSequenceCoverage(proteinSequence, peptideSequences);
             }
         }
         [ProteomicDisplayName("ProteinNote")]

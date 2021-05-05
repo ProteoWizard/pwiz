@@ -17,17 +17,11 @@
  */
 
 using System;
-using System.IO;
 using System.Windows.Forms;
-using AutoQC.Properties;
+using SharedBatch;
 
 namespace AutoQC
 {
-    public enum ConfigAction
-    {
-        Add, Edit, Copy
-    }
-
     public partial class AutoQcConfigForm : Form
     {
         // Allows a user to create a new configuration and add it to the list of configurations,
@@ -38,6 +32,11 @@ namespace AutoQC
         private readonly IMainUiControl _mainControl;
         private readonly ConfigAction _action;
         private readonly DateTime _initialCreated;
+
+        private SkylineTypeControl _skylineTypeControl;
+        private string _lastEnteredPath;
+        private TabPage _lastSelectedTab;
+        private SkylineSettings _currentSkylineSettings;
 
         public AutoQcConfigForm(IMainUiControl mainControl, AutoQcConfig config, ConfigAction action, bool isBusy)
         {
@@ -78,16 +77,16 @@ namespace AutoQC
 
         private void InitInputFieldsFromConfig(AutoQcConfig config)
         {
-            InitSkylineTab();
+            if (config != null) _lastEnteredPath = config.MainSettings.SkylineFilePath;
+            InitSkylineTab(config);
             SetInitialPanoramaSettings(config);
-            if (_action == ConfigAction.Add)
+            if (_action == ConfigAction.Add || config == null)
             {
                 SetDefaultMainSettings();
                 return;
             }
             textConfigName.Text = config.Name;
             SetInitialMainSettings(config.MainSettings);
-            SetInitialSkylineSettings(config);
         }
 
         public void DisableUserInputs(Control parentControl = null)
@@ -152,26 +151,26 @@ namespace AutoQC
 
         private void btnSkylineFilePath_Click(object sender, EventArgs e)
         {
-            OpenFile(TextUtil.FILTER_SKY, textSkylinePath);
-        }
-
-        private void OpenFile(string filter, TextBox textbox)
-        {
-            var dialog = new OpenFileDialog { Filter = filter };
+            var dialog = new OpenFileDialog
+            {
+                Filter = TextUtil.FILTER_SKY,
+                InitialDirectory = FileUtil.GetInitialDirectory(textSkylinePath.Text, _lastEnteredPath)
+            };
             if (dialog.ShowDialog(this) == DialogResult.OK)
             {
-                textbox.Text = dialog.FileName;
+                textSkylinePath.Text = dialog.FileName;
+                _lastEnteredPath = dialog.FileName;
             }
         }
-
+        
         private void btnFolderToWatch_Click(object sender, EventArgs e)
         {
-            using (var dialog = new FolderBrowserDialog())
+            var dialog = new FolderBrowserDialog();
+            dialog.SelectedPath = FileUtil.GetInitialDirectory(textFolderToWatchPath.Text, _lastEnteredPath);
+            if (dialog.ShowDialog(this) == DialogResult.OK)
             {
-                if (dialog.ShowDialog(this) == DialogResult.OK)
-                {
-                    textFolderToWatchPath.Text = dialog.SelectedPath;
-                }
+                textFolderToWatchPath.Text = dialog.SelectedPath;
+                _lastEnteredPath = dialog.SelectedPath;
             }
         }
 
@@ -237,72 +236,57 @@ namespace AutoQC
 
         #region Skyline Settings
 
-        private void InitSkylineTab()
+        private void InitSkylineTab(AutoQcConfig config)
         {
-            radioButtonSkyline.Enabled = Installations.HasSkyline;
-            radioButtonSkylineDaily.Enabled = Installations.HasSkylineDaily;
-            if (!string.IsNullOrEmpty(Settings.Default.SkylineCustomCmdPath))
-                textSkylineInstallationPath.Text = Path.GetDirectoryName(Settings.Default.SkylineCustomCmdPath);
+            if (config != null)
+                _skylineTypeControl = new SkylineTypeControl(_mainControl, config.UsesSkyline, config.UsesSkylineDaily, config.UsesCustomSkylinePath, config.SkylineSettings.CmdPath);
+            else
+                _skylineTypeControl = new SkylineTypeControl();
 
-            radioButtonSpecifySkylinePath.Checked = true;
-            radioButtonSkylineDaily.Checked = radioButtonSkylineDaily.Enabled;
-            radioButtonSkyline.Checked = radioButtonSkyline.Enabled;
+            _skylineTypeControl.Dock = DockStyle.Fill;
+            _skylineTypeControl.Show();
+            panelSkylineSettings.Controls.Add(_skylineTypeControl);
+            _currentSkylineSettings = GetSkylineSettingsFromUi();
         }
 
-        private void SetInitialSkylineSettings(AutoQcConfig config)
+        private void TabEnter(object sender, EventArgs e)
         {
-            radioButtonSkyline.Checked = config.UsesSkyline;
-            radioButtonSkylineDaily.Checked = config.UsesSkylineDaily;
-            radioButtonSpecifySkylinePath.Checked = config.UsesCustomSkylinePath;
-            if (config.UsesCustomSkylinePath)
+            // Ask if the user wants to update all SkylineSettings if they are leaving the Skyline tab
+            // after changing settings
+            var selectingTab = tabControl.SelectedTab;
+            if (tabSkylineSettings.Equals(_lastSelectedTab) && !tabSkylineSettings.Equals(selectingTab))
+                CheckIfSkylineChanged();
+            _lastSelectedTab = selectingTab;
+        }
+
+        private void CheckIfSkylineChanged()
+        {
+            var changedSkylineSettings = GetSkylineSettingsFromUi();
+            if (!changedSkylineSettings.Equals(_currentSkylineSettings))
             {
-                textSkylineInstallationPath.Text = Path.GetDirectoryName(config.SkylineSettings.CmdPath);
+                _currentSkylineSettings = changedSkylineSettings;
+                _mainControl.ReplaceAllSkylineVersions(_currentSkylineSettings);
             }
         }
 
         private SkylineSettings GetSkylineSettingsFromUi()
         {
-            var skylineType = SkylineType.Custom;
-            if (radioButtonSkyline.Checked)
-                skylineType = SkylineType.Skyline;
-            if (radioButtonSkylineDaily.Checked)
-                skylineType = SkylineType.SkylineDaily;
-            return new SkylineSettings(skylineType, textSkylineInstallationPath.Text);
+            return new SkylineSettings(_skylineTypeControl.Type, _skylineTypeControl.CommandPath);
         }
-
-        private void btnBrowse_Click(object sender, EventArgs e)
-        {
-            using (var folderBrowserDlg = new FolderBrowserDialog())
-            {
-                folderBrowserDlg.ShowNewFolderButton = false;
-                folderBrowserDlg.SelectedPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
-                if (folderBrowserDlg.ShowDialog() == DialogResult.OK)
-                {
-                    textSkylineInstallationPath.Text = folderBrowserDlg.SelectedPath;
-                }
-            }
-        }
-
-        private void radioButtonSpecifySkylinePath_CheckedChanged(object sender, EventArgs e)
-        {
-            textSkylineInstallationPath.Enabled = radioButtonSpecifySkylinePath.Checked;
-            btnBrowse.Enabled = radioButtonSpecifySkylinePath.Checked;
-        }
-
 
         #endregion
-
 
         #region Save config
 
         private void btnSaveConfig_Click(object sender, EventArgs e)
         {
+            if (tabControl.SelectedTab.Equals(tabSkylineSettings))
+                CheckIfSkylineChanged();
             Save();
         }
 
         private AutoQcConfig GetConfigFromUi()
         {
-            //AutoQcConfig config  = new AutoQcConfig();
             var name = textConfigName.Text;
             var mainSettings = GetMainSettingsFromUi();
             var panoramaSettings = GetPanoramaSettingsFromUi();
@@ -313,18 +297,22 @@ namespace AutoQC
 
         private void Save()
         {
+            var newConfig = GetConfigFromUi();
             try
             {
-                //throws ArgumentException if any fields are invalid
-                var newConfig = GetConfigFromUi();
-                //throws ArgumentException if config has a duplicate name
-                _mainControl.TryExecuteOperation(_action, newConfig);
+                _mainControl.AssertUniqueConfigName(newConfig.Name, _action == ConfigAction.Edit);
+                newConfig.Validate();
             }
             catch (ArgumentException e)
             {
-                _mainControl.DisplayError(e.Message);
+                AlertDlg.ShowError(this, Program.AppName, e.Message);
                 return;
             }
+
+            if (_action == ConfigAction.Edit)
+                _mainControl.ReplaceSelectedConfig(newConfig);
+            else
+                _mainControl.AddConfiguration(newConfig);
 
             Close();
         }

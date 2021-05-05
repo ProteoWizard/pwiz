@@ -31,6 +31,7 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(InvalidConfigSetupForm));
             this.panel1 = new System.Windows.Forms.Panel();
             this.btnNext = new System.Windows.Forms.Button();
+            this.btnSkip = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // panel1
@@ -43,16 +44,25 @@
             resources.ApplyResources(this.btnNext, "btnNext");
             this.btnNext.Name = "btnNext";
             this.btnNext.UseVisualStyleBackColor = true;
+            this.btnNext.Click += new System.EventHandler(this.btnNext_Click);
             // 
-            // FixInvalidConfigForm
+            // btnSkip
+            // 
+            resources.ApplyResources(this.btnSkip, "btnSkip");
+            this.btnSkip.Name = "btnSkip";
+            this.btnSkip.UseVisualStyleBackColor = true;
+            this.btnSkip.Click += new System.EventHandler(this.btnSkip_Click);
+            // 
+            // InvalidConfigSetupForm
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.btnSkip);
             this.Controls.Add(this.btnNext);
             this.Controls.Add(this.panel1);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
-            this.Name = "FixInvalidConfigForm";
+            this.Name = "InvalidConfigSetupForm";
             this.ShowInTaskbar = false;
             this.ResumeLayout(false);
 
@@ -61,6 +71,7 @@
         #endregion
 
         private System.Windows.Forms.Panel panel1;
-        private System.Windows.Forms.Button btnNext;
+        public System.Windows.Forms.Button btnNext;
+        public System.Windows.Forms.Button btnSkip;
     }
 }

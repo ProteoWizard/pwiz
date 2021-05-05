@@ -140,6 +140,8 @@
     <Compile Include="BilinearCurveFitTest.cs" />
     <Compile Include="BookmarkEnumeratorTest.cs" />
     <Compile Include="ChromatogramExporterTest.cs" />
+    <Compile Include="FastaSequenceTest.cs" />
+    <Compile Include="StripePainterTest.cs" />
     <Compile Include="ComplexFragmentIonTest.cs" />
     <Compile Include="ObjectSizeTest.cs" />
     <Compile Include="ChromPeakTest.cs" />
@@ -229,6 +231,7 @@
     <Compile Include="UndoManagerTest.cs" />
     <Compile Include="UniModTest.cs" />
     <Compile Include="UniquePrefixTest.cs" />
+    <Compile Include="MassListInputsTest.cs" />
     <Compile Include="UtilTest.cs" />
     <Compile Include="VariableModTest.cs" />
     <Compile Include="WebEnabledFastaImporterTest.cs" />

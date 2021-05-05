@@ -677,7 +677,8 @@ namespace TestRunner
                                             // runTests.Log("# Entering infinite loop.");
                                             // leakHanger.Wait();
 
-                                            runTestForever = true; // Once we break out of the loop, just keep running this test
+                                            if (!teamcityTestDecoration)
+                                                runTestForever = true; // Once we break out of the loop, just keep running this test
                                             hangIteration = i;
                                             RunTests.MemoryManagement.HeapDiagnostics = true;
                                         }

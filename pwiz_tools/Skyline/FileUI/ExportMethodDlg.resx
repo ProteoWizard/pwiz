@@ -1423,6 +1423,9 @@ If unchecked, zeros will be written in their place.</value>
   <data name="textMs1RepetitionTime.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
+  <data name="textMs1RepetitionTime.ToolTip" xml:space="preserve">
+    <value>The maximum time allowed between MS1 spectrum acquisition interspersed between MS/MS spectra for PRM (default 10 ms)</value>
+  </data>
   <data name="&gt;&gt;textMs1RepetitionTime.Name" xml:space="preserve">
     <value>textMs1RepetitionTime</value>
   </data>
@@ -1505,7 +1508,7 @@ If unchecked, zeros will be written in their place.</value>
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=20.1.1.133, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;helpTip.Name" xml:space="preserve">
     <value>helpTip</value>
@@ -1517,6 +1520,6 @@ If unchecked, zeros will be written in their place.</value>
     <value>ExportMethodDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.CreateHandleDebugBase, Skyline-daily, Version=20.1.1.133, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.CreateHandleDebugBase, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

@@ -114,11 +114,19 @@
         <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall"/>
         <RegistryValue Root="HKCU" Key="Software\MacCossLabUW\Skyline64" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
       </Component>
+      <Component Id="ApplicationBatchShortcut64">
+        <Shortcut Id="ApplicationBatchMenuShortcut32" Name="$(var.ProductName) Batch" Target="[#SkylineBatch_exe]"/>
+        <RegistryValue Root="HKCU" Key="Software\MacCossLabUW\SkylineBatch64" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
+      </Component>
       <?else?>
       <Component Id="ApplicationShortcut32" Guid="{0FC0030E-EE86-4B41-8A69-FE2EDED596E7}">
         <Shortcut Id="ApplicationMenuShortcut32" Name="$(var.ProductName)" Target="[#Skyline.exe_file]"/>
         <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall" />
         <RegistryValue Root="HKCU" Key="Software\MacCossLabUW\Skyline32" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
+      </Component>
+      <Component Id="ApplicationBatchShortcut32" Guid="{E6F13332-2C6F-4FC2-BCE5-40A8CDE70D94}">
+        <Shortcut Id="ApplicationBatchMenuShortcut32" Name="$(var.ProductName)" Target="[#SkylineBatch_exe]"/>
+        <RegistryValue Root="HKCU" Key="Software\MacCossLabUW\SkylineBatch32" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
       </Component>
       <?endif?>
     </ComponentGroup>
@@ -159,6 +167,9 @@
       <Component Id="FHOOE_IMP.MSAmanda.Utils.dll">
         <File Source="$(var.Skyline.TargetDir)/FHOOE_IMP.MSAmanda.Utils.dll" KeyPath="yes"/>
       </Component>
+      <Component Id="FluentFTP.dll">
+        <File Source="$(var.Skyline.TargetDir)/FluentFTP.dll" KeyPath="yes"/>
+      </Component>
       <Component Id="Grpc.Core.Api.dll">
         <File Source="$(var.Skyline.TargetDir)/Grpc.Core.Api.dll" KeyPath="yes"/>
       </Component>
@@ -179,6 +190,9 @@
       </Component>
       <Component Id="Kajabity_Tools.dll">
         <File Source="$(var.Skyline.TargetDir)/Kajabity Tools.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="LaunchBatch.exe">
+        <File Source="$(var.Skyline.TargetDir)/LaunchBatch.exe" KeyPath="yes"/>
       </Component>
       <Component Id="log4net.dll">
         <File Source="$(var.Skyline.TargetDir)/log4net.dll" KeyPath="yes"/>
@@ -254,6 +268,9 @@
       <Component Id="Remotion.Linq.EagerFetching.dll">
         <File Source="$(var.Skyline.TargetDir)/Remotion.Linq.EagerFetching.dll" KeyPath="yes"/>
       </Component>
+      <Component Id="SharedBatch.dll">
+        <File Source="$(var.Skyline.TargetDir)/SharedBatch.dll" KeyPath="yes"/>
+      </Component>
       <Component Id="Skyline.exe" Guid="{9C43D011-2748-480D-95EF-E7298E4E1B55}">
         <File Source="$(var.Skyline.TargetDir)/$(var.Skyline.TargetName).exe" Id="Skyline.exe_file" KeyPath="yes"/>
         <ProgId Id="Skyline.Document.0" Description="Skyline Document" Icon="SkylineDoc.ico">
@@ -281,6 +298,18 @@
       <Component Id="Skyline.pdb">
         <File Source="$(var.Skyline.TargetDir)/$(var.Skyline.TargetName).pdb" KeyPath="yes"/>
       </Component>
+      <Component Id="SkylineBatch.exe">
+        <File Source="$(var.Skyline.TargetDir)/SkylineBatch.exe" KeyPath="yes" Id="SkylineBatch_exe"/>
+      </Component>
+      <Component Id="SkylineBatch.exe.config">
+        <File Source="$(var.Skyline.TargetDir)/SkylineBatch.exe.config" KeyPath="yes" Id="SkylineBatch_exe_config"/>
+      </Component>
+      <Component Id="SkylineBatch.exe.manifest">
+        <File Source="$(var.Skyline.TargetDir)/SkylineBatch.exe.manifest" KeyPath="yes" Id="SkylineBatch_exe_manifest"/>
+      </Component>
+      <Component Id="SkylineBatch_configs.ico">
+        <File Source="$(var.Skyline.TargetDir)/SkylineBatch_configs.ico" KeyPath="yes"/>
+      </Component>
       <Component Id="SkylineCmd.exe">
         <File Source="$(var.Skyline.TargetDir)/SkylineCmd.exe" KeyPath="yes"/>
       </Component>
@@ -289,6 +318,9 @@
       </Component>
       <Component Id="SkylineCmd.pdb">
         <File Source="$(var.Skyline.TargetDir)/SkylineCmd.pdb" KeyPath="yes"/>
+      </Component>
+      <Component Id="SkylineDailyRunner.exe">
+        <File Source="$(var.Skyline.TargetDir)/SkylineDailyRunner.exe" KeyPath="yes"/>
       </Component>
       <Component Id="SkylineData.ico">
         <File Source="$(var.Skyline.ProjectDir)/SkylineData.ico" KeyPath="yes"/>
@@ -302,11 +334,17 @@
       <Component Id="SkylineProcessRunner.exe">
         <File Source="$(var.Skyline.TargetDir)/SkylineProcessRunner.exe" KeyPath="yes"/>
       </Component>
+      <Component Id="SkylineRunner.exe">
+        <File Source="$(var.Skyline.TargetDir)/SkylineRunner.exe" KeyPath="yes"/>
+      </Component>
       <Component Id="SkylineTool.dll">
         <File Source="$(var.Skyline.TargetDir)/SkylineTool.dll" KeyPath="yes"/>
       </Component>
       <Component Id="SkylineTool.pdb">
         <File Source="$(var.Skyline.TargetDir)/SkylineTool.pdb" KeyPath="yes"/>
+      </Component>
+      <Component Id="System.Collections.Immutable.dll">
+        <File Source="$(var.Skyline.TargetDir)/System.Collections.Immutable.dll" KeyPath="yes"/>
       </Component>
       <Component Id="System.Interactive.Async.dll">
         <File Source="$(var.Skyline.TargetDir)/System.Interactive.Async.dll" KeyPath="yes"/>

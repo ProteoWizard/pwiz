@@ -175,7 +175,7 @@
     <Compile Include="DataBinding\Clustering\ClusteredProperties.cs" />
     <Compile Include="DataBinding\Clustering\ClusteredReportResults.cs" />
     <Compile Include="DataBinding\Clustering\ClusteringSpec.cs" />
-    <Compile Include="DataBinding\Clustering\ColoredReportResults.cs" />
+    <Compile Include="DataBinding\Clustering\ReportColorScheme.cs" />
     <Compile Include="DataBinding\CollectionInfo.cs" />
     <Compile Include="DataBinding\ColumnFormats.cs" />
     <Compile Include="DataBinding\ColumnSelector.cs" />

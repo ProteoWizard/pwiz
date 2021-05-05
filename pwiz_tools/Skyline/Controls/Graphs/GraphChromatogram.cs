@@ -1487,7 +1487,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 if ((numSteps == 0 && ReferenceEquals(nodeTran, nodeTranSelected) ||
                      (numSteps > 0 && step == 0)))
                 {
-                    color = ChromGraphItem.ColorSelected;
+                    color = ColorScheme.ChromGraphItemSelected;
                     isSelected = true;
                     width++;
                 }
@@ -1608,7 +1608,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 false,
                 null,
                 step,
-                ChromGraphItem.ColorSelected,
+                ColorScheme.ChromGraphItemSelected,
                 fontSize,
                 width,
                 fullScanInfo)
@@ -1839,7 +1839,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     Color color;
                     if (step == 0)
                     {
-                        color = ChromGraphItem.ColorSelected;
+                        color = ColorScheme.ChromGraphItemSelected;
                         width++;
                     }
                     else if (nodeGroup.HasLibInfo)
@@ -2332,7 +2332,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                         if (nodePep != null && nodeTranGroup != null)
                         {
-                            var libKey = new LibKey(nodePep.ModifiedTarget, nodeTranGroup.PrecursorCharge);
+                            var libKey = new LibKey(nodePep.ModifiedTarget, nodeTranGroup.PrecursorAdduct);
                             chromGraphPrimary.MidasRetentionMsMs = settings.PeptideSettings.Libraries.MidasLibraries
                                 .SelectMany(lib => lib.GetSpectraByPeptide(chromGraphPrimary.Chromatogram.FilePath, libKey))
                                 .Select(s => s.RetentionTime).ToArray();

@@ -1,14 +1,9 @@
 ﻿using System;
-using System.CodeDom;
-using System.Collections.Generic;
 using System.IO;
-using System.Net;
-using System.Threading;
 using System.Threading.Tasks;
 using AutoQC;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 
 namespace AutoQCTest
@@ -27,6 +22,11 @@ namespace AutoQCTest
         [TestMethod]
         public async Task TestPublishToPanorama()
         {
+            Assert.IsTrue(File.Exists(TestUtils.GetTestFilePath("QEP_2015_0424_RJ_2015_04\\QEP_2015_0424_RJ.sky")),
+                "Could not find Skyline file, nothing to import data into.");
+            Assert.IsTrue(File.Exists(TestUtils.GetTestFilePath("PanoramaTestConfig\\QEP_2015_0424_RJ_05_prtc.raw")),
+                "Data file is not in configuration folder, nothing to upload.");
+
             File.Copy(TestUtils.GetTestFilePath("QEP_2015_0424_RJ_2015_04\\QEP_2015_0424_RJ.sky"), TestUtils.GetTestFilePath("QEP_2015_0424_RJ.sky"), true);
             File.Copy(TestUtils.GetTestFilePath("QEP_2015_0424_RJ_2015_04\\QEP_2015_0424_RJ.skyd"), TestUtils.GetTestFilePath("QEP_2015_0424_RJ.skyd"), true);
 
@@ -49,7 +49,7 @@ namespace AutoQCTest
                 TestUtils.GetTestMainSettings("folderToWatch", "PanoramaTestConfig"),
                 new PanoramaSettings(true, SERVER_URL, PANORAMA_USER_NAME, PANORAMA_PASSWORD, $"{PANORAMA_FOLDER_PATH}/{uniqueFolderName}"), 
                 TestUtils.GetTestSkylineSettings());
-            var runner = new ConfigRunner(config, new AutoQcLogger(config, null));
+            var runner = new ConfigRunner(config, TestUtils.GetTestLogger(config));
             Assert.IsTrue(runner.CanStart());
             runner.Start();
 
@@ -71,13 +71,11 @@ namespace AutoQCTest
             var webClient = new WebPanoramaClient(panoramaServerUri);
             var startTime = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
             var x = startTime;
-            var notFound = true;
-            while (notFound && x < startTime + TIMEOUT_80SEC)
+            while (x < startTime + TIMEOUT_80SEC)
             {
                 var jsonAsString = webClient.DownloadString(labKeyQuery, PANORAMA_USER_NAME, PANORAMA_PASSWORD);
                 var json = JsonConvert.DeserializeObject<RootObject>(jsonAsString);
-                notFound = json.rowCount == 0;
-                if (!notFound) return true;
+                if (json.rowCount > 0) return true;
                 await Task.Delay(WAIT_3SEC);
                 x = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
             }

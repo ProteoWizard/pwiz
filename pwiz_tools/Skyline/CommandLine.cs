@@ -82,6 +82,25 @@ namespace pwiz.Skyline
 
         public int Run(string[] args, bool withoutUsage = false)
         {
+            var exitStatus = RunInner(args, withoutUsage);
+
+            // Handle cases where the error reporting and exit code are out of synch
+            // TODO: Add testing that fails when these happen and fix the causes
+            if (exitStatus == Program.EXIT_CODE_SUCCESS)
+            {
+                if (_out.IsErrorReported)
+                    return Program.EXIT_CODE_RAN_WITH_ERRORS;
+            }
+            else if (!_out.IsErrorReported)
+            {
+                _out.WriteLine(Resources.CommandLine_Run_Error__Failure_occurred__Exiting___);
+            }
+
+            return exitStatus;
+        }
+
+        private int RunInner(string[] args, bool withoutUsage = false)
+        {
             _importedResults = false;
 
             var commandArgs = new CommandArgs(_out, _doc != null);
@@ -132,7 +151,9 @@ namespace pwiz.Skyline
             }
             if (commandArgs.RunningBatchCommands)
             {
-                RunBatchCommands(commandArgs.BatchCommandsPath);
+                var exitCode = RunBatchCommands(commandArgs.BatchCommandsPath);
+                if (exitCode != Program.EXIT_CODE_SUCCESS)
+                    return exitCode;
                 anyAction = true;
             }
             if (commandArgs.ImportingSkyr)
@@ -146,17 +167,20 @@ namespace pwiz.Skyline
                 if (!anyAction && !withoutUsage)
                     commandArgs.Usage();
 
-                // Exit quietly because Run(args[]) ran sucessfully. No work with a skyline document was called for.
+                // Exit quietly because Run(args[]) ran successfully. No work with a skyline document was called for.
                 return Program.EXIT_CODE_SUCCESS;
             }
 
-            _skylineFile = commandArgs.SkylineFile;
-            if ((_skylineFile != null && !OpenSkyFile(_skylineFile)) ||
-                (_skylineFile == null && _doc == null))
+            var skylineFile = commandArgs.SkylineFile;
+            if ((skylineFile != null && !OpenSkyFile(skylineFile)) ||
+                (skylineFile == null && _doc == null))
             {
                 _out.WriteLine(Resources.CommandLine_Run_Exiting___);
                 return Program.EXIT_CODE_RAN_WITH_ERRORS;
             }
+
+            if (skylineFile != null)
+                _skylineFile = skylineFile;
 
             try
             {
@@ -172,12 +196,16 @@ namespace pwiz.Skyline
                     }
                     DocContainer.SetDocument(_doc, null);
 
-                    if (ProcessDocument(commandArgs))
+                    bool successProcessing = ProcessDocument(commandArgs);
+                    if (successProcessing)
                         PerformExportOperations(commandArgs);
 
                     // Save any settings list changes made by opening the document
                     if (commandArgs.SaveSettings)
                         SaveSettings();
+
+                    if (!successProcessing)
+                        return Program.EXIT_CODE_RAN_WITH_ERRORS;
                 }
             }
             finally
@@ -279,6 +307,12 @@ namespace pwiz.Skyline
             }
 
             WaitForDocumentLoaded();
+
+            if (commandArgs.Minimizing)
+            {
+                if (!MinimizeResults(commandArgs))
+                    return false;
+            }
 
             if (commandArgs.RemovingResults && commandArgs.RemoveBeforeDate.HasValue)
             {
@@ -1714,6 +1748,34 @@ namespace pwiz.Skyline
             }
         }
 
+        public bool MinimizeResults(CommandArgs commandArgs)
+        {
+            if (!_doc.Settings.HasResults)
+            {
+                _out.WriteLine(Resources.CommandLine_ReintegratePeaks_Error__You_must_first_import_results_into_the_document_before_reintegrating_);
+                return false;
+            }
+
+            var saveFile = commandArgs.SaveFile ?? _skylineFile;
+            _out.WriteLine(Resources.CommandLine_MinimizeResults_Minimizing_results_to__0_, saveFile);
+            if (commandArgs.ChromatogramsDiscard)
+                _out.WriteLine(Resources.CommandLine_MinimizeResults_Removing_unused_chromatograms___);
+            if (commandArgs.LimitNoise.HasValue)
+                _out.WriteLine(Resources.CommandLine_MinimizeResults_Limiting_chromatogram_noise_to______0__minutes_around_peak___, commandArgs.LimitNoise);
+
+            var minimizeResults = Model.MinimizeResults.MinimizeResultsFromDocument(Document, ((statistics, sizeCalculator) =>
+            {
+                _out.WriteLine(statistics.PercentComplete + @"%");
+            }));
+            minimizeResults.Settings = minimizeResults.Settings
+                .ChangeDiscardUnmatchedChromatograms(commandArgs.ChromatogramsDiscard)
+                .ChangeNoiseTimeRange(commandArgs.LimitNoise);
+            minimizeResults.MinimizeToFile(saveFile);
+            _doc = minimizeResults.Document;
+            _skylineFile = saveFile;
+            return true;
+        }
+
         private bool ImportSearch(CommandArgs commandArgs)
         {
             var doc = Document;
@@ -2226,7 +2288,8 @@ namespace pwiz.Skyline
 
             var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(string.Empty));
             var inputs = new MassListInputs(commandArgs.TransitionListPath);
-            var docNew = _doc.ImportMassList(inputs, null, progressMonitor, null,
+            var importer = _doc.PreImportMassList(inputs, progressMonitor, false);
+            var docNew = _doc.ImportMassList(inputs, importer, progressMonitor, null,
                 out selectPath, out irtPeptides, out librarySpectra, out errorList, out peptideGroups);
 
             // If nothing was imported (e.g. operation was canceled or zero error-free transitions) and also no errors, just return
@@ -2594,6 +2657,9 @@ namespace pwiz.Skyline
             var viewContext = DocumentGridViewContext.CreateDocumentGridViewContext(_doc, reportInvariant
                 ? DataSchemaLocalizer.INVARIANT
                 : SkylineDataSchema.GetLocalizedSchemaLocalizer());
+            // Make sure invariant report format uses a true comma if a tab separator was not specified.
+            if (reportInvariant && reportColSeparator != TextUtil.SEPARATOR_TSV)
+                reportColSeparator = TextUtil.SEPARATOR_CSV;
             var viewInfo = viewContext.GetViewInfo(PersistedViews.MainGroup.Id.ViewName(reportName));
             if (null == viewInfo)
             {
@@ -2838,11 +2904,12 @@ namespace pwiz.Skyline
         }
 
         // A function for running each line of a text file like a SkylineRunner command
-        public void RunBatchCommands(string path)
+        public int RunBatchCommands(string path)
         {
             if (!File.Exists(path))
             {
                 _out.WriteLine(Resources.CommandLine_RunBatchCommands_Error___0__does_not_exist____batch_commands_failed_, path);
+                return Program.EXIT_CODE_RAN_WITH_ERRORS;
             }
             else
             {
@@ -2856,7 +2923,9 @@ namespace pwiz.Skyline
                         {
                             // Parse the line and run it.
                             string[] args = ParseArgs(input);
-                            Run(args);
+                            int exitCode = Run(args);
+                            if (exitCode != Program.EXIT_CODE_SUCCESS)
+                                return exitCode;
                         }
                     }
                 }
@@ -2865,6 +2934,7 @@ namespace pwiz.Skyline
                     _out.WriteLine(Resources.CommandLine_RunBatchCommands_Error__failed_to_open_file__0____batch_commands_command_failed_, path);
                 }
             }            
+            return Program.EXIT_CODE_SUCCESS;
         }
         
         /// <summary>
@@ -3563,12 +3633,14 @@ namespace pwiz.Skyline
         public CommandStatusWriter(TextWriter writer)
             : base(writer.FormatProvider)
         {
-            _writer = Synchronized(writer); // Make this thread safe for more predicitable console output
+            _writer = Synchronized(writer); // Make this thread safe for more predictable console output
         }
 
         public bool IsTimeStamped { get; set; }
 
         public bool IsMemStamped { get; set; }
+
+        public bool IsErrorReported { get; private set; }
 
         public override Encoding Encoding
         {
@@ -3619,6 +3691,23 @@ namespace pwiz.Skyline
             message.Append(value);
             _writer.WriteLine(message);
             Flush();
+
+            if (IsErrorMessage(value))
+            {
+                IsErrorReported = true;
+            }
+        }
+
+        private bool IsErrorMessage(string message)
+        {
+            if (message != null && !IsErrorReported)
+            {
+                return message.StartsWith(@"Error:", StringComparison.InvariantCulture) ||  // In Skyline-daily any message might not be localized
+                       message.StartsWith(Resources.CommandStatusWriter_WriteLine_Error_,
+                           StringComparison.CurrentCulture);
+            }
+
+            return false;
         }
 
         private string MemStamp(long memUsed)

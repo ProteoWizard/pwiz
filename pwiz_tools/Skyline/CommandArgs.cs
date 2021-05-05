@@ -118,10 +118,10 @@ namespace pwiz.Skyline
 
         public static readonly Argument ARG_IN = new DocArgument(@"in", PATH_TO_DOCUMENT,
             (c, p) => c.SkylineFile = p.ValueFullPath);
-        public static readonly Argument ARG_SAVE = new DocArgument(@"save", (c, p) => c.Saving = true);
+        public static readonly Argument ARG_SAVE = new DocArgument(@"save", (c, p) => { c.Saving = true; });
         public static readonly Argument ARG_SAVE_SETTINGS = new DocArgument(@"save-settings", (c, p) => c.SaveSettings = true);
         public static readonly Argument ARG_OUT = new DocArgument(@"out", PATH_TO_DOCUMENT,
-            (c, p) => c.SaveFile = p.ValueFullPath);
+            (c, p) => { c.SaveFile = p.ValueFullPath; });
         public static readonly Argument ARG_SHARE_ZIP = new DocArgument(@"share-zip", () => GetPathToFile(SrmDocumentSharing.EXT_SKY_ZIP),
             (c, p) =>
             {
@@ -301,6 +301,40 @@ namespace pwiz.Skyline
             return true;
         }
 
+        public static readonly Argument ARG_CHROMATOGRAMS_LIMIT_NOISE = new DocArgument(@"chromatograms-limit-noise", NUM_VALUE,
+            (c, p) => c.LimitNoise = p.ValueDouble);
+
+        public static readonly Argument ARG_CHROMATOGRAMS_DISCARD_UNUSED = new DocArgument(@"chromatograms-discard-unused",
+            (c, p) => c.ChromatogramsDiscard = true );
+
+        private static readonly ArgumentGroup GROUP_MINIMIZE_RESULTS = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_MINIMIZE_RESULTS_Minimizing_results_file_size, false,
+            ARG_CHROMATOGRAMS_LIMIT_NOISE, ARG_CHROMATOGRAMS_DISCARD_UNUSED)
+        {
+            Validate = c => c.ValidateMinimizeResultsArgs()
+        };
+        
+        private bool ValidateMinimizeResultsArgs()
+        {
+            if (Minimizing)
+            {
+                if (!_seenArguments.Contains(ARG_SAVE) && !_seenArguments.Contains(ARG_OUT))
+                {
+                    // Has minimize argument(s), but no --save or --out command
+                    if (ChromatogramsDiscard)
+                    {
+                        WarnArgRequirement(ARG_CHROMATOGRAMS_DISCARD_UNUSED, ARG_SAVE, ARG_OUT);
+                    }
+                    if (LimitNoise.HasValue)
+                    {
+                        WarnArgRequirement(ARG_CHROMATOGRAMS_LIMIT_NOISE, ARG_SAVE, ARG_OUT);
+                    }
+                    return false;
+                }
+            }
+            return true;
+        }
+
+
         public List<MsDataFileUri> ReplicateFile { get; private set; }
         public string ReplicateName { get; private set; }
         public int ImportThreads { get; private set; }
@@ -314,6 +348,8 @@ namespace pwiz.Skyline
         public bool ImportWarnOnFailure { get; private set; }
         public bool RemovingResults { get; private set; }
         public DateTime? RemoveBeforeDate { get; private set; }
+        public bool ChromatogramsDiscard{ get; private set; }
+        public double? LimitNoise { get; private set; }
         public DateTime? ImportBeforeDate { get; private set; }
         public DateTime? ImportOnOrAfterDate { get; private set; }
         // Waters lockmass correction
@@ -664,6 +700,7 @@ namespace pwiz.Skyline
         public List<IPeakFeatureCalculator> ExcludeFeatures { get; private set; }
 
         public bool Reintegrating { get { return !string.IsNullOrEmpty(ReintegrateModelName); } }
+        public bool Minimizing { get { return ChromatogramsDiscard || LimitNoise.HasValue; } }
 
 
         private List<double> ParseNumberList(NameValuePair pair)
@@ -962,8 +999,8 @@ namespace pwiz.Skyline
                 var serverUri = PanoramaUtil.ServerNameToUri(PanoramaServerUri);
                 if (serverUri == null)
                 {
-                    WriteLine(Resources.EditServerDlg_OkDialog_The_text__0__is_not_a_valid_server_name_,
-                        PanoramaServerUri);
+                    WriteLine(Resources.CommandLine_GeneralException_Error___0_, 
+                        string.Format(Resources.EditServerDlg_OkDialog_The_text__0__is_not_a_valid_server_name_, PanoramaServerUri));
                     return false;
                 }
 
@@ -1032,11 +1069,11 @@ namespace pwiz.Skyline
                 }
                 catch (PanoramaServerException x)
                 {
-                    _statusWriter.WriteLine(x.Message);
+                    _statusWriter.WriteLine(Resources.PanoramaHelper_ValidateServer_PanoramaServerException_, x.Message);
                 }
                 catch (Exception x)
                 {
-                    _statusWriter.WriteLine(Resources.PanoramaHelper_ValidateServer_, x.Message);
+                    _statusWriter.WriteLine(Resources.PanoramaHelper_ValidateServer_Exception_, x.Message);
                 }
 
                 return null;
@@ -1051,12 +1088,12 @@ namespace pwiz.Skyline
                 }
                 catch (PanoramaServerException x)
                 {
-                    _statusWriter.WriteLine(x.Message);
+                    _statusWriter.WriteLine(Resources.PanoramaHelper_ValidateFolder_PanoramaServerException_, x.Message);
                 }
                 catch (Exception x)
                 {
                     _statusWriter.WriteLine(
-                        Resources.PanoramaHelper_ValidateFolder_,
+                        Resources.PanoramaHelper_ValidateFolder_Exception_,
                         panoramaFolder, panoramaClient.ServerUri,
                         x.Message);
                 }
@@ -1736,6 +1773,7 @@ namespace pwiz.Skyline
                     GROUP_IMPORT,
                     GROUP_REINTEGRATE,
                     GROUP_REMOVE,
+                    GROUP_MINIMIZE_RESULTS,
                     GROUP_IMPORT_DOC,
                     GROUP_ANNOTATIONS,
                     GROUP_FASTA,
@@ -1852,7 +1890,7 @@ namespace pwiz.Skyline
             }
             catch (Exception x)
             {
-                // Unexpected behavior, but better to output the error then appear to crash, and
+                // Unexpected behavior, but better to output the error than appear to crash, and
                 // have Windows write it to the application event log.
                 WriteLine(Resources.CommandLine_GeneralException_Error___0_, x.Message);
                 WriteLine(x.StackTrace);
@@ -1923,15 +1961,26 @@ namespace pwiz.Skyline
             return true;
         }
 
-        public static string WarnArgRequirementText(Argument usedArg, Argument requiredArg)
+        public static string WarnArgRequirementText(Argument usedArg, params Argument[] requiredArgs)
         {
-            return string.Format(Resources.CommandArgs_WarnArgRequirment_Warning__Use_of_the_argument__0__requires_the_argument__1_,
-                usedArg.ArgumentText, requiredArg.ArgumentText);
+            if (requiredArgs.Length == 1)
+                return string.Format(Resources.CommandArgs_WarnArgRequirment_Warning__Use_of_the_argument__0__requires_the_argument__1_,
+                    usedArg.ArgumentText, requiredArgs[0].ArgumentText);
+
+            var requiredArgsText = new List<string>()
+            {
+                string.Format(
+                    Resources
+                        .CommandArgs_WarnArgRequirementText_Use_of_the_argument__0__requires_one_of_the_following_arguments_,
+                    usedArg.ArgumentText)
+            };
+            requiredArgsText.AddRange(requiredArgs.Select(i => i.ArgumentText).ToList());
+            return TextUtil.LineSeparate(requiredArgsText);
         }
 
-        private void WarnArgRequirement(Argument usedArg, Argument requiredArg)
+        private void WarnArgRequirement(Argument usedArg, params Argument[] requiredArgs)
         {
-            WriteLine(WarnArgRequirementText(usedArg, requiredArg));
+            WriteLine(WarnArgRequirementText(usedArg, requiredArgs));
         }
 
         public static string ErrorArgsExclusiveText(Argument arg1, Argument arg2)

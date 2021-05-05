@@ -1,14 +1,17 @@
 ﻿using System;
+using System.Drawing;
 using System.Text;
+using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using AutoQC.Properties;
+using SharedBatch;
 
 namespace AutoQC
 {
     [XmlRoot("autoqc_config")]
-    public class AutoQcConfig
+    public class AutoQcConfig : IConfig
     {
 
         public AutoQcConfig(string name, bool isEnabled, DateTime created, DateTime modified,
@@ -42,6 +45,34 @@ namespace AutoQC
 
         public readonly SkylineSettings SkylineSettings;
 
+        public string GetName() { return Name; }
+
+        public DateTime GetModified() { return Modified; }
+
+        public bool TryPathReplace(string oldRoot, string newRoot, out IConfig replacedConfig)
+        {
+            replacedConfig = this;
+            return false;
+        }
+
+        public IConfig ReplaceSkylineVersion(SkylineSettings newSettings)
+        {
+            return new AutoQcConfig(Name, IsEnabled, Created, Modified, MainSettings, PanoramaSettings, newSettings);
+        }
+
+        public ListViewItem AsListViewItem(IConfigRunner runner, Graphics graphics)
+        {
+            var lvi = new ListViewItem(Name);
+            lvi.UseItemStyleForSubItems = false; // So that we can change the color for sub-items.
+            lvi.SubItems.Add(User);
+            lvi.SubItems.Add(Created.ToShortDateString());
+            lvi.SubItems.Add(runner.GetDisplayStatus());
+
+            var runnerStatusIndex = lvi.SubItems.Count - 1;
+            lvi.SubItems[runnerStatusIndex].ForeColor = runner.GetDisplayColor();
+            return lvi;
+        }
+
         public string User => PanoramaSettings.PublishToPanorama ? PanoramaSettings.PanoramaUserEmail : string.Empty;
         
         public bool UsesSkyline => SkylineSettings.Type == SkylineType.Skyline;
@@ -54,7 +85,6 @@ namespace AutoQC
         {
             name,
             is_enabled,
-            user,
             created,
             modified
         }
@@ -142,14 +172,11 @@ namespace AutoQC
         public void Validate()
         {
             if (string.IsNullOrEmpty(Name))
-            {
                 throw new ArgumentException("Please enter a name for the configuration.");
-            }
 
             MainSettings.ValidateSettings();
             SkylineSettings.Validate();
             PanoramaSettings.ValidateSettings();
-
         }
 
         public virtual ProcessInfo RunBefore(ImportContext importContext)

@@ -36,6 +36,7 @@ using pwiz.Skyline.Model.Prosit;
 using pwiz.Skyline.Model.Prosit.Models;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Crawdad;
+using pwiz.Skyline.Model.Themes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -847,7 +848,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     if (IonMatches(selection.Transition.Transition, chromData))
                     {
-                        color = ChromGraphItem.ColorSelected;
+                        color = ColorScheme.ChromGraphItemSelected;
                     }
                 }
 
@@ -963,7 +964,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                     _spectrum.Name, _mirrorSpectrum.Name);
                             GraphPane.Title.Text = TextUtil.LineSeparate(
                                 libraryStr,
-                                SpectrumGraphItem.GetTitle(selection.Peptide, _mirrorSpectrum.Precursor, _mirrorSpectrum.LabelType),
+                                SpectrumGraphItem.GetTitle(null, selection.Peptide, _mirrorSpectrum.Precursor, _mirrorSpectrum.LabelType),
                                 prositEx.Message);
                             graphControl.Refresh();
                             return;
@@ -1028,7 +1029,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                     GraphPane.Title.Text = TextUtil.LineSeparate(
                                         string.Format(PrositResources.GraphSpectrum_UpdateUI__0__vs___1_,
                                             GraphItem.LibraryName, mirrorSpectrum.Name),
-                                        GraphItem.Title,
+                                        SpectrumGraphItem.RemoveLibraryPrefix(GraphItem.Title, GraphItem.LibraryName),
                                         string.Format(@"dotp: {0:0.0000}", dotp));
                                 }
                                 else
@@ -1047,7 +1048,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                     GraphPane.Title.Text = TextUtil.LineSeparate(
                                         string.Format(PrositResources.GraphSpectrum_UpdateUI__0__vs___1_,
                                             GraphItem.LibraryName, SpectrumInfoProsit.NAME),
-                                        GraphItem.Title,
+                                        SpectrumGraphItem.RemoveLibraryPrefix(GraphItem.Title, GraphItem.LibraryName),
                                         prositEx.Message);
                                 }
                                 else

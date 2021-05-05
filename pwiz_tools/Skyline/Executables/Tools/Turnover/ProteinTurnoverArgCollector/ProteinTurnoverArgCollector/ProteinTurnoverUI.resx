@@ -119,11 +119,11 @@
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnOk.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Right</value>
+    <value>Top, Right</value>
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="btnOk.Location" type="System.Drawing.Point, System.Drawing">
-    <value>213, 23</value>
+    <value>216, 23</value>
   </data>
   <data name="btnOk.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -133,7 +133,7 @@
     <value>8</value>
   </data>
   <data name="btnOk.Text" xml:space="preserve">
-    <value>&amp;OK</value>
+    <value>OK</value>
   </data>
   <data name="&gt;&gt;btnOk.Name" xml:space="preserve">
     <value>btnOk</value>
@@ -145,13 +145,13 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnOk.ZOrder" xml:space="preserve">
-    <value>10</value>
+    <value>15</value>
   </data>
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Right</value>
+    <value>Top, Right</value>
   </data>
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>213, 54</value>
+    <value>216, 54</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -160,7 +160,7 @@
     <value>9</value>
   </data>
   <data name="btnCancel.Text" xml:space="preserve">
-    <value>&amp;Cancel</value>
+    <value>Cancel</value>
   </data>
   <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
@@ -172,7 +172,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
-    <value>9</value>
+    <value>14</value>
   </data>
   <data name="label3.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -202,16 +202,22 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
-    <value>8</value>
+    <value>13</value>
   </data>
+  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 12</value>
+  </metadata>
   <data name="textDietEnrichment.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 25</value>
+    <value>11, 25</value>
   </data>
   <data name="textDietEnrichment.Size" type="System.Drawing.Size, System.Drawing">
-    <value>163, 18</value>
+    <value>164, 18</value>
   </data>
   <data name="textDietEnrichment.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
+  </data>
+  <data name="textDietEnrichment.ToolTip" xml:space="preserve">
+    <value>Percent Leucine in diet (0, 100]</value>
   </data>
   <data name="&gt;&gt;textDietEnrichment.Name" xml:space="preserve">
     <value>textDietEnrichment</value>
@@ -223,7 +229,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;textDietEnrichment.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>11</value>
   </data>
   <data name="label4.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -235,16 +241,16 @@
     <value>NoControl</value>
   </data>
   <data name="label4.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 9</value>
+    <value>8, 9</value>
   </data>
   <data name="label4.Size" type="System.Drawing.Size, System.Drawing">
-    <value>120, 13</value>
+    <value>138, 13</value>
   </data>
   <data name="label4.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
   <data name="label4.Text" xml:space="preserve">
-    <value>&amp;Percent diet enrichment:</value>
+    <value>Is&amp;otope labeling enrichment:</value>
   </data>
   <data name="&gt;&gt;label4.Name" xml:space="preserve">
     <value>label4</value>
@@ -256,7 +262,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label4.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>12</value>
   </data>
   <data name="percentLabel.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -289,7 +295,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;percentLabel.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>10</value>
   </data>
   <data name="textAverageTurnover.Location" type="System.Drawing.Point, System.Drawing">
     <value>11, 75</value>
@@ -299,6 +305,9 @@
   </data>
   <data name="textAverageTurnover.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
+  </data>
+  <data name="textAverageTurnover.ToolTip" xml:space="preserve">
+    <value>Smallest average turnover score to allow [0,1)</value>
   </data>
   <data name="&gt;&gt;textAverageTurnover.Name" xml:space="preserve">
     <value>textAverageTurnover</value>
@@ -310,7 +319,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;textAverageTurnover.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>8</value>
   </data>
   <data name="label1.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -331,7 +340,7 @@
     <value>2</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>Minimum &amp;average turnover score:</value>
+    <value>&amp;Minimum average turnover score:</value>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -343,7 +352,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>9</value>
   </data>
   <data name="textIDP.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 123</value>
@@ -353,6 +362,9 @@
   </data>
   <data name="textIDP.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
+  </data>
+  <data name="textIDP.ToolTip" xml:space="preserve">
+    <value>Smallest IDP to allow [0,1)</value>
   </data>
   <data name="&gt;&gt;textIDP.Name" xml:space="preserve">
     <value>textIDP</value>
@@ -364,7 +376,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;textIDP.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>6</value>
   </data>
   <data name="label2.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -376,7 +388,7 @@
     <value>NoControl</value>
   </data>
   <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 107</value>
+    <value>8, 107</value>
   </data>
   <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
     <value>144, 13</value>
@@ -385,7 +397,7 @@
     <value>4</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>Minimum &amp;isotope dot product:</value>
+    <value>Mi&amp;nimum isotope dot product:</value>
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
@@ -397,7 +409,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>7</value>
   </data>
   <data name="textFolderName.Location" type="System.Drawing.Point, System.Drawing">
     <value>11, 172</value>
@@ -407,6 +419,9 @@
   </data>
   <data name="textFolderName.TabIndex" type="System.Int32, mscorlib">
     <value>7</value>
+  </data>
+  <data name="textFolderName.ToolTip" xml:space="preserve">
+    <value>Name of the folder to put results  in</value>
   </data>
   <data name="&gt;&gt;textFolderName.Name" xml:space="preserve">
     <value>textFolderName</value>
@@ -418,6 +433,144 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;textFolderName.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="textQValue.Location" type="System.Drawing.Point, System.Drawing">
+    <value>11, 268</value>
+  </data>
+  <data name="textQValue.Size" type="System.Drawing.Size, System.Drawing">
+    <value>164, 18</value>
+  </data>
+  <data name="textQValue.TabIndex" type="System.Int32, mscorlib">
+    <value>12</value>
+  </data>
+  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 12</value>
+  </metadata>
+  <data name="textQValue.ToolTip" xml:space="preserve">
+    <value>Minimum Q value to allow [0.0001,1]</value>
+  </data>
+  <data name="&gt;&gt;textQValue.Name" xml:space="preserve">
+    <value>textQValue</value>
+  </data>
+  <data name="&gt;&gt;textQValue.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textQValue.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;textQValue.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="labelQValue.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelQValue.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelQValue.Location" type="System.Drawing.Point, System.Drawing">
+    <value>8, 252</value>
+  </data>
+  <data name="labelQValue.Size" type="System.Drawing.Size, System.Drawing">
+    <value>47, 13</value>
+  </data>
+  <data name="labelQValue.TabIndex" type="System.Int32, mscorlib">
+    <value>11</value>
+  </data>
+  <data name="labelQValue.Text" xml:space="preserve">
+    <value>&amp;Q value:</value>
+  </data>
+  <data name="&gt;&gt;labelQValue.Name" xml:space="preserve">
+    <value>labelQValue</value>
+  </data>
+  <data name="&gt;&gt;labelQValue.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelQValue.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;labelQValue.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="label5.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label5.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="label5.Location" type="System.Drawing.Point, System.Drawing">
+    <value>8, 200</value>
+  </data>
+  <data name="label5.Size" type="System.Drawing.Size, System.Drawing">
+    <value>58, 13</value>
+  </data>
+  <data name="label5.TabIndex" type="System.Int32, mscorlib">
+    <value>15</value>
+  </data>
+  <data name="label5.Text" xml:space="preserve">
+    <value>&amp;Reference:</value>
+  </data>
+  <data name="&gt;&gt;label5.Name" xml:space="preserve">
+    <value>label5</value>
+  </data>
+  <data name="&gt;&gt;label5.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label5.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;label5.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="labelQValueWarning.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelQValueWarning.Location" type="System.Drawing.Point, System.Drawing">
+    <value>8, 289</value>
+  </data>
+  <data name="labelQValueWarning.Size" type="System.Drawing.Size, System.Drawing">
+    <value>249, 13</value>
+  </data>
+  <data name="labelQValueWarning.TabIndex" type="System.Int32, mscorlib">
+    <value>16</value>
+  </data>
+  <data name="labelQValueWarning.Text" xml:space="preserve">
+    <value>Peptides with undefined Q values will be filtered out</value>
+  </data>
+  <data name="labelQValueWarning.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="&gt;&gt;labelQValueWarning.Name" xml:space="preserve">
+    <value>labelQValueWarning</value>
+  </data>
+  <data name="&gt;&gt;labelQValueWarning.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelQValueWarning.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;labelQValueWarning.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="comboReference.Location" type="System.Drawing.Point, System.Drawing">
+    <value>11, 216</value>
+  </data>
+  <data name="comboReference.Size" type="System.Drawing.Size, System.Drawing">
+    <value>164, 21</value>
+  </data>
+  <data name="comboReference.TabIndex" type="System.Int32, mscorlib">
+    <value>17</value>
+  </data>
+  <data name="&gt;&gt;comboReference.Name" xml:space="preserve">
+    <value>comboReference</value>
+  </data>
+  <data name="&gt;&gt;comboReference.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboReference.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;comboReference.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
@@ -427,13 +580,19 @@
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>300, 207</value>
+    <value>303, 314</value>
   </data>
   <data name="$this.Font" type="System.Drawing.Font, System.Drawing">
     <value>Microsoft Sans Serif, 7.25pt</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>Protein Turnover Tool</value>
+    <value>TurnoveR</value>
+  </data>
+  <data name="&gt;&gt;toolTip1.Name" xml:space="preserve">
+    <value>toolTip1</value>
+  </data>
+  <data name="&gt;&gt;toolTip1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>ProteinTurnoverUI</value>
