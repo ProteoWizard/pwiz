@@ -90,7 +90,14 @@ namespace AutoQC
             sb.Append("Include subfolders: ").AppendLine(IncludeSubfolders.ToString());
             sb.AppendLine(QcFileFilter.ToString());
             sb.Append("Instrument: ").AppendLine(InstrumentType);
-            sb.Append("Results window: ").Append(ResultsWindow.ToString()).AppendLine(" days");
+            if (RemoveResults)
+            {
+                sb.Append("Remove results older than: ").Append(ResultsWindow.ToString()).AppendLine(" days");
+            }
+            else
+            {
+                sb.AppendLine("Remove older results: No");
+            }
             sb.Append("Acquisition time: ").Append(AcquisitionTime.ToString()).AppendLine(" minutes");
             return sb.ToString();
         }
