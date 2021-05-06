@@ -40,10 +40,5 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 PrecursorResult.GetResultFile().ChromFileInfo.FilePath, PrecursorResult.Precursor.IdentityPath,
                 loadPoints);
         }
-
-        private PeakFeatureEnumerator.SummaryPeptidePeakData GetSummaryPeakData()
-        {
-
-        }
     }
 }

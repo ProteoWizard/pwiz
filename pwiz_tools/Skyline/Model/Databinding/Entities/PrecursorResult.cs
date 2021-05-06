@@ -30,6 +30,7 @@ using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
@@ -266,9 +267,26 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         private IList<CandidatePeakGroup> GetCandidatePeakGroups()
         {
             var chromatogramGroup = new ChromatogramGroup(this);
-            var chromatogramGroupInfo = chromatogramGroup.ChromatogramGroupInfo;
-            return ImmutableList.ValueOf(Enumerable.Range(0, chromatogramGroupInfo.NumPeaks)
-                .Select(peakIndex => new CandidatePeakGroup(chromatogramGroup, peakIndex)));
+            var peakGroups = new List<CandidatePeakGroup>();
+            var context = new PeakScoringContext(SrmDocument);
+            var nodeGroup = Precursor.DocNode;
+            var nodePep = Precursor.Peptide.DocNode;
+            var comparableGroup = PeakFeatureEnumerator.ComparableGroups(nodePep)
+                .Select(ImmutableList.ValueOf)
+                .FirstOrDefault(group => group.Any(docNode => ReferenceEquals(docNode, nodeGroup)));
+            Assume.IsNotNull(comparableGroup);
+            var summaryData = new PeakFeatureEnumerator.SummaryPeptidePeakData(SrmDocument, nodePep,
+                comparableGroup, GetResultFile().Replicate.ChromatogramSet,
+                chromatogramGroup.ChromatogramGroupInfo);
+            while (summaryData.NextPeakIndex())
+            {
+                var peakScoreCalculator = new PeakScoreCalculator(summaryData.PeakIndex,
+                    chromatogramGroup.ChromatogramGroupInfo, context, summaryData);
+                var defaultPeakScores = DefaultPeakScores.CalculateScores(peakScoreCalculator);
+                peakGroups.Add(new CandidatePeakGroup(chromatogramGroup, summaryData.PeakIndex, defaultPeakScores));
+            }
+
+            return ImmutableList.ValueOf(peakGroups);
         }
     }
 }
