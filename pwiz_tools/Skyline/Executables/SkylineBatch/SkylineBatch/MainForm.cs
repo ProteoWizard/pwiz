@@ -505,7 +505,7 @@ namespace SkylineBatch
         #region Logging
 
         private bool _scrolling = true;
-        private bool _forceScroll = true;
+        private bool _forceScroll;
 
         private void OutputLog(object sender, EventArgs e)
         {
@@ -543,10 +543,9 @@ namespace SkylineBatch
             if (numLines > Logger.MaxLogLines + buffer)
             {
                 textBoxLog.SelectionLength = 100;
-                var selectedText = textBoxLog.SelectedText;
                 textBoxLog.Text = string.Empty;
                 _configManager.GetSelectedLogger().DisplayLogFromFile();
-                _scrolling = true;
+                _forceScroll = true;
             }
         }
 

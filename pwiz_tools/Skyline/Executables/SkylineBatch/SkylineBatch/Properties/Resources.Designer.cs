@@ -958,6 +958,26 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to There was an error reading the saved configurations from an earlier version of {0}. Please restart the program and try again..
+        /// </summary>
+        public static string Program_Main_There_was_an_error_reading_the_saved_configurations_from_an_earlier_version_of__0___Please_restart_the_program_and_try_again_ {
+            get {
+                return ResourceManager.GetString("Program_Main_There_was_an_error_reading_the_saved_configurations_from_an_earlier_" +
+                        "version_of__0___Please_restart_the_program_and_try_again_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to To help improve {0} in future versions, please post the configuration file to the Skyline Support board:.
+        /// </summary>
+        public static string Program_Main_To_help_improve__0__in_future_versions__please_post_the_configuration_file_to_the_Skyline_Support_board_ {
+            get {
+                return ResourceManager.GetString("Program_Main_To_help_improve__0__in_future_versions__please_post_the_configuratio" +
+                        "n_file_to_the_Skyline_Support_board_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The following R installations were not found by {0}:.
         /// </summary>
         public static string RDirectorySelector_AddIfNecassary_The_following_R_installations_were_not_found_by__0__ {
