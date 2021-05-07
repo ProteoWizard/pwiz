@@ -444,7 +444,9 @@ bool MaxQuantReader::parseFile()
     vector<string> dirs, extensions;
     // look in parent and grandparent dirs in addition to cwd
     dirs.push_back("../");   
-    dirs.push_back("../../");
+    dirs.push_back("../../"); 
+    dirs.push_back("../../../"); 
+    dirs.push_back("../../../../");
     
     // look in common open and vendor formats
     extensions.push_back(".mz5");
