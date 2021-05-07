@@ -502,6 +502,7 @@ namespace pwiz.Skyline.Model
             var group = new PeptideGroupDocNode(new PeptideGroup(), Resources.ImportFastaControl_ImportFasta_iRT_standards, null,
                 standard.Peptides.Select(pep =>
                     new PeptideDocNode(new Peptide(pep.ModifiedTarget), doc.Settings, null, null, null, new TransitionGroupDocNode[0], true)
+                        .ChangeSettings(doc.Settings, SrmSettingsDiff.ALL)
                 ).ToArray());
             return (SrmDocument) doc.Insert(doc.Children.FirstOrDefault()?.Id, group);
         }
