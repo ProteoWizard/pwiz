@@ -153,6 +153,7 @@ namespace AutoQC
             try
             {
                 CreateConfigDir();
+                _logger.Init(); // Create the log file after the config directory has been created.
                 LogStartMessage();
             }
             catch (Exception)

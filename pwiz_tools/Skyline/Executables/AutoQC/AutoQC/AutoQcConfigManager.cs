@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using AutoQC.Properties;
@@ -127,7 +126,9 @@ namespace AutoQC
 
             var logFile = config.getConfigFilePath("AutoQC.log");
 
-            var logger = new Logger(logFile, config.Name, _uiControl);
+            var logger = new Logger(logFile, config.Name, 
+                false, // Do not initialize the logger in the constructor; it will be initialized when we start the config.
+                _uiControl);
             _logList.Add(logger);
             var runner = new ConfigRunner(config, logger, _uiControl);
             _configRunners.Add(config.Name, runner);
@@ -378,8 +379,8 @@ namespace AutoQC
                 }
                 catch (ArgumentException)
                 {
-                    DisplayError(string.Format(Resources.ConfigManager_UpdateSelectedEnabled_Cannot_run___0___while_it_is_invalid_, selectedConfig.Name) + Environment.NewLine +
-                                 string.Format(Resources.ConfigManager_UpdateSelectedEnabled_Please_edit___0___and_try_again_, selectedConfig.Name));
+                    DisplayError(TextUtil.LineSeparate(string.Format("Cannot run the configuration \"{0}\" because it could not be validated.", selectedConfig.Name),
+                                 "Please edit the configuration and try again."));
                     return;
                 }
                 var configRunner = GetSelectedConfigRunner();

@@ -97,7 +97,12 @@ namespace AutoQC
             var config = configRunner.Config;
             if (!_configManager.IsSelectedConfigValid())
             {
-                if (configRunner.IsRunning()) throw new Exception("Invalid configuration cannot be running.");
+                if (configRunner.IsRunning())
+                {
+                    // This should not happen.  But we will display an error instead of throwing an exception 
+                    DisplayError("Configuration '{0}' is invalid. It cannot be running.  Please stop the configuration and fix the errors.", config.Name);
+                    return;
+                }
                 var validateConfigForm = new InvalidConfigSetupForm(config, _configManager, this);
                 if (validateConfigForm.ShowDialog() != DialogResult.OK)
                     return;
@@ -644,6 +649,11 @@ namespace AutoQC
         public void DisplayError(string message)
         {
             RunUi(() => { AlertDlg.ShowError(this, Program.AppName, message); });
+        }
+
+        public void DisplayError(string message, params string[] args)
+        {
+            RunUi(() => { AlertDlg.ShowError(this, Program.AppName, string.Format(message, args)); });
         }
 
         public void DisplayWarning(string message)

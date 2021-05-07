@@ -20,11 +20,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Threading.Tasks;
 using SharedBatch.Properties;
 
  namespace SharedBatch
@@ -61,14 +59,12 @@ using SharedBatch.Properties;
         private const int LogBufferSize = 10240;
         private const int StreamReaderDefaultBufferSize = 4096;
         
-        public Logger(string logFilePath, string logName, IMainUiControl mainUi = null)
+        public Logger(string logFilePath, string logName, IMainUiControl mainUi = null):this(logFilePath, logName, true, mainUi)
         {
-            var logFolder = FileUtil.GetDirectory(logFilePath);
-            if (!Directory.Exists(logFolder))
-            {
-                Directory.CreateDirectory(logFolder);
-            }
+        }
 
+        public Logger(string logFilePath, string logName, bool init, IMainUiControl mainUi = null)
+        {
             if (_errorFormats == null)
             {
                 _errorFormats = new HashSet<Regex>();
@@ -78,9 +74,20 @@ using SharedBatch.Properties;
             _filePath = logFilePath;
             _mainUi = mainUi;
             Name = logName;
-            Init();
+
+            if (init)
+            {
+                var logFolder = FileUtil.GetDirectory(logFilePath);
+                if (!Directory.Exists(logFolder))
+                {
+                    Directory.CreateDirectory(logFolder);
+                }
+
+                Init();
+            }
         }
-        
+
+
         public void Init()
         {
             _logBuffer = new StringBuilder();

@@ -452,30 +452,12 @@ namespace AutoQC.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cannot run &quot;{0}&quot; while it is invalid..
-        /// </summary>
-        internal static string ConfigManager_UpdateSelectedEnabled_Cannot_run___0___while_it_is_invalid_ {
-            get {
-                return ResourceManager.GetString("ConfigManager_UpdateSelectedEnabled_Cannot_run___0___while_it_is_invalid_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Cannot stop a configuration that is {0}. Please wait until the configuration has finished {0}..
         /// </summary>
         internal static string ConfigManager_UpdateSelectedEnabled_Cannot_stop_a_configuration_that_is__0___Please_wait_until_the_configuration_has_finished__0__ {
             get {
                 return ResourceManager.GetString("ConfigManager_UpdateSelectedEnabled_Cannot_stop_a_configuration_that_is__0___Plea" +
                         "se_wait_until_the_configuration_has_finished__0__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Please edit &quot;{0}&quot; and try again..
-        /// </summary>
-        internal static string ConfigManager_UpdateSelectedEnabled_Please_edit___0___and_try_again_ {
-            get {
-                return ResourceManager.GetString("ConfigManager_UpdateSelectedEnabled_Please_edit___0___and_try_again_", resourceCulture);
             }
         }
         
