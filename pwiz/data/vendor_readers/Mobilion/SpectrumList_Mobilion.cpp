@@ -220,12 +220,12 @@ PWIZ_API_DECL bool SpectrumList_Mobilion::canConvertIonMobilityAndCCS() const
 
 PWIZ_API_DECL double SpectrumList_Mobilion::ionMobilityToCCS(double ionMobility, double mz, int charge) const
 {
-    return 0;
+    return 0; // TODO when API supplies it
 }
 
 PWIZ_API_DECL double SpectrumList_Mobilion::ccsToIonMobility(double ccs, double mz, int charge) const
 {
-    return 0;
+    return 0; // TODO when API supplies it
 }
 
 PWIZ_API_DECL void SpectrumList_Mobilion::getCombinedSpectrumData(Frame& frame, BinaryData<double>& mz, BinaryData<double>& intensity, BinaryData<double>& driftTime) const
