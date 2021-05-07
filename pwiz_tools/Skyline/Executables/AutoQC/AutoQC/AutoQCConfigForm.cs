@@ -209,8 +209,15 @@ namespace AutoQC
             }
             var panoramaSettings = config.PanoramaSettings;
             textPanoramaUrl.Text = panoramaSettings.PanoramaServerUrl;
-            textPanoramaEmail.Text = panoramaSettings.PanoramaUserEmail;
-            textPanoramaPasswd.Text = panoramaSettings.PanoramaPassword;
+            
+            if (_action != ConfigAction.Copy)
+            {
+                // Do not set the email and password when copying from a configuration.  AutoQC Loader is run on computers accessible to more than
+                // one user. We don't want the Panorama email and password for one user to be used by another user.
+                textPanoramaEmail.Text = panoramaSettings.PanoramaUserEmail;
+                textPanoramaPasswd.Text = panoramaSettings.PanoramaPassword;
+            }
+
             textPanoramaFolder.Text = panoramaSettings.PanoramaFolder;
             cbPublishToPanorama.Checked = panoramaSettings.PublishToPanorama;
             groupBoxPanorama.Enabled = panoramaSettings.PublishToPanorama;

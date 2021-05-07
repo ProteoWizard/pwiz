@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using System.IO;
 using System.Text;
 using System.Windows.Forms;
 using System.Xml;
@@ -80,6 +81,17 @@ namespace AutoQC
         public bool UsesSkylineDaily => SkylineSettings.Type == SkylineType.SkylineDaily;
 
         public bool UsesCustomSkylinePath => SkylineSettings.Type == SkylineType.Custom;
+
+        internal string GetConfigDir()
+        {
+            var skylineFileDir = Path.GetDirectoryName(MainSettings.SkylineFilePath);
+            return Path.Combine(skylineFileDir ?? string.Empty, FileUtil.GetSafeNameForDir(Name));
+        }
+
+        public string getConfigFilePath(string file)
+        {
+            return Path.Combine(GetConfigDir(), file);
+        }
 
         private enum Attr
         {

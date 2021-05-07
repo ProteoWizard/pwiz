@@ -121,16 +121,9 @@ namespace AutoQC
             return _logger;
         }
 
-        private string GetConfigDir()
-        {
-            var skylineFileDir = Path.GetDirectoryName(Config.MainSettings.SkylineFilePath);
-            if (skylineFileDir == null) throw new Exception("Cannot have a null Skyline file directory.");
-            return Path.Combine(skylineFileDir, GetSafeName(Config.Name));
-        }
-
         private void CreateConfigDir()
         {
-            var configDir = GetConfigDir();
+            var configDir = Config.GetConfigDir();
             if (!Directory.Exists(configDir))
             {
                 try
@@ -146,15 +139,6 @@ namespace AutoQC
                     throw new ConfigRunnerException(sb.ToString(), e);
                 }
             }
-        }
-
-        private static string GetSafeName(string name)
-        {
-            var invalidChars = new List<char>();
-            invalidChars.AddRange(Path.GetInvalidFileNameChars());
-            invalidChars.AddRange(Path.GetInvalidPathChars());
-            var safeName = string.Join("_", name.Split(invalidChars.ToArray()));
-            return safeName; // .TrimStart('.').TrimEnd('.');
         }
 
         public string GetLogDirectory()
@@ -655,7 +639,7 @@ namespace AutoQC
 
             }
             var skyrFile = Path.Combine(exeDir, "FileAcquisitionTime.skyr");
-            var reportFile = Path.Combine(GetConfigDir(), "AcquisitionTimes.csv");
+            var reportFile = Config.getConfigFilePath("AcquisitionTimes.csv");
 
             // Export a report from the given Skyline file
             var args =

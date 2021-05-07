@@ -85,7 +85,7 @@ namespace AutoQC
             {
                 UserInsertConfig(newConfig, index);
             }
-            catch (ArgumentException)
+            catch (Exception) // Catch all exceptions here otherwise, the old config is removed, and the new one is not added.
             {
                 UserInsertConfig(config, index);
                 throw;
@@ -115,11 +115,17 @@ namespace AutoQC
         {
             var config = (AutoQcConfig)iconfig;
             if (_configRunners.ContainsKey(config.Name))
-                throw new Exception("Config runner already exists.");
+            {
+                throw new Exception(
+                    string.Format("Config runner already exists for configuration with name '{0}'", config.Name));
+            }
 
-            var directory = Path.GetDirectoryName(config.MainSettings.SkylineFilePath);
-            if (directory == null) throw new Exception("Cannot have a null Skyline file directory.");
-            var logFile = Path.Combine(directory, FileUtil.GetSafeName(config.GetName()), "AutoQC.log");
+            // Question: Isn't the config validated before we get here? 
+            // var directory = Path.GetDirectoryName(config.MainSettings.SkylineFilePath);
+            // if (directory == null)
+            //     throw new Exception("Cannot have a null Skyline file directory.");
+
+            var logFile = config.getConfigFilePath("AutoQC.log");
 
             var logger = new Logger(logFile, config.Name, _uiControl);
             _logList.Add(logger);
@@ -187,7 +193,11 @@ namespace AutoQC
                 i++;
             }
             _logList.RemoveAt(i);
-            if (SelectedLog == _logList.Count) SelectLog(_logList.Count - 1);
+            _uiControl.ClearLog();
+            // Question: what happens if the selected log is not the last one?
+            // This causes an exception if there was only one item in the _logList, and that was just removed above.
+            // SelectLog will try to select the log at the index -1.
+            // if (SelectedLog == _logList.Count) SelectLog(_logList.Count - 1);
             _configRunners.Remove(config.Name);
         }
 
@@ -443,10 +453,9 @@ namespace AutoQC
 
         public void SelectLog(int selected)
         {
-            if (selected < 0 || selected > _logList.Count)
+            if (selected < 0 || selected >= _logList.Count)
                 throw new IndexOutOfRangeException("No log at index: " + selected);
-            if (SelectedLog >= 0)
-                GetSelectedLogger().DisableUiLogging();
+            GetSelectedLogger().DisableUiLogging();
             SelectedLog = selected;
             GetSelectedLogger().LogToUi(_uiControl);
         }

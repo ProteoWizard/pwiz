@@ -115,6 +115,8 @@ namespace SharedBatch
         void LogErrorToUi(string filePath, string text, bool trim = true);
         void LogLinesToUi(string filePath, List<string> lines);
         void LogErrorLinesToUi(string filePath, List<string> lines);
+        void ClearLog();
+
 
         void DisplayError(string message);
         void DisplayWarning(string message);

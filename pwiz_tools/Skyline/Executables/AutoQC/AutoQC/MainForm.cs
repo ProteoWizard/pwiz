@@ -529,6 +529,11 @@ namespace AutoQC
             });
         }
 
+        public void ClearLog()
+        {
+            textBoxLog.Clear();
+        }
+
         #endregion
 
         #region Settings Tab
