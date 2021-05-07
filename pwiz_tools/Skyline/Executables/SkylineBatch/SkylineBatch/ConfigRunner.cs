@@ -57,7 +57,7 @@ namespace SkylineBatch
             _processRunner = new ProcessRunner()
             {
                 OnDataReceived = DataReceived,
-                OnException = (e, message) => _logger?.LogException(e, message),
+                OnException = (e, message) => _logger?.LogError(message, e.ToString()),
                 OnError = () =>
                 {
                     if (IsRunning())
@@ -117,7 +117,7 @@ namespace SkylineBatch
             {
                 LogToUi("Error: " + e.Message);
                 ChangeStatus(RunnerStatus.Error);
-                _logger?.LogErrorNoPrefix(string.Format(Resources.ConfigRunner_Run_________________________________0____1_________________________________, Config.Name, GetStatus()));
+                LogToUi(string.Format(Resources.ConfigRunner_Run_________________________________0____1_________________________________, Config.Name, GetStatus()));
                 return;
             }
 
@@ -182,10 +182,7 @@ namespace SkylineBatch
             var delta = endTime - (DateTime)StartTime;
             RunTime = delta;
             var runTimeString = delta.Hours > 0 ? delta.ToString(@"hh\:mm\:ss") : delta.ToString(@"mm\:ss");
-            if (!IsError())
-                LogToUi(string.Format(Resources.ConfigRunner_Run_________________________________0____1_________________________________, Config.Name, GetStatus()));
-            else
-                _logger?.LogErrorNoPrefix(string.Format(Resources.ConfigRunner_Run_________________________________0____1_________________________________, Config.Name, GetStatus()));
+            LogToUi(string.Format(Resources.ConfigRunner_Run_________________________________0____1_________________________________, Config.Name, GetStatus()));
             LogToUi(string.Format(Resources.ConfigRunner_Run_________________________________0____1_________________________________, "Runtime", runTimeString));
             _uiControl?.UpdateUiConfigurations();
         }
@@ -248,7 +245,6 @@ namespace SkylineBatch
 
             var allFiles = server.GetServerFiles;
             var fileNames = allFiles.Keys;
-            var existingDataFiles = Directory.GetFiles(mainSettings.DataFolderPath).Length;
             var dataFilter = new Regex(mainSettings.Server.DataNamingPattern);
             var downloadingFilesEnum =
                 from name in fileNames
@@ -259,7 +255,7 @@ namespace SkylineBatch
             foreach (var downloadingFile in downloadingFiles)
             {
                 var fileName = Path.Combine(mainSettings.DataFolderPath, downloadingFile);
-                if (File.Exists(fileName) && allFiles[downloadingFile].Size != new FileInfo(fileName).Length)
+                if (File.Exists(fileName) && allFiles[downloadingFile].Size == new FileInfo(fileName).Length)
                     skippingFiles.Add(downloadingFile);
             }
 
@@ -320,8 +316,7 @@ namespace SkylineBatch
                     }
                     else
                     {
-                        _logger.LogException(e,
-                            Resources.ConfigRunner_DownloadData_An_error_occurred_while_downloading_the_data_files_);
+                        _logger.LogError(Resources.ConfigRunner_DownloadData_An_error_occurred_while_downloading_the_data_files_, e.ToString());
                         ChangeStatus(RunnerStatus.Error);
                     }
                 }

@@ -17,7 +17,6 @@
  */
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
@@ -37,6 +36,7 @@ namespace SkylineBatch
         private bool _loaded;
         private readonly ColumnWidthCalculator _listViewColumnWidths;
         private bool _showRefineStep;
+        private Timer _outputLog;
 
         public MainForm(string openFile)
         {
@@ -45,14 +45,17 @@ namespace SkylineBatch
             var roamingFolder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
             var localFolder = Path.Combine(Path.GetDirectoryName(roamingFolder) ?? throw new InvalidOperationException(), "local");
             var logPath= Path.Combine(localFolder, Program.AppName(), Program.AppName() + TextUtil.EXT_LOG);
-            _skylineBatchLogger = new Logger(logPath, Program.AppName() + TextUtil.EXT_LOG, this);
-            _skylineBatchLogger.AddErrorMatch(string.Format(Resources.ConfigRunner_Run_________________________________0____1_________________________________, ".*", RunnerStatus.Error));
+            Logger.AddErrorMatch(string.Format(Resources.ConfigRunner_Run_________________________________0____1_________________________________, ".*", RunnerStatus.Error));
+            _skylineBatchLogger = new Logger(logPath, Program.AppName() + TextUtil.EXT_LOG);
             toolStrip1.Items.Insert(3,new ToolStripSeparator());
             _listViewColumnWidths = new ColumnWidthCalculator(listViewConfigs);
             listViewConfigs.ColumnWidthChanged += listViewConfigs_ColumnWidthChanged;
             ProgramLog.Info(Resources.MainForm_MainForm_Loading_configurations_from_saved_settings_);
             _configManager = new SkylineBatchConfigManager(_skylineBatchLogger, this);
             _rDirectorySelector = new RDirectorySelector(this, _configManager);
+            _outputLog = new Timer { Interval = 500 };
+            _outputLog.Tick += OutputLog;
+            _outputLog.Start();
 
             UpdateUiConfigurations();
             ListViewSizeChanged();
@@ -501,41 +504,71 @@ namespace SkylineBatch
         
         #region Logging
 
-        private bool _isScrolling = true;
-        private bool _blockUiLogging = false;
+        private bool _scrolling = true;
+        private bool _forceScroll = true;
 
-        private void tabLog_Enter(object sender, EventArgs e)
+        private void OutputLog(object sender, EventArgs e)
         {
-            if (_configManager.SelectedLog == 0)
+            _outputLog.Tick -= OutputLog;
+            if (WindowState != FormWindowState.Minimized)
             {
-                // Wait for repaint before logging
-                _blockUiLogging = true;
-                var timer = new Timer { Interval = 50 };
-                timer.Tick += AddScrollToQueue;
-                timer.Start();
+                _scrolling = textBoxLog.GetPositionFromCharIndex(textBoxLog.Text.Length - 1).Y <=
+                             textBoxLog.Height;
+            }
+            var logger = _configManager.GetSelectedLogger();
+            if (textBoxLog.TextLength == 0)
+            {
+                if (logger.WillTruncate)
+                    LogErrorToUi(string.Format(Resources.Logger_DisplayLog_____Log_truncated_____Full_log_is_in__0_, _skylineBatchLogger.LogFile));
+            }
+            var logChanged = logger.OutputLog(LogToUi, LogErrorToUi);
+
+
+            if (logChanged) TrimDisplayedLog();
+            if (_forceScroll || (_scrolling && logChanged))
+            {
+                textBoxLog.SelectionStart = textBoxLog.TextLength;
+                textBoxLog.ScrollToCaret();
+                _scrolling = true;
+                _forceScroll = false;
+            }
+            
+            _outputLog.Tick += OutputLog;
+        }
+
+        private void TrimDisplayedLog()
+        {
+            var numLines = textBoxLog.Lines.Length;
+            const int buffer = Logger.MaxLogLines / 10;
+            if (numLines > Logger.MaxLogLines + buffer)
+            {
+                textBoxLog.SelectionLength = 100;
+                var selectedText = textBoxLog.SelectedText;
+                textBoxLog.Text = string.Empty;
+                _configManager.GetSelectedLogger().DisplayLogFromFile();
+                _scrolling = true;
             }
         }
 
-        private void AddScrollToQueue(object sender, EventArgs e)
+        private void LogToUi(string text)
         {
-            ((Timer) sender).Stop();
-            _blockUiLogging = false;
-            RunUi(() =>
-            {
-                // Load log messages since last paint
-                UpdateLog();
-                ScrollToLogEnd(true);
-            });
+            textBoxLog.AppendText(text);
+            textBoxLog.AppendText(Environment.NewLine);
         }
 
-        private void comboLogList_SelectedIndexChanged(object sender, EventArgs e)
+        private void LogErrorToUi(string text)
         {
-            _configManager.SelectLog(comboLogList.SelectedIndex);
-            UpdateLog();
+            textBoxLog.SelectionStart = textBoxLog.TextLength;
+            textBoxLog.SelectionLength = 0;
+            textBoxLog.SelectionColor = Color.Red;
+            textBoxLog.AppendText(text);
+            textBoxLog.AppendText(Environment.NewLine);
+            textBoxLog.SelectionColor = textBoxLog.ForeColor;
         }
 
-        private async void UpdateLog()
+        private async void SwitchLogger()
         {
+            _outputLog.Tick -= OutputLog;
             textBoxLog.Clear();
 
             var logger = _configManager.GetSelectedLogger();
@@ -544,35 +577,27 @@ namespace SkylineBatch
                 await Task.Run(() =>
                 {
                     // Read the log contents and display in the log tab.
-                    logger.DisplayLog();
+                    logger.DisplayLogFromFile();
                 });
             }
             catch (Exception ex)
             {
                 DisplayError(ex.Message);
             }
-            if (_configManager.SelectedLog == 0)
-                ScrollToLogEnd(true);
+            
+            _forceScroll = _configManager.SelectedLog == 0;
+            _outputLog.Tick += OutputLog;
         }
 
-        private void ScrollToLogEnd(bool forceScroll = false)
+        private void tabLog_Enter(object sender, EventArgs e)
         {
-            if (forceScroll)
-                _isScrolling = true;
-            else if(WindowState != FormWindowState.Minimized)
-            {
-                _isScrolling = textBoxLog.GetPositionFromCharIndex(textBoxLog.Text.Length - 1).Y <=
-                               textBoxLog.Height + 30;
-            }
+            _forceScroll = _configManager.SelectedLog == 0;
+        }
 
-            if (_isScrolling)
-            {
-                RunUi(() =>
-                {
-                    textBoxLog.SelectionStart = textBoxLog.Text.Length;
-                    textBoxLog.ScrollToCaret();
-                });
-            }
+        private void comboLogList_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            _configManager.SelectLog(comboLogList.SelectedIndex);
+            SwitchLogger();
         }
 
         private void btnDeleteLogs_Click(object sender, EventArgs e)
@@ -583,96 +608,13 @@ namespace SkylineBatch
 
         private void btnOpenFolder_Click(object sender, EventArgs e)
         {
+           // OutputLog(new object(), new EventArgs());
+           // return;
             var logger = _configManager.GetSelectedLogger();
-            var arg = "/select, \"" + logger.GetFile() + "\"";
+            var arg = "/select, \"" + logger.LogFile + "\"";
             Process.Start("explorer.exe", arg);
         }
-
-        public void LogToUi(string name, string text, bool trim)
-        {
-            RunUi(() =>
-            {
-                if (_configManager.SelectedLog != 0 || _blockUiLogging) return; // don't log if old log is displayed
-
-                if (trim)
-                {
-                    TrimDisplayedLog();
-                }
-                
-                textBoxLog.AppendText(text);
-                textBoxLog.AppendText(Environment.NewLine);
-
-                ScrollToLogEnd();
-            });
-        }
-
-        private void TrimDisplayedLog()
-        {
-            var numLines = textBoxLog.Lines.Length;
-            const int buffer = Logger.MaxLogLines / 10;
-            if (numLines > Logger.MaxLogLines + buffer)
-            {
-                var unTruncated = textBoxLog.Text;
-                var startIndex = textBoxLog.GetFirstCharIndexFromLine(numLines - Logger.MaxLogLines);
-                var message = (_skylineBatchLogger != null)
-                    ? string.Format(Resources.Logger_DisplayLog_____Log_truncated_____Full_log_is_in__0_, _skylineBatchLogger.GetFile())
-                    : Resources.MainForm_TrimDisplayedLog_____Log_truncated____;
-                message += Environment.NewLine;
-                textBoxLog.Text = message + unTruncated.Substring(startIndex);
-                textBoxLog.SelectionStart = 0;
-                textBoxLog.SelectionLength = message.Length;
-                textBoxLog.SelectionColor = Color.Red;
-            }
-        }
-
-        public void LogErrorToUi(string name, string text, bool trim)
-        {
-            RunUi(() =>
-            {
-                if (trim)
-                {
-                    TrimDisplayedLog();
-                }
-
-                textBoxLog.SelectionStart = textBoxLog.TextLength;
-                textBoxLog.SelectionLength = 0;
-                textBoxLog.SelectionColor = Color.Red;
-                textBoxLog.AppendText(text);
-                textBoxLog.AppendText(Environment.NewLine);
-                textBoxLog.SelectionColor = textBoxLog.ForeColor;
-
-                ScrollToLogEnd();
-            });
-        }
-
-        public void LogLinesToUi(string name, List<string> lines)
-        {
-            RunUi(() =>
-            {
-                foreach (var line in lines)
-                {
-                    textBoxLog.AppendText(line);
-                    textBoxLog.AppendText(Environment.NewLine);
-                }
-            });
-        }
-
-        public void LogErrorLinesToUi(string name, List<string> lines)
-        {
-            RunUi(() =>
-            {
-                var selectionStart = textBoxLog.SelectionStart;
-                foreach (var line in lines)
-                {
-                    textBoxLog.AppendText(line);
-                    textBoxLog.AppendText(Environment.NewLine);
-                }
-
-                textBoxLog.Select(selectionStart, textBoxLog.TextLength);
-                textBoxLog.SelectionColor = Color.Red;
-            });
-        }
-
+        
         #endregion
 
         #region Mainform event handlers and errors
