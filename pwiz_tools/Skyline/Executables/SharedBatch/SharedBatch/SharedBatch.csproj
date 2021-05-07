@@ -37,6 +37,7 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Management" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -52,13 +53,21 @@
     <Compile Include="AlertDlg.Designer.cs">
       <DependentUpon>AlertDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="ChildProcessTracker.cs" />
     <Compile Include="ConfigManager.cs" />
+    <Compile Include="FileOpenedForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FileOpenedForm.Designer.cs">
+      <DependentUpon>FileOpenedForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="FilePathControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="FilePathControl.Designer.cs">
       <DependentUpon>FilePathControl.cs</DependentUpon>
     </Compile>
+    <Compile Include="FileUtil.cs" />
     <Compile Include="FindSkylineForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -68,6 +77,7 @@
     <Compile Include="Interfaces.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="MainFormUtils.cs" />
+    <Compile Include="ProcessRunner.cs" />
     <Compile Include="ProgramLog.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
@@ -103,6 +113,9 @@
       <DependentUpon>AlertDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="FileOpenedForm.resx">
+      <DependentUpon>FileOpenedForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FilePathControl.resx">
       <DependentUpon>FilePathControl.cs</DependentUpon>
     </EmbeddedResource>
@@ -130,7 +143,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PreBuildEvent>cd "C:\Branches\Skylinework20210204_Consolidate_shared_AutoQcSkylineBatch_files\ProteoWizard\pwiz\pwiz_tools\Skyline\Executables\SharedBatch\SharedBatch\bin\Debug"
-del "SharedBatch.dll" "SharedBatch.dll.config" "SharedBatch.pdb"</PreBuildEvent>
+    <PreBuildEvent>
+    </PreBuildEvent>
   </PropertyGroup>
 </Project>

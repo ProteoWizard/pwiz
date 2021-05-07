@@ -163,6 +163,7 @@ All Info  :
 スペクトルライブラリを構築>曖昧な一致を含めるは偽です
 スペクトルライブラリを構築>ドキュメント内のペプチドをフィルタリングは真です
 スペクトルライブラリを構築>ワークフローは"PRM"です
+スペクトルライブラリを構築>Input File Typeは"Search results (build library directly)"です
 Extra Info: カットオフスコア = "0.99",
 ファイルを検索 = 
 [
@@ -172,7 +173,8 @@ Extra Info: カットオフスコア = "0.99",
 iRT標準ペプチド = なし,
 曖昧な一致を含める = 偽,
 ドキュメント内のペプチドをフィルタリング = 真,
-ワークフロー = "PRM"
+ワークフロー = "PRM",
+Input File Type = "Search results (build library directly)"
 
 Undo Redo : ペプチド検索がインポートされました
 Summary   : ペプチド検索がインポートされました

@@ -46,11 +46,3 @@ lib pwiz_analysis_diaumpire
 # Jamfile directory.  The test program can then locate its data files.
 
 exe DiaUmpire : DiaUmpireTest.cpp pwiz_analysis_diaumpire ;
-
-run-if-exists DiaUmpireTest.cpp pwiz_analysis_diaumpire 
-    : # args
-    : DiaUmpireTest.data/tests.txt # input-files
-    : # requirements
-    : DiaUmpireTest # target name
-    : # default-build
-    ;

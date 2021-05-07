@@ -30,13 +30,10 @@ namespace SkylineBatch
         // Finds and saves information about the computer's R installation locations
         private const string RegistryLocationR = @"SOFTWARE\R-core\R\";
 
-        public static string RLocation => Settings.Default.RDir ?? "C:\\Program Files\\R";
-
-        #region R
-
         public static bool FindRDirectory()
         {
-            if (string.IsNullOrWhiteSpace(Settings.Default.RDir))
+            if (Settings.Default.RDirs == null) Settings.Default.RDirs = new List<string>();
+            if (Settings.Default.RDirs.Count == 0)
             {
                 RegistryKey rKey = null;
                 try
@@ -47,40 +44,83 @@ namespace SkylineBatch
                 {
                     // ignored
                 }
-                if (rKey == null)
-                    return false;
-                var latestRPath = rKey.GetValue(@"InstallPath") as string;
-                Settings.Default.RDir = Path.GetDirectoryName(latestRPath);
+
+                if (rKey != null)
+                {
+                    var latestRPath = rKey.GetValue(@"InstallPath") as string;
+                    Settings.Default.RDirs.Add(Path.GetDirectoryName(latestRPath));
+                }
+                string documentsRPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "R");
+                Settings.Default.RDirs.Add(documentsRPath);
             }
 
-            InitRscriptExeList();
+            Settings.Default.RVersions = GetRInstallationDict(Settings.Default.RDirs);
             return Settings.Default.RVersions.Count > 0;
         }
 
-        private static void InitRscriptExeList()
+        public static void AddRDirectory(string newRDir)
         {
-            var rPaths = new Dictionary<string, string>();
-            if (string.IsNullOrWhiteSpace(Settings.Default.RDir))
+            // CONSIDER: Adding watch to R folders for new installations
+            if (!Directory.Exists(newRDir))
+                throw new ArgumentException(string.Format(Resources.RInstallations_AddRDirectory_R_installation_directory_not_found___0_, newRDir) + Environment.NewLine +
+                                            Resources.RInstallations_AddRDirectory_Please_enter_a_valid_directory_);
+            var RDirectoryFound = false;
+            var input = newRDir;
+            while (!RDirectoryFound)
             {
-                return;
-            }
-            var rVersions = Directory.GetDirectories(Settings.Default.RDir);
-            foreach (var rVersion in rVersions)
-            {
-                var folderName = Path.GetFileName(rVersion);
-                if (folderName.StartsWith("R-"))
-                {
-                    var rScriptPath = rVersion + "\\bin\\Rscript.exe";
-                    if (File.Exists(rScriptPath))
+                var childFolderNames = Directory.GetDirectories(newRDir);
+                foreach (var folderName in childFolderNames)
+                    if (Path.GetFileName(folderName).StartsWith("R-"))
                     {
-                        rPaths.Add(folderName.Substring(2), rScriptPath);
+                        RDirectoryFound = true;
+                        break;
                     }
+                if (RDirectoryFound) break;
+                try
+                {
+                    newRDir = Path.GetDirectoryName(newRDir);
                 }
-
+                catch (Exception)
+                {
+                    newRDir = null;
+                }
+                if (newRDir == null)
+                    throw new ArgumentException(string.Format(Resources.RInstallations_AddRDirectory_No_R_installations_were_found_in___0_, input) + Environment.NewLine +
+                                                Resources.RInstallations_AddRDirectory_Please_choose_a_directory_with_R_installations_);
             }
-            Settings.Default.RVersions = rPaths;
+
+            if (!Settings.Default.RDirs.Contains(newRDir))
+                Settings.Default.RDirs.Add(newRDir);
+            Settings.Default.RVersions = GetRInstallationDict(Settings.Default.RDirs);
+            Settings.Default.Save();
         }
 
-        #endregion
+        private static Dictionary<string, string> GetRInstallationDict(List<string> RDirs)
+        {
+            var rPaths = new Dictionary<string, string>();
+            foreach (var RDir in RDirs)
+            {
+                if (!Directory.Exists(RDir))
+                    continue;
+                string[] rVersions = Directory.GetDirectories(RDir);
+
+                foreach (var rVersion in rVersions)
+                {
+                    var folderName = Path.GetFileName(rVersion);
+                    if (folderName.StartsWith("R-"))
+                    {
+                        var rScriptPath = rVersion + "\\bin\\Rscript.exe";
+                        if (File.Exists(rScriptPath))
+                        {
+                            if (rPaths.ContainsKey(folderName.Substring(2)))
+                                rPaths[folderName.Substring(2)] = rScriptPath;
+                            else
+                                rPaths.Add(folderName.Substring(2), rScriptPath);
+                        }
+                    }
+                }
+            }
+            return rPaths;
+        }
     }
 }

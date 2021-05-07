@@ -70,7 +70,12 @@ namespace SharedBatch
             return Show(parent, appName, message, SystemIcons.Question.ToBitmap(), MessageBoxButtons.YesNo);
         }
 
-        public static DialogResult ShowLargeQuestion(IWin32Window parent, string appName, string message)
+        public static DialogResult ShowOkCancel(IWin32Window parent, string appName, string message)
+        {
+            return Show(parent, appName, message, SystemIcons.Question.ToBitmap(), MessageBoxButtons.OKCancel);
+        }
+
+        public static DialogResult ShowLargeOkCancel(IWin32Window parent, string appName, string message)
         {
             var questionDlg = new AlertDlg(appName, message, SystemIcons.Question.ToBitmap(), true);
             return questionDlg.ShowAndDispose(parent, MessageBoxButtons.OKCancel);
@@ -85,9 +90,13 @@ namespace SharedBatch
             new AlertDlg(appName, message, SystemIcons.Error.ToBitmap()) { Exception = exception }.ShowAndDispose(parent, MessageBoxButtons.OK);
         }
 
-        private string Message
+        public string Message
         {
-            set
+            get
+            {
+                return _message;
+            }
+            private set
             {
                 _message = value;
                 labelMessage.Text = TruncateMessage(_message);

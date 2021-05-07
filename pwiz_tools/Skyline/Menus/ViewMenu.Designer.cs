@@ -31,6 +31,7 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ViewMenu));
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.viewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.viewTargetsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.viewProteinsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showTargetsByNameToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showTargetsByAccessionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -153,6 +154,7 @@
             // viewToolStripMenuItem
             // 
             this.viewToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.viewTargetsMenuItem,
             this.viewProteinsMenuItem,
             this.viewModificationsMenuItem,
             this.textZoomToolStripMenuItem,
@@ -184,6 +186,15 @@
             this.statusToolStripMenuItem});
             this.viewToolStripMenuItem.Name = "viewToolStripMenuItem";
             resources.ApplyResources(this.viewToolStripMenuItem, "viewToolStripMenuItem");
+            // 
+            // viewTargetsMenuItem
+            // 
+            this.viewTargetsMenuItem.Checked = true;
+            this.viewTargetsMenuItem.CheckOnClick = true;
+            this.viewTargetsMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.viewTargetsMenuItem.Name = "viewTargetsMenuItem";
+            resources.ApplyResources(this.viewTargetsMenuItem, "viewTargetsMenuItem");
+            this.viewTargetsMenuItem.Click += new System.EventHandler(this.viewTargetsMenuItem_click);
             // 
             // viewProteinsMenuItem
             // 
@@ -230,6 +241,7 @@
             // 
             this.viewModificationsMenuItem.Name = "viewModificationsMenuItem";
             resources.ApplyResources(this.viewModificationsMenuItem, "viewModificationsMenuItem");
+            this.modeUIHandler.SetUIMode(this.viewModificationsMenuItem, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             // 
             // textZoomToolStripMenuItem
             // 
@@ -354,7 +366,7 @@
             this.toolStripSeparator39.Name = "toolStripSeparator39";
             resources.ApplyResources(this.toolStripSeparator39, "toolStripSeparator39");
             // 
-            // graphsToolStripMenuItem
+            // libraryMatchToolStripMenuItem
             // 
             resources.ApplyResources(this.libraryMatchToolStripMenuItem, "libraryMatchToolStripMenuItem");
             this.libraryMatchToolStripMenuItem.Name = "libraryMatchToolStripMenuItem";
@@ -650,7 +662,7 @@
             resources.ApplyResources(this.transformChromNoneMenuItem, "transformChromNoneMenuItem");
             this.transformChromNoneMenuItem.Click += new System.EventHandler(this.transformChromNoneMenuItem_Click);
             // 
-            // transformChromInterploatedMenuItem
+            // transformChromInterpolatedMenuItem
             // 
             this.transformChromInterpolatedMenuItem.Name = "transformChromInterpolatedMenuItem";
             resources.ApplyResources(this.transformChromInterpolatedMenuItem, "transformChromInterpolatedMenuItem");
@@ -1079,5 +1091,6 @@
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator36;
         private System.Windows.Forms.ToolStripMenuItem toolBarToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem statusToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem viewTargetsMenuItem;
     }
 }

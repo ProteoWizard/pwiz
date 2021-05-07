@@ -1070,7 +1070,7 @@ namespace pwiz.Skyline.Model
             // If no light modifications are present, this code assumes the user wants the 
             // default global light modifications.  Unless not stringPaste, in which case the target
             // static mods must also be empty
-            if (listLightMods.Count == 0 && (stringPaste || targetImplicitMods.StaticModifications.Count == 0))
+            if (listLightMods.Count(m => m.Modification.HasMod) == 0 && (stringPaste || targetImplicitMods.StaticModifications.Count == 0))
                 listLightMods = null;
             else if (stringPaste && ArrayUtil.EqualsDeep(listLightMods.ToArray(), targetImplicitMods.StaticModifications))
                 listLightMods = null;

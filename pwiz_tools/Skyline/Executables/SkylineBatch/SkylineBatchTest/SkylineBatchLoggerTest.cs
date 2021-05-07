@@ -15,8 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
+using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SharedBatch;
@@ -61,25 +63,40 @@ namespace SkylineBatchTest
 
 
         [TestMethod]
-        public async Task TestMultipleLogs()
+        public void TestMultipleLogs()
         {
             TestUtils.InitializeRInstallation();
 
             var logFolder = TestUtils.GetTestFilePath("MultipleLogsTest");
-            if (Directory.Exists(logFolder)) Directory.Delete(logFolder);
+            if (Directory.Exists(logFolder))
+            {
+                foreach (var file in Directory.EnumerateFiles(logFolder))
+                    File.Delete(file);
+            }
             Directory.CreateDirectory(logFolder);
             
             var testConfigManager = new SkylineBatchConfigManager(new Logger(Path.Combine(logFolder, "testLog.log"), "testLog.log"));
-            testConfigManager.AddConfiguration(TestUtils.GetTestConfig());
+            testConfigManager.UserAddConfig(TestUtils.GetTestConfig());
             Assert.IsTrue(testConfigManager.HasOldLogs() == false, "Expected no old logs.");
 
+
+            var timeout = new TimeSpan(0, 0, 5);
+            int timestep = 500;
+            var cancelErrorMessage = "Timeout - configuration took too long to cancel";
+            var startErrorMessage = "Timeout - configuration took too long to start running";
+
+            configManager = testConfigManager;
+
             // Run and cancel three times creates two old logs
-            await testConfigManager.RunAllEnabled(4);
-            testConfigManager.CancelRunners();
-            await testConfigManager.RunAllEnabled(4);
-            testConfigManager.CancelRunners();
-            await testConfigManager.RunAllEnabled(4);
-            testConfigManager.CancelRunners();
+            for (int i = 0; i < 3; i++)
+            {
+                Assert.IsTrue(testConfigManager.StartBatchRun(5), "Failed to start config");
+                TestUtils.WaitForCondition(ConfigRunnersStarted, timeout, timestep, startErrorMessage);
+                Thread.Sleep(1000);
+                testConfigManager.CancelRunners();
+                TestUtils.WaitForCondition(ConfigRunnersStopped, timeout, timestep, cancelErrorMessage);
+
+            }
 
             var hasOldLogs = testConfigManager.HasOldLogs();
             var numberOldLogs = testConfigManager.GetOldLogFiles().Length;
@@ -99,6 +116,17 @@ namespace SkylineBatchTest
             Assert.AreEqual(false, hasOldLogsAfterDelete, "Expected no old logs after deletion.");
         }
 
+        private static SkylineBatchConfigManager configManager;
+
+        private bool ConfigRunnersStopped()
+        {
+            return configManager.ConfigsBusy().Count == 0;
+        }
+
+        private bool ConfigRunnersStarted()
+        {
+            return configManager.ConfigRunning();
+        }
     }
 }
 

@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
 using SharedBatch;
@@ -31,60 +32,85 @@ namespace SkylineBatch
         // Allows a user to create a new configuration and add it to the list of configurations,
         // or replace an existing configuration.
         // Running configurations cannot be replaced, and will be opened in a read only mode.
-        
+
+        private static int _selectedTab = 0;
+
         private readonly IMainUiControl _mainControl;
-        private readonly bool _initialEnabled;
+        private readonly RDirectorySelector _rDirectorySelector;
+        private readonly bool _configEnabled;
         private readonly bool _isBusy;
         private readonly ConfigAction _action;
+        private readonly RefineInputObject _refineInput;
         private readonly List<ReportInfo> _newReportList;
-        private readonly bool _canEditSkylineSettings;
+        private readonly Dictionary<string, string> _possibleTemplates;
+        private readonly SkylineBatchConfigManager _configManager;
+        private SkylineSettings _currentSkylineSettings;
+        private readonly Image _downloadImage;
+        private readonly Image _downloadSelectedImage;
+        private DataServerInfo _dataServer;
+        public Control templateFileControl;
 
-        private SkylineTypeControl _skylineTypeControl;
         private string _lastEnteredPath;
 
-        public SkylineBatchConfigForm(IMainUiControl mainControl, SkylineBatchConfig config, ConfigAction action, bool isBusy)
+        public SkylineBatchConfigForm(IMainUiControl mainControl, RDirectorySelector rDirectorySelector, SkylineBatchConfig config, ConfigAction action, bool isBusy, SkylineBatchConfigManager configManager)
         {
             InitializeComponent();
-            _action = action;
-            _newReportList = new List<ReportInfo>();
+            Icon = Program.Icon();
+            _downloadImage = (Image)Resources.ResourceManager.GetObject("download");
+            _downloadSelectedImage = (Image)Resources.ResourceManager.GetObject("downloadSelected");
 
+            _action = action;
+            _refineInput = config != null ? config.RefineSettings.CommandValuesCopy : new RefineInputObject();
+            _newReportList = new List<ReportInfo>();
+            _rDirectorySelector = rDirectorySelector;
             _mainControl = mainControl;
-            if (config != null) 
-                _initialEnabled = config.Enabled;
+            _configManager = configManager;
+            _possibleTemplates = configManager.GetRefinedTemplates();
+            if (_action == ConfigAction.Edit && config != null && _possibleTemplates.ContainsKey(config.Name))
+                _possibleTemplates.Remove(config.Name);
+            if (config != null)
+                _configEnabled = config.Enabled;
             _isBusy = isBusy;
 
-            _canEditSkylineSettings = !SkylineInstallations.HasLocalSkylineCmd;
-            if (!_canEditSkylineSettings)
-                tabsConfig.TabPages[2].Hide();
-            
+            /*var dataServers = configManager.GetServerNames;
+            foreach (var serverName in dataServers)
+                comboDataServer.Items.Add(serverName);
+            comboDataServer.Items.Add("<Add>");*/
+
             InitInputFieldsFromConfig(config);
-            lblConfigRunning.Hide();
 
             if (isBusy)
             {
                 lblConfigRunning.Show();
-                btnSaveConfig.Hide(); // save and cancel buttons are replaced with OK button
+                // save and cancel buttons are replaced with OK button
+                btnSaveConfig.Hide();
                 btnCancelConfig.Hide();
                 btnOkConfig.Show();
                 AcceptButton = btnOkConfig;
+
                 DisableUserInputs();
             }
+
+            tabsConfig.SelectedIndex = _selectedTab;
 
             ActiveControl = textConfigName;
         }
 
+        public SkylineTypeControl SkylineTypeControl { get; private set; }
+
+        private bool ShowTemplateComboBox => _possibleTemplates.Count > 0 && !_isBusy;
+
         private void InitInputFieldsFromConfig(SkylineBatchConfig config)
         {
-            InitSkylineTab(config);
-            if (config == null)
-                return;
-            _lastEnteredPath = config.MainSettings.TemplateFilePath;
             textConfigName.Text = _action == ConfigAction.Add ? string.Empty : config.Name;
             textConfigName.TextChanged += textConfigName_TextChanged;
-            // Initialize UI input values using config
+            _lastEnteredPath = config != null ? config.MainSettings.TemplateFilePath : null;
+
             SetInitialMainSettings(config);
             SetInitialFileSettings(config);
+            SetInitialRefineSettings(config);
             SetInitialReportSettings(config);
+            InitSkylineTab(config);
         }
 
         public void DisableUserInputs(Control parentControl = null)
@@ -93,44 +119,103 @@ namespace SkylineBatch
 
             if (parentControl is TextBoxBase @base)
                 @base.ReadOnly = true;
+            if (parentControl is ComboBox comboBox)
+                comboBox.Enabled = false;
             if (parentControl is ButtonBase buttonBase && !buttonBase.Text.Equals(btnOkConfig.Text))
                 buttonBase.Enabled = false;
             if (parentControl is ToolStrip strip)
                 strip.Enabled = false;
+            if (parentControl is PropertyGrid grid)
+            {
+                var properties = ((RefineInputObject)grid.SelectedObject).GetProperties();
+                foreach (GlobalizedPropertyDescriptor prop in properties)
+                    prop.ReadOnly = true;
+                return;
+            }
 
             foreach (Control control in parentControl.Controls)
             {
                 DisableUserInputs(control);
             }
         }
-        
+
         #region Edit main settings
 
         private void SetInitialMainSettings(SkylineBatchConfig config)
         {
-            var mainSettings = config.MainSettings;
-            if (_action == ConfigAction.Add)
+            templateFileControl = textTemplateFile;
+            if (ShowTemplateComboBox)
             {
-                // ReSharper disable once LocalizableElement - backslash does not need to be localized string
-                textAnalysisPath.Text = Path.GetDirectoryName(mainSettings.AnalysisFolderPath) + @"\";
-            }
-            else
-            {
-                textAnalysisPath.Text = mainSettings.AnalysisFolderPath;
-                textNamingPattern.Text = mainSettings.ReplicateNamingPattern;
+                textTemplateFile.Hide();
+                comboTemplateFile.Visible = true;
+                foreach (var possibleTemplate in _possibleTemplates.Values)
+                    comboTemplateFile.Items.Add(possibleTemplate);
+                templateFileControl = comboTemplateFile;
             }
 
-            textSkylinePath.Text = mainSettings.TemplateFilePath;
-            textDataPath.Text = mainSettings.DataFolderPath;
+            if (config != null)
+            {
+                var mainSettings = config.MainSettings;
+                if (_action == ConfigAction.Add)
+                {
+                    var directoryName = Path.GetDirectoryName(mainSettings.AnalysisFolderPath);
+                    textAnalysisPath.Text =
+                        directoryName != null ? Path.Combine(directoryName, string.Empty) : string.Empty;
+                }
+                else
+                {
+                    textAnalysisPath.Text = mainSettings.AnalysisFolderPath;
+                    textReplicateNamingPattern.Text = mainSettings.ReplicateNamingPattern;
+                    if (mainSettings.WillDownloadData)
+                    {
+                        _dataServer = mainSettings.Server;
+                        ToggleDownloadData(true);
+                        /*comboDataServer.SelectedIndex = comboDataServer.Items.IndexOf(mainSettings.Server.Name);
+                        textDataNamingPatten.Text = mainSettings.DataNamingPattern;*/
+                    }
+                }
+                templateFileControl.Text = mainSettings.TemplateFilePath;
+                textDataPath.Text = mainSettings.DataFolderPath;
+                textAnnotationsFile.Text = mainSettings.AnnotationsFilePath;
+            }
+        }
+
+        private void ToggleDownloadData(bool downloading)
+        {
+            btnDownloadData.BackColor = downloading ? Color.SteelBlue : Color.Transparent;
+            btnDownloadData.Image = downloading ? _downloadSelectedImage : _downloadImage;
         }
 
         private MainSettings GetMainSettingsFromUi()
         {
-            var templateFilePath = textSkylinePath.Text;
+            var templateFilePath = templateFileControl.Text;
+            string dependentConfig = null;
+            foreach (var configName in _possibleTemplates.Keys)
+            {
+                if (_possibleTemplates[configName].Equals(templateFilePath))
+                {
+                    dependentConfig = configName;
+                    break;
+                }
+            }
+
             var analysisFolderPath = textAnalysisPath.Text;
             var dataFolderPath = textDataPath.Text;
-            var replicateNamingPattern = textNamingPattern.Text;
-            return new MainSettings(templateFilePath, analysisFolderPath, dataFolderPath,  replicateNamingPattern);
+            var server = _dataServer; // null if none specified
+            var annotationsFilePath = textAnnotationsFile.Text;
+            var replicateNamingPattern = textReplicateNamingPattern.Text;
+
+            return new MainSettings(templateFilePath, analysisFolderPath, dataFolderPath, server, annotationsFilePath, replicateNamingPattern, dependentConfig);
+        }
+
+        private void btnDownloadData_Click(object sender, EventArgs e)
+        {
+            var addServerForm = new AddServerForm(_dataServer);
+            if (DialogResult.OK == addServerForm.ShowDialog(this))
+            {
+                _dataServer = addServerForm.Server;
+                ToggleDownloadData(_dataServer != null);
+            }
         }
 
         private void textConfigName_TextChanged(object sender, EventArgs e)
@@ -145,7 +230,13 @@ namespace SkylineBatch
 
         private void btnSkylineFilePath_Click(object sender, EventArgs e)
         {
-            OpenFile(textSkylinePath, TextUtil.FILTER_SKY);
+            Control templatePathControl = ShowTemplateComboBox ? (Control)comboTemplateFile : textTemplateFile;
+            OpenFile(templatePathControl, TextUtil.FILTER_SKY);
+        }
+
+        private void btnAnnotationsFile_Click(object sender, EventArgs e)
+        {
+            OpenFile(textAnnotationsFile, TextUtil.FILTER_CSV);
         }
 
         private void btnAnalysisFilePath_Click(object sender, EventArgs e)
@@ -158,29 +249,50 @@ namespace SkylineBatch
             OpenFolder(textDataPath);
         }
 
-        private void OpenFile(TextBox textbox, string filter)
+        /*private void comboDataServer_SelectedIndexChanged(object sender, EventArgs e)
         {
-            var dialog = new OpenFileDialog();
-            var initialDirectory = TextUtil.GetInitialDirectory(textbox.Text, _lastEnteredPath);
+            if (comboDataServer.SelectedIndex == comboDataServer.Items.Count - 1)
+            {
+                comboDataServer.SelectedIndexChanged -= comboDataServer_SelectedIndexChanged;
+                var addServerForm = new AddServerForm();
+                if (DialogResult.OK == addServerForm.ShowDialog(this))
+                {
+                    var server = (ServerInfo)addServerForm.Server;
+                    _configManager.AddValidServer(server);
+                    comboDataServer.Items.Insert(comboDataServer.Items.Count - 1, server.Name);
+                    comboDataServer.SelectedItem = server.Name;
+                }
+                else
+                {
+                    comboDataServer.SelectedIndex = -1;
+                }
+                comboDataServer.SelectedIndexChanged += comboDataServer_SelectedIndexChanged;
+            }
+        }*/
+
+        private void OpenFile(Control textBox, string filter, bool save = false)
+        {
+            FileDialog dialog = save ? (FileDialog)new SaveFileDialog() : new OpenFileDialog();
+            var initialDirectory = FileUtil.GetInitialDirectory(textBox.Text, _lastEnteredPath);
             dialog.InitialDirectory = initialDirectory;
             dialog.Filter = filter;
             DialogResult result = dialog.ShowDialog();
             if (result == DialogResult.OK)
             {
-                textbox.Text = dialog.FileName;
+                textBox.Text = dialog.FileName;
                 _lastEnteredPath = dialog.FileName;
             }
         }
 
-        private void OpenFolder(TextBox textbox)
+        private void OpenFolder(Control textBox)
         {
             var dialog = new FolderBrowserDialog();
-            var initialPath = TextUtil.GetInitialDirectory(textbox.Text, _lastEnteredPath);
+            var initialPath = FileUtil.GetInitialDirectory(textBox.Text, _lastEnteredPath);
             dialog.SelectedPath = initialPath;
             DialogResult result = dialog.ShowDialog();
             if (result == DialogResult.OK)
             {
-                textbox.Text = dialog.SelectedPath;
+                textBox.Text = dialog.SelectedPath;
                 _lastEnteredPath = dialog.SelectedPath;
             }
         }
@@ -191,17 +303,19 @@ namespace SkylineBatch
         }
 
         #endregion
-        
+
         #region File Settings
 
         private void SetInitialFileSettings(SkylineBatchConfig config)
         {
+            if (_action == ConfigAction.Add) return;
+            var fileSettings = config.FileSettings;
             if (config.FileSettings.MsOneResolvingPower != null)
-                textMsOneResolvingPower.Text = config.FileSettings.MsOneResolvingPower;
+                textMsOneResolvingPower.Text = TextUtil.ToUiString(fileSettings.MsOneResolvingPower);
             if (config.FileSettings.MsMsResolvingPower != null)
-                textMsMsResolvingPower.Text = config.FileSettings.MsMsResolvingPower;
+                textMsMsResolvingPower.Text = TextUtil.ToUiString(fileSettings.MsMsResolvingPower);
             if (config.FileSettings.RetentionTime != null)
-                textRetentionTime.Text = config.FileSettings.RetentionTime;
+                textRetentionTime.Text = TextUtil.ToUiString(fileSettings.RetentionTime);
             checkBoxDecoys.Checked = config.FileSettings.AddDecoys;
             radioShuffleDecoys.Checked = config.FileSettings.ShuffleDecoys;
             checkBoxMProphet.Checked = config.FileSettings.TrainMProphet;
@@ -215,12 +329,70 @@ namespace SkylineBatch
 
         private FileSettings GetFileSettingsFromUi()
         {
-            return new FileSettings(textMsOneResolvingPower.Text, textMsMsResolvingPower.Text, textRetentionTime.Text, 
+            return FileSettings.FromUi(textMsOneResolvingPower.Text, textMsMsResolvingPower.Text, textRetentionTime.Text,
                 checkBoxDecoys.Checked, radioShuffleDecoys.Enabled && radioShuffleDecoys.Checked, checkBoxMProphet.Checked);
         }
-        
+
         #endregion
-        
+
+        #region Refine Settings
+
+        private void SetInitialRefineSettings(SkylineBatchConfig config)
+        {
+            var outputFilePath = config == null ? null : config.RefineSettings.OutputFilePath;
+            gridRefineInputs.SelectedObject = _refineInput;
+
+            if (config != null && _action != ConfigAction.Add && !string.IsNullOrEmpty(outputFilePath))
+            {
+                var refineSettings = config.RefineSettings;
+                textRefinedFilePath.Text = refineSettings.OutputFilePath;
+                checkBoxRemoveData.Checked = refineSettings.RemoveResults;
+                checkBoxRemoveDecoys.Checked = refineSettings.RemoveDecoys;
+            }
+            else
+            {
+                ToggleRefineEnabled(false);
+            }
+        }
+
+        private void textBoxRefinedFilePath_TextChanged(object sender, EventArgs e)
+        {
+            ToggleRefineEnabled(!string.IsNullOrEmpty(textRefinedFilePath.Text));
+        }
+        private bool _refineDefaultsActivated;
+
+        private void ToggleRefineEnabled(bool enabled)
+        {
+            checkBoxRemoveDecoys.Enabled = enabled;
+            checkBoxRemoveData.Enabled = enabled;
+            var properties = _refineInput.GetProperties();
+            foreach (GlobalizedPropertyDescriptor prop in properties)
+                prop.ReadOnly = !enabled;
+            gridRefineInputs.SelectedObject = _refineInput;
+
+            if (enabled && !_refineDefaultsActivated)
+            {
+                _refineDefaultsActivated = true;
+                checkBoxRemoveDecoys.Checked = true;
+                checkBoxRemoveData.Checked = true;
+            }
+        }
+
+        private RefineSettings GetRefineSettingsFromUi()
+        {
+            var removeDecoys = checkBoxRemoveDecoys.Checked;
+            var removeData = checkBoxRemoveData.Checked;
+            var outputFilePath = textRefinedFilePath.Text;
+            return new RefineSettings(_refineInput, removeDecoys, removeData, outputFilePath);
+        }
+
+        private void btnRefinedFilePath_Click(object sender, EventArgs e)
+        {
+            OpenFile(textRefinedFilePath, TextUtil.FILTER_SKY, true);
+        }
+
+        #endregion
+
         #region Reports
 
         private void SetInitialReportSettings(SkylineBatchConfig config)
@@ -243,7 +415,7 @@ namespace SkylineBatch
 
         private void ShowAddReportDialog(int addingIndex, ReportInfo editingReport = null)
         {
-            var addReportsForm = new ReportsAddForm(_mainControl, editingReport);
+            var addReportsForm = new ReportsAddForm(_mainControl, _rDirectorySelector, !string.IsNullOrEmpty(textRefinedFilePath.Text), editingReport);
             var addReportResult = addReportsForm.ShowDialog();
 
             if (addReportResult == DialogResult.OK)
@@ -254,7 +426,7 @@ namespace SkylineBatch
                     _newReportList.RemoveAt(addingIndex);
                     gridReportSettings.Rows.RemoveAt(addingIndex);
                 }
-                _newReportList.Insert(addingIndex,newReportInfo);
+                _newReportList.Insert(addingIndex, newReportInfo);
                 gridReportSettings.Rows.Insert(addingIndex, newReportInfo.AsObjectArray());
             }
         }
@@ -286,63 +458,106 @@ namespace SkylineBatch
         }
 
         #endregion
-        
+
         #region Skyline Settings
-        
+
         private void InitSkylineTab(SkylineBatchConfig config)
         {
-            if (!_canEditSkylineSettings) return;
+            if (SkylineInstallations.HasLocalSkylineCmd)
+            {
+                tabsConfig.TabPages.Remove(tabSkyline);
+                return;
+            }
 
             if (config != null)
-                _skylineTypeControl = new SkylineTypeControl(config.UsesSkyline, config.UsesSkylineDaily, config.UsesCustomSkylinePath, config.SkylineSettings.CmdPath);
+                SkylineTypeControl = new SkylineTypeControl(_mainControl, config.UsesSkyline, config.UsesSkylineDaily, config.UsesCustomSkylinePath, config.SkylineSettings.CmdPath);
             else
             {
                 // Default to the first existing Skyline installation (Skyline, Skyline-daily, custom path)
-                _skylineTypeControl = new SkylineTypeControl();
+                SkylineTypeControl = new SkylineTypeControl();
             }
 
-            _skylineTypeControl.Dock = DockStyle.Fill;
-            _skylineTypeControl.Show();
-            panelSkylineSettings.Controls.Add(_skylineTypeControl);
+            SkylineTypeControl.Dock = DockStyle.Fill;
+            SkylineTypeControl.Show();
+            panelSkylineSettings.Controls.Add(SkylineTypeControl);
+            try
+            {
+                _currentSkylineSettings = GetSkylineSettingsFromUi();
+            }
+            catch (ArgumentException)
+            {
+                _currentSkylineSettings = null;
+            }
         }
-        
+
+        private void TabEnter(object sender, EventArgs e)
+        {
+            // Ask if the user wants to update all SkylineSettings if they are leaving the Skyline tab
+            // after changing settings
+            if (tabsConfig.TabPages[_selectedTab].Equals(tabSkyline))
+                CheckIfSkylineChanged();
+            _selectedTab = tabsConfig.SelectedIndex;
+        }
+
+        private void CheckIfSkylineChanged()
+        {
+            if (_isBusy) return; // can't change Skyline settings if config is running
+            SkylineSettings changedSkylineSettings;
+            try
+            {
+                changedSkylineSettings = GetSkylineSettingsFromUi();
+            }
+            catch (ArgumentException)
+            {
+                changedSkylineSettings = null;
+            }
+            if (changedSkylineSettings != null && !changedSkylineSettings.Equals(_currentSkylineSettings))
+            {
+                _currentSkylineSettings = changedSkylineSettings;
+                _mainControl.ReplaceAllSkylineVersions(_currentSkylineSettings);
+            }
+        }
+
         private SkylineSettings GetSkylineSettingsFromUi()
         {
-            if (!_canEditSkylineSettings)
+            if (SkylineInstallations.HasLocalSkylineCmd)
                 return new SkylineSettings(SkylineType.Local);
-            
-            return new SkylineSettings(_skylineTypeControl.Type, _skylineTypeControl.CommandPath);
+
+            return (SkylineSettings)SkylineTypeControl.GetVariable();
         }
 
         #endregion
-        
+
         #region Save config
 
         private void btnSaveConfig_Click(object sender, EventArgs e)
         {
+            if (tabsConfig.SelectedTab.Equals(tabSkyline))
+                CheckIfSkylineChanged();
             Save();
         }
 
         private SkylineBatchConfig GetConfigFromUi()
         {
             var name = textConfigName.Text;
-            var enabled = _action == ConfigAction.Edit ? _initialEnabled : true;
+            var enabled = _action == ConfigAction.Edit ? _configEnabled : true;
             var mainSettings = GetMainSettingsFromUi();
             var fileSettings = GetFileSettingsFromUi();
+            var refineSettings = GetRefineSettingsFromUi();
             var reportSettings = new ReportSettings(_newReportList);
             var skylineSettings = GetSkylineSettingsFromUi();
-            return new SkylineBatchConfig(name, enabled, DateTime.Now, mainSettings, fileSettings, reportSettings, skylineSettings);
+            return new SkylineBatchConfig(name, enabled, DateTime.Now, mainSettings, fileSettings, refineSettings, reportSettings, skylineSettings);
         }
 
         private void Save()
         {
-            var newConfig = GetConfigFromUi();
+
+            SkylineBatchConfig newConfig;
             try
             {
-                if (_action == ConfigAction.Edit)
-                    _mainControl.ReplaceSelectedConfig(newConfig);
-                else
-                    _mainControl.AddConfiguration(newConfig);
+                newConfig = GetConfigFromUi();
+                _mainControl.AssertUniqueConfigName(newConfig.Name, _action == ConfigAction.Edit);
+                newConfig.Validate();
             }
             catch (ArgumentException e)
             {
@@ -350,9 +565,15 @@ namespace SkylineBatch
                 return;
             }
 
+            if (_action == ConfigAction.Edit)
+                _mainControl.ReplaceSelectedConfig(newConfig);
+            else
+                _mainControl.AddConfiguration(newConfig);
+
             Close();
         }
-        
+
         #endregion
+
     }
 }

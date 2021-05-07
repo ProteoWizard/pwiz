@@ -1,61 +1,95 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using SharedBatch;
 using SkylineBatch.Properties;
 
 namespace SkylineBatch
 {
-    class CommandWriter
+    public class CommandWriter
     {
-        private const string ALLOW_NEWLINE_SAVE_VERSION = "20.2.1.415"; // TODO(Ali): Make sure this matches future Skyline-daily release with --save fix
+        private static readonly string IN_COMMAND = "--in=";
+        private static readonly string OUT_COMMAND = "--out=";
 
+        private string _commandHolder;
         private readonly StreamWriter _writer;
         private readonly string _commandFile;
-        private readonly bool _multiLine; // If the Skyline version does not support --save on a new line (true for versions before 20.2.1.415)
-        private readonly string _newSkyFileName;
-        private readonly Logger _logger;
 
-        private bool _reopenFile; // If the Skyline file needs to be reopened with --in (true if _multiLine is false and a line has ended)
-
-        public CommandWriter(Logger logger, SkylineSettings skylineSettings, string newSkyFileName)
+        public CommandWriter(Logger logger, bool multiLine, bool invariantReport)
         {
             _commandFile = Path.GetTempFileName();
-            _newSkyFileName = newSkyFileName;
-            _logger = logger;
+            _commandHolder = string.Empty;
+            CurrentSkylineFile = string.Empty;
             _writer = new StreamWriter(_commandFile);
-            _multiLine = skylineSettings.HigherVersion(ALLOW_NEWLINE_SAVE_VERSION);
-            if (!_multiLine)
+
+            MultiLine = multiLine;
+            ExportsInvariantReport = invariantReport;
+
+            // TODO(Ali): Change this to invariant report release after 21.1
+            if (!MultiLine)
             {
-                _logger.Log(string.Empty);
-                _logger.Log(string.Format(Resources.CommandWriter_Start_Notice__For_faster_Skyline_Batch_runs__use_Skyline_version__0__or_higher_, ALLOW_NEWLINE_SAVE_VERSION));
-                _logger.Log(string.Empty);
+                logger.Log(string.Empty);
+                logger.Log(string.Format(Resources.CommandWriter_Start_Notice__For_faster_Skyline_Batch_runs__use_Skyline_version__0__or_higher_, ConfigRunner.ALLOW_NEWLINE_SAVE_VERSION));
+                logger.Log(string.Empty);
             }
         }
 
+        public string CurrentSkylineFile { get; private set; } // Filepath of last opened Skyline file with --in or --out
+        public readonly bool MultiLine; // If the Skyline version does not support --save on a new line (true for versions before 20.2.1.415)
+        public readonly bool ExportsInvariantReport; // If the Skyline version does not guarantee a comma separated invariant exported report
+
         public void Write(string command, params Object[] args)
         {
-            if (args != null)
-                command = string.Format(command, args);
-            _logger.Log(command);
-            if (_reopenFile)
+            command = string.Format(command, args);
+            if (!string.IsNullOrEmpty(_commandHolder))
             {
-                _reopenFile = false;
-                Write("--in=\"{0}\"", _newSkyFileName);
+                var reopenCommand = _commandHolder;
+                _commandHolder = string.Empty;
+                if (!command.StartsWith(IN_COMMAND))
+                    Write(reopenCommand);
             }
-            if (_multiLine) _writer.WriteLine(command);
-            else _writer.Write(command + " ");
+            UpdateCurrentFile(command);
+            _writer.Write(command + " ");
+        }
+
+        public void UpdateCurrentFile(string command)
+        {
+            var inFile = GetPathFromCommand(command, IN_COMMAND);
+            var outFile = GetPathFromCommand(command, OUT_COMMAND);
+            if (outFile != null)
+                CurrentSkylineFile = outFile;
+            else if (inFile != null)
+                CurrentSkylineFile = inFile;
+        }
+
+        public string GetPathFromCommand(string commandString, string commandName)
+        {
+            if (!commandString.StartsWith(commandName)) return null;
+            var singleQuote = "\"";
+            var startIndex = commandString.IndexOf(singleQuote, StringComparison.Ordinal) + 1;
+            var endIndex = commandString.LastIndexOf(singleQuote, StringComparison.Ordinal);
+            var path = commandString.Substring(startIndex, endIndex - startIndex);
+            if (path.Contains(singleQuote))
+                throw new Exception("Could not parse incorrect command format");
+            return path;
+        }
+
+        public void NewLine()
+        {
+            _writer.WriteLine();
         }
 
         public void EndCommandGroup()
         {
-            if (!_multiLine)
+            if (string.IsNullOrEmpty(_commandHolder))
             {
-                _writer.WriteLine();
-                _reopenFile = true;
+                NewLine();
+                if (!MultiLine)
+                    _commandHolder = string.Format(SkylineBatchConfig.OPEN_SKYLINE_FILE_COMMAND, CurrentSkylineFile);
             }
         }
 
-        public string ReturnCommandFile()
+        public string GetCommandFile()
         {
             _writer.Close();
             return _commandFile;

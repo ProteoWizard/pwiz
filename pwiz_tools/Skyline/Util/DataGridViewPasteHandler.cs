@@ -24,6 +24,7 @@ using System.Windows.Forms;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.DataBinding.Layout;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Properties;
@@ -330,7 +331,9 @@ namespace pwiz.Skyline.Util
             {
                 string message = string.Format(Resources.DataGridViewPasteHandler_TryConvertValue_Error_converting___0___to_required_type___1_, strValue,
                                                exception.Message);
-                MessageBox.Show(DataGridView, message, Program.Name);
+
+                // CONSIDER(bspratt): this is probably not the proper parent. See "Issue 775: follow up on possible improper parenting of MessageDlg"
+                MessageDlg.Show(DataGridView, message);
                 convertedValue = null;
                 return false;
             }

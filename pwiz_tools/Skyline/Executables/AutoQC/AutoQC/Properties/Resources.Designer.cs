@@ -89,79 +89,6 @@ namespace AutoQC.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Abort.
-        /// </summary>
-        internal static string AlertDlg_GetDefaultButtonText_Abort {
-            get {
-                return ResourceManager.GetString("AlertDlg_GetDefaultButtonText_Abort", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Cancel.
-        /// </summary>
-        internal static string AlertDlg_GetDefaultButtonText_Cancel {
-            get {
-                return ResourceManager.GetString("AlertDlg_GetDefaultButtonText_Cancel", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Ignore.
-        /// </summary>
-        internal static string AlertDlg_GetDefaultButtonText_Ignore {
-            get {
-                return ResourceManager.GetString("AlertDlg_GetDefaultButtonText_Ignore", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to No.
-        /// </summary>
-        internal static string AlertDlg_GetDefaultButtonText_No {
-            get {
-                return ResourceManager.GetString("AlertDlg_GetDefaultButtonText_No", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to OK.
-        /// </summary>
-        internal static string AlertDlg_GetDefaultButtonText_OK {
-            get {
-                return ResourceManager.GetString("AlertDlg_GetDefaultButtonText_OK", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Retry.
-        /// </summary>
-        internal static string AlertDlg_GetDefaultButtonText_Retry {
-            get {
-                return ResourceManager.GetString("AlertDlg_GetDefaultButtonText_Retry", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Yes.
-        /// </summary>
-        internal static string AlertDlg_GetDefaultButtonText_Yes {
-            get {
-                return ResourceManager.GetString("AlertDlg_GetDefaultButtonText_Yes", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Message truncated. Press Ctrl+C to copy entire message to the clipboard..
-        /// </summary>
-        internal static string AlertDlg_TruncateMessage_Message_truncated__Press_Ctrl_C_to_copy_entire_message_to_the_clipboard_ {
-            get {
-                return ResourceManager.GetString("AlertDlg_TruncateMessage_Message_truncated__Press_Ctrl_C_to_copy_entire_message_t" +
-                        "o_the_clipboard_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to All.
         /// </summary>
         internal static string AllFileFilter_FilterName_All {
@@ -185,6 +112,16 @@ namespace AutoQC.Properties {
         internal static string AutoQcConfig_AutoQcConfig_Please_enter_a_name_ {
             get {
                 return ResourceManager.GetString("AutoQcConfig_AutoQcConfig_Please_enter_a_name_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The following configurations are running and could not be updated:.
+        /// </summary>
+        internal static string AutoQcConfigManager_ReplaceSkylineSettings_The_following_configurations_are_running_and_could_not_be_updated_ {
+            get {
+                return ResourceManager.GetString("AutoQcConfigManager_ReplaceSkylineSettings_The_following_configurations_are_runni" +
+                        "ng_and_could_not_be_updated_", resourceCulture);
             }
         }
         
@@ -237,11 +174,11 @@ namespace AutoQC.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to FileSystemWatcher cancelled..
+        ///   Looks up a localized string similar to FileSystemWatcher canceled..
         /// </summary>
-        internal static string AutoQCFileSystemWatcher_Restart_FileSystemWatcher_cancelled_ {
+        internal static string AutoQCFileSystemWatcher_Restart_FileSystemWatcher_canceled_ {
             get {
-                return ResourceManager.GetString("AutoQCFileSystemWatcher_Restart_FileSystemWatcher_cancelled_", resourceCulture);
+                return ResourceManager.GetString("AutoQCFileSystemWatcher_Restart_FileSystemWatcher_canceled_", resourceCulture);
             }
         }
         
@@ -665,11 +602,11 @@ namespace AutoQC.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cancelled configuration..
+        ///   Looks up a localized string similar to Canceled configuration..
         /// </summary>
-        internal static string ConfigRunner_ProcessFilesCompleted_Cancelled_configuration_ {
+        internal static string ConfigRunner_ProcessFilesCompleted_Canceled_configuration_ {
             get {
-                return ResourceManager.GetString("ConfigRunner_ProcessFilesCompleted_Cancelled_configuration_", resourceCulture);
+                return ResourceManager.GetString("ConfigRunner_ProcessFilesCompleted_Canceled_configuration_", resourceCulture);
             }
         }
         
@@ -888,6 +825,15 @@ namespace AutoQC.Properties {
         internal static string MainForm_cb_keepRunning_CheckedChanged_Error_enabling__Keep__0__running_ {
             get {
                 return ResourceManager.GetString("MainForm_cb_keepRunning_CheckedChanged_Error_enabling__Keep__0__running_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Do you want to import configurations from {0}?.
+        /// </summary>
+        internal static string MainForm_FileOpened_Do_you_want_to_import_configurations_from__0__ {
+            get {
+                return ResourceManager.GetString("MainForm_FileOpened_Do_you_want_to_import_configurations_from__0__", resourceCulture);
             }
         }
         
@@ -1335,6 +1281,15 @@ namespace AutoQC.Properties {
         internal static string ProcessRunner_RunProcess_There_was_an_exception_running_the_process__0_ {
             get {
                 return ResourceManager.GetString("ProcessRunner_RunProcess_There_was_an_exception_running_the_process__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to AutoQC Configuration File.
+        /// </summary>
+        internal static string Program_AddFileTypesToRegistry_AutoQC_Configuration_File {
+            get {
+                return ResourceManager.GetString("Program_AddFileTypesToRegistry_AutoQC_Configuration_File", resourceCulture);
             }
         }
         

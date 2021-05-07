@@ -75,7 +75,7 @@
 
         private System.Windows.Forms.Button btnBrowse;
         public System.Windows.Forms.TextBox textFilePath;
-        private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.Label label2;
+        public System.Windows.Forms.Label label1;
+        public System.Windows.Forms.Label label2;
     }
 }

@@ -58,7 +58,7 @@ namespace pwiz.SkylineTest
         public void NistLoadLibrary()
         {
             var streamManager = new MemoryStreamManager();
-            streamManager.TextFiles.Add(PATH_NIST_LIB, TEXT_LIB_YEAST_NIST + TEXT_LIB_BICINE_NIST + TEXT_LIB_NO_ADDUCT + TEXT_LIB_FORMULA_PLUS + TEXT_LIB_MINE + LIB_TEXT_MONA + LIB_TEXT_MZVAULT);
+            streamManager.TextFiles.Add(PATH_NIST_LIB, TEXT_LIB_YEAST_NIST + TEXT_LIB_BICINE_NIST + TEXT_LIB_NO_ADDUCT + TEXT_LIB_FORMULA_PLUS + TEXT_LIB_MINE + LIB_TEXT_MONA + LIB_TEXT_MZVAULT + LIB_TEXT_RTINSECONDS);
             var loader = new TestLibraryLoader {StreamManager = streamManager};
             var expectedFragmentAnnotations = new Dictionary<int, List<SpectrumPeakAnnotation>>
             {
@@ -116,7 +116,14 @@ namespace pwiz.SkylineTest
             // Verify that we handled the mzVault variant
             key = lib2Keys.First(k => Equals("RHAXSHUQNIEUEY-UHFFFAOYAC", k.SmallMoleculeLibraryAttributes.InChiKey));
             Assert.IsTrue(lib2.TryLoadSpectrum(key, out peaksInfo));
-            AssertEx.AreEqual(67, peaksInfo.Peaks.Length); 
+            AssertEx.AreEqual(67, peaksInfo.Peaks.Length);
+
+            // Verify that we handled the RTINSECONDS variant
+            key = lib2Keys.First(k => Equals("IDAGLSESYTC[+57.0]YLLSKGK", k.Sequence));
+            Assert.IsTrue(lib2.TryLoadSpectrum(key, out peaksInfo));
+            Assert.IsTrue(lib2.TryGetLibInfo(key, out info));
+            AssertEx.AreEqual(61.389, ((NistSpectrumHeaderInfo)info).RT, .001);
+            AssertEx.AreEqual(28, peaksInfo.Peaks.Length);
         }
 
         [TestMethod]
@@ -1252,5 +1259,41 @@ namespace pwiz.SkylineTest
             "235.1189 207471.40\n" +
             "235.1690 76988.90\n" +
             "235.2054 61542.45\n";
+
+        private const string LIB_TEXT_RTINSECONDS =
+            "Name: IDAGLSESYTCYLLSKGK/2\n" +
+            "MW: 2003.9873686836993\n" +
+            "Comment: Mods=1/10,C,Carbamidomethyl Parent=1003.0015093739197 Protein=\"sp|A5A625|YIBV_ECOLI\" RTINSECONDS=3683.3344054867403 MS2PIP_ID=\"sp|A5A625|YIBV_ECOLI_001_000_2\"\n" +
+            "Num peaks: 30\n" +
+            "114.091293	28	\"b1\"\n" +
+            "147.112762	88	\"y1\"\n" +
+            "204.134232	2262	\"y2\"\n" +
+            "229.118225	916	\"b2\"\n" +
+            "300.155334	331	\"b3\"\n" +
+            "332.229156	1298	\"y3\"\n" +
+            "357.176788	10000	\"b4\"\n" +
+            "419.261200	6707	\"y4\"\n" +
+            "470.260834	927	\"b5\"\n" +
+            "532.345276	3559	\"y5\"\n" +
+            "557.292908	55	\"b6\"\n" +
+            "645.429321	2132	\"y6\"\n" +
+            "686.335510	198	\"b7\"\n" +
+            "773.367554	67	\"b8\"\n" +
+            "808.492676	1400	\"y7\"\n" +
+            "968.523315	3038	\"y8\"\n" +
+            "1069.571045	2459	\"y9\"\n" +
+            "1232.634399	2039	\"y10\"\n" +
+            "1319.666382	3234	\"y11\"\n" +
+            "1448.708984	1506	\"y12\"\n" +
+            "1473.656616	21	\"b13\"\n" +
+            "1535.740967	5521	\"y13\"\n" +
+            "1586.740723	11	\"b14\"\n" +
+            "1648.825073	103	\"y14\"\n" +
+            "1673.772705	0	\"b15\"\n" +
+            "1705.846558	113	\"y15\"\n" +
+            "1776.883667	32	\"y16\"\n" +
+            "1801.867676	0	\"b16\"\n" +
+            "1858.889160	13	\"b17\"\n" +
+            "1891.910645	15	\"y17\"\n";
     }
 }

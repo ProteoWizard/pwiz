@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -38,6 +39,16 @@ namespace pwiz.Skyline.Model
     public static class IonTypeExtension
     {
         private static readonly string[] VALUES = {string.Empty, string.Empty, @"a", @"b", @"c", @"x", @"y", @"z"};
+
+        private static readonly Color COLOR_A = Color.YellowGreen;
+        private static readonly Color COLOR_X = Color.Green;
+        private static readonly Color COLOR_B = Color.BlueViolet;
+        private static readonly Color COLOR_Y = Color.Blue;
+        private static readonly Color COLOR_C = Color.Orange;
+        private static readonly Color COLOR_Z = Color.OrangeRed;
+        private static readonly Color COLOR_OTHER_IONS = Color.DodgerBlue; // Other ion types, as in small molecule
+        private static readonly Color COLOR_PRECURSOR = Color.DarkCyan;
+        private static readonly Color COLOR_NONE = COLOR_A;
 
         private static string[] LOCALIZED_VALUES
         {
@@ -61,6 +72,27 @@ namespace pwiz.Skyline.Model
         public static IonType GetEnum(string enumValue, IonType defaultValue)
         {
             return Helpers.EnumFromLocalizedString(enumValue, LOCALIZED_VALUES, defaultValue);
+        }
+
+        public static Color GetTypeColor(IonType? type, int rank = 0)
+        {
+            Color color;
+            if(!type.HasValue)
+                return COLOR_NONE;
+
+            switch (type)
+            {
+                default: color = COLOR_NONE; break;
+                case IonType.a: color = COLOR_A; break;
+                case IonType.x: color = COLOR_X; break;
+                case IonType.b: color = COLOR_B; break;
+                case IonType.y: color = COLOR_Y; break;
+                case IonType.c: color = COLOR_C; break;
+                case IonType.z: color = COLOR_Z; break;
+                case IonType.custom: color = (rank > 0) ? COLOR_OTHER_IONS : COLOR_NONE; break; // Small molecule fragments - only color if ranked
+                case IonType.precursor: color = COLOR_PRECURSOR; break;
+            }
+            return color;
         }
     }
 

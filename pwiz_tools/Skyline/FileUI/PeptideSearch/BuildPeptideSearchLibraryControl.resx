@@ -192,6 +192,57 @@
   <data name="&gt;&gt;peptideSearchSplitContainer.Panel1.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <data name="label2.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label2.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
+    <value>14, 10</value>
+  </data>
+  <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
+    <value>55, 13</value>
+  </data>
+  <data name="label2.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="label2.Text" xml:space="preserve">
+    <value>Start fro&amp;m:</value>
+  </data>
+  <data name="&gt;&gt;label2.Name" xml:space="preserve">
+    <value>label2</value>
+  </data>
+  <data name="&gt;&gt;label2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label2.Parent" xml:space="preserve">
+    <value>peptideSearchSplitContainer.Panel2</value>
+  </data>
+  <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="comboInputFileType.Location" type="System.Drawing.Point, System.Drawing">
+    <value>14, 26</value>
+  </data>
+  <data name="comboInputFileType.Size" type="System.Drawing.Size, System.Drawing">
+    <value>275, 21</value>
+  </data>
+  <data name="comboInputFileType.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;comboInputFileType.Name" xml:space="preserve">
+    <value>comboInputFileType</value>
+  </data>
+  <data name="&gt;&gt;comboInputFileType.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboInputFileType.Parent" xml:space="preserve">
+    <value>peptideSearchSplitContainer.Panel2</value>
+  </data>
+  <data name="&gt;&gt;comboInputFileType.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
   <data name="lblStandardPeptides.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
   </data>
@@ -205,7 +256,7 @@
     <value>114, 13</value>
   </data>
   <data name="lblStandardPeptides.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
+    <value>7</value>
   </data>
   <data name="lblStandardPeptides.Text" xml:space="preserve">
     <value>iRT standard peptides:</value>
@@ -220,7 +271,7 @@
     <value>peptideSearchSplitContainer.Panel2</value>
   </data>
   <data name="&gt;&gt;lblStandardPeptides.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>2</value>
   </data>
   <data name="comboStandards.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
@@ -232,7 +283,7 @@
     <value>170, 21</value>
   </data>
   <data name="comboStandards.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
+    <value>8</value>
   </data>
   <data name="&gt;&gt;comboStandards.Name" xml:space="preserve">
     <value>comboStandards</value>
@@ -244,7 +295,7 @@
     <value>peptideSearchSplitContainer.Panel2</value>
   </data>
   <data name="&gt;&gt;comboStandards.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>3</value>
   </data>
   <data name="cbIncludeAmbiguousMatches.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
@@ -262,7 +313,7 @@
     <value>158, 17</value>
   </data>
   <data name="cbIncludeAmbiguousMatches.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
+    <value>9</value>
   </data>
   <data name="cbIncludeAmbiguousMatches.Text" xml:space="preserve">
     <value>&amp;Include ambiguous matches</value>
@@ -277,7 +328,7 @@
     <value>peptideSearchSplitContainer.Panel2</value>
   </data>
   <data name="&gt;&gt;cbIncludeAmbiguousMatches.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>4</value>
   </data>
   <data name="cbFilterForDocumentPeptides.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
@@ -292,7 +343,7 @@
     <value>156, 17</value>
   </data>
   <data name="cbFilterForDocumentPeptides.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
+    <value>10</value>
   </data>
   <data name="cbFilterForDocumentPeptides.Text" xml:space="preserve">
     <value>&amp;Filter for document peptides</value>
@@ -307,7 +358,7 @@
     <value>peptideSearchSplitContainer.Panel2</value>
   </data>
   <data name="&gt;&gt;cbFilterForDocumentPeptides.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>5</value>
   </data>
   <data name="btnRemFile.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -316,13 +367,13 @@
     <value>False</value>
   </data>
   <data name="btnRemFile.Location" type="System.Drawing.Point, System.Drawing">
-    <value>285, 54</value>
+    <value>285, 106</value>
   </data>
   <data name="btnRemFile.Size" type="System.Drawing.Size, System.Drawing">
     <value>93, 23</value>
   </data>
   <data name="btnRemFile.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
+    <value>6</value>
   </data>
   <data name="btnRemFile.Text" xml:space="preserve">
     <value>&amp;Remove Files</value>
@@ -337,19 +388,19 @@
     <value>peptideSearchSplitContainer.Panel2</value>
   </data>
   <data name="&gt;&gt;btnRemFile.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>6</value>
   </data>
   <data name="listSearchFiles.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
   <data name="listSearchFiles.Location" type="System.Drawing.Point, System.Drawing">
-    <value>14, 25</value>
+    <value>14, 77</value>
   </data>
   <data name="listSearchFiles.Size" type="System.Drawing.Size, System.Drawing">
-    <value>265, 199</value>
+    <value>265, 147</value>
   </data>
   <data name="listSearchFiles.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
+    <value>4</value>
   </data>
   <data name="&gt;&gt;listSearchFiles.Name" xml:space="preserve">
     <value>listSearchFiles</value>
@@ -361,19 +412,19 @@
     <value>peptideSearchSplitContainer.Panel2</value>
   </data>
   <data name="&gt;&gt;listSearchFiles.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>7</value>
   </data>
   <data name="lblFileCaption.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="lblFileCaption.Location" type="System.Drawing.Point, System.Drawing">
-    <value>14, 6</value>
+    <value>14, 59</value>
   </data>
   <data name="lblFileCaption.Size" type="System.Drawing.Size, System.Drawing">
     <value>65, 13</value>
   </data>
   <data name="lblFileCaption.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
+    <value>3</value>
   </data>
   <data name="lblFileCaption.Text" xml:space="preserve">
     <value>&amp;Search files:</value>
@@ -388,19 +439,19 @@
     <value>peptideSearchSplitContainer.Panel2</value>
   </data>
   <data name="&gt;&gt;lblFileCaption.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>8</value>
   </data>
   <data name="btnAddFile.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
   </data>
   <data name="btnAddFile.Location" type="System.Drawing.Point, System.Drawing">
-    <value>285, 25</value>
+    <value>285, 77</value>
   </data>
   <data name="btnAddFile.Size" type="System.Drawing.Size, System.Drawing">
     <value>93, 23</value>
   </data>
   <data name="btnAddFile.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
+    <value>5</value>
   </data>
   <data name="btnAddFile.Text" xml:space="preserve">
     <value>&amp;Add Files...</value>
@@ -415,7 +466,7 @@
     <value>peptideSearchSplitContainer.Panel2</value>
   </data>
   <data name="&gt;&gt;btnAddFile.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>9</value>
   </data>
   <data name="&gt;&gt;peptideSearchSplitContainer.Panel2.Name" xml:space="preserve">
     <value>peptideSearchSplitContainer.Panel2</value>
@@ -547,7 +598,7 @@
     <value>381, 93</value>
   </data>
   <data name="grpWorkflow.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
+    <value>11</value>
   </data>
   <data name="grpWorkflow.Text" xml:space="preserve">
     <value>Workflow</value>
@@ -563,30 +614,6 @@
   </data>
   <data name="&gt;&gt;grpWorkflow.ZOrder" xml:space="preserve">
     <value>3</value>
-  </data>
-  <data name="radioDDASearch.Location" type="System.Drawing.Point, System.Drawing">
-    <value>236, 10</value>
-  </data>
-  <data name="radioDDASearch.Size" type="System.Drawing.Size, System.Drawing">
-    <value>134, 24</value>
-  </data>
-  <data name="radioDDASearch.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="radioDDASearch.Text" xml:space="preserve">
-    <value>Perform DDA Search</value>
-  </data>
-  <data name="&gt;&gt;radioDDASearch.Name" xml:space="preserve">
-    <value>radioDDASearch</value>
-  </data>
-  <data name="&gt;&gt;radioDDASearch.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;radioDDASearch.Parent" xml:space="preserve">
-    <value>panel1</value>
-  </data>
-  <data name="&gt;&gt;radioDDASearch.ZOrder" xml:space="preserve">
-    <value>0</value>
   </data>
   <data name="radioButtonNewLibrary.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -616,7 +643,7 @@
     <value>panel1</value>
   </data>
   <data name="&gt;&gt;radioButtonNewLibrary.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>0</value>
   </data>
   <data name="radioExistingLibrary.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -646,7 +673,7 @@
     <value>panel1</value>
   </data>
   <data name="&gt;&gt;radioExistingLibrary.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>1</value>
   </data>
   <data name="panel1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Top</value>

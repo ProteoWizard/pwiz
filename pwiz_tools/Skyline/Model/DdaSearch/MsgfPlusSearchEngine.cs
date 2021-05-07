@@ -116,10 +116,8 @@ namespace pwiz.Skyline.Model.DdaSearch
         public override Bitmap SearchEngineLogo => null;
         public override event NotificationEventHandler SearchProgressChanged;
 
-        public override bool Run(CancellationTokenSource cancelToken)
+        public override bool Run(CancellationTokenSource cancelToken, IProgressStatus status)
         {
-
-            IProgressStatus status = new ProgressStatus();
             //UpdateProgress(status);
             bool success = true;
             foreach (var spectrumFilename in SpectrumFileNames)
@@ -134,7 +132,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                         $@"-m {fragmentationMethod} -inst {instrumentType} -e {enzyme} -ntt {ntt} -maxMissedCleavages {maxMissedCleavages}");
 
                     pr.Run(psi, string.Empty, this, ref status);
-                    status = status.Complete().ChangeMessage(Resources.DDASearchControl_SearchProgress_Search_done);
+                    status = status.NextSegment();
                 }
                 catch (OperationCanceledException)
                 {
@@ -144,13 +142,22 @@ namespace pwiz.Skyline.Model.DdaSearch
                 catch (Exception ex)
                 {
                     status = status.ChangeErrorException(ex).ChangeMessage(string.Format(Resources.DdaSearch_Search_failed__0, ex.Message));
-                    UpdateProgress(status);
                     success = false;
                 }
 
-                if (cancelToken.IsCancellationRequested)
+                if (cancelToken.IsCancellationRequested && !status.IsCanceled)
+                {
+                    status = status.Cancel().ChangeMessage(Resources.DDASearchControl_SearchProgress_Search_canceled);
                     success = false;
+                }
+
+                if (!success)
+                    break;
             }
+
+            if (success)
+                status = status.Complete().ChangeMessage(Resources.DDASearchControl_SearchProgress_Search_done);
+            UpdateProgress(status);
 
             var deleteHelper = new DeleteTempHelper(modsFile);
             deleteHelper.DeletePath();

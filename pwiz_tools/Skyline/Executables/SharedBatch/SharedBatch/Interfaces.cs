@@ -28,11 +28,14 @@ namespace SharedBatch
         //                      otherwise replaced is the same as the current configuration (this)
         bool TryPathReplace(string oldRoot, string newRoot, out IConfig replaced);
 
+        // Returns a copy of the configuration with the new Skyline settings
+        IConfig ReplaceSkylineVersion(SkylineSettings skylineSettings);
+
         // Writes the configuration as xml
         void WriteXml(XmlWriter writer);
 
         // Returns a listViewItem displaying information about the configuration for the UI
-        ListViewItem AsListViewItem(IConfigRunner runner);
+        ListViewItem AsListViewItem(IConfigRunner runner, Graphics graphics);
     }
 
     // Possible status' the ConfigRunner may have. A ConfigRunner does not need to use every status, 
@@ -42,8 +45,8 @@ namespace SharedBatch
         Waiting,
         Starting,
         Running,
-        Cancelling,
-        Cancelled,
+        Canceling,
+        Canceled,
         Stopping,
         Stopped,
         Completed,
@@ -78,6 +81,9 @@ namespace SharedBatch
 
         // Uses Validator to determine if variable is valid
         bool IsValid(out string errorMessage);
+
+        // For testing, sets the text in a control
+        void SetText(string value);
     }
 
     // Possible actions a user is taking when opening a configuration in the edit configuration form 
@@ -95,14 +101,18 @@ namespace SharedBatch
         // Updates the log files in the dropdown list based on the configManager
         void UpdateUiLogFiles();
 
+        // Checks there are no configurations with the name addingName
+        void AssertUniqueConfigName(string addingName, bool replacing);
+
         // Updates the Ui running buttons
         void UpdateRunningButtons(bool canStart, bool canStop);
 
         void AddConfiguration(IConfig config);
         void ReplaceSelectedConfig(IConfig config);
+        void ReplaceAllSkylineVersions(SkylineSettings skylineSettings);
 
-        void LogToUi(string filePath, string text, bool scrollToEnd = true, bool trim = true);
-        void LogErrorToUi(string filePath, string text, bool scrollToEnd = true, bool trim = true);
+        void LogToUi(string filePath, string text, bool trim = true);
+        void LogErrorToUi(string filePath, string text, bool trim = true);
         void LogLinesToUi(string filePath, List<string> lines);
         void LogErrorLinesToUi(string filePath, List<string> lines);
 
@@ -111,6 +121,6 @@ namespace SharedBatch
         void DisplayInfo(string message);
         void DisplayErrorWithException(string message, Exception exception);
         DialogResult DisplayQuestion(string message);
-        DialogResult DisplayLargeQuestion(string message);
+        DialogResult DisplayLargeOkCancel(string message);
     }
 }
