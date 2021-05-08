@@ -256,12 +256,18 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 Precursor.DocNode);
         }
 
+        [OneToMany(ItemDisplayName = nameof(CandidatePeakGroup))]
         public IList<CandidatePeakGroup> CandidatePeakGroups
         {
             get
             {
                 return _candidatePeaks.Value;
             }
+        }
+
+        public int GetCandidatePeakGroupCount()
+        {
+            return new ChromatogramGroup(this).ChromatogramGroupInfo?.NumPeaks ?? 0;
         }
 
         private IList<CandidatePeakGroup> GetCandidatePeakGroups()

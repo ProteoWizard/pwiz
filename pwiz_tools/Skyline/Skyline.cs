@@ -3666,6 +3666,11 @@ namespace pwiz.Skyline
                 _calibrationForm.UpdateUI(true);
             }
 
+            if (null != _candidatePeakForm)
+            {
+                _candidatePeakForm.SetReplicateIndex(ComboResults.SelectedIndex);
+            }
+
             if (SequenceTree.ResultsIndex != ComboResults.SelectedIndex)
             {
                 // Show the right result set in the tree view.

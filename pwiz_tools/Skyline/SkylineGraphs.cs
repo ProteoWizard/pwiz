@@ -74,6 +74,7 @@ namespace pwiz.Skyline
         private DocumentGridForm _documentGridForm;
         private CalibrationForm _calibrationForm;
         private AuditLogForm _auditLogForm;
+        private CandidatePeakForm _candidatePeakForm;
         public static int MAX_GRAPH_CHROM = 100; // Never show more than this many chromatograms, lest we hit the Windows handle limit
         private readonly List<GraphChromatogram> _listGraphChrom = new List<GraphChromatogram>(); // List order is MRU, with oldest in position 0
         private bool _inGraphUpdate;
@@ -5468,6 +5469,48 @@ namespace pwiz.Skyline
             return runStartTime;
         }
 
+        #endregion
+
+        #region Candidate Peaks
+        public void ShowCandidatePeaks()
+        {
+            if (_candidatePeakForm!= null && !Program.SkylineOffscreen)
+            {
+                _candidatePeakForm.Activate();
+            }
+            else
+            {
+                _candidatePeakForm = _candidatePeakForm ?? CreateCandidatePeakForm();
+                if (_candidatePeakForm != null)
+                {
+                    var rectFloat = GetFloatingRectangleForNewWindow();
+                    _candidatePeakForm.Show(dockPanel, rectFloat);
+                }
+            }
+        }
+
+        public CandidatePeakForm CreateCandidatePeakForm()
+        {
+            Assume.IsNull(_candidatePeakForm);
+            _candidatePeakForm = new CandidatePeakForm(this);
+            _candidatePeakForm.FormClosed += candidatePeakForm_FormClosed;
+            return _candidatePeakForm;
+        }
+
+        private void DestroyCandidatePeakForm()
+        {
+            if (null != _candidatePeakForm)
+            {
+                _candidatePeakForm.FormClosed -= candidatePeakForm_FormClosed;
+                _candidatePeakForm.Close();
+                _candidatePeakForm = null;
+            }
+        }
+
+        void candidatePeakForm_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            _candidatePeakForm = null;
+        }
         #endregion
     }
 }

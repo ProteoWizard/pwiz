@@ -364,6 +364,12 @@
       <DependentUpon>PcaPlot.cs</DependentUpon>
     </Compile>
     <Compile Include="Controls\Clustering\StripePainter.cs" />
+    <Compile Include="Controls\Databinding\CandidatePeakForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Controls\Databinding\CandidatePeakForm.Designer.cs">
+      <DependentUpon>CandidatePeakForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Controls\Databinding\IDataboundGridForm.cs" />
     <Compile Include="Controls\Graphs\ExportMethodScheduleGraph.cs">
       <SubType>Form</SubType>
@@ -528,6 +534,7 @@
     <Compile Include="Model\Crosslinking\PeptideStructure.cs" />
     <Compile Include="Model\Crosslinking\SimpleFragmentIon.cs" />
     <Compile Include="Model\Databinding\CellLocator.cs" />
+    <Compile Include="Model\Databinding\Collections\CandidatePeakGroups.cs" />
     <Compile Include="Model\Databinding\DataGridId.cs" />
     <Compile Include="Model\Databinding\Entities\CandidatePeak.cs" />
     <Compile Include="Model\Databinding\Entities\ColumnCaptions.Designer.cs">

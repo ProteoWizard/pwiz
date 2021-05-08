@@ -2,11 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Results;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
 {
+
+    [InvariantDisplayName(nameof(CandidatePeakGroup))]
     public class CandidatePeakGroup : SkylineObject, ILinkValue
     {
         private ChromatogramGroup _chromatogramGroup;
