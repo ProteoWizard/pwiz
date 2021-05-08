@@ -23,7 +23,6 @@ using System.Text;
 using AutoQC.Properties;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using SharedBatch;
 
 namespace AutoQC
 {
