@@ -95,7 +95,9 @@ void Reportfile::writeHeader()
 	"lib-chemical-formula\t"
 	"lib-adduct\t"
 	"lib-inchikey\t"
-	"lib-otherkeys";
+	"lib-otherkeys\t"
+	"query-ion-mobility\t"
+	"query-ion-mobility-type";
   /*
   //"TIC-proc\t"
   //"bp-proc\t"
@@ -237,6 +239,8 @@ void Reportfile::writeMatches(const vector<Match>& results)
 		file_ << "\t" << refSpec->getAdduct();
 		file_ << "\t" << refSpec->getInchiKey();
 		file_ << "\t" << refSpec->getotherKeys();
+		file_ << "\t" << querySpec->getIonMobility();
+		file_ << "\t" << querySpec->getIonMobilityType();
         file_ << endl;
         
     }// next match
