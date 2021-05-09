@@ -492,7 +492,12 @@ namespace AutoQC
         {
             var addedConfigs = ImportFrom(filePath, showDownloadedFileForm);
             foreach (var config in addedConfigs)
+            {
+                // Handle overwritten duplicate configs
+                if (_configRunners.ContainsKey(config.GetName()))
+                    ProgramaticallyRemoveAt(GetConfigIndex(config.GetName()));
                 ProgramaticallyAddConfig(config);
+            }
         }
 
         #endregion

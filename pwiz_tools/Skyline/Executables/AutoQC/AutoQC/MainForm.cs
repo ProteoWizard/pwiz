@@ -212,8 +212,13 @@ namespace AutoQC
 
         private void btnExport_Click(object sender, EventArgs e)
         {
-            var shareForm = new ShareConfigsForm(this, _configManager, TextUtil.FILTER_QCFG, Program.Icon());
-            shareForm.ShowDialog();
+            var shareForm = new ShareConfigsForm(this, _configManager, Program.Icon());
+            if (shareForm.ShowDialog(this) != DialogResult.OK)
+                return;
+            var dialog = new SaveFileDialog {Filter = TextUtil.FILTER_QCFG};
+            if (dialog.ShowDialog(this) != DialogResult.OK)
+                return;
+            _configManager.ExportConfigs(dialog.FileName, shareForm.IndiciesToSave);
         }
 
         private void btnRun_MouseClick(object sender, MouseEventArgs e)

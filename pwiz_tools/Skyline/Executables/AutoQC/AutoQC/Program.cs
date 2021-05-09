@@ -92,16 +92,34 @@ namespace AutoQC
                 // Initialize log4net -- global application logging
                 XmlConfigurator.Configure();
 
-                if (!InitSkylineSettings()) return;
-
+                string configFile = null;
                 try
                 {
+                    if (!InitSkylineSettings()) return;
                     var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal);
-                    ProgramLog.Info(string.Format("user.config path: {0}", config.FilePath));
+                    configFile = config.FilePath;
+                    ProgramLog.Info(string.Format("user.config path: {0}", configFile));
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
-                    // ignored
+                    ProgramLog.Error(e.Message, e);
+                    var folderToCopy = Path.GetDirectoryName(ProgramLog.GetProgramLogFilePath()) ?? string.Empty;
+                    var newFileName = Path.Combine(folderToCopy, "error-user.config");
+                    var message = "There was an error loading the saved configurations.";
+                    if (configFile != null)
+                    {
+                        File.Copy(configFile, newFileName, true);
+                        File.Delete(configFile);
+                        message += Environment.NewLine + Environment.NewLine +
+                                   string.Format(
+                                       Resources.Program_Main_To_help_improve__0__in_future_versions__please_post_the_configuration_file_to_the_Skyline_Support_board_,
+                                       AppName) +
+                                   Environment.NewLine +
+                                   newFileName;
+                    }
+
+                    MessageBox.Show(message);
+                    return;
                 }
 
                 // Thread.CurrentThread.CurrentUICulture = new CultureInfo("ja");

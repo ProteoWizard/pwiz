@@ -534,12 +534,6 @@ namespace SharedBatch
         public void ExportConfigs(string filePath, int[] indiciesToSave)
         {
             var directory = string.Empty;
-            // Exception if no configurations are selected to export
-            if (indiciesToSave.Length == 0)
-            {
-                throw new ArgumentException(Resources.ConfigManager_ExportConfigs_There_is_no_configuration_selected_ + Environment.NewLine +
-                                           Resources.ConfigManager_ExportConfigs_Please_select_a_configuration_to_share_);
-            }
             try
             {
                 directory = Path.GetDirectoryName(filePath);

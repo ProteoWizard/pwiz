@@ -550,4 +550,7 @@ with:
   <data name="Program_AddFileTypesToRegistry_AutoQC_Configuration_File" xml:space="preserve">
     <value>AutoQC Configuration File</value>
   </data>
+  <data name="Program_Main_To_help_improve__0__in_future_versions__please_post_the_configuration_file_to_the_Skyline_Support_board_" xml:space="preserve">
+    <value>To help improve {0} in future versions, please post the configuration file to the Skyline Support board:</value>
+  </data>
 </root>
