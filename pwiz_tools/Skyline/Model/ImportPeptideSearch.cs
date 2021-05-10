@@ -499,10 +499,11 @@ namespace pwiz.Skyline.Model
             else if (standard.HasDocument)
                 return standard.ImportTo(doc);
 
+            var modMatcher = new ModificationMatcher();
+            modMatcher.CreateMatches(doc.Settings, standard.Peptides.Select(pep => pep.ModifiedTarget.ToString()),
+                Settings.Default.StaticModList, Settings.Default.HeavyModList);
             var group = new PeptideGroupDocNode(new PeptideGroup(), Resources.ImportFastaControl_ImportFasta_iRT_standards, null,
-                standard.Peptides.Select(pep =>
-                    new PeptideDocNode(new Peptide(pep.ModifiedTarget), doc.Settings, null, null, null, new TransitionGroupDocNode[0], true)
-                        .ChangeSettings(doc.Settings, SrmSettingsDiff.ALL)
+                standard.Peptides.Select(pep => modMatcher.GetModifiedNode(pep.ModifiedTarget.ToString()).ChangeSettings(doc.Settings, SrmSettingsDiff.ALL)
                 ).ToArray());
             return (SrmDocument) doc.Insert(doc.Children.FirstOrDefault()?.Id, group);
         }
