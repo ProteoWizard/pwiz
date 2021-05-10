@@ -89,8 +89,9 @@ void Reportfile::writeHeader()
     "lbp-mz-raw\t"
     "num-peaks\t" 
     "matched-ions\t"
-	//New additions to support/enhance small molecule blibs
+	//New additions to support/enhance small molecule blibs and report retention times
 	"query-rt\t"
+	"lib-rt\t"
 	"lib-molecule-name\t"
 	"lib-chemical-formula\t"
 	"lib-adduct\t"
@@ -234,6 +235,7 @@ void Reportfile::writeMatches(const vector<Match>& results)
         */
         file_ << "\t" << curMatch.getScore(MATCHED_IONS);
 		file_ << "\t" << querySpec->getRetentionTime();
+		file_ << "\t" << refSpec->getRetentionTime();
 		file_ << "\t" << refSpec->getMoleculeName();
 		file_ << "\t" << refSpec->getChemicalFormula();
 		file_ << "\t" << refSpec->getAdduct();
