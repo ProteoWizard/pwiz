@@ -80,6 +80,15 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Save.
+        /// </summary>
+        public static string AddServerForm_FinishConnectToServer_Save {
+            get {
+                return ResourceManager.GetString("AddServerForm_FinishConnectToServer_Save", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Notice: For faster Skyline Batch runs, use Skyline version {0} or higher..
         /// </summary>
         public static string CommandWriter_Start_Notice__For_faster_Skyline_Batch_runs__use_Skyline_version__0__or_higher_ {
@@ -218,6 +227,15 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to File download failed..
+        /// </summary>
+        public static string ConfigRunner_DownloadData_File_download_failed_ {
+            get {
+                return ResourceManager.GetString("ConfigRunner_DownloadData_File_download_failed_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Found {0} matching data files on {1}:.
         /// </summary>
         public static string ConfigRunner_DownloadData_Found__0__matching_data_files_on__1__ {
@@ -241,6 +259,16 @@ namespace SkylineBatch.Properties {
         public static string ConfigRunner_DownloadData_Starting_download___ {
             get {
                 return ResourceManager.GetString("ConfigRunner_DownloadData_Starting_download___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There is not enough remaining disk space to download {0}. Free up some disk space and try again..
+        /// </summary>
+        public static string ConfigRunner_DownloadData_There_is_not_enough_remaining_disk_space_to_download__0___Free_up_some_disk_space_and_try_again_ {
+            get {
+                return ResourceManager.GetString("ConfigRunner_DownloadData_There_is_not_enough_remaining_disk_space_to_download__0" +
+                        "___Free_up_some_disk_space_and_try_again_", resourceCulture);
             }
         }
         
@@ -362,6 +390,25 @@ namespace SkylineBatch.Properties {
         public static string ConfigRunner_Run_Updating__0_ {
             get {
                 return ResourceManager.GetString("ConfigRunner_Run_Updating__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to None of the file names on the server matched the regular expression: {0}.
+        /// </summary>
+        public static string DataServerInfo_Validate_None_of_the_file_names_on_the_server_matched_the_regular_expression___0_ {
+            get {
+                return ResourceManager.GetString("DataServerInfo_Validate_None_of_the_file_names_on_the_server_matched_the_regular_" +
+                        "expression___0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please make sure your regular expression is correct..
+        /// </summary>
+        public static string DataServerInfo_Validate_Please_make_sure_your_regular_expression_is_correct_ {
+            get {
+                return ResourceManager.GetString("DataServerInfo_Validate_Please_make_sure_your_regular_expression_is_correct_", resourceCulture);
             }
         }
         
@@ -617,6 +664,15 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Importing configurations from {0}....
+        /// </summary>
+        public static string MainForm_DoImport_Importing_configurations_from__0____ {
+            get {
+                return ResourceManager.GetString("MainForm_DoImport_Importing_configurations_from__0____", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Do you want to import configurations from {0}?.
         /// </summary>
         public static string MainForm_FileOpenedImport_Do_you_want_to_import_configurations_from__0__ {
@@ -640,6 +696,15 @@ namespace SkylineBatch.Properties {
         public static string MainForm_MainForm_Loading_configurations_from_saved_settings_ {
             get {
                 return ResourceManager.GetString("MainForm_MainForm_Loading_configurations_from_saved_settings_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Loading configurations from saved settings....
+        /// </summary>
+        public static string MainForm_MainForm_Loading_configurations_from_saved_settings___ {
+            get {
+                return ResourceManager.GetString("MainForm_MainForm_Loading_configurations_from_saved_settings___", resourceCulture);
             }
         }
         
@@ -678,6 +743,15 @@ namespace SkylineBatch.Properties {
         public static string MainForm_TryExecuteOperation_Please_choose_a_unique_name_ {
             get {
                 return ResourceManager.GetString("MainForm_TryExecuteOperation_Please_choose_a_unique_name_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Download files only.
+        /// </summary>
+        public static string MainForm_UpdateRunBatchSteps_Download_data_only {
+            get {
+                return ResourceManager.GetString("MainForm_UpdateRunBatchSteps_Download_data_only", resourceCulture);
             }
         }
         
@@ -741,6 +815,16 @@ namespace SkylineBatch.Properties {
         public static string MainForm_UpdateRunBatchSteps_Run_from_step_5__run_R_scripts {
             get {
                 return ResourceManager.GetString("MainForm_UpdateRunBatchSteps_Run_from_step_5__run_R_scripts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The data folder cannot be empty. Please choose a folder with at least one data file..
+        /// </summary>
+        public static string MainSettings_ValidateAllButServer_The_data_folder_cannot_be_empty__Please_choose_a_folder_with_at_least_one_data_file_ {
+            get {
+                return ResourceManager.GetString("MainSettings_ValidateAllButServer_The_data_folder_cannot_be_empty__Please_choose_" +
+                        "a_folder_with_at_least_one_data_file_", resourceCulture);
             }
         }
         
@@ -1479,6 +1563,15 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} GB on the {1} drive.
+        /// </summary>
+        public static string SkylineBatchConfigManager_StartBatchRun__0__GB_on_the__1__drive {
+            get {
+                return ResourceManager.GetString("SkylineBatchConfigManager_StartBatchRun__0__GB_on_the__1__drive", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to chromatagram files.
         /// </summary>
         public static string SkylineBatchConfigManager_StartBatchRun_chromatagram_files {
@@ -1531,6 +1624,16 @@ namespace SkylineBatch.Properties {
             get {
                 return ResourceManager.GetString("SkylineBatchConfigManager_StartBatchRun_Please_check_the_checkbox_next_to_one_or_" +
                         "more_configurations_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please free up some space to download the data..
+        /// </summary>
+        public static string SkylineBatchConfigManager_StartBatchRun_Please_free_up_some_space_to_download_the_data_ {
+            get {
+                return ResourceManager.GetString("SkylineBatchConfigManager_StartBatchRun_Please_free_up_some_space_to_download_the" +
+                        "_data_", resourceCulture);
             }
         }
         
@@ -1588,6 +1691,16 @@ namespace SkylineBatch.Properties {
             get {
                 return ResourceManager.GetString("SkylineBatchConfigManager_StartBatchRun_There_are_no_enabled_configurations_to_ru" +
                         "n_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There is not enough space on this computer to download the data for these configurations. You need an additional:.
+        /// </summary>
+        public static string SkylineBatchConfigManager_StartBatchRun_There_is_not_enough_space_on_this_computer_to_download_the_data_for_these_configurations__You_need_an_additional_ {
+            get {
+                return ResourceManager.GetString("SkylineBatchConfigManager_StartBatchRun_There_is_not_enough_space_on_this_compute" +
+                        "r_to_download_the_data_for_these_configurations__You_need_an_additional_", resourceCulture);
             }
         }
         

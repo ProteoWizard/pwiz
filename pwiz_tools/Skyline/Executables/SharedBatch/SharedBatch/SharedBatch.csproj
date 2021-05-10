@@ -35,6 +35,10 @@
       <HintPath>..\..\..\..\Shared\Lib\log4net.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Collections.Immutable, Version=5.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\Shared\Lib\System.Collections.Immutable.dll</HintPath>
+    </Reference>
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Management" />
@@ -77,6 +81,13 @@
     <Compile Include="Interfaces.cs" />
     <Compile Include="OldLogger.cs" />
     <Compile Include="Logger.cs" />
+    <Compile Include="LongWaitDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="LongWaitDlg.Designer.cs">
+      <DependentUpon>LongWaitDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="LongWaitOperation.cs" />
     <Compile Include="MainFormUtils.cs" />
     <Compile Include="ProcessRunner.cs" />
     <Compile Include="ProgramLog.cs" />
@@ -122,6 +133,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FindSkylineForm.resx">
       <DependentUpon>FindSkylineForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="LongWaitDlg.resx">
+      <DependentUpon>LongWaitDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

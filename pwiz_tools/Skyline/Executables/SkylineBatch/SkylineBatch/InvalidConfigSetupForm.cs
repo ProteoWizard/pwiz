@@ -82,12 +82,15 @@ namespace SkylineBatch
                 mainSettings.TemplateFilePath, MainSettings.ValidateTemplateFile, PathDialogOptions.File, PathDialogOptions.ExistingOptional);
             var validAnalysisFolderPath = await GetValidPath(Resources.InvalidConfigSetupForm_FixInvalidMainSettings_analysis_folder, 
                 mainSettings.AnalysisFolderPath, MainSettings.ValidateAnalysisFolder, PathDialogOptions.Folder);
+            var dataValidator = mainSettings.Server != null ? (Validator)MainSettings.ValidateDataFolderWithServer : (Validator)MainSettings.ValidateDataFolderWithoutServer;
+            if (mainSettings.Server != null) dataValidator = MainSettings.ValidateDataFolderWithServer;
             var validDataFolderPath = await GetValidPath(Resources.InvalidConfigSetupForm_FixInvalidMainSettings_data_folder, 
-                mainSettings.DataFolderPath, MainSettings.ValidateDataFolder, PathDialogOptions.Folder);
+                mainSettings.DataFolderPath, dataValidator, PathDialogOptions.Folder);
             var validAnnotationsFilePath = await GetValidPath(Resources.InvalidConfigSetupForm_FixInvalidMainSettings_annotations_file, mainSettings.AnnotationsFilePath,
                 MainSettings.ValidateAnnotationsFile, PathDialogOptions.File);
+            var validServer = mainSettings.Server != null ? await GetValidServer(mainSettings.Server) : null;
 
-            return new MainSettings(validTemplateFilePath, validAnalysisFolderPath, validDataFolderPath, mainSettings.Server, 
+            return new MainSettings(validTemplateFilePath, validAnalysisFolderPath, validDataFolderPath, validServer, 
                 validAnnotationsFilePath, mainSettings.ReplicateNamingPattern, mainSettings.DependentConfigName);
         }
 
@@ -157,6 +160,12 @@ namespace SkylineBatch
 
             RemoveControl(folderControl);
             return path;
+        }
+
+        private async Task<DataServerInfo> GetValidServer(DataServerInfo invalidServer)
+        {
+            var dataServerControl = new DataServerControl(invalidServer);
+            return (DataServerInfo)await GetValidVariable(dataServerControl);
         }
 
         private async Task<string> GetValidRVersion(string scriptName, string invalidVersion)

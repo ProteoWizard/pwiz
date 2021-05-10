@@ -22,6 +22,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Serialization;
 using FluentFTP;
@@ -116,16 +117,25 @@ namespace SkylineBatch
             return sb.ToString();
         }
 
-        public void Validate(List<string> generatedSkylineFiles = null)
+        public void Validate()
+        {
+            Server?.Validate();
+            ValidateAllButServer();
+        }
+
+        public void QuickValidate()
+        {
+            ValidateAllButServer();
+            Server?.QuickValidate();
+        }
+
+        private void ValidateAllButServer()
         {
             if (DependentConfigName == null)
                 ValidateTemplateFile(TemplateFilePath);
-            ValidateDataFolder(DataFolderPath);
-            if (Server == null && !Directory.GetFiles(DataFolderPath).Any())
-                throw new ArgumentException("The data folder cannot be empty. Please choose a folder with at least one data file.");
+            ValidateDataFolder(DataFolderPath, Server != null);
             ValidateAnalysisFolder(AnalysisFolderPath);
             ValidateAnnotationsFile(AnnotationsFilePath);
-            if (Server != null) DataServerInfo.ValidateNamingPattern(Server.DataNamingPattern);
         }
 
         public static void ValidateTemplateFile(string templateFile)
@@ -151,7 +161,17 @@ namespace SkylineBatch
             FileUtil.ValidateNotInDownloads(analysisFolder, Resources.MainSettings_ValidateAnalysisFolder_analysis_folder);
         }
 
-        public static void ValidateDataFolder(string dataFolder)
+        public static void ValidateDataFolderWithoutServer(string dataFolder)
+        {
+            ValidateDataFolder(dataFolder, false);
+        }
+
+        public static void ValidateDataFolderWithServer(string dataFolder)
+        {
+            ValidateDataFolder(dataFolder, true);
+        }
+
+        private static void ValidateDataFolder(string dataFolder, bool hasServer)
         {
             FileUtil.ValidateNotEmptyPath(dataFolder, Resources.MainSettings_ValidateDataFolder_data_folder);
             if (!Directory.Exists(dataFolder))
@@ -160,6 +180,8 @@ namespace SkylineBatch
                                             Resources.MainSettings_ValidateAnalysisFolder_Please_provide_a_valid_folder_);
             }
             FileUtil.ValidateNotInDownloads(dataFolder, Resources.MainSettings_ValidateDataFolder_data_folder);
+            if (!hasServer && !Directory.GetFiles(dataFolder).Any())
+                throw new ArgumentException(Resources.MainSettings_ValidateAllButServer_The_data_folder_cannot_be_empty__Please_choose_a_folder_with_at_least_one_data_file_);
         }
 
         public static void ValidateAnnotationsFile(string annotationsFilePath)
@@ -181,8 +203,9 @@ namespace SkylineBatch
                 templateReplaced = TextUtil.SuccessfulReplace(ValidateTemplateFile, oldRoot, newRoot, TemplateFilePath, out replacedTemplatePath);
             var analysisReplaced =
                 TextUtil.SuccessfulReplace(ValidateAnalysisFolder, oldRoot, newRoot, AnalysisFolderPath, out string replacedAnalysisPath);
+            var dataValidator = Server != null ? (Validator)ValidateDataFolderWithServer : (Validator)ValidateDataFolderWithoutServer;
             var dataReplaced =
-                TextUtil.SuccessfulReplace(ValidateDataFolder, oldRoot, newRoot, DataFolderPath, out string replacedDataPath);
+                TextUtil.SuccessfulReplace(dataValidator, oldRoot, newRoot, DataFolderPath, out string replacedDataPath);
             var annotationsReplaced =
                 TextUtil.SuccessfulReplace(ValidateAnnotationsFile, oldRoot, newRoot, AnnotationsFilePath, out string replacedAnnotationsPath);
 
@@ -190,6 +213,22 @@ namespace SkylineBatch
                 Server, replacedAnnotationsPath, ReplicateNamingPattern, DependentConfigName);
 
             return templateReplaced || analysisReplaced || dataReplaced || annotationsReplaced;
+        }
+
+        public long SpaceNeeded(List<string> otherDataFolders)
+        {
+            if (Server == null || otherDataFolders.Contains(DataFolderPath)) return 0;
+            var filesToDownload = Server.FilesToDownload(DataFolderPath);
+            long spaceNeeded = 0;
+            foreach (var file in filesToDownload.Values)
+                spaceNeeded += file.Size;
+            return spaceNeeded;
+        }
+
+        public Dictionary<string, FtpListItem> FilesToDownload()
+        {
+            if (Server == null) return new Dictionary<string, FtpListItem>();
+            return Server.FilesToDownload(DataFolderPath);
         }
 
         public bool RunWillOverwrite(int startStep, string configHeader, out StringBuilder message)
@@ -374,7 +413,9 @@ namespace SkylineBatch
     public class DataServerInfo
     {
         private Dictionary<string, FtpListItem> _serverFiles;
-        
+        private bool _validated;
+        private Exception _validationError;
+
         public static DataServerInfo ServerFromUi(string url, string userName, string password, string namingPattern)
         {
             if (string.IsNullOrWhiteSpace(url))
@@ -398,8 +439,7 @@ namespace SkylineBatch
             Password = password ?? string.Empty;
             DataNamingPattern = namingPattern ?? string.Empty;
         }
-
-        public bool Validated { get; private set; }
+        
         public readonly Uri Server;
         public readonly string UserName;
         public readonly string Password;
@@ -428,31 +468,93 @@ namespace SkylineBatch
             return client;
         }
 
+        // The list of matching files that have not been fully downloaded to folderPath
+        public Dictionary<string, FtpListItem> FilesToDownload(string folderPath)
+        {
+            var downloadingFiles = new Dictionary<string, FtpListItem>();
+            foreach (var fileName in _serverFiles.Keys)
+            {
+                var filePath = Path.Combine(folderPath, fileName);
+                if (!File.Exists(filePath) || _serverFiles[fileName].Size != new FileInfo(filePath).Length)
+                {
+                    if (File.Exists(filePath)) File.Delete(filePath);
+                    downloadingFiles.Add(filePath, _serverFiles[fileName]);
+                }
+            }
+            return downloadingFiles;
+        }
+
+
+        public void QuickValidate()
+        {
+            if (_validationError != null) throw _validationError;
+            if (!_validated) throw new ArgumentException("The server should have already been validated.");
+        }
 
         public void Validate()
         {
+            if (_validated) return;
             ValidateNamingPattern(DataNamingPattern);
             _serverFiles = new Dictionary<string, FtpListItem>();
+            bool foundServerFiles;
+            try
+            {
+                // Try connecting to server twice if it fails the first time
+                if (!ConnectToServer(out foundServerFiles))
+                    ConnectToServer(out foundServerFiles, true);
+                
+            }
+            catch (Exception e)
+            {
+                _validationError = new ArgumentException(
+                    string.Format(Resources.DataServerInfo_Validate_There_was_an_error_connecting_to__0____1_, GetUrl(), e.Message));
+                throw _validationError;
+            }
+
+            if (!foundServerFiles)
+            {
+                _validationError = new ArgumentException(string.Format(
+                    Resources.DataServerInfo_Validate_There_were_no_files_found_at__0___Make_sure_the_URL__username__and_password_are_correct_and_try_again_,
+                    GetUrl()));
+                throw _validationError;
+            }
+            
+            if (_serverFiles.Count == 0)
+            {
+                _validationError = new ArgumentException(
+                    string.Format(Resources.DataServerInfo_Validate_None_of_the_file_names_on_the_server_matched_the_regular_expression___0_,
+                        DataNamingPattern) + Environment.NewLine +
+                    Resources.DataServerInfo_Validate_Please_make_sure_your_regular_expression_is_correct_);
+                throw _validationError;
+            }
+            _validated = true;
+        }
+
+        private bool ConnectToServer(out bool foundServerFiles, bool throwError = false)
+        {
+            foundServerFiles = false;
+            var namingRegex = new Regex(DataNamingPattern);
             var client = GetFtpClient();
             try
             {
                 client.Connect();
                 foreach (FtpListItem item in client.GetListing(Server.AbsolutePath))
                 {
-                    if (item.Type == FtpFileSystemObjectType.File) _serverFiles.Add(item.Name, item);
+                    if (item.Type == FtpFileSystemObjectType.File)
+                    {
+                        foundServerFiles = true;
+                        if (namingRegex.IsMatch(item.Name)) _serverFiles.Add(item.Name, item);
+                    }
                 }
             }
-            catch (Exception e)
+            catch (Exception)
             {
-                throw new ArgumentException(
-                    string.Format(Resources.DataServerInfo_Validate_There_was_an_error_connecting_to__0____1_, GetUrl(), e.Message));
+                client.Disconnect();
+                if (throwError) throw;
+                return false;
             }
             client.Disconnect();
-            if (_serverFiles.Count == 0)
-                throw new ArgumentException(string.Format(
-                    Resources.DataServerInfo_Validate_There_were_no_files_found_at__0___Make_sure_the_URL__username__and_password_are_correct_and_try_again_,
-                    GetUrl()));
-            Validated = true;
+            return true;
         }
 
         public static void ValidateNamingPattern(string dataNamingPattern)

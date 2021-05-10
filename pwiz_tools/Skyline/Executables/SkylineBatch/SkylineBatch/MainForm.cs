@@ -17,6 +17,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
@@ -30,9 +31,9 @@ namespace SkylineBatch
     public partial class MainForm : Form, IMainUiControl
     {
 
-        private readonly SkylineBatchConfigManager _configManager;
+        private SkylineBatchConfigManager _configManager;
         private readonly Logger _skylineBatchLogger;
-        private readonly RDirectorySelector _rDirectorySelector;
+        private RDirectorySelector _rDirectorySelector;
         private bool _loaded;
         private readonly ColumnWidthCalculator _listViewColumnWidths;
         private bool _showRefineStep;
@@ -51,23 +52,40 @@ namespace SkylineBatch
             _listViewColumnWidths = new ColumnWidthCalculator(listViewConfigs);
             listViewConfigs.ColumnWidthChanged += listViewConfigs_ColumnWidthChanged;
             ProgramLog.Info(Resources.MainForm_MainForm_Loading_configurations_from_saved_settings_);
-            _configManager = new SkylineBatchConfigManager(_skylineBatchLogger, this);
+            
             _rDirectorySelector = new RDirectorySelector(this, _configManager);
             _outputLog = new Timer { Interval = 500 };
             _outputLog.Tick += OutputLog;
             _outputLog.Start();
 
-            UpdateUiConfigurations();
-            ListViewSizeChanged();
-            UpdateUiLogFiles();
 
             Shown += ((sender, args) =>
             {
+                _configManager = new SkylineBatchConfigManager(_skylineBatchLogger, this);
+                var loadConfigsLongWaitDlg = new LongWaitDlg(this, Program.AppName(),
+                    Resources.MainForm_MainForm_Loading_configurations_from_saved_settings___);
+                _configManager.StartLoadingConfigList(new LongWaitOperation(this, loadConfigsLongWaitDlg), (success) =>
+                {
+                    ImportFinishedCallback(success);
+                    if (!string.IsNullOrEmpty(openFile))
+                        FileOpened(openFile);
+                });
+                _rDirectorySelector = new RDirectorySelector(this, _configManager);
+                ListViewSizeChanged();
+                UpdateUiLogFiles();
                 _loaded = true;
-                _rDirectorySelector.AddIfNecassary();
-                if (!string.IsNullOrEmpty(openFile))
-                    FileOpened(openFile);
             });
+        }
+        
+
+        private void ImportFinishedCallback(bool success)
+        {
+            if (success)
+            {
+                UpdateUiConfigurations();
+                if (!_rDirectorySelector.ShownDialog)
+                    _rDirectorySelector.AddIfNecassary();
+            }
         }
 
         private void RunUi(Action action)
@@ -132,10 +150,16 @@ namespace SkylineBatch
             {
                 if (configRunner.IsRunning()) throw new Exception("Invalid configuration cannot be running.");
                 var validateConfigForm = new InvalidConfigSetupForm(this, config, _configManager, _rDirectorySelector);
-                validateConfigForm.ShowDialog();
-
-                if (validateConfigForm.DialogResult != DialogResult.OK)
-                    return;
+                try
+                {
+                    validateConfigForm.ShowDialog();
+                    if (validateConfigForm.DialogResult != DialogResult.OK)
+                        return;
+                }
+                catch (ObjectDisposedException)
+                {
+                    // pass - the field making the config invalid cannot be set up in the invalid config manager
+                }
             }
             var configForm = new SkylineBatchConfigForm(this, _rDirectorySelector, _configManager.GetSelectedConfig(), ConfigAction.Edit, configRunner.IsBusy(), _configManager);
             configForm.ShowDialog();
@@ -312,7 +336,10 @@ namespace SkylineBatch
             }
             ((ToolStripMenuItem)batchRunDropDown.Items[index]).Checked = true;
             btnRunBatch.TextAlign = index == 0 ? ContentAlignment.MiddleCenter : ContentAlignment.MiddleLeft;
-            btnRunBatch.Text = batchRunDropDown.Items[index].Text.Insert(1, "&");
+            if (index == 1)
+                btnRunBatch.Text = batchRunDropDown.Items[index].Text.Insert(2, "&");
+            else
+                btnRunBatch.Text = batchRunDropDown.Items[index].Text.Insert(1, "&");
         }
 
         private void btnRunBatch_Click(object sender, EventArgs e)
@@ -328,9 +355,15 @@ namespace SkylineBatch
                 if (((ToolStripMenuItem)batchRunDropDown.Items[i - 1]).Checked)
                 {
                     var stepNumber = i;
-                    if (!_showRefineStep && i > 2)
-                         stepNumber += 1; // step 3 and 4 become step 4 and 5 when refine step is hidden
-                    running = _configManager.StartBatchRun(stepNumber);
+                    if (!_showRefineStep && i > 3)
+                        stepNumber += 1; // step 3 and 4 become step 4 and 5 when refine step is hidden
+
+                    var downloadFilesOnly = stepNumber == 2;
+                    if (downloadFilesOnly) // download files only
+                        stepNumber = 1000;
+                    if (stepNumber > 2) stepNumber--;
+                    
+                    running = _configManager.StartBatchRun(stepNumber, downloadFilesOnly);
                     break;
                 }
             }
@@ -427,8 +460,9 @@ namespace SkylineBatch
                         break;
                     }
                 }
-                    batchRunDropDown.Items.Clear();
+                batchRunDropDown.Items.Clear();
                 batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Run_All_Steps);
+                batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Download_data_only);
                 batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Run_from_step_2__data_import);
                 if (_showRefineStep)
                 {
@@ -445,7 +479,7 @@ namespace SkylineBatch
                 var newChecked = oldChecked;
                 if (oldChecked == 2 && _showRefineStep)
                     newChecked += 1;
-                else if (newChecked >= 3)
+                else if (newChecked >= 4)
                     newChecked = _showRefineStep ? oldChecked + 1 : oldChecked - 1;
                 
                 CheckDropDownOption(newChecked);
@@ -486,12 +520,13 @@ namespace SkylineBatch
             return dialogResult;
         }
 
-        public void DoImport(string filePath)
+        public LongWaitOperation DoImport(string filePath)
         {
-            _configManager.Import(filePath, ShowDownloadedFileForm);
-
-            if (!_rDirectorySelector.ShownDialog)
-                _rDirectorySelector.AddIfNecassary();
+            var importLongWaitDlg = new LongWaitDlg(this, Program.AppName(),
+                string.Format(Resources.MainForm_DoImport_Importing_configurations_from__0____, Path.GetFileName(filePath)));
+            var longWaitOperation = new LongWaitOperation(this, importLongWaitDlg);
+            _configManager.StartImport(filePath, longWaitOperation, ImportFinishedCallback, ShowDownloadedFileForm);
+            return longWaitOperation;
         }
 
         private void btnExport_Click(object sender, EventArgs e)
@@ -735,9 +770,9 @@ namespace SkylineBatch
         public void ClickDown() => btnDownArrow_Click(new object(), new EventArgs());
         public void ClickShare() => btnExport_Click(new object(), new EventArgs());
 
-        public void ClickRun(int startStep = 0)
+        public void ClickRun(int option = 0)
         {
-            CheckDropDownOption(startStep);
+            CheckDropDownOption(option);
             RunBatch();
         }
 

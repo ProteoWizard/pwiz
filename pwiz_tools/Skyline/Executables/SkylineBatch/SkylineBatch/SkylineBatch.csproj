@@ -29,8 +29,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>127</ApplicationRevision>
-    <ApplicationVersion>21.0.9.127</ApplicationVersion>
+    <ApplicationRevision>130</ApplicationRevision>
+    <ApplicationVersion>21.0.9.130</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -135,6 +135,9 @@
       <DependentUpon>CommandArgUsage.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="DataServerControl.resx">
+      <DependentUpon>DataServerControl.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="InvalidConfigSetupForm.resx">
       <DependentUpon>InvalidConfigSetupForm.cs</DependentUpon>
     </EmbeddedResource>
@@ -163,6 +166,12 @@
     </Compile>
     <Compile Include="AddServerForm.Designer.cs">
       <DependentUpon>AddServerForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="DataServerControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="DataServerControl.Designer.cs">
+      <DependentUpon>DataServerControl.cs</DependentUpon>
     </Compile>
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>

@@ -54,7 +54,7 @@ namespace SkylineBatchTest
             var logger = TestUtils.GetTestLogger();
             var testRunner = new ConfigRunner(TestUtils.GetTestConfig(), logger);
             Assert.IsTrue(testRunner.IsStopped());
-            await testRunner.Run(4);
+            await testRunner.Run(4, false);
             logger.Delete();
             Assert.IsTrue(testRunner.IsCompleted(), "Expected runner to have status \"Completed\" but was: " + testRunner.GetStatus());
         }

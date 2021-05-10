@@ -73,6 +73,7 @@
             this.btnEdit = new System.Windows.Forms.Button();
             this.btnCopy = new System.Windows.Forms.Button();
             this.tabMain = new System.Windows.Forms.TabControl();
+            this.downloadDataOnly = new System.Windows.Forms.ToolStripMenuItem();
             this.batchRunDropDown.SuspendLayout();
             this.tabLog.SuspendLayout();
             this.tabConfigs.SuspendLayout();
@@ -152,6 +153,7 @@
             // 
             this.batchRunDropDown.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.startFromStepOne,
+            this.downloadDataOnly,
             this.startFromStepTwo,
             this.startFromStepThree,
             this.startFromStepFour});
@@ -406,6 +408,11 @@
             this.tabMain.Name = "tabMain";
             this.tabMain.SelectedIndex = 0;
             // 
+            // downloadDataOnly
+            // 
+            this.downloadDataOnly.Name = "downloadDataOnly";
+            resources.ApplyResources(this.downloadDataOnly, "downloadDataOnly");
+            // 
             // MainForm
             // 
             resources.ApplyResources(this, "$this");
@@ -461,7 +468,7 @@
         private System.Windows.Forms.Button btnAddConfig;
         private System.Windows.Forms.Button btnEdit;
         private System.Windows.Forms.Button btnCopy;
-        private System.Windows.Forms.TabControl tabMain;
+        public System.Windows.Forms.TabControl tabMain;
         private System.Windows.Forms.Button btnOpenFolder;
         private System.Windows.Forms.ToolStripButton btnDelete;
         private System.Windows.Forms.ToolStripButton btnOpenAnalysis;
@@ -474,5 +481,6 @@
         private System.Windows.Forms.ColumnHeader columnStartTime;
         private System.Windows.Forms.ColumnHeader columnRunTime;
         private System.Windows.Forms.Button btnLogStop;
+        private System.Windows.Forms.ToolStripMenuItem downloadDataOnly;
     }
 }

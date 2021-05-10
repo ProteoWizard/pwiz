@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SharedBatch;
 using SkylineBatch;
@@ -46,8 +47,8 @@ namespace SkylineBatchTest
         public void TestCreateDependency(MainForm mainForm)
         {
             var baseConfigFile = Path.Combine(BCFG_FOLDER, "BaseConfiguration.bcfg");
-            mainForm.DoImport(baseConfigFile);
-
+            var longWaitOperation = mainForm.DoImport(baseConfigFile);
+            WaitForConditionUI(1000, () => longWaitOperation.Completed, () => "Import timed out");
             RunUI(() => { FunctionalTestUtil.CheckConfigs(1, 0, mainForm); });
 
             RunUI(() => { mainForm.ClickConfig(0); });
@@ -93,11 +94,11 @@ namespace SkylineBatchTest
         {
             RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
             var baseConfigFile = Path.Combine(BCFG_FOLDER, "BaseConfiguration.bcfg");
-            mainForm.DoImport(baseConfigFile);
+            WaitForShortImport(mainForm, baseConfigFile);
             RunUI(() => { FunctionalTestUtil.CheckConfigs(1, 0, mainForm); });
 
             var validDependentConfigFile = Path.Combine(BCFG_FOLDER, "ValidDependentConfiguration.bcfg");
-            mainForm.DoImport(validDependentConfigFile);
+            WaitForShortImport(mainForm, validDependentConfigFile);
             RunUI(() => { FunctionalTestUtil.CheckConfigs(2, 0, mainForm); });
             AssertDependentMatches(mainForm, Path.Combine(CONFIG_FOLDER, "RefinedOutput.sky"), 1);
 
@@ -114,10 +115,10 @@ namespace SkylineBatchTest
             RunUI(() => { FunctionalTestUtil.CheckConfigs(1, 1, mainForm); });
 
             RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
-            mainForm.DoImport(baseConfigFile);
+            WaitForShortImport(mainForm, baseConfigFile);
             RunUI(() => { FunctionalTestUtil.CheckConfigs(1, 0, mainForm); });
             var invalidDependentConfigsFile = Path.Combine(BCFG_FOLDER, "InvalidDependentConfigurations.bcfg");
-            RunDlg<AlertDlg>(() => mainForm.DoImport(invalidDependentConfigsFile),
+            RunDlg<AlertDlg>(() => { mainForm.DoImport(invalidDependentConfigsFile);},
                 dlg =>
                 {
                     Assert.AreEqual(string.Format(SkylineBatch.Properties.Resources.SkylineBatchConfigManager_AssignDependencies_The_following_configurations_use_refined_template_files_from_other_configurations_that_do_not_exist_, "BaseConfiguration") + Environment.NewLine +
@@ -127,6 +128,7 @@ namespace SkylineBatchTest
                         dlg.Message);
                     dlg.ClickOk();
                 });
+            Thread.SpinWait(100000000); // wait for short import to finish
             RunUI(() =>
             {
                 FunctionalTestUtil.CheckConfigs(3, 1, mainForm);
@@ -143,11 +145,11 @@ namespace SkylineBatchTest
         {
             RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
             var baseConfigFile = Path.Combine(BCFG_FOLDER, "BaseConfiguration.bcfg");
-            mainForm.DoImport(baseConfigFile);
+            WaitForShortImport(mainForm, baseConfigFile);
             RunUI(() => { FunctionalTestUtil.CheckConfigs(1, 0, mainForm); });
 
             var validDependentConfigFile = Path.Combine(BCFG_FOLDER, "ValidDependentConfiguration.bcfg");
-            mainForm.DoImport(validDependentConfigFile);
+            WaitForShortImport(mainForm, validDependentConfigFile);
             RunUI(() => { FunctionalTestUtil.CheckConfigs(2, 0, mainForm); });
 
             var newTemplate = Path.Combine(CONFIG_FOLDER, "NewRefinedOutput.sky");
@@ -165,11 +167,11 @@ namespace SkylineBatchTest
         {
             RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
             var baseConfigFile = Path.Combine(BCFG_FOLDER, "BaseConfiguration.bcfg");
-            mainForm.DoImport(baseConfigFile);
+            WaitForShortImport(mainForm, baseConfigFile);
             RunUI(() => { FunctionalTestUtil.CheckConfigs(1, 0, mainForm); });
 
             var validDependentConfigFile = Path.Combine(BCFG_FOLDER, "ValidDependentConfiguration.bcfg");
-            mainForm.DoImport(validDependentConfigFile);
+            WaitForShortImport(mainForm, validDependentConfigFile);
             RunUI(() =>
             {
                 FunctionalTestUtil.CheckConfigs(2, 0, mainForm);
@@ -238,6 +240,12 @@ namespace SkylineBatchTest
                 editConfigForm.btnSaveConfig.PerformClick();
             });
             WaitForClosedForm(editConfigForm);
+        }
+
+        private void WaitForShortImport(MainForm mainForm, string filePath)
+        {
+            var importOperation = mainForm.DoImport(filePath);
+            WaitForConditionUI(1000, () => importOperation.Completed, () => "Import timed out");
         }
 
     }

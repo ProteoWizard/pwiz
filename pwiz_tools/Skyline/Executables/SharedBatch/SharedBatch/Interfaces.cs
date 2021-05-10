@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml;
 
@@ -83,7 +84,7 @@ namespace SharedBatch
         bool IsValid(out string errorMessage);
 
         // For testing, sets the text in a control
-        void SetText(string value);
+        void SetInput(object variable);
     }
 
     // Possible actions a user is taking when opening a configuration in the edit configuration form 
@@ -118,4 +119,11 @@ namespace SharedBatch
         DialogResult DisplayQuestion(string message);
         DialogResult DisplayLargeOkCancel(string message);
     }
+
+    public delegate void OnPercentProgress(int percent, int maxPercent);
+
+    public delegate  void LongOperation(OnPercentProgress progress);
+
+    public delegate void Callback(bool completed);
+
 }

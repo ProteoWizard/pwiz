@@ -170,6 +170,8 @@ namespace SharedBatch
 
         protected bool Equals(SkylineSettings other)
         {
+            if (Type == SkylineType.Custom && other.Type == SkylineType.Custom)
+                return CmdPath.Equals(other.CmdPath);
             return Type == other.Type;
         }
 

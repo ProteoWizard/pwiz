@@ -557,7 +557,7 @@ namespace SkylineBatch
             {
                 newConfig = GetConfigFromUi();
                 _mainControl.AssertUniqueConfigName(newConfig.Name, _action == ConfigAction.Edit);
-                newConfig.Validate();
+                newConfig.QuickValidate();
             }
             catch (ArgumentException e)
             {
