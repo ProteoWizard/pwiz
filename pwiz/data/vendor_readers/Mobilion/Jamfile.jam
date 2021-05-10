@@ -1,0 +1,154 @@
+#
+# $Id$
+#
+#
+# Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>
+#
+# Copyright 2021
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); 
+# you may not use this file except in compliance with the License. 
+# You may obtain a copy of the License at 
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software 
+# distributed under the License is distributed on an "AS IS" BASIS, 
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+# See the License for the specific language governing permissions and 
+# limitations under the License.
+# 
+
+import path ;
+
+project
+    : requirements 
+        <toolset>gcc:<cxxflags>-fno-strict-aliasing
+        <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
+    ;
+
+
+path-constant API_PATH : $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Mobilion ;
+path-constant TEST_DATA_PATH : ./Reader_Mobilion_Test.data ;
+constant READER_PATH : "pwiz/data/vendor_readers/Mobilion" ;
+constant READER_NAME : "Reader_Mobilion" ;
+
+rule vendor-api-requirements ( properties * )
+{
+    local result ;
+    if <toolset>msvc in $(properties) &&
+       [ project-exists $(API_PATH) ] &&
+       [ mbi-dll-location $(API_PATH) : $(properties) ] &&
+       ! [ without-binary-msdata $(properties) ] &&
+       ! <vendor-api-support>off in $(properties) &&
+       <address-model>64 in $(properties)
+    {
+        result += <source>Reader_Mobilion_Detail.cpp ;
+    }
+    return $(result) [ vendor-api-usage-requirements $(properties) ] ;
+}
+
+rule vendor-api-usage-requirements ( properties * )
+{
+    local result ;
+    if <toolset>msvc in $(properties) &&
+       [ project-exists $(API_PATH) ] &&
+       [ mbi-dll-location $(API_PATH) : $(properties) ] &&
+       ! [ without-binary-msdata $(properties) ] &&
+       ! <vendor-api-support>off in $(properties) &&
+       <address-model>64 in $(properties)
+    {
+        result += <define>PWIZ_READER_MOBILION ;
+        result += <dependency>$(API_PATH)//pwiz_vendor_api_mbi ;
+    }
+    else if ! $(.warn-once)
+    {
+        .warn-once = true ;
+        if [ without-binary-msdata $(properties) ] 
+        {
+            echo "[$(READER_PATH)] without-binary-msdata build: $(READER_NAME) can only identify files, not read them." ;
+        }
+        else if ! ( <toolset>msvc in $(properties) )
+        {
+            echo "[$(READER_PATH)] Non-MSVC build: $(READER_NAME) can only identify files, not read them." ;
+        }
+        else if ! [ project-exists $(API_PATH) ]
+        {
+            echo "[$(READER_PATH)] Missing API: $(READER_NAME) can only identify files, not read them." ;
+        }
+        else if ! [ mbi-dll-location $(API_PATH) : $(properties) ]
+        {
+            echo "[$(READER_PATH)] Missing DLL: $(READER_NAME) can only identify files, not read them." ;
+        }
+    }
+    return $(result) ;
+}
+
+lib pwiz_reader_mobilion
+    : # sources
+        Reader_Mobilion.cpp
+        SpectrumList_Mobilion.cpp
+        ChromatogramList_Mobilion.cpp
+    : # requirements
+        <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata_core
+        <conditional>@vendor-api-requirements
+    : # default-build
+    : # usage-requirements
+        <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata_core
+        <conditional>@vendor-api-usage-requirements
+    ;
+
+
+# TODO: make this a generic function that works with a "once-flag" argument (not possible with pass-by-value)
+rule warn-once ( message )
+{
+    if ! $(.warn-once-test)
+    {
+        .warn-once-test = true ;
+        echo $(message) ;
+    }
+}
+
+
+import feature ;
+rule test-requirements ( properties * )
+{
+    local result ;
+
+    if ! [ path.exists $(TEST_DATA_PATH) ]
+    {
+        warn-once "[$(READER_PATH)] Missing test data." ;
+        result += <build>no ;
+    }
+    else if [ without-binary-msdata $(properties) ] 
+    {
+        warn-once "[$(READER_PATH)] without-binary-msdata build: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
+    }
+    else if ! [ project-exists $(API_PATH) ]
+    {
+        warn-once "[$(READER_PATH)] Missing API: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
+    }
+    else if ! [ mbi-dll-location $(API_PATH) : $(properties) ]
+    {
+        warn-once "[$(READER_PATH)] Missing DLL: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
+    }
+
+    return $(result) ;
+}
+
+local generate-mzML = [ MATCH (--generate-mzML) : [ modules.peek : ARGV ] ] ;
+
+# special run target for Reader_Mobilion_Test, which needs external data 
+# use --preserve-test-targets to prevent bjam from deleting the executable
+run-if-exists Reader_Mobilion_Test.cpp $(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_vendor_reader_test_harness
+    : # args
+        \"$(TEST_DATA_PATH)\" $(generate-mzML)
+    : # input-files
+    : # requirements
+        <library>pwiz_reader_mobilion
+        <conditional>@test-requirements
+
+    : # target name
+        Reader_Mobilion_Test 
+    : # default-build
+    ;

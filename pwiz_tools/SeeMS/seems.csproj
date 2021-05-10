@@ -169,6 +169,9 @@
     </Compile>
     <Compile Include="Misc\FileSizeFormatProvider.cs" />
     <Compile Include="Misc\ListViewColumnSorter.cs" />
+    <Compile Include="Misc\SpectrumDataSet.cs">
+      <DependentUpon>SpectrumDataSet.xsd</DependentUpon>
+    </Compile>
     <Compile Include="Misc\SpectrumDataSet.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>

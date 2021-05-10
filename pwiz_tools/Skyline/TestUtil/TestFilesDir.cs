@@ -152,6 +152,7 @@ namespace pwiz.SkylineTestUtil
             ABI,
             Agilent,
             Bruker,
+            Mobilion,
             Shimadzu,
             Thermo,
             UIMF,

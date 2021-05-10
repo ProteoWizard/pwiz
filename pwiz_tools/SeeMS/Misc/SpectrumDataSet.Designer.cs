@@ -311,6 +311,8 @@ namespace seems.Misc {
             
             private global::System.Data.DataColumn columnIonMobility;
             
+            private global::System.Data.DataColumn columnIonMobilityType;
+            
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "15.0.0.0")]
             public SpectrumTableDataTable() {
@@ -474,6 +476,14 @@ namespace seems.Misc {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "15.0.0.0")]
+            public global::System.Data.DataColumn IonMobilityTypeColumn {
+                get {
+                    return this.columnIonMobilityType;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "15.0.0.0")]
             [global::System.ComponentModel.Browsable(false)]
             public int Count {
                 get {
@@ -525,7 +535,8 @@ namespace seems.Misc {
                         string PrecursorInfo, 
                         string ScanInfo, 
                         string IsolationWindows, 
-                        double IonMobility) {
+                        double IonMobility, 
+                        byte IonMobilityType) {
                 SpectrumTableRow rowSpectrumTableRow = ((SpectrumTableRow)(this.NewRow()));
                 object[] columnValuesArray = new object[] {
                         Id,
@@ -543,7 +554,8 @@ namespace seems.Misc {
                         PrecursorInfo,
                         ScanInfo,
                         IsolationWindows,
-                        IonMobility};
+                        IonMobility,
+                        IonMobilityType};
                 rowSpectrumTableRow.ItemArray = columnValuesArray;
                 this.Rows.Add(rowSpectrumTableRow);
                 return rowSpectrumTableRow;
@@ -589,6 +601,7 @@ namespace seems.Misc {
                 this.columnScanInfo = base.Columns["ScanInfo"];
                 this.columnIsolationWindows = base.Columns["IsolationWindows"];
                 this.columnIonMobility = base.Columns["IonMobility"];
+                this.columnIonMobilityType = base.Columns["IonMobilityType"];
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -626,6 +639,8 @@ namespace seems.Misc {
                 base.Columns.Add(this.columnIsolationWindows);
                 this.columnIonMobility = new global::System.Data.DataColumn("IonMobility", typeof(double), null, global::System.Data.MappingType.Element);
                 base.Columns.Add(this.columnIonMobility);
+                this.columnIonMobilityType = new global::System.Data.DataColumn("IonMobilityType", typeof(byte), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnIonMobilityType);
                 this.Constraints.Add(new global::System.Data.UniqueConstraint("Constraint1", new global::System.Data.DataColumn[] {
                                 this.columnIndex}, true));
                 this.columnId.AllowDBNull = false;
@@ -1034,6 +1049,22 @@ namespace seems.Misc {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "15.0.0.0")]
+            public byte IonMobilityType {
+                get {
+                    try {
+                        return ((byte)(this[this.tableSpectrumTable.IonMobilityTypeColumn]));
+                    }
+                    catch (global::System.InvalidCastException e) {
+                        throw new global::System.Data.StrongTypingException("The value for column \'IonMobilityType\' in table \'SpectrumTable\' is DBNull.", e);
+                    }
+                }
+                set {
+                    this[this.tableSpectrumTable.IonMobilityTypeColumn] = value;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "15.0.0.0")]
             public bool IsSpotIdNull() {
                 return this.IsNull(this.tableSpectrumTable.SpotIdColumn);
             }
@@ -1198,6 +1229,18 @@ namespace seems.Misc {
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "15.0.0.0")]
             public void SetIonMobilityNull() {
                 this[this.tableSpectrumTable.IonMobilityColumn] = global::System.Convert.DBNull;
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "15.0.0.0")]
+            public bool IsIonMobilityTypeNull() {
+                return this.IsNull(this.tableSpectrumTable.IonMobilityTypeColumn);
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "15.0.0.0")]
+            public void SetIonMobilityTypeNull() {
+                this[this.tableSpectrumTable.IonMobilityTypeColumn] = global::System.Convert.DBNull;
             }
         }
         
