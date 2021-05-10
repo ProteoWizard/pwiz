@@ -509,6 +509,7 @@ namespace SkylineBatch
 
         private void OutputLog(object sender, EventArgs e)
         {
+            if (textBoxLog.IsDisposed) return;
             _outputLog.Tick -= OutputLog;
             if (WindowState != FormWindowState.Minimized && textBoxLog.TextLength > 0)
             {

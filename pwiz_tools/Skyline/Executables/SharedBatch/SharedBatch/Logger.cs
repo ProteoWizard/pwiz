@@ -270,7 +270,7 @@ using SharedBatch.Properties;
                     timestampFileName += lastModified.ToString("_yyyyMMdd_HHmmss") + TextUtil.EXT_LOG;
                     Close();
 
-                    File.Copy(_filePath, timestampFileName);
+                    File.Copy(_filePath, timestampFileName, true);
                     File.Delete(_filePath);
                     Init();
                     var newFilePath = Path.Combine(FileUtil.GetDirectory(_filePath), timestampFileName);
