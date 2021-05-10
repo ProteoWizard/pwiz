@@ -505,12 +505,12 @@ namespace SkylineBatch
         #region Logging
 
         private bool _scrolling = true;
-        private bool _forceScroll;
+        private bool _forceScroll = true;
 
         private void OutputLog(object sender, EventArgs e)
         {
             _outputLog.Tick -= OutputLog;
-            if (WindowState != FormWindowState.Minimized)
+            if (WindowState != FormWindowState.Minimized && textBoxLog.TextLength > 0)
             {
                 _scrolling = textBoxLog.GetPositionFromCharIndex(textBoxLog.Text.Length - 1).Y <=
                              textBoxLog.Height;
@@ -522,17 +522,15 @@ namespace SkylineBatch
                     LogErrorToUi(string.Format(Resources.Logger_DisplayLog_____Log_truncated_____Full_log_is_in__0_, _skylineBatchLogger.LogFile));
             }
             var logChanged = logger.OutputLog(LogToUi, LogErrorToUi);
-
-
-            if (logChanged) TrimDisplayedLog();
-            if (_forceScroll || (_scrolling && logChanged))
+            if (logChanged)
+                TrimDisplayedLog();
+            if (_forceScroll || (logChanged && _scrolling))
             {
+                _forceScroll = false;
+                _scrolling = true;
                 textBoxLog.SelectionStart = textBoxLog.TextLength;
                 textBoxLog.ScrollToCaret();
-                _scrolling = true;
-                _forceScroll = false;
             }
-            
             _outputLog.Tick += OutputLog;
         }
 
@@ -542,7 +540,6 @@ namespace SkylineBatch
             const int buffer = Logger.MaxLogLines / 10;
             if (numLines > Logger.MaxLogLines + buffer)
             {
-                textBoxLog.SelectionLength = 100;
                 textBoxLog.Text = string.Empty;
                 _configManager.GetSelectedLogger().DisplayLogFromFile();
                 _forceScroll = true;
@@ -583,7 +580,8 @@ namespace SkylineBatch
             {
                 DisplayError(ex.Message);
             }
-            
+
+            _scrolling = false;
             _forceScroll = _configManager.SelectedLog == 0;
             _outputLog.Tick += OutputLog;
         }
@@ -607,8 +605,6 @@ namespace SkylineBatch
 
         private void btnOpenFolder_Click(object sender, EventArgs e)
         {
-           // OutputLog(new object(), new EventArgs());
-           // return;
             var logger = _configManager.GetSelectedLogger();
             var arg = "/select, \"" + logger.LogFile + "\"";
             Process.Start("explorer.exe", arg);
