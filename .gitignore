@@ -407,12 +407,6 @@ SkylineTester Results
 /bs32.bat
 /bso64.bat
 /bso32.bat
-/BrowseOnly/pwiz.tlog/unsuccessfulbuild
-/BrowseOnly/pwiz.tlog/pwiz.lastbuildstate
-/BrowseOnly/pwiz.tlog/metagen.write.1.tlog
-/BrowseOnly/pwiz.tlog/CL.write.1.tlog
-/BrowseOnly/pwiz.tlog/CL.read.1.tlog
-/BrowseOnly/pwiz.tlog/CL.command.1.tlog
 /OnyxTOFMS.试验.wiff.scan
 /160109_Mix1_calcurve_074_raw.skyl
 /160109_Mix1_calcurve_074_raw.skyd
@@ -446,12 +440,6 @@ SkylineTester Results
 /pwiz_tools/Skyline/TestRunner/Properties/AssemblyInfo.cs
 /pwiz_tools/Skyline/Executables/Installer/FileList64.txt
 /pwiz_tools/Skyline/TestSettings_x??.testsettings
-/BrowseOnly/.NETFramework,Version=4.7.2.AssemblyAttributes.cpp
-/libraries/boost_aux/tools/bcp/out/build/x64-Debug/.cmake/api/v1/query/client-MicrosoftVS/query.json
-/libraries/boost_aux/tools/bcp/out/build/x64-Debug/CMakeFiles/3.19.20122902-MSVC_2/CompilerIdC/CMakeCCompilerId.c
-/libraries/boost_aux/tools/bcp/out/build/x64-Debug/CMakeFiles/3.19.20122902-MSVC_2/CompilerIdCXX/CMakeCXXCompilerId.cpp
-/libraries/boost_aux/tools/bcp/out/build/x64-Debug/CMakeFiles/3.19.20122902-MSVC_2/CMakeCCompiler.cmake
-/libraries/boost_aux/tools/bcp/out/build/x64-Debug/CMakeFiles/3.19.20122902-MSVC_2/CMakeCXXCompiler.cmake
-/libraries/boost_aux/tools/bcp/out/build/x64-Debug
+/BrowseOnly
 /x64/BrowseOnly
 /qb64.bat
