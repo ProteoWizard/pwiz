@@ -415,7 +415,9 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot<ImportResultsNameDlg>("Import Results form removing prefix and suffix", 18);
             OkDialog(importResultsNameDlg, importResultsNameDlg.YesDialog);
 
-            // Modifications are already set up, so that page should get skipped.
+            // Skip Match Modifications page.
+            WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.match_modifications_page);
+            RunUI(() => importPeptideSearchDlg.ClickNextButton());
 
             // PauseForScreenShot<ImportPeptideSearchDlg.TransitionSettingsPage>("Import Peptide Search Transition Settings page", 19);
 
