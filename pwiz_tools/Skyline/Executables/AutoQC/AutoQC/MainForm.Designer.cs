@@ -68,6 +68,8 @@
             this.openFolderMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.toolStripFolderToWatch = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripLogFolder = new System.Windows.Forms.ToolStripMenuItem();
+            this.panel3 = new System.Windows.Forms.Panel();
+            this.panel4 = new System.Windows.Forms.Panel();
             this.tabMain.SuspendLayout();
             this.tabConfigs.SuspendLayout();
             this.panel1.SuspendLayout();
@@ -77,6 +79,8 @@
             this.tabSettings.SuspendLayout();
             this.groupBoxAutoQcSettings.SuspendLayout();
             this.openFolderMenuStrip.SuspendLayout();
+            this.panel3.SuspendLayout();
+            this.panel4.SuspendLayout();
             this.SuspendLayout();
             // 
             // btnEdit
@@ -96,7 +100,7 @@
             // lblNoConfigs
             // 
             resources.ApplyResources(this.lblNoConfigs, "lblNoConfigs");
-            this.lblNoConfigs.ForeColor = System.Drawing.Color.Blue;
+            this.lblNoConfigs.ForeColor = System.Drawing.Color.Crimson;
             this.lblNoConfigs.Name = "lblNoConfigs";
             // 
             // labelSavedConfigurations
@@ -123,8 +127,8 @@
             // tabConfigs
             // 
             this.tabConfigs.BackColor = System.Drawing.Color.Transparent;
+            this.tabConfigs.Controls.Add(this.panel4);
             this.tabConfigs.Controls.Add(this.listViewConfigs);
-            this.tabConfigs.Controls.Add(this.labelSavedConfigurations);
             this.tabConfigs.Controls.Add(this.panel1);
             this.tabConfigs.Controls.Add(this.panel2);
             resources.ApplyResources(this.tabConfigs, "tabConfigs");
@@ -252,7 +256,6 @@
             this.panel2.Controls.Add(this.btnStop);
             this.panel2.Controls.Add(this.btnRun);
             this.panel2.Controls.Add(this.btnViewLog);
-            this.panel2.Controls.Add(this.lblNoConfigs);
             this.panel2.Name = "panel2";
             // 
             // btnStop
@@ -272,10 +275,8 @@
             // tabLog
             // 
             this.tabLog.BackColor = System.Drawing.Color.Transparent;
-            this.tabLog.Controls.Add(this.btnOpenLogFolder);
-            this.tabLog.Controls.Add(this.lblConfigSelect);
+            this.tabLog.Controls.Add(this.panel3);
             this.tabLog.Controls.Add(this.textBoxLog);
-            this.tabLog.Controls.Add(this.comboConfigs);
             resources.ApplyResources(this.tabLog, "tabLog");
             this.tabLog.Name = "tabLog";
             this.tabLog.Enter += new System.EventHandler(this.tabLog_Enter);
@@ -300,9 +301,9 @@
             // 
             // comboConfigs
             // 
+            resources.ApplyResources(this.comboConfigs, "comboConfigs");
             this.comboConfigs.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboConfigs.FormattingEnabled = true;
-            resources.ApplyResources(this.comboConfigs, "comboConfigs");
             this.comboConfigs.Name = "comboConfigs";
             this.comboConfigs.SelectedIndexChanged += new System.EventHandler(this.comboConfigs_SelectedIndexChanged);
             // 
@@ -363,6 +364,21 @@
             resources.ApplyResources(this.toolStripLogFolder, "toolStripLogFolder");
             this.toolStripLogFolder.Click += new System.EventHandler(this.toolStripLogFolder_Click);
             // 
+            // panel3
+            // 
+            resources.ApplyResources(this.panel3, "panel3");
+            this.panel3.Controls.Add(this.btnOpenLogFolder);
+            this.panel3.Controls.Add(this.lblConfigSelect);
+            this.panel3.Controls.Add(this.comboConfigs);
+            this.panel3.Name = "panel3";
+            // 
+            // panel4
+            // 
+            this.panel4.Controls.Add(this.labelSavedConfigurations);
+            this.panel4.Controls.Add(this.lblNoConfigs);
+            resources.ApplyResources(this.panel4, "panel4");
+            this.panel4.Name = "panel4";
+            // 
             // MainForm
             // 
             resources.ApplyResources(this, "$this");
@@ -373,19 +389,20 @@
             this.Resize += new System.EventHandler(this.MainForm_Resize);
             this.tabMain.ResumeLayout(false);
             this.tabConfigs.ResumeLayout(false);
-            this.tabConfigs.PerformLayout();
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
             this.toolStrip.ResumeLayout(false);
             this.toolStrip.PerformLayout();
             this.panel2.ResumeLayout(false);
-            this.panel2.PerformLayout();
             this.tabLog.ResumeLayout(false);
-            this.tabLog.PerformLayout();
             this.tabSettings.ResumeLayout(false);
             this.groupBoxAutoQcSettings.ResumeLayout(false);
             this.groupBoxAutoQcSettings.PerformLayout();
             this.openFolderMenuStrip.ResumeLayout(false);
+            this.panel3.ResumeLayout(false);
+            this.panel3.PerformLayout();
+            this.panel4.ResumeLayout(false);
+            this.panel4.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -430,5 +447,7 @@
         private System.Windows.Forms.ToolStripMenuItem toolStripFolderToWatch;
         private System.Windows.Forms.ToolStripMenuItem toolStripLogFolder;
         private System.Windows.Forms.Button btnAdd;
+        private System.Windows.Forms.Panel panel3;
+        private System.Windows.Forms.Panel panel4;
     }
 }
