@@ -171,7 +171,7 @@ int LibReader::getSpecInMzRange(double minMz,
         int numBytes2 = sqlite3_column_bytes(statement, 8);
         Byte* comprI = (Byte*)sqlite3_column_blob(statement, 8);
 
-		tmpSpec->setRetentionTime(sqlite3_column_double(statement, 9));
+        tmpSpec->setRetentionTime(sqlite3_column_double(statement, 9));
 
         tmpSpec->setRawPeaks(getUncompressedPeaks(numPeaks, numBytes1, comprM, 
                                                  numBytes2, comprI));
@@ -241,7 +241,7 @@ int LibReader::getSpecInMzRange(double minMz,
         int numBytes2 = sqlite3_column_bytes(statement, 8);
         Byte* comprI = (Byte*)sqlite3_column_blob(statement, 8);
 
-		tmpSpec->setRetentionTime(sqlite3_column_double(statement, 9));
+        tmpSpec->setRetentionTime(sqlite3_column_double(statement, 9));
 
         tmpSpec->setRawPeaks(getUncompressedPeaks(numPeaks, numBytes1, comprM, 
                                                  numBytes2, comprI));
