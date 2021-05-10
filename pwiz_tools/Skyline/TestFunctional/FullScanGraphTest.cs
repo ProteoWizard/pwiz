@@ -160,7 +160,7 @@ namespace pwiz.SkylineTestFunctional
 
             RunUI(() => SkylineWindow.ShowGraphSpectrum(true));
             WaitForGraphs();
-            RunUI(() => SkylineWindow.SynchMzScale(false));
+            RunUI(() => SkylineWindow.SynchMzScale());
             WaitForGraphs();
             RunUI(() => SkylineWindow.SynchMzScale(true));
             WaitForGraphs();

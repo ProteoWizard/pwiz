@@ -537,7 +537,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         rankAdducts,
                         rankTypes,
                         null);
-
+                    _rmis = _rmis.ChangeScore(null);
                     //create an map of transition indices vs. peak rank to use in the mouse click and mouse move handlers.
                     if (!_rmis.PeaksRanked.IsNullOrEmpty())
                     {
@@ -1063,7 +1063,6 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void graphControl_ContextMenuBuilder(ZedGraphControl sender, ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
         {
-            //ZedGraphHelper.BuildContextMenu(graphControl, menuStrip, true);
             menuStrip.Tag = this;
             showScanNumberContextMenuItem.Checked = Settings.Default.ShowFullScanNumber;
             menuStrip.Items.Insert(0, showScanNumberContextMenuItem);
