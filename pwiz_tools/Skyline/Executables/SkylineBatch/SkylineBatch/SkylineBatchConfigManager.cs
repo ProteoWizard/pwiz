@@ -698,13 +698,13 @@ namespace SkylineBatch
         {
             lock (_loggerLock)
             {
-                var logDirectory = Path.GetDirectoryName(_logList[0].GetFile());
+                var logDirectory = Path.GetDirectoryName(_logList[0].LogFile);
                 var files = logDirectory != null ? new DirectoryInfo(logDirectory).GetFiles() : new FileInfo[0];
                 foreach (var file in files)
                 {
-                    if (file.Name.EndsWith(TextUtil.EXT_LOG) && !file.Name.Equals(_logList[0].GetFileName()))
+                    if (file.Name.EndsWith(TextUtil.EXT_LOG) && !file.Name.Equals(_logList[0].LogFileName))
                     {
-                        _logList.Insert(1, new Logger(file.FullName, file.Name, _uiControl));
+                        _logList.Insert(1, new Logger(file.FullName, file.Name));
                     }
                 }
             }
@@ -717,7 +717,7 @@ namespace SkylineBatch
                 var oldLogFiles = new object[_logList.Count - 1];
                 for (int i = 1; i < _logList.Count; i++)
                 {
-                    oldLogFiles[i - 1] = _logList[i].GetFileName();
+                    oldLogFiles[i - 1] = _logList[i].LogFileName;
                 }
 
                 return oldLogFiles;
@@ -730,7 +730,7 @@ namespace SkylineBatch
             {
                 var logFiles = new object[_logList.Count];
                 for (int i = 0; i < _logList.Count; i++)
-                    logFiles[i] = _logList[i].GetFileName();
+                    logFiles[i] = _logList[i].LogFileName;
                 return logFiles;
             }
         }
@@ -744,7 +744,7 @@ namespace SkylineBatch
                 int i = 0;
                 while (i < _logList.Count)
                 {
-                    if (deletingLogs.Contains(_logList[i].GetFileName()))
+                    if (deletingLogs.Contains(_logList[i].LogFileName))
                     {
                         _logList[i].Delete(); // closes and deletes log file
                         _logList.RemoveAt(i); // removes from list
