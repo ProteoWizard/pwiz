@@ -829,6 +829,15 @@ namespace AutoQC.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Do you want to import configurations from {0}?.
+        /// </summary>
+        internal static string MainForm_FileOpened_Do_you_want_to_import_configurations_from__0__ {
+            get {
+                return ResourceManager.GetString("MainForm_FileOpened_Do_you_want_to_import_configurations_from__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Loading configurations from saved settings..
         /// </summary>
         internal static string MainForm_MainForm_Loading_configurations_from_saved_settings_ {
@@ -1272,6 +1281,15 @@ namespace AutoQC.Properties {
         internal static string ProcessRunner_RunProcess_There_was_an_exception_running_the_process__0_ {
             get {
                 return ResourceManager.GetString("ProcessRunner_RunProcess_There_was_an_exception_running_the_process__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to AutoQC Configuration File.
+        /// </summary>
+        internal static string Program_AddFileTypesToRegistry_AutoQC_Configuration_File {
+            get {
+                return ResourceManager.GetString("Program_AddFileTypesToRegistry_AutoQC_Configuration_File", resourceCulture);
             }
         }
         

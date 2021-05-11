@@ -1004,6 +1004,36 @@ namespace pwiz.Skyline.Util
                 }
             }
         }
+
+        /// <summary>
+        /// Checks to see if the path looks like it is a temporary folder that Windows extracts zip contents to
+        /// when a user opens a file inside of the zip.
+        /// Sets zipFileName to the name of the .zip file.
+        /// </summary>
+        public static bool IsTempZipFolder(string path, out string zipFileName)
+        {
+            zipFileName = null;
+            int indexAppData = path.IndexOf(@"appdata\local\temp", StringComparison.OrdinalIgnoreCase);
+            if (indexAppData < 0)
+            {
+                return false;
+            }
+
+            int indexZipExtension = path.IndexOf(@".zip\", indexAppData, StringComparison.OrdinalIgnoreCase);
+            if (indexZipExtension < 0)
+            {
+                return false;
+            }
+
+            zipFileName = Path.GetFileName(path.Substring(0, indexZipExtension + 4));
+
+            // Windows usually prepends "Temp1_" to the name of the folder, so strip that off if present
+            if (zipFileName.StartsWith(@"Temp1_"))
+            {
+                zipFileName = zipFileName.Substring(6);
+            }
+            return true;
+        }
     }
 
     public static class StreamEx

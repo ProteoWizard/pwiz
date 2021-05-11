@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
 using System.Xml;
@@ -59,7 +60,7 @@ namespace AutoQC
             return new AutoQcConfig(Name, IsEnabled, Created, Modified, MainSettings, PanoramaSettings, newSettings);
         }
 
-        public ListViewItem AsListViewItem(IConfigRunner runner)
+        public ListViewItem AsListViewItem(IConfigRunner runner, Graphics graphics)
         {
             var lvi = new ListViewItem(Name);
             lvi.UseItemStyleForSubItems = false; // So that we can change the color for sub-items.

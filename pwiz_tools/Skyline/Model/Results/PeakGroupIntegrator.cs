@@ -69,7 +69,7 @@ namespace pwiz.Skyline.Model.Results
             throw new NotImplementedException();
         }
 
-        public PeptideChromDataSets MakePeptideChromDataSets()
+        internal PeptideChromDataSets MakePeptideChromDataSets()
         {
             var peptideChromDataSets = new PeptideChromDataSets(PeptideDocNode, Document, ChromFileInfo,
                 DetailedPeakFeatureCalculators, false);

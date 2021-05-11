@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -118,7 +119,7 @@ namespace AutoQC
 
             var directory = Path.GetDirectoryName(config.MainSettings.SkylineFilePath);
             if (directory == null) throw new Exception("Cannot have a null Skyline file directory.");
-            var logFile = Path.Combine(directory, TextUtil.GetSafeName(config.GetName()), "AutoQC.log");
+            var logFile = Path.Combine(directory, FileUtil.GetSafeName(config.GetName()), "AutoQC.log");
 
             var logger = new Logger(logFile, config.Name, _uiControl);
             _logList.Add(logger);
@@ -199,9 +200,9 @@ namespace AutoQC
             return (AutoQcConfig)base.GetSelectedConfig();
         }
 
-        public List<ListViewItem> ConfigsListViewItems()
+        public List<ListViewItem> ConfigsListViewItems(Graphics graphics)
         {
-            return ConfigsListViewItems(_configRunners);
+            return ConfigsListViewItems(_configRunners, graphics);
         }
 
         public void ReplaceSkylineSettings(SkylineSettings skylineSettings)
@@ -477,9 +478,9 @@ namespace AutoQC
 
         #region Import/Export
 
-        public void Import(string filePath)
+        public void Import(string filePath, ShowDownloadedFileForm showDownloadedFileForm)
         {
-            var addedConfigs = ImportFrom(filePath);
+            var addedConfigs = ImportFrom(filePath, showDownloadedFileForm);
             foreach (var config in addedConfigs)
                 ProgramaticallyAddConfig(config);
         }

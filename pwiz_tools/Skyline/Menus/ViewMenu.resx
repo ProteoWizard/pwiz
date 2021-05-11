@@ -161,6 +161,12 @@
   <data name="viewProteinsMenuItem.Text" xml:space="preserve">
     <value>&amp;Proteins</value>
   </data>
+  <data name="viewTargetsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>191, 22</value>
+  </data>
+  <data name="viewTargetsMenuItem.Text" xml:space="preserve">
+    <value>&amp;Targets</value>
+  </data>
   <data name="showTargetsByNameToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>173, 22</value>
   </data>

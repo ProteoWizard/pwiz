@@ -55,12 +55,19 @@
     </Compile>
     <Compile Include="ChildProcessTracker.cs" />
     <Compile Include="ConfigManager.cs" />
+    <Compile Include="FileOpenedForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FileOpenedForm.Designer.cs">
+      <DependentUpon>FileOpenedForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="FilePathControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="FilePathControl.Designer.cs">
       <DependentUpon>FilePathControl.cs</DependentUpon>
     </Compile>
+    <Compile Include="FileUtil.cs" />
     <Compile Include="FindSkylineForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -106,6 +113,9 @@
       <DependentUpon>AlertDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="FileOpenedForm.resx">
+      <DependentUpon>FileOpenedForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FilePathControl.resx">
       <DependentUpon>FilePathControl.cs</DependentUpon>
     </EmbeddedResource>
@@ -133,7 +143,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PreBuildEvent>cd "C:\Branches\Skylinework20210223_SkylineBatch_functionality_for_NEU_configs\ProteoWizard\pwiz\pwiz_tools\Skyline\Executables\SharedBatch\SharedBatch\bin\Debug"
-del "SharedBatch.dll" "SharedBatch.dll.config" "SharedBatch.pdb"</PreBuildEvent>
+    <PreBuildEvent>
+    </PreBuildEvent>
   </PropertyGroup>
 </Project>

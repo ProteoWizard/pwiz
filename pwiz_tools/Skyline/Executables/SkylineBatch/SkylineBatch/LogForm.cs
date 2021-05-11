@@ -31,6 +31,7 @@ namespace SkylineBatch
         public LogForm(SkylineBatchConfigManager configManager)
         {
             InitializeComponent();
+            Icon = Program.Icon();
             _configManager = configManager;
             if (_configManager.HasOldLogs())
                 checkedListLogs.Items.AddRange(_configManager.GetOldLogFiles());

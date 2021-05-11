@@ -8,6 +8,13 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkylineBatchTest", "SkylineBatchTest\SkylineBatchTest.csproj", "{415D56D0-D83D-45D2-A833-E2D7E46E7A69}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharedBatch", "..\SharedBatch\SharedBatch\SharedBatch.csproj", "{9660E7B1-A0AD-4C2B-A395-350D4055640A}"
+	ProjectSection(ProjectDependencies) = postProject
+		{91458586-C381-465E-9A63-0341058E0C99} = {91458586-C381-465E-9A63-0341058E0C99}
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharedBatchTest", "..\SharedBatch\SharedBatchTest\SharedBatchTest.csproj", "{4955F974-381E-4902-8BAD-BAC7174CFC9F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LaunchBatch", "..\SharedBatch\LaunchBatch\LaunchBatch.csproj", "{91458586-C381-465E-9A63-0341058E0C99}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,6 +34,14 @@ Global
 		{9660E7B1-A0AD-4C2B-A395-350D4055640A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9660E7B1-A0AD-4C2B-A395-350D4055640A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9660E7B1-A0AD-4C2B-A395-350D4055640A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4955F974-381E-4902-8BAD-BAC7174CFC9F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4955F974-381E-4902-8BAD-BAC7174CFC9F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4955F974-381E-4902-8BAD-BAC7174CFC9F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4955F974-381E-4902-8BAD-BAC7174CFC9F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{91458586-C381-465E-9A63-0341058E0C99}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{91458586-C381-465E-9A63-0341058E0C99}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{91458586-C381-465E-9A63-0341058E0C99}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{91458586-C381-465E-9A63-0341058E0C99}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

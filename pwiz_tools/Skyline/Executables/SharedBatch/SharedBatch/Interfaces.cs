@@ -35,7 +35,7 @@ namespace SharedBatch
         void WriteXml(XmlWriter writer);
 
         // Returns a listViewItem displaying information about the configuration for the UI
-        ListViewItem AsListViewItem(IConfigRunner runner);
+        ListViewItem AsListViewItem(IConfigRunner runner, Graphics graphics);
     }
 
     // Possible status' the ConfigRunner may have. A ConfigRunner does not need to use every status, 
@@ -81,6 +81,9 @@ namespace SharedBatch
 
         // Uses Validator to determine if variable is valid
         bool IsValid(out string errorMessage);
+
+        // For testing, sets the text in a control
+        void SetText(string value);
     }
 
     // Possible actions a user is taking when opening a configuration in the edit configuration form 
@@ -118,6 +121,6 @@ namespace SharedBatch
         void DisplayInfo(string message);
         void DisplayErrorWithException(string message, Exception exception);
         DialogResult DisplayQuestion(string message);
-        DialogResult DisplayLargeQuestion(string message);
+        DialogResult DisplayLargeOkCancel(string message);
     }
 }

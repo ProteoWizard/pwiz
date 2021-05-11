@@ -29,7 +29,7 @@ using System.Xml.Serialization;
 
 namespace SharedBatch.Properties
 {
-    internal sealed partial class Settings
+    public sealed partial class Settings
     {
 
         [UserScopedSetting]
