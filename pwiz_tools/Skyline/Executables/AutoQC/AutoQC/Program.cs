@@ -23,7 +23,6 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Reflection;
 using System.Threading;
 using System.Windows.Forms;
 using AutoQC.Properties;
@@ -38,6 +37,7 @@ namespace AutoQC
     class Program
     {
         private static string _version;
+        private static string _lastInstalledVersion;
 
         public const string AUTO_QC_STARTER = "AutoQCStarter";
         public static readonly string AutoQcStarterExe = $"{AUTO_QC_STARTER}.exe";
@@ -122,15 +122,22 @@ namespace AutoQC
                     return;
                 }
 
-                // Thread.CurrentThread.CurrentUICulture = new CultureInfo("ja");
-                var openFile = GetFirstArg(args);
-                var form = new MainForm(openFile);
+                GetCurrentAndLastInstalledVersions();
 
-                // CurrentDeployment is null if it isn't network deployed.
-                _version = ApplicationDeployment.IsNetworkDeployed
-                    ? ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString()
-                    : string.Empty;
-                form.Text = Version();
+                var openFile = GetFirstArg(args);
+                if(!string.IsNullOrEmpty(openFile))
+                {
+                    ProgramLog.Info($"Reading from file {openFile}");
+                }
+
+                UpgradeConfigIfRequired(configFile);
+
+                // if (string.IsNullOrEmpty(openFile))
+                // {
+                //     openFile = GetPre_21_1_ConfigIfUpgrading(configFile);
+                //     ProgramLog.Info("Reading from OLD config file " + openFile);
+                // }
+                var form = new MainForm(openFile) {Text = Version()};
 
                 var worker = new BackgroundWorker {WorkerSupportsCancellation = false, WorkerReportsProgress = false};
                 worker.DoWork += UpdateAutoQcStarter;
@@ -150,6 +157,79 @@ namespace AutoQC
 
                 mutex.ReleaseMutex();
             }
+        }
+
+        private static void UpgradeConfigIfRequired(string configFile)
+        {
+            GetPre_21_1_ConfigIfUpgrading(configFile);
+
+            // string userConfigFileName = "user.config";
+            //
+            //
+            // // Expected location of the current user config
+            // DirectoryInfo currentVersionConfigFileDir = new FileInfo(ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath).Directory;
+            // if (currentVersionConfigFileDir == null)
+            // {
+            //     return;
+            // }
+            //
+            // // Location of the previous user config
+            //
+            // // grab the most recent folder from the list of user's settings folders, prior to the current version
+            // var previousSettingsDir = (from dir in currentVersionConfigFileDir.Parent.GetDirectories()
+            //     let dirVer = new { Dir = dir, Ver = new Version(dir.Name) }
+            //     where dirVer.Ver < currentVersion
+            //     orderby dirVer.Ver descending
+            //     select dir).FirstOrDefault();
+
+            Settings.Default.Upgrade();
+        }
+
+        private static string GetPre_21_1_ConfigIfUpgrading(string configFile)
+        {
+            if (!ApplicationDeployment.IsNetworkDeployed)
+            {
+                return string.Empty;
+            }
+
+            // if (!string.IsNullOrEmpty(_lastInstalledVersion) && _lastInstalledVersion.StartsWith("1.1.0."))
+            // {
+                // Copy the user.config to the Downloads folder
+                var downloadsFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                string filename = string.IsNullOrEmpty(_lastInstalledVersion)
+                    ? "autoqc_old.user.config"
+                    : _lastInstalledVersion + ".user.config";
+                var configOldFile = Path.Combine(downloadsFolder, filename);
+
+                ProgramLog.Info($"Config format changed. Copying old config to '{configOldFile}'");
+
+                File.Copy(configFile, configOldFile, true);
+                return configOldFile;
+            // }
+
+            // return string.Empty;
+        }
+
+        private static void GetCurrentAndLastInstalledVersions()
+        {
+            // CurrentDeployment is null if it isn't network deployed.
+            _version = ApplicationDeployment.IsNetworkDeployed
+                ? ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString()
+                : string.Empty;
+
+            _lastInstalledVersion = Settings.Default.InstalledVersion ?? string.Empty;
+
+            if (!_version.Equals(_lastInstalledVersion))
+            {
+                ProgramLog.Info(string.Empty.Equals(_lastInstalledVersion)
+                    ? $"This is a first install and run of version: {_version}."
+                    : $"Current version: {_version} is newer than the last installed version: {_lastInstalledVersion}.");
+
+                Settings.Default.InstalledVersion = _version;
+                Settings.Default.Save();
+                return;
+            }
+            ProgramLog.Info($"Current version: {_version} same as last installed version: {_lastInstalledVersion}.");
         }
 
         private static bool InitSkylineSettings()
@@ -174,7 +254,7 @@ namespace AutoQC
             string arg;
             if (ApplicationDeployment.IsNetworkDeployed)
             {
-                _version = ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString();
+                // _version = ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString();
                 var activationData = AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData;
                 arg = activationData != null && activationData.Length > 0
                     ? activationData[0]
@@ -182,7 +262,7 @@ namespace AutoQC
             }
             else
             {
-                _version = string.Empty;
+                // _version = string.Empty;
                 arg = args.Length > 0 ? args[0] : string.Empty;
             }
 
@@ -217,7 +297,7 @@ namespace AutoQC
 
             if (ApplicationDeployment.IsNetworkDeployed)
             {
-                if (IsFirstRun())
+                if (!_version.Equals(_lastInstalledVersion) /*IsFirstRun()*/)
                 {
                     // First time running a newer version of the application
                     ProgramLog.Info($"Updating {AutoQcStarterExe} shortcut.");
@@ -237,19 +317,19 @@ namespace AutoQC
             if (!ApplicationDeployment.IsNetworkDeployed)
                 return false;
 
-            var currentVersion = ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString();
-            var installedVersion = Settings.Default.InstalledVersion ?? string.Empty;
-            if (!currentVersion.Equals(installedVersion))
+            // var currentVersion = ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString();
+            // var installedVersion = Settings.Default.InstalledVersion ?? string.Empty;
+            if (!_version.Equals(_lastInstalledVersion))
             {
-                ProgramLog.Info(string.Empty.Equals(installedVersion)
-                    ? $"This is a first install and run of version: {currentVersion}."
-                    : $"Current version: {currentVersion} is newer than the last installed version: {installedVersion}.");
-
-                Settings.Default.InstalledVersion = currentVersion;
-                Settings.Default.Save();
+                // ProgramLog.Info(string.Empty.Equals(installedVersion)
+                //     ? $"This is a first install and run of version: {currentVersion}."
+                //     : $"Current version: {currentVersion} is newer than the last installed version: {installedVersion}.");
+                //
+                // Settings.Default.InstalledVersion = currentVersion;
+                // Settings.Default.Save();
                 return true;
             }
-            ProgramLog.Info($"Current version: {currentVersion} same as last installed version: {installedVersion}.");
+            // ProgramLog.Info($"Current version: {currentVersion} same as last installed version: {installedVersion}.");
             return false;
         }
         
