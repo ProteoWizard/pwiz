@@ -58,6 +58,13 @@ namespace pwiz.Skyline.Model.Results
             MaxPeakIndex = -1;
         }
 
+        public ChromData(TransitionDocNode transitionDocNode, TimeIntensities rawTimeIntensities, TimeIntensities timeIntensities) : this(ChromKey.EMPTY, -1)
+        {
+            DocNode = transitionDocNode;
+            RawTimeIntensities = rawTimeIntensities;
+            TimeIntensities = timeIntensities;
+        }
+
         /// <summary>
         /// Clone the object, and create a new list of peaks, since the peaks are
         /// calculated on the write thread, and may be calulated differently for multiple

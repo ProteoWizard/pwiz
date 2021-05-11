@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Model.Databinding.Entities;
+using pwiz.Skyline.Model.Results.Scoring;
+
 
 namespace pwiz.Skyline.Model.Databinding.Collections
 {
@@ -33,6 +36,39 @@ namespace pwiz.Skyline.Model.Databinding.Collections
                 FireListChanged();
             }
         }
+
+        public void SetSelectedIdentityPaths(IEnumerable<IdentityPath> identityPaths)
+        {
+            var precursorPaths = PathsToMaxLevel(SrmDocument.Level.TransitionGroups, identityPaths);
+            var peptidePaths = PathsToMaxLevel(SrmDocument.Level.Molecules, precursorPaths);
+            var peptides = new Peptides(DataSchema, peptidePaths.ToList());
+            var precursors = new List<Precursor>();
+            foreach (Entities.Peptide peptide in peptides.GetItems())
+            {
+                var comparableGroups = PeakFeatureEnumerator.ComparableGroups(peptide.DocNode)
+                    .Select(group=>group.ToList()).ToList();
+                bool containsAllGroups = comparableGroups.Count == 1
+                                         || peptidePaths.Contains(peptide.IdentityPath)
+                                         || peptidePaths.Contains(peptide.IdentityPath.Parent);
+                foreach (var comparableGroup in comparableGroups)
+                {
+                    if (containsAllGroups || comparableGroup.Any(nodeGroup =>
+                        precursorPaths.Contains(new IdentityPath(peptide.IdentityPath, nodeGroup.Id))))
+                    {
+                        precursors.Add(new Precursor(DataSchema, new IdentityPath(peptide.IdentityPath, comparableGroup[0].Id)));
+                    }
+                }
+            }
+
+            Precursors = precursors;
+        }
+
+        private HashSet<IdentityPath> PathsToMaxLevel(SrmDocument.Level level, IEnumerable<IdentityPath> identityPaths)
+        {
+            return identityPaths.Select(path => path.Length > (int) level + 1 ? path.GetPathTo((int) level) : path)
+                .ToHashSet();
+        }
+
 
         public Replicate Replicate
         {
@@ -75,7 +111,12 @@ namespace pwiz.Skyline.Model.Databinding.Collections
 
         protected override CandidatePeakGroup ConstructItem(PeakKey key)
         {
-            return key.PrecursorResult.CandidatePeakGroups[key.PeakIndex];
+            var candidatePeakGroups = key.PrecursorResult.CandidatePeakGroups;
+            if (key.PeakIndex < 0 || key.PeakIndex >= candidatePeakGroups.Count)
+            {
+                return null;
+            }
+            return candidatePeakGroups[key.PeakIndex];
         }
 
         public class PeakKey

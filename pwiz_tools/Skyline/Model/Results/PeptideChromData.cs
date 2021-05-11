@@ -29,7 +29,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
 {
-    internal sealed class PeptideChromDataSets
+    public sealed class PeptideChromDataSets
     {
         private const double TIME_DELTA_VARIATION_THRESHOLD = 0.001;
         public const double TIME_MIN_DELTA = 0.2 / 60;
@@ -75,9 +75,9 @@ namespace pwiz.Skyline.Model.Results
 
         public ChromFileInfo FileInfo { get; private set; }
 
-        public IList<ChromDataSet> DataSets { get { return _dataSets; } }
+        internal IList<ChromDataSet> DataSets { get { return _dataSets; } }
 
-        public RetentionTimePrediction PredictedRetentionTime { set { _predictedRetentionTime = value; }}
+        internal RetentionTimePrediction PredictedRetentionTime { set { _predictedRetentionTime = value; }}
 
         public double[] RetentionTimes { set { _retentionTimes = value; } }
 
@@ -135,7 +135,7 @@ namespace pwiz.Skyline.Model.Results
 
         public IEnumerable<int> ProviderIds { get { return _dataSets.SelectMany(d => d.ProviderIds); } }
 
-        public bool Load(ChromDataProvider provider)
+        internal bool Load(ChromDataProvider provider)
         {
             //Console.Out.WriteLine("Starting {0} {1} {2}", this.NodePep, _dataSets.Count, RuntimeHelpers.GetHashCode(this));
             foreach (var set in _dataSets.ToArray())
@@ -611,7 +611,7 @@ namespace pwiz.Skyline.Model.Results
             return listPeakSets;
         }
 
-        public int ComparePeakLists(PeptideChromDataPeakList p1, PeptideChromDataPeakList p2)
+        internal int ComparePeakLists(PeptideChromDataPeakList p1, PeptideChromDataPeakList p2)
         {
             // TODO: Do we want to keep this?
             // All identified peaks come first
@@ -812,7 +812,7 @@ namespace pwiz.Skyline.Model.Results
             return p1.CombinedScore.CompareTo(p2.CombinedScore);
         }
 
-        public void Add(PeptideDocNode nodePep, ChromDataSet chromDataSet)
+        internal void Add(PeptideDocNode nodePep, ChromDataSet chromDataSet)
         {
             // If this is coming from the same PeptideDocNode, then just add it, otherwise
             // a merged copy of the PeptideDocNode needs to be created that includes

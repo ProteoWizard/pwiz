@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
@@ -30,6 +29,7 @@ namespace pwiz.Skyline.Controls.Databinding
                 new SkylineViewContext(ColumnDescriptor.RootColumn(_dataSchema, typeof(CandidatePeakGroup)),
                     _peakGroups);
             BindingListSource.SetViewContext(viewContext);
+            Text = TabText = "Candidate Peaks";
         }
 
         public SkylineWindow SkylineWindow { get; }
@@ -107,8 +107,7 @@ namespace pwiz.Skyline.Controls.Databinding
         private void UpdateRowSource()
         {
             _peakGroups.Replicate = new Replicate(_dataSchema, SkylineWindow.SelectedResultsIndex);
-            _peakGroups.Precursors = ImmutableList.ValueOf(GetPrecursorIdentityPaths(_dataSchema.Document, SelectedIdentityPaths)
-                .Select(path => new Precursor(_dataSchema, path)));
+            _peakGroups.SetSelectedIdentityPaths(SelectedIdentityPaths);
         }
 
         private HashSet<IdentityPath> GetPrecursorIdentityPaths(SrmDocument document, IEnumerable<IdentityPath> identityPaths)

@@ -289,7 +289,9 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 var peakScoreCalculator = new PeakScoreCalculator(summaryData.PeakIndex,
                     chromatogramGroup.ChromatogramGroupInfo, context, summaryData);
                 var defaultPeakScores = DefaultPeakScores.CalculateScores(peakScoreCalculator);
-                peakGroups.Add(new CandidatePeakGroup(chromatogramGroup, summaryData.PeakIndex, defaultPeakScores));
+                var peakGroup = new CandidatePeakGroup(chromatogramGroup, summaryData.PeakIndex, defaultPeakScores);
+                peakGroup.UpdateChosen(this);
+                peakGroups.Add(peakGroup);
             }
 
             return ImmutableList.ValueOf(peakGroups);

@@ -482,6 +482,13 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             _graphHelper.ZoomToPeak(rtStart, rtEnd);
             graphControl.AxisChange();
+            using (var graphics = graphControl.CreateGraphics())
+            {
+                foreach (var graphPane in graphControl.MasterPane.PaneList.OfType<MSGraphPane>())
+                {
+                    graphPane.SetScale(graphics);
+                }
+            }
             graphControl.Invalidate();
         }
 

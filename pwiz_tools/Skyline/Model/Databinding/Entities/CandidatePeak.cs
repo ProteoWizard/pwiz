@@ -26,6 +26,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             return _chromatogramGroup.PrecursorResult;
         }
 
+        [Format(Formats.RETENTION_TIME)]
         public double PeakGroupStartTime
         {
             get
@@ -34,12 +35,31 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
+        [Format(Formats.RETENTION_TIME)]
         public double PeakGroupEndTime
         {
             get
             {
                 return GetTransitionPeaks().Max(peak => peak.EndTime);
             }
+        }
+
+
+        public bool Chosen { get; private set; }
+
+        public void UpdateChosen(PrecursorResult precursorResult)
+        {
+            Chosen = EqualTimes(precursorResult.MinStartTime, PeakGroupStartTime) && EqualTimes(precursorResult.MaxEndTime, PeakGroupEndTime);
+        }
+
+        private bool EqualTimes(double? time1, double? time2)
+        {
+            if (!time1.HasValue || !time2.HasValue)
+            {
+                return false;
+            }
+
+            return (float) time1 == (float) time2;
         }
 
         private IEnumerable<ChromPeak> GetTransitionPeaks()

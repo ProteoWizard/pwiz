@@ -396,6 +396,12 @@
     </Compile>
     <Compile Include="Controls\Graphs\GraphDataCalculator.cs" />
     <Compile Include="Controls\Graphs\PaneProgressBar.cs" />
+    <Compile Include="Controls\Graphs\PeakDetailsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Controls\Graphs\PeakDetailsForm.Designer.cs">
+      <DependentUpon>PeakDetailsForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Controls\Graphs\ReplicateGroupOp.cs" />
     <Compile Include="Controls\Graphs\ReplicateValue.cs" />
     <Compile Include="Controls\ImageListBox.cs">
@@ -607,6 +613,8 @@
     <Compile Include="Model\Lib\SpectrumRanker.cs" />
     <Compile Include="Model\MinimizeResults.cs" />
     <Compile Include="Model\ProteomicSequence.cs" />
+    <Compile Include="Model\Results\IntegratedPeakGroup.cs" />
+    <Compile Include="Model\Results\PeakGroupIntegrator.cs" />
     <Compile Include="Model\Results\Scoring\PeakScoreCalculator.cs" />
     <Compile Include="SettingsUI\ViewLibraryPepInfoList.cs" />
     <Compile Include="Model\Lib\LibKeyMap.cs" />
