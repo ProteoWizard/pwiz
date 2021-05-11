@@ -19,7 +19,7 @@ namespace SkylineBatch.Properties {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class Resources {
@@ -390,6 +390,24 @@ namespace SkylineBatch.Properties {
         public static string ConfigRunner_Run_Updating__0_ {
             get {
                 return ResourceManager.GetString("ConfigRunner_Run_Updating__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Connected.
+        /// </summary>
+        public static string DataServerControl_ServerConnected_Connected {
+            get {
+                return ResourceManager.GetString("DataServerControl_ServerConnected_Connected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No server.
+        /// </summary>
+        public static string DataServerControl_ServerRemoved_No_server {
+            get {
+                return ResourceManager.GetString("DataServerControl_ServerRemoved_No_server", resourceCulture);
             }
         }
         

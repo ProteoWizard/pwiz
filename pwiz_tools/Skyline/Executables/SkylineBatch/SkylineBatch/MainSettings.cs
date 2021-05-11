@@ -487,8 +487,9 @@ namespace SkylineBatch
 
         public void QuickValidate()
         {
-            if (_validationError != null) throw _validationError;
-            if (!_validated) throw new ArgumentException("The server should have already been validated.");
+            if (_validated) 
+                return;
+            throw _validationError;
         }
 
         public void Validate()

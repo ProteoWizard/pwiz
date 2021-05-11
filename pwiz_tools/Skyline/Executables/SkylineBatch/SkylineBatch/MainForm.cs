@@ -504,12 +504,18 @@ namespace SkylineBatch
             var inDownloadsFolder = filePath.Contains(FileUtil.DOWNLOADS_FOLDER);
             if (!inDownloadsFolder) // Only show dialog if configs are not in downloads folder
             {
-                importConfigs = DialogResult.Yes == DisplayQuestion(string.Format(
-                    Resources.MainForm_FileOpenedImport_Do_you_want_to_import_configurations_from__0__,
-                    Path.GetFileName(filePath)));
+                RunUi(() =>
+                {
+                    importConfigs = DialogResult.Yes == DisplayQuestion(string.Format(
+                        Resources.MainForm_FileOpenedImport_Do_you_want_to_import_configurations_from__0__,
+                        Path.GetFileName(filePath)));
+                });
             }
-            if (importConfigs || inDownloadsFolder)
-                DoImport(filePath);
+            RunUi(() =>
+            {
+                if (importConfigs || inDownloadsFolder)
+                    DoImport(filePath);
+            });
         }
 
         public DialogResult ShowDownloadedFileForm(string filePath, out string newRootDirectory)

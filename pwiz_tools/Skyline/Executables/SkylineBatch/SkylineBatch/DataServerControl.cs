@@ -1,13 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
-using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using SharedBatch;
+using SkylineBatch.Properties;
 
 namespace SkylineBatch
 {
@@ -16,17 +11,10 @@ namespace SkylineBatch
 
         private DataServerInfo _server;
 
-        private bool _checkedValidationOnce;
-
-        //private bool _isValid;
-
-        //private Exception _validationError;
-
         public DataServerControl(DataServerInfo initialServer)
         {
             InitializeComponent();
             _server = initialServer;
-            //_isValid = AlreadyValidated();
         }
 
         public object GetVariable() => _server;
@@ -34,7 +22,7 @@ namespace SkylineBatch
         public bool IsValid(out string errorMessage)
         {
             errorMessage = null;
-
+            if (_server == null) return true; // server was removed
             try
             {
                 _server.QuickValidate();
@@ -42,30 +30,31 @@ namespace SkylineBatch
             }
             catch (ArgumentException e)
             {
-                labelStatus.Text = e.Message;
+                errorMessage = e.Message;
+                ServerError(errorMessage);
                 return false;
             }
         }
 
-        /*private bool AlreadyValidated()
-        {
-            try
-            {
-                _server.QuickValidate();
-            }
-            catch (ArgumentException e)
-            {
-                labelStatus.Text = e.Message;
-                return false;
-            }
-
-            return true;
-        }*/
-
         private void ServerConnected()
         {
-            labelStatus.Text = "Connected";
-            labelStatus.ForeColor = Color.Green;
+            SetServerStatus(Resources.DataServerControl_ServerConnected_Connected, Color.Green);
+        }
+
+        private void ServerRemoved()
+        {
+            SetServerStatus(Resources.DataServerControl_ServerRemoved_No_server, Color.Blue);
+        }
+
+        private void ServerError(string errorMessage)
+        {
+            SetServerStatus(errorMessage, Color.Red);
+        }
+
+        private void SetServerStatus(string text, Color textColor)
+        {
+            textStatus.Text = text;
+            textStatus.ForeColor = textColor;
         }
 
         private void btnTryReconnect_Click(object sender, EventArgs e)
@@ -76,13 +65,17 @@ namespace SkylineBatch
             btnEditServer.Enabled = false;
             try
             {
-                _server.Validate();
-                ServerConnected();
+                if (_server == null)
+                    ServerRemoved();
+                else
+                {
+                    _server.Validate();
+                    ServerConnected();
+                }
             }
             catch (ArgumentException ex)
             {
-               // _validationError = ex;
-                labelStatus.Text = ex.Message;
+                ServerError(ex.Message);
             }
             btnTryReconnect.Text = initialConnectText;
             btnTryReconnect.Enabled = true;
@@ -95,18 +88,16 @@ namespace SkylineBatch
             if (DialogResult.OK == addServerForm.ShowDialog(this))
             {
                 _server = addServerForm.Server;
-                ServerConnected();
+                if (_server != null)
+                    ServerConnected();
+                else
+                    ServerRemoved();
             }
         }
 
         public void SetInput(object variable)
         {
             _server = (DataServerInfo) variable;
-        }
-
-        private void maskedTextBox1_MaskInputRejected(object sender, MaskInputRejectedEventArgs e)
-        {
-
         }
     }
 }

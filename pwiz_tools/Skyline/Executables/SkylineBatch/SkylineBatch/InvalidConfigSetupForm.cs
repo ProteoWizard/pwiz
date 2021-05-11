@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -82,13 +83,12 @@ namespace SkylineBatch
                 mainSettings.TemplateFilePath, MainSettings.ValidateTemplateFile, PathDialogOptions.File, PathDialogOptions.ExistingOptional);
             var validAnalysisFolderPath = await GetValidPath(Resources.InvalidConfigSetupForm_FixInvalidMainSettings_analysis_folder, 
                 mainSettings.AnalysisFolderPath, MainSettings.ValidateAnalysisFolder, PathDialogOptions.Folder);
-            var dataValidator = mainSettings.Server != null ? (Validator)MainSettings.ValidateDataFolderWithServer : (Validator)MainSettings.ValidateDataFolderWithoutServer;
-            if (mainSettings.Server != null) dataValidator = MainSettings.ValidateDataFolderWithServer;
+            var validServer = mainSettings.Server != null ? await GetValidServer(mainSettings.Server) : null;
+            var dataValidator = validServer != null ? (Validator)MainSettings.ValidateDataFolderWithServer : (Validator)MainSettings.ValidateDataFolderWithoutServer;
             var validDataFolderPath = await GetValidPath(Resources.InvalidConfigSetupForm_FixInvalidMainSettings_data_folder, 
                 mainSettings.DataFolderPath, dataValidator, PathDialogOptions.Folder);
             var validAnnotationsFilePath = await GetValidPath(Resources.InvalidConfigSetupForm_FixInvalidMainSettings_annotations_file, mainSettings.AnnotationsFilePath,
                 MainSettings.ValidateAnnotationsFile, PathDialogOptions.File);
-            var validServer = mainSettings.Server != null ? await GetValidServer(mainSettings.Server) : null;
 
             return new MainSettings(validTemplateFilePath, validAnalysisFolderPath, validDataFolderPath, validServer, 
                 validAnnotationsFilePath, mainSettings.ReplicateNamingPattern, mainSettings.DependentConfigName);
@@ -205,6 +205,9 @@ namespace SkylineBatch
         
         private void AddControl(UserControl control)
         {
+            var newHeight = Height - panel1.Height + control.Height;
+            var newWidth = Width - panel1.Width + control.Width;
+            Size = new Size(newWidth, newHeight);
             control.Dock = DockStyle.Fill;
             control.Show();
             panel1.Controls.Add(control);

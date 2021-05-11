@@ -676,4 +676,10 @@
   <data name="SkylineBatchConfigManager_StartBatchRun_Please_free_up_some_space_to_download_the_data_" xml:space="preserve">
     <value>Please free up some space to download the data.</value>
   </data>
+  <data name="DataServerControl_ServerConnected_Connected" xml:space="preserve">
+	  <value>Connected</value>
+  </data>
+  <data name="DataServerControl_ServerRemoved_No_server" xml:space="preserve">
+	  <value>No server</value>
+  </data>
 </root>

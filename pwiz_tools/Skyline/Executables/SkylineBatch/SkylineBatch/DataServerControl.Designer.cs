@@ -33,8 +33,8 @@
             this.btnTryReconnect = new System.Windows.Forms.Button();
             this.btnEditServer = new System.Windows.Forms.Button();
             this.label3 = new System.Windows.Forms.Label();
-            this.labelStatus = new System.Windows.Forms.Label();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.textStatus = new System.Windows.Forms.RichTextBox();
             this.panel1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -43,10 +43,9 @@
             this.label1.AutoSize = true;
             this.label1.Location = new System.Drawing.Point(-3, 0);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(401, 13);
+            this.label1.Size = new System.Drawing.Size(249, 13);
             this.label1.TabIndex = 0;
-            this.label1.Text = "Skyline Batch could not connect to the FTP server. This is likely a server-side i" +
-    "ssue.";
+            this.label1.Text = "Skyline Batch could not connect to the FTP server.";
             // 
             // label2
             // 
@@ -60,7 +59,7 @@
             // btnTryReconnect
             // 
             this.btnTryReconnect.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.btnTryReconnect.Location = new System.Drawing.Point(0, 86);
+            this.btnTryReconnect.Location = new System.Drawing.Point(0, 76);
             this.btnTryReconnect.Name = "btnTryReconnect";
             this.btnTryReconnect.Size = new System.Drawing.Size(174, 23);
             this.btnTryReconnect.TabIndex = 1;
@@ -71,7 +70,7 @@
             // btnEditServer
             // 
             this.btnEditServer.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.btnEditServer.Location = new System.Drawing.Point(180, 86);
+            this.btnEditServer.Location = new System.Drawing.Point(180, 76);
             this.btnEditServer.Name = "btnEditServer";
             this.btnEditServer.Size = new System.Drawing.Size(89, 23);
             this.btnEditServer.TabIndex = 2;
@@ -88,26 +87,32 @@
             this.label3.TabIndex = 4;
             this.label3.Text = "Status:";
             // 
-            // labelStatus
-            // 
-            this.labelStatus.AutoSize = true;
-            this.labelStatus.ForeColor = System.Drawing.Color.Red;
-            this.labelStatus.Location = new System.Drawing.Point(0, 0);
-            this.labelStatus.Name = "labelStatus";
-            this.labelStatus.Size = new System.Drawing.Size(73, 13);
-            this.labelStatus.TabIndex = 5;
-            this.labelStatus.Text = "Disconnected";
-            // 
             // panel1
             // 
             this.panel1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.panel1.Controls.Add(this.labelStatus);
+            this.panel1.Controls.Add(this.textStatus);
             this.panel1.Location = new System.Drawing.Point(3, 46);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(395, 34);
+            this.panel1.Size = new System.Drawing.Size(456, 24);
             this.panel1.TabIndex = 6;
+            // 
+            // textStatus
+            // 
+            this.textStatus.BackColor = System.Drawing.SystemColors.Control;
+            this.textStatus.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.textStatus.Cursor = System.Windows.Forms.Cursors.Arrow;
+            this.textStatus.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.textStatus.Location = new System.Drawing.Point(0, 0);
+            this.textStatus.Margin = new System.Windows.Forms.Padding(2);
+            this.textStatus.Name = "textStatus";
+            this.textStatus.ReadOnly = true;
+            this.textStatus.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.None;
+            this.textStatus.Size = new System.Drawing.Size(456, 24);
+            this.textStatus.TabIndex = 6;
+            this.textStatus.TabStop = false;
+            this.textStatus.Text = "";
             // 
             // DataServerControl
             // 
@@ -120,9 +125,8 @@
             this.Controls.Add(this.btnTryReconnect);
             this.Controls.Add(this.label1);
             this.Name = "DataServerControl";
-            this.Size = new System.Drawing.Size(411, 111);
+            this.Size = new System.Drawing.Size(462, 102);
             this.panel1.ResumeLayout(false);
-            this.panel1.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -135,7 +139,7 @@
         private System.Windows.Forms.Button btnTryReconnect;
         private System.Windows.Forms.Button btnEditServer;
         private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.Label labelStatus;
         private System.Windows.Forms.Panel panel1;
+        private System.Windows.Forms.RichTextBox textStatus;
     }
 }
