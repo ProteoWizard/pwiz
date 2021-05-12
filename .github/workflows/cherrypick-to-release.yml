@@ -9,7 +9,7 @@ jobs:
     name: release_pull_request
     steps:
     - name: checkout
-      uses: actions/checkout@v1
+      uses: actions/checkout@v2
     - name: Create PR to branch
       uses: chambm/github-action-cherry-pick@0.1.0
       with:
