@@ -299,7 +299,10 @@ namespace pwiz.SkylineTest
 
             foreach (var fileMask in allFileMasks)
             {
-                foreach (var filename in Directory.GetFiles(root, fileMask, SearchOption.AllDirectories))
+                var filenames = Directory.GetFiles(root, fileMask, SearchOption.AllDirectories).ToList();
+                filenames.AddRange(Directory.GetFiles(Path.Combine(root, @"..", @"Shared", @"Common"), fileMask, SearchOption.AllDirectories));
+
+                foreach (var filename in filenames)
                 {
                     if (Equals(filename, thisFile))
                     {
