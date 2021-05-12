@@ -16,6 +16,7 @@ jobs:
         #pr_branch: 'Skyline/skyline_21_1'
         pr_branch: master
         opt_in_message: '[cp-to-release]'
+        merge_strategy: '--strategy=recursive -Xtheirs'
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         GITBOT_EMAIL: actions@users.noreply.github.com
