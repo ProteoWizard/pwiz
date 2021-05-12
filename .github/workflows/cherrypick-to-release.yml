@@ -1,0 +1,21 @@
+name: Cherry-pick from master to Skyline release branch
+on:
+  push:
+    branches:
+      - master
+jobs:
+  release_pull_request:
+    runs-on: ubuntu-latest
+    name: release_pull_request
+    steps:
+    - name: checkout
+      uses: actions/checkout@v1
+    - name: Create PR to branch
+      uses: chambm/github-action-cherry-pick@0.1.0
+      with:
+        pr_branch: 'Skyline/skyline_21_1'
+        opt_in_message: '[cp-to-release]'
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITBOT_EMAIL: actions@users.noreply.github.com
+        DRY_RUN: false
