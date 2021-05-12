@@ -36,10 +36,7 @@ namespace SkylineBatch
     public class MainSettings
     {
 
-        // IMMUTABLE - all fields are readonly strings
-        // Holds file locations and naming pattern to use when running the configuration
-
-        private string _fileNamesResponse;
+        // IMMUTABLE - all fields are readonly strings/objects
 
         public MainSettings(string templateFilePath, string analysisFolderPath, string dataFolderPath,
             DataServerInfo server, string annotationsFilePath, string replicateNamingPattern, string dependentConfigName)
@@ -51,20 +48,6 @@ namespace SkylineBatch
             Server = server;
             AnnotationsFilePath = annotationsFilePath ?? string.Empty;
             ReplicateNamingPattern = replicateNamingPattern ?? string.Empty;
-            
-            if (Server != null)
-            {
-                try
-                {
-                    if (Directory.Exists(Path.GetDirectoryName(DataFolderPath)))
-                        Directory.CreateDirectory(DataFolderPath);
-                }
-                catch (Exception)
-                {
-                    // pass - will be invalidated later
-                }
-
-            }
         }
 
 
@@ -174,10 +157,22 @@ namespace SkylineBatch
         private static void ValidateDataFolder(string dataFolder, bool hasServer)
         {
             FileUtil.ValidateNotEmptyPath(dataFolder, Resources.MainSettings_ValidateDataFolder_data_folder);
-            if (!Directory.Exists(dataFolder))
+            if (!hasServer && !Directory.Exists(dataFolder))
             {
                 throw new ArgumentException(string.Format(Resources.MainSettings_ValidateDataFolder_The_data_folder__0__does_not_exist_, dataFolder) + Environment.NewLine +
                                             Resources.MainSettings_ValidateAnalysisFolder_Please_provide_a_valid_folder_);
+            }
+
+            if (hasServer)
+            {
+                try
+                {
+                    Directory.Exists(Path.GetDirectoryName(dataFolder));
+                }
+                catch (Exception)
+                {
+                    throw new ArgumentException(string.Format(Resources.MainSettings_ValidateAnalysisFolder_The__parent_directory_of_the_data_folder__0__does_not_exist_1, dataFolder));
+                }
             }
             FileUtil.ValidateNotInDownloads(dataFolder, Resources.MainSettings_ValidateDataFolder_data_folder);
             if (!hasServer && !Directory.GetFiles(dataFolder).Any())
@@ -205,7 +200,7 @@ namespace SkylineBatch
                 TextUtil.SuccessfulReplace(ValidateAnalysisFolder, oldRoot, newRoot, AnalysisFolderPath, out string replacedAnalysisPath);
             var dataValidator = Server != null ? (Validator)ValidateDataFolderWithServer : (Validator)ValidateDataFolderWithoutServer;
             var dataReplaced =
-                TextUtil.SuccessfulReplace(dataValidator, oldRoot, newRoot, DataFolderPath, out string replacedDataPath);
+                TextUtil.SuccessfulReplace(dataValidator, oldRoot, newRoot, DataFolderPath, out string replacedDataPath, true);
             var annotationsReplaced =
                 TextUtil.SuccessfulReplace(ValidateAnnotationsFile, oldRoot, newRoot, AnnotationsFilePath, out string replacedAnnotationsPath);
 
@@ -237,44 +232,31 @@ namespace SkylineBatch
             message = new StringBuilder(configHeader);
             CreateAnalysisFolderIfNonexistent();
             var analysisFolderName = Path.GetFileName(AnalysisFolderPath);
-            if (runOption == RunBatchOptions.RUN_ALL_STEPS) runOption = RunBatchOptions.FROM_COPY_TEMPLATE;
-            switch (runOption)
+
+            if (runOption == RunBatchOptions.RUN_ALL_STEPS || runOption == RunBatchOptions.FROM_CREATE_RESULTS)
             {
-                case RunBatchOptions.FROM_COPY_TEMPLATE:
-                    var resultsFile = GetResultsFilePath();
-                    var resultsFileIdentifyer = Path.Combine(analysisFolderName, Path.GetFileName(resultsFile));
-                    if (File.Exists(resultsFile) && new FileInfo(TemplateFilePath).Length != new FileInfo(resultsFile).Length)
-                    {
-                        message.Append(tab + tab)
-                            .Append(resultsFileIdentifyer)
-                            .AppendLine();
-                        return true;
-                    }
-                    break;
-                case RunBatchOptions.FROM_IMPORT_DATA:
-                    var templateSkyds = FileUtil.GetFilesInFolder(Path.GetDirectoryName(TemplateFilePath), TextUtil.EXT_SKYD);
-                    var resultsSkyds = FileUtil.GetFilesInFolder(AnalysisFolderPath, TextUtil.EXT_SKYD);
-                    var templateSkydSize = templateSkyds.Count == 0 ? 0 : new FileInfo(templateSkyds[0]).Length;
-                    var resultsSkydSize = resultsSkyds.Count == 0 ? 0 : new FileInfo(resultsSkyds[0]).Length;
-                    if (templateSkydSize < resultsSkydSize)
-                    {
-                        message.Append(tab + tab)
-                            .Append(string.Format(Path.Combine(analysisFolderName, Path.GetFileName(resultsSkyds[0]))))
-                            .AppendLine();
-                        return true;
-                    }
-                    break;
-                case RunBatchOptions.FROM_REFINE:
-                    // pass - handled in refine settings
-                    break;
-                case RunBatchOptions.FROM_EXPORT_REPORT:
-                    // pass
-                    break;
-                case RunBatchOptions.FROM_R_SCRIPTS:
-                    // pass
-                    break;
-                default:
-                    throw new Exception(runOption + " is not a valid start step.");
+                // TODO (Ali): ask if you should check .sky file or .skyd file here
+                /*var resultsFile = GetResultsFilePath();
+                var resultsFileIdentifyer = Path.Combine(analysisFolderName, Path.GetFileName(resultsFile));
+                if (File.Exists(resultsFile) && new FileInfo(TemplateFilePath).Length != new FileInfo(resultsFile).Length)
+                {
+                    message.Append(tab + tab)
+                        .Append(resultsFileIdentifyer)
+                        .AppendLine();
+                    return true;
+                }*/
+
+                var templateSkyds = FileUtil.GetFilesInFolder(Path.GetDirectoryName(TemplateFilePath), TextUtil.EXT_SKYD);
+                var resultsSkyds = FileUtil.GetFilesInFolder(AnalysisFolderPath, TextUtil.EXT_SKYD);
+                var templateSkydSize = templateSkyds.Count == 0 ? 0 : new FileInfo(templateSkyds[0]).Length;
+                var resultsSkydSize = resultsSkyds.Count == 0 ? 0 : new FileInfo(resultsSkyds[0]).Length;
+                if (templateSkydSize < resultsSkydSize)
+                {
+                    message.Append(tab + tab)
+                        .Append(string.Format(Path.Combine(analysisFolderName, Path.GetFileName(resultsSkyds[0]))))
+                        .AppendLine();
+                    return true;
+                }
             }
             return false;
         }

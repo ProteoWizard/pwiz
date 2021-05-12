@@ -20,6 +20,7 @@ namespace SharedBatch
         public const string EXT_R = ".R";
         public const string EXT_CSV = ".csv";
         public const string EXT_LOG = ".log";
+        public const string EXT_TMP = ".tmp";
         public const string EXT_APPREF = ".appref-ms";
 
         public const char SEPARATOR_CSV = ',';
@@ -65,32 +66,40 @@ namespace SharedBatch
         }
 
 
-        public static bool SuccessfulReplace(Validator validate, string oldText, string newText, string originalString, out string replacedString)
+        public static bool SuccessfulReplace(Validator validate, string oldText, string newText, string originalString, out string replacedString, bool preferredReplace = false)
         {
             var oldPath = originalString;
             var newPath = TryReplaceStart(oldText, newText, originalString);
             replacedString = oldPath;
-
+            var initialValidated = false;
+            var replacedValidated = false;
             try
             {
                 validate(oldPath);
-                return false;
+                initialValidated = true;
             }
             catch (ArgumentException)
             {
                 // Pass - expect oldPath to be invalid
             }
 
-            replacedString = newPath;
             try
             {
                 validate(newPath);
+                replacedValidated = true;
             }
             catch (ArgumentException)
             {
-                return false;
+                // Pass
             }
-            return true;
+
+            if (replacedValidated && (!initialValidated || preferredReplace))
+            {
+                replacedString = newPath;
+                return true;
+            }
+
+            return false;
         }
 
         public static string TryReplaceStart(string oldText, string newText, string originalString)

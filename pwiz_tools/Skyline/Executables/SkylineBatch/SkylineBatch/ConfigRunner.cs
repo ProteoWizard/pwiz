@@ -132,8 +132,7 @@ namespace SkylineBatch
             }
             
             if ((runOption == RunBatchOptions.RUN_ALL_STEPS ||
-                 runOption == RunBatchOptions.FROM_COPY_TEMPLATE ||
-                 runOption == RunBatchOptions.FROM_IMPORT_DATA ||
+                 runOption == RunBatchOptions.FROM_CREATE_RESULTS ||
                  runOption == RunBatchOptions.FROM_REFINE ||
                  runOption == RunBatchOptions.FROM_EXPORT_REPORT)
                 && IsRunning())
@@ -173,7 +172,7 @@ namespace SkylineBatch
                 }
             }
 
-            // STEP 5: run r scripts using csv files
+            // STEP 4: run r scripts using csv files
             if (runOption != RunBatchOptions.DOWNLOAD_DATA)
             {
                 var rScriptsRunInformation = Config.GetScriptArguments();
@@ -184,7 +183,12 @@ namespace SkylineBatch
 
             // Runner is still running if no errors or cancellations
             if (IsRunning()) ChangeStatus(RunnerStatus.Completed);
-            if (IsCanceling()) ChangeStatus(RunnerStatus.Canceled);
+            if (IsCanceling())
+            {
+                var tmpFiles = FileUtil.GetFilesInFolder(Config.MainSettings.AnalysisFolderPath, TextUtil.EXT_TMP);
+                foreach (var tmpFile in tmpFiles) File.Delete(tmpFile);
+                ChangeStatus(RunnerStatus.Canceled);
+            }
             var endTime = DateTime.Now;
             // ReSharper disable once PossibleInvalidOperationException - StartTime is always defined here
             var delta = endTime - (DateTime)StartTime;
@@ -197,8 +201,8 @@ namespace SkylineBatch
 
         public void WriteBatchCommandsToFile(CommandWriter commandWriter, RunBatchOptions runOption, bool invariantReport)
         {
-            // STEP 1: open skyline file and save copy to analysis folder
-            if ((int)runOption <= (int)RunBatchOptions.FROM_COPY_TEMPLATE)
+            // STEP 1: create results document and import data
+            if (runOption <= RunBatchOptions.FROM_CREATE_RESULTS)
             {
                 Config.WriteOpenSkylineTemplateCommand(commandWriter);
                 Config.WriteMsOneCommand(commandWriter);
@@ -207,16 +211,7 @@ namespace SkylineBatch
                 Config.WriteAddDecoysCommand(commandWriter);
                 Config.WriteSaveToResultsFile(commandWriter);
                 commandWriter.EndCommandGroup();
-            }
-            else if ((int)runOption < (int)RunBatchOptions.FROM_EXPORT_REPORT)
-            {
-                Config.WriteOpenSkylineResultsCommand(commandWriter);
-            }
-
-            // STEP 2: import data to new skyline file
-            if ((int)runOption <= (int)RunBatchOptions.FROM_IMPORT_DATA)
-            {
-                // import data and train model
+                // import data
                 Config.WriteImportDataCommand(commandWriter);
                 Config.WriteImportNamingPatternCommand(commandWriter);
                 Config.WriteTrainMProphetCommand(commandWriter);
@@ -224,13 +219,17 @@ namespace SkylineBatch
                 Config.WriteSaveCommand(commandWriter);
                 commandWriter.EndCommandGroup();
             }
+            else if (runOption < RunBatchOptions.FROM_EXPORT_REPORT)
+            {
+                Config.WriteOpenSkylineResultsCommand(commandWriter);
+            }
 
-            // STEP 3: refine file and save to new location
-            if ((int)runOption <= (int)RunBatchOptions.FROM_REFINE)
+            // STEP 2: refine file and save to new location
+            if (runOption <= RunBatchOptions.FROM_REFINE)
                 Config.WriteRefineCommands(commandWriter);
 
-            // STEP 4: output report(s) for completed analysis
-            if ((int)runOption <= (int)RunBatchOptions.FROM_EXPORT_REPORT)
+            // STEP 3: output report(s) for completed analysis
+            if (runOption <= RunBatchOptions.FROM_EXPORT_REPORT)
             {
                 if (Config.ReportSettings.UsesRefinedFile())
                 {
@@ -248,6 +247,7 @@ namespace SkylineBatch
         {
             var mainSettings = Config.MainSettings;
             var server = mainSettings.Server;
+            Directory.CreateDirectory(mainSettings.DataFolderPath);
 
             var matchingFiles = server.GetServerFiles;
             var downloadingFiles = server.FilesToDownload(mainSettings.DataFolderPath);

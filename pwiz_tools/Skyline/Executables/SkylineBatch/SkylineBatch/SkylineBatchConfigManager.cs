@@ -530,7 +530,7 @@ namespace SkylineBatch
                             var dependentIndex = enabledConfigs.IndexOf(dependency.Key);
                             if (dependentIndex < 0 || dependentIndex > enabledConfigs.IndexOf(configToRun))
                             {
-                                if ((runOption == RunBatchOptions.FROM_COPY_TEMPLATE ||
+                                if ((runOption == RunBatchOptions.FROM_CREATE_RESULTS ||
                                     runOption == RunBatchOptions.RUN_ALL_STEPS) &&
                                     !File.Exists(ConfigFromName(configToRun).MainSettings.TemplateFilePath))
                                 {
@@ -543,18 +543,21 @@ namespace SkylineBatch
                     }
                 }
 
+                var filesToDownload = new Dictionary<string, FtpListItem>();
+                var downloadingConfigNames = new List<string>();
+                foreach (var config in _configList)
+                {
+                    var skylineBatchConfig = (SkylineBatchConfig)config;
+                    if (!skylineBatchConfig.Enabled) continue;
+                    var newFiles = skylineBatchConfig.MainSettings.FilesToDownload();
+                    foreach (var file in newFiles)
+                        if (!filesToDownload.ContainsKey(file.Key)) filesToDownload.Add(file.Key, file.Value);
+                    if (newFiles.Count > 0) downloadingConfigNames.Add(config.GetName());
+                }
+
                 if (runOption == RunBatchOptions.RUN_ALL_STEPS ||
                     runOption == RunBatchOptions.DOWNLOAD_DATA)
                 {
-                    var filesToDownload = new Dictionary<string, FtpListItem>();
-                    foreach (var config in _configList)
-                    {
-                        var skylineBatchConfig = (SkylineBatchConfig)config;
-                        if (!skylineBatchConfig.Enabled) continue;
-                        var newFiles = skylineBatchConfig.MainSettings.FilesToDownload();
-                        foreach (var file in newFiles)
-                            if (!filesToDownload.ContainsKey(file.Key)) filesToDownload.Add(file.Key, file.Value);
-                    }
                     var driveSpaceNeeded = new Dictionary<string, long>();
                     foreach (var filePath in filesToDownload.Keys)
                     {
@@ -584,12 +587,25 @@ namespace SkylineBatch
                         return false;
                     }
                 }
+                else if (downloadingConfigNames.Count > 0)
+                {
+                    // data files need to be downloaded but user did not start from a download step
+                    var errorMessage = Resources.SkylineBatchConfigManager_StartBatchRun_The_data_for_the_following_configurations_has_not_fully_downloaded_ + Environment.NewLine + Environment.NewLine;
+                    errorMessage += TextUtil.LineSeparate(downloadingConfigNames) + Environment.NewLine +
+                                    Environment.NewLine;
+                    errorMessage +=
+                        Resources.SkylineBatchConfigManager_StartBatchRun_Please_download_the_data_for_these_configurations_before_running_them_from_a_later_step_;
+                    DisplayError(errorMessage);
+                    return false;
+                }
 
                 // Check if files will be overwritten by run
                 var overwriteInfo = "";
-                if (runOption == RunBatchOptions.RUN_ALL_STEPS || runOption == RunBatchOptions.FROM_COPY_TEMPLATE) 
-                    overwriteInfo = Resources.SkylineBatchConfigManager_StartBatchRun_results_files;
-                if (runOption == RunBatchOptions.FROM_IMPORT_DATA) overwriteInfo = Resources.SkylineBatchConfigManager_StartBatchRun_chromatagram_files;
+                // TODO (Ali): ask about this overwrite message
+                //if (runOption == RunBatchOptions.RUN_ALL_STEPS || runOption == RunBatchOptions.FROM_CREATE_RESULTS) 
+                //    overwriteInfo = Resources.SkylineBatchConfigManager_StartBatchRun_results_files;
+                if (runOption == RunBatchOptions.RUN_ALL_STEPS || runOption == RunBatchOptions.FROM_CREATE_RESULTS) 
+                    overwriteInfo = Resources.SkylineBatchConfigManager_StartBatchRun_chromatagram_files;
                 if (runOption == RunBatchOptions.FROM_REFINE) overwriteInfo = Resources.SkylineBatchConfigManager_StartBatchRun_refined_files;
                 if (runOption == RunBatchOptions.FROM_EXPORT_REPORT) overwriteInfo = Resources.SkylineBatchConfigManager_StartBatchRun_exported_reports;
                 if (runOption == RunBatchOptions.FROM_R_SCRIPTS) overwriteInfo = Resources.SkylineBatchConfigManager_StartBatchRun_R_script_outputs_in_the_following_analysis_folders;
@@ -676,20 +692,17 @@ namespace SkylineBatch
                 case RunBatchOptions.DOWNLOAD_DATA:
                     text = Resources.MainForm_UpdateRunBatchSteps_Download_data_only;
                     break;
-                case RunBatchOptions.FROM_COPY_TEMPLATE:
-                    text = Resources.MainForm_UpdateRunBatchSteps_Run_from_step_1__save_analysis_template;
-                    break;
-                case RunBatchOptions.FROM_IMPORT_DATA:
-                    text = Resources.MainForm_UpdateRunBatchSteps_Run_from_step_2__data_import;
+                case RunBatchOptions.FROM_CREATE_RESULTS:
+                    text = Resources.MainForm_UpdateRunBatchSteps_Run_from_step_1__create_results_file;
                     break;
                 case RunBatchOptions.FROM_REFINE:
-                    text = Resources.MainForm_UpdateRunBatchSteps_Run_from_step_3__refine_file;
+                    text = Resources.MainForm_UpdateRunBatchSteps_Run_from_step_2__refine_file;
                     break;
                 case RunBatchOptions.FROM_EXPORT_REPORT:
-                    text = Resources.MainForm_UpdateRunBatchSteps_Run_from_step_3__export_reports;
+                    text = Resources.MainForm_UpdateRunBatchSteps_Run_from_step_2__export_reports;
                     break;
                 case RunBatchOptions.FROM_R_SCRIPTS:
-                    text = Resources.MainForm_UpdateRunBatchSteps_Run_from_step_4__run_R_scripts;
+                    text = Resources.MainForm_UpdateRunBatchSteps_Run_from_step_3__run_R_scripts;
                     break;
                 default:
                     throw new Exception("The run option was not recognized");
@@ -989,8 +1002,7 @@ namespace SkylineBatch
     {
         RUN_ALL_STEPS,
         DOWNLOAD_DATA,
-        FROM_COPY_TEMPLATE,
-        FROM_IMPORT_DATA,
+        FROM_CREATE_RESULTS,
         FROM_REFINE,
         FROM_EXPORT_REPORT,
         FROM_R_SCRIPTS,
