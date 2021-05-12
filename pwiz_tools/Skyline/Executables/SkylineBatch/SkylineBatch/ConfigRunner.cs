@@ -106,7 +106,7 @@ namespace SkylineBatch
                 _logger.Log(line);
         }
 
-        public async Task Run(int startStep, bool downloadFilesOnly)
+        public async Task Run(RunBatchOptions runOption)
         {
             LogToUi(string.Format(Resources.ConfigRunner_Run________________________________Starting_Configuration___0_________________________________, Config.Name));
             try
@@ -125,12 +125,18 @@ namespace SkylineBatch
             ChangeStatus(RunnerStatus.Running);
             Config.MainSettings.CreateAnalysisFolderIfNonexistent();
 
-            if ((startStep == 1 || downloadFilesOnly) && Config.MainSettings.WillDownloadData)
+            if ((runOption == RunBatchOptions.RUN_ALL_STEPS || runOption == RunBatchOptions.DOWNLOAD_DATA) 
+                && Config.MainSettings.WillDownloadData)
             {
                 await DownloadData();
             }
             
-            if (startStep < 5 && IsRunning())
+            if ((runOption == RunBatchOptions.RUN_ALL_STEPS ||
+                 runOption == RunBatchOptions.FROM_COPY_TEMPLATE ||
+                 runOption == RunBatchOptions.FROM_IMPORT_DATA ||
+                 runOption == RunBatchOptions.FROM_REFINE ||
+                 runOption == RunBatchOptions.FROM_EXPORT_REPORT)
+                && IsRunning())
             {
                 var multiLine = await Config.SkylineSettings.HigherVersion(ALLOW_NEWLINE_SAVE_VERSION, _processRunner);
                 var numberFormat = CultureInfo.CurrentCulture.GetFormat(typeof(NumberFormatInfo)) as NumberFormatInfo;
@@ -140,7 +146,7 @@ namespace SkylineBatch
                 {
                     // Writes the batch commands for steps 1-4 to a file
                     var commandWriter = new CommandWriter(_logger, multiLine, invariantReport);
-                    WriteBatchCommandsToFile(commandWriter, startStep, invariantReport);
+                    WriteBatchCommandsToFile(commandWriter, runOption, invariantReport);
                     _batchFile = commandWriter.GetCommandFile();
                     // Runs steps 1-4
                     var command = string.Format("--batch-commands=\"{0}\"", _batchFile);
@@ -168,7 +174,7 @@ namespace SkylineBatch
             }
 
             // STEP 5: run r scripts using csv files
-            if (startStep <= 5)
+            if (runOption != RunBatchOptions.DOWNLOAD_DATA)
             {
                 var rScriptsRunInformation = Config.GetScriptArguments();
                 foreach (var rScript in rScriptsRunInformation)
@@ -189,10 +195,10 @@ namespace SkylineBatch
             _uiControl?.UpdateUiConfigurations();
         }
 
-        public void WriteBatchCommandsToFile(CommandWriter commandWriter, int startStep, bool invariantReport)
+        public void WriteBatchCommandsToFile(CommandWriter commandWriter, RunBatchOptions runOption, bool invariantReport)
         {
             // STEP 1: open skyline file and save copy to analysis folder
-            if (startStep == 1)
+            if ((int)runOption <= (int)RunBatchOptions.FROM_COPY_TEMPLATE)
             {
                 Config.WriteOpenSkylineTemplateCommand(commandWriter);
                 Config.WriteMsOneCommand(commandWriter);
@@ -202,13 +208,13 @@ namespace SkylineBatch
                 Config.WriteSaveToResultsFile(commandWriter);
                 commandWriter.EndCommandGroup();
             }
-            else if (startStep < 4)
+            else if ((int)runOption < (int)RunBatchOptions.FROM_EXPORT_REPORT)
             {
                 Config.WriteOpenSkylineResultsCommand(commandWriter);
             }
 
             // STEP 2: import data to new skyline file
-            if (startStep <= 2)
+            if ((int)runOption <= (int)RunBatchOptions.FROM_IMPORT_DATA)
             {
                 // import data and train model
                 Config.WriteImportDataCommand(commandWriter);
@@ -220,11 +226,11 @@ namespace SkylineBatch
             }
 
             // STEP 3: refine file and save to new location
-            if (startStep <= 3)
+            if ((int)runOption <= (int)RunBatchOptions.FROM_REFINE)
                 Config.WriteRefineCommands(commandWriter);
 
             // STEP 4: output report(s) for completed analysis
-            if (startStep <= 4)
+            if ((int)runOption <= (int)RunBatchOptions.FROM_EXPORT_REPORT)
             {
                 if (Config.ReportSettings.UsesRefinedFile())
                 {

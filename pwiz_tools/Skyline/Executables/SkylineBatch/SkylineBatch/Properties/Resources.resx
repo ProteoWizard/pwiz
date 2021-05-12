@@ -553,8 +553,8 @@
   <data name="SkylineBatchConfigManager_AssignDependencies_The_following_configurations_use_refined_template_files_from_other_configurations_that_do_not_exist_" xml:space="preserve">
     <value>The following configurations use refined template files from other configurations that do not exist:</value>
   </data>
-  <data name="SkylineBatchConfigManager_StartBatchRun_Running_the_enabled_configurations_from_step__0__would_overwrite_the_following__1__" xml:space="preserve">
-    <value>Running the enabled configurations from step {0} would overwrite the following {1}:</value>
+  <data name="SkylineBatchConfigManager_StartBatchRun_Running_the_enabled_configurations_from___0___would_overwrite_the_following__1__" xml:space="preserve">
+    <value>Running the enabled configurations from "{0}" would overwrite the following {1}:</value>
   </data>
   <data name="SkylineBatchConfigForm_SkylineBatchConfigForm_Editing_configuration___0__" xml:space="preserve">
     <value>Editing configuration "{0}"</value>
@@ -681,5 +681,8 @@
   </data>
   <data name="DataServerControl_ServerRemoved_No_server" xml:space="preserve">
 	  <value>No server</value>
+  </data>
+  <data name="MainForm_UpdateRunBatchSteps_Run_from_step_1__save_analysis_template" xml:space="preserve">
+	  <value>Run from step 1: save analysis template</value>
   </data>
 </root>

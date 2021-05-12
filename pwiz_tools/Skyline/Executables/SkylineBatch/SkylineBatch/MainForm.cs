@@ -17,7 +17,6 @@
  */
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
@@ -73,6 +72,7 @@ namespace SkylineBatch
                 _rDirectorySelector = new RDirectorySelector(this, _configManager);
                 ListViewSizeChanged();
                 UpdateUiLogFiles();
+                UpdateRunBatchSteps();
                 _loaded = true;
             });
         }
@@ -349,24 +349,12 @@ namespace SkylineBatch
 
         private void RunBatch()
         {
-            var running = false;
-            for (int i = 1; i <= batchRunDropDown.Items.Count; i++)
-            {
-                if (((ToolStripMenuItem)batchRunDropDown.Items[i - 1]).Checked)
-                {
-                    var stepNumber = i;
-                    if (!_showRefineStep && i > 3)
-                        stepNumber += 1; // step 3 and 4 become step 4 and 5 when refine step is hidden
+            var stepIndex = GetCheckedRunOptionIndex();
+            if (!_showRefineStep && stepIndex >= (int)RunBatchOptions.FROM_REFINE)
+                stepIndex += 1; // step 3 and 4 become step 4 and 5 when refine step is hidden
 
-                    var downloadFilesOnly = stepNumber == 2;
-                    if (downloadFilesOnly) // download files only
-                        stepNumber = 1000;
-                    if (stepNumber > 2) stepNumber--;
-                    
-                    running = _configManager.StartBatchRun(stepNumber, downloadFilesOnly);
-                    break;
-                }
-            }
+            var runOption = (RunBatchOptions)stepIndex;
+            var running = _configManager.StartBatchRun(runOption);
             // update ui log and switch to log tab
             if (running)
             {
@@ -446,23 +434,27 @@ namespace SkylineBatch
             }
         }
 
+        private int GetCheckedRunOptionIndex()
+        {
+            for (int i = 0; i < batchRunDropDown.Items.Count; i++)
+            {
+                if (((ToolStripMenuItem)batchRunDropDown.Items[i]).Checked)
+                    return i;
+            }
+
+            return 0;
+        }
+
         private void UpdateRunBatchSteps()
         {
-            if (_showRefineStep != _configManager.WillRefine())
+            if (_showRefineStep != _configManager.WillRefine() || !_loaded)
             {
                 _showRefineStep = _configManager.WillRefine();
-                var oldChecked = 0;
-                for (int i = 0; i < batchRunDropDown.Items.Count; i++)
-                {
-                    if (((ToolStripMenuItem)batchRunDropDown.Items[i]).Checked)
-                    {
-                        oldChecked = i;
-                        break;
-                    }
-                }
+                var oldChecked = GetCheckedRunOptionIndex();
                 batchRunDropDown.Items.Clear();
                 batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Run_All_Steps);
                 batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Download_data_only);
+                batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Run_from_step_1__save_analysis_template);
                 batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Run_from_step_2__data_import);
                 if (_showRefineStep)
                 {
@@ -477,9 +469,9 @@ namespace SkylineBatch
                 }
 
                 var newChecked = oldChecked;
-                if (oldChecked == 2 && _showRefineStep)
+                if (oldChecked == (int)RunBatchOptions.FROM_REFINE && _showRefineStep)
                     newChecked += 1;
-                else if (newChecked >= 4)
+                else if (newChecked > (int)RunBatchOptions.FROM_REFINE)
                     newChecked = _showRefineStep ? oldChecked + 1 : oldChecked - 1;
                 
                 CheckDropDownOption(newChecked);

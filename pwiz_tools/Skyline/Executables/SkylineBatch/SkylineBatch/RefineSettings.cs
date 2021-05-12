@@ -95,11 +95,11 @@ namespace SkylineBatch
             }
         }
 
-        public bool RunWillOverwrite(int startStep, string configHeader, out StringBuilder message)
+        public bool RunWillOverwrite(RunBatchOptions runOption, string configHeader, out StringBuilder message)
         {
             var tab = "      ";
             message = new StringBuilder(configHeader);
-            if (startStep != 3)
+            if (runOption != RunBatchOptions.FROM_REFINE)
                 return false;
             if (File.Exists(OutputFilePath))
             {

@@ -231,15 +231,16 @@ namespace SkylineBatch
             return Server.FilesToDownload(DataFolderPath);
         }
 
-        public bool RunWillOverwrite(int startStep, string configHeader, out StringBuilder message)
+        public bool RunWillOverwrite(RunBatchOptions runOption, string configHeader, out StringBuilder message)
         {
             var tab = "      ";
             message = new StringBuilder(configHeader);
             CreateAnalysisFolderIfNonexistent();
             var analysisFolderName = Path.GetFileName(AnalysisFolderPath);
-            switch (startStep)
+            if (runOption == RunBatchOptions.RUN_ALL_STEPS) runOption = RunBatchOptions.FROM_COPY_TEMPLATE;
+            switch (runOption)
             {
-                case 1:
+                case RunBatchOptions.FROM_COPY_TEMPLATE:
                     var resultsFile = GetResultsFilePath();
                     var resultsFileIdentifyer = Path.Combine(analysisFolderName, Path.GetFileName(resultsFile));
                     if (File.Exists(resultsFile) && new FileInfo(TemplateFilePath).Length != new FileInfo(resultsFile).Length)
@@ -250,9 +251,9 @@ namespace SkylineBatch
                         return true;
                     }
                     break;
-                case 2:
-                    var templateSkyds = GetFilesInFolder(Path.GetDirectoryName(TemplateFilePath), TextUtil.EXT_SKYD);
-                    var resultsSkyds = GetFilesInFolder(AnalysisFolderPath, TextUtil.EXT_SKYD);
+                case RunBatchOptions.FROM_IMPORT_DATA:
+                    var templateSkyds = FileUtil.GetFilesInFolder(Path.GetDirectoryName(TemplateFilePath), TextUtil.EXT_SKYD);
+                    var resultsSkyds = FileUtil.GetFilesInFolder(AnalysisFolderPath, TextUtil.EXT_SKYD);
                     var templateSkydSize = templateSkyds.Count == 0 ? 0 : new FileInfo(templateSkyds[0]).Length;
                     var resultsSkydSize = resultsSkyds.Count == 0 ? 0 : new FileInfo(resultsSkyds[0]).Length;
                     if (templateSkydSize < resultsSkydSize)
@@ -263,8 +264,11 @@ namespace SkylineBatch
                         return true;
                     }
                     break;
-                case 4:
-                    var reportFiles = GetFilesInFolder(AnalysisFolderPath, TextUtil.EXT_CSV);
+                case RunBatchOptions.FROM_REFINE:
+                    // pass - handled in refine settings
+                    break;
+                case RunBatchOptions.FROM_EXPORT_REPORT:
+                    var reportFiles = FileUtil.GetFilesInFolder(AnalysisFolderPath, TextUtil.EXT_CSV);
                     if (reportFiles.Count > 0)
                     {
                         foreach (var reportCsv in reportFiles)
@@ -274,26 +278,13 @@ namespace SkylineBatch
                         return true;
                     }
                     break;
-                case 5:
+                case RunBatchOptions.FROM_R_SCRIPTS:
                     // pass
                     break;
                 default:
-                    throw new Exception(startStep + " is not a valid start step.");
+                    throw new Exception(runOption + " is not a valid start step.");
             }
             return false;
-        }
-
-        private List<string> GetFilesInFolder(string folder, string fileType)
-        {
-            var filesWithType = new List<string>();
-            var allFiles = new DirectoryInfo(folder).GetFiles();
-            foreach (var file in allFiles)
-            {
-                if (file.Name.EndsWith(fileType))
-                    filesWithType.Add(file.FullName);
-            }
-
-            return filesWithType;
         }
 
         #region Read/Write XML

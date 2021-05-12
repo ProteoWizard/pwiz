@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Xml;
 using System.IO;
+using System.Text;
 using SharedBatch;
 using SkylineBatch.Properties;
 
@@ -47,6 +48,24 @@ namespace SkylineBatch
             {
                 reportInfo.Validate();
             }
+        }
+
+        public bool RunWillOverwrite(RunBatchOptions runOption, string configHeader, string analysisFolder, out StringBuilder message)
+        {
+            message = new StringBuilder();
+            var tab = "      ";
+            var existingReports = FileUtil.GetFilesInFolder(analysisFolder, TextUtil.EXT_CSV);
+            if (existingReports.Count > 0)
+            {
+                foreach (var report in Reports)
+                {
+                    var reportCsv = Path.Combine(analysisFolder, report.Name + TextUtil.EXT_CSV);
+                    if (existingReports.Contains(reportCsv))
+                        message.Append(tab + tab).Append(report.Name + TextUtil.EXT_CSV).AppendLine();
+                }
+                return message.Length > 0;
+            }
+            return false;
         }
 
         public bool UsesRefinedFile()

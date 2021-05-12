@@ -92,6 +92,19 @@ namespace SharedBatch
             return GetInitialDirectory(directoryName);
         }
 
+        public static List<string> GetFilesInFolder(string folder, string fileType)
+        {
+            var filesWithType = new List<string>();
+            var allFiles = new DirectoryInfo(folder).GetFiles();
+            foreach (var file in allFiles)
+            {
+                if (file.Name.EndsWith(fileType))
+                    filesWithType.Add(file.FullName);
+            }
+
+            return filesWithType;
+        }
+
         public static string GetSafeName(string name)
         {
             var invalidChars = new List<char>();

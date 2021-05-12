@@ -22,21 +22,21 @@ namespace SkylineBatch.Properties {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    public class Resources {
+    internal class Resources {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
         private static global::System.Globalization.CultureInfo resourceCulture;
         
         [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        public Resources() {
+        internal Resources() {
         }
         
         /// <summary>
         ///   Returns the cached ResourceManager instance used by this class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        public static global::System.Resources.ResourceManager ResourceManager {
+        internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
                     global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("SkylineBatch.Properties.Resources", typeof(Resources).Assembly);
@@ -51,7 +51,7 @@ namespace SkylineBatch.Properties {
         ///   resource lookups using this strongly typed resource class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        public static global::System.Globalization.CultureInfo Culture {
+        internal static global::System.Globalization.CultureInfo Culture {
             get {
                 return resourceCulture;
             }
@@ -63,7 +63,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap add {
+        internal static System.Drawing.Bitmap add {
             get {
                 object obj = ResourceManager.GetObject("add", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -73,7 +73,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Verifying.
         /// </summary>
-        public static string AddServerForm_btnAdd_Click_Verifying {
+        internal static string AddServerForm_btnAdd_Click_Verifying {
             get {
                 return ResourceManager.GetString("AddServerForm_btnAdd_Click_Verifying", resourceCulture);
             }
@@ -82,7 +82,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Save.
         /// </summary>
-        public static string AddServerForm_FinishConnectToServer_Save {
+        internal static string AddServerForm_FinishConnectToServer_Save {
             get {
                 return ResourceManager.GetString("AddServerForm_FinishConnectToServer_Save", resourceCulture);
             }
@@ -91,7 +91,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Notice: For faster Skyline Batch runs, use Skyline version {0} or higher..
         /// </summary>
-        public static string CommandWriter_Start_Notice__For_faster_Skyline_Batch_runs__use_Skyline_version__0__or_higher_ {
+        internal static string CommandWriter_Start_Notice__For_faster_Skyline_Batch_runs__use_Skyline_version__0__or_higher_ {
             get {
                 return ResourceManager.GetString("CommandWriter_Start_Notice__For_faster_Skyline_Batch_runs__use_Skyline_version__0" +
                         "__or_higher_", resourceCulture);
@@ -101,7 +101,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap Comment {
+        internal static System.Drawing.Bitmap Comment {
             get {
                 object obj = ResourceManager.GetObject("Comment", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -111,7 +111,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Cannot disable &quot;{0}&quot; while it has status: {1}.
         /// </summary>
-        public static string ConfigManager_CheckConfigAtIndex_Cannot_disable___0___while_it_has_status___1_ {
+        internal static string ConfigManager_CheckConfigAtIndex_Cannot_disable___0___while_it_has_status___1_ {
             get {
                 return ResourceManager.GetString("ConfigManager_CheckConfigAtIndex_Cannot_disable___0___while_it_has_status___1_", resourceCulture);
             }
@@ -120,7 +120,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Please wait until &quot;{0}&quot; has finished running..
         /// </summary>
-        public static string ConfigManager_CheckConfigAtIndex_Please_wait_until___0___has_finished_running_ {
+        internal static string ConfigManager_CheckConfigAtIndex_Please_wait_until___0___has_finished_running_ {
             get {
                 return ResourceManager.GetString("ConfigManager_CheckConfigAtIndex_Please_wait_until___0___has_finished_running_", resourceCulture);
             }
@@ -129,7 +129,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to &quot;{0}&quot; is still running. Please stop the current run before deleting &quot;{0}&quot;..
         /// </summary>
-        public static string ConfigManager_RemoveSelected___0___is_still_running__Please_stop_the_current_run_before_deleting___0___ {
+        internal static string ConfigManager_RemoveSelected___0___is_still_running__Please_stop_the_current_run_before_deleting___0___ {
             get {
                 return ResourceManager.GetString("ConfigManager_RemoveSelected___0___is_still_running__Please_stop_the_current_run_" +
                         "before_deleting___0___", resourceCulture);
@@ -139,7 +139,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Cannot run configurations while &quot;{0}&quot; has an error..
         /// </summary>
-        public static string ConfigManager_RunAll_Cannot_run_configurations_while___0___has_an_error_ {
+        internal static string ConfigManager_RunAll_Cannot_run_configurations_while___0___has_an_error_ {
             get {
                 return ResourceManager.GetString("ConfigManager_RunAll_Cannot_run_configurations_while___0___has_an_error_", resourceCulture);
             }
@@ -148,7 +148,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Cannot run while the following configurations are running:.
         /// </summary>
-        public static string ConfigManager_RunAll_Cannot_run_while_the_following_configurations_are_running_ {
+        internal static string ConfigManager_RunAll_Cannot_run_while_the_following_configurations_are_running_ {
             get {
                 return ResourceManager.GetString("ConfigManager_RunAll_Cannot_run_while_the_following_configurations_are_running_", resourceCulture);
             }
@@ -157,7 +157,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Cannot run while the following configurations have errors:.
         /// </summary>
-        public static string ConfigManager_RunAll_Cannot_run_while_the_following_configurations_have_errors_ {
+        internal static string ConfigManager_RunAll_Cannot_run_while_the_following_configurations_have_errors_ {
             get {
                 return ResourceManager.GetString("ConfigManager_RunAll_Cannot_run_while_the_following_configurations_have_errors_", resourceCulture);
             }
@@ -166,7 +166,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Please edit &quot;{0}&quot; to enable running..
         /// </summary>
-        public static string ConfigManager_RunAll_Please_edit___0___to_enable_running_ {
+        internal static string ConfigManager_RunAll_Please_edit___0___to_enable_running_ {
             get {
                 return ResourceManager.GetString("ConfigManager_RunAll_Please_edit___0___to_enable_running_", resourceCulture);
             }
@@ -175,7 +175,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Please edit these configurations to enable running..
         /// </summary>
-        public static string ConfigManager_RunAll_Please_edit_these_configurations_to_enable_running_ {
+        internal static string ConfigManager_RunAll_Please_edit_these_configurations_to_enable_running_ {
             get {
                 return ResourceManager.GetString("ConfigManager_RunAll_Please_edit_these_configurations_to_enable_running_", resourceCulture);
             }
@@ -184,7 +184,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Please wait until the current run is finished..
         /// </summary>
-        public static string ConfigManager_RunAll_Please_wait_until_the_current_run_is_finished_ {
+        internal static string ConfigManager_RunAll_Please_wait_until_the_current_run_is_finished_ {
             get {
                 return ResourceManager.GetString("ConfigManager_RunAll_Please_wait_until_the_current_run_is_finished_", resourceCulture);
             }
@@ -193,7 +193,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to No log at index: .
         /// </summary>
-        public static string ConfigManager_SelectLog_No_log_at_index__ {
+        internal static string ConfigManager_SelectLog_No_log_at_index__ {
             get {
                 return ResourceManager.GetString("ConfigManager_SelectLog_No_log_at_index__", resourceCulture);
             }
@@ -202,7 +202,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to {0} ({1} of {2}).
         /// </summary>
-        public static string ConfigRunner_DownloadData__0____1__of__2__ {
+        internal static string ConfigRunner_DownloadData__0____1__of__2__ {
             get {
                 return ResourceManager.GetString("ConfigRunner_DownloadData__0____1__of__2__", resourceCulture);
             }
@@ -211,7 +211,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Already downloaded. Skipping..
         /// </summary>
-        public static string ConfigRunner_DownloadData_Already_downloaded__Skipping_ {
+        internal static string ConfigRunner_DownloadData_Already_downloaded__Skipping_ {
             get {
                 return ResourceManager.GetString("ConfigRunner_DownloadData_Already_downloaded__Skipping_", resourceCulture);
             }
@@ -220,7 +220,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to An error occurred while downloading the data files..
         /// </summary>
-        public static string ConfigRunner_DownloadData_An_error_occurred_while_downloading_the_data_files_ {
+        internal static string ConfigRunner_DownloadData_An_error_occurred_while_downloading_the_data_files_ {
             get {
                 return ResourceManager.GetString("ConfigRunner_DownloadData_An_error_occurred_while_downloading_the_data_files_", resourceCulture);
             }
@@ -229,7 +229,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to File download failed..
         /// </summary>
-        public static string ConfigRunner_DownloadData_File_download_failed_ {
+        internal static string ConfigRunner_DownloadData_File_download_failed_ {
             get {
                 return ResourceManager.GetString("ConfigRunner_DownloadData_File_download_failed_", resourceCulture);
             }
@@ -238,7 +238,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Found {0} matching data files on {1}:.
         /// </summary>
-        public static string ConfigRunner_DownloadData_Found__0__matching_data_files_on__1__ {
+        internal static string ConfigRunner_DownloadData_Found__0__matching_data_files_on__1__ {
             get {
                 return ResourceManager.GetString("ConfigRunner_DownloadData_Found__0__matching_data_files_on__1__", resourceCulture);
             }
@@ -247,7 +247,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Skipping {0}. Already downloaded.
         /// </summary>
-        public static string ConfigRunner_DownloadData_Skipping__0___Already_downloaded {
+        internal static string ConfigRunner_DownloadData_Skipping__0___Already_downloaded {
             get {
                 return ResourceManager.GetString("ConfigRunner_DownloadData_Skipping__0___Already_downloaded", resourceCulture);
             }
@@ -256,7 +256,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Starting download....
         /// </summary>
-        public static string ConfigRunner_DownloadData_Starting_download___ {
+        internal static string ConfigRunner_DownloadData_Starting_download___ {
             get {
                 return ResourceManager.GetString("ConfigRunner_DownloadData_Starting_download___", resourceCulture);
             }
@@ -265,7 +265,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to There is not enough remaining disk space to download {0}. Free up some disk space and try again..
         /// </summary>
-        public static string ConfigRunner_DownloadData_There_is_not_enough_remaining_disk_space_to_download__0___Free_up_some_disk_space_and_try_again_ {
+        internal static string ConfigRunner_DownloadData_There_is_not_enough_remaining_disk_space_to_download__0___Free_up_some_disk_space_and_try_again_ {
             get {
                 return ResourceManager.GetString("ConfigRunner_DownloadData_There_is_not_enough_remaining_disk_space_to_download__0" +
                         "___Free_up_some_disk_space_and_try_again_", resourceCulture);
@@ -275,7 +275,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Trying again....
         /// </summary>
-        public static string ConfigRunner_DownloadData_Trying_again___ {
+        internal static string ConfigRunner_DownloadData_Trying_again___ {
             get {
                 return ResourceManager.GetString("ConfigRunner_DownloadData_Trying_again___", resourceCulture);
             }
@@ -284,7 +284,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Process terminated..
         /// </summary>
-        public static string ConfigRunner_ExecuteCommandLine_Process_terminated_ {
+        internal static string ConfigRunner_ExecuteCommandLine_Process_terminated_ {
             get {
                 return ResourceManager.GetString("ConfigRunner_ExecuteCommandLine_Process_terminated_", resourceCulture);
             }
@@ -293,7 +293,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Cannot kill child process..
         /// </summary>
-        public static string ConfigRunner_KillProcessChildren_Cannot_kill_child_process_ {
+        internal static string ConfigRunner_KillProcessChildren_Cannot_kill_child_process_ {
             get {
                 return ResourceManager.GetString("ConfigRunner_KillProcessChildren_Cannot_kill_child_process_", resourceCulture);
             }
@@ -302,7 +302,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Killing {0} processes spawned by the process with Id: {1}.
         /// </summary>
-        public static string ConfigRunner_KillProcessChildren_Killing__0__processes_spawned_by_the_process_with_Id___1_ {
+        internal static string ConfigRunner_KillProcessChildren_Killing__0__processes_spawned_by_the_process_with_Id___1_ {
             get {
                 return ResourceManager.GetString("ConfigRunner_KillProcessChildren_Killing__0__processes_spawned_by_the_process_wit" +
                         "h_Id___1_", resourceCulture);
@@ -312,7 +312,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Killing a processes spawned by the process with Id: {0}.
         /// </summary>
-        public static string ConfigRunner_KillProcessChildren_Killing_a_processes_spawned_by_the_process_with_Id___0_ {
+        internal static string ConfigRunner_KillProcessChildren_Killing_a_processes_spawned_by_the_process_with_Id___0_ {
             get {
                 return ResourceManager.GetString("ConfigRunner_KillProcessChildren_Killing_a_processes_spawned_by_the_process_with_" +
                         "Id___0_", resourceCulture);
@@ -322,7 +322,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Killing child process &quot;{0}&quot; with Id: {1}.
         /// </summary>
-        public static string ConfigRunner_KillProcessChildren_Killing_child_process___0___with_Id___1_ {
+        internal static string ConfigRunner_KillProcessChildren_Killing_child_process___0___with_Id___1_ {
             get {
                 return ResourceManager.GetString("ConfigRunner_KillProcessChildren_Killing_child_process___0___with_Id___1_", resourceCulture);
             }
@@ -331,7 +331,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to The child process has already been terminated..
         /// </summary>
-        public static string ConfigRunner_KillProcessChildren_The_child_process_has_already_been_terminated_ {
+        internal static string ConfigRunner_KillProcessChildren_The_child_process_has_already_been_terminated_ {
             get {
                 return ResourceManager.GetString("ConfigRunner_KillProcessChildren_The_child_process_has_already_been_terminated_", resourceCulture);
             }
@@ -340,7 +340,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to ------------------------------ {0}: {1} -------------------------------.
         /// </summary>
-        public static string ConfigRunner_Run_________________________________0____1_________________________________ {
+        internal static string ConfigRunner_Run_________________________________0____1_________________________________ {
             get {
                 return ResourceManager.GetString("ConfigRunner_Run_________________________________0____1__________________________" +
                         "_______", resourceCulture);
@@ -350,7 +350,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to ------------------------------ Starting Configuration: {0} -------------------------------.
         /// </summary>
-        public static string ConfigRunner_Run________________________________Starting_Configuration___0_________________________________ {
+        internal static string ConfigRunner_Run________________________________Starting_Configuration___0_________________________________ {
             get {
                 return ResourceManager.GetString("ConfigRunner_Run________________________________Starting_Configuration___0_______" +
                         "__________________________", resourceCulture);
@@ -360,7 +360,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Converting {0} to invariant format....
         /// </summary>
-        public static string ConfigRunner_Run_Converting__0__to_invariant_format___ {
+        internal static string ConfigRunner_Run_Converting__0__to_invariant_format___ {
             get {
                 return ResourceManager.GetString("ConfigRunner_Run_Converting__0__to_invariant_format___", resourceCulture);
             }
@@ -369,7 +369,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Reading {0}.
         /// </summary>
-        public static string ConfigRunner_Run_Reading__0_ {
+        internal static string ConfigRunner_Run_Reading__0_ {
             get {
                 return ResourceManager.GetString("ConfigRunner_Run_Reading__0_", resourceCulture);
             }
@@ -378,7 +378,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Saving {0}.
         /// </summary>
-        public static string ConfigRunner_Run_Saving__0_ {
+        internal static string ConfigRunner_Run_Saving__0_ {
             get {
                 return ResourceManager.GetString("ConfigRunner_Run_Saving__0_", resourceCulture);
             }
@@ -387,7 +387,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Updating {0}.
         /// </summary>
-        public static string ConfigRunner_Run_Updating__0_ {
+        internal static string ConfigRunner_Run_Updating__0_ {
             get {
                 return ResourceManager.GetString("ConfigRunner_Run_Updating__0_", resourceCulture);
             }
@@ -396,7 +396,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Connected.
         /// </summary>
-        public static string DataServerControl_ServerConnected_Connected {
+        internal static string DataServerControl_ServerConnected_Connected {
             get {
                 return ResourceManager.GetString("DataServerControl_ServerConnected_Connected", resourceCulture);
             }
@@ -405,7 +405,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to No server.
         /// </summary>
-        public static string DataServerControl_ServerRemoved_No_server {
+        internal static string DataServerControl_ServerRemoved_No_server {
             get {
                 return ResourceManager.GetString("DataServerControl_ServerRemoved_No_server", resourceCulture);
             }
@@ -414,7 +414,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to None of the file names on the server matched the regular expression: {0}.
         /// </summary>
-        public static string DataServerInfo_Validate_None_of_the_file_names_on_the_server_matched_the_regular_expression___0_ {
+        internal static string DataServerInfo_Validate_None_of_the_file_names_on_the_server_matched_the_regular_expression___0_ {
             get {
                 return ResourceManager.GetString("DataServerInfo_Validate_None_of_the_file_names_on_the_server_matched_the_regular_" +
                         "expression___0_", resourceCulture);
@@ -424,7 +424,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Please make sure your regular expression is correct..
         /// </summary>
-        public static string DataServerInfo_Validate_Please_make_sure_your_regular_expression_is_correct_ {
+        internal static string DataServerInfo_Validate_Please_make_sure_your_regular_expression_is_correct_ {
             get {
                 return ResourceManager.GetString("DataServerInfo_Validate_Please_make_sure_your_regular_expression_is_correct_", resourceCulture);
             }
@@ -433,7 +433,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to There was an error connecting to {0}: {1}.
         /// </summary>
-        public static string DataServerInfo_Validate_There_was_an_error_connecting_to__0____1_ {
+        internal static string DataServerInfo_Validate_There_was_an_error_connecting_to__0____1_ {
             get {
                 return ResourceManager.GetString("DataServerInfo_Validate_There_was_an_error_connecting_to__0____1_", resourceCulture);
             }
@@ -442,7 +442,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to There were no files found at {0}. Make sure the URL, username, and password are correct and try again..
         /// </summary>
-        public static string DataServerInfo_Validate_There_were_no_files_found_at__0___Make_sure_the_URL__username__and_password_are_correct_and_try_again_ {
+        internal static string DataServerInfo_Validate_There_were_no_files_found_at__0___Make_sure_the_URL__username__and_password_are_correct_and_try_again_ {
             get {
                 return ResourceManager.GetString("DataServerInfo_Validate_There_were_no_files_found_at__0___Make_sure_the_URL__user" +
                         "name__and_password_are_correct_and_try_again_", resourceCulture);
@@ -452,7 +452,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to A data naming pattern is required for downloaded data. Please add a data naming pattern..
         /// </summary>
-        public static string DataServerInfo_ValidateNamingPattern_A_data_naming_pattern_is_required_for_downloaded_data__Please_add_a_data_naming_pattern_ {
+        internal static string DataServerInfo_ValidateNamingPattern_A_data_naming_pattern_is_required_for_downloaded_data__Please_add_a_data_naming_pattern_ {
             get {
                 return ResourceManager.GetString("DataServerInfo_ValidateNamingPattern_A_data_naming_pattern_is_required_for_downlo" +
                         "aded_data__Please_add_a_data_naming_pattern_", resourceCulture);
@@ -462,7 +462,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap Delete {
+        internal static System.Drawing.Bitmap Delete {
             get {
                 object obj = ResourceManager.GetObject("Delete", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -472,7 +472,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap downarrow {
+        internal static System.Drawing.Bitmap downarrow {
             get {
                 object obj = ResourceManager.GetObject("downarrow", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -482,7 +482,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap download {
+        internal static System.Drawing.Bitmap download {
             get {
                 object obj = ResourceManager.GetObject("download", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -492,7 +492,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap downloadSelected {
+        internal static System.Drawing.Bitmap downloadSelected {
             get {
                 object obj = ResourceManager.GetObject("downloadSelected", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -502,7 +502,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap downtriangle1 {
+        internal static System.Drawing.Bitmap downtriangle1 {
             get {
                 object obj = ResourceManager.GetObject("downtriangle1", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -512,7 +512,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Ms/Ms filtering res/accuracy.
         /// </summary>
-        public static string FileSettings_Validate_Ms_Ms_filtering_res_accuracy {
+        internal static string FileSettings_Validate_Ms_Ms_filtering_res_accuracy {
             get {
                 return ResourceManager.GetString("FileSettings_Validate_Ms_Ms_filtering_res_accuracy", resourceCulture);
             }
@@ -521,7 +521,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to MS1 filtering res/accuracy.
         /// </summary>
-        public static string FileSettings_Validate_MS1_filtering_res_accuracy {
+        internal static string FileSettings_Validate_MS1_filtering_res_accuracy {
             get {
                 return ResourceManager.GetString("FileSettings_Validate_MS1_filtering_res_accuracy", resourceCulture);
             }
@@ -530,7 +530,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to retention time filtering.
         /// </summary>
-        public static string FileSettings_Validate_retention_time_filtering {
+        internal static string FileSettings_Validate_retention_time_filtering {
             get {
                 return ResourceManager.GetString("FileSettings_Validate_retention_time_filtering", resourceCulture);
             }
@@ -539,7 +539,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Please enter a positive integer..
         /// </summary>
-        public static string FileSettings_ValidateNonNegative_Please_enter_a_positive_integer_ {
+        internal static string FileSettings_ValidateNonNegative_Please_enter_a_positive_integer_ {
             get {
                 return ResourceManager.GetString("FileSettings_ValidateNonNegative_Please_enter_a_positive_integer_", resourceCulture);
             }
@@ -548,7 +548,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to The {0} cannot be less than zero..
         /// </summary>
-        public static string FileSettings_ValidateNonNegative_The__0__cannot_be_less_than_zero_ {
+        internal static string FileSettings_ValidateNonNegative_The__0__cannot_be_less_than_zero_ {
             get {
                 return ResourceManager.GetString("FileSettings_ValidateNonNegative_The__0__cannot_be_less_than_zero_", resourceCulture);
             }
@@ -557,7 +557,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to analysis folder.
         /// </summary>
-        public static string InvalidConfigSetupForm_FixInvalidMainSettings_analysis_folder {
+        internal static string InvalidConfigSetupForm_FixInvalidMainSettings_analysis_folder {
             get {
                 return ResourceManager.GetString("InvalidConfigSetupForm_FixInvalidMainSettings_analysis_folder", resourceCulture);
             }
@@ -566,7 +566,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to annotations file.
         /// </summary>
-        public static string InvalidConfigSetupForm_FixInvalidMainSettings_annotations_file {
+        internal static string InvalidConfigSetupForm_FixInvalidMainSettings_annotations_file {
             get {
                 return ResourceManager.GetString("InvalidConfigSetupForm_FixInvalidMainSettings_annotations_file", resourceCulture);
             }
@@ -575,7 +575,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to data folder.
         /// </summary>
-        public static string InvalidConfigSetupForm_FixInvalidMainSettings_data_folder {
+        internal static string InvalidConfigSetupForm_FixInvalidMainSettings_data_folder {
             get {
                 return ResourceManager.GetString("InvalidConfigSetupForm_FixInvalidMainSettings_data_folder", resourceCulture);
             }
@@ -584,7 +584,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Skyline template file.
         /// </summary>
-        public static string InvalidConfigSetupForm_FixInvalidMainSettings_Skyline_template_file {
+        internal static string InvalidConfigSetupForm_FixInvalidMainSettings_Skyline_template_file {
             get {
                 return ResourceManager.GetString("InvalidConfigSetupForm_FixInvalidMainSettings_Skyline_template_file", resourceCulture);
             }
@@ -593,7 +593,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to path to the refined output file.
         /// </summary>
-        public static string InvalidConfigSetupForm_FixInvalidRefineSettings_path_to_the_refined_output_file {
+        internal static string InvalidConfigSetupForm_FixInvalidRefineSettings_path_to_the_refined_output_file {
             get {
                 return ResourceManager.GetString("InvalidConfigSetupForm_FixInvalidRefineSettings_path_to_the_refined_output_file", resourceCulture);
             }
@@ -602,7 +602,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to {0} R script.
         /// </summary>
-        public static string InvalidConfigSetupForm_FixInvalidReportSettings__0__R_script {
+        internal static string InvalidConfigSetupForm_FixInvalidReportSettings__0__R_script {
             get {
                 return ResourceManager.GetString("InvalidConfigSetupForm_FixInvalidReportSettings__0__R_script", resourceCulture);
             }
@@ -611,7 +611,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to {0} report.
         /// </summary>
-        public static string InvalidConfigSetupForm_FixInvalidReportSettings__0__report {
+        internal static string InvalidConfigSetupForm_FixInvalidReportSettings__0__report {
             get {
                 return ResourceManager.GetString("InvalidConfigSetupForm_FixInvalidReportSettings__0__report", resourceCulture);
             }
@@ -620,7 +620,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to ... Log truncated ... Full log is in {0}.
         /// </summary>
-        public static string Logger_DisplayLog_____Log_truncated_____Full_log_is_in__0_ {
+        internal static string Logger_DisplayLog_____Log_truncated_____Full_log_is_in__0_ {
             get {
                 return ResourceManager.GetString("Logger_DisplayLog_____Log_truncated_____Full_log_is_in__0_", resourceCulture);
             }
@@ -629,7 +629,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Creating a new configuration..
         /// </summary>
-        public static string MainForm_btnNewConfig_Click_Creating_a_new_configuration_ {
+        internal static string MainForm_btnNewConfig_Click_Creating_a_new_configuration_ {
             get {
                 return ResourceManager.GetString("MainForm_btnNewConfig_Click_Creating_a_new_configuration_", resourceCulture);
             }
@@ -638,7 +638,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to analysis folder.
         /// </summary>
-        public static string MainForm_btnOpenAnalysis_Click_analysis_folder {
+        internal static string MainForm_btnOpenAnalysis_Click_analysis_folder {
             get {
                 return ResourceManager.GetString("MainForm_btnOpenAnalysis_Click_analysis_folder", resourceCulture);
             }
@@ -647,7 +647,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Please run &quot;{0}&quot; from step 1 and try again..
         /// </summary>
-        public static string MainForm_btnOpenResults_Click_Please_run___0___from_step_one_and_try_again_ {
+        internal static string MainForm_btnOpenResults_Click_Please_run___0___from_step_one_and_try_again_ {
             get {
                 return ResourceManager.GetString("MainForm_btnOpenResults_Click_Please_run___0___from_step_one_and_try_again_", resourceCulture);
             }
@@ -656,7 +656,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Skyline results file.
         /// </summary>
-        public static string MainForm_btnOpenResults_Click_Skyline_results_file {
+        internal static string MainForm_btnOpenResults_Click_Skyline_results_file {
             get {
                 return ResourceManager.GetString("MainForm_btnOpenResults_Click_Skyline_results_file", resourceCulture);
             }
@@ -665,7 +665,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to The Skyline results file for this configuration has not been generated yet..
         /// </summary>
-        public static string MainForm_btnOpenResults_Click_The_Skyline_results_file_for_this_configuration_has_not_been_generated_yet_ {
+        internal static string MainForm_btnOpenResults_Click_The_Skyline_results_file_for_this_configuration_has_not_been_generated_yet_ {
             get {
                 return ResourceManager.GetString("MainForm_btnOpenResults_Click_The_Skyline_results_file_for_this_configuration_has" +
                         "_not_been_generated_yet_", resourceCulture);
@@ -675,7 +675,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Skyline template file.
         /// </summary>
-        public static string MainForm_btnOpenTemplate_Click_Skyline_template_file {
+        internal static string MainForm_btnOpenTemplate_Click_Skyline_template_file {
             get {
                 return ResourceManager.GetString("MainForm_btnOpenTemplate_Click_Skyline_template_file", resourceCulture);
             }
@@ -684,7 +684,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Importing configurations from {0}....
         /// </summary>
-        public static string MainForm_DoImport_Importing_configurations_from__0____ {
+        internal static string MainForm_DoImport_Importing_configurations_from__0____ {
             get {
                 return ResourceManager.GetString("MainForm_DoImport_Importing_configurations_from__0____", resourceCulture);
             }
@@ -693,7 +693,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Do you want to import configurations from {0}?.
         /// </summary>
-        public static string MainForm_FileOpenedImport_Do_you_want_to_import_configurations_from__0__ {
+        internal static string MainForm_FileOpenedImport_Do_you_want_to_import_configurations_from__0__ {
             get {
                 return ResourceManager.GetString("MainForm_FileOpenedImport_Do_you_want_to_import_configurations_from__0__", resourceCulture);
             }
@@ -702,7 +702,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Cannot enable &quot;{0}&quot; while it is invalid..
         /// </summary>
-        public static string MainForm_listViewConfigs_ItemCheck_Cannot_enable___0___while_it_is_invalid_ {
+        internal static string MainForm_listViewConfigs_ItemCheck_Cannot_enable___0___while_it_is_invalid_ {
             get {
                 return ResourceManager.GetString("MainForm_listViewConfigs_ItemCheck_Cannot_enable___0___while_it_is_invalid_", resourceCulture);
             }
@@ -711,7 +711,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Loading configurations from saved settings..
         /// </summary>
-        public static string MainForm_MainForm_Loading_configurations_from_saved_settings_ {
+        internal static string MainForm_MainForm_Loading_configurations_from_saved_settings_ {
             get {
                 return ResourceManager.GetString("MainForm_MainForm_Loading_configurations_from_saved_settings_", resourceCulture);
             }
@@ -720,7 +720,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Loading configurations from saved settings....
         /// </summary>
-        public static string MainForm_MainForm_Loading_configurations_from_saved_settings___ {
+        internal static string MainForm_MainForm_Loading_configurations_from_saved_settings___ {
             get {
                 return ResourceManager.GetString("MainForm_MainForm_Loading_configurations_from_saved_settings___", resourceCulture);
             }
@@ -729,7 +729,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Do you want to use this Skyline version for all configurations?.
         /// </summary>
-        public static string MainForm_ReplaceAllSkylineVersions_Do_you_want_to_use_this_Skyline_version_for_all_configurations_ {
+        internal static string MainForm_ReplaceAllSkylineVersions_Do_you_want_to_use_this_Skyline_version_for_all_configurations_ {
             get {
                 return ResourceManager.GetString("MainForm_ReplaceAllSkylineVersions_Do_you_want_to_use_this_Skyline_version_for_al" +
                         "l_configurations_", resourceCulture);
@@ -739,7 +739,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to ... Log truncated ....
         /// </summary>
-        public static string MainForm_TrimDisplayedLog_____Log_truncated____ {
+        internal static string MainForm_TrimDisplayedLog_____Log_truncated____ {
             get {
                 return ResourceManager.GetString("MainForm_TrimDisplayedLog_____Log_truncated____", resourceCulture);
             }
@@ -748,7 +748,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Cannot add &quot;{0}&quot; because there is another configuration with the same name..
         /// </summary>
-        public static string MainForm_TryExecuteOperation_Cannot_add___0___because_there_is_another_configuration_with_the_same_name_ {
+        internal static string MainForm_TryExecuteOperation_Cannot_add___0___because_there_is_another_configuration_with_the_same_name_ {
             get {
                 return ResourceManager.GetString("MainForm_TryExecuteOperation_Cannot_add___0___because_there_is_another_configurat" +
                         "ion_with_the_same_name_", resourceCulture);
@@ -758,7 +758,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Please choose a unique name..
         /// </summary>
-        public static string MainForm_TryExecuteOperation_Please_choose_a_unique_name_ {
+        internal static string MainForm_TryExecuteOperation_Please_choose_a_unique_name_ {
             get {
                 return ResourceManager.GetString("MainForm_TryExecuteOperation_Please_choose_a_unique_name_", resourceCulture);
             }
@@ -767,7 +767,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Download files only.
         /// </summary>
-        public static string MainForm_UpdateRunBatchSteps_Download_data_only {
+        internal static string MainForm_UpdateRunBatchSteps_Download_data_only {
             get {
                 return ResourceManager.GetString("MainForm_UpdateRunBatchSteps_Download_data_only", resourceCulture);
             }
@@ -776,16 +776,25 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Run All Steps.
         /// </summary>
-        public static string MainForm_UpdateRunBatchSteps_Run_All_Steps {
+        internal static string MainForm_UpdateRunBatchSteps_Run_All_Steps {
             get {
                 return ResourceManager.GetString("MainForm_UpdateRunBatchSteps_Run_All_Steps", resourceCulture);
             }
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Run from step 1: save analysis template.
+        /// </summary>
+        internal static string MainForm_UpdateRunBatchSteps_Run_from_step_1__save_analysis_template {
+            get {
+                return ResourceManager.GetString("MainForm_UpdateRunBatchSteps_Run_from_step_1__save_analysis_template", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Run from step 2: data import.
         /// </summary>
-        public static string MainForm_UpdateRunBatchSteps_Run_from_step_2__data_import {
+        internal static string MainForm_UpdateRunBatchSteps_Run_from_step_2__data_import {
             get {
                 return ResourceManager.GetString("MainForm_UpdateRunBatchSteps_Run_from_step_2__data_import", resourceCulture);
             }
@@ -794,7 +803,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Run from step 3: export reports.
         /// </summary>
-        public static string MainForm_UpdateRunBatchSteps_Run_from_step_3__export_reports {
+        internal static string MainForm_UpdateRunBatchSteps_Run_from_step_3__export_reports {
             get {
                 return ResourceManager.GetString("MainForm_UpdateRunBatchSteps_Run_from_step_3__export_reports", resourceCulture);
             }
@@ -803,7 +812,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Run from step 3: refine file.
         /// </summary>
-        public static string MainForm_UpdateRunBatchSteps_Run_from_step_3__refine_file {
+        internal static string MainForm_UpdateRunBatchSteps_Run_from_step_3__refine_file {
             get {
                 return ResourceManager.GetString("MainForm_UpdateRunBatchSteps_Run_from_step_3__refine_file", resourceCulture);
             }
@@ -812,7 +821,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Run from step 4: export reports.
         /// </summary>
-        public static string MainForm_UpdateRunBatchSteps_Run_from_step_4__export_reports {
+        internal static string MainForm_UpdateRunBatchSteps_Run_from_step_4__export_reports {
             get {
                 return ResourceManager.GetString("MainForm_UpdateRunBatchSteps_Run_from_step_4__export_reports", resourceCulture);
             }
@@ -821,7 +830,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Run from step 4: run R scripts.
         /// </summary>
-        public static string MainForm_UpdateRunBatchSteps_Run_from_step_4__run_R_scripts {
+        internal static string MainForm_UpdateRunBatchSteps_Run_from_step_4__run_R_scripts {
             get {
                 return ResourceManager.GetString("MainForm_UpdateRunBatchSteps_Run_from_step_4__run_R_scripts", resourceCulture);
             }
@@ -830,7 +839,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Run from step 5: run R scripts.
         /// </summary>
-        public static string MainForm_UpdateRunBatchSteps_Run_from_step_5__run_R_scripts {
+        internal static string MainForm_UpdateRunBatchSteps_Run_from_step_5__run_R_scripts {
             get {
                 return ResourceManager.GetString("MainForm_UpdateRunBatchSteps_Run_from_step_5__run_R_scripts", resourceCulture);
             }
@@ -839,7 +848,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to The data folder cannot be empty. Please choose a folder with at least one data file..
         /// </summary>
-        public static string MainSettings_ValidateAllButServer_The_data_folder_cannot_be_empty__Please_choose_a_folder_with_at_least_one_data_file_ {
+        internal static string MainSettings_ValidateAllButServer_The_data_folder_cannot_be_empty__Please_choose_a_folder_with_at_least_one_data_file_ {
             get {
                 return ResourceManager.GetString("MainSettings_ValidateAllButServer_The_data_folder_cannot_be_empty__Please_choose_" +
                         "a_folder_with_at_least_one_data_file_", resourceCulture);
@@ -849,7 +858,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to analysis folder.
         /// </summary>
-        public static string MainSettings_ValidateAnalysisFolder_analysis_folder {
+        internal static string MainSettings_ValidateAnalysisFolder_analysis_folder {
             get {
                 return ResourceManager.GetString("MainSettings_ValidateAnalysisFolder_analysis_folder", resourceCulture);
             }
@@ -858,7 +867,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Please provide a valid folder..
         /// </summary>
-        public static string MainSettings_ValidateAnalysisFolder_Please_provide_a_valid_folder_ {
+        internal static string MainSettings_ValidateAnalysisFolder_Please_provide_a_valid_folder_ {
             get {
                 return ResourceManager.GetString("MainSettings_ValidateAnalysisFolder_Please_provide_a_valid_folder_", resourceCulture);
             }
@@ -867,7 +876,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to The parent directory of the analysis folder {0} does not exist..
         /// </summary>
-        public static string MainSettings_ValidateAnalysisFolder_The__parent_directory_of_the_analysis_folder__0__does_not_exist_ {
+        internal static string MainSettings_ValidateAnalysisFolder_The__parent_directory_of_the_analysis_folder__0__does_not_exist_ {
             get {
                 return ResourceManager.GetString("MainSettings_ValidateAnalysisFolder_The__parent_directory_of_the_analysis_folder_" +
                         "_0__does_not_exist_", resourceCulture);
@@ -877,7 +886,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to annotations file.
         /// </summary>
-        public static string MainSettings_ValidateAnnotationsFile_annotations_file {
+        internal static string MainSettings_ValidateAnnotationsFile_annotations_file {
             get {
                 return ResourceManager.GetString("MainSettings_ValidateAnnotationsFile_annotations_file", resourceCulture);
             }
@@ -886,7 +895,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Please enter a valid file path, or no text if you do not wish to include annotations..
         /// </summary>
-        public static string MainSettings_ValidateAnnotationsFolder_Please_enter_a_valid_file_path__or_no_text_if_you_do_not_wish_to_include_annotations_ {
+        internal static string MainSettings_ValidateAnnotationsFolder_Please_enter_a_valid_file_path__or_no_text_if_you_do_not_wish_to_include_annotations_ {
             get {
                 return ResourceManager.GetString("MainSettings_ValidateAnnotationsFolder_Please_enter_a_valid_file_path__or_no_text" +
                         "_if_you_do_not_wish_to_include_annotations_", resourceCulture);
@@ -896,7 +905,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to The annotations file {0} does not exist..
         /// </summary>
-        public static string MainSettings_ValidateAnnotationsFolder_The_annotations_file__0__does_not_exist_ {
+        internal static string MainSettings_ValidateAnnotationsFolder_The_annotations_file__0__does_not_exist_ {
             get {
                 return ResourceManager.GetString("MainSettings_ValidateAnnotationsFolder_The_annotations_file__0__does_not_exist_", resourceCulture);
             }
@@ -905,7 +914,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to data folder.
         /// </summary>
-        public static string MainSettings_ValidateDataFolder_data_folder {
+        internal static string MainSettings_ValidateDataFolder_data_folder {
             get {
                 return ResourceManager.GetString("MainSettings_ValidateDataFolder_data_folder", resourceCulture);
             }
@@ -914,7 +923,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to The data folder {0} does not exist..
         /// </summary>
-        public static string MainSettings_ValidateDataFolder_The_data_folder__0__does_not_exist_ {
+        internal static string MainSettings_ValidateDataFolder_The_data_folder__0__does_not_exist_ {
             get {
                 return ResourceManager.GetString("MainSettings_ValidateDataFolder_The_data_folder__0__does_not_exist_", resourceCulture);
             }
@@ -923,7 +932,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Please provide a valid file..
         /// </summary>
-        public static string MainSettings_ValidateSkylineFile_Please_provide_a_valid_file_ {
+        internal static string MainSettings_ValidateSkylineFile_Please_provide_a_valid_file_ {
             get {
                 return ResourceManager.GetString("MainSettings_ValidateSkylineFile_Please_provide_a_valid_file_", resourceCulture);
             }
@@ -932,7 +941,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Skyline file.
         /// </summary>
-        public static string MainSettings_ValidateSkylineFile_Skyline_file {
+        internal static string MainSettings_ValidateSkylineFile_Skyline_file {
             get {
                 return ResourceManager.GetString("MainSettings_ValidateSkylineFile_Skyline_file", resourceCulture);
             }
@@ -941,7 +950,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to The Skyline template file {0} does not exist..
         /// </summary>
-        public static string MainSettings_ValidateSkylineFile_The_Skyline_template_file__0__does_not_exist_ {
+        internal static string MainSettings_ValidateSkylineFile_The_Skyline_template_file__0__does_not_exist_ {
             get {
                 return ResourceManager.GetString("MainSettings_ValidateSkylineFile_The_Skyline_template_file__0__does_not_exist_", resourceCulture);
             }
@@ -950,7 +959,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to The Skyline template file for this configuration does not exist..
         /// </summary>
-        public static string MainSettings_ValidateTemplateFile_The_Skyline_template_file_for_this_configuration_does_not_exist_ {
+        internal static string MainSettings_ValidateTemplateFile_The_Skyline_template_file_for_this_configuration_does_not_exist_ {
             get {
                 return ResourceManager.GetString("MainSettings_ValidateTemplateFile_The_Skyline_template_file_for_this_configuratio" +
                         "n_does_not_exist_", resourceCulture);
@@ -960,7 +969,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Will another configuration generate {0} before this configuration runs?.
         /// </summary>
-        public static string MainSettings_ValidateTemplateFile_Will_another_configuration_generate__0__before_this_configuration_runs_ {
+        internal static string MainSettings_ValidateTemplateFile_Will_another_configuration_generate__0__before_this_configuration_runs_ {
             get {
                 return ResourceManager.GetString("MainSettings_ValidateTemplateFile_Will_another_configuration_generate__0__before_" +
                         "this_configuration_runs_", resourceCulture);
@@ -970,7 +979,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap OpenFolder {
+        internal static System.Drawing.Bitmap OpenFolder {
             get {
                 object obj = ResourceManager.GetObject("OpenFolder", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -980,7 +989,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Skyline Batch Configuration File.
         /// </summary>
-        public static string Program_AddFileTypesToRegistry_Skyline_Batch_Configuration_File {
+        internal static string Program_AddFileTypesToRegistry_Skyline_Batch_Configuration_File {
             get {
                 return ResourceManager.GetString("Program_AddFileTypesToRegistry_Skyline_Batch_Configuration_File", resourceCulture);
             }
@@ -989,7 +998,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to {0} requires Skyline to run..
         /// </summary>
-        public static string Program_InitSkylineSettings__0__requires_Skyline_to_run_ {
+        internal static string Program_InitSkylineSettings__0__requires_Skyline_to_run_ {
             get {
                 return ResourceManager.GetString("Program_InitSkylineSettings__0__requires_Skyline_to_run_", resourceCulture);
             }
@@ -998,7 +1007,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Please install Skyline to start {0}..
         /// </summary>
-        public static string Program_InitSkylineSettings_Please_install_Skyline_to_start__0__ {
+        internal static string Program_InitSkylineSettings_Please_install_Skyline_to_start__0__ {
             get {
                 return ResourceManager.GetString("Program_InitSkylineSettings_Please_install_Skyline_to_start__0__", resourceCulture);
             }
@@ -1007,7 +1016,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to {0} encountered an unexpected error.
         /// </summary>
-        public static string Program_Main__0__encountered_an_unexpected_error {
+        internal static string Program_Main__0__encountered_an_unexpected_error {
             get {
                 return ResourceManager.GetString("Program_Main__0__encountered_an_unexpected_error", resourceCulture);
             }
@@ -1016,7 +1025,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to An unexpected error occured during initialization..
         /// </summary>
-        public static string Program_Main_An_unexpected_error_occured_during_initialization_ {
+        internal static string Program_Main_An_unexpected_error_occured_during_initialization_ {
             get {
                 return ResourceManager.GetString("Program_Main_An_unexpected_error_occured_during_initialization_", resourceCulture);
             }
@@ -1025,7 +1034,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Another instance of {0} is already running..
         /// </summary>
-        public static string Program_Main_Another_instance_of__0__is_already_running_ {
+        internal static string Program_Main_Another_instance_of__0__is_already_running_ {
             get {
                 return ResourceManager.GetString("Program_Main_Another_instance_of__0__is_already_running_", resourceCulture);
             }
@@ -1034,7 +1043,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Error details may be found in the file: {0}..
         /// </summary>
-        public static string Program_Main_Error_details_may_be_found_in_the_file__0_ {
+        internal static string Program_Main_Error_details_may_be_found_in_the_file__0_ {
             get {
                 return ResourceManager.GetString("Program_Main_Error_details_may_be_found_in_the_file__0_", resourceCulture);
             }
@@ -1043,7 +1052,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Error details may be found in the SkylineBatchProgram.log file in this directory : {0}.
         /// </summary>
-        public static string Program_Main_Error_details_may_be_found_in_the_SkylineBatchProgram_log_file_in_this_directory____0_ {
+        internal static string Program_Main_Error_details_may_be_found_in_the_SkylineBatchProgram_log_file_in_this_directory____0_ {
             get {
                 return ResourceManager.GetString("Program_Main_Error_details_may_be_found_in_the_SkylineBatchProgram_log_file_in_th" +
                         "is_directory____0_", resourceCulture);
@@ -1053,7 +1062,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Saved configurations were found in: {0}.
         /// </summary>
-        public static string Program_Main_Saved_configurations_were_found_in___0_ {
+        internal static string Program_Main_Saved_configurations_were_found_in___0_ {
             get {
                 return ResourceManager.GetString("Program_Main_Saved_configurations_were_found_in___0_", resourceCulture);
             }
@@ -1062,7 +1071,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to There was an error reading the saved configurations from an earlier version of {0}. Please restart the program and try again..
         /// </summary>
-        public static string Program_Main_There_was_an_error_reading_the_saved_configurations_from_an_earlier_version_of__0___Please_restart_the_program_and_try_again_ {
+        internal static string Program_Main_There_was_an_error_reading_the_saved_configurations_from_an_earlier_version_of__0___Please_restart_the_program_and_try_again_ {
             get {
                 return ResourceManager.GetString("Program_Main_There_was_an_error_reading_the_saved_configurations_from_an_earlier_" +
                         "version_of__0___Please_restart_the_program_and_try_again_", resourceCulture);
@@ -1072,7 +1081,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to To help improve {0} in future versions, please post the configuration file to the Skyline Support board:.
         /// </summary>
-        public static string Program_Main_To_help_improve__0__in_future_versions__please_post_the_configuration_file_to_the_Skyline_Support_board_ {
+        internal static string Program_Main_To_help_improve__0__in_future_versions__please_post_the_configuration_file_to_the_Skyline_Support_board_ {
             get {
                 return ResourceManager.GetString("Program_Main_To_help_improve__0__in_future_versions__please_post_the_configuratio" +
                         "n_file_to_the_Skyline_Support_board_", resourceCulture);
@@ -1082,7 +1091,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to The following R installations were not found by {0}:.
         /// </summary>
-        public static string RDirectorySelector_AddIfNecassary_The_following_R_installations_were_not_found_by__0__ {
+        internal static string RDirectorySelector_AddIfNecassary_The_following_R_installations_were_not_found_by__0__ {
             get {
                 return ResourceManager.GetString("RDirectorySelector_AddIfNecassary_The_following_R_installations_were_not_found_by" +
                         "__0__", resourceCulture);
@@ -1092,7 +1101,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Would you like to add an R installation directory?.
         /// </summary>
-        public static string RDirectorySelector_AddIfNecassary_Would_you_like_to_add_an_R_installation_directory_ {
+        internal static string RDirectorySelector_AddIfNecassary_Would_you_like_to_add_an_R_installation_directory_ {
             get {
                 return ResourceManager.GetString("RDirectorySelector_AddIfNecassary_Would_you_like_to_add_an_R_installation_directo" +
                         "ry_", resourceCulture);
@@ -1102,7 +1111,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Cannot save the refined file to {0}.
         /// </summary>
-        public static string RefineSettings_Validate_Cannot_save_the_refined_file_to__0_ {
+        internal static string RefineSettings_Validate_Cannot_save_the_refined_file_to__0_ {
             get {
                 return ResourceManager.GetString("RefineSettings_Validate_Cannot_save_the_refined_file_to__0_", resourceCulture);
             }
@@ -1111,7 +1120,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to CV cutoff.
         /// </summary>
-        public static string RefineSettings_Validate_CV_cutoff {
+        internal static string RefineSettings_Validate_CV_cutoff {
             get {
                 return ResourceManager.GetString("RefineSettings_Validate_CV_cutoff", resourceCulture);
             }
@@ -1120,7 +1129,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to minimum detections allowed.
         /// </summary>
-        public static string RefineSettings_Validate_minimum_detections_allowed {
+        internal static string RefineSettings_Validate_minimum_detections_allowed {
             get {
                 return ResourceManager.GetString("RefineSettings_Validate_minimum_detections_allowed", resourceCulture);
             }
@@ -1129,7 +1138,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to No refine commands have been selected..
         /// </summary>
-        public static string RefineSettings_Validate_No_refine_commands_have_been_selected_ {
+        internal static string RefineSettings_Validate_No_refine_commands_have_been_selected_ {
             get {
                 return ResourceManager.GetString("RefineSettings_Validate_No_refine_commands_have_been_selected_", resourceCulture);
             }
@@ -1138,7 +1147,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Please enter values for the refine commands you wish to use, or skip the refinement step by removing the file path on the refine tab..
         /// </summary>
-        public static string RefineSettings_Validate_Please_enter_values_for_the_refine_commands_you_wish_to_use__or_skip_the_refinement_step_by_removing_the_file_path_on_the_refine_tab_ {
+        internal static string RefineSettings_Validate_Please_enter_values_for_the_refine_commands_you_wish_to_use__or_skip_the_refinement_step_by_removing_the_file_path_on_the_refine_tab_ {
             get {
                 return ResourceManager.GetString("RefineSettings_Validate_Please_enter_values_for_the_refine_commands_you_wish_to_u" +
                         "se__or_skip_the_refinement_step_by_removing_the_file_path_on_the_refine_tab_", resourceCulture);
@@ -1148,7 +1157,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Q value cutoff.
         /// </summary>
-        public static string RefineSettings_Validate_Q_value_cutoff {
+        internal static string RefineSettings_Validate_Q_value_cutoff {
             get {
                 return ResourceManager.GetString("RefineSettings_Validate_Q_value_cutoff", resourceCulture);
             }
@@ -1157,7 +1166,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to {0} is out of range for the {1}..
         /// </summary>
-        public static string RefineSettings_ValidateNumberInput__0__is_out_of_range_for_the__1__ {
+        internal static string RefineSettings_ValidateNumberInput__0__is_out_of_range_for_the__1__ {
             get {
                 return ResourceManager.GetString("RefineSettings_ValidateNumberInput__0__is_out_of_range_for_the__1__", resourceCulture);
             }
@@ -1166,7 +1175,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Invalid value for the {0}: {1}.
         /// </summary>
-        public static string RefineSettings_ValidateNumberInput_Invalid_value_for_the__0____1_ {
+        internal static string RefineSettings_ValidateNumberInput_Invalid_value_for_the__0____1_ {
             get {
                 return ResourceManager.GetString("RefineSettings_ValidateNumberInput_Invalid_value_for_the__0____1_", resourceCulture);
             }
@@ -1175,7 +1184,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Please enter a number..
         /// </summary>
-        public static string RefineSettings_ValidateNumberInput_Please_enter_a_number_ {
+        internal static string RefineSettings_ValidateNumberInput_Please_enter_a_number_ {
             get {
                 return ResourceManager.GetString("RefineSettings_ValidateNumberInput_Please_enter_a_number_", resourceCulture);
             }
@@ -1184,7 +1193,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Please enter a number between {0} and {1}.
         /// </summary>
-        public static string RefineSettings_ValidateNumberInput_Please_enter_a_number_between__0__and__1_ {
+        internal static string RefineSettings_ValidateNumberInput_Please_enter_a_number_between__0__and__1_ {
             get {
                 return ResourceManager.GetString("RefineSettings_ValidateNumberInput_Please_enter_a_number_between__0__and__1_", resourceCulture);
             }
@@ -1193,7 +1202,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Please provide a valid output file path..
         /// </summary>
-        public static string RefineSettings_ValidateOutputFile_Please_provide_a_valid_output_file_path_ {
+        internal static string RefineSettings_ValidateOutputFile_Please_provide_a_valid_output_file_path_ {
             get {
                 return ResourceManager.GetString("RefineSettings_ValidateOutputFile_Please_provide_a_valid_output_file_path_", resourceCulture);
             }
@@ -1202,7 +1211,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to refined output file.
         /// </summary>
-        public static string RefineSettings_ValidateOutputFile_refined_output_file {
+        internal static string RefineSettings_ValidateOutputFile_refined_output_file {
             get {
                 return ResourceManager.GetString("RefineSettings_ValidateOutputFile_refined_output_file", resourceCulture);
             }
@@ -1211,7 +1220,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Refined.
         /// </summary>
-        public static string ReportInfo_AsObjectArray_Refined {
+        internal static string ReportInfo_AsObjectArray_Refined {
             get {
                 return ResourceManager.GetString("ReportInfo_AsObjectArray_Refined", resourceCulture);
             }
@@ -1220,7 +1229,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Results.
         /// </summary>
-        public static string ReportInfo_AsObjectArray_Results {
+        internal static string ReportInfo_AsObjectArray_Results {
             get {
                 return ResourceManager.GetString("ReportInfo_AsObjectArray_Results", resourceCulture);
             }
@@ -1229,7 +1238,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Please enter a name for this report..
         /// </summary>
-        public static string ReportInfo_Validate_Please_enter_a_name_for_this_report_ {
+        internal static string ReportInfo_Validate_Please_enter_a_name_for_this_report_ {
             get {
                 return ResourceManager.GetString("ReportInfo_Validate_Please_enter_a_name_for_this_report_", resourceCulture);
             }
@@ -1238,7 +1247,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Please enter a path to an existing file..
         /// </summary>
-        public static string ReportInfo_Validate_Please_enter_a_path_to_an_existing_file_ {
+        internal static string ReportInfo_Validate_Please_enter_a_path_to_an_existing_file_ {
             get {
                 return ResourceManager.GetString("ReportInfo_Validate_Please_enter_a_path_to_an_existing_file_", resourceCulture);
             }
@@ -1247,7 +1256,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Report {0}:.
         /// </summary>
-        public static string ReportInfo_Validate_Report__0__ {
+        internal static string ReportInfo_Validate_Report__0__ {
             get {
                 return ResourceManager.GetString("ReportInfo_Validate_Report__0__", resourceCulture);
             }
@@ -1256,7 +1265,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Report must have name..
         /// </summary>
-        public static string ReportInfo_Validate_Report_must_have_name_ {
+        internal static string ReportInfo_Validate_Report_must_have_name_ {
             get {
                 return ResourceManager.GetString("ReportInfo_Validate_Report_must_have_name_", resourceCulture);
             }
@@ -1265,7 +1274,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to report path.
         /// </summary>
-        public static string ReportInfo_ValidateReportPath_report_path {
+        internal static string ReportInfo_ValidateReportPath_report_path {
             get {
                 return ResourceManager.GetString("ReportInfo_ValidateReportPath_report_path", resourceCulture);
             }
@@ -1274,7 +1283,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Report path {0} is not a valid path..
         /// </summary>
-        public static string ReportInfo_ValidateReportPath_Report_path__0__is_not_a_valid_path_ {
+        internal static string ReportInfo_ValidateReportPath_Report_path__0__is_not_a_valid_path_ {
             get {
                 return ResourceManager.GetString("ReportInfo_ValidateReportPath_Report_path__0__is_not_a_valid_path_", resourceCulture);
             }
@@ -1283,7 +1292,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to R script.
         /// </summary>
-        public static string ReportInfo_ValidateRScriptPath_R_script {
+        internal static string ReportInfo_ValidateRScriptPath_R_script {
             get {
                 return ResourceManager.GetString("ReportInfo_ValidateRScriptPath_R_script", resourceCulture);
             }
@@ -1292,7 +1301,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to R script path {0} is not a valid path..
         /// </summary>
-        public static string ReportInfo_ValidateRScriptPath_R_script_path__0__is_not_a_valid_path_ {
+        internal static string ReportInfo_ValidateRScriptPath_R_script_path__0__is_not_a_valid_path_ {
             get {
                 return ResourceManager.GetString("ReportInfo_ValidateRScriptPath_R_script_path__0__is_not_a_valid_path_", resourceCulture);
             }
@@ -1301,7 +1310,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Please choose a different version of R..
         /// </summary>
-        public static string ReportInfo_ValidateRVersion_Please_choose_a_different_version_of_R_ {
+        internal static string ReportInfo_ValidateRVersion_Please_choose_a_different_version_of_R_ {
             get {
                 return ResourceManager.GetString("ReportInfo_ValidateRVersion_Please_choose_a_different_version_of_R_", resourceCulture);
             }
@@ -1310,7 +1319,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to R version {0} is not installed on this computer..
         /// </summary>
-        public static string ReportInfo_ValidateRVersion_R_version__0__is_not_installed_on_this_computer_ {
+        internal static string ReportInfo_ValidateRVersion_R_version__0__is_not_installed_on_this_computer_ {
             get {
                 return ResourceManager.GetString("ReportInfo_ValidateRVersion_R_version__0__is_not_installed_on_this_computer_", resourceCulture);
             }
@@ -1319,7 +1328,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Could not find any R Installations in: .
         /// </summary>
-        public static string ReportsAddForm_btnAddRScript_Click_Could_not_find_any_R_Installations_in__ {
+        internal static string ReportsAddForm_btnAddRScript_Click_Could_not_find_any_R_Installations_in__ {
             get {
                 return ResourceManager.GetString("ReportsAddForm_btnAddRScript_Click_Could_not_find_any_R_Installations_in__", resourceCulture);
             }
@@ -1328,7 +1337,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Please install R before adding R scripts to this configuration..
         /// </summary>
-        public static string ReportsAddForm_btnAddRScript_Click_Please_install_R_before_adding_R_scripts_to_this_configuration_ {
+        internal static string ReportsAddForm_btnAddRScript_Click_Please_install_R_before_adding_R_scripts_to_this_configuration_ {
             get {
                 return ResourceManager.GetString("ReportsAddForm_btnAddRScript_Click_Please_install_R_before_adding_R_scripts_to_th" +
                         "is_configuration_", resourceCulture);
@@ -1338,7 +1347,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to A culture-invariant report ensures a CSV file with period decimal points and full-precision numbers..
         /// </summary>
-        public static string ReportsAddForm_checkBoxCultureSpecific_CheckedChanged_A_culture_invariant_report_ensures_a_CSV_file_with_period_decimal_points_and_full_precision_numbers_ {
+        internal static string ReportsAddForm_checkBoxCultureSpecific_CheckedChanged_A_culture_invariant_report_ensures_a_CSV_file_with_period_decimal_points_and_full_precision_numbers_ {
             get {
                 return ResourceManager.GetString("ReportsAddForm_checkBoxCultureSpecific_CheckedChanged_A_culture_invariant_report_" +
                         "ensures_a_CSV_file_with_period_decimal_points_and_full_precision_numbers_", resourceCulture);
@@ -1348,7 +1357,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Do you want to continue?.
         /// </summary>
-        public static string ReportsAddForm_checkBoxCultureSpecific_CheckedChanged_Do_you_want_to_continue_ {
+        internal static string ReportsAddForm_checkBoxCultureSpecific_CheckedChanged_Do_you_want_to_continue_ {
             get {
                 return ResourceManager.GetString("ReportsAddForm_checkBoxCultureSpecific_CheckedChanged_Do_you_want_to_continue_", resourceCulture);
             }
@@ -1357,7 +1366,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to No R installations were found in: {0}.
         /// </summary>
-        public static string RInstallations_AddRDirectory_No_R_installations_were_found_in___0_ {
+        internal static string RInstallations_AddRDirectory_No_R_installations_were_found_in___0_ {
             get {
                 return ResourceManager.GetString("RInstallations_AddRDirectory_No_R_installations_were_found_in___0_", resourceCulture);
             }
@@ -1366,7 +1375,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Please choose a directory with R installations..
         /// </summary>
-        public static string RInstallations_AddRDirectory_Please_choose_a_directory_with_R_installations_ {
+        internal static string RInstallations_AddRDirectory_Please_choose_a_directory_with_R_installations_ {
             get {
                 return ResourceManager.GetString("RInstallations_AddRDirectory_Please_choose_a_directory_with_R_installations_", resourceCulture);
             }
@@ -1375,7 +1384,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Please enter a different directory..
         /// </summary>
-        public static string RInstallations_AddRDirectory_Please_enter_a_different_directory_ {
+        internal static string RInstallations_AddRDirectory_Please_enter_a_different_directory_ {
             get {
                 return ResourceManager.GetString("RInstallations_AddRDirectory_Please_enter_a_different_directory_", resourceCulture);
             }
@@ -1384,7 +1393,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Please enter a valid directory..
         /// </summary>
-        public static string RInstallations_AddRDirectory_Please_enter_a_valid_directory_ {
+        internal static string RInstallations_AddRDirectory_Please_enter_a_valid_directory_ {
             get {
                 return ResourceManager.GetString("RInstallations_AddRDirectory_Please_enter_a_valid_directory_", resourceCulture);
             }
@@ -1393,7 +1402,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to R installation directory not found: {0}.
         /// </summary>
-        public static string RInstallations_AddRDirectory_R_installation_directory_not_found___0_ {
+        internal static string RInstallations_AddRDirectory_R_installation_directory_not_found___0_ {
             get {
                 return ResourceManager.GetString("RInstallations_AddRDirectory_R_installation_directory_not_found___0_", resourceCulture);
             }
@@ -1402,7 +1411,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to The R directory is already used to find R installations: {0}.
         /// </summary>
-        public static string RInstallations_AddRDirectory_The_R_directory_is_already_used_to_find_R_installations___0_ {
+        internal static string RInstallations_AddRDirectory_The_R_directory_is_already_used_to_find_R_installations___0_ {
             get {
                 return ResourceManager.GetString("RInstallations_AddRDirectory_The_R_directory_is_already_used_to_find_R_installati" +
                         "ons___0_", resourceCulture);
@@ -1412,7 +1421,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to No R version selected. Please choose an R version..
         /// </summary>
-        public static string RVersionControl_IsValid_No_R_version_selected__Please_choose_an_R_version_ {
+        internal static string RVersionControl_IsValid_No_R_version_selected__Please_choose_an_R_version_ {
             get {
                 return ResourceManager.GetString("RVersionControl_IsValid_No_R_version_selected__Please_choose_an_R_version_", resourceCulture);
             }
@@ -1421,7 +1430,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Could not find any R installations on this computer..
         /// </summary>
-        public static string RVersionControl_RVersionControl_Could_not_find_any_R_installations_on_this_computer_ {
+        internal static string RVersionControl_RVersionControl_Could_not_find_any_R_installations_on_this_computer_ {
             get {
                 return ResourceManager.GetString("RVersionControl_RVersionControl_Could_not_find_any_R_installations_on_this_comput" +
                         "er_", resourceCulture);
@@ -1431,7 +1440,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Please add an R installation directory..
         /// </summary>
-        public static string RVersionControl_RVersionControl_Please_add_an_R_installation_directory_ {
+        internal static string RVersionControl_RVersionControl_Please_add_an_R_installation_directory_ {
             get {
                 return ResourceManager.GetString("RVersionControl_RVersionControl_Please_add_an_R_installation_directory_", resourceCulture);
             }
@@ -1440,7 +1449,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to R version {0} not found..
         /// </summary>
-        public static string RVersionControl_RVersionControl_R_version__0__not_found_ {
+        internal static string RVersionControl_RVersionControl_R_version__0__not_found_ {
             get {
                 return ResourceManager.GetString("RVersionControl_RVersionControl_R_version__0__not_found_", resourceCulture);
             }
@@ -1449,7 +1458,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Select an R version for {0}:.
         /// </summary>
-        public static string RVersionControl_RVersionControl_Select_an_R_version_for__0__ {
+        internal static string RVersionControl_RVersionControl_Select_an_R_version_for__0__ {
             get {
                 return ResourceManager.GetString("RVersionControl_RVersionControl_Select_an_R_version_for__0__", resourceCulture);
             }
@@ -1458,7 +1467,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
         /// </summary>
-        public static System.Drawing.Icon SkylineBatch_daily {
+        internal static System.Drawing.Icon SkylineBatch_daily {
             get {
                 object obj = ResourceManager.GetObject("SkylineBatch_daily", resourceCulture);
                 return ((System.Drawing.Icon)(obj));
@@ -1468,7 +1477,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
         /// </summary>
-        public static System.Drawing.Icon SkylineBatch_release {
+        internal static System.Drawing.Icon SkylineBatch_release {
             get {
                 object obj = ResourceManager.GetObject("SkylineBatch_release", resourceCulture);
                 return ((System.Drawing.Icon)(obj));
@@ -1478,7 +1487,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to &quot;{0}&quot; is not a valid name for the configuration..
         /// </summary>
-        public static string SkylineBatchConfig_SkylineBatchConfig___0___is_not_a_valid_name_for_the_configuration_ {
+        internal static string SkylineBatchConfig_SkylineBatchConfig___0___is_not_a_valid_name_for_the_configuration_ {
             get {
                 return ResourceManager.GetString("SkylineBatchConfig_SkylineBatchConfig___0___is_not_a_valid_name_for_the_configura" +
                         "tion_", resourceCulture);
@@ -1488,7 +1497,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Please enter a name..
         /// </summary>
-        public static string SkylineBatchConfig_SkylineBatchConfig_Please_enter_a_name_ {
+        internal static string SkylineBatchConfig_SkylineBatchConfig_Please_enter_a_name_ {
             get {
                 return ResourceManager.GetString("SkylineBatchConfig_SkylineBatchConfig_Please_enter_a_name_", resourceCulture);
             }
@@ -1497,7 +1506,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Creating new report..
         /// </summary>
-        public static string SkylineBatchConfigForm_btnAddReport_Click_Creating_new_report_ {
+        internal static string SkylineBatchConfigForm_btnAddReport_Click_Creating_new_report_ {
             get {
                 return ResourceManager.GetString("SkylineBatchConfigForm_btnAddReport_Click_Creating_new_report_", resourceCulture);
             }
@@ -1506,7 +1515,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Editing report..
         /// </summary>
-        public static string SkylineBatchConfigForm_btnEditReport_Click_Editing_report_ {
+        internal static string SkylineBatchConfigForm_btnEditReport_Click_Editing_report_ {
             get {
                 return ResourceManager.GetString("SkylineBatchConfigForm_btnEditReport_Click_Editing_report_", resourceCulture);
             }
@@ -1515,7 +1524,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to A server is required to download data. Please select a server, or uncheck the download data checkbox..
         /// </summary>
-        public static string SkylineBatchConfigForm_Save_A_server_is_required_to_download_data__Please_select_a_server__or_uncheck_the_download_data_checkbox_ {
+        internal static string SkylineBatchConfigForm_Save_A_server_is_required_to_download_data__Please_select_a_server__or_uncheck_the_download_data_checkbox_ {
             get {
                 return ResourceManager.GetString("SkylineBatchConfigForm_Save_A_server_is_required_to_download_data__Please_select_" +
                         "a_server__or_uncheck_the_download_data_checkbox_", resourceCulture);
@@ -1525,7 +1534,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Editing configuration &quot;{0}&quot;.
         /// </summary>
-        public static string SkylineBatchConfigForm_SkylineBatchConfigForm_Editing_configuration___0__ {
+        internal static string SkylineBatchConfigForm_SkylineBatchConfigForm_Editing_configuration___0__ {
             get {
                 return ResourceManager.GetString("SkylineBatchConfigForm_SkylineBatchConfigForm_Editing_configuration___0__", resourceCulture);
             }
@@ -1534,7 +1543,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Viewing configuration &quot;{0}&quot;.
         /// </summary>
-        public static string SkylineBatchConfigForm_SkylineBatchConfigForm_Viewing_configuration___0__ {
+        internal static string SkylineBatchConfigForm_SkylineBatchConfigForm_Viewing_configuration___0__ {
             get {
                 return ResourceManager.GetString("SkylineBatchConfigForm_SkylineBatchConfigForm_Viewing_configuration___0__", resourceCulture);
             }
@@ -1543,7 +1552,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to The following configurations use refined template files from other configurations that do not exist:.
         /// </summary>
-        public static string SkylineBatchConfigManager_AssignDependencies_The_following_configurations_use_refined_template_files_from_other_configurations_that_do_not_exist_ {
+        internal static string SkylineBatchConfigManager_AssignDependencies_The_following_configurations_use_refined_template_files_from_other_configurations_that_do_not_exist_ {
             get {
                 return ResourceManager.GetString("SkylineBatchConfigManager_AssignDependencies_The_following_configurations_use_ref" +
                         "ined_template_files_from_other_configurations_that_do_not_exist_", resourceCulture);
@@ -1553,7 +1562,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to You may want to update the template file paths..
         /// </summary>
-        public static string SkylineBatchConfigManager_AssignDependencies_You_may_want_to_update_the_template_file_paths_ {
+        internal static string SkylineBatchConfigManager_AssignDependencies_You_may_want_to_update_the_template_file_paths_ {
             get {
                 return ResourceManager.GetString("SkylineBatchConfigManager_AssignDependencies_You_may_want_to_update_the_template_" +
                         "file_paths_", resourceCulture);
@@ -1563,7 +1572,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to The following configurations are running and could not be updated:.
         /// </summary>
-        public static string SkylineBatchConfigManager_ReplaceSkylineSettings_The_following_configurations_are_running_and_could_not_be_updated_ {
+        internal static string SkylineBatchConfigManager_ReplaceSkylineSettings_The_following_configurations_are_running_and_could_not_be_updated_ {
             get {
                 return ResourceManager.GetString("SkylineBatchConfigManager_ReplaceSkylineSettings_The_following_configurations_are" +
                         "_running_and_could_not_be_updated_", resourceCulture);
@@ -1573,7 +1582,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to An unexpected error occurred while running {0}.
         /// </summary>
-        public static string SkylineBatchConfigManager_RunAsync_An_unexpected_error_occurred_while_running__0_ {
+        internal static string SkylineBatchConfigManager_RunAsync_An_unexpected_error_occurred_while_running__0_ {
             get {
                 return ResourceManager.GetString("SkylineBatchConfigManager_RunAsync_An_unexpected_error_occurred_while_running__0_" +
                         "", resourceCulture);
@@ -1583,7 +1592,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to {0} GB on the {1} drive.
         /// </summary>
-        public static string SkylineBatchConfigManager_StartBatchRun__0__GB_on_the__1__drive {
+        internal static string SkylineBatchConfigManager_StartBatchRun__0__GB_on_the__1__drive {
             get {
                 return ResourceManager.GetString("SkylineBatchConfigManager_StartBatchRun__0__GB_on_the__1__drive", resourceCulture);
             }
@@ -1592,7 +1601,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to chromatagram files.
         /// </summary>
-        public static string SkylineBatchConfigManager_StartBatchRun_chromatagram_files {
+        internal static string SkylineBatchConfigManager_StartBatchRun_chromatagram_files {
             get {
                 return ResourceManager.GetString("SkylineBatchConfigManager_StartBatchRun_chromatagram_files", resourceCulture);
             }
@@ -1601,7 +1610,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Configuration &quot;{0}&quot;.
         /// </summary>
-        public static string SkylineBatchConfigManager_StartBatchRun_Configuration___0___ {
+        internal static string SkylineBatchConfigManager_StartBatchRun_Configuration___0___ {
             get {
                 return ResourceManager.GetString("SkylineBatchConfigManager_StartBatchRun_Configuration___0___", resourceCulture);
             }
@@ -1610,7 +1619,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Configuration {0} must be run before {1} to generate its template file..
         /// </summary>
-        public static string SkylineBatchConfigManager_StartBatchRun_Configuration__0__must_be_run_before__1__to_generate_its_template_file_ {
+        internal static string SkylineBatchConfigManager_StartBatchRun_Configuration__0__must_be_run_before__1__to_generate_its_template_file_ {
             get {
                 return ResourceManager.GetString("SkylineBatchConfigManager_StartBatchRun_Configuration__0__must_be_run_before__1__" +
                         "to_generate_its_template_file_", resourceCulture);
@@ -1620,7 +1629,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Do you want to continue?.
         /// </summary>
-        public static string SkylineBatchConfigManager_StartBatchRun_Do_you_want_to_continue_ {
+        internal static string SkylineBatchConfigManager_StartBatchRun_Do_you_want_to_continue_ {
             get {
                 return ResourceManager.GetString("SkylineBatchConfigManager_StartBatchRun_Do_you_want_to_continue_", resourceCulture);
             }
@@ -1629,7 +1638,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to exported reports.
         /// </summary>
-        public static string SkylineBatchConfigManager_StartBatchRun_exported_reports {
+        internal static string SkylineBatchConfigManager_StartBatchRun_exported_reports {
             get {
                 return ResourceManager.GetString("SkylineBatchConfigManager_StartBatchRun_exported_reports", resourceCulture);
             }
@@ -1638,7 +1647,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Please check the checkbox next to one or more configurations..
         /// </summary>
-        public static string SkylineBatchConfigManager_StartBatchRun_Please_check_the_checkbox_next_to_one_or_more_configurations_ {
+        internal static string SkylineBatchConfigManager_StartBatchRun_Please_check_the_checkbox_next_to_one_or_more_configurations_ {
             get {
                 return ResourceManager.GetString("SkylineBatchConfigManager_StartBatchRun_Please_check_the_checkbox_next_to_one_or_" +
                         "more_configurations_", resourceCulture);
@@ -1648,7 +1657,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Please free up some space to download the data..
         /// </summary>
-        public static string SkylineBatchConfigManager_StartBatchRun_Please_free_up_some_space_to_download_the_data_ {
+        internal static string SkylineBatchConfigManager_StartBatchRun_Please_free_up_some_space_to_download_the_data_ {
             get {
                 return ResourceManager.GetString("SkylineBatchConfigManager_StartBatchRun_Please_free_up_some_space_to_download_the" +
                         "_data_", resourceCulture);
@@ -1658,7 +1667,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Please reorder the configurations so {0} runs first..
         /// </summary>
-        public static string SkylineBatchConfigManager_StartBatchRun_Please_reorder_the_configurations_so__0__runs_first_ {
+        internal static string SkylineBatchConfigManager_StartBatchRun_Please_reorder_the_configurations_so__0__runs_first_ {
             get {
                 return ResourceManager.GetString("SkylineBatchConfigManager_StartBatchRun_Please_reorder_the_configurations_so__0__" +
                         "runs_first_", resourceCulture);
@@ -1668,7 +1677,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to R script outputs.
         /// </summary>
-        public static string SkylineBatchConfigManager_StartBatchRun_R_script_outputs {
+        internal static string SkylineBatchConfigManager_StartBatchRun_R_script_outputs {
             get {
                 return ResourceManager.GetString("SkylineBatchConfigManager_StartBatchRun_R_script_outputs", resourceCulture);
             }
@@ -1677,7 +1686,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to refined files.
         /// </summary>
-        public static string SkylineBatchConfigManager_StartBatchRun_refined_files {
+        internal static string SkylineBatchConfigManager_StartBatchRun_refined_files {
             get {
                 return ResourceManager.GetString("SkylineBatchConfigManager_StartBatchRun_refined_files", resourceCulture);
             }
@@ -1686,26 +1695,26 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to results files.
         /// </summary>
-        public static string SkylineBatchConfigManager_StartBatchRun_results_files {
+        internal static string SkylineBatchConfigManager_StartBatchRun_results_files {
             get {
                 return ResourceManager.GetString("SkylineBatchConfigManager_StartBatchRun_results_files", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Running the enabled configurations from step {0} would overwrite the following {1}:.
+        ///   Looks up a localized string similar to Running the enabled configurations from &quot;{0}&quot; would overwrite the following {1}:.
         /// </summary>
-        public static string SkylineBatchConfigManager_StartBatchRun_Running_the_enabled_configurations_from_step__0__would_overwrite_the_following__1__ {
+        internal static string SkylineBatchConfigManager_StartBatchRun_Running_the_enabled_configurations_from___0___would_overwrite_the_following__1__ {
             get {
-                return ResourceManager.GetString("SkylineBatchConfigManager_StartBatchRun_Running_the_enabled_configurations_from_s" +
-                        "tep__0__would_overwrite_the_following__1__", resourceCulture);
+                return ResourceManager.GetString("SkylineBatchConfigManager_StartBatchRun_Running_the_enabled_configurations_from__" +
+                        "_0___would_overwrite_the_following__1__", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to There are no enabled configurations to run..
         /// </summary>
-        public static string SkylineBatchConfigManager_StartBatchRun_There_are_no_enabled_configurations_to_run_ {
+        internal static string SkylineBatchConfigManager_StartBatchRun_There_are_no_enabled_configurations_to_run_ {
             get {
                 return ResourceManager.GetString("SkylineBatchConfigManager_StartBatchRun_There_are_no_enabled_configurations_to_ru" +
                         "n_", resourceCulture);
@@ -1715,7 +1724,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to There is not enough space on this computer to download the data for these configurations. You need an additional:.
         /// </summary>
-        public static string SkylineBatchConfigManager_StartBatchRun_There_is_not_enough_space_on_this_computer_to_download_the_data_for_these_configurations__You_need_an_additional_ {
+        internal static string SkylineBatchConfigManager_StartBatchRun_There_is_not_enough_space_on_this_computer_to_download_the_data_for_these_configurations__You_need_an_additional_ {
             get {
                 return ResourceManager.GetString("SkylineBatchConfigManager_StartBatchRun_There_is_not_enough_space_on_this_compute" +
                         "r_to_download_the_data_for_these_configurations__You_need_an_additional_", resourceCulture);
@@ -1725,7 +1734,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Are you sure you want to delete &quot;{0}&quot;?.
         /// </summary>
-        public static string SkylineBatchConfigManager_UserRemoveSelected_Are_you_sure_you_want_to_delete___0___ {
+        internal static string SkylineBatchConfigManager_UserRemoveSelected_Are_you_sure_you_want_to_delete___0___ {
             get {
                 return ResourceManager.GetString("SkylineBatchConfigManager_UserRemoveSelected_Are_you_sure_you_want_to_delete___0_" +
                         "__", resourceCulture);
@@ -1735,7 +1744,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Cannot delete &quot;{0}&quot; while the following configurations are running:.
         /// </summary>
-        public static string SkylineBatchConfigManager_UserRemoveSelected_Cannot_delete___0___while_the_following_configurations_are_running_ {
+        internal static string SkylineBatchConfigManager_UserRemoveSelected_Cannot_delete___0___while_the_following_configurations_are_running_ {
             get {
                 return ResourceManager.GetString("SkylineBatchConfigManager_UserRemoveSelected_Cannot_delete___0___while_the_follow" +
                         "ing_configurations_are_running_", resourceCulture);
@@ -1745,7 +1754,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Deleting &quot;{0}&quot; may impact the template files of the following configurations:.
         /// </summary>
-        public static string SkylineBatchConfigManager_UserRemoveSelected_Deleting___0___may_impact_the_template_files_of_the_following_configurations_ {
+        internal static string SkylineBatchConfigManager_UserRemoveSelected_Deleting___0___may_impact_the_template_files_of_the_following_configurations_ {
             get {
                 return ResourceManager.GetString("SkylineBatchConfigManager_UserRemoveSelected_Deleting___0___may_impact_the_templa" +
                         "te_files_of_the_following_configurations_", resourceCulture);
@@ -1755,7 +1764,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Please wait until these configurations have finished running..
         /// </summary>
-        public static string SkylineBatchConfigManager_UserRemoveSelected_Please_wait_until_these_configurations_have_finished_running_ {
+        internal static string SkylineBatchConfigManager_UserRemoveSelected_Please_wait_until_these_configurations_have_finished_running_ {
             get {
                 return ResourceManager.GetString("SkylineBatchConfigManager_UserRemoveSelected_Please_wait_until_these_configuratio" +
                         "ns_have_finished_running_", resourceCulture);
@@ -1765,7 +1774,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Could not update the configuration name or the refined output file path while the following dependent configurations are running:.
         /// </summary>
-        public static string SkylineBatchConfigManager_UserReplaceSelected_Could_not_update_the_configuration_name_or_the_refined_output_file_path_while_the_following_dependent_configurations_are_running_ {
+        internal static string SkylineBatchConfigManager_UserReplaceSelected_Could_not_update_the_configuration_name_or_the_refined_output_file_path_while_the_following_dependent_configurations_are_running_ {
             get {
                 return ResourceManager.GetString("SkylineBatchConfigManager_UserReplaceSelected_Could_not_update_the_configuration_" +
                         "name_or_the_refined_output_file_path_while_the_following_dependent_configuration" +
@@ -1776,7 +1785,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Please wait until the dependent configurations have stopped to change these values..
         /// </summary>
-        public static string SkylineBatchConfigManager_UserReplaceSelected_Please_wait_until_the_dependent_configurations_have_stopped_to_change_these_values_ {
+        internal static string SkylineBatchConfigManager_UserReplaceSelected_Please_wait_until_the_dependent_configurations_have_stopped_to_change_these_values_ {
             get {
                 return ResourceManager.GetString("SkylineBatchConfigManager_UserReplaceSelected_Please_wait_until_the_dependent_con" +
                         "figurations_have_stopped_to_change_these_values_", resourceCulture);
@@ -1786,7 +1795,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap SkylineData {
+        internal static System.Drawing.Bitmap SkylineData {
             get {
                 object obj = ResourceManager.GetObject("SkylineData", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -1796,7 +1805,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap SkylineDoc {
+        internal static System.Drawing.Bitmap SkylineDoc {
             get {
                 object obj = ResourceManager.GetObject("SkylineDoc", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -1806,7 +1815,7 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap uparrow {
+        internal static System.Drawing.Bitmap uparrow {
             get {
                 object obj = ResourceManager.GetObject("uparrow", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
