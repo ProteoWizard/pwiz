@@ -2,7 +2,7 @@ name: Cherry-pick from master to Skyline release branch
 on:
   push:
     branches:
-      - test-actions
+      - master
 jobs:
   release_pull_request:
     runs-on: ubuntu-latest
@@ -13,8 +13,7 @@ jobs:
     - name: Create PR to branch
       uses: chambm/github-action-cherry-pick@0.1.0
       with:
-        #pr_branch: 'Skyline/skyline_21_1'
-        pr_branch: master
+        pr_branch: 'Skyline/skyline_21_1'
         opt_in_message: '[cp-to-release]'
         merge_strategy: '--strategy=recursive -Xtheirs'
       env:
