@@ -268,15 +268,7 @@ namespace SkylineBatch
                     // pass - handled in refine settings
                     break;
                 case RunBatchOptions.FROM_EXPORT_REPORT:
-                    var reportFiles = FileUtil.GetFilesInFolder(AnalysisFolderPath, TextUtil.EXT_CSV);
-                    if (reportFiles.Count > 0)
-                    {
-                        foreach (var reportCsv in reportFiles)
-                        {
-                            message.Append(tab + tab).Append(Path.GetFileName(reportCsv)).AppendLine();
-                        }
-                        return true;
-                    }
+                    // pass
                     break;
                 case RunBatchOptions.FROM_R_SCRIPTS:
                     // pass
@@ -520,6 +512,16 @@ namespace SkylineBatch
                 throw _validationError;
             }
             _validated = true;
+        }
+
+        public DataServerInfo Copy()
+        {
+            return new DataServerInfo(Server, UserName, Password, DataNamingPattern)
+            {
+                _serverFiles = _serverFiles,
+                _validated = _validated,
+                _validationError = _validationError
+            };
         }
 
         private bool ConnectToServer(out bool foundServerFiles, bool throwError = false)

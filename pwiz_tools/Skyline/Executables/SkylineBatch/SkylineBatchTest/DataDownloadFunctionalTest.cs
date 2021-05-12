@@ -32,6 +32,7 @@ namespace SkylineBatchTest
 
             var mainWindow = MainFormWindow();
             var mainForm = mainWindow as MainForm;
+            WaitForShownForm(mainForm);
             Assert.IsNotNull(mainForm, "Main program window is not an instance of MainForm.");
             Assert.AreEqual(0, mainForm.ConfigCount());
 
@@ -53,7 +54,6 @@ namespace SkylineBatchTest
 
         public void TestSmallDataDownload(MainForm mainForm)
         {
-            WaitForShownForm(mainForm);
             var dataDirectory = Path.Combine(CONFIG_FOLDER, "emptyData");
             var configFile = Path.Combine(TEST_FOLDER, "DownloadingConfiguration.bcfg");
             
@@ -62,7 +62,7 @@ namespace SkylineBatchTest
 
             RunUI(() =>
             {
-                FunctionalTestUtil.CheckConfigs(1, 0, mainForm);
+                FunctionalTestUtil.CheckConfigs(1, 0, mainForm, "Config was not imported!", "Config was imported but invalid");
                 mainForm.ClickRun(1);
             });
             var tenSeconds = new TimeSpan(0,0,10);
@@ -78,7 +78,7 @@ namespace SkylineBatchTest
 
         public void TestNoSpaceDataDownload(MainForm mainForm)
         {
-            WaitForShownForm(mainForm);
+            RunUI(() => { mainForm.tabMain.SelectedIndex = 0; });
             FunctionalTestUtil.ClearConfigs(mainForm);
             var dataDirectory = Path.Combine(CONFIG_FOLDER, "bigData");
             Assert.AreEqual(false, Directory.Exists(dataDirectory));
@@ -91,16 +91,13 @@ namespace SkylineBatchTest
 
             RunUI(() =>
             {
-                FunctionalTestUtil.CheckConfigs(1, 0, mainForm);
+                FunctionalTestUtil.CheckConfigs(1, 0, mainForm, "Config was not imported!", "Config was imported but invalid");
             });
             RunDlg<AlertDlg>(() => mainForm.ClickRun(1),
                 dlg =>
                 {
-                    Assert.AreEqual(SkylineBatch.Properties.Resources.SkylineBatchConfigManager_StartBatchRun_There_is_not_enough_space_on_this_computer_to_download_the_data_for_these_configurations__You_need_an_additional_ + Environment.NewLine + Environment.NewLine +
-                                    string.Format(SkylineBatch.Properties.Resources.SkylineBatchConfigManager_StartBatchRun__0__GB_on_the__1__drive, 125, "C:\\") + Environment.NewLine + Environment.NewLine +
-                                    SkylineBatch.Properties.Resources.SkylineBatchConfigManager_StartBatchRun_Please_free_up_some_space_to_download_the_data_,
-                        dlg.Message);
-                    dlg.ClickOk();
+                    Assert.IsTrue(dlg.Message.StartsWith(SkylineBatch.Properties.Resources.SkylineBatchConfigManager_StartBatchRun_There_is_not_enough_space_on_this_computer_to_download_the_data_for_these_configurations__You_need_an_additional_));
+                                  dlg.ClickOk();
                 });
             RunUI(() =>
             {

@@ -496,7 +496,7 @@ namespace SkylineBatch
             return (SkylineBatchConfig) _configRunners[name].GetConfig();
         }
 
-        public bool StartBatchRun(RunBatchOptions runOption)
+        public bool StartBatchRun(RunBatchOptions runOption, bool checkOverwrite = true)
         {
             // Check that no configs are currently running
             var configsRunning = ConfigsBusy();
@@ -592,10 +592,10 @@ namespace SkylineBatch
                 if (runOption == RunBatchOptions.FROM_IMPORT_DATA) overwriteInfo = Resources.SkylineBatchConfigManager_StartBatchRun_chromatagram_files;
                 if (runOption == RunBatchOptions.FROM_REFINE) overwriteInfo = Resources.SkylineBatchConfigManager_StartBatchRun_refined_files;
                 if (runOption == RunBatchOptions.FROM_EXPORT_REPORT) overwriteInfo = Resources.SkylineBatchConfigManager_StartBatchRun_exported_reports;
-                if (runOption == RunBatchOptions.FROM_R_SCRIPTS) overwriteInfo = Resources.SkylineBatchConfigManager_StartBatchRun_R_script_outputs;
+                if (runOption == RunBatchOptions.FROM_R_SCRIPTS) overwriteInfo = Resources.SkylineBatchConfigManager_StartBatchRun_R_script_outputs_in_the_following_analysis_folders;
                 var overwriteMessage = new StringBuilder();
                 overwriteMessage.Append(string.Format(
-                    Resources.SkylineBatchConfigManager_StartBatchRun_Running_the_enabled_configurations_from___0___would_overwrite_the_following__1__,
+                    Resources.SkylineBatchConfigManager_StartBatchRun_Running_the_enabled_configurations_from___0___would_overwrite_the__1__,
                     StepToReadableString(runOption), overwriteInfo)).AppendLine().AppendLine();
                 var showOverwriteMessage = false;
 
@@ -614,7 +614,7 @@ namespace SkylineBatch
                 }
                 // Ask if run should start if files will be overwritten
                 overwriteMessage.Append(Resources.SkylineBatchConfigManager_StartBatchRun_Do_you_want_to_continue_);
-                if (showOverwriteMessage)
+                if (showOverwriteMessage && checkOverwrite)
                 {
                     if (DisplayLargeOkCancel(overwriteMessage.ToString()) != DialogResult.OK)
                         return false;

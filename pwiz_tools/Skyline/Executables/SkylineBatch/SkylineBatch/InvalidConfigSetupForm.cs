@@ -83,7 +83,7 @@ namespace SkylineBatch
                 mainSettings.TemplateFilePath, MainSettings.ValidateTemplateFile, PathDialogOptions.File, PathDialogOptions.ExistingOptional);
             var validAnalysisFolderPath = await GetValidPath(Resources.InvalidConfigSetupForm_FixInvalidMainSettings_analysis_folder, 
                 mainSettings.AnalysisFolderPath, MainSettings.ValidateAnalysisFolder, PathDialogOptions.Folder);
-            var validServer = mainSettings.Server != null ? await GetValidServer(mainSettings.Server) : null;
+            var validServer = mainSettings.Server != null ? await GetValidServer(mainSettings.Server.Copy()) : null;
             var dataValidator = validServer != null ? (Validator)MainSettings.ValidateDataFolderWithServer : (Validator)MainSettings.ValidateDataFolderWithoutServer;
             var validDataFolderPath = await GetValidPath(Resources.InvalidConfigSetupForm_FixInvalidMainSettings_data_folder, 
                 mainSettings.DataFolderPath, dataValidator, PathDialogOptions.Folder);

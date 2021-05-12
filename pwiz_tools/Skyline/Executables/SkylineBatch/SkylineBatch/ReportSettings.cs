@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Xml;
 using System.IO;
+using System.Linq;
 using System.Text;
 using SharedBatch;
 using SkylineBatch.Properties;
@@ -53,19 +54,42 @@ namespace SkylineBatch
         public bool RunWillOverwrite(RunBatchOptions runOption, string configHeader, string analysisFolder, out StringBuilder message)
         {
             message = new StringBuilder();
+            if (runOption < RunBatchOptions.FROM_EXPORT_REPORT)
+                return false;
             var tab = "      ";
-            var existingReports = FileUtil.GetFilesInFolder(analysisFolder, TextUtil.EXT_CSV);
-            if (existingReports.Count > 0)
+            var analysisFolderName = Path.GetFileName(analysisFolder);
+            var csvFiles = FileUtil.GetFilesInFolder(analysisFolder, TextUtil.EXT_CSV);
+            var existingReports = new List<string>();
+            foreach (var report in Reports)
             {
-                foreach (var report in Reports)
-                {
-                    var reportCsv = Path.Combine(analysisFolder, report.Name + TextUtil.EXT_CSV);
-                    if (existingReports.Contains(reportCsv))
-                        message.Append(tab + tab).Append(report.Name + TextUtil.EXT_CSV).AppendLine();
-                }
-                return message.Length > 0;
+                var reportPath = Path.Combine(analysisFolder, report.Name + TextUtil.EXT_CSV);
+                if (csvFiles.Contains(reportPath))
+                    existingReports.Add(reportPath);
             }
-            return false;
+
+
+            if (runOption == RunBatchOptions.FROM_EXPORT_REPORT)
+            {
+                if (existingReports.Count > 0)
+                {
+                    foreach (var reportPath in existingReports)
+                        message.Append(tab + tab).Append(Path.Combine(analysisFolderName, Path.GetFileName(reportPath))).AppendLine();
+                }
+                return existingReports.Count > 0;
+            }
+            else
+            {
+                var analysisFolderFiles = Directory.GetFiles(analysisFolder);
+                foreach (var file in analysisFolderFiles)
+                {
+                    var extension = Path.GetExtension(file);
+                    if (extension.StartsWith(TextUtil.EXT_SKY) || extension == TextUtil.EXT_LOG || existingReports.Contains(file))
+                        continue;
+                    message.Append(tab + tab).Append(analysisFolderName).AppendLine();
+                    return true;
+                }
+                return false;
+            }
         }
 
         public bool UsesRefinedFile()
