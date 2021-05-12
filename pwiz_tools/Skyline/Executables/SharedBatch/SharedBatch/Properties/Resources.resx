@@ -168,12 +168,6 @@
   <data name="ConfigManager_Import_Number_of_configurations_with_errors_that_could_not_be_imported_" xml:space="preserve">
     <value>Number of configurations with errors that could not be imported:</value>
   </data>
-  <data name="ConfigManager_Import_Please_remove_the_configurations_you_would_like_to_import_" xml:space="preserve">
-    <value>Please remove the configurations you would like to import.</value>
-  </data>
-  <data name="ConfigManager_Import_These_configurations_already_exist_and_could_not_be_imported_" xml:space="preserve">
-    <value>These configurations already exist and could not be imported:</value>
-  </data>
   <data name="ConfigManager_InsertConfiguration_Adding_configuration___0___" xml:space="preserve">
     <value>Adding configuration "{0}".</value>
   </data>
@@ -335,5 +329,23 @@ with:
   </data>
   <data name="MainFormUtils_CanOpen_The__0__is_not_valid_for__1__" xml:space="preserve">
     <value>The {0} is not valid for {1}.</value>
+  </data>
+  <data name="Logger_LogPercent__0__" xml:space="preserve">
+    <value>{0}%</value>
+  </data>
+  <data name="ConfigManager_ImportFrom_Do_you_want_to_overwrite_these_configurations_" xml:space="preserve">
+    <value>Do you want to overwrite these configurations?</value>
+  </data>
+  <data name="ConfigManager_ImportFrom_Overwriting_" xml:space="preserve">
+    <value>Overwriting...</value>
+  </data>
+  <data name="ConfigManager_ImportFrom_The_following_configurations_already_exist_" xml:space="preserve">
+    <value>The following configurations already exist:</value>
+  </data>
+  <data name="TextUtil_GetOptionalIntegerFromString__0__is_not_a_valid_value_for__1___Please_enter_an_integer_" xml:space="preserve">
+    <value>{0} is not a valid value for {1}. Please enter an integer.</value>
+  </data>
+  <data name="TextUtil_GetOptionalIntegerFromInvariantString_Cound_not_parse___0___as_type___1__" xml:space="preserve">
+    <value>Cound not parse "{0}" as type "{1}"</value>
   </data>
 </root>

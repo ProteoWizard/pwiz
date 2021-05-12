@@ -50,7 +50,7 @@ namespace SkylineBatchTest
             RunUI(() =>
             {
                 FunctionalTestUtil.PopulateConfigForm(newConfigForm, @"TestConfig", TestFilesDirs[0].FullPath, this);
-                newConfigForm.textTemplateFile.Text = nonexistentTemplate;
+                newConfigForm.templateFileControl.Text = nonexistentTemplate;
             });
 
             RunDlg<AlertDlg>(() => newConfigForm.btnSaveConfig.PerformClick(),
