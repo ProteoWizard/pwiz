@@ -115,6 +115,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
                 _isDdaSearch = value;
                 _fastaFile = true;
+
+                targetFastaPanel.Visible = _isDdaSearch;
             }
         }
 
