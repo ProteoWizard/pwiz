@@ -117,7 +117,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
         {
             get
             {
-                if (!ReferenceEquals(SelectedRegressionType, _originalRegressionType))
+                if (_originalRegressionType != null && !ReferenceEquals(SelectedRegressionType, _originalRegressionType))
                     return true;
 
                 if (_originalPeptides == null)
