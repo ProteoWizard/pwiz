@@ -11022,10 +11022,10 @@ Invalid peptide sequence at position 18
     <value>Search is being canceled.</value>
   </data>
   <data name="BuildPeptideSearchLibraryControl_Files_to_search_" xml:space="preserve">
-    <value>Files to search:</value>
+    <value>&amp;Files to search:</value>
   </data>
   <data name="BuildPeptideSearchLibraryControl_Result_files_" xml:space="preserve">
-    <value>Result files:</value>
+    <value>&amp;Result files:</value>
   </data>
   <data name="ListBoxModification_ToString__variable_" xml:space="preserve">
     <value>(variable)</value>
