@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using Microsoft.Win32;
 using SharedBatch.Properties;
@@ -52,6 +53,20 @@ namespace SharedBatch
             return Path.GetDirectoryName(path);
         }
 
+        public static bool DirectoryExists(string path)
+        {
+            var exists = false;
+            try
+            {
+                exists = Directory.Exists(Path.GetDirectoryName(path));
+            }
+            catch (Exception)
+            {
+                // pass incorrectly formatted paths
+            }
+            return exists;
+        }
+
         // Find an existing initial directory to use in a file/folder browser dialog, can be null (dialog will use a default)
         public static string GetInitialDirectory(string directory, string lastEnteredPath = "")
         {
@@ -92,17 +107,31 @@ namespace SharedBatch
             return path;
         }
 
-        public static void AddFileType(string extension, string id, string description, string exePath, string iconPath)
+        public static void AddFileTypeClickOnce(string extension, string id, string description, string applicationReference, string iconPath)
         {
-            // Register file/exe/icon associations.
-            
+            // Register ClickOnce exe/icon/description associations.
+            var launchExe = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "LaunchBatch.exe");
+            Registry.SetValue($@"HKEY_CURRENT_USER\Software\Classes\{id}\shell\open\command", null,
+                $"\"{launchExe}\" \"{applicationReference}\" \"\\\"%1\\\"\"");
+            AddFileType(extension, id, description, iconPath);
+        }
+
+        public static void AddFileTypeAdminInstall(string extension, string id, string description, string applicationExe, string iconPath)
+        {
+            // Register admin installation exe/icon/description associations.
+
+            Registry.SetValue($@"HKEY_CURRENT_USER\Software\Classes\{id}\shell\open\command", null,
+                $"\"{applicationExe}\" \"%1\"");
+            AddFileType(extension, id, description, iconPath);
+        }
+
+        private static void AddFileType(string extension, string id, string description, string iconPath)
+        {
             Registry.SetValue($@"HKEY_CURRENT_USER\Software\Classes\{id}", null, description);
 
             Registry.SetValue($@"HKEY_CURRENT_USER\Software\Classes\{id}\DefaultIcon", null,
                 $"\"{iconPath}\"");
 
-            Registry.SetValue($@"HKEY_CURRENT_USER\Software\Classes\{id}\shell\open\command", null,
-                $"\"{exePath}\" \"%1\"");
             Registry.SetValue($@"HKEY_CURRENT_USER\Software\Classes\{extension}", null, id);
             SHChangeNotify(0x08000000, 0x0000, IntPtr.Zero, IntPtr.Zero);
 

@@ -74,13 +74,13 @@ namespace SkylineBatchTest
             RunDlg<AlertDlg>(() => mainForm.DoImport(validConfigFile),
                 dlg =>
                 {
-                    Assert.AreEqual(SharedBatch.Properties.Resources.ConfigManager_Import_These_configurations_already_exist_and_could_not_be_imported_ + Environment.NewLine +
+                    Assert.AreEqual(SharedBatch.Properties.Resources.ConfigManager_ImportFrom_The_following_configurations_already_exist_ + Environment.NewLine +
                                     "\"RefineEmptyTemplate\"" + Environment.NewLine +
                                     "\"EmptyTemplate\"" + Environment.NewLine +
                                     "\"Bruderer\"" + Environment.NewLine +
-                                    SharedBatch.Properties.Resources.ConfigManager_Import_Please_remove_the_configurations_you_would_like_to_import_,
+                                    SharedBatch.Properties.Resources.ConfigManager_ImportFrom_Do_you_want_to_overwrite_these_configurations_,
                         dlg.Message);
-                    dlg.ClickOk();
+                    dlg.ClickNo();
                 });
 
             RunUI(() => { FunctionalTestUtil.CheckConfigs(3, 0, mainForm); });
