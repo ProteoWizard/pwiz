@@ -48,13 +48,13 @@ namespace SkylineBatchTest
         }
 
         [TestMethod]
-        public async Task TestRunFromStepFour()
+        public async Task TestRunFromRScripts()
         {
             TestUtils.InitializeRInstallation();
             var logger = TestUtils.GetTestLogger();
             var testRunner = new ConfigRunner(TestUtils.GetTestConfig(), logger);
             Assert.IsTrue(testRunner.IsStopped());
-            await testRunner.Run(RunBatchOptions.FROM_EXPORT_REPORT);
+            await testRunner.Run(RunBatchOptions.FROM_R_SCRIPTS);
             logger.Delete();
             Assert.IsTrue(testRunner.IsCompleted(), "Expected runner to have status \"Completed\" but was: " + testRunner.GetStatus());
         }

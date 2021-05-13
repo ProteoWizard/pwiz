@@ -68,9 +68,9 @@ namespace SkylineBatch
         {
             if (validationException != null || (_cancelValidate != null && _cancelValidate.IsCancellationRequested))
             {
-                if (validationException != null) AlertDlg.ShowError(this, Program.AppName(), validationException.Message);
                 Invoke(new Action(() =>
                 {
+                    if (validationException != null) AlertDlg.ShowError(this, Program.AppName(), validationException.Message);
                     btnSave.Enabled = true;
                     btnSave.Text = Resources.AddServerForm_FinishConnectToServer_Save;
                 }));

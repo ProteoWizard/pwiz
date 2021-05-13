@@ -34,7 +34,15 @@ using SharedBatch.Properties;
 
         private readonly string _filePath;
 
+        public const long MaxLogSize = 10 * 1024 * 1024; // 10MB
+        private const int MaxBackups = 5;
         public const int MaxLogLines = 10000;
+
+        private Queue<string> _memLogMessages;
+        private const int MemLogSize = 100; // Keep the last 100 log messages in memory
+        private StringBuilder _logBuffer; // To be used when the log file is unavailable for writing
+        private const int LogBufferSize = 10240;
+        private const int StreamReaderDefaultBufferSize = 4096;
 
         private int _lines;
 
@@ -44,6 +52,7 @@ using SharedBatch.Properties;
         private readonly object _uiBufferLock = new object();
 
         private readonly object _fileLock = new object();
+        private readonly object _lock = new object();
 
         private FileStream _fileStream;
         private const int StreamDefaultBufferSize = 4096;
@@ -97,6 +106,16 @@ using SharedBatch.Properties;
 
         public void Init()
         {
+            _logBuffer = new StringBuilder();
+            _memLogMessages = new Queue<string>(MemLogSize);
+
+            // Initialize - create blank log file if doesn't exist
+            if (!File.Exists(_filePath))
+            {
+                using (File.Create(_filePath))
+                {
+                }
+            }
             lock (_uiBuffer)
             {
                 _uiBuffer.Clear();
@@ -109,23 +128,7 @@ using SharedBatch.Properties;
         // Logs the text to the log as is
         private void LogVerbatim(params string[] text)
         {
-            var fullMessage = string.Join(Environment.NewLine, text);
-            lock (_fileLock)
-            {
-                using (var fileStream = new FileStream(_filePath, FileMode.Append, FileAccess.Write, FileShare.Read))
-                {
-                    using (var streamWriter =
-                        new StreamWriter(fileStream, Encoding.UTF8, StreamDefaultBufferSize, true))
-                    {
-                        foreach (var line in text)
-                        {
-                            streamWriter.WriteLine(line);
-                            streamWriter.Flush();
-                        }
-                    }
-
-                }
-            }
+            WriteToFile(TextUtil.LineSeparate(text));
             lock (_uiBufferLock)
             {
                 _uiBuffer.AddRange(text);
@@ -298,6 +301,128 @@ using SharedBatch.Properties;
                 // pass - file already closed
             }
             File.Delete(_filePath);
+        }
+
+        private void WriteToFile(string message)
+        {
+            // This should be an uncontested lock unless there is a thread in DisplayLog (which displays the log contents in the UI)
+            // In this case we want to wait for that to finish before updating the log.
+            lock (_lock)
+            {
+                try
+                {
+                    BackupLog();
+                }
+                catch (Exception e)
+                {
+                    var err = new StringBuilder(Resources.Logger_WriteToFile_Error_occurred_while_trying_to_backup_log_file__).AppendLine(_filePath);
+                    err.AppendLine(Resources.Logger_WriteToFile_Exception_stack_trace__);
+                    ProgramLog.Error(err.ToString(), e);
+                }
+
+                //var dateAndMessage = GetDate() + message;
+
+                try
+                {
+
+                    using (var fileStream = new FileStream(_filePath, FileMode.Append, FileAccess.Write, FileShare.Read))
+                    {
+                        using (var streamWriter =
+                            new StreamWriter(fileStream, Encoding.UTF8, StreamDefaultBufferSize, true))
+                        {
+                            if (_logBuffer != null && _logBuffer.Length > 0)
+                            {
+                                // Append any log messages that were buffered while the log file was unavailable (e.g. due to network share being temporarily unavailable).
+                                streamWriter.Write(_logBuffer.ToString());
+                                streamWriter.Flush();
+                                _logBuffer.Clear();
+                            }
+                            streamWriter.WriteLine(message);
+                            streamWriter.Flush();
+                        }
+
+                    }
+
+                    // Save log message in memory
+                    if (_memLogMessages.Count == MemLogSize)
+                    {
+                        _memLogMessages.Dequeue();
+                    }
+                    _memLogMessages.Enqueue(message);
+                }
+                catch (Exception e)
+                {
+                    // If we cannot access the log file at this time, write to the buffer and the program log
+                    WriteToBuffer(message);
+
+                    var fileNotFound = e.GetType().IsAssignableFrom(typeof(FileNotFoundException));
+                    if (!fileNotFound)
+                    {
+                        WriteToBuffer(string.Format(Resources.Logger_WriteToFile_ERROR_writing_to_the_log_file___0___Check_program_log_for_details___1_, e.Message, ProgramLog.GetProgramLogFilePath()));
+                    }
+
+                    ProgramLog.Error(string.Format(Resources.Logger_WriteToFile_Error_occurred_writing_to_log_file___0___Attempted_to_write_, _filePath));
+                    ProgramLog.Error(message);
+                    if (!fileNotFound)
+                    {
+                        ProgramLog.Error(Resources.Logger_WriteToFile_Exception_stack_trace_, e);
+                    }
+                    else
+                    {
+                        ProgramLog.Error(string.Format(Resources.Logger_WriteToFile_Error_message_was__0__, e.Message));
+                    }
+                }
+            }
+        }
+
+        private void WriteToBuffer(string message)
+        {
+            if (_logBuffer.Length > LogBufferSize)
+            {
+                return;
+            }
+            _logBuffer.AppendLine(message);
+
+            if (_logBuffer.Length > LogBufferSize)
+            {
+                _logBuffer.AppendLine(Resources.Logger_WriteToBuffer_____LOG_BUFFER_IS_FULL____);
+            }
+        }
+
+        private void BackupLog()
+        {
+            if (!File.Exists(_filePath))
+            {
+                // Maybe the log file is on a mapped network drive and we have lost connection
+                return;
+            }
+
+            var size = new FileInfo(_filePath).Length;
+            if (size >= MaxLogSize)
+            {
+                BackupLog(_filePath, 1);
+            }
+        }
+
+        private void BackupLog(string filePath, int bkupIndex)
+        {
+            if (bkupIndex > MaxBackups)
+            {
+                File.Delete(GetLogFilePath(filePath, bkupIndex - 1));
+                return;
+            }
+            var backupFile = GetLogFilePath(filePath, bkupIndex);
+            if (File.Exists(backupFile))
+            {
+                BackupLog(filePath, bkupIndex + 1);
+            }
+
+            var startFile = GetLogFilePath(filePath, bkupIndex - 1);
+            File.Move(startFile, backupFile);
+        }
+        private static string GetLogFilePath(string filePath, int index)
+        {
+            return index == 0 ? filePath : filePath + "." + index;
         }
 
     }

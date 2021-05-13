@@ -1,12 +1,8 @@
 ﻿using System;
 using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SharedBatch;
-using SharedBatchTest;
 using SkylineBatch;
-using SkylineBatchTest;
 
 namespace SkylineBatchTest
 {
@@ -86,8 +82,7 @@ namespace SkylineBatchTest
 
             var longImportDlg = ShowDialog<LongWaitDlg>(() => mainForm.DoImport(configFile));
             WaitForClosedForm(longImportDlg);
-            //TODO uncomment this when fix
-            //Assert.AreEqual(false, Directory.Exists(dataDirectory));
+            Assert.AreEqual(false, Directory.Exists(dataDirectory));
 
             RunUI(() =>
             {
