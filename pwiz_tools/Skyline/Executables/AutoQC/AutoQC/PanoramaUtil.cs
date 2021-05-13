@@ -82,7 +82,7 @@ namespace AutoQC
             switch (panoramaClient.IsValidUser(username, password))
             {
                 case UserState.nonvalid:
-                    throw new PanoramaServerException(Resources.PanoramaUtil_VerifyServerInformation_The_username_and_password_could_not_be_authenticated_with_the_panorama_server__Please_try_again_);
+                    throw new PanoramaServerException("The username and password could not be authenticated with the panorama server.");
                 case UserState.unknown:
                     throw new PanoramaServerException(string.Format(Resources.PanoramaUtil_VerifyServerInformation_Unknown_error_validating_user_on_server__0__, uriServer.AbsoluteUri));
             }

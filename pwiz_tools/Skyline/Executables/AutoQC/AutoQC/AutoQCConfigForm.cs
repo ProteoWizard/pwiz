@@ -79,14 +79,18 @@ namespace AutoQC
         {
             if (config != null) _lastEnteredPath = config.MainSettings.SkylineFilePath;
             InitSkylineTab(config);
-            SetInitialPanoramaSettings(config);
+            
             if (_action == ConfigAction.Add || config == null)
             {
                 SetDefaultMainSettings();
+                // If we are given a config (e.g. the most recently modified config) take the Panorama server URL from the config
+                // so that the user does not have to enter the URL again. But don't copy anything else.
+                SetDefaultPanoramaSettings(config?.PanoramaSettings.PanoramaServerUrl);
                 return;
             }
             textConfigName.Text = config.Name;
             SetInitialMainSettings(config.MainSettings);
+            SetInitialPanoramaSettings(config.PanoramaSettings);
         }
 
         public void DisableUserInputs(Control parentControl = null)
@@ -145,7 +149,7 @@ namespace AutoQC
             var resultsWindow = textResultsTimeWindow.Text;
             var instrumentType = comboBoxInstrumentType.SelectedItem.ToString();
             var acquisitionTime = textAquisitionTime.Text;
-            var mainSettings = new MainSettings(skylineFilePath, folderToWatch, includeSubfolders, qcFileFilter, removeResults, resultsWindow, instrumentType, acquisitionTime);
+            var mainSettings = MainSettings.Get(skylineFilePath, folderToWatch, includeSubfolders, qcFileFilter, removeResults, resultsWindow, instrumentType, acquisitionTime);
             return mainSettings;
         }
 
@@ -200,14 +204,8 @@ namespace AutoQC
 
         #region Panorama settings
 
-        private void SetInitialPanoramaSettings(AutoQcConfig config)
+        private void SetInitialPanoramaSettings(PanoramaSettings panoramaSettings)
         {
-            if (config == null)
-            {
-                SetDefaultPanoramaSettings();
-                return;
-            }
-            var panoramaSettings = config.PanoramaSettings;
             textPanoramaUrl.Text = panoramaSettings.PanoramaServerUrl;
             
             if (_action != ConfigAction.Copy)
@@ -223,15 +221,20 @@ namespace AutoQC
             groupBoxPanorama.Enabled = panoramaSettings.PublishToPanorama;
         }
 
-        private void SetDefaultPanoramaSettings()
+
+        private void SetDefaultPanoramaSettings(string serverUrl = null)
         {
             cbPublishToPanorama.Checked = PanoramaSettings.GetDefaultPublishToPanorama();
             groupBoxPanorama.Enabled = PanoramaSettings.GetDefaultPublishToPanorama();
+            if (serverUrl != null)
+            {
+                textPanoramaUrl.Text = serverUrl;
+            }
         }
 
         private PanoramaSettings GetPanoramaSettingsFromUi()
         {
-            return new PanoramaSettings(cbPublishToPanorama.Checked, textPanoramaUrl.Text, textPanoramaEmail.Text, textPanoramaPasswd.Text, textPanoramaFolder.Text);
+            return PanoramaSettings.Get(cbPublishToPanorama.Checked, textPanoramaUrl.Text, textPanoramaEmail.Text, textPanoramaPasswd.Text, textPanoramaFolder.Text);
         }
 
         private void cbPublishToPanorama_CheckedChanged(object sender, EventArgs e)
@@ -304,11 +307,11 @@ namespace AutoQC
 
         private void Save()
         {
-            var newConfig = GetConfigFromUi();
+            AutoQcConfig newConfig;
             try
             {
+                newConfig = GetConfigFromUi();
                 _mainControl.AssertUniqueConfigName(newConfig.Name, _action == ConfigAction.Edit);
-                newConfig.Validate();
             }
             catch (ArgumentException e)
             {

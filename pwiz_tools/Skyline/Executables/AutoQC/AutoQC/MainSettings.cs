@@ -64,8 +64,22 @@ namespace AutoQC
         public DateTime LastArchivalDate; // TODO: finish making readonly
 
 
-        public MainSettings(string skylineFilePath, string folderToWatch, bool includeSubFolders, FileFilter qcFileFilter, 
+        public static MainSettings Get(string skylineFilePath, string folderToWatch, bool includeSubFolders, FileFilter qcFileFilter,
             bool removeResults, string resultsWindowString, string instrumentType, string acquisitionTimeString)
+        {
+            return new MainSettings(skylineFilePath, folderToWatch, includeSubFolders, qcFileFilter, removeResults,
+                resultsWindowString, instrumentType, acquisitionTimeString);
+        }
+
+        public static MainSettings GetUnValidated(string skylineFilePath, string folderToWatch, bool includeSubFolders, FileFilter qcFileFilter,
+            bool removeResults, string resultsWindowString, string instrumentType, string acquisitionTimeString)
+        {
+            return new MainSettings(skylineFilePath, folderToWatch, includeSubFolders, qcFileFilter, removeResults,
+                resultsWindowString, instrumentType, acquisitionTimeString, false);
+        }
+
+        private MainSettings(string skylineFilePath, string folderToWatch, bool includeSubFolders, FileFilter qcFileFilter, 
+            bool removeResults, string resultsWindowString, string instrumentType, string acquisitionTimeString, bool validate = true)
         {
             SkylineFilePath = skylineFilePath;
             FolderToWatch = folderToWatch;
@@ -75,6 +89,11 @@ namespace AutoQC
             ResultsWindow = ValidateIntTextField(resultsWindowString, Resources.MainSettings_MainSettings_results_window);
             InstrumentType = instrumentType;
             AcquisitionTime = ValidateIntTextField(acquisitionTimeString, Resources.MainSettings_MainSettings_acquisition_time);
+
+            if (validate)
+            {
+                ValidateSettings();
+            }
         }
 
         public virtual bool IsSelected()
@@ -287,7 +306,12 @@ namespace AutoQC
             return LastArchivalDate;
         }
 
-      
+        public void Validate()
+        {
+            ValidateSettings();
+        }
+
+
         #region Implementation of IXmlSerializable interface
 
         private enum Attr
@@ -326,8 +350,9 @@ namespace AutoQC
             var instrumentType = reader.GetAttribute(Attr.instrument_type);
             var acquisitionTime = reader.GetAttribute(Attr.acquisition_time);
 
-
-            return new MainSettings(skylineFilePath, folderToWatch, includeSubfolders, 
+            // Return unvalidated settings. Validation can throw an exception that will cause the config to not get read fully and it will not be added to the config list
+            // We want the user to be able to fix invalid configs.
+            return GetUnValidated(skylineFilePath, folderToWatch, includeSubfolders, 
                 qcFileFilter, removeResults, resultsWindow, instrumentType, 
                 acquisitionTime);
         }
@@ -352,22 +377,17 @@ namespace AutoQC
 
         protected bool Equals(MainSettings other)
         {
-            return string.Equals(SkylineFilePath, other.SkylineFilePath)
-                   && string.Equals(FolderToWatch, other.FolderToWatch)
-                   && IncludeSubfolders == other.IncludeSubfolders
-                   && Equals(QcFileFilter, other.QcFileFilter)
-                   && ResultsWindow == other.ResultsWindow
-                   && RemoveResults == other.RemoveResults
-                   && string.Equals(InstrumentType, other.InstrumentType)
-                   && AcquisitionTime == other.AcquisitionTime
-                   && LastAcquiredFileDate.Equals(other.LastAcquiredFileDate);
+            return SkylineFilePath == other.SkylineFilePath && FolderToWatch == other.FolderToWatch &&
+                   IncludeSubfolders == other.IncludeSubfolders && Equals(QcFileFilter, other.QcFileFilter) &&
+                   RemoveResults == other.RemoveResults && ResultsWindow == other.ResultsWindow &&
+                   InstrumentType == other.InstrumentType && AcquisitionTime == other.AcquisitionTime;
         }
 
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != GetType()) return false;
+            if (obj.GetType() != this.GetType()) return false;
             return Equals((MainSettings) obj);
         }
 
@@ -376,12 +396,13 @@ namespace AutoQC
             unchecked
             {
                 var hashCode = (SkylineFilePath != null ? SkylineFilePath.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ (FolderToWatch != null ? FolderToWatch.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ IncludeSubfolders.GetHashCode();
-                hashCode = (hashCode*397) ^ (QcFileFilter != null ? QcFileFilter.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ ResultsWindow;
-                hashCode = (hashCode*397) ^ (InstrumentType != null ? InstrumentType.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ AcquisitionTime;
+                hashCode = (hashCode * 397) ^ (FolderToWatch != null ? FolderToWatch.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ IncludeSubfolders.GetHashCode();
+                hashCode = (hashCode * 397) ^ (QcFileFilter != null ? QcFileFilter.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ RemoveResults.GetHashCode();
+                hashCode = (hashCode * 397) ^ ResultsWindow;
+                hashCode = (hashCode * 397) ^ (InstrumentType != null ? InstrumentType.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ AcquisitionTime;
                 return hashCode;
             }
         }

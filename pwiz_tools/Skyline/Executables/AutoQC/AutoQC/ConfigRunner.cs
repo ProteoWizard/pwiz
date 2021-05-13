@@ -178,10 +178,11 @@ namespace AutoQC
             lock (_lock)
             {
                 _runnerStatus = runnerStatus;
-                if (_uiControl != null)
+                if (IsStopped())
                 {
-                    _uiControl.UpdateUiConfigurations();
+                    Config.IsEnabled = false;
                 }
+                _uiControl?.UpdateUiConfigurations();
             }
         }
 

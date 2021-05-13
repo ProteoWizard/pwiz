@@ -130,13 +130,6 @@ namespace AutoQC
                     ProgramLog.Info($"Reading from file {openFile}");
                 }
 
-                UpgradeConfigIfRequired(configFile);
-
-                // if (string.IsNullOrEmpty(openFile))
-                // {
-                //     openFile = GetPre_21_1_ConfigIfUpgrading(configFile);
-                //     ProgramLog.Info("Reading from OLD config file " + openFile);
-                // }
                 var form = new MainForm(openFile) {Text = Version()};
 
                 var worker = new BackgroundWorker {WorkerSupportsCancellation = false, WorkerReportsProgress = false};
@@ -157,57 +150,6 @@ namespace AutoQC
 
                 mutex.ReleaseMutex();
             }
-        }
-
-        private static void UpgradeConfigIfRequired(string configFile)
-        {
-            GetPre_21_1_ConfigIfUpgrading(configFile);
-
-            // string userConfigFileName = "user.config";
-            //
-            //
-            // // Expected location of the current user config
-            // DirectoryInfo currentVersionConfigFileDir = new FileInfo(ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath).Directory;
-            // if (currentVersionConfigFileDir == null)
-            // {
-            //     return;
-            // }
-            //
-            // // Location of the previous user config
-            //
-            // // grab the most recent folder from the list of user's settings folders, prior to the current version
-            // var previousSettingsDir = (from dir in currentVersionConfigFileDir.Parent.GetDirectories()
-            //     let dirVer = new { Dir = dir, Ver = new Version(dir.Name) }
-            //     where dirVer.Ver < currentVersion
-            //     orderby dirVer.Ver descending
-            //     select dir).FirstOrDefault();
-
-            Settings.Default.Upgrade();
-        }
-
-        private static string GetPre_21_1_ConfigIfUpgrading(string configFile)
-        {
-            if (!ApplicationDeployment.IsNetworkDeployed)
-            {
-                return string.Empty;
-            }
-
-            // if (!string.IsNullOrEmpty(_lastInstalledVersion) && _lastInstalledVersion.StartsWith("1.1.0."))
-            // {
-                // Copy the user.config to the Downloads folder
-                var downloadsFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-                string filename = string.IsNullOrEmpty(_lastInstalledVersion)
-                    ? "autoqc_old.user.config"
-                    : _lastInstalledVersion + ".user.config";
-                var configOldFile = Path.Combine(downloadsFolder, filename);
-
-                ProgramLog.Info($"Config format changed. Copying old config to '{configOldFile}'");
-
-                File.Copy(configFile, configOldFile, true);
-                return configOldFile;
-            // }
-
-            // return string.Empty;
         }
 
         private static void GetCurrentAndLastInstalledVersions()
@@ -254,7 +196,6 @@ namespace AutoQC
             string arg;
             if (ApplicationDeployment.IsNetworkDeployed)
             {
-                // _version = ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString();
                 var activationData = AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData;
                 arg = activationData != null && activationData.Length > 0
                     ? activationData[0]
@@ -262,7 +203,6 @@ namespace AutoQC
             }
             else
             {
-                // _version = string.Empty;
                 arg = args.Length > 0 ? args[0] : string.Empty;
             }
 
@@ -271,7 +211,9 @@ namespace AutoQC
 
         private static void AddFileTypesToRegistry()
         {
-            var appReference = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\Microsoft\\Windows\\Start Menu\\Programs\\MacCoss Lab, UW\\" + AppName.Substring(0, AppName.IndexOf(" ")) + TextUtil.EXT_APPREF;
+            var appReference = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) +
+                               "\\Microsoft\\Windows\\Start Menu\\Programs\\MacCoss Lab, UW\\" +
+                               AppName.Substring(0, AppName.IndexOf(" ")) + TextUtil.EXT_APPREF;
             var appExe = Application.ExecutablePath;
 
             var baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
@@ -297,7 +239,7 @@ namespace AutoQC
 
             if (ApplicationDeployment.IsNetworkDeployed)
             {
-                if (!_version.Equals(_lastInstalledVersion) /*IsFirstRun()*/)
+                if (!_version.Equals(_lastInstalledVersion))
                 {
                     // First time running a newer version of the application
                     ProgramLog.Info($"Updating {AutoQcStarterExe} shortcut.");
@@ -312,27 +254,6 @@ namespace AutoQC
             }
         }
 
-        private static bool IsFirstRun()
-        {
-            if (!ApplicationDeployment.IsNetworkDeployed)
-                return false;
-
-            // var currentVersion = ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString();
-            // var installedVersion = Settings.Default.InstalledVersion ?? string.Empty;
-            if (!_version.Equals(_lastInstalledVersion))
-            {
-                // ProgramLog.Info(string.Empty.Equals(installedVersion)
-                //     ? $"This is a first install and run of version: {currentVersion}."
-                //     : $"Current version: {currentVersion} is newer than the last installed version: {installedVersion}.");
-                //
-                // Settings.Default.InstalledVersion = currentVersion;
-                // Settings.Default.Save();
-                return true;
-            }
-            // ProgramLog.Info($"Current version: {currentVersion} same as last installed version: {installedVersion}.");
-            return false;
-        }
-        
         public static string GetProgramLogFilePath()
         {
             var repository = ((Hierarchy) LogManager.GetRepository());

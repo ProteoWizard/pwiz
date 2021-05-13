@@ -366,44 +366,65 @@ namespace AutoQC
             }
         }
 
-        public void UpdateSelectedEnabled(bool newIsEnabled)
+        public void StopConfiguration()
         {
             lock (_lock)
             {
                 var selectedConfig = GetSelectedConfig();
-                if (selectedConfig.IsEnabled == newIsEnabled)
+                if (!selectedConfig.IsEnabled) // TODO: Do we need this?
                     return;
-                try
-                {
-                    selectedConfig.Validate();
-                }
-                catch (ArgumentException)
-                {
-                    DisplayError(TextUtil.LineSeparate(string.Format("Cannot run the configuration \"{0}\" because it could not be validated.", selectedConfig.Name),
-                                 "Please edit the configuration and try again."));
-                    return;
-                }
+                
                 var configRunner = GetSelectedConfigRunner();
                 if (configRunner.IsStarting() || configRunner.IsStopping())
                 {
-                    var message = string.Format(Resources.ConfigManager_UpdateSelectedEnabled_Cannot_stop_a_configuration_that_is__0___Please_wait_until_the_configuration_has_finished__0__,
+                    var message = string.Format("Cannot stop a configuration that is {0}. Please wait until the configuration has finished {0}.",
                         configRunner.IsStarting() ? Resources.ConfigManager_UpdateSelectedEnabled_starting : Resources.ConfigManager_UpdateSelectedEnabled_stopping);
 
                     DisplayWarning(message);
                     return;
                 }
 
-                if (!newIsEnabled)
-                {
-                    var doChange = DisplayQuestion(string.Format(
-                        Resources.ConfigManager_UpdateSelectedEnabled_Are_you_sure_you_want_to_stop_configuration__0__,
-                        configRunner.GetConfigName()));
+                var doChange = DisplayQuestion(string.Format(
+                    Resources.ConfigManager_UpdateSelectedEnabled_Are_you_sure_you_want_to_stop_configuration__0__,
+                    configRunner.GetConfigName()));
 
-                    if (doChange == DialogResult.Yes)
-                    {
-                        selectedConfig.IsEnabled = false;
-                        configRunner.Stop();
-                    }
+                if (doChange == DialogResult.Yes)
+                {
+                    selectedConfig.IsEnabled = false;
+                    configRunner.Stop();
+                }
+            }
+        }
+
+        public void StartConfiguration()
+        {
+            lock (_lock)
+            {
+                var selectedConfig = GetSelectedConfig();
+                if (selectedConfig.IsEnabled) // TODO: Do we need this?
+                    return;
+                try
+                {
+                    selectedConfig.Validate();
+                }
+                catch (ArgumentException e)
+                {
+                    DisplayError(TextUtil.LineSeparate(string.Format("Cannot run the configuration '{0}' because it could not be validated.", selectedConfig.Name),
+                                 "The error was:",
+                                 e.Message,
+                                 "Please edit the configuration and try again."));
+                    return;
+                }
+                var configRunner = GetSelectedConfigRunner();
+                if (configRunner.IsStarting() || configRunner.IsStopping())
+                {
+                    var message = string.Format(
+                        "Cannot start a configuration that is {0}. Please wait until the configuration has finished {0}.",
+                        configRunner.IsStarting()
+                            ? Resources.ConfigManager_UpdateSelectedEnabled_starting
+                            : Resources.ConfigManager_UpdateSelectedEnabled_stopping);
+
+                    DisplayWarning(message);
                     return;
                 }
 

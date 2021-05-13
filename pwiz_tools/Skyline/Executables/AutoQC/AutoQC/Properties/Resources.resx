@@ -172,12 +172,6 @@
   <data name="Panorama" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Panorama.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="AutoQcConfig_AutoQcConfig___0___is_not_a_valid_name_for_the_configuration_" xml:space="preserve">
-    <value>"{0}" is not a valid name for the configuration.</value>
-  </data>
-  <data name="AutoQcConfig_AutoQcConfig_Please_enter_a_name_" xml:space="preserve">
-    <value>Please enter a name.</value>
-  </data>
   <data name="AutoQCFileSystemWatcher_Restart_FileSystemWatcher_canceled_" xml:space="preserve">
     <value>FileSystemWatcher canceled.</value>
   </data>
@@ -228,9 +222,6 @@
   </data>
   <data name="ConfigManager_UpdateSelectedEnabled_stopping" xml:space="preserve">
     <value>stopping</value>
-  </data>
-  <data name="ConfigManager_UpdateSelectedEnabled_Cannot_stop_a_configuration_that_is__0___Please_wait_until_the_configuration_has_finished__0__" xml:space="preserve">
-    <value>Cannot stop a configuration that is {0}. Please wait until the configuration has finished {0}.</value>
   </data>
   <data name="ConfigManager_UpdateSelectedEnabled_Are_you_sure_you_want_to_stop_configuration__0__" xml:space="preserve">
     <value>Are you sure you want to stop configuration {0}?</value>
@@ -454,9 +445,6 @@ with:
   <data name="RegexFilter_FilterName_Regular_expression" xml:space="preserve">
     <value>Regular expression</value>
   </data>
-  <data name="PanoramaSettings_PanoramaSettings_Panorama_server_name_is_invalid__Please_enter_a_different_Panorama_server_name_" xml:space="preserve">
-    <value>Panorama server name is invalid. Please enter a different Panorama server name.</value>
-  </data>
   <data name="PanoramaSettings_ValidateSettings_The__0__cannot_be_empty__Please_specify_a__0__" xml:space="preserve">
     <value>The {0} cannot be empty. Please specify a {0}.</value>
   </data>
@@ -498,9 +486,6 @@ with:
   </data>
   <data name="ProcessRunner_RunProcess__0__exited_successfully_" xml:space="preserve">
     <value>{0} exited successfully.</value>
-  </data>
-  <data name="PanoramaUtil_VerifyServerInformation_The_username_and_password_could_not_be_authenticated_with_the_panorama_server__Please_try_again_" xml:space="preserve">
-    <value>The username and password could not be authenticated with the panorama server. Please try again.</value>
   </data>
   <data name="PanoramaUtil_VerifyServerInformation_Username_and_password_cannot_be_null__Please_enter_a_username_and_password_" xml:space="preserve">
     <value>Username and password cannot be null. Please enter a username and password.</value>

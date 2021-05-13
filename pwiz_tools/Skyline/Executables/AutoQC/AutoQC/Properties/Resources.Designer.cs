@@ -98,24 +98,6 @@ namespace AutoQC.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &quot;{0}&quot; is not a valid name for the configuration..
-        /// </summary>
-        internal static string AutoQcConfig_AutoQcConfig___0___is_not_a_valid_name_for_the_configuration_ {
-            get {
-                return ResourceManager.GetString("AutoQcConfig_AutoQcConfig___0___is_not_a_valid_name_for_the_configuration_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Please enter a name..
-        /// </summary>
-        internal static string AutoQcConfig_AutoQcConfig_Please_enter_a_name_ {
-            get {
-                return ResourceManager.GetString("AutoQcConfig_AutoQcConfig_Please_enter_a_name_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to The following configurations are running and could not be updated:.
         /// </summary>
         internal static string AutoQcConfigManager_ReplaceSkylineSettings_The_following_configurations_are_running_and_could_not_be_updated_ {
@@ -448,16 +430,6 @@ namespace AutoQC.Properties {
             get {
                 return ResourceManager.GetString("ConfigManager_UpdateSelectedEnabled_Are_you_sure_you_want_to_stop_configuration__" +
                         "0__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Cannot stop a configuration that is {0}. Please wait until the configuration has finished {0}..
-        /// </summary>
-        internal static string ConfigManager_UpdateSelectedEnabled_Cannot_stop_a_configuration_that_is__0___Please_wait_until_the_configuration_has_finished__0__ {
-            get {
-                return ResourceManager.GetString("ConfigManager_UpdateSelectedEnabled_Cannot_stop_a_configuration_that_is__0___Plea" +
-                        "se_wait_until_the_configuration_has_finished__0__", resourceCulture);
             }
         }
         
@@ -1081,16 +1053,6 @@ namespace AutoQC.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Panorama server name is invalid. Please enter a different Panorama server name..
-        /// </summary>
-        internal static string PanoramaSettings_PanoramaSettings_Panorama_server_name_is_invalid__Please_enter_a_different_Panorama_server_name_ {
-            get {
-                return ResourceManager.GetString("PanoramaSettings_PanoramaSettings_Panorama_server_name_is_invalid__Please_enter_a" +
-                        "_different_Panorama_server_name_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to folder on the Panorama server.
         /// </summary>
         internal static string PanoramaSettings_ValidateSettings_folder_on_the_Panorama_server {
@@ -1150,16 +1112,6 @@ namespace AutoQC.Properties {
         internal static string PanoramaUtil_VerifyServerInformation_The_server__0__is_not_a_Panorama_server_ {
             get {
                 return ResourceManager.GetString("PanoramaUtil_VerifyServerInformation_The_server__0__is_not_a_Panorama_server_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The username and password could not be authenticated with the panorama server. Please try again..
-        /// </summary>
-        internal static string PanoramaUtil_VerifyServerInformation_The_username_and_password_could_not_be_authenticated_with_the_panorama_server__Please_try_again_ {
-            get {
-                return ResourceManager.GetString("PanoramaUtil_VerifyServerInformation_The_username_and_password_could_not_be_authe" +
-                        "nticated_with_the_panorama_server__Please_try_again_", resourceCulture);
             }
         }
         

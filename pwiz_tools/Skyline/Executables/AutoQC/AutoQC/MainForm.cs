@@ -223,13 +223,13 @@ namespace AutoQC
 
         private void btnRun_MouseClick(object sender, MouseEventArgs e)
         {
-            _configManager.UpdateSelectedEnabled(true);
+            _configManager.StartConfiguration();
             UpdateUiConfigurations();
         }
 
         private void btnStop_MouseClick(object sender, MouseEventArgs e)
         {
-            _configManager.UpdateSelectedEnabled(false);
+            _configManager.StopConfiguration();
             UpdateUiConfigurations();
         }
 

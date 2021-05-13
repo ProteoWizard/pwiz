@@ -30,11 +30,11 @@ namespace AutoQC
 
         public bool IsValid(out string errorMessage)
         {
-            _panoramaSettings = new PanoramaSettings(_panoramaSettings.PublishToPanorama, textPanoramaUrl.Text, textPanoramaEmail.Text, textPanoramaPasswd.Text, textPanoramaFolder.Text);
             errorMessage = null;
             try
             {
-                _panoramaSettings.ValidateSettings();
+                _panoramaSettings = PanoramaSettings.Get(_panoramaSettings.PublishToPanorama, textPanoramaUrl.Text,
+                    textPanoramaEmail.Text, textPanoramaPasswd.Text, textPanoramaFolder.Text);
                 return true;
             }
             catch (ArgumentException e)

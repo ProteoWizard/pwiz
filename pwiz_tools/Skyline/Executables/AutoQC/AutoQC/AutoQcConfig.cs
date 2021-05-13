@@ -6,7 +6,6 @@ using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
-using AutoQC.Properties;
 using SharedBatch;
 
 namespace AutoQC
@@ -20,8 +19,7 @@ namespace AutoQC
         {
             if (string.IsNullOrEmpty(name))
             {
-                throw new ArgumentException(string.Format(Resources.AutoQcConfig_AutoQcConfig___0___is_not_a_valid_name_for_the_configuration_, name) + Environment.NewLine +
-                                            Resources.AutoQcConfig_AutoQcConfig_Please_enter_a_name_);
+                throw new ArgumentException("Configuration name cannot be blank. Please enter a name for the configuration.");
             }
             Name = name;
             IsEnabled = isEnabled;
