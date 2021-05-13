@@ -287,6 +287,7 @@ namespace pwiz.SkylineTestFunctional
             });
 
             // We're on the Converter settings page.
+            TryWaitForOpenForm(typeof(ImportPeptideSearchDlg.ConverterSettingsPage));   // Stop to show this form during form testing
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.converter_settings_page);
