@@ -21,8 +21,10 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
@@ -56,6 +58,9 @@ namespace AutoQC
         private RunnerStatus _runnerStatus;
         // This flag is set if a document failed to upload to Panorama for any reason.
         private bool _panoramaUploadError;
+
+        public DateTime LastAcquiredFileDate;
+        public DateTime LastArchivalDate; 
 
         public ConfigRunner(AutoQcConfig config, Logger logger, IMainUiControl uiControl = null)
         {
@@ -447,7 +452,7 @@ namespace AutoQC
                     continue;
                 }
 
-                var lastAcquiredFileDate = Config.MainSettings.LastAcquiredFileDate;
+                var lastAcquiredFileDate = LastAcquiredFileDate;
                 var fileLastWriteTime = File.GetLastWriteTime(filePath);
                 if (fileLastWriteTime.CompareTo(lastAcquiredFileDate.AddSeconds(1)) < 0)
                 {
@@ -665,7 +670,7 @@ namespace AutoQC
             try
             {
                 var lastAcquiredFileDate = GetLastAcquiredFileDate(reportFile, logger);
-                Config.MainSettings.LastAcquiredFileDate = lastAcquiredFileDate;
+                LastAcquiredFileDate = lastAcquiredFileDate;
                 if (!lastAcquiredFileDate.Equals(DateTime.MinValue))
                 {
                     logger.Log(Resources.ConfigRunner_ReadLastAcquiredFileDate_The_most_recent_acquisition_date_in_the_Skyline_document_is__0_, lastAcquiredFileDate);
@@ -721,6 +726,109 @@ namespace AutoQC
             }
 
             return lastAcq;
+        }
+
+        public string SkylineRunnerArgs(ImportContext importContext, bool toPrint = false)
+        {
+            // Get the current results time window
+            var currentDate = DateTime.Today;
+            var accumulationWindow = AccumulationWindow.Get(currentDate, Config.MainSettings.ResultsWindow);
+
+            var args = new StringBuilder();
+            // Input Skyline file
+            args.Append(string.Format(" --in=\"{0}\"", Config.MainSettings.SkylineFilePath));
+
+            string importOnOrAfter = string.Empty;
+            if (importContext.ImportExisting)
+            {
+                // We are importing existing files in the folder.  The import-on-or-after is determined
+                // by the last acquisition date on the files already imported in the Skyline document.
+                // If the Skyline document does not have any results files, we will import all existing
+                // files in the folder.
+                if (LastAcquiredFileDate != DateTime.MinValue)
+                {
+                    importOnOrAfter = string.Format(" --import-on-or-after={0}", LastAcquiredFileDate);
+                }
+            }
+            else
+            {
+                importOnOrAfter = string.Format(" --import-on-or-after={0}",
+                    accumulationWindow.StartDate.ToShortDateString());
+
+                if (Config.MainSettings.RemoveResults)
+                {
+                    // Add arguments to remove files older than the start of the rolling window.   
+                    args.Append(string.Format(" --remove-before={0}",
+                        accumulationWindow.StartDate.ToShortDateString()));
+                }
+            }
+
+            // Add arguments to import the results file
+            args.Append(string.Format(" --import-file=\"{0}\"{1}", importContext.GetCurrentFile(), importOnOrAfter));
+
+            // Save the Skyline file
+            args.Append(" --save");
+
+            return args.ToString();
+        }
+
+        public string GetArchiveArgs(DateTime archiveDate, DateTime currentDate)
+        {
+            if (currentDate.CompareTo(archiveDate) < 0)
+                return null;
+
+            if (currentDate.Year == archiveDate.Year && currentDate.Month == archiveDate.Month)
+            {
+                return null;
+            }
+
+            // Return args to archive the file: create a shared zip
+            var archiveFileName = string.Format("{0}_{1:D4}_{2:D2}.sky.zip",
+                Path.GetFileNameWithoutExtension(Config.MainSettings.SkylineFilePath),
+                archiveDate.Year,
+                archiveDate.Month);
+
+            LastArchivalDate = currentDate;
+
+            // Archive file will be written in the same directory as the Skyline file.
+            return string.Format("--share-zip={0}", archiveFileName);
+        }
+
+        public DateTime GetLastArchivalDate()
+        {
+            return GetLastArchivalDate(new FileSystemUtil());
+        }
+
+        public DateTime GetLastArchivalDate(IFileSystemUtil fileUtil)
+        {
+            if (!LastArchivalDate.Equals(DateTime.MinValue))
+            {
+                return LastArchivalDate;
+            }
+
+            if (!LastAcquiredFileDate.Equals(DateTime.MinValue))
+            {
+                LastArchivalDate = LastAcquiredFileDate;
+                return LastArchivalDate;
+            }
+
+            var fileName = Path.GetFileNameWithoutExtension(Config.MainSettings.SkylineFilePath);
+            var pattern = fileName + "_\\d{4}_\\d{2}.sky.zip";
+            var regex = new Regex(pattern);
+
+            var skylineFileDir = Path.GetDirectoryName(Config.MainSettings.SkylineFilePath);
+
+            // Look at any existing .sky.zip files to determine the last archival date
+            // Look for shared zip files with file names like <skyline_file_name>_<yyyy>_<mm>.sky.zip
+            var archiveFiles =
+                fileUtil.GetSkyZipFiles(skylineFileDir)
+                    .Where(f => regex.IsMatch(Path.GetFileName(f) ?? string.Empty))
+                    .OrderBy(filePath => fileUtil.LastWriteTime(filePath))
+                    .ToList();
+
+            LastArchivalDate = archiveFiles.Any() ? fileUtil.LastWriteTime(archiveFiles.Last()) : DateTime.Today;
+
+            return LastArchivalDate;
         }
 
         private void Log(string message, params Object[] args)
@@ -794,7 +902,7 @@ namespace AutoQC
         {
             var processInfos = new List<ProcessInfo>();
 
-            var runBefore = Config.RunBefore(importContext);
+            var runBefore = RunBefore(importContext);
             if (runBefore != null)
             {
                 runBefore.WorkingDirectory = importContext.WorkingDir;
@@ -807,7 +915,7 @@ namespace AutoQC
             var skylineRunner = new ProcessInfo(Config.SkylineSettings.CmdPath, skylineRunnerArgs, argsToPrint);
             processInfos.Add(skylineRunner);
             
-            var runAfter = Config.RunAfter(importContext);
+            var runAfter = RunAfter(importContext);
             if (runAfter != null)
             {
                 processInfos.Add(runAfter);
@@ -821,11 +929,51 @@ namespace AutoQC
             var args = new StringBuilder();
 
             args.AppendLine();
-            args.Append(Config.MainSettings.SkylineRunnerArgs(importContext, toPrint));
+            args.Append(SkylineRunnerArgs(importContext, toPrint));
             args.Append(" ");
             args.Append(Config.PanoramaSettings.SkylineRunnerArgs(importContext, toPrint));
 
             return args.ToString();
+        }
+
+        public ProcessInfo RunBefore(ImportContext importContext)
+        {
+            string archiveArgs = null;
+            if (!importContext.ImportExisting)
+            {
+                // If we are NOT importing existing results, create an archive (if required) of the 
+                // Skyline document BEFORE importing a results file.
+                archiveArgs = GetArchiveArgs(GetLastArchivalDate(), DateTime.Today);
+            }
+            if (string.IsNullOrEmpty(archiveArgs))
+            {
+                return null;
+            }
+            var args = string.Format("--in=\"{0}\" {1}", Config.MainSettings.SkylineFilePath, archiveArgs);
+            return new ProcessInfo(Config.SkylineSettings.CmdPath, args, args);
+        }
+
+        public ProcessInfo RunAfter(ImportContext importContext)
+        {
+            string archiveArgs = null;
+            var currentDate = DateTime.Today;
+            if (importContext.ImportExisting && importContext.ImportingLast())
+            {
+                // If we are importing existing files in the folder, create an archive (if required) of the 
+                // Skyline document AFTER importing the last results file.
+                var oldestFileDate = importContext.GetOldestImportedFileDate(LastAcquiredFileDate);
+                var today = DateTime.Today;
+                if (oldestFileDate.Year < today.Year || oldestFileDate.Month < today.Month)
+                {
+                    archiveArgs = GetArchiveArgs(currentDate.AddMonths(-1), currentDate);
+                }
+            }
+            if (string.IsNullOrEmpty(archiveArgs))
+            {
+                return null;
+            }
+            var args = string.Format("--in=\"{0}\" {1}", Config.MainSettings.SkylineFilePath, archiveArgs);
+            return new ProcessInfo(Config.SkylineSettings.CmdPath, args, args);
         }
 
         public ProcStatus RunProcess(ProcessInfo processInfo)

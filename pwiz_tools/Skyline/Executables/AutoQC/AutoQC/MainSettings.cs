@@ -60,10 +60,6 @@ namespace AutoQC
         public readonly int AcquisitionTime;
 
 
-        public DateTime LastAcquiredFileDate; // Not saved to Properties.Settings
-        public DateTime LastArchivalDate; // TODO: finish making readonly
-
-
         public static MainSettings Get(string skylineFilePath, string folderToWatch, bool includeSubFolders, FileFilter qcFileFilter,
             bool removeResults, string resultsWindowString, string instrumentType, string acquisitionTimeString)
         {
@@ -201,109 +197,6 @@ namespace AutoQC
                 throw new ArgumentException(string.Format(Resources.MainSettings_ValidateFolderToWatch_The_folder_to_watch___0__does_not_exist_, folderToWatch) + Environment.NewLine +
                                             Resources.MainSettings_ValidateFolderToWatch_Please_enter_a_path_to_an_existing_folder_);
             }
-        }
-
-        public virtual string SkylineRunnerArgs(ImportContext importContext, bool toPrint = false)
-        {
-            // Get the current results time window
-            var currentDate = DateTime.Today;
-            var accumulationWindow = AccumulationWindow.Get(currentDate, ResultsWindow);
-
-            var args = new StringBuilder();
-            // Input Skyline file
-            args.Append(string.Format(" --in=\"{0}\"", SkylineFilePath));
-
-            string importOnOrAfter = string.Empty;
-            if (importContext.ImportExisting)
-            {
-                // We are importing existing files in the folder.  The import-on-or-after is determined
-                // by the last acquisition date on the files already imported in the Skyline document.
-                // If the Skyline document does not have any results files, we will import all existing
-                // files in the folder.
-                if (LastAcquiredFileDate != DateTime.MinValue)
-                {
-                    importOnOrAfter = string.Format(" --import-on-or-after={0}", LastAcquiredFileDate);
-                }
-            }
-            else
-            {
-                importOnOrAfter = string.Format(" --import-on-or-after={0}",
-                    accumulationWindow.StartDate.ToShortDateString());
-
-                if (RemoveResults)
-                {
-                    // Add arguments to remove files older than the start of the rolling window.   
-                    args.Append(string.Format(" --remove-before={0}",
-                        accumulationWindow.StartDate.ToShortDateString()));
-                }
-            }
-
-            // Add arguments to import the results file
-            args.Append(string.Format(" --import-file=\"{0}\"{1}", importContext.GetCurrentFile(), importOnOrAfter));
-
-            // Save the Skyline file
-            args.Append(" --save");
-
-            return args.ToString();
-        }
-
-        public string GetArchiveArgs(DateTime archiveDate, DateTime currentDate)
-        {
-            if (currentDate.CompareTo(archiveDate) < 0)
-                return null;
-
-            if (currentDate.Year == archiveDate.Year && currentDate.Month == archiveDate.Month)
-            {
-                return null;
-            }
-
-            // Return args to archive the file: create a shared zip
-            var archiveFileName = string.Format("{0}_{1:D4}_{2:D2}.sky.zip",
-                Path.GetFileNameWithoutExtension(SkylineFilePath),
-                archiveDate.Year,
-                archiveDate.Month);
-
-            LastArchivalDate = currentDate;
-
-            // Archive file will be written in the same directory as the Skyline file.
-            return string.Format("--share-zip={0}", archiveFileName);
-        }
-
-        public DateTime GetLastArchivalDate()
-        {
-            return GetLastArchivalDate(new FileSystemUtil());
-        }
-
-        public DateTime GetLastArchivalDate(IFileSystemUtil fileUtil)
-        {
-            if (!LastArchivalDate.Equals(DateTime.MinValue))
-            {
-                return LastArchivalDate;
-            }
-
-            if (!LastAcquiredFileDate.Equals(DateTime.MinValue))
-            {
-                LastArchivalDate = LastAcquiredFileDate;
-                return LastArchivalDate;
-            }
-
-            var fileName = Path.GetFileNameWithoutExtension(SkylineFilePath);
-            var pattern = fileName + "_\\d{4}_\\d{2}.sky.zip";
-            var regex = new Regex(pattern);
-
-            var skylineFileDir = Path.GetDirectoryName(SkylineFilePath);
-
-            // Look at any existing .sky.zip files to determine the last archival date
-            // Look for shared zip files with file names like <skyline_file_name>_<yyyy>_<mm>.sky.zip
-            var archiveFiles =
-                fileUtil.GetSkyZipFiles(skylineFileDir)
-                    .Where(f => regex.IsMatch(Path.GetFileName(f) ?? string.Empty))
-                    .OrderBy(filePath => fileUtil.LastWriteTime(filePath))
-                    .ToList();
-
-            LastArchivalDate = archiveFiles.Any() ? fileUtil.LastWriteTime(archiveFiles.Last()) : DateTime.Today;
-
-            return LastArchivalDate;
         }
 
         public void Validate()

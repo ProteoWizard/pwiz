@@ -189,46 +189,6 @@ namespace AutoQC
             PanoramaSettings.ValidateSettings();
         }
 
-        public virtual ProcessInfo RunBefore(ImportContext importContext)
-        {
-            string archiveArgs = null;
-            if (!importContext.ImportExisting)
-            {
-                // If we are NOT importing existing results, create an archive (if required) of the 
-                // Skyline document BEFORE importing a results file.
-                archiveArgs = MainSettings.GetArchiveArgs(MainSettings.GetLastArchivalDate(), DateTime.Today);
-            }
-            if (string.IsNullOrEmpty(archiveArgs))
-            {
-                return null;
-            }
-            var args = string.Format("--in=\"{0}\" {1}", MainSettings.SkylineFilePath, archiveArgs);
-            return new ProcessInfo(SkylineSettings.CmdPath, args, args);
-        }
-
-        public virtual ProcessInfo RunAfter(ImportContext importContext)
-        {
-            string archiveArgs = null;
-            var currentDate = DateTime.Today;
-            if (importContext.ImportExisting && importContext.ImportingLast())
-            {
-                // If we are importing existing files in the folder, create an archive (if required) of the 
-                // Skyline document AFTER importing the last results file.
-                var oldestFileDate = importContext.GetOldestImportedFileDate(MainSettings.LastAcquiredFileDate);
-                var today = DateTime.Today;
-                if (oldestFileDate.Year < today.Year || oldestFileDate.Month < today.Month)
-                {
-                    archiveArgs = MainSettings.GetArchiveArgs(currentDate.AddMonths(-1), currentDate);
-                }
-            }
-            if (string.IsNullOrEmpty(archiveArgs))
-            {
-                return null;
-            }
-            var args = string.Format("--in=\"{0}\" {1}", MainSettings.SkylineFilePath, archiveArgs);
-            return new ProcessInfo(SkylineSettings.CmdPath, args, args);
-        }
-
         public override string ToString()
         {
             var sb = new StringBuilder();
