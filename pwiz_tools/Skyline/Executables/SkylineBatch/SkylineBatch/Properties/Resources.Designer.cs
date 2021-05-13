@@ -1646,6 +1646,16 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Please add configurations before running..
+        /// </summary>
+        public static string SkylineBatchConfigManager_StartBatchRun_Please_add_configurations_before_running_ {
+            get {
+                return ResourceManager.GetString("SkylineBatchConfigManager_StartBatchRun_Please_add_configurations_before_running_" +
+                        "", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Please check the checkbox next to one or more configurations..
         /// </summary>
         public static string SkylineBatchConfigManager_StartBatchRun_Please_check_the_checkbox_next_to_one_or_more_configurations_ {
@@ -1730,6 +1740,15 @@ namespace SkylineBatch.Properties {
             get {
                 return ResourceManager.GetString("SkylineBatchConfigManager_StartBatchRun_The_data_for_the_following_configurations" +
                         "_has_not_fully_downloaded_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There are no configurations to run..
+        /// </summary>
+        public static string SkylineBatchConfigManager_StartBatchRun_There_are_no_configurations_to_run_ {
+            get {
+                return ResourceManager.GetString("SkylineBatchConfigManager_StartBatchRun_There_are_no_configurations_to_run_", resourceCulture);
             }
         }
         

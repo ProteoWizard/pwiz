@@ -204,6 +204,14 @@ namespace SkylineBatch
             // STEP 1: create results document and import data
             if (runOption <= RunBatchOptions.FROM_CREATE_RESULTS)
             {
+                // Delete existing .sky and .skyd results files
+                var skyFileName = Path.GetFileNameWithoutExtension(Config.MainSettings.TemplateFilePath);
+                var filesToDelete = FileUtil.GetFilesInFolder(Config.MainSettings.AnalysisFolderPath, TextUtil.EXT_SKY);
+                filesToDelete.AddRange(FileUtil.GetFilesInFolder(Config.MainSettings.AnalysisFolderPath,
+                    TextUtil.EXT_SKYD));
+                foreach (var file in filesToDelete) 
+                    if (Path.GetFileNameWithoutExtension(file).Equals(skyFileName)) File.Delete(file);
+
                 Config.WriteOpenSkylineTemplateCommand(commandWriter);
                 Config.WriteMsOneCommand(commandWriter);
                 Config.WriteMsMsCommand(commandWriter);

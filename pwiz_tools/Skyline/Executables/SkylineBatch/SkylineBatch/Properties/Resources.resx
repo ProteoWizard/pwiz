@@ -691,4 +691,10 @@
   <data name="SkylineBatchConfigManager_StartBatchRun_Please_download_the_data_for_these_configurations_before_running_them_from_a_later_step_" xml:space="preserve">
 	  <value>Please download the data for these configurations before running them from a later step.</value>
   </data>
+  <data name="SkylineBatchConfigManager_StartBatchRun_There_are_no_configurations_to_run_" xml:space="preserve">
+	  <value>There are no configurations to run.</value>
+  </data>
+  <data name="SkylineBatchConfigManager_StartBatchRun_Please_add_configurations_before_running_" xml:space="preserve">
+	  <value>Please add configurations before running.</value>
+  </data>
 </root>

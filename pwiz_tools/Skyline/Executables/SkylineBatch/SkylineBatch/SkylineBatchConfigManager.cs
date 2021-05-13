@@ -510,6 +510,14 @@ namespace SkylineBatch
 
             lock (_lock)
             {
+                // check that configs exist
+                if (_configList.Count == 0)
+                {
+                    DisplayError(Resources.SkylineBatchConfigManager_StartBatchRun_There_are_no_configurations_to_run_ + Environment.NewLine +
+                                 Resources.SkylineBatchConfigManager_StartBatchRun_Please_add_configurations_before_running_);
+                    return false;
+                }
+
                 var enabledConfigs = GetEnabledConfigs();
                 // Check there are enabled (checked) configs to run
                 if (enabledConfigs.Count == 0)

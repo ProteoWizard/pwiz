@@ -110,8 +110,6 @@ using SharedBatch.Properties;
         private void LogVerbatim(params string[] text)
         {
             var fullMessage = string.Join(Environment.NewLine, text);
-            if (fullMessage.Equals(_lastLogMessage)) return;
-            _lastLogMessage = fullMessage;
             lock (_fileLock)
             {
                 using (var fileStream = new FileStream(_filePath, FileMode.Append, FileAccess.Write, FileShare.Read))
@@ -137,8 +135,10 @@ using SharedBatch.Properties;
 
         public void Log(params string[] text)
         {
-            if (text.Length > 0)
+            var messageNoTimestamp = TextUtil.LineSeparate(text);
+            if (text.Length > 0 && !messageNoTimestamp.Equals(_lastLogMessage))
             {
+                _lastLogMessage = messageNoTimestamp;
                 text[0] = GetDate() + text[0];
                 LogVerbatim(text);
             }
@@ -177,6 +177,7 @@ using SharedBatch.Properties;
                 }
                 else
                 {
+                    LastPercent = percent;
                     LastLogTime = DateTime.Now;
                     Log(string.Format(Resources.Logger_LogPercent__0__, percent));
                 }
