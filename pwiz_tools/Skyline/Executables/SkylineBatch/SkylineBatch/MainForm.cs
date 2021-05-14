@@ -218,6 +218,7 @@ namespace SkylineBatch
                 DisplayError(errorMessage);
                 return;
             }
+            UpdateUiConfigurations();
             UpdateRunBatchSteps();
         }
 

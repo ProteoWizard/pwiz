@@ -400,7 +400,7 @@ namespace SkylineBatch
                         string.Format(Resources.ConfigManager_RunAll_Please_edit___0___to_enable_running_, config.Name);
                     return false;
                 }
-                if (runner.IsBusy())
+                if (runner.IsRunning() || runner.IsCanceling())
                 {
                     errorMessage =
                         string.Format( Resources.ConfigManager_CheckConfigAtIndex_Cannot_disable___0___while_it_has_status___1_,
@@ -409,6 +409,7 @@ namespace SkylineBatch
                         string.Format(Resources.ConfigManager_CheckConfigAtIndex_Please_wait_until___0___has_finished_running_, config.Name);
                     return false;
                 }
+                runner.Cancel();
                 config.Enabled = !config.Enabled;
                 return true;
             }

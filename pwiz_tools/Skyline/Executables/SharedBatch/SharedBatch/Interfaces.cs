@@ -69,6 +69,8 @@ namespace SharedBatch
 
         bool IsBusy();
         bool IsRunning();
+        bool IsWaiting();
+        bool IsCanceling();
         void Cancel();
     }
 
