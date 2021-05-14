@@ -11447,4 +11447,7 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
     <value>Error: An unknown error occurred trying to verify access to Panorama folder '{0}' on the server {1}.
 {2}</value>
   </data>
+  <data name="ImportFastaControl_ImportFasta_iRT_standards" xml:space="preserve">
+    <value>iRT standards</value>
+  </data>
 </root>
