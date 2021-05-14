@@ -113,7 +113,7 @@ namespace SkylineBatch
 
         public bool TryPathReplace(string oldRoot, string newRoot, out RefineSettings pathReplacedRefineSettings)
         {
-            var didReplace = TextUtil.SuccessfulReplace(ValidateOutputFile, oldRoot, newRoot, OutputFilePath, out string replacedOutputPath);
+            var didReplace = TextUtil.SuccessfulReplace(ValidateOutputFile, oldRoot, newRoot, OutputFilePath, Program.FunctionalTest, out string replacedOutputPath);
             pathReplacedRefineSettings =
                 new RefineSettings(_commandValues, RemoveDecoys, RemoveResults, replacedOutputPath);
             return didReplace;
@@ -138,7 +138,7 @@ namespace SkylineBatch
             }
             var removeDecoys = reader.GetBoolAttribute(Attr.RemoveDecoys);
             var removeResults = reader.GetBoolAttribute(Attr.RemoveResults);
-            var outputFilePath = FileUtil.GetTestPath(Program.FunctionalTest, Program.TestDirectory, reader.GetAttribute(Attr.OutputFilePath));
+            var outputFilePath = reader.GetAttribute(Attr.OutputFilePath);
             var commandList = new List<Tuple<RefineVariable, string>>();
             while (reader.IsStartElement() && !reader.IsEmptyElement)
             {

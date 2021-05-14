@@ -305,12 +305,13 @@ namespace SkylineBatch
 
         public bool TryPathReplace(string oldRoot, string newRoot, out ReportInfo pathReplacedReportInfo)
         {
-            var reportReplaced = TextUtil.SuccessfulReplace(ValidateReportPath, oldRoot, newRoot, ReportPath, out string replacedReportPath);
+            var preferReplace = Program.FunctionalTest;
+            var reportReplaced = TextUtil.SuccessfulReplace(ValidateReportPath, oldRoot, newRoot, ReportPath, preferReplace, out string replacedReportPath);
             var replacedRScripts = new List<Tuple<string, string>>();
             var anyScriptReplaced = false;
             foreach (var rScriptAndVersion in RScripts)
             {
-                anyScriptReplaced = TextUtil.SuccessfulReplace(ValidateRScriptPath, oldRoot, newRoot, rScriptAndVersion.Item1, out string replacedRScript) || anyScriptReplaced;
+                anyScriptReplaced = TextUtil.SuccessfulReplace(ValidateRScriptPath, oldRoot, newRoot, rScriptAndVersion.Item1, preferReplace, out string replacedRScript) || anyScriptReplaced;
                 replacedRScripts.Add(new Tuple<string, string>(replacedRScript, rScriptAndVersion.Item2));
             }
             pathReplacedReportInfo = new ReportInfo(Name, CultureSpecific, replacedReportPath, replacedRScripts, UseRefineFile);
@@ -329,7 +330,7 @@ namespace SkylineBatch
         {
             var name = reader.GetAttribute(Attr.Name);
             var cultureSpecific = reader.GetBoolAttribute(Attr.CultureSpecific);
-            var reportPath = GetPath(reader.GetAttribute(Attr.Path));
+            var reportPath = reader.GetAttribute(Attr.Path);
             var resultsFile = reader.GetNullableBoolAttribute(Attr.UseRefineFile);
             var rScripts = new List<Tuple<string, string>>();
             while (reader.IsStartElement() && !reader.IsEmptyElement)
@@ -337,7 +338,7 @@ namespace SkylineBatch
                 if (reader.Name == "script_path")
                 {
                     var tupleItems = reader.ReadElementContentAsString().Split(new[]{ '(', ',', ')' }, StringSplitOptions.RemoveEmptyEntries);
-                    rScripts.Add(new Tuple<string,string>(GetPath(tupleItems[0].Trim()), tupleItems[1].Trim()));
+                    rScripts.Add(new Tuple<string,string>(tupleItems[0].Trim(), tupleItems[1].Trim()));
                 }
                 else
                 {
@@ -347,9 +348,6 @@ namespace SkylineBatch
 
             return new ReportInfo(name, cultureSpecific, reportPath, rScripts, resultsFile?? false);
         }
-
-        private static string GetPath(string path) =>
-            FileUtil.GetTestPath(Program.FunctionalTest, Program.TestDirectory, path);
 
         public void WriteXml(XmlWriter writer)
         {

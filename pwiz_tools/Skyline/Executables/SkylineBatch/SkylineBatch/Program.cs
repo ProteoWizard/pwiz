@@ -24,8 +24,6 @@ using System.Deployment.Application;
 using System.Drawing;
 using System.IO;
 using System.Net;
-using System.Runtime.CompilerServices;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
 using log4net.Config;

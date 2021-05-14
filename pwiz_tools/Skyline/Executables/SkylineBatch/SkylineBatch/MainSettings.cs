@@ -194,15 +194,16 @@ namespace SkylineBatch
         {
             var templateReplaced = false;
             var replacedTemplatePath = TemplateFilePath;
+            var preferReplace = Program.FunctionalTest;
             if (DependentConfigName == null)
-                templateReplaced = TextUtil.SuccessfulReplace(ValidateTemplateFile, oldRoot, newRoot, TemplateFilePath, out replacedTemplatePath);
+                templateReplaced = TextUtil.SuccessfulReplace(ValidateTemplateFile, oldRoot, newRoot, TemplateFilePath, Program.FunctionalTest, out replacedTemplatePath);
             var analysisReplaced =
-                TextUtil.SuccessfulReplace(ValidateAnalysisFolder, oldRoot, newRoot, AnalysisFolderPath, out string replacedAnalysisPath);
+                TextUtil.SuccessfulReplace(ValidateAnalysisFolder, oldRoot, newRoot, AnalysisFolderPath, preferReplace, out string replacedAnalysisPath);
             var dataValidator = Server != null ? (Validator)ValidateDataFolderWithServer : (Validator)ValidateDataFolderWithoutServer;
             var dataReplaced =
-                TextUtil.SuccessfulReplace(dataValidator, oldRoot, newRoot, DataFolderPath, out string replacedDataPath, true);
+                TextUtil.SuccessfulReplace(dataValidator, oldRoot, newRoot, DataFolderPath, Server != null || preferReplace, out string replacedDataPath);
             var annotationsReplaced =
-                TextUtil.SuccessfulReplace(ValidateAnnotationsFile, oldRoot, newRoot, AnnotationsFilePath, out string replacedAnnotationsPath);
+                TextUtil.SuccessfulReplace(ValidateAnnotationsFile, oldRoot, newRoot, AnnotationsFilePath, preferReplace, out string replacedAnnotationsPath);
 
             pathReplacedMainSettings = new MainSettings(replacedTemplatePath, replacedAnalysisPath, replacedDataPath,
                 Server, replacedAnnotationsPath, ReplicateNamingPattern, DependentConfigName);
@@ -275,19 +276,16 @@ namespace SkylineBatch
 
         public static MainSettings ReadXml(XmlReader reader)
         {
-            var templateFilePath = GetPath(reader.GetAttribute(Attr.TemplateFilePath));
+            var templateFilePath = reader.GetAttribute(Attr.TemplateFilePath);
             var dependentConfigName = reader.GetAttribute(Attr.DependentConfigName);
-            var analysisFolderPath = GetPath(reader.GetAttribute(Attr.AnalysisFolderPath));
-            var dataFolderPath = GetPath(reader.GetAttribute(Attr.DataFolderPath));
-            var annotationsFilePath = GetPath(reader.GetAttribute(Attr.AnnotationsFilePath));
+            var analysisFolderPath = reader.GetAttribute(Attr.AnalysisFolderPath);
+            var dataFolderPath = reader.GetAttribute(Attr.DataFolderPath);
+            var annotationsFilePath = reader.GetAttribute(Attr.AnnotationsFilePath);
             var replicateNamingPattern = reader.GetAttribute(Attr.ReplicateNamingPattern);
             var server = DataServerInfo.ReadXml(reader);
             return new MainSettings(templateFilePath, analysisFolderPath, dataFolderPath, server, 
                 annotationsFilePath, replicateNamingPattern, dependentConfigName);
         }
-
-        private static string GetPath(string path) =>
-            FileUtil.GetTestPath(Program.FunctionalTest, Program.TestDirectory, path);
 
         public void WriteXml(XmlWriter writer)
         {

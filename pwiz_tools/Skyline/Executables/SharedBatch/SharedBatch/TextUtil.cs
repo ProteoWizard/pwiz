@@ -66,11 +66,13 @@ namespace SharedBatch
         }
 
 
-        public static bool SuccessfulReplace(Validator validate, string oldText, string newText, string originalString, out string replacedString, bool preferredReplace = false)
+        public static bool SuccessfulReplace(Validator validate, string oldText, string newText, string originalString, bool preferReplace, out string replacedString)
         {
             var oldPath = originalString;
             var newPath = TryReplaceStart(oldText, newText, originalString);
             replacedString = oldPath;
+            if (string.IsNullOrEmpty(originalString))
+                return false;
             var initialValidated = false;
             var replacedValidated = false;
             try
@@ -93,7 +95,7 @@ namespace SharedBatch
                 // Pass
             }
 
-            if (replacedValidated && (!initialValidated || preferredReplace))
+            if (replacedValidated && (!initialValidated || preferReplace))
             {
                 replacedString = newPath;
                 return true;

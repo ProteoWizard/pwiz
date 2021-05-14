@@ -114,13 +114,6 @@ namespace SharedBatch
             return safeName; // .TrimStart('.').TrimEnd('.');
         }
 
-        public static string GetTestPath(bool isTest, string testFolder, string path)
-        {
-            if (path != null && isTest && path.StartsWith("\\"))
-                path = testFolder + path;
-            return path;
-        }
-
         public static void AddFileTypeClickOnce(string extension, string id, string description, string applicationReference, string iconPath)
         {
             // Register ClickOnce exe/icon/description associations.

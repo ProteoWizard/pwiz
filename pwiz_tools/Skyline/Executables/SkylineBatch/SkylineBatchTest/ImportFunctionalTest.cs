@@ -234,7 +234,7 @@ namespace SkylineBatchTest
                      Assert.AreEqual(string.Format(
                              SharedBatch.Properties.Resources
                                  .InvalidConfigSetupForm_GetValidPath_Would_you_like_to_replace__0__with__1___,
-                             Path.GetDirectoryName(CONFIG_FOLDER) + "\\nonexistentFolder\\nonexistentFolderTwo",
+                             "C:\\nonexistentFolder\\nonexistentFolderTwo",
                              Path.GetDirectoryName(CONFIG_FOLDER)),
                          dlg.Message);
                      dlg.ClickYes();
@@ -246,7 +246,7 @@ namespace SkylineBatchTest
 
              RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
             WaitForShortImport(mainForm, invalidConfigFile);
-            RunUI(() => { FunctionalTestUtil.CheckConfigs(3, 0, mainForm); });
+            RunUI(() => { FunctionalTestUtil.CheckConfigs(3, 0, mainForm, "Expected 3 imported configs", "Expected configs to be valid from root replacement."); });
         }
 
         public void TestDriveRootReplacement(MainForm mainForm)
