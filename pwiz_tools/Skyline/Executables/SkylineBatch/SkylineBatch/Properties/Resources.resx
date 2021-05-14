@@ -697,4 +697,7 @@
   <data name="SkylineBatchConfigManager_StartBatchRun_Please_add_configurations_before_running_" xml:space="preserve">
 	  <value>Please add configurations before running.</value>
   </data>
+  <data name="MainForm_btnImport_Click_Cannot_add_configurations_while__0__is_loading__Please_wait_and_try_again_" xml:space="preserve">
+    <value>Cannot add configurations while {0} is loading. Please wait and try again.</value>
+  </data>
 </root>

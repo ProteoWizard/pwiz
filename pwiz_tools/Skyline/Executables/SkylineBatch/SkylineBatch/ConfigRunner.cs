@@ -183,12 +183,8 @@ namespace SkylineBatch
 
             // Runner is still running if no errors or cancellations
             if (IsRunning()) ChangeStatus(RunnerStatus.Completed);
-            if (IsCanceling())
-            {
-                var tmpFiles = FileUtil.GetFilesInFolder(Config.MainSettings.AnalysisFolderPath, TextUtil.EXT_TMP);
-                foreach (var tmpFile in tmpFiles) File.Delete(tmpFile);
-                ChangeStatus(RunnerStatus.Canceled);
-            }
+            if (IsCanceling()) ChangeStatus(RunnerStatus.Canceled);
+            
             var endTime = DateTime.Now;
             // ReSharper disable once PossibleInvalidOperationException - StartTime is always defined here
             var delta = endTime - (DateTime)StartTime;

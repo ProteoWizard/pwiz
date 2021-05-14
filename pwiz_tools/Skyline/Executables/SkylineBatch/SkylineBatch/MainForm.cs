@@ -37,6 +37,7 @@ namespace SkylineBatch
         private readonly ColumnWidthCalculator _listViewColumnWidths;
         private bool _showRefineStep;
         private Timer _outputLog;
+        private bool _loadingConfigs;
 
         public MainForm(string openFile)
         {
@@ -56,13 +57,14 @@ namespace SkylineBatch
             _outputLog = new Timer { Interval = 500 };
             _outputLog.Tick += OutputLog;
             _outputLog.Start();
-
+            UpdateButtonsEnabled();
 
             Shown += ((sender, args) =>
             {
                 _configManager = new SkylineBatchConfigManager(_skylineBatchLogger, this);
                 var loadConfigsLongWaitDlg = new LongWaitDlg(this, Program.AppName(),
                     Resources.MainForm_MainForm_Loading_configurations_from_saved_settings___);
+                _loadingConfigs = true;
                 _configManager.StartLoadingConfigList(new LongWaitOperation(this, loadConfigsLongWaitDlg), (success) =>
                 {
                     ImportFinishedCallback(success);
@@ -86,6 +88,7 @@ namespace SkylineBatch
                 if (!_rDirectorySelector.ShownDialog)
                     _rDirectorySelector.AddIfNecassary();
             }
+            _loadingConfigs = false;
         }
 
         private void RunUi(Action action)
@@ -118,6 +121,11 @@ namespace SkylineBatch
         
         private void btnNewConfig_Click(object sender, EventArgs e)
         {
+            if (IsLoadingConfigs(string.Format(
+                Resources
+                    .MainForm_btnImport_Click_Cannot_add_configurations_while__0__is_loading__Please_wait_and_try_again_,
+                Program.AppName())))
+                return;
             ProgramLog.Info(Resources.MainForm_btnNewConfig_Click_Creating_a_new_configuration_);
             var initialConfigValues = (SkylineBatchConfig)_configManager.GetLastModified();
             var configForm = new SkylineBatchConfigForm(this, _rDirectorySelector, initialConfigValues, ConfigAction.Add, false, _configManager);
@@ -171,7 +179,7 @@ namespace SkylineBatch
             configForm.ShowDialog();
         }
 
-        public void ReplaceAllSkylineVersions(SkylineSettings skylineSettings)
+        public bool? ReplaceAllSkylineVersions(SkylineSettings skylineSettings)
         {
             try
             {
@@ -180,7 +188,7 @@ namespace SkylineBatch
             catch (ArgumentException)
             {
                 // Only ask to replace Skyline settings if new settings are valid
-                return;
+                return null;
             }
             if (DialogResult.Yes ==
                 DisplayQuestion(Resources.MainForm_ReplaceAllSkylineVersions_Do_you_want_to_use_this_Skyline_version_for_all_configurations_))
@@ -194,7 +202,10 @@ namespace SkylineBatch
                     DisplayError(e.Message);
                 }
                 UpdateUiConfigurations();
+                return true;
             }
+
+            return false;
         }
 
         private void listViewConfigs_ItemCheck(object sender, ItemCheckEventArgs e)
@@ -236,7 +247,7 @@ namespace SkylineBatch
 
         private void UpdateButtonsEnabled()
         {
-            var configSelected = _configManager.HasSelectedConfig();
+            var configSelected = _loaded ? _configManager.HasSelectedConfig() : false;
             btnEdit.Enabled = configSelected;
             btnCopy.Enabled = configSelected;
             btnUpArrow.Enabled = configSelected && _configManager.SelectedConfig != 0;
@@ -245,7 +256,7 @@ namespace SkylineBatch
             btnOpenAnalysis.Enabled = configSelected;
             btnOpenTemplate.Enabled = configSelected;
             btnOpenResults.Enabled = configSelected;
-            btnExportConfigs.Enabled = _configManager.HasConfigs();
+            btnExportConfigs.Enabled = _loaded ? _configManager.HasConfigs() : false;
         }
 
         private void btnUpArrow_Click(object sender, EventArgs e)
@@ -265,6 +276,14 @@ namespace SkylineBatch
             _configManager.UserRemoveSelected();
             UpdateUiConfigurations();
             ListViewSizeChanged();
+        }
+
+        private bool IsLoadingConfigs(string errorMessage)
+        {
+            bool loadingConfigs = _loadingConfigs;
+            if (loadingConfigs)
+                DisplayError(errorMessage);
+            return loadingConfigs;
         }
 
         #endregion
@@ -483,6 +502,11 @@ namespace SkylineBatch
 
         private void btnImport_Click(object sender, EventArgs e)
         {
+            if (IsLoadingConfigs(string.Format(
+                Resources
+                    .MainForm_btnImport_Click_Cannot_add_configurations_while__0__is_loading__Please_wait_and_try_again_,
+                Program.AppName())))
+                return;
             var dialog = new OpenFileDialog();
             dialog.Filter = TextUtil.FILTER_BCFG;
             if (dialog.ShowDialog(this) != DialogResult.OK) return;
@@ -522,6 +546,7 @@ namespace SkylineBatch
             var importLongWaitDlg = new LongWaitDlg(this, Program.AppName(),
                 string.Format(Resources.MainForm_DoImport_Importing_configurations_from__0____, Path.GetFileName(filePath)));
             var longWaitOperation = new LongWaitOperation(this, importLongWaitDlg);
+            _loadingConfigs = true;
             _configManager.StartImport(filePath, longWaitOperation, ImportFinishedCallback, ShowDownloadedFileForm);
             return longWaitOperation;
         }

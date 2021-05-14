@@ -19,7 +19,7 @@ namespace SkylineBatch.Properties {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class Resources {
@@ -623,6 +623,16 @@ namespace SkylineBatch.Properties {
         public static string Logger_DisplayLog_____Log_truncated_____Full_log_is_in__0_ {
             get {
                 return ResourceManager.GetString("Logger_DisplayLog_____Log_truncated_____Full_log_is_in__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot add configurations while {0} is loading. Please wait and try again..
+        /// </summary>
+        public static string MainForm_btnImport_Click_Cannot_add_configurations_while__0__is_loading__Please_wait_and_try_again_ {
+            get {
+                return ResourceManager.GetString("MainForm_btnImport_Click_Cannot_add_configurations_while__0__is_loading__Please_w" +
+                        "ait_and_try_again_", resourceCulture);
             }
         }
         

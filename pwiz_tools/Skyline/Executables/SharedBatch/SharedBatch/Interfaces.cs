@@ -110,7 +110,7 @@ namespace SharedBatch
 
         void AddConfiguration(IConfig config);
         void ReplaceSelectedConfig(IConfig config);
-        void ReplaceAllSkylineVersions(SkylineSettings skylineSettings);
+        bool? ReplaceAllSkylineVersions(SkylineSettings skylineSettings);
 
         void DisplayError(string message);
         void DisplayWarning(string message);
