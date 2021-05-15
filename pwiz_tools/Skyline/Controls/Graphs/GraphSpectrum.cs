@@ -1258,7 +1258,7 @@ namespace pwiz.Skyline.Controls.Graphs
         }
         public MzRange Range
         {
-            get {return new MzRange() {Min = GraphPane.XAxis.Scale.Min, Max = GraphPane.XAxis.Scale.Max};}
+            get {return new MzRange(GraphPane.XAxis.Scale.Min, GraphPane.XAxis.Scale.Max);}
         }
 
         public double MzMax
@@ -1287,7 +1287,6 @@ namespace pwiz.Skyline.Controls.Graphs
         private void graphControl_ContextMenuBuilder(ZedGraphControl sender,
             ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
         {
-            menuStrip.Tag = this;
             var isProteomic = _nodeGroup == null || !_nodeGroup.IsCustomIon;
             _stateProvider.BuildSpectrumMenu(isProteomic, sender, menuStrip);
         }
@@ -1627,7 +1626,12 @@ namespace pwiz.Skyline.Controls.Graphs
     }
     public sealed class MzRange
     {
-        public double Min;
-        public double Max;
+        public MzRange(double min, double max)
+        {
+            Min = min;
+            Max = max;
+        }
+        public double Min { get; private set; }
+        public double Max { get; private set; }
     }
 }

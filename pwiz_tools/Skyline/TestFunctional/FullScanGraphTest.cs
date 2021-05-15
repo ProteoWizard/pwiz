@@ -143,7 +143,7 @@ namespace pwiz.SkylineTestFunctional
                 TestAnnotations(ions1);
                 SetZoom(false);
                 TestAnnotations(ions2);
-                RunUI(() => SkylineWindow.GraphFullScan.SetMzRange(500, 700));
+                RunUI(() => SkylineWindow.GraphFullScan.SetMzScale(new MzRange(500,700)));
                 ClickFullScan(618, 120);
                 TestScale(617, 621, 0, 60);
                 SetShowAnnotations(false);

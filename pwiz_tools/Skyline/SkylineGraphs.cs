@@ -28,6 +28,7 @@ using DigitalRune.Windows.Docking;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
+using pwiz.MSGraph;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs;
@@ -910,7 +911,7 @@ namespace pwiz.Skyline
         private void synchMzScaleToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (_graphFullScan == null || !_graphFullScan.Visible || _graphSpectrum == null || !_graphSpectrum.Visible) return;
-            IMzScaleCopyable source = (IMzScaleCopyable)synchMzScaleToolStripMenuItem.Owner.Tag;
+            IMzScaleCopyable source = (IMzScaleCopyable)(synchMzScaleToolStripMenuItem.Owner as ContextMenuStrip)?.SourceControl.Parent.Parent;
 
             if (sender is IMzScaleCopyable)         //testing support
                 source = (IMzScaleCopyable) sender;
@@ -1045,7 +1046,8 @@ namespace pwiz.Skyline
             menuStrip.Items.Insert(iInsert++, toolStripSeparator12);
             ranksContextMenuItem.Checked = set.ShowRanks;
             menuStrip.Items.Insert(iInsert++, ranksContextMenuItem);
-            if (menuStrip.Tag is GraphSpectrum)
+            var control = (menuStrip as ContextMenuStrip)?.SourceControl.Parent.Parent;
+            if (control is GraphSpectrum)
             {
                 scoreContextMenuItem.Checked = set.ShowLibraryScores;
                 menuStrip.Items.Insert(iInsert++, scoreContextMenuItem);
@@ -1062,7 +1064,7 @@ namespace pwiz.Skyline
             menuStrip.Items.Insert(iInsert++, toolStripSeparator14);
 
             // Need to test small mol
-            if (isProteomic && menuStrip.Tag is GraphSpectrum)
+            if (isProteomic && control is GraphSpectrum)
             {
                 prositLibMatchItem.Checked = Settings.Default.Prosit;
                 menuStrip.Items.Insert(iInsert++, prositLibMatchItem);
@@ -1072,7 +1074,7 @@ namespace pwiz.Skyline
             }
 
             menuStrip.Items.Insert(iInsert++, spectrumPropsContextMenuItem);
-            if (menuStrip.Tag is GraphSpectrum)
+            if (control is GraphSpectrum)
             {
                 showLibraryChromatogramsSpectrumContextMenuItem.Checked = set.ShowLibraryChromatograms;
                 menuStrip.Items.Insert(iInsert++, showLibraryChromatogramsSpectrumContextMenuItem);

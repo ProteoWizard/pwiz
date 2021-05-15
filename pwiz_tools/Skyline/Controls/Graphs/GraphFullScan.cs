@@ -70,6 +70,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 MinDotRadius = MIN_DOT_RADIUS,
                 MaxDotRadius = MAX_DOT_RADIUS
             };
+            graphControl.GraphPane.AllowLabelOverlap = true;
 
             Icon = Resources.SkylineData;
             _graphHelper = GraphHelper.Attach(graphControl);
@@ -94,6 +95,7 @@ namespace pwiz.Skyline.Controls.Graphs
             spectrumBtn.Visible = false;
             filterBtn.Visible = false;
             lblScanId.Visible = false; // you might want to show the scan index for debugging
+            toolBar.Visible = false;
         }
 
         public ZedGraphControl ZedGraphControl
@@ -119,7 +121,7 @@ namespace pwiz.Skyline.Controls.Graphs
             _maxIntensity = 0;
             GetMaxMzIntensity(out _maxMz, out _maxIntensity);
             GetMaxMobility(out _maxIonMobility);
-            _requestedRange = new MzRange() {Min = 0, Max = _maxMz * 1.1};
+            _requestedRange = new MzRange(0, _maxMz * 1.1);
 
             if (_zoomXAxis)
             {
@@ -453,20 +455,38 @@ namespace pwiz.Skyline.Controls.Graphs
             heatMapGraphPane.SetPoints(_heatMapData, minDrift, maxDrift);
         }
 
-        private class RankingContext:IComparable<RankingContext>
+        private class RankingContext
         {
+            public int scanIndex;
             public TransitionGroupDocNode precursor;
             public ImmutableList<IonType> types;
             public ImmutableList<int> charges;
             public ImmutableList<Adduct> rankAdducts;
             public ImmutableList<IonType> rankTypes;
 
-            public int CompareTo(RankingContext other)
+            public override bool Equals(object obj)
             {
-                var res = ReferenceEquals(precursor.Id, other.precursor.Id) && types.SequenceEqual(other.types) 
-                          && charges.SequenceEqual(other.charges) 
-                          && rankAdducts.SequenceEqual(other.rankAdducts) && rankTypes.SequenceEqual(other.rankTypes);
-                return res ? 0 : 1;
+                if (obj is RankingContext other)
+                    return scanIndex.Equals(other.scanIndex)
+                           && ReferenceEquals(precursor.Id, other.precursor.Id) 
+                           && types.Equals(other.types)
+                           && charges.Equals(other.charges)
+                           && rankAdducts.Equals(
+                               other.rankAdducts) &&
+                           rankTypes.Equals(other.rankTypes);
+                else
+                    return false;
+            }
+
+            public override int GetHashCode()
+            {
+                var res = scanIndex.GetHashCode();
+                res = res * 397 ^ precursor.Id.GetHashCode();
+                res = res * 397 ^ types.GetHashCode();
+                res = res * 397 ^ charges.GetHashCode();
+                res = res * 397 ^ rankAdducts.GetHashCode();
+                res = res * 397 ^ rankTypes.GetHashCode();
+                return res;
             }
         }
 
@@ -519,11 +539,11 @@ namespace pwiz.Skyline.Controls.Graphs
                 var spectrumInfo = new SpectrumPeaksInfo(Enumerable.Range(0, mzs.Count).Select(j => new SpectrumPeaksInfo.MI()
                     {Mz = mzs[j], Intensity = (float)intensities[j]}).ToArray());
 
-                var newRankingContext = new RankingContext(){precursor = precursor,
+                var newRankingContext = new RankingContext(){scanIndex = _msDataFileScanHelper.ScanIndex, precursor = precursor,
                     types = ImmutableList.ValueOf(types), charges = ImmutableList.ValueOf(charges),
                     rankTypes = ImmutableList.ValueOf(rankTypes), rankAdducts = ImmutableList.ValueOf(rankAdducts)};
 
-                if (_rmis == null || rankContext == null || rankContext.Equals(newRankingContext))
+                if (_rmis == null || rankContext == null || !rankContext.Equals(newRankingContext))
                 {
                     rankContext = newRankingContext;
                     _rmis = LibraryRankedSpectrumInfo.NewLibraryRankedSpectrumInfo(spectrumInfo,
@@ -538,7 +558,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         rankTypes,
                         null);
                     _rmis = _rmis.ChangeScore(null);
-                    //create an map of transition indices vs. peak rank to use in the mouse click and mouse move handlers.
+                    //create a map of transition indices vs. peak rank to use in the mouse click and mouse move handlers.
                     if (!_rmis.PeaksRanked.IsNullOrEmpty())
                     {
                         _transitionIndex = Enumerable
@@ -853,12 +873,15 @@ namespace pwiz.Skyline.Controls.Graphs
                 magnifyBtn.Checked = false;
             else
                 ZoomXAxis();
-            _requestedRange = new MzRange(){Min = 0, Max = _maxMz * 1.1};
-            graphControl.Invalidate();
+            _requestedRange = new MzRange(0, _maxMz * 1.1);
+            using (var g = graphControl.CreateGraphics())
+                GraphPane.SetScale(g);
+
+            graphControl.Refresh();
         }
         public MzRange Range
         {
-            get { return new MzRange() {Min = GraphPane.XAxis.Scale.Min, Max = GraphPane.XAxis.Scale.Max}; }
+            get { return new MzRange(GraphPane.XAxis.Scale.Min, GraphPane.XAxis.Scale.Max); }
         }
 
         private void ZoomYAxis()
@@ -919,6 +942,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             if (_msDataFileScanHelper.MsDataSpectra != null)
             {
+                toolBar.Visible = true;
                 leftButton.Enabled = (_msDataFileScanHelper.ScanIndex > 0);
                 rightButton.Enabled = (_msDataFileScanHelper.ScanIndex < _msDataFileScanHelper.ScanProvider.Times.Count-1);
                 lblScanId.Text = _msDataFileScanHelper.GetScanIndex().ToString(@"D");
@@ -1063,17 +1087,19 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void graphControl_ContextMenuBuilder(ZedGraphControl sender, ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
         {
-            menuStrip.Tag = this;
-            showScanNumberContextMenuItem.Checked = Settings.Default.ShowFullScanNumber;
-            menuStrip.Items.Insert(0, showScanNumberContextMenuItem);
-            menuStrip.Items.Insert(1, showIonTypesRanksToolStripMenuItem);
-            menuStrip.Items.Insert(2, toolStripSeparator1);
+            if (_msDataFileScanHelper.MsDataSpectra != null)
+            {
+                showScanNumberContextMenuItem.Checked = Settings.Default.ShowFullScanNumber;
+                menuStrip.Items.Insert(0, showScanNumberContextMenuItem);
+                menuStrip.Items.Insert(1, showIonTypesRanksToolStripMenuItem);
+                menuStrip.Items.Insert(2, toolStripSeparator1);
 
-            var currentTransition =
-                _msDataFileScanHelper.ScanProvider.Transitions[_msDataFileScanHelper.TransitionIndex];
-            var isProteomic = (currentTransition.Id as Transition)?.Group.IsProteomic;
-            (_documentContainer as GraphSpectrum.IStateProvider)
-                ?.BuildSpectrumMenu(isProteomic.GetValueOrDefault(), sender, menuStrip);
+                var currentTransition =
+                    _msDataFileScanHelper.ScanProvider.Transitions[_msDataFileScanHelper.TransitionIndex];
+                var isProteomic = (currentTransition.Id as Transition)?.Group.IsProteomic;
+                (_documentContainer as GraphSpectrum.IStateProvider)
+                    ?.BuildSpectrumMenu(isProteomic.GetValueOrDefault(), sender, menuStrip);
+            }
         }
 
         private void graphControl_MouseClick(object sender, MouseEventArgs e)
@@ -1174,15 +1200,6 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             toolStripButtonShowAnnotations.Checked = isChecked;
         }
-
-        public void SetMzRange(double mzMin, double mzMax)
-        {
-            GraphPane.XAxis.Scale.Min = Math.Max(0, mzMin);
-            GraphPane.XAxis.Scale.Max = Math.Min(_maxMz * 1.1, mzMax);
-            ZoomYAxis();
-            UpdateUI();
-        }
-
         #endregion Test support
 
         private void showScanNumberToolStripMenuItem_Click(object sender, EventArgs e)
