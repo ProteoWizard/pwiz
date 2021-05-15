@@ -72,11 +72,6 @@ namespace AutoQC
             }
         }
 
-        public virtual bool IsSelected()
-        {
-            return PublishToPanorama;
-        }
-
         private Uri ValidateAndGetServerUri(string panoramaServerUrl)
         {
             if (string.IsNullOrWhiteSpace(panoramaServerUrl))
@@ -145,35 +140,6 @@ namespace AutoQC
         public void ValidateSettings()
         {
             ValidateAndGetServerUri(PanoramaServerUrl);
-        }
-
-        public virtual string SkylineRunnerArgs(ImportContext importContext, bool toPrint = false)
-        {
-            if (!IsSelected() || (importContext.ImportExisting && !importContext.ImportingLast()))
-            {
-                // Do not upload to Panorama if we are importing existing documents and this is not the 
-                // last file being imported.
-                return string.Empty;
-            }
-
-            var passwdArg = toPrint ? string.Empty : string.Format("--panorama-password=\"{0}\"", PanoramaPassword);
-            var uploadArgs = string.Format(
-                    " --panorama-server=\"{0}\" --panorama-folder=\"{1}\" --panorama-username=\"{2}\" {3}",
-                    PanoramaServerUrl,
-                    PanoramaFolder,
-                    PanoramaUserEmail,
-                    passwdArg);
-            return uploadArgs;
-        }
-
-        public virtual ProcessInfo RunBefore(ImportContext importContext)
-        {
-            return null;
-        }
-
-        public virtual ProcessInfo RunAfter(ImportContext importContext)
-        {
-            return null;
         }
 
         // Changed DataProtectionScope from LocalMachine to CurrentUser

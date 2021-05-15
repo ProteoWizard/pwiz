@@ -413,8 +413,13 @@ namespace AutoQC
                                  "The error was:",
                                  e.Message,
                                  "Please edit the configuration and try again."));
+
+                    SetConfigInvalid(selectedConfig);
                     return;
                 }
+
+                SetConfigValid(selectedConfig);
+
                 var configRunner = GetSelectedConfigRunner();
                 if (configRunner.IsStarting() || configRunner.IsStopping())
                 {

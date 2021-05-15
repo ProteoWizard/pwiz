@@ -250,6 +250,28 @@ namespace SharedBatch
             _uiControl.UpdateUiConfigurations();
         }
 
+        public void SetConfigValid(IConfig config)
+        {
+            lock (_lock)
+            {
+                if (config != null && _configValidation.ContainsKey(config.GetName()))
+                {
+                    _configValidation[config.GetName()] = true;
+                }
+            }
+        }
+
+        public void SetConfigInvalid(IConfig config)
+        {
+            lock (_lock)
+            {
+                if (config != null && _configValidation.ContainsKey(config.GetName()))
+                {
+                    _configValidation[config.GetName()] = false;
+                }
+            }
+        }
+
         public IConfig GetLastModified() // creates config using most recently modified config
         {
             lock (_lock)

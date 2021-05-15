@@ -48,7 +48,6 @@ namespace AutoQC
         private Process _process;
 
         private bool _documentImportFailed;
-        private bool _panoramaUploadFailed;
         private bool _errorLogged;
         private bool _fileImportIgnored;
 
@@ -99,7 +98,13 @@ namespace AutoQC
 
                 if (_fileImportIgnored)
                 {
-                    return ProcStatus.Success;
+                    return ProcStatus.Skipped;
+                }
+
+                if (_documentImportFailed)
+                {
+                    LogError(string.Format(Resources.ProcessRunner_RunProcess__0__exited_with_code__1___Skyline_document_import_failed_, _procInfo.ExeName, exitCode));
+                    return ProcStatus.Error;
                 }
 
                 if (exitCode != 0)
@@ -112,16 +117,6 @@ namespace AutoQC
                 {
                     LogError(string.Format(Resources.ProcessRunner_RunProcess__0__exited_with_code__1___Error_reported_, _procInfo.ExeName, exitCode));
                     return ProcStatus.Error;
-                }
-                if (_documentImportFailed)
-                {
-                    LogError(string.Format(Resources.ProcessRunner_RunProcess__0__exited_with_code__1___Skyline_document_import_failed_, _procInfo.ExeName, exitCode));
-                    return ProcStatus.DocImportError;
-                }
-                if (_panoramaUploadFailed)
-                {
-                    LogError(string.Format(Resources.ProcessRunner_RunProcess__0__exited_with_code__1___Panorama_upload_failed_, _procInfo.ExeName, exitCode));
-                    return ProcStatus.PanoramaUploadError;
                 }
 
                 Log(string.Format(Resources.ProcessRunner_RunProcess__0__exited_successfully_, _procInfo.ExeName));
@@ -171,8 +166,8 @@ namespace AutoQC
             if (message.Contains("The file has already been imported. Ignoring..."))
             {
                 _fileImportIgnored = true; // SkylineRunner will return an exit code of 2 which will cause the file to be put 
-                // on the reimport queue. We don't want that.
-                return false;
+                                           // on the reimport queue. We don't want that.
+               return false;
             }
 
             if (message.Contains("Failed importing"))
@@ -188,15 +183,8 @@ namespace AutoQC
             }
 
             if (!message.StartsWith("Error")) return false;
-            
-            if (message.Contains("PanoramaImportErrorException"))
-            {
-                _panoramaUploadFailed = true;
-            }
-            else
-            {
-                _errorLogged = true;
-            }
+
+            _errorLogged = true;
             return true;
         }
 

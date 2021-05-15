@@ -384,7 +384,7 @@ namespace AutoQC
             {
                 _configManager.SelectLogOfSelectedConfig();
                 UpdateUiLogFiles();
-                SwitchLogger();
+                // SwitchLogger(); // We don't need this. UpdateUiLogFiles will change the selected index in the log combobox which will end up calling SwitchLogger.
             }
             tabMain.SelectTab(tabLog);
         }

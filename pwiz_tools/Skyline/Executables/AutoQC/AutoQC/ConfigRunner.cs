@@ -249,7 +249,7 @@ namespace AutoQC
 
                 _fileWatcher.Init(Config);
 
-                Log("Starting configuration...");
+                Log("Running configuration...");
                 ChangeStatus(RunnerStatus.Running);
 
                 if (ProcessExistingFiles(e))
@@ -512,8 +512,8 @@ namespace AutoQC
             }
 
             _panoramaUploadError = false;
-            var docImported = ProcessOneFile(importContext);
-            if (!docImported)
+            var resultsImported = ProcessOneFile(importContext);
+            if (!resultsImported)
             {
                 if (addToReimportQueueOnFailure)
                 {
@@ -521,7 +521,7 @@ namespace AutoQC
                 }
             }
            
-            return docImported;
+            return resultsImported;
         }
 
         private void AddToReimportQueue(string filePath)
@@ -533,23 +533,59 @@ namespace AutoQC
 
         private bool ProcessOneFile(ImportContext importContext)
         {
-            var processInfos = GetProcessInfos(importContext);
-            bool docImportFailed = false;
-            foreach (var processInfo in processInfos)
+            var importResultsFailed = false;
+
+            var runBeforeProc = RunBefore(importContext);
+            if (runBeforeProc != null)
             {
-                var status = RunProcess(processInfo);
-                if (status == ProcStatus.PanoramaUploadError)
-                {
-                    _panoramaUploadError = true;
-                }
-                if (status == ProcStatus.DocImportError || status == ProcStatus.Error)
-                {
-                    docImportFailed = true;
-                }   
+                runBeforeProc.WorkingDirectory = importContext.WorkingDir;
+                RunProcess(runBeforeProc); // Create a zip archive BEFORE if NOT importing existing files
             }
-            
-            if(!docImportFailed) _totalImportCount++;
-            return !docImportFailed;
+
+            // Import the results file
+            var skylineRunnerArgs = ImportResultsFileArgs(importContext);
+            var importResultsFileProc = new ProcessInfo(Config.SkylineSettings.CmdPath, skylineRunnerArgs, skylineRunnerArgs);
+            var status = RunProcess(importResultsFileProc);
+            if (status == ProcStatus.Error)
+            {
+                importResultsFailed = true;
+                // return false;  // If raw file was not imported successfully don't execute the next step of uploading the Skyline document to a Panorama server.
+            }
+            else if (status != ProcStatus.Skipped)
+            {
+                _totalImportCount++;
+            }
+
+            var panoramaUploadArgs = PanoramaArgs(importContext);
+            if (!string.IsNullOrEmpty(panoramaUploadArgs))
+            {
+                if (importResultsFailed)
+                {
+                    LogError("Failed to import results. Skipping upload to Panorama.");
+                }
+                else if (_totalImportCount == 0)
+                {
+                    Log("No results were imported. Skipping upload to Panorama.");
+                }
+                else
+                {
+                    var argsToPrint = PanoramaArgs(importContext, true);
+                    var uploadToPanoramaProc = new ProcessInfo(Config.SkylineSettings.CmdPath, panoramaUploadArgs, argsToPrint);
+                    status = RunProcess(uploadToPanoramaProc);
+                    if (status == ProcStatus.Error)
+                    {
+                        _panoramaUploadError = true;
+                    }
+                }
+            }
+
+            var runAfter = RunAfter(importContext);
+            if (runAfter != null && _totalImportCount > 0)
+            {
+                RunProcess(runAfter); // Create a zip archive AFTER importing all files if importing existing files
+            }
+
+            return !importResultsFailed;
         }
 
         public void Cancel()
@@ -690,7 +726,7 @@ namespace AutoQC
 
         private static DateTime GetLastAcquiredFileDate(string reportFile, Logger logger)
         {
-            var lastAcq = new DateTime();
+            var lastAcq = DateTime.MinValue;
 
             using (var reader = new StreamReader(reportFile))
             {
@@ -728,50 +764,6 @@ namespace AutoQC
             return lastAcq;
         }
 
-        public string SkylineRunnerArgs(ImportContext importContext, bool toPrint = false)
-        {
-            // Get the current results time window
-            var currentDate = DateTime.Today;
-            var accumulationWindow = AccumulationWindow.Get(currentDate, Config.MainSettings.ResultsWindow);
-
-            var args = new StringBuilder();
-            // Input Skyline file
-            args.Append(string.Format(" --in=\"{0}\"", Config.MainSettings.SkylineFilePath));
-
-            string importOnOrAfter = string.Empty;
-            if (importContext.ImportExisting)
-            {
-                // We are importing existing files in the folder.  The import-on-or-after is determined
-                // by the last acquisition date on the files already imported in the Skyline document.
-                // If the Skyline document does not have any results files, we will import all existing
-                // files in the folder.
-                if (LastAcquiredFileDate != DateTime.MinValue)
-                {
-                    importOnOrAfter = string.Format(" --import-on-or-after={0}", LastAcquiredFileDate);
-                }
-            }
-            else
-            {
-                importOnOrAfter = string.Format(" --import-on-or-after={0}",
-                    accumulationWindow.StartDate.ToShortDateString());
-
-                if (Config.MainSettings.RemoveResults)
-                {
-                    // Add arguments to remove files older than the start of the rolling window.   
-                    args.Append(string.Format(" --remove-before={0}",
-                        accumulationWindow.StartDate.ToShortDateString()));
-                }
-            }
-
-            // Add arguments to import the results file
-            args.Append(string.Format(" --import-file=\"{0}\"{1}", importContext.GetCurrentFile(), importOnOrAfter));
-
-            // Save the Skyline file
-            args.Append(" --save");
-
-            return args.ToString();
-        }
-
         public string GetArchiveArgs(DateTime archiveDate, DateTime currentDate)
         {
             if (currentDate.CompareTo(archiveDate) < 0)
@@ -801,12 +793,12 @@ namespace AutoQC
 
         public DateTime GetLastArchivalDate(IFileSystemUtil fileUtil)
         {
-            if (!LastArchivalDate.Equals(DateTime.MinValue))
+            if (!DateTime.MinValue.Equals(LastArchivalDate))
             {
                 return LastArchivalDate;
             }
 
-            if (!LastAcquiredFileDate.Equals(DateTime.MinValue))
+            if (!DateTime.MinValue.Equals(LastAcquiredFileDate))
             {
                 LastArchivalDate = LastAcquiredFileDate;
                 return LastArchivalDate;
@@ -831,17 +823,17 @@ namespace AutoQC
             return LastArchivalDate;
         }
 
-        private void Log(string message, params Object[] args)
+        private void Log(string message, params object[] args)
         {
             _logger.Log(string.Format(message, args));    
         }
         
-        private void LogError(string message, params Object[] args)
+        private void LogError(string message, params object[] args)
         {
             _logger.LogError(string.Format(message, args));
         }
 
-        private void LogException(Exception e, string message, params Object[] args)
+        private void LogException(Exception e, string message, params object[] args)
         {
             _logger.LogException(e, string.Format(message, args));
         }
@@ -897,43 +889,71 @@ namespace AutoQC
             return IsRunning();
         }
 
-        #region [Implementation of IProcessControl interface]
-        public IEnumerable<ProcessInfo> GetProcessInfos(ImportContext importContext)
+        public string ImportResultsFileArgs(ImportContext importContext)
         {
-            var processInfos = new List<ProcessInfo>();
+            // Get the current results time window
+            var currentDate = DateTime.Today;
+            var accumulationWindow = AccumulationWindow.Get(currentDate, Config.MainSettings.ResultsWindow);
 
-            var runBefore = RunBefore(importContext);
-            if (runBefore != null)
-            {
-                runBefore.WorkingDirectory = importContext.WorkingDir;
-                processInfos.Add(runBefore);
-            }
-            
-
-            var skylineRunnerArgs = GetSkylineRunnerArgs(importContext);
-            var argsToPrint = GetSkylineRunnerArgs(importContext, true);
-            var skylineRunner = new ProcessInfo(Config.SkylineSettings.CmdPath, skylineRunnerArgs, argsToPrint);
-            processInfos.Add(skylineRunner);
-            
-            var runAfter = RunAfter(importContext);
-            if (runAfter != null)
-            {
-                processInfos.Add(runAfter);
-            }
-
-            return processInfos;
-        }
-
-        private string GetSkylineRunnerArgs(ImportContext importContext, bool toPrint = false)
-        {
             var args = new StringBuilder();
+            // Input Skyline file
+            args.Append(string.Format(" --in=\"{0}\"", Config.MainSettings.SkylineFilePath));
 
-            args.AppendLine();
-            args.Append(SkylineRunnerArgs(importContext, toPrint));
-            args.Append(" ");
-            args.Append(Config.PanoramaSettings.SkylineRunnerArgs(importContext, toPrint));
+            string importOnOrAfter = string.Empty;
+            if (importContext.ImportExisting)
+            {
+                // We are importing existing files in the folder.  The import-on-or-after is determined
+                // by the last acquisition date on the files already imported in the Skyline document.
+                // If the Skyline document does not have any results files, we will import all existing
+                // files in the folder.
+                if (!DateTime.MinValue.Equals(LastAcquiredFileDate))
+                {
+                    importOnOrAfter = string.Format(" --import-on-or-after={0}", LastAcquiredFileDate);
+                }
+            }
+            else
+            {
+                importOnOrAfter = string.Format(" --import-on-or-after={0}",
+                    accumulationWindow.StartDate.ToShortDateString());
+
+                if (Config.MainSettings.RemoveResults)
+                {
+                    // Add arguments to remove files older than the start of the rolling window.   
+                    args.Append(string.Format(" --remove-before={0}",
+                        accumulationWindow.StartDate.ToShortDateString()));
+                }
+            }
+
+            // Add arguments to import the results file
+            args.Append(string.Format(" --import-file=\"{0}\"{1}", importContext.GetCurrentFile(), importOnOrAfter));
+
+            // Save the Skyline file
+            args.Append(" --save");
 
             return args.ToString();
+        }
+
+        public string PanoramaArgs(ImportContext importContext, bool toPrint = false)
+        {
+            if (!Config.PanoramaSettings.PublishToPanorama || importContext.ImportExisting && !importContext.ImportingLast())
+            {
+                // Do not upload to Panorama if we are importing existing documents and this is not the 
+                // last file being imported.
+                return string.Empty;
+            }
+
+            var args = new StringBuilder();
+            // Input Skyline file
+            args.Append(string.Format(" --in=\"{0}\"", Config.MainSettings.SkylineFilePath));
+
+            var passwdArg = toPrint ? string.Empty : string.Format(" --panorama-password=\"{0}\"", Config.PanoramaSettings.PanoramaPassword);
+            var uploadArgs = string.Format(
+                    " --panorama-server=\"{0}\" --panorama-folder=\"{1}\" --panorama-username=\"{2}\" {3}",
+                    Config.PanoramaSettings.PanoramaServerUrl,
+                    Config.PanoramaSettings.PanoramaFolder,
+                    Config.PanoramaSettings.PanoramaUserEmail,
+                    passwdArg);
+            return args.Append(uploadArgs).ToString();
         }
 
         public ProcessInfo RunBefore(ImportContext importContext)
@@ -976,6 +996,7 @@ namespace AutoQC
             return new ProcessInfo(Config.SkylineSettings.CmdPath, args, args);
         }
 
+        #region [Implementation of IProcessControl interface]
         public ProcStatus RunProcess(ProcessInfo processInfo)
         {
             _processRunner = new ProcessRunner(_logger);
@@ -992,7 +1013,6 @@ namespace AutoQC
 
     public interface IProcessControl
     {
-        IEnumerable<ProcessInfo> GetProcessInfos(ImportContext importContext);
         ProcStatus RunProcess(ProcessInfo processInfo);
         void StopProcess();
     }
@@ -1001,8 +1021,7 @@ namespace AutoQC
     {
         Success,
         Error,
-        DocImportError,
-        PanoramaUploadError
+        Skipped
     }
 
     public class ConfigRunnerException : SystemException

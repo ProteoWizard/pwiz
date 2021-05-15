@@ -449,8 +449,12 @@ using SharedBatch.Properties;
                 }
 
                 // Reset the stream reader to start from the beginning of the file
-                _streamReader.Close();
-                _streamReader.BaseStream.Dispose();
+                if (_streamReader != null)
+                {
+                    _streamReader.Close();
+                    _streamReader.BaseStream.Dispose();
+                }
+
                 var logFileRead = File.Open(_filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
                 _streamReader = new StreamReader(logFileRead, Encoding.Default, false, 
                     StreamReaderDefaultBufferSize, true);
