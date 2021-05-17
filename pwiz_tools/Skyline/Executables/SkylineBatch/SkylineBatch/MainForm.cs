@@ -574,7 +574,7 @@ namespace SkylineBatch
         {
             if (textBoxLog.IsDisposed) return;
             _outputLog.Tick -= OutputLog;
-            if (WindowState != FormWindowState.Minimized && textBoxLog.TextLength > 0)
+            if (WindowState != FormWindowState.Minimized && tabMain.SelectedIndex == 1 && textBoxLog.TextLength > 0)
             {
                 _scrolling = textBoxLog.GetPositionFromCharIndex(textBoxLog.Text.Length - 1).Y <=
                              textBoxLog.Height;
@@ -652,7 +652,12 @@ namespace SkylineBatch
 
         private void tabLog_Enter(object sender, EventArgs e)
         {
-            _forceScroll = _configManager.SelectedLog == 0;
+            _forceScroll = _configManager.SelectedLog == 0 && !_scrolling;
+        }
+
+        private void tabLog_Leave(object sender, EventArgs e)
+        {
+            _scrolling = _configManager.SelectedLog == 0;
         }
 
         private void comboLogList_SelectedIndexChanged(object sender, EventArgs e)
