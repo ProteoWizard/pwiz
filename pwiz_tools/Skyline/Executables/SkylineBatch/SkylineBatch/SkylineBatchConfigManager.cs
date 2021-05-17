@@ -409,8 +409,8 @@ namespace SkylineBatch
                         string.Format(Resources.ConfigManager_CheckConfigAtIndex_Please_wait_until___0___has_finished_running_, config.Name);
                     return false;
                 }
-                runner.Cancel();
                 config.Enabled = !config.Enabled;
+                runner.Cancel();
                 return true;
             }
         }

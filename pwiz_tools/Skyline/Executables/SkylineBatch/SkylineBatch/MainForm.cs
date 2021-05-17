@@ -218,7 +218,6 @@ namespace SkylineBatch
                 DisplayError(errorMessage);
                 return;
             }
-            UpdateUiConfigurations();
             UpdateRunBatchSteps();
         }
 
@@ -387,7 +386,7 @@ namespace SkylineBatch
         {
             _configManager.CancelRunners();
             btnStop.Enabled = false;
-            btnLogStop.Enabled = false;
+            btnLogStop.Enabled = false; 
         }
 
         #endregion
