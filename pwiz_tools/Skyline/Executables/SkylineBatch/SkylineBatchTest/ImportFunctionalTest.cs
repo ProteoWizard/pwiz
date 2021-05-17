@@ -56,7 +56,7 @@ namespace SkylineBatchTest
         public void TestImportValidConfigurations(MainForm mainForm)
         {
             var validConfigFile = Path.Combine(TEST_FOLDER, "ValidConfigurations.bcfg");
-            WaitForShortImport(mainForm, validConfigFile);
+            FunctionalTestUtil.WaitForShortImport(mainForm, validConfigFile, this);
             RunUI(() => { FunctionalTestUtil.CheckConfigs(3, 0, mainForm); });
 
 
@@ -70,7 +70,7 @@ namespace SkylineBatchTest
         {
             RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
             var validConfigFile = Path.Combine(TEST_FOLDER, "ValidConfigurations.bcfg");
-            WaitForShortImport(mainForm, validConfigFile);
+            FunctionalTestUtil.WaitForShortImport(mainForm, validConfigFile, this);
             RunUI(() => { FunctionalTestUtil.CheckConfigs(3, 0, mainForm); });
 
             RunDlg<AlertDlg>(() => mainForm.DoImport(validConfigFile),
@@ -93,7 +93,7 @@ namespace SkylineBatchTest
         {
             RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
             var invalidPathsFile = Path.Combine(TEST_FOLDER, "InvalidPathConfigurations.bcfg");
-            WaitForShortImport(mainForm, invalidPathsFile);
+            FunctionalTestUtil.WaitForShortImport(mainForm, invalidPathsFile, this);
             RunUI(() => { FunctionalTestUtil.CheckConfigs(3, 3, mainForm); });
 
 
@@ -106,7 +106,7 @@ namespace SkylineBatchTest
 
             RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
             var invalidConfigFile = Path.Combine(TEST_FOLDER, "InvalidSkylineConfigurations.bcfg");
-            WaitForShortImport(mainForm, invalidConfigFile);
+            FunctionalTestUtil.WaitForShortImport(mainForm, invalidConfigFile, this);
             RunUI(() => { FunctionalTestUtil.CheckConfigs(3, 3, mainForm); });
 
 
@@ -166,7 +166,7 @@ namespace SkylineBatchTest
         {
             RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
             var invalidConfigFile = Path.Combine(TEST_FOLDER, "InvalidSkylineConfigurations.bcfg");
-            WaitForShortImport(mainForm, invalidConfigFile);
+            FunctionalTestUtil.WaitForShortImport(mainForm, invalidConfigFile, this);
             RunUI(() =>
             {
                 FunctionalTestUtil.CheckConfigs(3, 3, mainForm);
@@ -217,7 +217,7 @@ namespace SkylineBatchTest
         {
             RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
             var invalidConfigFile = Path.Combine(TEST_FOLDER, "InvalidPathConfigurations.bcfg");
-            WaitForShortImport(mainForm, invalidConfigFile);
+            FunctionalTestUtil.WaitForShortImport(mainForm, invalidConfigFile, this);
             RunUI(() => { FunctionalTestUtil.CheckConfigs(3, 3, mainForm); });
 
             RunUI(() => { mainForm.ClickConfig(0); });
@@ -245,7 +245,7 @@ namespace SkylineBatchTest
              RunUI(() => { FunctionalTestUtil.CheckConfigs(3, 0, mainForm); });
 
              RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
-            WaitForShortImport(mainForm, invalidConfigFile);
+             FunctionalTestUtil.WaitForShortImport(mainForm, invalidConfigFile, this);
             RunUI(() => { FunctionalTestUtil.CheckConfigs(3, 0, mainForm, "Expected 3 imported configs", "Expected configs to be valid from root replacement."); });
         }
 
@@ -253,7 +253,7 @@ namespace SkylineBatchTest
         {
             RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
             var invalidConfigFile = Path.Combine(TEST_FOLDER, "InvalidRootConfigurations.bcfg");
-            WaitForShortImport(mainForm, invalidConfigFile);
+            FunctionalTestUtil.WaitForShortImport(mainForm, invalidConfigFile, this);
             RunUI(() => { FunctionalTestUtil.CheckConfigs(3, 3, mainForm); });
 
             RunUI(() => { mainForm.ClickConfig(0); });
@@ -281,15 +281,8 @@ namespace SkylineBatchTest
             RunUI(() => { FunctionalTestUtil.CheckConfigs(3, 0, mainForm); });
 
             RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
-            WaitForShortImport(mainForm, invalidConfigFile);
+            FunctionalTestUtil.WaitForShortImport(mainForm, invalidConfigFile, this);
             RunUI(() => { FunctionalTestUtil.CheckConfigs(3, 0, mainForm); });
-        }
-
-
-        private void WaitForShortImport(MainForm mainForm, string filePath)
-        {
-            var importOperation = mainForm.DoImport(filePath);
-            WaitForConditionUI(1000, () => importOperation.Completed, () => "Import timed out");
         }
 
     }

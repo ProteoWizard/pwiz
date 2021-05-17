@@ -410,7 +410,8 @@ namespace SkylineBatch
                     return false;
                 }
                 config.Enabled = !config.Enabled;
-                runner.Cancel();
+                if (runner.IsWaiting())
+                    runner.Cancel();
                 return true;
             }
         }

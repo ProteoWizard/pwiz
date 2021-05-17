@@ -95,11 +95,11 @@ namespace SkylineBatchTest
         {
             RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
             var baseConfigFile = Path.Combine(BCFG_FOLDER, "BaseConfiguration.bcfg");
-            WaitForShortImport(mainForm, baseConfigFile);
+            FunctionalTestUtil.WaitForShortImport(mainForm, baseConfigFile, this);
             RunUI(() => { FunctionalTestUtil.CheckConfigs(1, 0, mainForm); });
 
             var validDependentConfigFile = Path.Combine(BCFG_FOLDER, "ValidDependentConfiguration.bcfg");
-            WaitForShortImport(mainForm, validDependentConfigFile);
+            FunctionalTestUtil.WaitForShortImport(mainForm, validDependentConfigFile, this);
             RunUI(() => { FunctionalTestUtil.CheckConfigs(2, 0, mainForm); });
             AssertDependentMatches(mainForm, Path.Combine(CONFIG_FOLDER, "RefinedOutput.sky"), 1);
 
@@ -116,7 +116,7 @@ namespace SkylineBatchTest
             RunUI(() => { FunctionalTestUtil.CheckConfigs(1, 1, mainForm); });
 
             RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
-            WaitForShortImport(mainForm, baseConfigFile);
+            FunctionalTestUtil.WaitForShortImport(mainForm, baseConfigFile, this);
             RunUI(() => { FunctionalTestUtil.CheckConfigs(1, 0, mainForm); });
             var invalidDependentConfigsFile = Path.Combine(BCFG_FOLDER, "InvalidDependentConfigurations.bcfg");
             RunDlg<AlertDlg>(() => { mainForm.DoImport(invalidDependentConfigsFile);},
@@ -146,11 +146,11 @@ namespace SkylineBatchTest
         {
             RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
             var baseConfigFile = Path.Combine(BCFG_FOLDER, "BaseConfiguration.bcfg");
-            WaitForShortImport(mainForm, baseConfigFile);
+            FunctionalTestUtil.WaitForShortImport(mainForm, baseConfigFile, this);
             RunUI(() => { FunctionalTestUtil.CheckConfigs(1, 0, mainForm); });
 
             var validDependentConfigFile = Path.Combine(BCFG_FOLDER, "ValidDependentConfiguration.bcfg");
-            WaitForShortImport(mainForm, validDependentConfigFile);
+            FunctionalTestUtil.WaitForShortImport(mainForm, validDependentConfigFile, this);
             RunUI(() => { FunctionalTestUtil.CheckConfigs(2, 0, mainForm); });
 
             var newTemplate = Path.Combine(CONFIG_FOLDER, "NewRefinedOutput.sky");
@@ -168,15 +168,15 @@ namespace SkylineBatchTest
         {
             RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
             var baseConfigFile = Path.Combine(BCFG_FOLDER, "BaseConfiguration.bcfg");
-            WaitForShortImport(mainForm, baseConfigFile);
+            FunctionalTestUtil.WaitForShortImport(mainForm, baseConfigFile, this);
             RunUI(() => { FunctionalTestUtil.CheckConfigs(1, 0, mainForm); });
 
             var validDependentConfigFile = Path.Combine(BCFG_FOLDER, "ValidDependentConfiguration.bcfg");
-            WaitForShortImport(mainForm, validDependentConfigFile);
+            FunctionalTestUtil.WaitForShortImport(mainForm, validDependentConfigFile, this);
             RunUI(() =>
             {
                 FunctionalTestUtil.CheckConfigs(2, 0, mainForm);
-                mainForm.ConfigEnabled(1, true);
+                mainForm.SetConfigEnabled(1, true);
             });
             RunDlg<AlertDlg>(() => mainForm.ClickRun(),
                 dlg =>
@@ -189,7 +189,7 @@ namespace SkylineBatchTest
             RunUI(() =>
             {
                 mainForm.ClickConfig(0);
-                mainForm.ConfigEnabled(0, true);
+                mainForm.SetConfigEnabled(0, true);
                 mainForm.ClickDown();
             });
             RunDlg<AlertDlg>(() => mainForm.ClickRun(),
@@ -242,12 +242,5 @@ namespace SkylineBatchTest
             });
             WaitForClosedForm(editConfigForm);
         }
-
-        private void WaitForShortImport(MainForm mainForm, string filePath)
-        {
-            var importOperation = mainForm.DoImport(filePath);
-            WaitForConditionUI(1000, () => importOperation.Completed, () => "Import timed out");
-        }
-
     }
 }

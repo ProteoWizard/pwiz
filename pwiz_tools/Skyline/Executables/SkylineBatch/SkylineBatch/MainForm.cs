@@ -210,14 +210,20 @@ namespace SkylineBatch
 
         private void listViewConfigs_ItemCheck(object sender, ItemCheckEventArgs e)
         {
-            if (!_loaded) return;
-            var success = _configManager.CheckConfigAtIndex(e.Index, out string errorMessage);
+            if (!_loaded || e.NewValue == e.CurrentValue) return;
+            e.NewValue = e.CurrentValue;
+            ChangeConfigEnabled(e.Index);
+        }
+
+        private void ChangeConfigEnabled(int index)
+        {
+            var success = _configManager.CheckConfigAtIndex(index, out string errorMessage);
             if (!success)
             {
-                e.NewValue = e.CurrentValue;
                 DisplayError(errorMessage);
                 return;
             }
+            UpdateUiConfigurations();
             UpdateRunBatchSteps();
         }
 
@@ -799,7 +805,10 @@ namespace SkylineBatch
         }
 
         public void ClickConfig(int index) => SelectConfig(index);
-        public void ConfigEnabled(int index, bool newValue) => listViewConfigs.Items[index].Checked = newValue;
+        public void SetConfigEnabled(int index, bool newValue) => listViewConfigs.SimulateItemCheck(new ItemCheckEventArgs(index, newValue ? CheckState.Checked : CheckState.Unchecked, listViewConfigs.Items[index].Checked ? CheckState.Checked : CheckState.Unchecked));
+
+        public bool IsConfigEnabled(int index) => listViewConfigs.Items[index].Checked;
+        
 
         #endregion
     }
@@ -809,6 +818,8 @@ namespace SkylineBatch
     {
         private bool checkFromDoubleClick;
 
+        public void SimulateItemCheck(ItemCheckEventArgs ice) => OnItemCheck(ice);
+        
         protected override void OnItemCheck(ItemCheckEventArgs ice)
         {
             if (this.checkFromDoubleClick)
