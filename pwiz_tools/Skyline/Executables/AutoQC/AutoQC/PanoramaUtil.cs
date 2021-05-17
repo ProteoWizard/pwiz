@@ -431,19 +431,17 @@ namespace AutoQC
         {
             try
             {
-                Uri uri = new Uri(ServerUri, "project/home/getContainers.view"); // Not L10N
+                // Use the LabKey AdminController.HealthCheckAction instead of ProjectController.GetContainersAction which does not return the expected
+                // JSON key if the "Home" container on the LabKey Server is not public.
+                // (https://www.labkey.org/home/Developer/issues/Secure/issues-details.view?issueId=20686)
+                Uri uri = new Uri(ServerUri, @"admin/home/healthCheck.view");
                 using (var webClient = new UTF8WebClient())
                 {
                     JObject jsonResponse = webClient.Get(uri);
-                    string type = (string)jsonResponse["type"]; // Not L10N
-                    if (string.Equals(type, "project")) // Not L10N
-                    {
-                        return PanoramaState.panorama;
-                    }
-                    else
-                    {
-                        return PanoramaState.other;
-                    }
+                    var panoramaState = jsonResponse.ContainsKey(@"healthy")
+                        ? PanoramaState.panorama
+                        : PanoramaState.other;
+                    return panoramaState;
                 }
             }
             catch (WebException ex)
