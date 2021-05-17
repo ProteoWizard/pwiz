@@ -485,6 +485,29 @@ namespace pwiz.Skyline.Model
             return minPeptides > 0 ? new RefinementSettings {MinPeptidesPerProtein = minPeptides}.Refine(document) : document;
         }
 
+        public static SrmDocument AddStandardsToDocument(SrmDocument doc, IrtStandard standard)
+        {
+            if (standard == null)
+                return doc;
+
+            var standardMap = new TargetMap<bool>(standard.Peptides.Select(pep => new KeyValuePair<Target, bool>(pep.ModifiedTarget, true)));
+            var docStandards = new TargetMap<bool>(doc.Peptides
+                .Where(nodePep => standardMap.ContainsKey(nodePep.ModifiedTarget))
+                .Select(nodePep => new KeyValuePair<Target, bool>(nodePep.ModifiedTarget, true)));
+            if (standard.Peptides.All(pep => docStandards.ContainsKey(pep.ModifiedTarget)))
+                return doc; // document already contains all standards
+            else if (standard.HasDocument)
+                return standard.ImportTo(doc);
+
+            var modMatcher = new ModificationMatcher();
+            modMatcher.CreateMatches(doc.Settings, standard.Peptides.Select(pep => pep.ModifiedTarget.ToString()),
+                Settings.Default.StaticModList, Settings.Default.HeavyModList);
+            var group = new PeptideGroupDocNode(new PeptideGroup(), Resources.ImportFastaControl_ImportFasta_iRT_standards, null,
+                standard.Peptides.Select(pep => modMatcher.GetModifiedNode(pep.ModifiedTarget.ToString()).ChangeSettings(doc.Settings, SrmSettingsDiff.ALL)
+                ).ToArray());
+            return (SrmDocument) doc.Insert(doc.Children.FirstOrDefault()?.Id, group);
+        }
+
         public class FoundResultsFile
         {
             public string Name { get; set; }
