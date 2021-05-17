@@ -479,7 +479,7 @@ namespace SkylineBatch
                 batchRunDropDown.Items.Clear();
                 batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Run_All_Steps);
                 batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Download_data_only);
-                batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Run_from_step_1__create_results_file);
+                batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Run_from_step_1__copy_template_and_import_data);
                 if (_showRefineStep)
                 {
                     batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Run_from_step_2__refine_file);

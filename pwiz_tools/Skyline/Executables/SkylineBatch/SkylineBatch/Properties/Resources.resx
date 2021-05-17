@@ -628,8 +628,8 @@
   <data name="SkylineBatch_release" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\SkylineBatch_release.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="Program_Main_There_was_an_error_reading_the_saved_configurations_from_an_earlier_version_of__0___Please_restart_the_program_and_try_again_" xml:space="preserve">
-    <value>There was an error reading the saved configurations from an earlier version of {0}. Please restart the program and try again.</value>
+  <data name="Program_Main_There_was_an_error_reading_the_saved_configurations_from_an_earlier_version_of__0___" xml:space="preserve">
+    <value>There was an error reading the saved configurations from an earlier version of {0}.</value>
   </data>
   <data name="Program_Main_To_help_improve__0__in_future_versions__please_post_the_configuration_file_to_the_Skyline_Support_board_" xml:space="preserve">
     <value>To help improve {0} in future versions, please post the configuration file to the Skyline Support board:</value>
@@ -676,8 +676,8 @@
   <data name="DataServerControl_ServerRemoved_No_server" xml:space="preserve">
     <value>No server</value>
   </data>
-  <data name="MainForm_UpdateRunBatchSteps_Run_from_step_1__create_results_file" xml:space="preserve">
-    <value>Run from step 1: create results file</value>
+  <data name="MainForm_UpdateRunBatchSteps_Run_from_step_1__copy_template_and_import_data" xml:space="preserve">
+    <value>Run from step 1: copy template and import data</value>
   </data>
   <data name="SkylineBatchConfigManager_StartBatchRun_R_script_outputs_in_the_following_analysis_folders" xml:space="preserve">
     <value>R script outputs in the following analysis folders</value>
@@ -686,16 +686,16 @@
     <value>The parent directory of the data folder {0} does not exist.</value>
   </data>
   <data name="SkylineBatchConfigManager_StartBatchRun_The_data_for_the_following_configurations_has_not_fully_downloaded_" xml:space="preserve">
-	  <value>The data for the following configurations has not fully downloaded:</value>
+    <value>The data for the following configurations has not fully downloaded:</value>
   </data>
   <data name="SkylineBatchConfigManager_StartBatchRun_Please_download_the_data_for_these_configurations_before_running_them_from_a_later_step_" xml:space="preserve">
-	  <value>Please download the data for these configurations before running them from a later step.</value>
+    <value>Please download the data for these configurations before running them from a later step.</value>
   </data>
   <data name="SkylineBatchConfigManager_StartBatchRun_There_are_no_configurations_to_run_" xml:space="preserve">
-	  <value>There are no configurations to run.</value>
+    <value>There are no configurations to run.</value>
   </data>
   <data name="SkylineBatchConfigManager_StartBatchRun_Please_add_configurations_before_running_" xml:space="preserve">
-	  <value>Please add configurations before running.</value>
+    <value>Please add configurations before running.</value>
   </data>
   <data name="MainForm_btnImport_Click_Cannot_add_configurations_while__0__is_loading__Please_wait_and_try_again_" xml:space="preserve">
     <value>Cannot add configurations while {0} is loading. Please wait and try again.</value>

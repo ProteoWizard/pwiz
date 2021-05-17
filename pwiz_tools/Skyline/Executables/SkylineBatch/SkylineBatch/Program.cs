@@ -110,7 +110,7 @@ namespace SkylineBatch
                     var folderToCopy = Path.GetDirectoryName(ProgramLog.GetProgramLogFilePath()) ?? string.Empty;
                     var newFileName = Path.Combine(folderToCopy, "error-user.config");
                     var message = string.Format(
-                        Resources.Program_Main_There_was_an_error_reading_the_saved_configurations_from_an_earlier_version_of__0___Please_restart_the_program_and_try_again_,
+                        Resources.Program_Main_There_was_an_error_reading_the_saved_configurations_from_an_earlier_version_of__0___,
                         AppName());
                     if (configFile != null)
                     {
@@ -125,6 +125,7 @@ namespace SkylineBatch
                     }
                     
                     MessageBox.Show(message);
+                    Application.Restart();
                     return;
                 }
                 

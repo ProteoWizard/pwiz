@@ -703,7 +703,7 @@ namespace SkylineBatch
                     text = Resources.MainForm_UpdateRunBatchSteps_Download_data_only;
                     break;
                 case RunBatchOptions.FROM_CREATE_RESULTS:
-                    text = Resources.MainForm_UpdateRunBatchSteps_Run_from_step_1__create_results_file;
+                    text = Resources.MainForm_UpdateRunBatchSteps_Run_from_step_1__copy_template_and_import_data;
                     break;
                 case RunBatchOptions.FROM_REFINE:
                     text = Resources.MainForm_UpdateRunBatchSteps_Run_from_step_2__refine_file;

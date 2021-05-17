@@ -793,11 +793,11 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Run from step 1: create results file.
+        ///   Looks up a localized string similar to Run from step 1: copy template and import data.
         /// </summary>
-        public static string MainForm_UpdateRunBatchSteps_Run_from_step_1__create_results_file {
+        public static string MainForm_UpdateRunBatchSteps_Run_from_step_1__copy_template_and_import_data {
             get {
-                return ResourceManager.GetString("MainForm_UpdateRunBatchSteps_Run_from_step_1__create_results_file", resourceCulture);
+                return ResourceManager.GetString("MainForm_UpdateRunBatchSteps_Run_from_step_1__copy_template_and_import_data", resourceCulture);
             }
         }
         
@@ -1080,12 +1080,12 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to There was an error reading the saved configurations from an earlier version of {0}. Please restart the program and try again..
+        ///   Looks up a localized string similar to There was an error reading the saved configurations from an earlier version of {0}..
         /// </summary>
-        public static string Program_Main_There_was_an_error_reading_the_saved_configurations_from_an_earlier_version_of__0___Please_restart_the_program_and_try_again_ {
+        public static string Program_Main_There_was_an_error_reading_the_saved_configurations_from_an_earlier_version_of__0___ {
             get {
                 return ResourceManager.GetString("Program_Main_There_was_an_error_reading_the_saved_configurations_from_an_earlier_" +
-                        "version_of__0___Please_restart_the_program_and_try_again_", resourceCulture);
+                        "version_of__0___", resourceCulture);
             }
         }
         
