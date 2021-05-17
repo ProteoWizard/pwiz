@@ -12,6 +12,7 @@ namespace SharedBatch
     {
 
         public const string DOWNLOADS_FOLDER = "\\Downloads";
+        public const int ONE_GB = 1000000000;
 
 
         public static void ValidateNotEmptyPath(string input, string name)
@@ -91,6 +92,19 @@ namespace SharedBatch
             return GetInitialDirectory(directoryName);
         }
 
+        public static List<string> GetFilesInFolder(string folder, string fileType)
+        {
+            var filesWithType = new List<string>();
+            var allFiles = new DirectoryInfo(folder).GetFiles();
+            foreach (var file in allFiles)
+            {
+                if (file.Name.EndsWith(fileType))
+                    filesWithType.Add(file.FullName);
+            }
+
+            return filesWithType;
+        }
+
         public static string GetSafeName(string name)
         {
             var invalidChars = new List<char>();
@@ -98,13 +112,6 @@ namespace SharedBatch
             invalidChars.AddRange(Path.GetInvalidPathChars());
             var safeName = string.Join("_", name.Split(invalidChars.ToArray()));
             return safeName; // .TrimStart('.').TrimEnd('.');
-        }
-
-        public static string GetTestPath(bool isTest, string testFolder, string path)
-        {
-            if (path != null && isTest && path.StartsWith("\\"))
-                path = testFolder + path;
-            return path;
         }
 
         public static void AddFileTypeClickOnce(string extension, string id, string description, string applicationReference, string iconPath)
@@ -139,6 +146,18 @@ namespace SharedBatch
 
         [DllImport("shell32.dll", CharSet = CharSet.Auto, SetLastError = true)]
         public static extern void SHChangeNotify(uint wEventId, uint uFlags, IntPtr dwItem1, IntPtr dwItem2);
+
+        public static long GetTotalFreeSpace(string driveName)
+        {
+            foreach (DriveInfo drive in DriveInfo.GetDrives())
+            {
+                if (drive.IsReady && drive.Name == driveName)
+                {
+                    return drive.TotalFreeSpace;
+                }
+            }
+            return -1;
+        }
 
     }
 }

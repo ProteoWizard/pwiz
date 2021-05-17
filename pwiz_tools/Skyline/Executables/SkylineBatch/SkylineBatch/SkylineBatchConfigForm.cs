@@ -48,6 +48,7 @@ namespace SkylineBatch
         private readonly Image _downloadImage;
         private readonly Image _downloadSelectedImage;
         private DataServerInfo _dataServer;
+        private bool _showChangeAllSkylineSettings;
         public Control templateFileControl;
 
         private string _lastEnteredPath;
@@ -66,6 +67,8 @@ namespace SkylineBatch
             _mainControl = mainControl;
             _configManager = configManager;
             _possibleTemplates = configManager.GetRefinedTemplates();
+            var numConfigs = configManager.ConfigNamesAsObjectArray().Length;
+            _showChangeAllSkylineSettings = (numConfigs == 1 && _action != ConfigAction.Edit) || numConfigs > 1;
             if (_action == ConfigAction.Edit && config != null && _possibleTemplates.ContainsKey(config.Name))
                 _possibleTemplates.Remove(config.Name);
             if (config != null)
@@ -501,7 +504,7 @@ namespace SkylineBatch
 
         private void CheckIfSkylineChanged()
         {
-            if (_isBusy) return; // can't change Skyline settings if config is running
+            if (_isBusy || !_showChangeAllSkylineSettings) return; // can't change Skyline settings if config is running
             SkylineSettings changedSkylineSettings;
             try
             {
@@ -514,7 +517,9 @@ namespace SkylineBatch
             if (changedSkylineSettings != null && !changedSkylineSettings.Equals(_currentSkylineSettings))
             {
                 _currentSkylineSettings = changedSkylineSettings;
-                _mainControl.ReplaceAllSkylineVersions(_currentSkylineSettings);
+                var replaced = _mainControl.ReplaceAllSkylineVersions(_currentSkylineSettings);
+                // only set this to false if user did not want to change all settings
+                _showChangeAllSkylineSettings = replaced ?? true;
             }
         }
 
@@ -557,7 +562,7 @@ namespace SkylineBatch
             {
                 newConfig = GetConfigFromUi();
                 _mainControl.AssertUniqueConfigName(newConfig.Name, _action == ConfigAction.Edit);
-                newConfig.Validate();
+                newConfig.QuickValidate();
             }
             catch (ArgumentException e)
             {

@@ -228,11 +228,23 @@ namespace SkylineBatch
             SkylineSettings.Validate();
         }
 
-        public bool RunWillOverwrite(int startStep, string configurationHeader, out StringBuilder message)
+        public void QuickValidate()
         {
-            if (startStep != 3)
-                return MainSettings.RunWillOverwrite(startStep, configurationHeader, out message);
-            return RefineSettings.RunWillOverwrite(startStep, configurationHeader, out message);
+            MainSettings.QuickValidate();
+            FileSettings.Validate();
+            RefineSettings.Validate();
+            ReportSettings.Validate();
+            SkylineSettings.Validate();
+        }
+
+        public bool RunWillOverwrite(RunBatchOptions runOption, string configurationHeader, out StringBuilder message)
+        {
+            message = new StringBuilder();
+            if (runOption == RunBatchOptions.DOWNLOAD_DATA) return false;
+            
+            return MainSettings.RunWillOverwrite(runOption, configurationHeader, out message)
+                || RefineSettings.RunWillOverwrite(runOption, configurationHeader, out message)
+                || ReportSettings.RunWillOverwrite(runOption, configurationHeader, MainSettings.AnalysisFolderPath, out message);
         }
 
         public bool TryPathReplace(string oldRoot, string newRoot, out IConfig replacedPathConfig)

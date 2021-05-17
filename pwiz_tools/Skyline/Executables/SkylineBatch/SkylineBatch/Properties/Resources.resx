@@ -138,8 +138,8 @@
   <data name="ReportInfo_ValidateRScriptPath_R_script_path__0__is_not_a_valid_path_" xml:space="preserve">
     <value>R script path {0} is not a valid path.</value>
   </data>
-  <data name="MainForm_UpdateRunBatchSteps_Run_from_step_3__export_reports" xml:space="preserve">
-    <value>Run from step 3: export reports</value>
+  <data name="MainForm_UpdateRunBatchSteps_Run_from_step_2__export_reports" xml:space="preserve">
+    <value>Run from step 2: export reports</value>
   </data>
   <data name="MainSettings_ValidateSkylineFile_Skyline_file" xml:space="preserve">
     <value>Skyline file</value>
@@ -180,8 +180,8 @@
   <data name="ConfigRunner_DownloadData_Trying_again___" xml:space="preserve">
     <value>Trying again...</value>
   </data>
-  <data name="MainForm_UpdateRunBatchSteps_Run_from_step_4__export_reports" xml:space="preserve">
-    <value>Run from step 4: export reports</value>
+  <data name="MainForm_UpdateRunBatchSteps_Run_from_step_3__export_reports" xml:space="preserve">
+    <value>Run from step 3: export reports</value>
   </data>
   <data name="ReportInfo_ValidateRVersion_Please_choose_a_different_version_of_R_" xml:space="preserve">
     <value>Please choose a different version of R.</value>
@@ -210,11 +210,8 @@
   <data name="ConfigManager_CheckConfigAtIndex_Please_wait_until___0___has_finished_running_" xml:space="preserve">
     <value>Please wait until "{0}" has finished running.</value>
   </data>
-  <data name="SkylineBatchConfigManager_StartBatchRun_R_script_outputs" xml:space="preserve">
-    <value>R script outputs</value>
-  </data>
-  <data name="MainForm_UpdateRunBatchSteps_Run_from_step_4__run_R_scripts" xml:space="preserve">
-    <value>Run from step 4: run R scripts</value>
+  <data name="MainForm_UpdateRunBatchSteps_Run_from_step_3__run_R_scripts" xml:space="preserve">
+    <value>Run from step 3: run R scripts</value>
   </data>
   <data name="Logger_DisplayLog_____Log_truncated_____Full_log_is_in__0_" xml:space="preserve">
     <value>... Log truncated ... Full log is in {0}</value>
@@ -225,8 +222,8 @@
   <data name="ConfigRunner_DownloadData_Skipping__0___Already_downloaded" xml:space="preserve">
     <value>Skipping {0}. Already downloaded</value>
   </data>
-  <data name="MainForm_UpdateRunBatchSteps_Run_from_step_3__refine_file" xml:space="preserve">
-    <value>Run from step 3: refine file</value>
+  <data name="MainForm_UpdateRunBatchSteps_Run_from_step_2__refine_file" xml:space="preserve">
+    <value>Run from step 2: refine file</value>
   </data>
   <data name="Program_Main_Error_details_may_be_found_in_the_SkylineBatchProgram_log_file_in_this_directory____0_" xml:space="preserve">
     <value>Error details may be found in the SkylineBatchProgram.log file in this directory : {0}</value>
@@ -236,9 +233,6 @@
   </data>
   <data name="RVersionControl_RVersionControl_R_version__0__not_found_" xml:space="preserve">
     <value>R version {0} not found.</value>
-  </data>
-  <data name="MainForm_UpdateRunBatchSteps_Run_from_step_2__data_import" xml:space="preserve">
-    <value>Run from step 2: data import</value>
   </data>
   <data name="RefineSettings_ValidateOutputFile_Please_provide_a_valid_output_file_path_" xml:space="preserve">
     <value>Please provide a valid output file path.</value>
@@ -445,8 +439,8 @@
   <data name="RefineSettings_Validate_CV_cutoff" xml:space="preserve">
     <value>CV cutoff</value>
   </data>
-  <data name="MainForm_UpdateRunBatchSteps_Run_from_step_5__run_R_scripts" xml:space="preserve">
-    <value>Run from step 5: run R scripts</value>
+  <data name="MainForm_UpdateRunBatchSteps_Run_from_step_4__run_R_scripts" xml:space="preserve">
+    <value>Run from step 4: run R scripts</value>
   </data>
   <data name="ConfigManager_SelectLog_No_log_at_index__" xml:space="preserve">
     <value>No log at index: </value>
@@ -553,8 +547,8 @@
   <data name="SkylineBatchConfigManager_AssignDependencies_The_following_configurations_use_refined_template_files_from_other_configurations_that_do_not_exist_" xml:space="preserve">
     <value>The following configurations use refined template files from other configurations that do not exist:</value>
   </data>
-  <data name="SkylineBatchConfigManager_StartBatchRun_Running_the_enabled_configurations_from_step__0__would_overwrite_the_following__1__" xml:space="preserve">
-    <value>Running the enabled configurations from step {0} would overwrite the following {1}:</value>
+  <data name="SkylineBatchConfigManager_StartBatchRun_Running_the_enabled_configurations_from___0___would_overwrite_the__1__" xml:space="preserve">
+    <value>Running the enabled configurations from "{0}" would overwrite the {1}:</value>
   </data>
   <data name="SkylineBatchConfigForm_SkylineBatchConfigForm_Editing_configuration___0__" xml:space="preserve">
     <value>Editing configuration "{0}"</value>
@@ -633,5 +627,77 @@
   </data>
   <data name="SkylineBatch_release" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\SkylineBatch_release.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Program_Main_There_was_an_error_reading_the_saved_configurations_from_an_earlier_version_of__0___Please_restart_the_program_and_try_again_" xml:space="preserve">
+    <value>There was an error reading the saved configurations from an earlier version of {0}. Please restart the program and try again.</value>
+  </data>
+  <data name="Program_Main_To_help_improve__0__in_future_versions__please_post_the_configuration_file_to_the_Skyline_Support_board_" xml:space="preserve">
+    <value>To help improve {0} in future versions, please post the configuration file to the Skyline Support board:</value>
+  </data>
+  <data name="MainForm_UpdateRunBatchSteps_Download_data_only" xml:space="preserve">
+    <value>Download files only</value>
+  </data>
+  <data name="ConfigRunner_DownloadData_There_is_not_enough_remaining_disk_space_to_download__0___Free_up_some_disk_space_and_try_again_" xml:space="preserve">
+    <value>There is not enough remaining disk space to download {0}. Free up some disk space and try again.</value>
+  </data>
+  <data name="ConfigRunner_DownloadData_File_download_failed_" xml:space="preserve">
+    <value>File download failed.</value>
+  </data>
+  <data name="MainForm_MainForm_Loading_configurations_from_saved_settings___" xml:space="preserve">
+    <value>Loading configurations from saved settings...</value>
+  </data>
+  <data name="MainForm_DoImport_Importing_configurations_from__0____" xml:space="preserve">
+    <value>Importing configurations from {0}...</value>
+  </data>
+  <data name="DataServerInfo_Validate_None_of_the_file_names_on_the_server_matched_the_regular_expression___0_" xml:space="preserve">
+    <value>None of the file names on the server matched the regular expression: {0}</value>
+  </data>
+  <data name="DataServerInfo_Validate_Please_make_sure_your_regular_expression_is_correct_" xml:space="preserve">
+    <value>Please make sure your regular expression is correct.</value>
+  </data>
+  <data name="MainSettings_ValidateAllButServer_The_data_folder_cannot_be_empty__Please_choose_a_folder_with_at_least_one_data_file_" xml:space="preserve">
+    <value>The data folder cannot be empty. Please choose a folder with at least one data file.</value>
+  </data>
+  <data name="AddServerForm_FinishConnectToServer_Save" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="SkylineBatchConfigManager_StartBatchRun_There_is_not_enough_space_on_this_computer_to_download_the_data_for_these_configurations__You_need_an_additional_" xml:space="preserve">
+    <value>There is not enough space on this computer to download the data for these configurations. You need an additional:</value>
+  </data>
+  <data name="SkylineBatchConfigManager_StartBatchRun__0__GB_on_the__1__drive" xml:space="preserve">
+    <value>{0} GB on the {1} drive</value>
+  </data>
+  <data name="SkylineBatchConfigManager_StartBatchRun_Please_free_up_some_space_to_download_the_data_" xml:space="preserve">
+    <value>Please free up some space to download the data.</value>
+  </data>
+  <data name="DataServerControl_ServerConnected_Connected" xml:space="preserve">
+    <value>Connected</value>
+  </data>
+  <data name="DataServerControl_ServerRemoved_No_server" xml:space="preserve">
+    <value>No server</value>
+  </data>
+  <data name="MainForm_UpdateRunBatchSteps_Run_from_step_1__create_results_file" xml:space="preserve">
+    <value>Run from step 1: create results file</value>
+  </data>
+  <data name="SkylineBatchConfigManager_StartBatchRun_R_script_outputs_in_the_following_analysis_folders" xml:space="preserve">
+    <value>R script outputs in the following analysis folders</value>
+  </data>
+  <data name="MainSettings_ValidateAnalysisFolder_The__parent_directory_of_the_data_folder__0__does_not_exist_1" xml:space="preserve">
+    <value>The parent directory of the data folder {0} does not exist.</value>
+  </data>
+  <data name="SkylineBatchConfigManager_StartBatchRun_The_data_for_the_following_configurations_has_not_fully_downloaded_" xml:space="preserve">
+	  <value>The data for the following configurations has not fully downloaded:</value>
+  </data>
+  <data name="SkylineBatchConfigManager_StartBatchRun_Please_download_the_data_for_these_configurations_before_running_them_from_a_later_step_" xml:space="preserve">
+	  <value>Please download the data for these configurations before running them from a later step.</value>
+  </data>
+  <data name="SkylineBatchConfigManager_StartBatchRun_There_are_no_configurations_to_run_" xml:space="preserve">
+	  <value>There are no configurations to run.</value>
+  </data>
+  <data name="SkylineBatchConfigManager_StartBatchRun_Please_add_configurations_before_running_" xml:space="preserve">
+	  <value>Please add configurations before running.</value>
+  </data>
+  <data name="MainForm_btnImport_Click_Cannot_add_configurations_while__0__is_loading__Please_wait_and_try_again_" xml:space="preserve">
+    <value>Cannot add configurations while {0} is loading. Please wait and try again.</value>
   </data>
 </root>

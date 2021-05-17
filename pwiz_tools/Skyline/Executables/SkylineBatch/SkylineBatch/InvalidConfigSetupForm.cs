@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -82,12 +83,14 @@ namespace SkylineBatch
                 mainSettings.TemplateFilePath, MainSettings.ValidateTemplateFile, PathDialogOptions.File, PathDialogOptions.ExistingOptional);
             var validAnalysisFolderPath = await GetValidPath(Resources.InvalidConfigSetupForm_FixInvalidMainSettings_analysis_folder, 
                 mainSettings.AnalysisFolderPath, MainSettings.ValidateAnalysisFolder, PathDialogOptions.Folder);
+            var validServer = mainSettings.Server != null ? await GetValidServer(mainSettings.Server.Copy()) : null;
+            var dataValidator = validServer != null ? (Validator)MainSettings.ValidateDataFolderWithServer : (Validator)MainSettings.ValidateDataFolderWithoutServer;
             var validDataFolderPath = await GetValidPath(Resources.InvalidConfigSetupForm_FixInvalidMainSettings_data_folder, 
-                mainSettings.DataFolderPath, MainSettings.ValidateDataFolder, PathDialogOptions.Folder);
+                mainSettings.DataFolderPath, dataValidator, PathDialogOptions.Folder);
             var validAnnotationsFilePath = await GetValidPath(Resources.InvalidConfigSetupForm_FixInvalidMainSettings_annotations_file, mainSettings.AnnotationsFilePath,
                 MainSettings.ValidateAnnotationsFile, PathDialogOptions.File);
 
-            return new MainSettings(validTemplateFilePath, validAnalysisFolderPath, validDataFolderPath, mainSettings.Server, 
+            return new MainSettings(validTemplateFilePath, validAnalysisFolderPath, validDataFolderPath, validServer, 
                 validAnnotationsFilePath, mainSettings.ReplicateNamingPattern, mainSettings.DependentConfigName);
         }
 
@@ -159,6 +162,12 @@ namespace SkylineBatch
             return path;
         }
 
+        private async Task<DataServerInfo> GetValidServer(DataServerInfo invalidServer)
+        {
+            var dataServerControl = new DataServerControl(invalidServer);
+            return (DataServerInfo)await GetValidVariable(dataServerControl);
+        }
+
         private async Task<string> GetValidRVersion(string scriptName, string invalidVersion)
         {
             var version = invalidVersion;
@@ -196,6 +205,9 @@ namespace SkylineBatch
         
         private void AddControl(UserControl control)
         {
+            var newHeight = Height - panel1.Height + control.Height;
+            var newWidth = Width - panel1.Width + control.Width;
+            Size = new Size(newWidth, newHeight);
             control.Dock = DockStyle.Fill;
             control.Show();
             panel1.Controls.Add(control);

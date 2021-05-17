@@ -24,8 +24,6 @@ using System.Deployment.Application;
 using System.Drawing;
 using System.IO;
 using System.Net;
-using System.Runtime.CompilerServices;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
 using log4net.Config;
@@ -97,18 +95,40 @@ namespace SkylineBatch
                 // Initialize log4net -- global application logging
                 XmlConfigurator.Configure();
 
+                string configFile = null;
                 try
                 {
                     var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal);
+                    configFile = config.FilePath;
                     ProgramLog.Info(string.Format(Resources.Program_Main_Saved_configurations_were_found_in___0_, config.FilePath));
+                    if (!InitSkylineSettings()) return;
+                    RInstallations.FindRDirectory();
                 }
-                catch (Exception)
+                catch (ConfigurationException e)
                 {
-                    // ignored
+                    ProgramLog.Error(e.Message, e);
+                    var folderToCopy = Path.GetDirectoryName(ProgramLog.GetProgramLogFilePath()) ?? string.Empty;
+                    var newFileName = Path.Combine(folderToCopy, "error-user.config");
+                    var message = string.Format(
+                        Resources.Program_Main_There_was_an_error_reading_the_saved_configurations_from_an_earlier_version_of__0___Please_restart_the_program_and_try_again_,
+                        AppName());
+                    if (configFile != null)
+                    {
+                        File.Copy(configFile, newFileName, true);
+                        File.Delete(configFile);
+                        message += Environment.NewLine + Environment.NewLine +
+                                   string.Format(
+                                       Resources.Program_Main_To_help_improve__0__in_future_versions__please_post_the_configuration_file_to_the_Skyline_Support_board_,
+                                       AppName()) +
+                                   Environment.NewLine +
+                                   newFileName;
+                    }
+                    
+                    MessageBox.Show(message);
+                    return;
                 }
                 
-                if (!InitSkylineSettings()) return;
-                RInstallations.FindRDirectory();
+
 
                 AddFileTypesToRegistry();
                 InitializeVersion();

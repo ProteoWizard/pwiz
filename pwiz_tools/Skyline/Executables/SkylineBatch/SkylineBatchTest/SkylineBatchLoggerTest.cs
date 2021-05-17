@@ -36,17 +36,17 @@ namespace SkylineBatchTest
             if (!Directory.Exists(logFolder)) Directory.CreateDirectory(logFolder);
 
             var logger = TestUtils.GetTestLogger(logFolder);
-            var logFile = logger.GetFile();
+            var logFile = logger.LogFile;
             Assert.IsTrue(File.Exists(logFile));
             var fileInfo = new FileInfo(logFile);
 
             var createdFileLength = fileInfo.Length;
 
             logger.Log("Test line 1");
-            var textLength = new FileInfo(logger.GetFile()).Length;
+            var textLength = new FileInfo(logger.LogFile).Length;
 
             var oldLogger = logger.Archive();
-            var fileLengthAfterArchive = new FileInfo(logger.GetFile()).Length;
+            var fileLengthAfterArchive = new FileInfo(logger.LogFile).Length;
             var logFilesAfterArchive = TestUtils.GetAllLogFiles();
             var archivedFileLength = logFilesAfterArchive.Count > 1 ? new FileInfo(logFilesAfterArchive[1]).Length : -1;
             logger.Delete();
@@ -90,7 +90,7 @@ namespace SkylineBatchTest
             // Run and cancel three times creates two old logs
             for (int i = 0; i < 3; i++)
             {
-                Assert.IsTrue(testConfigManager.StartBatchRun(5), "Failed to start config");
+                Assert.IsTrue(testConfigManager.StartBatchRun(RunBatchOptions.FROM_R_SCRIPTS, false), "Failed to start config");
                 TestUtils.WaitForCondition(ConfigRunnersStarted, timeout, timestep, startErrorMessage);
                 Thread.Sleep(1000);
                 testConfigManager.CancelRunners();

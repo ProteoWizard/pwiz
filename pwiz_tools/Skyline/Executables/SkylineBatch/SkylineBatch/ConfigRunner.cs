@@ -57,7 +57,7 @@ namespace SkylineBatch
             _processRunner = new ProcessRunner()
             {
                 OnDataReceived = DataReceived,
-                OnException = (e, message) => _logger?.LogException(e, message),
+                OnException = (e, message) => _logger?.LogError(message, e.ToString()),
                 OnError = () =>
                 {
                     if (IsRunning())
@@ -106,18 +106,18 @@ namespace SkylineBatch
                 _logger.Log(line);
         }
 
-        public async Task Run(int startStep)
+        public async Task Run(RunBatchOptions runOption)
         {
             LogToUi(string.Format(Resources.ConfigRunner_Run________________________________Starting_Configuration___0_________________________________, Config.Name));
             try
             {
-                Config.Validate();
+                Config.QuickValidate();
 
             } catch (ArgumentException e)
             {
                 LogToUi("Error: " + e.Message);
                 ChangeStatus(RunnerStatus.Error);
-                _logger?.LogErrorNoPrefix(string.Format(Resources.ConfigRunner_Run_________________________________0____1_________________________________, Config.Name, GetStatus()));
+                LogToUi(string.Format(Resources.ConfigRunner_Run_________________________________0____1_________________________________, Config.Name, GetStatus()));
                 return;
             }
 
@@ -125,12 +125,17 @@ namespace SkylineBatch
             ChangeStatus(RunnerStatus.Running);
             Config.MainSettings.CreateAnalysisFolderIfNonexistent();
 
-            if (startStep == 1 && Config.MainSettings.WillDownloadData)
+            if ((runOption == RunBatchOptions.RUN_ALL_STEPS || runOption == RunBatchOptions.DOWNLOAD_DATA) 
+                && Config.MainSettings.WillDownloadData)
             {
                 await DownloadData();
             }
             
-            if (startStep != 5 && IsRunning())
+            if ((runOption == RunBatchOptions.RUN_ALL_STEPS ||
+                 runOption == RunBatchOptions.FROM_CREATE_RESULTS ||
+                 runOption == RunBatchOptions.FROM_REFINE ||
+                 runOption == RunBatchOptions.FROM_EXPORT_REPORT)
+                && IsRunning())
             {
                 var multiLine = await Config.SkylineSettings.HigherVersion(ALLOW_NEWLINE_SAVE_VERSION, _processRunner);
                 var numberFormat = CultureInfo.CurrentCulture.GetFormat(typeof(NumberFormatInfo)) as NumberFormatInfo;
@@ -140,7 +145,7 @@ namespace SkylineBatch
                 {
                     // Writes the batch commands for steps 1-4 to a file
                     var commandWriter = new CommandWriter(_logger, multiLine, invariantReport);
-                    WriteBatchCommandsToFile(commandWriter, startStep, invariantReport);
+                    WriteBatchCommandsToFile(commandWriter, runOption, invariantReport);
                     _batchFile = commandWriter.GetCommandFile();
                     // Runs steps 1-4
                     var command = string.Format("--batch-commands=\"{0}\"", _batchFile);
@@ -167,34 +172,42 @@ namespace SkylineBatch
                 }
             }
 
-            // STEP 5: run r scripts using csv files
-            var rScriptsRunInformation = Config.GetScriptArguments();
-            foreach(var rScript in rScriptsRunInformation)
-                if (IsRunning())
-                    await _processRunner.Run(rScript[RRunInfo.ExePath], rScript[RRunInfo.Arguments]);
-            
+            // STEP 4: run r scripts using csv files
+            if (runOption != RunBatchOptions.DOWNLOAD_DATA)
+            {
+                var rScriptsRunInformation = Config.GetScriptArguments();
+                foreach (var rScript in rScriptsRunInformation)
+                    if (IsRunning())
+                        await _processRunner.Run(rScript[RRunInfo.ExePath], rScript[RRunInfo.Arguments]);
+            }
 
             // Runner is still running if no errors or cancellations
             if (IsRunning()) ChangeStatus(RunnerStatus.Completed);
             if (IsCanceling()) ChangeStatus(RunnerStatus.Canceled);
+            
             var endTime = DateTime.Now;
             // ReSharper disable once PossibleInvalidOperationException - StartTime is always defined here
             var delta = endTime - (DateTime)StartTime;
             RunTime = delta;
             var runTimeString = delta.Hours > 0 ? delta.ToString(@"hh\:mm\:ss") : delta.ToString(@"mm\:ss");
-            if (!IsError())
-                LogToUi(string.Format(Resources.ConfigRunner_Run_________________________________0____1_________________________________, Config.Name, GetStatus()));
-            else
-                _logger?.LogErrorNoPrefix(string.Format(Resources.ConfigRunner_Run_________________________________0____1_________________________________, Config.Name, GetStatus()));
+            LogToUi(string.Format(Resources.ConfigRunner_Run_________________________________0____1_________________________________, Config.Name, GetStatus()));
             LogToUi(string.Format(Resources.ConfigRunner_Run_________________________________0____1_________________________________, "Runtime", runTimeString));
             _uiControl?.UpdateUiConfigurations();
         }
 
-        public void WriteBatchCommandsToFile(CommandWriter commandWriter, int startStep, bool invariantReport)
+        public void WriteBatchCommandsToFile(CommandWriter commandWriter, RunBatchOptions runOption, bool invariantReport)
         {
-            // STEP 1: open skyline file and save copy to analysis folder
-            if (startStep == 1)
+            // STEP 1: create results document and import data
+            if (runOption <= RunBatchOptions.FROM_CREATE_RESULTS)
             {
+                // Delete existing .sky and .skyd results files
+                var skyFileName = Path.GetFileNameWithoutExtension(Config.MainSettings.TemplateFilePath);
+                var filesToDelete = FileUtil.GetFilesInFolder(Config.MainSettings.AnalysisFolderPath, TextUtil.EXT_SKY);
+                filesToDelete.AddRange(FileUtil.GetFilesInFolder(Config.MainSettings.AnalysisFolderPath,
+                    TextUtil.EXT_SKYD));
+                foreach (var file in filesToDelete) 
+                    if (Path.GetFileNameWithoutExtension(file).Equals(skyFileName)) File.Delete(file);
+
                 Config.WriteOpenSkylineTemplateCommand(commandWriter);
                 Config.WriteMsOneCommand(commandWriter);
                 Config.WriteMsMsCommand(commandWriter);
@@ -202,16 +215,7 @@ namespace SkylineBatch
                 Config.WriteAddDecoysCommand(commandWriter);
                 Config.WriteSaveToResultsFile(commandWriter);
                 commandWriter.EndCommandGroup();
-            }
-            else if (startStep < 4)
-            {
-                Config.WriteOpenSkylineResultsCommand(commandWriter);
-            }
-
-            // STEP 2: import data to new skyline file
-            if (startStep <= 2)
-            {
-                // import data and train model
+                // import data
                 Config.WriteImportDataCommand(commandWriter);
                 Config.WriteImportNamingPatternCommand(commandWriter);
                 Config.WriteTrainMProphetCommand(commandWriter);
@@ -219,13 +223,17 @@ namespace SkylineBatch
                 Config.WriteSaveCommand(commandWriter);
                 commandWriter.EndCommandGroup();
             }
+            else if (runOption < RunBatchOptions.FROM_EXPORT_REPORT)
+            {
+                Config.WriteOpenSkylineResultsCommand(commandWriter);
+            }
 
-            // STEP 3: refine file and save to new location
-            if (startStep <= 3)
+            // STEP 2: refine file and save to new location
+            if (runOption <= RunBatchOptions.FROM_REFINE)
                 Config.WriteRefineCommands(commandWriter);
 
-            // STEP 4: output report(s) for completed analysis
-            if (startStep <= 4)
+            // STEP 3: output report(s) for completed analysis
+            if (runOption <= RunBatchOptions.FROM_EXPORT_REPORT)
             {
                 if (Config.ReportSettings.UsesRefinedFile())
                 {
@@ -243,88 +251,84 @@ namespace SkylineBatch
         {
             var mainSettings = Config.MainSettings;
             var server = mainSettings.Server;
-            if (!server.Validated)
-                server.Validate();
+            Directory.CreateDirectory(mainSettings.DataFolderPath);
 
-            var allFiles = server.GetServerFiles;
-            var fileNames = allFiles.Keys;
-            var dataFilter = new Regex(mainSettings.Server.DataNamingPattern);
-            var downloadingFilesEnum =
-                from name in fileNames
-                where dataFilter.IsMatch(name)
-                select name;
-            var downloadingFiles = downloadingFilesEnum.ToList();
-            var skippingFiles = new List<string>();
-            foreach (var downloadingFile in downloadingFiles)
-            {
-                var fileName = Path.Combine(mainSettings.DataFolderPath, downloadingFile);
-                if (File.Exists(fileName) && allFiles[downloadingFile].Size == new FileInfo(fileName).Length)
-                    skippingFiles.Add(downloadingFile);
-            }
+            var matchingFiles = server.GetServerFiles;
+            var downloadingFiles = server.FilesToDownload(mainSettings.DataFolderPath);
 
-            if (skippingFiles.Count == downloadingFiles.Count) return;
+            if (downloadingFiles.Count == 0) return;
 
-            _logger.Log(string.Format(Resources.ConfigRunner_DownloadData_Found__0__matching_data_files_on__1__, downloadingFiles.Count, server.GetUrl()));
-            foreach (var file in downloadingFiles)
+            _logger.Log(string.Format(Resources.ConfigRunner_DownloadData_Found__0__matching_data_files_on__1__, matchingFiles.Count, server.GetUrl()));
+            foreach (var file in matchingFiles.Keys)
                 _logger.Log(file);
             _logger.Log(Resources.ConfigRunner_DownloadData_Starting_download___);
-            
+
+            var dataDriveName = mainSettings.DataFolderPath.Substring(0, 3);
             var ftpClient = server.GetFtpClient();
             var source = new CancellationTokenSource();
             CancellationToken token = source.Token;
             _runningCancellationToken = source;
-            var i = 0;
-            int triesOnFile = 0;
-            while ( i < downloadingFiles.Count && IsRunning())
+            var currentFileNumber = 0;
+            foreach (var fileName in matchingFiles.Keys)
             {
-                var fileName = downloadingFiles[i];
-                if (triesOnFile == 0)
+                currentFileNumber++;
+                _logger.Log(string.Format(Resources.ConfigRunner_DownloadData__0____1__of__2__, fileName, currentFileNumber, matchingFiles.Count));
+                // 3 tries to download file
+                int i;
+                Exception exception = null;
+                for (i = 0; i < 3; i++)
                 {
-                    _logger.Log(string.Format(Resources.ConfigRunner_DownloadData__0____1__of__2__, fileName, i + 1, downloadingFiles.Count));
-                }
-                
-                if (skippingFiles.Contains(fileName))
-                {
-                    _logger.Log(Resources.ConfigRunner_DownloadData_Already_downloaded__Skipping_);
-                    triesOnFile = 0;
-                    i++;
-                    continue;
+                    if (!IsRunning()) return;
+                    var filePath = Path.Combine(mainSettings.DataFolderPath, fileName);
+                    if (!downloadingFiles.ContainsKey(filePath))
+                    {
+                        _logger.Log(Resources.ConfigRunner_DownloadData_Already_downloaded__Skipping_);
+                        break;
+                    }
+                    if (downloadingFiles[filePath].Size + FileUtil.ONE_GB > FileUtil.GetTotalFreeSpace(dataDriveName))
+                    {
+                        _logger.LogError(string.Format(Resources.ConfigRunner_DownloadData_There_is_not_enough_remaining_disk_space_to_download__0___Free_up_some_disk_space_and_try_again_, fileName));
+                        ChangeStatus(RunnerStatus.Error);
+                        return;
+                    }
+
+                    if (i > 0)
+                        _logger.Log(Resources.ConfigRunner_DownloadData_Trying_again___);
+
+                    Progress<FtpProgress> progress = new Progress<FtpProgress>(p =>
+                    {
+                        _logger.LogPercent((int)Math.Floor(p.Progress));
+                    });
+                    try
+                    {
+                        await ftpClient.ConnectAsync(token);
+                        var status = await ftpClient.DownloadFileAsync(filePath,
+                            server.FilePath(fileName), token: token, existsMode: FtpLocalExists.Overwrite, progress: progress);
+                        await ftpClient.DisconnectAsync(token);
+                        if (status != FtpStatus.Success)
+                            throw new Exception(Resources.ConfigRunner_DownloadData_File_download_failed_);
+                        break;
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        _logger.LogPercent(-1); // Stop logging percent
+                    }
+                    catch (Exception e)
+                    {
+                        _logger.LogPercent(-1);
+                        _logger.Log(e.Message);
+                        exception = e;
+                    }
                 }
 
-                Progress<FtpProgress> progress = new Progress<FtpProgress>(p =>
+                if (i == 3)
                 {
-                    _logger.LogPercent((int)Math.Floor(p.Progress));
-                });
-                try
-                {
-                    await ftpClient.ConnectAsync(token);
-                    await ftpClient.DownloadFileAsync(Path.Combine(mainSettings.DataFolderPath, fileName),
-                        server.FilePath(fileName), token: token, existsMode: FtpLocalExists.Overwrite, progress: progress);
-                    await ftpClient.DisconnectAsync(token);
-                    triesOnFile = 0;
-                    i++;
-                }
-                catch (OperationCanceledException)
-                {
-                    _logger.LogPercent(-1); // Stop logging percent
-                }
-                catch (Exception e)
-                {
-                    _logger.LogPercent(-1);
-                    _logger.Log(e.Message);
-                    if (triesOnFile < 3)
-                    {
-                        _logger.Log(Resources.ConfigRunner_DownloadData_Trying_again___);
-                        triesOnFile++;
-                    }
-                    else
-                    {
-                        _logger.LogException(e,
-                            Resources.ConfigRunner_DownloadData_An_error_occurred_while_downloading_the_data_files_);
-                        ChangeStatus(RunnerStatus.Error);
-                    }
+                    _logger.LogError(
+                        Resources.ConfigRunner_DownloadData_An_error_occurred_while_downloading_the_data_files_, exception.Message);
+                    ChangeStatus(RunnerStatus.Error);
                 }
             }
+
         }
 
         

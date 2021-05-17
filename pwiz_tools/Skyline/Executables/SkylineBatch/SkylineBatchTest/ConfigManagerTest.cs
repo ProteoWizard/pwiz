@@ -24,6 +24,7 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using SharedBatch;
 using SkylineBatch;
 
 
@@ -203,12 +204,13 @@ namespace SkylineBatchTest
             Assert.IsFalse(i == 4, "Failed to remove all configs.");
 
             var testingConfigs = TestUtils.ConfigListFromNames(new List<string> { "one", "two", "three" });
-            configManager.Import(configsXmlPath, null);
+            ImportConfigs(configsXmlPath, configManager);
             Assert.IsTrue(configManager.ConfigListEquals(testingConfigs));
 
             configManager.SelectConfig(2);
             configManager.UserRemoveSelected();
-            configManager.Import(TestUtils.GetTestFilePath("configs.xml"), null);
+
+            ImportConfigs(TestUtils.GetTestFilePath("configs.xml"), configManager);
             Assert.IsTrue(configManager.ConfigListEquals(testingConfigs));
 
             configManager.GetSelectedLogger().Delete();
@@ -226,9 +228,20 @@ namespace SkylineBatchTest
             configManager.GetSelectedLogger().Delete();
             var testConfigManager = new SkylineBatchConfigManager(TestUtils.GetTestLogger());
             // Simulate loading saved configs from file
-            testConfigManager.Import(ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath, null);
+            ImportConfigs(ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath, testConfigManager);
             Assert.IsTrue(testConfigManager.ConfigListEquals(testingConfigs));
             testConfigManager.GetSelectedLogger().Delete();
+        }
+
+        private void ImportConfigs(string filepath, SkylineBatchConfigManager configManager)
+        {
+            var importing = true;
+            configManager.StartImport(filepath, new LongWaitOperation(), success =>
+            {
+                Assert.AreEqual(true, success, "Import failed");
+                importing = false;
+            }, null);
+            TestUtils.WaitForCondition(() => { return !importing; }, new TimeSpan(0, 0, 10), 1, "Import timed out.");
         }
 
         #endregion

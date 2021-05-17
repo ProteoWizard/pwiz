@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using SharedBatch;
 using SkylineBatch.Properties;
@@ -8,6 +10,9 @@ namespace SkylineBatch
 {
     public partial class AddServerForm : Form
     {
+
+        private CancellationTokenSource _cancelValidate;
+
         public AddServerForm(DataServerInfo editingServerInfo)
         {
             InitializeComponent();
@@ -21,28 +26,60 @@ namespace SkylineBatch
 
         private void btnAdd_Click(object sender, EventArgs e)
         {
-            var addText = btnSave.Text;
             btnSave.Text = Resources.AddServerForm_btnAdd_Click_Verifying;
             btnSave.Enabled = false;
 
-            if (Server != null)
+            Exception validationException = null;
+            try
+            {
+                Server = GetServerFromUi();
+            }
+            catch (ArgumentException ex)
+            {
+                validationException = ex;
+                Server = null;
+            }
+
+            if (Server == null)
+            {
+                FinishConnectToServer(validationException);
+                return;
+            }
+
+
+            _cancelValidate = new CancellationTokenSource();
+            var connectToServer = new LongWaitOperation(_cancelValidate);
+            connectToServer.Start(false, (OnProgress) =>
             {
                 try
                 {
-                    Server = GetServerFromUi();
                     Server.Validate();
                 }
                 catch (ArgumentException ex)
                 {
-                    AlertDlg.ShowError(this, Program.AppName(), ex.Message);
-                    btnSave.Enabled = true;
-                    btnSave.Text = addText;
-                    return;
+                    validationException = ex;
                 }
-            }
 
+                FinishConnectToServer(validationException);
+            }, (success) => { });
+        }
+
+        private void FinishConnectToServer(Exception validationException)
+        {
+            if (validationException != null || (_cancelValidate != null && _cancelValidate.IsCancellationRequested))
+            {
+                Invoke(new Action(() =>
+                {
+                    if (validationException != null) AlertDlg.ShowError(this, Program.AppName(), validationException.Message);
+                    btnSave.Enabled = true;
+                    btnSave.Text = Resources.AddServerForm_FinishConnectToServer_Save;
+                }));
+                _cancelValidate = null;
+                return;
+            }
             DialogResult = DialogResult.OK;
-            Close();
+
+            Invoke(new Action(Close));
         }
 
         private DataServerInfo GetServerFromUi()
@@ -57,6 +94,7 @@ namespace SkylineBatch
 
         private void btnRemoveServer_Click(object sender, EventArgs e)
         {
+            _cancelValidate?.Cancel();
             Server = null;
             UpdateUiServer();
         }
@@ -72,6 +110,11 @@ namespace SkylineBatch
         private void linkLabelRegex_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
             Process.Start("http://www.regular-expressions.info/reference.html");
+        }
+
+        private void AddServerForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            _cancelValidate?.Cancel();
         }
     }
 }
