@@ -37,6 +37,7 @@
             this.btnViewLog = new System.Windows.Forms.Button();
             this.tabMain = new System.Windows.Forms.TabControl();
             this.tabConfigs = new System.Windows.Forms.TabPage();
+            this.panel4 = new System.Windows.Forms.Panel();
             this.listViewConfigs = new System.Windows.Forms.ListView();
             this.columnName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnUser = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -55,10 +56,11 @@
             this.btnStop = new System.Windows.Forms.Button();
             this.btnRun = new System.Windows.Forms.Button();
             this.tabLog = new System.Windows.Forms.TabPage();
+            this.panel3 = new System.Windows.Forms.Panel();
             this.btnOpenLogFolder = new System.Windows.Forms.Button();
             this.lblConfigSelect = new System.Windows.Forms.Label();
-            this.textBoxLog = new System.Windows.Forms.RichTextBox();
             this.comboConfigs = new System.Windows.Forms.ComboBox();
+            this.textBoxLog = new System.Windows.Forms.RichTextBox();
             this.tabSettings = new System.Windows.Forms.TabPage();
             this.groupBoxAutoQcSettings = new System.Windows.Forms.GroupBox();
             this.cb_minimizeToSysTray = new System.Windows.Forms.CheckBox();
@@ -68,19 +70,17 @@
             this.openFolderMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.toolStripFolderToWatch = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripLogFolder = new System.Windows.Forms.ToolStripMenuItem();
-            this.panel3 = new System.Windows.Forms.Panel();
-            this.panel4 = new System.Windows.Forms.Panel();
             this.tabMain.SuspendLayout();
             this.tabConfigs.SuspendLayout();
+            this.panel4.SuspendLayout();
             this.panel1.SuspendLayout();
             this.toolStrip.SuspendLayout();
             this.panel2.SuspendLayout();
             this.tabLog.SuspendLayout();
+            this.panel3.SuspendLayout();
             this.tabSettings.SuspendLayout();
             this.groupBoxAutoQcSettings.SuspendLayout();
             this.openFolderMenuStrip.SuspendLayout();
-            this.panel3.SuspendLayout();
-            this.panel4.SuspendLayout();
             this.SuspendLayout();
             // 
             // btnEdit
@@ -134,6 +134,13 @@
             resources.ApplyResources(this.tabConfigs, "tabConfigs");
             this.tabConfigs.Name = "tabConfigs";
             this.tabConfigs.Enter += new System.EventHandler(this.tabConfigs_Enter);
+            // 
+            // panel4
+            // 
+            this.panel4.Controls.Add(this.labelSavedConfigurations);
+            this.panel4.Controls.Add(this.lblNoConfigs);
+            resources.ApplyResources(this.panel4, "panel4");
+            this.panel4.Name = "panel4";
             // 
             // listViewConfigs
             // 
@@ -281,6 +288,14 @@
             this.tabLog.Name = "tabLog";
             this.tabLog.Enter += new System.EventHandler(this.tabLog_Enter);
             // 
+            // panel3
+            // 
+            resources.ApplyResources(this.panel3, "panel3");
+            this.panel3.Controls.Add(this.btnOpenLogFolder);
+            this.panel3.Controls.Add(this.lblConfigSelect);
+            this.panel3.Controls.Add(this.comboConfigs);
+            this.panel3.Name = "panel3";
+            // 
             // btnOpenLogFolder
             // 
             resources.ApplyResources(this.btnOpenLogFolder, "btnOpenLogFolder");
@@ -293,12 +308,6 @@
             resources.ApplyResources(this.lblConfigSelect, "lblConfigSelect");
             this.lblConfigSelect.Name = "lblConfigSelect";
             // 
-            // textBoxLog
-            // 
-            resources.ApplyResources(this.textBoxLog, "textBoxLog");
-            this.textBoxLog.Name = "textBoxLog";
-            this.textBoxLog.ReadOnly = true;
-            // 
             // comboConfigs
             // 
             resources.ApplyResources(this.comboConfigs, "comboConfigs");
@@ -306,6 +315,12 @@
             this.comboConfigs.FormattingEnabled = true;
             this.comboConfigs.Name = "comboConfigs";
             this.comboConfigs.SelectedIndexChanged += new System.EventHandler(this.comboConfigs_SelectedIndexChanged);
+            // 
+            // textBoxLog
+            // 
+            resources.ApplyResources(this.textBoxLog, "textBoxLog");
+            this.textBoxLog.Name = "textBoxLog";
+            this.textBoxLog.ReadOnly = true;
             // 
             // tabSettings
             // 
@@ -364,21 +379,6 @@
             resources.ApplyResources(this.toolStripLogFolder, "toolStripLogFolder");
             this.toolStripLogFolder.Click += new System.EventHandler(this.toolStripLogFolder_Click);
             // 
-            // panel3
-            // 
-            resources.ApplyResources(this.panel3, "panel3");
-            this.panel3.Controls.Add(this.btnOpenLogFolder);
-            this.panel3.Controls.Add(this.lblConfigSelect);
-            this.panel3.Controls.Add(this.comboConfigs);
-            this.panel3.Name = "panel3";
-            // 
-            // panel4
-            // 
-            this.panel4.Controls.Add(this.labelSavedConfigurations);
-            this.panel4.Controls.Add(this.lblNoConfigs);
-            resources.ApplyResources(this.panel4, "panel4");
-            this.panel4.Name = "panel4";
-            // 
             // MainForm
             // 
             resources.ApplyResources(this, "$this");
@@ -389,20 +389,20 @@
             this.Resize += new System.EventHandler(this.MainForm_Resize);
             this.tabMain.ResumeLayout(false);
             this.tabConfigs.ResumeLayout(false);
+            this.panel4.ResumeLayout(false);
+            this.panel4.PerformLayout();
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
             this.toolStrip.ResumeLayout(false);
             this.toolStrip.PerformLayout();
             this.panel2.ResumeLayout(false);
             this.tabLog.ResumeLayout(false);
+            this.panel3.ResumeLayout(false);
+            this.panel3.PerformLayout();
             this.tabSettings.ResumeLayout(false);
             this.groupBoxAutoQcSettings.ResumeLayout(false);
             this.groupBoxAutoQcSettings.PerformLayout();
             this.openFolderMenuStrip.ResumeLayout(false);
-            this.panel3.ResumeLayout(false);
-            this.panel3.PerformLayout();
-            this.panel4.ResumeLayout(false);
-            this.panel4.PerformLayout();
             this.ResumeLayout(false);
 
         }

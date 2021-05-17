@@ -656,7 +656,7 @@ namespace AutoQC
             RunUi(() => { AlertDlg.ShowError(this, Program.AppName, message); });
         }
 
-        public void DisplayError(string message, params string[] args)
+        public void DisplayError(string message, params object[] args)
         {
             RunUi(() => { AlertDlg.ShowError(this, Program.AppName, string.Format(message, args)); });
         }

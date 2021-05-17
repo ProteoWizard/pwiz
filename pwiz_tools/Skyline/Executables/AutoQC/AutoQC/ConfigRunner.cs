@@ -37,12 +37,10 @@ namespace AutoQC
     {
         private BackgroundWorker _worker;
 
-        private int _totalImportCount;
-
         private AutoQCFileSystemWatcher _fileWatcher;
 
         private readonly IMainUiControl _uiControl;
-        private Logger _logger;
+        private readonly Logger _logger;
         private ProcessRunner _processRunner;
 
         public AutoQcConfig Config { get; }
@@ -58,6 +56,8 @@ namespace AutoQC
         private RunnerStatus _runnerStatus;
         // This flag is set if a document failed to upload to Panorama for any reason.
         private bool _panoramaUploadError;
+        private DateTime _panoramaErrorOccurred = DateTime.MinValue;
+        private DateTime _lastUploadAt = DateTime.MinValue;
 
         public DateTime LastAcquiredFileDate;
         public DateTime LastArchivalDate; 
@@ -307,14 +307,8 @@ namespace AutoQC
                
                 if (filePath != null)
                 {
-                    var importContext = new ImportContext(filePath) { TotalImportCount = _totalImportCount };
+                    var importContext = new ImportContext(filePath);
                     var success = ImportFile(e, importContext);
-                    
-                    if (_panoramaUploadError)
-                    {
-                        // If there was an error uploading to Panorama, we will stop here
-                        break;
-                    }
 
                     if (success)
                     {
@@ -330,6 +324,24 @@ namespace AutoQC
                 {
                     // Try to import any older files that resulted in an import error the first time.
                     TryReimportOldFiles(e, false);
+
+                    if (_panoramaUploadError)
+                    {
+                        if (_lastUploadAt.AddMinutes(5) < DateTime.Now)
+                        {
+                            // Try uploading to Panorama every 5 minutes until we succeed
+                            Log("Trying to upload the Skyline document to Panorama again. ");
+                            UploadToPanorama(PanoramaArgs(), PanoramaArgs(true));
+                        }
+
+                        // If we haven't been able to upload to Panorama for 24 hours, stop with an error
+                        if (!DateTime.MinValue.Equals(_panoramaErrorOccurred) && // _panoramaErrorOccurred.AddMinutes(5) < DateTime.Now)
+                            _panoramaErrorOccurred.AddHours(24) < DateTime.Now)
+                        {
+                            LogError("Uploads to Panorama have not been successful in over 24 hours. Stopping configuration.");
+                            break;
+                        }
+                    }
 
                     if (!inWait)
                     {
@@ -351,7 +363,7 @@ namespace AutoQC
                 var file = _fileWatcher.GetNextFileToReimport();
                 if (forceImport || file.TryReimport())
                 {
-                    var importContext = new ImportContext(file.FilePath) { TotalImportCount = _totalImportCount };
+                    var importContext = new ImportContext(file.FilePath);
                     _logger.Log(Resources.ConfigRunner_TryReimportOldFiles_Attempting_to_re_import__0__, file.FilePath);
                     if (!ImportFile(e, importContext, false)) 
                     {
@@ -406,10 +418,10 @@ namespace AutoQC
             {
                 Log(Resources.ConfigRunner_ProcessFilesCompleted_Canceled_configuration_);
             }
-            else if (_panoramaUploadError)
-            {
-                LogError(Resources.ConfigRunner_ProcessFilesCompleted_There_was_an_error_uploading_the_document_to_Panorama__Stopping_configuration_);    
-            }
+            // else if (_panoramaUploadError)
+            // {
+            //     LogError(Resources.ConfigRunner_ProcessFilesCompleted_There_was_an_error_uploading_the_document_to_Panorama__Stopping_configuration_);    
+            // }
             else
             {
                 Log(Resources.ConfigRunner_ProcessFilesCompleted_Finished_running_configuration_);
@@ -435,7 +447,7 @@ namespace AutoQC
             
             Log("Existing files found: {0}", files.Count);
 
-            var importContext = new ImportContext(files) {TotalImportCount = _totalImportCount};
+            var importContext = new ImportContext(files);
             while (importContext.GetNextFile() != null)
             {
                 if (_worker.CancellationPending)
@@ -467,7 +479,7 @@ namespace AutoQC
             }
 
             Log(Resources.ConfigRunner_ProcessExistingFiles_Finished_importing_existing_files___);
-            return !_panoramaUploadError;
+            return true;
         }
 
         private string GetFilePathForLog(string filePath)
@@ -511,7 +523,6 @@ namespace AutoQC
                 return false;
             }
 
-            _panoramaUploadError = false;
             var resultsImported = ProcessOneFile(importContext);
             if (!resultsImported)
             {
@@ -533,59 +544,90 @@ namespace AutoQC
 
         private bool ProcessOneFile(ImportContext importContext)
         {
-            var importResultsFailed = false;
+            CreateZipArchiveBefore(importContext);
 
+            var importSucceeded = ImportResults(importContext);
+
+            UploadToPanorama(importContext);
+
+            CreateZipArchiveAfter(importContext);
+
+            return importSucceeded;
+        }
+
+        private bool ImportResults(ImportContext importContext)
+        {
+            var skylineRunnerArgs = ImportResultsFileArgs(importContext);
+            var importResultsFileProc = new ProcessInfo(Config.SkylineSettings.CmdPath, skylineRunnerArgs, skylineRunnerArgs);
+            var status = RunProcess(importResultsFileProc);
+            if (status == ProcStatus.Error)
+            {
+                return false;
+            }
+
+            if (status != ProcStatus.Skipped)
+            {
+                importContext.IncrementImported();
+            }
+
+            return true;
+        }
+
+        private void UploadToPanorama(ImportContext importContext)
+        {
+            var panoramaUploadArgs = PanoramaArgs(importContext);
+            if (!string.IsNullOrEmpty(panoramaUploadArgs))
+            {
+                if (importContext.ImportCount == 0)
+                {
+                    LogError("No results were imported. Skipping upload to Panorama.");
+                }
+                else
+                {
+                    var argsToPrint = PanoramaArgs(importContext, true);
+                    UploadToPanorama(panoramaUploadArgs, argsToPrint);
+                }
+            }
+        }
+
+        private void UploadToPanorama(string panoramaUploadArgs, string argsToPrint)
+        {
+            var uploadToPanoramaProc = new ProcessInfo(Config.SkylineSettings.CmdPath, panoramaUploadArgs, argsToPrint);
+            var status = RunProcess(uploadToPanoramaProc);
+            _lastUploadAt = DateTime.Now;
+            if (status == ProcStatus.Error)
+            {
+                _panoramaUploadError = true;
+                if (DateTime.MinValue.Equals(_panoramaErrorOccurred))
+                {
+                    // Set the time when the first error occurred
+                    _panoramaErrorOccurred = _lastUploadAt;
+                }
+            }
+            else
+            {
+                _panoramaUploadError = false;
+                _panoramaErrorOccurred = DateTime.MinValue;
+            }
+        }
+
+        private void CreateZipArchiveBefore(ImportContext importContext)
+        {
             var runBeforeProc = RunBefore(importContext);
             if (runBeforeProc != null)
             {
                 runBeforeProc.WorkingDirectory = importContext.WorkingDir;
                 RunProcess(runBeforeProc); // Create a zip archive BEFORE if NOT importing existing files
             }
+        }
 
-            // Import the results file
-            var skylineRunnerArgs = ImportResultsFileArgs(importContext);
-            var importResultsFileProc = new ProcessInfo(Config.SkylineSettings.CmdPath, skylineRunnerArgs, skylineRunnerArgs);
-            var status = RunProcess(importResultsFileProc);
-            if (status == ProcStatus.Error)
-            {
-                importResultsFailed = true;
-                // return false;  // If raw file was not imported successfully don't execute the next step of uploading the Skyline document to a Panorama server.
-            }
-            else if (status != ProcStatus.Skipped)
-            {
-                _totalImportCount++;
-            }
-
-            var panoramaUploadArgs = PanoramaArgs(importContext);
-            if (!string.IsNullOrEmpty(panoramaUploadArgs))
-            {
-                if (importResultsFailed)
-                {
-                    LogError("Failed to import results. Skipping upload to Panorama.");
-                }
-                else if (_totalImportCount == 0)
-                {
-                    Log("No results were imported. Skipping upload to Panorama.");
-                }
-                else
-                {
-                    var argsToPrint = PanoramaArgs(importContext, true);
-                    var uploadToPanoramaProc = new ProcessInfo(Config.SkylineSettings.CmdPath, panoramaUploadArgs, argsToPrint);
-                    status = RunProcess(uploadToPanoramaProc);
-                    if (status == ProcStatus.Error)
-                    {
-                        _panoramaUploadError = true;
-                    }
-                }
-            }
-
+        private void CreateZipArchiveAfter(ImportContext importContext)
+        {
             var runAfter = RunAfter(importContext);
-            if (runAfter != null && _totalImportCount > 0)
+            if (runAfter != null && importContext.ImportCount > 0)
             {
                 RunProcess(runAfter); // Create a zip archive AFTER importing all files if importing existing files
             }
-
-            return !importResultsFailed;
         }
 
         public void Cancel()
@@ -601,8 +643,6 @@ namespace AutoQC
             Task.Run(() =>
             {
                 _fileWatcher?.Stop();
-
-                _totalImportCount = 0;
 
                 if (_worker != null && _worker.IsBusy)
                 {
@@ -644,8 +684,7 @@ namespace AutoQC
                                     {
                                         if (reader.MoveToAttribute("integrate_all"))
                                         {
-                                            bool integrateAll;
-                                            Boolean.TryParse(reader.Value, out integrateAll);
+                                            bool.TryParse(reader.Value, out var integrateAll);
                                             return integrateAll;
                                         }
                                         done = true;
@@ -933,7 +972,7 @@ namespace AutoQC
             return args.ToString();
         }
 
-        public string PanoramaArgs(ImportContext importContext, bool toPrint = false)
+        private string PanoramaArgs(ImportContext importContext, bool toPrint = false)
         {
             if (!Config.PanoramaSettings.PublishToPanorama || importContext.ImportExisting && !importContext.ImportingLast())
             {
@@ -942,17 +981,22 @@ namespace AutoQC
                 return string.Empty;
             }
 
+            return PanoramaArgs(toPrint);
+        }
+
+        private string PanoramaArgs(bool toPrint = false)
+        {
             var args = new StringBuilder();
             // Input Skyline file
             args.Append(string.Format(" --in=\"{0}\"", Config.MainSettings.SkylineFilePath));
 
             var passwdArg = toPrint ? string.Empty : string.Format(" --panorama-password=\"{0}\"", Config.PanoramaSettings.PanoramaPassword);
             var uploadArgs = string.Format(
-                    " --panorama-server=\"{0}\" --panorama-folder=\"{1}\" --panorama-username=\"{2}\" {3}",
-                    Config.PanoramaSettings.PanoramaServerUrl,
-                    Config.PanoramaSettings.PanoramaFolder,
-                    Config.PanoramaSettings.PanoramaUserEmail,
-                    passwdArg);
+                " --panorama-server=\"{0}\" --panorama-folder=\"{1}\" --panorama-username=\"{2}\" {3}",
+                Config.PanoramaSettings.PanoramaServerUrl,
+                Config.PanoramaSettings.PanoramaFolder,
+                Config.PanoramaSettings.PanoramaUserEmail,
+                passwdArg);
             return args.Append(uploadArgs).ToString();
         }
 
