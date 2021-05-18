@@ -4570,7 +4570,7 @@ namespace pwiz.Skyline.Properties {
                         "export", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Error: A value is required for the following argument to upload the document to Panorama:
         ///{0}.
@@ -4580,7 +4580,7 @@ namespace pwiz.Skyline.Properties {
                 return ResourceManager.GetString("CommandArgs_PanoramaArgsComplete_", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Error: A value is required for the following arguments to upload the document to Panorama:
         ///{0}.
@@ -20579,7 +20579,7 @@ namespace pwiz.Skyline.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Error: An unknown error occurred trying to verify access to Panorama folder &apos;{0}&apos; on the server {1}.
         ///{2}.
