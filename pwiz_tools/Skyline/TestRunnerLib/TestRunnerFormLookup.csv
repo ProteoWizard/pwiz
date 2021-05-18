@@ -183,7 +183,7 @@ RTDetails,IrtFunctionalTest
 SaveSettingsDlg,TestShareSettings
 SchedulingGraphPropertyDlg,TestIrtTutorial
 SchedulingOptionsDlg,TestExportIsolationList
-SelectIrtStandardDlg,TODO (KaipoT)
+SelectIrtStandardDlg,TestLibraryBuild
 SequenceTreeForm,*
 ShareListDlg`2,TestShareSettings
 ShareTypeDlg,TestDocumentSharing
@@ -214,7 +214,7 @@ UndoRedoList,*
 UniquePeptidesDlg,TestMethodEditTutorial
 UpgradeDlg,UpgradeBasicFunctionalTest
 UpgradeLicenseDlg,TestMiscForms
-UseCurrentCalculatorDlg,TODO (KaipoT)
+UseCurrentCalculatorDlg,IrtFunctionalTest
 ViewEditor.ChooseColumnsView,TestLiveReportsFilter
 ViewEditor.FilterView,TestLiveReportsFilter
 ViewLibraryDlg,TestFullScanId
