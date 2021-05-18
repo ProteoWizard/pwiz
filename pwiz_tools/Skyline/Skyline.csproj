@@ -2154,11 +2154,17 @@
       <DependentUpon>AuditLogExtraInfoForm.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="Controls\AuditLog\AuditLogForm.ja.resx">
+      <DependentUpon>AuditLogForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\AuditLog\AuditLogForm.resx">
       <DependentUpon>AuditLogForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\AuditLog\AuditLogForm.zh-CHS.resx">
       <DependentUpon>AuditLogForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Clustering\HeatMapGraph.ja.resx">
+      <DependentUpon>HeatMapGraph.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Clustering\HeatMapGraph.resx">
       <DependentUpon>HeatMapGraph.cs</DependentUpon>
@@ -2166,6 +2172,9 @@
     <EmbeddedResource Include="Controls\Clustering\HeatMapGraph.zh-CHS.resx">
       <DependentUpon>HeatMapGraph.cs</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Clustering\PcaPlot.ja.resx">
+      <DependentUpon>PcaPlot.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Clustering\PcaPlot.resx">
       <DependentUpon>PcaPlot.cs</DependentUpon>
@@ -2491,6 +2500,9 @@
       <DependentUpon>ComparePeakPickingDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\EditLinkedPeptidesDlg.ja.resx">
+      <DependentUpon>EditLinkedPeptidesDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="EditUI\EditLinkedPeptidesDlg.resx">
       <DependentUpon>EditLinkedPeptidesDlg.cs</DependentUpon>
     </EmbeddedResource>
@@ -2505,6 +2517,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\MassErrorChartPropertyDlg.zh-CHS.resx">
       <DependentUpon>MassErrorChartPropertyDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\PermuteIsotopeModificationsDlg.ja.resx">
+      <DependentUpon>PermuteIsotopeModificationsDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\PermuteIsotopeModificationsDlg.resx">
       <DependentUpon>PermuteIsotopeModificationsDlg.cs</DependentUpon>
@@ -2555,6 +2570,9 @@
       <DependentUpon>ImportResultsLockMassDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\ImportTransitionListColumnSelectDlg.ja.resx">
+      <DependentUpon>ImportTransitionListColumnSelectDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ImportTransitionListColumnSelectDlg.resx">
       <DependentUpon>ImportTransitionListColumnSelectDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -2571,6 +2589,9 @@
     <EmbeddedResource Include="FileUI\ImportTransitionListErrorDlg.zh-CHS.resx">
       <DependentUpon>ImportTransitionListErrorDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\PeptideSearch\ConverterSettingsControl.ja.resx">
+      <DependentUpon>ConverterSettingsControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\ConverterSettingsControl.zh-CHS.resx">
       <DependentUpon>ConverterSettingsControl.cs</DependentUpon>
@@ -2618,11 +2639,17 @@
     <EmbeddedResource Include="FileUI\ChooseIrtStandardPeptidesDlg.resx">
       <DependentUpon>ChooseIrtStandardPeptidesDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Menus\ChromatogramContextMenu.ja.resx">
+      <DependentUpon>ChromatogramContextMenu.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Menus\ChromatogramContextMenu.resx">
       <DependentUpon>ChromatogramContextMenu.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Menus\ChromatogramContextMenu.zh-CHS.resx">
       <DependentUpon>ChromatogramContextMenu.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Menus\EditMenu.ja.resx">
+      <DependentUpon>EditMenu.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Menus\EditMenu.resx">
       <DependentUpon>EditMenu.cs</DependentUpon>
@@ -2630,11 +2657,17 @@
     <EmbeddedResource Include="Menus\EditMenu.zh-CHS.resx">
       <DependentUpon>EditMenu.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Menus\RefineMenu.ja.resx">
+      <DependentUpon>RefineMenu.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Menus\RefineMenu.resx">
       <DependentUpon>RefineMenu.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Menus\RefineMenu.zh-CHS.resx">
       <DependentUpon>RefineMenu.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Menus\ViewMenu.ja.resx">
+      <DependentUpon>ViewMenu.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Menus\ViewMenu.resx">
       <DependentUpon>ViewMenu.cs</DependentUpon>

@@ -517,4 +517,37 @@
   <data name="UnknownUiMode" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\UnknownUiMode.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="ClusterMetricType_CHEBYSHEV_Chebyshev_distance__L_inf_norm_" xml:space="preserve">
+    <value>Chebyshev距離 (L-inf基準)</value>
+  </data>
+  <data name="ClusterMetricType_MANHATTAN_City_block_distance__L_1_norm_" xml:space="preserve">
+    <value>街区距離 (L-1基準)</value>
+  </data>
+  <data name="ClusterMetricType_EUCLIDEAN_Euclidean_distance__L2_norm_" xml:space="preserve">
+    <value>ユークリッド距離 (L2基準)</value>
+  </data>
+  <data name="ClusterMetricType_PEARSON_Pearson_correlation" xml:space="preserve">
+    <value>ピアソンの相関関係</value>
+  </data>
+  <data name="ClusterRole_IGNORED_Ignored" xml:space="preserve">
+    <value>無視されました</value>
+  </data>
+  <data name="ClusterRole_ROWHEADER_Row_Header" xml:space="preserve">
+    <value>生データヘッダ</value>
+  </data>
+  <data name="ClusterRole_COLUMNHEADER_Column_Header" xml:space="preserve">
+    <value>列ヘッダ</value>
+  </data>
+  <data name="ClusterRole_RAW_Raw_Value" xml:space="preserve">
+    <value>生データ値</value>
+  </data>
+  <data name="ClusterRole_LOGARITHM_Log10" xml:space="preserve">
+    <value>Log10</value>
+  </data>
+  <data name="BooleanTransform_BooleanTransform_Boolean" xml:space="preserve">
+    <value>ブール</value>
+  </data>
+  <data name="ZScore_ZScore_Z_Score" xml:space="preserve">
+    <value>Zスコア</value>
+  </data>
 </root>
