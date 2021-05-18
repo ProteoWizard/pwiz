@@ -775,74 +775,65 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Download files only.
+        ///   Looks up a localized string similar to R&amp;un: download files only.
         /// </summary>
-        public static string MainForm_UpdateRunBatchSteps_Download_data_only {
+        public static string MainForm_UpdateRunBatchSteps_Run__download_files_only {
             get {
-                return ResourceManager.GetString("MainForm_UpdateRunBatchSteps_Download_data_only", resourceCulture);
+                return ResourceManager.GetString("MainForm_UpdateRunBatchSteps_Run__download_files_only", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Run All Steps.
+        ///   Looks up a localized string similar to R&amp;un: R scripts only.
+        /// </summary>
+        public static string MainForm_UpdateRunBatchSteps_Run__R_scripts_only {
+            get {
+                return ResourceManager.GetString("MainForm_UpdateRunBatchSteps_Run__R_scripts_only", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to R&amp;un: start from refinement.
+        /// </summary>
+        public static string MainForm_UpdateRunBatchSteps_Run__start_from_refinement {
+            get {
+                return ResourceManager.GetString("MainForm_UpdateRunBatchSteps_Run__start_from_refinement", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to R&amp;un: start from report export.
+        /// </summary>
+        public static string MainForm_UpdateRunBatchSteps_Run__start_from_report_export {
+            get {
+                return ResourceManager.GetString("MainForm_UpdateRunBatchSteps_Run__start_from_report_export", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to R&amp;un: start from template copy.
+        /// </summary>
+        public static string MainForm_UpdateRunBatchSteps_Run__start_from_template_copy {
+            get {
+                return ResourceManager.GetString("MainForm_UpdateRunBatchSteps_Run__start_from_template_copy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to R&amp;un: start from template copy and data import.
+        /// </summary>
+        public static string MainForm_UpdateRunBatchSteps_Run__start_from_template_copy_and_data_import {
+            get {
+                return ResourceManager.GetString("MainForm_UpdateRunBatchSteps_Run__start_from_template_copy_and_data_import", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to R&amp;un All Steps.
         /// </summary>
         public static string MainForm_UpdateRunBatchSteps_Run_All_Steps {
             get {
                 return ResourceManager.GetString("MainForm_UpdateRunBatchSteps_Run_All_Steps", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Run from step 1: copy template and import data.
-        /// </summary>
-        public static string MainForm_UpdateRunBatchSteps_Run_from_step_1__copy_template_and_import_data {
-            get {
-                return ResourceManager.GetString("MainForm_UpdateRunBatchSteps_Run_from_step_1__copy_template_and_import_data", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Run from step 2: export reports.
-        /// </summary>
-        public static string MainForm_UpdateRunBatchSteps_Run_from_step_2__export_reports {
-            get {
-                return ResourceManager.GetString("MainForm_UpdateRunBatchSteps_Run_from_step_2__export_reports", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Run from step 2: refine file.
-        /// </summary>
-        public static string MainForm_UpdateRunBatchSteps_Run_from_step_2__refine_file {
-            get {
-                return ResourceManager.GetString("MainForm_UpdateRunBatchSteps_Run_from_step_2__refine_file", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Run from step 3: export reports.
-        /// </summary>
-        public static string MainForm_UpdateRunBatchSteps_Run_from_step_3__export_reports {
-            get {
-                return ResourceManager.GetString("MainForm_UpdateRunBatchSteps_Run_from_step_3__export_reports", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Run from step 3: run R scripts.
-        /// </summary>
-        public static string MainForm_UpdateRunBatchSteps_Run_from_step_3__run_R_scripts {
-            get {
-                return ResourceManager.GetString("MainForm_UpdateRunBatchSteps_Run_from_step_3__run_R_scripts", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Run from step 4: run R scripts.
-        /// </summary>
-        public static string MainForm_UpdateRunBatchSteps_Run_from_step_4__run_R_scripts {
-            get {
-                return ResourceManager.GetString("MainForm_UpdateRunBatchSteps_Run_from_step_4__run_R_scripts", resourceCulture);
             }
         }
         

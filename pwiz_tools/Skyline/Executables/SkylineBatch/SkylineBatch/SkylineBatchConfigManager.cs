@@ -700,19 +700,19 @@ namespace SkylineBatch
                     text = Resources.MainForm_UpdateRunBatchSteps_Run_All_Steps;
                     break;
                 case RunBatchOptions.DOWNLOAD_DATA:
-                    text = Resources.MainForm_UpdateRunBatchSteps_Download_data_only;
+                    text = Resources.MainForm_UpdateRunBatchSteps_Run__download_files_only;
                     break;
                 case RunBatchOptions.FROM_CREATE_RESULTS:
-                    text = Resources.MainForm_UpdateRunBatchSteps_Run_from_step_1__copy_template_and_import_data;
+                    text = Resources.MainForm_UpdateRunBatchSteps_Run__start_from_template_copy_and_data_import;
                     break;
                 case RunBatchOptions.FROM_REFINE:
-                    text = Resources.MainForm_UpdateRunBatchSteps_Run_from_step_2__refine_file;
+                    text = Resources.MainForm_UpdateRunBatchSteps_Run__start_from_refinement;
                     break;
                 case RunBatchOptions.FROM_EXPORT_REPORT:
-                    text = Resources.MainForm_UpdateRunBatchSteps_Run_from_step_2__export_reports;
+                    text = Resources.MainForm_UpdateRunBatchSteps_Run__start_from_report_export;
                     break;
                 case RunBatchOptions.FROM_R_SCRIPTS:
-                    text = Resources.MainForm_UpdateRunBatchSteps_Run_from_step_3__run_R_scripts;
+                    text = Resources.MainForm_UpdateRunBatchSteps_Run__R_scripts_only;
                     break;
                 default:
                     throw new Exception("The run option was not recognized");

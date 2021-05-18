@@ -361,10 +361,10 @@ namespace SkylineBatch
             }
             ((ToolStripMenuItem)batchRunDropDown.Items[index]).Checked = true;
             btnRunBatch.TextAlign = index == 0 ? ContentAlignment.MiddleCenter : ContentAlignment.MiddleLeft;
-            if (index == 1)
-                btnRunBatch.Text = batchRunDropDown.Items[index].Text.Insert(2, "&");
-            else
-                btnRunBatch.Text = batchRunDropDown.Items[index].Text.Insert(1, "&");
+            var runButtonText = batchRunDropDown.Items[index].Text;
+            if (index == 2)
+                runButtonText = Resources.MainForm_UpdateRunBatchSteps_Run__start_from_template_copy;
+            btnRunBatch.Text = runButtonText;
         }
 
         private void btnRunBatch_Click(object sender, EventArgs e)
@@ -478,18 +478,18 @@ namespace SkylineBatch
                 var oldChecked = GetCheckedRunOptionIndex();
                 batchRunDropDown.Items.Clear();
                 batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Run_All_Steps);
-                batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Download_data_only);
-                batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Run_from_step_1__copy_template_and_import_data);
+                batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Run__download_files_only);
+                batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Run__start_from_template_copy_and_data_import);
                 if (_showRefineStep)
                 {
-                    batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Run_from_step_2__refine_file);
-                    batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Run_from_step_3__export_reports);
-                    batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Run_from_step_4__run_R_scripts);
+                    batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Run__start_from_refinement);
+                    batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Run__start_from_report_export);
+                    batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Run__R_scripts_only);
                 }
                 else
                 {
-                    batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Run_from_step_2__export_reports);
-                    batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Run_from_step_3__run_R_scripts);
+                    batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Run__start_from_report_export);
+                    batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Run__R_scripts_only);
                 }
 
                 var newChecked = oldChecked;
