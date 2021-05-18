@@ -190,7 +190,7 @@
     <value>NoControl</value>
   </data>
   <data name="lblNoConfigs.Location" type="System.Drawing.Point, System.Drawing">
-    <value>-3, 4</value>
+    <value>2, 25</value>
   </data>
   <data name="lblNoConfigs.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 0, 2, 0</value>
@@ -214,7 +214,7 @@
     <value>panel2</value>
   </data>
   <data name="&gt;&gt;lblNoConfigs.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>1</value>
   </data>
   <data name="labelSavedConfigurations.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -283,7 +283,7 @@
     <value>panel2</value>
   </data>
   <data name="&gt;&gt;btnViewLog.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>0</value>
   </data>
   <data name="tabMain.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
@@ -291,44 +291,44 @@
   <data name="listViewConfigs.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
-  <data name="columnName.Text" xml:space="preserve">
+  <data name="columnName2.Text" xml:space="preserve">
     <value>Configuration</value>
   </data>
-  <data name="columnName.Width" type="System.Int32, mscorlib">
-    <value>195</value>
+  <data name="columnName2.Width" type="System.Int32, mscorlib">
+    <value>193</value>
   </data>
-  <data name="columnUser.Text" xml:space="preserve">
+  <data name="columnUser2.Text" xml:space="preserve">
     <value>User</value>
   </data>
-  <data name="columnUser.Width" type="System.Int32, mscorlib">
-    <value>127</value>
+  <data name="columnUser2.Width" type="System.Int32, mscorlib">
+    <value>130</value>
   </data>
-  <data name="columnCreated.Text" xml:space="preserve">
+  <data name="columnCreated2.Text" xml:space="preserve">
     <value>Created</value>
   </data>
-  <data name="columnCreated.Width" type="System.Int32, mscorlib">
-    <value>86</value>
+  <data name="columnCreated2.Width" type="System.Int32, mscorlib">
+    <value>84</value>
   </data>
-  <data name="columnStatus.Text" xml:space="preserve">
+  <data name="columnStatus2.Text" xml:space="preserve">
     <value>Status</value>
   </data>
-  <data name="columnStatus.Width" type="System.Int32, mscorlib">
-    <value>86</value>
+  <data name="columnStatus2.Width" type="System.Int32, mscorlib">
+    <value>88</value>
   </data>
   <data name="listViewConfigs.Location" type="System.Drawing.Point, System.Drawing">
-    <value>7, 24</value>
+    <value>3, 25</value>
   </data>
   <data name="listViewConfigs.Size" type="System.Drawing.Size, System.Drawing">
-    <value>510, 381</value>
+    <value>510, 389</value>
   </data>
   <data name="listViewConfigs.TabIndex" type="System.Int32, mscorlib">
-    <value>15</value>
+    <value>16</value>
   </data>
   <data name="&gt;&gt;listViewConfigs.Name" xml:space="preserve">
     <value>listViewConfigs</value>
   </data>
   <data name="&gt;&gt;listViewConfigs.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ListView, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>AutoQC.MyListView, AutoQC, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;listViewConfigs.Parent" xml:space="preserve">
     <value>tabConfigs</value>
@@ -539,60 +539,6 @@
   </data>
   <data name="panel2.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left, Right</value>
-  </data>
-  <data name="btnStop.Location" type="System.Drawing.Point, System.Drawing">
-    <value>80, 22</value>
-  </data>
-  <data name="btnStop.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
-  </data>
-  <data name="btnStop.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="btnStop.Text" xml:space="preserve">
-    <value>St&amp;op</value>
-  </data>
-  <data name="&gt;&gt;btnStop.Name" xml:space="preserve">
-    <value>btnStop</value>
-  </data>
-  <data name="&gt;&gt;btnStop.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnStop.Parent" xml:space="preserve">
-    <value>panel2</value>
-  </data>
-  <data name="&gt;&gt;btnStop.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="btnRun.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="btnRun.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 22</value>
-  </data>
-  <data name="btnRun.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
-  </data>
-  <data name="btnRun.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
-  </data>
-  <data name="btnRun.TabIndex" type="System.Int32, mscorlib">
-    <value>12</value>
-  </data>
-  <data name="btnRun.Text" xml:space="preserve">
-    <value>R&amp;un</value>
-  </data>
-  <data name="&gt;&gt;btnRun.Name" xml:space="preserve">
-    <value>btnRun</value>
-  </data>
-  <data name="&gt;&gt;btnRun.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnRun.Parent" xml:space="preserve">
-    <value>panel2</value>
-  </data>
-  <data name="&gt;&gt;btnRun.ZOrder" xml:space="preserve">
-    <value>1</value>
   </data>
   <data name="panel2.Location" type="System.Drawing.Point, System.Drawing">
     <value>7, 403</value>
@@ -1960,28 +1906,28 @@ Any configurations that were running when AutoQC Loader was last running are als
   <data name="$this.Text" xml:space="preserve">
     <value> AutoQC</value>
   </data>
-  <data name="&gt;&gt;columnName.Name" xml:space="preserve">
-    <value>columnName</value>
+  <data name="&gt;&gt;columnName2.Name" xml:space="preserve">
+    <value>columnName2</value>
   </data>
-  <data name="&gt;&gt;columnName.Type" xml:space="preserve">
+  <data name="&gt;&gt;columnName2.Type" xml:space="preserve">
     <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;columnUser.Name" xml:space="preserve">
-    <value>columnUser</value>
+  <data name="&gt;&gt;columnUser2.Name" xml:space="preserve">
+    <value>columnUser2</value>
   </data>
-  <data name="&gt;&gt;columnUser.Type" xml:space="preserve">
+  <data name="&gt;&gt;columnUser2.Type" xml:space="preserve">
     <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;columnCreated.Name" xml:space="preserve">
-    <value>columnCreated</value>
+  <data name="&gt;&gt;columnCreated2.Name" xml:space="preserve">
+    <value>columnCreated2</value>
   </data>
-  <data name="&gt;&gt;columnCreated.Type" xml:space="preserve">
+  <data name="&gt;&gt;columnCreated2.Type" xml:space="preserve">
     <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;columnStatus.Name" xml:space="preserve">
-    <value>columnStatus</value>
+  <data name="&gt;&gt;columnStatus2.Name" xml:space="preserve">
+    <value>columnStatus2</value>
   </data>
-  <data name="&gt;&gt;columnStatus.Type" xml:space="preserve">
+  <data name="&gt;&gt;columnStatus2.Type" xml:space="preserve">
     <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnDelete.Name" xml:space="preserve">

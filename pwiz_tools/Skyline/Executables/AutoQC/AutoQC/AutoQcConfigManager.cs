@@ -194,11 +194,7 @@ namespace AutoQC
                 i++;
             }
             _logList.RemoveAt(i);
-            _uiControl.ClearLog();
-            // Question: what happens if the selected log is not the last one?
-            // This causes an exception if there was only one item in the _logList, and that was just removed above.
-            // SelectLog will try to select the log at the index -1.
-            // if (SelectedLog == _logList.Count) SelectLog(_logList.Count - 1);
+            _uiControl?.ClearLog();
             _configRunners.Remove(config.Name);
         }
 
@@ -366,13 +362,13 @@ namespace AutoQC
             }
         }
 
-        public void UpdateSelectedEnabled(bool newIsEnabled)
+        public bool UpdateSelectedEnabled(bool newIsEnabled)
         {
             lock (_lock)
             {
                 var selectedConfig = GetSelectedConfig();
                 if (selectedConfig.IsEnabled == newIsEnabled)
-                    return;
+                    return false;
                 try
                 {
                     selectedConfig.Validate();
@@ -381,7 +377,7 @@ namespace AutoQC
                 {
                     DisplayError(TextUtil.LineSeparate(string.Format("Cannot run the configuration \"{0}\" because it could not be validated.", selectedConfig.Name),
                                  "Please edit the configuration and try again."));
-                    return;
+                    return false;
                 }
                 var configRunner = GetSelectedConfigRunner();
                 if (configRunner.IsStarting() || configRunner.IsStopping())
@@ -390,7 +386,7 @@ namespace AutoQC
                         configRunner.IsStarting() ? Resources.ConfigManager_UpdateSelectedEnabled_starting : Resources.ConfigManager_UpdateSelectedEnabled_stopping);
 
                     DisplayWarning(message);
-                    return;
+                    return false;
                 }
 
                 if (!newIsEnabled)
@@ -404,10 +400,11 @@ namespace AutoQC
                         selectedConfig.IsEnabled = false;
                         configRunner.Stop();
                     }
-                    return;
+                    return true;
                 }
 
                 StartConfig(selectedConfig);
+                return true;
             }
         }
 

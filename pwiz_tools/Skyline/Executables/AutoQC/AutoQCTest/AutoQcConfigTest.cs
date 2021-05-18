@@ -108,15 +108,15 @@ namespace AutoQCTest
         {
             ProgramLog.Init("TestLog");
             TestInvalidPanoramaSettings(new PanoramaSettings(true, "https://fake_panoramaweb.org/", "testEmail", "testPassword", "testFolder"), 
-                "The server https://fake_panoramaweb.org/ does not exist.");
+                "Error verifying server information.\r\nThe server https://fake_panoramaweb.org/ does not exist.");
             TestInvalidPanoramaSettings(new PanoramaSettings(true, string.Empty, "testEmail", "testPassword", "testFolder"),
                 "The Panorama server Url cannot be empty. Please specify a Panorama server Url.");
             TestInvalidPanoramaSettings(new PanoramaSettings(true, "https://panoramaweb.org/", "bad_email@bad.bad", "testPassword", "testFolder"),
-                "The username and password could not be authenticated with the panorama server. Please try again.");
+                "Error verifying server information.\r\nThe username and password could not be authenticated with the panorama server. Please try again.");
             TestInvalidPanoramaSettings(new PanoramaSettings(true, "https://panoramaweb.org/", string.Empty, "testPassword", "testFolder"),
                 "The Panorama login email cannot be empty. Please specify a Panorama login email.");
             TestInvalidPanoramaSettings(new PanoramaSettings(true, "https://panoramaweb.org/", "testEmail", "not_the_password", "testFolder"),
-                "The username and password could not be authenticated with the panorama server. Please try again.");
+                "Error verifying server information.\r\nThe username and password could not be authenticated with the panorama server. Please try again.");
             TestInvalidPanoramaSettings(new PanoramaSettings(true, "https://panoramaweb.org/", "testEmail", string.Empty, "testFolder"),
                 "The Panorama user password cannot be empty. Please specify a Panorama user password.");
             TestInvalidPanoramaSettings(new PanoramaSettings(true, "https://panoramaweb.org/", "testEmail", "testPassword", ""),

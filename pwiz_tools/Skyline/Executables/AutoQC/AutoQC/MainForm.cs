@@ -221,16 +221,13 @@ namespace AutoQC
             _configManager.ExportConfigs(dialog.FileName, shareForm.IndiciesToSave);
         }
 
-        private void btnRun_MouseClick(object sender, MouseEventArgs e)
+        private void listViewConfigs_ItemCheck(object sender, ItemCheckEventArgs e)
         {
-            _configManager.UpdateSelectedEnabled(true);
-            UpdateUiConfigurations();
-        }
-
-        private void btnStop_MouseClick(object sender, MouseEventArgs e)
-        {
-            _configManager.UpdateSelectedEnabled(false);
-            UpdateUiConfigurations();
+            if (!_loaded || e.NewValue == e.CurrentValue) return;
+            var newIsEnabled = e.NewValue == CheckState.Checked;
+            e.NewValue = e.CurrentValue;
+            if (_configManager.UpdateSelectedEnabled(newIsEnabled))
+                UpdateUiConfigurations();
         }
 
         private void listViewConfigs_PreventItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
@@ -319,8 +316,10 @@ namespace AutoQC
                 var topItemIndex = listViewConfigs.TopItem != null ? listViewConfigs.TopItem.Index : -1;
                 var listViewItems = _configManager.ConfigsListViewItems(listViewConfigs.CreateGraphics());
                 listViewConfigs.Items.Clear();
+                listViewConfigs.ItemCheck -= listViewConfigs_ItemCheck;
                 foreach (var lvi in listViewItems)
                     listViewConfigs.Items.Add(lvi);
+                listViewConfigs.ItemCheck += listViewConfigs_ItemCheck;
                 if (topItemIndex != -1 && listViewConfigs.Items.Count > topItemIndex)
                     listViewConfigs.TopItem = listViewConfigs.Items[topItemIndex];
                 UpdateLabelVisibility();
@@ -342,17 +341,7 @@ namespace AutoQC
                 btnEdit.Enabled = configSelected;
                 btnCopy.Enabled = configSelected;
                 btnViewLog.Enabled = configSelected;
-
-                var canStart = configSelected && _configManager.GetSelectedConfigRunner().CanStart();
-                var canStop = configSelected && _configManager.GetSelectedConfigRunner().CanStop();
-                UpdateRunningButtons(canStart, canStop);
             });
-        }
-
-        public void UpdateRunningButtons(bool canStart, bool canStop)
-        {
-            btnRun.Enabled = canStart;
-            btnStop.Enabled = canStop;
         }
 
         public void UpdateUiLogFiles()
@@ -686,21 +675,40 @@ namespace AutoQC
             return AlertDlg.ShowLargeOkCancel(this, Program.AppName, message);
         }
 
+        public void UpdateRunningButtons(bool canStart, bool canStop)
+        {
+            // Implements interface member, AutoQC does not use running buttons
+        }
+
         #endregion
     }
 
+    // ListView that prevents a double click from toggling checkbox
     class MyListView : ListView
     {
-        protected override void WndProc(ref Message m)
-        {
-            if (m.Msg == 0x203)
-            {
-                // override double click behavior - default changes checkbox checked value
-                OnMouseDoubleClick(new MouseEventArgs(new MouseButtons(), 2, MousePosition.X, MousePosition.Y, 0));
-                return;
-            }
+        private bool checkFromDoubleClick;
 
-            base.WndProc(ref m);
+        public void SimulateItemCheck(ItemCheckEventArgs ice) => OnItemCheck(ice);
+
+        protected override void OnItemCheck(ItemCheckEventArgs ice)
+        {
+            if (this.checkFromDoubleClick)
+            {
+                ice.NewValue = ice.CurrentValue;
+                this.checkFromDoubleClick = false;
+            }
+            else
+                base.OnItemCheck(ice);
+        }
+
+        protected override void OnMouseDown(MouseEventArgs e)
+        {
+            // Is this a double-click?
+            if ((e.Button == MouseButtons.Left) && (e.Clicks > 1))
+            {
+                this.checkFromDoubleClick = true;
+            }
+            base.OnMouseDown(e);
         }
     }
 
