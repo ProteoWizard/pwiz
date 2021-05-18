@@ -11450,4 +11450,7 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
   <data name="ImportFastaControl_ImportFasta_iRT_standards" xml:space="preserve">
     <value>iRT standards</value>
   </data>
+  <data name="BuildPeptideSearchLibraryControl_AddExistingLibrary_This_library_contains_iRT_values__Do_you_want_to_create_a_retention_time_predictor_with_these_values_" xml:space="preserve">
+    <value>This library contains iRT values. Do you want to create a retention time predictor with these values?</value>
+  </data>
 </root>
