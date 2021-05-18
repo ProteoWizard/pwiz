@@ -436,7 +436,7 @@
     <value>3</value>
   </data>
   <data name="lblAggregateOperation.Text" xml:space="preserve">
-    <value>聚集操作：</value>
+    <value>聚集操作(&amp;O)：</value>
   </data>
   <data name="&gt;&gt;lblAggregateOperation.Name" xml:space="preserve">
     <value>lblAggregateOperation</value>
