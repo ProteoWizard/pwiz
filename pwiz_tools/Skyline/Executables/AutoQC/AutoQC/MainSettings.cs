@@ -60,22 +60,8 @@ namespace AutoQC
         public readonly int AcquisitionTime;
 
 
-        public static MainSettings Get(string skylineFilePath, string folderToWatch, bool includeSubFolders, FileFilter qcFileFilter,
+        public MainSettings(string skylineFilePath, string folderToWatch, bool includeSubFolders, FileFilter qcFileFilter, 
             bool removeResults, string resultsWindowString, string instrumentType, string acquisitionTimeString)
-        {
-            return new MainSettings(skylineFilePath, folderToWatch, includeSubFolders, qcFileFilter, removeResults,
-                resultsWindowString, instrumentType, acquisitionTimeString);
-        }
-
-        public static MainSettings GetUnValidated(string skylineFilePath, string folderToWatch, bool includeSubFolders, FileFilter qcFileFilter,
-            bool removeResults, string resultsWindowString, string instrumentType, string acquisitionTimeString)
-        {
-            return new MainSettings(skylineFilePath, folderToWatch, includeSubFolders, qcFileFilter, removeResults,
-                resultsWindowString, instrumentType, acquisitionTimeString, false);
-        }
-
-        private MainSettings(string skylineFilePath, string folderToWatch, bool includeSubFolders, FileFilter qcFileFilter, 
-            bool removeResults, string resultsWindowString, string instrumentType, string acquisitionTimeString, bool validate = true)
         {
             SkylineFilePath = skylineFilePath;
             FolderToWatch = folderToWatch;
@@ -85,11 +71,6 @@ namespace AutoQC
             ResultsWindow = ValidateIntTextField(resultsWindowString, Resources.MainSettings_MainSettings_results_window);
             InstrumentType = instrumentType;
             AcquisitionTime = ValidateIntTextField(acquisitionTimeString, Resources.MainSettings_MainSettings_acquisition_time);
-
-            if (validate)
-            {
-                ValidateSettings();
-            }
         }
 
         public virtual bool IsSelected()
@@ -245,7 +226,7 @@ namespace AutoQC
 
             // Return unvalidated settings. Validation can throw an exception that will cause the config to not get read fully and it will not be added to the config list
             // We want the user to be able to fix invalid configs.
-            return GetUnValidated(skylineFilePath, folderToWatch, includeSubfolders, 
+            return new MainSettings(skylineFilePath, folderToWatch, includeSubfolders, 
                 qcFileFilter, removeResults, resultsWindow, instrumentType, 
                 acquisitionTime);
         }

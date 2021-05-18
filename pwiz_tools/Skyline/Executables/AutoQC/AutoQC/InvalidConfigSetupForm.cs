@@ -62,7 +62,7 @@ namespace AutoQC
                 mainSettings.SkylineFilePath, MainSettings.ValidateSkylineFile, PathDialogOptions.File);
             var validFolderToWatch = await GetValidPath("folder to watch",
                 mainSettings.FolderToWatch, MainSettings.ValidateFolderToWatch, PathDialogOptions.Folder);
-            return MainSettings.Get(validSkylinePath, validFolderToWatch, mainSettings.IncludeSubfolders, mainSettings.QcFileFilter, mainSettings.RemoveResults, 
+            return new MainSettings(validSkylinePath, validFolderToWatch, mainSettings.IncludeSubfolders, mainSettings.QcFileFilter, mainSettings.RemoveResults, 
                 mainSettings.ResultsWindow.ToString(), mainSettings.InstrumentType, mainSettings.AcquisitionTime.ToString());
         }
 

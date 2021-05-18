@@ -31,10 +31,11 @@ namespace AutoQC
         public bool IsValid(out string errorMessage)
         {
             errorMessage = null;
+            _panoramaSettings = new PanoramaSettings(_panoramaSettings.PublishToPanorama, textPanoramaUrl.Text,
+                textPanoramaEmail.Text, textPanoramaPasswd.Text, textPanoramaFolder.Text);
             try
             {
-                _panoramaSettings = PanoramaSettings.Get(_panoramaSettings.PublishToPanorama, textPanoramaUrl.Text,
-                    textPanoramaEmail.Text, textPanoramaPasswd.Text, textPanoramaFolder.Text);
+                _panoramaSettings.ValidateSettings();
                 return true;
             }
             catch (ArgumentException e)

@@ -35,41 +35,21 @@ namespace AutoQC
         public static bool GetDefaultPublishToPanorama() { return false; }
 
         public readonly bool PublishToPanorama;
-        public readonly string PanoramaServerUrl;
         public readonly string PanoramaUserEmail;
         public readonly string PanoramaPassword;
         public readonly string PanoramaFolder;
-        public readonly Uri PanoramaServerUri;
 
-        public static PanoramaSettings Get(bool publishToPanorama, string panoramaServerUrl, string panoramaUserEmail,
+        public string PanoramaServerUrl;
+        public Uri PanoramaServerUri;
+
+        public PanoramaSettings(bool publishToPanorama, string panoramaServerUrl, string panoramaUserEmail,
             string panoramaPassword, string panoramaFolder)
-        {
-            return new PanoramaSettings(publishToPanorama, panoramaServerUrl, panoramaUserEmail, panoramaPassword, panoramaFolder);
-        }
-
-        public static PanoramaSettings GetUnvalidated(bool publishToPanorama, string panoramaServerUrl, string panoramaUserEmail,
-            string panoramaPassword, string panoramaFolder)
-        {
-            return new PanoramaSettings(publishToPanorama, panoramaServerUrl, panoramaUserEmail, panoramaPassword, panoramaFolder, false);
-        }
-
-        private PanoramaSettings(bool publishToPanorama, string panoramaServerUrl, string panoramaUserEmail,
-            string panoramaPassword, string panoramaFolder, bool validate = true)
         {
             PublishToPanorama = publishToPanorama;
             PanoramaUserEmail = panoramaUserEmail;
             PanoramaPassword = panoramaPassword;
             PanoramaFolder = panoramaFolder;
-
-            if (PublishToPanorama && validate)
-            {
-                PanoramaServerUri = ValidateAndGetServerUri(panoramaServerUrl);
-                PanoramaServerUrl = PanoramaServerUri.AbsoluteUri;
-            }
-            else
-            {
-                PanoramaServerUrl = panoramaServerUrl;
-            }
+            PanoramaServerUrl = panoramaServerUrl;
         }
 
         private Uri ValidateAndGetServerUri(string panoramaServerUrl)
@@ -139,7 +119,12 @@ namespace AutoQC
 
         public void ValidateSettings()
         {
-            ValidateAndGetServerUri(PanoramaServerUrl);
+            if (!PublishToPanorama)
+            {
+                return;
+            }
+            PanoramaServerUri = ValidateAndGetServerUri(PanoramaServerUrl);
+            PanoramaServerUrl = PanoramaServerUri.AbsoluteUri;
         }
 
         // Changed DataProtectionScope from LocalMachine to CurrentUser
@@ -211,7 +196,7 @@ namespace AutoQC
             var panoramaFolder = reader.GetAttribute(Attr.panorama_folder);
             // Return unvalidated settings. Validation can throw an exception that will cause the config to not get read fully and it will not be added to the config list
             // We want the user to be able to fix invalid configs.
-            return GetUnvalidated(publishToPanorama, panoramaServerUrl, panoramaUserEmail, panoramaPassword, panoramaFolder);
+            return new PanoramaSettings(publishToPanorama, panoramaServerUrl, panoramaUserEmail, panoramaPassword, panoramaFolder);
         }
 
         public void WriteXml(XmlWriter writer)

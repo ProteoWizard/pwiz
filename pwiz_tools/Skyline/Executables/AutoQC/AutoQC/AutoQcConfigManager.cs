@@ -119,7 +119,7 @@ namespace AutoQC
                     string.Format("Config runner already exists for configuration with name '{0}'", config.Name));
             }
 
-            // Question: Isn't the config validated before we get here? 
+            // The config should have been validated by the time we get here. No need to check the directory path
             // var directory = Path.GetDirectoryName(config.MainSettings.SkylineFilePath);
             // if (directory == null)
             //     throw new Exception("Cannot have a null Skyline file directory.");

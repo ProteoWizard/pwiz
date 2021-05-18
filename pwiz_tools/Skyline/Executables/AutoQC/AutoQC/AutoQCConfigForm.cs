@@ -149,7 +149,7 @@ namespace AutoQC
             var resultsWindow = textResultsTimeWindow.Text;
             var instrumentType = comboBoxInstrumentType.SelectedItem.ToString();
             var acquisitionTime = textAquisitionTime.Text;
-            var mainSettings = MainSettings.Get(skylineFilePath, folderToWatch, includeSubfolders, qcFileFilter, removeResults, resultsWindow, instrumentType, acquisitionTime);
+            var mainSettings = new MainSettings(skylineFilePath, folderToWatch, includeSubfolders, qcFileFilter, removeResults, resultsWindow, instrumentType, acquisitionTime);
             return mainSettings;
         }
 
@@ -234,7 +234,7 @@ namespace AutoQC
 
         private PanoramaSettings GetPanoramaSettingsFromUi()
         {
-            return PanoramaSettings.Get(cbPublishToPanorama.Checked, textPanoramaUrl.Text, textPanoramaEmail.Text, textPanoramaPasswd.Text, textPanoramaFolder.Text);
+            return new PanoramaSettings(cbPublishToPanorama.Checked, textPanoramaUrl.Text, textPanoramaEmail.Text, textPanoramaPasswd.Text, textPanoramaFolder.Text);
         }
 
         private void cbPublishToPanorama_CheckedChanged(object sender, EventArgs e)
@@ -307,11 +307,11 @@ namespace AutoQC
 
         private void Save()
         {
-            AutoQcConfig newConfig;
+            AutoQcConfig newConfig = GetConfigFromUi();
             try
             {
-                newConfig = GetConfigFromUi();
                 _mainControl.AssertUniqueConfigName(newConfig.Name, _action == ConfigAction.Edit);
+                newConfig.Validate();
             }
             catch (ArgumentException e)
             {
