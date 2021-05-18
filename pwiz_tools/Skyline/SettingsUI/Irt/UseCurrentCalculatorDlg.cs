@@ -31,13 +31,13 @@ namespace pwiz.Skyline.SettingsUI.Irt
     {
         public bool UseCurrent => radioUseCurrent.Checked;
 
-        public string StandardName
+        public string StandardName { get; private set; }
+        public string StandardNameText
         {
-            get => _standardName;
+            get => textName.Text;
             set => textName.Text = value;
         }
 
-        private string _standardName;
         private readonly HashSet<string> _existing;
 
         public UseCurrentCalculatorDlg(IEnumerable<IrtStandard> existing)
@@ -66,7 +66,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     helper.ShowTextBoxError(textName, Resources.CalibrateIrtDlg_OkDialog_The_iRT_standard__0__already_exists_, name);
                     return;
                 }
-                _standardName = name;
+                StandardName = name;
             }
 
             DialogResult = DialogResult.OK;

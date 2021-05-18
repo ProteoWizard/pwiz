@@ -95,7 +95,7 @@ namespace pwiz.SkylineTestFunctional
             });
             var calcToStandardDlg = ShowDialog<UseCurrentCalculatorDlg>(irtDlg1.AddStandard);
             const string newStandardName = "testCalcToStandard";
-            RunUI(() => calcToStandardDlg.StandardName = newStandardName);
+            RunUI(() => calcToStandardDlg.StandardNameText = newStandardName);
             OkDialog(calcToStandardDlg, calcToStandardDlg.OkDialog);
             RunUI(() =>
             {
