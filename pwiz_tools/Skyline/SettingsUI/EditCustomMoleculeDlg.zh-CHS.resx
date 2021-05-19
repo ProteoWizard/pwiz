@@ -135,7 +135,7 @@
     <value>13</value>
   </data>
   <data name="textIonMobility.ToolTip" xml:space="preserve">
-    <value>覆盖任何预测的漂移时间值</value>
+    <value>覆盖任何库离子迁移值</value>
   </data>
   <data name="&gt;&gt;textIonMobility.Name" xml:space="preserve">
     <value>textIonMobility</value>
@@ -466,7 +466,7 @@
     <value>15</value>
   </data>
   <data name="textBoxCCS.ToolTip" xml:space="preserve">
-    <value>覆盖任何预测或库碰撞截面值</value>
+    <value>覆盖任何库碰撞截面值</value>
   </data>
   <data name="&gt;&gt;textBoxCCS.Name" xml:space="preserve">
     <value>textBoxCCS</value>
