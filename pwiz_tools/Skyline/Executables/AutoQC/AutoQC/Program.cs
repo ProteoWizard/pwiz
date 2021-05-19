@@ -250,7 +250,7 @@ namespace AutoQC
         private static ConfigList ReadOldConfigList(string configFile)
         {
             string skylineType = null;
-            string skylineInstallDir = string.Empty2023;
+            string skylineInstallDir = string.Empty;
             ConfigList configList = null;
             try
             {

@@ -194,11 +194,7 @@ namespace AutoQC
                 i++;
             }
             _logList.RemoveAt(i);
-            _uiControl.ClearLog();
-            // Question: what happens if the selected log is not the last one?
-            // This causes an exception if there was only one item in the _logList, and that was just removed above.
-            // SelectLog will try to select the log at the index -1.
-            // if (SelectedLog == _logList.Count) SelectLog(_logList.Count - 1);
+            _uiControl?.ClearLog();
             _configRunners.Remove(config.Name);
         }
 
@@ -366,13 +362,13 @@ namespace AutoQC
             }
         }
 
-        public void StopConfiguration()
+        public bool StopConfiguration()
         {
             lock (_lock)
             {
                 var selectedConfig = GetSelectedConfig();
                 if (!selectedConfig.IsEnabled) // TODO: Do we need this?
-                    return;
+                    return false;
                 
                 var configRunner = GetSelectedConfigRunner();
                 if (configRunner.IsStarting() || configRunner.IsStopping())
@@ -381,7 +377,7 @@ namespace AutoQC
                         configRunner.IsStarting() ? Resources.ConfigManager_UpdateSelectedEnabled_starting : Resources.ConfigManager_UpdateSelectedEnabled_stopping);
 
                     DisplayWarning(message);
-                    return;
+                    return false;
                 }
 
                 var doChange = DisplayQuestion(string.Format(
@@ -392,17 +388,25 @@ namespace AutoQC
                 {
                     selectedConfig.IsEnabled = false;
                     configRunner.Stop();
+                    return true;
                 }
+
+                return false;
             }
         }
 
-        public void StartConfiguration()
+        public bool UpdateSelectedEnabled(bool newIsEnabled)
+        {
+            return newIsEnabled ? StartConfiguration() : StopConfiguration();
+        }
+
+        public bool StartConfiguration()
         {
             lock (_lock)
             {
                 var selectedConfig = GetSelectedConfig();
                 if (selectedConfig.IsEnabled) // TODO: Do we need this?
-                    return;
+                    return false;
                 try
                 {
                     selectedConfig.Validate();
@@ -415,7 +419,7 @@ namespace AutoQC
                                  "Please edit the configuration and try again."));
 
                     SetConfigInvalid(selectedConfig);
-                    return;
+                    return false;
                 }
 
                 SetConfigValid(selectedConfig);
@@ -430,10 +434,11 @@ namespace AutoQC
                             : Resources.ConfigManager_UpdateSelectedEnabled_stopping);
 
                     DisplayWarning(message);
-                    return;
+                    return false;
                 }
 
                 StartConfig(selectedConfig);
+                return true;
             }
         }
 

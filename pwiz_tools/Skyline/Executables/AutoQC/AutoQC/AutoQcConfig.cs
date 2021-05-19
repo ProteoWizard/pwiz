@@ -62,6 +62,7 @@ namespace AutoQC
         public ListViewItem AsListViewItem(IConfigRunner runner, Graphics graphics)
         {
             var lvi = new ListViewItem(Name);
+            lvi.Checked = IsEnabled;
             lvi.UseItemStyleForSubItems = false; // So that we can change the color for sub-items.
             lvi.SubItems.Add(User);
             lvi.SubItems.Add(Created.ToShortDateString());
