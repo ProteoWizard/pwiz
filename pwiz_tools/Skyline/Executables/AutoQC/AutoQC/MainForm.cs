@@ -173,16 +173,17 @@ namespace AutoQC
 
         public void FileOpened(string filePath)
         {
-            var importConfigs = false;
-            var inDownloadsFolder = filePath.Contains(FileUtil.DOWNLOADS_FOLDER);
-            if (!inDownloadsFolder) // Only show dialog if configs are not in downloads folder
+            var importConfigs = true;
+            if (!filePath.Contains(FileUtil.DOWNLOADS_FOLDER)) // Only show dialog if configs are not in downloads folder
             {
                 importConfigs = DialogResult.Yes == DisplayQuestion(string.Format(
                     Resources.MainForm_FileOpened_Do_you_want_to_import_configurations_from__0__,
                     Path.GetFileName(filePath)));
             }
-            if (importConfigs || inDownloadsFolder)
-                DoImport(filePath);
+
+            if (!importConfigs) return;
+            ProgramLog.Info($"Importing configurations from {filePath}");
+            DoImport(filePath);
         }
 
         private void btnImport_Click(object sender, EventArgs e)

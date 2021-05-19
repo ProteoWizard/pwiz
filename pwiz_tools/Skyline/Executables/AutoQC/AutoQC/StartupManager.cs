@@ -227,7 +227,7 @@ namespace AutoQC
 
             using (Process.Start(procInfo))
             {
-                ProgramLog.Info($"Started {AUTOQCSTARTER}.");
+                ProgramLog.Info($"{AUTOQCSTARTER} has been started.");
             }
         }     
     }

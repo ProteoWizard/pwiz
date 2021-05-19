@@ -436,45 +436,51 @@ namespace SharedBatch
                 {
                     using (var reader = XmlReader.Create(stream))
                     {
-                        while (!reader.Name.Equals("ConfigList"))
-                            reader.Read();
-                        var oldConfigFile = reader.GetAttribute(Attr.SavedConfigsFilePath);
-                        var oldFolder = reader.GetAttribute(Attr.SavedPathRoot);
-                        if (!string.IsNullOrEmpty(oldConfigFile) && string.IsNullOrEmpty(oldFolder))
-                            oldFolder = Path.GetDirectoryName(oldConfigFile);
-                        if (!string.IsNullOrEmpty(oldFolder))
+                        while (reader.Read())
                         {
-                            var newFolder = string.IsNullOrEmpty(copiedDestination)
-                                ? Path.GetDirectoryName(filePath)
-                                : Path.GetDirectoryName(copiedConfigFile);
-                            AddRootReplacement(oldFolder, newFolder, false, out _, out _);
-                        }
-
-                        while (!reader.Name.EndsWith("_config"))
-                        {
-                            if (reader.Name == "userSettings" && !reader.IsStartElement())
-                                break; // there are no configurations in the file
-                            reader.Read();
-                        }
-                        while (reader.IsStartElement())
-                        {
-                            if (reader.Name.EndsWith("_config"))
+                            if (reader.Name.Equals("ConfigList"))
                             {
-                                IConfig config = null;
-                                try
+                                var oldConfigFile = reader.GetAttribute(Attr.SavedConfigsFilePath);
+                                var oldFolder = reader.GetAttribute(Attr.SavedPathRoot);
+                                if (!string.IsNullOrEmpty(oldConfigFile) && string.IsNullOrEmpty(oldFolder))
+                                    oldFolder = Path.GetDirectoryName(oldConfigFile);
+                                if (!string.IsNullOrEmpty(oldFolder))
                                 {
-                                    config = importer(reader);
+                                    var newFolder = string.IsNullOrEmpty(copiedDestination)
+                                        ? Path.GetDirectoryName(filePath)
+                                        : Path.GetDirectoryName(copiedConfigFile);
+                                    AddRootReplacement(oldFolder, newFolder, false, out _, out _);
                                 }
-                                catch (Exception ex)
+
+                                while (!reader.Name.EndsWith("_config"))
                                 {
-                                    readXmlErrors.Add(ex.Message);
+                                    if (reader.Name == "userSettings" && !reader.IsStartElement())
+                                        break; // there are no configurations in the file
+                                    reader.Read();
                                 }
-                                
-                                if (config != null)
-                                    readConfigs.Add(config);
+                                while (reader.IsStartElement())
+                                {
+                                    if (reader.Name.EndsWith("_config"))
+                                    {
+                                        IConfig config = null;
+                                        try
+                                        {
+                                            config = importer(reader);
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            readXmlErrors.Add(ex.Message);
+                                        }
+
+                                        if (config != null)
+                                            readConfigs.Add(config);
+                                    }
+                                    reader.Read();
+                                    reader.Read();
+                                }
+
+                                break; // We are done reading the ConfigList
                             }
-                            reader.Read();
-                            reader.Read();
                         }
                     }
                 }
