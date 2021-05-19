@@ -2953,7 +2953,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Files to search:.
+        ///   Looks up a localized string similar to &amp;Files to search:.
         /// </summary>
         public static string BuildPeptideSearchLibraryControl_Files_to_search_ {
             get {
@@ -2981,7 +2981,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Result files:.
+        ///   Looks up a localized string similar to &amp;Result files:.
         /// </summary>
         public static string BuildPeptideSearchLibraryControl_Result_files_ {
             get {

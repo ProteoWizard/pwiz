@@ -21,7 +21,7 @@ ArrangeGraphsGroupedDlg,TestManageResults
 AssociateProteinsDlg,TestAssociateProteins
 AuditLogForm,*
 AuditLogExtraInfoForm,TestAuditLogSaving
-LongOperationRunner.BackgroundThreadLongWaitDlg,TODO (NickSh)
+LongOperationRunner.BackgroundThreadLongWaitDlg,*
 BuildBackgroundProteomeDlg,TestBackgroundProteome
 BuildLibraryDlg,TestFullScanId
 BuildLibraryNotification,*
@@ -100,7 +100,7 @@ GraphRegression,TestOptimization
 GraphSpectrum,TestMs1Tutorial
 GraphSummary.AreaGraphView,*
 GraphSummary.RTGraphView,*
-GraphSummary.DetectionsGraphView,TODO (RitaCh)
+GraphSummary.DetectionsGraphView,*
 HeatMapGraph,TestClusteredHeatMap
 ImmediateWindow,ImmediateWindowTestMethod
 ImportDocResultsDlg,TestImportDoc
@@ -221,4 +221,4 @@ ViewLibraryDlg,TestFullScanId
 VolcanoPlotPropertiesDlg,TestGroupComparisonVolcanoPlot
 VolcanoPlotFormattingDlg,TestVolcanoPlotFormatting
 DetectionToolbarProperties, TestDetectionsPlot
-ImportTransitionListColumnSelectDlg,ExistingExperimentsTutorialTest
+ImportTransitionListColumnSelectDlg,TestExistingExperimentsTutorial
