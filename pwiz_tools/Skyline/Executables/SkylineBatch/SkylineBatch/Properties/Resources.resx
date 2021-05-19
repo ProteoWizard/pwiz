@@ -138,8 +138,8 @@
   <data name="ReportInfo_ValidateRScriptPath_R_script_path__0__is_not_a_valid_path_" xml:space="preserve">
     <value>R script path {0} is not a valid path.</value>
   </data>
-  <data name="MainForm_UpdateRunBatchSteps_Run__start_from_report_export" xml:space="preserve">
-    <value>R&amp;un: start from report export</value>
+  <data name="MainForm_UpdateRunBatchSteps_Start_from_report_export" xml:space="preserve">
+    <value>Start from report export</value>
   </data>
   <data name="MainSettings_ValidateSkylineFile_Skyline_file" xml:space="preserve">
     <value>Skyline file</value>
@@ -207,8 +207,8 @@
   <data name="ConfigManager_CheckConfigAtIndex_Please_wait_until___0___has_finished_running_" xml:space="preserve">
     <value>Please wait until "{0}" has finished running.</value>
   </data>
-  <data name="MainForm_UpdateRunBatchSteps_Run__R_scripts_only" xml:space="preserve">
-    <value>R&amp;un: R scripts only</value>
+  <data name="MainForm_UpdateRunBatchSteps_R_scripts_only" xml:space="preserve">
+    <value>R scripts only</value>
   </data>
   <data name="Logger_DisplayLog_____Log_truncated_____Full_log_is_in__0_" xml:space="preserve">
     <value>... Log truncated ... Full log is in {0}</value>
@@ -219,8 +219,8 @@
   <data name="ConfigRunner_DownloadData_Skipping__0___Already_downloaded" xml:space="preserve">
     <value>Skipping {0}. Already downloaded</value>
   </data>
-  <data name="MainForm_UpdateRunBatchSteps_Run__start_from_refinement" xml:space="preserve">
-    <value>R&amp;un: start from refinement</value>
+  <data name="MainForm_UpdateRunBatchSteps_Start_from_refinement" xml:space="preserve">
+    <value>Start from refinement</value>
   </data>
   <data name="Program_Main_Error_details_may_be_found_in_the_SkylineBatchProgram_log_file_in_this_directory____0_" xml:space="preserve">
     <value>Error details may be found in the SkylineBatchProgram.log file in this directory : {0}</value>
@@ -276,8 +276,8 @@
   <data name="RefineSettings_Validate_Cannot_save_the_refined_file_to__0_" xml:space="preserve">
     <value>Cannot save the refined file to {0}</value>
   </data>
-  <data name="SkylineBatchConfigManager_StartBatchRun_chromatagram_files" xml:space="preserve">
-    <value>chromatagram files</value>
+  <data name="SkylineBatchConfigManager_StartBatchRun_files" xml:space="preserve">
+    <value>files</value>
   </data>
   <data name="RInstallations_AddRDirectory_Please_enter_a_valid_directory_" xml:space="preserve">
     <value>Please enter a valid directory.</value>
@@ -364,8 +364,8 @@
   <data name="OpenFolder" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\OpenFolder.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="MainForm_UpdateRunBatchSteps_Run_All_Steps" xml:space="preserve">
-    <value>R&amp;un All Steps</value>
+  <data name="MainForm_UpdateRunBatchSteps_All" xml:space="preserve">
+    <value>All</value>
   </data>
   <data name="FileSettings_Validate_MS1_filtering_res_accuracy" xml:space="preserve">
     <value>MS1 filtering res/accuracy</value>
@@ -542,7 +542,7 @@
     <value>The following configurations use refined template files from other configurations that do not exist:</value>
   </data>
   <data name="SkylineBatchConfigManager_StartBatchRun_Running_the_enabled_configurations_from___0___would_overwrite_the__1__" xml:space="preserve">
-    <value>Running the enabled configurations from "{0}" would overwrite the {1}:</value>
+    <value>Running "{0}" on the enabled configurations would overwrite the {1}:</value>
   </data>
   <data name="SkylineBatchConfigForm_SkylineBatchConfigForm_Editing_configuration___0__" xml:space="preserve">
     <value>Editing configuration "{0}"</value>
@@ -628,8 +628,8 @@
   <data name="Program_Main_To_help_improve__0__in_future_versions__please_post_the_configuration_file_to_the_Skyline_Support_board_" xml:space="preserve">
     <value>To help improve {0} in future versions, please post the configuration file to the Skyline Support board:</value>
   </data>
-  <data name="MainForm_UpdateRunBatchSteps_Run__download_files_only" xml:space="preserve">
-    <value>R&amp;un: download files only</value>
+  <data name="MainForm_UpdateRunBatchSteps_Download_files_only" xml:space="preserve">
+    <value>Download files only</value>
   </data>
   <data name="ConfigRunner_DownloadData_There_is_not_enough_remaining_disk_space_to_download__0___Free_up_some_disk_space_and_try_again_" xml:space="preserve">
     <value>There is not enough remaining disk space to download {0}. Free up some disk space and try again.</value>
@@ -670,9 +670,6 @@
   <data name="DataServerControl_ServerRemoved_No_server" xml:space="preserve">
     <value>No server</value>
   </data>
-  <data name="MainForm_UpdateRunBatchSteps_Run__start_from_template_copy_and_data_import" xml:space="preserve">
-    <value>R&amp;un: start from template copy and data import</value>
-  </data>
   <data name="SkylineBatchConfigManager_StartBatchRun_R_script_outputs_in_the_following_analysis_folders" xml:space="preserve">
     <value>R script outputs in the following analysis folders</value>
   </data>
@@ -694,7 +691,10 @@
   <data name="MainForm_btnImport_Click_Cannot_add_configurations_while__0__is_loading__Please_wait_and_try_again_" xml:space="preserve">
     <value>Cannot add configurations while {0} is loading. Please wait and try again.</value>
   </data>
-  <data name="MainForm_UpdateRunBatchSteps_Run__start_from_template_copy" xml:space="preserve">
-    <value>R&amp;un: start from template copy</value>
+  <data name="MainForm_UpdateRunBatchSteps_Start_from_template_copy" xml:space="preserve">
+    <value>Start from template copy</value>
+  </data>
+  <data name="MainForm_CheckDropDownOption_R_un___0_" xml:space="preserve">
+    <value>R&amp;un: {0}</value>
   </data>
 </root>

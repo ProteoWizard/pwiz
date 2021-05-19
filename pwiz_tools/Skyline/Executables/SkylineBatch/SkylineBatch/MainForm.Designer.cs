@@ -162,7 +162,6 @@
             this.tabLog.Controls.Add(this.textBoxLog);
             resources.ApplyResources(this.tabLog, "tabLog");
             this.tabLog.Name = "tabLog";
-            this.tabLog.Enter += new System.EventHandler(this.tabLog_Enter);
             this.tabLog.Leave += new System.EventHandler(this.tabLog_Leave);
             // 
             // label1

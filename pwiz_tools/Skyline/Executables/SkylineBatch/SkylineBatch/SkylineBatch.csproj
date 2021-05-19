@@ -29,8 +29,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>130</ApplicationRevision>
-    <ApplicationVersion>21.0.9.130</ApplicationVersion>
+    <ApplicationRevision>138</ApplicationRevision>
+    <ApplicationVersion>21.0.9.138</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -73,7 +73,7 @@
     <SignManifests>false</SignManifests>
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>SkylineBatch_release.ico</ApplicationIcon>
+    <ApplicationIcon>Resources\SkylineBatch_daily.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup />
   <PropertyGroup />

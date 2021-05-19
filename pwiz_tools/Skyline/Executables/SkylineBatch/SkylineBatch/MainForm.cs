@@ -361,10 +361,7 @@ namespace SkylineBatch
             }
             ((ToolStripMenuItem)batchRunDropDown.Items[index]).Checked = true;
             btnRunBatch.TextAlign = index == 0 ? ContentAlignment.MiddleCenter : ContentAlignment.MiddleLeft;
-            var runButtonText = batchRunDropDown.Items[index].Text;
-            if (index == 2)
-                runButtonText = Resources.MainForm_UpdateRunBatchSteps_Run__start_from_template_copy;
-            btnRunBatch.Text = runButtonText;
+            btnRunBatch.Text = string.Format(Resources.MainForm_CheckDropDownOption_R_un___0_, batchRunDropDown.Items[index].Text);
         }
 
         private void btnRunBatch_Click(object sender, EventArgs e)
@@ -376,7 +373,7 @@ namespace SkylineBatch
         {
             var stepIndex = GetCheckedRunOptionIndex();
             if (!_showRefineStep && stepIndex >= (int)RunBatchOptions.FROM_REFINE)
-                stepIndex += 1; // step 3 and 4 become step 4 and 5 when refine step is hidden
+                stepIndex += 1; // step 2 and 3 become step 3 and 4 when refine step is hidden
 
             var runOption = (RunBatchOptions)stepIndex;
             var running = _configManager.StartBatchRun(runOption);
@@ -477,19 +474,19 @@ namespace SkylineBatch
                 _showRefineStep = _configManager.WillRefine();
                 var oldChecked = GetCheckedRunOptionIndex();
                 batchRunDropDown.Items.Clear();
-                batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Run_All_Steps);
-                batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Run__download_files_only);
-                batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Run__start_from_template_copy_and_data_import);
+                batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_All);
+                batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Download_files_only);
+                batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Start_from_template_copy);
                 if (_showRefineStep)
                 {
-                    batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Run__start_from_refinement);
-                    batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Run__start_from_report_export);
-                    batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Run__R_scripts_only);
+                    batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Start_from_refinement);
+                    batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Start_from_report_export);
+                    batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_R_scripts_only);
                 }
                 else
                 {
-                    batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Run__start_from_report_export);
-                    batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Run__R_scripts_only);
+                    batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Start_from_report_export);
+                    batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_R_scripts_only);
                 }
 
                 var newChecked = oldChecked;
@@ -568,13 +565,12 @@ namespace SkylineBatch
         #region Logging
 
         private bool _scrolling = true;
-        private bool _forceScroll = true;
 
         private void OutputLog(object sender, EventArgs e)
         {
             if (textBoxLog.IsDisposed) return;
             _outputLog.Tick -= OutputLog;
-            if (WindowState != FormWindowState.Minimized && tabMain.SelectedIndex == 1 && textBoxLog.TextLength > 0)
+            if (WindowState != FormWindowState.Minimized && tabLog.Visible && textBoxLog.TextLength > 0)
             {
                 _scrolling = textBoxLog.GetPositionFromCharIndex(textBoxLog.Text.Length - 1).Y <=
                              textBoxLog.Height;
@@ -588,13 +584,8 @@ namespace SkylineBatch
             var logChanged = logger.OutputLog(LogToUi, LogErrorToUi);
             if (logChanged)
                 TrimDisplayedLog();
-            if (_forceScroll || (logChanged && _scrolling))
-            {
-                _forceScroll = false;
-                _scrolling = true;
-                textBoxLog.SelectionStart = textBoxLog.TextLength;
-                textBoxLog.ScrollToCaret();
-            }
+            if (logChanged && _scrolling)
+                ScrollToLogEnd();
             _outputLog.Tick += OutputLog;
         }
 
@@ -606,8 +597,15 @@ namespace SkylineBatch
             {
                 textBoxLog.Text = string.Empty;
                 _configManager.GetSelectedLogger().DisplayLogFromFile();
-                _forceScroll = true;
+                ScrollToLogEnd();
             }
+        }
+
+        private void ScrollToLogEnd()
+        {
+            _scrolling = true;
+            textBoxLog.SelectionStart = textBoxLog.TextLength;
+            textBoxLog.ScrollToCaret();
         }
 
         private void LogToUi(string text)
@@ -645,14 +643,8 @@ namespace SkylineBatch
                 DisplayError(ex.Message);
             }
 
-            _scrolling = false;
-            _forceScroll = _configManager.SelectedLog == 0;
+            _scrolling = _configManager.SelectedLog == 0;
             _outputLog.Tick += OutputLog;
-        }
-
-        private void tabLog_Enter(object sender, EventArgs e)
-        {
-            _forceScroll = _configManager.SelectedLog == 0 && !_scrolling;
         }
 
         private void tabLog_Leave(object sender, EventArgs e)

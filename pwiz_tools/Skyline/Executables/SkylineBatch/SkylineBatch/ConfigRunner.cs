@@ -125,16 +125,16 @@ namespace SkylineBatch
             ChangeStatus(RunnerStatus.Running);
             Config.MainSettings.CreateAnalysisFolderIfNonexistent();
 
-            if ((runOption == RunBatchOptions.RUN_ALL_STEPS || runOption == RunBatchOptions.DOWNLOAD_DATA) 
+            if ((runOption == RunBatchOptions.ALL || runOption == RunBatchOptions.DOWNLOAD_DATA) 
                 && Config.MainSettings.WillDownloadData)
             {
                 await DownloadData();
             }
             
-            if ((runOption == RunBatchOptions.RUN_ALL_STEPS ||
-                 runOption == RunBatchOptions.FROM_CREATE_RESULTS ||
+            if ((runOption == RunBatchOptions.ALL ||
+                 runOption == RunBatchOptions.FROM_TEMPLATE_COPY ||
                  runOption == RunBatchOptions.FROM_REFINE ||
-                 runOption == RunBatchOptions.FROM_EXPORT_REPORT)
+                 runOption == RunBatchOptions.FROM_REPORT_EXPORT)
                 && IsRunning())
             {
                 var multiLine = await Config.SkylineSettings.HigherVersion(ALLOW_NEWLINE_SAVE_VERSION, _processRunner);
@@ -198,15 +198,14 @@ namespace SkylineBatch
         public void WriteBatchCommandsToFile(CommandWriter commandWriter, RunBatchOptions runOption, bool invariantReport)
         {
             // STEP 1: create results document and import data
-            if (runOption <= RunBatchOptions.FROM_CREATE_RESULTS)
+            if (runOption <= RunBatchOptions.FROM_TEMPLATE_COPY)
             {
                 // Delete existing .sky and .skyd results files
-                var skyFileName = Path.GetFileNameWithoutExtension(Config.MainSettings.TemplateFilePath);
                 var filesToDelete = FileUtil.GetFilesInFolder(Config.MainSettings.AnalysisFolderPath, TextUtil.EXT_SKY);
                 filesToDelete.AddRange(FileUtil.GetFilesInFolder(Config.MainSettings.AnalysisFolderPath,
                     TextUtil.EXT_SKYD));
                 foreach (var file in filesToDelete) 
-                    if (Path.GetFileNameWithoutExtension(file).Equals(skyFileName)) File.Delete(file);
+                    File.Delete(file);
 
                 Config.WriteOpenSkylineTemplateCommand(commandWriter);
                 Config.WriteMsOneCommand(commandWriter);
@@ -223,7 +222,7 @@ namespace SkylineBatch
                 Config.WriteSaveCommand(commandWriter);
                 commandWriter.EndCommandGroup();
             }
-            else if (runOption < RunBatchOptions.FROM_EXPORT_REPORT)
+            else if (runOption < RunBatchOptions.FROM_REPORT_EXPORT)
             {
                 Config.WriteOpenSkylineResultsCommand(commandWriter);
             }
@@ -233,7 +232,7 @@ namespace SkylineBatch
                 Config.WriteRefineCommands(commandWriter);
 
             // STEP 3: output report(s) for completed analysis
-            if (runOption <= RunBatchOptions.FROM_EXPORT_REPORT)
+            if (runOption <= RunBatchOptions.FROM_REPORT_EXPORT)
             {
                 if (Config.ReportSettings.UsesRefinedFile())
                 {

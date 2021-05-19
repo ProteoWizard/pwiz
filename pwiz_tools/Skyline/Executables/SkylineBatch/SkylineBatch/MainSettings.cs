@@ -234,30 +234,20 @@ namespace SkylineBatch
             CreateAnalysisFolderIfNonexistent();
             var analysisFolderName = Path.GetFileName(AnalysisFolderPath);
 
-            if (runOption == RunBatchOptions.RUN_ALL_STEPS || runOption == RunBatchOptions.FROM_CREATE_RESULTS)
+            if (runOption == RunBatchOptions.ALL || runOption == RunBatchOptions.FROM_TEMPLATE_COPY)
             {
-                // TODO (Ali): ask if you should check .sky file or .skyd file here
-                /*var resultsFile = GetResultsFilePath();
-                var resultsFileIdentifyer = Path.Combine(analysisFolderName, Path.GetFileName(resultsFile));
-                if (File.Exists(resultsFile) && new FileInfo(TemplateFilePath).Length != new FileInfo(resultsFile).Length)
+                var overwriteFiles = FileUtil.GetFilesInFolder(AnalysisFolderPath, TextUtil.EXT_SKY);
+                overwriteFiles.AddRange(FileUtil.GetFilesInFolder(AnalysisFolderPath, TextUtil.EXT_SKYD));
+                if (overwriteFiles.Count == 0)
+                    return false;
+                foreach (var file in overwriteFiles)
                 {
                     message.Append(tab + tab)
-                        .Append(resultsFileIdentifyer)
+                        .Append(string.Format(Path.Combine(analysisFolderName, Path.GetFileName(file))))
                         .AppendLine();
-                    return true;
-                }*/
-
-                var templateSkyds = FileUtil.GetFilesInFolder(Path.GetDirectoryName(TemplateFilePath), TextUtil.EXT_SKYD);
-                var resultsSkyds = FileUtil.GetFilesInFolder(AnalysisFolderPath, TextUtil.EXT_SKYD);
-                var templateSkydSize = templateSkyds.Count == 0 ? 0 : new FileInfo(templateSkyds[0]).Length;
-                var resultsSkydSize = resultsSkyds.Count == 0 ? 0 : new FileInfo(resultsSkyds[0]).Length;
-                if (templateSkydSize < resultsSkydSize)
-                {
-                    message.Append(tab + tab)
-                        .Append(string.Format(Path.Combine(analysisFolderName, Path.GetFileName(resultsSkyds[0]))))
-                        .AppendLine();
-                    return true;
                 }
+
+                return true;
             }
             return false;
         }
