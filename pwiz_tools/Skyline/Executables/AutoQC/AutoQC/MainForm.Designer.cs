@@ -52,7 +52,6 @@
             this.btnOpenFolder = new System.Windows.Forms.ToolStripButton();
             this.btnImportConfigs = new System.Windows.Forms.Button();
             this.btnExportConfigs = new System.Windows.Forms.Button();
-            this.panel2 = new System.Windows.Forms.Panel();
             this.tabLog = new System.Windows.Forms.TabPage();
             this.panel3 = new System.Windows.Forms.Panel();
             this.btnOpenLogFolder = new System.Windows.Forms.Button();
@@ -73,7 +72,6 @@
             this.panel4.SuspendLayout();
             this.panel1.SuspendLayout();
             this.toolStrip.SuspendLayout();
-            this.panel2.SuspendLayout();
             this.tabLog.SuspendLayout();
             this.panel3.SuspendLayout();
             this.tabSettings.SuspendLayout();
@@ -128,7 +126,6 @@
             this.tabConfigs.Controls.Add(this.panel4);
             this.tabConfigs.Controls.Add(this.listViewConfigs);
             this.tabConfigs.Controls.Add(this.panel1);
-            this.tabConfigs.Controls.Add(this.panel2);
             resources.ApplyResources(this.tabConfigs, "tabConfigs");
             this.tabConfigs.Name = "tabConfigs";
             this.tabConfigs.Enter += new System.EventHandler(this.tabConfigs_Enter);
@@ -180,6 +177,7 @@
             // panel1
             // 
             resources.ApplyResources(this.panel1, "panel1");
+            this.panel1.Controls.Add(this.btnViewLog);
             this.panel1.Controls.Add(this.btnAdd);
             this.panel1.Controls.Add(this.toolStrip);
             this.panel1.Controls.Add(this.btnImportConfigs);
@@ -255,12 +253,6 @@
             this.toolTip_MainForm.SetToolTip(this.btnExportConfigs, resources.GetString("btnExportConfigs.ToolTip"));
             this.btnExportConfigs.UseVisualStyleBackColor = true;
             this.btnExportConfigs.Click += new System.EventHandler(this.btnExport_Click);
-            // 
-            // panel2
-            // 
-            resources.ApplyResources(this.panel2, "panel2");
-            this.panel2.Controls.Add(this.btnViewLog);
-            this.panel2.Name = "panel2";
             // 
             // tabLog
             // 
@@ -378,7 +370,6 @@
             this.panel1.PerformLayout();
             this.toolStrip.ResumeLayout(false);
             this.toolStrip.PerformLayout();
-            this.panel2.ResumeLayout(false);
             this.tabLog.ResumeLayout(false);
             this.panel3.ResumeLayout(false);
             this.panel3.PerformLayout();
@@ -412,7 +403,6 @@
         private System.Windows.Forms.GroupBox groupBoxAutoQcSettings;
         private System.Windows.Forms.CheckBox cb_keepRunning;
         private System.Windows.Forms.NotifyIcon systray_icon;
-        private System.Windows.Forms.Panel panel2;
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.ToolStrip toolStrip;
         private System.Windows.Forms.ToolStripButton btnDelete;
