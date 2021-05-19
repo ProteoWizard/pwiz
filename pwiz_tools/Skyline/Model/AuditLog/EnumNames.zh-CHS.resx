@@ -240,6 +240,9 @@
   <data name="SingletonNormalizationMethod_quantile" xml:space="preserve">
     <value>分位数</value>
   </data>
+  <data name="SingletonNormalizationMethod_tic" xml:space="preserve">
+    <value>总离子电流</value>
+  </data>
   <data name="OptimizedMethodType_None" xml:space="preserve">
     <value>无</value>
   </data>
@@ -534,6 +537,9 @@
   <data name="AreaCVNormalizationMethod_ratio" xml:space="preserve">
     <value>比率</value>
   </data>
+  <data name="AreaCVNormalizationMethod_tic" xml:space="preserve">
+    <value>总离子电流</value>
+  </data>
   <data name="AreaCVMsLevel_precursors" xml:space="preserve">
     <value>母离子</value>
   </data>
@@ -568,6 +574,45 @@
     <value>固定宽度</value>
   </data>
   <data name="IonMobilityWindowWidthType_none" xml:space="preserve">
+    <value>无</value>
+  </data>
+  <data name="ClusterMetricType_chebyshev" xml:space="preserve">
+    <value>Chebyshev</value>
+  </data>
+  <data name="ClusterMetricType_manhattan" xml:space="preserve">
+    <value>城市街区</value>
+  </data>
+  <data name="ClusterMetricType_pearson" xml:space="preserve">
+    <value>Pearson</value>
+  </data>
+  <data name="ClusterMetricType_euclidean" xml:space="preserve">
+    <value>Euclidean</value>
+  </data>
+  <data name="InputFile_dda_raw" xml:space="preserve">
+    <value>DDA 原始（搜索和构建库）</value>
+  </data>
+  <data name="InputFile_dia_raw" xml:space="preserve">
+    <value>DIA 原始（去卷积、搜索和构建库）</value>
+  </data>
+  <data name="InputFile_search_result" xml:space="preserve">
+    <value>搜索结果（直接构建库）</value>
+  </data>
+  <data name="InstrumentPreset_OrbitrapLTQ" xml:space="preserve">
+    <value>Orbitrap LTQ</value>
+  </data>
+  <data name="InstrumentPreset_QExactive" xml:space="preserve">
+    <value>Q Exactive</value>
+  </data>
+  <data name="InstrumentPreset_TripleTOF" xml:space="preserve">
+    <value>TripleTOF</value>
+  </data>
+  <data name="Protocol_dia_umpire" xml:space="preserve">
+    <value>DIA-Umpire</value>
+  </data>
+  <data name="Protocol_msconvert" xml:space="preserve">
+    <value>MSConvert</value>
+  </data>
+  <data name="Protocol_none" xml:space="preserve">
     <value>无</value>
   </data>
 </root>

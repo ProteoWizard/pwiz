@@ -52,12 +52,14 @@ namespace SkylineBatchTest
 
             RunUI(() => { mainForm.ClickConfig(0); });
             var editConfigForm = ShowDialog<SkylineBatchConfigForm>(() => mainForm.ClickEdit());
+            RunUI(() => { editConfigForm.tabsConfig.SelectedIndex = 0; });
             Assert.AreEqual(false, editConfigForm.comboTemplateFile.Visible);
             RunUI(() => { editConfigForm.CancelButton.PerformClick(); });
             WaitForClosedForm(editConfigForm);
 
             var addConfigForm = ShowDialog<SkylineBatchConfigForm>(() => mainForm.ClickAdd());
             WaitForShownForm(addConfigForm);
+            RunUI(() => { editConfigForm.tabsConfig.SelectedIndex = 0; });
             Assert.AreEqual(true, addConfigForm.comboTemplateFile.Visible);
             RunUI(() =>
             {
@@ -209,6 +211,7 @@ namespace SkylineBatchTest
             var editConfigForm = ShowDialog<SkylineBatchConfigForm>(() => mainForm.ClickEdit());
             RunUI(() =>
             {
+                editConfigForm.tabsConfig.SelectedIndex = 0;
                 Assert.AreEqual(true, editConfigForm.comboTemplateFile.Visible);
                 Assert.AreEqual(expectedTemplate, editConfigForm.comboTemplateFile.Text);
                 editConfigForm.CancelButton.PerformClick();
@@ -222,11 +225,11 @@ namespace SkylineBatchTest
             var editConfigForm = ShowDialog<SkylineBatchConfigForm>(() => mainForm.ClickEdit());
             RunUI(() =>
             {
+                editConfigForm.tabsConfig.SelectedIndex = 0;
                 Assert.AreEqual(comboVisible, editConfigForm.comboTemplateFile.Visible);
                 if (templatePath)
                 {
-                    if (comboVisible) editConfigForm.comboTemplateFile.Text = newPath;
-                    else editConfigForm.textTemplateFile.Text = newPath;
+                    editConfigForm.templateFileControl.Text = newPath;
                 }
                 else
                 {

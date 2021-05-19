@@ -41,10 +41,12 @@ namespace SkylineBatch
         public MainForm(string openFile)
         {
             InitializeComponent();
+            Icon = Program.Icon();
             var roamingFolder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
             var localFolder = Path.Combine(Path.GetDirectoryName(roamingFolder) ?? throw new InvalidOperationException(), "local");
             var logPath= Path.Combine(localFolder, Program.AppName(), Program.AppName() + TextUtil.EXT_LOG);
             _skylineBatchLogger = new Logger(logPath, Program.AppName() + TextUtil.EXT_LOG, this);
+            _skylineBatchLogger.AddErrorMatch(string.Format(Resources.ConfigRunner_Run_________________________________0____1_________________________________, ".*", RunnerStatus.Error));
             toolStrip1.Items.Insert(3,new ToolStripSeparator());
             _listViewColumnWidths = new ColumnWidthCalculator(listViewConfigs);
             listViewConfigs.ColumnWidthChanged += listViewConfigs_ColumnWidthChanged;
@@ -97,7 +99,7 @@ namespace SkylineBatch
         {
             ProgramLog.Info(Resources.MainForm_btnNewConfig_Click_Creating_a_new_configuration_);
             var initialConfigValues = (SkylineBatchConfig)_configManager.GetLastModified();
-            var configForm = new SkylineBatchConfigForm(this, _rDirectorySelector, initialConfigValues, ConfigAction.Add, false, _configManager.GetRefinedTemplates());
+            var configForm = new SkylineBatchConfigForm(this, _rDirectorySelector, initialConfigValues, ConfigAction.Add, false, _configManager);
             configForm.ShowDialog();
         }
 
@@ -123,11 +125,7 @@ namespace SkylineBatch
         {
             var configRunner = _configManager.GetSelectedConfigRunner();
             var config = (SkylineBatchConfig)configRunner.GetConfig();
-            try
-            {
-                config.Validate();
-            }
-            catch (ArgumentException)
+            if (!_configManager.IsSelectedConfigValid())
             {
                 if (configRunner.IsRunning()) throw new Exception("Invalid configuration cannot be running.");
                 var validateConfigForm = new InvalidConfigSetupForm(this, config, _configManager, _rDirectorySelector);
@@ -136,13 +134,13 @@ namespace SkylineBatch
                 if (validateConfigForm.DialogResult != DialogResult.OK)
                     return;
             }
-            var configForm = new SkylineBatchConfigForm(this, _rDirectorySelector, _configManager.GetSelectedConfig(), ConfigAction.Edit, configRunner.IsBusy(), _configManager.GetRefinedTemplates());
+            var configForm = new SkylineBatchConfigForm(this, _rDirectorySelector, _configManager.GetSelectedConfig(), ConfigAction.Edit, configRunner.IsBusy(), _configManager);
             configForm.ShowDialog();
         }
 
         private void btnCopy_Click(object sender, EventArgs e)
         {
-            var configForm = new SkylineBatchConfigForm(this, _rDirectorySelector, _configManager.GetSelectedConfig(), ConfigAction.Copy, false, _configManager.GetRefinedTemplates());
+            var configForm = new SkylineBatchConfigForm(this, _rDirectorySelector, _configManager.GetSelectedConfig(), ConfigAction.Copy, false, _configManager);
             configForm.ShowDialog();
         }
 
@@ -504,21 +502,39 @@ namespace SkylineBatch
         #region Logging
 
         private bool _isScrolling = true;
+        private bool _blockUiLogging = false;
 
         private void tabLog_Enter(object sender, EventArgs e)
         {
-            textBoxLog.Refresh();
             if (_configManager.SelectedLog == 0)
+            {
+                // Wait for repaint before logging
+                _blockUiLogging = true;
+                var timer = new Timer { Interval = 50 };
+                timer.Tick += AddScrollToQueue;
+                timer.Start();
+            }
+        }
+
+        private void AddScrollToQueue(object sender, EventArgs e)
+        {
+            ((Timer) sender).Stop();
+            _blockUiLogging = false;
+            RunUi(() =>
+            {
+                // Load log messages since last paint
+                UpdateLog();
                 ScrollToLogEnd(true);
+            });
         }
 
         private void comboLogList_SelectedIndexChanged(object sender, EventArgs e)
         {
             _configManager.SelectLog(comboLogList.SelectedIndex);
-            SwitchLogger();
+            UpdateLog();
         }
 
-        private async void SwitchLogger()
+        private async void UpdateLog()
         {
             textBoxLog.Clear();
 
@@ -546,7 +562,7 @@ namespace SkylineBatch
             else if(WindowState != FormWindowState.Minimized)
             {
                 _isScrolling = textBoxLog.GetPositionFromCharIndex(textBoxLog.Text.Length - 1).Y <=
-                               textBoxLog.Height;
+                               textBoxLog.Height + 30;
             }
 
             if (_isScrolling)
@@ -576,7 +592,7 @@ namespace SkylineBatch
         {
             RunUi(() =>
             {
-                if (_configManager.SelectedLog != 0) return; // don't log if old log is displayed
+                if (_configManager.SelectedLog != 0 || _blockUiLogging) return; // don't log if old log is displayed
 
                 if (trim)
                 {
@@ -728,9 +744,9 @@ namespace SkylineBatch
             return AlertDlg.ShowQuestion(this, Program.AppName(), message);
         }
 
-        public DialogResult DisplayLargeQuestion(string message)
+        public DialogResult DisplayLargeOkCancel(string message)
         {
-            return AlertDlg.ShowLargeQuestion(this, Program.AppName(), message);
+            return AlertDlg.ShowLargeOkCancel(this, Program.AppName(), message);
         }
 
         #endregion
@@ -749,6 +765,18 @@ namespace SkylineBatch
                 if (lvi.ForeColor == Color.Red)
                     count++;
             return count;
+        }
+
+        public bool ConfigRunning(string name)
+        {
+            foreach (ListViewItem lvi in listViewConfigs.Items)
+            {
+                if (lvi.Text.Equals(name))
+                {
+                    return lvi.SubItems[2].Text.Equals("Running");
+                }
+            }
+            throw new Exception("Configuration not found");
         }
 
         public string SelectedConfigName()
