@@ -647,7 +647,7 @@ namespace SharedBatch
 
         public Logger GetSelectedLogger()
         {
-            return _logList[SelectedLog];
+            return SelectedLog < 0 || SelectedLog >= _logList.Count ? null : _logList[SelectedLog];
         }
 
         public bool LoggerIsDisplayed(string name)

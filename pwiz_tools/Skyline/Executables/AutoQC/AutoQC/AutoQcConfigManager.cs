@@ -487,7 +487,7 @@ namespace AutoQC
         {
             if (selected < 0 || selected >= _logList.Count)
                 throw new IndexOutOfRangeException("No log at index: " + selected);
-            GetSelectedLogger().DisableUiLogging();
+            GetSelectedLogger()?.DisableUiLogging();
             SelectedLog = selected;
             GetSelectedLogger().LogToUi(_uiControl);
         }
