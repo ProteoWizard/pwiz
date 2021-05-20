@@ -9,16 +9,16 @@ matrix:
     # works on Precise and Trusty
     - os: linux
       dist: xenial
-      compiler: g++
+      compiler: g++-9
       addons:
         apt:
           sources:
             - ubuntu-toolchain-r-test
           packages:
-            - g++
+            - g++-9
       env:
         - TOOLSET=gcc
-        - MATRIX_EVAL="TOOLSET=toolset=gcc"
+        - MATRIX_EVAL="TOOLSET=toolset=gcc-9"
 
     #
     # Clang
