@@ -412,6 +412,15 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Try Reconnecting to Server.
+        /// </summary>
+        public static string DataServerControl_SuccessfulConnect_Try_Reconnecting_to_Server {
+            get {
+                return ResourceManager.GetString("DataServerControl_SuccessfulConnect_Try_Reconnecting_to_Server", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to None of the file names on the server matched the regular expression: {0}.
         /// </summary>
         public static string DataServerInfo_Validate_None_of_the_file_names_on_the_server_matched_the_regular_expression___0_ {
@@ -752,6 +761,15 @@ namespace SkylineBatch.Properties {
             get {
                 return ResourceManager.GetString("MainForm_ReplaceAllSkylineVersions_Do_you_want_to_use_this_Skyline_version_for_al" +
                         "l_configurations_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Checking servers for files to download....
+        /// </summary>
+        public static string MainForm_RunBatch_Checking_servers_for_files_to_download___ {
+            get {
+                return ResourceManager.GetString("MainForm_RunBatch_Checking_servers_for_files_to_download___", resourceCulture);
             }
         }
         

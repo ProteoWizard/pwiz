@@ -697,4 +697,10 @@
   <data name="MainForm_CheckDropDownOption_R_un___0_" xml:space="preserve">
     <value>R&amp;un: {0}</value>
   </data>
+  <data name="MainForm_RunBatch_Checking_servers_for_files_to_download___" xml:space="preserve">
+    <value>Checking servers for files to download...</value>
+  </data>
+  <data name="DataServerControl_SuccessfulConnect_Try_Reconnecting_to_Server" xml:space="preserve">
+    <value>Try Reconnecting to Server</value>
+  </data>
 </root>

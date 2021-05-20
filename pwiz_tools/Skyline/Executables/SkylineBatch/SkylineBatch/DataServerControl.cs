@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
+using FluentFTP;
 using SharedBatch;
 using SkylineBatch.Properties;
 
@@ -22,6 +24,7 @@ namespace SkylineBatch
         public bool IsValid(out string errorMessage)
         {
             errorMessage = null;
+            return true;/*
             if (_server == null) return true; // server was removed
             try
             {
@@ -33,7 +36,7 @@ namespace SkylineBatch
                 errorMessage = e.Message;
                 ServerError(errorMessage);
                 return false;
-            }
+            }*/
         }
 
         private void ServerConnected()
@@ -59,27 +62,34 @@ namespace SkylineBatch
 
         private void btnTryReconnect_Click(object sender, EventArgs e)
         {
-            var initialConnectText = btnTryReconnect.Text;
             btnTryReconnect.Text = "Connecting...";
             btnTryReconnect.Enabled = false;
             btnEditServer.Enabled = false;
-            try
+            var serverConnector = new ServerConnector();
+            serverConnector.AddServer(_server);
+            _ = serverConnector.GetFiles(_server, (a, b) => { }, SuccessfulConnect, UnsuccessfulConnect);
+        }
+
+        private void SuccessfulConnect(List<FtpListItem> ftpFiles)
+        {
+            Invoke(new Action(() =>
             {
-                if (_server == null)
-                    ServerRemoved();
-                else
-                {
-                    _server.Validate();
-                    ServerConnected();
-                }
-            }
-            catch (ArgumentException ex)
+                ServerConnected();
+                btnTryReconnect.Text = Resources.DataServerControl_SuccessfulConnect_Try_Reconnecting_to_Server;
+                btnTryReconnect.Enabled = true;
+                btnEditServer.Enabled = true;
+            }));
+        }
+
+        private void UnsuccessfulConnect(Exception e)
+        {
+            Invoke(new Action(() =>
             {
-                ServerError(ex.Message);
-            }
-            btnTryReconnect.Text = initialConnectText;
-            btnTryReconnect.Enabled = true;
-            btnEditServer.Enabled = true;
+                ServerError(e.Message);
+                btnTryReconnect.Text = Resources.DataServerControl_SuccessfulConnect_Try_Reconnecting_to_Server;
+                btnTryReconnect.Enabled = true;
+                btnEditServer.Enabled = true;
+            }));
         }
 
         private void btnEditServer_Click(object sender, EventArgs e)

@@ -111,7 +111,7 @@ namespace SkylineBatch
             LogToUi(string.Format(Resources.ConfigRunner_Run________________________________Starting_Configuration___0_________________________________, Config.Name));
             try
             {
-                Config.QuickValidate();
+                Config.Validate();
 
             } catch (ArgumentException e)
             {

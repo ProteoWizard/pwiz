@@ -228,15 +228,6 @@ namespace SkylineBatch
             SkylineSettings.Validate();
         }
 
-        public void QuickValidate()
-        {
-            MainSettings.QuickValidate();
-            FileSettings.Validate();
-            RefineSettings.Validate();
-            ReportSettings.Validate();
-            SkylineSettings.Validate();
-        }
-
         public bool RunWillOverwrite(RunBatchOptions runOption, string configurationHeader, out StringBuilder message)
         {
             message = new StringBuilder();

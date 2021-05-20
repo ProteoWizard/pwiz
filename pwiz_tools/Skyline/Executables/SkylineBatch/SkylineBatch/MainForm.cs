@@ -65,7 +65,7 @@ namespace SkylineBatch
                 var loadConfigsLongWaitDlg = new LongWaitDlg(this, Program.AppName(),
                     Resources.MainForm_MainForm_Loading_configurations_from_saved_settings___);
                 _loadingConfigs = true;
-                _configManager.StartLoadingConfigList(new LongWaitOperation(this, loadConfigsLongWaitDlg), (success) =>
+                _configManager.StartLoadingConfigList(new LongWaitOperation(loadConfigsLongWaitDlg), (success) =>
                 {
                     ImportFinishedCallback(success);
                     if (!string.IsNullOrEmpty(openFile))
@@ -376,13 +376,22 @@ namespace SkylineBatch
                 stepIndex += 1; // step 2 and 3 become step 3 and 4 when refine step is hidden
 
             var runOption = (RunBatchOptions)stepIndex;
-            var running = _configManager.StartBatchRun(runOption);
-            // update ui log and switch to log tab
-            if (running)
+            var checkServersLongWaitDlg = new LongWaitDlg(this, Program.AppName(),
+                Resources.MainForm_RunBatch_Checking_servers_for_files_to_download___);
+
+            if (!_configManager.CanRun(runOption)) return;
+            _configManager.StartCheckingServers(checkServersLongWaitDlg, StartRun);
+        }
+
+        private void StartRun(bool success)
+        {
+            if (!success) return;
+            _configManager.StartBatchRun();
+            RunUi(() =>
             {
                 comboLogList.SelectedIndex = 0;
                 tabMain.SelectTab(tabLog);
-            }
+            });
         }
 
         private void btnCancel_Click(object sender, EventArgs e)
@@ -548,7 +557,7 @@ namespace SkylineBatch
         {
             var importLongWaitDlg = new LongWaitDlg(this, Program.AppName(),
                 string.Format(Resources.MainForm_DoImport_Importing_configurations_from__0____, Path.GetFileName(filePath)));
-            var longWaitOperation = new LongWaitOperation(this, importLongWaitDlg);
+            var longWaitOperation = new LongWaitOperation(importLongWaitDlg);
             _loadingConfigs = true;
             _configManager.StartImport(filePath, longWaitOperation, ImportFinishedCallback, ShowDownloadedFileForm);
             return longWaitOperation;
