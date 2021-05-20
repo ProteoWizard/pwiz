@@ -9,16 +9,16 @@ matrix:
     # works on Precise and Trusty
     - os: linux
       dist: xenial
-      compiler: g++-8
+      compiler: g++
       addons:
         apt:
           sources:
             - ubuntu-toolchain-r-test
           packages:
-            - g++-8
+            - g++
       env:
         - TOOLSET=gcc
-        - MATRIX_EVAL="TOOLSET=toolset=gcc-8"
+        - MATRIX_EVAL="TOOLSET=toolset=gcc"
 
     #
     # Clang
@@ -74,7 +74,7 @@ matrix:
 before_install:
     - eval "${MATRIX_EVAL}"
 
-script: ./quickbuild.sh --abbreviate-paths -j2 pwiz
+script: ./quickbuild.sh --abbreviate-paths -j2 pwiz pwiz_tools/Bumbershoot
 
 notifications:
   webhooks:
