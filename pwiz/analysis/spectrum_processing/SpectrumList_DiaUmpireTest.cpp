@@ -194,6 +194,7 @@ int main(int argc, char* argv[])
             string rawFilepath = (testpath / tokens[0]).string();
             string paramsFilepath = (testpath / tokens[1]).string();
             DiaUmpire::Config config(paramsFilepath);
+            config.maxThreads = 1; // temporarily workaround intermittent testing errors
 
             try
             {
