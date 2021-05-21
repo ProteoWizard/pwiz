@@ -499,7 +499,14 @@ namespace pwiz.Skyline.Model
             var transitionsUnranked = new List<DocNode>();
             foreach (var peak in spectrum.Peaks)
             {
-                transitionsUnranked.Add(TransitionFromPeakAndAnnotations(key, nodeGroupMatched, fragmentCharge, peak, null));
+                try
+                {
+                    transitionsUnranked.Add(TransitionFromPeakAndAnnotations(key, nodeGroupMatched, fragmentCharge, peak, null));
+                }
+                catch (InvalidDataException)
+                {
+                    // Some kind of garbage in peaklist, e.g fragment mass is absurdly small or large - ignore
+                }
             }
             var nodeGroupUnranked = (TransitionGroupDocNode) nodeGroupMatched.ChangeChildren(transitionsUnranked);
             // Filter again, retain only those with rank info,  or at least an interesting name
