@@ -95,7 +95,7 @@ namespace AutoQC
 
         public void UserAddConfig(IConfig iconfig) => UserInsertConfig(iconfig, _configList.Count);
 
-        public new void UserInsertConfig(IConfig iconfig, int index)
+        protected override void UserInsertConfig(IConfig iconfig, int index)
         {
             base.UserInsertConfig(iconfig, index);
             AddConfig(iconfig);
@@ -104,7 +104,7 @@ namespace AutoQC
 
         private void ProgramaticallyAddConfig(IConfig iconfig) => ProgramaticallyInsertConfig(iconfig, _configList.Count);
 
-        private new void ProgramaticallyInsertConfig(IConfig iconfig, int index)
+        protected override void ProgramaticallyInsertConfig(IConfig iconfig, int index)
         {
             base.ProgramaticallyInsertConfig(iconfig, index);
             AddConfig(iconfig);
@@ -115,14 +115,12 @@ namespace AutoQC
             var config = (AutoQcConfig)iconfig;
             if (_configRunners.ContainsKey(config.Name))
             {
+                // TODO: Should the config be programatically removed if this exception is thrown?
+                // If the config has just been added, there should not be another config with this name, and there should not be a config runner
+                // with this name. Should we just replace the existing config runner if this ever happens? 
                 throw new Exception(
                     string.Format("Config runner already exists for configuration with name '{0}'", config.Name));
             }
-
-            // The config should have been validated by the time we get here. No need to check the directory path
-            // var directory = Path.GetDirectoryName(config.MainSettings.SkylineFilePath);
-            // if (directory == null)
-            //     throw new Exception("Cannot have a null Skyline file directory.");
 
             var logFile = config.getConfigFilePath("AutoQC.log");
 
@@ -357,7 +355,7 @@ namespace AutoQC
                     var autoQcConfig = (AutoQcConfig) config;
                     if (!autoQcConfig.IsEnabled)
                         continue;
-                    StartConfig(autoQcConfig);
+                    TryStartConfig(autoQcConfig);
                 }
             }
         }
@@ -373,8 +371,11 @@ namespace AutoQC
                 var configRunner = GetSelectedConfigRunner();
                 if (configRunner.IsStarting() || configRunner.IsStopping())
                 {
-                    var message = string.Format("Cannot stop a configuration that is {0}. Please wait until the configuration has finished {0}.",
-                        configRunner.IsStarting() ? Resources.ConfigManager_UpdateSelectedEnabled_starting : Resources.ConfigManager_UpdateSelectedEnabled_stopping);
+                    var message = string.Format(
+                        "Cannot stop a configuration that is {0}. Please wait for the action to complete.",
+                        configRunner.IsStarting()
+                            ? Resources.ConfigManager_UpdateSelectedEnabled_starting
+                            : Resources.ConfigManager_UpdateSelectedEnabled_stopping);
 
                     DisplayWarning(message);
                     return false;
@@ -407,28 +408,12 @@ namespace AutoQC
                 var selectedConfig = GetSelectedConfig();
                 if (selectedConfig.IsEnabled) // TODO: Do we need this?
                     return false;
-                try
-                {
-                    selectedConfig.Validate();
-                }
-                catch (ArgumentException e)
-                {
-                    DisplayError(TextUtil.LineSeparate(string.Format("Cannot run the configuration '{0}' because it could not be validated.", selectedConfig.Name),
-                                 "The error was:",
-                                 e.Message,
-                                 "Please edit the configuration and try again."));
-
-                    SetConfigInvalid(selectedConfig);
-                    return false;
-                }
-
-                SetConfigValid(selectedConfig);
 
                 var configRunner = GetSelectedConfigRunner();
                 if (configRunner.IsStarting() || configRunner.IsStopping())
                 {
                     var message = string.Format(
-                        "Cannot start a configuration that is {0}. Please wait until the configuration has finished {0}.",
+                        "Cannot start a configuration that is {0}. Please wait for the action to complete.",
                         configRunner.IsStarting()
                             ? Resources.ConfigManager_UpdateSelectedEnabled_starting
                             : Resources.ConfigManager_UpdateSelectedEnabled_stopping);
@@ -437,26 +422,55 @@ namespace AutoQC
                     return false;
                 }
 
-                StartConfig(selectedConfig);
+                try
+                {
+                    StartConfig(selectedConfig);
+                }
+                catch (Exception e)
+                {
+                    DisplayErrorWithException(
+                        TextUtil.LineSeparate($"Error running configuration \"{selectedConfig.Name}.", e.Message), e);
+                    return false;
+                }
+                
                 return true;
+            }
+        }
+
+        // Starts a configuration.  If there are any errors or exceptions they are logged to the program log
+        private void TryStartConfig(AutoQcConfig config)
+        {
+            try
+            {
+                StartConfig(config);
+            }
+            catch (Exception e)
+            {
+                ProgramLog.Error($"There was an error running the configuration \"{config.Name}\".", e);
             }
         }
 
         private void StartConfig(AutoQcConfig config)
         {
-            config.IsEnabled = true;
-            var configRunner = _configRunners[config.Name];
+            _configRunners.TryGetValue(config.Name, out var configRunner);
+
+            if (configRunner == null)
+            {
+                config.IsEnabled = false;
+                _uiControl?.UpdateUiConfigurations();
+                throw new ConfigRunnerException($"Could not find a config runner for name \"{config.Name}\"");
+            }
             ProgramLog.Info(string.Format(Resources.ConfigManager_StartConfig_Starting_configuration___0__, config.Name));
+            config.IsEnabled = true;
             try
             {
                 ((ConfigRunner)configRunner).Start();
             }
-            catch (Exception e)
+            catch (Exception)
             {
-                DisplayErrorWithException(string.Format(Resources.ConfigManager_StartConfig_Error_starting_configuration__0__, configRunner.GetConfig().GetName()) + Environment.NewLine +
-                                          e.Message, e);
-                // ReSharper disable once LocalizableElement
-                ProgramLog.Error(string.Format(Resources.ConfigManager_StartConfig_Error_starting_configuration___0__, configRunner.GetConfig().GetName()), e);
+                config.IsEnabled = false;
+                ((ConfigRunner)configRunner).ChangeStatus(RunnerStatus.Error);
+                throw;
             }
         }
 

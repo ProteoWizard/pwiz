@@ -311,7 +311,7 @@ namespace AutoQC
             try
             {
                 _mainControl.AssertUniqueConfigName(newConfig.Name, _action == ConfigAction.Edit);
-                newConfig.Validate();
+                newConfig.Validate(true);
             }
             catch (ArgumentException e)
             {

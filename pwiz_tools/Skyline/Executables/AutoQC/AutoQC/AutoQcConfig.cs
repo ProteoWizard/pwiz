@@ -182,12 +182,17 @@ namespace AutoQC
 
         public void Validate()
         {
+            Validate(false);
+        }
+
+        public void Validate(bool doServerCheck)
+        {
             if (string.IsNullOrEmpty(Name))
                 throw new ArgumentException("Please enter a name for the configuration.");
 
             MainSettings.ValidateSettings();
             SkylineSettings.Validate();
-            PanoramaSettings.ValidateSettings();
+            PanoramaSettings.ValidateSettings(doServerCheck);
         }
 
         public override string ToString()

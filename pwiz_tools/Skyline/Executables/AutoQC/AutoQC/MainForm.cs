@@ -128,6 +128,7 @@ namespace AutoQC
             UpdateUiConfigurations();
             ListViewSizeChanged();
             UpdateUiLogFiles();
+            _configManager.SaveConfigList();
         }
 
         public void ReplaceSelectedConfig(IConfig config)
@@ -135,6 +136,12 @@ namespace AutoQC
             _configManager.ReplaceSelectedConfig(config);
             UpdateUiConfigurations();
             UpdateUiLogFiles();
+            _configManager.SaveConfigList();
+        }
+
+        public void SetConfigInvalid(IConfig config)
+        {
+            _configManager.SetConfigInvalid(config);
         }
 
         public void ReplaceAllSkylineVersions(SkylineSettings skylineSettings)
@@ -169,6 +176,7 @@ namespace AutoQC
             UpdateUiConfigurations();
             ListViewSizeChanged();
             UpdateUiLogFiles();
+            _configManager.SaveConfigList();
         }
 
         public void FileOpened(string filePath)

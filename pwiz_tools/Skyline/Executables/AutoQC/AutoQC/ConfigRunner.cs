@@ -101,7 +101,7 @@ namespace AutoQC
                 return Color.Orange;
             if (IsError())
                 return Color.Red;
-            if (IsDisconnected())
+            if (!IsStopped()) // Starting / Stopping
                 return Color.DarkOrange;
             return Color.Black;
         }
@@ -155,17 +155,8 @@ namespace AutoQC
         {
             _panoramaUploadError = false;
 
-            try
-            {
-                CreateConfigDir();
-                _logger.Init(); // Create the log file after the config directory has been created.
-                LogStartMessage();
-            }
-            catch (Exception)
-            {
-                ChangeStatus(RunnerStatus.Error);
-                throw;
-            }
+            CreateConfigDir();
+            _logger.Init(); // Create the log file after the config directory has been created.
             
             RunBackgroundWorker(RunConfiguration, ProcessFilesCompleted);
         }
@@ -187,8 +178,8 @@ namespace AutoQC
                 {
                     Config.IsEnabled = false;
                 }
-                _uiControl?.UpdateUiConfigurations();
             }
+            _uiControl?.UpdateUiConfigurations();
         }
 
         private void RunBackgroundWorker(DoWorkEventHandler doWork, RunWorkerCompletedEventHandler doOnComplete)
@@ -218,10 +209,18 @@ namespace AutoQC
             try
             {
                 ChangeStatus(RunnerStatus.Starting);
-                
-                Config.MainSettings.ValidateSettings();
-
-                Config.PanoramaSettings.ValidateSettings();
+                Config.Validate(true);
+            }
+            catch (ArgumentException x)
+            {
+                ((MainForm)_uiControl)?.SetConfigInvalid(Config); // TODO: Another way to add the configs to the invalid config list?
+                SetErrorStateDisplayAndLogException($"Error validating configuration \"{Config.Name}\"", x, false);
+                return;
+            }
+            
+            try
+            {
+                LogStartMessage();
 
                 _fileWatcher = new AutoQCFileSystemWatcher(_logger, this);
 
@@ -258,36 +257,27 @@ namespace AutoQC
                 }
                 e.Result = COMPLETED;
             }
-
-            catch (ArgumentException x)
-            {
-                var err = new StringBuilder(string.Format("There was an error validating configuration \"{0}\"",
-                    Config.Name));
-                
-                LogException(x, err.ToString());
-                ChangeStatus(RunnerStatus.Error);
-
-                err.AppendLine().AppendLine().Append(x.Message);
-                if (_uiControl != null)
-                    _uiControl.DisplayError("Configuration Validation Error:" + Environment.NewLine + err);
-            }
             catch (FileWatcherException x)
             {
-                var err = new StringBuilder(string.Format("There was an error looking for files for configuration \"{0}\".",
-                    Config.Name));
-
-                LogException(x, err.ToString());
-                ChangeStatus(RunnerStatus.Error);
-
-                err.AppendLine().AppendLine().Append(x.Message);
-                if (_uiControl != null)
-                    _uiControl.DisplayError("File Watcher Error" + Environment.NewLine + err);   
+                SetErrorStateDisplayAndLogException($"There was an error looking for files for configuration \"{Config.Name}\"", x);
             }
             catch (Exception x)
             {
-                LogException(x, "There was an error running configuration \"{0}\"",
-                    Config.Name);
-                ChangeStatus(RunnerStatus.Error);
+                SetErrorStateDisplayAndLogException($"There was an error running configuration \"{Config.Name}\"", x);
+            }
+        }
+
+        private void SetErrorStateDisplayAndLogException(string message, Exception x, bool showException = true)
+        {
+            LogException(x, message);
+            ChangeStatus(RunnerStatus.Error);
+            if (showException)
+            {
+                _uiControl?.DisplayErrorWithException(message, x);
+            }
+            else
+            {
+                _uiControl?.DisplayError(TextUtil.LineSeparate(message, x.Message));
             }
         }
 
@@ -1071,6 +1061,10 @@ namespace AutoQC
     public class ConfigRunnerException : SystemException
     {
         public ConfigRunnerException(string message, Exception innerException) : base(message, innerException)
+        {
+        }
+
+        public ConfigRunnerException(string message) : base(message)
         {
         }
     }

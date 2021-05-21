@@ -35,7 +35,7 @@ namespace AutoQC
                 textPanoramaEmail.Text, textPanoramaPasswd.Text, textPanoramaFolder.Text);
             try
             {
-                _panoramaSettings.ValidateSettings();
+                _panoramaSettings.ValidateSettings(true);
                 return true;
             }
             catch (ArgumentException e)

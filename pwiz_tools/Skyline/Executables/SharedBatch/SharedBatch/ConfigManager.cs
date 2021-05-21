@@ -84,7 +84,7 @@ namespace SharedBatch
             return _runningUi ? Settings.Default.ConfigList.ToList() : new List<IConfig>();
         }
 
-        protected void ProgramaticallyInsertConfig(IConfig config, int index)
+        protected virtual void ProgramaticallyInsertConfig(IConfig config, int index)
         {
             _configList.Insert(index, config);
             try
@@ -104,7 +104,7 @@ namespace SharedBatch
             SaveConfigList();
         }
 
-        private void SaveConfigList()
+        public void SaveConfigList()
         {
             var updatedConfigs = new ConfigList();
             foreach (var config in _configList)
@@ -259,6 +259,7 @@ namespace SharedBatch
                     _configValidation[config.GetName()] = true;
                 }
             }
+            _uiControl.UpdateUiConfigurations();
         }
 
         public void SetConfigInvalid(IConfig config)
@@ -270,6 +271,7 @@ namespace SharedBatch
                     _configValidation[config.GetName()] = false;
                 }
             }
+            _uiControl.UpdateUiConfigurations();
         }
 
         public IConfig GetLastModified() // creates config using most recently modified config
@@ -298,7 +300,7 @@ namespace SharedBatch
             }
         }
 
-        protected void UserInsertConfig(IConfig config, int index)
+        protected virtual void UserInsertConfig(IConfig config, int index)
         {
             lock (_lock)
             {

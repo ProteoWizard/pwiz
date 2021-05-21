@@ -54,29 +54,6 @@ namespace AutoQC
 
         private Uri ValidateAndGetServerUri(string panoramaServerUrl)
         {
-            if (string.IsNullOrWhiteSpace(panoramaServerUrl))
-            {
-                throw new ArgumentException(string.Format(Resources.PanoramaSettings_ValidateSettings_The__0__cannot_be_empty__Please_specify_a__0__,
-                    Resources.PanoramaSettings_ValidateSettings_Panorama_server_Url));
-            }
-
-            if (string.IsNullOrWhiteSpace(PanoramaUserEmail))
-            {
-                throw new ArgumentException(string.Format(Resources.PanoramaSettings_ValidateSettings_The__0__cannot_be_empty__Please_specify_a__0__,
-                    Resources.PanoramaSettings_ValidateSettings_Panorama_login_email));
-            }
-            if (string.IsNullOrWhiteSpace(PanoramaPassword))
-            {
-                throw new ArgumentException(string.Format(Resources.PanoramaSettings_ValidateSettings_The__0__cannot_be_empty__Please_specify_a__0__,
-                    Resources.PanoramaSettings_ValidateSettings_Panorama_user_password));
-            }
-
-            if (string.IsNullOrWhiteSpace(PanoramaFolder))
-            {
-                throw new ArgumentException(string.Format(Resources.PanoramaSettings_ValidateSettings_The__0__cannot_be_empty__Please_specify_a__0__,
-                    Resources.PanoramaSettings_ValidateSettings_folder_on_the_Panorama_server));
-            }
-
             PanoramaServer panoramaServer;
             try
             {
@@ -117,14 +94,41 @@ namespace AutoQC
             return panoramaServer.ServerUri;
         }
 
-        public void ValidateSettings()
+        public void ValidateSettings(bool doServerCheck)
         {
             if (!PublishToPanorama)
             {
                 return;
             }
-            PanoramaServerUri = ValidateAndGetServerUri(PanoramaServerUrl);
-            PanoramaServerUrl = PanoramaServerUri.AbsoluteUri;
+
+            if (string.IsNullOrWhiteSpace(PanoramaServerUrl))
+            {
+                throw new ArgumentException(string.Format(Resources.PanoramaSettings_ValidateSettings_The__0__cannot_be_empty__Please_specify_a__0__,
+                    Resources.PanoramaSettings_ValidateSettings_Panorama_server_Url));
+            }
+
+            if (string.IsNullOrWhiteSpace(PanoramaUserEmail))
+            {
+                throw new ArgumentException(string.Format(Resources.PanoramaSettings_ValidateSettings_The__0__cannot_be_empty__Please_specify_a__0__,
+                    Resources.PanoramaSettings_ValidateSettings_Panorama_login_email));
+            }
+            if (string.IsNullOrWhiteSpace(PanoramaPassword))
+            {
+                throw new ArgumentException(string.Format(Resources.PanoramaSettings_ValidateSettings_The__0__cannot_be_empty__Please_specify_a__0__,
+                    Resources.PanoramaSettings_ValidateSettings_Panorama_user_password));
+            }
+
+            if (string.IsNullOrWhiteSpace(PanoramaFolder))
+            {
+                throw new ArgumentException(string.Format(Resources.PanoramaSettings_ValidateSettings_The__0__cannot_be_empty__Please_specify_a__0__,
+                    Resources.PanoramaSettings_ValidateSettings_folder_on_the_Panorama_server));
+            }
+
+            if (doServerCheck)
+            {
+                PanoramaServerUri = ValidateAndGetServerUri(PanoramaServerUrl);
+                PanoramaServerUrl = PanoramaServerUri.AbsoluteUri;
+            }
         }
 
         // Changed DataProtectionScope from LocalMachine to CurrentUser

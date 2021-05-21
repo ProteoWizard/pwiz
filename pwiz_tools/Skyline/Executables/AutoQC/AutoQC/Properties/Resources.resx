@@ -226,9 +226,6 @@
   <data name="ConfigManager_UpdateSelectedEnabled_Are_you_sure_you_want_to_stop_configuration__0__" xml:space="preserve">
     <value>Are you sure you want to stop configuration {0}?</value>
   </data>
-  <data name="ConfigManager_StartConfig_Error_starting_configuration__0__" xml:space="preserve">
-    <value>Error starting configuration {0}:</value>
-  </data>
   <data name="ConfigManager_Import_Number_of_configurations_imported__" xml:space="preserve">
     <value>Number of configurations imported: </value>
   </data>
@@ -270,9 +267,6 @@
   </data>
   <data name="ConfigManager_StartConfig_Starting_configuration___0__" xml:space="preserve">
     <value>Starting configuration "{0}"</value>
-  </data>
-  <data name="ConfigManager_StartConfig_Error_starting_configuration___0__" xml:space="preserve">
-    <value>Error starting configuration "{0}"</value>
   </data>
   <data name="ConfigManager_Import_An_error_occurred_while_importing_configurations_from__0__" xml:space="preserve">
     <value>An error occurred while importing configurations from {0}:</value>

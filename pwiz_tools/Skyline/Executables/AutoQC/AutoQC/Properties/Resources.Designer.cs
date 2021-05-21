@@ -397,24 +397,6 @@ namespace AutoQC.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error starting configuration &quot;{0}&quot;.
-        /// </summary>
-        internal static string ConfigManager_StartConfig_Error_starting_configuration___0__ {
-            get {
-                return ResourceManager.GetString("ConfigManager_StartConfig_Error_starting_configuration___0__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Error starting configuration {0}:.
-        /// </summary>
-        internal static string ConfigManager_StartConfig_Error_starting_configuration__0__ {
-            get {
-                return ResourceManager.GetString("ConfigManager_StartConfig_Error_starting_configuration__0__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Starting configuration &quot;{0}&quot;.
         /// </summary>
         internal static string ConfigManager_StartConfig_Starting_configuration___0__ {
