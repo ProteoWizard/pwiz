@@ -111,7 +111,13 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 // just be able to move to the next page.
                 RunUI(() => Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page));
                 RunUI(() => importPeptideSearchDlg.ClickNextButton());
-                // Modifications are already set up, so that page should get skipped.
+
+                // Skip Match Modifications page.
+                RunUI(() =>
+                {
+                    AssertEx.AreEqual(ImportPeptideSearchDlg.Pages.match_modifications_page, importPeptideSearchDlg.CurrentPage);
+                    AssertEx.IsTrue(importPeptideSearchDlg.ClickNextButton());
+                });
 
                 // Make sure we're set up for ion mobility filtering - these settings should come from skyline file
                 AssertEx.IsTrue(importPeptideSearchDlg.FullScanSettingsControl.IonMobilityFiltering.IsUseSpectralLibraryIonMobilities);
