@@ -78,7 +78,7 @@ matrix:
 before_install:
     - eval "${MATRIX_EVAL}"
 
-script: ./quickbuild.sh --abbreviate-paths -j2 $(TARGETS)
+script: ./quickbuild.sh --abbreviate-paths -j2 ${TARGETS}
 
 notifications:
   webhooks:
