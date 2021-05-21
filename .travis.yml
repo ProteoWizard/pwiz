@@ -17,7 +17,7 @@ matrix:
           packages:
             - g++-9
       env:
-        - TOOLSET=gcc
+        - TOOLSET=gcc-9
         - TARGETS="pwiz pwiz_tools/Bumbershoot"
         - MATRIX_EVAL="TOOLSET=toolset=gcc-9"
 
@@ -78,7 +78,7 @@ matrix:
 before_install:
     - eval "${MATRIX_EVAL}"
 
-script: ./quickbuild.sh --abbreviate-paths -j2 ${TARGETS}
+script: ./quickbuild.sh --abbreviate-paths -j2 $TARGETS
 
 notifications:
   webhooks:
