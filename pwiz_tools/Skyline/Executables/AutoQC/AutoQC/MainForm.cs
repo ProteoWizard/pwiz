@@ -59,6 +59,7 @@ namespace AutoQC
                 _loaded = true;
                 if (Settings.Default.KeepAutoQcRunning)
                     _configManager.RunEnabled();
+                _configManager.DoServerValidation();
                 if (!string.IsNullOrEmpty(openFile))
                     FileOpened(openFile);
             });

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -147,22 +148,19 @@ namespace AutoQC
             lock (_lock)
             {
                 var configRunner = (ConfigRunner)_configRunners[_configList[index].GetName()];
-                if (configRunner.IsBusy())
+                if (configRunner.IsBusy()) // Not stopped or error
                 {
-                    string message = null;
-                    if (configRunner.IsStarting() || configRunner.IsRunning())
+                    string message;
+                    
+                    if (configRunner.IsPending()) // Stopping / Starting / Loading
                     {
                         message =
-                            string.Format(
-                                Resources.MainForm_btnDelete_Click_Configuration___0___is_running__Please_stop_the_configuration_and_try_again__,
-                                configRunner.GetConfigName());
+                            ($"The configuration \"{configRunner.GetConfigName()}\" is {configRunner.GetStatus().ToString()}. Please wait for the action to complete and try again.");
                     }
-                    else if (configRunner.IsStopping())
+                    else
                     {
                         message =
-                            string.Format(
-                                Resources.MainForm_btnDelete_Click_Please_wait_for_the_configuration___0___to_stop_and_try_again_,
-                                configRunner.GetConfigName());
+                            ($"The configuration \"{configRunner.GetConfigName()}\" is running. Please stop the configuration and try again.");
                     }
                     DisplayWarning(message);
                     return;
@@ -346,6 +344,16 @@ namespace AutoQC
             return (ConfigRunner)_configRunners[GetSelectedConfig().GetName()];
         }
 
+        public ConfigRunner GetConfigRunner(IConfig config)
+        {
+            if (_configRunners.TryGetValue(config.GetName(), out var configRunner))
+            {
+                return (ConfigRunner) configRunner;
+            }
+
+            return null;
+        }
+
         public void RunEnabled()
         {
             lock (_lock)
@@ -360,6 +368,53 @@ namespace AutoQC
             }
         }
 
+        public void DoServerValidation()
+        {
+            lock (_lock)
+            {
+                foreach (var config in _configList)
+                {
+                    var autoQcConfig = (AutoQcConfig)config;
+                    if (autoQcConfig.IsEnabled || !IsConfigValid(autoQcConfig))
+                    {
+                        continue; // Config is either running, or is already marked as invalid
+                    }
+
+                    var worker = new BackgroundWorker { WorkerSupportsCancellation = false, WorkerReportsProgress = false };
+                    worker.DoWork += ValidateServerSettings;
+                    worker.RunWorkerAsync(argument: config);
+                }
+            }
+        }
+
+        private void ValidateServerSettings(object sender, DoWorkEventArgs e)
+        {
+            AutoQcConfig config = (AutoQcConfig) e.Argument;
+            if (config != null && config.PanoramaSettings.PublishToPanorama)
+            {
+                ConfigRunner configRunner = GetConfigRunner(config);
+                if (configRunner != null)
+                {
+                    try
+                    {
+                        // Change the status while we are validating.
+                        configRunner.ChangeStatus(RunnerStatus.Loading);
+                        // Thread.Sleep(5000);
+                        // Only validate the Panorama server settings. Everything else should already have been validated
+                        config.PanoramaSettings.ValidateSettings(true);
+                    }
+                    catch (ArgumentException)
+                    {
+                        SetConfigInvalid(config);
+                    }
+                    finally
+                    {
+                        configRunner.ChangeStatus(RunnerStatus.Stopped);
+                    }
+                }
+            }
+        }
+
         public bool StopConfiguration()
         {
             lock (_lock)
@@ -369,13 +424,11 @@ namespace AutoQC
                     return false;
                 
                 var configRunner = GetSelectedConfigRunner();
-                if (configRunner.IsStarting() || configRunner.IsStopping())
+                if (configRunner.IsPending())
                 {
-                    var message = string.Format(
-                        "Cannot stop a configuration that is {0}. Please wait for the action to complete.",
-                        configRunner.IsStarting()
-                            ? Resources.ConfigManager_UpdateSelectedEnabled_starting
-                            : Resources.ConfigManager_UpdateSelectedEnabled_stopping);
+                    var action = configRunner.GetStatus().ToString();
+                    var message =
+                        $"Cannot stop a configuration that is {action}. Please wait for the action to complete.";
 
                     DisplayWarning(message);
                     return false;
@@ -410,13 +463,11 @@ namespace AutoQC
                     return false;
 
                 var configRunner = GetSelectedConfigRunner();
-                if (configRunner.IsStarting() || configRunner.IsStopping())
+                if (configRunner.IsPending())
                 {
-                    var message = string.Format(
-                        "Cannot start a configuration that is {0}. Please wait for the action to complete.",
-                        configRunner.IsStarting()
-                            ? Resources.ConfigManager_UpdateSelectedEnabled_starting
-                            : Resources.ConfigManager_UpdateSelectedEnabled_stopping);
+                    var action = configRunner.GetStatus().ToString();
+                    var message =
+                        $"Cannot start a configuration that is {action}. Please wait for the action to complete.";
 
                     DisplayWarning(message);
                     return false;

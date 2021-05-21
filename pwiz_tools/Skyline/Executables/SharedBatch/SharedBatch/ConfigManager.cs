@@ -229,6 +229,12 @@ namespace SharedBatch
             return _configValidation[_configList[index].GetName()];
         }
 
+        public bool IsConfigValid(IConfig config)
+        {
+            _configValidation.TryGetValue(config.GetName(), out var isValid);
+            return isValid;
+        }
+
         public void UpdateConfigValidation()
         {
             lock (_lock)

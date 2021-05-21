@@ -43,6 +43,7 @@ namespace SharedBatch
     public enum RunnerStatus
     {
         Waiting,
+        Loading,
         Starting,
         Running,
         Canceling,

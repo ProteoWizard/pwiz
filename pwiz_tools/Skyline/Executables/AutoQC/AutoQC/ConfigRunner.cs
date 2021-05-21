@@ -101,7 +101,7 @@ namespace AutoQC
                 return Color.Orange;
             if (IsError())
                 return Color.Red;
-            if (!IsStopped()) // Starting / Stopping
+            if (IsPending()) // Starting / Stopping / Validating
                 return Color.DarkOrange;
             return Color.Black;
         }
@@ -878,6 +878,11 @@ namespace AutoQC
             return !IsStopped();
         }
 
+        public bool IsPending()
+        {
+            return IsStarting() || IsStopping() || IsLoading();
+        }
+
         public bool IsStopping()
         {
             return _runnerStatus == RunnerStatus.Stopping;
@@ -891,6 +896,11 @@ namespace AutoQC
         public bool IsStarting()
         {
             return _runnerStatus == RunnerStatus.Starting;
+        }
+
+        public bool IsLoading()
+        {
+            return _runnerStatus == RunnerStatus.Loading;
         }
 
         public bool IsRunning()
@@ -911,11 +921,6 @@ namespace AutoQC
         public bool CanStart()
         {
             return IsStopped() || IsDisconnected() || IsError();
-        }
-
-        public bool CanStop()
-        {
-            return IsRunning();
         }
 
         public string ImportResultsFileArgs(ImportContext importContext)

@@ -700,26 +700,6 @@ namespace AutoQC.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Configuration &quot;{0}&quot; is running. Please stop the configuration and try again. .
-        /// </summary>
-        internal static string MainForm_btnDelete_Click_Configuration___0___is_running__Please_stop_the_configuration_and_try_again__ {
-            get {
-                return ResourceManager.GetString("MainForm_btnDelete_Click_Configuration___0___is_running__Please_stop_the_configur" +
-                        "ation_and_try_again__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Please wait for the configuration &quot;{0}&quot; to stop and try again..
-        /// </summary>
-        internal static string MainForm_btnDelete_Click_Please_wait_for_the_configuration___0___to_stop_and_try_again_ {
-            get {
-                return ResourceManager.GetString("MainForm_btnDelete_Click_Please_wait_for_the_configuration___0___to_stop_and_try_" +
-                        "again_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to File location does not exist: {0}.
         /// </summary>
         internal static string MainForm_btnOpenFolder_Click_File_location_does_not_exist___0_ {
