@@ -70,7 +70,7 @@ namespace freicore
 
         bool isValidEntry()
         {
-            size_t totalComps;
+            size_t totalComps = 0;
             totalComps += numTargetUnmodComparisons;
             totalComps += numDecoyUnmodComparisons;
             totalComps += numTargetModComparisons;
