@@ -920,7 +920,7 @@ namespace AutoQC
 
         public bool CanStart()
         {
-            return IsStopped() || IsDisconnected() || IsError();
+            return IsStopped() || IsError();
         }
 
         public string ImportResultsFileArgs(ImportContext importContext)

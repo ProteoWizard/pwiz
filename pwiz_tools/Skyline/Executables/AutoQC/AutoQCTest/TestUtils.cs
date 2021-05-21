@@ -63,14 +63,27 @@ namespace AutoQCTest
             var panoramaServerUrl = publishToPanorama ? "https://panoramaweb.org/" : "";
             var panoramaUserEmail = publishToPanorama ? "skyline_tester@proteinms.net" : "";
             var panoramaPassword = publishToPanorama ? "lclcmsms" : "";
-            var panoramaFolder = publishToPanorama ? "/SkylineTest" : "";
+            var panoramaProject = publishToPanorama ? "/SkylineTest" : "";
 
-            return new PanoramaSettings(publishToPanorama, panoramaServerUrl, panoramaUserEmail, panoramaPassword, panoramaFolder);
+            return new PanoramaSettings(publishToPanorama, panoramaServerUrl, panoramaUserEmail, panoramaPassword, panoramaProject);
+        }
+
+        public static PanoramaSettings GetNoPublishPanoramaSettings()
+        {
+            return new PanoramaSettings(false, null, null, null, null);
         }
 
         public static SkylineSettings GetTestSkylineSettings()
         {
-            return new SkylineSettings(SkylineType.Custom, "C:\\Program Files\\Skyline");
+            if (SkylineInstallations.FindSkyline())
+            {
+                if (SkylineInstallations.HasSkyline)
+                    return new SkylineSettings(SkylineType.Skyline);
+                if (SkylineInstallations.HasSkylineDaily)
+                    return new SkylineSettings(SkylineType.SkylineDaily);
+            }
+
+            return null;
         }
 
         public static AutoQcConfig GetTestConfig(string name)

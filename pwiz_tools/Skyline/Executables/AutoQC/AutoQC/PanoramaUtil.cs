@@ -541,12 +541,11 @@ namespace AutoQC
             return true;
         }
 
-        public FolderOperationStatus CreateFolder(string folderPath, string folderName, string username, string password)
+        public FolderOperationStatus CreateFolder(string parentPath, string folderName, string username, string password)
         {
-
-            if (IsValidFolder($@"{folderPath}/{folderName}", username, password) == FolderState.valid)
+            if (IsValidFolder($@"{parentPath}/{folderName}", username, password) == FolderState.valid)
                 return FolderOperationStatus.alreadyexists;        //cannot create a folder with the same name
-            var parentFolderStatus = IsValidFolder(folderPath, username, password);
+            var parentFolderStatus = IsValidFolder(parentPath, username, password);
             switch (parentFolderStatus)
             {
                 case FolderState.nopermission:
@@ -570,7 +569,7 @@ namespace AutoQC
             {
                 using (var webClient = new WebClientWithCredentials(ServerUri, username, password))
                 {
-                    Uri requestUri = PanoramaUtil.CallNewInterface(ServerUri, @"core", folderPath, @"createContainer", "", true);
+                    Uri requestUri = PanoramaUtil.CallNewInterface(ServerUri, @"core", parentPath, @"createContainer", "", true);
                     webClient.Post(requestUri, createRequest);
                     return FolderOperationStatus.OK;
                 }

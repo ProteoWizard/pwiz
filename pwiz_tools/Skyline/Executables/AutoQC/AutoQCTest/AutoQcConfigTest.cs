@@ -35,7 +35,7 @@ namespace AutoQCTest
         public void TestValidateMainSettings()
         {
             var skylinePath = TestUtils.GetTestFilePath("EmptyTemplate.sky");
-            var folderToWatch = TestUtils.GetTestFilePath("Config");
+            var folderToWatch = TestUtils.CreateTestFolder("Config");
             var resultsWindow = "51";
             var acquisitionTime = "500";
 
@@ -112,22 +112,22 @@ namespace AutoQCTest
             TestInvalidPanoramaSettings(new PanoramaSettings(true, string.Empty, "testEmail", "testPassword", "testFolder"),
                 "The Panorama server Url cannot be empty. Please specify a Panorama server Url.");
             TestInvalidPanoramaSettings(new PanoramaSettings(true, "https://panoramaweb.org/", "bad_email@bad.bad", "testPassword", "testFolder"),
-                "Error verifying server information.\r\nThe username and password could not be authenticated with the panorama server. Please try again.");
+                "Error verifying server information.\r\nThe username and password could not be authenticated with the panorama server.");
             TestInvalidPanoramaSettings(new PanoramaSettings(true, "https://panoramaweb.org/", string.Empty, "testPassword", "testFolder"),
                 "The Panorama login email cannot be empty. Please specify a Panorama login email.");
             TestInvalidPanoramaSettings(new PanoramaSettings(true, "https://panoramaweb.org/", "testEmail", "not_the_password", "testFolder"),
-                "Error verifying server information.\r\nThe username and password could not be authenticated with the panorama server. Please try again.");
+                "Error verifying server information.\r\nThe username and password could not be authenticated with the panorama server.");
             TestInvalidPanoramaSettings(new PanoramaSettings(true, "https://panoramaweb.org/", "testEmail", string.Empty, "testFolder"),
                 "The Panorama user password cannot be empty. Please specify a Panorama user password.");
             TestInvalidPanoramaSettings(new PanoramaSettings(true, "https://panoramaweb.org/", "testEmail", "testPassword", ""),
                 "The folder on the Panorama server cannot be empty. Please specify a folder on the Panorama server.");
 
-            var noPublishToPanorama = new PanoramaSettings();
+            var noPublishToPanorama = TestUtils.GetNoPublishPanoramaSettings();
             var validPanoramaSettings = TestUtils.GetTestPanoramaSettings();
             try
             {
-                noPublishToPanorama.ValidateSettings();
-                validPanoramaSettings.ValidateSettings();
+                noPublishToPanorama.ValidateSettings(true);
+                validPanoramaSettings.ValidateSettings(true);
             }
             catch (Exception e)
             {
@@ -140,7 +140,7 @@ namespace AutoQCTest
         {
             try
             {
-                testPanoramaSettings.ValidateSettings();
+                testPanoramaSettings.ValidateSettings(true);
                 Assert.Fail("Should have failed to validate PanoramaSettings with Error:" + Environment.NewLine + expectedError);
             }
             catch (ArgumentException e)
@@ -155,8 +155,10 @@ namespace AutoQCTest
             var mainSettings = new MainSettings(@"C:\Dummy\path\Test_file.sky", string.Empty, false, null, true,
                 MainSettings.ACCUM_TIME_WINDOW.ToString(), "Thermo", MainSettings.ACQUISITION_TIME.ToString());
             var fsUtil = new TestFileSystemUtil();
-
-            Assert.AreEqual(new DateTime(2015, 06, 01), mainSettings.GetLastArchivalDate(fsUtil));
+            var config = new AutoQcConfig("Test Config", false, DateTime.MinValue, DateTime.MinValue, mainSettings,
+                TestUtils.GetNoPublishPanoramaSettings(), TestUtils.GetTestSkylineSettings());
+            ConfigRunner configRunner = new ConfigRunner(config, TestUtils.GetTestLogger(config), null);
+            Assert.AreEqual(new DateTime(2015, 06, 01), configRunner.GetLastArchivalDate(fsUtil));
         }
 
 
@@ -179,7 +181,7 @@ namespace AutoQCTest
             var panoramaSettingsTwo = new PanoramaSettings(true, "https://panoramaweb.org/", "bad@email.edu",
                 "BadPassword", "badfolder");
             Assert.IsTrue(Equals(panoramaSettingsOne, panoramaSettingsTwo));
-            var differentPanoramaSettings = new PanoramaSettings();
+            var differentPanoramaSettings = TestUtils.GetNoPublishPanoramaSettings();
             Assert.IsFalse(Equals(panoramaSettingsOne, null));
             Assert.IsFalse(Equals(panoramaSettingsOne, differentPanoramaSettings));
         }
