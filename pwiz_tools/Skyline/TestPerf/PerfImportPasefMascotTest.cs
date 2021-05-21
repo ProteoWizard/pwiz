@@ -161,7 +161,13 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 RunUI(() => importPeptideSearchDlg.ClickNextButtonNoCheck());
             }
 
-            // Modifications are already set up, so that page should get skipped.
+            // Skip Match Modifications page.
+            RunUI(() =>
+            {
+                AssertEx.AreEqual(ImportPeptideSearchDlg.Pages.match_modifications_page, importPeptideSearchDlg.CurrentPage);
+                AssertEx.IsTrue(importPeptideSearchDlg.ClickNextButton());
+            });
+
             RunUI(() => AssertEx.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.full_scan_settings_page));
 
             RunUI(() => importPeptideSearchDlg.FullScanSettingsControl.PrecursorCharges = new []{2,3,4,5});
