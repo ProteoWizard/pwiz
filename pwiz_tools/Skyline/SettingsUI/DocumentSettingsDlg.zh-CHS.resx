@@ -475,7 +475,7 @@
     <value>10</value>
   </data>
   <data name="btnManageLists.Text" xml:space="preserve">
-    <value>管理列表(&amp;M)...</value>
+    <value>管理列表(&amp;M)…</value>
   </data>
   <data name="&gt;&gt;btnManageLists.Name" xml:space="preserve">
     <value>btnManageLists</value>

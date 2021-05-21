@@ -23,6 +23,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using SharedBatch;
@@ -37,6 +38,7 @@ namespace SkylineBatch
 
         private readonly Dictionary<string, IConfigRunner> _configRunners; // dictionary mapping from config name to that config's runner
         private readonly Dictionary<string, string> _refinedTemplates; // dictionary mapping from config name to it's refined output file (not included if no refinement occurs)
+        //private readonly Dictionary<string, DataServerInfo> _dataServers; // dictionary mapping from config name to it's refined output file (not included if no refinement occurs)
 
         // Shared variables with ConfigManager:
         //  Protected -
@@ -64,6 +66,7 @@ namespace SkylineBatch
             _logList.Add(logger);
             _configRunners = new Dictionary<string, IConfigRunner>();
             _refinedTemplates = new Dictionary<string, string>();
+            //_dataServers = new Dictionary<string, DataServerInfo>();
 
             _uiControl = uiControl;
             _runningUi = uiControl != null;
@@ -82,6 +85,8 @@ namespace SkylineBatch
                 _logList[0].Archive();
                 _logList[0].Close();
             }
+            foreach (var runner in _configRunners.Values)
+                runner.Cancel();
         }
 
         private new void LoadConfigList()
@@ -89,12 +94,14 @@ namespace SkylineBatch
             lock (_lock)
             {
                 var configs = base.LoadConfigList();
-                configs = AssignDependencies(configs, true, out string warningMessage); // ignore warning
+                configs = AssignDependencies(configs, true, out _); // ignore warning
                 foreach (var config in configs)
                     ProgramaticallyAddConfig(config);
                 DisableInvalidConfigs();
             }
         }
+
+        //public List<string> GetServerNames => _dataServers.Keys.ToList();
 
         #region Add/Remove Configs
 
@@ -116,7 +123,7 @@ namespace SkylineBatch
             {
                 var config = (SkylineBatchConfig) iconfig;
                 var dependentName = config.MainSettings.DependentConfigName;
-                if (dependentName != null)
+                if (!string.IsNullOrEmpty(dependentName))
                 {
                     SkylineBatchConfig dependentConfig;
                     try
@@ -158,7 +165,7 @@ namespace SkylineBatch
                     !config.RefineSettings.OutputFilePath.Equals(replacingConfig.RefineSettings.OutputFilePath);
                 if (oldDependencies.ContainsKey(config.Name) && (nameChanged || refineFileChanged))
                 {
-                    var runningConfigs = ConfigsRunning();
+                    var runningConfigs = ConfigsBusy();
                     var runningDependentConfigs = oldDependencies[config.Name].Where(x => runningConfigs.Contains(x)).ToList();
                     if (runningDependentConfigs.Any())
                     {
@@ -167,9 +174,7 @@ namespace SkylineBatch
                             Environment.NewLine +
                             TextUtil.LineSeparate(runningDependentConfigs) + Environment.NewLine + Environment.NewLine +
                             Resources.SkylineBatchConfigManager_UserReplaceSelected_Please_wait_until_the_dependent_configurations_have_stopped_to_change_these_values_);
-                        var newRefineSettings = new RefineSettings(replacingConfig.RefineSettings.CommandValues,
-                            replacingConfig.RefineSettings.RemoveDecoys,
-                            replacingConfig.RefineSettings.RemoveResults, config.RefineSettings.OutputFilePath);
+                        var newRefineSettings = RefineSettings.GetPathChanged(replacingConfig.RefineSettings, config.RefineSettings.OutputFilePath);
                         newConfig = new SkylineBatchConfig(config.Name, replacingConfig.Enabled, DateTime.Now,
                             replacingConfig.MainSettings,
                             replacingConfig.FileSettings, newRefineSettings, replacingConfig.ReportSettings,
@@ -236,6 +241,9 @@ namespace SkylineBatch
 
             if (config.RefineSettings.WillRefine())
                 _refinedTemplates.Add(config.Name, config.RefineSettings.OutputFilePath);
+            var server = config.MainSettings.Server;
+            //if (server != null && !_dataServers.ContainsKey(server.Url))
+            //    AddValidServer(server);
         }
 
         private Dictionary<string, List<string>> GetDependencies()
@@ -245,7 +253,7 @@ namespace SkylineBatch
             {
                 var config = (SkylineBatchConfig) iconfig;
                 var dependentConfigName = config.MainSettings.DependentConfigName;
-                if (dependentConfigName != null)
+                if (!string.IsNullOrEmpty(dependentConfigName))
                 {
                     if (!dependencies.ContainsKey(dependentConfigName))
                         dependencies.Add(dependentConfigName, new List<string>());
@@ -272,7 +280,7 @@ namespace SkylineBatch
                 var configDependencies = GetDependencies();
                 if (configDependencies.ContainsKey(removingConfigName))
                 {
-                    var runningConfigs = ConfigsRunning();
+                    var runningConfigs = ConfigsBusy();
                     var runningDependentConfigs = configDependencies[removingConfigName].Where(x => runningConfigs.Contains(x)).ToList();
 
                     if (runningDependentConfigs.Any())
@@ -418,7 +426,7 @@ namespace SkylineBatch
         {
             lock (_lock)
             {
-                var runningConfigs = ConfigsRunning();
+                var runningConfigs = ConfigsBusy();
                 var replacingConfigs = GetReplacedSkylineSettings(skylineSettings, runningConfigs);
                 foreach (var indexAndConfig in replacingConfigs)
                 {
@@ -491,7 +499,7 @@ namespace SkylineBatch
         public bool StartBatchRun(int startStep)
         {
             // Check that no configs are currently running
-            var configsRunning = ConfigsRunning();
+            var configsRunning = ConfigsBusy();
             if (configsRunning.Count > 0)
             {
                 DisplayError(Resources.ConfigManager_RunAll_Cannot_run_while_the_following_configurations_are_running_ + Environment.NewLine +
@@ -564,7 +572,7 @@ namespace SkylineBatch
                 overwriteMessage.Append(Resources.SkylineBatchConfigManager_StartBatchRun_Do_you_want_to_continue_);
                 if (showOverwriteMessage)
                 {
-                    if (DisplayLargeQuestion(overwriteMessage.ToString()) != DialogResult.Yes)
+                    if (DisplayLargeOkCancel(overwriteMessage.ToString()) != DialogResult.OK)
                         return false;
                 }
 
@@ -579,7 +587,7 @@ namespace SkylineBatch
                 if (oldLogger != null)
                     _logList.Insert(1, oldLogger);
             }
-            _ = RunAsync(startStep);
+            new Thread(() => _ = RunAsync(startStep)).Start();
             return true;
         }
 
@@ -603,6 +611,7 @@ namespace SkylineBatch
                 }
                 catch (Exception e)
                 {
+                    startingConfigRunner.ChangeStatus(RunnerStatus.Error);
                     DisplayErrorWithException(string.Format(Resources.SkylineBatchConfigManager_RunAsync_An_unexpected_error_occurred_while_running__0_, nextConfig), e);
                 }
 
@@ -627,7 +636,7 @@ namespace SkylineBatch
             }
         }
 
-        public List<string> ConfigsRunning()
+        public List<string> ConfigsBusy()
         {
             var configsRunning = new List<string>();
             lock (_lock)
@@ -639,6 +648,19 @@ namespace SkylineBatch
                 }
             }
             return configsRunning;
+        }
+
+        public bool ConfigRunning()
+        {
+            lock (_lock)
+            {
+                foreach (var runner in _configRunners.Values)
+                {
+                    if (runner.IsRunning())
+                        return true;
+                }
+            }
+            return false;
         }
 
         public void CancelRunners()
@@ -744,29 +766,27 @@ namespace SkylineBatch
 
         #endregion
 
+        /*public void AddValidServer(DataServerInfo server)
+        {
+            if (!_dataServers.ContainsKey(server.Name))
+                _dataServers.Add(server.Name, server);
+        }
+
+        public DataServerInfo GetServer(string name)
+        {
+            return _dataServers[name];
+        }*/
+
         #region Import/Export
 
         public void Import(string filePath, ShowDownloadedFileForm showDownloadedFileForm)
         {
             var importedConfigs = ImportFrom(filePath, showDownloadedFileForm);
-            HandleImportedConfigs(importedConfigs);
-            /*importedConfigs = AssignDependencies(importedConfigs, out string warningMessage);
             foreach (var config in importedConfigs)
-                ProgramaticallyAddConfig(config);
-            DisableInvalidConfigs();
-            _uiControl?.UpdateUiConfigurations();
-            if (warningMessage != null)
-                DisplayWarning(warningMessage);*/
-        }
-
-        /*public new void CopyAndImport(string filePath, string newRootDirectory)
-        {
-            var importedConfigs = base.CopyAndImport(filePath, newRootDirectory);
-            HandleImportedConfigs(importedConfigs);
-        }*/
-
-        private void HandleImportedConfigs(List<IConfig> importedConfigs)
-        {
+            {
+                if (_configRunners.ContainsKey(config.GetName()))
+                    ProgramaticallyRemoveAt(GetConfigIndex(config.GetName()));
+            }
             importedConfigs = AssignDependencies(importedConfigs, true, out string warningMessage);
             foreach (var config in importedConfigs)
                 ProgramaticallyAddConfig(config);

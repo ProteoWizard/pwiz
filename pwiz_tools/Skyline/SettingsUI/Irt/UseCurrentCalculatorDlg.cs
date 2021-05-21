@@ -30,7 +30,13 @@ namespace pwiz.Skyline.SettingsUI.Irt
     public partial class UseCurrentCalculatorDlg : FormEx
     {
         public bool UseCurrent => radioUseCurrent.Checked;
+
         public string StandardName { get; private set; }
+        public string StandardNameText
+        {
+            get => textName.Text;
+            set => textName.Text = value;
+        }
 
         private readonly HashSet<string> _existing;
 

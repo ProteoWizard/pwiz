@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Globalization;
 using System.Text;
 using System.Windows.Forms;
 using System.Xml;
@@ -156,9 +157,9 @@ namespace SkylineBatch
             var name = reader.GetAttribute(Attr.Name);
             var enabled = reader.GetBoolAttribute(Attr.Enabled);
             DateTime modified;
-            DateTime.TryParse(reader.GetAttribute(Attr.Modified), out modified);
+            DateTime.TryParse(reader.GetAttribute(Attr.Modified), CultureInfo.InvariantCulture, DateTimeStyles.None, out modified);
 
-                ReadUntilElement(reader);
+            ReadUntilElement(reader);
             MainSettings mainSettings = null;
             RefineSettings refineSettings = null;
             FileSettings fileSettings = null;
@@ -207,7 +208,7 @@ namespace SkylineBatch
             writer.WriteStartElement("skylinebatch_config");
             writer.WriteAttribute(Attr.Name, Name);
             writer.WriteAttribute(Attr.Enabled, Enabled);
-            writer.WriteAttributeIfString(Attr.Modified, Modified.ToShortDateString() + " " + Modified.ToShortTimeString());
+            writer.WriteAttributeIfString(Attr.Modified, Modified.ToString(CultureInfo.InvariantCulture));
             MainSettings.WriteXml(writer);
             FileSettings.WriteXml(writer);
             RefineSettings.WriteXml(writer);

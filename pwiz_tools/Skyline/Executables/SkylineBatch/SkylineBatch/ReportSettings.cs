@@ -172,9 +172,10 @@ namespace SkylineBatch
         // IMMUTABLE
         // Represents a report and associated r scripts to run using that report.
         
-        public ReportInfo(string name, string path, List<Tuple<string, string>> rScripts, bool useRefineFile)
+        public ReportInfo(string name, bool cultureSpecific, string path, List<Tuple<string, string>> rScripts, bool useRefineFile)
         {
             Name = name;
+            CultureSpecific = cultureSpecific;
             ReportPath = path ?? string.Empty;
             RScripts = ImmutableList.Create<Tuple<string,string>>().AddRange(rScripts);
             UseRefineFile = useRefineFile;
@@ -186,6 +187,8 @@ namespace SkylineBatch
         }
 
         public readonly string Name;
+
+        public readonly bool CultureSpecific;
 
         public readonly string ReportPath;
 
@@ -267,13 +270,14 @@ namespace SkylineBatch
                 anyScriptReplaced = TextUtil.SuccessfulReplace(ValidateRScriptPath, oldRoot, newRoot, rScriptAndVersion.Item1, out string replacedRScript) || anyScriptReplaced;
                 replacedRScripts.Add(new Tuple<string, string>(replacedRScript, rScriptAndVersion.Item2));
             }
-            pathReplacedReportInfo = new ReportInfo(Name, replacedReportPath, replacedRScripts, UseRefineFile);
+            pathReplacedReportInfo = new ReportInfo(Name, CultureSpecific, replacedReportPath, replacedRScripts, UseRefineFile);
             return reportReplaced || anyScriptReplaced;
         }
 
         private enum Attr
         {
             Name,
+            CultureSpecific,
             Path,
             UseRefineFile
         };
@@ -281,6 +285,7 @@ namespace SkylineBatch
         public static ReportInfo ReadXml(XmlReader reader)
         {
             var name = reader.GetAttribute(Attr.Name);
+            var cultureSpecific = reader.GetBoolAttribute(Attr.CultureSpecific);
             var reportPath = GetPath(reader.GetAttribute(Attr.Path));
             var resultsFile = reader.GetNullableBoolAttribute(Attr.UseRefineFile);
             var rScripts = new List<Tuple<string, string>>();
@@ -297,7 +302,7 @@ namespace SkylineBatch
                 }
             }
 
-            return new ReportInfo(name, reportPath, rScripts, resultsFile?? false);
+            return new ReportInfo(name, cultureSpecific, reportPath, rScripts, resultsFile?? false);
         }
 
         private static string GetPath(string path) =>
@@ -306,6 +311,7 @@ namespace SkylineBatch
         public void WriteXml(XmlWriter writer)
         {
             writer.WriteStartElement("report_info");
+            writer.WriteAttribute(Attr.CultureSpecific, CultureSpecific);
             writer.WriteAttributeIfString(Attr.Name, Name);
             writer.WriteAttributeIfString(Attr.Path, ReportPath);
             writer.WriteAttribute(Attr.UseRefineFile, UseRefineFile);
@@ -321,7 +327,9 @@ namespace SkylineBatch
 
         public const string ADD_REPORT_OVERWRITE_COMMAND =
             "--report-add=\"{0}\" --report-conflict-resolution=overwrite";
-        public const string EXPORT_REPORT_COMMAND = "--report-name=\"{0}\" --report-file=\"{1}\" --report-invariant";
+        public const string EXPORT_REPORT_COMMAND = "--report-name=\"{0}\" --report-file=\"{1}\"";
+        public const string REPORT_INVARIANT_COMMAND = "--report-invariant";
+        public const string REPORT_TSV_COMMAND = "--report-format=tsv";
         public const string SAVE_SETTINGS_COMMAND = "--save-settings";
         public const string RUN_R_ARGUMENT = "\"{0}\" \"{1}\"";
 
@@ -333,6 +341,12 @@ namespace SkylineBatch
                 commandWriter.Write(SAVE_SETTINGS_COMMAND);
             }
             commandWriter.Write(EXPORT_REPORT_COMMAND, Name, Path.Combine(analysisFolder, Name + TextUtil.EXT_CSV));
+            if (!CultureSpecific)
+            {
+                commandWriter.Write(REPORT_INVARIANT_COMMAND);
+                if (!commandWriter.ExportsInvariantReport)
+                    commandWriter.Write(REPORT_TSV_COMMAND);
+            }
             commandWriter.EndCommandGroup();
         }
 
