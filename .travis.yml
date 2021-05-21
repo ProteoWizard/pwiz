@@ -37,6 +37,7 @@ matrix:
           packages:
             - clang-3.6
       env:
+        - TOOLSET=clang-3.6
         - TARGETS="pwiz pwiz_tools/Bumbershoot"
         - MATRIX_EVAL="TOOLSET=toolset=clang-3.6"
 
@@ -51,6 +52,7 @@ matrix:
           packages:
             - clang-7
       env:
+        - TOOLSET=clang-7
         - TARGETS="pwiz pwiz_tools/Bumbershoot"
         - MATRIX_EVAL="TOOLSET=toolset=clang-7"
 
@@ -78,7 +80,7 @@ matrix:
 before_install:
     - eval "${MATRIX_EVAL}"
 
-script: ./quickbuild.sh --abbreviate-paths -j2 $TARGETS
+script: ./quickbuild.sh --abbreviate-paths -j2 $TARGETS $TOOLSET
 
 notifications:
   webhooks:
