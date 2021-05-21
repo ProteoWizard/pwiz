@@ -18,6 +18,7 @@ matrix:
             - g++-9
       env:
         - TOOLSET=gcc
+        - TARGETS="pwiz pwiz_tools/Bumbershoot"
         - MATRIX_EVAL="TOOLSET=toolset=gcc-9"
 
     #
@@ -36,6 +37,7 @@ matrix:
           packages:
             - clang-3.6
       env:
+        - TARGETS="pwiz pwiz_tools/Bumbershoot"
         - MATRIX_EVAL="TOOLSET=toolset=clang-3.6"
 
     # works on Trusty
@@ -49,11 +51,13 @@ matrix:
           packages:
             - clang-7
       env:
+        - TARGETS="pwiz pwiz_tools/Bumbershoot"
         - MATRIX_EVAL="TOOLSET=toolset=clang-7"
 
     - os: osx
       osx_image: xcode8.3
-#      env:
+      env:
+         - TARGETS="pwiz"
 #        - MATRIX_EVAL="TOOLSET=toolset=gcc-4.9"
 
 #    - os: osx
@@ -74,7 +78,7 @@ matrix:
 before_install:
     - eval "${MATRIX_EVAL}"
 
-script: ./quickbuild.sh --abbreviate-paths -j2 pwiz pwiz_tools/Bumbershoot
+script: ./quickbuild.sh --abbreviate-paths -j2 $(TARGETS)
 
 notifications:
   webhooks:
