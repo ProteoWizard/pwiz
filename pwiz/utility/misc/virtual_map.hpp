@@ -229,6 +229,14 @@ class virtual_map
     /// Returns a function object capable of comparing pair<const Key, T> values using the comparison operation, Compare, of the current map. This function is identical to key_comp for sets.
     virtual value_compare value_comp() const
 	{return _base.value_comp();}
+
+    /// Access to backing map for serialization
+    const BaseType& base() const
+    {return _base;}
+
+    /// Access to backing map for serialization
+    BaseType& base()
+    {return _base;}
 };
 
 
