@@ -770,7 +770,8 @@ namespace pwiz.Skyline.Model
             // updated on a background thread
             if (!ReferenceEquals(Settings.GetPeptideStandards(StandardType.IRT),
                 docClone.Settings.GetPeptideStandards(StandardType.IRT)) &&
-                docClone.Settings.PeptideSettings.Prediction.RetentionTime != null)
+                docClone.Settings.PeptideSettings.Prediction.RetentionTime != null &&
+                docClone.Settings.PeptideSettings.Prediction.RetentionTime.AutoCalcRegression)
             {
                 docClone.Settings = docClone.Settings.ChangePeptidePrediction(p =>
                     p.ChangeRetentionTime(p.RetentionTime.ForceRecalculate()));
