@@ -1180,24 +1180,6 @@ namespace pwiz.Common.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} of {1}.
-        /// </summary>
-        internal static string RecordNavBar_UpdateNow__0__of__1_ {
-            get {
-                return ResourceManager.GetString("RecordNavBar_UpdateNow__0__of__1_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to (Filtered from {0}).
-        /// </summary>
-        internal static string RecordNavBar_UpdateNow__Filtered_from__0__ {
-            get {
-                return ResourceManager.GetString("RecordNavBar_UpdateNow__Filtered_from__0__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         internal static System.Drawing.Bitmap restore {
