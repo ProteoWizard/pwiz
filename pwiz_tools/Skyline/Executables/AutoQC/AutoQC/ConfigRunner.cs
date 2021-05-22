@@ -878,6 +878,11 @@ namespace AutoQC
             return !IsStopped();
         }
 
+        public static bool IsBusy(RunnerStatus status)
+        {
+            return !(status == RunnerStatus.Stopped || status == RunnerStatus.Error);
+        }
+
         public bool IsPending()
         {
             return IsStarting() || IsStopping() || IsLoading();

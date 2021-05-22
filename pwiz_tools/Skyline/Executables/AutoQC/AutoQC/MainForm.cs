@@ -88,7 +88,7 @@ namespace AutoQC
         private void btnAdd_Click(object sender, EventArgs e)
         {
             ProgramLog.Info("Creating a new configuration");
-            var configForm = new AutoQcConfigForm(this, (AutoQcConfig)_configManager.GetLastModified(), ConfigAction.Add, false);
+            var configForm = new AutoQcConfigForm(this, (AutoQcConfig)_configManager.GetLastModified(), ConfigAction.Add);
             configForm.ShowDialog();
         }
 
@@ -108,13 +108,13 @@ namespace AutoQC
                 if (validateConfigForm.ShowDialog() != DialogResult.OK)
                     return;
             }
-            var configForm = new AutoQcConfigForm(this, _configManager.GetSelectedConfig(), ConfigAction.Edit, configRunner.IsBusy());
+            var configForm = new AutoQcConfigForm(this, _configManager.GetSelectedConfig(), ConfigAction.Edit, configRunner.GetStatus());
             configForm.ShowDialog();
         }
 
         private void btnCopy_Click(object sender, EventArgs e)
         {
-            var configForm = new AutoQcConfigForm(this, _configManager.GetSelectedConfig(), ConfigAction.Copy, false);
+            var configForm = new AutoQcConfigForm(this, _configManager.GetSelectedConfig(), ConfigAction.Copy);
             configForm.ShowDialog();
         }
 

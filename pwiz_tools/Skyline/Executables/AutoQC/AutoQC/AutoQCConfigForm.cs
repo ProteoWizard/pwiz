@@ -38,7 +38,7 @@ namespace AutoQC
         private TabPage _lastSelectedTab;
         private SkylineSettings _currentSkylineSettings;
 
-        public AutoQcConfigForm(IMainUiControl mainControl, AutoQcConfig config, ConfigAction action, bool isBusy)
+        public AutoQcConfigForm(IMainUiControl mainControl, AutoQcConfig config, ConfigAction action, RunnerStatus status = RunnerStatus.Stopped)
         {
             InitializeComponent();
             
@@ -61,8 +61,9 @@ namespace AutoQC
 
             lblConfigRunning.Hide();
 
-            if (isBusy)
+            if (ConfigRunner.IsBusy(status))
             {
+                lblConfigRunning.Text = $"The configuration is {status} and cannot be edited.";
                 lblConfigRunning.Show();
                 btnSaveConfig.Hide(); // save and cancel buttons are replaced with OK button
                 btnCancelConfig.Hide();
