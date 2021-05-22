@@ -110,6 +110,7 @@ namespace TestPerf
         [Timeout(int.MaxValue)] // These can take a long time
         public void TestDiaTtofTutorial()
         {
+            RunPerfTests = true;
             _analysisValues = new AnalysisValues
             {
                 KeepPrecursors = false,
@@ -576,6 +577,40 @@ namespace TestPerf
             PauseForScreenShot("mProphet model form", 14);
 
             OkDialog(peakScoringModelDlg, peakScoringModelDlg.OkDialog);
+
+            // Attempt to cause corruption in audit log
+            var peptideSettingsUi = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+            RunUI(() => peptideSettingsUi.SelectedTab = PeptideSettingsUI.TABS.Prediction);
+            var editIrtCalcDlg = ShowDialog<EditRTDlg>(peptideSettingsUi.EditRegression);
+            RunUI(() =>
+            {
+                editIrtCalcDlg.SetAutoCalcRegression(false);
+                editIrtCalcDlg.SetSlope(7.ToString(CultureInfo.CurrentCulture));
+                editIrtCalcDlg.SetIntercept(22.7.ToString(CultureInfo.CurrentCulture));
+            });
+            OkDialog(editIrtCalcDlg, editIrtCalcDlg.OkDialog);
+            OkDialog(peptideSettingsUi, peptideSettingsUi.OkDialog);
+            {
+                var manageResultsDocument = SkylineWindow.Document;
+                var manageResultsDlg = ShowDialog<ManageResultsDlg>(SkylineWindow.ManageResults);
+                RunUI(() =>
+                {
+                    manageResultsDlg.SelectedChromatograms = manageResultsDocument.MeasuredResults.Chromatograms.Skip(1);
+                    manageResultsDlg.RemoveReplicates();
+                    manageResultsDlg.SelectedChromatograms = manageResultsDocument.MeasuredResults.Chromatograms.Take(1);
+                    manageResultsDlg.ReimportResults();
+                });
+                OkDialog(manageResultsDlg, manageResultsDlg.OkDialog);
+                WaitForDocumentChangeLoaded(manageResultsDocument);
+                Assert.AreEqual(1, SkylineWindow.Document.MeasuredResults.Chromatograms.Count);
+            }
+            string shareFilePath = Path.Combine(Path.GetDirectoryName(SkylineWindow.DocumentFilePath), "TryToCorruptAuditLog.sky.zip");
+            RunUI(() =>
+            {
+                SkylineWindow.SaveDocument();
+                SkylineWindow.ShareDocument(shareFilePath, ShareType.COMPLETE);
+            });
+            PauseTest("Created share file: " + shareFilePath);
 
             // Setup annotations
             var documentSettingsDlg = ShowDialog<DocumentSettingsDlg>(SkylineWindow.ShowDocumentSettingsDialog);
