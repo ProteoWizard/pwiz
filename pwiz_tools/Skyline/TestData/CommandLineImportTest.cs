@@ -146,7 +146,7 @@ namespace pwiz.SkylineTestData
             output = RunCommand("--in=" + docPath,
                 "--import-search-file=" + searchFilePath,
                 "--import-search-irts=CiRT (iRT-C18)");
-            AssertEx.Contains(output, string.Format(Resources.CommandLine_ImportSearchInternal_Error___0__must_be_set_when_using_CiRT_peptides_, CommandArgs.ARG_IMPORT_PEPTIDE_SEARCH_NUM_CIRTS.Name));
+            AssertEx.Contains(output, string.Format(Resources.CommandLine_ImportSearchInternal__0__must_be_set_when_using_CiRT_peptides_, CommandArgs.ARG_IMPORT_PEPTIDE_SEARCH_NUM_CIRTS.Name));
             // test with irts
             output = RunCommand("--in=" + docPath,
                 "--import-search-file=" + searchFilePath,
