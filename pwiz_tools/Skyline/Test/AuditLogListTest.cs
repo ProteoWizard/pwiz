@@ -59,7 +59,7 @@ namespace pwiz.SkylineTest
             // Test backward compatibility - this file with 4.2 log should load without any problems
             AssertEx.IsTrue(AuditLogList.ReadFromXmlTextReader(new XmlTextReader(new StringReader(Test42FormatSkyl)), out var old));
             AssertEx.IsNull(old.RootHash);
-            var oldWithRootHash = old.RecalculateHashValues(DocumentFormat.VERSION_4_2, old.DocumentHash.HashString);
+            var oldWithRootHash = old.RecalculateHashValues(DocumentFormat.VERSION_4_2, old.DocumentHash.HashString, false);
             AssertEx.AreEqual("tgnQ8fDiKLMIS236kpdJIXNR+fw=", oldWithRootHash.RootHash.HashString);
             AssertEx.AreEqual("AjigWTmQeAO94/jAlwubVMp4FRg=", old.DocumentHash.HashString); // Note that this is a base64 representation of the 4.2 hex representation "<document_hash>0238A05939907803BDE3F8C0970B9B54CA781518</document_hash>
 
@@ -87,7 +87,7 @@ namespace pwiz.SkylineTest
             var auditLogList = new AuditLogList(headEntry);
             var serializedAuditLog = new StringWriter();
             var serializer = new XmlSerializer(typeof(AuditLogList));
-            var auditLogListWithHashes = auditLogList.RecalculateHashValues(DocumentFormat.CURRENT, null);
+            var auditLogListWithHashes = auditLogList.RecalculateHashValues(DocumentFormat.CURRENT, null, false);
             serializer.Serialize(serializedAuditLog, auditLogListWithHashes);
             var currentCulture = Thread.CurrentThread.CurrentCulture;
             Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture; // Logs are meant to be culture invariant

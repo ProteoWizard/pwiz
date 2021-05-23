@@ -174,13 +174,29 @@ namespace pwiz.Skyline.Model.AuditLog
             Validate();
         }
 
-        public AuditLogList RecalculateHashValues(DocumentFormat documentFormat, string documentHash)
+        /// <summary>
+        /// Returns a new AuditLogList where all of the AuditLogEntry's have newly calculated hash values.
+        /// </summary>
+        /// <param name="documentFormat"></param>
+        /// <param name="documentHash"></param>
+        /// <param name="recomputeEnExtraInfo">Whether to recalculate "EnExtraInfo" based on the current Skyline .resx and settings
+        /// such as <see cref="AuditLogEntry.ConvertPathsToFileNames"/>.
+        /// When verifying hash values read from disk, this parameter should be false.
+        /// When writing a new audit log to disk, this parameter should be true.
+        /// </param>
+        /// <returns></returns>
+        public AuditLogList RecalculateHashValues(DocumentFormat documentFormat, string documentHash, bool recomputeEnExtraInfo)
         {
             var hashes = new List<Hash>();
             Hash parentHash = null;
             AuditLogEntry parentEntry = AuditLogEntry.ROOT;
-            foreach (var auditLogEntry in AuditLogEntries.Enumerate().Reverse())
+            foreach (var originalAuditLogEntry in AuditLogEntries.Enumerate().Reverse())
             {
+                var auditLogEntry = originalAuditLogEntry;
+                if (recomputeEnExtraInfo)
+                {
+                    auditLogEntry = auditLogEntry.RecomputeEnExtraInfo();
+                }
                 Hash hash = auditLogEntry.GetAuditLogHash(documentFormat, parentHash);
                 parentEntry = auditLogEntry.ChangeParent(parentEntry).ChangeHash(hash);
                 hashes.Add(hash);
@@ -347,7 +363,7 @@ namespace pwiz.Skyline.Model.AuditLog
                 return;
             }
 
-            var recalculated = RecalculateHashValues(FormatVersion.Value, DocumentHash?.HashString);
+            var recalculated = RecalculateHashValues(FormatVersion.Value, DocumentHash?.HashString, false);
             var entriesWithIncorrectHash = new List<AuditLogEntry>();
             var hashes = new List<Hash>();
             var entries = AuditLogEntries.Enumerate().ToList();
@@ -612,12 +628,23 @@ namespace pwiz.Skyline.Model.AuditLog
         {
             get
             {
-                return _enExtraInfo ?? (_enExtraInfo = LogMessage
-                           .ParseLogString(ExtraInfo, LogLevel.all_info, CultureInfo.InvariantCulture, DocumentType)?
-                           .EscapeNonPrintableChars());
+                return _enExtraInfo ?? (_enExtraInfo = ComputeEnExtraInfo());
             }
             private set { _enExtraInfo = value; }
         }
+
+        public AuditLogEntry RecomputeEnExtraInfo()
+        {
+            return ChangeProp(ImClone(this), im => im._enExtraInfo = ComputeEnExtraInfo());
+        }
+
+        private string ComputeEnExtraInfo()
+        {
+            return LogMessage
+                .ParseLogString(ExtraInfo, LogLevel.all_info, CultureInfo.InvariantCulture, DocumentType)?
+                .EscapeNonPrintableChars();
+        }
+
         public LogMessage UndoRedo { get; private set; }
         public LogMessage Summary { get; private set; }
 
@@ -1345,7 +1372,6 @@ namespace pwiz.Skyline.Model.AuditLog
 
             if (!string.IsNullOrEmpty(ExtraInfo) && LogMessage.ExpansionToken.EnumerateTokens(ExtraInfo).Any())
             {
-                EnExtraInfo = null;
                 writer.WriteElementString(EL.en_extra_info, EnExtraInfo);
             }
 
