@@ -5755,11 +5755,12 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} must be set when using CiRT peptides..
+        ///   Looks up a localized string similar to Error: {0} must be set when using CiRT peptides..
         /// </summary>
-        public static string CommandLine_ImportSearchInternal__0__must_be_set_when_using_CiRT_peptides_ {
+        public static string CommandLine_ImportSearchInternal_Error___0__must_be_set_when_using_CiRT_peptides_ {
             get {
-                return ResourceManager.GetString("CommandLine_ImportSearchInternal__0__must_be_set_when_using_CiRT_peptides_", resourceCulture);
+                return ResourceManager.GetString("CommandLine_ImportSearchInternal_Error___0__must_be_set_when_using_CiRT_peptides_" +
+                        "", resourceCulture);
             }
         }
         

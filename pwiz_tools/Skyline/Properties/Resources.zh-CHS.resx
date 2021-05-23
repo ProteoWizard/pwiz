@@ -11117,9 +11117,6 @@ Invalid peptide sequence at position 18
   <data name="CommandLine_ImportSearchInternal_The_iRT_standard_name___0___is_invalid_" xml:space="preserve">
     <value>iRT标准名称 '{0}' 无效。</value>
   </data>
-  <data name="CommandLine_ImportSearchInternal__0__must_be_set_when_using_CiRT_peptides_" xml:space="preserve">
-    <value>使用 CiRT 肽段时必须设置 {0}。</value>
-  </data>
   <data name="CommandLine_ImportSearchInternal_iRT_standard_set_to__0___but_multiple_iRT_standards_were_found__iRT_standard_must_be_set_explicitly_" xml:space="preserve">
     <value>iRT 标准设置为 {0}，但找到多个 iRT 标准。必须明确设置 iRT 标准。</value>
   </data>

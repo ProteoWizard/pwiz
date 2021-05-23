@@ -1873,7 +1873,7 @@ namespace pwiz.Skyline
                 {
                     if (!commandArgs.NumCirts.HasValue)
                     {
-                        _out.WriteLine(Resources.CommandLine_ImportSearchInternal__0__must_be_set_when_using_CiRT_peptides_, CommandArgs.ARG_IMPORT_PEPTIDE_SEARCH_NUM_CIRTS.Name);
+                        _out.WriteLine(Resources.CommandLine_ImportSearchInternal_Error___0__must_be_set_when_using_CiRT_peptides_, CommandArgs.ARG_IMPORT_PEPTIDE_SEARCH_NUM_CIRTS.Name);
                         return false;
                     }
                     numCirt = commandArgs.NumCirts.Value;
