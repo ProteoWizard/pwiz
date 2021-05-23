@@ -137,7 +137,7 @@ namespace AutoQC
                 }
                 catch (Exception e)
                 {
-                    var sb = new StringBuilder(string.Format("Configuration directory \"{0}\" could not be created for configuration \"{1}\""
+                    var sb = new StringBuilder(string.Format(Resources.ConfigRunner_CreateConfigDir_Configuration_directory___0___could_not_be_created_for_configuration___1___
                         , configDir, GetConfigName()));
                     sb.AppendLine();
                     sb.AppendLine(e.Message);
@@ -214,7 +214,7 @@ namespace AutoQC
             catch (ArgumentException x)
             {
                 ((MainForm)_uiControl)?.SetConfigInvalid(Config); // TODO: Another way to add the configs to the invalid config list?
-                SetErrorStateDisplayAndLogException($"Error validating configuration \"{Config.Name}\"", x, false);
+                SetErrorStateDisplayAndLogException(string.Format(Resources.ConfigRunner_RunConfiguration_Error_validating_configuration___0___, Config.Name), x, false);
                 return;
             }
             
@@ -259,11 +259,11 @@ namespace AutoQC
             }
             catch (FileWatcherException x)
             {
-                SetErrorStateDisplayAndLogException($"There was an error looking for files for configuration \"{Config.Name}\"", x);
+                SetErrorStateDisplayAndLogException(string.Format(Resources.ConfigRunner_RunConfiguration_There_was_an_error_looking_for_files_for_configuration___0___, Config.Name), x);
             }
             catch (Exception x)
             {
-                SetErrorStateDisplayAndLogException($"There was an error running configuration \"{Config.Name}\"", x);
+                SetErrorStateDisplayAndLogException(string.Format(Resources.ConfigRunner_RunConfiguration_There_was_an_error_running_configuration___0___, Config.Name), x);
             }
         }
 
@@ -408,10 +408,6 @@ namespace AutoQC
             {
                 Log(Resources.ConfigRunner_ProcessFilesCompleted_Canceled_configuration_);
             }
-            // else if (_panoramaUploadError)
-            // {
-            //     LogError(Resources.ConfigRunner_ProcessFilesCompleted_There_was_an_error_uploading_the_document_to_Panorama__Stopping_configuration_);    
-            // }
             else
             {
                 Log(Resources.ConfigRunner_ProcessFilesCompleted_Finished_running_configuration_);

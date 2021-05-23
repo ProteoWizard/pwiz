@@ -633,9 +633,9 @@ namespace AutoQC
                 case ServerState.unknown:
                     return string.Format(Resources.PanoramaUtil_VerifyServerInformation_Unknown_error_connecting_to_the_server__0__, serverUrl);
                 case ServerState.available:
-                    return "Server validation passed without errors!"; // Should not be throwing an exception if validation was successful
+                    return Resources.PanoramaServerException_ServerError_Server_validation_passed_without_errors_; // Should not be throwing an exception if validation was successful
                 default:
-                    return string.Format("Encountered unknown server validation state {0}", serverState);
+                    return string.Format(Resources.PanoramaServerException_ServerError_Encountered_unknown_server_validation_state__0__, serverState);
             }
         }
 
@@ -648,13 +648,13 @@ namespace AutoQC
             switch (userState)
             {
                 case UserState.nonvalid:
-                    return "The username and password could not be authenticated with the Panorama server.";
+                    return Resources.PanoramaServerException_UserValidationError_The_username_and_password_could_not_be_authenticated_with_the_Panorama_server_;
                 case UserState.unknown:
-                    return "Unknown error validating user permissions on the Panorama server.";
+                    return Resources.PanoramaServerException_UserValidationError_Unknown_error_validating_user_permissions_on_the_Panorama_server_;
                 case UserState.valid:
-                    return "User validation passed without errors!"; // Should not be throwing an exception if validation was successful
+                    return Resources.PanoramaServerException_UserValidationError_User_validation_passed_without_errors_; // Should not be throwing an exception if validation was successful
                 default:
-                    return string.Format("Encountered unknown user validation state {0}", userState);
+                    return string.Format(Resources.PanoramaServerException_UserValidationError_Encountered_unknown_user_validation_state__0__, userState);
             }
         }
 
@@ -671,9 +671,9 @@ namespace AutoQC
                 case PanoramaState.unknown:
                     return string.Format(Resources.PanoramaUtil_VerifyServerInformation_Unknown_error_while_checking_if_server__0__is_a_Panorama_server_, serverUrl);
                 case PanoramaState.panorama:
-                    return "Panorama server validation passed without errors!"; // Should not be throwing an exception if validation was successful
+                    return Resources.PanoramaServerException_PanoramaStateError_Panorama_server_validation_passed_without_errors_; // Should not be throwing an exception if validation was successful
                 default:
-                    return string.Format("Encountered unknown Panorama server validation state {0}", panoramaState);
+                    return string.Format(Resources.PanoramaServerException_PanoramaStateError_Encountered_unknown_Panorama_server_validation_state__0__, panoramaState);
             }
         }
 
@@ -686,15 +686,15 @@ namespace AutoQC
             switch (folderState)
             {
                 case FolderState.notfound:
-                    return string.Format("Folder {0} does not exist on the Panorama server {1}", folder, serverUrl);
+                    return string.Format(Resources.PanoramaServerException_FolderValidationError_Folder___0___does_not_exist_on_the_Panorama_server__1__, folder, serverUrl);
                 case FolderState.nopermission:
-                    return string.Format("User {0} does not have permissions to upload to the Panorama folder {1}", user, folder);
+                    return string.Format(Resources.PanoramaServerException_FolderValidationError_User__0__does_not_have_permissions_to_upload_to_the_Panorama_folder___1___, user, folder);
                 case FolderState.notpanorama:
-                    return string.Format("{0} is not a Panorama folder", folder);
+                    return string.Format(Resources.PanoramaServerException_FolderValidationError___0___is_not_a_Panorama_folder_, folder);
                 case FolderState.valid:
-                    return "Folder validation passed without errors!"; // Should not be throwing an exception if validation was successful
+                    return Resources.PanoramaServerException_FolderValidationError_Folder_validation_passed_without_errors_; // Should not be throwing an exception if validation was successful
                 default:
-                    return string.Format("Encountered unknown folder validation state {0}", folderState);
+                    return string.Format(Resources.PanoramaServerException_FolderValidationError_Encountered_unknown_folder_validation_state__0__, folderState);
             }
         }
     }

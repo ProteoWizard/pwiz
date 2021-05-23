@@ -6,6 +6,7 @@ using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
+using AutoQC.Properties;
 using SharedBatch;
 
 namespace AutoQC
@@ -13,13 +14,14 @@ namespace AutoQC
     [XmlRoot("autoqc_config")]
     public class AutoQcConfig : IConfig
     {
+        private const string AUTOQC_CONFIG = "autoqc_config";
 
         public AutoQcConfig(string name, bool isEnabled, DateTime created, DateTime modified,
             MainSettings mainSettings, PanoramaSettings panoramaSettings, SkylineSettings skylineSettings)
         {
             if (string.IsNullOrEmpty(name))
             {
-                throw new ArgumentException("Configuration name cannot be blank. Please enter a name for the configuration.");
+                throw new ArgumentException(Resources.AutoQcConfig_AutoQcConfig_Configuration_name_cannot_be_blank__Please_enter_a_name_for_the_configuration_);
             }
             Name = name;
             IsEnabled = isEnabled;
@@ -140,7 +142,7 @@ namespace AutoQC
                 {
                     reader.Read();
 
-                    if (reader.Name.Equals("autoqc_config")) // handles old configurations without skyline settings
+                    if (reader.Name.Equals(AUTOQC_CONFIG)) // handles old configurations without skyline settings
                     {
                         skylineSettings = new SkylineSettings(SkylineType.Skyline);
                         break;
@@ -154,7 +156,7 @@ namespace AutoQC
             }
 
             // finish reading config before exception is thrown so following configs aren't messed up
-            while (!(reader.Name == "autoqc_config" && reader.NodeType == XmlNodeType.EndElement))
+            while (!(AUTOQC_CONFIG.Equals(reader.Name) && reader.NodeType == XmlNodeType.EndElement))
             {
                 reader.Read();
             } 
@@ -167,7 +169,7 @@ namespace AutoQC
 
         public void WriteXml(XmlWriter writer)
         {
-            writer.WriteStartElement("autoqc_config");
+            writer.WriteStartElement(AUTOQC_CONFIG);
             writer.WriteAttribute(Attr.name, Name);
             writer.WriteAttribute(Attr.is_enabled, IsEnabled);
             writer.WriteAttributeIfString(Attr.created, Created.ToShortDateString() + " " + Created.ToShortTimeString());
@@ -188,7 +190,7 @@ namespace AutoQC
         public void Validate(bool doServerCheck)
         {
             if (string.IsNullOrEmpty(Name))
-                throw new ArgumentException("Please enter a name for the configuration.");
+                throw new ArgumentException(Resources.AutoQcConfig_Validate_Please_enter_a_name_for_the_configuration_);
 
             MainSettings.ValidateSettings();
             SkylineSettings.Validate();

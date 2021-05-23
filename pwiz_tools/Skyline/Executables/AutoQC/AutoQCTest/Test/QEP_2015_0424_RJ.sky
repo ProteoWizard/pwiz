@@ -67,7 +67,7 @@
         </sample_file>
       </replicate>
       <replicate name="QEP_2015_0424_RJ_05_prtc">
-        <sample_file id="QEP_2015_0424_RJ_05_prtc_f0" file_path="C:\Branches\func_tests\pwiz_tools\Skyline\Executables\AutoQC\AutoQCTest\Test\PanoramaTestConfig\QEP_2015_0424_RJ_05_prtc.raw" sample_name="QEP_2015_0424_RJ_05_prtc" sample_id="1:A,1" instrument_serial_number="Exactive Series slot #117" acquired_time="2015-04-24T20:45:50" modified_time="2021-01-15T13:19:42" tic_area="41761345536" ion_mobility_type="compensation_V">
+        <sample_file id="QEP_2015_0424_RJ_05_prtc_f0" file_path="C:\Users\vsharma\WORK\Skyline\master\pwiz\pwiz_tools\Skyline\Executables\AutoQC\AutoQCTest\Test\PanoramaTestConfig\QEP_2015_0424_RJ_05_prtc.raw" sample_name="QEP_2015_0424_RJ_05_prtc" sample_id="1:A,1" instrument_serial_number="Exactive Series slot #117" acquired_time="2015-04-24T20:45:50" modified_time="2015-04-24T22:17:46" tic_area="41761345536" ion_mobility_type="compensation_V">
           <instrument_info_list>
             <instrument_info>
               <model>Q Exactive HF</model>

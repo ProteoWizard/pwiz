@@ -123,7 +123,7 @@ namespace AutoQC
                 var pattern = QcFileFilter.Pattern;
                 if (string.IsNullOrEmpty(pattern))
                 {
-                    var err = $"The file filter \"{QcFileFilter.Name()}\" cannot have an empty pattern. Please enter a pattern.";
+                    var err = string.Format(Resources.MainSettings_ValidateSettings_The_file_filter___0___cannot_have_an_empty_pattern__Please_enter_a_pattern_, QcFileFilter.Name());
                     throw new ArgumentException(err);  
                 }
             }

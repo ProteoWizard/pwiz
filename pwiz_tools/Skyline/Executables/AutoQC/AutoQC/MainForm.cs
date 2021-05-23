@@ -101,7 +101,7 @@ namespace AutoQC
                 if (configRunner.IsRunning())
                 {
                     // This should not happen.  But we will display an error instead of throwing an exception 
-                    DisplayError("Configuration '{0}' is invalid. It cannot be running.  Please stop the configuration and fix the errors.", config.Name);
+                    DisplayError(Resources.MainForm_HandleEditEvent_Configuration___0___is_invalid__It_cannot_be_running___Please_stop_the_configuration_and_fix_the_errors_, config.Name);
                     return;
                 }
                 var validateConfigForm = new InvalidConfigSetupForm(config, _configManager, this);
@@ -157,7 +157,7 @@ namespace AutoQC
                 return;
             }
             if (DialogResult.Yes ==
-                DisplayQuestion("Do you want to use this Skyline version for all configurations?"))
+                DisplayQuestion(Resources.MainForm_ReplaceAllSkylineVersions_Do_you_want_to_use_this_Skyline_version_for_all_configurations_))
             {
                 try
                 {

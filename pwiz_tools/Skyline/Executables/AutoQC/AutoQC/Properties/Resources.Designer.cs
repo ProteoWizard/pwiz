@@ -98,12 +98,100 @@ namespace AutoQC.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Configuration name cannot be blank. Please enter a name for the configuration..
+        /// </summary>
+        internal static string AutoQcConfig_AutoQcConfig_Configuration_name_cannot_be_blank__Please_enter_a_name_for_the_configuration_ {
+            get {
+                return ResourceManager.GetString("AutoQcConfig_AutoQcConfig_Configuration_name_cannot_be_blank__Please_enter_a_name" +
+                        "_for_the_configuration_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please enter a name for the configuration..
+        /// </summary>
+        internal static string AutoQcConfig_Validate_Please_enter_a_name_for_the_configuration_ {
+            get {
+                return ResourceManager.GetString("AutoQcConfig_Validate_Please_enter_a_name_for_the_configuration_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The configuration is {0} and cannot be edited..
+        /// </summary>
+        internal static string AutoQcConfigForm_AutoQcConfigForm_The_configuration_is__0__and_cannot_be_edited_ {
+            get {
+                return ResourceManager.GetString("AutoQcConfigForm_AutoQcConfigForm_The_configuration_is__0__and_cannot_be_edited_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The following configurations are running and could not be updated:.
         /// </summary>
         internal static string AutoQcConfigManager_ReplaceSkylineSettings_The_following_configurations_are_running_and_could_not_be_updated_ {
             get {
                 return ResourceManager.GetString("AutoQcConfigManager_ReplaceSkylineSettings_The_following_configurations_are_runni" +
                         "ng_and_could_not_be_updated_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not find a config runner for configuration name &quot;{0}&quot;..
+        /// </summary>
+        internal static string AutoQcConfigManager_StartConfig_Could_not_find_a_config_runner_for_configuration_name___0___ {
+            get {
+                return ResourceManager.GetString("AutoQcConfigManager_StartConfig_Could_not_find_a_config_runner_for_configuration_" +
+                        "name___0___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot start a configuration that is {0}. Please wait for the action to complete..
+        /// </summary>
+        internal static string AutoQcConfigManager_StartConfiguration_Cannot_start_a_configuration_that_is__0___Please_wait_for_the_action_to_complete_ {
+            get {
+                return ResourceManager.GetString("AutoQcConfigManager_StartConfiguration_Cannot_start_a_configuration_that_is__0___" +
+                        "Please_wait_for_the_action_to_complete_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There was an error running the configuration &quot;{0}&quot;..
+        /// </summary>
+        internal static string AutoQcConfigManager_StartConfiguration_There_was_an_error_running_the_configuration___0___ {
+            get {
+                return ResourceManager.GetString("AutoQcConfigManager_StartConfiguration_There_was_an_error_running_the_configurati" +
+                        "on___0___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot stop a configuration that is {0}. Please wait for the action to complete..
+        /// </summary>
+        internal static string AutoQcConfigManager_StopConfiguration_Cannot_stop_a_configuration_that_is__0___Please_wait_for_the_action_to_complete_ {
+            get {
+                return ResourceManager.GetString("AutoQcConfigManager_StopConfiguration_Cannot_stop_a_configuration_that_is__0___Pl" +
+                        "ease_wait_for_the_action_to_complete_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The configuration &quot;{0}&quot; is {1}. Please wait for the action to complete and try again..
+        /// </summary>
+        internal static string AutoQcConfigManager_UserRemoveAt_The_configuration___0___is__1___Please_wait_for_the_action_to_complete_and_try_again_ {
+            get {
+                return ResourceManager.GetString("AutoQcConfigManager_UserRemoveAt_The_configuration___0___is__1___Please_wait_for_" +
+                        "the_action_to_complete_and_try_again_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The configuration &quot;{0}&quot; is running. Please stop the configuration and try again..
+        /// </summary>
+        internal static string AutoQcConfigManager_UserRemoveAt_The_configuration___0___is_running__Please_stop_the_configuration_and_try_again_ {
+            get {
+                return ResourceManager.GetString("AutoQcConfigManager_UserRemoveAt_The_configuration___0___is_running__Please_stop_" +
+                        "the_configuration_and_try_again_", resourceCulture);
             }
         }
         
@@ -434,6 +522,16 @@ namespace AutoQC.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Configuration directory &quot;{0}&quot; could not be created for configuration &quot;{1}&quot;..
+        /// </summary>
+        internal static string ConfigRunner_CreateConfigDir_Configuration_directory___0___could_not_be_created_for_configuration___1___ {
+            get {
+                return ResourceManager.GetString("ConfigRunner_CreateConfigDir_Configuration_directory___0___could_not_be_created_f" +
+                        "or_configuration___1___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error parsing acquired time from Skyline report: {0}.
         /// </summary>
         internal static string ConfigRunner_GetLastAcquiredFileDate_Error_parsing_acquired_time_from_Skyline_report___0_ {
@@ -615,6 +713,34 @@ namespace AutoQC.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error validating configuration &quot;{0}&quot;..
+        /// </summary>
+        internal static string ConfigRunner_RunConfiguration_Error_validating_configuration___0___ {
+            get {
+                return ResourceManager.GetString("ConfigRunner_RunConfiguration_Error_validating_configuration___0___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There was an error looking for files for configuration &quot;{0}&quot;..
+        /// </summary>
+        internal static string ConfigRunner_RunConfiguration_There_was_an_error_looking_for_files_for_configuration___0___ {
+            get {
+                return ResourceManager.GetString("ConfigRunner_RunConfiguration_There_was_an_error_looking_for_files_for_configurat" +
+                        "ion___0___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There was an error running configuration &quot;{0}&quot;..
+        /// </summary>
+        internal static string ConfigRunner_RunConfiguration_There_was_an_error_running_configuration___0___ {
+            get {
+                return ResourceManager.GetString("ConfigRunner_RunConfiguration_There_was_an_error_running_configuration___0___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} failed to import successfully. Skipping....
         /// </summary>
         internal static string ConfigRunner_TryReimportOldFiles__0__failed_to_import_successfully__Skipping___ {
@@ -754,11 +880,31 @@ namespace AutoQC.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Configuration &quot;{0}&quot; is invalid. It cannot be running.  Please stop the configuration and fix the errors..
+        /// </summary>
+        internal static string MainForm_HandleEditEvent_Configuration___0___is_invalid__It_cannot_be_running___Please_stop_the_configuration_and_fix_the_errors_ {
+            get {
+                return ResourceManager.GetString("MainForm_HandleEditEvent_Configuration___0___is_invalid__It_cannot_be_running___P" +
+                        "lease_stop_the_configuration_and_fix_the_errors_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Loading configurations from saved settings..
         /// </summary>
         internal static string MainForm_MainForm_Loading_configurations_from_saved_settings_ {
             get {
                 return ResourceManager.GetString("MainForm_MainForm_Loading_configurations_from_saved_settings_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Do you want to use this Skyline version for all configurations?.
+        /// </summary>
+        internal static string MainForm_ReplaceAllSkylineVersions_Do_you_want_to_use_this_Skyline_version_for_all_configurations_ {
+            get {
+                return ResourceManager.GetString("MainForm_ReplaceAllSkylineVersions_Do_you_want_to_use_this_Skyline_version_for_al" +
+                        "l_configurations_", resourceCulture);
             }
         }
         
@@ -921,6 +1067,16 @@ namespace AutoQC.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The file filter &quot;{0}&quot; cannot have an empty pattern. Please enter a pattern..
+        /// </summary>
+        internal static string MainSettings_ValidateSettings_The_file_filter___0___cannot_have_an_empty_pattern__Please_enter_a_pattern_ {
+            get {
+                return ResourceManager.GetString("MainSettings_ValidateSettings_The_file_filter___0___cannot_have_an_empty_pattern_" +
+                        "_Please_enter_a_pattern_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The results time window is too big. Please enter a smaller number..
         /// </summary>
         internal static string MainSettings_ValidateSettings_The_results_time_window_is_too_big__Please_enter_a_smaller_number_ {
@@ -993,6 +1149,163 @@ namespace AutoQC.Properties {
         internal static string PanoramaPinger_PingPanoramaServer_Successfully_pinged_Panorama_server_ {
             get {
                 return ResourceManager.GetString("PanoramaPinger_PingPanoramaServer_Successfully_pinged_Panorama_server_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &quot;{0}&quot; is not a Panorama folder..
+        /// </summary>
+        internal static string PanoramaServerException_FolderValidationError___0___is_not_a_Panorama_folder_ {
+            get {
+                return ResourceManager.GetString("PanoramaServerException_FolderValidationError___0___is_not_a_Panorama_folder_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Encountered unknown folder validation state {0}..
+        /// </summary>
+        internal static string PanoramaServerException_FolderValidationError_Encountered_unknown_folder_validation_state__0__ {
+            get {
+                return ResourceManager.GetString("PanoramaServerException_FolderValidationError_Encountered_unknown_folder_validati" +
+                        "on_state__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Folder &quot;{0}&quot; does not exist on the Panorama server {1}..
+        /// </summary>
+        internal static string PanoramaServerException_FolderValidationError_Folder___0___does_not_exist_on_the_Panorama_server__1__ {
+            get {
+                return ResourceManager.GetString("PanoramaServerException_FolderValidationError_Folder___0___does_not_exist_on_the_" +
+                        "Panorama_server__1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Folder validation passed without errors!.
+        /// </summary>
+        internal static string PanoramaServerException_FolderValidationError_Folder_validation_passed_without_errors_ {
+            get {
+                return ResourceManager.GetString("PanoramaServerException_FolderValidationError_Folder_validation_passed_without_er" +
+                        "rors_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to User {0} does not have permissions to upload to the Panorama folder &quot;{1}&quot;..
+        /// </summary>
+        internal static string PanoramaServerException_FolderValidationError_User__0__does_not_have_permissions_to_upload_to_the_Panorama_folder___1___ {
+            get {
+                return ResourceManager.GetString("PanoramaServerException_FolderValidationError_User__0__does_not_have_permissions_" +
+                        "to_upload_to_the_Panorama_folder___1___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Encountered unknown Panorama server validation state {0}..
+        /// </summary>
+        internal static string PanoramaServerException_PanoramaStateError_Encountered_unknown_Panorama_server_validation_state__0__ {
+            get {
+                return ResourceManager.GetString("PanoramaServerException_PanoramaStateError_Encountered_unknown_Panorama_server_va" +
+                        "lidation_state__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Panorama server validation passed without errors!.
+        /// </summary>
+        internal static string PanoramaServerException_PanoramaStateError_Panorama_server_validation_passed_without_errors_ {
+            get {
+                return ResourceManager.GetString("PanoramaServerException_PanoramaStateError_Panorama_server_validation_passed_with" +
+                        "out_errors_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Encountered unknown server validation state {0}..
+        /// </summary>
+        internal static string PanoramaServerException_ServerError_Encountered_unknown_server_validation_state__0__ {
+            get {
+                return ResourceManager.GetString("PanoramaServerException_ServerError_Encountered_unknown_server_validation_state__" +
+                        "0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Server validation passed without errors!.
+        /// </summary>
+        internal static string PanoramaServerException_ServerError_Server_validation_passed_without_errors_ {
+            get {
+                return ResourceManager.GetString("PanoramaServerException_ServerError_Server_validation_passed_without_errors_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Encountered unknown user validation state {0}..
+        /// </summary>
+        internal static string PanoramaServerException_UserValidationError_Encountered_unknown_user_validation_state__0__ {
+            get {
+                return ResourceManager.GetString("PanoramaServerException_UserValidationError_Encountered_unknown_user_validation_s" +
+                        "tate__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The username and password could not be authenticated with the Panorama server..
+        /// </summary>
+        internal static string PanoramaServerException_UserValidationError_The_username_and_password_could_not_be_authenticated_with_the_Panorama_server_ {
+            get {
+                return ResourceManager.GetString("PanoramaServerException_UserValidationError_The_username_and_password_could_not_b" +
+                        "e_authenticated_with_the_Panorama_server_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unknown error validating user permissions on the Panorama server..
+        /// </summary>
+        internal static string PanoramaServerException_UserValidationError_Unknown_error_validating_user_permissions_on_the_Panorama_server_ {
+            get {
+                return ResourceManager.GetString("PanoramaServerException_UserValidationError_Unknown_error_validating_user_permiss" +
+                        "ions_on_the_Panorama_server_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to User validation passed without errors!.
+        /// </summary>
+        internal static string PanoramaServerException_UserValidationError_User_validation_passed_without_errors_ {
+            get {
+                return ResourceManager.GetString("PanoramaServerException_UserValidationError_User_validation_passed_without_errors" +
+                        "_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error verifying Panorama folder information. {0}.
+        /// </summary>
+        internal static string PanoramaSettings_ValidateAndGetServerUri_Error_verifying_Panorama_folder_information___0_ {
+            get {
+                return ResourceManager.GetString("PanoramaSettings_ValidateAndGetServerUri_Error_verifying_Panorama_folder_informat" +
+                        "ion___0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error verifying server information. {0}.
+        /// </summary>
+        internal static string PanoramaSettings_ValidateAndGetServerUri_Error_verifying_server_information___0_ {
+            get {
+                return ResourceManager.GetString("PanoramaSettings_ValidateAndGetServerUri_Error_verifying_server_information___0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Panorama server URL is invalid: {0}. {1}.
+        /// </summary>
+        internal static string PanoramaSettings_ValidateAndGetServerUri_Panorama_server_URL_is_invalid___0____1_ {
+            get {
+                return ResourceManager.GetString("PanoramaSettings_ValidateAndGetServerUri_Panorama_server_URL_is_invalid___0____1_" +
+                        "", resourceCulture);
             }
         }
         

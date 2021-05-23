@@ -18,6 +18,7 @@
 
 using System;
 using System.Windows.Forms;
+using AutoQC.Properties;
 using SharedBatch;
 
 namespace AutoQC
@@ -63,7 +64,7 @@ namespace AutoQC
 
             if (ConfigRunner.IsBusy(status))
             {
-                lblConfigRunning.Text = $"The configuration is {status} and cannot be edited.";
+                lblConfigRunning.Text = string.Format(Resources.AutoQcConfigForm_AutoQcConfigForm_The_configuration_is__0__and_cannot_be_edited_, status);
                 lblConfigRunning.Show();
                 btnSaveConfig.Hide(); // save and cancel buttons are replaced with OK button
                 btnCancelConfig.Hide();

@@ -155,12 +155,12 @@ namespace AutoQC
                     if (configRunner.IsPending()) // Stopping / Starting / Loading
                     {
                         message =
-                            ($"The configuration \"{configRunner.GetConfigName()}\" is {configRunner.GetStatus().ToString()}. Please wait for the action to complete and try again.");
+                            (string.Format(Resources.AutoQcConfigManager_UserRemoveAt_The_configuration___0___is__1___Please_wait_for_the_action_to_complete_and_try_again_, configRunner.GetConfigName(), configRunner.GetStatus().ToString()));
                     }
                     else
                     {
                         message =
-                            ($"The configuration \"{configRunner.GetConfigName()}\" is running. Please stop the configuration and try again.");
+                            (string.Format(Resources.AutoQcConfigManager_UserRemoveAt_The_configuration___0___is_running__Please_stop_the_configuration_and_try_again_, configRunner.GetConfigName()));
                     }
                     DisplayWarning(message);
                     return;
@@ -428,7 +428,7 @@ namespace AutoQC
                 {
                     var action = configRunner.GetStatus().ToString();
                     var message =
-                        $"Cannot stop a configuration that is {action}. Please wait for the action to complete.";
+                        string.Format(Resources.AutoQcConfigManager_StopConfiguration_Cannot_stop_a_configuration_that_is__0___Please_wait_for_the_action_to_complete_, action);
 
                     DisplayWarning(message);
                     return false;
@@ -467,7 +467,7 @@ namespace AutoQC
                 {
                     var action = configRunner.GetStatus().ToString();
                     var message =
-                        $"Cannot start a configuration that is {action}. Please wait for the action to complete.";
+                        string.Format(Resources.AutoQcConfigManager_StartConfiguration_Cannot_start_a_configuration_that_is__0___Please_wait_for_the_action_to_complete_, action);
 
                     DisplayWarning(message);
                     return false;
@@ -480,7 +480,7 @@ namespace AutoQC
                 catch (Exception e)
                 {
                     DisplayErrorWithException(
-                        TextUtil.LineSeparate($"Error running configuration \"{selectedConfig.Name}.", e.Message), e);
+                        TextUtil.LineSeparate(string.Format(Resources.AutoQcConfigManager_StartConfiguration_There_was_an_error_running_the_configuration___0___, selectedConfig.Name), e.Message), e);
                     return false;
                 }
                 
@@ -497,7 +497,7 @@ namespace AutoQC
             }
             catch (Exception e)
             {
-                ProgramLog.Error($"There was an error running the configuration \"{config.Name}\".", e);
+                ProgramLog.Error(string.Format(Resources.AutoQcConfigManager_StartConfiguration_There_was_an_error_running_the_configuration___0___, config.Name), e);
             }
         }
 
@@ -509,7 +509,7 @@ namespace AutoQC
             {
                 config.IsEnabled = false;
                 _uiControl?.UpdateUiConfigurations();
-                throw new ConfigRunnerException($"Could not find a config runner for name \"{config.Name}\"");
+                throw new ConfigRunnerException(string.Format(Resources.AutoQcConfigManager_StartConfig_Could_not_find_a_config_runner_for_configuration_name___0___, config.Name));
             }
             ProgramLog.Info(string.Format(Resources.ConfigManager_StartConfig_Starting_configuration___0__, config.Name));
             config.IsEnabled = true;

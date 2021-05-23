@@ -62,7 +62,7 @@ namespace AutoQC
             }
             catch (UriFormatException e)
             {
-                throw new PanoramaServerException($"Panorama server URL is invalid: {panoramaServerUrl}. {e.Message}");
+                throw new PanoramaServerException(string.Format(Resources.PanoramaSettings_ValidateAndGetServerUri_Panorama_server_URL_is_invalid___0____1_, panoramaServerUrl, e.Message));
             }
 
             var panoramaClient = new WebPanoramaClient(panoramaServer.ServerUri);
@@ -78,7 +78,7 @@ namespace AutoQC
             catch (Exception ex)
             {
                 if (ex is PanoramaServerException) throw;
-                throw new PanoramaServerException(string.Format("Error verifying server information. {0}", ex.Message));
+                throw new PanoramaServerException(string.Format(Resources.PanoramaSettings_ValidateAndGetServerUri_Error_verifying_server_information___0_, ex.Message));
             }
             try
             {
@@ -90,7 +90,7 @@ namespace AutoQC
             catch (Exception ex)
             {
                 if (ex is PanoramaServerException) throw;
-                throw new PanoramaServerException(string.Format("Error verifying Panorama folder information. {0}", ex.Message));
+                throw new PanoramaServerException(string.Format(Resources.PanoramaSettings_ValidateAndGetServerUri_Error_verifying_Panorama_folder_information___0_, ex.Message));
             }
 
             return panoramaServer.ServerUri;

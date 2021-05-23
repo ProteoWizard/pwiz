@@ -514,4 +514,100 @@ with:
   <data name="MainSettings_ValidateSettings_Please_enter_a_value_greater_than_or_equal_to__0__" xml:space="preserve">
     <value>Please enter a value greater than or equal to {0}.</value>
   </data>
+  <data name="AutoQcConfig_AutoQcConfig_Configuration_name_cannot_be_blank__Please_enter_a_name_for_the_configuration_" xml:space="preserve">
+    <value>Configuration name cannot be blank. Please enter a name for the configuration.</value>
+  </data>
+  <data name="AutoQcConfig_Validate_Please_enter_a_name_for_the_configuration_" xml:space="preserve">
+    <value>Please enter a name for the configuration.</value>
+  </data>
+  <data name="MainSettings_ValidateSettings_The_file_filter___0___cannot_have_an_empty_pattern__Please_enter_a_pattern_" xml:space="preserve">
+    <value>The file filter "{0}" cannot have an empty pattern. Please enter a pattern.</value>
+  </data>
+  <data name="PanoramaSettings_ValidateAndGetServerUri_Panorama_server_URL_is_invalid___0____1_" xml:space="preserve">
+    <value>Panorama server URL is invalid: {0}. {1}</value>
+  </data>
+  <data name="PanoramaSettings_ValidateAndGetServerUri_Error_verifying_server_information___0_" xml:space="preserve">
+    <value>Error verifying server information. {0}</value>
+  </data>
+  <data name="PanoramaSettings_ValidateAndGetServerUri_Error_verifying_Panorama_folder_information___0_" xml:space="preserve">
+    <value>Error verifying Panorama folder information. {0}</value>
+  </data>
+  <data name="PanoramaServerException_ServerError_Server_validation_passed_without_errors_" xml:space="preserve">
+    <value>Server validation passed without errors!</value>
+  </data>
+  <data name="PanoramaServerException_UserValidationError_The_username_and_password_could_not_be_authenticated_with_the_Panorama_server_" xml:space="preserve">
+    <value>The username and password could not be authenticated with the Panorama server.</value>
+  </data>
+  <data name="PanoramaServerException_UserValidationError_Unknown_error_validating_user_permissions_on_the_Panorama_server_" xml:space="preserve">
+    <value>Unknown error validating user permissions on the Panorama server.</value>
+  </data>
+  <data name="PanoramaServerException_UserValidationError_User_validation_passed_without_errors_" xml:space="preserve">
+    <value>User validation passed without errors!</value>
+  </data>
+  <data name="PanoramaServerException_PanoramaStateError_Panorama_server_validation_passed_without_errors_" xml:space="preserve">
+    <value>Panorama server validation passed without errors!</value>
+  </data>
+  <data name="PanoramaServerException_ServerError_Encountered_unknown_server_validation_state__0__" xml:space="preserve">
+    <value>Encountered unknown server validation state {0}.</value>
+  </data>
+  <data name="PanoramaServerException_UserValidationError_Encountered_unknown_user_validation_state__0__" xml:space="preserve">
+    <value>Encountered unknown user validation state {0}.</value>
+  </data>
+  <data name="PanoramaServerException_PanoramaStateError_Encountered_unknown_Panorama_server_validation_state__0__" xml:space="preserve">
+    <value>Encountered unknown Panorama server validation state {0}.</value>
+  </data>
+  <data name="PanoramaServerException_FolderValidationError_Folder___0___does_not_exist_on_the_Panorama_server__1__" xml:space="preserve">
+    <value>Folder "{0}" does not exist on the Panorama server {1}.</value>
+  </data>
+  <data name="PanoramaServerException_FolderValidationError_User__0__does_not_have_permissions_to_upload_to_the_Panorama_folder___1___" xml:space="preserve">
+    <value>User {0} does not have permissions to upload to the Panorama folder "{1}".</value>
+  </data>
+  <data name="PanoramaServerException_FolderValidationError___0___is_not_a_Panorama_folder_" xml:space="preserve">
+    <value>"{0}" is not a Panorama folder.</value>
+  </data>
+  <data name="PanoramaServerException_FolderValidationError_Folder_validation_passed_without_errors_" xml:space="preserve">
+    <value>Folder validation passed without errors!</value>
+  </data>
+  <data name="PanoramaServerException_FolderValidationError_Encountered_unknown_folder_validation_state__0__" xml:space="preserve">
+    <value>Encountered unknown folder validation state {0}.</value>
+  </data>
+  <data name="AutoQcConfigManager_StartConfiguration_Cannot_start_a_configuration_that_is__0___Please_wait_for_the_action_to_complete_" xml:space="preserve">
+    <value>Cannot start a configuration that is {0}. Please wait for the action to complete.</value>
+  </data>
+  <data name="AutoQcConfigManager_StartConfiguration_There_was_an_error_running_the_configuration___0___" xml:space="preserve">
+    <value>There was an error running the configuration "{0}".</value>
+  </data>
+  <data name="ConfigRunner_RunConfiguration_There_was_an_error_running_configuration___0___" xml:space="preserve">
+    <value>There was an error running configuration "{0}".</value>
+  </data>
+  <data name="AutoQcConfigForm_AutoQcConfigForm_The_configuration_is__0__and_cannot_be_edited_" xml:space="preserve">
+    <value>The configuration is {0} and cannot be edited.</value>
+  </data>
+  <data name="AutoQcConfigManager_UserRemoveAt_The_configuration___0___is__1___Please_wait_for_the_action_to_complete_and_try_again_" xml:space="preserve">
+    <value>The configuration "{0}" is {1}. Please wait for the action to complete and try again.</value>
+  </data>
+  <data name="AutoQcConfigManager_UserRemoveAt_The_configuration___0___is_running__Please_stop_the_configuration_and_try_again_" xml:space="preserve">
+    <value>The configuration "{0}" is running. Please stop the configuration and try again.</value>
+  </data>
+  <data name="AutoQcConfigManager_StopConfiguration_Cannot_stop_a_configuration_that_is__0___Please_wait_for_the_action_to_complete_" xml:space="preserve">
+    <value>Cannot stop a configuration that is {0}. Please wait for the action to complete.</value>
+  </data>
+  <data name="MainForm_HandleEditEvent_Configuration___0___is_invalid__It_cannot_be_running___Please_stop_the_configuration_and_fix_the_errors_" xml:space="preserve">
+    <value>Configuration "{0}" is invalid. It cannot be running.  Please stop the configuration and fix the errors.</value>
+  </data>
+  <data name="MainForm_ReplaceAllSkylineVersions_Do_you_want_to_use_this_Skyline_version_for_all_configurations_" xml:space="preserve">
+    <value>Do you want to use this Skyline version for all configurations?</value>
+  </data>
+  <data name="AutoQcConfigManager_StartConfig_Could_not_find_a_config_runner_for_configuration_name___0___" xml:space="preserve">
+    <value>Could not find a config runner for configuration name "{0}".</value>
+  </data>
+  <data name="ConfigRunner_CreateConfigDir_Configuration_directory___0___could_not_be_created_for_configuration___1___" xml:space="preserve">
+    <value>Configuration directory "{0}" could not be created for configuration "{1}".</value>
+  </data>
+  <data name="ConfigRunner_RunConfiguration_Error_validating_configuration___0___" xml:space="preserve">
+    <value>Error validating configuration "{0}".</value>
+  </data>
+  <data name="ConfigRunner_RunConfiguration_There_was_an_error_looking_for_files_for_configuration___0___" xml:space="preserve">
+    <value>There was an error looking for files for configuration "{0}".</value>
+  </data>
 </root>
