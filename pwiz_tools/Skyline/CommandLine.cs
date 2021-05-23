@@ -650,8 +650,11 @@ namespace pwiz.Skyline
         {
             if (commandArgs.ExportingReport)
             {
-                ExportReport(commandArgs.ReportName, commandArgs.ReportFile,
-                    commandArgs.ReportColumnSeparator, commandArgs.IsReportInvariant);
+                if (!ExportReport(commandArgs.ReportName, commandArgs.ReportFile,
+                    commandArgs.ReportColumnSeparator, commandArgs.IsReportInvariant))
+                {
+                    return false;
+                }
             }
 
             if (commandArgs.ExportingChromatograms)
@@ -2676,19 +2679,19 @@ namespace pwiz.Skyline
             return true;
         }
 
-        public void ExportReport(string reportName, string reportFile, char reportColSeparator, bool reportInvariant)
+        public bool ExportReport(string reportName, string reportFile, char reportColSeparator, bool reportInvariant)
         {
 
             if (String.IsNullOrEmpty(reportFile))
             {
                 _out.WriteLine(Resources.CommandLine_ExportReport_);
-                return;
+                return false;
             }
 
-            ExportLiveReport(reportName, reportFile, reportColSeparator, reportInvariant);
+            return ExportLiveReport(reportName, reportFile, reportColSeparator, reportInvariant);
         }
 
-        private void ExportLiveReport(string reportName, string reportFile, char reportColSeparator, bool reportInvariant)
+        private bool ExportLiveReport(string reportName, string reportFile, char reportColSeparator, bool reportInvariant)
         {
             var viewContext = DocumentGridViewContext.CreateDocumentGridViewContext(_doc, reportInvariant
                 ? DataSchemaLocalizer.INVARIANT
@@ -2700,7 +2703,7 @@ namespace pwiz.Skyline
             if (null == viewInfo)
             {
                 _out.WriteLine(Resources.CommandLine_ExportLiveReport_Error__The_report__0__does_not_exist__If_it_has_spaces_in_its_name__use__double_quotes__around_the_entire_list_of_command_parameters_, reportName);
-                return;
+                return false;
             }
             _out.WriteLine(Resources.CommandLine_ExportLiveReport_Exporting_report__0____, reportName);
 
@@ -2712,6 +2715,7 @@ namespace pwiz.Skyline
                     {
                         _out.WriteLine(Resources.CommandLine_ExportLiveReport_Error__The_report__0__could_not_be_saved_to__1__, reportName, reportFile);
                         _out.WriteLine(Resources.CommandLine_ExportLiveReport_Check_to_make_sure_it_is_not_read_only_);
+                        return false;
                     }
 
                     IProgressStatus status = new ProgressStatus(string.Empty);
@@ -2726,12 +2730,14 @@ namespace pwiz.Skyline
                     broker.UpdateProgress(status.Complete());
                     saver.Commit();
                     _out.WriteLine(Resources.CommandLine_ExportLiveReport_Report__0__exported_successfully_to__1__, reportName, reportFile);
+                    return true;
                 }
             }
             catch (Exception x)
             {
                 _out.WriteLine(Resources.CommandLine_ExportLiveReport_Error__Failure_attempting_to_save__0__report_to__1__, reportName, reportFile);
                 _out.WriteLine(x.Message);
+                return false;
             }
         }
 
