@@ -147,8 +147,12 @@ namespace pwiz.Skyline
             }
             if (commandArgs.ImportingTool)
             {
-                ImportTool(commandArgs.ToolName, commandArgs.ToolCommand, commandArgs.ToolArguments,
-                    commandArgs.ToolInitialDirectory, commandArgs.ToolReportTitle, commandArgs.ToolOutputToImmediateWindow, commandArgs.ResolveToolConflictsBySkipping);
+                if (!ImportTool(commandArgs.ToolName, commandArgs.ToolCommand, commandArgs.ToolArguments,
+                    commandArgs.ToolInitialDirectory, commandArgs.ToolReportTitle,
+                    commandArgs.ToolOutputToImmediateWindow, commandArgs.ResolveToolConflictsBySkipping))
+                {
+                    return Program.EXIT_CODE_RAN_WITH_ERRORS;
+                }
                 anyAction = true;
             }
             if (commandArgs.RunningBatchCommands)
@@ -199,14 +203,15 @@ namespace pwiz.Skyline
                     DocContainer.SetDocument(_doc, null);
 
                     bool successProcessing = ProcessDocument(commandArgs);
+                    bool successExporting = true;
                     if (successProcessing)
-                        PerformExportOperations(commandArgs);
+                        successExporting = PerformExportOperations(commandArgs);
 
                     // Save any settings list changes made by opening the document
                     if (commandArgs.SaveSettings)
                         SaveSettings();
 
-                    if (!successProcessing)
+                    if (!successProcessing || !successExporting)
                         return Program.EXIT_CODE_RAN_WITH_ERRORS;
                 }
             }
@@ -640,7 +645,7 @@ namespace pwiz.Skyline
                 deltas.Add(TextUtil.SpaceSeparate(value.ToString(), typeName));
         }
 
-        private void PerformExportOperations(CommandArgs commandArgs)
+        private bool PerformExportOperations(CommandArgs commandArgs)
         {
             if (commandArgs.ExportingReport)
             {
@@ -662,22 +667,32 @@ namespace pwiz.Skyline
             if (exportTypes > 1)
             {
                 _out.WriteLine(Resources.CommandLine_Run_Error__You_cannot_simultaneously_export_a_transition_list_and_a_method___Neither_will_be_exported__);
+                return false;
             }
             else
             {
                 if (commandArgs.ExportingIsolationList)
                 {
-                    ExportInstrumentFile(ExportFileType.IsolationList, commandArgs);
+                    if (!ExportInstrumentFile(ExportFileType.IsolationList, commandArgs))
+                    {
+                        return false;
+                    }
                 }
 
                 if (commandArgs.ExportingTransitionList)
                 {
-                    ExportInstrumentFile(ExportFileType.List, commandArgs);
+                    if (!ExportInstrumentFile(ExportFileType.List, commandArgs))
+                    {
+                        return false;
+                    }
                 }
 
                 if (commandArgs.ExportingMethod)
                 {
-                    ExportInstrumentFile(ExportFileType.Method, commandArgs);
+                    if (!ExportInstrumentFile(ExportFileType.Method, commandArgs))
+                    {
+                        return false;
+                    }
                 }
             }
 
@@ -722,6 +737,8 @@ namespace pwiz.Skyline
                     _out.WriteLine(Resources.CommandLine_Run_No_new_results_added__Skipping_Panorama_import_);
                 }
             }
+
+            return true;
         }
 
         public void SetDocument(SrmDocument doc)
@@ -2837,12 +2854,12 @@ namespace pwiz.Skyline
         }
 
         // A function for adding tools to the Tools Menu.
-        public void ImportTool (string title, string command, string arguments, string initialDirectory, string reportTitle, bool outputToImmediateWindow, bool? resolveToolConflictsBySkipping)
+        public bool ImportTool (string title, string command, string arguments, string initialDirectory, string reportTitle, bool outputToImmediateWindow, bool? resolveToolConflictsBySkipping)
         {
             if (title == null | command == null)
             {
                 _out.WriteLine(Resources.CommandLine_ImportTool_Error__to_import_a_tool_it_must_have_a_name_and_a_command___Use___tool_add_to_specify_a_name_and_use___tool_command_to_specify_a_command___The_tool_was_not_imported___);
-                return;
+                return false;
             }
             // Check if the command is of a supported type and not a URL
             else if (!ConfigureToolsDlg.CheckExtension(command) && !ToolDescription.IsWebPageCommand(command))
@@ -2851,7 +2868,7 @@ namespace pwiz.Skyline
                 supportedTypes = supportedTypes.Replace(@".", @"*.");
                 _out.WriteLine(Resources.CommandLine_ImportTool_Error__the_provided_command_for_the_tool__0__is_not_of_a_supported_type___Supported_Types_are___1_, title, supportedTypes);
                 _out.WriteLine(Resources.CommandLine_ImportTool_The_tool_was_not_imported___);
-                return;
+                return false;
             }
             if (arguments != null && arguments.Contains(ToolMacros.INPUT_REPORT_TEMP_PATH))
             {
@@ -2859,14 +2876,14 @@ namespace pwiz.Skyline
                 {
                     _out.WriteLine(Resources.CommandLine_ImportTool_Error__If__0__is_and_argument_the_tool_must_have_a_Report_Title__Use_the___tool_report_parameter_to_specify_a_report_, ToolMacros.INPUT_REPORT_TEMP_PATH);
                     _out.WriteLine(Resources.CommandLine_ImportTool_The_tool_was_not_imported___);
-                    return;
+                    return false;
                 }
 
                 if (!ReportSharing.GetExistingReports().ContainsKey(PersistedViews.ExternalToolsGroup.Id.ViewName(reportTitle))) 
                 {
                     _out.WriteLine(Resources.CommandLine_ImportTool_Error__Please_import_the_report_format_for__0____Use_the___report_add_parameter_to_add_the_missing_custom_report_, reportTitle);
                     _out.WriteLine(Resources.CommandLine_ImportTool_The_tool_was_not_imported___);
-                    return;                    
+                    return false;                    
                 }
             }            
 
@@ -2881,14 +2898,14 @@ namespace pwiz.Skyline
                     {
                         // Complain. No resolution specified.
                         _out.WriteLine(Resources.CommandLine_ImportTool_, tool.Title);
-                        return; // Dont add.
+                        return false; // Dont add.
                     }
                     // Skip conflicts
                     if (resolveToolConflictsBySkipping == true)
                     {
                         _out.WriteLine(Resources.CommandLine_ImportTool_Warning__skipping_tool__0__due_to_a_name_conflict_, tool.Title);
 //                        _out.WriteLine("         tool {0} was not modified.", tool.Title);
-                        return;
+                        return true;
                     }
                     // Ovewrite conflicts
                     if (resolveToolConflictsBySkipping == false)
@@ -2914,7 +2931,9 @@ namespace pwiz.Skyline
             arguments = arguments ?? string.Empty; 
             initialDirectory = initialDirectory ?? string.Empty; 
             Settings.Default.ToolList.Add(new ToolDescription(title, command, arguments, initialDirectory, outputToImmediateWindow, reportTitle));
-            SaveSettings();        
+            SaveSettings();
+
+            return true;
         }
 
         // A function for running each line of a text file like a SkylineRunner command
@@ -3110,12 +3129,12 @@ namespace pwiz.Skyline
         }
 
         // This function needs so many variables, we might as well just pass the whole CommandArgs object
-        private void ExportInstrumentFile(ExportFileType type, CommandArgs args)
+        private bool ExportInstrumentFile(ExportFileType type, CommandArgs args)
         {
             if (string.IsNullOrEmpty(args.ExportPath))
             {
                 _out.WriteLine(Resources.CommandLine_ExportInstrumentFile_);
-                return;
+                return false;
             }
 
             if (Equals(type, ExportFileType.Method))
@@ -3123,20 +3142,20 @@ namespace pwiz.Skyline
                 if (string.IsNullOrEmpty(args.TemplateFile))
                 {
                     _out.WriteLine(Resources.CommandLine_ExportInstrumentFile_Error__A_template_file_is_required_to_export_a_method_);
-                    return;
+                    return false;
                 }
                 if (Equals(args.MethodInstrumentType, ExportInstrumentType.AGILENT6400)
                         ? !Directory.Exists(args.TemplateFile)
                         : !File.Exists(args.TemplateFile))
                 {
                     _out.WriteLine(Resources.CommandLine_ExportInstrumentFile_Error__The_template_file__0__does_not_exist_, args.TemplateFile);
-                    return;
+                    return false;
                 }
                 if (Equals(args.MethodInstrumentType, ExportInstrumentType.AGILENT6400) &&
                     !AgilentMethodExporter.IsAgilentMethodPath(args.TemplateFile))
                 {
                     _out.WriteLine(Resources.CommandLine_ExportInstrumentFile_Error__The_folder__0__does_not_appear_to_contain_an_Agilent_QQQ_method_template___The_folder_is_expected_to_have_a__m_extension__and_contain_the_file_qqqacqmethod_xsd_, args.TemplateFile);
-                    return;
+                    return false;
                 }
             }
 
@@ -3206,7 +3225,7 @@ namespace pwiz.Skyline
                 if (!Equals(ExportInstrumentType.MethodExtension(args.MethodInstrumentType), extension))
                 {
                     _out.WriteLine(Resources.CommandLine_ExportInstrumentFile_Error__The_template_extension__0__does_not_match_the_expected_extension_for_the_instrument__1___No_method_will_be_exported_, extension,args.MethodInstrumentType);
-                    return;
+                    return false;
                 }
             }
 
@@ -3288,7 +3307,7 @@ namespace pwiz.Skyline
                         _out.WriteLine(!Equals(type, ExportFileType.Method)
                                                ? Resources.CommandLine_ExportInstrumentFile_No_list_will_be_exported_
                                                : Resources.CommandLine_ExportInstrumentFile_No_method_will_be_exported_);
-                        return;
+                        return false;
                     }
                     _exportProperties.PrimaryTransitionCount = args.PrimaryTransitionCount;
                 }
@@ -3327,7 +3346,7 @@ namespace pwiz.Skyline
                     _out.WriteLine(!Equals(type, ExportFileType.Method)
                                            ? Resources.CommandLine_ExportInstrumentFile_No_list_will_be_exported_
                                            : Resources.CommandLine_ExportInstrumentFile_No_method_will_be_exported_);
-                    return;
+                    return false;
                 }
 
                 if (Equals(args.ExportSchedulingAlgorithm, ExportSchedulingAlgorithm.Average))
@@ -3350,7 +3369,7 @@ namespace pwiz.Skyline
                             _out.WriteLine(!Equals(type, ExportFileType.Method)
                                                    ? Resources.CommandLine_ExportInstrumentFile_No_list_will_be_exported_
                                                    : Resources.CommandLine_ExportInstrumentFile_No_method_will_be_exported_);
-                            return;
+                            return false;
                         }
 
                         _exportProperties.SchedulingReplicateNum =
@@ -3368,7 +3387,7 @@ namespace pwiz.Skyline
             {
                 _out.WriteLine(Resources.CommandLine_ExportInstrumentFile_Error__The_file__0__could_not_be_saved___Check_that_the_specified_file_directory_exists_and_is_writeable_, args.ExportPath);
                 _out.WriteLine(x.Message);
-                return;
+                return false;
             }
 
             var exportPath = Path.GetFileName(args.ExportPath);
@@ -3390,6 +3409,7 @@ namespace pwiz.Skyline
                                ? Resources.CommandLine_ExportInstrumentFile_List__0__exported_successfully_
                                : Resources.CommandLine_ExportInstrumentFile_Method__0__exported_successfully_,
                            exportPath);
+            return true;
         }
 
         public void SaveDocument(SrmDocument doc, string outFile, TextWriter outText)
