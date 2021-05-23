@@ -71,28 +71,22 @@ namespace AutoQC
 
             var uriServer = panoramaClient.ServerUri;
 
-            switch (panoramaClient.GetServerState())
+            var serverState = panoramaClient.GetServerState();
+            if (!ServerState.available.Equals(serverState))
             {
-                case ServerState.missing:
-                    throw new PanoramaServerException(string.Format(Resources.PanoramaUtil_VerifyServerInformation_The_server__0__does_not_exist_, uriServer.AbsoluteUri));
-                case ServerState.unknown:
-                    throw new PanoramaServerException(string.Format(Resources.PanoramaUtil_VerifyServerInformation_Unknown_error_connecting_to_the_server__0__, uriServer.AbsoluteUri));
+                throw new PanoramaServerException(serverState, uriServer.AbsoluteUri);
             }
 
-            switch (panoramaClient.IsValidUser(username, password))
+            var userState = panoramaClient.IsValidUser(username, password);
+            if (!UserState.valid.Equals(userState))
             {
-                case UserState.nonvalid:
-                    throw new PanoramaServerException("The username and password could not be authenticated with the panorama server.");
-                case UserState.unknown:
-                    throw new PanoramaServerException(string.Format(Resources.PanoramaUtil_VerifyServerInformation_Unknown_error_validating_user_on_server__0__, uriServer.AbsoluteUri));
+                throw new PanoramaServerException(userState);
             }
 
-            switch (panoramaClient.IsPanorama())
+            var panoramaState = panoramaClient.IsPanorama();
+            if (!PanoramaState.panorama.Equals(panoramaState))
             {
-                case PanoramaState.other:
-                    throw new PanoramaServerException(string.Format(Resources.PanoramaUtil_VerifyServerInformation_The_server__0__is_not_a_Panorama_server_, uriServer.AbsoluteUri));
-                case PanoramaState.unknown:
-                    throw new PanoramaServerException(string.Format(Resources.PanoramaUtil_VerifyServerInformation_Unknown_error_while_checking_if_server__0__is_a_Panorama_server_, uriServer.AbsoluteUri));
+                throw new PanoramaServerException(panoramaState, uriServer.AbsoluteUri);
             }
         }
 
@@ -202,21 +196,10 @@ namespace AutoQC
 
         public static void VerifyFolder(IPanoramaClient panoramaClient, Server server, string panoramaFolder)
         {
-            switch (panoramaClient.IsValidFolder(panoramaFolder, server.Username, server.Password))
+            var folderState = panoramaClient.IsValidFolder(panoramaFolder, server.Username, server.Password);
+            if (!FolderState.valid.Equals(folderState))
             {
-                case FolderState.notfound:
-                    throw new PanoramaServerException(
-                        string.Format(
-                            "Folder {0} does not exist on the Panorama server {1}",
-                            panoramaFolder, panoramaClient.ServerUri));
-                case FolderState.nopermission:
-                    throw new PanoramaServerException(string.Format(
-                        "User {0} does not have permissions to upload to the Panorama folder {1}",
-                        server.Username, panoramaFolder));
-                case FolderState.notpanorama:
-                    throw new PanoramaServerException(string.Format(
-                        "{0} is not a Panorama folder",
-                        panoramaFolder));
+                throw new PanoramaServerException(folderState, server.Username, panoramaFolder, panoramaClient.ServerUri.AbsoluteUri);
             }
         }
 
@@ -631,11 +614,88 @@ namespace AutoQC
         }
     }
 
-    public class PanoramaServerException : Exception
+    public class PanoramaServerException : ArgumentException
     {
-        public PanoramaServerException(string message)
-            : base(message)
+        public PanoramaServerException(string message) : base(message)
         {
+        }
+
+        public PanoramaServerException(ServerState serverState, string serverUrl) : base(ServerError(serverState, serverUrl))
+        {
+        }
+
+        private static string ServerError(ServerState serverState, string serverUrl)
+        {
+            switch (serverState)
+            {
+                case ServerState.missing:
+                    return string.Format(Resources.PanoramaUtil_VerifyServerInformation_The_server__0__does_not_exist_, serverUrl);
+                case ServerState.unknown:
+                    return string.Format(Resources.PanoramaUtil_VerifyServerInformation_Unknown_error_connecting_to_the_server__0__, serverUrl);
+                case ServerState.available:
+                    return "Server validation passed without errors!"; // Should not be throwing an exception if validation was successful
+                default:
+                    return string.Format("Encountered unknown server validation state {0}", serverState);
+            }
+        }
+
+        public PanoramaServerException(UserState userState) : base(UserValidationError(userState))
+        {
+        }
+
+        private static string UserValidationError(UserState userState)
+        {
+            switch (userState)
+            {
+                case UserState.nonvalid:
+                    return "The username and password could not be authenticated with the Panorama server.";
+                case UserState.unknown:
+                    return "Unknown error validating user permissions on the Panorama server.";
+                case UserState.valid:
+                    return "User validation passed without errors!"; // Should not be throwing an exception if validation was successful
+                default:
+                    return string.Format("Encountered unknown user validation state {0}", userState);
+            }
+        }
+
+        public PanoramaServerException(PanoramaState panoramaState, string serverUrl) : base(PanoramaStateError(panoramaState, serverUrl))
+        {
+        }
+
+        private static string PanoramaStateError(PanoramaState panoramaState, string serverUrl)
+        {
+            switch (panoramaState)
+            {
+                case PanoramaState.other:
+                    return string.Format(Resources.PanoramaUtil_VerifyServerInformation_The_server__0__is_not_a_Panorama_server_, serverUrl);
+                case PanoramaState.unknown:
+                    return string.Format(Resources.PanoramaUtil_VerifyServerInformation_Unknown_error_while_checking_if_server__0__is_a_Panorama_server_, serverUrl);
+                case PanoramaState.panorama:
+                    return "Panorama server validation passed without errors!"; // Should not be throwing an exception if validation was successful
+                default:
+                    return string.Format("Encountered unknown Panorama server validation state {0}", panoramaState);
+            }
+        }
+
+        public PanoramaServerException(FolderState folderState, string user, string folder, string serverUrl) : base(FolderValidationError(folderState, user, folder, serverUrl))
+        {
+        }
+
+        private static string FolderValidationError(FolderState folderState, string user, string folder, string serverUrl)
+        {
+            switch (folderState)
+            {
+                case FolderState.notfound:
+                    return string.Format("Folder {0} does not exist on the Panorama server {1}", folder, serverUrl);
+                case FolderState.nopermission:
+                    return string.Format("User {0} does not have permissions to upload to the Panorama folder {1}", user, folder);
+                case FolderState.notpanorama:
+                    return string.Format("{0} is not a Panorama folder", folder);
+                case FolderState.valid:
+                    return "Folder validation passed without errors!"; // Should not be throwing an exception if validation was successful
+                default:
+                    return string.Format("Encountered unknown folder validation state {0}", folderState);
+            }
         }
     }
 

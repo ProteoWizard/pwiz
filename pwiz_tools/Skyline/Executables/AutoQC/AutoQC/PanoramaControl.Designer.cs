@@ -36,14 +36,14 @@
             this.lblPanoramaPasswd = new System.Windows.Forms.Label();
             this.lblPanoramaEmail = new System.Windows.Forms.Label();
             this.textPanoramaEmail = new System.Windows.Forms.TextBox();
-            this.label1 = new System.Windows.Forms.Label();
+            this.label_err_message = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // labelPanoramaFolder
             // 
             this.labelPanoramaFolder.AutoSize = true;
             this.labelPanoramaFolder.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.labelPanoramaFolder.Location = new System.Drawing.Point(-2, 151);
+            this.labelPanoramaFolder.Location = new System.Drawing.Point(-2, 156);
             this.labelPanoramaFolder.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.labelPanoramaFolder.Name = "labelPanoramaFolder";
             this.labelPanoramaFolder.Size = new System.Drawing.Size(204, 13);
@@ -52,7 +52,7 @@
             // 
             // textPanoramaFolder
             // 
-            this.textPanoramaFolder.Location = new System.Drawing.Point(0, 167);
+            this.textPanoramaFolder.Location = new System.Drawing.Point(0, 172);
             this.textPanoramaFolder.Margin = new System.Windows.Forms.Padding(2);
             this.textPanoramaFolder.Name = "textPanoramaFolder";
             this.textPanoramaFolder.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
@@ -63,7 +63,7 @@
             // 
             this.lblPanoramaUrl.AutoSize = true;
             this.lblPanoramaUrl.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.lblPanoramaUrl.Location = new System.Drawing.Point(-3, 19);
+            this.lblPanoramaUrl.Location = new System.Drawing.Point(-3, 24);
             this.lblPanoramaUrl.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.lblPanoramaUrl.Name = "lblPanoramaUrl";
             this.lblPanoramaUrl.Size = new System.Drawing.Size(32, 13);
@@ -74,7 +74,7 @@
             // 
             this.textPanoramaUrl.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.textPanoramaUrl.Location = new System.Drawing.Point(0, 34);
+            this.textPanoramaUrl.Location = new System.Drawing.Point(0, 39);
             this.textPanoramaUrl.Margin = new System.Windows.Forms.Padding(2);
             this.textPanoramaUrl.Name = "textPanoramaUrl";
             this.textPanoramaUrl.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
@@ -84,7 +84,7 @@
             // 
             // textPanoramaPasswd
             // 
-            this.textPanoramaPasswd.Location = new System.Drawing.Point(1, 122);
+            this.textPanoramaPasswd.Location = new System.Drawing.Point(1, 127);
             this.textPanoramaPasswd.Margin = new System.Windows.Forms.Padding(2);
             this.textPanoramaPasswd.Name = "textPanoramaPasswd";
             this.textPanoramaPasswd.PasswordChar = '*';
@@ -96,7 +96,7 @@
             // 
             this.lblPanoramaPasswd.AutoSize = true;
             this.lblPanoramaPasswd.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.lblPanoramaPasswd.Location = new System.Drawing.Point(-2, 106);
+            this.lblPanoramaPasswd.Location = new System.Drawing.Point(-2, 111);
             this.lblPanoramaPasswd.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.lblPanoramaPasswd.Name = "lblPanoramaPasswd";
             this.lblPanoramaPasswd.Size = new System.Drawing.Size(56, 13);
@@ -107,7 +107,7 @@
             // 
             this.lblPanoramaEmail.AutoSize = true;
             this.lblPanoramaEmail.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.lblPanoramaEmail.Location = new System.Drawing.Point(-2, 63);
+            this.lblPanoramaEmail.Location = new System.Drawing.Point(-2, 68);
             this.lblPanoramaEmail.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.lblPanoramaEmail.Name = "lblPanoramaEmail";
             this.lblPanoramaEmail.Size = new System.Drawing.Size(35, 13);
@@ -116,26 +116,26 @@
             // 
             // textPanoramaEmail
             // 
-            this.textPanoramaEmail.Location = new System.Drawing.Point(0, 79);
+            this.textPanoramaEmail.Location = new System.Drawing.Point(0, 84);
             this.textPanoramaEmail.Margin = new System.Windows.Forms.Padding(2);
             this.textPanoramaEmail.Name = "textPanoramaEmail";
             this.textPanoramaEmail.Size = new System.Drawing.Size(202, 20);
             this.textPanoramaEmail.TabIndex = 15;
             // 
-            // label1
+            // label_err_message
             // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(-3, 0);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(219, 13);
-            this.label1.TabIndex = 22;
-            this.label1.Text = "Please fix the Panorama settings to continue.";
+            this.label_err_message.AutoSize = true;
+            this.label_err_message.Location = new System.Drawing.Point(-2, 1);
+            this.label_err_message.Name = "label_err_message";
+            this.label_err_message.Size = new System.Drawing.Size(32, 13);
+            this.label_err_message.TabIndex = 23;
+            this.label_err_message.Text = "Error:";
             // 
             // PanoramaControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Controls.Add(this.label1);
+            this.Controls.Add(this.label_err_message);
             this.Controls.Add(this.labelPanoramaFolder);
             this.Controls.Add(this.textPanoramaFolder);
             this.Controls.Add(this.lblPanoramaUrl);
@@ -145,7 +145,7 @@
             this.Controls.Add(this.lblPanoramaEmail);
             this.Controls.Add(this.textPanoramaEmail);
             this.Name = "PanoramaControl";
-            this.Size = new System.Drawing.Size(346, 186);
+            this.Size = new System.Drawing.Size(346, 195);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -161,6 +161,6 @@
         private System.Windows.Forms.Label lblPanoramaPasswd;
         private System.Windows.Forms.Label lblPanoramaEmail;
         private System.Windows.Forms.TextBox textPanoramaEmail;
-        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Label label_err_message;
     }
 }

@@ -912,29 +912,11 @@ namespace AutoQC.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Please enter a pattern..
+        ///   Looks up a localized string similar to Please enter a value greater than or equal to {0}..
         /// </summary>
-        internal static string MainSettings_ValidateSettings_Please_enter_a_pattern_ {
+        internal static string MainSettings_ValidateSettings_Please_enter_a_value_greater_than_or_equal_to__0__ {
             get {
-                return ResourceManager.GetString("MainSettings_ValidateSettings_Please_enter_a_pattern_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Please enter a value larger than {0}..
-        /// </summary>
-        internal static string MainSettings_ValidateSettings_Please_enter_a_value_larger_than__0__ {
-            get {
-                return ResourceManager.GetString("MainSettings_ValidateSettings_Please_enter_a_value_larger_than__0__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The file filter cannot have an empty pattern..
-        /// </summary>
-        internal static string MainSettings_ValidateSettings_The_file_filter_cannot_have_an_empty_pattern_ {
-            get {
-                return ResourceManager.GetString("MainSettings_ValidateSettings_The_file_filter_cannot_have_an_empty_pattern_", resourceCulture);
+                return ResourceManager.GetString("MainSettings_ValidateSettings_Please_enter_a_value_greater_than_or_equal_to__0__", resourceCulture);
             }
         }
         
@@ -1083,16 +1065,6 @@ namespace AutoQC.Properties {
         internal static string PanoramaUtil_VerifyServerInformation_Unknown_error_connecting_to_the_server__0__ {
             get {
                 return ResourceManager.GetString("PanoramaUtil_VerifyServerInformation_Unknown_error_connecting_to_the_server__0__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Unknown error validating user on server {0}..
-        /// </summary>
-        internal static string PanoramaUtil_VerifyServerInformation_Unknown_error_validating_user_on_server__0__ {
-            get {
-                return ResourceManager.GetString("PanoramaUtil_VerifyServerInformation_Unknown_error_validating_user_on_server__0__" +
-                        "", resourceCulture);
             }
         }
         

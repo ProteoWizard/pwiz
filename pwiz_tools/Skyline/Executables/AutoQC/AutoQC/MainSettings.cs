@@ -19,7 +19,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml;
@@ -124,8 +123,7 @@ namespace AutoQC
                 var pattern = QcFileFilter.Pattern;
                 if (string.IsNullOrEmpty(pattern))
                 {
-                    var err = Resources.MainSettings_ValidateSettings_The_file_filter_cannot_have_an_empty_pattern_ + Environment.NewLine +
-                              Resources.MainSettings_ValidateSettings_Please_enter_a_pattern_;
+                    var err = $"The file filter \"{QcFileFilter.Name()}\" cannot have an empty pattern. Please enter a pattern.";
                     throw new ArgumentException(err);  
                 }
             }
@@ -135,7 +133,7 @@ namespace AutoQC
             {
                 throw new ArgumentException(string.Format(Resources.MainSettings_ValidateSettings__Results_time_window__cannot_be_less_than__0__days_,
                     ACCUM_TIME_WINDOW) + Environment.NewLine + 
-                    string.Format(Resources.MainSettings_ValidateSettings_Please_enter_a_value_larger_than__0__, ACCUM_TIME_WINDOW));
+                    string.Format(Resources.MainSettings_ValidateSettings_Please_enter_a_value_greater_than_or_equal_to__0__, ACCUM_TIME_WINDOW));
             }
             try
             {
@@ -150,7 +148,7 @@ namespace AutoQC
             if (AcquisitionTime < 0)
             {
                 throw new ArgumentException(Resources.MainSettings_ValidateSettings__Expected_acquisition_time__cannot_be_less_than_0_minutes_ +Environment.NewLine +
-                      string.Format(Resources.MainSettings_ValidateSettings_Please_enter_a_value_larger_than__0__, 0));
+                      string.Format(Resources.MainSettings_ValidateSettings_Please_enter_a_value_greater_than_or_equal_to__0__, 0));
             }
         }
 

@@ -41,6 +41,7 @@ namespace AutoQC
             catch (ArgumentException e)
             {
                 errorMessage = e.Message;
+                label_err_message.Text = errorMessage;
                 return false;
             }
         }
@@ -50,8 +51,5 @@ namespace AutoQC
         {
             throw new NotImplementedException("The set text method used in testing cannot be applied to the Panorama settings input, since it has multiple text fields.");
         }
-
-
-
     }
 }

@@ -60,9 +60,9 @@ namespace AutoQC
                 panoramaServer = new PanoramaServer(new Uri(PanoramaUtil.ServerNameToUrl(panoramaServerUrl)),
                     PanoramaUserEmail, PanoramaPassword);
             }
-            catch (UriFormatException)
+            catch (UriFormatException e)
             {
-                throw new ArgumentException($"Panorama server URL is invalid: {panoramaServerUrl}");
+                throw new PanoramaServerException($"Panorama server URL is invalid: {panoramaServerUrl}. {e.Message}");
             }
 
             var panoramaClient = new WebPanoramaClient(panoramaServer.ServerUri);
@@ -77,7 +77,8 @@ namespace AutoQC
             }
             catch (Exception ex)
             {
-                throw new ArgumentException(TextUtil.LineSeparate("Error verifying server information.", ex.Message));
+                if (ex is PanoramaServerException) throw;
+                throw new PanoramaServerException(string.Format("Error verifying server information. {0}", ex.Message));
             }
             try
             {
@@ -88,7 +89,8 @@ namespace AutoQC
             }
             catch (Exception ex)
             {
-                throw new ArgumentException(TextUtil.LineSeparate("Error verifying Panorama folder information.", ex.Message));
+                if (ex is PanoramaServerException) throw;
+                throw new PanoramaServerException(string.Format("Error verifying Panorama folder information. {0}", ex.Message));
             }
 
             return panoramaServer.ServerUri;
