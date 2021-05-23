@@ -380,6 +380,7 @@ namespace pwiz.Skyline
             {
                 _out.WriteLine(Resources.CommandLine_Run_Error__Failed_to_get_optimization_function__0____1_,
                     commandArgs.ImportOptimizeType, x.Message);
+                // TODO: Return false here?
             }
 
             if (commandArgs.ImportingReplicateFile)
@@ -425,7 +426,7 @@ namespace pwiz.Skyline
                    
                     if (listNewPaths.Count == 0)
                     {
-                        _out.WriteLine(Resources.CommandLine_ImportResults_No_replicates_left_to_import_);
+                        _out.WriteLine(Resources.CommandLine_ImportResults_Error__No_replicates_left_to_import_);
                         return false;
                     }
 
@@ -1215,7 +1216,7 @@ namespace pwiz.Skyline
                 string.IsNullOrEmpty(replicateName) /*If a replicate name is not given, remove file paths imported into any replicate.*/);
             if (listNewPaths.Count == 0)
             {
-                _out.WriteLine(Resources.CommandLine_ImportResults_No_replicates_left_to_import_);
+                _out.WriteLine(Resources.CommandLine_ImportResults_Error__No_replicates_left_to_import_);
                 return false;
             }
 
@@ -1647,8 +1648,8 @@ namespace pwiz.Skyline
                         // CONSIDER: Error? Check if the replicate contains the file?
                         //           It does not seem right to just continue on to export a report
                         //           or new method without the results added.
-                        _out.WriteLine(Resources.CommandLine_ImportResultsFile_Warning__The_replicate__0__already_exists_in_the_given_document_and_the___import_append_option_is_not_specified___The_replicate_will_not_be_added_to_the_document_, replicateName);
-                        return true;
+                        _out.WriteLine(Resources.CommandLine_ImportDataFilesWithAppend_Error__The_replicate__0__already_exists_in_the_given_document_and_the___import_append_option_is_not_specified___The_replicate_will_not_be_added_to_the_document_, replicateName);
+                        return false;
                     }
 
                     var replicateFiles = namedPath.Value;
@@ -1672,7 +1673,11 @@ namespace pwiz.Skyline
                         }
                     }
                     if (newFiles.Count == 0)
-                        return true;
+                    {
+                        _out.WriteLine(Resources.CommandLine_ImportResults_Error__No_replicates_left_to_import_);
+                        return false;
+                    }
+
                     if (newFiles.Count != replicateFiles.Length)
                         listNamedPaths[i] = new KeyValuePair<string, MsDataFileUri[]>(replicateName, newFiles.ToArray());
                 }

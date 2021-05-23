@@ -1988,8 +1988,7 @@ namespace pwiz.SkylineTestData
             Assert.AreEqual(3, doc.Settings.MeasuredResults.Chromatograms.Count);
             Assert.IsTrue(
                 msg.Contains(string.Format(
-                    Resources
-                        .CommandLine_ImportResultsFile_Warning__The_replicate__0__already_exists_in_the_given_document_and_the___import_append_option_is_not_specified___The_replicate_will_not_be_added_to_the_document_,
+                    Resources.CommandLine_ImportDataFilesWithAppend_Error__The_replicate__0__already_exists_in_the_given_document_and_the___import_append_option_is_not_specified___The_replicate_will_not_be_added_to_the_document_,
                     replicateName)), msg);
 
             // ------------------------------------------------------------------------------------

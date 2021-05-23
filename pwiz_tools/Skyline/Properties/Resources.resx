@@ -7281,9 +7281,6 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="AbstractMassListExporter_ExportScheduledBuckets_Check_max_concurrent__0__count_and_optimization_step_count" xml:space="preserve">
     <value>Check max concurrent {0} count and optimization step count.</value>
   </data>
-  <data name="CommandLine_ImportResultsFile_Warning__The_replicate__0__already_exists_in_the_given_document_and_the___import_append_option_is_not_specified___The_replicate_will_not_be_added_to_the_document_" xml:space="preserve">
-    <value>Warning: The replicate {0} already exists in the given document and the --import-append option is not specified.  The replicate will not be added to the document.</value>
-  </data>
   <data name="DoconvolutionMethod_OVERLAP_Overlap" xml:space="preserve">
     <value>Overlap</value>
   </data>
@@ -10315,9 +10312,6 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="DocumentAnnotationUpdater_UpdateAnnotations_Updating_calculated_annotations" xml:space="preserve">
     <value>Updating calculated annotations</value>
   </data>
-  <data name="CommandLine_ImportResults_No_replicates_left_to_import_" xml:space="preserve">
-    <value>No replicates left to import.</value>
-  </data>
   <data name="CommandArgs_ParseRegexArgument_Error__Regular_expression___0___for__1__cannot_be_parsed_" xml:space="preserve">
     <value>Error: Regular expression '{0}' for {1} cannot be parsed.</value>
   </data>
@@ -11452,5 +11446,11 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
   </data>
   <data name="BuildPeptideSearchLibraryControl_AddExistingLibrary_This_library_contains_iRT_values__Do_you_want_to_create_a_retention_time_predictor_with_these_values_" xml:space="preserve">
     <value>This library contains iRT values. Do you want to create a retention time predictor with these values?</value>
+  </data>
+  <data name="CommandLine_ImportResults_Error__No_replicates_left_to_import_" xml:space="preserve">
+    <value>Error: No replicates left to import.</value>
+  </data>
+  <data name="CommandLine_ImportDataFilesWithAppend_Error__The_replicate__0__already_exists_in_the_given_document_and_the___import_append_option_is_not_specified___The_replicate_will_not_be_added_to_the_document_" xml:space="preserve">
+    <value>Error: The replicate {0} already exists in the given document and the --import-append option is not specified.  The replicate will not be added to the document.</value>
   </data>
 </root>

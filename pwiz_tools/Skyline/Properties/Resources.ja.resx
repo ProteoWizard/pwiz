@@ -7289,9 +7289,6 @@
   <data name="AbstractMassListExporter_ExportScheduledBuckets_Check_max_concurrent__0__count_and_optimization_step_count" xml:space="preserve">
     <value>最大共点数{0}と最適化ステップ数を確認します。</value>
   </data>
-  <data name="CommandLine_ImportResultsFile_Warning__The_replicate__0__already_exists_in_the_given_document_and_the___import_append_option_is_not_specified___The_replicate_will_not_be_added_to_the_document_" xml:space="preserve">
-    <value>警告： 繰り返し測定{0}が指定したドキュメント内に既に存在しており、import-appendオプションが指定されていません。 繰り返し測定はドキュメントに追加されません。</value>
-  </data>
   <data name="DoconvolutionMethod_OVERLAP_Overlap" xml:space="preserve">
     <value>重複</value>
   </data>
@@ -10320,9 +10317,6 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
   </data>
   <data name="DocumentAnnotationUpdater_UpdateAnnotations_Updating_calculated_annotations" xml:space="preserve">
     <value>計算された注釈を更新中</value>
-  </data>
-  <data name="CommandLine_ImportResults_No_replicates_left_to_import_" xml:space="preserve">
-    <value>インポートする繰り返し測定が残されていません。</value>
   </data>
   <data name="CommandArgs_ParseRegexArgument_Error__Regular_expression___0___for__1__cannot_be_parsed_" xml:space="preserve">
     <value>エラー：{1}の正規表現「{0}」が解析できません。</value>

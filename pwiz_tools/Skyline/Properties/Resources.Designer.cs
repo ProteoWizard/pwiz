@@ -5595,6 +5595,17 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error: The replicate {0} already exists in the given document and the --import-append option is not specified.  The replicate will not be added to the document..
+        /// </summary>
+        public static string CommandLine_ImportDataFilesWithAppend_Error__The_replicate__0__already_exists_in_the_given_document_and_the___import_append_option_is_not_specified___The_replicate_will_not_be_added_to_the_document_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ImportDataFilesWithAppend_Error__The_replicate__0__already_exists_in_" +
+                        "the_given_document_and_the___import_append_option_is_not_specified___The_replica" +
+                        "te_will_not_be_added_to_the_document_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Importing FASTA file {0}....
         /// </summary>
         public static string CommandLine_ImportFasta_Importing_FASTA_file__0____ {
@@ -5604,11 +5615,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to No replicates left to import..
+        ///   Looks up a localized string similar to Error: No replicates left to import..
         /// </summary>
-        public static string CommandLine_ImportResults_No_replicates_left_to_import_ {
+        public static string CommandLine_ImportResults_Error__No_replicates_left_to_import_ {
             get {
-                return ResourceManager.GetString("CommandLine_ImportResults_No_replicates_left_to_import_", resourceCulture);
+                return ResourceManager.GetString("CommandLine_ImportResults_Error__No_replicates_left_to_import_", resourceCulture);
             }
         }
         
@@ -5685,17 +5696,6 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("CommandLine_ImportResultsFile_Warning__Failed_importing_the_results_file__0____Ig" +
                         "noring___", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Warning: The replicate {0} already exists in the given document and the --import-append option is not specified.  The replicate will not be added to the document..
-        /// </summary>
-        public static string CommandLine_ImportResultsFile_Warning__The_replicate__0__already_exists_in_the_given_document_and_the___import_append_option_is_not_specified___The_replicate_will_not_be_added_to_the_document_ {
-            get {
-                return ResourceManager.GetString("CommandLine_ImportResultsFile_Warning__The_replicate__0__already_exists_in_the_gi" +
-                        "ven_document_and_the___import_append_option_is_not_specified___The_replicate_wil" +
-                        "l_not_be_added_to_the_document_", resourceCulture);
             }
         }
         

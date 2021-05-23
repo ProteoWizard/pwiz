@@ -7289,9 +7289,6 @@
   <data name="AbstractMassListExporter_ExportScheduledBuckets_Check_max_concurrent__0__count_and_optimization_step_count" xml:space="preserve">
     <value>核选最大并行{0}计数和优步计数。</value>
   </data>
-  <data name="CommandLine_ImportResultsFile_Warning__The_replicate__0__already_exists_in_the_given_document_and_the___import_append_option_is_not_specified___The_replicate_will_not_be_added_to_the_document_" xml:space="preserve">
-    <value>警告：重复测定{0}已经存在于特定文档中，并且“--导入-附加”选项未指定。 重复测定不会添加到文档中。</value>
-  </data>
   <data name="DoconvolutionMethod_OVERLAP_Overlap" xml:space="preserve">
     <value>重叠</value>
   </data>
@@ -10330,9 +10327,6 @@
   </data>
   <data name="DocumentAnnotationUpdater_UpdateAnnotations_Updating_calculated_annotations" xml:space="preserve">
     <value>更新计算后注释</value>
-  </data>
-  <data name="CommandLine_ImportResults_No_replicates_left_to_import_" xml:space="preserve">
-    <value>无需要导入的重复测定。</value>
   </data>
   <data name="CommandArgs_ParseRegexArgument_Error__Regular_expression___0___for__1__cannot_be_parsed_" xml:space="preserve">
     <value>错误：{1} 的正则表达式“{0}”无法解析。</value>
