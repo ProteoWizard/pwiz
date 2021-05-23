@@ -669,4 +669,10 @@
   <data name="SkylineWindow_ChangeQuantitative_0_transitions" xml:space="preserve">
     <value>{0} 个离子对</value>
   </data>
+  <data name="permuted_isotope_label_simple">
+    <value>已添加同位素修饰 '{0}' 的简单排列</value>
+  </data>
+  <data name="permuted_isotope_label_complete">
+    <value>已添加同位素修饰 '{0}' 的完整排列</value>
+  </data>
 </root>

@@ -9,7 +9,13 @@ namespace pwiz.Skyline.SettingsUI.Irt
 {
     public partial class SelectIrtStandardDlg : FormEx
     {
-        public IrtStandard Selected => comboStandards.SelectedItem as IrtStandard;
+        public IrtStandard Selected
+        {
+            get => comboStandards.SelectedItem as IrtStandard;
+            set => comboStandards.SelectedItem = value;
+        }
+
+        public IEnumerable<IrtStandard> Standards => comboStandards.Items.Cast<IrtStandard>();
 
         public SelectIrtStandardDlg(IEnumerable<IrtStandard> standards)
         {
@@ -19,6 +25,11 @@ namespace pwiz.Skyline.SettingsUI.Irt
         }
 
         private void btnOk_Click(object sender, EventArgs e)
+        {
+            OkDialog();
+        }
+
+        public void OkDialog()
         {
             DialogResult = DialogResult.OK;
         }
