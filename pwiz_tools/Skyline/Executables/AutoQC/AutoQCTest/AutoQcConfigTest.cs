@@ -55,12 +55,13 @@ namespace AutoQCTest
             var smallResultsWindow = "30";
             TestInvalidMainSettings(new MainSettings(skylinePath, folderToWatch, false, fileFilter, false,
                     smallResultsWindow, instrumentType, acquisitionTime),
-                "\"Results time window\" cannot be less than 31 days.\r\nPlease enter a value larger than 31.");
+                
+                "\"Results time window\" cannot be less than 31 days.\r\nPlease enter a value greater than or equal to 31.");
 
             var negativeAcquisitionTime = "-1";
             TestInvalidMainSettings(new MainSettings(skylinePath, folderToWatch, false, fileFilter, false,
                     resultsWindow, instrumentType, negativeAcquisitionTime),
-                "\"Expected acquisition time\" cannot be less than 0 minutes.\r\nPlease enter a value larger than 0.");
+                "\"Expected acquisition time\" cannot be less than 0 minutes.\r\nPlease enter a value greater than or equal to 0.");
 
             var nonNumberAcquisitionTime = "aaa";
             try
@@ -108,15 +109,15 @@ namespace AutoQCTest
         {
             ProgramLog.Init("TestLog");
             TestInvalidPanoramaSettings(new PanoramaSettings(true, "https://fake_panoramaweb.org/", "testEmail", "testPassword", "testFolder"), 
-                "Error verifying server information.\r\nThe server https://fake_panoramaweb.org/ does not exist.");
+                "The server https://fake_panoramaweb.org/ does not exist.");
             TestInvalidPanoramaSettings(new PanoramaSettings(true, string.Empty, "testEmail", "testPassword", "testFolder"),
                 "The Panorama server Url cannot be empty. Please specify a Panorama server Url.");
             TestInvalidPanoramaSettings(new PanoramaSettings(true, "https://panoramaweb.org/", "bad_email@bad.bad", "testPassword", "testFolder"),
-                "Error verifying server information.\r\nThe username and password could not be authenticated with the panorama server.");
+                "The username and password could not be authenticated with the Panorama server.");
             TestInvalidPanoramaSettings(new PanoramaSettings(true, "https://panoramaweb.org/", string.Empty, "testPassword", "testFolder"),
                 "The Panorama login email cannot be empty. Please specify a Panorama login email.");
             TestInvalidPanoramaSettings(new PanoramaSettings(true, "https://panoramaweb.org/", "testEmail", "not_the_password", "testFolder"),
-                "Error verifying server information.\r\nThe username and password could not be authenticated with the panorama server.");
+                "The username and password could not be authenticated with the Panorama server.");
             TestInvalidPanoramaSettings(new PanoramaSettings(true, "https://panoramaweb.org/", "testEmail", string.Empty, "testFolder"),
                 "The Panorama user password cannot be empty. Please specify a Panorama user password.");
             TestInvalidPanoramaSettings(new PanoramaSettings(true, "https://panoramaweb.org/", "testEmail", "testPassword", ""),
