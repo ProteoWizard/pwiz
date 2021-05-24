@@ -141,8 +141,13 @@ namespace pwiz.Skyline
             bool anyAction = false;
             if (commandArgs.InstallingToolsFromZip)
             {
-                ImportToolsFromZip(commandArgs.ZippedToolsPath, commandArgs.ResolveZipToolConflictsBySkipping, commandArgs.ResolveZipToolAnotationConflictsBySkipping,
-                                   commandArgs.ZippedToolsProgramPathContainer, commandArgs.ZippedToolsProgramPathValue, commandArgs.ZippedToolsPackagesHandled);
+                if (!ImportToolsFromZip(commandArgs.ZippedToolsPath, commandArgs.ResolveZipToolConflictsBySkipping,
+                    commandArgs.ResolveZipToolAnotationConflictsBySkipping,
+                    commandArgs.ZippedToolsProgramPathContainer, commandArgs.ZippedToolsProgramPathValue,
+                    commandArgs.ZippedToolsPackagesHandled))
+                {
+                    return Program.EXIT_CODE_RAN_WITH_ERRORS;
+                }
                 anyAction = true;
             }
             if (commandArgs.ImportingTool)
@@ -2801,22 +2806,22 @@ namespace pwiz.Skyline
             in_parallel
         }
 
-        public void ImportToolsFromZip(string path, ResolveZipToolConflicts? resolveConflicts, bool? overwriteAnnotations, ProgramPathContainer ppc, string programPath, bool arePackagesHandled)
+        public bool ImportToolsFromZip(string path, ResolveZipToolConflicts? resolveConflicts, bool? overwriteAnnotations, ProgramPathContainer ppc, string programPath, bool arePackagesHandled)
         {
             if (string.IsNullOrEmpty(path))
             {
                 _out.WriteLine(Resources.CommandLine_ImportToolsFromZip_Error__to_import_tools_from_a_zip_you_must_specify_a_path___tool_add_zip_must_be_followed_by_an_existing_path_);
-                return;
+                return false;
             }
             if (!File.Exists(path))
             {
                 _out.WriteLine(Resources.CommandLine_ImportToolsFromZip_Error__the_file_specified_with_the___tool_add_zip_command_does_not_exist__Please_verify_the_file_location_and_try_again_);
-                return;
+                return false;
             }
             if (Path.GetExtension(path) != ToolDescription.EXT_INSTALL)
             {
                 _out.WriteLine(Resources.CommandLine_ImportToolsFromZip_Error__the_file_specified_with_the___tool_add_zip_command_is_not_a__zip_file__Please_specify_a_valid__zip_file_);
-                return;
+                return false;
             }
             string filename = Path.GetFileName(path);
             _out.WriteLine(Resources.CommandLine_ImportToolsFromZip_Installing_tools_from__0_, filename);
@@ -2845,8 +2850,11 @@ namespace pwiz.Skyline
             }
             else
             {
-                _out.WriteLine(Resources.CommandLine_ImportToolsFromZip_Canceled_installing_tools_from__0__, filename);
+                _out.WriteLine(Resources.CommandLine_ImportToolsFromZip_Error__Canceled_installing_tools_from__0__, filename);
+                return false;
             }
+
+            return true;
         }
 
         private bool SaveSettings()

@@ -5851,9 +5851,6 @@
   <data name="OptimizationDb_GetOptimizationDb_Library_path_cannot_be_null_" xml:space="preserve">
     <value>ライブラリパスは空値にはできません。</value>
   </data>
-  <data name="CommandLine_ImportToolsFromZip_Canceled_installing_tools_from__0__" xml:space="preserve">
-    <value>{0}からツールのインストールをキャンセルしました。</value>
-  </data>
   <data name="AllChromatogramsGraph_btnCancelFile_Click_Cancel_file" xml:space="preserve">
     <value>ファイルをキャンセル</value>
   </data>
