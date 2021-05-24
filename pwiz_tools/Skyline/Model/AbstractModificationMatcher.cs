@@ -499,7 +499,20 @@ namespace pwiz.Skyline.Model
             var transitionsUnranked = new List<DocNode>();
             foreach (var peak in spectrum.Peaks)
             {
-                transitionsUnranked.Add(TransitionFromPeakAndAnnotations(key, nodeGroupMatched, fragmentCharge, peak, null));
+                try
+                {
+                    transitionsUnranked.Add(TransitionFromPeakAndAnnotations(key, nodeGroupMatched, fragmentCharge, peak, null));
+                }
+                catch (InvalidDataException)
+                {
+                    // Some kind of garbage in peaklist, e.g fragment mass is absurdly small or large - ignore
+                    // TODO(bspratt) - address Brendan's comment from pull request:
+                    // "This call should be paying attention to settings and the minimum value that causes the exception reported to initiate this fix.For peptide fragment
+                    // annotation, we definitely consider the settings, and since we do not rank fragments outside the instrument range. This code also strikes me as odd that you wouldn't just create the precursor
+                    // and then use a precursor.ChangeSettings(Settings, diff ?? SrmSettingsDiff.ALL) to materialize all of the transitions based on the settings. That way you only write the code once to materialize
+                    // transitions based on settings."
+                    // In particular not ranking things outside the machine range makes sense.
+                } 
             }
             var nodeGroupUnranked = (TransitionGroupDocNode) nodeGroupMatched.ChangeChildren(transitionsUnranked);
             // Filter again, retain only those with rank info,  or at least an interesting name
