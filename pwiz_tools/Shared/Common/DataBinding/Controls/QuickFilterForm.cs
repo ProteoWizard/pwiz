@@ -191,9 +191,7 @@ namespace pwiz.Common.DataBinding.Controls
             {
                 // If there is no ViewContext (which should never happen), fall back to using the system message box to show the
                 // error message.
-                // Put a line break in the function call so that code inspection passes
-                MessageBox
-                    .Show(this, e.Message);
+                MessageBox.Show(this, e.Message);  // Purposely using MessageBox here - not a code inspection violation
             }
         }
 

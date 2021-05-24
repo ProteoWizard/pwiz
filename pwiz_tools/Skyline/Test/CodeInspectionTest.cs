@@ -53,6 +53,7 @@ namespace pwiz.SkylineTest
         public void CodeInspection()
         {
             // Looking for uses of MessageBox where we should really be using MessageDlg
+            const string messageBoxExemptionComment = @"// Purposely using MessageBox here";
             AddTextInspection(@"*.cs", // Examine files with this mask
                 Inspection.Forbidden, // This is a test for things that should NOT be in such files
                 Level.Error, // Any failure is treated as an error, and overall test fails
@@ -60,8 +61,8 @@ namespace pwiz.SkylineTest
                 string.Empty, // No file content required for inspection
                 @"MessageBox.Show", // Forbidden pattern
                 false, // Pattern is not a regular expression
-                @"use MessageDlg.Show instead - this ensures proper interaction with automated tests, small molecule interface operation, and other enhancements", // Explanation for prohibition, appears in report
-                @"// Purposely using MessageBox here"); // There is one legitimate use of this, look for this comment and ignore the violation when found
+                @"use MessageDlg.Show instead - this ensures proper interaction with automated tests, small molecule interface operation, and other enhancements. If this really is a legitimate use add this comment to the offending line: '"+ messageBoxExemptionComment+@"'", // Explanation for prohibition, appears in report
+                messageBoxExemptionComment); // There are one or two legitimate uses of this, look for this comment and ignore the violation when found
 
             // Looking for forgotten PauseTest() calls that will mess up automated tests
             AddTextInspection(@"*.cs", // Examine files with this mask
