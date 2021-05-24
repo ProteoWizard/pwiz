@@ -90,11 +90,14 @@ namespace pwiz.Skyline
             {
                 if (_out.IsErrorReported)
                 {
-                    return test ? exitStatus : Program.EXIT_CODE_RAN_WITH_ERRORS;
+                    return test ? exitStatus // Return the original exit code when we are running a test so that the test fails
+                        : Program.EXIT_CODE_RAN_WITH_ERRORS;
                 }
             }
             else if (!_out.IsErrorReported && !test)
             {
+                // Output the catch-all error only if we are not running tests. We want the test to fail if no error is reported 
+                // and the exit code is not 0.
                 _out.WriteLine(Resources.CommandLine_Run_Error__Failure_occurred__Exiting___);
             }
             
@@ -1657,7 +1660,7 @@ namespace pwiz.Skyline
                         //           It does not seem right to just continue on to export a report
                         //           or new method without the results added.
                         _out.WriteLine(Resources.CommandLine_ImportDataFilesWithAppend_Error__The_replicate__0__already_exists_in_the_given_document_and_the___import_append_option_is_not_specified___The_replicate_will_not_be_added_to_the_document_, replicateName);
-                        return false;
+                        return false; // TODO: Is this OK? 
                     }
 
                     var replicateFiles = namedPath.Value;
@@ -1683,7 +1686,7 @@ namespace pwiz.Skyline
                     if (newFiles.Count == 0)
                     {
                         _out.WriteLine(Resources.CommandLine_ImportResults_Error__No_replicates_left_to_import_);
-                        return false;
+                        return false; // TODO: Is this OK?
                     }
 
                     if (newFiles.Count != replicateFiles.Length)
@@ -3751,7 +3754,7 @@ namespace pwiz.Skyline
             }
         }
 
-        public virtual bool IsErrorMessage(string message)
+        private bool IsErrorMessage(string message)
         {
             if (message != null && !IsErrorReported)
             {
