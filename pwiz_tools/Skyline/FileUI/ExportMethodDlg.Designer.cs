@@ -80,6 +80,7 @@
             this.panelBrukerTimsTof = new System.Windows.Forms.Panel();
             this.textMs1RepetitionTime = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
+            this.cbSureQuant = new System.Windows.Forms.CheckBox();
             this.panelThermoColumns.SuspendLayout();
             this.panelAbSciexTOF.SuspendLayout();
             this.panelTriggered.SuspendLayout();
@@ -431,12 +432,19 @@
             resources.ApplyResources(this.label1, "label1");
             this.label1.Name = "label1";
             // 
+            // cbSureQuant
+            // 
+            resources.ApplyResources(this.cbSureQuant, "cbSureQuant");
+            this.cbSureQuant.Name = "cbSureQuant";
+            this.cbSureQuant.UseVisualStyleBackColor = true;
+            // 
             // ExportMethodDlg
             // 
             this.AcceptButton = this.btnOk;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.cbSureQuant);
             this.Controls.Add(this.panelBrukerTimsTof);
             this.Controls.Add(this.btnGraph);
             this.Controls.Add(this.cbSortByMz);
@@ -552,5 +560,6 @@
         private System.Windows.Forms.Panel panelBrukerTimsTof;
         private System.Windows.Forms.TextBox textMs1RepetitionTime;
         private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.CheckBox cbSureQuant;
     }
 }

@@ -186,8 +186,8 @@ namespace pwiz.Skyline.Model
         public const string THERMO_FUSION = "Thermo Fusion";
         public const string THERMO_LTQ = "Thermo LTQ";
         public const string THERMO_Q_EXACTIVE = "Thermo Q Exactive";
-        public const string THERMO_EXPLORIS_SUREQUANT = "Thermo Exploris (SureQuant)";
-        public const string THERMO_FUSION_LUMOS_SUREQUANT = "Thermo Fusion Lumos (SureQuant)";
+        public const string THERMO_EXPLORIS = "Thermo Exploris";
+        public const string THERMO_FUSION_LUMOS = "Thermo Fusion Lumos";
         public const string WATERS = "Waters";
         public const string WATERS_XEVO_TQ = "Waters Xevo TQ";
         public const string WATERS_XEVO_QTOF = "Waters Xevo QTOF";
@@ -217,8 +217,8 @@ namespace pwiz.Skyline.Model
                 THERMO_ALTIS,
                 THERMO_FUSION,
                 THERMO_QUANTIVA,
-                THERMO_EXPLORIS_SUREQUANT,
-                THERMO_FUSION_LUMOS_SUREQUANT,
+                THERMO_EXPLORIS,
+                THERMO_FUSION_LUMOS,
                 WATERS_XEVO_TQ,
                 WATERS_QUATTRO_PREMIER,
             };
@@ -263,8 +263,8 @@ namespace pwiz.Skyline.Model
                                        {THERMO_QUANTIVA, EXT_THERMO},
                                        {THERMO_ALTIS, EXT_THERMO},
                                        {THERMO_FUSION, EXT_THERMO},
-                                       {THERMO_EXPLORIS_SUREQUANT, EXT_THERMO},
-                                       {THERMO_FUSION_LUMOS_SUREQUANT, EXT_THERMO},
+                                       {THERMO_EXPLORIS, EXT_THERMO},
+                                       {THERMO_FUSION_LUMOS, EXT_THERMO},
                                        {WATERS_XEVO_TQ, EXT_WATERS},
                                        {WATERS_QUATTRO_PREMIER, EXT_WATERS}
                                    };
@@ -389,6 +389,7 @@ namespace pwiz.Skyline.Model
         public virtual string MsMsAnalyzer { get; set; }
 
         public virtual bool ExportMultiQuant { get; set; }
+        public virtual bool ExportSureQuant { get; set; }
 
         public virtual bool RetentionStartAndEnd { get; set; }
 
@@ -485,9 +486,10 @@ namespace pwiz.Skyline.Model
                     }
                     else
                         return ExportThermoFusionMethod(doc, path, template);
-                case ExportInstrumentType.THERMO_EXPLORIS_SUREQUANT:
-                case ExportInstrumentType.THERMO_FUSION_LUMOS_SUREQUANT:
-                    return ExportThermoSureQuantMethod(doc, path, template, instrumentType);
+                case ExportInstrumentType.THERMO_EXPLORIS:
+                    return ExportThermoExplorisMethod(doc, path, template);
+                case ExportInstrumentType.THERMO_FUSION_LUMOS:
+                    return ExportThermoFusionLumosMethod(doc, path, template);
                 case ExportInstrumentType.SHIMADZU:
                     if (type == ExportFileType.List)
                         return ExportShimadzuCsv(doc, path);
@@ -772,9 +774,22 @@ namespace pwiz.Skyline.Model
             PerformLongExport(m => exporter.ExportIsolationList(fileName, m));
         }
 
-        public AbstractMassListExporter ExportThermoSureQuantMethod(SrmDocument document, string fileName, string templateName, string instrumentType)
+        public AbstractMassListExporter ExportThermoExplorisMethod(SrmDocument document, string fileName,
+            string templateName)
         {
-            var exporter = InitExporter(new ThermoSureQuantMethodExporter(document, instrumentType));
+            var exporter = InitExporter(new ThermoSureQuantMethodExporter(document, ExportInstrumentType.THERMO_EXPLORIS, ExportSureQuant));
+            if (MethodType == ExportMethodType.Standard)
+                exporter.RunLength = RunLength;
+            exporter.RetentionStartAndEnd = RetentionStartAndEnd;
+            PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
+
+            return exporter;
+        }
+
+        public AbstractMassListExporter ExportThermoFusionLumosMethod(SrmDocument document, string fileName,
+            string templateName)
+        {
+            var exporter = InitExporter(new ThermoSureQuantMethodExporter(document, ExportInstrumentType.THERMO_FUSION_LUMOS, ExportSureQuant));
             if (MethodType == ExportMethodType.Standard)
                 exporter.RunLength = RunLength;
             exporter.RetentionStartAndEnd = RetentionStartAndEnd;
@@ -1899,13 +1914,15 @@ namespace pwiz.Skyline.Model
 
     public class ThermoSureQuantMethodExporter : ThermoMassListExporter
     {
-        public ThermoSureQuantMethodExporter(SrmDocument document, string instrumentType)
+        public ThermoSureQuantMethodExporter(SrmDocument document, string instrumentType, bool surequantMethod)
             : base(document)
         {
             _instrumentType = instrumentType;
+            _surequantMethod = surequantMethod;
         }
 
         private readonly string _instrumentType;
+        private readonly bool _surequantMethod;
 
         protected override string InstrumentType => _instrumentType;
 
@@ -1913,8 +1930,11 @@ namespace pwiz.Skyline.Model
 
         protected override void WriteHeaders(TextWriter writer)
         {
-            writer.Write(@"SureQuant Info");
-            writer.Write(FieldSeparator);
+            if (_surequantMethod)
+            {
+                writer.Write(@"SureQuant Info");
+                writer.Write(FieldSeparator);
+            }
             writer.Write(@"Compound");
             writer.Write(FieldSeparator);
             if (RetentionStartAndEnd)
@@ -1955,11 +1975,14 @@ namespace pwiz.Skyline.Model
             TransitionDocNode nodeTran,
             int step)
         {
-            var surequantInfo = nodeTranGroup.PrecursorCharge.ToString(CultureInfo);
-            surequantInfo += Equals(nodeTranGroup.LabelType, IsotopeLabelType.heavy) ? 'H' : 'L';
-            surequantInfo += nodePep.Target;
-            writer.WriteDsvField(surequantInfo, FieldSeparator);
-            writer.Write(FieldSeparator);
+            if (_surequantMethod)
+            {
+                var surequantInfo = nodeTranGroup.PrecursorCharge.ToString(CultureInfo);
+                surequantInfo += Equals(nodeTranGroup.LabelType, IsotopeLabelType.heavy) ? 'H' : 'L';
+                surequantInfo += nodePep.Target;
+                writer.WriteDsvField(surequantInfo, FieldSeparator);
+                writer.Write(FieldSeparator);
+            }
 
             var compound = string.Format(@"{0}{1}({2}{3})",
                 GetCompound(nodePep, nodeTranGroup),
@@ -2053,10 +2076,10 @@ namespace pwiz.Skyline.Model
             var argv = new List<string>();
             switch (_instrumentType)
             {
-                case ExportInstrumentType.THERMO_EXPLORIS_SUREQUANT:
+                case ExportInstrumentType.THERMO_EXPLORIS:
                     argv.Add(@"-p");
                     break;
-                case ExportInstrumentType.THERMO_FUSION_LUMOS_SUREQUANT:
+                case ExportInstrumentType.THERMO_FUSION_LUMOS:
                     argv.Add(@"-l");
                     break;
             }

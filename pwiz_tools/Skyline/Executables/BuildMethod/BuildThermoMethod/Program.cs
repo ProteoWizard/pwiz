@@ -138,7 +138,7 @@ namespace BuildThermoMethod
 
         public static ListItem FromLine(int lineNum, string[] fields, Dictionary<int, string> columnMap)
         {
-            int numFields = fields.Count();
+            int numFields = fields.Length;
 
             if (numFields != columnMap.Count)
                 throw new InvalidDataException("CSV data contains different number of values than headers");
@@ -510,10 +510,10 @@ namespace BuildThermoMethod
                                 mx.ApplyMethodModificationsFromXML(GetFusionModificationXml(listItems, outMeth));
                                 break;
                             case InstrumentExploris:
-                                mx.ApplyMethodModificationsFromXML(GetExplorisSureQuantModificationXml(listItems, outMeth));
+                                mx.ApplyMethodModificationsFromXML(GetExplorisModificationXml(listItems, outMeth));
                                 break;
                             case InstrumentFusionLumos:
-                                mx.ApplyMethodModificationsFromXML(GetFusionLumosSureQuantModificationXml(listItems, outMeth));
+                                mx.ApplyMethodModificationsFromXML(GetFusionLumosModificationXml(listItems, outMeth));
                                 break;
                             default:
                                 mx.ImportMassListFromXML(GetTsqMassListXml(listItems, outMeth));
@@ -654,12 +654,14 @@ namespace BuildThermoMethod
         }
 
         // Get XML for Exploris methods
-        private string GetExplorisSureQuantModificationXml(IEnumerable<ListItem> items, string outMethod)
+        private string GetExplorisModificationXml(IList<ListItem> items, string outMethod)
         {
+            var surequant = items.Count > 0 && items[0].SureQuantInfo != null;
+
             var records = new Dictionary<Tuple<int, char>, List<XmlExploris.MassListRecord>>();
             foreach (var item in items)
             {
-                var key = item.SureQuantInfo.Key;
+                var key = surequant ? item.SureQuantInfo.Key : Tuple.Create(0, '\0');
                 if (!records.TryGetValue(key, out var list))
                 {
                     records[key] = new List<XmlExploris.MassListRecord>();
@@ -712,12 +714,14 @@ namespace BuildThermoMethod
         }
 
         // Get XML for Fusion Lumos methods
-        private string GetFusionLumosSureQuantModificationXml(IEnumerable<ListItem> items, string outMethod)
+        private string GetFusionLumosModificationXml(IList<ListItem> items, string outMethod)
         {
+            var surequant = items.Count > 0 && items[0].SureQuantInfo != null;
+
             var records = new Dictionary<Tuple<int, char>, List<XmlCalcium.MassListRecord>>();
             foreach (var item in items)
             {
-                var key = item.SureQuantInfo.Key;
+                var key = surequant ? item.SureQuantInfo.Key : Tuple.Create(0, '\0');
                 if (!records.TryGetValue(key, out var list))
                 {
                     records[key] = new List<XmlCalcium.MassListRecord>();
