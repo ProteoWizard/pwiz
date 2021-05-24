@@ -10023,10 +10023,6 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
     <value>Panoramaにアップロードしようとした際に不明なエラーが発生しました。
 {0}</value>
   </data>
-  <data name="CommandArgs_PanoramaArgsComplete_plural_" xml:space="preserve">
-    <value>ドキュメントをPanormaにアップロードするため必要な以下の引数に値を指定してください：
-{0}</value>
-  </data>
   <data name="SkylineWindow_ShowPublishDlg_The_document_must_be_fully_loaded_before_it_can_be_uploaded_" xml:space="preserve">
     <value>ドキュメントはアップロードする前に、完全に読み込まれている必要があります。</value>
   </data>
@@ -10047,10 +10043,6 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
   </data>
   <data name="PublishDocumentDlg_btnBrowse_Click_Upload_Document" xml:space="preserve">
     <value>ドキュメントをアップロード</value>
-  </data>
-  <data name="CommandArgs_PanoramaArgsComplete_" xml:space="preserve">
-    <value>ドキュメントをPanoramaにアップロードするため必要な以下の引数に値を指定してください：
-{0}</value>
   </data>
   <data name="FullScanAcquisitionMethod_FromName__0__is_not_a_valid_Full_Scan_Acquisition_Method" xml:space="preserve">
     <value>{0}は有効なフルスキャン取得メソッドではありません</value>
@@ -11409,5 +11401,8 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
   <data name="IonMobilityObject_ToString_HEO_" xml:space="preserve">
     <value>HEO：</value>
     <comment>Compact representation of "High Energy Ion Mobility Offset Offset"</comment>
+  </data>
+  <data name="CommandStatusWriter_WriteLine_Error_" xml:space="preserve">
+    <value>エラー：</value>
   </data>
 </root>

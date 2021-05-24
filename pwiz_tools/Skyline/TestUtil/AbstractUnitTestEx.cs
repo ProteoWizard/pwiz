@@ -39,22 +39,21 @@ namespace pwiz.SkylineTestUtil
         protected static string RunCommand(params string[] inputArgs)
         {
             var consoleBuffer = new StringBuilder();
-            var consoleOutput = new TestCommandStatusWriter(new StringWriter(consoleBuffer));
-            int exitStatus = CommandLineRunner.RunCommand(inputArgs, consoleOutput, true);
+            var consoleOutput = new CommandStatusWriter(new StringWriter(consoleBuffer));
+            var exitStatus = CommandLineRunner.RunCommand(inputArgs, consoleOutput, true);
 
             if (exitStatus == Program.EXIT_CODE_SUCCESS && consoleOutput.IsErrorReported)
             {
-                var message = string.Format("Error reported but exit status was {0}.", exitStatus);
-                if (consoleOutput.Errors.Count > 0)
-                {
-                    message = TextUtil.LineSeparate(message, "Errors reported: ",
-                        TextUtil.LineSeparate(consoleOutput.Errors));
-                }
+                var message =
+                    TextUtil.LineSeparate(string.Format("Error reported but exit status was {0}.", exitStatus),
+                        "Output: ", consoleBuffer.ToString());
                 Assert.Fail(message);
             }
             else if (exitStatus != Program.EXIT_CODE_SUCCESS && !consoleOutput.IsErrorReported)
             {
-                var message = string.Format("No error reported but exit status was {0}.", exitStatus);
+                var message =
+                    TextUtil.LineSeparate(string.Format("No error reported but exit status was {0}.", exitStatus),
+                        "Output: ", consoleBuffer.ToString());
                 Assert.Fail(message);
             }
 
@@ -125,26 +124,6 @@ namespace pwiz.SkylineTestUtil
             }
             AssertEx.ConvertedSmallMoleculeDocumentIsSimilar(docOriginal, doc, Path.GetDirectoryName(docPath), mode);
             return doc;
-        }
-    }
-
-    public class TestCommandStatusWriter : CommandStatusWriter
-    {
-        public List<string> Errors { get; }
-
-        public TestCommandStatusWriter(TextWriter writer) : base(writer)
-        {
-            Errors = new List<string>();
-        }
-
-        public override bool IsErrorMessage(string message)
-        {
-            bool isError = base.IsErrorMessage(message);
-            if (isError)
-            {
-                Errors.Add(message);
-            }
-            return isError;
         }
     }
 }
