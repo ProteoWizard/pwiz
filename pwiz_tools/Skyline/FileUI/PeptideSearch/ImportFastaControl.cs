@@ -473,6 +473,15 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     return false;
                 }
 
+                // Add iRT standards if not present
+                var docWithStandards = ImportPeptideSearch.AddStandardsToDocument(docNew, irtStandard);
+                if (!ReferenceEquals(docWithStandards, docNew))
+                {
+                    // iRT standards were added
+                    docNew = docWithStandards;
+                    newPeptideGroups.Insert(0, docWithStandards.PeptideGroups.First());
+                }
+
                 // Filter proteins based on number of peptides and add decoys
                 using (var dlg = new PeptidesPerProteinDlg(docNew, newPeptideGroups, DecoyGenerationMethod, NumDecoys ?? 0))
                 {
@@ -482,9 +491,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 // Document will be null if user was given option to keep or remove empty proteins and pressed cancel
                 if (docNew == null)
                     return false;
-
-                // Add iRT standards if not present
-                docNew = ImportPeptideSearch.AddStandardsToDocument(docNew, irtStandard);
 
                 if (AutoTrain)
                 {
