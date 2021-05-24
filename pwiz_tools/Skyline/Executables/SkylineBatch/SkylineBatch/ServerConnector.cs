@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using FluentFTP;
 using SharedBatch;
+using SkylineBatch.Properties;
 
 namespace SkylineBatch
 {
@@ -15,61 +16,50 @@ namespace SkylineBatch
     {
         private Dictionary<ServerInfo, List<FtpListItem>> _serverMap;
         private Dictionary<ServerInfo, Exception> _serverExceptions;
-        private bool _started;
         private object _lock = new object();
 
-        public ServerConnector()
+        public ServerConnector(params ServerInfo[] serverInfos)
         {
             lock (_lock)
             {
                 _serverMap = new Dictionary<ServerInfo, List<FtpListItem>>();
                 _serverExceptions = new Dictionary<ServerInfo, Exception>();
-            }
-        }
-
-
-        public async Task GetFiles(ServerInfo serverInfo, OnPercentProgress doOnProgress, Action<List<FtpListItem>> successCallback, Action<Exception> errorCallback)
-        {
-            while (true)
-            {
-                lock (_lock)
+                foreach (var serverInfo in serverInfos)
                 {
-                    if (!_started)
-                        Start(doOnProgress);
-                    _started = true;
-                    if (_serverMap[serverInfo] != null || _serverExceptions[serverInfo] != null)
-                        break;
-                }
-                await Task.Delay(1000);
-            }
-            if (_serverMap[serverInfo] != null)
-                successCallback(_serverMap[serverInfo]);
-            if (_serverExceptions[serverInfo] != null)
-                errorCallback(_serverExceptions[serverInfo]);
-        }
-
-        public void AddServer(ServerInfo serverInfo)
-        {
-            lock (_lock)
-            {
-                if (_started) throw new Exception("Cannot add servers after start.");
-                if (!_serverMap.ContainsKey(serverInfo))
-                {
-                    _serverMap.Add(serverInfo, null);
-                    _serverExceptions.Add(serverInfo, null);
+                    if (!_serverMap.ContainsKey(serverInfo))
+                    {
+                        _serverMap.Add(serverInfo, null);
+                        _serverExceptions.Add(serverInfo, null);
+                    }
                 }
             }
         }
 
-        private void Start(OnPercentProgress doOnProgress)
+        public List<FtpListItem> GetFiles(ServerInfo serverInfo, out Exception connectionException)
         {
-            var serverCount = _serverMap.Count;
+            if (!_serverMap.ContainsKey(serverInfo) )
+                throw new Exception("ServerConnector was not initialized with this server. No information for the server.");
+            if (_serverMap[serverInfo] == null && _serverExceptions[serverInfo] == null)
+                throw new Exception("ServerConnector was never started. No information for the server.");
+            connectionException = _serverExceptions[serverInfo];
+            if (connectionException != null)
+                return null;
+            return _serverMap[serverInfo];
+        }
+
+        public void Connect(OnPercentProgress doOnProgress, List<ServerInfo> servers = null)
+        {
+            if (servers == null)
+                servers = _serverMap.Keys.ToList();
+
+            var serverCount = servers.Count;
             var downloadFinished = 0;
-            var servers = _serverMap.Keys.ToList();
             doOnProgress(0,
                 (int)(1.0 / serverCount * 100));
             foreach (var serverInfo in servers)
             {
+                if (_serverMap[serverInfo] != null || _serverExceptions[serverInfo] != null)
+                    continue;
                 var serverFiles = new List<FtpListItem>();
                 var client = GetFtpClient(serverInfo);
                 try
@@ -89,13 +79,33 @@ namespace SkylineBatch
                     lock (_lock)
                         _serverExceptions[serverInfo] = e;
                 }
+                if (_serverExceptions[serverInfo] == null && serverFiles.Count == 0)
+                {
+                    _serverExceptions[serverInfo] = new ArgumentException(string.Format(
+                        Resources
+                            .DataServerInfo_Validate_There_were_no_files_found_at__0___Make_sure_the_URL__username__and_password_are_correct_and_try_again_,
+                        serverInfo.Server.AbsoluteUri));
+                }
+                else
+                {
+                    lock (_lock)
+                        _serverMap[serverInfo] = serverFiles;
+                }
                 client.Disconnect();
-                lock (_lock)
-                    _serverMap[serverInfo] = serverFiles;
                 downloadFinished++;
                 doOnProgress((int)((double)downloadFinished / serverCount * 100),
                     (int)((double)(downloadFinished + 1) / serverCount * 100));
             }
+        }
+
+        public void Reconnect(List<ServerInfo> servers, OnPercentProgress doOnProgress)
+        {
+            foreach (var serverInfo in servers)
+            {
+                _serverMap[serverInfo] = null;
+                _serverExceptions[serverInfo] = null;
+            }
+            Connect(doOnProgress, servers);
         }
 
         public FtpClient GetFtpClient(ServerInfo serverInfo)

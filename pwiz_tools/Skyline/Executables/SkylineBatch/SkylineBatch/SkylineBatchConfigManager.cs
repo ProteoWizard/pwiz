@@ -41,12 +41,9 @@ namespace SkylineBatch
         private ImmutableDictionary<string, IConfigRunner> _configRunners; // dictionary mapping from config name to that config's runner
         private ImmutableDictionary<string, string> _refinedTemplates; // dictionary mapping from config name to it's refined output file (not included if no refinement occurs)
 
-        private SkylineBatchConfigManagerState _importedConfigsState;
-
-        private CancellationTokenSource _longOperationCancelToken;
-
         private SkylineBatchConfigManagerState _checkedRunState;
         private RunBatchOptions? _checkedRunOption;
+        private ServerConnector _runServerConnector;
 
         // Shared variables with ConfigManager:
         //  Protected -
@@ -93,13 +90,15 @@ namespace SkylineBatch
                 runner.Cancel();
         }
 
-        public void StartLoadingConfigList(LongWaitOperation longImportOperation, Callback importCallback)
+        public new void LoadConfigList()
         {
-            var configs = LoadConfigList();
+            var configs = base.LoadConfigList();
             var state = new SkylineBatchConfigManagerState(this);
             configs = AssignDependencies(configs, true, state, out _); // ignore warning
-
-            DoLongImportOperation(configs, longImportOperation, importCallback, state);
+            foreach (var config in configs)
+                state = ProgramaticallyAddConfig(config, state);
+            state = DisableInvalidConfigs(state);
+            SetState(state);
         }
 
 
@@ -640,8 +639,11 @@ namespace SkylineBatch
                 throw new Exception("Run state was never checked, should never get here.");
 
             var downloadingConfigs = new List<SkylineBatchConfig>();
+
+            // Servers don't need to connect for steps after refine
             if (_checkedRunOption >= RunBatchOptions.FROM_REFINE)
             {
+                _runServerConnector = new ServerConnector();
                 FinishCheckingServers(true, downloadingConfigs, callback);
                 return;
             }
@@ -649,64 +651,66 @@ namespace SkylineBatch
 
             var enabledConfigs = GetEnabledConfigs(_checkedRunState);
             // Try connecting to all necessary servers
-            var serverConnector = new ServerConnector();
+            var servers = new List<ServerInfo>();
             foreach (var config in enabledConfigs)
+            {
                 if (config.MainSettings.WillDownloadData)
+                {
                     downloadingConfigs.Add(config);
+                    servers.Add(config.MainSettings.Server);
+                }
+            }
+            _runServerConnector = new ServerConnector(servers.ToArray());
+            
             var longWaitOperation = new LongWaitOperation(longWaitDlg);
 
 
             longWaitOperation.Start(downloadingConfigs.Count > 0, async (OnProgress) =>
             {
-                int i = 0;
-                foreach (var config in downloadingConfigs)
-                    serverConnector.AddServer(config.MainSettings.Server);
-                //serverConnector.Start(OnProgress);
-                foreach (var config in downloadingConfigs)
-                    await config.MainSettings.Server.UseServerConnector(serverConnector, OnProgress);
-                //while (!serverConnector.DoneConnecting) i++;
-                //Thread.SpinWait(50000);
-
+                _runServerConnector.Connect(OnProgress);
             }, (success) =>
             {
                 FinishCheckingServers(success, downloadingConfigs, callback);
             });
-
-
-
-
-            /*
-
-            bool? successfulComplete = null;
-            longWaitOperation.Start(downloadingConfigs.Count > 0, (onProgress) =>
-            {
-                foreach (var config in downloadingConfigs)
-                    config.MainSettings.Server.UseServerConnector(serverConnector);
-                var percent = 0;
-                while (percent < 100)
-                {
-                    serverConnector.Progress(out percent, out int maxPercent);
-                    onProgress(percent, maxPercent);
-                    Thread.SpinWait(1000000);
-                }
-            }, (completed) => successfulComplete = completed);
-            while (successfulComplete == null) Thread.SpinWait(1000000);
-            if (successfulComplete == false)
-                MessageBox.Show("Show dialog here");*/
         }
 
-        public void FinishCheckingServers(bool success, List<SkylineBatchConfig> downloadingConfigs, Callback callback)
+        public void FinishCheckingServers(bool finishedOperation, List<SkylineBatchConfig> downloadingConfigs, Callback callback)
         {
-            if (!success)
+            if (!finishedOperation)
             {
                 CannotRun(callback);
                 return;
             }
+
+            //var disconnectedConfigs = new Dictionary<SkylineBatchConfig, Exception>();
+            var showConnectionForm = false;
+            foreach (var config in downloadingConfigs)
+            {
+                _runServerConnector.GetFiles(config.MainSettings.Server, out Exception connectionException);
+                if (connectionException != null)
+                {
+                    showConnectionForm = true;
+                    break;
+                }
+            }
+
+            if (showConnectionForm)
+            {
+                var connectionForm = new ConnectionErrorForm(downloadingConfigs, _runServerConnector);
+                _uiControl.DisplayForm(connectionForm);
+                if (connectionForm.DialogResult != DialogResult.OK)
+                {
+                    CannotRun(callback);
+                    return;
+                }
+
+            }
+
             var filesToDownload = new Dictionary<string, FtpListItem>();
             var configsWillDownload = new List<string>();
             foreach (var config in downloadingConfigs)
             {
-                var newFiles = config.MainSettings.FilesToDownload();
+                var newFiles = config.MainSettings.FilesToDownload(_runServerConnector);
                 foreach (var file in newFiles)
                     if (!filesToDownload.ContainsKey(file.Key)) filesToDownload.Add(file.Key, file.Value);
                 if (newFiles.Count > 0) configsWillDownload.Add(config.GetName());
@@ -764,6 +768,7 @@ namespace SkylineBatch
         {
             _checkedRunOption = null;
             _checkedRunState = null;
+            _runServerConnector = null;
             callback(false);
         }
 
@@ -785,13 +790,15 @@ namespace SkylineBatch
             }
 
             var runOption = (RunBatchOptions)_checkedRunOption;
-            new Thread(() => _ = RunAsync(runOption)).Start();
+            var serverConnector = _runServerConnector;
             _checkedRunOption = null;
             _checkedRunState = null;
+            _runServerConnector = null;
+            new Thread(() => _ = RunAsync(runOption, serverConnector)).Start();
         }
 
 
-        public async Task RunAsync(RunBatchOptions runOption)
+        public async Task RunAsync(RunBatchOptions runOption, ServerConnector serverConnector)
         {
             UpdateUiLogs();
             UpdateIsRunning(false, true);
@@ -806,7 +813,7 @@ namespace SkylineBatch
 
                 try
                 {
-                    await startingConfigRunner.Run(runOption);
+                    await startingConfigRunner.Run(runOption, serverConnector);
                 }
                 catch (Exception e)
                 {
@@ -989,45 +996,7 @@ namespace SkylineBatch
 
         #region Import/Export
 
-        private void DoLongImportOperation(List<IConfig> importingConfigs, LongWaitOperation longWaitOperation, Callback importCallback, SkylineBatchConfigManagerState state)
-        {
-            var numberConnectingToServer = 0.0;
-            foreach (var config in importingConfigs)
-            {
-                if (((SkylineBatchConfig) config).MainSettings.WillDownloadData)
-                    numberConnectingToServer++;
-            }
-
-            var numberConnectedToServer = 0;
-            _longOperationCancelToken = longWaitOperation.CancelToken;
-
-            longWaitOperation.Start(false, (OnProgress) =>
-            {
-                OnProgress(0, (int)((numberConnectedToServer + 1) / numberConnectingToServer * 100));
-                foreach (var config in importingConfigs)
-                {
-                    OnProgress((int)(numberConnectedToServer / numberConnectingToServer * 100),
-                        (int)((numberConnectedToServer + 1) / numberConnectingToServer * 100));
-                    if (_longOperationCancelToken.IsCancellationRequested) break;
-                    state = ProgramaticallyAddConfig(config, state);
-                    if (((SkylineBatchConfig)config).MainSettings.WillDownloadData)
-                        numberConnectedToServer++;
-                }
-
-                if (!_longOperationCancelToken.IsCancellationRequested)
-                {
-                    _importedConfigsState = state;
-                    OnProgress(100, 100);
-                }
-            }, (success) =>
-            {
-                FinishImport(success);
-                importCallback(success);
-            });
-        }
-        
-
-        public void StartImport(string filePath, LongWaitOperation longWaitOperation, Callback importCallback, ShowDownloadedFileForm showDownloadedFileForm)
+        public void Import(string filePath, ShowDownloadedFileForm showDownloadedFileForm)
         {
             var state = new SkylineBatchConfigManagerState(this);
             var importedConfigs = ImportFrom(filePath, showDownloadedFileForm);
@@ -1041,18 +1010,10 @@ namespace SkylineBatch
             if (warningMessage != null)
                 DisplayWarning(warningMessage);
 
-            DoLongImportOperation(importedConfigs, longWaitOperation, importCallback, state);
-        }
-
-        private void FinishImport(bool success)
-        {
-            var newState = _importedConfigsState;
-            _importedConfigsState = null;
-            _longOperationCancelToken = null;
-            if (!success)
-                return;
-            newState = DisableInvalidConfigs(newState);
-            SetState(newState);
+            foreach (var config in importedConfigs)
+                state = ProgramaticallyAddConfig(config, state);
+            state = DisableInvalidConfigs(state);
+            SetState(state);
         }
 
         private SkylineBatchConfigManagerState DisableInvalidConfigs(SkylineBatchConfigManagerState state)

@@ -106,7 +106,7 @@ namespace SkylineBatch
                 _logger.Log(line);
         }
 
-        public async Task Run(RunBatchOptions runOption)
+        public async Task Run(RunBatchOptions runOption, ServerConnector serverConnector)
         {
             LogToUi(string.Format(Resources.ConfigRunner_Run________________________________Starting_Configuration___0_________________________________, Config.Name));
             try
@@ -128,7 +128,7 @@ namespace SkylineBatch
             if ((runOption == RunBatchOptions.ALL || runOption == RunBatchOptions.DOWNLOAD_DATA) 
                 && Config.MainSettings.WillDownloadData)
             {
-                await DownloadData();
+                await DownloadData(serverConnector);
             }
             
             if ((runOption == RunBatchOptions.ALL ||
@@ -246,14 +246,14 @@ namespace SkylineBatch
             }
         }
 
-        private async Task DownloadData()
+        private async Task DownloadData(ServerConnector serverConnector)
         {
             var mainSettings = Config.MainSettings;
             var server = mainSettings.Server;
             Directory.CreateDirectory(mainSettings.DataFolderPath);
 
-            var matchingFiles = server.GetServerFiles;
-            var downloadingFiles = server.FilesToDownload(mainSettings.DataFolderPath);
+            var matchingFiles = server.GetDataFiles(serverConnector);
+            var downloadingFiles = server.FilesToDownload(mainSettings.DataFolderPath, serverConnector);
 
             if (downloadingFiles.Count == 0) return;
 

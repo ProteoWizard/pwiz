@@ -18,6 +18,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Drawing.Text;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -207,20 +208,20 @@ namespace SkylineBatch
             return templateReplaced || analysisReplaced || dataReplaced || annotationsReplaced;
         }
 
-        public long SpaceNeeded(List<string> otherDataFolders)
+        public long SpaceNeeded(List<string> otherDataFolders, ServerConnector serverConnector)
         {
             if (Server == null || otherDataFolders.Contains(DataFolderPath)) return 0;
-            var filesToDownload = Server.FilesToDownload(DataFolderPath);
+            var filesToDownload = Server.FilesToDownload(DataFolderPath, serverConnector);
             long spaceNeeded = 0;
             foreach (var file in filesToDownload.Values)
                 spaceNeeded += file.Size;
             return spaceNeeded;
         }
 
-        public Dictionary<string, FtpListItem> FilesToDownload()
+        public Dictionary<string, FtpListItem> FilesToDownload(ServerConnector serverConnector)
         {
             if (Server == null) return new Dictionary<string, FtpListItem>();
-            return Server.FilesToDownload(DataFolderPath);
+            return Server.FilesToDownload(DataFolderPath, serverConnector);
         }
 
         public bool RunWillOverwrite(RunBatchOptions runOption, string configHeader, out StringBuilder message)
@@ -361,10 +362,6 @@ namespace SkylineBatch
 
     public class DataServerInfo : ServerInfo
     {
-        private Dictionary<string, FtpListItem> _serverFiles;
-        private bool _validated;
-        private Exception _connectionError;
-        private Exception _validationError;
 
         public static DataServerInfo ServerFromUi(string url, string userName, string password, string namingPattern)
         {
@@ -379,13 +376,13 @@ namespace SkylineBatch
             {
                 throw new ArgumentException("Error parsing the URL. Please correct the URL and try again.");
             }
+            ValidateNamingPattern(namingPattern);
 
             return new DataServerInfo(uri, userName, password, namingPattern);
         }
 
         private DataServerInfo(Uri server, string userName, string password, string namingPattern) : base(server, userName, password)
         {
-            _serverFiles = new Dictionary<string, FtpListItem>();
             DataNamingPattern = namingPattern ?? string.Empty;
         }
         
@@ -395,8 +392,6 @@ namespace SkylineBatch
 
         public string FilePath(string fileName) =>
             string.IsNullOrEmpty(Server.AbsolutePath) ? fileName : Path.Combine(Server.AbsolutePath, fileName);
-
-        public Dictionary<string, FtpListItem> GetServerFiles => new Dictionary<string, FtpListItem>(_serverFiles);
 
         public FtpClient GetFtpClient()
         {
@@ -414,73 +409,49 @@ namespace SkylineBatch
         }
 
         // The list of matching files that have not been fully downloaded to folderPath
-        public Dictionary<string, FtpListItem> FilesToDownload(string folderPath)
+        public Dictionary<string, FtpListItem> FilesToDownload(string folderPath, ServerConnector serverConnector)
         {
             var downloadingFiles = new Dictionary<string, FtpListItem>();
-            foreach (var fileName in _serverFiles.Keys)
+            var ftpFiles = GetDataFiles(serverConnector);
+            foreach (var fileName in ftpFiles.Keys)
             {
                 var filePath = Path.Combine(folderPath, fileName);
-                if (!File.Exists(filePath) || _serverFiles[fileName].Size != new FileInfo(filePath).Length)
+                if (!File.Exists(filePath) || ftpFiles[fileName].Size != new FileInfo(filePath).Length)
                 {
                     if (File.Exists(filePath)) File.Delete(filePath);
-                    downloadingFiles.Add(filePath, _serverFiles[fileName]);
+                    downloadingFiles.Add(filePath, ftpFiles[fileName]);
                 }
             }
             return downloadingFiles;
         }
 
-
-        public async Task UseServerConnector(ServerConnector serverConnector, OnPercentProgress onProgress)
+        public Dictionary<string, FtpListItem> GetDataFiles(ServerConnector serverConnector)
         {
-            _serverFiles.Clear();
-            _connectionError = null;
+            var dataFiles = new Dictionary<string, FtpListItem>();
+            var ftpFiles = serverConnector.GetFiles(this, out Exception connectionException);
+            if (connectionException != null) throw connectionException;
             var namingRegex = new Regex(DataNamingPattern);
-            await serverConnector.GetFiles(this, onProgress, (ftpFiles) =>
+            foreach (var ftpFile in ftpFiles)
             {
-                foreach (var ftpFile in ftpFiles)
-                    if (namingRegex.IsMatch(ftpFile.Name))
-                        _serverFiles.Add(ftpFile.Name, ftpFile);
-            }, (exception) =>
+                if (namingRegex.IsMatch(ftpFile.Name))
+                    dataFiles.Add(ftpFile.Name, ftpFile);
+            }
+            if (dataFiles.Count == 0)
             {
-                _connectionError = exception;
-            });
+                throw new ArgumentException(
+                    string.Format(
+                        Resources
+                            .DataServerInfo_Validate_None_of_the_file_names_on_the_server_matched_the_regular_expression___0_,
+                        DataNamingPattern) + Environment.NewLine +
+                    Resources.DataServerInfo_Validate_Please_make_sure_your_regular_expression_is_correct_);
+            }
+            return dataFiles;
         }
+        
 
         public DataServerInfo Copy()
         {
-            return new DataServerInfo(Server, UserName, Password, DataNamingPattern)
-            {
-                _serverFiles = _serverFiles,
-                _validated = _validated,
-                _validationError = _validationError
-            };
-        }
-
-        private bool ConnectToServer(out bool foundServerFiles, bool throwError = false)
-        {
-            foundServerFiles = false;
-            var namingRegex = new Regex(DataNamingPattern);
-            var client = GetFtpClient();
-            try
-            {
-                client.Connect();
-                foreach (FtpListItem item in client.GetListing(Server.AbsolutePath))
-                {
-                    if (item.Type == FtpFileSystemObjectType.File)
-                    {
-                        foundServerFiles = true;
-                        if (namingRegex.IsMatch(item.Name)) _serverFiles.Add(item.Name, item);
-                    }
-                }
-            }
-            catch (Exception)
-            {
-                client.Disconnect();
-                if (throwError) throw;
-                return false;
-            }
-            client.Disconnect();
-            return true;
+            return new DataServerInfo(Server, UserName, Password, DataNamingPattern);
         }
 
         public static void ValidateNamingPattern(string dataNamingPattern)

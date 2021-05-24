@@ -16,14 +16,19 @@ namespace SkylineBatch
     {
 
         private CancellationTokenSource _cancelValidate;
+        private readonly bool _serverRequired;
 
-        public AddServerForm(DataServerInfo editingServerInfo)
+        public AddServerForm(DataServerInfo editingServerInfo, bool serverRequired = false)
         {
             InitializeComponent();
             Icon = Program.Icon();
 
             Server = editingServerInfo;
+            _serverRequired = serverRequired;
             UpdateUiServer();
+
+            if (_serverRequired)
+                btnRemoveServer.Hide();
         }
 
         public DataServerInfo Server;
@@ -56,13 +61,21 @@ namespace SkylineBatch
 
             _cancelValidate = new CancellationTokenSource();
             var connectToServer = new LongWaitOperation(_cancelValidate);
-            var serverConnector = new ServerConnector();
-            serverConnector.AddServer(Server);
+            var serverConnector = new ServerConnector(Server);
+            List<FtpListItem> serverFiles = null;
+            Exception connectionException = null;
             connectToServer.Start(false,
                 async (OnProgress) =>
                 {
-                    await serverConnector.GetFiles(Server, (a, b) => { }, SuccessfulConnect, UnsuccessfulConnect);
-                }, completed => { });
+                    serverConnector.Connect(OnProgress);
+                    serverFiles = serverConnector.GetFiles(Server, out connectionException);
+                }, completed =>
+                {
+                    if (connectionException == null)
+                        SuccessfulConnect(serverFiles);
+                    else
+                        UnsuccessfulConnect(connectionException);
+                });
         }
 
         private void SuccessfulConnect(List<FtpListItem> ftpFiles)
@@ -116,7 +129,11 @@ namespace SkylineBatch
                 string.IsNullOrWhiteSpace(textUserName.Text) &&
                 string.IsNullOrWhiteSpace(textPassword.Text) &&
                 string.IsNullOrWhiteSpace(textNamingPattern.Text))
+            {
+                if (_serverRequired)
+                    throw new ArgumentException("The server cannot be empty. Please enter the server information.");
                 return null;
+            }
             return DataServerInfo.ServerFromUi(textUrl.Text, textUserName.Text, textPassword.Text, textNamingPattern.Text);
         }
 

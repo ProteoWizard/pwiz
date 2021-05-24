@@ -37,7 +37,6 @@ namespace SkylineBatch
         private readonly ColumnWidthCalculator _listViewColumnWidths;
         private bool _showRefineStep;
         private Timer _outputLog;
-        private bool _loadingConfigs;
 
         public MainForm(string openFile)
         {
@@ -62,33 +61,15 @@ namespace SkylineBatch
             Shown += ((sender, args) =>
             {
                 _configManager = new SkylineBatchConfigManager(_skylineBatchLogger, this);
-                var loadConfigsLongWaitDlg = new LongWaitDlg(this, Program.AppName(),
-                    Resources.MainForm_MainForm_Loading_configurations_from_saved_settings___);
-                _loadingConfigs = true;
-                _configManager.StartLoadingConfigList(new LongWaitOperation(loadConfigsLongWaitDlg), (success) =>
-                {
-                    ImportFinishedCallback(success);
-                    if (!string.IsNullOrEmpty(openFile))
-                        FileOpened(openFile);
-                });
+                _configManager.LoadConfigList();
+                if (!string.IsNullOrEmpty(openFile))
+                    FileOpened(openFile);
                 _rDirectorySelector = new RDirectorySelector(this, _configManager);
                 ListViewSizeChanged();
                 UpdateUiLogFiles();
                 UpdateRunBatchSteps();
                 _loaded = true;
             });
-        }
-        
-
-        private void ImportFinishedCallback(bool success)
-        {
-            if (success)
-            {
-                UpdateUiConfigurations();
-                if (!_rDirectorySelector.ShownDialog)
-                    _rDirectorySelector.AddIfNecassary();
-            }
-            _loadingConfigs = false;
         }
 
         private void RunUi(Action action)
@@ -121,11 +102,6 @@ namespace SkylineBatch
         
         private void btnNewConfig_Click(object sender, EventArgs e)
         {
-            if (IsLoadingConfigs(string.Format(
-                Resources
-                    .MainForm_btnImport_Click_Cannot_add_configurations_while__0__is_loading__Please_wait_and_try_again_,
-                Program.AppName())))
-                return;
             ProgramLog.Info(Resources.MainForm_btnNewConfig_Click_Creating_a_new_configuration_);
             var initialConfigValues = (SkylineBatchConfig)_configManager.GetLastModified();
             var configForm = new SkylineBatchConfigForm(this, _rDirectorySelector, initialConfigValues, ConfigAction.Add, false, _configManager);
@@ -283,15 +259,7 @@ namespace SkylineBatch
             UpdateUiConfigurations();
             ListViewSizeChanged();
         }
-
-        private bool IsLoadingConfigs(string errorMessage)
-        {
-            bool loadingConfigs = _loadingConfigs;
-            if (loadingConfigs)
-                DisplayError(errorMessage);
-            return loadingConfigs;
-        }
-
+        
         #endregion
 
         #region Open File/Folder
@@ -514,11 +482,6 @@ namespace SkylineBatch
 
         private void btnImport_Click(object sender, EventArgs e)
         {
-            if (IsLoadingConfigs(string.Format(
-                Resources
-                    .MainForm_btnImport_Click_Cannot_add_configurations_while__0__is_loading__Please_wait_and_try_again_,
-                Program.AppName())))
-                return;
             var dialog = new OpenFileDialog();
             dialog.Filter = TextUtil.FILTER_BCFG;
             if (dialog.ShowDialog(this) != DialogResult.OK) return;
@@ -553,14 +516,12 @@ namespace SkylineBatch
             return dialogResult;
         }
 
-        public LongWaitOperation DoImport(string filePath)
+        public void DoImport(string filePath)
         {
-            var importLongWaitDlg = new LongWaitDlg(this, Program.AppName(),
-                string.Format(Resources.MainForm_DoImport_Importing_configurations_from__0____, Path.GetFileName(filePath)));
-            var longWaitOperation = new LongWaitOperation(importLongWaitDlg);
-            _loadingConfigs = true;
-            _configManager.StartImport(filePath, longWaitOperation, ImportFinishedCallback, ShowDownloadedFileForm);
-            return longWaitOperation;
+            _configManager.Import(filePath, ShowDownloadedFileForm);
+            UpdateUiConfigurations();
+            if (!_rDirectorySelector.ShownDialog)
+                _rDirectorySelector.AddIfNecassary();
         }
 
         private void btnExport_Click(object sender, EventArgs e)
@@ -754,6 +715,14 @@ namespace SkylineBatch
         public DialogResult DisplayLargeOkCancel(string message)
         {
             return AlertDlg.ShowLargeOkCancel(this, Program.AppName(), message);
+        }
+
+        public void DisplayForm(Form form)
+        {
+            RunUi(() =>
+            {
+                form.ShowDialog(this);
+            });
         }
 
         #endregion

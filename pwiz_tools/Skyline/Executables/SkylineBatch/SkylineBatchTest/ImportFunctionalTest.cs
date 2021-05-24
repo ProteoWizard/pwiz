@@ -56,8 +56,11 @@ namespace SkylineBatchTest
         public void TestImportValidConfigurations(MainForm mainForm)
         {
             var validConfigFile = Path.Combine(TEST_FOLDER, "ValidConfigurations.bcfg");
-            FunctionalTestUtil.WaitForShortImport(mainForm, validConfigFile, this);
-            RunUI(() => { FunctionalTestUtil.CheckConfigs(3, 0, mainForm); });
+            RunUI(() =>
+            {
+                mainForm.DoImport(validConfigFile);
+                FunctionalTestUtil.CheckConfigs(3, 0, mainForm);
+            });
 
 
             RunUI(() => { mainForm.ClickConfig(0); });
@@ -70,8 +73,11 @@ namespace SkylineBatchTest
         {
             RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
             var validConfigFile = Path.Combine(TEST_FOLDER, "ValidConfigurations.bcfg");
-            FunctionalTestUtil.WaitForShortImport(mainForm, validConfigFile, this);
-            RunUI(() => { FunctionalTestUtil.CheckConfigs(3, 0, mainForm); });
+            RunUI(() =>
+            {
+                mainForm.DoImport(validConfigFile);
+                FunctionalTestUtil.CheckConfigs(3, 0, mainForm);
+            });
 
             RunDlg<AlertDlg>(() => mainForm.DoImport(validConfigFile),
                 dlg =>
@@ -93,8 +99,11 @@ namespace SkylineBatchTest
         {
             RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
             var invalidPathsFile = Path.Combine(TEST_FOLDER, "InvalidPathConfigurations.bcfg");
-            FunctionalTestUtil.WaitForShortImport(mainForm, invalidPathsFile, this);
-            RunUI(() => { FunctionalTestUtil.CheckConfigs(3, 3, mainForm); });
+            RunUI(() =>
+            {
+                mainForm.DoImport(invalidPathsFile);
+                FunctionalTestUtil.CheckConfigs(3, 3, mainForm);
+            });
 
 
             RunUI(() => { mainForm.ClickConfig(0); });
@@ -106,8 +115,11 @@ namespace SkylineBatchTest
 
             RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
             var invalidConfigFile = Path.Combine(TEST_FOLDER, "InvalidSkylineConfigurations.bcfg");
-            FunctionalTestUtil.WaitForShortImport(mainForm, invalidConfigFile, this);
-            RunUI(() => { FunctionalTestUtil.CheckConfigs(3, 3, mainForm); });
+            RunUI(() =>
+            {
+                mainForm.DoImport(invalidConfigFile);
+                FunctionalTestUtil.CheckConfigs(3, 3, mainForm);
+            });
 
 
             RunUI(() => { mainForm.ClickConfig(0); });
@@ -166,9 +178,9 @@ namespace SkylineBatchTest
         {
             RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
             var invalidConfigFile = Path.Combine(TEST_FOLDER, "InvalidSkylineConfigurations.bcfg");
-            FunctionalTestUtil.WaitForShortImport(mainForm, invalidConfigFile, this);
             RunUI(() =>
             {
+                mainForm.DoImport(invalidConfigFile);
                 FunctionalTestUtil.CheckConfigs(3, 3, mainForm);
                 mainForm.ClickConfig(0);
             });
@@ -217,8 +229,11 @@ namespace SkylineBatchTest
         {
             RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
             var invalidConfigFile = Path.Combine(TEST_FOLDER, "InvalidPathConfigurations.bcfg");
-            FunctionalTestUtil.WaitForShortImport(mainForm, invalidConfigFile, this);
-            RunUI(() => { FunctionalTestUtil.CheckConfigs(3, 3, mainForm); });
+            RunUI(() =>
+            {
+                mainForm.DoImport(invalidConfigFile);
+                FunctionalTestUtil.CheckConfigs(3, 3, mainForm);
+            });
 
             RunUI(() => { mainForm.ClickConfig(0); });
             var invalidConfigForm = ShowDialog<InvalidConfigSetupForm>(() => mainForm.ClickEdit());
@@ -242,19 +257,24 @@ namespace SkylineBatchTest
              var editConfigForm = ShowDialog<SkylineBatchConfigForm>(() => { });
              RunUI(() => { editConfigForm.CancelButton.PerformClick(); });
              WaitForClosedForm(editConfigForm);
-             RunUI(() => { FunctionalTestUtil.CheckConfigs(3, 0, mainForm); });
-
-             RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
-             FunctionalTestUtil.WaitForShortImport(mainForm, invalidConfigFile, this);
-            RunUI(() => { FunctionalTestUtil.CheckConfigs(3, 0, mainForm, "Expected 3 imported configs", "Expected configs to be valid from root replacement."); });
+             RunUI(() =>
+             {
+                 FunctionalTestUtil.CheckConfigs(3, 0, mainForm);
+                 FunctionalTestUtil.ClearConfigs(mainForm);
+                mainForm.DoImport(invalidConfigFile);
+                FunctionalTestUtil.CheckConfigs(3, 0, mainForm, "Expected 3 imported configs", "Expected configs to be valid from root replacement.");
+            });
         }
 
         public void TestDriveRootReplacement(MainForm mainForm)
         {
             RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
             var invalidConfigFile = Path.Combine(TEST_FOLDER, "InvalidRootConfigurations.bcfg");
-            FunctionalTestUtil.WaitForShortImport(mainForm, invalidConfigFile, this);
-            RunUI(() => { FunctionalTestUtil.CheckConfigs(3, 3, mainForm); });
+            RunUI(() =>
+            {
+                mainForm.DoImport(invalidConfigFile);
+                FunctionalTestUtil.CheckConfigs(3, 3, mainForm);
+            });
 
             RunUI(() => { mainForm.ClickConfig(0); });
             var invalidConfigForm = ShowDialog<InvalidConfigSetupForm>(() => mainForm.ClickEdit());
@@ -281,8 +301,11 @@ namespace SkylineBatchTest
             RunUI(() => { FunctionalTestUtil.CheckConfigs(3, 0, mainForm); });
 
             RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
-            FunctionalTestUtil.WaitForShortImport(mainForm, invalidConfigFile, this);
-            RunUI(() => { FunctionalTestUtil.CheckConfigs(3, 0, mainForm); });
+            RunUI(() =>
+            {
+                mainForm.DoImport(invalidConfigFile);
+                FunctionalTestUtil.CheckConfigs(3, 0, mainForm);
+            });
         }
 
     }
