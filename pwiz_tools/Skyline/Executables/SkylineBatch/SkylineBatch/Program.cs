@@ -27,10 +27,9 @@ using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Web;
 using System.Windows.Forms;
 using log4net.Config;
-using Newtonsoft.Json.Converters;
-using Newtonsoft.Json.Serialization;
 using SkylineBatch.Properties;
 using SharedBatch;
 
@@ -229,13 +228,22 @@ namespace SkylineBatch
             postData += "&p=" + "Instance"; // Page
 
             var data = Encoding.UTF8.GetBytes(postData);
-            var request = (HttpWebRequest)WebRequest.Create("http://www.google-analytics.com/collect");
+            var analyticsUrl = "http://www.google-analytics.com/collect";
+            var request = (HttpWebRequest)WebRequest.Create(analyticsUrl);
+
             request.Method = "POST";
             request.ContentType = "application/x-www-form-urlencoded";
             request.ContentLength = data.Length;
-            using (Stream stream = request.GetRequestStream())
+            try
             {
-                stream.Write(data, 0, data.Length);
+                using (Stream stream = request.GetRequestStream())
+                {
+                    stream.Write(data, 0, data.Length);
+                }
+            } catch (Exception e)
+            {
+                ProgramLog.Error(string.Format(Resources.Program_SendAnalyticsHit_There_was_an_error_connecting_to__0___Skipping_sending_analytics_, analyticsUrl), e);
+                return;
             }
 
             var response = (HttpWebResponse)request.GetResponse();

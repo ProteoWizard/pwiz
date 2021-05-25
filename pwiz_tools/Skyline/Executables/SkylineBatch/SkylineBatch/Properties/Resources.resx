@@ -703,4 +703,7 @@
   <data name="DataServerControl_SuccessfulConnect_Try_Reconnecting_to_Server" xml:space="preserve">
     <value>Try Reconnecting to Server</value>
   </data>
+  <data name="Program_SendAnalyticsHit_There_was_an_error_connecting_to__0___Skipping_sending_analytics_" xml:space="preserve">
+    <value>There was an error connecting to {0}. Skipping sending analytics.</value>
+  </data>
 </root>

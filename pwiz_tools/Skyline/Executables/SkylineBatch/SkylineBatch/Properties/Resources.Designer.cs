@@ -1109,6 +1109,16 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to There was an error connecting to {0}. Skipping sending analytics..
+        /// </summary>
+        public static string Program_SendAnalyticsHit_There_was_an_error_connecting_to__0___Skipping_sending_analytics_ {
+            get {
+                return ResourceManager.GetString("Program_SendAnalyticsHit_There_was_an_error_connecting_to__0___Skipping_sending_a" +
+                        "nalytics_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The following R installations were not found by {0}:.
         /// </summary>
         public static string RDirectorySelector_AddIfNecassary_The_following_R_installations_were_not_found_by__0__ {
