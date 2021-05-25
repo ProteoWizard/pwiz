@@ -1495,26 +1495,6 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
-        /// </summary>
-        public static System.Drawing.Icon SkylineBatch_daily {
-            get {
-                object obj = ResourceManager.GetObject("SkylineBatch_daily", resourceCulture);
-                return ((System.Drawing.Icon)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
-        /// </summary>
-        public static System.Drawing.Icon SkylineBatch_release {
-            get {
-                object obj = ResourceManager.GetObject("SkylineBatch_release", resourceCulture);
-                return ((System.Drawing.Icon)(obj));
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to &quot;{0}&quot; is not a valid name for the configuration..
         /// </summary>
         public static string SkylineBatchConfig_SkylineBatchConfig___0___is_not_a_valid_name_for_the_configuration_ {
