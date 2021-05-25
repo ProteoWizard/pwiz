@@ -1031,7 +1031,6 @@ namespace SkylineBatch
 
         private void SetState(SkylineBatchConfigManagerState newState)
         {
-            // TODO add checks fior valid
             lock (_lock)
             {
                 newState.ValidateState();

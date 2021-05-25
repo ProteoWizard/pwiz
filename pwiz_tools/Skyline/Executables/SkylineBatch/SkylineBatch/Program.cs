@@ -30,6 +30,7 @@ using System.Threading;
 using System.Windows.Forms;
 using log4net.Config;
 using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Serialization;
 using SkylineBatch.Properties;
 using SharedBatch;
 
@@ -37,6 +38,8 @@ namespace SkylineBatch
 {
     public class Program
     {
+        public const string ADMIN_VERSION = "21.1.0.145";
+
         private static string _version;
 
         #region For tests
@@ -54,6 +57,7 @@ namespace SkylineBatch
         {
             ProgramLog.Init("SkylineBatch");
             Application.EnableVisualStyles();
+            InitializeVersion();
 
             if (!FunctionalTest)
             {
@@ -83,8 +87,7 @@ namespace SkylineBatch
                         Application.Exit();
                     }
                 });
-                // TODO (Ali): Make sure you're looking at the right page to view this
-                //SendAnalyticsHit();
+                SendAnalyticsHit();
             }
 
             using (var mutex = new Mutex(false, $"University of Washington {AppName()}"))
@@ -137,7 +140,6 @@ namespace SkylineBatch
 
 
                 AddFileTypesToRegistry();
-                InitializeVersion();
                 var openFile = GetFirstArg(args);
 
                 MainWindow = new MainForm(openFile);
@@ -219,11 +221,11 @@ namespace SkylineBatch
             var postData = "v=1"; // Version 
             postData += "&t=event"; // Event hit type
             postData += "&tid=UA-9194399-1"; // Tracking Id 
-            //postData += "&cid=" + Settings.Default.InstallationId; // Anonymous Client Id
+            postData += "&cid=" + SharedBatch.Properties.Settings.Default.InstallationId; // Anonymous Client Id
             postData += "&ec=Instance"; // Event Category
-            postData += "&ea=" + Uri.EscapeDataString(_version.Length > 0 ? _version : "AdminInstall");
+            postData += "&ea=" + Uri.EscapeDataString(_version.Length > 0 ? _version : ADMIN_VERSION);
             var dailyRegex = new Regex(@"[0-9]+\.[0-9]+\.[19]\.[0-9]+");
-            postData += "&el=" + (dailyRegex.IsMatch(_version) ? "Daily" : "Release");
+            postData += "&el=" + (dailyRegex.IsMatch(_version) ? "batch-daily" : "batch-release");
             postData += "&p=" + "Instance"; // Page
 
             var data = Encoding.UTF8.GetBytes(postData);

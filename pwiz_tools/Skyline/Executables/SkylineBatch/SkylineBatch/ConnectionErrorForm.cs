@@ -87,13 +87,25 @@ namespace SkylineBatch
             longWaitOperation.Start(true, (onProgress) =>
             {
                 _serverConnector.Reconnect(servers, onProgress);
-            }, DoneReconnecting);
+            }, (completed) => { DoneReconnecting(completed, servers); });
         }
 
-        private void DoneReconnecting(bool completed)
+        private void DoneReconnecting(bool completed, List<ServerInfo> servers)
         {
             if (IsDisposed || !completed) return;
             UpdateConfigList();
+            foreach (var server in servers)
+            {
+                foreach (var config in _configDict.Values)
+                {
+                    if (((ServerInfo)config.MainSettings.Server).Equals(server) &&
+                        _disconnectedConfigs[config.Name] != null)
+                    {
+                        AlertDlg.ShowError(this, Program.AppName(), _disconnectedConfigs[config.Name].Message);
+                        return;
+                    }
+                }
+            }
         }
 
         private void UpdateConfigList()
