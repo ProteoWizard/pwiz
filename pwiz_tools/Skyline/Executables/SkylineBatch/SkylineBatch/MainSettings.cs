@@ -18,13 +18,11 @@
 
 using System;
 using System.Collections.Generic;
-using System.Drawing.Text;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Serialization;
 using FluentFTP;
@@ -193,7 +191,7 @@ namespace SkylineBatch
                 TextUtil.SuccessfulReplace(ValidateAnalysisFolder, oldRoot, newRoot, AnalysisFolderPath, preferReplace,
                     out string replacedAnalysisPath);
             var dataValidator = Server != null
-                ? (Validator) ValidateDataFolderWithServer
+                ? ValidateDataFolderWithServer
                 : (Validator) ValidateDataFolderWithoutServer;
             var dataReplaced =
                 TextUtil.SuccessfulReplace(dataValidator, oldRoot, newRoot, DataFolderPath,

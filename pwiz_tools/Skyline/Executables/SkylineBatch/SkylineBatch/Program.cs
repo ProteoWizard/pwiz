@@ -37,7 +37,7 @@ namespace SkylineBatch
 {
     public class Program
     {
-        public const string ADMIN_VERSION = "21.1.0.144";
+        public const string ADMIN_VERSION = "21.1.0.146";
 
         private static string _version;
 
