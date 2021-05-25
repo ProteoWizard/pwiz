@@ -105,7 +105,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Shimadzu::chromatogram(size_t ind
             auto ticPtr = rawfile_->getTIC(config_.globalChromatogramsAreMs1Only);
             if (getBinaryData)
             {
-                result->setTimeIntensityArrays(vector<double>(), vector<double>(), UO_minute, MS_number_of_detector_counts);
+                result->setTimeIntensityArrays(vector<double>(), vector<double>(), UO_second, MS_number_of_detector_counts);
                 ticPtr->getXArray(result->getTimeArray()->data);
                 ticPtr->getYArray(result->getIntensityArray()->data);
             }
@@ -120,7 +120,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Shimadzu::chromatogram(size_t ind
             result->precursor.isolationWindow.set(MS_isolation_window_target_m_z, ci.transition.Q1, MS_m_z);
             result->precursor.activation.set(MS_CID);
             result->precursor.activation.set(MS_collision_energy, ci.transition.collisionEnergy, UO_electronvolt);
-            result->set(ci.transition.polarity != 1 ? MS_positive_scan : MS_negative_scan);
+            result->set(ci.transition.polarity == pwiz::vendor_api::Shimadzu::Positive ? MS_positive_scan : MS_negative_scan);
 
             result->product.isolationWindow.set(MS_isolation_window_target_m_z, ci.transition.Q3, MS_m_z);
             //result->product.isolationWindow.set(MS_isolation_window_lower_offset, ci.q3Offset, MS_m_z);
@@ -131,7 +131,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Shimadzu::chromatogram(size_t ind
 
             if (getBinaryData)
             {
-                result->setTimeIntensityArrays(vector<double>(), vector<double>(), UO_minute, MS_number_of_detector_counts);
+                result->setTimeIntensityArrays(vector<double>(), vector<double>(), UO_second, MS_number_of_detector_counts);
                 chromatogramPtr->getXArray(result->getTimeArray()->data);
                 chromatogramPtr->getYArray(result->getIntensityArray()->data);
                 result->defaultArrayLength = result->getTimeArray()->data.size();
@@ -150,16 +150,13 @@ PWIZ_API_DECL void ChromatogramList_Shimadzu::createIndex() const
 {
     const set<SRMTransition>& transitions = rawfile_->getTransitions();
 
-    if (transitions.empty()) // MRM file reading interface doesn't provide TIC
-    {
-        // support file-level TIC for all file types
-        index_.push_back(IndexEntry());
-        IndexEntry& ci = index_.back();
-        ci.index = index_.size() - 1;
-        ci.chromatogramType = MS_TIC_chromatogram;
-        ci.id = "TIC";
-        idMap_[ci.id] = ci.index;
-    }
+    // support file-level TIC for all file types
+    index_.push_back(IndexEntry());
+    IndexEntry& ci = index_.back();
+    ci.index = index_.size() - 1;
+    ci.chromatogramType = MS_TIC_chromatogram;
+    ci.id = "TIC";
+    idMap_[ci.id] = ci.index;
 
     for (const SRMTransition& transition : transitions)
     {

@@ -19,9 +19,20 @@
 using System;
 using System.Diagnostics.Contracts;
 using System.Globalization;
+using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Serialization
 {
+    /// <summary>
+    /// Constants listing version numbers which identify times when changes were made to the way
+    /// that Skyline saves documents in the .sky file.
+    /// The current schema is described in a file called "Skyline_Current.xsd".
+    /// The current version number should be changed if you make a change to "Skyline_Current.xsd", and there
+    /// is already a released build of Skyline-Daily that is using the current version.
+    /// When changing the current version number, you should copy "Skyline_Current.xsd" to "Skyline_###.xsd" representing
+    /// the old version number.
+    /// </summary>
     public struct DocumentFormat : IComparable<DocumentFormat>
     {
         public static readonly DocumentFormat VERSION_0_1 = new DocumentFormat(0.1);
@@ -60,13 +71,23 @@ namespace pwiz.Skyline.Model.Serialization
         public static readonly DocumentFormat VERSION_4_13 = new DocumentFormat(4.13); // Adds new audit log format
         public static readonly DocumentFormat VERSION_4_2 = new DocumentFormat(4.2); // Release format
         public static readonly DocumentFormat VERSION_4_21 = new DocumentFormat(4.21); // Adds Lists feature
-        public static readonly DocumentFormat VERSION_4_22 = new DocumentFormat(4.22); // Moves explicite CE, explicit ion mobility high energy offset etc to transition instead of peptide level
+        public static readonly DocumentFormat VERSION_4_22 = new DocumentFormat(4.22); // Moves explicit CE, explicit ion mobility high energy offset etc to transition instead of peptide level
         public static readonly DocumentFormat VERSION_19_1 = new DocumentFormat(19.1); // Release format
         public static readonly DocumentFormat VERSION_19_11 = new DocumentFormat(19.11); // Annotation expressions
         public static readonly DocumentFormat VERSION_19_12 = new DocumentFormat(19.12); // Adds sample_id and serial_number
         public static readonly DocumentFormat VERSION_20_1 = new DocumentFormat(20.1); // Release format
         public static readonly DocumentFormat VERSION_20_11 = new DocumentFormat(20.11);
-        public static readonly DocumentFormat CURRENT = VERSION_20_11;
+        public static readonly DocumentFormat VERSION_20_12 = new DocumentFormat(20.12); // Crosslinked peptides
+        public static readonly DocumentFormat VERSION_20_13 = new DocumentFormat(20.13); // Add decoy_match_proportion
+        public static readonly DocumentFormat VERSION_20_14 = new DocumentFormat(20.14); // Moves ion mobility settings from PeptideSettings to TransitionSettings, introduces ion mobility libraries (.imsdb files)
+        public static readonly DocumentFormat TRANSITION_SETTINGS_ION_MOBILITY = VERSION_20_14; // First version with ion mobility settings moved from PeptideSettings to TransitionSettings, and using .imsdb IMS libraries
+        public static readonly DocumentFormat VERSION_20_2 = new DocumentFormat(20.2); // Release format
+        public static readonly DocumentFormat VERSION_20_21 = new DocumentFormat(20.21); // Sequential audit log hash calculation
+        public static readonly DocumentFormat VERSION_20_22 = new DocumentFormat(20.22); // Flat crosslinks
+        public static readonly DocumentFormat SEQUENTIAL_LOG_HASH = VERSION_20_21;
+        public static readonly DocumentFormat FLAT_CROSSLINKS = VERSION_20_22;
+        public static readonly DocumentFormat CURRENT = VERSION_20_22;
+
 
         private readonly double _versionNumber;
         public DocumentFormat(double versionNumber)
@@ -105,6 +126,27 @@ namespace pwiz.Skyline.Model.Serialization
         public override string ToString()
         {
             return _versionNumber.ToString(CultureInfo.InvariantCulture);
+        }
+
+        /// <summary>
+        /// Return the name of the Skyline version corresponding to this format.
+        /// If this format is not an official Skyline release then it will be just "Version: " and the number.
+        /// </summary>
+        public string GetDescription()
+        {
+            foreach (var skylineVersion in SkylineVersion.SupportedForSharing())
+            {
+                if (Equals(skylineVersion.SrmDocumentVersion))
+                {
+                    if (Equals(SkylineVersion.CURRENT, skylineVersion) && Install.Type == Install.InstallType.developer)
+                    {
+                        break;
+                    }
+                    return skylineVersion.Label;
+                }
+            }
+
+            return string.Format(Resources.SpectrumLibraryInfoDlg_SetDetailsText_Version__0__, ToString());
         }
     }
 }

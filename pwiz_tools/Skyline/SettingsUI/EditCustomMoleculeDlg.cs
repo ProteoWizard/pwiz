@@ -122,6 +122,8 @@ namespace pwiz.Skyline.SettingsUI
 
             if (!needExplicitTransitionGroupValues)
             {
+                labelPrecursorCollisionEnergy.Visible = false;
+                textBoxPrecursorCollisionEnergy.Visible = false;
                 labelCCS.Visible = false;
                 textBoxCCS.Visible = false;
                 labelIonMobility.Visible = false;
@@ -134,7 +136,13 @@ namespace pwiz.Skyline.SettingsUI
 
             // Initialise the ion mobility units dropdown with L10N values
             foreach (eIonMobilityUnits t in Enum.GetValues(typeof(eIonMobilityUnits)))
-                comboBoxIonMobilityUnits.Items.Add(IonMobilityFilter.IonMobilityUnitsL10NString(t));
+            {
+                var displayString = IonMobilityFilter.IonMobilityUnitsL10NString(t);
+                if (displayString != null) // Special value eIonMobilityUnits.unknown must not appear in list
+                {
+                    comboBoxIonMobilityUnits.Items.Add(displayString);
+                }
+            }
 
             if (needOptionalValuesBox)
             {
@@ -162,7 +170,7 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     // We need to shift precursor-level items up to where retention time was
                     movers.AddRange(new Control[]{textBoxCCS, labelCCS, textIonMobility,
-                        labelIonMobility, comboBoxIonMobilityUnits, labelIonMobilityUnits
+                        labelIonMobility, comboBoxIonMobilityUnits, labelIonMobilityUnits, labelPrecursorCollisionEnergy, textBoxPrecursorCollisionEnergy
                     });
                     offset = labelIonMobility.Location.Y - (explicitRetentionTime == null ? labelRetentionTime.Location.Y : labelCollisionEnergy.Location.Y);
                     newHeight = explicitRetentionTime == null ? textSLens.Location.Y : textIonMobility.Location.Y;
@@ -178,7 +186,7 @@ namespace pwiz.Skyline.SettingsUI
                 groupBoxOptionalValues.Height = newHeight;
             }
 
-            ResultExplicitTransitionGroupValues = new ExplicitTransitionGroupValues(explicitTransitionGroupAttributes);
+            ResultExplicitTransitionGroupValues = explicitTransitionGroupAttributes ?? ExplicitTransitionGroupValues.EMPTY;
             ResultExplicitTransitionValues = new ExplicitTransitionValues(explicitTransitionAttributes);
 
             string labelAverage = !defaultCharge.IsEmpty
@@ -399,15 +407,16 @@ namespace pwiz.Skyline.SettingsUI
         {
             get
             {
-                var val = ExplicitTransitionGroupValues.Create(IonMobility, 
+                var val = ExplicitTransitionGroupValues.Create(PrecursorCollisionEnergy, 
+                    IonMobility,
                     IonMobilityUnits,
                     CollisionalCrossSectionSqA);
                 return val;
             }
             set
             {
-                // Use constructor to handle value == null
-                var resultExplicitTransitionGroupValues = new ExplicitTransitionGroupValues(value);
+                var resultExplicitTransitionGroupValues = value ?? ExplicitTransitionGroupValues.EMPTY;
+                PrecursorCollisionEnergy = resultExplicitTransitionGroupValues.CollisionEnergy;
                 IonMobility = resultExplicitTransitionGroupValues.IonMobility;
                 IonMobilityUnits = resultExplicitTransitionGroupValues.IonMobilityUnits;
                 CollisionalCrossSectionSqA = resultExplicitTransitionGroupValues.CollisionalCrossSectionSqA;
@@ -496,6 +505,12 @@ namespace pwiz.Skyline.SettingsUI
             return (dval <= 0) ? string.Empty : dval.ToString(LocalizationHelper.CurrentCulture);
         }
 
+        private static string EmptyForNullOrZero(double? value)
+        {
+            double dval = (value ?? 0);
+            return (dval == 0) ? string.Empty : dval.ToString(LocalizationHelper.CurrentCulture);
+        }
+
         public double? CollisionEnergy
         {
             get { return NullForEmpty(textCollisionEnergy.Text); }
@@ -561,7 +576,33 @@ namespace pwiz.Skyline.SettingsUI
         public double? IonMobility
         {
             get { return NullForEmpty(textIonMobility.Text); }
-            set { textIonMobility.Text = EmptyForNullOrNonPositive(value); }
+            set { textIonMobility.Text = EmptyForNullOrZero(value); }
+        }
+
+        private void PopulateIonMobilityUnits()
+        {
+            if (!string.IsNullOrEmpty(textIonMobility.Text) && Equals(IonMobilityUnits, eIonMobilityUnits.none))
+            {
+                // Try to set a reasonable value for ion mobility units
+
+                // First look for any other explicit ion mobility values in the document
+                var doc = _parent?.Document;
+                var node =
+                    doc?.MoleculeTransitionGroups.FirstOrDefault(n =>
+                        n.ExplicitValues.IonMobilityUnits != eIonMobilityUnits.none);
+                if (node != null)
+                {
+                    IonMobilityUnits = node.ExplicitValues.IonMobilityUnits;
+                    return;
+                }
+
+                // Then try the ion mobility library if any
+                var filters = doc?.Settings.TransitionSettings.IonMobilityFiltering;
+                if (filters != null)
+                {
+                    IonMobilityUnits = filters.GetFirstSeenIonMobilityUnits();
+                }
+            }
         }
 
         public double? IonMobilityHighEnergyOffset
@@ -585,6 +626,17 @@ namespace pwiz.Skyline.SettingsUI
                     : eIonMobilityUnits.none;
             }
             set { comboBoxIonMobilityUnits.SelectedIndex = (int) value; }
+        }
+
+        public double? PrecursorCollisionEnergy
+        {
+            get { return NullForEmpty(textBoxPrecursorCollisionEnergy.Text); }
+            set
+            {
+                textBoxPrecursorCollisionEnergy.Text = value.HasValue && !value.Value.Equals(0)
+                    ? value.Value.ToString(LocalizationHelper.CurrentCulture)
+                    : string.Empty;
+            }
         }
 
         public double? CollisionalCrossSectionSqA
@@ -658,6 +710,26 @@ namespace pwiz.Skyline.SettingsUI
                     Resources
                         .SkylineWindow_AddMolecule_The_precursor_m_z_for_this_molecule_is_out_of_range_for_your_instrument_settings_);
                 return;
+            }
+
+            // Ion mobility value must have ion mobility units
+            if (textIonMobility.Visible && IonMobility.HasValue)
+            {
+                if (IonMobilityUnits == eIonMobilityUnits.none)
+                {
+                    helper.ShowTextBoxError(textIonMobility, Resources.EditCustomMoleculeDlg_OkDialog_Please_specify_the_ion_mobility_units_);
+                    comboBoxIonMobilityUnits.Focus();
+                    return;
+                }
+
+                if (IonMobility.Value == 0 ||
+                    (IonMobility.Value < 0 && !IonMobilityFilter.AcceptNegativeMobilityValues(IonMobilityUnits)))
+                {
+                    helper.ShowTextBoxError(textIonMobility, 
+                        string.Format(Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Invalid_ion_mobility_value__0_, IonMobility));
+                    textIonMobility.Focus();
+                    return;
+                }
             }
             if (_usageMode == UsageMode.precursor)
             {
@@ -827,6 +899,10 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        private void textIonMobility_TextChanged(object sender, EventArgs e)
+        {
+            PopulateIonMobilityUnits(); // Try to set reasonable ion mobility units if user is adding an ion mobility value
+        }
 
         #region For Testing
 

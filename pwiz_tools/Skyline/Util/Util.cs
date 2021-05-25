@@ -29,7 +29,6 @@ using System.Net;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
@@ -797,9 +796,10 @@ namespace pwiz.Skyline.Util
                 return true;
             if (values1 == null || values2 == null)
                 return false;
-            if (values1.Count != values2.Count)
+            int count = values1.Count;
+            if (count != values2.Count)
                 return false;
-            for (int i = 0; i < values1.Count; i++)
+            for (int i = 0; i < count; i++)
             {
                 if (!Equals(values1[i], values2[i]))
                     return false;
@@ -872,9 +872,10 @@ namespace pwiz.Skyline.Util
                 return true;
             if (values1 == null || values2 == null)
                 return false;
-            if (values1.Count != values2.Count)
+            int count = values1.Count;
+            if (count != values2.Count)
                 return false;
-            for (int i = 0; i < values1.Count; i++)
+            for (int i = 0; i < count; i++)
             {
                 if (!ReferenceEquals(values1[i], values2[i]))
                     return false;
@@ -1477,16 +1478,13 @@ namespace pwiz.Skyline.Util
         /// <param name="value">The string to parse</param>
         /// <param name="defaultValue">The value to return, if parsing fails</param>
         /// <returns>An enum value of type <see cref="TEnum"/></returns>
-        public static TEnum ParseEnum<TEnum>(string value, TEnum defaultValue)
+        public static TEnum ParseEnum<TEnum>(string value, TEnum defaultValue) where TEnum : struct
         {
-            try
+            if (Enum.TryParse(value, true, out TEnum result))
             {
-                return (TEnum)Enum.Parse(typeof(TEnum), value, true);
+                return result;
             }
-            catch (Exception)
-            {
-                return defaultValue;
-            }                            
+            return defaultValue;
         }
 
         /// <summary>
@@ -2023,6 +2021,31 @@ namespace pwiz.Skyline.Util
         {
             if (InvokeDebuggerOnFail)
             {
+                // Try to launch devenv with our solution sln so it presents in the list of debugger options.
+                // This makes for better code navigation and easier debugging.
+                try
+                {
+                    var path = @"\pwiz_tools\Skyline";
+                    var basedir = AppDomain.CurrentDomain.BaseDirectory;
+                    if (!string.IsNullOrEmpty(basedir))
+                    {
+                        var index = basedir.IndexOf(path, StringComparison.Ordinal);
+                        var solutionPath = basedir.Substring(0, index + path.Length);
+                        var skylineSln = Path.Combine(solutionPath, "Skyline.sln");
+                        // Try to give user a hint as to which debugger to pick
+                        var skylineTesterSln = Path.Combine(solutionPath, "USE THIS FOR ASSUME FAIL DEBUGGING.sln");
+                        if (File.Exists(skylineTesterSln))
+                            File.Delete(skylineTesterSln);
+                        File.Copy(skylineSln, skylineTesterSln);
+                        Process.Start(skylineTesterSln);
+                        Thread.Sleep(20000); // Wait for it to fire up sp it's offered in the list of debuggers
+                    }
+                }
+                // ReSharper disable once EmptyGeneralCatchClause
+                catch (Exception)
+                {
+                }
+
                 Console.WriteLine();
                 if (!string.IsNullOrEmpty(error))
                     Console.WriteLine(error);
@@ -2088,147 +2111,20 @@ namespace pwiz.Skyline.Util
             return ex.Message;
         }
 
-        public static string GetStackTraceText(Exception exception, StackTrace stackTraceExceptionCaughtAt = null, bool showMessage = true)
+        /// <summary>
+        /// Returns text to be used when reporting an unhandled exception to the Skyline.ms.
+        /// </summary>
+        public static string GetExceptionText(Exception exception, StackTrace stackTraceExceptionCaughtAt)
         {
-            StringBuilder stackTrace = new StringBuilder();
-            if (showMessage)
-                stackTrace.AppendLine(@"Stack trace:").AppendLine();
-
-            stackTrace.AppendLine(exception.StackTrace).AppendLine();
-
-            for (var x = exception.InnerException; x != null; x = x.InnerException)
+            StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.AppendLine(exception.ToString());
+            if (stackTraceExceptionCaughtAt != null)
             {
-                if (ReferenceEquals(x, exception.InnerException))
-                    stackTrace.AppendLine(@"Inner exceptions:");
-                else
-                    stackTrace.AppendLine(@"---------------------------------------------------------------");
-                stackTrace.Append(@"Exception type: ").Append(x.GetType().FullName).AppendLine();
-                stackTrace.Append(@"Error message: ").AppendLine(x.Message);
-                stackTrace.AppendLine(x.Message).AppendLine(x.StackTrace);
-            }
-            if (null != stackTraceExceptionCaughtAt)
-            {
-                stackTrace.AppendLine(@"Exception caught at: ");
-                stackTrace.AppendLine(stackTraceExceptionCaughtAt.ToString());
-            }
-            return stackTrace.ToString();
-        }
-    }
-
-    public static class ParallelEx
-    {
-        // This can be set to true to make debugging easier.
-        public static readonly bool SINGLE_THREADED = false;
-
-        private static readonly ParallelOptions PARALLEL_OPTIONS = new ParallelOptions
-        {
-            MaxDegreeOfParallelism = SINGLE_THREADED ? 1 : -1
-        };
-
-        private class IntHolder
-        {
-            public IntHolder(int theInt)
-            {
-                TheInt = theInt;
+                stringBuilder.AppendLine(@"Exception caught at: ");
+                stringBuilder.AppendLine(stackTraceExceptionCaughtAt.ToString());
             }
 
-            public int TheInt { get; private set; }
-        }
-
-        public static int GetThreadCount(int? maxThreads = null)
-        {
-            if (SINGLE_THREADED)
-                return 1;
-            int threadCount = Environment.ProcessorCount;
-            int maxThreadCount = maxThreads ?? 8; // Trial with maximum of 8
-            if (threadCount > maxThreadCount)
-                threadCount = maxThreadCount;
-            return threadCount;
-        }
-
-        public static void For(int fromInclusive, int toExclusive, Action<int> body, Action<AggregateException> catchClause = null, int? maxThreads = null)
-        {
-            Action<int> localBody = i =>
-            {
-                LocalizationHelper.InitThread(); // Ensure appropriate culture
-                body(i);
-            };
-            LoopWithExceptionHandling(() =>
-            {
-                using (var worker = new QueueWorker<IntHolder>(null, (h, i) => localBody(h.TheInt)))
-                {
-                    worker.RunAsync(GetThreadCount(maxThreads), typeof(ParallelEx).Name);
-                    for (int i = fromInclusive; i < toExclusive; i++)
-                    {
-                        if (worker.Exception != null)
-                            break;
-                        worker.Add(new IntHolder(i));
-                    }
-                    worker.DoneAdding(true);
-                    if (worker.Exception != null)
-                        throw new AggregateException(@"Exception in Parallel.For", worker.Exception);   
-                }
-            }, catchClause);
-//            LoopWithExceptionHandling(() => Parallel.For(fromInclusive, toExclusive, PARALLEL_OPTIONS, localBody), catchClause);
-        }
-
-        public static void ForEach<TSource>(IEnumerable<TSource> source, Action<TSource> body, Action<AggregateException> catchClause = null, int? maxThreads = null) where TSource : class
-        {
-            Action<TSource> localBody = o =>
-            {
-                LocalizationHelper.InitThread(); // Ensure appropriate culture
-                body(o);
-            };
-            LoopWithExceptionHandling(() =>
-            {
-                using (var worker = new QueueWorker<TSource>(null, (s, i) => localBody(s)))
-                {
-                    worker.RunAsync(GetThreadCount(maxThreads), typeof(ParallelEx).Name);
-                    foreach (TSource s in source)
-                    {
-                        if (worker.Exception != null)
-                            break;
-                        worker.Add(s);
-                    }
-                    worker.DoneAdding(true);
-                    if (worker.Exception != null)
-                        throw new AggregateException(@"Exception in Parallel.ForEx", worker.Exception); 
-                }
-            }, catchClause);
-//            LoopWithExceptionHandling(() => Parallel.ForEach(source, PARALLEL_OPTIONS, localBody), catchClause);
-        }
-
-        private static void LoopWithExceptionHandling(Action loop, Action<AggregateException> catchClause)
-        {
-            try
-            {
-                loop();
-            }
-            catch (AggregateException x)
-            {
-                Exception ex = null;
-                x.Handle(inner =>
-                {
-                    if (inner is OperationCanceledException)
-                    {
-                        if (!(ex is OperationCanceledException))
-                            ex = inner;
-                        return true;
-                    }
-                    if (catchClause == null)
-                    {
-                        if (ex == null)
-                            ex = inner;
-                        return true;
-                    }
-                    return false;
-                });
-
-                if (ex != null)
-                    Helpers.WrapAndThrowException(ex);
-                if (catchClause != null)
-                    catchClause(x);
-            }
+            return stringBuilder.ToString();
         }
     }
 
@@ -2288,6 +2184,36 @@ namespace pwiz.Skyline.Util
         public static void Initialize()
         {
             ServicePointManager.SecurityProtocol |= (SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12);
+        }
+    }
+
+    /// <summary>
+    /// Creates a string representing a UTC time and offset to local time zone, per ISO 8601 standard
+    /// </summary>
+    public class TimeStampISO8601
+    {
+        public TimeStampISO8601(DateTime timeStampUTC)
+        {
+            Assume.IsTrue(timeStampUTC.Kind == DateTimeKind.Utc); // We only deal in UTC
+            TimeStampUTC = timeStampUTC;
+            TimeZoneOffset = TimeZoneInfo.Local.GetUtcOffset(TimeStampUTC); // UTC offset e.g. -8 for Seattle whn not on DST
+        }
+
+        public TimeStampISO8601() : this(DateTime.UtcNow)
+        {
+        }
+
+        public DateTime TimeStampUTC { get; } // UTC time of creation
+        public TimeSpan TimeZoneOffset { get; } // UTC offset at time of creation e.g. -8 for Seattle when not on DST, -7 when DST  
+
+        public override string ToString()
+        {
+            var localTime = TimeStampUTC + TimeZoneOffset;
+            var tzShift = TimeZoneOffset.TotalHours; // Decimal hours eg 8.5 or -0.5 etc
+            return localTime.ToString(@"s", DateTimeFormatInfo.InvariantInfo) +
+                   (tzShift == 0
+                       ? @"Z"
+                       : (tzShift < 0 ? @"-" : @"+") + TimeZoneOffset.ToString(@"hh\:mm"));
         }
     }
 

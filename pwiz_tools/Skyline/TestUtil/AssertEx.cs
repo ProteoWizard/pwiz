@@ -31,9 +31,11 @@ using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
+using pwiz.SkylineTestUtil.Schemas;
 
 namespace pwiz.SkylineTestUtil
 {
@@ -108,7 +110,7 @@ namespace pwiz.SkylineTestUtil
         {
             if (Assume.InvokeDebuggerOnFail)
             {
-                Assume.Fail(message); // Handles the debugger launch
+                Assume.Fail(string.Format(message, parameters)); // Handles the debugger launch
             }
             Assert.Fail(message, parameters);
         }
@@ -211,7 +213,7 @@ namespace pwiz.SkylineTestUtil
                 return;
 
             Fail(TextUtil.LineSeparate(exceptions.Count == 1 ? "Unexpected exception:" : "Unexpected exceptions:",
-                TextUtil.LineSeparate(exceptions.Select(x => TextUtil.LineSeparate(x.Message, ExceptionUtil.GetStackTraceText(x, null, false), string.Empty)))));
+                TextUtil.LineSeparate(exceptions.Select(x => x.ToString()))));
         }
 
         public static void Contains(string value, params string[] parts)
@@ -239,7 +241,8 @@ namespace pwiz.SkylineTestUtil
 
         public static TObj Deserialize<TObj>(string s)
         {
-            s = XmlUtil.XML_DIRECTIVE + s;
+            if (!s.StartsWith(XmlUtil.XML_DIRECTIVE.Split(' ')[0])) // Just match "<?xml" in <?xml version="1.0" encoding="utf-16"?>"
+                s = XmlUtil.XML_DIRECTIVE + s;
 
             XmlSerializer ser = new XmlSerializer(typeof(TObj));
             using (TextReader reader = new StringReader(s))
@@ -251,13 +254,19 @@ namespace pwiz.SkylineTestUtil
         public static void Serialization<TObj>(string s, Action<TObj, TObj> validate, bool checkAgainstSkylineSchema = true, string expectedTypeInSkylineSchema = null)
             where TObj : class
         {
-            Serializable(Deserialize<TObj>(s), validate, checkAgainstSkylineSchema, expectedTypeInSkylineSchema);
+            Serializable(Deserialize<TObj>(s), validate, DocumentFormat.CURRENT, checkAgainstSkylineSchema, expectedTypeInSkylineSchema);
         }
 
         public static void DeserializeNoError<TObj>(string s, bool roundTrip = true, bool checkAgainstSkylineSchema = true, string expectedSkylineSchemaType = null)
             where TObj : class
         {
-            DeserializeError<TObj, Exception>(s, roundTrip ? DeserializeType.roundtrip : DeserializeType.no_error, null, checkAgainstSkylineSchema, expectedSkylineSchemaType);
+            DeserializeError<TObj, Exception>(s, roundTrip ? DeserializeType.roundtrip : DeserializeType.no_error, DocumentFormat.CURRENT, null, checkAgainstSkylineSchema, expectedSkylineSchemaType);
+        }
+
+        public static void DeserializeNoError<TObj>(string s, DocumentFormat docFormat, bool roundTrip = true, bool checkAgainstSkylineSchema = true, string expectedSkylineSchemaType = null)
+            where TObj : class
+        {
+            DeserializeError<TObj, Exception>(s, roundTrip ? DeserializeType.roundtrip : DeserializeType.no_error, docFormat, null, checkAgainstSkylineSchema, expectedSkylineSchemaType);
         }
 
         public static void DeserializeError<TObj>(string s, string expectedExceptionText = null)
@@ -266,11 +275,17 @@ namespace pwiz.SkylineTestUtil
             DeserializeError<TObj, InvalidDataException>(s, expectedExceptionText);
         }
 
+        public static void DeserializeError<TObj>(string s, DocumentFormat formatVersion, string expectedExceptionText = null)
+            where TObj : class
+        {
+            DeserializeError<TObj, InvalidDataException>(s, DeserializeType.error, formatVersion, expectedExceptionText);
+        }
+
         public static void DeserializeError<TObj, TEx>(string s, string expectedExceptionText = null)
             where TEx : Exception
             where TObj : class
         {
-            DeserializeError<TObj, TEx>(s, DeserializeType.error, expectedExceptionText);
+            DeserializeError<TObj, TEx>(s, DeserializeType.error, DocumentFormat.CURRENT, expectedExceptionText);
         }
 
         private enum DeserializeType
@@ -278,11 +293,12 @@ namespace pwiz.SkylineTestUtil
             error, no_error, roundtrip
         }
 
-        private static void DeserializeError<TObj, TEx>(string s, DeserializeType deserializeType, string expectedExceptionText = null, bool checkAgainstSkylineSchema = true, string expectedSkylineSchemaType = null)
+        private static void DeserializeError<TObj, TEx>(string s, DeserializeType deserializeType, DocumentFormat formatVersion, string expectedExceptionText = null, bool checkAgainstSkylineSchema = true, string expectedSkylineSchemaType = null)
             where TEx : Exception
             where TObj : class
         {
-            s = XmlUtil.XML_DIRECTIVE + s;
+            if (!s.StartsWith(XmlUtil.XML_DIRECTIVE.Split(' ')[0])) // Just match "<?xml" in <?xml version="1.0" encoding="utf-16"?>"
+                s = XmlUtil.XML_DIRECTIVE + s;
 
             XmlSerializer ser = new XmlSerializer(typeof(TObj));
             using (TextReader reader = new StringReader(s))
@@ -299,7 +315,7 @@ namespace pwiz.SkylineTestUtil
                     }
 
                     if (deserializeType == DeserializeType.roundtrip)
-                        Serializable(obj, Cloned, checkAgainstSkylineSchema, expectedSkylineSchemaType);
+                        Serializable(obj, Cloned, formatVersion, checkAgainstSkylineSchema, expectedSkylineSchemaType);
                 }
                 catch (InvalidOperationException x)
                 {
@@ -335,17 +351,45 @@ namespace pwiz.SkylineTestUtil
 
         public static void Serializable(SrmDocument doc)
         {
-            Serializable(doc, DocumentCloned);
+            Serializable(doc, DocumentCloned, DocumentFormat.CURRENT);
             VerifyModifiedSequences(doc);
+            NormalizedValueCalculatorVerifier.VerifyRatioCalculations(doc);
+            // Skyline uses a format involving protocol buffers if the document is very large.
+            // Make sure to serialize the document the other way, and make sure it's still the same.
+            bool wasCompactFormat = CompactFormatOption.FromSettings().UseCompactFormat(doc);
+            string oldSetting = Settings.Default.CompactFormatOption;
+            try
+            {
+                Settings.Default.CompactFormatOption =
+                    (wasCompactFormat ? CompactFormatOption.NEVER : CompactFormatOption.ALWAYS).Name;
+                Assert.AreNotEqual(wasCompactFormat, CompactFormatOption.FromSettings().UseCompactFormat(doc));
+                Serializable(doc, DocumentCloned);
+            }
+            finally
+            {
+                Settings.Default.CompactFormatOption = oldSetting;
+            }
         }
 
         public static void Serializable<TObj>(TObj target, Action<TObj, TObj> validate, bool checkAgainstSkylineSchema = true, string expectedTypeInSkylineSchema = null)
             where TObj : class
         {
-            Serializable(target, 1, validate, checkAgainstSkylineSchema, expectedTypeInSkylineSchema);
+            Serializable(target, 1, validate, DocumentFormat.CURRENT, checkAgainstSkylineSchema, expectedTypeInSkylineSchema);
+        }
+
+        public static void Serializable<TObj>(TObj target, Action<TObj, TObj> validate, DocumentFormat formatVersion, bool checkAgainstSkylineSchema = true, string expectedTypeInSkylineSchema = null)
+            where TObj : class
+        {
+            Serializable(target, 1, validate, formatVersion, checkAgainstSkylineSchema, expectedTypeInSkylineSchema);
         }
 
         public static void Serializable<TObj>(TObj target, int roundTrips, Action<TObj, TObj> validate, bool checkAgainstSkylineSchema = true, string expectedTypeInSkylineSchema = null)
+            where TObj : class
+        {
+            Serializable(target, roundTrips, validate, DocumentFormat.CURRENT, checkAgainstSkylineSchema, expectedTypeInSkylineSchema);
+        }
+
+        public static void Serializable<TObj>(TObj target, int roundTrips, Action<TObj, TObj> validate, DocumentFormat formatVersion, bool checkAgainstSkylineSchema = true, string expectedTypeInSkylineSchema = null)
             where TObj : class
         {
             string expected = null;
@@ -354,18 +398,19 @@ namespace pwiz.SkylineTestUtil
 
             // Validate documents or document fragments against current schema
             if (checkAgainstSkylineSchema)
-                ValidatesAgainstSchema(target, expectedTypeInSkylineSchema);
+                ValidatesAgainstSchema(target, formatVersion, expectedTypeInSkylineSchema);
         }
 
-        public static SrmDocument Serializable(SrmDocument target, string testPath, bool checkAgainstSkylineSchema = true, string expectedTypeInSkylineSchema = null, bool forceFullLoad = false)
+        public static SrmDocument Serializable(SrmDocument target, string testPath, SkylineVersion skylineVersion, bool checkAgainstSkylineSchema = true, bool forceFullLoad = false)
         {
-            string expected = null;
-            var actual = RoundTrip(target, ref expected);
+            string asXML = null;
+            var actual = RoundTrip(target, skylineVersion, ref asXML);
             DocumentClonedLoadable(ref target, ref actual, testPath, forceFullLoad);
             VerifyModifiedSequences(target);
-            // Validate documents or document fragments against current schema
+            NormalizedValueCalculatorVerifier.VerifyRatioCalculations(target);
+            // Validate document against indicated schema
             if (checkAgainstSkylineSchema)
-                ValidatesAgainstSchema(target, expectedTypeInSkylineSchema);
+                ValidatesAgainstSchema(actual, skylineVersion.SrmDocumentVersion, nameof(SrmDocument), asXML);
             return target;
         }
 
@@ -378,6 +423,10 @@ namespace pwiz.SkylineTestUtil
         {
             foreach (var peptide in doc.Peptides)
             {
+                if (peptide.ExplicitMods != null && peptide.ExplicitMods.HasCrosslinks)
+                {
+                    continue;
+                }
                 var peptideModifiedSequence =
                     ModifiedSequence.GetModifiedSequence(doc.Settings, peptide, IsotopeLabelType.light);
                 IsNotNull(peptideModifiedSequence);
@@ -406,6 +455,14 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         public static void ValidatesAgainstSchema(Object obj, string expectedTypeInSkylineSchema = null)
         {
+            ValidatesAgainstSchema(obj, DocumentFormat.CURRENT, expectedTypeInSkylineSchema);
+        }
+
+        /// <summary>
+        /// Checks validity of a document or document fragment against the indicated schema
+        /// </summary>
+        public static void ValidatesAgainstSchema(Object obj, DocumentFormat formatVersion, string expectedTypeInSkylineSchema = null)
+        {
             var sb = new StringBuilder();
             using (var sw = new StringWriter(sb))
             {
@@ -427,76 +484,85 @@ namespace pwiz.SkylineTestUtil
                                 return;  // Just a really big document, let it slide
                             throw new OutOfMemoryException("Strangely large non-document object", x.InnerException);
                         }
-                        var assembly = Assembly.GetAssembly(typeof(AssertEx));
-                        var xsdName = typeof(AssertEx).Namespace + String.Format(CultureInfo.InvariantCulture, ".Schemas.Skyline_{0}.xsd", SrmDocument.FORMAT_VERSION);
-                        var schemaStream = assembly.GetManifestResourceStream(xsdName);
-                        IsNotNull(schemaStream, string.Format("Schema {0} not found in TestUtil assembly", xsdName));
-                        // ReSharper disable once AssignNullToNotNullAttribute
-                        var schemaText = (new StreamReader(schemaStream)).ReadToEnd();
-                        var xd = new XmlDocument();
-                        xd.Load(new MemoryStream(Encoding.UTF8.GetBytes(schemaText)));
-                        string targetXML = null;
-                        if (!(obj is SrmDocument))
-                        {
-                            // XSD validation takes place from the root, so make the object's type a root element for test purposes.
-                            // Inspired by http://stackoverflow.com/questions/715626/validating-xml-nodes-not-the-entire-document
-                            var elementName = xmlText.Split('<')[2].Split(' ')[0];
-                            var nodes = xd.GetElementsByTagName("xs:element");
-                            int currentCount = nodes.Count;
-                            for (var i = 0; i < currentCount; i++)
-                            {
-                                var xmlAttributeCollection = nodes[i].Attributes;
-                                if (xmlAttributeCollection != null &&
-                                    elementName.Equals(xmlAttributeCollection.GetNamedItem("name").Value) &&
-                                    (expectedTypeInSkylineSchema == null || expectedTypeInSkylineSchema.Equals(xmlAttributeCollection.GetNamedItem("type").Value)))
-                                {
-                                    // Insert this XML as a root element at the end of the schema
-                                    xmlAttributeCollection.RemoveNamedItem("minOccurs"); // Useful only in the full sequence context
-                                    xmlAttributeCollection.RemoveNamedItem("maxOccurs");
-                                    var xml = nodes[i].OuterXml;
-                                    if (!xml.Equals(targetXML))
-                                    {
-                                        // Don't enter a redundant definition
-                                        targetXML = xml;
-                                        IsNotNull(xd.DocumentElement);
-                                        // ReSharper disable once PossibleNullReferenceException
-                                        xd.DocumentElement.AppendChild(nodes[i]);
-                                    }
-                                }
-                            }
-                        }
-                        
-                        using (var schemaReader = new XmlNodeReader(xd))
-                        {
-                            var schema = XmlSchema.Read(schemaReader, ValidationCallBack);
-                            var readerSettings = new XmlReaderSettings
-                            {
-                                ValidationType = ValidationType.Schema
-                            };
-                            readerSettings.ValidationFlags |= XmlSchemaValidationFlags.ProcessInlineSchema;
-                            readerSettings.ValidationFlags |= XmlSchemaValidationFlags.ReportValidationWarnings;
-                            readerSettings.ValidationEventHandler += ValidationCallBack;
-                            readerSettings.Schemas.Add(schema);
-
-                            using (var reader = XmlReader.Create(new StringReader(xmlText), readerSettings))
-                            {
-                                try
-                                {
-                                    while (reader.Read())
-                                    {
-                                    }
-                                    reader.Close();
-                                }
-                                catch (Exception e)
-                                {
-                                    Fail(e.Message + "  XML text:\r\n" + xmlText);
-                                }
-                            }
-                        }
+                        ValidatesAgainstSchema(obj, formatVersion, expectedTypeInSkylineSchema, xmlText);
                     }
                     catch (Exception e)
                     {
                         Fail(e.ToString());
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Checks validity of a document or document fragment against the indicated schema
+        /// </summary>
+        private static void ValidatesAgainstSchema(object obj, DocumentFormat formatVersion, string expectedTypeInSkylineSchema, string xmlText)
+        {
+            var assembly = Assembly.GetAssembly(typeof(AssertEx));
+            var xsdName = SchemaDocuments.GetSkylineSchemaResourceName(formatVersion.ToString());
+            var schemaStream = assembly.GetManifestResourceStream(xsdName);
+            IsNotNull(schemaStream, string.Format("Schema {0} not found in TestUtil assembly", xsdName));
+            // ReSharper disable once AssignNullToNotNullAttribute
+            var schemaText = (new StreamReader(schemaStream)).ReadToEnd();
+            var xd = new XmlDocument();
+            xd.Load(new MemoryStream(Encoding.UTF8.GetBytes(schemaText)));
+            string targetXML = null;
+            if (!(obj is SrmDocument))
+            {
+                // XSD validation takes place from the root, so make the object's type a root element for test purposes.
+                // Inspired by http://stackoverflow.com/questions/715626/validating-xml-nodes-not-the-entire-document
+                var elementName = xmlText.Split('<')[2].Split(' ')[0];
+                var nodes = xd.GetElementsByTagName("xs:element");
+                int currentCount = nodes.Count;
+                for (var i = 0; i < currentCount; i++)
+                {
+                    var xmlAttributeCollection = nodes[i].Attributes;
+                    if (xmlAttributeCollection != null &&
+                        elementName.Equals(xmlAttributeCollection.GetNamedItem("name").Value) &&
+                        (expectedTypeInSkylineSchema == null || expectedTypeInSkylineSchema.Equals(xmlAttributeCollection.GetNamedItem("type").Value)))
+                    {
+                        // Insert this XML as a root element at the end of the schema
+                        xmlAttributeCollection.RemoveNamedItem("minOccurs"); // Useful only in the full sequence context
+                        xmlAttributeCollection.RemoveNamedItem("maxOccurs");
+                        var xml = nodes[i].OuterXml;
+                        if (!xml.Equals(targetXML))
+                        {
+                            // Don't enter a redundant definition
+                            targetXML = xml;
+                            IsNotNull(xd.DocumentElement);
+                            // ReSharper disable once PossibleNullReferenceException
+                            xd.DocumentElement.AppendChild(nodes[i]);
+                        }
+                    }
+                }
+            }
+
+            using (var schemaReader = new XmlNodeReader(xd))
+            {
+                var schema = XmlSchema.Read(schemaReader, ValidationCallBack);
+                var readerSettings = new XmlReaderSettings
+                {
+                    ValidationType = ValidationType.Schema
+                };
+                readerSettings.ValidationFlags |= XmlSchemaValidationFlags.ProcessInlineSchema;
+                readerSettings.ValidationFlags |= XmlSchemaValidationFlags.ReportValidationWarnings;
+                readerSettings.ValidationEventHandler += ValidationCallBack;
+                readerSettings.Schemas.Add(schema);
+
+                using (var reader = XmlReader.Create(new StringReader(xmlText), readerSettings))
+                {
+                    try
+                    {
+                        while (reader.Read())
+                        {
+                        }
+
+                        reader.Close();
+                    }
+                    catch (Exception e)
+                    {
+                        Fail(e.Message + "  XML text:\r\n" + xmlText);
                     }
                 }
             }
@@ -517,7 +583,7 @@ namespace pwiz.SkylineTestUtil
             string schemaVer = xmlText.Substring(verStart, xmlText.Substring(verStart).IndexOf("\"", StringComparison.Ordinal));
             // ReSharper restore LocalizableElement
 
-            ValidatesAgainstSchema(xmlText, "Skyline_" + schemaVer);
+            ValidatesAgainstSchema(xmlText, SchemaDocuments.GetSkylineSchemaResourceName(schemaVer));
         }
 
         [Localizable(false)]
@@ -542,16 +608,15 @@ namespace pwiz.SkylineTestUtil
                 version = "4.21";
             }
 
-            ValidatesAgainstSchema(xmlText, "AuditLog.Skyl_" + version);
+            ValidatesAgainstSchema(xmlText, SchemaDocuments.GetAuditLogSchemaResourceName(version));
         }
 
 
-        public static void ValidatesAgainstSchema(string xmlText, string xsdName)
+        public static void ValidatesAgainstSchema(string xmlText, string xsdResourceName)
         {
             var assembly = Assembly.GetAssembly(typeof(AssertEx));
-            var schemaFileName = typeof(AssertEx).Namespace + String.Format(CultureInfo.InvariantCulture, @".Schemas.{0}.xsd", xsdName);
-            var schemaFile = assembly.GetManifestResourceStream(schemaFileName);
-            IsNotNull(schemaFile, "could not locate a schema file called " + schemaFileName);
+            var schemaFile = assembly.GetManifestResourceStream(xsdResourceName);
+            IsNotNull(schemaFile, "could not locate a schema file called " + xsdResourceName);
             // ReSharper disable once AssignNullToNotNullAttribute
             using (var schemaReader = new XmlTextReader(schemaFile))
             {
@@ -584,8 +649,7 @@ namespace pwiz.SkylineTestUtil
 
         private static void ValidationCallBack(object sender, ValidationEventArgs args)
         {
-            string message = String.Format(CultureInfo.InvariantCulture, "XML Validation error using Skyline_{0}.xsd:",
-                SrmDocument.FORMAT_VERSION) + args.Message;
+            string message = String.Format(CultureInfo.InvariantCulture, "XML Validation error: {0}", args.Message);
             if (null != args.Exception)
             {
                 message = TextUtil.SpaceSeparate(message, string.Format("Line {0} Position {1}", args.Exception.LineNumber, args.Exception.LinePosition));
@@ -604,20 +668,24 @@ namespace pwiz.SkylineTestUtil
             where TObj : class
         {
             XmlSerializer ser = new XmlSerializer(typeof(TObj));
-            StringBuilder sb = new StringBuilder();
-            using (XmlTextWriter writer = new XmlTextWriter(new StringWriter(sb)))
+            using (var memStream = new MemoryStream())
             {
+                XmlTextWriter writer = new XmlTextWriter(memStream, Encoding.UTF8);
                 writer.Formatting = Formatting.Indented;
 
                 try
                 {
                     ser.Serialize(writer, target);
+                    memStream.Seek(0, SeekOrigin.Begin);
+                    string xmlString = string.Empty;
+                    using (var reader = new StreamReader(memStream))
+                        xmlString = reader.ReadToEnd();
+
                     if (String.IsNullOrEmpty(expected))
-                        expected = sb.ToString();
+                        expected = xmlString;
                     else
-                        NoDiff(expected, sb.ToString());
-                    var s = sb.ToString();
-                    using (TextReader reader = new StringReader(s))
+                        NoDiff(expected, xmlString);
+                    using (TextReader reader = new StringReader(xmlString))
                     {
                         TObj copy = (TObj)ser.Deserialize(reader);
                         return copy;
@@ -629,9 +697,41 @@ namespace pwiz.SkylineTestUtil
                 }
             }
 
-// ReSharper disable HeuristicUnreachableCode
+            // ReSharper disable HeuristicUnreachableCode
             return null;
-// ReSharper restore HeuristicUnreachableCode
+            // ReSharper restore HeuristicUnreachableCode
+        }
+        public static SrmDocument RoundTrip(SrmDocument target, SkylineVersion skylineVersion, ref string expected)
+        {
+            XmlSerializer ser = new XmlSerializer(typeof(SrmDocument));
+            StringBuilder sb = new StringBuilder();
+            using (XmlTextWriter writer = new XmlTextWriter(new StringWriter(sb)))
+            {
+                writer.Formatting = Formatting.Indented;
+
+                try
+                {
+                    target.Serialize(writer, null, skylineVersion,  null);
+                    if (String.IsNullOrEmpty(expected))
+                        expected = sb.ToString();
+                    else
+                        NoDiff(expected, sb.ToString());
+                    var s = sb.ToString();
+                    using (TextReader reader = new StringReader(s))
+                    {
+                        var copy = (SrmDocument)ser.Deserialize(reader);
+                        return copy;
+                    }
+                }
+                catch (Exception e)
+                {
+                    Fail(e.ToString());
+                }
+            }
+
+            // ReSharper disable HeuristicUnreachableCode
+            return null;
+            // ReSharper restore HeuristicUnreachableCode
         }
 
         public static SrmDocument RoundTripTransitionList(AbstractMassListExporter exporter)
@@ -645,7 +745,7 @@ namespace pwiz.SkylineTestUtil
             IdentityPath pathAdded;
             var inputs = new MassListInputs(DuplicateAndReverseLines(transitionList, exporter.HasHeaders),
                 CultureInfo.InvariantCulture, TextUtil.SEPARATOR_CSV);
-            docImport = docImport.ImportMassList(inputs, IdentityPath.ROOT, out pathAdded);
+            docImport = docImport.ImportMassList(inputs, null, IdentityPath.ROOT, out pathAdded);
 
             IsDocumentState(docImport, 1,
                                      docExport.MoleculeGroupCount,
@@ -710,6 +810,29 @@ namespace pwiz.SkylineTestUtil
                         Fail(GetEarlyEndingMessage(helpMsg, "Actual", count-1, lineEqualLast, lineTarget, readerTarget));
                     if (lineTarget != lineActual)
                     {
+                        // If only difference appears to be a generated GUID, let it pass
+                        var regexLSID = new Regex(@"(.*)\:[0123456789abcdef]*-[0123456789abcdef]*-[0123456789abcdef]*-[0123456789abcdef]*-[0123456789abcdef]*\:(.*)");
+                        var matchTarget = regexLSID.Match(lineTarget ?? string.Empty);
+                        var matchActual = regexLSID.Match(lineActual ?? string.Empty);
+                        if (matchTarget.Success && matchActual.Success
+                                                && Equals(matchTarget.Groups[1].ToString(), matchActual.Groups[1].ToString())
+                                                && Equals(matchTarget.Groups[2].ToString(), matchActual.Groups[2].ToString()))
+                        {
+                            continue;
+                        }
+
+                        // If only difference appears to be a generated ISO timestamp, let it pass
+                        // e.g. 2020-07-10T10:40:03Z or 2020-07-10T10:40:03-07:00 etc
+                        var regexTimestamp = new Regex(@"(.*"")\d\d\d\d\-\d\d\-\d\dT\d\d\:\d\d\:\d\d(?:Z|(?:[\-\+]\d\d\:\d\d))("".*)");
+                        matchTarget = regexTimestamp.Match(lineTarget ?? string.Empty);
+                        matchActual = regexTimestamp.Match(lineActual ?? string.Empty);
+                        if (matchTarget.Success && matchActual.Success
+                                                && Equals(matchTarget.Groups[1].ToString(), matchActual.Groups[1].ToString())
+                                                && Equals(matchTarget.Groups[2].ToString(), matchActual.Groups[2].ToString()))
+                        {
+                            continue;
+                        }
+                        
                         bool failed = true;
                         if (columnTolerances != null)
                         {
@@ -1008,7 +1131,7 @@ namespace pwiz.SkylineTestUtil
             File.WriteAllText(tmpSky, xmlSaved);
             using (var cmd = new Skyline.CommandLine())
             {
-                IsTrue(cmd.OpenSkyFile(tmpSky)); // Handles any path shifts in database files, like our .imdb file
+                IsTrue(cmd.OpenSkyFile(tmpSky)); // Handles any path shifts in database files, like our .imsdb file
                 var docLoad = cmd.Document;
                 using (var docContainer = new ResultsTestDocumentContainer(null, tmpSky))
                 {
@@ -1066,6 +1189,7 @@ namespace pwiz.SkylineTestUtil
             Cloned(target.TransitionSettings.Prediction, copy.TransitionSettings.Prediction, defTran.Prediction);
             Cloned(target.TransitionSettings.Filter, copy.TransitionSettings.Filter, defTran.Filter);
             Cloned(target.TransitionSettings.Libraries, copy.TransitionSettings.Libraries, defTran.Libraries);
+            Cloned(target.TransitionSettings.IonMobilityFiltering, copy.TransitionSettings.IonMobilityFiltering, defTran.IonMobilityFiltering);
             Cloned(target.TransitionSettings.Integration, copy.TransitionSettings.Integration, defTran.Integration);
             Cloned(target.TransitionSettings.Instrument, copy.TransitionSettings.Instrument, defTran.Instrument);
             Cloned(target.TransitionSettings.FullScan, copy.TransitionSettings.FullScan, defTran.FullScan);
@@ -1161,8 +1285,8 @@ namespace pwiz.SkylineTestUtil
         public static void ConvertedSmallMoleculeDocumentIsSimilar(SrmDocument document, SrmDocument converted, string testDir, RefinementSettings.ConvertToSmallMoleculesMode conversionMode)
         {
             // Are both versions valid?
-            converted = Serializable(converted, testDir, true, null, true); // Force a full load to verify library correctness
-            document = Serializable(document, testDir, true, null, true); // Force a full load to verify library correctness
+            converted = Serializable(converted, testDir, SkylineVersion.CURRENT, true,  true); // Force a full load to verify library correctness
+            document = Serializable(document, testDir, SkylineVersion.CURRENT, true,  true); // Force a full load to verify library correctness
 
             using (var convertedMoleculeGroupsIterator = converted.MoleculeGroups.GetEnumerator())
             {
@@ -1207,20 +1331,20 @@ namespace pwiz.SkylineTestUtil
         {
 
             if (convertedGroup.IsotopeDist == null)
-                Assume.IsNull(group.IsotopeDist);
+                IsNull(group.IsotopeDist);
             else if (conversionMode != RefinementSettings.ConvertToSmallMoleculesMode.masses_only)
-                Assume.IsTrue(convertedGroup.IsotopeDist.IsSimilar(group.IsotopeDist));
+                IsTrue(convertedGroup.IsotopeDist.IsSimilar(group.IsotopeDist));
 
             if (conversionMode == RefinementSettings.ConvertToSmallMoleculesMode.masses_only && group.Results != null)
             {
                 // All we can really expect is that retention times agree - but nothing beyond that, not even the peak width
-                Assume.AreEqual(group.Results.Count, convertedGroup.Results.Count);
+                AreEqual(group.Results.Count, convertedGroup.Results.Count);
                 for (var i = 0; i < group.Results.Count; i++)
                 {
-                    Assume.AreEqual(group.Results[i].Count, convertedGroup.Results[i].Count);
+                    AreEqual(group.Results[i].Count, convertedGroup.Results[i].Count);
                     for (var j = 0; j < group.Results[i].Count; j++)
                     {
-                        Assume.AreEqual(group.Results[i][j].RetentionTime, convertedGroup.Results[i][j].RetentionTime, group + " vs " + convertedGroup);
+                        AreEqual(group.Results[i][j].RetentionTime, convertedGroup.Results[i][j].RetentionTime, group + " vs " + convertedGroup);
                     }
                 }
                 return;

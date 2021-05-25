@@ -91,6 +91,8 @@ namespace pwiz.Skyline.Model.Results
         private SpectrumProductFilter[] SimProductFilters { get; set; }
         public SpectrumProductFilter[] Ms2ProductFilters { get; set; }
 
+        public string ScanDescriptionFilter { get; set; }
+
         public int AddQ1FilterValues(IEnumerable<SignedMz> filterValues, Func<double, double> getFilterWindow)
         {
 
@@ -174,6 +176,16 @@ namespace pwiz.Skyline.Model.Results
 
             var imRangeHelper = new IonMobilityRangeHelper(spectra, useIonMobilityHighEnergyOffset ? productFilters : null,
                 MinIonMobilityValue, MaxIonMobilityValue);
+            if (imRangeHelper.IndexFirst >= spectra.Length)
+            {
+                // No ion mobility match - record a zero intensity unless IM value is outside the
+                // machine's measured range, or if this is a polarity mismatch
+                if (!IsOutsideSpectraRangeIM(spectra, MinIonMobilityValue, MaxIonMobilityValue) && 
+                    spectra.Any(s => Equals(s.NegativeCharge, Q1.IsNegative)))
+                {
+                    spectrumCount++; // Our flag to process this as zero rather than null
+                }
+            }
 //            if (spectra.Length > 1)
 //                Console.Write(string.Empty);
             for (int specIndex = imRangeHelper.IndexFirst; specIndex < spectra.Length; specIndex++)
@@ -355,22 +367,24 @@ namespace pwiz.Skyline.Model.Results
         {
             if (null != productFilters)
             {
-                var ionMobility = GetIonMobilityWindow();
+                var ionMobilityFilter = GetIonMobilityWindow();
                 foreach (var spectrumProductFilter in productFilters)
                 {
                     spectrumProductFilter.FilterId = listChromKeys.Count;
                     var key = new ChromKey(ModifiedSequence,
                         Q1,
-                        ionMobility.ApplyOffset(highEnergy ? spectrumProductFilter.HighEnergyIonMobilityValueOffset : 0),
+                        ionMobilityFilter.ApplyOffset(highEnergy ? spectrumProductFilter.HighEnergyIonMobilityValueOffset : 0),
                         spectrumProductFilter.TargetMz,
                         0,  // CE value (Shimadzu SRM only)
                         spectrumProductFilter.FilterWidth,
                         source,
                         Extractor,
                         true,
-                        true,
-                        MinTime,
-                        MaxTime);
+                        true);
+                    if (_filterByTime)
+                    {
+                        key = key.ChangeOptionalTimes(_minTime, _maxTime);
+                    }
                     listChromKeys.Add(key);
                 }
             }
@@ -400,7 +414,7 @@ namespace pwiz.Skyline.Model.Results
                 // High energy (product ion) scans may have a faster ion mobility, as in Waters MsE, that gets applied elsewhere
                 var width = MaxIonMobilityValue.Value - MinIonMobilityValue.Value;
                 var center = MinIonMobilityValue.Value + 0.5*width;
-                return IonMobilityFilter.GetIonMobilityFilter(IonMobilityValue.GetIonMobilityValue(center, IonMobilityInfo.IonMobility.Units), width, IonMobilityInfo.CollisionalCrossSectionSqA);
+                return IonMobilityFilter.GetIonMobilityFilter(center, IonMobilityInfo.IonMobility.Units, width, IonMobilityInfo.CollisionalCrossSectionSqA);
             }
             else
             {
@@ -454,6 +468,18 @@ namespace pwiz.Skyline.Model.Results
         {
             return Ms1ProductFilters.Any(filter => 0 == filter.TargetMz.CompareTolerant(precursorMz, filter.FilterWidth));
         }
+
+        public bool IsOutsideSpectraRangeIM(MsDataSpectrum[] spectra, double? minIonMobilityValue, double? maxIonMobilityValue)
+        {
+            // For distinguishing zero IM values from not-measured IM values
+            return minIonMobilityValue.HasValue && maxIonMobilityValue.HasValue &&
+                   spectra.All(s =>
+                       (s.IonMobilityMeasurementRangeLow.HasValue &&
+                        s.IonMobilityMeasurementRangeLow > maxIonMobilityValue) ||
+                       (s.IonMobilityMeasurementRangeHigh.HasValue &&
+                        s.IonMobilityMeasurementRangeHigh < minIonMobilityValue));
+        }
+
     }
 
     internal class IonMobilityRangeHelper
@@ -657,6 +683,4 @@ namespace pwiz.Skyline.Model.Results
             return CompareTo((SpectrumFilterValues)obj);
         }
     }
-
-
 }

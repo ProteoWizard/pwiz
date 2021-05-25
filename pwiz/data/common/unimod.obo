@@ -1,5 +1,5 @@
 format-version: 1.2
-date: 2019:09:10 09:30
+date: 2021:03:11 13:32
 
 saved-by: psi-pi_team
 default-namespace: UNIMOD
@@ -2992,9 +2992,9 @@ is_a: UNIMOD:0 ! unimod root node
 [Term]
 id: UNIMOD:137
 name: Hex(5)HexNAc(2)
-def: "N-linked glycan core." [URL:https\://glyconnect.expasy.org/browser/global/compositions/search?hex=5&hexnac=2&mode=exact, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=137]
+def: "M5/Man5." [URL:https\://glyconnect.expasy.org/browser/global/compositions/search?hex=5&hexnac=2&mode=exact, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=137]
 comment: Core structure of high-mannose N-linked oligosaccharides.
-synonym: "Man5" []
+synonym: "N-linked glycan core" []
 xref: record_id "137"
 xref: delta_mono_mass "1216.422863"
 xref: delta_avge_mass "1217.088"
@@ -3002,7 +3002,7 @@ xref: delta_composition "Hex(5) HexNAc(2)"
 xref: username_of_poster "tpjd2"
 xref: group_of_poster "users"
 xref: date_time_posted "2003-08-06 11:31:37"
-xref: date_time_modified "2015-05-01 15:44:36"
+xref: date_time_modified "2020-08-02 11:50:32"
 xref: approved "1"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -3852,7 +3852,7 @@ is_a: UNIMOD:0 ! unimod root node
 [Term]
 id: UNIMOD:159
 name: Hex(3)HexNAc(2)
-def: "Hex3HexNAc2." [URL:https\://glyconnect.expasy.org/browser/global/compositions/search?hex=3&hexnac=2&mode=exact, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=159]
+def: "M3/Man3." [URL:https\://glyconnect.expasy.org/browser/global/compositions/search?hex=3&hexnac=2&mode=exact, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=159]
 synonym: "chitobiose core" []
 xref: record_id "159"
 xref: delta_mono_mass "892.317216"
@@ -3861,7 +3861,7 @@ xref: delta_composition "Hex(3) HexNAc(2)"
 xref: username_of_poster "unimod"
 xref: group_of_poster "admin"
 xref: date_time_posted "2003-09-29 12:59:59"
-xref: date_time_modified "2015-05-05 16:27:36"
+xref: date_time_modified "2020-08-02 11:51:23"
 xref: approved "1"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -3894,14 +3894,14 @@ xref: spec_2_hidden "1"
 xref: spec_2_site "S"
 xref: spec_2_position "Anywhere"
 xref: spec_2_classification "O-linked glycosylation"
-xref: spec_2_neutral_loss_0_mono_mass "0"
-xref: spec_2_neutral_loss_0_avge_mass "0"
-xref: spec_2_neutral_loss_0_flag "false"
-xref: spec_2_neutral_loss_0_composition "0"
 xref: spec_2_neutral_loss_893_mono_mass "892.317216"
 xref: spec_2_neutral_loss_893_avge_mass "892.8068"
 xref: spec_2_neutral_loss_893_flag "false"
 xref: spec_2_neutral_loss_893_composition "Hex(3) HexNAc(2)"
+xref: spec_2_neutral_loss_0_mono_mass "0"
+xref: spec_2_neutral_loss_0_avge_mass "0"
+xref: spec_2_neutral_loss_0_flag "false"
+xref: spec_2_neutral_loss_0_composition "0"
 is_a: UNIMOD:0 ! unimod root node
 
 
@@ -6004,7 +6004,7 @@ is_a: UNIMOD:0 ! unimod root node
 [Term]
 id: UNIMOD:305
 name: dHex(1)Hex(3)HexNAc(4)
-def: "Fucosylated biantennary (-2 galactose)." [URL:https\://glyconnect.expasy.org/browser/global/compositions/search?dhex=1&hex=3&hexnac=4&mode=exact, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=305]
+def: "FA2/G0F." [URL:https\://glyconnect.expasy.org/browser/global/compositions/search?dhex=1&hex=3&hexnac=4&mode=exact, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=305]
 xref: record_id "305"
 xref: delta_mono_mass "1444.53387"
 xref: delta_avge_mass "1445.3331"
@@ -6012,21 +6012,21 @@ xref: delta_composition "dHex Hex(3) HexNAc(4)"
 xref: username_of_poster "whaskins"
 xref: group_of_poster "users"
 xref: date_time_posted "2005-04-25 18:20:12"
-xref: date_time_modified "2017-06-02 14:24:06"
+xref: date_time_modified "2020-08-02 11:42:31"
 xref: approved "1"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
 xref: spec_1_site "N"
 xref: spec_1_position "Anywhere"
 xref: spec_1_classification "N-linked glycosylation"
-xref: spec_1_neutral_loss_0_mono_mass "0"
-xref: spec_1_neutral_loss_0_avge_mass "0"
-xref: spec_1_neutral_loss_0_flag "false"
-xref: spec_1_neutral_loss_0_composition "0"
 xref: spec_1_neutral_loss_1445_mono_mass "1444.53387"
 xref: spec_1_neutral_loss_1445_avge_mass "1445.3331"
 xref: spec_1_neutral_loss_1445_flag "false"
 xref: spec_1_neutral_loss_1445_composition "dHex Hex(3) HexNAc(4)"
+xref: spec_1_neutral_loss_0_mono_mass "0"
+xref: spec_1_neutral_loss_0_avge_mass "0"
+xref: spec_1_neutral_loss_0_flag "false"
+xref: spec_1_neutral_loss_0_composition "0"
 xref: spec_2_group "2"
 xref: spec_2_hidden "1"
 xref: spec_2_site "T"
@@ -6059,8 +6059,8 @@ is_a: UNIMOD:0 ! unimod root node
 [Term]
 id: UNIMOD:307
 name: dHex(1)Hex(4)HexNAc(4)
-def: "DHex Hex(4) HexNAc(4) ---OR--- Hex(4) HexNAc(4) Pent Me." [URL:https\://glyconnect.expasy.org/browser/global/compositions/search?dhex=1&hex=4&hexnac=4&mode=exact, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=307]
-synonym: "Fucosylated biantennary (-1 galactose)" []
+def: "FA2G1/G1F." [URL:https\://glyconnect.expasy.org/browser/global/compositions/search?dhex=1&hex=4&hexnac=4&mode=exact, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=307]
+synonym: "dHex Hex(4) HexNAc(4) ---OR--- Hex(4) HexNAc(4) Pent Me" []
 xref: record_id "307"
 xref: delta_mono_mass "1606.586693"
 xref: delta_avge_mass "1607.4737"
@@ -6068,7 +6068,7 @@ xref: delta_composition "dHex Hex(4) HexNAc(4)"
 xref: username_of_poster "whaskins"
 xref: group_of_poster "users"
 xref: date_time_posted "2005-04-25 19:22:11"
-xref: date_time_modified "2017-11-22 10:34:55"
+xref: date_time_modified "2020-08-02 11:55:46"
 xref: approved "1"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -6088,14 +6088,14 @@ xref: spec_2_hidden "1"
 xref: spec_2_site "T"
 xref: spec_2_position "Anywhere"
 xref: spec_2_classification "O-linked glycosylation"
-xref: spec_2_neutral_loss_1607_mono_mass "1606.586693"
-xref: spec_2_neutral_loss_1607_avge_mass "1607.4737"
-xref: spec_2_neutral_loss_1607_flag "false"
-xref: spec_2_neutral_loss_1607_composition "dHex Hex(4) HexNAc(4)"
 xref: spec_2_neutral_loss_0_mono_mass "0"
 xref: spec_2_neutral_loss_0_avge_mass "0"
 xref: spec_2_neutral_loss_0_flag "false"
 xref: spec_2_neutral_loss_0_composition "0"
+xref: spec_2_neutral_loss_1607_mono_mass "1606.586693"
+xref: spec_2_neutral_loss_1607_avge_mass "1607.4737"
+xref: spec_2_neutral_loss_1607_flag "false"
+xref: spec_2_neutral_loss_1607_composition "dHex Hex(4) HexNAc(4)"
 xref: spec_2_group "2"
 xref: spec_2_hidden "1"
 xref: spec_2_site "S"
@@ -6115,7 +6115,7 @@ is_a: UNIMOD:0 ! unimod root node
 [Term]
 id: UNIMOD:308
 name: dHex(1)Hex(5)HexNAc(4)
-def: "Fucosylated biantennary." [URL:https\://glyconnect.expasy.org/browser/global/compositions/search?dhex=1&hex=5&hexnac=4&mode=exact, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=308]
+def: "FA2G2/G2F." [URL:https\://glyconnect.expasy.org/browser/global/compositions/search?dhex=1&hex=5&hexnac=4&mode=exact, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=308]
 xref: record_id "308"
 xref: delta_mono_mass "1768.639517"
 xref: delta_avge_mass "1769.6143"
@@ -6123,7 +6123,7 @@ xref: delta_composition "dHex Hex(5) HexNAc(4)"
 xref: username_of_poster "whaskins"
 xref: group_of_poster "users"
 xref: date_time_posted "2005-04-25 19:25:17"
-xref: date_time_modified "2017-06-02 14:24:27"
+xref: date_time_modified "2020-08-02 11:41:19"
 xref: approved "1"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -6144,7 +6144,7 @@ is_a: UNIMOD:0 ! unimod root node
 [Term]
 id: UNIMOD:309
 name: Hex(3)HexNAc(4)
-def: "Biantennary (-2 galactose)." [URL:https\://glyconnect.expasy.org/browser/global/compositions/search?hex=3&hexnac=4&mode=exact, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=309]
+def: "A2/G0." [URL:https\://glyconnect.expasy.org/browser/global/compositions/search?hex=3&hexnac=4&mode=exact, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=309]
 xref: record_id "309"
 xref: delta_mono_mass "1298.475961"
 xref: delta_avge_mass "1299.1919"
@@ -6152,21 +6152,21 @@ xref: delta_composition "Hex(3) HexNAc(4)"
 xref: username_of_poster "whaskins"
 xref: group_of_poster "users"
 xref: date_time_posted "2005-04-25 19:27:51"
-xref: date_time_modified "2017-06-02 14:24:37"
+xref: date_time_modified "2020-08-02 11:39:23"
 xref: approved "1"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
 xref: spec_1_site "N"
 xref: spec_1_position "Anywhere"
 xref: spec_1_classification "N-linked glycosylation"
-xref: spec_1_neutral_loss_1299_mono_mass "1298.475961"
-xref: spec_1_neutral_loss_1299_avge_mass "1299.1919"
-xref: spec_1_neutral_loss_1299_flag "false"
-xref: spec_1_neutral_loss_1299_composition "Hex(3) HexNAc(4)"
 xref: spec_1_neutral_loss_0_mono_mass "0"
 xref: spec_1_neutral_loss_0_avge_mass "0"
 xref: spec_1_neutral_loss_0_flag "false"
 xref: spec_1_neutral_loss_0_composition "0"
+xref: spec_1_neutral_loss_1299_mono_mass "1298.475961"
+xref: spec_1_neutral_loss_1299_avge_mass "1299.1919"
+xref: spec_1_neutral_loss_1299_flag "false"
+xref: spec_1_neutral_loss_1299_composition "Hex(3) HexNAc(4)"
 xref: spec_2_group "2"
 xref: spec_2_hidden "1"
 xref: spec_2_site "T"
@@ -6185,21 +6185,21 @@ xref: spec_2_hidden "1"
 xref: spec_2_site "S"
 xref: spec_2_position "Anywhere"
 xref: spec_2_classification "O-linked glycosylation"
-xref: spec_2_neutral_loss_0_mono_mass "0"
-xref: spec_2_neutral_loss_0_avge_mass "0"
-xref: spec_2_neutral_loss_0_flag "false"
-xref: spec_2_neutral_loss_0_composition "0"
 xref: spec_2_neutral_loss_1299_mono_mass "1298.475961"
 xref: spec_2_neutral_loss_1299_avge_mass "1299.1919"
 xref: spec_2_neutral_loss_1299_flag "false"
 xref: spec_2_neutral_loss_1299_composition "Hex(3) HexNAc(4)"
+xref: spec_2_neutral_loss_0_mono_mass "0"
+xref: spec_2_neutral_loss_0_avge_mass "0"
+xref: spec_2_neutral_loss_0_flag "false"
+xref: spec_2_neutral_loss_0_composition "0"
 is_a: UNIMOD:0 ! unimod root node
 
 
 [Term]
 id: UNIMOD:310
 name: Hex(4)HexNAc(4)
-def: "Biantennary (-1 galactose)." [URL:https\://glyconnect.expasy.org/browser/global/compositions/search?hex=4&hexnac=4&mode=exact, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=310]
+def: "A2G1/G1." [URL:https\://glyconnect.expasy.org/browser/global/compositions/search?hex=4&hexnac=4&mode=exact, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=310]
 xref: record_id "310"
 xref: delta_mono_mass "1460.528784"
 xref: delta_avge_mass "1461.3325"
@@ -6207,7 +6207,7 @@ xref: delta_composition "Hex(4) HexNAc(4)"
 xref: username_of_poster "whaskins"
 xref: group_of_poster "users"
 xref: date_time_posted "2005-04-25 19:33:37"
-xref: date_time_modified "2017-06-02 14:24:51"
+xref: date_time_modified "2020-08-02 11:38:53"
 xref: approved "1"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -6254,7 +6254,7 @@ is_a: UNIMOD:0 ! unimod root node
 [Term]
 id: UNIMOD:311
 name: Hex(5)HexNAc(4)
-def: "Biantennary." [URL:https\://glyconnect.expasy.org/browser/global/compositions/search?hex=5&hexnac=4&mode=exact, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=311]
+def: "A2G2/G2." [URL:https\://glyconnect.expasy.org/browser/global/compositions/search?hex=5&hexnac=4&mode=exact, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=311]
 xref: record_id "311"
 xref: delta_mono_mass "1622.581608"
 xref: delta_avge_mass "1623.4731"
@@ -6262,7 +6262,7 @@ xref: delta_composition "Hex(5) HexNAc(4)"
 xref: username_of_poster "whaskins"
 xref: group_of_poster "users"
 xref: date_time_posted "2005-04-25 19:35:54"
-xref: date_time_modified "2017-11-24 13:06:38"
+xref: date_time_modified "2020-08-02 11:38:17"
 xref: approved "1"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -6279,20 +6279,6 @@ xref: spec_1_neutral_loss_1623_flag "false"
 xref: spec_1_neutral_loss_1623_composition "Hex(5) HexNAc(4)"
 xref: spec_2_group "2"
 xref: spec_2_hidden "1"
-xref: spec_2_site "S"
-xref: spec_2_position "Anywhere"
-xref: spec_2_classification "O-linked glycosylation"
-xref: spec_2_misc_notes "Not reported for human proteins"
-xref: spec_2_neutral_loss_0_mono_mass "0"
-xref: spec_2_neutral_loss_0_avge_mass "0"
-xref: spec_2_neutral_loss_0_flag "false"
-xref: spec_2_neutral_loss_0_composition "0"
-xref: spec_2_neutral_loss_1623_mono_mass "1622.581608"
-xref: spec_2_neutral_loss_1623_avge_mass "1623.4731"
-xref: spec_2_neutral_loss_1623_flag "false"
-xref: spec_2_neutral_loss_1623_composition "Hex(5) HexNAc(4)"
-xref: spec_2_group "2"
-xref: spec_2_hidden "1"
 xref: spec_2_site "T"
 xref: spec_2_position "Anywhere"
 xref: spec_2_classification "O-linked glycosylation"
@@ -6305,6 +6291,20 @@ xref: spec_2_neutral_loss_0_mono_mass "0"
 xref: spec_2_neutral_loss_0_avge_mass "0"
 xref: spec_2_neutral_loss_0_flag "false"
 xref: spec_2_neutral_loss_0_composition "0"
+xref: spec_2_group "2"
+xref: spec_2_hidden "1"
+xref: spec_2_site "S"
+xref: spec_2_position "Anywhere"
+xref: spec_2_classification "O-linked glycosylation"
+xref: spec_2_misc_notes "Not reported for human proteins"
+xref: spec_2_neutral_loss_0_mono_mass "0"
+xref: spec_2_neutral_loss_0_avge_mass "0"
+xref: spec_2_neutral_loss_0_flag "false"
+xref: spec_2_neutral_loss_0_composition "0"
+xref: spec_2_neutral_loss_1623_mono_mass "1622.581608"
+xref: spec_2_neutral_loss_1623_avge_mass "1623.4731"
+xref: spec_2_neutral_loss_1623_flag "false"
+xref: spec_2_neutral_loss_1623_composition "Hex(5) HexNAc(4)"
 is_a: UNIMOD:0 ! unimod root node
 
 
@@ -7512,6 +7512,7 @@ is_a: UNIMOD:0 ! unimod root node
 id: UNIMOD:378
 name: Carboxyethyl
 def: "Carboxyethyl." [RESID:AA0115, FindMod:CETH, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=378]
+synonym: "Ethoxyformylation" []
 xref: record_id "378"
 xref: delta_mono_mass "72.021129"
 xref: delta_avge_mass "72.0627"
@@ -7519,7 +7520,7 @@ xref: delta_composition "H(4) C(3) O(2)"
 xref: username_of_poster "unimod"
 xref: group_of_poster "admin"
 xref: date_time_posted "2005-10-07 22:18:20"
-xref: date_time_modified "2012-09-19 22:24:05"
+xref: date_time_modified "2021-02-09 10:33:42"
 xref: approved "1"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -8032,7 +8033,7 @@ is_a: UNIMOD:0 ! unimod root node
 [Term]
 id: UNIMOD:405
 name: Phosphoadenosine
-def: "AMP." [RESID:AA0267, RESID:AA0203, RESID:AA0227, RESID:AA0371, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=405]
+def: "AMP." [RESID:AA0371, RESID:AA0227, RESID:AA0203, RESID:AA0267, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=405]
 xref: record_id "405"
 xref: delta_mono_mass "329.05252"
 xref: delta_avge_mass "329.2059"
@@ -8040,13 +8041,25 @@ xref: delta_composition "H(12) C(10) N(5) O(6) P"
 xref: username_of_poster "unimod"
 xref: group_of_poster "admin"
 xref: date_time_posted "2005-10-11 21:34:01"
-xref: date_time_modified "2015-05-01 13:24:04"
+xref: date_time_modified "2021-03-11 13:32:18"
 xref: approved "1"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
 xref: spec_1_site "Y"
 xref: spec_1_position "Anywhere"
 xref: spec_1_classification "Post-translational"
+xref: spec_1_neutral_loss_0_mono_mass "0"
+xref: spec_1_neutral_loss_0_avge_mass "0"
+xref: spec_1_neutral_loss_0_flag "false"
+xref: spec_1_neutral_loss_0_composition "0"
+xref: spec_1_neutral_loss_136_mono_mass "135.054495"
+xref: spec_1_neutral_loss_136_avge_mass "135.1267"
+xref: spec_1_neutral_loss_136_flag "false"
+xref: spec_1_neutral_loss_136_composition "H(5) C(5) N(5)"
+xref: spec_1_neutral_loss_250_mono_mass "249.086189"
+xref: spec_1_neutral_loss_250_avge_mass "249.226"
+xref: spec_1_neutral_loss_250_flag "false"
+xref: spec_1_neutral_loss_250_composition "H(11) C(10) N(5) O(3)"
 xref: spec_2_group "2"
 xref: spec_2_hidden "1"
 xref: spec_2_site "K"
@@ -8057,11 +8070,32 @@ xref: spec_3_hidden "1"
 xref: spec_3_site "T"
 xref: spec_3_position "Anywhere"
 xref: spec_3_classification "Post-translational"
+xref: spec_3_neutral_loss_0_mono_mass "0"
+xref: spec_3_neutral_loss_0_avge_mass "0"
+xref: spec_3_neutral_loss_0_flag "false"
+xref: spec_3_neutral_loss_0_composition "0"
+xref: spec_3_neutral_loss_348_mono_mass "347.063085"
+xref: spec_3_neutral_loss_348_avge_mass "347.2212"
+xref: spec_3_neutral_loss_348_flag "false"
+xref: spec_3_neutral_loss_348_composition "H(14) C(10) N(5) O(7) P"
 xref: spec_4_group "4"
 xref: spec_4_hidden "1"
 xref: spec_4_site "H"
 xref: spec_4_position "Anywhere"
 xref: spec_4_classification "Post-translational"
+xref: spec_5_group "5"
+xref: spec_5_hidden "1"
+xref: spec_5_site "S"
+xref: spec_5_position "Anywhere"
+xref: spec_5_classification "Post-translational"
+xref: spec_5_neutral_loss_348_mono_mass "347.063085"
+xref: spec_5_neutral_loss_348_avge_mass "347.2212"
+xref: spec_5_neutral_loss_348_flag "false"
+xref: spec_5_neutral_loss_348_composition "H(14) C(10) N(5) O(7) P"
+xref: spec_5_neutral_loss_0_mono_mass "0"
+xref: spec_5_neutral_loss_0_avge_mass "0"
+xref: spec_5_neutral_loss_0_flag "false"
+xref: spec_5_neutral_loss_0_composition "0"
 is_a: UNIMOD:0 ! unimod root node
 
 
@@ -16329,27 +16363,6 @@ is_a: UNIMOD:0 ! unimod root node
 
 
 [Term]
-id: UNIMOD:915
-name: Ethoxyformyl
-def: "Ethoxyformylation." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=915]
-xref: record_id "915"
-xref: delta_mono_mass "72.021129"
-xref: delta_avge_mass "72.0627"
-xref: delta_composition "H(4) C(3) O(2)"
-xref: username_of_poster "BThomas"
-xref: group_of_poster ""
-xref: date_time_posted "2009-07-24 17:00:29"
-xref: date_time_modified "2015-10-30 14:01:47"
-xref: approved "0"
-xref: spec_1_group "1"
-xref: spec_1_hidden "1"
-xref: spec_1_site "H"
-xref: spec_1_position "Anywhere"
-xref: spec_1_classification "Chemical derivative"
-is_a: UNIMOD:0 ! unimod root node
-
-
-[Term]
 id: UNIMOD:923
 name: Label:13C(4)15N(2)+GG
 def: "13C(4) 15N(2) Lysine glygly." [PMID:12716131, URL:http\://www.pil.sdu.dk/silac_intro.htm, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=923]
@@ -16787,7 +16800,7 @@ is_a: UNIMOD:0 ! unimod root node
 [Term]
 id: UNIMOD:947
 name: LG-pyrrole
-def: "Levuglandinyl-lysine pyrrole adduct." [PMID:10413514, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=947]
+def: "Levuglandinyl-lysine pyrrole adduct." [PMID:10413514, URL:http\://www.hmdb.ca/metabolites/HMDB0005079, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=947]
 xref: record_id "947"
 xref: delta_mono_mass "316.203845"
 xref: delta_avge_mass "316.4345"
@@ -16795,7 +16808,7 @@ xref: delta_composition "H(28) C(20) O(3)"
 xref: username_of_poster "wridenour"
 xref: group_of_poster ""
 xref: date_time_posted "2010-01-12 01:12:38"
-xref: date_time_modified "2011-06-08 18:01:50"
+xref: date_time_modified "2020-01-21 14:42:42"
 xref: approved "0"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -16807,6 +16820,12 @@ xref: spec_2_hidden "1"
 xref: spec_2_site "N-term"
 xref: spec_2_position "Any N-term"
 xref: spec_2_classification "Post-translational"
+xref: spec_3_group "3"
+xref: spec_3_hidden "1"
+xref: spec_3_site "C"
+xref: spec_3_position "Anywhere"
+xref: spec_3_classification "Post-translational"
+xref: spec_3_misc_notes "15-deoxy-PGJ2 (15d-PGJ2) influences multiple signaling pathways by covalently binding with key signaling molecules"
 is_a: UNIMOD:0 ! unimod root node
 
 
@@ -23484,6 +23503,7 @@ is_a: UNIMOD:0 ! unimod root node
 id: UNIMOD:1263
 name: Gly
 def: "Addition of Glycine." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1263]
+comment: Occasionally used as chemical tag. In most cases, +57 is actually over-alkylation with iodoacetamide.
 xref: record_id "1263"
 xref: delta_mono_mass "57.021464"
 xref: delta_avge_mass "57.0513"
@@ -23491,23 +23511,23 @@ xref: delta_composition "H(3) C(2) N O"
 xref: username_of_poster "kstampe2"
 xref: group_of_poster ""
 xref: date_time_posted "2011-07-07 16:37:10"
-xref: date_time_modified "2011-07-09 09:33:11"
+xref: date_time_modified "2020-10-05 09:16:08"
 xref: approved "0"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
 xref: spec_1_site "K"
 xref: spec_1_position "Anywhere"
-xref: spec_1_classification "Other"
+xref: spec_1_classification "Chemical derivative"
 xref: spec_2_group "2"
 xref: spec_2_hidden "1"
 xref: spec_2_site "S"
 xref: spec_2_position "Anywhere"
-xref: spec_2_classification "Other"
+xref: spec_2_classification "Chemical derivative"
 xref: spec_3_group "3"
 xref: spec_3_hidden "1"
 xref: spec_3_site "T"
 xref: spec_3_position "Anywhere"
-xref: spec_3_classification "Other"
+xref: spec_3_classification "Chemical derivative"
 is_a: UNIMOD:0 ! unimod root node
 
 
@@ -24019,7 +24039,7 @@ is_a: UNIMOD:0 ! unimod root node
 [Term]
 id: UNIMOD:1297
 name: Label:13C(3)15N(1)
-def: "13C3 15N1 label for SILAC." [URL:http\://www.pil.sdu.dk/silac_intro.htm, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1297]
+def: "SILAC or AQUA label." [URL:http\://www.pil.sdu.dk/silac_intro.htm, URL:https\://www.thermofisher.com/order/catalog/product/A40010#/A40010, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1297]
 xref: record_id "1297"
 xref: delta_mono_mass "4.007099"
 xref: delta_avge_mass "3.9714"
@@ -24027,13 +24047,18 @@ xref: delta_composition "C(-3) 13C(3) N(-1) 15N"
 xref: username_of_poster "unimod"
 xref: group_of_poster ""
 xref: date_time_posted "2011-11-21 14:37:53"
-xref: date_time_modified "2011-11-21 14:37:53"
+xref: date_time_modified "2020-01-09 09:44:52"
 xref: approved "0"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
 xref: spec_1_site "A"
 xref: spec_1_position "Anywhere"
 xref: spec_1_classification "Isotopic label"
+xref: spec_2_group "2"
+xref: spec_2_hidden "1"
+xref: spec_2_site "S"
+xref: spec_2_position "Anywhere"
+xref: spec_2_classification "Isotopic label"
 is_a: UNIMOD:0 ! unimod root node
 
 
@@ -25702,7 +25727,8 @@ is_a: UNIMOD:0 ! unimod root node
 [Term]
 id: UNIMOD:1385
 name: Hydroxamic_acid
-def: "Conversion of carboxylic acid to hydroxamic acid." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1385]
+def: "ADP-ribosylation followed by conversion to hydroxamic acid via hydroxylamine." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1385]
+synonym: "Conversion of carboxylic acid to hydroxamic acid" []
 xref: record_id "1385"
 xref: delta_mono_mass "15.010899"
 xref: delta_avge_mass "15.0146"
@@ -25710,7 +25736,7 @@ xref: delta_composition "H N"
 xref: username_of_poster "mbern"
 xref: group_of_poster ""
 xref: date_time_posted "2013-05-16 20:40:47"
-xref: date_time_modified "2013-05-31 15:58:22"
+xref: date_time_modified "2020-03-26 09:49:42"
 xref: approved "0"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -26255,7 +26281,7 @@ is_a: UNIMOD:0 ! unimod root node
 [Term]
 id: UNIMOD:1408
 name: Hex(5)HexNAc(4)NeuAc(2)
-def: "Hex(5) HexNAc(4) NeuAc(2)." [URL:http\://www.unicarbkb.org/structure/1187, URL:https\://glyconnect.expasy.org/browser/global/compositions/search?hex=5&hexnac=4&neuac=2&mode=exact, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1408]
+def: "A2G2S2/G2S2." [URL:http\://www.unicarbkb.org/structure/1187, URL:https\://glyconnect.expasy.org/browser/global/compositions/search?hex=5&hexnac=4&neuac=2&mode=exact, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1408]
 xref: record_id "1408"
 xref: delta_mono_mass "2204.772441"
 xref: delta_avge_mass "2205.9822"
@@ -26263,7 +26289,7 @@ xref: delta_composition "Hex(5) HexNAc(4) NeuAc(2)"
 xref: username_of_poster "unimod"
 xref: group_of_poster ""
 xref: date_time_posted "2014-07-31 13:51:41"
-xref: date_time_modified "2015-07-03 17:01:58"
+xref: date_time_modified "2020-08-02 11:36:19"
 xref: approved "0"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -26284,7 +26310,7 @@ is_a: UNIMOD:0 ! unimod root node
 [Term]
 id: UNIMOD:1409
 name: Hex(5)HexNAc(4)NeuAc(1)
-def: "Hex(5) HexNAc(4) NeuAc." [URL:https\://glyconnect.expasy.org/browser/global/compositions/search?hex=5&hexnac=4&neuac=1&mode=exact, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1409]
+def: "A2G2S1/G2S1." [URL:https\://glyconnect.expasy.org/browser/global/compositions/search?hex=5&hexnac=4&neuac=1&mode=exact, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1409]
 xref: record_id "1409"
 xref: delta_mono_mass "1913.677025"
 xref: delta_avge_mass "1914.7277"
@@ -26292,7 +26318,7 @@ xref: delta_composition "Hex(5) HexNAc(4) NeuAc"
 xref: username_of_poster "unimod"
 xref: group_of_poster ""
 xref: date_time_posted "2014-07-31 13:52:20"
-xref: date_time_modified "2015-05-06 10:45:29"
+xref: date_time_modified "2020-08-02 11:37:01"
 xref: approved "0"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -26313,7 +26339,7 @@ is_a: UNIMOD:0 ! unimod root node
 [Term]
 id: UNIMOD:1410
 name: dHex(1)Hex(5)HexNAc(4)NeuAc(1)
-def: "DHex Hex(5) HexNAc(4) NeuAc." [URL:https\://glyconnect.expasy.org/browser/global/compositions/search?dhex=1&hex=5&hexnac=4&neuac=1&mode=exact, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1410]
+def: "FA2G2S1/G2FS1." [URL:https\://glyconnect.expasy.org/browser/global/compositions/search?dhex=1&hex=5&hexnac=4&neuac=1&mode=exact, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1410]
 xref: record_id "1410"
 xref: delta_mono_mass "2059.734933"
 xref: delta_avge_mass "2060.8689"
@@ -26321,7 +26347,7 @@ xref: delta_composition "dHex Hex(5) HexNAc(4) NeuAc"
 xref: username_of_poster "unimod"
 xref: group_of_poster ""
 xref: date_time_posted "2014-07-31 13:53:31"
-xref: date_time_modified "2015-05-06 10:45:43"
+xref: date_time_modified "2020-08-02 11:40:30"
 xref: approved "0"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -26342,7 +26368,7 @@ is_a: UNIMOD:0 ! unimod root node
 [Term]
 id: UNIMOD:1411
 name: dHex(1)Hex(5)HexNAc(4)NeuAc(2)
-def: "DHex Hex(5) HexNAc(4) NeuAc(2)." [URL:https\://glyconnect.expasy.org/browser/global/compositions/search?dhex=1&hex=5&hexnac=4&neuac=2&mode=exact, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1411]
+def: "FA2G2S2/G2FS2." [URL:https\://glyconnect.expasy.org/browser/global/compositions/search?dhex=1&hex=5&hexnac=4&neuac=2&mode=exact, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1411]
 xref: record_id "1411"
 xref: delta_mono_mass "2350.83035"
 xref: delta_avge_mass "2352.1234"
@@ -26350,7 +26376,7 @@ xref: delta_composition "dHex Hex(5) HexNAc(4) NeuAc(2)"
 xref: username_of_poster "unimod"
 xref: group_of_poster ""
 xref: date_time_posted "2014-07-31 13:53:47"
-xref: date_time_modified "2015-05-06 10:45:52"
+xref: date_time_modified "2020-08-02 11:40:01"
 xref: approved "0"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -28135,7 +28161,7 @@ is_a: UNIMOD:0 ! unimod root node
 [Term]
 id: UNIMOD:1465
 name: Hex(6)HexNAc(2)
-def: "Hex(6) HexNAc(2)." [URL:https\://glyconnect.expasy.org/browser/global/compositions/search?hex=6&hexnac=2&mode=exact, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1465]
+def: "M6/Man6." [URL:https\://glyconnect.expasy.org/browser/global/compositions/search?hex=6&hexnac=2&mode=exact, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1465]
 xref: record_id "1465"
 xref: delta_mono_mass "1378.475686"
 xref: delta_avge_mass "1379.2286"
@@ -28143,7 +28169,7 @@ xref: delta_composition "Hex(6) HexNAc(2)"
 xref: username_of_poster "unimod"
 xref: group_of_poster ""
 xref: date_time_posted "2015-05-05 12:00:00"
-xref: date_time_modified "2015-05-05 12:00:00"
+xref: date_time_modified "2020-08-02 11:49:46"
 xref: approved "0"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -28570,7 +28596,7 @@ is_a: UNIMOD:0 ! unimod root node
 [Term]
 id: UNIMOD:1480
 name: Hex(7)HexNAc(2)
-def: "Hex(7) HexNAc(2)." [URL:https\://glyconnect.expasy.org/browser/global/compositions/search?hex=7&hexnac=2&mode=exact, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1480]
+def: "M7/Man7." [URL:https\://glyconnect.expasy.org/browser/global/compositions/search?hex=7&hexnac=2&mode=exact, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1480]
 xref: record_id "1480"
 xref: delta_mono_mass "1540.52851"
 xref: delta_avge_mass "1541.3692"
@@ -28578,7 +28604,7 @@ xref: delta_composition "Hex(7) HexNAc(2)"
 xref: username_of_poster "unimod"
 xref: group_of_poster ""
 xref: date_time_posted "2015-05-05 12:00:00"
-xref: date_time_modified "2015-05-05 12:00:00"
+xref: date_time_modified "2020-08-02 11:49:23"
 xref: approved "0"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -29292,7 +29318,7 @@ is_a: UNIMOD:0 ! unimod root node
 [Term]
 id: UNIMOD:1504
 name: Hex(8)HexNAc(2)
-def: "Hex(8) HexNAc(2)." [URL:https\://glyconnect.expasy.org/browser/global/compositions/search?hex=8&hexnac=2&mode=exact, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1504]
+def: "M8/Man8." [URL:https\://glyconnect.expasy.org/browser/global/compositions/search?hex=8&hexnac=2&mode=exact, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1504]
 xref: record_id "1504"
 xref: delta_mono_mass "1702.581333"
 xref: delta_avge_mass "1703.5098"
@@ -29300,7 +29326,7 @@ xref: delta_composition "Hex(8) HexNAc(2)"
 xref: username_of_poster "unimod"
 xref: group_of_poster ""
 xref: date_time_posted "2015-05-05 12:00:00"
-xref: date_time_modified "2015-05-05 12:00:00"
+xref: date_time_modified "2020-08-02 11:49:00"
 xref: approved "0"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -30075,7 +30101,7 @@ is_a: UNIMOD:0 ! unimod root node
 [Term]
 id: UNIMOD:1531
 name: Hex(9)HexNAc(2)
-def: "Hex(9) HexNAc(2)." [URL:https\://glyconnect.expasy.org/browser/global/compositions/search?hex=9&hexnac=2&mode=exact, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1531]
+def: "M9/Man9." [URL:https\://glyconnect.expasy.org/browser/global/compositions/search?hex=9&hexnac=2&mode=exact, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1531]
 xref: record_id "1531"
 xref: delta_mono_mass "1864.634157"
 xref: delta_avge_mass "1865.6504"
@@ -30083,7 +30109,7 @@ xref: delta_composition "Hex(9) HexNAc(2)"
 xref: username_of_poster "unimod"
 xref: group_of_poster ""
 xref: date_time_posted "2015-05-05 12:00:00"
-xref: date_time_modified "2015-05-05 12:00:00"
+xref: date_time_modified "2020-08-02 11:48:38"
 xref: approved "0"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -30887,7 +30913,7 @@ is_a: UNIMOD:0 ! unimod root node
 [Term]
 id: UNIMOD:1559
 name: Hex(6)HexNAc(5)
-def: "Hex(6) HexNAc(5)." [URL:https\://glyconnect.expasy.org/browser/global/compositions/search?hex=6&hexnac=5&mode=exact, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1559]
+def: "A3G3." [URL:https\://glyconnect.expasy.org/browser/global/compositions/search?hex=6&hexnac=5&mode=exact, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1559]
 xref: record_id "1559"
 xref: delta_mono_mass "1987.713804"
 xref: delta_avge_mass "1988.8062"
@@ -30895,7 +30921,7 @@ xref: delta_composition "Hex(6) HexNAc(5)"
 xref: username_of_poster "unimod"
 xref: group_of_poster ""
 xref: date_time_posted "2015-05-05 12:00:00"
-xref: date_time_modified "2015-05-05 12:00:00"
+xref: date_time_modified "2020-08-02 11:45:49"
 xref: approved "0"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -39466,7 +39492,7 @@ is_a: UNIMOD:0 ! unimod root node
 [Term]
 id: UNIMOD:1772
 name: Hex(3)HexNAc(5)
-def: "Hex(3) HexNAc(5)." [URL:https\://glyconnect.expasy.org/browser/global/compositions/search?hex=3&hexnac=5&mode=exact, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1772]
+def: "A3." [URL:https\://glyconnect.expasy.org/browser/global/compositions/search?hex=3&hexnac=5&mode=exact, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1772]
 xref: record_id "1772"
 xref: delta_mono_mass "1501.555334"
 xref: delta_avge_mass "1502.3844"
@@ -39474,34 +39500,34 @@ xref: delta_composition "Hex(3) HexNAc(5)"
 xref: username_of_poster "unimod"
 xref: group_of_poster ""
 xref: date_time_posted "2015-05-05 12:00:00"
-xref: date_time_modified "2015-05-05 12:00:00"
+xref: date_time_modified "2020-08-02 11:46:20"
 xref: approved "0"
-xref: spec_1_group "1"
-xref: spec_1_hidden "1"
-xref: spec_1_site "S"
-xref: spec_1_position "Anywhere"
-xref: spec_1_classification "O-linked glycosylation"
-xref: spec_1_neutral_loss_1502_mono_mass "1501.555334"
-xref: spec_1_neutral_loss_1502_avge_mass "1502.3844"
-xref: spec_1_neutral_loss_1502_flag "false"
-xref: spec_1_neutral_loss_1502_composition "Hex(3) HexNAc(5)"
-xref: spec_1_neutral_loss_0_mono_mass "0"
-xref: spec_1_neutral_loss_0_avge_mass "0"
-xref: spec_1_neutral_loss_0_flag "false"
-xref: spec_1_neutral_loss_0_composition "0"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
 xref: spec_1_site "T"
 xref: spec_1_position "Anywhere"
 xref: spec_1_classification "O-linked glycosylation"
-xref: spec_1_neutral_loss_1502_mono_mass "1501.555334"
-xref: spec_1_neutral_loss_1502_avge_mass "1502.3844"
-xref: spec_1_neutral_loss_1502_flag "false"
-xref: spec_1_neutral_loss_1502_composition "Hex(3) HexNAc(5)"
 xref: spec_1_neutral_loss_0_mono_mass "0"
 xref: spec_1_neutral_loss_0_avge_mass "0"
 xref: spec_1_neutral_loss_0_flag "false"
 xref: spec_1_neutral_loss_0_composition "0"
+xref: spec_1_neutral_loss_1502_mono_mass "1501.555334"
+xref: spec_1_neutral_loss_1502_avge_mass "1502.3844"
+xref: spec_1_neutral_loss_1502_flag "false"
+xref: spec_1_neutral_loss_1502_composition "Hex(3) HexNAc(5)"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "S"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "O-linked glycosylation"
+xref: spec_1_neutral_loss_0_mono_mass "0"
+xref: spec_1_neutral_loss_0_avge_mass "0"
+xref: spec_1_neutral_loss_0_flag "false"
+xref: spec_1_neutral_loss_0_composition "0"
+xref: spec_1_neutral_loss_1502_mono_mass "1501.555334"
+xref: spec_1_neutral_loss_1502_avge_mass "1502.3844"
+xref: spec_1_neutral_loss_1502_flag "false"
+xref: spec_1_neutral_loss_1502_composition "Hex(3) HexNAc(5)"
 xref: spec_2_group "2"
 xref: spec_2_hidden "1"
 xref: spec_2_site "N"
@@ -39686,7 +39712,7 @@ is_a: UNIMOD:0 ! unimod root node
 [Term]
 id: UNIMOD:1776
 name: Hex(3)HexNAc(6)
-def: "Hex(3) HexNAc(6)." [URL:https\://glyconnect.expasy.org/browser/global/compositions/search?hex=3&hexnac=6&mode=exact, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1776]
+def: "A4." [URL:https\://glyconnect.expasy.org/browser/global/compositions/search?hex=3&hexnac=6&mode=exact, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1776]
 xref: record_id "1776"
 xref: delta_mono_mass "1704.634706"
 xref: delta_avge_mass "1705.5769"
@@ -39694,34 +39720,34 @@ xref: delta_composition "Hex(3) HexNAc(6)"
 xref: username_of_poster "unimod"
 xref: group_of_poster ""
 xref: date_time_posted "2015-05-05 12:00:00"
-xref: date_time_modified "2015-05-05 12:00:00"
+xref: date_time_modified "2020-08-02 11:48:13"
 xref: approved "0"
-xref: spec_1_group "1"
-xref: spec_1_hidden "1"
-xref: spec_1_site "S"
-xref: spec_1_position "Anywhere"
-xref: spec_1_classification "O-linked glycosylation"
-xref: spec_1_neutral_loss_1705_mono_mass "1704.634706"
-xref: spec_1_neutral_loss_1705_avge_mass "1705.5769"
-xref: spec_1_neutral_loss_1705_flag "false"
-xref: spec_1_neutral_loss_1705_composition "Hex(3) HexNAc(6)"
-xref: spec_1_neutral_loss_0_mono_mass "0"
-xref: spec_1_neutral_loss_0_avge_mass "0"
-xref: spec_1_neutral_loss_0_flag "false"
-xref: spec_1_neutral_loss_0_composition "0"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
 xref: spec_1_site "T"
 xref: spec_1_position "Anywhere"
 xref: spec_1_classification "O-linked glycosylation"
-xref: spec_1_neutral_loss_1705_mono_mass "1704.634706"
-xref: spec_1_neutral_loss_1705_avge_mass "1705.5769"
-xref: spec_1_neutral_loss_1705_flag "false"
-xref: spec_1_neutral_loss_1705_composition "Hex(3) HexNAc(6)"
 xref: spec_1_neutral_loss_0_mono_mass "0"
 xref: spec_1_neutral_loss_0_avge_mass "0"
 xref: spec_1_neutral_loss_0_flag "false"
 xref: spec_1_neutral_loss_0_composition "0"
+xref: spec_1_neutral_loss_1705_mono_mass "1704.634706"
+xref: spec_1_neutral_loss_1705_avge_mass "1705.5769"
+xref: spec_1_neutral_loss_1705_flag "false"
+xref: spec_1_neutral_loss_1705_composition "Hex(3) HexNAc(6)"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "S"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "O-linked glycosylation"
+xref: spec_1_neutral_loss_0_mono_mass "0"
+xref: spec_1_neutral_loss_0_avge_mass "0"
+xref: spec_1_neutral_loss_0_flag "false"
+xref: spec_1_neutral_loss_0_composition "0"
+xref: spec_1_neutral_loss_1705_mono_mass "1704.634706"
+xref: spec_1_neutral_loss_1705_avge_mass "1705.5769"
+xref: spec_1_neutral_loss_1705_flag "false"
+xref: spec_1_neutral_loss_1705_composition "Hex(3) HexNAc(6)"
 xref: spec_2_group "2"
 xref: spec_2_hidden "1"
 xref: spec_2_site "N"
@@ -40906,6 +40932,7 @@ is_a: UNIMOD:0 ! unimod root node
 id: UNIMOD:1849
 name: hydroxyisobutyryl
 def: "2-hydroxyisobutyrylation." [PMID:24681537, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1849]
+synonym: "2-hydroxyisobutanoyl 3-hydroxybutanoyl" []
 xref: record_id "1849"
 xref: delta_mono_mass "86.036779"
 xref: delta_avge_mass "86.0892"
@@ -40913,7 +40940,7 @@ xref: delta_composition "H(6) C(4) O(2)"
 xref: username_of_poster "cfeller"
 xref: group_of_poster ""
 xref: date_time_posted "2017-03-30 11:16:14"
-xref: date_time_modified "2019-09-10 09:07:50"
+xref: date_time_modified "2021-03-11 11:57:59"
 xref: approved "0"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -44052,37 +44079,43 @@ is_a: UNIMOD:0 ! unimod root node
 [Term]
 id: UNIMOD:1979
 name: Unknown:420
-def: "Unidentified modification of 420.0506 found in open search." [URL:http\://www.matrixscience.com/blog/trying-to-illuminate-proteomics-dark-matter.html, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1979]
-synonym: "The elemental composition should be assumed incorrect" []
+def: "Unidentified modification of 420.0506 found in open search." [URL:http\://www.matrixscience.com/blog/results-round-up-for-the-dark-matter-challenge.html, URL:http\://www.matrixscience.com/blog/trying-to-illuminate-proteomics-dark-matter.html, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1979]
+synonym: "Probable non-covalent adduct of CAM-DTT-DTT-CAM" []
 xref: record_id "1979"
-xref: delta_mono_mass "420.050846"
-xref: delta_avge_mass "420.4049"
-xref: delta_composition "H(14) C(10) N(9) O(6) S(2)"
+xref: delta_mono_mass "420.051719"
+xref: delta_avge_mass "420.5888"
+xref: delta_composition "H(24) C(12) N(2) O(6) S(4)"
 xref: username_of_poster "unimod"
 xref: group_of_poster ""
 xref: date_time_posted "2017-12-07 10:03:58"
-xref: date_time_modified "2017-12-07 10:03:58"
+xref: date_time_modified "2019-10-17 16:01:58"
 xref: approved "0"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
-xref: spec_1_site "D"
-xref: spec_1_position "Anywhere"
+xref: spec_1_site "C-term"
+xref: spec_1_position "Any C-term"
 xref: spec_1_classification "Artefact"
-xref: spec_1_group "1"
-xref: spec_1_hidden "1"
-xref: spec_1_site "E"
-xref: spec_1_position "Anywhere"
-xref: spec_1_classification "Artefact"
+xref: spec_1_neutral_loss_421_mono_mass "420.051719"
+xref: spec_1_neutral_loss_421_avge_mass "420.5888"
+xref: spec_1_neutral_loss_421_flag "false"
+xref: spec_1_neutral_loss_421_composition "H(24) C(12) N(2) O(6) S(4)"
+xref: spec_1_neutral_loss_0_mono_mass "0"
+xref: spec_1_neutral_loss_0_avge_mass "0"
+xref: spec_1_neutral_loss_0_flag "false"
+xref: spec_1_neutral_loss_0_composition "0"
 xref: spec_2_group "2"
 xref: spec_2_hidden "1"
-xref: spec_2_site "C-term"
-xref: spec_2_position "Any C-term"
+xref: spec_2_site "N-term"
+xref: spec_2_position "Any N-term"
 xref: spec_2_classification "Artefact"
-xref: spec_3_group "3"
-xref: spec_3_hidden "1"
-xref: spec_3_site "N-term"
-xref: spec_3_position "Any N-term"
-xref: spec_3_classification "Artefact"
+xref: spec_2_neutral_loss_0_mono_mass "0"
+xref: spec_2_neutral_loss_0_avge_mass "0"
+xref: spec_2_neutral_loss_0_flag "false"
+xref: spec_2_neutral_loss_0_composition "0"
+xref: spec_2_neutral_loss_421_mono_mass "420.051719"
+xref: spec_2_neutral_loss_421_avge_mass "420.5888"
+xref: spec_2_neutral_loss_421_flag "false"
+xref: spec_2_neutral_loss_421_composition "H(24) C(12) N(2) O(6) S(4)"
 is_a: UNIMOD:0 ! unimod root node
 
 
@@ -44660,6 +44693,390 @@ xref: spec_6_hidden "1"
 xref: spec_6_site "T"
 xref: spec_6_position "Anywhere"
 xref: spec_6_classification "Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:2022
+name: Kdo
+def: "Glycosylation with KDO." [PMID:https://pubmed.ncbi.nlm.nih.gov/32886756/, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=2022]
+synonym: "3-deoxy-D-manno-oct-2-ulosonic acid 2-Keto-3-Deoxy-D-Mannooctanoic Acid" []
+xref: record_id "2022"
+xref: delta_mono_mass "220.058303"
+xref: delta_avge_mass "220.1767"
+xref: delta_composition "H(12) C(8) O(7)"
+xref: username_of_poster "ramya"
+xref: group_of_poster ""
+xref: date_time_posted "2020-02-13 12:07:17"
+xref: date_time_modified "2020-09-09 12:47:42"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "T"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "O-linked glycosylation"
+xref: spec_1_neutral_loss_221_mono_mass "220.058303"
+xref: spec_1_neutral_loss_221_avge_mass "220.1767"
+xref: spec_1_neutral_loss_221_flag "false"
+xref: spec_1_neutral_loss_221_composition "H(12) C(8) O(7)"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "S"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "O-linked glycosylation"
+xref: spec_1_neutral_loss_221_mono_mass "220.058303"
+xref: spec_1_neutral_loss_221_avge_mass "220.1767"
+xref: spec_1_neutral_loss_221_flag "false"
+xref: spec_1_neutral_loss_221_composition "H(12) C(8) O(7)"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:2025
+name: Andro-H2O
+def: "Andrographolide with the loss of H2O." [PMID:24445406, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=2025]
+xref: record_id "2025"
+xref: delta_mono_mass "332.19876"
+xref: delta_avge_mass "332.4339"
+xref: delta_composition "H(28) C(20) O(4)"
+xref: username_of_poster "nekoooooo"
+xref: group_of_poster ""
+xref: date_time_posted "2020-05-18 08:48:39"
+xref: date_time_modified "2020-05-26 15:47:33"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "C"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:2027
+name: His+O(2)
+def: "Photo-induced histidine adduct." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=2027]
+xref: record_id "2027"
+xref: delta_mono_mass "169.048741"
+xref: delta_avge_mass "169.1381"
+xref: delta_composition "H(7) C(6) N(3) O(3)"
+xref: username_of_poster "tomp1808"
+xref: group_of_poster ""
+xref: date_time_posted "2020-06-01 16:45:37"
+xref: date_time_modified "2020-06-09 11:01:57"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "H"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Post-translational"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:2028
+name: Hex(6)HexNAc(5)NeuAc(3)
+def: "A3G3S3." [URL:https\://glyconnect.expasy.org/browser/global/compositions/search?hex=6&hexnac=5&neuac=3&mode=exact, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=2028]
+xref: record_id "2028"
+xref: delta_mono_mass "2861.000054"
+xref: delta_avge_mass "2862.5699"
+xref: delta_composition "Hex(6) HexNAc(5) NeuAc(3)"
+xref: username_of_poster "unimod"
+xref: group_of_poster ""
+xref: date_time_posted "2020-08-02 11:44:31"
+xref: date_time_modified "2020-08-02 11:44:31"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "N"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "N-linked glycosylation"
+xref: spec_1_neutral_loss_2862_mono_mass "2861.000054"
+xref: spec_1_neutral_loss_2862_avge_mass "2862.5699"
+xref: spec_1_neutral_loss_2862_flag "false"
+xref: spec_1_neutral_loss_2862_composition "Hex(6) HexNAc(5) NeuAc(3)"
+xref: spec_1_neutral_loss_0_mono_mass "0"
+xref: spec_1_neutral_loss_0_avge_mass "0"
+xref: spec_1_neutral_loss_0_flag "false"
+xref: spec_1_neutral_loss_0_composition "0"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:2029
+name: Hex(7)HexNAc(6)
+def: "A4G4." [URL:https\://glyconnect.expasy.org/browser/global/compositions/search?hex=7&hexnac=6&mode=exact, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=2029]
+xref: record_id "2029"
+xref: delta_mono_mass "2352.846"
+xref: delta_avge_mass "2354.1393"
+xref: delta_composition "Hex(7) HexNAc(6)"
+xref: username_of_poster "unimod"
+xref: group_of_poster ""
+xref: date_time_posted "2020-08-02 11:47:40"
+xref: date_time_modified "2020-08-02 11:47:40"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "S"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "O-linked glycosylation"
+xref: spec_1_neutral_loss_2353_mono_mass "2352.846"
+xref: spec_1_neutral_loss_2353_avge_mass "2354.1393"
+xref: spec_1_neutral_loss_2353_flag "false"
+xref: spec_1_neutral_loss_2353_composition "Hex(7) HexNAc(6)"
+xref: spec_1_neutral_loss_0_mono_mass "0"
+xref: spec_1_neutral_loss_0_avge_mass "0"
+xref: spec_1_neutral_loss_0_flag "false"
+xref: spec_1_neutral_loss_0_composition "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "T"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "O-linked glycosylation"
+xref: spec_1_neutral_loss_2353_mono_mass "2352.846"
+xref: spec_1_neutral_loss_2353_avge_mass "2354.1393"
+xref: spec_1_neutral_loss_2353_flag "false"
+xref: spec_1_neutral_loss_2353_composition "Hex(7) HexNAc(6)"
+xref: spec_1_neutral_loss_0_mono_mass "0"
+xref: spec_1_neutral_loss_0_avge_mass "0"
+xref: spec_1_neutral_loss_0_flag "false"
+xref: spec_1_neutral_loss_0_composition "0"
+xref: spec_2_group "2"
+xref: spec_2_hidden "1"
+xref: spec_2_site "N"
+xref: spec_2_position "Anywhere"
+xref: spec_2_classification "N-linked glycosylation"
+xref: spec_2_neutral_loss_2353_mono_mass "2352.846"
+xref: spec_2_neutral_loss_2353_avge_mass "2354.1393"
+xref: spec_2_neutral_loss_2353_flag "false"
+xref: spec_2_neutral_loss_2353_composition "Hex(7) HexNAc(6)"
+xref: spec_2_neutral_loss_0_mono_mass "0"
+xref: spec_2_neutral_loss_0_avge_mass "0"
+xref: spec_2_neutral_loss_0_flag "false"
+xref: spec_2_neutral_loss_0_composition "0"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:2033
+name: Met+O(2)
+def: "Photo-induced Methionine Adduct." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=2033]
+xref: record_id "2033"
+xref: delta_mono_mass "163.030314"
+xref: delta_avge_mass "163.1949"
+xref: delta_composition "H(9) C(5) N O(3) S"
+xref: username_of_poster "tomp1808"
+xref: group_of_poster ""
+xref: date_time_posted "2021-02-01 10:35:58"
+xref: date_time_modified "2021-03-09 13:26:40"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "H"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Chemical derivative"
+xref: spec_1_misc_notes "Oxidative cross-link of free methionine to histidine residue in protein."
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:2034
+name: Gly+O(2)
+def: "Photo-induced Glycine Adduct." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=2034]
+xref: record_id "2034"
+xref: delta_mono_mass "89.011293"
+xref: delta_avge_mass "89.0501"
+xref: delta_composition "H(3) C(2) N O(3)"
+xref: username_of_poster "tomp1808"
+xref: group_of_poster ""
+xref: date_time_posted "2021-02-01 13:18:42"
+xref: date_time_modified "2021-03-09 13:27:33"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "H"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:2035
+name: Pro+O(2)
+def: "Photo-induced Proline adduct." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=2035]
+xref: record_id "2035"
+xref: delta_mono_mass "129.042593"
+xref: delta_avge_mass "129.114"
+xref: delta_composition "H(7) C(5) N O(3)"
+xref: username_of_poster "tomp1808"
+xref: group_of_poster ""
+xref: date_time_posted "2021-02-01 13:30:11"
+xref: date_time_modified "2021-03-09 13:28:02"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "H"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Post-translational"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:2036
+name: Lys+O(2)
+def: "Photo-induced Lysine adduct." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=2036]
+xref: record_id "2036"
+xref: delta_mono_mass "160.084792"
+xref: delta_avge_mass "160.1711"
+xref: delta_composition "H(12) C(6) N(2) O(3)"
+xref: username_of_poster "tomp1808"
+xref: group_of_poster ""
+xref: date_time_posted "2021-02-01 13:33:53"
+xref: date_time_modified "2021-03-09 13:28:34"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "H"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Post-translational"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:2037
+name: Glu+O(2)
+def: "Photo-induced Glutamate adduct." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=2037]
+xref: record_id "2037"
+xref: delta_mono_mass "161.032422"
+xref: delta_avge_mass "161.1128"
+xref: delta_composition "H(7) C(5) N O(5)"
+xref: username_of_poster "tomp1808"
+xref: group_of_poster ""
+xref: date_time_posted "2021-02-01 13:35:06"
+xref: date_time_modified "2021-03-09 13:28:59"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "H"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Post-translational"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:2039
+name: LTX+Lophotoxin
+def: "Addition of lophotoxin to tyrosine." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=2039]
+xref: record_id "2039"
+xref: delta_mono_mass "416.147118"
+xref: delta_avge_mass "416.4212"
+xref: delta_composition "H(24) C(22) O(8)"
+xref: username_of_poster "modchaser99"
+xref: group_of_poster ""
+xref: date_time_posted "2021-02-17 23:23:43"
+xref: date_time_modified "2021-03-09 13:32:47"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "Y"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Post-translational"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:2040
+name: MBS+peptide
+def: "MBS_233p24 plus peptide 1250p53." [URL:https\://www.thermofisher.com/order/catalog/product/22311?us&en#/22311?us&en, PMID:https://pubmed.ncbi.nlm.nih.gov/8829804/, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=2040]
+xref: record_id "2040"
+xref: delta_mono_mass "1482.77"
+xref: delta_avge_mass "1483.7597"
+xref: delta_composition "H(108) C(81) N(7) O(19)"
+xref: username_of_poster "nendicott"
+xref: group_of_poster ""
+xref: date_time_posted "2021-02-24 17:50:09"
+xref: date_time_modified "2021-03-09 13:32:27"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "C"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Chemical derivative"
+xref: spec_1_misc_notes "Loss of MBS, peptide from KLH after trypsin digestion"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:2041
+name: 3-hydroxybenzyl-phosphate
+def: "3-hydroxybenzyl phosphate." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=2041]
+comment: Created by hydrolysis of the product of the reaction of 2-(o-cresyl)-4H-1,3,2-benzodioxaphosphorane-2-one with amino acids residues in proteins.
+xref: record_id "2041"
+xref: delta_mono_mass "186.008196"
+xref: delta_avge_mass "186.1018"
+xref: delta_composition "H(7) C(7) O(4) P"
+xref: username_of_poster "lmschopfer"
+xref: group_of_poster ""
+xref: date_time_posted "2021-03-07 21:17:23"
+xref: date_time_modified "2021-03-09 13:34:53"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "K"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Chemical derivative"
+xref: spec_2_group "2"
+xref: spec_2_hidden "1"
+xref: spec_2_site "S"
+xref: spec_2_position "Anywhere"
+xref: spec_2_classification "Chemical derivative"
+xref: spec_3_group "3"
+xref: spec_3_hidden "1"
+xref: spec_3_site "T"
+xref: spec_3_position "Anywhere"
+xref: spec_3_classification "Chemical derivative"
+xref: spec_4_group "4"
+xref: spec_4_hidden "1"
+xref: spec_4_site "Y"
+xref: spec_4_position "Anywhere"
+xref: spec_4_classification "Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:2042
+name: phenyl-phosphate
+def: "Phenyl phosphate." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=2042]
+comment: Created by hydrolysis of the product of the reaction of 2-(o-cresyl)-4H-1,3,2-benzodioxaphosphorane-2-one with amino acids residues in proteins.
+xref: record_id "2042"
+xref: delta_mono_mass "155.997631"
+xref: delta_avge_mass "156.0759"
+xref: delta_composition "H(5) C(6) O(3) P"
+xref: username_of_poster "lmschopfer"
+xref: group_of_poster ""
+xref: date_time_posted "2021-03-07 21:23:37"
+xref: date_time_modified "2021-03-09 13:36:06"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "K"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Chemical derivative"
+xref: spec_2_group "2"
+xref: spec_2_hidden "1"
+xref: spec_2_site "S"
+xref: spec_2_position "Anywhere"
+xref: spec_2_classification "Chemical derivative"
+xref: spec_3_group "3"
+xref: spec_3_hidden "1"
+xref: spec_3_site "T"
+xref: spec_3_position "Anywhere"
+xref: spec_3_classification "Chemical derivative"
+xref: spec_4_group "4"
+xref: spec_4_hidden "1"
+xref: spec_4_site "Y"
+xref: spec_4_position "Anywhere"
+xref: spec_4_classification "Chemical derivative"
 is_a: UNIMOD:0 ! unimod root node
 
 

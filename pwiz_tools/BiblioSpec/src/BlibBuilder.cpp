@@ -96,11 +96,13 @@ static vector<string> supportedTypes = {
     ".msf",
     ".pdResult",
     ".mzid",
+    ".mzid.gz",
     "msms.txt",
     "final_fragment.csv",
     ".proxl.xml",
     ".ssl",
     ".mlb",
+    ".speclib",
     ".tsv",
     ".osw",
     ".mzTab",
@@ -699,7 +701,7 @@ string base_name(const char* name)
 
 bool has_extension(const char* name, const char* ext)
 {
-    return strcmp(name + strlen(name) - strlen(ext), ext) == 0;
+    return bal::iends_with(name, ext);
 }
 
 /**

@@ -84,8 +84,20 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public int OptStep { get { return ChromInfo.OptimizationStep; } }
         [Format(NullValue = TextUtil.EXCEL_NA)]
         public int? PointsAcrossPeak { get { return ChromInfo.PointsAcrossPeak; } }
+        [Format(Formats.RETENTION_TIME, NullValue = TextUtil.EXCEL_NA)]
+        public double? CycleTimeAcrossPeak { get { return (EndTime - StartTime) * 60 / PointsAcrossPeak; } }
 
         public bool Coeluting { get { return !ChromInfo.IsForcedIntegration; } }
+
+        [Format(Formats.RETENTION_TIME, NullValue = TextUtil.EXCEL_NA)]
+        public double? IonMobilityFragment 
+        {
+            get
+            {
+                return IonMobilityFilter.IsNullOrEmpty(ChromInfo.IonMobility) ? null
+                    : ChromInfo.IonMobility.IonMobilityAndCCS.GetHighEnergyIonMobility();
+            }
+        }
 
         public Chromatogram Chromatogram
         {
@@ -101,6 +113,22 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             {
                 ChangeChromInfo(EditColumnDescription(nameof(Note), value),
                     chromInfo=>chromInfo.ChangeAnnotations(chromInfo.Annotations.ChangeNote(value)));
+            }
+        }
+
+        public bool TransitionResultIsQuantitative
+        {
+            get
+            {
+                return Transition.DocNode.IsQuantitative(SrmDocument.Settings);
+            }
+        }
+
+        public bool TransitionResultIsMs1
+        {
+            get
+            {
+                return SrmDocument.Settings.GetChromSource(Transition.DocNode) == ChromSource.ms1;
             }
         }
 

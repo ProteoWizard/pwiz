@@ -17,9 +17,7 @@
  * limitations under the License.
  */
 
-using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -35,6 +33,7 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
+using pwiz.SkylineTestUtil.Schemas;
 
 namespace pwiz.SkylineTestData
 {
@@ -57,8 +56,8 @@ namespace pwiz.SkylineTestData
 
             // Test schema validation.
             var assembly = Assembly.GetAssembly(typeof(AssertEx));
-            var stream = assembly.GetManifestResourceStream(
-               typeof(AssertEx).Namespace + String.Format(CultureInfo.InvariantCulture, @".Schemas.Skyline_{0}.xsd", SrmDocument.FORMAT_VERSION));
+            var xsdName = SchemaDocuments.GetSkylineSchemaResourceName(DocumentFormat.CURRENT.ToString());
+            var stream = assembly.GetManifestResourceStream(xsdName);
             TestSchemaValidation(stream, doc08Path, docCurrentPath);
 
             // Check explicit and implicit modifications in the current format.
@@ -83,11 +82,14 @@ namespace pwiz.SkylineTestData
                 var stringBuilder = new StringBuilder();
                 using (var xmlWriter = XmlWriter.Create(stringBuilder))
                 {
+                    // Some versions of ReSharper think XmlWriter.Create can return a null, others don't, disable this check to satisfy either
+                    // ReSharper disable PossibleNullReferenceException
                     xmlWriter.WriteStartDocument();
                     xmlWriter.WriteStartElement("TestDocument");
                     xmlWriter.WriteElements(listChromatograms, new XmlElementHelper<ChromatogramSet>());
                     xmlWriter.WriteEndElement();
                     xmlWriter.WriteEndDocument();
+                    // ReSharper restore PossibleNullReferenceException
                 }
                 var xmlReader = XmlReader.Create(new StringReader(stringBuilder.ToString()));
                 xmlReader.ReadStartElement();

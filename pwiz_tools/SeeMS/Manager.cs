@@ -270,33 +270,36 @@ namespace seems
             LoadDefaultAnnotationSettings();
         }
 
-        public void OpenFile( string filepath, bool closeIfOpen = false )
+        public bool OpenFile(string filepath, bool closeIfOpen = false )
         {
-            OpenFile(filepath, -1, closeIfOpen);
+            return OpenFile(filepath, -1, closeIfOpen);
         }
 
-        public void OpenFile( string filepath, int index, bool closeIfOpen = false )
+        public bool OpenFile(string filepath, int index, bool closeIfOpen = false )
         {
-            OpenFile(filepath, index > 0 ? new List<object> { index } : null, null, closeIfOpen);
+            return OpenFile(filepath, index > 0 ? new List<object> { index } : null, null, closeIfOpen);
         }
 
-        public void OpenFile( string filepath, string id, bool closeIfOpen = false )
+        public bool OpenFile(string filepath, string id, bool closeIfOpen = false )
         {
-            OpenFile(filepath, new List<object> { id }, null, closeIfOpen);
+            return OpenFile(filepath, new List<object> { id }, null, closeIfOpen);
         }
 
-        public void OpenFile (string filepath, IList<object> idOrIndexList, IAnnotation annotation, bool closeIfOpen = false )
+        public bool OpenFile(string filepath, IList<object> idOrIndexList, IAnnotation annotation, bool closeIfOpen = false )
         {
-            OpenFile(filepath, idOrIndexList, annotation, "", closeIfOpen);
+            return OpenFile(filepath, idOrIndexList, annotation, "", closeIfOpen);
         }
 
-        public void OpenFile(string filepath, IList<object> idOrIndexList, IAnnotation annotation, string spectrumListFilters, bool closeIfOpen = false)
+        public bool OpenFile(string filepathOrMsDataRunPath, IList<object> idOrIndexList, IAnnotation annotation, string spectrumListFilters, bool closeIfOpen = false)
         {
+            var msDataRunPath = new OpenDataSourceDialog.MSDataRunPath(filepathOrMsDataRunPath);
+            string filepath = msDataRunPath.ToString();
+
 			try
 			{
-                OnLoadDataSourceProgress("Opening data source: " + Path.GetFileNameWithoutExtension(filepath), 0);
+                OnLoadDataSourceProgress("Opening data source: " + Path.GetFileNameWithoutExtension(msDataRunPath.Filepath), 0);
 
-                string[] spectrumListFilterList = spectrumListFilters.Split(';');
+                string[] spectrumListFilterList = spectrumListFilters.Split(';').Where(o => o.Length > 0).ToArray();
 
 			    bool fileAlreadyOpen = dataSourceMap.ContainsKey(filepath);
 
@@ -317,7 +320,7 @@ namespace seems
 
                 if (!fileAlreadyOpen)
                 {
-                    var newSource = new ManagedDataSource(new SpectrumSource(filepath));
+                    var newSource = new ManagedDataSource(new SpectrumSource(msDataRunPath));
                     dataSourceMap.Add(filepath, newSource);
 
                     if (spectrumListFilters.Length > 0)
@@ -337,7 +340,7 @@ namespace seems
                     foreach (object idOrIndex in idOrIndexList)
                     {
                         Type indexType = typeof(MassSpectrum);
-                        int index = -1;
+                        //int index = -1;
                         if (idOrIndex is int)
                             indexListByType[indexType].Add((int)idOrIndex);
                         else if (idOrIndex is string)
@@ -414,16 +417,12 @@ namespace seems
                     }
 				}
 
+			    return true;
 			} catch( Exception ex )
 			{
-				string message = ex.Message;
-				if( ex.InnerException != null )
-					message += "\n\nAdditional information: " + ex.InnerException.Message;
-				MessageBox.Show( message,
-								"Error opening source file",
-								MessageBoxButtons.OK, MessageBoxIcon.Error, MessageBoxDefaultButton.Button1,
-								0, false );
+				Program.HandleException("Error opening source file", ex);
                 OnLoadDataSourceProgress("Failed to load data: " + ex.Message, 100);
+			    return false;
 			}
 		}
 
@@ -544,7 +543,7 @@ namespace seems
                     foreach (object idOrIndex in idOrIndexList)
                     {
                         Type indexType = typeof(MassSpectrum);
-                        int index = -1;
+                        //int index = -1;
                         if (idOrIndex is int)
                             indexListByType[indexType].Add((int)idOrIndex);
                         else if (idOrIndex is string)
@@ -623,13 +622,7 @@ namespace seems
 
 			} catch( Exception ex )
 			{
-                string message = "SeeMS encountered an error reading metadata from \"" + managedDataSource.Source.CurrentFilepath + "\" (" + ex.ToString() + ")";
-				if( ex.InnerException != null )
-                    message += "\n\nAdditional information: " + ex.InnerException.ToString();
-				MessageBox.Show( message,
-								"Error reading source metadata",
-								MessageBoxButtons.OK, MessageBoxIcon.Error, MessageBoxDefaultButton.Button1,
-								0, false );
+			    Program.HandleException("Error reading source metadata", ex);
 				OnLoadDataSourceProgress("Failed to load data: " + ex.Message, 100);
 			}
 		}
@@ -775,7 +768,7 @@ namespace seems
             Application.DoEvents();
 
             var ionMobilityColumn = spectrumListForm.GridView.Columns["IonMobility"];
-            if (ionMobilityColumn != null && ionMobilityColumn.Visible || sl.spectrum(0, true).GetIonMobilityArray() != null)
+            if (ionMobilityColumn != null && ionMobilityColumn.Visible || sl.size() > 0 && sl.spectrum(0, true).GetIonMobilityArray() != null)
             {
                 var heatmapForm = new HeatmapForm(this, managedDataSource);
                 heatmapForm.Show(DockPanel, DockState.Document);

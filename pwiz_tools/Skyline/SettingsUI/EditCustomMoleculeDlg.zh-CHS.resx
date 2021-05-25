@@ -132,10 +132,10 @@
   </data>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="textIonMobility.TabIndex" type="System.Int32, mscorlib">
-    <value>17</value>
+    <value>13</value>
   </data>
   <data name="textIonMobility.ToolTip" xml:space="preserve">
-    <value>忽略任何预测的漂移时间值</value>
+    <value>覆盖任何库离子迁移值</value>
   </data>
   <data name="&gt;&gt;textIonMobility.Name" xml:space="preserve">
     <value>textIonMobility</value>
@@ -153,13 +153,13 @@
     <value>Bottom, Left</value>
   </data>
   <data name="textIonMobilityHighEnergyOffset.Location" type="System.Drawing.Point, System.Drawing">
-    <value>173, 234</value>
+    <value>173, 286</value>
   </data>
   <data name="textIonMobilityHighEnergyOffset.Size" type="System.Drawing.Size, System.Drawing">
     <value>135, 20</value>
   </data>
   <data name="textIonMobilityHighEnergyOffset.TabIndex" type="System.Int32, mscorlib">
-    <value>19</value>
+    <value>21</value>
   </data>
   <data name="textIonMobilityHighEnergyOffset.ToolTip" xml:space="preserve">
     <value>一个小（通常为负）的值被用在离子上，来补偿因添加在后漂移分裂中的动能而导致的稍快的飞行</value>
@@ -186,7 +186,7 @@
     <value>1</value>
   </data>
   <data name="textRetentionTime.ToolTip" xml:space="preserve">
-    <value>忽略任何预测保留时间值</value>
+    <value>覆盖任何预测保留时间值</value>
   </data>
   <data name="&gt;&gt;textRetentionTime.Name" xml:space="preserve">
     <value>textRetentionTime</value>
@@ -237,7 +237,7 @@
     <value>5</value>
   </data>
   <data name="textCollisionEnergy.ToolTip" xml:space="preserve">
-    <value>忽略任何预测的或库碰撞能量值</value>
+    <value>覆盖任何预测的碰撞能量值、库碰撞能量值或根据母离子而定的明确碰撞能量值</value>
   </data>
   <data name="&gt;&gt;textCollisionEnergy.Name" xml:space="preserve">
     <value>textCollisionEnergy</value>
@@ -466,7 +466,7 @@
     <value>15</value>
   </data>
   <data name="textBoxCCS.ToolTip" xml:space="preserve">
-    <value>覆盖任何预测或库碰撞截面值</value>
+    <value>覆盖任何库碰撞截面值</value>
   </data>
   <data name="&gt;&gt;textBoxCCS.Name" xml:space="preserve">
     <value>textBoxCCS</value>
@@ -478,7 +478,34 @@
     <value>groupBoxOptionalValues</value>
   </data>
   <data name="&gt;&gt;textBoxCCS.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>5</value>
+  </data>
+  <data name="textBoxPrecursorCollisionEnergy.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="textBoxPrecursorCollisionEnergy.Location" type="System.Drawing.Point, System.Drawing">
+    <value>173, 234</value>
+  </data>
+  <data name="textBoxPrecursorCollisionEnergy.Size" type="System.Drawing.Size, System.Drawing">
+    <value>135, 20</value>
+  </data>
+  <data name="textBoxPrecursorCollisionEnergy.TabIndex" type="System.Int32, mscorlib">
+    <value>19</value>
+  </data>
+  <data name="textBoxPrecursorCollisionEnergy.ToolTip" xml:space="preserve">
+    <value>覆盖任何预测的能量值或库碰撞能量值，自身可能被离子对级别的明确值覆盖</value>
+  </data>
+  <data name="&gt;&gt;textBoxPrecursorCollisionEnergy.Name" xml:space="preserve">
+    <value>textBoxPrecursorCollisionEnergy</value>
+  </data>
+  <data name="&gt;&gt;textBoxPrecursorCollisionEnergy.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textBoxPrecursorCollisionEnergy.Parent" xml:space="preserve">
+    <value>groupBoxOptionalValues</value>
+  </data>
+  <data name="&gt;&gt;textBoxPrecursorCollisionEnergy.ZOrder" xml:space="preserve">
+    <value>1</value>
   </data>
   <data name="btnOK.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -540,6 +567,39 @@
   <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
+  <data name="labelPrecursorCollisionEnergy.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="labelPrecursorCollisionEnergy.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelPrecursorCollisionEnergy.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelPrecursorCollisionEnergy.Location" type="System.Drawing.Point, System.Drawing">
+    <value>170, 214</value>
+  </data>
+  <data name="labelPrecursorCollisionEnergy.Size" type="System.Drawing.Size, System.Drawing">
+    <value>83, 13</value>
+  </data>
+  <data name="labelPrecursorCollisionEnergy.TabIndex" type="System.Int32, mscorlib">
+    <value>18</value>
+  </data>
+  <data name="labelPrecursorCollisionEnergy.Text" xml:space="preserve">
+    <value>碰撞能量(&amp;E)：</value>
+  </data>
+  <data name="&gt;&gt;labelPrecursorCollisionEnergy.Name" xml:space="preserve">
+    <value>labelPrecursorCollisionEnergy</value>
+  </data>
+  <data name="&gt;&gt;labelPrecursorCollisionEnergy.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelPrecursorCollisionEnergy.Parent" xml:space="preserve">
+    <value>groupBoxOptionalValues</value>
+  </data>
+  <data name="&gt;&gt;labelPrecursorCollisionEnergy.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
   <data name="comboBoxIonMobilityUnits.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
   </data>
@@ -550,7 +610,7 @@
     <value>150, 21</value>
   </data>
   <data name="comboBoxIonMobilityUnits.TabIndex" type="System.Int32, mscorlib">
-    <value>21</value>
+    <value>17</value>
   </data>
   <data name="&gt;&gt;comboBoxIonMobilityUnits.Name" xml:space="preserve">
     <value>comboBoxIonMobilityUnits</value>
@@ -562,7 +622,7 @@
     <value>groupBoxOptionalValues</value>
   </data>
   <data name="&gt;&gt;comboBoxIonMobilityUnits.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>2</value>
   </data>
   <data name="labelIonMobilityUnits.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
@@ -580,7 +640,7 @@
     <value>87, 13</value>
   </data>
   <data name="labelIonMobilityUnits.TabIndex" type="System.Int32, mscorlib">
-    <value>20</value>
+    <value>16</value>
   </data>
   <data name="labelIonMobilityUnits.Text" xml:space="preserve">
     <value>离子迁移单位(&amp;U)：</value>
@@ -595,9 +655,8 @@
     <value>groupBoxOptionalValues</value>
   </data>
   <data name="&gt;&gt;labelIonMobilityUnits.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>3</value>
   </data>
-
   <data name="labelCCS.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
   </data>
@@ -629,7 +688,7 @@
     <value>groupBoxOptionalValues</value>
   </data>
   <data name="&gt;&gt;labelCCS.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>4</value>
   </data>
   <data name="labelDeclusteringPotential.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
@@ -680,7 +739,7 @@
     <value>115, 17</value>
   </data>
   <data name="labelIonMobility.TabIndex" type="System.Int32, mscorlib">
-    <value>16</value>
+    <value>12</value>
   </data>
   <data name="labelIonMobility.Text" xml:space="preserve">
     <value>离子迁移(&amp;I)：</value>
@@ -713,7 +772,7 @@
     <value>203, 17</value>
   </data>
   <data name="labelIonMobilityHighEnergyOffset.TabIndex" type="System.Int32, mscorlib">
-    <value>18</value>
+    <value>20</value>
   </data>
   <data name="labelIonMobilityHighEnergyOffset.Text" xml:space="preserve">
     <value>高能离子迁移偏置(&amp;O)：</value>

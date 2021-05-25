@@ -606,8 +606,6 @@
           <xs:attribute name="summarization_method" type="xs:string"/>
           <xs:attribute name="confidence_level" type="xs:double"/>
           <xs:attribute name="per_protein" type="xs:boolean"/>
-          <xs:attribute name="use_zero_for_missing_peaks" type="xs:boolean"/>
-          <xs:attribute name="q_value_cutoff" type="xs:double"/>
         </xs:complexType>
       </xs:element>
       <xs:element name="list_data" minOccurs="0" maxOccurs="unbounded">
@@ -792,6 +790,7 @@
         <xs:attribute name="label_name" type="xs:string"/>
         <xs:attributeGroup ref ="protein_details_type"/>
         <xs:attribute name="decoy" type="xs:boolean"/>
+        <xs:attribute name="decoy_match_proportion" type="xs:double" use="optional"/>
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>

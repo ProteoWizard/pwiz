@@ -23,18 +23,15 @@ using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.Controls;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    public enum AreaNormalizeToView{ area_percent_view, area_maximum_view, area_ratio_view, area_global_standard_view, none }
-
     public enum AreaScope{ document, protein }
 
     public enum PointsTypePeakArea { targets, decoys }
-
-    public enum AreaCVNormalizationMethod { global_standards, medians, none, ratio }
 
     public enum AreaCVTransitions { all, best, count }
 
@@ -81,10 +78,28 @@ namespace pwiz.Skyline.Controls.Graphs
             set { Settings.Default.AreaGraphDisplayType = value.ToString(); }
         }
 
-        public static AreaNormalizeToView AreaView
+        public static NormalizeOption AreaNormalizeOption
         {
-            get { return Helpers.ParseEnum(Settings.Default.AreaNormalizeToView, AreaNormalizeToView.none); }
-            set { Settings.Default.AreaNormalizeToView = value.ToString(); }
+            get { return Settings.Default.AreaNormalizeOption; }
+            set { Settings.Default.AreaNormalizeOption = value; }
+        }
+
+        public static NormalizeOption AreaCVNormalizeOption
+        {
+            get
+            {
+                var option = AreaNormalizeOption;
+                if (option == NormalizeOption.MAXIMUM || option == NormalizeOption.TOTAL)
+                {
+                    option = NormalizeOption.NONE;
+                }
+
+                return option;
+            }
+            set
+            {
+                AreaNormalizeOption = value;
+            }
         }
 
         public static AreaScope AreaScope
@@ -99,12 +114,6 @@ namespace pwiz.Skyline.Controls.Graphs
             set { Settings.Default.AreaCVPointsType = value.ToString(); }
         }
 
-        public static AreaCVNormalizationMethod NormalizationMethod
-        {
-            get { return Helpers.ParseEnum(Settings.Default.AreaCVNormalizationMethod, AreaCVNormalizationMethod.none); }
-            set { Settings.Default.AreaCVNormalizationMethod = value.ToString(); }
-        }
-
         public static AreaCVTransitions AreaCVTransitions
         {
             get { return Helpers.ParseEnum(Settings.Default.AreaCVTransitions, AreaCVTransitions.all); }
@@ -115,12 +124,6 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             get { return Helpers.ParseEnum(Settings.Default.AreaCVMsLevel, AreaCVMsLevel.products); }
             set { Settings.Default.AreaCVMsLevel = value.ToString(); }
-        }
-
-        public static int AreaCVRatioIndex
-        {
-            get { return Settings.Default.AreaCVRatioIndex; }
-            set { Settings.Default.AreaCVRatioIndex = value; }
         }
 
         public static string GroupByGroup { get; set; }
@@ -204,7 +207,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 GraphSummary.UpdateUI();
         }
 
-        public void OnRatioIndexChanged()
+        public void OnNormalizeOptionChanged()
         {
             if (GraphSummary.GraphPanes.OfType<AreaReplicateGraphPane>().Any() /* || !Settings.Default.AreaAverageReplicates */)
                 GraphSummary.UpdateUI();
@@ -216,25 +219,7 @@ namespace pwiz.Skyline.Controls.Graphs
             //           one in the sequence tree, but at least this will keep the UI
             //           from crashing with IndexOutOfBoundsException.
             var settings = GraphSummary.DocumentUIContainer.DocumentUI.Settings;
-            var mods = settings.PeptideSettings.Modifications;
-            GraphSummary.RatioIndex = Math.Min(GraphSummary.RatioIndex, mods.RatioInternalStandardTypes.Count - 1);
-
-            // Only show ratios if document changes to have valid ratios
-            if (AreaView == AreaNormalizeToView.area_ratio_view && !mods.HasHeavyModifications)
-                AreaView = AreaNormalizeToView.none;
-
-            // Only show ratios if type and info match
-            if (NormalizationMethod == AreaCVNormalizationMethod.ratio && !mods.HasHeavyModifications ||
-                NormalizationMethod == AreaCVNormalizationMethod.global_standards && !settings.HasGlobalStandardArea)
-            {
-                NormalizationMethod = AreaCVNormalizationMethod.none;
-            }
-
-            AreaCVRatioIndex = Math.Min(AreaCVRatioIndex, mods.RatioInternalStandardTypes.Count - 1);
-
-            var globalStandards = NormalizationMethod == AreaCVNormalizationMethod.global_standards;
-            if (globalStandards && !GraphSummary.DocumentUIContainer.DocumentUI.Settings.HasGlobalStandardArea)
-                NormalizationMethod = AreaCVNormalizationMethod.none;
+            GraphSummary.NormalizeOption = NormalizeOption.Constrain(settings, GraphSummary.NormalizeOption);
 
             var pane = GraphSummary.GraphPanes.FirstOrDefault();
 

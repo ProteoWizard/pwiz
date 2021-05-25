@@ -591,6 +591,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Edited ion mobility library {0} ({1}).
+        /// </summary>
+        public static string edited_ion_mobility_library {
+            get {
+                return ResourceManager.GetString("edited_ion_mobility_library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Edited note of {0}.
         /// </summary>
         public static string edited_note {
@@ -1120,6 +1129,24 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string pasted_targets {
             get {
                 return ResourceManager.GetString("pasted_targets", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Added complete permutations of isotope modification &apos;{0}&apos;.
+        /// </summary>
+        public static string permuted_isotope_label_complete {
+            get {
+                return ResourceManager.GetString("permuted_isotope_label_complete", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Added simple permutations of isotope modification &apos;{0}&apos;.
+        /// </summary>
+        public static string permuted_isotope_label_simple {
+            get {
+                return ResourceManager.GetString("permuted_isotope_label_simple", resourceCulture);
             }
         }
         

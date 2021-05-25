@@ -9,6 +9,7 @@ All Info  :
 スペクトルライブラリを構築>曖昧な一致を含めるは偽です
 スペクトルライブラリを構築>ドキュメント内のペプチドをフィルタリングは偽です
 スペクトルライブラリを構築>ワークフローは"MS1フィルタを用いたDDA"です
+スペクトルライブラリを構築>入力ファイルタイプは"検索結果 (ライブラリを直接構築)"です
 Extra Info: カットオフスコア = "0.95",
 ファイルを検索 = 
 [
@@ -18,7 +19,8 @@ Extra Info: カットオフスコア = "0.95",
 iRT標準ペプチド = なし,
 曖昧な一致を含める = 偽,
 ドキュメント内のペプチドをフィルタリング = 偽,
-ワークフロー = "MS1フィルタを用いたDDA"
+ワークフロー = "MS1フィルタを用いたDDA",
+入力ファイルタイプ = "検索結果 (ライブラリを直接構築)"
 
 Undo Redo : ペプチド検索がインポートされました
 Summary   : ペプチド検索がインポートされました
@@ -155,13 +157,6 @@ sp|P24534|EF1B_HUMAN>K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] （�
 sp|P24534|EF1B_HUMAN>K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] （ミス2）>1065.9279++++のプロダクトイオンプリカーサー [M+5] - 1067.1813++++ (iランク6)が選択されました
 sp|P24534|EF1B_HUMAN>K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] （ミス2）>1065.9279++++のプロダクトイオンプリカーサー [M+6] - 1067.4320++++ (iランク7)が選択されました
 sp|P24534|EF1B_HUMAN>K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] （ミス2）>1065.9279++++のプロダクトイオンプリカーサー [M+7] - 1067.6826++++ (iランク8)が選択されました
-
-Undo Redo : sp|P07900|HS90A_HUMAN>R.GVVDSEDLPLNISR.E [386, 399]>757.3965++のピーク境界が変更されました
-Summary   : sp|P07900|HS90A_HUMAN>R.GVVDSEDLPLNISR.E [386, 399]>757.3965++のピーク境界が変更されました
-All Info  :
-sp|P07900|HS90A_HUMAN>R.GVVDSEDLPLNISR.E [386, 399]>757.3965++のピーク境界が変更されました
-「5b_MCF7_TiTip3」にあるsp|P07900|HS90A_HUMAN>R.GVVDSEDLPLNISR.E [386, 399]>757.3965++の全ピークの開始時間が35.54から35.72に変更されました
-「5b_MCF7_TiTip3」にあるsp|P07900|HS90A_HUMAN>R.GVVDSEDLPLNISR.E [386, 399]>757.3965++の全ピークの終了時間が36.98から36.44に変更されました
 
 Undo Redo : ペプチド設定－予測>時間枠が"10"に変更されました
 Summary   : 設定>ペプチド設定－予測>時間枠が"10"に変更されました

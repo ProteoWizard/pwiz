@@ -91,6 +91,7 @@ class LibReader{
   int totalCount_; //total RefSpectra in the mz range
   int curSpecId_;  // id of the next spectrum to get when getNextSpec called
   int maxSpecId_;  // biggest spec id in the library
+  sqlite3_stmt* enumSpectraStatement_;
   
   vector<PEAK_T> getUncompressedPeaks(int& numPeaks, int& mzLen, Byte* comprM,int& intensityLen, Byte* comprI);
   void setMaxLibId();

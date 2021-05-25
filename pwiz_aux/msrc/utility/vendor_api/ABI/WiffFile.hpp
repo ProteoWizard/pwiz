@@ -134,7 +134,7 @@ struct PWIZ_API_DECL Spectrum
     virtual int getMSLevel() const = 0;
 
     virtual bool getHasIsolationInfo() const = 0;
-    virtual void getIsolationInfo(double& centerMz, double& lowerLimit, double& upperLimit) const = 0;
+    virtual void getIsolationInfo(double& centerMz, double& lowerLimit, double& upperLimit, double& collisionEnergy) const = 0;
 
     virtual bool getHasPrecursorInfo() const = 0;
     virtual void getPrecursorInfo(double& selectedMz, double& intensity, int& charge) const = 0;
@@ -191,10 +191,6 @@ struct PWIZ_API_DECL Experiment
     virtual void getSIC(size_t index, pwiz::util::BinaryData<double>& times, pwiz::util::BinaryData<double>& intensities,
                         double& basePeakX, double& basePeakY) const = 0;
 
-    virtual bool getHasIsolationInfo() const = 0;
-    virtual void getIsolationInfo(int cycle, double& centerMz, double& lowerLimit, double& upperLimit) const = 0;
-    virtual void getPrecursorInfo(int cycle, double& centerMz, int& charge) const = 0;
-
     virtual void getAcquisitionMassRange(double& startMz, double& stopMz) const = 0;
     virtual ScanType getScanType() const = 0;
     virtual ExperimentType getExperimentType() const = 0;
@@ -219,6 +215,8 @@ class PWIZ_API_DECL WiffFile
     public:
     typedef boost::shared_ptr<WiffFile> Ptr;
     static Ptr create(const std::string& wiffpath);
+
+    virtual std::string getWiffPath() const = 0;
 
     virtual int getSampleCount() const = 0;
     virtual int getPeriodCount(int sample) const = 0;

@@ -35,13 +35,16 @@ namespace pwiz.Skyline.Controls.Graphs
 {
     public class SpectrumGraphItem : AbstractSpectrumGraphItem
     {
+        public PeptideDocNode PeptideDocNode { get; private set; }
         public TransitionGroupDocNode TransitionGroupNode { get; private set; }
         private TransitionDocNode TransitionNode { get; set; }
         public string LibraryName { get; private set; }
 
-        public SpectrumGraphItem(TransitionGroupDocNode transitionGroupNode, TransitionDocNode transition,
-                                 LibraryRankedSpectrumInfo spectrumInfo, string libName) : base(spectrumInfo)
+        public SpectrumGraphItem(PeptideDocNode peptideDocNode,
+            TransitionGroupDocNode transitionGroupNode, TransitionDocNode transition,
+            LibraryRankedSpectrumInfo spectrumInfo, string libName) : base(spectrumInfo)
         {
+            PeptideDocNode = peptideDocNode;
             TransitionGroupNode = transitionGroupNode;
             TransitionNode = transition;
             LibraryName = libName;
@@ -52,16 +55,38 @@ namespace pwiz.Skyline.Controls.Graphs
             return ((TransitionNode != null) && (predictedMz == TransitionNode.Mz));
         }
 
-        public static string GetTitle(TransitionGroupDocNode transitionGroupDocNode, IsotopeLabelType labelType)
+        public static string GetLibraryPrefix(string libraryName)
         {
-            string libraryNamePrefix = string.Empty;
-            //if (!string.IsNullOrEmpty(libraryNamePrefix))
-            //    libraryNamePrefix += @" - ";
+            return !string.IsNullOrEmpty(libraryName) ? libraryName + @" - " : string.Empty;
+        }
+
+        public static string RemoveLibraryPrefix(string title, string libraryName)
+        {
+            string libraryNamePrefix = GetLibraryPrefix(libraryName);
+            if (!string.IsNullOrEmpty(libraryNamePrefix) && title.StartsWith(libraryNamePrefix))
+                return title.Substring(libraryNamePrefix.Length);
+            return title;
+        }
+
+        public static string GetTitle(string libraryName, PeptideDocNode peptideDocNode, TransitionGroupDocNode transitionGroupDocNode, IsotopeLabelType labelType)
+        {
+            string libraryNamePrefix = GetLibraryPrefix(libraryName);
 
             TransitionGroup transitionGroup = transitionGroupDocNode.TransitionGroup;
-            string sequence = transitionGroup.Peptide.IsCustomMolecule
-                ? transitionGroupDocNode.CustomMolecule.DisplayName
-                : transitionGroup.Peptide.Target.Sequence;
+            string sequence;
+            if (transitionGroup.Peptide.IsCustomMolecule)
+            {
+                sequence = transitionGroupDocNode.CustomMolecule.DisplayName;
+            }
+            else if (peptideDocNode.CrosslinkStructure.HasCrosslinks)
+            {
+                sequence = peptideDocNode.GetCrosslinkedSequence();
+            }
+            else
+            {
+                sequence = transitionGroup.Peptide.Target.Sequence;
+            }
+
             var charge = transitionGroup.PrecursorAdduct.ToString(); // Something like "2" or "-3" for protonation, or "[M+Na]" for small molecules
             if (transitionGroup.Peptide.IsCustomMolecule)
             {
@@ -76,22 +101,13 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public override string Title
         {
-            get { return GetTitle(TransitionGroupNode, SpectrumInfo.LabelType); }
+            get { return GetTitle(LibraryName, PeptideDocNode, TransitionGroupNode, SpectrumInfo.LabelType); }
         }
     }
     
     public abstract class AbstractSpectrumGraphItem : AbstractMSGraphItem
     {
         private const string FONT_FACE = "Arial";
-        private static readonly Color COLOR_A = Color.YellowGreen;
-        private static readonly Color COLOR_X = Color.Green;
-        private static readonly Color COLOR_B = Color.BlueViolet;
-        private static readonly Color COLOR_Y = Color.Blue;
-        private static readonly Color COLOR_C = Color.Orange;
-        private static readonly Color COLOR_Z = Color.OrangeRed;
-        private static readonly Color COLOR_OTHER_IONS = Color.DodgerBlue; // Other ion types, as in small molecule
-        private static readonly Color COLOR_PRECURSOR = Color.DarkCyan;
-        private static readonly Color COLOR_NONE = COLOR_A;
         public static readonly Color COLOR_SELECTED = Color.Red;
 
         private readonly Dictionary<double, LibraryRankedSpectrumInfo.RankedMI> _ionMatches;
@@ -111,23 +127,23 @@ namespace pwiz.Skyline.Controls.Graphs
 
         // ReSharper disable InconsistentNaming
         private FontSpec _fontSpecA;
-        private FontSpec FONT_SPEC_A { get { return GetFontSpec(COLOR_A, ref _fontSpecA); } }
+        private FontSpec FONT_SPEC_A { get { return GetFontSpec(IonTypeExtension.GetTypeColor(IonType.a), ref _fontSpecA); } }
         private FontSpec _fontSpecX;
-        private FontSpec FONT_SPEC_X { get { return GetFontSpec(COLOR_X, ref _fontSpecX); } }
+        private FontSpec FONT_SPEC_X { get { return GetFontSpec(IonTypeExtension.GetTypeColor(IonType.x), ref _fontSpecX); } }
         private FontSpec _fontSpecB;
-        private FontSpec FONT_SPEC_B { get { return GetFontSpec(COLOR_B, ref _fontSpecB); } }
+        private FontSpec FONT_SPEC_B { get { return GetFontSpec(IonTypeExtension.GetTypeColor(IonType.b), ref _fontSpecB); } }
         private FontSpec _fontSpecY;
-        private FontSpec FONT_SPEC_Y { get { return GetFontSpec(COLOR_Y, ref _fontSpecY); } }
+        private FontSpec FONT_SPEC_Y { get { return GetFontSpec(IonTypeExtension.GetTypeColor(IonType.y), ref _fontSpecY); } }
         private FontSpec _fontSpecC;
-        private FontSpec FONT_SPEC_C { get { return GetFontSpec(COLOR_C, ref _fontSpecC); } }
+        private FontSpec FONT_SPEC_C { get { return GetFontSpec(IonTypeExtension.GetTypeColor(IonType.c), ref _fontSpecC); } }
         private FontSpec _fontSpecZ;
-        private FontSpec FONT_SPEC_PRECURSOR { get { return GetFontSpec(COLOR_PRECURSOR, ref _fontSpecPrecursor); } }
+        private FontSpec FONT_SPEC_PRECURSOR { get { return GetFontSpec(IonTypeExtension.GetTypeColor(IonType.precursor), ref _fontSpecPrecursor); } }
         private FontSpec _fontSpecPrecursor;
-        private FontSpec FONT_SPEC_Z { get { return GetFontSpec(COLOR_Z, ref _fontSpecZ); } }
+        private FontSpec FONT_SPEC_Z { get { return GetFontSpec(IonTypeExtension.GetTypeColor(IonType.z), ref _fontSpecZ); } }
         private FontSpec _fontSpecOtherIons;
-        private FontSpec FONT_SPEC_OTHER_IONS { get { return GetFontSpec(COLOR_OTHER_IONS, ref _fontSpecOtherIons); } } // Small molecule fragments etc
+        private FontSpec FONT_SPEC_OTHER_IONS { get { return GetFontSpec(IonTypeExtension.GetTypeColor(IonType.a), ref _fontSpecOtherIons); } } // Small molecule fragments etc
         private FontSpec _fontSpecNone;
-        private FontSpec FONT_SPEC_NONE { get { return GetFontSpec(COLOR_NONE, ref _fontSpecNone); } }
+        private FontSpec FONT_SPEC_NONE { get { return GetFontSpec(IonTypeExtension.GetTypeColor(null), ref _fontSpecNone); } }
         private FontSpec _fontSpecSelected;
         private FontSpec FONT_SPEC_SELECTED { get { return GetFontSpec(COLOR_SELECTED, ref _fontSpecSelected); } }
         // ReSharper restore InconsistentNaming
@@ -197,19 +213,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 var matchedIon = rmi.MatchedIons.First(IsVisibleIon);
 
-                Color color;
-                switch (matchedIon.IonType)
-                {
-                    default: color = COLOR_NONE; break;
-                    case IonType.a: color = COLOR_A; break;
-                    case IonType.x: color = COLOR_X; break;
-                    case IonType.b: color = COLOR_B; break;
-                    case IonType.y: color = COLOR_Y; break;
-                    case IonType.c: color = COLOR_C; break;
-                    case IonType.z: color = COLOR_Z; break;
-                    case IonType.custom: color = (rmi.Rank > 0) ? COLOR_OTHER_IONS : COLOR_NONE; break; // Small molecule fragments - only color if ranked
-                    case IonType.precursor: color = COLOR_PRECURSOR; break;
-                }
+                Color color = IonTypeExtension.GetTypeColor(matchedIon.IonType, rmi.Rank);
 
                 if (Invert)
                     color = InvertColor(color);

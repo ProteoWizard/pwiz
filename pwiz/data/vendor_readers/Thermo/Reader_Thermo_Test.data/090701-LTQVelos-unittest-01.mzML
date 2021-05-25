@@ -4559,7 +4559,7 @@
     <chromatogramList count="4" defaultDataProcessingRef="pwiz_Reader_Thermo_conversion">
       <chromatogram index="0" id="TIC" defaultArrayLength="99">
         <cvParam cvRef="MS" accession="MS:1000235" name="total ion current chromatogram" value=""/>
-        <binaryDataArrayList count="2">
+        <binaryDataArrayList count="3">
           <binaryDataArray encodedLength="544">
             <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
@@ -4571,6 +4571,12 @@
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1000515" name="intensity array" value="" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
             <binary>eJwBjAFz/t9baEs/LCJLJ4C6SWe+CkmgJstH2EhFSZ2zFEpWdENLi3pMS4UPPUkU3npIc//gR12kUUicvOdJPsJwS2s4d0uWlGlIRUTpR2AJOEcinTBIWo4FSv0Fwkuh27BLEQZDSLxwiEfDdrZFguoSR0OGzEl4pzNLFgI4S+Ut0keqT6NGNap3RRFlmEa8jAxKh7MISwGJOksje2hHWltoRrcZOUV16h9GgPQcStavMEteTp1LjdQbR5zyg0cY2YlFe4xIRxM5AEoR7JJLxrpFSwJ4/kj6ahxHco9iRfq8jUaYM9tJrX90S7bEQku1RRhIzDjrRvH9GUZT5hRHx+s0SsZkfEvJa4dLc4/dR6iz+kVnjWRESsQARjok6klmUztLbqRfSzB5OUfpxSNHSQdARtNp5UZC6PxJBEGISw+jmEvjXH5I7nvWRQrIX0Wb8xlKUenLS0B8VEueMShIbnNVRjGJXERF9DdGKa76SXtTg0v7tftLRWFESJ6a1kaXBGlFeEj1RgER/0kzXMBL1TN8SybnqdA=</binary>
+          </binaryDataArray>
+          <binaryDataArray arrayLength="99" encodedLength="40">
+            <cvParam cvRef="MS" accession="MS:1000519" name="32-bit integer" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000786" name="non-standard data array" value="ms level" unitCvRef="UO" unitAccession="UO:0000186" unitName="dimensionless unit"/>
+            <binary>eJxjZGBgYIRiJiBmhtKMaHhUDrcctcwDAHnIAJo=</binary>
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>

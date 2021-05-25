@@ -53,11 +53,10 @@ namespace pwiz.SkylineTestData
             VerifyInstrumentInfo(testFilesDir.GetTestPath("051309_digestion" + ExtensionTestContext.ExtAbWiff),
                 "4000 QTRAP", "electrospray ionization", "quadrupole/quadrupole/axial ejection linear ion trap", "electron multiplier");
 
-            if (ExtensionTestContext.CanImportAbWiff2)
-            {
-                VerifyInstrumentInfo(testFilesDir.GetTestPath("OnyxTOFMS.wiff2"),
-                    "TripleTOF 5600", "electrospray ionization", "quadrupole/quadrupole/time-of-flight", "electron multiplier");
-            }
+            // Sciex .wiff2 file
+            string wiff2Ext = ExtensionTestContext.CanImportAbWiff2 ? ".wiff2" : "-sample-centroid.mzML";
+            VerifyInstrumentInfo(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.ABI, "swath.api" + wiff2Ext),
+                "X500R QTOF", "electrospray ionization", "quadrupole/quadrupole/time-of-flight", "electron multiplier");
 
             // MzWiff generated mzXML files
             VerifyInstrumentInfo(testFilesDir.GetTestPath("051309_digestion-s3.mzXML"),
@@ -96,6 +95,20 @@ namespace pwiz.SkylineTestData
             VerifyTicChromatogram(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.Waters, "MSe_Short.raw"), 2, 3286253);
             VerifyTicChromatogram(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.Waters, "HDMRM_Short_noLM.raw"), 0, 0);
             VerifyTicChromatogram(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.Waters, "HDDDA_Short_noLM.raw"), 1, 3692876);
+        }
+
+        [TestMethod]
+        public void TestScanDescription()
+        {
+            if (Skyline.Program.NoVendorReaders)
+                return;
+
+            string path = TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.Thermo, "IT-HCD-SPS.raw");
+
+            using (var msDataFile = new MsDataFileImpl(path))
+            {
+                Assert.AreEqual("sps", msDataFile.GetScanDescription(0));
+            }
         }
 
         [TestMethod]
@@ -164,7 +177,7 @@ namespace pwiz.SkylineTestData
             var testFilesDir = new TestFilesDir(TestContext, testZipPath);
 
             if (ExtensionTestContext.CanImportAbWiff2)
-                VerifySerialNumber(testFilesDir.GetTestPath("OnyxTOFMS.wiff2"), null); // WIFF2 file with empty serial number
+                VerifySerialNumber(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.ABI, "swath.api.wiff2"), "CI231606PT"); // WIFF2 file with empty serial number
 
             if (ExtensionTestContext.CanImportAbWiff)
                 VerifySerialNumber(testFilesDir.GetTestPath("051309_digestion.wiff"), "U016050603");

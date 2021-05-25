@@ -60,7 +60,9 @@ namespace pwiz.SkylineTestTutorial
         public void TestGroupedStudies1Tutorial()
         {
             // Set true to look at tutorial screenshots.
-            // IsPauseForScreenShots = true;
+//            IsPauseForScreenShots = true;
+//            IsCoverShotMode = true;
+            CoverShotName = "GroupedStudies";
 
             ForceMzml = true;   // Mzml is faster for this test.
 
@@ -275,7 +277,7 @@ namespace pwiz.SkylineTestTutorial
 
             PauseForScreenShot("Peak Areas graph", 12);
 
-            RunUI(() => SkylineWindow.NormalizeAreaGraphTo(AreaNormalizeToView.area_percent_view));
+            RunUI(() => SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.TOTAL));
 
             PauseForScreenShot("Peak Areas graph (normalized to total)", 13);
 
@@ -356,7 +358,7 @@ namespace pwiz.SkylineTestTutorial
             SelectNode(SrmDocument.Level.Molecules, 1);
             ActivateReplicate("D_196_REP3");
 
-            RunUI(() => SkylineWindow.NormalizeAreaGraphTo(AreaNormalizeToView.none));
+            RunUI(() => SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.NONE));
 
             PauseForScreenShot("Peak Areas graph", 21);
 
@@ -367,7 +369,7 @@ namespace pwiz.SkylineTestTutorial
 
             RunUI(() =>
             {
-                SkylineWindow.NormalizeAreaGraphTo(AreaNormalizeToView.area_percent_view);
+                SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.TOTAL);
                 SkylineWindow.AutoZoomBestPeak();
             });
 
@@ -579,7 +581,7 @@ namespace pwiz.SkylineTestTutorial
             // Ensure some settings, in case prior steps did not occur
             RunUI(() =>
             {
-                SkylineWindow.NormalizeAreaGraphTo(AreaNormalizeToView.area_percent_view);
+                SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.TOTAL);
                 SkylineWindow.ShowReplicateOrder(SummaryReplicateOrder.time);
             });
 
@@ -621,7 +623,7 @@ namespace pwiz.SkylineTestTutorial
 
             PauseForScreenShot("Chromatogram graph with interference", 31);
 
-            RunUI(() => SkylineWindow.NormalizeAreaGraphTo(AreaNormalizeToView.none));
+            RunUI(() => SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.NONE));
 
             SelectNode(SrmDocument.Level.MoleculeGroups, SkylineWindow.Document.PeptideGroupCount - 1);
             ActivateReplicate("D_102_REP1");
@@ -662,7 +664,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 SkylineWindow.ShowAllTransitions();
-                SkylineWindow.NormalizeAreaGraphTo(AreaNormalizeToView.area_percent_view);
+                SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.TOTAL);
             });
 
             PauseForScreenShot("Peak area graph for LGPLVEDQR normalized", 35);
@@ -677,7 +679,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 // Ensure these important settings are set
-                SkylineWindow.NormalizeAreaGraphTo(AreaNormalizeToView.area_percent_view);
+                SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.TOTAL);
                 SkylineWindow.SetIntegrateAll(true);    
                 SkylineWindow.ShowReplicateOrder(SummaryReplicateOrder.time);
             });
@@ -743,7 +745,7 @@ namespace pwiz.SkylineTestTutorial
 
                 RunUI(() =>
                 {
-                    SkylineWindow.NormalizeAreaGraphTo(AreaNormalizeToView.none);
+                    SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.NONE);
                     SkylineWindow.Size = new Size(1380, 744);
                 });
                 
@@ -778,7 +780,7 @@ namespace pwiz.SkylineTestTutorial
                 ChangePeakBounds("D_154_REP3", 23, 23.5);
                 }
 
-                RunUI(() => SkylineWindow.NormalizeAreaGraphTo(AreaNormalizeToView.area_percent_view));
+                RunUI(() => SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.TOTAL));
 
                 SelectPeptidesUpUntil("GMYESLPVVAVK");
 
@@ -871,7 +873,7 @@ namespace pwiz.SkylineTestTutorial
 
                 RunUI(() =>
                 {
-                    SkylineWindow.NormalizeAreaGraphTo(AreaNormalizeToView.none);
+                    SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.NONE);
                     SkylineWindow.ShowReplicateOrder(SummaryReplicateOrder.time);
                 });
 
@@ -1194,7 +1196,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 SkylineWindow.ShowTotalTransitions();
-                SkylineWindow.NormalizeAreaGraphTo(AreaNormalizeToView.area_global_standard_view);
+                SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.GLOBAL_STANDARDS);
                 SkylineWindow.GroupByReplicateAnnotation("SubjectId");
                 SkylineWindow.ShowCVValues(true);
             });
@@ -1353,17 +1355,18 @@ namespace pwiz.SkylineTestTutorial
             Assert.AreEqual(idendityAnnotation, groupComparison.IdentityAnnotation);
             RunUI(() => SkylineWindow.ShowGroupComparisonWindow(comparisonName));
             var foldChangeGrid = FindOpenForm<FoldChangeGrid>();
-            WaitForConditionUI(() => foldChangeGrid.DataboundGridControl.IsComplete &&
-                foldChangeGrid.DataboundGridControl.FindColumn(PropertyPath.Root.Property("FoldChangeResult")) != null);
+            var foldChangeGridControl = foldChangeGrid.DataboundGridControl;
+            WaitForConditionUI(() => foldChangeGridControl.IsComplete &&
+                foldChangeGridControl.FindColumn(PropertyPath.Root.Property("FoldChangeResult")) != null);
             RunUI(() =>
             {
                 var foldChangeResultColumn =
-                    foldChangeGrid.DataboundGridControl.FindColumn(PropertyPath.Root.Property("FoldChangeResult"));
-                foldChangeGrid.DataboundGridControl.DataGridView.AutoResizeColumn(foldChangeResultColumn.Index);
+                    foldChangeGridControl.FindColumn(PropertyPath.Root.Property("FoldChangeResult"));
+                foldChangeGridControl.DataGridView.AutoResizeColumn(foldChangeResultColumn.Index);
             });
-            WaitForConditionUI(() => 0 != foldChangeGrid.DataboundGridControl.RowCount,
+            WaitForConditionUI(() => 0 != foldChangeGridControl.RowCount,
                 "0 != foldChangeGrid.DataboundGridControl.RowCount");
-            WaitForConditionUI(() => foldChangeGrid.DataboundGridControl.IsComplete,
+            WaitForConditionUI(() => foldChangeGridControl.IsComplete,
                 "foldChangeGrid.DataboundGridControl.IsComplete");
             PauseForScreenShot<FoldChangeGrid>("Healthy v. Diseased:Grid", 65);
             RunUI(() =>
@@ -1371,11 +1374,14 @@ namespace pwiz.SkylineTestTutorial
                 foldChangeGrid.ShowGraph();
             });
             PauseForScreenShot<FoldChangeBarGraph>("Healthy v Diseased:Graph", 66);
-            var foldChangeGraph = FindOpenForm<FoldChangeBarGraph>();
-            RunUI(() =>
+            if (IsCoverShotMode)
             {
-                foldChangeGraph.Show(foldChangeGraph.DockPanel, DockState.Floating);
-            });
+                RestoreCoverViewOnScreen();
+                foldChangeGrid = WaitForOpenForm<FoldChangeGrid>();
+            }
+            var foldChangeGraph = WaitForOpenForm<FoldChangeBarGraph>();
+            if (!IsCoverShotMode)
+                RunUI(() => foldChangeGraph.Show(foldChangeGraph.DockPanel, DockState.Floating));
             RunUI(() =>
             {
                 var foldChangeResultColumn =
@@ -1404,6 +1410,37 @@ namespace pwiz.SkylineTestTutorial
             WaitForConditionUI(() => 11 == foldChangeGrid.DataboundGridControl.RowCount);
             RunUI(() => Assert.AreEqual(11, foldChangeGrid.DataboundGridControl.RowCount));
             PauseForScreenShot<FoldChangeBarGraph>("Right click on the graph and choose Copy", 67);
+
+            if (IsCoverShotMode)
+            {
+                RunUI(() =>
+                {
+                    Settings.Default.ChromatogramFontSize = 14;
+                    Settings.Default.AreaFontSize = 14;
+                    SkylineWindow.ChangeTextSize(TreeViewMS.LRG_TEXT_FACTOR);
+                    SkylineWindow.ShowPeakAreaLegend(false);
+                    SkylineWindow.ShowChromatogramLegends(false);
+                    SkylineWindow.ShowAllTransitions();
+                    SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.TOTAL);
+                    SkylineWindow.GroupByReplicateValue(null);
+                });
+                RunUI(SkylineWindow.AutoZoomBestPeak);
+                RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.PrevNode);
+                WaitForGraphs();
+                RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.NextNode);
+                WaitForGraphs();
+                RunUI(() =>
+                {
+                    ZoomYAxis(foldChangeGraph.ZedGraphControl, -6, 6);
+                    var gcFloatingWindow = foldChangeGraph.Parent.Parent;
+                    gcFloatingWindow.Top = SkylineWindow.Top + 5;
+                    gcFloatingWindow.Height = SkylineWindow.Height - 10;
+                    gcFloatingWindow.Left = SkylineWindow.Right - gcFloatingWindow.Width - 5;
+                });
+                TakeCoverShot();
+                return;
+            }
+
             WaitForConditionUI(() => foldChangeGrid.DataboundGridControl.IsComplete);
             var settingsForm = ShowDialog<EditGroupComparisonDlg>(foldChangeGrid.ShowChangeSettings);
             RunUI(() => settingsForm.ComboIdentityAnnotation.SelectedIndex = 0);
@@ -1435,6 +1472,7 @@ namespace pwiz.SkylineTestTutorial
             }
             WaitForConditionUI(() => 92 == foldChangeGrid.DataboundGridControl.RowCount);
             PauseForScreenShot<FoldChangeBarGraph>("Copy the graph", 68);
+
             RunUI(() =>
             {
                 foldChangeGrid.DataboundGridControl.DataGridView.SelectAll();

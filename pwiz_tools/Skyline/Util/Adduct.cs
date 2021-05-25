@@ -126,6 +126,28 @@ namespace pwiz.Skyline.Util
                     input = @"[" + input + @"]";
                 }
 
+                // Watch for strange construction from Agilent MP system e.g. (M+H)+ and (M+H)+[-H2O]
+                if (input.StartsWith(@"(") && input.Contains(@")") && input.Contains(@"M"))
+                {
+                    var parts = input.Split('['); // Break off water loss etc, if any
+                    if (parts.Length == 1 || input.IndexOf(')') < input.IndexOf('['))
+                    {
+                        var constructed = parts[0].Replace(@"(", @"[").Replace(@")", @"]");
+                        if (parts.Length > 1) // Deal with water loss etc
+                        {
+                            // Rearrange (M+H)+[-H2O] as [M-H2O+H]+
+                            var mod = parts[1].Split(']')[0]; // Trim end
+                            var mPos = input.IndexOf('M');
+                            constructed = constructed.Substring(0, mPos+1) + mod + constructed.Substring(mPos + 1);
+                        }
+                        if (TryParse(constructed, out _))
+                        {
+                            input = constructed; // Constructed string is parseable
+                        }
+                    }
+                }
+
+
                 // Check for implied positive ion mode - we see "MH", "MH+", "MNH4+" etc in the wild
                 // Also watch for for label-only like  "[M2Cl37]"
                 var posNext = input.IndexOf('M') + 1;
@@ -1104,6 +1126,7 @@ namespace pwiz.Skyline.Util
         };
 
         // All the adducts from http://fiehnlab.ucdavis.edu/staff/kind/Metabolomics/MS-Adduct-Calculator
+        // And a few more from XCMS public
         public static readonly string[] DEFACTO_STANDARD_ADDUCTS =
         {
             "[M+3H]",       
@@ -1145,7 +1168,9 @@ namespace pwiz.Skyline.Util
             "[M+Cl]",       
             "[M+K-2H]",     
             "[M+FA-H]",     
+            "[M+HCOO]", // Formate (synonym for deprotonated FA)  
             "[M+Hac-H]",    
+            "[M+CH3COO]", // Synonym for deprotonated Hac
             "[M+Br]",       
             "[M+TFA-H]",    
             "[2M-H]",       
@@ -1278,7 +1303,7 @@ namespace pwiz.Skyline.Util
                         {
                             resultDict[unlabeledSymbol] = unlabeledCount; // Number of remaining non-label atoms
                         }
-                        else if (unlabeledCount < 0) // Can't remove that which is not there
+                        else // Can't remove that which is not there
                         {
                             throw new InvalidOperationException(
                                 string.Format(Resources.Adduct_ApplyToMolecule_Adduct___0___calls_for_labeling_more__1__atoms_than_are_found_in_the_molecule__2_,

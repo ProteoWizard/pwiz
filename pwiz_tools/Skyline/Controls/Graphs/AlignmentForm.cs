@@ -568,6 +568,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public ComboBox ComboAlignAgainst { get { return comboAlignAgainst; } }
         public DataGridView DataGridView { get { return dataGridView1; } }
         public ZedGraphControl RegressionGraph { get { return zedGraphControl; } }
+        public SplitContainer Splitter { get { return splitContainer1; } }
 
         #endregion
     }

@@ -45,13 +45,17 @@ public enum class QuantitationMethod
     ITRAQ8plex,
     TMT2plex,
     TMT6plex,
-    TMT10plex
+    TMT10plex,
+    TMT11plex,
+    TMTpro16plex
 };
 
 
 public ref struct Embedder abstract
 {
 
+static property int MAX_ITRAQ_REPORTER_IONS { int get(); }
+static property int MAX_TMT_REPORTER_IONS { int get(); }
 
 ref struct QuantitationConfiguration
 {

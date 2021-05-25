@@ -144,7 +144,7 @@
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;labelMinIrt.Parent" xml:space="preserve">
-    <value>grpLinearEquation</value>
+    <value>grpRegressionEquation</value>
   </data>
   <data name="&gt;&gt;labelMinIrt.ZOrder" xml:space="preserve">
     <value>8</value>
@@ -171,7 +171,7 @@
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;labelMaxIrt.Parent" xml:space="preserve">
-    <value>grpLinearEquation</value>
+    <value>grpRegressionEquation</value>
   </data>
   <data name="&gt;&gt;labelMaxIrt.ZOrder" xml:space="preserve">
     <value>11</value>
@@ -195,7 +195,7 @@
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textMaxIrt.Parent" xml:space="preserve">
-    <value>grpLinearEquation</value>
+    <value>grpRegressionEquation</value>
   </data>
   <data name="&gt;&gt;textMaxIrt.ZOrder" xml:space="preserve">
     <value>10</value>
@@ -219,7 +219,7 @@
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textMinIrt.Parent" xml:space="preserve">
-    <value>grpLinearEquation</value>
+    <value>grpRegressionEquation</value>
   </data>
   <data name="&gt;&gt;textMinIrt.ZOrder" xml:space="preserve">
     <value>9</value>
@@ -319,7 +319,7 @@
     <value>True</value>
   </metadata>
   <data name="calibratePeptides.HeaderText" xml:space="preserve">
-    <value>修飾シークエンス</value>
+    <value>ターゲット</value>
   </data>
   <metadata name="calibrateMeasuredRt.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -346,7 +346,7 @@
     <value>gridViewCalibrate</value>
   </data>
   <data name="&gt;&gt;gridViewCalibrate.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline, Version=19.1.1.294, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;gridViewCalibrate.Parent" xml:space="preserve">
     <value>panelPeptides</value>
@@ -421,7 +421,7 @@
     <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboRegression.Parent" xml:space="preserve">
-    <value>grpLinearEquation</value>
+    <value>grpRegressionEquation</value>
   </data>
   <data name="&gt;&gt;comboRegression.ZOrder" xml:space="preserve">
     <value>7</value>
@@ -451,7 +451,7 @@
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnGraph.Parent" xml:space="preserve">
-    <value>grpLinearEquation</value>
+    <value>grpRegressionEquation</value>
   </data>
   <data name="&gt;&gt;btnGraph.ZOrder" xml:space="preserve">
     <value>6</value>
@@ -478,7 +478,7 @@
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;lblEquation.Parent" xml:space="preserve">
-    <value>grpLinearEquation</value>
+    <value>grpRegressionEquation</value>
   </data>
   <data name="&gt;&gt;lblEquation.ZOrder" xml:space="preserve">
     <value>0</value>
@@ -502,7 +502,7 @@
     <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboMaxPeptide.Parent" xml:space="preserve">
-    <value>grpLinearEquation</value>
+    <value>grpRegressionEquation</value>
   </data>
   <data name="&gt;&gt;comboMaxPeptide.ZOrder" xml:space="preserve">
     <value>1</value>
@@ -526,7 +526,7 @@
     <value>8</value>
   </data>
   <data name="labelMaxPeptide.Text" xml:space="preserve">
-    <value>最大固定ペプチド：</value>
+    <value>最大固定ペプチド数：</value>
   </data>
   <data name="&gt;&gt;labelMaxPeptide.Name" xml:space="preserve">
     <value>labelMaxPeptide</value>
@@ -535,7 +535,7 @@
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;labelMaxPeptide.Parent" xml:space="preserve">
-    <value>grpLinearEquation</value>
+    <value>grpRegressionEquation</value>
   </data>
   <data name="&gt;&gt;labelMaxPeptide.ZOrder" xml:space="preserve">
     <value>2</value>
@@ -559,7 +559,7 @@
     <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboMinPeptide.Parent" xml:space="preserve">
-    <value>grpLinearEquation</value>
+    <value>grpRegressionEquation</value>
   </data>
   <data name="&gt;&gt;comboMinPeptide.ZOrder" xml:space="preserve">
     <value>3</value>
@@ -580,7 +580,7 @@
     <value>6</value>
   </data>
   <data name="labelMinPeptide.Text" xml:space="preserve">
-    <value>最小固定ペプチド：</value>
+    <value>最小固定ペプチド数：</value>
   </data>
   <data name="&gt;&gt;labelMinPeptide.Name" xml:space="preserve">
     <value>labelMinPeptide</value>
@@ -589,7 +589,7 @@
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;labelMinPeptide.Parent" xml:space="preserve">
-    <value>grpLinearEquation</value>
+    <value>grpRegressionEquation</value>
   </data>
   <data name="&gt;&gt;labelMinPeptide.ZOrder" xml:space="preserve">
     <value>4</value>
@@ -610,7 +610,7 @@
     <value>0</value>
   </data>
   <data name="label4.Text" xml:space="preserve">
-    <value>計算：</value>
+    <value>計算元：</value>
   </data>
   <data name="&gt;&gt;label4.Name" xml:space="preserve">
     <value>label4</value>
@@ -619,39 +619,39 @@
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label4.Parent" xml:space="preserve">
-    <value>grpLinearEquation</value>
+    <value>grpRegressionEquation</value>
   </data>
   <data name="&gt;&gt;label4.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
-  <data name="grpLinearEquation.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="grpRegressionEquation.Location" type="System.Drawing.Point, System.Drawing">
     <value>8, 66</value>
   </data>
-  <data name="grpLinearEquation.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+  <data name="grpRegressionEquation.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
   </data>
-  <data name="grpLinearEquation.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+  <data name="grpRegressionEquation.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
   </data>
-  <data name="grpLinearEquation.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="grpRegressionEquation.Size" type="System.Drawing.Size, System.Drawing">
     <value>359, 194</value>
   </data>
-  <data name="grpLinearEquation.TabIndex" type="System.Int32, mscorlib">
+  <data name="grpRegressionEquation.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
   </data>
-  <data name="grpLinearEquation.Text" xml:space="preserve">
-    <value>線形方程式</value>
+  <data name="grpRegressionEquation.Text" xml:space="preserve">
+    <value>回帰式</value>
   </data>
-  <data name="&gt;&gt;grpLinearEquation.Name" xml:space="preserve">
-    <value>grpLinearEquation</value>
+  <data name="&gt;&gt;grpRegressionEquation.Name" xml:space="preserve">
+    <value>grpRegressionEquation</value>
   </data>
-  <data name="&gt;&gt;grpLinearEquation.Type" xml:space="preserve">
+  <data name="&gt;&gt;grpRegressionEquation.Type" xml:space="preserve">
     <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;grpLinearEquation.Parent" xml:space="preserve">
+  <data name="&gt;&gt;grpRegressionEquation.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;grpLinearEquation.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;grpRegressionEquation.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="label7.AutoSize" type="System.Boolean, mscorlib">
@@ -788,6 +788,12 @@
   </data>
   <data name="$this.Text" xml:space="preserve">
     <value>iRTカルキュレータを校正</value>
+  </data>
+  <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
+    <value>modeUIHandler</value>
+  </data>
+  <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;bindingSourceStandard.Name" xml:space="preserve">
     <value>bindingSourceStandard</value>

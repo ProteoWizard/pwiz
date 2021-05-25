@@ -446,6 +446,7 @@ namespace pwiz.Skyline.Model.Databinding
                 {
                     columnsToRemove.Add(PropertyPath.Root.Property("Name"));
                     columnsToRemove.Add(PropertyPath.Root.Property(nameof(Protein.AutoSelectPeptides)));
+                    columnsToRemove.Add(PropertyPath.Root.Property(nameof(Protein.ProteinSequenceCoverage)));
                     if (docHasOnlyCustomIons)
                     {
                         // Peptide-oriented fields that make no sense in a small molecule context
@@ -523,6 +524,8 @@ namespace pwiz.Skyline.Model.Databinding
                     columnsToRemove.Add(PropertyPath.Root.Property("ExplicitCompensationVoltage"));
                     columnsToRemove.Add(PropertyPath.Root.Property("PrecursorConcentration"));
                     columnsToRemove.Add(PropertyPath.Root.Property(nameof(Precursor.AutoSelectTransitions)));
+                    columnsToRemove.Add(PropertyPath.Root.Property(nameof(Precursor.TargetQualitativeIonRatio)));
+                    columnsToRemove.Add(PropertyPath.Root.Property(nameof(Precursor.LibraryIonMobility)));
                     addRoot = true;
                 }
                 else if (columnDescriptor.PropertyType == typeof(Entities.Transition))
@@ -598,6 +601,12 @@ namespace pwiz.Skyline.Model.Databinding
             if (rowType == typeof(Replicate))
             {
                 return PropertyPath.Root.Property("Files").LookupAllItems();
+            }
+
+            if (rowType == typeof(Protein))
+            {
+                return PropertyPath.Root.Property(nameof(Protein.Results)).LookupAllItems().Property("Value")
+                    .Property(nameof(Replicate.Files));
             }
             return PropertyPath.Root.Property("Results").LookupAllItems();
         }

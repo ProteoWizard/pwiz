@@ -10,6 +10,7 @@ using System.Text;
 using System.Windows.Forms;
 using System.Threading;
 using Microsoft.Win32;
+using seems;
 
 namespace JWC
 {
@@ -559,8 +560,9 @@ namespace JWC
 
 		public void AddFile(string filename)
 		{
-			string pathname = Path.GetFullPath(filename);
-			AddFile(pathname, ShortenPathname(pathname, MaxShortenPathLength));
+		    var msdataRunPath = new OpenDataSourceDialog.MSDataRunPath(filename);
+			msdataRunPath = new OpenDataSourceDialog.MSDataRunPath(Path.GetFullPath(msdataRunPath.Filepath), msdataRunPath.RunIndex);
+		    AddFile(msdataRunPath.ToString(), ShortenPathname(msdataRunPath.ToString(), MaxShortenPathLength));
 		}
 
 		public void AddFile(string filename, string entryname)
@@ -748,7 +750,14 @@ namespace JWC
 					{
 						string filename = (string)regKey.GetValue("File" + number.ToString());
 						if (filename != null)
-							AddFile(filename);
+					        try
+					        {
+					            AddFile(filename);
+					        }
+					        catch
+					        {
+					            //skip errors
+					        }
 					}
 
 					regKey.Close();

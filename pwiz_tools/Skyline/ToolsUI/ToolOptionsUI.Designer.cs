@@ -64,7 +64,6 @@ namespace pwiz.Skyline.ToolsUI
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOK = new System.Windows.Forms.Button();
             this.tbxPrositServer = new System.Windows.Forms.TextBox();
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.tabControl.SuspendLayout();
             this.tabPanorama.SuspendLayout();
             this.tabRemote.SuspendLayout();
@@ -339,7 +338,6 @@ namespace pwiz.Skyline.ToolsUI
             this.Name = "ToolOptionsUI";
             this.ShowInTaskbar = false;
             this.Shown += new System.EventHandler(this.ToolOptionsUI_Shown);
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             this.tabControl.ResumeLayout(false);
             this.tabPanorama.ResumeLayout(false);
             this.tabPanorama.PerformLayout();

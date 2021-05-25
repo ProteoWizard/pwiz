@@ -50,7 +50,11 @@ class PWIZ_API_DECL IterationListener
 
         UpdateMessage(size_t index, size_t count, const std::string& message = no_message)
         :   iterationIndex(index), iterationCount(count), message(message)
-        {}
+        {
+            // if iterationCount is set, iterationIndex should never exceed count-1
+            if (iterationCount > 0 && iterationIndex >= iterationCount)
+                iterationIndex = iterationCount - 1;
+        }
     };
 
     virtual Status update(const UpdateMessage& updateMessage) {return Status_Ok;}

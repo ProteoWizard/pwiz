@@ -83,6 +83,28 @@ namespace pwiz.SkylineTestFunctional
                     irtDlg1.CreateDatabase(databasePath);
                 });
 
+            RunUI(() =>
+            {
+                SetClipboardText(BuildStandardText(new[]
+                {
+                    BuildMeasuredPeptide("AAA", -10.00),
+                    BuildMeasuredPeptide("CCC", 0.00),
+                    BuildMeasuredPeptide("DDD", 10.00),
+                }, seq => seq.Substring(0, seq.Length - 1)));
+                irtDlg1.DoPasteStandard();
+            });
+            var calcToStandardDlg = ShowDialog<UseCurrentCalculatorDlg>(irtDlg1.AddStandard);
+            const string newStandardName = "testCalcToStandard";
+            RunUI(() => calcToStandardDlg.StandardNameText = newStandardName);
+            OkDialog(calcToStandardDlg, calcToStandardDlg.OkDialog);
+            RunUI(() =>
+            {
+                Assert.AreEqual(newStandardName, irtDlg1.IrtStandards.Name);
+                // set back to none and make sure standards are cleared
+                irtDlg1.IrtStandards = null;
+                Assert.IsFalse(irtDlg1.StandardPeptides.Any());
+            });
+
             /*
              * Check several error handling cases
              * Check the peptide choosing algorithm for sanity (correct # peptides)
@@ -1038,8 +1060,21 @@ namespace pwiz.SkylineTestFunctional
             {
                 irtCalc.CalcName = "Biognosys-10";
                 irtCalc.CreateDatabase(Path.Combine(testDir, "test.irtdb"));
+
+            });
+            // Test choosing an iRT standard with many rows before switching to a standard with fewer rows
+            RunUI(() =>
+            {
+                irtCalc.IrtStandards = IrtStandard.REPLICAL;
+                var standardPeptideCount = IrtStandard.REPLICAL.Peptides.Count;
+                var gridView = irtCalc.GridViewStandard;
+                Assert.AreEqual(standardPeptideCount, gridView.Rows.Count);
+                // Put the focus in the last row, and make sure nothing bad happens when we switch to a shorter
+                // iRT standard
+                irtCalc.GridViewStandard.CurrentCell = gridView.Rows[standardPeptideCount - 1].Cells[0];
                 irtCalc.IrtStandards = IrtStandard.BIOGNOSYS_10;
             });
+
             OkDialog(irtCalc, irtCalc.OkDialog);
             var addPeptides = ShowDialog<AddIrtStandardsToDocumentDlg>(peptideSettings.OkDialog);
             RunUI(() => addPeptides.NumTransitions = 3);

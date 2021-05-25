@@ -23,6 +23,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
@@ -620,6 +621,7 @@ namespace pwiz.Skyline.Model
 
             protected override void InsertItem(int index, PeptideSchedule item)
             {
+                // ReSharper disable once PossibleNullReferenceException
                 TransitionCount += item.TransitionCount;
                 base.InsertItem(index, item);
             }
@@ -632,6 +634,7 @@ namespace pwiz.Skyline.Model
 
             protected override void SetItem(int index, PeptideSchedule item)
             {
+                // ReSharper disable once PossibleNullReferenceException
                 TransitionCount += item.TransitionCount - this[index].TransitionCount;
                 base.SetItem(index, item);
             }
@@ -793,7 +796,7 @@ namespace pwiz.Skyline.Model
             double? explicitDP = ExplicitTransitionValues.Get(nodeTran).DeclusteringPotential;
             if (explicitDP.HasValue)
             {
-                return step == 0 ? explicitDP.Value : 0;  // No optimizing of explicit values
+                return explicitDP.Value;  // No optimizing of explicit values
             }
 
             var prediction = Document.Settings.TransitionSettings.Prediction;
@@ -819,9 +822,21 @@ namespace pwiz.Skyline.Model
             var tuneLevel = CompensationVoltageParameters.GetTuneLevel(OptimizeType);
             // Check for explicit value
             var cov = nodeGroup.ExplicitValues.CompensationVoltage;
+            // Check for CoV as an ion mobility parameter
+            if (!cov.HasValue)
+            {
+                var libKey = nodeGroup.GetLibKey(Document.Settings, nodePep);
+                var imInfo = Document.Settings.GetIonMobilities(new []{libKey}, null);
+                var im = imInfo.GetLibraryMeasuredIonMobilityAndCCS(libKey, nodeGroup.PrecursorMz, null);
+                if (im.IonMobility.Units == eIonMobilityUnits.compensation_V)
+                {
+                    cov = im.IonMobility.Mobility;
+                }
+            }
             if (cov.HasValue)
             {
-                // If optimizing use explicit value as center of optimization
+                // If optimizing use explicit CoV value, or appropriate ion mobility value, as center of optimization
+                // CONSIDER(bspratt) do we update either of these in light of a new optimized value?
                 var covPrediction = prediction.CompensationVoltage;
                 double stepSize;
                 switch (tuneLevel)

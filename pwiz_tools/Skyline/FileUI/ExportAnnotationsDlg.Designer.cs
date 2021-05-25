@@ -29,31 +29,22 @@
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ExportAnnotationsDlg));
-            this.listBoxElementTypes = new System.Windows.Forms.ListBox();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.lblChooseAnnotations = new System.Windows.Forms.Label();
             this.listBoxAnnotations = new System.Windows.Forms.ListBox();
             this.listBoxProperties = new System.Windows.Forms.ListBox();
             this.lblChooseProperties = new System.Windows.Forms.Label();
+            this.listBoxElementTypes = new System.Windows.Forms.ListBox();
             this.btnExport = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
             this.lblElementTypes = new System.Windows.Forms.Label();
             this.cbxRemoveBlankRows = new System.Windows.Forms.CheckBox();
             this.lblInstructions = new System.Windows.Forms.Label();
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
             this.SuspendLayout();
-            // 
-            // listBoxElementTypes
-            // 
-            this.listBoxElementTypes.FormattingEnabled = true;
-            resources.ApplyResources(this.listBoxElementTypes, "listBoxElementTypes");
-            this.listBoxElementTypes.Name = "listBoxElementTypes";
-            this.listBoxElementTypes.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended;
-            this.listBoxElementTypes.SelectedIndexChanged += new System.EventHandler(this.checkedListBoxElementTypes_SelectedIndexChanged);
             // 
             // splitContainer1
             // 
@@ -62,11 +53,13 @@
             // 
             // splitContainer1.Panel1
             // 
+            resources.ApplyResources(this.splitContainer1.Panel1, "splitContainer1.Panel1");
             this.splitContainer1.Panel1.Controls.Add(this.lblChooseAnnotations);
             this.splitContainer1.Panel1.Controls.Add(this.listBoxAnnotations);
             // 
             // splitContainer1.Panel2
             // 
+            resources.ApplyResources(this.splitContainer1.Panel2, "splitContainer1.Panel2");
             this.splitContainer1.Panel2.Controls.Add(this.listBoxProperties);
             this.splitContainer1.Panel2.Controls.Add(this.lblChooseProperties);
             // 
@@ -95,6 +88,14 @@
             // 
             resources.ApplyResources(this.lblChooseProperties, "lblChooseProperties");
             this.lblChooseProperties.Name = "lblChooseProperties";
+            // 
+            // listBoxElementTypes
+            // 
+            resources.ApplyResources(this.listBoxElementTypes, "listBoxElementTypes");
+            this.listBoxElementTypes.FormattingEnabled = true;
+            this.listBoxElementTypes.Name = "listBoxElementTypes";
+            this.listBoxElementTypes.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended;
+            this.listBoxElementTypes.SelectedIndexChanged += new System.EventHandler(this.checkedListBoxElementTypes_SelectedIndexChanged);
             // 
             // btnExport
             // 
@@ -142,7 +143,6 @@
             this.Name = "ExportAnnotationsDlg";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.Panel1.PerformLayout();
             this.splitContainer1.Panel2.ResumeLayout(false);

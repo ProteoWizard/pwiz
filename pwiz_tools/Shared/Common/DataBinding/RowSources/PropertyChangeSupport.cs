@@ -21,11 +21,13 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using pwiz.Common.Collections;
 
 namespace pwiz.Common.DataBinding.RowSources
 {
+    [SuppressMessage("ReSharper", "UnusedType.Global")]
     public class PropertyChangedSupport : INotifyPropertyChanged
     {
         private readonly object _sender;

@@ -103,6 +103,7 @@ build-project-if-exists msdata ;
 build-project-if-exists analysis ;
 build-project-if-exists proteome ;
 build-project-if-exists tradata ;
+build-project-if-exists timstof_prm_scheduler ;
 
 
 # build XDC documentation from source files
@@ -171,6 +172,7 @@ lib pwiz_bindings_cli
         $(bound_libs)
         <link>shared
         <linkflags>"/MACHINE:$(PLATFORM) /FIXED:No" # /KEYFILE:$(CLI_ROOT)/signature.snk"
+        <cxxflags>/permissive
         $(clr-requirement)
     : # default-build
     : # usage-requirements
@@ -193,6 +195,7 @@ lib pwiz_data_cli
         $(data_libs)
         <link>shared
         <linkflags>"/MACHINE:$(PLATFORM) /FIXED:No" # /KEYFILE:$(CLI_ROOT)/signature.snk"
+        <cxxflags>/permissive
         $(clr-requirement)
     : # default-build
     : # usage-requirements

@@ -22,7 +22,9 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading;
+using pwiz.Common.DataBinding.Clustering;
 using pwiz.Common.DataBinding.Layout;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.DataBinding.Internal
 {
@@ -33,10 +35,18 @@ namespace pwiz.Common.DataBinding.Internal
             var pivotedRows = Pivot(cancellationToken, results);
             var dataSchema = results.Parameters.ViewInfo.DataSchema;
             var transformedRows = Transform(cancellationToken, dataSchema, new TransformResults(null, null, pivotedRows), results.Parameters.TransformStack);
+            if (null != results.Parameters.ClusteringSpec)
+            {
+                var clusteredResults = Clusterer.PerformClustering(new ProgressHandler(cancellationToken), results.Parameters.ClusteringSpec, transformedRows.PivotedRows);
+                if (clusteredResults != null)
+                {
+                    transformedRows = new TransformResults(transformedRows.Parent, transformedRows.RowTransform, clusteredResults);
+                }
+            }
             return results.ChangeTransformResults(transformedRows);
         }
 
-        protected PivotedRows Pivot(CancellationToken cancellationToken, QueryResults results)
+        protected ReportResults Pivot(CancellationToken cancellationToken, QueryResults results)
         {
             var pivoter = new Pivoter(results.Parameters.ViewInfo);
             return pivoter.ExpandAndPivot(cancellationToken, results.SourceRows);
@@ -57,7 +67,7 @@ namespace pwiz.Common.DataBinding.Internal
             var filter = transformStack.CurrentTransform as RowFilter;
             if (filter != null)
             {
-                var filteredRows = new PivotedRows(Filter(cancellationToken, dataSchema, filter, input.PivotedRows),
+                var filteredRows = new ReportResults(Filter(cancellationToken, dataSchema, filter, input.PivotedRows),
                     input.PivotedRows.ItemProperties);
                 filteredRows = Sort(cancellationToken, dataSchema, filter, filteredRows);
                 return new TransformResults(input, filter, filteredRows);
@@ -71,7 +81,7 @@ namespace pwiz.Common.DataBinding.Internal
             return input;
         }
 
-        protected IEnumerable<RowItem> Filter(CancellationToken cancellationToken, DataSchema dataSchema, RowFilter filter, PivotedRows pivotedRows)
+        protected IEnumerable<RowItem> Filter(CancellationToken cancellationToken, DataSchema dataSchema, RowFilter filter, ReportResults pivotedRows)
         {
             if (filter.IsEmptyFilter)
             {
@@ -151,8 +161,8 @@ namespace pwiz.Common.DataBinding.Internal
             return filteredRows;
         }
 
-        protected PivotedRows Sort(CancellationToken cancellationToken, DataSchema dataSchema, RowFilter rowFilter,
-            PivotedRows pivotedRows)
+        protected ReportResults Sort(CancellationToken cancellationToken, DataSchema dataSchema, RowFilter rowFilter,
+            ReportResults pivotedRows)
         {
             if (rowFilter.ColumnSorts.Count == 0)
             {
@@ -166,7 +176,7 @@ namespace pwiz.Common.DataBinding.Internal
             return pivotedRows.ChangeRowItems(Sort(cancellationToken, dataSchema, sortDescriptions, pivotedRows));
         }
 
-        protected IEnumerable<RowItem> Sort(CancellationToken cancellationToken, DataSchema dataSchema, ListSortDescriptionCollection sortDescriptions, PivotedRows pivotedRows)
+        protected IEnumerable<RowItem> Sort(CancellationToken cancellationToken, DataSchema dataSchema, ListSortDescriptionCollection sortDescriptions, ReportResults pivotedRows)
         {
             var unsortedRows = pivotedRows.RowItems;
             if (sortDescriptions == null || sortDescriptions.Count == 0)

@@ -1,0 +1,48 @@
+#
+# $Id$
+#
+#
+# Original author: Darren Kessner <darren@proteowizard.org>
+#
+# Copyright 2008 Spielberg Family Center for Applied Proteomics
+#   Cedars-Sinai Medical Center, Los Angeles, California  90048
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); 
+# you may not use this file except in compliance with the License. 
+# You may obtain a copy of the License at 
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software 
+# distributed under the License is distributed on an "AS IS" BASIS, 
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+# See the License for the specific language governing permissions and 
+# limitations under the License.
+#
+
+
+project
+    : requirements 
+        <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
+    ;
+
+
+lib pwiz_analysis_diaumpire
+    : # sources  
+        DiaUmpire.cpp
+        IsotopePatternMap.cpp
+    : # requirements
+        <library>../../data/msdata//pwiz_data_msdata
+        <library>$(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers//pwiz_data_vendor_readers
+    : # default-build
+    : # usage-requirements
+        <library>../../data/msdata//pwiz_data_msdata
+        <library>$(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers//pwiz_data_vendor_readers
+    ;
+
+
+# Special run targets for tests with data files.
+# We pass in single input file, to which bjam prepends the full path from current
+# Jamfile directory.  The test program can then locate its data files.
+
+exe DiaUmpire : DiaUmpireTest.cpp pwiz_analysis_diaumpire ;

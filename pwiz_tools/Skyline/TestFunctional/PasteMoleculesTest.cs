@@ -29,6 +29,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
@@ -110,6 +111,7 @@ namespace pwiz.SkylineTestFunctional
         {
             var docEmpty = NewDocument();
 
+            TestInconsistentMoleculeDescriptions();
             TestProductNeutralLoss();
             TestUnsortedMzPrecursors();
             TestNameCollisions();
@@ -300,7 +302,7 @@ namespace pwiz.SkylineTestFunctional
                 var transitionGroup = testTransitionGroups[0];
                 var precursor = docTest.Molecules.First();
                 var product = transitionGroup.Transitions.First();
-                Assert.AreEqual(explicitCE, product.ExplicitValues.CollisionEnergy);
+                Assert.AreEqual(explicitCE, product.ExplicitValues.CollisionEnergy?? transitionGroup.ExplicitValues.CollisionEnergy);
                 Assert.AreEqual(expectedIM, transitionGroup.ExplicitValues.IonMobility);
                 Assert.AreEqual(expectedTypeIM, transitionGroup.ExplicitValues.IonMobilityUnits);
                 Assert.AreEqual(precursorCCS, transitionGroup.ExplicitValues.CollisionalCrossSectionSqA);
@@ -340,7 +342,10 @@ namespace pwiz.SkylineTestFunctional
                 TestTransitionListOutput(docTest, "PasteMoleculeTinyTest.csv", "PasteMoleculeTinyTestExpected.csv", ExportFileType.IsolationList);
                 // Does serialization of imported values work properly?
                 AssertEx.Serializable(docTest);
-                
+
+                // Verify that this text can be imported as a file with File > Import > Transition List
+                TestFileImportTransitionList(line1);
+
             }
             // Reset
             var docOrig = NewDocument();
@@ -708,9 +713,10 @@ namespace pwiz.SkylineTestFunctional
                 // Simulate user editing the precursor in the document grid, also check for molecule IDs
                 EnableDocumentGridColumns(documentGrid, Resources.SkylineViewContext_GetDocumentGridRowSources_Precursors, 16, new[] {
                     "Proteins!*.Peptides!*.Precursors!*.ExplicitIonMobility",
+                    "Proteins!*.Peptides!*.Precursors!*.PrecursorExplicitCollisionEnergy",
                     "Proteins!*.Peptides!*.Precursors!*.Transitions!*.ExplicitIonMobilityHighEnergyOffset",
                     "Proteins!*.Peptides!*.Precursors!*.ExplicitCollisionalCrossSection",
-                    "Proteins!*.Peptides!*.Precursors!*.Transitions!*.ExplicitCollisionEnergy",
+                    "Proteins!*.Peptides!*.Precursors!*.Transitions!*.ExplicitCollisionEnergy", // Overrides Precursors!*.ExplicitCollisionEnergy
                     "Proteins!*.Peptides!*.Precursors!*.Transitions!*.ExplicitDeclusteringPotential",
                     "Proteins!*.Peptides!*.Precursors!*.ExplicitCompensationVoltage",
                     "Proteins!*.Peptides!*.InChiKey",
@@ -718,13 +724,19 @@ namespace pwiz.SkylineTestFunctional
                     "Proteins!*.Peptides!*.HMDB",
                     "Proteins!*.Peptides!*.SMILES",
                     "Proteins!*.Peptides!*.CAS",
-                    "Proteins!*.Peptides!*.KEGG"});
-
+                    "Proteins!*.Peptides!*.KEGG"}, null, 32);
                 const double explicitCE2= 123.45;
                 var colCE = FindDocumentGridColumn(documentGrid, "ExplicitCollisionEnergy");
                 RunUI(() => documentGrid.DataGridView.Rows[0].Cells[colCE.Index].Value = explicitCE2);
                 WaitForCondition(() => (SkylineWindow.Document.MoleculeTransitionGroups.Any() &&
                   SkylineWindow.Document.MoleculeTransitions.First().ExplicitValues.CollisionEnergy.Equals(explicitCE2)));
+
+                const double explicitPrecursorCE = 234.567;
+                var colPCE = FindDocumentGridColumn(documentGrid, "Precursor.PrecursorExplicitCollisionEnergy");
+                RunUI(() => documentGrid.DataGridView.Rows[0].Cells[colPCE.Index].Value = explicitPrecursorCE);
+                WaitForCondition(() => SkylineWindow.Document.MoleculeTransitionGroups.Any(tg => tg.ExplicitValues.CollisionEnergy.Equals(explicitPrecursorCE)));
+                // Expect the next line, which depicts a sibling transition, to share this precursor value
+                WaitForCondition(() => Equals(explicitPrecursorCE, documentGrid.DataGridView.Rows[1].Cells[colPCE.Index].Value));
 
                 const double explicitDP = 12.345;
                 var colDP = FindDocumentGridColumn(documentGrid, "ExplicitDeclusteringPotential");
@@ -785,8 +797,9 @@ namespace pwiz.SkylineTestFunctional
             var reportedKEGG = string.Empty;
             RunUI(() => reportedKEGG = documentGrid.DataGridView.Rows[0].Cells[colKEGG.Index].Value.ToString());
             Assume.AreEqual(caffeineKEGG, reportedKEGG, "unexpected molecule kegg");
+            // PauseTest(); // Pretty pictures!
 
-                // And clean up after ourselves
+            // And clean up after ourselves
             RunUI(() => documentGrid.Close());
             NewDocument();
             RunUI(() => Settings.Default.CustomMoleculeTransitionInsertColumnsList = saveColumnOrder);
@@ -1300,8 +1313,11 @@ namespace pwiz.SkylineTestFunctional
                 "Molecule List Name,Molecule,Label Type,Precursor m/z,Precursor Charge,Product m/z,Product Charge,Explicit Collision Energy,Explicit Retention Time\n" +
                 "ThompsonIS,Apain,light,452,1,384,1,20,1\n" +
                 "ThompsonIS,Apain,light,452,1,188,1,25,1\n" +
-                "ThompsonIS,Apain,heavy,455,1,387,1,20,1\n" +
-                "ThompsonIS,Apain,heavy,455,1,191,1,25,1\n";
+                "ThompsonIS,Apain,light,452,1,160,1,,1\n" + // No explicit CE
+                "ThompsonIS,Apain,light,452,1,140,1,20,1\n" + // Same explicit CE as first
+                "ThompsonIS,Apain,heavy,455,1,387,1,21,1\n" +
+                "ThompsonIS,Apain,heavy,455,1,191,1,26,1\n" +
+                "ThompsonIS,Bpain,light,567,1,,,35,1\n"; // Precursor-only explicit CE
             SetClipboardText(precursorsTransitionList);
 
             // Paste directly into targets area
@@ -1309,54 +1325,143 @@ namespace pwiz.SkylineTestFunctional
 
             var pastedDoc = WaitForDocumentChange(docOrig);
             Assume.AreEqual(1, pastedDoc.MoleculeGroupCount);
-            Assume.AreEqual(1, pastedDoc.MoleculeCount);
+            AssertEx.AreEqual(2, pastedDoc.MoleculeCount);
+            var molecules = pastedDoc.Molecules.ToArray();
             var precursors = pastedDoc.MoleculeTransitionGroups.ToArray();
             Assume.IsTrue(!precursors[0].PrecursorAdduct.HasIsotopeLabels);
             Assume.IsTrue(precursors[1].PrecursorAdduct.HasIsotopeLabels);
+            AssertEx.AreEqual(20, precursors[0].ExplicitValues.CollisionEnergy); // First-seen CE is taken as default for transition group
+            AssertEx.AreEqual(21, precursors[1].ExplicitValues.CollisionEnergy);
+            AssertEx.AreEqual(35, precursors[2].ExplicitValues.CollisionEnergy);
             var transitions = pastedDoc.MoleculeTransitions.ToArray();
-            Assume.AreEqual(2, transitions.Count(t => t.ExplicitValues.CollisionEnergy == 20));
-            Assume.AreEqual(2, transitions.Count(t => t.ExplicitValues.CollisionEnergy == 25));
+
+            // Apain light
+            AssertEx.IsFalse(transitions[0].ExplicitValues.CollisionEnergy.HasValue); // Should pull from precursor explicit CE
+            AssertEx.AreEqual(20, pastedDoc.GetCollisionEnergy(molecules[0], precursors[0], transitions[0], 0));
+            AssertEx.AreEqual(25, pastedDoc.GetCollisionEnergy(molecules[0], precursors[0], transitions[1], 0));
+            AssertEx.IsFalse(transitions[2].ExplicitValues.CollisionEnergy.HasValue); // Should pull from precursor explicit CE
+            int stepsize = 1;
+            AssertEx.AreEqual(20 + stepsize, pastedDoc.GetCollisionEnergy(molecules[0], precursors[0], transitions[2], stepsize));
+            AssertEx.IsFalse(transitions[3].ExplicitValues.CollisionEnergy.HasValue); // Should pull from precursor explicit CE
+            stepsize++;
+            AssertEx.AreEqual(20 + stepsize, pastedDoc.GetCollisionEnergy(molecules[0], precursors[0], transitions[3], stepsize));
+
+            // Apain heavy
+            AssertEx.IsFalse(transitions[4].ExplicitValues.CollisionEnergy.HasValue); // Should pull from precursor explicit CE
+            AssertEx.AreEqual(21, pastedDoc.GetCollisionEnergy(molecules[0], precursors[1], transitions[4], 0));
+            AssertEx.AreEqual(26, pastedDoc.GetCollisionEnergy(molecules[0], precursors[1], transitions[5], 0));
+
+            // Bpain
+            AssertEx.IsFalse(transitions[6].ExplicitValues.CollisionEnergy.HasValue); // Should pull from precursor explicit CE
+            AssertEx.AreEqual(35, pastedDoc.GetCollisionEnergy(molecules[1], precursors[2], transitions[6], 0));
+
+
             TestTransitionListOutput(pastedDoc, "per_trans.csv", "per_trans_expected.csv", ExportFileType.List);
             
 
             docOrig = NewDocument();
             const string precursorsTransitionListHEOffset =
-                "Precursor Name,Precursor Formula,Precursor Adduct,Precursor charge,Explicit Retention Time,Collisional Cross Section (Sq A),Product m/z,product charge,explicit ion mobility High energy Offset\n" +
-                "Sulfamethizole,C9H10N4O2S2,[M+H],1,1.85,157.7,,,\n" +
-                "Sulfamethizole,C9H10N4O2S2,[M+H],1,1.85,157.7,156.0112,1,0.5\n" +
-                "Sulfamethizole,C9H10N4O2S2,[M+H],1,1.85,157.7,92.0498,1,0.51\n" +
-                "Sulfamethizole,C9H10N4O2S2,[M+Na],1,1.85,173.43,,,\n" +
-                "Sulfamethazine,C12H14N4O2S,[M+H],1,2.01,163.56,,,\n" +
-                "Sulfamethazine,C12H14N4O2S,[M+H],1,2.01,,186.0336,1,0.2\n" +
-                "Sulfamethazine,C12H14N4O2S,[M+H],1,2.01,,124.0873,1,0.21\n" +
-                "Sulfamethazine,C12H14N4O2S,[M+Na],1,2.01,172.47,,,\n" +
-                "Sulfachloropyridazine,C10H9ClN4O2S,[M+H],1,2.51,161.23,,,\n" +
-                "Sulfachloropyridazine,C10H9ClN4O2S,[M+H],1,2.51,161.23,156.011,1,0.1\n" +
-                "Sulfachloropyridazine,C10H9ClN4O2S,[M+H],1,2.51,161.23,92.0495,1,0.11\n" +
-                "Sulfachloropyridazine,C10H9ClN4O2S,[M+Na],1,2.51,171.16,,,\n" +
-                "Sulfadimethoxine,C12H14N4O4S,[M+H],1,3.68,170.01,,,\n" +
-                "Sulfadimethoxine,C12H14N4O4S,[M+H],1,3.68,170.01,156.077,1,0.3\n" +
-                "Sulfadimethoxine,C12H14N4O4S,[M+H],1,3.68,170.01,108.0445,1,0.31\n" +
-                "Sulfadimethoxine,C12H14N4O4S,[M+Na],1,3.68,177.96,,,\n";
+                "Precursor Name,Precursor Formula,Precursor Adduct,Precursor charge,Explicit Retention Time,Collisional Cross Section (Sq A),Product m/z,product charge,explicit ion mobility High energy Offset,Explicit Collision Energy\n" +
+                "Sulfamethizole,C9H10N4O2S2,[M+H],1,1.85,157.7,,,,1\n" +
+                "Sulfamethizole,C9H10N4O2S2,[M+H],1,1.85,157.7,156.0112,1,0.5,1\n" +
+                "Sulfamethizole,C9H10N4O2S2,[M+H],1,1.85,157.7,92.0498,1,0.51,1\n" +
+                "Sulfamethizole,C9H10N4O2S2,[M+Na],1,1.85,173.43,,,,2\n" +
+                "Sulfamethazine,C12H14N4O2S,[M+H],1,2.01,163.56,,,,1\n" +
+                "Sulfamethazine,C12H14N4O2S,[M+H],1,2.01,,186.0336,1,0.2,1\n" +
+                "Sulfamethazine,C12H14N4O2S,[M+H],1,2.01,,124.0873,1,0.21,1\n" +
+                "Sulfamethazine,C12H14N4O2S,[M+Na],1,2.01,172.47,,,,2\n" +
+                "Sulfachloropyridazine,C10H9ClN4O2S,[M+H],1,2.51,161.23,,,,1\n" +
+                "Sulfachloropyridazine,C10H9ClN4O2S,[M+H],1,2.51,161.23,156.011,1,0.1,2\n" +
+                "Sulfachloropyridazine,C10H9ClN4O2S,[M+H],1,2.51,161.23,92.0495,1,0.11,3\n" +
+                "Sulfachloropyridazine,C10H9ClN4O2S,[M+Na],1,2.51,171.16,,,,\n" +
+                "Sulfadimethoxine,C12H14N4O4S,[M+H],1,3.68,170.01,,,,\n" +
+                "Sulfadimethoxine,C12H14N4O4S,[M+H],1,3.68,170.01,156.077,1,0.3,1\n" +
+                "Sulfadimethoxine,C12H14N4O4S,[M+H],1,3.68,170.01,108.0445,1,0.31,1\n" +
+                "Sulfadimethoxine,C12H14N4O4S,[M+Na],1,3.68,177.96,,,,\n";
             SetClipboardText(precursorsTransitionListHEOffset);
 
             // Paste directly into targets area
             RunUI(() => SkylineWindow.Paste());
 
             pastedDoc = WaitForDocumentChange(docOrig);
-            Assume.AreEqual(1, pastedDoc.MoleculeGroupCount);
-            Assume.AreEqual(4, pastedDoc.MoleculeCount);
-            precursors = pastedDoc.MoleculeTransitionGroups.ToArray();
-            Assume.AreEqual(8, precursors.Length);
-            transitions = pastedDoc.MoleculeTransitions.ToArray();
-            Assume.AreEqual(1, transitions.Count(t => t.ExplicitValues.IonMobilityHighEnergyOffset == 0.5));
-            Assume.AreEqual(1, transitions.Count(t => t.ExplicitValues.IonMobilityHighEnergyOffset == 0.51));
-            Assume.AreEqual(1, transitions.Count(t => t.ExplicitValues.IonMobilityHighEnergyOffset == 0.2));
-            Assume.AreEqual(1, transitions.Count(t => t.ExplicitValues.IonMobilityHighEnergyOffset == 0.21));
-            Assume.AreEqual(1, transitions.Count(t => t.ExplicitValues.IonMobilityHighEnergyOffset == 0.1));
-            Assume.AreEqual(1, transitions.Count(t => t.ExplicitValues.IonMobilityHighEnergyOffset == 0.11));
-            Assume.AreEqual(1, transitions.Count(t => t.ExplicitValues.IonMobilityHighEnergyOffset == 0.3));
-            Assume.AreEqual(1, transitions.Count(t => t.ExplicitValues.IonMobilityHighEnergyOffset == 0.31));
+
+            for (var roundtrips = 0; roundtrips < 2; roundtrips++)
+            {
+                Assume.AreEqual(1, pastedDoc.MoleculeGroupCount);
+                Assume.AreEqual(4, pastedDoc.MoleculeCount);
+                precursors = pastedDoc.MoleculeTransitionGroups.ToArray();
+                Assume.AreEqual(8, precursors.Length);
+                transitions = pastedDoc.MoleculeTransitions.ToArray();
+                Assume.AreEqual(1, transitions.Count(t => t.ExplicitValues.IonMobilityHighEnergyOffset == 0.5));
+                Assume.AreEqual(1, transitions.Count(t => t.ExplicitValues.IonMobilityHighEnergyOffset == 0.51));
+                Assume.AreEqual(1, transitions.Count(t => t.ExplicitValues.IonMobilityHighEnergyOffset == 0.2));
+                Assume.AreEqual(1, transitions.Count(t => t.ExplicitValues.IonMobilityHighEnergyOffset == 0.21));
+                Assume.AreEqual(1, transitions.Count(t => t.ExplicitValues.IonMobilityHighEnergyOffset == 0.1));
+                Assume.AreEqual(1, transitions.Count(t => t.ExplicitValues.IonMobilityHighEnergyOffset == 0.11));
+                Assume.AreEqual(1, transitions.Count(t => t.ExplicitValues.IonMobilityHighEnergyOffset == 0.3));
+                Assume.AreEqual(1, transitions.Count(t => t.ExplicitValues.IonMobilityHighEnergyOffset == 0.31));
+
+                // Testing explicit CE behavior
+                foreach (var precursor in pastedDoc.MoleculeTransitionGroups)
+                {
+                    switch (precursor.Peptide.Target.DisplayName)
+                    {
+                        case "Sulfamethizole":
+                        {
+                            // Sulfamethizole[M+H] all set to 1, should be stored at transition group level
+                            // Sulfamethizole[M+Na] all set to 2, should be stored at transition group level
+                            var expectedPrecursorExplicitCE = precursor.PrecursorAdduct.Equals(Adduct.M_PLUS_H) ? 1 : 2;
+                            AssertEx.AreEqual(expectedPrecursorExplicitCE, precursor.ExplicitValues.CollisionEnergy);
+                            AssertEx.IsTrue(precursor.Transitions.All(t => !t.ExplicitValues.CollisionEnergy.HasValue));
+                            break;
+                        }
+                        case "Sulfachloropyridazine":
+                        {
+                            // Sulfachloropyridazine[M+H] all set differently, all but first should be stored at transition level
+                            // Sulfachloropyridazine[M+Na] no value set
+                            var expectedPrecursorExplicitCE = precursor.PrecursorAdduct.Equals(Adduct.M_PLUS_H) ? 1 : (double?)null;
+                            AssertEx.AreEqual(expectedPrecursorExplicitCE, precursor.ExplicitValues.CollisionEnergy);
+                            foreach (var transition in precursor.Transitions)
+                            {
+                                if (expectedPrecursorExplicitCE == null)
+                                {
+                                    AssertEx.IsFalse(transition.ExplicitValues.CollisionEnergy.HasValue); // First-seen sets the default precursor value
+                                    break;
+                                }
+                                else if (expectedPrecursorExplicitCE == 1)
+                                {
+                                    AssertEx.IsFalse(transition.ExplicitValues.CollisionEnergy.HasValue); // First-seen sets the default precursor value
+                                }
+                                else
+                                {
+                                    AssertEx.AreEqual(expectedPrecursorExplicitCE, transition.ExplicitValues.CollisionEnergy.Value);
+                                }
+
+                                expectedPrecursorExplicitCE++;
+                            }
+                            break;
+                        }
+                        case "Sulfadimethoxine":
+                        {
+                            AssertEx.IsFalse(precursor.ExplicitValues.CollisionEnergy.HasValue);
+                            double? expectedCE = null;
+                            foreach (var transition in precursor.Transitions)
+                            {
+                                // Sulfadimethoxine[M+H] only two of three transitions have explicit values
+                                // Sulfadimethoxine[M+Na] has no explicit value
+                                AssertEx.AreEqual(expectedCE, transition.ExplicitValues.CollisionEnergy);
+                                if (precursor.PrecursorAdduct.Equals(Adduct.M_PLUS_H))
+                                {
+                                    expectedCE = 1;
+                                }
+                            }
+                            break;
+                        }
+                    }
+                }
+                // Test serialization of explicit values
+                pastedDoc = AssertEx.Serializable(pastedDoc, TestDirectoryName, SkylineVersion.CURRENT); 
+            }
             NewDocument();
 
         }
@@ -1493,5 +1598,51 @@ namespace pwiz.SkylineTestFunctional
             Assume.AreEqual(0, transitions.Count(t => !t.IsMs1));
             NewDocument();
         }
-    }  
+
+        private void TestInconsistentMoleculeDescriptions()
+        {
+            // Check that we handle items with same name but different InChiKey, which is legitimate
+            var input =
+                "Molecule List Name, Precursor Name,Precursor Formula, Precursor Adduct,Precursor Charge, Product m/z,Product Charge, Explicit Retention Time, Explicit Collision Energy, InChiKey, Explicit Declustering potential\n" +
+                "bob,D-Erythrose 4-phosphate,C4H9O7P,[M-H],-1,97,-1,,8,NGHMDNPXVRFFGS-IUYQGCFVSA-N,60\n" +
+                "bob,D-Erythrose 4-phosphate,C4H9O7P,[M+H],1,99,1,,8,,60\n";
+            var docOrig = NewDocument();
+            SetClipboardText(input);
+
+            // Paste directly into targets area
+            var errDlg = ShowDialog<MessageDlg>(() => SkylineWindow.Paste());
+            AssertEx.IsTrue(errDlg.Message.Contains(Resources.SmallMoleculeTransitionListReader_GetMoleculeTransitionGroup_Inconsistent_molecule_description));
+            OkDialog(errDlg, errDlg.OkDialog);
+        }
+
+        /// <summary>
+        /// Verify handling of small molecule transition lists in File>Import>TransitionLIst
+        /// </summary>
+        void TestFileImportTransitionList(string knownGood)
+        {
+            var filename = TestFilesDir.GetTestPath("known_good.csv");
+            var headers = Settings.Default.CustomMoleculeTransitionInsertColumnsList.Select(header => header.ToString()).ToArray();
+            var contents = string.Join("\t", 
+                               headers.Take(headers.Length-1)) + // Leave off the product neutral loss column
+                           Environment.NewLine + knownGood;
+            File.WriteAllText(filename, contents);
+            RunUI(() =>
+            {
+                SkylineWindow.NewDocument(true);
+                SkylineWindow.ImportMassList(filename);
+            });
+            WaitForCondition(() => 0 != SkylineWindow.Document.MoleculeCount);
+
+            // Now verify error handling
+            filename = TestFilesDir.GetTestPath("known_bad.csv");
+            File.WriteAllText(filename, @"foo"+contents);
+            RunUI(() =>
+            {
+                SkylineWindow.NewDocument(true);
+            });
+            var messageDlg = ShowDialog<ImportTransitionListErrorDlg>(() => SkylineWindow.ImportMassList(filename));
+            OkDialog(messageDlg, messageDlg.AcceptButton.PerformClick); // Acknowledge the error
+        }
+
+    }
 }

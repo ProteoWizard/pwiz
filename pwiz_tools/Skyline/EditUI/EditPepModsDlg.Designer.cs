@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(EditPepModsDlg));
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOk = new System.Windows.Forms.Button();
@@ -37,8 +38,11 @@
             this.comboHeavy1_1 = new System.Windows.Forms.ComboBox();
             this.labelAA1 = new System.Windows.Forms.Label();
             this.panelMain = new System.Windows.Forms.Panel();
+            this.btnEditLink1 = new System.Windows.Forms.Button();
+            this.imageList1 = new System.Windows.Forms.ImageList(this.components);
             this.btnReset = new System.Windows.Forms.Button();
             this.cbCreateCopy = new System.Windows.Forms.CheckBox();
+            this.toolTip = new System.Windows.Forms.ToolTip(this.components);
             this.panelMain.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -88,12 +92,26 @@
             // panelMain
             // 
             resources.ApplyResources(this.panelMain, "panelMain");
+            this.panelMain.Controls.Add(this.btnEditLink1);
             this.panelMain.Controls.Add(this.comboHeavy1_1);
             this.panelMain.Controls.Add(this.labelAA1);
             this.panelMain.Controls.Add(this.comboStatic1);
             this.panelMain.Controls.Add(this.label1);
             this.panelMain.Controls.Add(this.labelHeavy1);
             this.panelMain.Name = "panelMain";
+            // 
+            // btnEditLink1
+            // 
+            resources.ApplyResources(this.btnEditLink1, "btnEditLink1");
+            this.btnEditLink1.ImageList = this.imageList1;
+            this.btnEditLink1.Name = "btnEditLink1";
+            this.btnEditLink1.UseVisualStyleBackColor = true;
+            // 
+            // imageList1
+            // 
+            this.imageList1.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("imageList1.ImageStream")));
+            this.imageList1.TransparentColor = System.Drawing.Color.Magenta;
+            this.imageList1.Images.SetKeyName(0, "EditLink.bmp");
             // 
             // btnReset
             // 
@@ -142,5 +160,8 @@
         private System.Windows.Forms.Panel panelMain;
         private System.Windows.Forms.Button btnReset;
         private System.Windows.Forms.CheckBox cbCreateCopy;
+        private System.Windows.Forms.Button btnEditLink1;
+        private System.Windows.Forms.ImageList imageList1;
+        private System.Windows.Forms.ToolTip toolTip;
     }
 }

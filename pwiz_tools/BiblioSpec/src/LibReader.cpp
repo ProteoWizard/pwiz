@@ -36,6 +36,7 @@ LibReader::LibReader() :
     totalCount_(-1),
     curSpecId_(1),
     maxSpecId_(0),
+    enumSpectraStatement_(NULL),
     modPrecision_(-1)
 {
 }
@@ -49,6 +50,7 @@ LibReader::LibReader(const char* libName, int modPrecision) :
     totalCount_(-1),
     curSpecId_(1),
     maxSpecId_(0),
+    enumSpectraStatement_(NULL),
     modPrecision_(modPrecision)
 {
     strcpy(libraryName_, libName);
@@ -56,7 +58,13 @@ LibReader::LibReader(const char* libName, int modPrecision) :
 }
 
 
-LibReader::~LibReader() {sqlite3_close(db_);}
+LibReader::~LibReader()
+{
+    if (enumSpectraStatement_ != NULL)
+        sqlite3_finalize(enumSpectraStatement_);
+
+    sqlite3_close(db_);
+}
 
 void LibReader::initialize()
 {
@@ -67,6 +75,24 @@ void LibReader::initialize()
     }
 
     setMaxLibId();
+
+    if (enumSpectraStatement_ != NULL)
+        sqlite3_finalize(enumSpectraStatement_);
+
+    int rc = sqlite3_prepare(db_, "SELECT id, peptideSeq,precursorMZ, precursorCharge,"
+                                  "peptideModSeq,prevAA, nextAA, copies, numPeaks, peakMZ, "
+                                  "peakIntensity, retentionTime "
+                                  "FROM RefSpectra, RefSpectraPeaks "
+                                  "WHERE id=RefSpectraID "
+                                  "ORDER BY id",
+                             -1, &enumSpectraStatement_, 0);
+
+    if (rc != SQLITE_OK) {
+        string dbMsg = sqlite3_errmsg(db_);
+        Verbosity::debug("SQLITE error message: %s", dbMsg.c_str());
+        Verbosity::error("LibReader::initialize cannot prepare SQL statement for enumerating spectra from %s (%s)",
+                         libraryName_, dbMsg.c_str());
+    }
 }
 
 void LibReader::setMaxLibId(){
@@ -672,20 +698,39 @@ int LibReader::getAllRefSpec(vector<RefSpectrum*>& specs)
  * there was a spectrum to return, false if all have been fetched
  * already.
  */
-bool LibReader::getNextSpectrum(RefSpectrum& spec){
-    // keep trying spec ids until we find one or get to the end
-    while( curSpecId_ <= maxSpecId_  && !getRefSpec(curSpecId_, spec) ){
-        Verbosity::debug("Skipping spectrum %d.", curSpecId_);
-        curSpecId_++;
-    }
-
-    if( curSpecId_ > maxSpecId_ ){
+bool LibReader::getNextSpectrum(RefSpectrum& spec)
+{
+    bool done = false;
+    int rc = sqlite3_step(enumSpectraStatement_);
+    if (rc == SQLITE_DONE)
+    {
         Verbosity::debug("Returned the last spec from the library.");
-        return false;
+        done = true;
     }
+    else if (rc != SQLITE_ROW)
+        Verbosity::error("Fetching library spectra from %s.", libraryName_);
+
+    spec.setLibSpecID(sqlite3_column_int(enumSpectraStatement_, 0));
+    spec.setSeq(reinterpret_cast<const char*>(sqlite3_column_text(enumSpectraStatement_, 1)));
+    spec.setMz(sqlite3_column_double(enumSpectraStatement_, 2));
+    spec.setCharge(sqlite3_column_int(enumSpectraStatement_, 3));
+    spec.setMods(reinterpret_cast<const char*>(sqlite3_column_text(enumSpectraStatement_, 4)));
+    spec.setPrevAA("-");
+    spec.setNextAA("-");
+    spec.setCopies(sqlite3_column_int(enumSpectraStatement_, 7));
+    int numPeaks = sqlite3_column_int(enumSpectraStatement_, 8);
+
+    int numBytes1 = sqlite3_column_bytes(enumSpectraStatement_, 9);
+    Byte* comprM = (Byte*)sqlite3_column_blob(enumSpectraStatement_, 9);
+    int numBytes2 = sqlite3_column_bytes(enumSpectraStatement_, 10);
+    Byte* comprI = (Byte*)sqlite3_column_blob(enumSpectraStatement_, 10);
+
+    spec.setRetentionTime(sqlite3_column_double(enumSpectraStatement_, 11));
+
+    spec.setRawPeaks(getUncompressedPeaks(numPeaks, numBytes1, comprM, numBytes2, comprI));
+
     curSpecId_++;
-    
-    return true;
+    return !done;
 }
 
 

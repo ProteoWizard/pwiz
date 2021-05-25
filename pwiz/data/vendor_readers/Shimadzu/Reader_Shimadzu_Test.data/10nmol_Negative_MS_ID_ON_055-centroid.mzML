@@ -20,7 +20,7 @@
     <software id="Shimadzu_x0020_software" version="4.0">
       <cvParam cvRef="MS" accession="MS:1001557" name="Shimadzu Corporation software" value=""/>
     </software>
-    <software id="pwiz" version="3.0.19326">
+    <software id="pwiz" version="3.0.20134">
       <cvParam cvRef="MS" accession="MS:1000615" name="ProteoWizard software" value=""/>
     </software>
   </softwareList>
@@ -5316,11 +5316,11 @@
       <chromatogram index="0" id="TIC" defaultArrayLength="150">
         <cvParam cvRef="MS" accession="MS:1000235" name="total ion current chromatogram" value=""/>
         <binaryDataArrayList count="2">
-          <binaryDataArray encodedLength="616">
+          <binaryDataArray encodedLength="480">
             <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000595" name="time array" value="" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
-            <binary>eJwN0F+EFWEYx/G30h9T+qPJVuqcalVna21lSlv2fZ9HN2cvujnddDM33czN3pwu9mbPzYoRibEsOSuRWYkYkRgROSuRORIxIjEicVYisxLR9+418zy/z89jjDFemc545bhNBvOWtx0WBe/aToR7HN/demfaDYvrLmvfcsy4vBG7iTBxK/0+/1PX8zNmchcmA+YKRwizlWvGI+ZrByF5Y6vctp6QKdWCLyv9Q3Ijbwj5sla3pOdPSRAEgiWrXSthck38rC24Eo86Yr2bstEKhQ4SRZE04zkp067QR2arBTFmkZ07ODF7d7HusXsfL2F/CXOZjAe4fXIeYj8i6zF+St4TOjwl8xk9MnKf0+UF2S/pk5P/ik6vMd5gDDDeYrzDeI9RYHzA+IjxCaPE+IzxBeMrRoXxDeM7xg+MEcZPjF8YvzFqjD8YfzH+YRjN2ps0TDarV25R7qZRtE39bLuu1TuUG2oz3qnDYpf2/N3KPbVM92o82qdBsF+5rSaDA2q9MV3vHFTurLPVYd1oHdHV7lHl5mrMMYzjGCcwxjFOYpzCOI3RwjiDcRZjEmMK4xzGeYwLGAHGRYxLGJcxpjGuYFzFmMGwGE7/A+rH8/4=</binary>
+            <cvParam cvRef="MS" accession="MS:1000595" name="time array" value="" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
+            <binary>eJwNzlFEXXEcB/A/McYexojYw4gYe4hDRDrniDHuwxgj9jDGIXqIiLGHO0vKkqWkczcpSzZlljuzlClNNjs3TZOypGyuZullT3vb5+37/Xx/D78QQqgVpc5aUXRW8qZYjkMox5U8j6OoqhdxltVZSGrFpcRNkmUtSRRFCWIl1s0y1s/K8hAf1SdsOZtlC2yJVdkKW2dbrGC77IAdszo7Y3/ZPxbSKGpIs+xCWskvpn5IQ7jMrrBG1sSusmusmbWw6+wGa2URa2PtrIMlrIvdZLdYid1md9hd1s3usfvsActYD+tlfayfDbCH7BEry4/5E33QNsSG2Qh7ykbZGHvGxtkEm2RTbJrl7Dl7wWbYLJtjL9k8W2Cv2Gu2yJbYG/aWLbMqe8fesw9sha2yNfaRrbMNtsk+sS32mX1hX1nBttkO+8Z22Xe2x/bZAfvBDtkRO2Yn7Cf7xerslP1mf9gZO0//A2Tu8QM=</binary>
           </binaryDataArray>
           <binaryDataArray encodedLength="576">
             <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>

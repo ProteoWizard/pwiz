@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -53,13 +52,13 @@ namespace pwiz.SkylineTestFunctional
         }
 
         private PeptideSettingsUI PeptideSettingsUI { get; set; }
+        private bool ReportLibraryBuildFailures { get; set; }
 
         [TestMethod]
         public void TestLibraryBuild()
         {
             TestFilesZip = @"TestFunctional\LibraryBuildTest.zip";
-using (new Assume.DebugOnFail(Environment.MachineName.Contains("BSPRATT-UW3"))) // If any AsertEx or Assume fails on BSPRATT-UW3, invoke debugger instead of failing  TODO(bspratt) remove this once debugged
-                RunFunctionalTest();
+            RunFunctionalTest();
         }
 
         protected override void DoTest()
@@ -145,6 +144,27 @@ using (new Assume.DebugOnFail(Environment.MachineName.Contains("BSPRATT-UW3"))) 
             BuildLibraryError("no_such_file.pep.XML", null, "Failed to open");
             BuildLibraryError("missing_mzxml.pep.XML", null, "Could not find spectrum file");
 
+            // Test trying to build using an existing library (e.g. msp/sptxt)
+            EnsurePeptideSettings();
+            var buildLibAddDlg = ShowDialog<BuildLibraryDlg>(PeptideSettingsUI.ShowBuildLibraryDlg);
+            RunUI(() =>
+            {
+                buildLibAddDlg.LibraryName = "test_msp_lib";
+                buildLibAddDlg.OkWizardPage();
+            });
+            var mspPath = Path.Combine(TestFilesDir.GetTestPath("msp"), "aurum_consensus_final_true_lib.msp");
+            var askAddLibDlg = ShowDialog<MultiButtonMsgDlg>(() => buildLibAddDlg.AddInputFiles(new[] {mspPath}));
+            var addLibDlg = ShowDialog<EditLibraryDlg>(askAddLibDlg.BtnYesClick);
+            const string mspLibName = "aurum_consensus";
+            RunUI(() =>
+            {
+                Assert.AreEqual(mspPath, addLibDlg.LibraryPath);
+                addLibDlg.LibraryName = mspLibName;
+            });
+            OkDialog(addLibDlg, addLibDlg.OkDialog);
+            if (!TryWaitForConditionUI(() => PeptideSettingsUI.AvailableLibraries.Contains(mspLibName)))
+                AssertEx.Fail("Failed waiting for the library {0} in Peptide Settings", mspLibName);
+
             // Check for proper handling of labeled addducts in small molecule files 
             // (formerly this would throw on a null object, fixed with the use of ExplicitMods.EMPTY)
             BuildLibraryValid("heavy_adduct.ssl", true, false, false, 1);
@@ -220,6 +240,14 @@ using (new Assume.DebugOnFail(Environment.MachineName.Contains("BSPRATT-UW3"))) 
             };
             TestAddPaths(buildLibraryDlg, invalidTypes, true);
 
+            // Test AddPathsDlg (multiple library files)
+            string[] existingLibFiles =
+            {
+                Path.Combine(TestFilesDir.GetTestPath("msp"), "aurum_consensus_final_true_lib.msp"),
+                Path.Combine(TestFilesDir.GetTestPath("msp"), "human_b2mg_consensus_final_true_lib.msp")
+            };
+            TestAddPaths(buildLibraryDlg, existingLibFiles, true);
+            
             // Test AddPathsDlg (valid files)
             string[] goodPaths =
             {
@@ -420,6 +448,33 @@ using (new Assume.DebugOnFail(Environment.MachineName.Contains("BSPRATT-UW3"))) 
             RunUI(() => Assert.IsTrue(ReferenceEquals(editIrtDlg4.IrtStandards, IrtStandard.EMPTY)));
             OkDialog(editIrtDlg4, editIrtDlg4.CancelDialog);
 
+            // New document
+            var twoStandardLib = TestFilesDir.GetTestPath("two.blib");
+            docNew = new SrmDocument(SrmSettingsList.GetDefault());
+            RunUI(() => SkylineWindow.SwitchDocument(docNew, null));
+            // Build a library with "automatic" iRT and input file with two different standards.
+            BuildLibrary(TestFilesDir.GetTestPath("library_valid"), new[] { "twostandards.blib" }, null, false, false,
+                false, false, IrtStandard.AUTO);
+            var selectIrtStandardDlg = WaitForOpenForm<SelectIrtStandardDlg>();
+            RunUI(() =>
+            {
+                var standards = selectIrtStandardDlg.Standards.ToArray();
+                Assert.AreEqual(2, standards.Length);
+                Assert.IsTrue(standards.Contains(IrtStandard.BIOGNOSYS_11));
+                Assert.IsTrue(standards.Contains(IrtStandard.PIERCE));
+                selectIrtStandardDlg.Selected = IrtStandard.BIOGNOSYS_11;
+            });
+            var addIrtDlg = ShowDialog<AddIrtPeptidesDlg>(selectIrtStandardDlg.OkDialog);
+            var recalibrateDlg = ShowDialog<MultiButtonMsgDlg>(addIrtDlg.OkDialog);
+            var addPredictorDlg = ShowDialog<AddRetentionTimePredictorDlg>(recalibrateDlg.BtnCancelClick);
+            OkDialog(addPredictorDlg, addPredictorDlg.NoDialog);
+            var twoStandardDb = IrtDb.GetIrtDb(TestFilesDir.GetTestPath(_libraryName) + ".blib", null);
+            var dbStandards = twoStandardDb.StandardPeptides.ToArray();
+            // Check that the created blib has the chosen standards.
+            Assert.AreEqual(dbStandards.Length, IrtStandard.BIOGNOSYS_11.Peptides.Count);
+            foreach (var dbIrtPeptide in IrtStandard.BIOGNOSYS_11.Peptides)
+                Assert.IsTrue(dbStandards.Contains(dbIrtPeptide.ModifiedTarget));
+
             OkDialog(PeptideSettingsUI, PeptideSettingsUI.CancelDialog);
         }
 
@@ -539,6 +594,7 @@ using (new Assume.DebugOnFail(Environment.MachineName.Contains("BSPRATT-UW3"))) 
         private void BuildLibraryValid(string inputDir, IEnumerable<string> inputFiles,
             bool keepRedundant, bool filterPeptides, bool append, int expectedSpectra, int expectedAmbiguous = 0)
         {
+            ReportLibraryBuildFailures = true;
             BuildLibrary(inputDir, inputFiles, null, keepRedundant, false, filterPeptides, append, null);
 
             if (expectedAmbiguous > 0)
@@ -548,14 +604,19 @@ using (new Assume.DebugOnFail(Environment.MachineName.Contains("BSPRATT-UW3"))) 
                 OkDialog(ambiguousDlg, ambiguousDlg.OkDialog);
             }
 
-            string nonredundantBuildPath = TestFilesDir.GetTestPath(_libraryName + BiblioSpecLiteSpec.EXT);
-            TryWaitForConditionUI(() => PeptideSettingsUI.AvailableLibraries.Contains(_libraryName) &&
-                                        File.Exists(nonredundantBuildPath));
+            if (!TryWaitForConditionUI(() => PeptideSettingsUI.AvailableLibraries.Contains(_libraryName)))
+            {
+                var messageDlg = FindOpenForm<MessageDlg>();
+                if (messageDlg != null)
+                    AssertEx.Fail("Unexpected MessageDlg: " + messageDlg.DetailedMessage);
+                AssertEx.Fail("Failed waiting for the library {0} in Peptide Settings", _libraryName);
+            }
+            string nonRedundantBuildPath = TestFilesDir.GetTestPath(_libraryName + BiblioSpecLiteSpec.EXT);
+            WaitForConditionUI(() => File.Exists(nonRedundantBuildPath),
+                string.Format("Failed waiting for the non-redundant library {0}", nonRedundantBuildPath));
+            WaitForConditionUI(() => !PeptideSettingsUI.IsBuildingLibrary,
+                string.Format("Failed waiting for library {0} build to complete", _libraryName));
 
-            WaitForConditionUI(() => !PeptideSettingsUI.IsBuildingLibrary);
-            var messageDlg = FindOpenForm<MessageDlg>();
-            if (messageDlg != null)
-                Assert.Fail("Unexpected MessageDlg: " + messageDlg.DetailedMessage);
             RunUI(() => PeptideSettingsUI.PickedLibraries = new[] { _libraryName });
             OkDialog(PeptideSettingsUI, PeptideSettingsUI.OkDialog);
 
@@ -575,6 +636,7 @@ using (new Assume.DebugOnFail(Environment.MachineName.Contains("BSPRATT-UW3"))) 
             string nonredundantBuildPath = TestFilesDir.GetTestPath(_libraryName + BiblioSpecLiteSpec.EXT);
             FileEx.SafeDelete(nonredundantBuildPath);
 
+            ReportLibraryBuildFailures = false;
             BuildLibrary(TestFilesDir.GetTestPath("library_errors"), new[] {inputFile}, libraryPath, false, false,
                 false, false, null);
 
@@ -588,6 +650,8 @@ using (new Assume.DebugOnFail(Environment.MachineName.Contains("BSPRATT-UW3"))) 
             OkDialog(messageDlg, messageDlg.OkDialog);           
             CheckLibraryExistence(redundantBuildPath, false);
             CheckLibraryExistence(nonredundantBuildPath, false);
+
+            WaitForConditionUI(() => !PeptideSettingsUI.IsBuildingLibrary);
         }
 
         private void BuildLibraryIrt(bool addIrts, bool recalibrate, bool addPredictor)
@@ -614,6 +678,10 @@ using (new Assume.DebugOnFail(Environment.MachineName.Contains("BSPRATT-UW3"))) 
         {
             PeptideSettingsUI = FindOpenForm<PeptideSettingsUI>() ??
                                 ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+
+            // Control console output on failure for diagnosing nightly test failures
+            PeptideSettingsUI.ReportLibraryBuildFailure = ReportLibraryBuildFailures;
+            
             // Allow a person watching to see what is going on in the Library tab
             RunUI(() =>
             {

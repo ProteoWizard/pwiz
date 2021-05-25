@@ -42,7 +42,8 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             RunUI(()=>SkylineWindow.OpenFile(TestFilesDir.GetTestPath("ImportHighPrecTranList.sky")));
-            RunUI(() => SkylineWindow.ImportMassList(TestFilesDir.GetTestPath("ThermoTransitionList.csv")));
+            ImportTransitionListSkipColumnSelect(TestFilesDir.GetTestPath("ThermoTransitionList.csv"));
+            WaitForCondition(() => 0 != SkylineWindow.Document.MoleculeCount);
             var documentGrid = ShowDialog<DocumentGridForm>(() => SkylineWindow.ShowDocumentGrid(true));
             RunUI(() => documentGrid.ChooseView("PeptideModSeqFullNames"));
             VerifyExpectedPeptides(documentGrid);

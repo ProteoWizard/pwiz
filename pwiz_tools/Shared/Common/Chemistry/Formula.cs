@@ -356,5 +356,27 @@ namespace pwiz.Common.Chemistry
             }
             return result.ToString();
         }
+
+        public static T Sum(IEnumerable<T> items)
+        {
+            var dictionary = new Dictionary<string, int>();
+            foreach (var item in items)
+            {
+                foreach (var entry in item)
+                {
+                    int count;
+                    if (dictionary.TryGetValue(entry.Key, out count))
+                    {
+                        dictionary[entry.Key] = count + entry.Value;
+                    }
+                    else
+                    {
+                        dictionary.Add(entry.Key, entry.Value);
+                    }
+                }
+            }
+
+            return FromDict(dictionary);
+        }
     }
 }

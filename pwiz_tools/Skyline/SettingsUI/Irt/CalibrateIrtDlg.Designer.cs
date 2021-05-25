@@ -44,9 +44,6 @@
             this.btnUseCurrent = new System.Windows.Forms.Button();
             this.bindingSourceStandard = new System.Windows.Forms.BindingSource(this.components);
             this.gridViewCalibrate = new pwiz.Skyline.Controls.DataGridViewEx();
-            this.calibratePeptides = new pwiz.Skyline.Controls.TargetColumn();
-            this.calibrateMeasuredRt = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colIrt = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.label3 = new System.Windows.Forms.Label();
             this.textName = new System.Windows.Forms.TextBox();
             this.comboRegression = new System.Windows.Forms.ComboBox();
@@ -62,7 +59,9 @@
             this.btnGraphIrts = new System.Windows.Forms.Button();
             this.labelStandardCount = new System.Windows.Forms.Label();
             this.panelPeptides = new System.Windows.Forms.Panel();
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
+            this.calibratePeptides = new pwiz.Skyline.Controls.TargetColumn();
+            this.calibrateMeasuredRt = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colIrt = new System.Windows.Forms.DataGridViewTextBoxColumn();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceStandard)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.gridViewCalibrate)).BeginInit();
             this.grpRegressionEquation.SuspendLayout();
@@ -147,33 +146,7 @@
             dataGridViewCellStyle5.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
             dataGridViewCellStyle5.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
             this.gridViewCalibrate.RowHeadersDefaultCellStyle = dataGridViewCellStyle5;
-            // 
-            // calibratePeptides
-            // 
-            this.calibratePeptides.DataPropertyName = "Target";
-            this.calibratePeptides.FillWeight = 161.0009F;
-            resources.ApplyResources(this.calibratePeptides, "calibratePeptides");
-            this.calibratePeptides.Name = "calibratePeptides";
-            // 
-            // calibrateMeasuredRt
-            // 
-            this.calibrateMeasuredRt.DataPropertyName = "RetentionTime";
-            dataGridViewCellStyle2.Format = "N2";
-            dataGridViewCellStyle2.NullValue = null;
-            this.calibrateMeasuredRt.DefaultCellStyle = dataGridViewCellStyle2;
-            this.calibrateMeasuredRt.FillWeight = 78.08542F;
-            resources.ApplyResources(this.calibrateMeasuredRt, "calibrateMeasuredRt");
-            this.calibrateMeasuredRt.Name = "calibrateMeasuredRt";
-            // 
-            // colIrt
-            // 
-            this.colIrt.DataPropertyName = "IrtDisplay";
-            dataGridViewCellStyle3.Format = "N2";
-            this.colIrt.DefaultCellStyle = dataGridViewCellStyle3;
-            this.colIrt.FillWeight = 78.08542F;
-            resources.ApplyResources(this.colIrt, "colIrt");
-            this.colIrt.Name = "colIrt";
-            this.colIrt.ReadOnly = true;
+            this.gridViewCalibrate.CellFormatting += new System.Windows.Forms.DataGridViewCellFormattingEventHandler(this.gridViewCalibrate_CellFormatting);
             // 
             // label3
             // 
@@ -279,6 +252,33 @@
             this.panelPeptides.Controls.Add(this.gridViewCalibrate);
             this.panelPeptides.Name = "panelPeptides";
             // 
+            // calibratePeptides
+            // 
+            this.calibratePeptides.DataPropertyName = "Target";
+            this.calibratePeptides.FillWeight = 161.0009F;
+            resources.ApplyResources(this.calibratePeptides, "calibratePeptides");
+            this.calibratePeptides.Name = "calibratePeptides";
+            // 
+            // calibrateMeasuredRt
+            // 
+            this.calibrateMeasuredRt.DataPropertyName = "RetentionTime";
+            dataGridViewCellStyle2.Format = "N2";
+            dataGridViewCellStyle2.NullValue = null;
+            this.calibrateMeasuredRt.DefaultCellStyle = dataGridViewCellStyle2;
+            this.calibrateMeasuredRt.FillWeight = 78.08542F;
+            resources.ApplyResources(this.calibrateMeasuredRt, "calibrateMeasuredRt");
+            this.calibrateMeasuredRt.Name = "calibrateMeasuredRt";
+            // 
+            // colIrt
+            // 
+            this.colIrt.DataPropertyName = "Irt";
+            dataGridViewCellStyle3.Format = "N2";
+            this.colIrt.DefaultCellStyle = dataGridViewCellStyle3;
+            this.colIrt.FillWeight = 78.08542F;
+            resources.ApplyResources(this.colIrt, "colIrt");
+            this.colIrt.Name = "colIrt";
+            this.colIrt.ReadOnly = true;
+            // 
             // CalibrateIrtDlg
             // 
             this.AcceptButton = this.btnOk;
@@ -297,9 +297,6 @@
             this.MinimizeBox = false;
             this.Name = "CalibrateIrtDlg";
             this.ShowInTaskbar = false;
-            this.Load += new System.EventHandler(this.OnLoad);
-            this.Shown += new System.EventHandler(this.CalibrateIrtDlg_Shown);
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceStandard)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.gridViewCalibrate)).EndInit();
             this.grpRegressionEquation.ResumeLayout(false);
@@ -333,12 +330,12 @@
         private System.Windows.Forms.ComboBox comboMinPeptide;
         private System.Windows.Forms.Label labelMinPeptide;
         private System.Windows.Forms.Label label7;
-        private Controls.TargetColumn calibratePeptides;
-        private System.Windows.Forms.DataGridViewTextBoxColumn calibrateMeasuredRt;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colIrt;
         private System.Windows.Forms.Button btnGraphIrts;
         private System.Windows.Forms.Label labelStandardCount;
         private System.Windows.Forms.Panel panelPeptides;
         private System.Windows.Forms.Label lblEquation;
+        private Controls.TargetColumn calibratePeptides;
+        private System.Windows.Forms.DataGridViewTextBoxColumn calibrateMeasuredRt;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colIrt;
     }
 }

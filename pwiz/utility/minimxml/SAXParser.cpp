@@ -583,8 +583,7 @@ PWIZ_API_DECL void parse(istream& is, Handler& handler)
 
 string xml_root_element(const string& fileheader)
 {
-    // TODO: make this static again when we switch to a proper C++11 compiler (e.g. VC++ 2015)
-    const /*static*/ bxp::sregex e = bxp::sregex::compile("<\\?xml.*?>.*?<([^?!]\\S+?)[\\s>]");
+    const static bxp::sregex e = bxp::sregex::compile("<\\?xml.*?>.*?<([^?!]\\S+?)[\\s>]");
 
     // convert Unicode to ASCII
     string asciiheader;

@@ -2,14 +2,15 @@ Undo Redo : 已添加谱图库“Ms1FilterTutorial”
 Summary   : 已添加谱图库“Ms1FilterTutorial”
 All Info  :
 已添加谱图库“Ms1FilterTutorial”
-建立谱图库 > 阈值 是 "0.95"
+建立谱图库 > 截止值 是 "0.95"
 建立谱图库 > 搜索文件 : 包含 "100803_0001_MCF7_TiB_L.group.xml"
 建立谱图库 > 搜索文件 : 包含 "100803_0005b_MCF7_TiTip3.group.xml"
 建立谱图库 > iRT 标准肽段 是 无
 建立谱图库 > 包含不明确匹配项 是 假
 建立谱图库 > 文档肽段筛选器 是 假
 建立谱图库 > 工作流程 是 "含有 MS1 筛选器的 DDA"
-Extra Info: 阈值 = "0.95",
+建立谱图库 > 输入文件类型 是 "搜索结果（直接构建库）"
+Extra Info: 截止值 = "0.95",
 搜索文件 = 
 [
     "100803_0001_MCF7_TiB_L.group.xml",
@@ -18,7 +19,8 @@ Extra Info: 阈值 = "0.95",
 iRT 标准肽段 = 无,
 包含不明确匹配项 = 假,
 文档肽段筛选器 = 假,
-工作流程 = "含有 MS1 筛选器的 DDA"
+工作流程 = "含有 MS1 筛选器的 DDA",
+输入文件类型 = "搜索结果（直接构建库）"
 
 Undo Redo : 已导入肽段搜索
 Summary   : 已导入肽段搜索
@@ -155,13 +157,6 @@ All Info  :
 已为 sp|P24534|EF1B_HUMAN > K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] （缺少2） > 1065.9279++++ 选择子离子 母离子 [M+5] - 1067.1813++++ (针对离子对节点的同位素排名 6)
 已为 sp|P24534|EF1B_HUMAN > K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] （缺少2） > 1065.9279++++ 选择子离子 母离子 [M+6] - 1067.4320++++ (针对离子对节点的同位素排名 7)
 已为 sp|P24534|EF1B_HUMAN > K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] （缺少2） > 1065.9279++++ 选择子离子 母离子 [M+7] - 1067.6826++++ (针对离子对节点的同位素排名 8)
-
-Undo Redo : 已更改 sp|P07900|HS90A_HUMAN > R.GVVDSEDLPLNISR.E [386, 399] > 757.3965++ 的峰界限
-Summary   : 已更改 sp|P07900|HS90A_HUMAN > R.GVVDSEDLPLNISR.E [386, 399] > 757.3965++ 的峰界限
-All Info  :
-已更改 sp|P07900|HS90A_HUMAN > R.GVVDSEDLPLNISR.E [386, 399] > 757.3965++ 的峰界限
-已将“5b_MCF7_TiTip3”中的 sp|P07900|HS90A_HUMAN > R.GVVDSEDLPLNISR.E [386, 399] > 757.3965++ 所有峰的开始时间从 35.54 更改到 35.72
-已将“5b_MCF7_TiTip3”中的 sp|P07900|HS90A_HUMAN > R.GVVDSEDLPLNISR.E [386, 399] > 757.3965++ 所有峰的结束时间从 36.98 更改到 36.44
 
 Undo Redo : 肽段设置 -- 预测 > 时间窗口 已更改为 "10"
 Summary   : 设置 > 肽段设置 -- 预测 > 时间窗口 已更改为 "10"

@@ -42,7 +42,7 @@ namespace pwiz.Skyline.Util
             public static readonly PeptideToMoleculeTextMapper SMALL_MOLECULE_MAPPER = new PeptideToMoleculeTextMapper(SrmDocument.DOCUMENT_TYPE.small_molecules, null);
 
             private readonly List<KeyValuePair<string, string>> TRANSLATION_TABLE;
-            private ToolTip ToolTip; // Used when working on an entire form
+            private List<ToolTip> ToolTips; // Used when working on an entire form
             private readonly SrmDocument.DOCUMENT_TYPE ModeUI;
 
             public PeptideToMoleculeTextMapper(SrmDocument.DOCUMENT_TYPE modeUI, ModeUIExtender extender)
@@ -156,7 +156,7 @@ namespace pwiz.Skyline.Util
                 list.Sort((a, b) => b.Key.Length.CompareTo(a.Key.Length));
                 TRANSLATION_TABLE = new List<KeyValuePair<string, string>>(list);
                 InUseKeyboardAccelerators = new HashSet<char>();
-                ToolTip = null;
+                ToolTips = null;
                 HandledComponents = extender == null ? new Dictionary<IComponent, ModeUIExtender.MODE_UI_HANDLING_TYPE>() : extender.GetHandledComponents();
             }
 
@@ -196,13 +196,12 @@ namespace pwiz.Skyline.Util
                     var mapper = new PeptideToMoleculeTextMapper(modeUI, extender);
                     form.Text = mapper.TranslateString(form.Text); // Update the title
 
-                    // Find a tooltip component in the form, if any
-                    var tips = (from field in form.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+                    // Find tooltip components in the form, if any
+                    mapper.ToolTips = (from field in form.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
                         where typeof(Component).IsAssignableFrom(field.FieldType)
                         let component = (Component)field.GetValue(form)
                         where component is ToolTip
-                        select component as ToolTip).ToArray();
-                    mapper.ToolTip = tips.FirstOrDefault();
+                        select component as ToolTip).ToList();
 
                     mapper.FindInUseKeyboardAccelerators(form.Controls);
 
@@ -327,7 +326,7 @@ namespace pwiz.Skyline.Util
 
             public void Translate(IEnumerable controls)
             {
-                // Prepare to disable anything tagged as being incomptible with current UI mode
+                // Prepare to disable anything tagged as being incompatible with current UI mode
                 var inappropriateComponents = ModeUI == SrmDocument.DOCUMENT_TYPE.proteomic
                     ? HandledComponents.Where(item => item.Value.Equals(ModeUIExtender.MODE_UI_HANDLING_TYPE.small_mol) ||
                                                       item.Value.Equals(ModeUIExtender.MODE_UI_HANDLING_TYPE.small_mol_only) ||
@@ -348,7 +347,7 @@ namespace pwiz.Skyline.Util
                     if (inappropriateComponents != null && 
                         inappropriateComponents.Contains(component))
                     {
-                        ModeUIAwareFormHelper.SetComponentEnabledStateForModeUI(ctrl, false);
+                        ModeUIAwareFormHelper.SetComponentEnabledStateForModeUI(ctrl, ToolTips, false);
                     }
 
                     ModeUIExtender.MODE_UI_HANDLING_TYPE handling;
@@ -378,13 +377,11 @@ namespace pwiz.Skyline.Util
                     }
 
                     // Tool tips
-                    if (ToolTip != null)
+                    var toolTip = ToolTips?.FirstOrDefault(t => !string.IsNullOrEmpty(t.GetToolTip(ctrl)));
+                    if (toolTip != null)
                     {
-                        var tip = ToolTip.GetToolTip(ctrl);
-                        if (!string.IsNullOrEmpty(tip))
-                        {
-                            ToolTip.SetToolTip(ctrl, TranslateString(tip));
-                        }
+                        var tipText = toolTip.GetToolTip(ctrl);
+                        toolTip.SetToolTip(ctrl, TranslateString(tipText));
                     }
 
                     if (!(ctrl is TextBox)) // Don't mess with the user edit area

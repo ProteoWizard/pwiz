@@ -153,6 +153,7 @@ namespace pwiz.Skyline.Model.Results
 //                    throw new ArgumentException(string.Format("The stored scan ID {0} was not found in the file {1}.", scanIdText, DataFilePath));
             }
             var currentSpectrum = GetDataFile(ignoreZeroIntensityPoints).GetSpectrum(dataFileSpectrumStartIndex);
+
             spectra.Add(currentSpectrum);
             if (currentSpectrum.IonMobilities != null)  // Sort combined IMS spectra by m/z order
             {

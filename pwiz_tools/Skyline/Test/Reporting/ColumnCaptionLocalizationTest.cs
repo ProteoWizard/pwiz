@@ -260,6 +260,8 @@ namespace pwiz.SkylineTest.Reporting
             };
             using (var xmlWriter = XmlWriter.Create(writer, settings))
             {
+                // Some versions of ReSharper think XmlWriter.Create can return a null, others don't, disable this check to satisfy either
+                // ReSharper disable PossibleNullReferenceException
                 xmlWriter.WriteStartElement("root");
                 foreach (string propertyName in sortedPropertyNames)
                 {
@@ -269,6 +271,7 @@ namespace pwiz.SkylineTest.Reporting
                     xmlWriter.WriteEndElement();
                 }
                 xmlWriter.WriteEndElement();
+                // ReSharper restore PossibleNullReferenceException
             }
         }
 

@@ -31,6 +31,7 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Lib;
@@ -254,9 +255,10 @@ namespace pwiz.Skyline.EditUI
         private void SetCurrentCellForPasteError(DataGridView gridView, PasteError pasteError, int? columnIndex = null)
         {
             ShowError(pasteError);
-            if (gridView.Rows[pasteError.Line].Cells[columnIndex ?? pasteError.Column].Visible)
+            var errColumn = columnIndex ?? pasteError.Column;
+            if (errColumn >= 0 && gridView.Rows[pasteError.Line].Cells[errColumn].Visible)
             {
-                gridView.CurrentCell = gridView.Rows[pasteError.Line].Cells[columnIndex ?? pasteError.Column];
+                gridView.CurrentCell = gridView.Rows[pasteError.Line].Cells[errColumn];
             }
             else
             {
@@ -464,17 +466,34 @@ namespace pwiz.Skyline.EditUI
                     });
                     return null;
                 }
-                if (!FastaSequence.IsExSequence(peptideSequence))
+
+                CrosslinkLibraryKey crosslinkLibraryKey =
+                    CrosslinkSequenceParser.TryParseCrosslinkLibraryKey(peptideSequence, 0);
+                if (crosslinkLibraryKey == null)
+                {
+                    if (!FastaSequence.IsExSequence(peptideSequence))
+                    {
+                        ShowPeptideError(new PasteError
+                        {
+                            Column = colPeptideSequence.Index,
+                            Line = i,
+                            Message = Resources.PasteDlg_ListPeptideSequences_This_peptide_sequence_contains_invalid_characters
+                        });
+                        return null;
+                    }
+                    peptideSequence = FastaSequence.NormalizeNTerminalMod(peptideSequence);
+                }
+                else if (!crosslinkLibraryKey.IsSupportedBySkyline())
                 {
                     ShowPeptideError(new PasteError
                     {
                         Column = colPeptideSequence.Index,
                         Line = i,
-                        Message = Resources.PasteDlg_ListPeptideSequences_This_peptide_sequence_contains_invalid_characters
+                        Message = Resources.PasteDlg_ListPeptideSequences_The_structure_of_this_crosslinked_peptide_is_not_supported_by_Skyline
                     });
                     return null;
                 }
-                peptideSequence = FastaSequence.NormalizeNTerminalMod(peptideSequence);
+
                 listSequences.Add(peptideSequence);
             }
             return listSequences;
@@ -706,19 +725,16 @@ namespace pwiz.Skyline.EditUI
                 IEnumerable<PeptideGroupDocNode> peptideGroupDocNodes;
                 try
                 {
-                    List<TransitionImportErrorInfo> errorList;
-                    List<MeasuredRetentionTime> irtPeptides;
-                    List<SpectrumMzInfo> librarySpectra;
+                    List<TransitionImportErrorInfo> errorList = new List<TransitionImportErrorInfo>();
+                    List<MeasuredRetentionTime> irtPeptides = new List<MeasuredRetentionTime>();
+                    List<SpectrumMzInfo> librarySpectra = new List<SpectrumMzInfo>();
                     var inputs = new MassListInputs(sbTransitionList.ToString(), LocalizationHelper.CurrentCulture, TRANSITION_LIST_SEPARATOR);
                     var importer = new MassListImporter(document, inputs);
-                    // TODO: support long-wait broker
-                    peptideGroupDocNodes = importer.Import(null,
-                        inputs.InputFilename,
-                        TRANSITION_LIST_COL_INDICES,
-                        dictNameSeq,
-                        out irtPeptides,
-                        out librarySpectra,
-                        out errorList);
+                    // TODO: support long-wait broker        
+                    if (importer.PreImport(null, TRANSITION_LIST_COL_INDICES, false))
+                        peptideGroupDocNodes = importer.DoImport(null, dictNameSeq, irtPeptides, librarySpectra, errorList);
+                    else
+                        peptideGroupDocNodes = new PeptideGroupDocNode[0];
                     if (errorList.Any())
                     {
                         var firstError = errorList[0];
@@ -864,19 +880,23 @@ namespace pwiz.Skyline.EditUI
             var helpText = Resources.PasteDlg_btnTransitionListHelp_Click_;
             if (btnCustomMoleculeColumns.Visible)
             {
-                helpText = Resources.PasteDlg_btnTransitionListHelp_Click_SmallMol_ +
-                    string.Join(", ", SmallMoleculeTransitionListColumnHeaders.KnownHeaders) +
-                    "\r\n" +
+                helpText = TextUtil.LineSeparate(Resources.PasteDlg_btnTransitionListHelp_Click_SmallMol_,
+                    string.Join(", ", SmallMoleculeTransitionListColumnHeaders.KnownHeaders),
                     string.Format(Resources.PasteDlg_btnTransitionListHelp_Click_Supported_values_for__0__are___1_, SmallMoleculeTransitionListColumnHeaders.imUnits, string.Join(", ", Enum.GetNames(typeof(eIonMobilityUnits))))+
-                    "\r\n\r\n" + 
-                    Resources.PasteDlg_btnTransitionListHelp_Click_2_ +
-                    "\r\n\r\n" + 
+                    string.Empty,
+                    Resources.PasteDlg_btnTransitionListHelp_Click_2_,
+                    string.Empty,
                     Resources.FormulaBox_FormulaHelpText_Formulas_are_written_in_standard_chemical_notation__e_g___C2H6O____Heavy_isotopes_are_indicated_by_a_prime__e_g__C__for_C13__or_double_prime_for_less_abundant_stable_iostopes__e_g__O__for_O17__O__for_O18__ +
-                    "\r\n\r\n" + 
-                    Adduct.Tips;
+                    string.Empty,
+                    Adduct.Tips);
             }
+
+            // CONSIDER(bspratt) use DocumentationViewer instead, this is quite a lot of text
+            helpText = TextUtil.LineSeparate(Resources.PasteDlg_btnTransitionListHelp_Click_Transition_List_Help,
+                string.Empty,
+                helpText);
             // ReSharper restore LocalizableElement
-            MessageBox.Show(this, helpText, Resources.PasteDlg_btnTransitionListHelp_Click_Transition_List_Help);
+            MessageDlg.Show(this, helpText);
         }
 
         private void btnCancel_Click(object sender, EventArgs e)
@@ -1927,14 +1947,6 @@ namespace pwiz.Skyline.EditUI
         transition_list,
     }
 
-    public class PasteError
-    {
-        public String Message { get; set; }
-        public int Line { get; set; }
-        public int Column { get; set; }
-        public int Length { get; set; }
-    }
-
     public class ImportFastaHelper
     {
         public ImportFastaHelper(TextBox tbxFasta, TextBox tbxError, Panel panelError, ToolTip helpTip)
@@ -2058,19 +2070,32 @@ namespace pwiz.Skyline.EditUI
                 TbxError.Visible = false;
                 return;
             }
-            TbxError.BackColor = Color.Red;
-            TbxError.ForeColor = Color.White;
-            TbxError.Text = pasteError.Message;
-            TbxError.Visible = true;
-            if (HelpTip != null)
-            {
-                // In case message is long, make it possible to see in a tip
-                HelpTip.SetToolTip(TbxError, pasteError.Message);
-            }
+
+            ShowFastaError(pasteError.Message);
 
             TbxFasta.SelectionStart = Math.Max(0, TbxFasta.GetFirstCharIndexFromLine(pasteError.Line) + pasteError.Column);
             TbxFasta.SelectionLength = Math.Min(pasteError.Length, TbxFasta.Text.Length - TbxFasta.SelectionStart);
             TbxFasta.Focus();
+        }
+
+        public void ShowFastaError(string errorMsg)
+        {
+            PanelError.Visible = true;
+            if (string.IsNullOrEmpty(errorMsg))
+            {
+                TbxError.Text = string.Empty;
+                TbxError.Visible = false;
+                return;
+            }
+            TbxError.BackColor = Color.Red;
+            TbxError.ForeColor = Color.White;
+            TbxError.Text = errorMsg;
+            TbxError.Visible = true;
+            if (HelpTip != null)
+            {
+                // In case message is long, make it possible to see in a tip
+                HelpTip.SetToolTip(TbxError, errorMsg);
+            }
         }
 
         public void ClearFastaError()

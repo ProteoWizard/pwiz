@@ -24,7 +24,6 @@ using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs;
@@ -40,6 +39,7 @@ using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestTutorial
@@ -54,21 +54,30 @@ namespace pwiz.SkylineTestTutorial
         public void TestExistingExperimentsTutorial()
         {
             // Set true to look at tutorial screenshots.
-            //IsPauseForScreenShots = true;
-            //IsPauseForAuditLog = true;
+//            IsPauseForScreenShots = true;
+//            IsCoverShotMode = true;
+//            IsPauseForAuditLog = true;
+            CoverShotName = "ExistingQuant";
 
             ForceMzml = false;
 
-            LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/ExistingQuant-1_4.pdf";
+            LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/ExistingQuant-20_1.pdf";
 
             TestFilesZipPaths = new[]
                 {
                     UseRawFilesOrFullData
-                        ? "https://skyline.gs.washington.edu/tutorials/ExistingQuant.zip"
-                        : "https://skyline.gs.washington.edu/tutorials/ExistingQuantMzml.zip",
+                        ? "https://skyline.ms/tutorials/ExistingQuant.zip"
+                        : "https://skyline.ms/tutorials/ExistingQuantMzml.zip",
                     @"TestTutorial\ExistingExperimentsViews.zip"
                 };
             RunFunctionalTest();
+        }
+
+        protected override void ProcessCoverShot(Bitmap bmp)
+        {
+            var excelBmp = new Bitmap(TestContext.GetProjectDirectory(@"TestTutorial\ExistingQuant_excel.png"));
+            var graph = Graphics.FromImage(bmp);
+            graph.DrawImageUnscaled(excelBmp, bmp.Width - excelBmp.Width, bmp.Height - excelBmp.Height);
         }
 
         // Not L10N
@@ -93,7 +102,8 @@ namespace pwiz.SkylineTestTutorial
 
         protected override void DoTest()
         {
-            DoMrmerTest();
+            if (!IsCoverShotMode)
+                DoMrmerTest();
             DoStudy7Test();
         }
 
@@ -290,6 +300,12 @@ namespace pwiz.SkylineTestTutorial
             // Preparing a Document to Accept the Study 7 Transition List, p. 18
             RunUI(() => SkylineWindow.NewDocument());
             var peptideSettingsUI1 = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+            if (IsCoverShotMode)
+            {
+                var modHeavyK = new StaticMod(HEAVY_K, "K", ModTerminus.C, false, null, LabelAtoms.C13 | LabelAtoms.N15, // Not L10N
+                    RelativeRT.Matching, null, null, null);
+                AddHeavyMod(modHeavyK, peptideSettingsUI1, "Edit Isotope Modification form", 6);
+            }
             var mod13Cr = new StaticMod("Label:13C(6) (C-term R)", "R", ModTerminus.C, false, null, LabelAtoms.C13,
                                           RelativeRT.Matching, null, null, null);
             AddHeavyMod(mod13Cr, peptideSettingsUI1, "Edit Isotope Modification form", 18);
@@ -309,12 +325,18 @@ namespace pwiz.SkylineTestTutorial
                 SetExcelFileClipboardText(filePath, "Simple", 6, false);
                 clipboardSaveText = ClipboardEx.GetText();
             });
-
+            // We expect this to fail due to instrument settings rather than format issues eg "The product m/z 1519.78 is out of range for the instrument settings, in the peptide sequence YEVQGEVFTKPQLWP. Check the Instrument tab in the Transition Settings."
             {
-                var messageDlg = ShowDialog<ImportTransitionListErrorDlg>(SkylineWindow.Paste);
+                var transitionSelectdgl = ShowDialog<ImportTransitionListColumnSelectDlg>(SkylineWindow.Paste);
+                var messageDlg = ShowDialog<ImportTransitionListErrorDlg>(transitionSelectdgl.AcceptButton.PerformClick);
+                AssertEx.AreComparableStrings(TextUtil.SpaceSeparate(Resources.MassListRowReader_CalcTransitionExplanations_The_product_m_z__0__is_out_of_range_for_the_instrument_settings__in_the_peptide_sequence__1_,
+                        Resources.MassListRowReader_CalcPrecursorExplanations_Check_the_Instrument_tab_in_the_Transition_Settings),
+                    messageDlg.ErrorList[0].ErrorMessage,
+                    2);
                 RunUI(() => messageDlg.Size = new Size(838, 192));
                 PauseForScreenShot<ImportTransitionListErrorDlg>("Error message form (expected)", 19);
-                OkDialog(messageDlg, messageDlg.CancelDialog);
+                OkDialog(messageDlg, messageDlg.CancelButton.PerformClick); // Acknowledge the error but decline to proceed with import
+                RunUI(() => transitionSelectdgl.DialogResult = DialogResult.Cancel); // Cancel the import
 
                 // Restore the clipboard text after pausing
                 ClipboardEx.SetText(clipboardSaveText);
@@ -325,11 +347,8 @@ namespace pwiz.SkylineTestTutorial
                 transitionSettingsUI.InstrumentMaxMz = 1800;
                 transitionSettingsUI.OkDialog();
             });
-            RunUI(() =>
-            {
-                SkylineWindow.Paste();
-                SkylineWindow.CollapsePeptides();
-            });
+            PasteTransitionListSkipColumnSelect();
+            RunUI(SkylineWindow.CollapsePeptides);
             PauseForScreenShot("Targets tree (selected from main window)", 20);
 
             // Adjusting Modifications Manually, p. 19.
@@ -395,7 +414,7 @@ namespace pwiz.SkylineTestTutorial
 
             {
                 var importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(importResultsDlg1.OkDialog);
-                PauseForScreenShot<ImportDocResultsDlg>("Import Results Common prefix form", 25);
+                PauseForScreenShot<ImportResultsNameDlg>("Import Results Common prefix form", 25);
 
                 OkDialog(importResultsNameDlg, importResultsNameDlg.YesDialog);
             }
@@ -474,7 +493,7 @@ namespace pwiz.SkylineTestTutorial
             FindNode(hgflprLight);
             PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas graph metafile", 31);
 
-            RunUI(() => SkylineWindow.NormalizeAreaGraphTo(AreaNormalizeToView.area_percent_view));
+            RunUI(() => SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.TOTAL));
             PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas graph normalized metafile", 32);
 
             RunUI(() =>
@@ -578,7 +597,25 @@ namespace pwiz.SkylineTestTutorial
             RunUI(SkylineWindow.ShowPeakAreaReplicateComparison);
             PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas normalized to heave graph metafile", 39);
 
-            RunUI(() => SkylineWindow.NormalizeAreaGraphTo(AreaNormalizeToView.none));
+            if (IsCoverShotMode)
+            {
+                RunUI(() =>
+                {
+                    Settings.Default.ChromatogramFontSize = 14;
+                    Settings.Default.AreaFontSize = 14;
+                    SkylineWindow.ChangeTextSize(TreeViewMS.LRG_TEXT_FACTOR);
+                    SkylineWindow.AutoZoomBestPeak();
+                });
+                RestoreCoverViewOnScreen();
+                RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.Parent);
+                WaitForGraphs();
+                RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.Nodes[0]);
+                RunUI(SkylineWindow.FocusDocument);
+                TakeCoverShot();
+                return;
+            }
+
+            RunUI(() => SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.NONE));
             WaitForGraphs();
             PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas no normalization graph metafile", 40);
 
@@ -599,7 +636,7 @@ namespace pwiz.SkylineTestTutorial
 
         private static void NormalizeGraphToHeavy()
         {
-            AreaGraphController.AreaView = AreaNormalizeToView.area_ratio_view;
+            AreaGraphController.AreaNormalizeOption = NormalizeOption.FromIsotopeLabelType(IsotopeLabelType.heavy);
             Settings.Default.AreaLogScale = false;
             SkylineWindow.UpdatePeakAreaGraph();
         }

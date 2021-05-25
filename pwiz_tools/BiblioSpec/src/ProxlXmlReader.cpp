@@ -21,7 +21,7 @@
 
 #include "ProxlXmlReader.h"
 #include "AminoAcidMasses.h"
-
+#include "pwiz/utility/misc/Std.hpp"
 
 namespace BiblioSpec {
 
@@ -31,6 +31,16 @@ ProxlXmlReader::ProxlXmlReader(BlibBuilder& maker, const char* filename, const P
     : BuildParser(maker, filename, parentProgress), curProxlPsm_(NULL) {
     setFileName(filename);
     AminoAcidMasses::initializeMass(aaMasses_, 1);
+
+    dirs_.push_back("../");   // look in parent dir in addition to cwd
+    dirs_.push_back("../../");  // look in grandparent dir in addition to cwd
+    extensions_.push_back(".mz5"); // look for spec in mz5 files
+    extensions_.push_back(".mzML"); // look for spec in mzML files
+    extensions_.push_back(".mzXML"); // look for spec in mzXML files
+    extensions_.push_back(".ms2");
+    extensions_.push_back(".cms2");
+    extensions_.push_back(".bms2");
+    extensions_.push_back(".pms2");
 }
 
 ProxlXmlReader::~ProxlXmlReader() {
@@ -57,10 +67,19 @@ void ProxlXmlReader::startElement(const XML_Char* name, const XML_Char** attr) {
         }
         break;
     case REPORTED_PEPTIDES_STATE:
-        if (isIElement("reported_peptide", name) && strcmp(getRequiredAttrValue("type", attr), "looplink") != 0) {
+        if (isIElement("reported_peptide", name)) {
             state_.push_back(REPORTED_PEPTIDE_STATE);
 
             proxlMatches_.push_back(ProxlMatches());
+            string type = getRequiredAttrValue("type", attr);
+            if (type == "unlinked")
+                proxlMatches_.back().linkType_ = LinkType::Unlinked;
+            else if (type == "crosslink")
+                proxlMatches_.back().linkType_ = LinkType::Crosslink;
+            else if (type == "looplink")
+                proxlMatches_.back().linkType_ = LinkType::Looplink;
+            else
+                proxlMatches_.back().linkType_ = LinkType::Other;
         }
         break;
     case REPORTED_PEPTIDE_STATE:
@@ -111,8 +130,8 @@ void ProxlXmlReader::startElement(const XML_Char* name, const XML_Char** attr) {
             // Set sequence/mods at reported_peptide end tag
             curProxlPsm_->charge = getIntRequiredAttrValue("precursor_charge", attr);
             curProxlPsm_->specKey = getIntRequiredAttrValue("scan_number", attr);
-            curProxlPsm_->score = numeric_limits<double>::max();
-            curProxlPsm_->linkerMass_ = getDoubleRequiredAttrValue("linker_mass", attr);
+            curProxlPsm_->score = 1;
+            curProxlPsm_->linkerMass_ = proxlMatches_.back().linkType_ != LinkType::Unlinked ? getDoubleRequiredAttrValue("linker_mass", attr) : 0;
         }
         break;
     case PSM_STATE:
@@ -159,7 +178,7 @@ void ProxlXmlReader::endElement(const XML_Char* name) {
             for (map< string, vector<PSM*> >::iterator i = fileToPsms_.begin(); i != fileToPsms_.end(); i++) {
                 psms_ = vector<PSM*>(i->second);
                 i->second.clear();
-                setSpecFileName(i->first, true);
+                setSpecFileName(i->first, extensions_, dirs_);
                 buildTables(PERCOLATOR_QVALUE);
             }
         }
@@ -230,41 +249,98 @@ double ProxlXmlReader::calcMass(const string& sequence, const vector<SeqMod>& mo
 }
 
 void ProxlXmlReader::calcPsms() {
+    boost::format modSeqCrosslinkFormat("%s-%s-[%+.4f@%d,%d]");
+    boost::format modSeqLooplinkFormat("%s-[%+.4f@%d-%d]");
 
-    for (vector<ProxlMatches>::iterator match = proxlMatches_.begin(); match != proxlMatches_.end(); match++) {
-		for (vector<ProxlPeptide>::iterator k = match->peptides_.begin(); k != match->peptides_.end(); k++) {
-			applyStaticMods(k->sequence_, k->mods_);
-		}
-		for (map< string, vector<ProxlPsm*> >::iterator i = match->psms_.begin(); i != match->psms_.end(); i++) {
-            map< string, vector<PSM*> >::iterator lookup = fileToPsms_.find(i->first);
+    for (auto& match : proxlMatches_) {
+        for (auto& peptide : match.peptides_)
+            applyStaticMods(peptide.sequence_, peptide.mods_, peptide.links_.empty() ? -1 : peptide.links_[0]);
+
+        for (auto& psmPair : match.psms_) {
+            map< string, vector<PSM*> >::iterator lookup = fileToPsms_.find(psmPair.first);
             if (lookup == fileToPsms_.end()) {
-                fileToPsms_[i->first] = vector<PSM*>();
-                lookup = fileToPsms_.find(i->first);
+                fileToPsms_[psmPair.first] = vector<PSM*>();
+                lookup = fileToPsms_.find(psmPair.first);
             }
-            for (vector<ProxlPsm*>::iterator j = i->second.begin(); j != i->second.end(); j++) {
-                if ((*j)->score <= getScoreThreshold(SQT)) {
-                    for (vector<ProxlPeptide>::iterator k = match->peptides_.begin(); k != match->peptides_.end(); k++) {
-                        PSM* psm = new PSM();
-                        *psm = **j;
-                        psm->unmodSeq = k->sequence_;
-                        psm->mods = k->mods_;
-                        if (k->links_.size() == 1 && match->peptides_.size() == 2) {
-                            const ProxlPeptide& other = (k == match->peptides_.begin())
-                                ? match->peptides_[1]
-                                : match->peptides_[0];
-                            psm->mods.push_back(SeqMod(k->links_[0], other.mass() + (*j)->linkerMass_));
+            for (auto& proxlPsm : psmPair.second) {
+                if (proxlPsm->score <= getScoreThreshold(SQT)) {
+                    switch (match.linkType_)
+                    {
+                        case LinkType::Unlinked:
+                        {
+                            if (match.peptides_.size() != 1)
+                                throw runtime_error("[calcPsms] unexpected number of peptides in unlinked peptide: " + match.peptides_.size());
+
+                            auto& pepA = match.peptides_[0];
+
+                            PSM* psm = new PSM();
+                            *psm = *proxlPsm;
+                            psm->unmodSeq = pepA.sequence_;
+                            psm->mods = pepA.mods_;
+                            lookup->second.push_back(psm);
                         }
-                        lookup->second.push_back(psm);
+                        break;
+
+                        case LinkType::Crosslink:
+                        {
+                            if (match.peptides_.size() != 2)
+                                throw runtime_error("[calcPsms] unexpected number of peptides in crosslink: " + match.peptides_.size());
+
+                            auto& pepA = match.peptides_[0];
+                            auto& pepB = match.peptides_[1];
+                            if (pepA.links_.size() != 1 || pepB.links_.size() != 1)
+                                throw runtime_error("[calcPsms] unexpected number of links on crosslink: " + pepA.sequence_ + "/" + pepB.sequence_ + " " + lexical_cast<string>(pepA.links_.size()) + "/" + lexical_cast<string>(pepB.links_.size()));
+
+                            PSM* psm = new PSM();
+                            *psm = *proxlPsm;
+                            psm->unmodSeq = pepA.sequence_ + "-" + pepB.sequence_;
+                            string modifiedPepA = blibMaker_.generateModifiedSeq(pepA.sequence_.c_str(), pepA.mods_);
+                            string modifiedPepB = blibMaker_.generateModifiedSeq(pepB.sequence_.c_str(), pepB.mods_);
+                            psm->modifiedSeq = (modSeqCrosslinkFormat % modifiedPepA % modifiedPepB % proxlPsm->linkerMass_ % pepA.links_[0] % pepB.links_[0]).str();
+                            psm->mods = pepA.mods_;
+                            psm->mods.push_back(SeqMod(pepA.links_[0], pepB.mass() + proxlPsm->linkerMass_));
+                            lookup->second.push_back(psm);
+                        }
+                        break;
+
+                        case LinkType::Looplink:
+                        {
+                            if (match.peptides_.size() != 1)
+                                throw runtime_error("[calcPsms] unexpected number of peptides in looplink: " + match.peptides_.size());
+
+                            auto& pepA = match.peptides_[0];
+                            if (pepA.links_.size() != 2)
+                                throw runtime_error("[calcPsms] unexpected number of links on looplink: " + pepA.sequence_ + " " + lexical_cast<string>(pepA.links_.size()));
+
+                            PSM* psm = new PSM();
+                            *psm = *proxlPsm;
+                            psm->unmodSeq = pepA.sequence_;
+                            psm->modifiedSeq = blibMaker_.generateModifiedSeq(psm->unmodSeq.c_str(), pepA.mods_);
+                            psm->modifiedSeq = (modSeqLooplinkFormat % pepA.sequence_ % proxlPsm->linkerMass_ % pepA.links_[0] % pepA.links_[1]).str();
+                            psm->mods = pepA.mods_;
+                            psm->mods.push_back(SeqMod(pepA.links_[0], proxlPsm->linkerMass_));
+                            lookup->second.push_back(psm);
+                        }
+                        break;
+
+                        case LinkType::Other:
+                        default:
+                            break;
                     }
                 }
-                delete *j;
+                delete proxlPsm;
             }
         }
     }
 }
 
-void ProxlXmlReader::applyStaticMods(const string& sequence, vector<SeqMod>& mods) {
+void ProxlXmlReader::applyStaticMods(const string& sequence, vector<SeqMod>& mods, int crosslinkPosition) {
+    size_t varModCount = mods.size();
     for (int i = 0; i < sequence.length(); i++) {
+        // CONSIDER: what is correct behavior for static mods on crosslink positions?
+        //if (i + 1 == crosslinkPosition) // skip all static mods on crosslink position (e.g. C+57)
+        //    continue;
+
         map< char, vector<double> >::const_iterator lookup = staticMods_.find(sequence[i]);
         if (lookup == staticMods_.end())
             continue;
@@ -272,6 +348,10 @@ void ProxlXmlReader::applyStaticMods(const string& sequence, vector<SeqMod>& mod
             mods.push_back(SeqMod(i + 1, *j));
         }
     }
+
+    // if static mods were added, sort all mods by position
+    if (mods.size() > varModCount)
+        sort(mods.begin(), mods.end(), [](const auto& lhs, const auto& rhs) { return lhs.position < rhs.position; });
 }
 
 }

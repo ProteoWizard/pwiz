@@ -46,6 +46,7 @@ namespace pwiz.Skyline.Model.Lib
         public const string EXT_PEP_XML = ".pep.xml";
         public const string EXT_PEP_XML_ONE_DOT = ".pepXML";
         public const string EXT_MZID = ".mzid";
+        public const string EXT_MZID_GZ = ".mzid.gz";
         public const string EXT_IDP_XML = ".idpXML";
         public const string EXT_SQT = ".sqt";
         public const string EXT_DAT = ".dat";
@@ -65,6 +66,7 @@ namespace pwiz.Skyline.Model.Lib
         public const string EXT_MZTAB = ".mzTab";
         public const string EXT_MZTAB_TXT = "mztab.txt";
         public const string EXT_OPEN_SWATH = ".osw";
+        public const string EXT_SPECLIB = ".speclib";
         // ReSharper restore LocalizableElement
 
         private ReadOnlyCollection<string> _inputFiles;

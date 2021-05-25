@@ -32,9 +32,9 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FoldChangeGrid));
             this.databoundGridControl = new pwiz.Skyline.Controls.Databinding.DataboundGridControl();
             this.toolStrip = new System.Windows.Forms.ToolStrip();
-            this.toolButtonShowGraph = new System.Windows.Forms.ToolStripButton();
             this.toolButtonVolcano = new System.Windows.Forms.ToolStripButton();
             this.toolStripButtonChangeSettings = new System.Windows.Forms.ToolStripButton();
+            this.toolButtonShowGraph = new System.Windows.Forms.ToolStripButton();
             this.toolStrip.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -45,35 +45,35 @@
             // 
             // toolStrip
             // 
+            resources.ApplyResources(this.toolStrip, "toolStrip");
             this.toolStrip.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
             this.toolStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolButtonVolcano,
             this.toolStripButtonChangeSettings,
             this.toolButtonShowGraph});
-            resources.ApplyResources(this.toolStrip, "toolStrip");
             this.toolStrip.Name = "toolStrip";
-            // 
-            // toolButtonShowGraph
-            // 
-            this.toolButtonShowGraph.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.toolButtonShowGraph.Name = "toolButtonShowGraph";
-            resources.ApplyResources(this.toolButtonShowGraph, "toolButtonShowGraph");
-            this.toolButtonShowGraph.Click += new System.EventHandler(this.toolButtonShowGraph_Click);
             // 
             // toolButtonVolcano
             // 
+            resources.ApplyResources(this.toolButtonVolcano, "toolButtonVolcano");
             this.toolButtonVolcano.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.toolButtonVolcano.Name = "toolButtonVolcano";
-            resources.ApplyResources(this.toolButtonVolcano, "toolButtonVolcano");
             this.toolButtonVolcano.Click += new System.EventHandler(this.toolButtonVolcano_Click);
             // 
             // toolStripButtonChangeSettings
             // 
+            resources.ApplyResources(this.toolStripButtonChangeSettings, "toolStripButtonChangeSettings");
             this.toolStripButtonChangeSettings.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
             this.toolStripButtonChangeSettings.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.toolStripButtonChangeSettings.Name = "toolStripButtonChangeSettings";
-            resources.ApplyResources(this.toolStripButtonChangeSettings, "toolStripButtonChangeSettings");
             this.toolStripButtonChangeSettings.Click += new System.EventHandler(this.toolStripButtonChangeSettings_Click);
+            // 
+            // toolButtonShowGraph
+            // 
+            resources.ApplyResources(this.toolButtonShowGraph, "toolButtonShowGraph");
+            this.toolButtonShowGraph.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.toolButtonShowGraph.Name = "toolButtonShowGraph";
+            this.toolButtonShowGraph.Click += new System.EventHandler(this.toolButtonShowGraph_Click);
             // 
             // FoldChangeGrid
             // 

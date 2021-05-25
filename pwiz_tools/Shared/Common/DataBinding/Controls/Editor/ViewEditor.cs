@@ -27,6 +27,7 @@ using pwiz.Common.Collections;
 using pwiz.Common.Controls;
 using pwiz.Common.DataBinding.Documentation;
 using pwiz.Common.Properties;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.DataBinding.Controls.Editor
 {
@@ -232,7 +233,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
                 {
                     if (tabPageSource.Parent == tabControl1)
                     {
-                        tabControl1.TabPages.Remove(tabPageSource);
+                        FormUtil.RemoveTabPage(tabPageSource, toolTip1);
                     }
                 }
 

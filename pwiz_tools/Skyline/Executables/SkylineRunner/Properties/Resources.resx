@@ -108,4 +108,7 @@
     <comment>Example: Make sure you have a valid Skyline installation.</comment>
     <value>Make sure you have a valid {0} installation.</value>
   </data>
+  <data name="Program_WaitForConnection_Waiting_for_Skyline" xml:space="preserve">
+    <value>Waiting for Skyline</value>
+  </data>
 </root>

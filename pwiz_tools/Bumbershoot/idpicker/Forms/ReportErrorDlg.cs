@@ -148,7 +148,12 @@ namespace IDPicker.Forms
             Clipboard.SetDataObject(MessageBody, true);
         }
 
-        [DllImport("secur32.dll", CharSet = CharSet.Auto)]
+        private string getUserDisplayName()
+        {
+            return String.Empty;
+        }
+
+        /*[DllImport("secur32.dll", CharSet = CharSet.Auto)]
         private static extern int GetUserNameEx (int nameFormat, StringBuilder userName, ref uint userNameSize);
 
         [DllImport("netapi32.dll", CharSet = CharSet.Unicode, ExactSpelling = true)]
@@ -202,6 +207,6 @@ namespace IDPicker.Forms
             }
 
             return String.Empty;
-        }
+        }*/
     }
 }

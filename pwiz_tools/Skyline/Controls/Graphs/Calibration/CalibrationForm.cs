@@ -411,7 +411,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                 }
                 else
                 {
-                    quantificationResult = curveFitter.GetQuantificationResult(selectionIdentifier.Value.ReplicateIndex);
+                    quantificationResult = curveFitter.GetPeptideQuantificationResult(selectionIdentifier.Value.ReplicateIndex);
                     calculatedConcentration = quantificationResult?.CalculatedConcentration;
                 }
                 if (calculatedConcentration.HasValue)
@@ -478,8 +478,8 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             }
             else
             {
-                if (_skylineWindow.Document.Settings.MeasuredResults.Chromatograms.Select(c => c.BatchName).Distinct()
-                        .Count() > 1)
+                if (_skylineWindow.Document.Settings.HasResults && _skylineWindow.Document.Settings.MeasuredResults
+                    .Chromatograms.Select(c => c.BatchName).Distinct().Count() > 1)
                 {
                     title = TextUtil.SpaceSeparate(title, QuantificationStrings.CalibrationForm_GetFormTitle__All_Replicates_);
                 }

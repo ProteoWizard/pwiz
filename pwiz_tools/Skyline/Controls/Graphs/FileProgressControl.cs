@@ -142,7 +142,7 @@ namespace pwiz.Skyline.Controls.Graphs
                             _errorExceptions.RemoveAt(2);
                         }
                         _errorLog.Insert(0, Error);
-                        _errorExceptions.Insert(0, ExceptionUtil.GetStackTraceText(status.ErrorException, null, false));
+                        _errorExceptions.Insert(0, status.ErrorException.ToString());
                         btnRetry.Text = Resources.FileProgressControl_SetStatus_Retry;
                         btnRetry.Visible = true;
                         ShowWarningIcon(Resources.FileProgressControl_SetStatus_failed);

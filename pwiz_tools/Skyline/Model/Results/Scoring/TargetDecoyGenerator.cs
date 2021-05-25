@@ -22,8 +22,6 @@ using System.Linq;
 using System.Threading;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.SettingsUI;
-using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results.Scoring
 {
@@ -284,7 +282,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 foreach (var peakGroupFeatures in peakTransitionGroupFeatures.PeakGroupFeatures)
                 {
                     double value = peakGroupFeatures.Features[calculatorIndex];
-                    if (EditPeakScoringModelDlg.IsUnknown(value))
+                    if (IsUnknown(value))
                         return false;
                     maxValue = Math.Max(value, maxValue);
                     minValue = Math.Min(value, minValue);
@@ -304,6 +302,11 @@ namespace pwiz.Skyline.Model.Results.Scoring
         private static double GetScore(LinearModelParams parameters, PeakGroupFeatures peakGroupFeatures)
         {
             return GetScore(parameters.Weights, peakGroupFeatures, parameters.Bias);
+        }
+
+        public static bool IsUnknown(double d)
+        {
+            return (double.IsNaN(d) || double.IsInfinity(d));
         }
     }
 

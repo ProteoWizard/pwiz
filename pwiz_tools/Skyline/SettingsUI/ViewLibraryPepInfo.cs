@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System.Linq;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Lib;
@@ -33,13 +34,15 @@ namespace pwiz.Skyline.SettingsUI
     /// </summary>
     public class ViewLibraryPepInfo : Immutable
     {
-        public ViewLibraryPepInfo(LibKey key)
+        public ViewLibraryPepInfo(LibKey key, SpectrumHeaderInfo libInfo = null)
         {
             Key = key;
+            LibInfo = libInfo;
             UnmodifiedTargetText = GetUnmodifiedTargetText(key.LibraryKey);
         }
 
         public LibKey Key { get; private set; }
+        public SpectrumHeaderInfo LibInfo { get; private set; } // Provides peptide/protein association when available
         public PeptideDocNode PeptideNode { get; private set; }
 
         public ViewLibraryPepInfo ChangePeptideNode(PeptideDocNode peptideDocNode)
@@ -141,6 +144,12 @@ namespace pwiz.Skyline.SettingsUI
                     return moleculeKey.SmallMoleculeLibraryAttributes.MoleculeName;
                 }
                 return moleculeKey.ToString();
+            }
+
+            var crosslinkKey = key as CrosslinkLibraryKey;
+            if (crosslinkKey != null)
+            {
+                return crosslinkKey.PeptideLibraryKeys.First().UnmodifiedSequence;
             }
             return key.ToString();
         }

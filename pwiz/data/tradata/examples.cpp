@@ -112,7 +112,7 @@ PWIZ_API_DECL void addMIAPEExampleMetadata(TraData& td)
     proteinPtr->set(MS_protein_accession, "Q123");
     proteinPtr->sequence = "ABCD";
     proteinPtr->set(MS_protein_name, "A short protein.");
-    proteinPtr->set(MS_molecular_mass_OBSOLETE, 12345, UO_dalton);
+    proteinPtr->set(MS_molecular_mass, 12345, UO_dalton);
     td.proteinPtrs.push_back(proteinPtr);
 
 

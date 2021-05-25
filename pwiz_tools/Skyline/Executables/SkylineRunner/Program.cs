@@ -116,7 +116,7 @@ namespace pwiz.SkylineRunner
                     //While (!done reading)
                     while ((line = sr.ReadLine()) != null)
                     {
-                        if (line.StartsWith("Error:"))
+                        if (ErrorChecker.IsErrorLine(line))   // In case of Skyline-daily with untranslated text
                         {
                             exitCode = 2;
                         }
@@ -142,10 +142,36 @@ namespace pwiz.SkylineRunner
             connector.Start();
 
             bool connected;
+            var wait = 5;
             lock (SERVER_CONNECTION_LOCK)
             {
-                Monitor.Wait(SERVER_CONNECTION_LOCK, 5 * 1000);
+                Monitor.Wait(SERVER_CONNECTION_LOCK, wait * 1000);
                 connected = _connected;
+            }
+
+            if (!connected)
+            {
+                // Wait another 10 seconds for a total of 15 seconds.
+                Console.Write(Resources.Program_WaitForConnection_Waiting_for_Skyline);
+
+                wait++;
+                var timer = new System.Timers.Timer(1000);
+                timer.Elapsed += (sender, e) =>
+                {
+                    Console.Write(@".");
+                    wait++;
+                };
+                timer.Start();
+                lock (SERVER_CONNECTION_LOCK)
+                {
+                    Monitor.Wait(SERVER_CONNECTION_LOCK, 10 * 1000);
+                    connected = _connected;
+                } 
+                timer.Stop();
+                timer.Dispose();
+
+                Console.Write($@" {wait}s");
+                Console.WriteLine();
             }
 
             if (!connected)

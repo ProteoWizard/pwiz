@@ -373,8 +373,8 @@ namespace SkylineTester
                     tutorialTests.AddRange(GetTestInfos(tutorialDll, "NoLocalizationAttribute", "Tutorial"));
                 foreach (var test in tutorialTests.ToArray())
                 {
-                    // Remove any tutorial tests we've hacked for small molecule testing - not of interest to localizers
-                    if (test.Contains("AsSmallMolecule"))
+                    // Remove any tutorial tests we've hacked for extra testing (extending test name not to end with Tutorial) - not of interest to localizers
+                    if (!test.EndsWith("Tutorial"))
                         tutorialTests.Remove(test);
                 }
                 var tutorialNodes = new TreeNode[tutorialTests.Count];
@@ -1002,6 +1002,7 @@ namespace SkylineTester
 
                 // Tutorials
                 pauseTutorialsScreenShots,
+                modeTutorialsCoverShots,
                 pauseTutorialsDelay,
                 pauseTutorialsSeconds,
                 tutorialsDemoMode,
@@ -1423,7 +1424,7 @@ namespace SkylineTester
         public CheckBox         NightlyRunIndefinitely      { get { return nightlyRunIndefinitely; } }
         public Label            NightlyRoot                 { get { return nightlyRoot; } }
         public ComboBox         NightlyRunDate              { get { return nightlyRunDate; } }
-        public ComboBox         NightlyRepeat          { get { return nightlyRepeat; } }
+        public ComboBox         NightlyRepeat               { get { return nightlyRepeat; } }
         public CheckBox         NightlyRunPerfTests         { get { return nightlyRunPerfTests; } }
         public DateTimePicker   NightlyStartTime            { get { return nightlyStartTime; } }
         public Label            NightlyTestName             { get { return nightlyTestName; } }
@@ -1436,6 +1437,8 @@ namespace SkylineTester
         public SplitContainer   OutputSplitContainer        { get { return outputSplitContainer; } }
         public CheckBox         Pass0                       { get { return pass0; } }
         public CheckBox         Pass1                       { get { return pass1; } }
+        public RadioButton      ModeTutorialsCoverShots     { get { return modeTutorialsCoverShots; } }
+        public TextBox          PauseStartingPage           { get { return pauseStartingPage; } }
         public RadioButton      PauseTutorialsScreenShots   { get { return pauseTutorialsScreenShots; } }
         public NumericUpDown    PauseTutorialsSeconds       { get { return pauseTutorialsSeconds; } }
         public RadioButton      QualityChooseTests          { get { return qualityChooseTests; } }

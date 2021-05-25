@@ -70,7 +70,6 @@
             this.comboStandards = new System.Windows.Forms.ComboBox();
             this.comboRegressionType = new System.Windows.Forms.ComboBox();
             this.label5 = new System.Windows.Forms.Label();
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceLibrary)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceStandard)).BeginInit();
             this.contextMenuAdd.SuspendLayout();
@@ -161,7 +160,6 @@
             // 
             // contextMenuAdd
             // 
-            this.contextMenuAdd.ImageScalingSize = new System.Drawing.Size(40, 40);
             this.contextMenuAdd.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.addResultsContextMenuItem,
             this.addSpectralLibraryContextMenuItem,
@@ -365,8 +363,8 @@
             this.MinimizeBox = false;
             this.Name = "EditIrtCalcDlg";
             this.ShowInTaskbar = false;
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.EditIrtCalcDlg_FormClosing);
             this.Load += new System.EventHandler(this.OnLoad);
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceLibrary)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceStandard)).EndInit();
             this.contextMenuAdd.ResumeLayout(false);

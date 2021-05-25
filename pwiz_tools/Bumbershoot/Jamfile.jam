@@ -95,21 +95,7 @@ explicit bumbershoot-bin.tar.bz2 ;
 
 # source tarball
 
-.exclusion-list =
-    "exclude:.svn"
-    "exclude:.git"
-    "exclude:*.bak"
-    "exclude:cvgen*.exe"
-    "exclude:svnrev.hpp"
-    "exclude:Version.cpp"
-    "exclude:Reader_*_Test.data"
-    "exclude:example_data/small* # large files in example_data"
-    "exclude:bootstrap exclude:bin.* # boost-build intermediate directories"
-    "exclude:bin exclude:obj exclude:TestResults # C#.NET intermediate directories"
-    "exclude:_ReSharper.* # ReSharper directory for C# projects"
-    "exclude:*.ncb exclude:*.suo exclude:*.user exclude:*.p12 exclude:*.sdf # More visual studio files"
-    "exclude:*.xdc # .NET XML documentation sources"
-    "exclude:tar.excluded # a place to put any files in these directories that shouldn't be tarballed"
+.exclusion-list = .$(common-src-exclusions)
     "exclude:pwiz/utility/bindings/CLI/example"
     "exclude:pwiz_tools/commandline"
     "exclude:pwiz_tools/MSConvertGUI"
@@ -130,38 +116,9 @@ explicit bumbershoot-bin.tar.bz2 ;
     "exclude:pwiz_tools/Shared/Lib/x64"
     "exclude:pwiz_tools/Shared/Lib/mysql.*"
     "exclude:pwiz_tools/Shared/Lib/zlib.*"
-    "exclude:pwiz_aux/msrc/utility/vendor_api/ABI/Clearcore*.dll"
-    "exclude:pwiz_aux/msrc/utility/vendor_api/ABI/Sciex*.dll"
-    "exclude:pwiz_aux/msrc/utility/vendor_api/ABI/OFX*.dll"
-    "exclude:pwiz_aux/msrc/utility/vendor_api/ABI/LicenseKey.h"
-    "exclude:pwiz_aux/msrc/utility/vendor_api/Agilent/x*"
-    "exclude:pwiz_aux/msrc/utility/vendor_api/Bruker/x*"
-    "exclude:pwiz_aux/msrc/utility/vendor_api/Shimadzu/*.dll"
-    "exclude:pwiz_aux/msrc/utility/vendor_api/Shimadzu/x*"
-    "exclude:pwiz_aux/msrc/utility/vendor_api/thermo/x64"
-    "exclude:pwiz_aux/msrc/utility/vendor_api/thermo/x86"
-    "exclude:pwiz_aux/msrc/utility/vendor_api/Waters/*_x*"
 ;
 
-.common-sources =
-    "path-anchor:$(PWIZ_ROOT_PATH)"
-    $(.exclusion-list)
-    
-    $(PWIZ_ROOT_PATH)/Jamroot.jam
-    $(PWIZ_ROOT_PATH)/NOTICE
-    $(PWIZ_ROOT_PATH)/LICENSE
-    $(PWIZ_ROOT_PATH)/quickbuild.bat
-    $(PWIZ_ROOT_PATH)/quickbuild.sh
-    $(PWIZ_ROOT_PATH)/clean.bat
-    $(PWIZ_ROOT_PATH)/clean.sh
-
-    $(PWIZ_ROOT_PATH)/pwiz
-    $(PWIZ_ROOT_PATH)/pwiz_aux
-    $(PWIZ_ROOT_PATH)/pwiz_tools
-    $(PWIZ_ROOT_PATH)/scripts
-
-    "path-anchor:$(PWIZ_ROOT_PATH)"
-;
+.bumbershoot-sources = $(.exclusion-list) $(.common-sources) ;
 
 .l = 
     $(PWIZ_LIBRARIES_PATH)/boost-build
@@ -192,6 +149,6 @@ explicit bumbershoot-bin.tar.bz2 ;
 
 .common-requirements = <location>$(.common-location) <dependency>$(PWIZ_ROOT_PATH)//boost_$(BOOST_VERSION:J=_).tar.bz2 <dependency>VERSION ;
 
-tar.create bumbershoot-src.tar.bz2             : $(.common-sources) $(.l) : $(.common-requirements) <name>bumbershoot-src-$(version-tag:J=_).tar.bz2 ;
-tar.create bumbershoot-src-without-t.tar.bz2   : $(.no-t) $(.common-sources) $(.l) : $(.common-requirements) <name>bumbershoot-src-without-t-$(version-tag:J=_).tar.bz2 ;
+tar.create bumbershoot-src.tar.bz2             : $(.bumbershoot-sources) $(.l) : $(.common-requirements) <name>bumbershoot-src-$(version-tag:J=_).tar.bz2 ;
+tar.create bumbershoot-src-without-t.tar.bz2   : $(.no-t) $(.bumbershoot-sources) $(.l) : $(.common-requirements) <name>bumbershoot-src-without-t-$(version-tag:J=_).tar.bz2 ;
 explicit bumbershoot-src.tar.bz2 bumbershoot-src-without-t.tar.bz2 ;

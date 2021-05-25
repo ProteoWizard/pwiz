@@ -437,6 +437,14 @@ PWIZ_API_DECL bool BinaryDataArray::empty() const
 }
 
 
+PWIZ_API_DECL bool IntegerDataArray::empty() const
+{
+    return (!dataProcessingPtr.get() || dataProcessingPtr->empty()) && 
+           data.empty() && 
+           ParamContainer::empty();
+}
+
+
 //
 // MZIntensityPair 
 //
@@ -493,6 +501,9 @@ pair<string,string> stringToPair(const string& nameValuePair)
 
 PWIZ_API_DECL map<string,string> parse(const string& id)
 {
+    if (id.empty())
+        throw runtime_error("[MSData::parse] Empty id");
+
     vector<string> pairs;
     boost::split(pairs, id, boost::is_any_of(" \t\n\r"));
 
@@ -627,6 +638,16 @@ PWIZ_API_DECL bool Spectrum::empty() const
            ParamContainer::empty();
 }
 
+PWIZ_API_DECL bool Spectrum::hasBinaryData() const
+{
+    return (binaryDataArrayPtrs.size() &&
+            binaryDataArrayPtrs[0] &&
+            !binaryDataArrayPtrs[0]->data.empty())
+           ||
+           (integerDataArrayPtrs.size() &&
+            integerDataArrayPtrs[0] &&
+            !integerDataArrayPtrs[0]->data.empty());
+};
 
 namespace {
 
@@ -1132,6 +1153,34 @@ PWIZ_API_DECL SpectrumPtr SpectrumList::spectrum(size_t index, DetailLevel detai
 
 PWIZ_API_DECL void SpectrumList::warn_once(const char *msg) const
 {
+}
+
+PWIZ_API_DECL DetailLevel SpectrumList::min_level_accepted(std::function<boost::tribool(const Spectrum&)> predicate) const
+{
+    DetailLevel result = DetailLevel_InstantMetadata;
+
+    for (size_t i = 0, end = size(); i < end; ++i)
+    {
+        boost::tribool accepted;
+
+        do
+        {
+            SpectrumPtr s = spectrum(i, result);
+            accepted = predicate(*s);
+
+            if (accepted)
+                return result;
+            if (!accepted && (int)result < (int)DetailLevel_FullData)
+                result = DetailLevel(int(result) + 1);
+            else if (boost::logic::indeterminate(accepted))
+            {
+                break;
+            }
+        } while ((int)result < (int)DetailLevel_FullData);
+    }
+
+    // if we reach this point, no spectrum satisfied the predicate even at the highest detail level
+    throw runtime_error("[SpectrumList::min_level_accepted] no spectrum satisfied the given predicate at any DetailLevel");
 }
 
 

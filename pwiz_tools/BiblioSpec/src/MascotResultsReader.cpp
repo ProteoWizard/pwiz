@@ -320,9 +320,9 @@ void MascotResultsReader::parseMods(PSM* psm, string modstr,
 
     // first parse the terminal character
     if( modstr.at(0) == 'X' ){
-        addErrorTolerantMod(psm, readableModStr, first_mod_pos);
+        addErrorTolerantMod(psm, readableModStr, 0);
     } else {
-        addVarMod(psm, modstr.at(0), first_mod_pos);
+        addVarMod(psm, modstr.at(0), 0);
     }
 
     // for characters first to last in modstr, 
@@ -337,17 +337,24 @@ void MascotResultsReader::parseMods(PSM* psm, string modstr,
 
     // now get terminal character at the other end
     if( modstr.at(last_mod_pos+1) == 'X' ){
-        addErrorTolerantMod(psm, readableModStr, last_mod_pos);
+        addErrorTolerantMod(psm, readableModStr, psm->unmodSeq.length()+1);
     } else {
-        addVarMod(psm, modstr.at(last_mod_pos+1), last_mod_pos);
+        addVarMod(psm, modstr.at(last_mod_pos+1), psm->unmodSeq.length()+1);
     }
 
     // for static mods look up each residue in the staticMods collection
     for (size_t i = 0; i < psm->unmodSeq.length(); i++) {
-        addStaticMods(psm, psm->unmodSeq[i], i + 1, true);
+        addStaticMods(psm, psm->unmodSeq[i], i + 1);
     }
-    addStaticMods(psm, N_TERM_POS, 1, false);
-    addStaticMods(psm, C_TERM_POS, psm->unmodSeq.length(), false);
+    addStaticMods(psm, N_TERM_POS, 0);
+    addStaticMods(psm, C_TERM_POS, psm->unmodSeq.length()+1);
+
+    // now consolidate terminal mods with residue-terminal mods (i.e. position 0 to 1, position N+1 to N)
+    for (auto& mod : psm->mods)
+        if (mod.position == 0)
+            mod.position = 1;
+        else if (mod.position == psm->unmodSeq.length() + 1)
+            mod.position = psm->unmodSeq.length();
 }
 
 /**
@@ -373,14 +380,13 @@ void MascotResultsReader::addVarMod(PSM* psm,
  * A-Z, N_TERM_POS, or C_TERM_POS that will be used to look up all masses of mods
  * for that particular residue. aaPosition is the location of this mod in the peptide.
  */
-void MascotResultsReader::addStaticMods(PSM* psm, char staticLookUpChar, int aaPosition, bool checkExisting){
-    if (checkExisting) {
-        for (vector<SeqMod>::const_iterator i = psm->mods.begin(); i != psm->mods.end(); i++) {
-            if (i->position == aaPosition) {
-                return; // don't add any static mods if there is already a mod at this position
-            }
+void MascotResultsReader::addStaticMods(PSM* psm, char staticLookUpChar, int aaPosition){
+    for (vector<SeqMod>::const_iterator i = psm->mods.begin(); i != psm->mods.end(); i++) {
+        if (i->position == aaPosition) {
+            return; // don't add any static mods if there is already a mod at this position
         }
     }
+
     MultiModTable::iterator found = staticMods_.find(staticLookUpChar);
     if (found != staticMods_.end())
     {

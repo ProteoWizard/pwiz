@@ -79,6 +79,7 @@ namespace pwiz.Skyline
         public static bool ShowMatchingPages { get; set; }          // Set true to show tutorial pages automatically when pausing for moust click
         public static int UnitTestTimeoutMultiplier { get; set; }   // Set to positive multiplier for multi-process stress runs.
         public static int PauseSeconds { get; set; }                // Positive to pause when displaying dialogs for unit test, <0 to pause for mouse click
+        public static int PauseStartingPage { get; set; }           // First page to pause at during pause for screenshots
         public static IList<string> PauseForms { get; set; }        // List of forms to pause after displaying.
         public static string ExtraRawFileSearchFolder { get; set; } // Perf test support for avoiding extra copying of large raw files
         public static List<Exception> TestExceptions { get; set; }  // To avoid showing unexpected exception UI during tests and instead log them as failures
@@ -426,6 +427,7 @@ namespace pwiz.Skyline
             int numTools = toolList.Count;
             const int endValue = 100;
             int progressValue = 0;
+            // ReSharper disable once UselessBinaryOperation (in case we decide to start at progress>0 for display purposes)
             int increment = (endValue - progressValue)/(numTools +1);
 
             foreach (var tool in toolList)

@@ -34,7 +34,7 @@ namespace {
 PWIZ_API_DECL void pwiz::msdata::SpectrumListBase::warn_once(const char * msg) const
 {
     boost::lock_guard<boost::mutex> g(m);
-    if (warn_msg_hashes_.insert(hash_(msg)).second) // .second is true iff value is new
+    if (warn_msg_hashes_.insert(hash(msg)).second) // .second is true iff value is new
         std::cerr << msg << std::endl;
 }
 
@@ -43,6 +43,9 @@ PWIZ_API_DECL size_t pwiz::msdata::SpectrumListBase::checkNativeIdFindResult(siz
 {
     if (result < size() || size() == 0)
         return result;
+
+    if (id.empty())
+        return size();
 
     {
         boost::lock_guard<boost::mutex> g(m);
@@ -69,12 +72,17 @@ PWIZ_API_DECL size_t pwiz::msdata::SpectrumListBase::checkNativeIdFindResult(siz
             std::back_inserter(missingIdKeys));
 
         if (!missingIdKeys.empty())
-            warn_once(("[SpectrumList::find]: mismatch between spectrum id format of the file (" + firstId + ") and the looked-up id (" + id + ")").c_str());
+            warn_once(("[SpectrumList::find] mismatch between spectrum id format of the file (" + firstId + ") and the looked-up id (" + id + ")").c_str());
         return size();
     }
     catch (std::exception& e)
     {
-        warn_once(e.what()); // TODO: log exception
+        warn_once((std::string("[SpectrumList::find] error checking for spectrum id conformance: ") + e.what()).c_str()); // TODO: log exception
         return size();
     }
+}
+
+size_t pwiz::msdata::SpectrumListBase::hash(const char* msg) const
+{
+    return boost::hash_range(msg, msg + strlen(msg));
 }

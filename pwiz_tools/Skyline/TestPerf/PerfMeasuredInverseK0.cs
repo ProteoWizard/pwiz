@@ -28,6 +28,8 @@ using pwiz.Skyline;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
@@ -51,7 +53,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         [TestMethod]
         public void MeasuredInverseK0ValuesPerfTest()
         {
-            TestFilesZip = "https://skyline.gs.washington.edu/perftests/PerfMeasuredInverseK0_v3.zip";
+            TestFilesZip = GetPerfTestDataURL(@"PerfMeasuredInverseK0_v3.zip");
             TestFilesPersistent = new[] { BSA_50fmol_TIMS_InfusionESI_10precd, bsaFmolTimsInfusionesiPrecMz5Mz5 }; // list of files that we'd like to unzip alongside parent zipFile, and (re)use in place
 
             RunFunctionalTest();
@@ -84,29 +86,37 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             var transitions = document.MoleculeTransitions.ToArray();
 
             // Verify ability to extract ion mobility peaks from raw data
-            var peptideSettingsDlg = ShowDialog<PeptideSettingsUI>(
-                () => SkylineWindow.ShowPeptideSettingsUI(PeptideSettingsUI.TABS.Prediction));
+            var transitionSettingsDlg = ShowDialog<TransitionSettingsUI>(
+                () => SkylineWindow.ShowTransitionSettingsUI(TransitionSettingsUI.TABS.IonMobility));
+            RunUI(()=>
+            {
+                transitionSettingsDlg.IonMobilityControl.WindowWidthType =
+                    IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.resolving_power;
+                transitionSettingsDlg.IonMobilityControl.IonMobilityFilterResolvingPower = 40;
+            });
 
             // Simulate user picking Add from the ion mobility Predictor combo control
-            var driftTimePredictorDlg = ShowDialog<EditDriftTimePredictorDlg>(peptideSettingsDlg.AddDriftTimePredictor);
+            var editIonMobilityLibraryDlg = ShowDialog<EditIonMobilityLibraryDlg>(transitionSettingsDlg.IonMobilityControl.AddIonMobilityLibrary);
+            var testlibName = "test_tims";
+            var databasePath = TestFilesDir.GetTestPath(testlibName + IonMobilityDb.EXT);
             RunUI(() =>
             {
-                driftTimePredictorDlg.SetOffsetHighEnergySpectraCheckbox(true);
-                driftTimePredictorDlg.SetPredictorName("test_tims");
-                driftTimePredictorDlg.SetResolvingPower(40);
-                driftTimePredictorDlg.GetDriftTimesFromResults();
+                editIonMobilityLibraryDlg.SetOffsetHighEnergySpectraCheckbox(true);
+                editIonMobilityLibraryDlg.LibraryName = testlibName;
+                editIonMobilityLibraryDlg.CreateDatabaseFile(databasePath); // Simulate user click on Create button
+                editIonMobilityLibraryDlg.GetIonMobilitiesFromResults();
             });
             // PauseTest(); // Uncomment this to inspect ion mobility finder results
             RunUI(() =>
             {
-                driftTimePredictorDlg.OkDialog(true); // Force overwrite if a named predictor already exists
+                editIonMobilityLibraryDlg.OkDialog();
             });
-            WaitForClosedForm(driftTimePredictorDlg);
+            WaitForClosedForm(editIonMobilityLibraryDlg);
             RunUI(() =>
             {
-                peptideSettingsDlg.OkDialog();
+                transitionSettingsDlg.OkDialog();
             });
-            WaitForClosedForm(peptideSettingsDlg);
+            WaitForClosedForm(transitionSettingsDlg);
 
             var docChangedDriftTimePredictor = WaitForDocumentChange(document);
 
@@ -158,23 +168,24 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                         trials++;
                     if (Equals(nodeTran.Results[0], nodeTran.Results[1]))
                         continue;
-                    var diff = Math.Abs(nodeTran.Results[0].First().Area - nodeTran.Results[1].First().Area) /
-                               Math.Min(nodeTran.Results[0].First().Area, nodeTran.Results[1].First().Area);
-                    diffs++;
-                    if (diff > 0)
+                    if (nodeTran.Results[0].First().Area != nodeTran.Results[1].First().Area)
                     {
-                        sb.AppendLine(string.Format("Difference {0} in {1} - {2}",
-                            diff, nodeGroup, nodeTran.Transition));
+                        diffs++;
+                        var diff =
+                            Math.Abs(nodeTran.Results[0].First().Area - nodeTran.Results[1].First().Area) /
+                            Math.Min(nodeTran.Results[0].First().Area, nodeTran.Results[1].First().Area);
+                        sb.AppendLine(string.Format("{0}% difference {3} vs {4}(mz5) in precursor {1} transition {2}",
+                            diff, nodeGroup, nodeTran.Transition, nodeTran.Results[0].First().Area, nodeTran.Results[1].First().Area));
                     }
                     else
                     {
-                        sb.AppendLine(string.Format("No area difference in {0} - {1}",
+                        sb.AppendLine(string.Format("No area difference in precursor {0} transition {1}",
                             nodeGroup, nodeTran.Transition));
                     }
                 }
             }
-            if (sb.Length > 0)
-                Assert.Fail(TextUtil.LineSeparate(string.Format("{0} of {1} differences found in peak areas between 2- and 3- array spectra", diffs, trials), sb.ToString()));
+            if (diffs != 0)
+                Assert.Fail(TextUtil.LineSeparate(string.Format("{0} differences found in peak areas between 2- and 3- array spectra", diffs), sb.ToString()));
 
             // Verify that the data was loaded in 3-array IMS format for .d and 2-array for .mz5 (which was converted that way on purpose) by looking at serialization
             RunUI(() =>

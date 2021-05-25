@@ -24,6 +24,7 @@ using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
@@ -140,6 +141,22 @@ namespace pwiz.Skyline.Model.Results
             }
             ExpectedPeaks = expectedPeaks;
         }
+        /// <summary>
+        /// Constructor for an IsotopeDistInfo using TransitionFullScanSettings
+        /// </summary>
+        public static IsotopeDistInfo MakeIsotopeDistInfo(MassDistribution mzDistribution, TypedMass monoisotopicMass, Adduct adduct, TransitionFullScan fullScan)
+        {
+            // Centering resolution must be inversely proportional to charge state
+            // High charge states can bring major peaks close enough together to
+            // cause them to be combined and centered in isotope distribution valleys
+            double massResolution = TransitionFullScan.ISOTOPE_PEAK_CENTERING_RES /
+                                    (1 + Math.Abs(adduct.AdductCharge / 15.0));
+            return new IsotopeDistInfo(mzDistribution, monoisotopicMass, adduct,
+                fullScan.GetPrecursorFilterWindow,
+                massResolution,
+                TransitionFullScan.MIN_ISOTOPE_PEAK_ABUNDANCE);
+        }
+
 
         public int CountPeaks { get { return _expectedDistribution.Count; } }
 

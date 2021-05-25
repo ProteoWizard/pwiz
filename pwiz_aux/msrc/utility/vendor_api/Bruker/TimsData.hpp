@@ -159,6 +159,7 @@ public:
 
     virtual bool isIonMobilitySpectrum() const { return oneOverK0() > 0; }
     virtual double oneOverK0() const;
+    virtual std::pair<double, double> getIonMobilityRange() const; // Gets the measured IM range
 
     void getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities, pwiz::util::BinaryData<double>& mobilities, bool sortAndJitter) const;
     size_t getCombinedSpectrumDataSize() const;
@@ -252,6 +253,12 @@ struct PWIZ_API_DECL TimsDataImpl : public CompassData
 
     /// returns true if the source is TIMS PASEF data
     virtual bool hasPASEFData() const;
+
+    virtual bool canConvertOneOverK0AndCCS() const;
+
+    virtual double oneOverK0ToCCS(double oneOverK0, double mz, int charge) const;
+
+    virtual double ccsToOneOverK0(double ccs, double mz, int charge) const;
 
     /// returns the number of spectra available from the MS source
     virtual size_t getMSSpectrumCount() const;

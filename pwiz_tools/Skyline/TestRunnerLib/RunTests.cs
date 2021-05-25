@@ -31,6 +31,7 @@ using System.Threading;
 using JetBrains.Annotations;
 using log4net;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using Exception = System.Exception;
 
@@ -90,7 +91,8 @@ namespace TestRunnerLib
         public bool RunsSmallMoleculeVersions { get; set; }
         public bool LiveReports { get; set; }
         public bool TeamCityTestDecoration { get; set; }
-      
+        public bool Verbose { get; set; }
+
         public bool ReportSystemHeaps
         {
             get { return !RunPerfTests; }   // 12-hour perf runs get much slower with system heap reporting
@@ -114,10 +116,12 @@ namespace TestRunnerLib
             bool retrydatadownloads,
             IEnumerable<string> pauseForms,
             int pauseSeconds = 0,
+            int pauseStartingPage = 1,
             bool useVendorReaders = true,
             int timeoutMultiplier = 1,
             string results = null,
-            StreamWriter log = null)
+            StreamWriter log = null,
+            bool verbose = false)
         {
             _buildMode = buildMode;
             _log = log;
@@ -136,6 +140,7 @@ namespace TestRunnerLib
             Skyline.Set("NoSaveSettings", true);
             Skyline.Set("UnitTestTimeoutMultiplier", timeoutMultiplier);
             Skyline.Set("PauseSeconds", pauseSeconds);
+            Skyline.Set("PauseStartingPage", pauseStartingPage);
             Skyline.Set("PauseForms", pauseForms != null ? pauseForms.ToList() : null);
             Skyline.Set("Log", (Action<string>)(s => Log(s)));
             Skyline.Run("Init");
@@ -147,6 +152,7 @@ namespace TestRunnerLib
             RecordAuditLogs = recordauditlogs; // Replace or create audit logs for tutorial tests
             LiveReports = true;
             TeamCityTestDecoration = teamcityTestDecoration;
+            Verbose = verbose;
 
             // Disable logging.
             LogManager.GetRepository().Threshold = LogManager.GetRepository().LevelMap["OFF"];
@@ -198,13 +204,19 @@ namespace TestRunnerLib
             }
             else
             {
+                string testName;
+                if (Verbose)
+                    testName = test.TestClassType.Name + "." + test.TestMethod.Name;
+                else
+                    testName = test.TestMethod.Name;
+
                 var time = DateTime.Now;
                 Log("[{0}:{1}] {2,3}.{3,-3} {4,-46} ({5}) ",
                     time.Hour.ToString("D2"),
                     time.Minute.ToString("D2"),
                     pass,
                     testNumber,
-                    test.TestMethod.Name,
+                    testName,
                     Language.TwoLetterISOLanguageName);
             }
 
@@ -299,7 +311,9 @@ namespace TestRunnerLib
 
             MemoryManagement.FlushMemory();
             _process.Refresh();
-            var heapCounts = ReportSystemHeaps ? MemoryManagement.GetProcessHeapSizes() : new MemoryManagement.HeapAllocationSizes[1];
+            var heapCounts = ReportSystemHeaps
+                ? MemoryManagement.GetProcessHeapSizes(heapOutput ? dmpDir : null)
+                : new MemoryManagement.HeapAllocationSizes[1];
             var processBytes = heapCounts[0].Committed; // Process heap : useful for debugging - though included in committed bytes
             var managedBytes = GC.GetTotalMemory(true); // Managed heap
             var committedBytes = heapCounts.Sum(h => h.Committed);
@@ -367,21 +381,23 @@ namespace TestRunnerLib
                 {
                     const int sizeOutputs = 50;
                     const int stringOutputs = 50;
-                    var allSizes = new List<KeyValuePair<long, int>>();
-                    var allStrings = new List<KeyValuePair<string, int>>();
-                    foreach (var heapCount in heapCounts)
+                    var allSizes = new List<Tuple<int, long, int>>();
+                    var allStrings = new List<Tuple<int, string, int>>();
+                    for (int i = 0; i < heapCounts.Length; i++)
                     {
-                        allSizes.AddRange(heapCount.CommittedSizes.Take(sizeOutputs));
-                        allStrings.AddRange(heapCount.StringCounts.Take(stringOutputs));
+                        var heapCount = heapCounts[i];
+                        allSizes.AddRange(heapCount.CommittedSizes.Take(sizeOutputs).Select(p =>
+                            new Tuple<int, long, int>(i, p.Key, p.Value)));
+                        allStrings.AddRange(heapCount.StringCounts.Take(stringOutputs).Select(p =>
+                            new Tuple<int, string, int>(i, p.Key, p.Value)));
                     }
 
-                    Log("# HEAP SIZES (top {0})", sizeOutputs);
-                    foreach (var size in allSizes.OrderByDescending(x => x.Value).Take(sizeOutputs))
-                        Log("# ({0}) {1}", size.Value, size.Key);
-
-                    Log("# HEAP STRINGS (top {0})", stringOutputs);
-                    foreach (var size in allStrings.OrderByDescending(x => x.Value).Take(stringOutputs))
-                        Log("# ({0}) \"{1}\"", size.Value, size.Key);
+                    var sizeText = allSizes.OrderByDescending(s => s.Item3).Take(sizeOutputs)
+                        .Select(s => string.Format("{0}:{1}:{2}", s.Item1, s.Item2, s.Item3));
+                    Log("# HEAP SIZES (top {0}) - {1}\r\n", sizeOutputs, string.Join(", ", sizeText));
+                    var stringText = allStrings.OrderByDescending(s => s.Item3).Take(stringOutputs)
+                        .Select(s => string.Format("{0}:\"{1}\":{2}", s.Item1, s.Item2, s.Item3));
+                    Log("# HEAP STRINGS (top {0}) - {1}\r\n", stringOutputs, string.Join(", ", stringText));
                 }
 
                 TeamCityFinishTest(test);
@@ -518,16 +534,110 @@ namespace TestRunnerLib
                         Unknown / (double)MB);
                 }
             }
-            public static HeapAllocationSizes[] GetProcessHeapSizes()
+
+            private static readonly SizeTracker[] TRACK_SIZES = {new SizeTracker(120), new SizeTracker(624)};
+
+            private class SizeTracker
             {
+                private static int _dumps;
+
+                public static void NextDump()
+                {
+                    _dumps++;
+                }
+
+                private readonly int _size;
+                private readonly HashSet<IntPtr> _seenAllocations = new HashSet<IntPtr>();
+                private TextWriter _currentDump;
+
+                public SizeTracker(int size)
+                {
+                    _size = size;
+                }
+
+                private string DumpFile => "SizeDump" + _size + "_" + _dumps + ".txt";
+
+                public void OpenDumpFile(string dmpDir)
+                {
+                    if (!Directory.Exists(dmpDir))
+                        Directory.CreateDirectory(dmpDir);
+                    _currentDump = new StreamWriter(new FileStream(Path.Combine(dmpDir, DumpFile), FileMode.Create));
+                }
+
+                public void CloseDumpFile()
+                {
+                    if (_currentDump != null)
+                    {
+                        _currentDump.Close();
+                        _currentDump = null;
+                    }
+                }
+
+                public void DumpUnseenSize(IntPtr pData, byte[] byteData)
+                {
+                    if (_currentDump != null && byteData.Length == _size && !_seenAllocations.Contains(pData))
+                    {
+                        DumpBytes(byteData);
+                        _currentDump.WriteLine();
+                        _seenAllocations.Add(pData);
+                    }
+                }
+
+                private const int DUMP_WIDTH = 16;
+
+                private void DumpBytes(byte[] byteData)
+                {
+                    int charPrintCount = Characters(byteData.Length);
+                    for (int i = 0; i < charPrintCount; i++)
+                    {
+                        if (i < byteData.Length)
+                        {
+                            var b = byteData[i];
+                            _currentDump.Write(b.ToString("X2"));
+                        }
+                        else
+                        {
+                            _currentDump.Write("  ");
+                        }
+                        _currentDump.Write(' ');
+                        if (i % DUMP_WIDTH == DUMP_WIDTH - 1)
+                        {
+                            for (int j = DUMP_WIDTH - 1; j >= 0; j--)
+                            {
+                                int byteIndex = i - j;
+                                var bc = byteIndex < byteData.Length ? byteData[byteIndex] : (byte) 0x20;
+                                if (IsPrintableLowerAscii(bc))
+                                    _currentDump.Write((char) bc);
+                                else
+                                    _currentDump.Write(".");
+                            }
+                            _currentDump.WriteLine();
+                        }
+                    }
+                }
+
+                private int Characters(int byteDataLength)
+                {
+                    return (Math.Max(0, byteDataLength-1) / DUMP_WIDTH + 1) * DUMP_WIDTH;
+                }
+            }
+
+            public static HeapAllocationSizes[] GetProcessHeapSizes(string dmpDir)
+            {
+                if (HeapDiagnostics && dmpDir != null)
+                {
+                    SizeTracker.NextDump();
+                    TRACK_SIZES.ForEach(t => t.OpenDumpFile(dmpDir));
+                }
                 var count = GetProcessHeaps(0, null);
                 var buffer = new IntPtr[count];
                 GetProcessHeaps(count, buffer);
                 var sizes = new HeapAllocationSizes[count];
-                var committedSizes = HeapDiagnostics ? new Dictionary<long, int>() : null;
-                var stringCounts = HeapDiagnostics ? new Dictionary<string, int>() : null;
                 for (int i = 0; i < count; i++)
                 {
+                    var committedSizes = HeapDiagnostics ? new Dictionary<long, int>() : null;
+                    var stringCounts = HeapDiagnostics ? new Dictionary<string, int>() : null;
+
                     var h = buffer[i];
                     HeapLock(h);
                     var e = new PROCESS_HEAP_ENTRY();
@@ -541,40 +651,22 @@ namespace TestRunnerLib
                             {
                                 // Update count
                                 if (!committedSizes.ContainsKey(e.cbData))
-                                    committedSizes[e.cbData] = 1;
-                                else
-                                    committedSizes[e.cbData]++;
+                                    committedSizes[e.cbData] = 0;
+                                committedSizes[e.cbData]++;
                             }
 
                             if (stringCounts != null)
                             {
                                 // Find string(s)
-                                const int MIN_STRING_LENGTH = 8;
                                 var byteData = new byte[e.cbData];
-                                Marshal.Copy(e.lpData, byteData, 0, byteData.Length);
-                                var byteSb = new StringBuilder();
-                                var byteStrings = new List<string>();
-                                for (var j = 0; j < byteData.Length; j++)
-                                {
-                                    if (32 <= byteData[j] && byteData[j] <= 126)
-                                    {
-                                        byteSb.Append((char)byteData[j]);
-                                    }
-                                    else
-                                    {
-                                        if (byteSb.Length >= MIN_STRING_LENGTH)
-                                            byteStrings.Add(byteSb.ToString());
-                                        byteSb.Clear();
-                                    }
-                                }
-                                if (byteSb.Length >= MIN_STRING_LENGTH)
-                                    byteStrings.Add(byteSb.ToString()); // Add the last string
-                                foreach (var byteString in byteStrings)
+                                IntPtr pData = e.lpData;
+                                Marshal.Copy(pData, byteData, 0, byteData.Length);
+                                TRACK_SIZES.ForEach(t => t.DumpUnseenSize(pData, byteData));
+                                foreach (var byteString in FindStrings(byteData))
                                 {
                                     if (!stringCounts.ContainsKey(byteString))
-                                        stringCounts[byteString] = 1;
-                                    else
-                                        stringCounts[byteString]++;
+                                        stringCounts[byteString] = 0;
+                                    stringCounts[byteString]++;
                                 }
                             }
                         }
@@ -591,8 +683,46 @@ namespace TestRunnerLib
                     if (stringCounts != null)
                         sizes[i].StringCounts = stringCounts.OrderByDescending(p => p.Value).ToList();
                 }
-
+                if (HeapDiagnostics)
+                    TRACK_SIZES.ForEach(t => t.CloseDumpFile());
                 return sizes;
+            }
+
+            private static IEnumerable<string> FindStrings(byte[] byteData)
+            {
+                const int MIN_STRING_LENGTH = 8;
+                var byteSb = new StringBuilder();
+                bool inString = false;
+                for (var j = 0; j < byteData.Length; j++)
+                {
+                    var b = byteData[j];
+                    if (IsPrintableLowerAscii(b))
+                    {
+                        inString = true;
+                        byteSb.Append((char) b);
+                    }
+                    else if (inString && b == 0)
+                    {
+                        // Support for Unicode strings where characters will
+                        // be alternating printable with zeros
+                        inString = false;   // If the next character is not printable, accumulation will end
+                    }
+                    else
+                    {
+                        if (byteSb.Length >= MIN_STRING_LENGTH)
+                            yield return byteSb.ToString();
+                        byteSb.Clear();
+                        inString = false;
+                    }
+                }
+
+                if (byteSb.Length >= MIN_STRING_LENGTH)
+                    yield return byteSb.ToString(); // Add the last string
+            }
+
+            private static bool IsPrintableLowerAscii(byte b)
+            {
+                return 32 <= b && b <= 126;
             }
 
             public static void FlushMemory()

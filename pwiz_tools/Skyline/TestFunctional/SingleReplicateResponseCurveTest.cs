@@ -30,6 +30,8 @@ using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
+using pwiz.Skyline.Model.Hibernate;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.SkylineTestFunctional
 {
@@ -197,7 +199,7 @@ namespace pwiz.SkylineTestFunctional
                     var replicateCalibrationCurve =
                         (LinkValue<CalibrationCurve>) row.Cells[colReplicateCalibrationCurve.Index].Value;
                     var quantificationResult =
-                        (LinkValue<QuantificationResult>) row.Cells[colQuantificationResult.Index].Value;
+                        (LinkValue<PrecursorQuantificationResult>) row.Cells[colQuantificationResult.Index].Value;
                     var precursor = (Precursor) row.Cells[colPrecursor.Index].Value;
                     var precursorResult = (PrecursorResult) row.Cells[colPrecursorResult.Index].Value;
                     var totalArea = precursorResult.TotalArea;
@@ -206,6 +208,9 @@ namespace pwiz.SkylineTestFunctional
                     var expectedConcentration = precursorResult.Precursor.PrecursorConcentration;
                     var accuracy = calculatedConcentration / expectedConcentration;
                     Assert.AreEqual(accuracy.Value, quantificationResult.Value.Accuracy.Value, .0001);
+                    Assert.AreEqual(
+                        TextUtil.SpaceSeparate(calculatedConcentration.Value.ToString(Formats.Concentration), "fmol"),
+                        quantificationResult.ToString());
                 }
             });
 

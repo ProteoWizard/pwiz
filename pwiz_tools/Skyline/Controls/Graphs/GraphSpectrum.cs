@@ -36,6 +36,7 @@ using pwiz.Skyline.Model.Prosit;
 using pwiz.Skyline.Model.Prosit.Models;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Crawdad;
+using pwiz.Skyline.Model.Themes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -266,13 +267,25 @@ namespace pwiz.Skyline.Controls.Graphs
         private void ZoomXAxis(Axis axis)
         {
             var instrument = DocumentUI.Settings.TransitionSettings.Instrument;
+            double xMin;
             if (!instrument.IsDynamicMin || _nodeGroup == null)
-                axis.Scale.Min = instrument.MinMz;
+                xMin = instrument.MinMz;
             else
-                axis.Scale.Min = instrument.GetMinMz(_nodeGroup.PrecursorMz);
+                xMin = instrument.GetMinMz(_nodeGroup.PrecursorMz);
+            ZoomXAxis(axis, xMin, instrument.MaxMz);
+        }
+
+        private void ZoomXAxis(Axis axis, double xMin, double xMax)
+        {
+            axis.Scale.Min = xMin;
             axis.Scale.MinAuto = false;
-            axis.Scale.Max = instrument.MaxMz;
+            axis.Scale.Max = xMax;
             axis.Scale.MaxAuto = false;
+        }
+
+        public void ZoomXAxis(double xMin, double xMax)
+        {
+            ZoomXAxis(GraphPane.XAxis, xMin, xMax);
         }
 
         public void ZoomSpectrumToSettings()
@@ -680,7 +693,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
 
             var lookupData = new LookupData(selection);
-            var spectrumInfoR = new LibraryRankedSpectrumInfo(spectrumPeaksOverride ?? spectrum.SpectrumPeaksInfo,
+            var spectrumInfoR = LibraryRankedSpectrumInfo.NewLibraryRankedSpectrumInfo(spectrumPeaksOverride ?? spectrum.SpectrumPeaksInfo,
                 spectrum.LabelType,
                 selection.Precursor,
                 settings,
@@ -691,7 +704,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 rankAdducts,
                 rankTypes,
                 null);
-            return new SpectrumGraphItem(selection.Precursor, selection.Transition, spectrumInfoR,
+            return new SpectrumGraphItem(selection.Peptide, selection.Precursor, selection.Transition, spectrumInfoR,
                 spectrum.Name)
             {
                 ShowTypes = types,
@@ -835,7 +848,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     if (IonMatches(selection.Transition.Transition, chromData))
                     {
-                        color = ChromGraphItem.ColorSelected;
+                        color = ColorScheme.ChromGraphItemSelected;
                     }
                 }
 
@@ -951,7 +964,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                     _spectrum.Name, _mirrorSpectrum.Name);
                             GraphPane.Title.Text = TextUtil.LineSeparate(
                                 libraryStr,
-                                SpectrumGraphItem.GetTitle(_mirrorSpectrum.Precursor, _mirrorSpectrum.LabelType),
+                                SpectrumGraphItem.GetTitle(null, selection.Peptide, _mirrorSpectrum.Precursor, _mirrorSpectrum.LabelType),
                                 prositEx.Message);
                             graphControl.Refresh();
                             return;
@@ -1016,7 +1029,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                     GraphPane.Title.Text = TextUtil.LineSeparate(
                                         string.Format(PrositResources.GraphSpectrum_UpdateUI__0__vs___1_,
                                             GraphItem.LibraryName, mirrorSpectrum.Name),
-                                        GraphItem.Title,
+                                        SpectrumGraphItem.RemoveLibraryPrefix(GraphItem.Title, GraphItem.LibraryName),
                                         string.Format(@"dotp: {0:0.0000}", dotp));
                                 }
                                 else
@@ -1035,7 +1048,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                     GraphPane.Title.Text = TextUtil.LineSeparate(
                                         string.Format(PrositResources.GraphSpectrum_UpdateUI__0__vs___1_,
                                             GraphItem.LibraryName, SpectrumInfoProsit.NAME),
-                                        GraphItem.Title,
+                                        SpectrumGraphItem.RemoveLibraryPrefix(GraphItem.Title, GraphItem.LibraryName),
                                         prositEx.Message);
                                 }
                                 else
@@ -1327,7 +1340,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     new Dictionary<Type, int>(),
                     new byte[0],
                     new ChromCachedFile[0],
-                    new[] { new ChromTransition(chromData.Mz, 0, (float)(driftTimeFilter.IonMobility.Mobility??0), (float)(driftTimeFilter.IonMobilityExtractionWindowWidth??0), ChromSource.unknown), },
+                    new[] { new ChromTransition(chromData.Mz, 0, (float)(driftTimeFilter.IonMobilityAndCCS.IonMobility.Mobility??0), (float)(driftTimeFilter.IonMobilityExtractionWindowWidth??0), ChromSource.unknown), },
                     peaks,
                     null) { TimeIntensitiesGroup = TimeIntensitiesGroup.Singleton(timeIntensities) };
 

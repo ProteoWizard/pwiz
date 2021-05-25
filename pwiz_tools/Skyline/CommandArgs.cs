@@ -118,10 +118,10 @@ namespace pwiz.Skyline
 
         public static readonly Argument ARG_IN = new DocArgument(@"in", PATH_TO_DOCUMENT,
             (c, p) => c.SkylineFile = p.ValueFullPath);
-        public static readonly Argument ARG_SAVE = new DocArgument(@"save", (c, p) => c.Saving = true);
+        public static readonly Argument ARG_SAVE = new DocArgument(@"save", (c, p) => { c.Saving = true; });
         public static readonly Argument ARG_SAVE_SETTINGS = new DocArgument(@"save-settings", (c, p) => c.SaveSettings = true);
         public static readonly Argument ARG_OUT = new DocArgument(@"out", PATH_TO_DOCUMENT,
-            (c, p) => c.SaveFile = p.ValueFullPath);
+            (c, p) => { c.SaveFile = p.ValueFullPath; });
         public static readonly Argument ARG_SHARE_ZIP = new DocArgument(@"share-zip", () => GetPathToFile(SrmDocumentSharing.EXT_SKY_ZIP),
             (c, p) =>
             {
@@ -301,6 +301,40 @@ namespace pwiz.Skyline
             return true;
         }
 
+        public static readonly Argument ARG_CHROMATOGRAMS_LIMIT_NOISE = new DocArgument(@"chromatograms-limit-noise", NUM_VALUE,
+            (c, p) => c.LimitNoise = p.ValueDouble);
+
+        public static readonly Argument ARG_CHROMATOGRAMS_DISCARD_UNUSED = new DocArgument(@"chromatograms-discard-unused",
+            (c, p) => c.ChromatogramsDiscard = true );
+
+        private static readonly ArgumentGroup GROUP_MINIMIZE_RESULTS = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_MINIMIZE_RESULTS_Minimizing_results_file_size, false,
+            ARG_CHROMATOGRAMS_LIMIT_NOISE, ARG_CHROMATOGRAMS_DISCARD_UNUSED)
+        {
+            Validate = c => c.ValidateMinimizeResultsArgs()
+        };
+        
+        private bool ValidateMinimizeResultsArgs()
+        {
+            if (Minimizing)
+            {
+                if (!_seenArguments.Contains(ARG_SAVE) && !_seenArguments.Contains(ARG_OUT))
+                {
+                    // Has minimize argument(s), but no --save or --out command
+                    if (ChromatogramsDiscard)
+                    {
+                        WarnArgRequirement(ARG_CHROMATOGRAMS_DISCARD_UNUSED, ARG_SAVE, ARG_OUT);
+                    }
+                    if (LimitNoise.HasValue)
+                    {
+                        WarnArgRequirement(ARG_CHROMATOGRAMS_LIMIT_NOISE, ARG_SAVE, ARG_OUT);
+                    }
+                    return false;
+                }
+            }
+            return true;
+        }
+
+
         public List<MsDataFileUri> ReplicateFile { get; private set; }
         public string ReplicateName { get; private set; }
         public int ImportThreads { get; private set; }
@@ -314,6 +348,8 @@ namespace pwiz.Skyline
         public bool ImportWarnOnFailure { get; private set; }
         public bool RemovingResults { get; private set; }
         public DateTime? RemoveBeforeDate { get; private set; }
+        public bool ChromatogramsDiscard{ get; private set; }
+        public double? LimitNoise { get; private set; }
         public DateTime? ImportBeforeDate { get; private set; }
         public DateTime? ImportOnOrAfterDate { get; private set; }
         // Waters lockmass correction
@@ -505,7 +541,6 @@ namespace pwiz.Skyline
             Dependencies =
             {
                 { ARG_DECOYS_ADD_COUNT, ARG_DECOYS_ADD },
-                { ARG_DECOYS_DISCARD, ARG_DECOYS_ADD },
             }
         };
 
@@ -665,6 +700,7 @@ namespace pwiz.Skyline
         public List<IPeakFeatureCalculator> ExcludeFeatures { get; private set; }
 
         public bool Reintegrating { get { return !string.IsNullOrEmpty(ReintegrateModelName); } }
+        public bool Minimizing { get { return ChromatogramsDiscard || LimitNoise.HasValue; } }
 
 
         private List<double> ParseNumberList(NameValuePair pair)
@@ -754,20 +790,28 @@ namespace pwiz.Skyline
             (c, p) => c.Refinement.UseBestResult = true);
         // Refinement consistency tab
         public static readonly Argument ARG_REFINE_CV_REMOVE_ABOVE_CUTOFF = new RefineArgument(@"refine-cv-remove-above-cutoff", NUM_VALUE,
-            (c,p) => c.Refinement.CVCutoff = p.ValueDouble);
+            (c,p) => c.Refinement.CVCutoff = p.ValueDouble >= 1 ? p.ValueDouble : p.ValueDouble * 100);  // If a value like 0.2, interpret as 20%
         public static readonly Argument ARG_REFINE_CV_GLOBAL_NORMALIZE = new RefineArgument(@"refine-cv-global-normalize",
-            new[] { NormalizationMethod.GLOBAL_STANDARDS.Name, NormalizationMethod.EQUALIZE_MEDIANS.Name },
+            new[] { NormalizationMethod.GLOBAL_STANDARDS.Name, NormalizationMethod.EQUALIZE_MEDIANS.Name, NormalizationMethod.TIC.Name },
             (c, p) =>
             {
-                c.Refinement.NormalizationMethod = p.Value.Equals(NormalizationMethod.GLOBAL_STANDARDS.Name)
-                    ? AreaCVNormalizationMethod.global_standards
-                    : AreaCVNormalizationMethod.medians;
+                if (p.Value == NormalizationMethod.GLOBAL_STANDARDS.Name)
+                {
+                    c.Refinement.NormalizationMethod = NormalizeOption.FromNormalizationMethod(NormalizationMethod.GLOBAL_STANDARDS);
+                }
+                else if (p.Value == NormalizationMethod.TIC.Name)
+                {
+                    c.Refinement.NormalizationMethod = NormalizeOption.FromNormalizationMethod(NormalizationMethod.TIC);
+                }
+                else
+                {
+                    c.Refinement.NormalizationMethod = NormalizeOption.FromNormalizationMethod(NormalizationMethod.EQUALIZE_MEDIANS);
+                }
             }) { WrapValue = true };
         public static readonly Argument ARG_REFINE_CV_REFERENCE_NORMALIZE = new RefineArgument(@"refine-cv-reference-normalize", LABEL_VALUE,
             (c, p) =>
             {
-                c.Refinement.NormalizationMethod = AreaCVNormalizationMethod.ratio;
-                c.RefinementCvLabelTypeName = p.Value;
+                c.Refinement.NormalizationMethod = NormalizeOption.FromNormalizationMethod(NormalizationMethod.FromIsotopeLabelTypeName(p.Value));
             }) { WrapValue = true };
         public static readonly Argument ARG_REFINE_CV_TRANSITIONS = new RefineArgument(@"refine-cv-transitions",
             new[] { AreaCVTransitions.all.ToString(), AreaCVTransitions.best.ToString() },
@@ -955,8 +999,8 @@ namespace pwiz.Skyline
                 var serverUri = PanoramaUtil.ServerNameToUri(PanoramaServerUri);
                 if (serverUri == null)
                 {
-                    WriteLine(Resources.EditServerDlg_OkDialog_The_text__0__is_not_a_valid_server_name_,
-                        PanoramaServerUri);
+                    WriteLine(Resources.CommandLine_GeneralException_Error___0_, 
+                        string.Format(Resources.EditServerDlg_OkDialog_The_text__0__is_not_a_valid_server_name_, PanoramaServerUri));
                     return false;
                 }
 
@@ -1025,11 +1069,11 @@ namespace pwiz.Skyline
                 }
                 catch (PanoramaServerException x)
                 {
-                    _statusWriter.WriteLine(x.Message);
+                    _statusWriter.WriteLine(Resources.PanoramaHelper_ValidateServer_PanoramaServerException_, x.Message);
                 }
                 catch (Exception x)
                 {
-                    _statusWriter.WriteLine(Resources.PanoramaHelper_ValidateServer_, x.Message);
+                    _statusWriter.WriteLine(Resources.PanoramaHelper_ValidateServer_Exception_, x.Message);
                 }
 
                 return null;
@@ -1044,12 +1088,12 @@ namespace pwiz.Skyline
                 }
                 catch (PanoramaServerException x)
                 {
-                    _statusWriter.WriteLine(x.Message);
+                    _statusWriter.WriteLine(Resources.PanoramaHelper_ValidateFolder_PanoramaServerException_, x.Message);
                 }
                 catch (Exception x)
                 {
                     _statusWriter.WriteLine(
-                        Resources.PanoramaHelper_ValidateFolder_,
+                        Resources.PanoramaHelper_ValidateFolder_Exception_,
                         panoramaFolder, panoramaClient.ServerUri,
                         x.Message);
                 }
@@ -1078,10 +1122,18 @@ namespace pwiz.Skyline
             {
                 c.SearchResultsFiles.Add(p.ValueFullPath);
                 c.CutoffScore = c.CutoffScore ?? Settings.Default.LibraryResultCutOff;
-
+                c.IrtStandardName = null;
+                c.NumCirts = null;
+                c.RecalibrateIrts = false;
             });
         public static readonly Argument ARG_IMPORT_PEPTIDE_SEARCH_CUTOFF = new Argument(@"import-search-cutoff-score", NUM_VALUE,
             (c, p) => c.CutoffScore = p.GetValueDouble(0, 1));
+        public static readonly Argument ARG_IMPORT_PEPTIDE_SEARCH_IRTS = new Argument(@"import-search-irts", NAME_VALUE,
+            (c, p) => c.IrtStandardName = p.Value);
+        public static readonly Argument ARG_IMPORT_PEPTIDE_SEARCH_NUM_CIRTS = new Argument(@"import-search-num-cirts", INT_VALUE,
+            (c, p) => c.NumCirts = p.ValueInt);
+        public static readonly Argument ARG_IMPORT_PEPTIDE_SEARCH_RECALIBRATE_IRTS = new Argument(@"import-search-recalibrate-irts",
+            (c, p) => c.RecalibrateIrts = true);
         public static readonly Argument ARG_IMPORT_PEPTIDE_SEARCH_MODS = new Argument(@"import-search-add-mods",
             (c, p) => c.AcceptAllModifications = true);
         public static readonly Argument ARG_IMPORT_PEPTIDE_SEARCH_AMBIGUOUS = new Argument(@"import-search-include-ambiguous",
@@ -1090,12 +1142,15 @@ namespace pwiz.Skyline
             (c, p) => c.PreferEmbeddedSpectra = true);
 
         private static readonly ArgumentGroup GROUP_IMPORT_SEARCH = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_IMPORT_SEARCH_Importing_peptide_searches, false, 
-            ARG_IMPORT_PEPTIDE_SEARCH_FILE, ARG_IMPORT_PEPTIDE_SEARCH_CUTOFF, ARG_IMPORT_PEPTIDE_SEARCH_MODS,
-            ARG_IMPORT_PEPTIDE_SEARCH_AMBIGUOUS, ARG_IMPORT_PEPTIDE_SEARCH_PREFER_EMBEDDED)
+            ARG_IMPORT_PEPTIDE_SEARCH_FILE, ARG_IMPORT_PEPTIDE_SEARCH_CUTOFF, ARG_IMPORT_PEPTIDE_SEARCH_IRTS, ARG_IMPORT_PEPTIDE_SEARCH_NUM_CIRTS,
+            ARG_IMPORT_PEPTIDE_SEARCH_RECALIBRATE_IRTS, ARG_IMPORT_PEPTIDE_SEARCH_MODS, ARG_IMPORT_PEPTIDE_SEARCH_AMBIGUOUS, ARG_IMPORT_PEPTIDE_SEARCH_PREFER_EMBEDDED)
         {
             Dependencies =
             {
                 { ARG_IMPORT_PEPTIDE_SEARCH_CUTOFF, ARG_IMPORT_PEPTIDE_SEARCH_FILE },
+                { ARG_IMPORT_PEPTIDE_SEARCH_IRTS, ARG_IMPORT_PEPTIDE_SEARCH_FILE },
+                { ARG_IMPORT_PEPTIDE_SEARCH_NUM_CIRTS, ARG_IMPORT_PEPTIDE_SEARCH_IRTS },
+                { ARG_IMPORT_PEPTIDE_SEARCH_RECALIBRATE_IRTS, ARG_IMPORT_PEPTIDE_SEARCH_IRTS },
                 { ARG_IMPORT_PEPTIDE_SEARCH_MODS, ARG_IMPORT_PEPTIDE_SEARCH_FILE },
                 { ARG_IMPORT_PEPTIDE_SEARCH_AMBIGUOUS, ARG_IMPORT_PEPTIDE_SEARCH_FILE },
                 { ARG_IMPORT_PEPTIDE_SEARCH_PREFER_EMBEDDED, ARG_IMPORT_PEPTIDE_SEARCH_FILE },
@@ -1104,6 +1159,9 @@ namespace pwiz.Skyline
 
         public List<string> SearchResultsFiles { get; private set; }
         public double? CutoffScore { get; private set; }
+        public string IrtStandardName { get; private set; }
+        public int? NumCirts { get; private set; }
+        public bool RecalibrateIrts { get; private set; }
         public bool AcceptAllModifications { get; private set; }
         public bool IncludeAmbiguousMatches { get; private set; }
         public bool? PreferEmbeddedSpectra { get; private set; }
@@ -1715,6 +1773,7 @@ namespace pwiz.Skyline
                     GROUP_IMPORT,
                     GROUP_REINTEGRATE,
                     GROUP_REMOVE,
+                    GROUP_MINIMIZE_RESULTS,
                     GROUP_IMPORT_DOC,
                     GROUP_ANNOTATIONS,
                     GROUP_FASTA,
@@ -1831,7 +1890,7 @@ namespace pwiz.Skyline
             }
             catch (Exception x)
             {
-                // Unexpected behavior, but better to output the error then appear to crash, and
+                // Unexpected behavior, but better to output the error than appear to crash, and
                 // have Windows write it to the application event log.
                 WriteLine(Resources.CommandLine_GeneralException_Error___0_, x.Message);
                 WriteLine(x.StackTrace);
@@ -1902,15 +1961,26 @@ namespace pwiz.Skyline
             return true;
         }
 
-        public static string WarnArgRequirementText(Argument usedArg, Argument requiredArg)
+        public static string WarnArgRequirementText(Argument usedArg, params Argument[] requiredArgs)
         {
-            return string.Format(Resources.CommandArgs_WarnArgRequirment_Warning__Use_of_the_argument__0__requires_the_argument__1_,
-                usedArg.ArgumentText, requiredArg.ArgumentText);
+            if (requiredArgs.Length == 1)
+                return string.Format(Resources.CommandArgs_WarnArgRequirment_Warning__Use_of_the_argument__0__requires_the_argument__1_,
+                    usedArg.ArgumentText, requiredArgs[0].ArgumentText);
+
+            var requiredArgsText = new List<string>()
+            {
+                string.Format(
+                    Resources
+                        .CommandArgs_WarnArgRequirementText_Use_of_the_argument__0__requires_one_of_the_following_arguments_,
+                    usedArg.ArgumentText)
+            };
+            requiredArgsText.AddRange(requiredArgs.Select(i => i.ArgumentText).ToList());
+            return TextUtil.LineSeparate(requiredArgsText);
         }
 
-        private void WarnArgRequirement(Argument usedArg, Argument requiredArg)
+        private void WarnArgRequirement(Argument usedArg, params Argument[] requiredArgs)
         {
-            WriteLine(WarnArgRequirementText(usedArg, requiredArg));
+            WriteLine(WarnArgRequirementText(usedArg, requiredArgs));
         }
 
         public static string ErrorArgsExclusiveText(Argument arg1, Argument arg2)

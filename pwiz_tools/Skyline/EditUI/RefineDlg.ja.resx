@@ -1821,6 +1821,354 @@
   <data name="&gt;&gt;tabConsistency.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
+  <data name="comboMSGroupComparisons.Location" type="System.Drawing.Point, System.Drawing">
+    <value>15, 177</value>
+  </data>
+  <data name="comboMSGroupComparisons.Size" type="System.Drawing.Size, System.Drawing">
+    <value>65, 21</value>
+  </data>
+  <data name="comboMSGroupComparisons.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="&gt;&gt;comboMSGroupComparisons.Name" xml:space="preserve">
+    <value>comboMSGroupComparisons</value>
+  </data>
+  <data name="&gt;&gt;comboMSGroupComparisons.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboMSGroupComparisons.Parent" xml:space="preserve">
+    <value>tabGroupComparisons</value>
+  </data>
+  <data name="&gt;&gt;comboMSGroupComparisons.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="labelFoldChangeUnit.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelFoldChangeUnit.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelFoldChangeUnit.Location" type="System.Drawing.Point, System.Drawing">
+    <value>86, 242</value>
+  </data>
+  <data name="labelFoldChangeUnit.Size" type="System.Drawing.Size, System.Drawing">
+    <value>40, 13</value>
+  </data>
+  <data name="labelFoldChangeUnit.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
+  </data>
+  <data name="labelFoldChangeUnit.Text" xml:space="preserve">
+    <value>-Log10</value>
+  </data>
+  <data name="&gt;&gt;labelFoldChangeUnit.Name" xml:space="preserve">
+    <value>labelFoldChangeUnit</value>
+  </data>
+  <data name="&gt;&gt;labelFoldChangeUnit.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelFoldChangeUnit.Parent" xml:space="preserve">
+    <value>tabGroupComparisons</value>
+  </data>
+  <data name="&gt;&gt;labelFoldChangeUnit.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="labelPValueUnit.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelPValueUnit.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelPValueUnit.Location" type="System.Drawing.Point, System.Drawing">
+    <value>86, 302</value>
+  </data>
+  <data name="labelPValueUnit.Size" type="System.Drawing.Size, System.Drawing">
+    <value>31, 13</value>
+  </data>
+  <data name="labelPValueUnit.TabIndex" type="System.Int32, mscorlib">
+    <value>10</value>
+  </data>
+  <data name="labelPValueUnit.Text" xml:space="preserve">
+    <value>Log2</value>
+  </data>
+  <data name="&gt;&gt;labelPValueUnit.Name" xml:space="preserve">
+    <value>labelPValueUnit</value>
+  </data>
+  <data name="&gt;&gt;labelPValueUnit.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelPValueUnit.Parent" xml:space="preserve">
+    <value>tabGroupComparisons</value>
+  </data>
+  <data name="&gt;&gt;labelPValueUnit.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="checkBoxLog.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="checkBoxLog.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="checkBoxLog.Location" type="System.Drawing.Point, System.Drawing">
+    <value>15, 329</value>
+  </data>
+  <data name="checkBoxLog.Size" type="System.Drawing.Size, System.Drawing">
+    <value>44, 17</value>
+  </data>
+  <data name="checkBoxLog.TabIndex" type="System.Int32, mscorlib">
+    <value>11</value>
+  </data>
+  <data name="checkBoxLog.Text" xml:space="preserve">
+    <value>ログ(&amp;L)</value>
+  </data>
+  <data name="&gt;&gt;checkBoxLog.Name" xml:space="preserve">
+    <value>checkBoxLog</value>
+  </data>
+  <data name="&gt;&gt;checkBoxLog.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;checkBoxLog.Parent" xml:space="preserve">
+    <value>tabGroupComparisons</value>
+  </data>
+  <data name="&gt;&gt;checkBoxLog.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="textFoldChange.Location" type="System.Drawing.Point, System.Drawing">
+    <value>15, 299</value>
+  </data>
+  <data name="textFoldChange.Size" type="System.Drawing.Size, System.Drawing">
+    <value>65, 20</value>
+  </data>
+  <data name="textFoldChange.TabIndex" type="System.Int32, mscorlib">
+    <value>9</value>
+  </data>
+  <data name="&gt;&gt;textFoldChange.Name" xml:space="preserve">
+    <value>textFoldChange</value>
+  </data>
+  <data name="&gt;&gt;textFoldChange.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textFoldChange.Parent" xml:space="preserve">
+    <value>tabGroupComparisons</value>
+  </data>
+  <data name="&gt;&gt;textFoldChange.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="textPValue.Location" type="System.Drawing.Point, System.Drawing">
+    <value>15, 239</value>
+  </data>
+  <data name="textPValue.Size" type="System.Drawing.Size, System.Drawing">
+    <value>65, 20</value>
+  </data>
+  <data name="textPValue.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="&gt;&gt;textPValue.Name" xml:space="preserve">
+    <value>textPValue</value>
+  </data>
+  <data name="&gt;&gt;textPValue.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textPValue.Parent" xml:space="preserve">
+    <value>tabGroupComparisons</value>
+  </data>
+  <data name="&gt;&gt;textPValue.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="labelFoldChange.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelFoldChange.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelFoldChange.Location" type="System.Drawing.Point, System.Drawing">
+    <value>12, 283</value>
+  </data>
+  <data name="labelFoldChange.Size" type="System.Drawing.Size, System.Drawing">
+    <value>99, 13</value>
+  </data>
+  <data name="labelFoldChange.TabIndex" type="System.Int32, mscorlib">
+    <value>8</value>
+  </data>
+  <data name="labelFoldChange.Text" xml:space="preserve">
+    <value>倍率変化カットオフ(&amp;C)：</value>
+  </data>
+  <data name="&gt;&gt;labelFoldChange.Name" xml:space="preserve">
+    <value>labelFoldChange</value>
+  </data>
+  <data name="&gt;&gt;labelFoldChange.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelFoldChange.Parent" xml:space="preserve">
+    <value>tabGroupComparisons</value>
+  </data>
+  <data name="&gt;&gt;labelFoldChange.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
+  <data name="labelPValue.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelPValue.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelPValue.Location" type="System.Drawing.Point, System.Drawing">
+    <value>12, 223</value>
+  </data>
+  <data name="labelPValue.Size" type="System.Drawing.Size, System.Drawing">
+    <value>119, 13</value>
+  </data>
+  <data name="labelPValue.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="labelPValue.Text" xml:space="preserve">
+    <value>調整されたp値のカットオフ(&amp;P)：</value>
+  </data>
+  <data name="&gt;&gt;labelPValue.Name" xml:space="preserve">
+    <value>labelPValue</value>
+  </data>
+  <data name="&gt;&gt;labelPValue.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelPValue.Parent" xml:space="preserve">
+    <value>tabGroupComparisons</value>
+  </data>
+  <data name="&gt;&gt;labelPValue.ZOrder" xml:space="preserve">
+    <value>7</value>
+  </data>
+  <data name="labelMSLevel.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelMSLevel.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelMSLevel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>12, 161</value>
+  </data>
+  <data name="labelMSLevel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>51, 13</value>
+  </data>
+  <data name="labelMSLevel.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="labelMSLevel.Text" xml:space="preserve">
+    <value>MSレベル(&amp;M)：</value>
+  </data>
+  <data name="&gt;&gt;labelMSLevel.Name" xml:space="preserve">
+    <value>labelMSLevel</value>
+  </data>
+  <data name="&gt;&gt;labelMSLevel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelMSLevel.Parent" xml:space="preserve">
+    <value>tabGroupComparisons</value>
+  </data>
+  <data name="&gt;&gt;labelMSLevel.ZOrder" xml:space="preserve">
+    <value>8</value>
+  </data>
+  <data name="labelGroupComparison.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelGroupComparison.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelGroupComparison.Location" type="System.Drawing.Point, System.Drawing">
+    <value>12, 17</value>
+  </data>
+  <data name="labelGroupComparison.Size" type="System.Drawing.Size, System.Drawing">
+    <value>101, 13</value>
+  </data>
+  <data name="labelGroupComparison.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="labelGroupComparison.Text" xml:space="preserve">
+    <value>グループ比較(&amp;G)：</value>
+  </data>
+  <data name="&gt;&gt;labelGroupComparison.Name" xml:space="preserve">
+    <value>labelGroupComparison</value>
+  </data>
+  <data name="&gt;&gt;labelGroupComparison.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelGroupComparison.Parent" xml:space="preserve">
+    <value>tabGroupComparisons</value>
+  </data>
+  <data name="&gt;&gt;labelGroupComparison.ZOrder" xml:space="preserve">
+    <value>9</value>
+  </data>
+  <data name="btnEditGroupComparisons.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="btnEditGroupComparisons.Location" type="System.Drawing.Point, System.Drawing">
+    <value>269, 33</value>
+  </data>
+  <data name="btnEditGroupComparisons.Size" type="System.Drawing.Size, System.Drawing">
+    <value>95, 23</value>
+  </data>
+  <data name="btnEditGroupComparisons.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="btnEditGroupComparisons.Text" xml:space="preserve">
+    <value>リストを編集(E)...</value>
+  </data>
+  <data name="&gt;&gt;btnEditGroupComparisons.Name" xml:space="preserve">
+    <value>btnEditGroupComparisons</value>
+  </data>
+  <data name="&gt;&gt;btnEditGroupComparisons.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnEditGroupComparisons.Parent" xml:space="preserve">
+    <value>tabGroupComparisons</value>
+  </data>
+  <data name="&gt;&gt;btnEditGroupComparisons.ZOrder" xml:space="preserve">
+    <value>10</value>
+  </data>
+  <data name="checkedListBoxGroupComparisons.Location" type="System.Drawing.Point, System.Drawing">
+    <value>15, 33</value>
+  </data>
+  <data name="checkedListBoxGroupComparisons.Size" type="System.Drawing.Size, System.Drawing">
+    <value>248, 109</value>
+  </data>
+  <data name="checkedListBoxGroupComparisons.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;checkedListBoxGroupComparisons.Name" xml:space="preserve">
+    <value>checkedListBoxGroupComparisons</value>
+  </data>
+  <data name="&gt;&gt;checkedListBoxGroupComparisons.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckedListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;checkedListBoxGroupComparisons.Parent" xml:space="preserve">
+    <value>tabGroupComparisons</value>
+  </data>
+  <data name="&gt;&gt;checkedListBoxGroupComparisons.ZOrder" xml:space="preserve">
+    <value>11</value>
+  </data>
+  <data name="tabGroupComparisons.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="tabGroupComparisons.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="tabGroupComparisons.Size" type="System.Drawing.Size, System.Drawing">
+    <value>387, 477</value>
+  </data>
+  <data name="tabGroupComparisons.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="tabGroupComparisons.Text" xml:space="preserve">
+    <value>グループ比較</value>
+  </data>
+  <data name="&gt;&gt;tabGroupComparisons.Name" xml:space="preserve">
+    <value>tabGroupComparisons</value>
+  </data>
+  <data name="&gt;&gt;tabGroupComparisons.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabGroupComparisons.Parent" xml:space="preserve">
+    <value>tabControl1</value>
+  </data>
+  <data name="&gt;&gt;tabGroupComparisons.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
   <data name="tabControl1.Location" type="System.Drawing.Point, System.Drawing">
     <value>13, 13</value>
   </data>
@@ -1861,7 +2209,7 @@
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=19.1.1.311, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;helpTip.Name" xml:space="preserve">
     <value>helpTip</value>
@@ -1873,6 +2221,6 @@
     <value>RefineDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=19.1.1.311, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

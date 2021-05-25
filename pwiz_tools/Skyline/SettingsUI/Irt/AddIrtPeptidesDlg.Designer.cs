@@ -53,7 +53,6 @@
             this.Equation = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.R = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Result = new System.Windows.Forms.DataGridViewLinkColumn();
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).BeginInit();
             this.panelKeep.SuspendLayout();
             this.panelOverwrite.SuspendLayout();
@@ -245,7 +244,6 @@
             this.MinimizeBox = false;
             this.Name = "AddIrtPeptidesDlg";
             this.ShowInTaskbar = false;
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).EndInit();
             this.panelKeep.ResumeLayout(false);
             this.panelKeep.PerformLayout();

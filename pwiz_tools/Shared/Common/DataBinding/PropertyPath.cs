@@ -84,6 +84,14 @@ namespace pwiz.Common.DataBinding
         {
             return new PropertyPath(this, null, false);
         }
+
+        /// <summary>
+        /// Returns a property path corresponding to the Values collection of an IDictionary
+        /// </summary>
+        public PropertyPath DictionaryValues()
+        {
+            return LookupAllItems().Property(@"Value");
+        }
         public PropertyPath Concat(PropertyPath propertyPath)
         {
             if (propertyPath.IsRoot)
@@ -390,12 +398,5 @@ namespace pwiz.Common.DataBinding
             public int Location { get; private set; }
             public string ErrorMessage { get; private set; }
         }
-    }
-
-    public enum LookupType
-    {
-        Unbound,
-        Property,
-        Index,
     }
 }

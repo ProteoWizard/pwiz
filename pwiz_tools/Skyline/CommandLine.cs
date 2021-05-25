@@ -24,6 +24,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
@@ -81,6 +82,25 @@ namespace pwiz.Skyline
 
         public int Run(string[] args, bool withoutUsage = false)
         {
+            var exitStatus = RunInner(args, withoutUsage);
+
+            // Handle cases where the error reporting and exit code are out of synch
+            // TODO: Add testing that fails when these happen and fix the causes
+            if (exitStatus == Program.EXIT_CODE_SUCCESS)
+            {
+                if (_out.IsErrorReported)
+                    return Program.EXIT_CODE_RAN_WITH_ERRORS;
+            }
+            else if (!_out.IsErrorReported)
+            {
+                _out.WriteLine(Resources.CommandLine_Run_Error__Failure_occurred__Exiting___);
+            }
+
+            return exitStatus;
+        }
+
+        private int RunInner(string[] args, bool withoutUsage = false)
+        {
             _importedResults = false;
 
             var commandArgs = new CommandArgs(_out, _doc != null);
@@ -131,7 +151,9 @@ namespace pwiz.Skyline
             }
             if (commandArgs.RunningBatchCommands)
             {
-                RunBatchCommands(commandArgs.BatchCommandsPath);
+                var exitCode = RunBatchCommands(commandArgs.BatchCommandsPath);
+                if (exitCode != Program.EXIT_CODE_SUCCESS)
+                    return exitCode;
                 anyAction = true;
             }
             if (commandArgs.ImportingSkyr)
@@ -145,17 +167,20 @@ namespace pwiz.Skyline
                 if (!anyAction && !withoutUsage)
                     commandArgs.Usage();
 
-                // Exit quietly because Run(args[]) ran sucessfully. No work with a skyline document was called for.
+                // Exit quietly because Run(args[]) ran successfully. No work with a skyline document was called for.
                 return Program.EXIT_CODE_SUCCESS;
             }
 
-            _skylineFile = commandArgs.SkylineFile;
-            if ((_skylineFile != null && !OpenSkyFile(_skylineFile)) ||
-                (_skylineFile == null && _doc == null))
+            var skylineFile = commandArgs.SkylineFile;
+            if ((skylineFile != null && !OpenSkyFile(skylineFile)) ||
+                (skylineFile == null && _doc == null))
             {
                 _out.WriteLine(Resources.CommandLine_Run_Exiting___);
                 return Program.EXIT_CODE_RAN_WITH_ERRORS;
             }
+
+            if (skylineFile != null)
+                _skylineFile = skylineFile;
 
             try
             {
@@ -171,12 +196,16 @@ namespace pwiz.Skyline
                     }
                     DocContainer.SetDocument(_doc, null);
 
-                    if (ProcessDocument(commandArgs))
+                    bool successProcessing = ProcessDocument(commandArgs);
+                    if (successProcessing)
                         PerformExportOperations(commandArgs);
 
                     // Save any settings list changes made by opening the document
                     if (commandArgs.SaveSettings)
                         SaveSettings();
+
+                    if (!successProcessing)
+                        return Program.EXIT_CODE_RAN_WITH_ERRORS;
                 }
             }
             finally
@@ -259,7 +288,7 @@ namespace pwiz.Skyline
                     return false;
             }
 
-            if (commandArgs.AddDecoys)
+            if (commandArgs.AddDecoys || commandArgs.DiscardDecoys)
             {
                 if (!AddDecoys(commandArgs))
                     return false;
@@ -278,6 +307,12 @@ namespace pwiz.Skyline
             }
 
             WaitForDocumentLoaded();
+
+            if (commandArgs.Minimizing)
+            {
+                if (!MinimizeResults(commandArgs))
+                    return false;
+            }
 
             if (commandArgs.RemovingResults && commandArgs.RemoveBeforeDate.HasValue)
             {
@@ -458,7 +493,7 @@ namespace pwiz.Skyline
             {
                 var labelType = GetLabelTypeHelper(commandArgs.RefinementCvLabelTypeName);
                 if (labelType != null)
-                    commandArgs.Refinement.NormalizationLabelType = labelType;
+                    commandArgs.Refinement.NormalizationMethod = NormalizeOption.FromIsotopeLabelType(labelType);
                 else
                     return false;
             }
@@ -836,20 +871,20 @@ namespace pwiz.Skyline
             {
                 if (commandArgs.IonMobilityLibraryRes.HasValue)
                 {
-                    if (!_doc.Settings.PeptideSettings.Prediction.UseLibraryIonMobilityValues)
+                    if (!_doc.Settings.TransitionSettings.IonMobilityFiltering.UseSpectralLibraryIonMobilityValues)
                         _out.WriteLine(Resources.CommandLine_SetImsSettings_Enabling_extraction_based_on_spectral_library_ion_mobility_values_);
                     double rp = commandArgs.IonMobilityLibraryRes.Value;
                     var imsWindowCalcNew = new IonMobilityWindowWidthCalculator(rp);
-                    var imsWindowCalc = _doc.Settings.PeptideSettings.Prediction.LibraryIonMobilityWindowWidthCalculator;
+                    var imsWindowCalc = _doc.Settings.TransitionSettings.IonMobilityFiltering.FilterWindowWidthCalculator;
                     if (!Equals(imsWindowCalc, imsWindowCalcNew))
                         _out.WriteLine(Resources.CommandLine_SetImsSettings_Changing_ion_mobility_spectral_library_resolving_power_to__0__, rp);
-                    ModifyDocument(d => d.ChangeSettings(d.Settings.ChangePeptidePrediction(p =>
+                    ModifyDocument(d => d.ChangeSettings(d.Settings.ChangeTransitionIonMobilityFiltering(p =>
                         {
                             var result = p;
-                            if (!result.UseLibraryIonMobilityValues)
-                                result = result.ChangeUseLibraryIonMobilityValues(true);
-                            if (!Equals(result.LibraryIonMobilityWindowWidthCalculator, imsWindowCalcNew))
-                                result = result.ChangeLibraryDriftTimesWindowWidthCalculator(imsWindowCalcNew);
+                            if (!result.UseSpectralLibraryIonMobilityValues)
+                                result = result.ChangeUseSpectralLibraryIonMobilityValues(true);
+                            if (!Equals(result.FilterWindowWidthCalculator, imsWindowCalcNew))
+                                result = result.ChangeFilterWindowWidthCalculator(imsWindowCalcNew);
                             return result;
                         })),
                         AuditLogEntry.SettingsLogFunction);
@@ -870,8 +905,12 @@ namespace pwiz.Skyline
             {
                 var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(string.Empty));
                 string hash;
-                using (var reader = new HashingStreamReaderWithProgress(skylineFile, progressMonitor))
+                using (var hashingStreamReader = new HashingStreamReaderWithProgress(skylineFile, progressMonitor))
                 {
+                    // Wrap stream in XmlReader so that BaseUri is known
+                    var reader = XmlReader.Create(hashingStreamReader, 
+                        new XmlReaderSettings() { IgnoreWhitespace = true }, 
+                        skylineFile);  
                     XmlSerializer xmlSerializer = new XmlSerializer(typeof(SrmDocument));
                     _out.WriteLine(Resources.CommandLine_OpenSkyFile_Opening_file___);
 
@@ -880,7 +919,7 @@ namespace pwiz.Skyline
                         return false;
 
                     _out.WriteLine(Resources.CommandLine_OpenSkyFile_File__0__opened_, Path.GetFileName(skylineFile));
-                    hash = reader.Stream.Done();
+                    hash = hashingStreamReader.Stream.Done();
                 }
 
                 SetDocument(_doc.ReadAuditLog(skylineFile, hash, () => null));
@@ -1059,7 +1098,7 @@ namespace pwiz.Skyline
 
         private SrmDocument ConnectIonMobilityDatabase(SrmDocument document, string documentPath)
         {
-            var settings = document.Settings.ConnectIonMobilityLibrary(imdb => FindIonMobilityDatabase(documentPath, imdb));
+            var settings = document.Settings.ConnectIonMobilityLibrary(imsdb => FindIonMobilityDatabase(documentPath, imsdb));
             if (settings == null)
                 return null;
             if (ReferenceEquals(settings, document.Settings))
@@ -1067,25 +1106,22 @@ namespace pwiz.Skyline
             return document.ChangeSettings(settings);
         }
 
-        private IonMobilityLibrarySpec FindIonMobilityDatabase(string documentPath, IonMobilityLibrarySpec ionMobilityLibSpec)
+        private IonMobilityLibrary FindIonMobilityDatabase(string documentPath, IonMobilityLibrary ionMobilityLibSpec)
         {
 
-            IonMobilityLibrarySpec result;
-            if (Settings.Default.IonMobilityLibraryList.TryGetValue(ionMobilityLibSpec.Name, out result))
+            if (Settings.Default.IonMobilityLibraryList.TryGetValue(ionMobilityLibSpec.Name, out var result))
             {
-                if (result.IsNone || File.Exists(result.PersistencePath))
+                if (result.IsNone || File.Exists(result.FilePath))
                     return result;                
             }
 
             // First look for the file name in the document directory
-            string filePath = PathEx.FindExistingRelativeFile(documentPath, ionMobilityLibSpec.PersistencePath);
+            string filePath = PathEx.FindExistingRelativeFile(documentPath, ionMobilityLibSpec.FilePath);
             if (filePath != null)
             {
                 try
                 {
-                    var lib = ionMobilityLibSpec as IonMobilityLibrary;
-                    if (lib != null)
-                        return lib.ChangeDatabasePath(filePath);
+                    return ionMobilityLibSpec.ChangeDatabasePath(filePath);
                 }
 // ReSharper disable once EmptyGeneralCatchClause
                 catch
@@ -1094,7 +1130,7 @@ namespace pwiz.Skyline
                 }
             }
 
-            _out.WriteLine(Resources.CommandLine_FindIonMobilityDatabase_Error__Could_not_find_the_ion_mobility_library__0__, Path.GetFileName(ionMobilityLibSpec.PersistencePath));
+            _out.WriteLine(Resources.CommandLine_FindIonMobilityDatabase_Error__Could_not_find_the_ion_mobility_library__0__, Path.GetFileName(ionMobilityLibSpec.FilePath));
             return null;
         }
 
@@ -1712,6 +1748,34 @@ namespace pwiz.Skyline
             }
         }
 
+        public bool MinimizeResults(CommandArgs commandArgs)
+        {
+            if (!_doc.Settings.HasResults)
+            {
+                _out.WriteLine(Resources.CommandLine_ReintegratePeaks_Error__You_must_first_import_results_into_the_document_before_reintegrating_);
+                return false;
+            }
+
+            var saveFile = commandArgs.SaveFile ?? _skylineFile;
+            _out.WriteLine(Resources.CommandLine_MinimizeResults_Minimizing_results_to__0_, saveFile);
+            if (commandArgs.ChromatogramsDiscard)
+                _out.WriteLine(Resources.CommandLine_MinimizeResults_Removing_unused_chromatograms___);
+            if (commandArgs.LimitNoise.HasValue)
+                _out.WriteLine(Resources.CommandLine_MinimizeResults_Limiting_chromatogram_noise_to______0__minutes_around_peak___, commandArgs.LimitNoise);
+
+            var minimizeResults = Model.MinimizeResults.MinimizeResultsFromDocument(Document, ((statistics, sizeCalculator) =>
+            {
+                _out.WriteLine(statistics.PercentComplete + @"%");
+            }));
+            minimizeResults.Settings = minimizeResults.Settings
+                .ChangeDiscardUnmatchedChromatograms(commandArgs.ChromatogramsDiscard)
+                .ChangeNoiseTimeRange(commandArgs.LimitNoise);
+            minimizeResults.MinimizeToFile(saveFile);
+            _doc = minimizeResults.Document;
+            _skylineFile = saveFile;
+            return true;
+        }
+
         private bool ImportSearch(CommandArgs commandArgs)
         {
             var doc = Document;
@@ -1729,10 +1793,21 @@ namespace pwiz.Skyline
         private bool ImportSearchInternal(CommandArgs commandArgs, ref SrmDocument doc)
         {
             var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(String.Empty));
+            IrtStandard irtStandard = null;
+            if (!string.IsNullOrEmpty(commandArgs.IrtStandardName))
+            {
+                irtStandard = Settings.Default.IrtStandardList.FirstOrDefault(standard => Equals(standard.Name, commandArgs.IrtStandardName));
+                if (irtStandard == null)
+                {
+                    _out.WriteLine(Resources.CommandLine_ImportSearchInternal_The_iRT_standard_name___0___is_invalid_, commandArgs.IrtStandardName);
+                    return false;
+                }
+            }
             var import = new ImportPeptideSearch
             {
                 SearchFilenames = commandArgs.SearchResultsFiles.ToArray(),
-                CutoffScore = commandArgs.CutoffScore.GetValueOrDefault()
+                CutoffScore = commandArgs.CutoffScore.GetValueOrDefault(),
+                IrtStandard = irtStandard
             };
 
             // Build library
@@ -1758,6 +1833,65 @@ namespace pwiz.Skyline
             doc = import.AddDocumentSpectralLibrary(doc, docLibSpec);
             if (doc == null)
                 return false;
+
+            // Add iRTs
+            if (import.IrtStandard != null && !import.IrtStandard.Name.Equals(IrtStandard.EMPTY.Name))
+            {
+                ImportPeptideSearch.GetLibIrtProviders(import.DocLib, import.IrtStandard, progressMonitor,
+                    out var irtProviders, out var autoStandards, out var cirtPeptides);
+                int? numCirt = null;
+                if (cirtPeptides.Length >= RCalcIrt.MIN_PEPTIDES_COUNT)
+                {
+                    if (!commandArgs.NumCirts.HasValue)
+                    {
+                        _out.WriteLine(Resources.CommandLine_ImportSearchInternal__0__must_be_set_when_using_CiRT_peptides_, CommandArgs.ARG_IMPORT_PEPTIDE_SEARCH_NUM_CIRTS.Name);
+                        return false;
+                    }
+                    numCirt = commandArgs.NumCirts.Value;
+                }
+                else if (ReferenceEquals(import.IrtStandard, IrtStandard.AUTO))
+                {
+                    switch (autoStandards.Count)
+                    {
+                        case 0:
+                            import.IrtStandard = new IrtStandard(XmlNamedElement.NAME_INTERNAL, null, null, IrtPeptidePicker.Pick(irtProviders, 10));
+                            break;
+                        case 1:
+                            import.IrtStandard = autoStandards[0];
+                            break;
+                        default:
+                            _out.WriteLine(Resources.CommandLine_ImportSearchInternal_iRT_standard_set_to__0___but_multiple_iRT_standards_were_found__iRT_standard_must_be_set_explicitly_,
+                                IrtStandard.AUTO.Name);
+                            return false;
+                    }
+                }
+
+                ProcessedIrtAverages processed;
+                try
+                {
+                    processed = ImportPeptideSearch.ProcessRetentionTimes(numCirt, irtProviders, import.IrtStandard.Peptides.ToArray(),
+                        cirtPeptides, IrtRegressionType.DEFAULT, progressMonitor, out var newStandardPeptides);
+                    if (newStandardPeptides != null)
+                    {
+                        import.IrtStandard = new IrtStandard(XmlNamedElement.NAME_INTERNAL, null, null, newStandardPeptides);
+                    }
+                }
+                catch (Exception x)
+                {
+                    _out.WriteLine(TextUtil.LineSeparate(
+                        Resources.BuildPeptideSearchLibraryControl_AddIrtLibraryTable_An_error_occurred_while_processing_retention_times_,
+                        x.Message));
+                    return false;
+                }
+
+                var processedDbIrtPeptides = processed.DbIrtPeptides.ToArray();
+                if (processedDbIrtPeptides.Any())
+                {
+                    ImportPeptideSearch.CreateIrtDb(docLibSpec.FilePath, processed, import.IrtStandard.Peptides.ToArray(),
+                        processed.CanRecalibrateStandards(import.IrtStandard.Peptides) && commandArgs.RecalibrateIrts, IrtRegressionType.DEFAULT, progressMonitor);
+                }
+                doc = ImportPeptideSearch.AddRetentionTimePredictor(doc, docLibSpec);
+            }
 
             if (!import.VerifyRetentionTimes(import.GetFoundResultsFiles().Select(f => f.Path)))
             {
@@ -1825,6 +1959,8 @@ namespace pwiz.Skyline
                 {
                     doc = ImportPeptideSearch.RemoveProteinsByPeptideCount(doc, 1);
                 }
+
+                doc = ImportPeptideSearch.AddStandardsToDocument(doc, import.IrtStandard);
             }
 
             // Import results
@@ -1869,7 +2005,16 @@ namespace pwiz.Skyline
 
         private bool AddDecoys(CommandArgs commandArgs)
         {
-            if (_doc.PeptideGroups.Contains(g => g.IsDecoy))
+            if (!commandArgs.AddDecoys)
+            {
+                if (!commandArgs.DiscardDecoys || !_doc.MoleculeGroups.Contains(g => g.IsDecoy))
+                    return true;
+
+                ModifyDocument(RefinementSettings.RemoveDecoys);
+                _out.WriteLine(Resources.CommandLine_AddDecoys_Decoys_discarded);
+                return true;
+            }
+            if (!commandArgs.DiscardDecoys && _doc.PeptideGroups.Contains(g => g.IsDecoy))
             {
                 _out.WriteLine(Resources.CommandLine_AddDecoys_Error__Attempting_to_add_decoys_to_document_with_decoys_);
                 return false;
@@ -1885,6 +2030,7 @@ namespace pwiz.Skyline
             {
                 _out.WriteLine(Resources.CommandLine_AddDecoys_Error_The_number_of_peptides,
                     numDecoys, numComparableGroups, CommandArgs.ARG_DECOYS_ADD.ArgumentText, CommandArgs.ARG_VALUE_DECOYS_ADD_SHUFFLE);
+                return false;
             }
             var refineAddDecoys = new RefinementSettings
             {
@@ -1892,8 +2038,16 @@ namespace pwiz.Skyline
                 NumberOfDecoys = numDecoys
             };
             int peptidesBefore = _doc.PeptideCount;
+            int decoyPeptideCount = 0;
+            if (commandArgs.DiscardDecoys)
+                decoyPeptideCount = _doc.MoleculeGroups.Where(g => g.IsDecoy).Sum(g => g.MoleculeCount);
+
             ModifyDocument(d => refineAddDecoys.GenerateDecoys(d));
-            _out.WriteLine(Resources.CommandLine_AddDecoys_Added__0__decoy_peptides_using___1___method, _doc.PeptideCount - peptidesBefore, commandArgs.AddDecoysType);
+
+            if (decoyPeptideCount > 0)
+                _out.WriteLine(Resources.CommandLine_AddDecoys_Decoys_discarded);
+            _out.WriteLine(Resources.CommandLine_AddDecoys_Added__0__decoy_peptides_using___1___method,
+                _doc.PeptideCount - (peptidesBefore - decoyPeptideCount), commandArgs.AddDecoysType);
             return true;
         }
 
@@ -2137,7 +2291,8 @@ namespace pwiz.Skyline
 
             var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(string.Empty));
             var inputs = new MassListInputs(commandArgs.TransitionListPath);
-            var docNew = _doc.ImportMassList(inputs, progressMonitor, null,
+            var importer = _doc.PreImportMassList(inputs, progressMonitor, false);
+            var docNew = _doc.ImportMassList(inputs, importer, progressMonitor, null,
                 out selectPath, out irtPeptides, out librarySpectra, out errorList, out peptideGroups);
 
             // If nothing was imported (e.g. operation was canceled or zero error-free transitions) and also no errors, just return
@@ -2505,6 +2660,9 @@ namespace pwiz.Skyline
             var viewContext = DocumentGridViewContext.CreateDocumentGridViewContext(_doc, reportInvariant
                 ? DataSchemaLocalizer.INVARIANT
                 : SkylineDataSchema.GetLocalizedSchemaLocalizer());
+            // Make sure invariant report format uses a true comma if a tab separator was not specified.
+            if (reportInvariant && reportColSeparator != TextUtil.SEPARATOR_TSV)
+                reportColSeparator = TextUtil.SEPARATOR_CSV;
             var viewInfo = viewContext.GetViewInfo(PersistedViews.MainGroup.Id.ViewName(reportName));
             if (null == viewInfo)
             {
@@ -2749,11 +2907,12 @@ namespace pwiz.Skyline
         }
 
         // A function for running each line of a text file like a SkylineRunner command
-        public void RunBatchCommands(string path)
+        public int RunBatchCommands(string path)
         {
             if (!File.Exists(path))
             {
                 _out.WriteLine(Resources.CommandLine_RunBatchCommands_Error___0__does_not_exist____batch_commands_failed_, path);
+                return Program.EXIT_CODE_RAN_WITH_ERRORS;
             }
             else
             {
@@ -2767,7 +2926,9 @@ namespace pwiz.Skyline
                         {
                             // Parse the line and run it.
                             string[] args = ParseArgs(input);
-                            Run(args);
+                            int exitCode = Run(args);
+                            if (exitCode != Program.EXIT_CODE_SUCCESS)
+                                return exitCode;
                         }
                     }
                 }
@@ -2776,6 +2937,7 @@ namespace pwiz.Skyline
                     _out.WriteLine(Resources.CommandLine_RunBatchCommands_Error__failed_to_open_file__0____batch_commands_command_failed_, path);
                 }
             }            
+            return Program.EXIT_CODE_SUCCESS;
         }
         
         /// <summary>
@@ -3474,12 +3636,14 @@ namespace pwiz.Skyline
         public CommandStatusWriter(TextWriter writer)
             : base(writer.FormatProvider)
         {
-            _writer = Synchronized(writer); // Make this thread safe for more predicitable console output
+            _writer = Synchronized(writer); // Make this thread safe for more predictable console output
         }
 
         public bool IsTimeStamped { get; set; }
 
         public bool IsMemStamped { get; set; }
+
+        public bool IsErrorReported { get; private set; }
 
         public override Encoding Encoding
         {
@@ -3530,6 +3694,23 @@ namespace pwiz.Skyline
             message.Append(value);
             _writer.WriteLine(message);
             Flush();
+
+            if (IsErrorMessage(value))
+            {
+                IsErrorReported = true;
+            }
+        }
+
+        private bool IsErrorMessage(string message)
+        {
+            if (message != null && !IsErrorReported)
+            {
+                return message.StartsWith(@"Error:", StringComparison.InvariantCulture) ||  // In Skyline-daily any message might not be localized
+                       message.StartsWith(Resources.CommandStatusWriter_WriteLine_Error_,
+                           StringComparison.CurrentCulture);
+            }
+
+            return false;
         }
 
         private string MemStamp(long memUsed)
@@ -3717,6 +3898,7 @@ namespace pwiz.Skyline
         private readonly DateTime _waitStart;
         private DateTime _lastOutput;
         private string _lastMessage;
+        private string _lastWarning;
 
         private readonly TextWriter _out;
         private Thread _waitingThread;
@@ -3813,6 +3995,12 @@ namespace pwiz.Skyline
             else if (writeMessage)
             {
                 _out.WriteLine(status.Message);
+            }
+
+            if (!string.IsNullOrEmpty(status.WarningMessage) && !Equals(_lastWarning, status.WarningMessage))
+            {
+                _out.WriteLine(status.WarningMessage);
+                _lastWarning = status.WarningMessage;
             }
 
             if (writeMessage)

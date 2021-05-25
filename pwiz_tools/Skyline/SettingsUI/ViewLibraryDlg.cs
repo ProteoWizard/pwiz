@@ -346,6 +346,10 @@ namespace pwiz.Skyline.SettingsUI
                             MessageDlg.ShowException(this, status.ErrorException);
                             return;
                         }
+                        else if (!string.IsNullOrEmpty(status.WarningMessage))
+                        {
+                            MessageDlg.Show(this, status.WarningMessage);
+                        }
                     }
                     catch (Exception x)
                     {
@@ -375,7 +379,14 @@ namespace pwiz.Skyline.SettingsUI
             else
             {
                 pepInfos = _selectedLibrary.Keys.Select(
-                    key => new ViewLibraryPepInfo(key));
+                    key =>
+                    {
+                        if (!_selectedLibrary.TryGetLibInfo(key, out var libInfo))
+                        {
+                            libInfo = null;
+                        }
+                        return new ViewLibraryPepInfo(key, libInfo);
+                    });
             }
             _peptides = new ViewLibraryPepInfoList(pepInfos);
             bool allPeptides = _peptides.All(key => key.Key.IsProteomicKey);
@@ -544,7 +555,7 @@ namespace pwiz.Skyline.SettingsUI
             }
             else if (null != pepInfo.Key.LibraryKey.Target)
             {
-                var peptide = new Peptide(pepInfo.Key.LibraryKey.StripModifications().Target);
+                var peptide = pepInfo.Key.LibraryKey.CreatePeptideIdentityObj();
                 transitionGroup = new TransitionGroupDocNode(new TransitionGroup(peptide, pepInfo.Adduct,
                                                       IsotopeLabelType.light, true, null), null);
                 if (pepInfo.Key.IsSmallMoleculeKey)
@@ -690,7 +701,7 @@ namespace pwiz.Skyline.SettingsUI
                         adducts.AddRange(showAdducts.Where(a => charges.Contains(Math.Abs(a.AdductCharge)) && !adducts.Contains(a))); // And the unranked charges as well
 
                         var spectrumInfo = _selectedLibrary.GetSpectra(_peptides[index].Key, null, LibraryRedundancy.best).FirstOrDefault();
-                        var spectrumInfoR = new LibraryRankedSpectrumInfo(spectrum,
+                        var spectrumInfoR = LibraryRankedSpectrumInfo.NewLibraryRankedSpectrumInfo(spectrum,
                                                                           transitionGroupDocNode.TransitionGroup.LabelType,
                                                                           transitionGroupDocNode,
                                                                           settings,
@@ -1921,9 +1932,15 @@ namespace pwiz.Skyline.SettingsUI
         private static IEnumerable<ModificationInfo> GetModifications(ViewLibraryPepInfo pep)
         {
             IList<ModificationInfo> modList = new List<ModificationInfo>();
-            if (!pep.Target.IsProteomic)
+            string sequence;
+            if (pep.Key.LibraryKey is PeptideLibraryKey peptideLibraryKey)
+            {
+                sequence = peptideLibraryKey.ModifiedSequence;
+            }
+            else
+            {
                 return modList;
-            string sequence = pep.Target.Sequence;
+            }
             int iMod = -1;
             for (int i = 0; i < sequence.Length; i++)
             {
@@ -1985,6 +2002,8 @@ namespace pwiz.Skyline.SettingsUI
             get { return comboLibrary.SelectedIndex; }
             set { listPeptide.SelectedIndex = value; }
         }
+
+        public bool HasSelectedLibrary => _selectedLibrary != null;
 
         public string SourceFile
         {

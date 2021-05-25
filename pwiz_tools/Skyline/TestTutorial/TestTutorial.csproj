@@ -213,6 +213,7 @@
     <None Include="ExistingExperimentsViews.zip" />
     <None Include="GroupedStudies1Views.zip" />
     <None Include="IrtViews.zip" />
+    <None Include="LibraryExplorerViews.zip" />
     <None Include="MethodEditCSVs.zip" />
     <None Include="MethodEditViews.zip" />
     <None Include="MethodRefinementViews.zip" />
@@ -224,6 +225,9 @@
     <None Include="SRMViews.zip" />
     <None Include="TargetedMSMSViews.zip" />
     <None Include="GroupedStudiesViews.zip" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ExistingQuant_excel.png" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

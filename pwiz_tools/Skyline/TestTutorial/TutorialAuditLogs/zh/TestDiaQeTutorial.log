@@ -1,20 +1,21 @@
-Undo Redo : 离子对设置 -- Integration > Integrate All 已更改为 真
-Summary   : 设置 > 离子对设置 -- Integration > Integrate All 已更改为 真
+Undo Redo : 离子对设置 -- 整合 > 全部整合 已更改为 真
+Summary   : 设置 > 离子对设置 -- 整合 > 全部整合 已更改为 真
 All Info  :
-离子对设置 -- Integration > Integrate All 已更改为 真
-设置 > 离子对设置 -- Integration > Integrate All 从 假 更改到 真
+离子对设置 -- 整合 > 全部整合 已更改为 真
+设置 > 离子对设置 -- 整合 > 全部整合 从 假 更改到 真
 
 Undo Redo : 已添加谱图库“DIA-QE-tutorial”
 Summary   : 已添加谱图库“DIA-QE-tutorial”
 All Info  :
 已添加谱图库“DIA-QE-tutorial”
-建立谱图库 > 阈值 是 "0.95"
+建立谱图库 > 截止值 是 "0.95"
 建立谱图库 > 搜索文件 : 包含 "interact.pep.xml"
 建立谱图库 > iRT 标准肽段 是 "Biognosys-11 (iRT-C18)"
 建立谱图库 > 包含不明确匹配项 是 假
 建立谱图库 > 文档肽段筛选器 是 假
 建立谱图库 > 工作流程 是 "DIA（数据非依赖性采集）"
-Extra Info: 阈值 = "0.95",
+建立谱图库 > 输入文件类型 是 "搜索结果（直接构建库）"
+Extra Info: 截止值 = "0.95",
 搜索文件 = 
 [
     "interact.pep.xml"
@@ -22,7 +23,8 @@ Extra Info: 阈值 = "0.95",
 iRT 标准肽段 = "Biognosys-11 (iRT-C18)",
 包含不明确匹配项 = 假,
 文档肽段筛选器 = 假,
-工作流程 = "DIA（数据非依赖性采集）"
+工作流程 = "DIA（数据非依赖性采集）",
+输入文件类型 = "搜索结果（直接构建库）"
 
 Undo Redo : 已导入肽段搜索
 Summary   : 已导入肽段搜索
@@ -228,7 +230,7 @@ Undo Redo : 已将 12 值粘贴到文档网格
 Summary   : 已将 12 值粘贴到文档网格
 All Info  :
 已将 12 值粘贴到文档网格
-文档网格 > 查看名称 是 "重复测定"
+文档网格 > 报告名称 是 "重复测定"
 将 1-A 的 Condition 设定为 "A"
 将 1-A 的 BioReplicate 设定为 "1"
 将 2-B 的 Condition 设定为 "B"
@@ -248,7 +250,7 @@ B	2
 A	3
 B	3
 
-查看名称 = "重复测定"
+报告名称 = "重复测定"
 
 Undo Redo : 群组比较 : "By Condition" 已添加
 Summary   : 设置 > 文档设置 -- 群组比较 : "By Condition" 已添加
@@ -264,7 +266,7 @@ All Info  :
 设置 > 文档设置 -- 群组比较 > "By Condition" > 置信水平 是 "95"
 设置 > 文档设置 -- 群组比较 > "By Condition" > 蛋白质范围 是 假
 设置 > 文档设置 -- 群组比较 > "By Condition" > 用零作为缺失峰值 是 假
-设置 > 文档设置 -- 群组比较 > "By Condition" > Q值界限 是 "0.01"
+设置 > 文档设置 -- 群组比较 > "By Condition" > Q 值截止 是 "0.01"
 设置 > 文档设置 -- 群组比较 > "By Condition" > 格式化行 是 空
 
 Undo Redo : 群组比较 > "By Condition" > 格式化行 已更改

@@ -28,9 +28,17 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(AuditLogForm));
+            this.SuspendLayout();
+            // 
+            // AuditLogForm
+            // 
+            resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Text = "AuditLogForm";
+            this.Name = "AuditLogForm";
+            this.ShowViewsMenu = true;
+            this.ResumeLayout(false);
+
         }
 
         #endregion

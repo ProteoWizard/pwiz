@@ -76,6 +76,11 @@ namespace pwiz.Skyline.Model.Serialization
             public const string molecule = "molecule";
             public const string transition_data = "transition_data";
             public const string results_data = "results_data";
+            public const string linked_peptide = "linked_peptide";
+            public const string linked_fragment_ion = "linked_fragment_ion";
+            public const string crosslinks = "crosslinks";
+            public const string crosslink = "crosslink";
+            public const string site = "site";
             // ReSharper restore LocalizableElement
         }
 
@@ -114,6 +119,7 @@ namespace pwiz.Skyline.Model.Serialization
             public const string explicit_drift_time_high_energy_offset_msec = "explicit_drift_time_high_energy_offset_msec"; // obsolete, replaced by the more general exolicit_ion_mobility_*
             public const string explicit_ion_mobility = "explicit_ion_mobility";
             public const string explicit_ion_mobility_units = "explicit_ion_mobility_units";
+            public const string ion_mobility_high_energy_offset = "ion_mobility_high_energy_offset";
             public const string explicit_ion_mobility_high_energy_offset = "explicit_ion_mobility_high_energy_offset";
             public const string explicit_ccs_sqa = "explicit_ccs_sqa";
             public const string drift_time_ms1 = "drift_time_ms1"; // Obsolete, replaced by ion_mobility_*
@@ -142,6 +148,7 @@ namespace pwiz.Skyline.Model.Serialization
             public const string auto_manage_children = "auto_manage_children";
             public const string decoy = "decoy";
             public const string decoy_mass_shift = "decoy_mass_shift";
+            public const string decoy_match_proportion = "decoy_match_proportion";
             public const string isotope_dist_rank = "isotope_dist_rank";
             public const string isotope_dist_proportion = "isotope_dist_proportion";
             public const string ion_formula = "ion_formula";
@@ -169,6 +176,7 @@ namespace pwiz.Skyline.Model.Serialization
             public const string quantitative = "quantitative";
             public const string precursor_concentration = "precursor_concentration";
             public const string attribute_group_id = "attribute_group_id";
+            public const string peptide_index = "peptide_index";
 
             // Results
             public const string replicate = "replicate";
@@ -194,8 +202,8 @@ namespace pwiz.Skyline.Model.Serialization
             public const string exclude_from_calibration = "exclude_from_calibration";
             public const string analyte_concentration = "analyte_concentration";
             public const string points_across = "points_across";
-
             public const string forced_integration = "forced_integration";
+            public const string orphaned_crosslink_ion = "orphaned_crosslink_ion";
             // ReSharper restore LocalizableElement
         }
     }

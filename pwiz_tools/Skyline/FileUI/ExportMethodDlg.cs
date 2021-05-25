@@ -30,6 +30,7 @@ using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
@@ -88,7 +89,7 @@ namespace pwiz.Skyline.FileUI
                 btnBrowseTemplate.Visible = false;
                 labelTemplateFile.Visible = false;
                 textTemplateFile.Visible = false;
-                Height -= textTemplateFile.Bottom - comboTargetType.Bottom;
+                Height -= textTemplateFile.Bottom - btnGraph.Bottom;
             }
 
             comboInstrument.Items.Clear();
@@ -201,16 +202,21 @@ namespace pwiz.Skyline.FileUI
             cbExportMultiQuant.Checked = Settings.Default.ExportMultiQuant;
             cbExportEdcMass.Checked = Settings.Default.ExportEdcMass;
             textPrimaryCount.Text = Settings.Default.PrimaryTransitionCount.ToString(LocalizationHelper.CurrentCulture);
+            textMs1RepetitionTime.Text = Settings.Default.ExportMs1RepetitionTime.ToString(LocalizationHelper.CurrentCulture);
             // Reposition from design layout
             cbSlens.Top = textMaxTransitions.Bottom;
             cbWriteCoV.Top = cbSlens.Bottom;
             panelThermoColumns.Top = labelDwellTime.Top;
+            var panelOffset = panelThermoColumns.Controls.Cast<Control>().Min(c => c.Left);
+            foreach (var control in panelThermoColumns.Controls.Cast<Control>())
+                control.Left -= panelOffset;
             panelThermoRt.Top = panelThermoColumns.Top - (int)(panelThermoRt.Height*0.8);
             panelAbSciexTOF.Top = textDwellTime.Top + (textDwellTime.Height - panelAbSciexTOF.Height)/2;
             panelTriggered.Top = textDwellTime.Top + (textDwellTime.Height - panelTriggered.Height)/2;
             panelTuneColumns.Top = comboTargetType.Top + (comboTargetType.Height - panelTuneColumns.Height)/2;
             panelSciexTune.Top = labelOptimizing.Top;
             panelWaters.Top = labelDwellTime.Top - panelWaters.Height;
+            panelBrukerTimsTof.Top = labelOptimizing.Top;
 
             foreach (string tuneType in ExportOptimize.CompensationVoltageTuneTypes)
                 comboTuning.Items.Add(tuneType);
@@ -284,6 +290,7 @@ namespace pwiz.Skyline.FileUI
         {
             return Equals(type, ExportInstrumentType.AGILENT_TOF) ||
                    Equals(type, ExportInstrumentType.BRUKER_TOF) ||
+                   Equals(type, ExportInstrumentType.BRUKER_TIMSTOF) ||
                    Equals(type, ExportInstrumentType.SHIMADZU) ||
                    Equals(type, ExportInstrumentType.THERMO) ||
                    Equals(type, ExportInstrumentType.THERMO_QUANTIVA) ||
@@ -325,6 +332,7 @@ namespace pwiz.Skyline.FileUI
                        Equals(type, ExportInstrumentType.WATERS_XEVO_QTOF) ||
                        Equals(type, ExportInstrumentType.WATERS_QUATTRO_PREMIER) ||
                        Equals(type, ExportInstrumentType.BRUKER_TOF) ||
+                       Equals(type, ExportInstrumentType.BRUKER_TIMSTOF) ||
                        // LTQ can only schedule for inclusion lists, but then it always
                        // requires start and stop times.
                        Equals(type, ExportInstrumentType.THERMO_LTQ);
@@ -536,6 +544,11 @@ namespace pwiz.Skyline.FileUI
                     panelWaters.Visible = false;
                     break;
             }
+        }
+
+        private void UpdateBrukerTimsTofControls()
+        {
+            panelBrukerTimsTof.Visible = Equals(InstrumentType, ExportInstrumentType.BRUKER_TIMSTOF);
         }
 
         private void UpdateCovControls()
@@ -927,6 +940,19 @@ namespace pwiz.Skyline.FileUI
                 }
             }
 
+            if (Equals(InstrumentType, ExportInstrumentType.BRUKER_TIMSTOF))
+            {
+                var missingIonMobility = BrukerTimsTofMethodExporter.GetMissingIonMobility(_document, _exportProperties);
+                if (missingIonMobility.Length > 0)
+                {
+                    MessageDlg.Show(this,
+                        Resources.ExportMethodDlg_OkDialog_All_targets_must_have_an_ion_mobility_value__These_can_be_set_explicitly_or_contained_in_an_ion_mobility_library_or_spectral_library__The_following_ion_mobility_values_are_missing_ +
+                        Environment.NewLine + Environment.NewLine +
+                        TextUtil.LineSeparate(missingIonMobility.Select(k => k.ToString())));
+                    return;
+                }
+            }
+
             if (outputPath == null)
             {
                 string title = Text;
@@ -1030,6 +1056,8 @@ namespace pwiz.Skyline.FileUI
                 Settings.Default.ExportEdcMass = ExportEdcMass;
             if (comboPolarityFilter.Enabled)
                 Settings.Default.ExportPolarityFilterEnum = TypeSafeEnum.ValidateOrDefault((ExportPolarity)comboPolarityFilter.SelectedIndex, ExportPolarity.all).ToString();
+            if (textMs1RepetitionTime.Visible)
+                Settings.Default.ExportMs1RepetitionTime = _exportProperties.Ms1RepetitionTime;
             DialogResult = DialogResult.OK;
             Close();
         }
@@ -1213,6 +1241,14 @@ namespace pwiz.Skyline.FileUI
                     return false;
 
                 _exportProperties.RunLength = runLength;
+            }
+
+            if (textMs1RepetitionTime.Visible)
+            {
+                if (!helper.ValidateDecimalTextBox(textMs1RepetitionTime, 0, null, out var ms1RepetitionTime))
+                    return false;
+
+                _exportProperties.Ms1RepetitionTime = ms1RepetitionTime;
             }
 
             // If export method type is scheduled, and allows multiple scheduling options
@@ -1404,6 +1440,11 @@ namespace pwiz.Skyline.FileUI
                 MessageDlg.Show(this, Resources.ExportMethodDlg_StrategyCheckChanged_Only_one_method_can_be_exported_in_DIA_mode);
                 radioSingle.Checked = true;
             }
+            else if (Equals(InstrumentType, ExportInstrumentType.BRUKER_TIMSTOF) && radioBuckets.Checked)
+            {
+                MessageDlg.Show(this, string.Format(Resources.ExportMethodDlg_StrategyCheckChanged_Multiple_methods_is_not_yet_supported_for__0__, InstrumentType));
+                radioSingle.Checked = true;
+            }
 
             textMaxTransitions.Enabled = radioBuckets.Checked;
             if (!textMaxTransitions.Enabled)
@@ -1499,7 +1540,9 @@ namespace pwiz.Skyline.FileUI
             bool standard = (targetType == ExportMethodType.Standard);
             bool triggered = (targetType == ExportMethodType.Triggered);
 
-            if (targetType != ExportMethodType.Standard && cbIgnoreProteins.Enabled)
+            btnGraph.Visible = !standard;
+
+            if (!standard && cbIgnoreProteins.Enabled)
             {
                 cbIgnoreProteins.Checked = true;
             }
@@ -1521,6 +1564,7 @@ namespace pwiz.Skyline.FileUI
             UpdateThermoColumns(targetType);
             UpdateAbSciexControls();
             UpdateWatersControls();
+            UpdateBrukerTimsTofControls();
             UpdateThermoRtControls(targetType);
             UpdateThermoSLensControl(targetType);
             UpdateThermoFaimsCvControl();
@@ -1807,6 +1851,10 @@ namespace pwiz.Skyline.FileUI
                 {
                     listFileTypes.Add(MethodFilter(ExportInstrumentType.EXT_AB_SCIEX));
                 }
+                else if (Equals(InstrumentType, ExportInstrumentType.BRUKER_TIMSTOF))
+                {
+                    listFileTypes.Add(MethodFilter(ExportInstrumentType.EXT_BRUKER_TIMSTOF));
+                }
                 else if (Equals(InstrumentType, ExportInstrumentType.SHIMADZU))
                 {
                     listFileTypes.Add(MethodFilter(ExportInstrumentType.EXT_SHIMADZU));
@@ -1887,6 +1935,50 @@ namespace pwiz.Skyline.FileUI
                 MessageDlg.Show(this, Resources.ExportMethodDlg_cbIgnoreProteins_CheckedChanged_Grouping_peptides_by_protein_has_not_yet_been_implemented_for_scheduled_methods_);
             }
         }
+        
+        private void btnGraph_Click(object sender, EventArgs e)
+        {
+            ShowSchedulingGraph();
+        }
+
+        public void ShowSchedulingGraph()
+        {
+            var brukerTemplate = Equals(InstrumentType, ExportInstrumentType.BRUKER_TIMSTOF)
+                ? textTemplateFile.Text
+                : null;
+            BrukerTimsTofMethodExporter.Metrics brukerMetrics = null;
+
+            if (!string.IsNullOrEmpty(brukerTemplate))
+            {
+                if (!File.Exists(brukerTemplate))
+                {
+                    MessageDlg.Show(this,
+                        string.Format(Resources.ExportMethodDlg_OkDialog_The_template_file__0__does_not_exist,
+                            brukerTemplate));
+                    return;
+                }
+
+                using (var longWait = new LongWaitDlg())
+                {
+                    longWait.PerformWork(this, 800, progress =>
+                    {
+                        var exportProperties = new ExportDlgProperties(this, new CancellationToken());
+                        exportProperties.MethodType = ExportMethodType.Scheduled;
+                        brukerMetrics = BrukerTimsTofMethodExporter.GetSchedulingMetrics(_document, exportProperties, brukerTemplate, progress);
+                    });
+                }
+            }
+            
+            using (var dlg = new ExportMethodScheduleGraph(_document, brukerTemplate, brukerMetrics))
+            {
+                if (dlg.Exception != null)
+                {
+                    MessageDlg.ShowWithException(this, Resources.ExportMethodDlg_btnGraph_Click_An_error_occurred_, dlg.Exception);
+                    return;
+                }
+                dlg.ShowDialog(this);
+            }
+        }
 
         #region Functional Test Support
 
@@ -1910,9 +2002,11 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
-        public void SetTemplateFile(string templateFile)
+        public void SetTemplateFile(string templateFile, bool setEndCaret = false)
         {
             textTemplateFile.Text = templateFile;
+            if (setEndCaret)
+                textTemplateFile.Select(templateFile.Length, 0);
         }
 
         public void SetInstrument(string instrument)

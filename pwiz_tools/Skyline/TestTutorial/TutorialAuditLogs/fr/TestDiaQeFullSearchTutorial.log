@@ -14,6 +14,7 @@ Build Spectral Library > iRT standard peptides is "Biognosys-11 (iRT-C18)"
 Build Spectral Library > Include ambiguous matches is False
 Build Spectral Library > Filter for document peptides is False
 Build Spectral Library > Workflow is "DIA"
+Build Spectral Library > Input File Type is "Search results (build library directly)"
 Extra Info: Cut-off score = "0,95",
 Search files = 
 [
@@ -22,7 +23,8 @@ Search files =
 iRT standard peptides = "Biognosys-11 (iRT-C18)",
 Include ambiguous matches = False,
 Filter for document peptides = False,
-Workflow = "DIA"
+Workflow = "DIA",
+Input File Type = "Search results (build library directly)"
 
 Undo Redo : Imported a peptide search
 Summary   : Imported a peptide search
@@ -66,7 +68,7 @@ Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespe
 Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "999", End = "1219", Margin = "1" }
 Import Peptide Search > Configure Full-Scan Settings > Product mass analyzer is "Centroided"
 Import Peptide Search > Configure Full-Scan Settings > Mass accuracy is "20"
-Import Peptide Search > Configure Full-Scan Settings > Retention time filter type is "Use only scans withing time frame of predicted RT"
+Import Peptide Search > Configure Full-Scan Settings > Retention time filter type is "Use only scans within time frame of predicted RT"
 Import Peptide Search > Import FASTA > FASTA file is "napedro_3mixed_human_yeast_ecoli_20140403_iRT_reverse.fasta"
 Import Peptide Search > Import FASTA > Decoy generation method is "Shuffle Sequence"
 Import Peptide Search > Import FASTA > Decoys per target is "1"
@@ -201,7 +203,7 @@ Configure Full-Scan Settings =
     },
     Product mass analyzer = "Centroided",
     Mass accuracy = "20",
-    Retention time filter type = "Use only scans withing time frame of predicted RT"
+    Retention time filter type = "Use only scans within time frame of predicted RT"
 },
 Import FASTA = 
 {

@@ -153,18 +153,14 @@ namespace pwiz.Skyline.Model.Results
 
         private bool NeedMaxIonMobilityValue(MsDataFileImpl dataFile)
         {
-            var linear = IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.linear_range;
-            // If peak width mode for a predictor is linear then the maximum is needed
-            var peptidePrediction = _document.Settings.PeptideSettings.Prediction;
-            if (peptidePrediction.IonMobilityPredictor?.WindowWidthCalculator.PeakWidthMode == linear)
-                return true;
+            // Only need to find the IM range if filter window width calculation mode is linear
+            var settings = _document.Settings.TransitionSettings.IonMobilityFiltering;
 
-            // Otherwise, if library ion mobilities are not used, then it is not necessary
-            if (!_document.Settings.PeptideSettings.Prediction.UseLibraryIonMobilityValues)
+            if (settings == null || settings.IsEmpty)
                 return false;
-            // If the library window width calculator is not using linear mode, then it is not necessary
-            if (peptidePrediction.LibraryIonMobilityWindowWidthCalculator?.PeakWidthMode != linear)
-                return false;
+
+            if (settings.FilterWindowWidthCalculator?.WindowWidthMode != IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.linear_range)
+                return false; // Only the linear_range option needs to discover the IM range
 
             // This is the expensive part - check if there are any ion mobilities in the libraries that will need windows
             // TODO (bspratt): Use a quicker check for any ion mobility for a file - this especially slow with big DDA libraries used in DIA where the library may be composed of 40 files none of them this one
@@ -490,9 +486,7 @@ namespace pwiz.Skyline.Model.Results
                         chromMap.ChromSource,
                         modSeq.Extractor,
                         true,
-                        true,
-                        null,
-                        null);
+                        true);
 
                     _collectors.AddSrmCollector(key, chromCollector);
                 }
@@ -1652,9 +1646,12 @@ namespace pwiz.Skyline.Model.Results
             int lenTimes = collector.TimeCount;
             if (IsGroupedTime)
             {
-                // Shared scan ids and times do not belong to a group.
-                collector.AddScanId(scanId);
-                collector.AddGroupedTime(time);
+                // The chromatogram index is used to determine which spillfile to use.
+                // All chromatograms in this group use the same spillfile, so any chromatogram index will work
+                int firstChromatogramIndex = chromatograms.ProductFilterIdToId(spectrum.ProductFilters.First().FilterId);
+
+                collector.ScansCollector.Add(firstChromatogramIndex, scanId, _blockWriter);
+                collector.GroupedTimesCollector.Add(firstChromatogramIndex, time, _blockWriter);
                 lenTimes = collector.GroupedTimesCollector.Count;
             }
 
@@ -1735,16 +1732,6 @@ namespace pwiz.Skyline.Model.Results
         public Dictionary<SpectrumProductFilter, ChromCollector> ProductIntensityMap { get; private set; }
         public readonly SortedBlockedList<float> GroupedTimesCollector;
         public readonly BlockedList<int> ScansCollector;
-
-        public void AddGroupedTime(float time)
-        {
-            GroupedTimesCollector.AddShared(time);
-        }
-
-        public void AddScanId(int scanId)
-        {
-            ScansCollector.AddShared(scanId);
-        }
 
         public int TimeCount
         {

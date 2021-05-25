@@ -26,6 +26,7 @@ using System.Windows.Forms;
 using pwiz.Common.Controls;
 using ZedGraph;
 using pwiz.Common.DataBinding;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
@@ -383,11 +384,6 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        public static bool IsUnknown(double d)
-        {
-            return (double.IsNaN(d) || double.IsInfinity(d));
-        }
-
         /// <summary>
         /// Has this weight been assigned a score opposite to that expected in its definition?
         /// </summary>
@@ -405,7 +401,7 @@ namespace pwiz.Skyline.SettingsUI
 
         private static void ProcessScores(double score, ref double min, ref double max, ref int countUnknownScores)
         {
-            if (IsUnknown(score))
+            if (TargetDecoyGenerator.IsUnknown(score))
                 countUnknownScores++;
             else
             {
@@ -810,11 +806,28 @@ namespace pwiz.Skyline.SettingsUI
 
             public HistogramGroup(ICollection<List<double>> scoreGroups)
             {
-                int nGroups = scoreGroups.Count;
                 var histogramList = scoreGroups.Select(scoreGroup => new HistogramData(scoreGroup)).ToList();
-                Min = histogramList.Select(histogram => histogram.Min).Min();
+
+                double binWidth = InitBinGroups(histogramList);
+
+                HasUnknownScores = histogramList.Sum(histogram => histogram.CountUnknowns) > 0;
+                if (HasUnknownScores)
+                {
+                    Max += (Max - Min) * 0.2;
+                    for (int i = 0; i < scoreGroups.Count; ++i)
+                    {
+                        BinGroups[i].Add(new PointPair(Max, histogramList[i].CountUnknowns));
+                    }
+
+                    Max += binWidth;
+                }
+            }
+
+            private double InitBinGroups(IList<HistogramData> histogramList, double? min = null)
+            {
+                Min = min ?? histogramList.Select(histogram => histogram.Min).Min();
                 Max = histogramList.Select(histogram => histogram.Max).Max();
-                BinGroups = scoreGroups.Select(group => new PointPairList()).ToList();
+                BinGroups = histogramList.Select(group => new PointPairList()).ToList();
                 double binWidth = (Max - Min) / HISTOGRAM_BAR_COUNT;
                 AllUnknownScores = histogramList.All(histogram => histogram.Scores.Count == histogram.CountUnknowns);
                 if (AllUnknownScores)
@@ -826,18 +839,22 @@ namespace pwiz.Skyline.SettingsUI
                 else
                 {
                     double minTemp = Min;
-                    BinGroups = histogramList.Select(histogram => histogram.ComputeHistogram(minTemp, binWidth, HISTOGRAM_BAR_COUNT)).ToList();
+                    BinGroups = histogramList
+                        .Select(histogram => histogram.ComputeHistogram(minTemp, binWidth, HISTOGRAM_BAR_COUNT)).ToList();
+
+                    int minVisibleBinIndex = GetMinVisibleBinIndex();
+                    if (minVisibleBinIndex > 0)
+                        return InitBinGroups(histogramList, Min + binWidth * minVisibleBinIndex);
                 }
-                HasUnknownScores = histogramList.Sum(histogram => histogram.CountUnknowns) > 0;
-                if (HasUnknownScores)
-                {
-                    Max += (Max - Min) * 0.2;
-                    for (int i = 0; i < nGroups; ++i)
-                    {
-                        BinGroups[i].Add(new PointPair(Max, histogramList[i].CountUnknowns));
-                    }
-                    Max += binWidth;
-                }
+
+                return binWidth;
+            }
+
+            private int GetMinVisibleBinIndex()
+            {
+                const double minPercentOfMax = 0.0001;
+                double maxBar = BinGroups.SelectMany(g => g).Max(p => p.Y);
+                return BinGroups.Select(g => g.IndexOf(p => p.Y / maxBar >= minPercentOfMax)).Min();
             }
 
             protected bool Equals(HistogramGroup other)
@@ -905,7 +922,7 @@ namespace pwiz.Skyline.SettingsUI
                 }
                 foreach (var score in Scores)
                 {
-                    if (IsUnknown(score))
+                    if (TargetDecoyGenerator.IsUnknown(score))
                         continue;
                     int bin = Math.Max(0, Math.Min(listBins.Count - 1, (int)((score - min) / binWidth)));
                     listBins[bin].Y++;

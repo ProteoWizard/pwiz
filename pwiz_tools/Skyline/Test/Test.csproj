@@ -140,13 +140,20 @@
     <Compile Include="BilinearCurveFitTest.cs" />
     <Compile Include="BookmarkEnumeratorTest.cs" />
     <Compile Include="ChromatogramExporterTest.cs" />
+    <Compile Include="FastaSequenceTest.cs" />
+    <Compile Include="StripePainterTest.cs" />
+    <Compile Include="ComplexFragmentIonTest.cs" />
+    <Compile Include="ObjectSizeTest.cs" />
     <Compile Include="ChromPeakTest.cs" />
     <Compile Include="ChromTransitionTest.cs" />
+    <Compile Include="CodeInspectionTest.cs" />
     <Compile Include="CommandLineAssayImportTest.cs" />
     <Compile Include="CommandLineImportAnnotationsTest.cs" />
     <Compile Include="CommandLineImportDocTest.cs" />
     <Compile Include="CommandLineMProphetTest.cs" />
     <Compile Include="CreateTextSequencesTest.cs" />
+    <Compile Include="CrosslinkModTest.cs" />
+    <Compile Include="CrosslinkSequenceParserTest.cs" />
     <Compile Include="CustomMoleculeTest.cs" />
     <Compile Include="DecoysTest.cs" />
     <Compile Include="DigestionTest.cs" />
@@ -156,8 +163,10 @@
     <Compile Include="EspTest.cs" />
     <Compile Include="ExplicitLossTest.cs" />
     <Compile Include="ExplicitModTest.cs" />
+    <Compile Include="ExtractedMetadataTest.cs" />
     <Compile Include="FastaImporterTest.cs" />
     <Compile Include="FindNodeTest.cs" />
+    <Compile Include="FragmentedMoleculeTest.cs" />
     <Compile Include="FullScanPrecursorTest.cs" />
     <Compile Include="IdentityTest.cs" />
     <Compile Include="InternetAccessTest.cs" />
@@ -165,6 +174,7 @@
     <Compile Include="IpiToUniprotTest.cs" />
     <Compile Include="IsotypeModTest.cs" />
     <Compile Include="LibraryLoadTest.cs" />
+    <Compile Include="LibraryRankedSpectrumInfoSpeedTest.cs" />
     <Compile Include="LibrarySettingsTest.cs" />
     <Compile Include="LinearInLogSpaceTest.cs" />
     <Compile Include="ListDataTest.cs" />
@@ -188,6 +198,7 @@
     <Compile Include="MSstats\WithRunQuantification\GroupComparisonRunQuantificationTest.cs" />
     <Compile Include="NormalizeProductIonTest.cs" />
     <Compile Include="PasteTest.cs" />
+    <Compile Include="PcaTest.cs" />
     <Compile Include="PeakBoundaryTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PropertySettingsTest.cs" />
@@ -220,6 +231,7 @@
     <Compile Include="UndoManagerTest.cs" />
     <Compile Include="UniModTest.cs" />
     <Compile Include="UniquePrefixTest.cs" />
+    <Compile Include="MassListInputsTest.cs" />
     <Compile Include="UtilTest.cs" />
     <Compile Include="VariableModTest.cs" />
     <Compile Include="WebEnabledFastaImporterTest.cs" />
@@ -261,6 +273,7 @@
     <EmbeddedResource Include="explicit-losses.sky" />
     <EmbeddedResource Include="DocumentSerializerTest.sky" />
     <None Include="FullScanPrecursor.zip" />
+    <None Include="LibraryRankedSpectrumInfoSpeedTest.zip" />
     <None Include="modmatch.sky" />
     <None Include="ModMatch.zip" />
     <EmbeddedResource Include="MultiLabel.sky" />

@@ -34,7 +34,7 @@
     <software id="micrOTOFcontrol" version="5.0.71.422-9346-vc110">
       <cvParam cvRef="MS" accession="MS:1000726" name="micrOTOFcontrol" value=""/>
     </software>
-    <software id="pwiz_Reader_Bruker" version="3.0.19304">
+    <software id="pwiz_Reader_Bruker" version="3.0.20168">
       <cvParam cvRef="MS" accession="MS:1000615" name="ProteoWizard software" value=""/>
     </software>
   </softwareList>
@@ -79,6 +79,8 @@
         <cvParam cvRef="MS" accession="MS:1000505" name="base peak intensity" value="148.0"/>
         <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="10513.0"/>
         <cvParam cvRef="MS" accession="MS:1000127" name="centroid spectrum" value=""/>
+        <userParam name="ion mobility lower limit" value="1.4602232906378299" type="xsd:double" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
+        <userParam name="ion mobility upper limit" value="1.555768150531077" type="xsd:double" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000571" name="sum of spectra" value=""/>
           <scan>
@@ -137,6 +139,8 @@
         <cvParam cvRef="MS" accession="MS:1000505" name="base peak intensity" value="3657.0"/>
         <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="1.68258e07"/>
         <cvParam cvRef="MS" accession="MS:1000127" name="centroid spectrum" value=""/>
+        <userParam name="ion mobility lower limit" value="1.4602232906378299" type="xsd:double" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
+        <userParam name="ion mobility upper limit" value="1.555768150531077" type="xsd:double" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000571" name="sum of spectra" value=""/>
           <scan>
@@ -192,7 +196,7 @@
     <chromatogramList count="2" defaultDataProcessingRef="pwiz_Reader_Bruker_conversion">
       <chromatogram index="0" id="TIC" defaultArrayLength="2">
         <cvParam cvRef="MS" accession="MS:1000235" name="total ion current chromatogram" value=""/>
-        <binaryDataArrayList count="2">
+        <binaryDataArrayList count="3">
           <binaryDataArray encodedLength="36">
             <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
@@ -205,11 +209,17 @@
             <cvParam cvRef="MS" accession="MS:1000515" name="intensity array" value="" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
             <binary>eJxjYGBgaOg44gCi7nAXOAIAHQIEJQ==</binary>
           </binaryDataArray>
+          <binaryDataArray arrayLength="2" encodedLength="20">
+            <cvParam cvRef="MS" accession="MS:1000522" name="64-bit integer" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000786" name="non-standard data array" value="ms level" unitCvRef="UO" unitAccession="UO:0000186" unitName="dimensionless unit"/>
+            <binary>eJxjYoAAJigNAABAAAU=</binary>
+          </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
       <chromatogram index="1" id="BPC" defaultArrayLength="2">
         <cvParam cvRef="MS" accession="MS:1000628" name="basepeak chromatogram" value=""/>
-        <binaryDataArrayList count="2">
+        <binaryDataArrayList count="3">
           <binaryDataArray encodedLength="36">
             <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
@@ -221,6 +231,12 @@
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1000515" name="intensity array" value="" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
             <binary>eJxjYACChiQHEMUwaY0DAA7yAqE=</binary>
+          </binaryDataArray>
+          <binaryDataArray arrayLength="2" encodedLength="20">
+            <cvParam cvRef="MS" accession="MS:1000522" name="64-bit integer" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000786" name="non-standard data array" value="ms level" unitCvRef="UO" unitAccession="UO:0000186" unitName="dimensionless unit"/>
+            <binary>eJxjYoAAJigNAABAAAU=</binary>
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>

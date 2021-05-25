@@ -201,6 +201,9 @@
     <ClCompile Include="src\mzTabReader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\DiaNNSpecLibReader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\AllBuildParsers.h">
@@ -408,6 +411,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\mzTabReader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\DiaNNSpecLibReader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

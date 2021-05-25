@@ -443,6 +443,7 @@ class PWIZ_API_DECL RawFile
     // getDetectorType is obsolete?
     virtual double getIsolationWidth(int scanSegment, int scanEvent) const = 0;
     virtual double getDefaultIsolationWidth(int scanSegment, int msLevel)const = 0;
+    virtual double calculateIsolationMzWithOffset(long scanNumber, double isolationMzPossiblyWithOffset) const = 0;
 
     virtual ErrorLogItem getErrorLogItem(long itemNumber) const = 0;
     virtual std::vector<std::string> getInstrumentMethods() const = 0;
@@ -455,9 +456,9 @@ class PWIZ_API_DECL RawFile
     virtual const std::vector<DetectorType>& getDetectors() const = 0;
 
     virtual std::string getSampleID() const = 0;
-    virtual std::string getTrailerExtraValue(long scanNumber, const std::string& name) const = 0;
-    virtual double getTrailerExtraValueDouble(long scanNumber, const std::string& name) const = 0;
-    virtual long getTrailerExtraValueLong(long scanNumber, const std::string& name) const = 0;
+    virtual std::string getTrailerExtraValue(long scanNumber, const std::string& name, std::string valueIfMissing = "") const = 0;
+    virtual double getTrailerExtraValueDouble(long scanNumber, const std::string& name, double valueIfMissing = 0) const = 0;
+    virtual long getTrailerExtraValueLong(long scanNumber, const std::string& name, long valueIfMissing = 0) const = 0;
 
     virtual ChromatogramDataPtr
     getChromatogramData(ChromatogramType traceType,

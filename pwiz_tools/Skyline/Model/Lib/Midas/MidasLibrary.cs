@@ -43,7 +43,7 @@ namespace pwiz.Skyline.Model.Lib.Midas
         private const int SCHEMA_VERSION_CURRENT = 1;
 
         private const double PRECURSOR_TOLERANCE_CHROM = 0.7;
-        private const double PRECURSOR_TOLERANCE = 0.001;
+        private const double PRECURSOR_TOLERANCE = 0.005;
         private const double RT_TOLERANCE = 0.001;
 
         private int SchemaVersion { get; set; }
@@ -405,7 +405,7 @@ namespace pwiz.Skyline.Model.Lib.Midas
 
         public override bool TryGetLibInfo(LibKey key, out SpectrumHeaderInfo libInfo)
         {
-            libInfo = Contains(key) ? new BiblioSpecSpectrumHeaderInfo(Name, 1, null, null) : null;
+            libInfo = Contains(key) ? new BiblioSpecSpectrumHeaderInfo(Name, 1, null, null, null) : null;
             return libInfo != null;
         }
 
@@ -515,14 +515,14 @@ namespace pwiz.Skyline.Model.Lib.Midas
             if (!key.IsPrecursorKey)
             {
                 foreach (var spectrum in GetSpectraByPeptide(null, key))
-                    yield return new SpectrumInfoLibrary(this, labelType, spectrum.ResultsFile.FilePath, spectrum.RetentionTime, null, false, spectrum);
+                    yield return new SpectrumInfoLibrary(this, labelType, spectrum.ResultsFile.FilePath, spectrum.RetentionTime, null, null, false, spectrum);
                 yield break;
             }
 
             var keyRt = key.RetentionTime;
             foreach (var spectrum in GetSpectraByPrecursor(null, key.PrecursorMz.GetValueOrDefault()))
                 if (!keyRt.HasValue || Equals(keyRt.Value, spectrum.RetentionTime))
-                    yield return new SpectrumInfoLibrary(this, labelType, spectrum.ResultsFile.FilePath, spectrum.RetentionTime, null, false, spectrum);
+                    yield return new SpectrumInfoLibrary(this, labelType, spectrum.ResultsFile.FilePath, spectrum.RetentionTime, null, null, false, spectrum);
         }
 
         public override int? FileCount { get { return IsLoaded ? _spectra.Keys.Count : 0; } }

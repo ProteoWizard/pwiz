@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <root>
-	<!-- 
+  <!-- 
 		Microsoft ResX Schema
 
 		Version 1.3
@@ -58,52 +58,53 @@
 			: using a System.ComponentModel.TypeConverter
 			: and then encoded with base64 encoding.
 	-->
-	
-	<xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
-		<xsd:element name="root" msdata:IsDataSet="true">
-			<xsd:complexType>
-				<xsd:choice maxOccurs="unbounded">
-					<xsd:element name="data">
-						<xsd:complexType>
-							<xsd:sequence>
-								<xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
-								<xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
-							</xsd:sequence>
-							<xsd:attribute name="name" type="xsd:string" msdata:Ordinal="1" />
-							<xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
-							<xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
-						</xsd:complexType>
-					</xsd:element>
-					<xsd:element name="resheader">
-						<xsd:complexType>
-							<xsd:sequence>
-								<xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
-							</xsd:sequence>
-							<xsd:attribute name="name" type="xsd:string" use="required" />
-						</xsd:complexType>
-					</xsd:element>
-				</xsd:choice>
-			</xsd:complexType>
-		</xsd:element>
-	</xsd:schema>
-	<resheader name="resmimetype">
-		<value>text/microsoft-resx</value>
-	</resheader>
-	<resheader name="version">
-		<value>1.3</value>
-	</resheader>
-	<resheader name="reader">
-		<value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-	</resheader>
-	<resheader name="writer">
-		<value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-	</resheader>
-
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>1.3</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
   <data name="AbsFoldChange">
     <value>倍数变化的绝对值</value>
   </data>
   <data name="AbsLog2FoldChange">
     <value>倍数变化的以 2 为底的对数的绝对值</value>
+  </data>
+  <data name="Abundance">
+    <value>用于计算文件夹更改的此重复测定的值。此数值取决于归一化方法以及是在蛋白质还是肽段级别计算倍数变化。</value>
   </data>
   <data name="AdjustedPValue">
     <value>在多组肽段或蛋白质的该组比较中，针对多重比较调整 P 值。使用 Benjamini-Hochberg 程序完成调整。</value>
@@ -175,6 +176,9 @@
     <value>此重复测定所属批次的名称。特定重复的校准曲线
 将使用拥有相同批次名称的外部标准子集进行计算。</value>
   </data>
+  <data name="BatchTargetQualitativeIonRatio">
+    <value>使用与此重复测定具有相同批次名称的外部标准重复测定子集计算的目标定性离子比。</value>
+  </data>
   <data name="BeginPos">
     <value>在其归属的蛋白质序列中该肽段序列中的首位（N-末端）氨基酸的位置，
 如果没有可用的蛋白质序列，则为 #N/A。
@@ -219,6 +223,9 @@
   <data name="ChromatogramSource">
     <value>提取色谱图所用的扫描类型：“片段”、“sim”、“ms1”或“未知”之一</value>
     <comment>Keep the english form of "fragment", "sim", "ms1", or "unknown" because that is what users see in the Document Grid. However, maybe put the localized translation in parentheses: "fragment" (translation of fragment), "sim" (translation of selected ion monitoring), etc. </comment>
+  </data>
+  <data name="CollisionCrossSection">
+    <value>母离子的碰撞横截面</value>
   </data>
   <data name="Coeluting">
     <value>如果此离子对的峰具有与峰群组内的其他离子对类似的顶点和范围，则为真。</value>
@@ -314,8 +321,13 @@
   <data name="ExcludeFromCalibration">
     <value>是否应从肽段的校准曲线计算中排除重复测定的结果。</value>
   </data>
+  <data name="ExplicitAnalyteConcentration">
+    <value>这种特定的分子或肽段在该重复测定中的浓度。
+如果未指定明确分析物浓度，则假定分析物的浓度为
+重复测定中的分析物浓度乘以肽段或分子的浓度系数。</value>
+  </data>
   <data name="ExplicitCollisionEnergy">
-    <value>用于目标的 SRM 方法或离子对清单确切所需的碰撞能量，覆盖所有模型或优化库值。</value>
+    <value>用于目标的 SRM 方法或离子对列表确切所需的碰撞能量，覆盖所有模型或优化库值或根据母离子而定的明确值。</value>
   </data>
   <data name="ExplicitCompensationVoltage">
     <value>用于目标的 SRM 方法或离子对清单确切所需的补偿电压（离子迁移率过滤器），覆盖所有模型或优化库值。</value>
@@ -327,7 +339,7 @@
     <value>用于目标的 SRM 方法或离子对清单确切所需的去簇电压（仅限 SCIEX 仪器），覆盖所有模型值。</value>
   </data>
   <data name="ExplicitDriftTimeHighEnergyOffsetMsec">
-    <value>用于从离子迁移率高能质谱中提取色谱图确切所需的漂移时间高能量偏移（以毫秒为单位），覆盖所有模型值。</value>
+    <value>用于从离子迁移率高能质谱中提取色谱图确切所需的漂移时间高能偏置（以毫秒为单位），覆盖所有模型值。</value>
   </data>
   <data name="ExplicitDriftTimeMsec">
     <value>用于从离子迁移率质谱中提取色谱图确切所需的漂移时间偏移（以毫秒为单位），覆盖所有模型值。</value>
@@ -362,6 +374,9 @@
   </data>
   <data name="FileName">
     <value>导入数据的文件的名称</value>
+  </data>
+  <data name="FilePath">
+    <value>从中导入数据的文件所在的完整路径和文件名。</value>
   </data>
   <data name="Files">
     <value>文件</value>
@@ -435,6 +450,12 @@
   <data name="IonFormula">
     <value>在质谱仪中待测量的全充（且可能是同位素标记）离子的原子化学式。</value>
   </data>
+  <data name="IonMobilityHighEnergyOffset">
+    <value>离子迁移库中母离子的高能偏置</value>
+  </data>
+  <data name="IonMobilityValue">
+    <value>母离子的离子迁移</value>
+  </data>
   <data name="IonName">
     <value>母离子的名称。</value>
   </data>
@@ -467,6 +488,21 @@
   </data>
   <data name="Key">
     <value>关键</value>
+  </data>
+  <data name="LibraryCollisionCrossSection">
+    <value>离子迁移库中母离子的碰撞横截面</value>
+  </data>
+  <data name="LibraryIonMobility">
+    <value>离子迁移库中母离子的离子迁移信息</value>
+  </data>
+  <data name="LibraryIonMobilityHighEnergyOffset">
+    <value>离子迁移库中母离子的高能偏置</value>
+  </data>
+  <data name="LibraryIonMobilityUnits">
+    <value>库离子迁移值的单位</value>
+  </data>
+  <data name="LibraryIonMobilityValue">
+    <value>离子迁移库中母离子的离子迁移</value>
   </data>
   <data name="LibraryDotProduct">
     <value>母离子的单个离子对峰面积与匹配的串联质谱谱图库谱图
@@ -543,6 +579,9 @@
   <data name="MaxBestRetentionTime">
     <value>母离子最佳保留时间值的最大值</value>
   </data>
+  <data name="MaxDetectionQValue" xml:space="preserve">
+    <value>在应用 mProphet 模型后，分配给每个选定目标峰的错误发现率 (FDR) 得分的最大值。</value>
+  </data>
   <data name="MaxEndTime">
     <value>母离子所有离子对的最大结束时间。除非使用
 相同的积分边界手动编辑母离子的所有离子对。</value>
@@ -559,6 +598,9 @@
   </data>
   <data name="MaxRetentionTime">
     <value>离子对保留时间值最大值。</value>
+  </data>
+  <data name="Median">
+    <value>中位数</value>
   </data>
   <data name="Mean">
     <value>平均值</value>
@@ -596,6 +638,9 @@
   <data name="MeanTotalAreaRatio">
     <value>母离子总面积比值的平均值。</value>
   </data>
+  <data name="MedianDetectionQValue" xml:space="preserve">
+    <value>在应用 mProphet 模型后，分配给每个选定目标峰的错误发现率 (FDR) 得分的中位数。</value>
+  </data>
   <data name="Min">
     <value>最小</value>
   </data>
@@ -607,6 +652,9 @@
   </data>
   <data name="MinRetentionTime">
     <value>离子对保留时间值的最小值。</value>
+  </data>
+  <data name="MinDetectionQValue" xml:space="preserve">
+    <value>在应用 mProphet 模型后，分配给每个选定目标峰的错误发现率 (FDR) 得分的最小值。</value>
   </data>
   <data name="MinStartTime">
     <value>母离子所有离子对的最小开始时间。除非使用
@@ -647,8 +695,13 @@
   <data name="MoleculeFormula">
     <value>用于在质谱仪中测量的中性未标记分子的原子化学式。</value>
   </data>
+  <data name="MoleculeListAbundance">
+    <value>表示分子列表丰度的数值。对该分子列表下所有离子对的归一化面积求平均值，即可得出该数值。
+根据“分子定量”设置中指定的归一化方法对面积进行归一化处理。
+如果该重复测定中有任何离子对缺少值，则除非归一化方法是与标记之间的比率，否则分子列表丰度将为空白</value>
+  </data>
   <data name="MoleculeListLocator">
-      <value>文档内的分子列表特殊标识符。以“MoleculeGroup：”开头。</value>
+    <value>文档内的分子列表特殊标识符。以“MoleculeGroup：”开头。</value>
     <comment>Do not translate "MoleculeGroup:".</comment>
   </data>
   <data name="MoleculeListName">
@@ -659,6 +712,12 @@
   </data>
   <data name="MoleculeList">
     <value>Skyline 文档中的一组分子。</value>
+  </data>
+  <data name="MoleculeListResult">
+    <value>分子列表结果</value>
+  </data>
+  <data name="MoleculeListResults">
+    <value>分子列表结果</value>
   </data>
   <data name="MoleculeLists">
     <value>Skyline 文档中所有分子分组的顶级集合。</value>
@@ -801,6 +860,9 @@
   <data name="PointsAcrossPeak">
     <value>合并峰启动时间和结束时间之间的色谱图点数。</value>
   </data>
+  <data name="CycleTimeAcrossPeak">
+    <value>整合峰间的周期时间（秒）。</value>
+  </data>
   <data name="Precursor">
     <value>母离子</value>
   </data>
@@ -818,6 +880,9 @@
   </data>
   <data name="PrecursorConcentration">
     <value>将该母离子掺入样品时的浓度。用于产生同位素响应曲线。</value>
+  </data>
+  <data name="PrecursorExplicitCollisionEnergy" xml:space="preserve">
+    <value>目标的 SRM 方法或离子对列表中使用的确切目标碰撞能量，将覆盖所有模型或优化库值。 可依次由每个离子对的明确碰撞能量覆盖。</value>
   </data>
   <data name="PrecursorIonFormula">
     <value>母离子的公式。</value>
@@ -911,6 +976,13 @@
   <data name="Protein">
     <value>蛋白质</value>
   </data>
+  <data name="ProteinAbundance">
+    <value>表示特定重复测定中蛋白质丰度的数值。
+对蛋白质下所有离子对的归一化面积取平均值，即可计算出蛋白质丰度。
+离子对面积根据“肽段定量”设置中指定的归一化方法进行归一化处理。
+如果任何离子对在“重复测定”中缺少峰面积，蛋白质丰度将为空白，除非归一化方法是与标记的比率设置中指定的归一化方法进行归一化处理。
+如果该重复测定中有任何离子对缺少峰面积，则除非归一化方法是与标记之间的比率，否则蛋白质丰度将为空白。</value>
+  </data>
   <data name="ProteinAccession">
     <value>蛋白质检索号</value>
   </data>
@@ -937,6 +1009,13 @@
   <data name="ProteinPreferredName">
     <value>蛋白质首选名称</value>
   </data>
+  <data name="ProteinResult">
+    <value>蛋白质结果</value>
+  </data>
+  <data name="ProteinResults">
+    <value>蛋白质结果
+</value>
+  </data>
   <data name="Proteins">
     <value>蛋白质</value>
   </data>
@@ -944,6 +1023,9 @@
     <value>在通过公共 FASTA 序列文件将蛋白质导入 Skyline 时，
 可以存取全部蛋白质序列。若将光标悬浮在
 肽段树视图中的蛋白质名称，也会看到蛋白质描述。</value>
+  </data>
+  <data name="ProteinSequenceCoverage">
+    <value>蛋白质序列中氨基酸的部分可能是子肽段的一个或多个序列的一部分。</value>
   </data>
   <data name="ProteinSpecies">
     <value>蛋白质物种</value>
@@ -953,6 +1035,14 @@
   </data>
   <data name="QuadraticCoefficient">
     <value>二次回归中 x 平方项的系数。</value>
+  </data>
+  <data name="QualitativeIonRatio">
+    <value>在该分子或肽段下，非定量离子对的峰面积总和与定量离子对峰面积总和之比。</value>
+  </data>
+  <data name="QualitativeIonRatioStatus">
+    <value>描述定性离子比与目标定性离子比的比较。
+如果在定量设置中指定了定性离子比阈值，则定性离子比状态将为“通过”或“失败”。
+如果未指定定性离子比阈值，定性离子比状态将为“等于”、“低”或“高”，具体取决于它与目标定性离子比的比较方式。</value>
   </data>
   <data name="Quantification">
     <value>与使用校正曲线或归一化方法量化分析相关的值。</value>
@@ -1000,12 +1090,24 @@
   <data name="Replicate">
     <value>重复测定</value>
   </data>
+  <data name="ReplicateAbundance">
+    <value>关于计算倍数变化所使用的重复测定值的信息</value>
+  </data>
+  <data name="ReplicateAbundances">
+    <value>用于计算倍数变化的各个重复测定的值的集合</value>
+  </data>
   <data name="ReplicateCalibrationCurve">
     <value>使用与此重复测定具有相同批次名称的重复测定生成的校准曲线。
 若母离子浓度在任一此肽段内母离子中指定，则校准曲线将为同位素响应曲线。</value>
   </data>
   <data name="ReplicateCount">
     <value>具有有效强度并对结果有作用的重复测定次数。</value>
+  </data>
+  <data name="ReplicateGroup">
+    <value>重复测定丰度所属的群体</value>
+  </data>
+  <data name="ReplicateSampleIdentity">
+    <value>重复测定丰度的生物重复测定</value>
   </data>
   <data name="ReplicateErrorMessage">
     <value>在尝试拟合重复测定校准曲线时出现的错误消息正文（如有）</value>
@@ -1051,9 +1153,6 @@
     <value>文档内的结果文件特殊标识符。这以“ResultFile:/”开头，之后是重复测定名称。
 这通常以结果文件名称结束，但如果文件名称不是重复测定内唯一的，则可能包含额外属性（比如完整路径）。</value>
     <comment>Do not translate "ResultFile:/".</comment>
-  </data>
-  <data name="Results">
-    <value>结果</value>
   </data>
   <data name="RetentionTime">
     <value>离子对峰的最大强度所对应的的保留时间。</value>
@@ -1136,6 +1235,9 @@
     <value>母离子总面积归一化值的标准
 偏差。</value>
   </data>
+  <data name="TargetQualitativeIonRatio">
+    <value>所有未从校准排除的外部标准重复测定中定性离子比值的平均值。</value>
+  </data>
   <data name="ThreeLetterCodes">
     <value>以其三字母代码指代修饰的修饰序列，例如"C[CAM]"。如果修饰没有三字母代码，则使用其全名代替。</value>
   </data>
@@ -1198,6 +1300,12 @@
   <data name="TransitionResult">
     <value>离子对结果（单个）</value>
   </data>
+  <data name="TransitionResultIsMs1">
+    <value>此结果是否从 MS1 扫描获取。</value>
+  </data>
+  <data name="TransitionResultIsQuantitative">
+    <value>该结果是否作为定量处理，是基于离子对的可由用户修改的定量性质；以及 MS/MS 全扫描采集方法是否为将所有碎片离子作为非定量的 DDA。</value>
+  </data>
   <data name="TransitionResultLocator">
     <value>文档内的离子对结果特殊标识符。这以“TransitionResult:”开头，并通常以重复测定名称结束，但可能包含最优步和结果文件的额外属性。</value>
     <comment>Do not translate "TransitionResult:".</comment>
@@ -1235,10 +1343,10 @@
     <value>以平方埃为单位的离子迁移测量值，通常会转换为适当的单位（例如漂移时间，inverseK0），并用于从离子迁移质谱中提取色谱图。</value>
   </data>
   <data name="DriftTimeFragment">
-    <value>片段离子的离子迁移漂移时间（以毫秒为单位），通常因能量碰撞更多而移动更快。（仅用于向后相容：离子迁移片段和离子迁移单位是首选术语。）</value>
+    <value>碎片离子的离子迁移漂移时间（以毫秒为单位），通常因能量碰撞更多而移动更快。（仅用于向后相容：离子迁移片段和离子迁移单位是首选术语。）</value>
   </data>
   <data name="DriftTimeMS1">
-    <value>母离子的离子迁移漂移时间（以毫秒为单位），通常因能量较少而比片段离子移动稍慢。（仅用于向后相容：离子迁移MS1 和离子迁移单位是首选术语。）</value>
+    <value>母离子的离子迁移漂移时间（以毫秒为单位），通常因能量较少而比碎片离子移动稍慢。（仅用于向后相容：离子迁移MS1 和离子迁移单位是首选术语。）</value>
   </data>
   <data name="DriftTimeWindow">
     <value>在色谱图提取中使用的离子迁移漂移时间窗口（以毫秒为单位）。（仅用于向后相容：离子迁移窗口和离子迁移单位是首选术语。）</value>

@@ -23,7 +23,7 @@ using System.Text.RegularExpressions;
 
 namespace pwiz.Skyline.Util
 {
-    static class Install
+    public static class Install
     {
         public enum InstallType { release, daily, developer }
 

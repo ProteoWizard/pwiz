@@ -443,6 +443,9 @@ namespace IDPicker.DataModel
                 throw new ArgumentException();
 
             var serializedList = cached as string;
+            if (!serializedList.Trim().Any())
+                return null;
+
             var formatter = new XmlSerializer();
             return formatter.Deserialize(new MemoryStream(Encoding.UTF8.GetBytes(serializedList)));
         }

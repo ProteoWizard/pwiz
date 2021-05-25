@@ -803,14 +803,51 @@ public ref class BinaryDataArray : public ParamContainer
     /// <summary>
     /// the binary data.
     /// </summary>
-    property pwiz::CLI::util::BinaryData^ data
+    property pwiz::CLI::util::BinaryDataDouble^ data
     {
-        pwiz::CLI::util::BinaryData^ get();
-        void set(pwiz::CLI::util::BinaryData^ value);
+        pwiz::CLI::util::BinaryDataDouble^ get();
+        void set(pwiz::CLI::util::BinaryDataDouble^ value);
     }
 
 
     BinaryDataArray();
+
+    /// <summary>
+    /// returns true iff the element contains no params and all members are empty or null
+    /// </summary>
+    bool empty() new;
+};
+
+
+/// <summary>
+/// A BinaryDataArray that stores integer values instead of doubles.
+/// </summary>
+public ref class IntegerDataArray : public ParamContainer
+{
+    DEFINE_SHARED_DERIVED_INTERNAL_BASE_CODE(pwiz::msdata, IntegerDataArray, ParamContainer);
+
+    public:
+
+    /// <summary>
+    /// this optional attribute may reference the 'id' attribute of the appropriate dataProcessing.
+    /// </summary>
+    property DataProcessing^ dataProcessing
+    {
+        DataProcessing^ get();
+        void set(DataProcessing^ value);
+    }
+
+    /// <summary>
+    /// the binary data.
+    /// </summary>
+    property pwiz::CLI::util::BinaryDataInteger^ data
+    {
+        pwiz::CLI::util::BinaryDataInteger^ get();
+        void set(pwiz::CLI::util::BinaryDataInteger^ value);
+    }
+
+
+    IntegerDataArray();
 
     /// <summary>
     /// returns true iff the element contains no params and all members are empty or null
@@ -967,6 +1004,12 @@ public DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(BinaryDataArrayList, pwiz::m
 
 
 /// <summary>
+/// A list of IntegerDataArray references; implements the IList&lt;IntegerDataArray&gt; interface
+/// </summary>
+public DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(IntegerDataArrayList, pwiz::msdata::IntegerDataArrayPtr, IntegerDataArray, NATIVE_SHARED_PTR_TO_CLI, CLI_TO_NATIVE_SHARED_PTR);
+
+
+/// <summary>
 /// A list of MZIntensityPair references; implements the IList&lt;MZIntensityPair&gt; interface
 /// </summary>
 public DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(MZIntensityPairList, pwiz::msdata::MZIntensityPair, MZIntensityPair, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
@@ -1085,6 +1128,15 @@ public ref class Spectrum : public ParamContainer
     {
         BinaryDataArrayList^ get();
         void set(BinaryDataArrayList^ value);
+    }
+
+    /// <summary>
+    /// list of integer data arrays.
+    /// </summary>
+    property IntegerDataArrayList^ integerDataArrays
+    {
+        IntegerDataArrayList^ get();
+        void set(IntegerDataArrayList^ value);
     }
 
 
@@ -1222,6 +1274,15 @@ public ref class Chromatogram : public ParamContainer
     {
         BinaryDataArrayList^ get();
         void set(BinaryDataArrayList^ value);
+    }
+
+    /// <summary>
+    /// list of integer data arrays.
+    /// </summary>
+    property IntegerDataArrayList^ integerDataArrays
+    {
+        IntegerDataArrayList^ get();
+        void set(IntegerDataArrayList^ value);
     }
 
 
@@ -1362,6 +1423,11 @@ public ref class SpectrumList
     /// set DataProcessing
     /// </summary>
     virtual void setDataProcessing(DataProcessing^ dp);
+
+    /// <summary>
+    /// return true if either the wrapper implementation would benefit from using multiple threads, or if the inner wrapped list would
+    /// </summary>
+    virtual bool benefitsFromWorkerThreads();
 };
 
 
