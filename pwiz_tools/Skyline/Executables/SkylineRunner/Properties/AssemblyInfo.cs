@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("SkylineDailyRunner")]
-[assembly: AssemblyDescription("Command-line interface to Skyline-daily")]
+[assembly: AssemblyTitle("SkylineRunner")]
+[assembly: AssemblyDescription("Command-line interface to Skyline")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("University of Washington")]
-[assembly: AssemblyProduct("Skyline-daily")]
+[assembly: AssemblyProduct("Skyline")]
 [assembly: AssemblyCopyright("Copyright © University of Washington 2011-2021")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -32,5 +32,5 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("21.1.1.118")]
-[assembly: AssemblyFileVersion("21.1.1.118")]
+[assembly: AssemblyVersion("21.1.0.144")]
+[assembly: AssemblyFileVersion("21.1.0.144")]
