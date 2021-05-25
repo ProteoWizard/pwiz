@@ -114,6 +114,10 @@ namespace pwiz.Skyline
             {
                 if (!commandArgs.UsageShown)
                     _out.WriteLine(Resources.CommandLine_Run_Exiting___);
+                else if (!_out.IsErrorReported)
+                {
+                    return Program.EXIT_CODE_SUCCESS;
+                }
                 return Program.EXIT_CODE_FAILURE_TO_START;
             }
 
@@ -261,6 +265,11 @@ namespace pwiz.Skyline
             }
 
             WaitForDocumentLoaded();
+
+            if (_out.IsErrorReported)
+            {
+                return false;
+            }
 
             if (commandArgs.ImportingFasta && !commandArgs.ImportingSearch)
             {

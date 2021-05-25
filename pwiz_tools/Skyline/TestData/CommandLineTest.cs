@@ -655,7 +655,9 @@ namespace pwiz.SkylineTestData
                                  "--exp-file=" + agilentOut,
                                  "--exp-dwell-time=20",
                                  "--exp-strategy=buckets",
-                                 "--exp-max-trans=75"};
+                                 "--exp-max-trans=75",
+                                 "--import-warn-on-failure"
+                };
                 output = RunCommand(cmd);
 
                 //check for success
@@ -681,10 +683,7 @@ namespace pwiz.SkylineTestData
 
             if (!success)
             {
-// ReSharper disable LocalizableElement
-                Console.WriteLine("Failed to write Agilent method: {0}", output);   // Not L10N
-// ReSharper restore LocalizableElement
-                Assert.IsTrue(success);
+                Assert.Fail("Failed to write Agilent method: {0}", output);
             }
 
             // Test order by m/z
@@ -692,7 +691,9 @@ namespace pwiz.SkylineTestData
             var cmd2 = new[] {"--in=" + docPath2,
                 "--exp-translist-instrument=Thermo",
                 "--exp-order-by-mz",
-                "--exp-file=" + mzOrderOut};
+                "--exp-file=" + mzOrderOut,
+                "--import-warn-on-failure"
+            };
             output = RunCommand(cmd2);
 
             //check for success
