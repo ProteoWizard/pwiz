@@ -10031,6 +10031,10 @@
     <value>尝试上传至 Panorama 时出现未知错误。
 {0}</value>
   </data>
+  <data name="CommandArgs_PanoramaArgsComplete_plural_" xml:space="preserve">
+    <value>请为向 Panorma 上传文档时需要的以下参数指定一个值：
+{0}</value>
+  </data>
   <data name="SkylineWindow_ShowPublishDlg_The_document_must_be_fully_loaded_before_it_can_be_uploaded_" xml:space="preserve">
     <value>文档必须在可以上传之前完全加载。</value>
   </data>
@@ -10051,6 +10055,10 @@
   </data>
   <data name="PublishDocumentDlg_btnBrowse_Click_Upload_Document" xml:space="preserve">
     <value>上传文档</value>
+  </data>
+  <data name="CommandArgs_PanoramaArgsComplete_" xml:space="preserve">
+    <value>请为向 Panorma 上传文档时需要的以下参数指定一个值：
+{0}</value>
   </data>
   <data name="FullScanAcquisitionMethod_FromName__0__is_not_a_valid_Full_Scan_Acquisition_Method" xml:space="preserve">
     <value>{0} 不是有效的全扫描采集方法</value>
@@ -11411,8 +11419,5 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
   <data name="IonMobilityObject_ToString_HEO_" xml:space="preserve">
     <value>HEO：</value>
     <comment>Compact representation of "High Energy Ion Mobility Offset Offset"</comment>
-  </data>
-  <data name="CommandStatusWriter_WriteLine_Error_" xml:space="preserve">
-    <value>错误：</value>
   </data>
 </root>
