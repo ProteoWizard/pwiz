@@ -11422,4 +11422,7 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
     <value>HEO：</value>
     <comment>Compact representation of "High Energy Ion Mobility Offset Offset"</comment>
   </data>
+  <data name="CommandStatusWriter_WriteLine_Error_" xml:space="preserve">
+    <value>エラー：</value>
+  </data>
 </root>
