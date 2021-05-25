@@ -2884,6 +2884,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to This library contains iRT values. Do you want to create a retention time predictor with these values?.
+        /// </summary>
+        public static string BuildPeptideSearchLibraryControl_AddExistingLibrary_This_library_contains_iRT_values__Do_you_want_to_create_a_retention_time_predictor_with_these_values_ {
+            get {
+                return ResourceManager.GetString("BuildPeptideSearchLibraryControl_AddExistingLibrary_This_library_contains_iRT_val" +
+                        "ues__Do_you_want_to_create_a_retention_time_predictor_with_these_values_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to An error occurred while processing retention times..
         /// </summary>
         public static string BuildPeptideSearchLibraryControl_AddIrtLibraryTable_An_error_occurred_while_processing_retention_times_ {
@@ -2943,7 +2953,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Files to search:.
+        ///   Looks up a localized string similar to &amp;Files to search:.
         /// </summary>
         public static string BuildPeptideSearchLibraryControl_Files_to_search_ {
             get {
@@ -2971,7 +2981,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Result files:.
+        ///   Looks up a localized string similar to &amp;Result files:.
         /// </summary>
         public static string BuildPeptideSearchLibraryControl_Result_files_ {
             get {
@@ -4562,7 +4572,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Please specify a value for the following argument required to upload the document to Panorma:
+        ///   Looks up a localized string similar to Error: A value is required for the following argument to upload the document to Panorama:
         ///{0}.
         /// </summary>
         public static string CommandArgs_PanoramaArgsComplete_ {
@@ -4572,7 +4582,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Please specify a value for the following arguments required to upload the document to Panorma:
+        ///   Looks up a localized string similar to Error: A value is required for the following arguments to upload the document to Panorama:
         ///{0}.
         /// </summary>
         public static string CommandArgs_PanoramaArgsComplete_plural_ {
@@ -16086,7 +16096,7 @@ namespace pwiz.Skyline.Properties {
         ///
         ///Multipliers (e.g. the &quot;2&quot; in &quot;[2M+K]&quot;) and isotope labels (e.g. the &quot;2Cl37&quot; in &quot;[M2Cl37+H]&quot;) are supported.
         ///
-        ///Recognized adduct components  [rest of string was truncated]&quot;;.
+        ///Recognized adduct com [rest of string was truncated]&quot;;.
         /// </summary>
         public static string IonInfo_AdductTips_ {
             get {
@@ -20562,7 +20572,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to An unknown error occurred trying to verify access to Panorama folder {0} on the server {1}.
+        ///   Looks up a localized string similar to Error: An unknown error occurred trying to verify access to Panorama folder &apos;{0}&apos; on the server {1}.
         ///{2}.
         /// </summary>
         public static string PanoramaHelper_ValidateFolder_Exception_ {
@@ -20872,7 +20882,7 @@ namespace pwiz.Skyline.Properties {
         ///    
         ///Note that you can adjust column order in Skyline by dragging the column headers left or right.  For molecules, you can also select which columns to enable with the &quot;Columns...&quot; button.
         ///
-        ///Most peptide transition lists can be imported with the &quot;File|Import|Transition List...&quot; menu item or even pasted directly into the Targets window. You can also do this with molecule transit [rest of string was truncated]&quot;;.
+        ///Most peptide transition lists can be imported with the &quot;File|Import|Transition List...&quot; menu item or even pasted directly into the Targets window. You can also do this with molecule tra [rest of string was truncated]&quot;;.
         /// </summary>
         public static string PasteDlg_btnTransitionListHelp_Click_SmallMol_ {
             get {
