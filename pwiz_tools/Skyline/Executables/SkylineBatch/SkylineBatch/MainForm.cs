@@ -52,7 +52,6 @@ namespace SkylineBatch
             listViewConfigs.ColumnWidthChanged += listViewConfigs_ColumnWidthChanged;
             ProgramLog.Info(Resources.MainForm_MainForm_Loading_configurations_from_saved_settings_);
             
-            _rDirectorySelector = new RDirectorySelector(this, _configManager);
             _outputLog = new Timer { Interval = 500 };
             _outputLog.Tick += OutputLog;
             _outputLog.Start();
@@ -62,6 +61,7 @@ namespace SkylineBatch
             {
                 _configManager = new SkylineBatchConfigManager(_skylineBatchLogger, this);
                 _configManager.LoadConfigList();
+                _rDirectorySelector = new RDirectorySelector(this, _configManager);
                 if (!string.IsNullOrEmpty(openFile))
                     FileOpened(openFile);
                 _rDirectorySelector = new RDirectorySelector(this, _configManager);
