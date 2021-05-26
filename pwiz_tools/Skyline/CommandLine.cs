@@ -196,7 +196,7 @@ namespace pwiz.Skyline
             if ((skylineFile != null && !OpenSkyFile(skylineFile)) ||
                 (skylineFile == null && _doc == null))
             {
-                _out.WriteLine(Resources.CommandLine_Run_Exiting___);
+                _out.WriteLine(Resources.CommandLine_RunInner_Error__Could_not_open_Skyline_document__Exiting___);
                 return Program.EXIT_CODE_RAN_WITH_ERRORS;
             }
 
@@ -264,7 +264,10 @@ namespace pwiz.Skyline
             if (commandArgs.SettingLibraryPath)
             {
                 if (!SetLibrary(commandArgs.LibraryName, commandArgs.LibraryPath))
+                {
                     _out.WriteLine(Resources.CommandLine_Run_Not_setting_library_);
+                    return false;
+                }
             }
 
             WaitForDocumentLoaded();
@@ -679,9 +682,12 @@ namespace pwiz.Skyline
 
             if (commandArgs.ExportingChromatograms)
             {
-                ExportChromatograms(commandArgs.ChromatogramsFile, commandArgs.ChromatogramsPrecursors,
+                if (!ExportChromatograms(commandArgs.ChromatogramsFile, commandArgs.ChromatogramsPrecursors,
                     commandArgs.ChromatogramsProducts,
-                    commandArgs.ChromatogramsBasePeaks, commandArgs.ChromatogramsTics);
+                    commandArgs.ChromatogramsBasePeaks, commandArgs.ChromatogramsTics))
+                {
+                    return false;
+                }
             }
 
             var exportTypes =
@@ -743,7 +749,10 @@ namespace pwiz.Skyline
                     sharedFileName = FileEx.GetTimeStampedFileName(_skylineFile);
                 }
                 var sharedFilePath = Path.Combine(sharedFileDir, sharedFileName);
-                ShareDocument(_doc, _skylineFile, sharedFilePath, commandArgs.SharedFileType, _out);
+                if (!ShareDocument(_doc, _skylineFile, sharedFilePath, commandArgs.SharedFileType, _out))
+                {
+                    return false;
+                }
             }
             if (commandArgs.PublishingToPanorama)
             {
@@ -2761,7 +2770,7 @@ namespace pwiz.Skyline
             }
         }
 
-        public void ExportChromatograms(string chromatogramsFile, bool precursors, bool products, bool basePeaks, bool tics)
+        public bool ExportChromatograms(string chromatogramsFile, bool precursors, bool products, bool basePeaks, bool tics)
         {
             _out.WriteLine(Resources.CommandLine_ExportChromatograms_Exporting_chromatograms_file__0____, chromatogramsFile);
 
@@ -2780,7 +2789,7 @@ namespace pwiz.Skyline
             if (chromExtractors.Count == 0 && chromSources.Count == 0)
             {
                 _out.WriteLine(Resources.CommandLine_ExportChromatograms_Error__At_least_one_chromatogram_type_must_be_selected);
-                return;
+                return false;
             }
 
             var filesToExport = Document.Settings.HasResults
@@ -2789,7 +2798,7 @@ namespace pwiz.Skyline
             if (filesToExport.Count == 0)
             {
                 _out.WriteLine(Resources.CommandLine_ExportChromatograms_Error__The_document_must_have_imported_results);
-                return;
+                return false;
             }
 
             try
@@ -2811,7 +2820,10 @@ namespace pwiz.Skyline
             {
                 _out.WriteLine(Resources.CommandLine_ExportChromatograms_Error__Failure_attempting_to_save_chromatograms_file__0_, chromatogramsFile);
                 _out.WriteLine(x.Message);
+                return false;
             }
+
+            return true;
         }
 
         public enum ResolveZipToolConflicts
@@ -3119,6 +3131,7 @@ namespace pwiz.Skyline
                         return false;
                     _out.WriteLine(Resources.CommandLine_ImportSkyr_Success__Imported_Reports_from__0_, Path.GetFileNameWithoutExtension(path));
                 }
+                // TODO: Return an error if the report was not imported?
             }
             return true;
         }
@@ -3612,7 +3625,8 @@ namespace pwiz.Skyline
             }
             catch (Exception x)
             {
-                statusWriter.WriteLine(Resources.SkylineWindow_ShareDocument_Failed_attempting_to_create_sharing_file__0__, fileDest);
+                statusWriter.WriteLine(Resources.CommandLine_GeneralException_Error___0_,
+                    Resources.SkylineWindow_ShareDocument_Failed_attempting_to_create_sharing_file__0__, fileDest);
                 statusWriter.WriteLine(x.Message);
             }
             return false;

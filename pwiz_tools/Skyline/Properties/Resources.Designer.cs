@@ -5784,7 +5784,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failure loading {0}. 
+        ///   Looks up a localized string similar to Error: Failed to load {0}. 
         /// {1}.
         /// </summary>
         public static string CommandLine_ImportSkyr_ {
@@ -6400,6 +6400,15 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("CommandLine_RunBatchCommands_Error__failed_to_open_file__0____batch_commands_comm" +
                         "and_failed_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: Could not open Skyline document. Exiting....
+        /// </summary>
+        public static string CommandLine_RunInner_Error__Could_not_open_Skyline_document__Exiting___ {
+            get {
+                return ResourceManager.GetString("CommandLine_RunInner_Error__Could_not_open_Skyline_document__Exiting___", resourceCulture);
             }
         }
         

@@ -2373,10 +2373,6 @@ Are you sure you want to continue?</value>
   <data name="ChromatogramDataProvider_GetChromatogram_This_import_appears_to_be_taking_longer_than_expected__If_importing_from_a_network_drive__consider_canceling_this_import__copying_to_local_disk_and_retrying_" xml:space="preserve">
     <value>This import appears to be taking longer than expected. If importing from a network drive, consider canceling this import, copying to local disk and retrying.</value>
   </data>
-  <data name="CommandLine_ImportSkyr_" xml:space="preserve">
-    <value>Failure loading {0}. 
- {1}</value>
-  </data>
   <data name="CommandLine_ImportTransitionList_Error__To_create_the_iRT_database___0___for_this_assay_library__you_must_specify_the_iRT_standards_using_either_of_the_arguments__1__or__2_" xml:space="preserve">
     <value>Error: To create the iRT database '{0}' for this assay library, you must specify the iRT standards using either of the arguments {1} or {2}</value>
   </data>
@@ -11452,5 +11448,12 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
   </data>
   <data name="CommandLine_ApplyFileAndSampleNameRegex_Error__No_files_match_the_sample_name_pattern___0___" xml:space="preserve">
     <value>Error: No files match the sample name pattern '{0}'.</value>
+  </data>
+  <data name="CommandLine_ImportSkyr_" xml:space="preserve">
+    <value>Error: Failed to load {0}. 
+ {1}</value>
+  </data>
+  <data name="CommandLine_RunInner_Error__Could_not_open_Skyline_document__Exiting___" xml:space="preserve">
+    <value>Error: Could not open Skyline document. Exiting...</value>
   </data>
 </root>

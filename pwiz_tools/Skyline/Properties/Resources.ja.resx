@@ -2373,10 +2373,6 @@
   <data name="ChromatogramDataProvider_GetChromatogram_This_import_appears_to_be_taking_longer_than_expected__If_importing_from_a_network_drive__consider_canceling_this_import__copying_to_local_disk_and_retrying_" xml:space="preserve">
     <value>このインポートは予測より長くかかっています。ネットワークドライブからインポート中である場合、このインポートをキャンセルしてローカルディスクをコピーし再試行することを検討してください。</value>
   </data>
-  <data name="CommandLine_ImportSkyr_" xml:space="preserve">
-    <value>{0}の読み込みに失敗しました。
- {1}</value>
-  </data>
   <data name="CommandLine_ImportTransitionList_Error__To_create_the_iRT_database___0___for_this_assay_library__you_must_specify_the_iRT_standards_using_either_of_the_arguments__1__or__2_" xml:space="preserve">
     <value>エラー：このアッセイライブラリのiRTデータベース「{0}」を作成するには、引数{1}または{2}のいずれかを用いてiRT標準を指定する必要があります。</value>
   </data>

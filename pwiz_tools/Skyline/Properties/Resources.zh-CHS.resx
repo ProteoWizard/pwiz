@@ -2373,10 +2373,6 @@
   <data name="ChromatogramDataProvider_GetChromatogram_This_import_appears_to_be_taking_longer_than_expected__If_importing_from_a_network_drive__consider_canceling_this_import__copying_to_local_disk_and_retrying_" xml:space="preserve">
     <value>此次导入好像比预期的时间长。如果是从网络驱动器导入，请考虑取消这次导入，复制到本地磁盘，再重试。</value>
   </data>
-  <data name="CommandLine_ImportSkyr_" xml:space="preserve">
-    <value>加载{0}失败。
- {1}</value>
-  </data>
   <data name="CommandLine_ImportTransitionList_Error__To_create_the_iRT_database___0___for_this_assay_library__you_must_specify_the_iRT_standards_using_either_of_the_arguments__1__or__2_" xml:space="preserve">
     <value>错误：要为此分析库创建 iRT 数据库“{0}”，您必须使用参数 {1} 或 {2} 指定 iRT 标准</value>
   </data>
