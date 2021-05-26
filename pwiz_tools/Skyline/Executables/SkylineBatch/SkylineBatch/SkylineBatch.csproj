@@ -90,11 +90,12 @@
   <ItemGroup>
     <None Include="packages.config" />
     <None Include="Resources\downtriangle.png" />
-    <Content Include="LaunchBatch.exe">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
     <None Include="Resources\download.png" />
     <None Include="Resources\downloadSelected.png" />
+    <Content Include="..\..\SharedBatch\LaunchBatch\bin\$(Configuration)\LaunchBatch.exe">
+      <Link>LaunchBatch.exe</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="SkylineBatch.ico" />
     <Content Include="SkylineDailyRunner.exe">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>

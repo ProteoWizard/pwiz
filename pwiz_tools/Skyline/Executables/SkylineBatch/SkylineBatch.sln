@@ -4,6 +4,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 15.0.27703.2026
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkylineBatch", "SkylineBatch\SkylineBatch.csproj", "{7AB2D7AD-6760-450E-BCCD-B08502307B99}"
+	ProjectSection(ProjectDependencies) = postProject
+		{91458586-C381-465E-9A63-0341058E0C99} = {91458586-C381-465E-9A63-0341058E0C99}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkylineBatchTest", "SkylineBatchTest\SkylineBatchTest.csproj", "{415D56D0-D83D-45D2-A833-E2D7E46E7A69}"
 EndProject
