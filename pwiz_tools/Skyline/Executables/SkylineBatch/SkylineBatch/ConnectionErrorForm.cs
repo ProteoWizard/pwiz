@@ -59,6 +59,7 @@ namespace SkylineBatch
                 _configDict.Remove(config.Name);
                 _disconnectedConfigs.Remove(config.Name);
                 listConfigs.Items.Remove(config.Name);
+                _serverConnector.Combine(addServerForm.serverConnector);
                 CheckIfAllConnected();
             }
         }
@@ -101,7 +102,7 @@ namespace SkylineBatch
                     if (((ServerInfo)config.MainSettings.Server).Equals(server) &&
                         _disconnectedConfigs[config.Name] != null)
                     {
-                        AlertDlg.ShowError(this, Program.AppName(), _disconnectedConfigs[config.Name].Message);
+                        RunUi(() => { AlertDlg.ShowError(this, Program.AppName(), _disconnectedConfigs[config.Name].Message); });
                         return;
                     }
                 }

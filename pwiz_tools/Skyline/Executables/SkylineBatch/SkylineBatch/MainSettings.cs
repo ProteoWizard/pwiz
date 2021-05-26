@@ -428,20 +428,9 @@ namespace SkylineBatch
             var dataFiles = new Dictionary<string, FtpListItem>();
             var ftpFiles = serverConnector.GetFiles(this, out Exception connectionException);
             if (connectionException != null) throw connectionException;
-            var namingRegex = new Regex(DataNamingPattern);
             foreach (var ftpFile in ftpFiles)
             {
-                if (namingRegex.IsMatch(ftpFile.Name))
-                    dataFiles.Add(ftpFile.Name, ftpFile);
-            }
-            if (dataFiles.Count == 0)
-            {
-                throw new ArgumentException(
-                    string.Format(
-                        Resources
-                            .DataServerInfo_Validate_None_of_the_file_names_on_the_server_matched_the_regular_expression___0_,
-                        DataNamingPattern) + Environment.NewLine +
-                    Resources.DataServerInfo_Validate_Please_make_sure_your_regular_expression_is_correct_);
+                dataFiles.Add(ftpFile.Name, ftpFile);
             }
             return dataFiles;
         }

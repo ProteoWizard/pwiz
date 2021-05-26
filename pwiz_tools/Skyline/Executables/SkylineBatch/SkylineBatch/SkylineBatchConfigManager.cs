@@ -682,7 +682,6 @@ namespace SkylineBatch
                 return;
             }
 
-            //var disconnectedConfigs = new Dictionary<SkylineBatchConfig, Exception>();
             var showConnectionForm = false;
             foreach (var config in downloadingConfigs)
             {
@@ -703,7 +702,19 @@ namespace SkylineBatch
                     CannotRun(callback);
                     return;
                 }
-
+                
+                foreach (var config in connectionForm.ReplacingConfigs)
+                {
+                    var index = GetConfigIndex(config.Name, _checkedRunState.baseState);
+                    _checkedRunState = ProgramaticallyRemoveAt(index, _checkedRunState);
+                    _checkedRunState = ProgramaticallyInsertConfig(config, index, _checkedRunState);
+                    // replace configs in downloading configs list
+                    int i = 0;
+                    while (i < downloadingConfigs.Count && !downloadingConfigs[i].Name.Equals(config.Name)) i++;
+                    downloadingConfigs.RemoveAt(i);
+                    downloadingConfigs.Insert(i, config);
+                }
+                SetState(_checkedRunState);
             }
 
             var filesToDownload = new Dictionary<string, FtpListItem>();

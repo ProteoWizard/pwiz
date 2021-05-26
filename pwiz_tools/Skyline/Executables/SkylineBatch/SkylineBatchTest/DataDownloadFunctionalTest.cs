@@ -88,7 +88,7 @@ namespace SkylineBatchTest
             });
             var longWaitDialog = ShowDialog<LongWaitDlg>(() => mainForm.ClickRun(1));
             WaitForClosedForm(longWaitDialog);
-            var spaceErrorDlg = FindOpenForm<AlertDlg>();
+            var spaceErrorDlg = WaitForOpenForm<AlertDlg>();
             RunUI(() =>
             {
                 Assert.IsTrue(spaceErrorDlg.Message.StartsWith(SkylineBatch.Properties.Resources.SkylineBatchConfigManager_StartBatchRun_There_is_not_enough_space_on_this_computer_to_download_the_data_for_these_configurations__You_need_an_additional_));

@@ -32,6 +32,7 @@ namespace SkylineBatch
         }
 
         public DataServerInfo Server;
+        public ServerConnector serverConnector { get; private set; }
 
         private void btnAdd_Click(object sender, EventArgs e)
         {
@@ -61,7 +62,7 @@ namespace SkylineBatch
 
             _cancelValidate = new CancellationTokenSource();
             var connectToServer = new LongWaitOperation(_cancelValidate);
-            var serverConnector = new ServerConnector(Server);
+            serverConnector = new ServerConnector(Server);
             List<FtpListItem> serverFiles = null;
             Exception connectionException = null;
             connectToServer.Start(false,

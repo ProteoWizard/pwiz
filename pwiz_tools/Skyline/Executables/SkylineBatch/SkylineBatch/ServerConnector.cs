@@ -4,6 +4,7 @@ using System.Data;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentFTP;
@@ -35,16 +36,36 @@ namespace SkylineBatch
             }
         }
 
-        public List<FtpListItem> GetFiles(ServerInfo serverInfo, out Exception connectionException)
+        public List<FtpListItem> GetFiles(DataServerInfo serverInfo, out Exception connectionException)
         {
             if (!_serverMap.ContainsKey(serverInfo) )
                 throw new Exception("ServerConnector was not initialized with this server. No information for the server.");
             if (_serverMap[serverInfo] == null && _serverExceptions[serverInfo] == null)
                 throw new Exception("ServerConnector was never started. No information for the server.");
             connectionException = _serverExceptions[serverInfo];
+            var matchingFiles = new List<FtpListItem>();
+            if (connectionException == null)
+            {
+                var namingRegex = new Regex(serverInfo.DataNamingPattern);
+                foreach (var ftpFile in _serverMap[serverInfo])
+                {
+                    if (namingRegex.IsMatch(ftpFile.Name))
+                        matchingFiles.Add(ftpFile);
+                }
+                if (matchingFiles.Count == 0)
+                {
+                    connectionException = new ArgumentException(
+                        string.Format(
+                            Resources
+                                .DataServerInfo_Validate_None_of_the_file_names_on_the_server_matched_the_regular_expression___0_,
+                            serverInfo.DataNamingPattern) + Environment.NewLine +
+                        Resources.DataServerInfo_Validate_Please_make_sure_your_regular_expression_is_correct_);
+                }
+            }
+
             if (connectionException != null)
                 return null;
-            return _serverMap[serverInfo];
+            return matchingFiles;
         }
 
         public void Connect(OnPercentProgress doOnProgress, List<ServerInfo> servers = null)
@@ -123,5 +144,18 @@ namespace SkylineBatch
             return client;
         }
 
+        public void Combine(ServerConnector other)
+        {
+            foreach (var server in other._serverMap.Keys)
+            {
+                if (!_serverMap.ContainsKey(server))
+                {
+                    _serverMap.Add(server, null);
+                    _serverExceptions.Add(server, null);
+                }
+                _serverMap[server] = other._serverMap[server];
+                _serverExceptions[server] = other._serverExceptions[server];
+            }
+        }
     }
 }
