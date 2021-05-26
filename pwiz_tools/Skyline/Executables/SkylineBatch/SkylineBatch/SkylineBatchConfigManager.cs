@@ -1000,7 +1000,6 @@ namespace SkylineBatch
         {
             var state = new SkylineBatchConfigManagerState(this);
             var importedConfigs = ImportFrom(filePath, showDownloadedFileForm);
-            //var showLongWaitDlg = false;
             foreach (var config in importedConfigs)
             {
                 if (state.configRunners.ContainsKey(config.GetName()))
