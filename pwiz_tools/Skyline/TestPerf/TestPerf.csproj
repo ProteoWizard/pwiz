@@ -169,6 +169,7 @@
     <Compile Include="PerfThermoNegativeFAIMSTest.cs" />
     <Compile Include="PerfTicAreaTest.cs" />
     <Compile Include="PerfUniquePeptidesTest.cs" />
+    <Compile Include="PerfWatersSonarTest.cs" />
     <Compile Include="SmallMolDriftTimePredictorTest.cs" />
     <Compile Include="SmallMolLibrariesTutorialTest.cs" />
   </ItemGroup>

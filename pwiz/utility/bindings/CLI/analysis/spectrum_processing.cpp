@@ -518,6 +518,29 @@ double SpectrumList_IonMobility::ccsToIonMobility(double ccs, double mz, int cha
     try { return base_->ccsToIonMobility(ccs, mz, charge); } CATCH_AND_FORWARD
 }
 
+bool SpectrumList_IonMobility::isWatersSonarData()
+{
+    try { return base_->isWatersSonarData(); } CATCH_AND_FORWARD
+}
+
+void SpectrumList_IonMobility::sonarMzToBinRange(double precursorMz, double tolerance, int% binRangeLow, int% binRangeHigh)
+{
+    try
+    {
+        std::pair<int, int> range = base_->sonarMzToBinRange(precursorMz, tolerance);
+        binRangeLow = range.first;
+        binRangeHigh = range.second;
+    } CATCH_AND_FORWARD
+}
+
+void SpectrumList_IonMobility::sonarBinToPrecursorMz(int bin, double% result)
+{
+    try
+    {
+        result = base_->sonarBinToPrecursorMz(bin);
+    } CATCH_AND_FORWARD
+}
+
 bool SpectrumList_IonMobility::accept(msdata::SpectrumList^ inner)
 {
     return b::SpectrumList_IonMobility::accept(*inner->base_);

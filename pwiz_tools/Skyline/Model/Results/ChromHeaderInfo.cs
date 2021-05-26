@@ -241,7 +241,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 flags &= ~FlagValues.polarity_negative;
             }
-            flags = (flags & ~FlagValues.ion_mobility_type_bitmask) | (FlagValues) ((int) ionMobilityUnits << 8);
+            flags = (flags & ~FlagValues.ion_mobility_type_bitmask) | (FlagValues.ion_mobility_type_bitmask & (FlagValues) ((int) ionMobilityUnits << 8));
             _textIdIndex = textIdIndex;
             _textIdLen = CheckUShort(textIdLen);
             _fileIndex = CheckUShort(fileIndex);
@@ -402,7 +402,12 @@ namespace pwiz.Skyline.Model.Results
         {
             get
             {
-                return (eIonMobilityUnits)((int)(Flags & FlagValues.ion_mobility_type_bitmask) >> 8);
+                var ionMobilityBits = Flags & FlagValues.ion_mobility_type_bitmask;
+                if (ionMobilityBits == FlagValues.ion_mobility_type_bitmask)
+                {
+                    return (eIonMobilityUnits)(-1);
+                }
+                return (eIonMobilityUnits)((int)ionMobilityBits >> 8);
             }
         }
 
@@ -1553,7 +1558,12 @@ namespace pwiz.Skyline.Model.Results
 
         public static eIonMobilityUnits IonMobilityUnitsFromFlags(FlagValues flags)
         {
-            return (eIonMobilityUnits)((int)(flags & FlagValues.ion_mobility_type_bitmask) >> 4);
+            var ionMobilityBits = flags & FlagValues.ion_mobility_type_bitmask;
+            if (ionMobilityBits == FlagValues.ion_mobility_type_bitmask)
+            {
+                return (eIonMobilityUnits)(-1);
+            }
+            return (eIonMobilityUnits)((int)ionMobilityBits >> 4);
         }
 
         private static bool UsedMs1CentroidsFlags(FlagValues flags)
@@ -1597,7 +1607,7 @@ namespace pwiz.Skyline.Model.Results
             if (fileUri.LegacyGetCentroidMs2())
                 flags |= FlagValues.used_ms2_centroids;
             FilePath = fileUri.RemoveLegacyParameters();
-            Flags = (flags & ~FlagValues.ion_mobility_type_bitmask) | (FlagValues)((int)ionMobilityUnits << 4);
+            Flags = (flags & ~FlagValues.ion_mobility_type_bitmask) | ((FlagValues)((int)ionMobilityUnits << 4) & FlagValues.ion_mobility_type_bitmask);
             FileWriteTime = fileWriteTime;
             RunStartTime = runStartTime;
             MaxRetentionTime = maxRT;

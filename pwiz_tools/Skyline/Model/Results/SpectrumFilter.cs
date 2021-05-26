@@ -46,6 +46,8 @@ namespace pwiz.Skyline.Model.Results
         bool HasCombinedIonMobility { get; } // When true, data source provides IMS data in 3-array format, which affects spectrum ID format
         IonMobilityValue IonMobilityFromCCS(double ccs, double mz, int charge); // Convert from Collisional Cross Section to ion mobility
         double CCSFromIonMobility(IonMobilityValue im, double mz, int charge); // Convert from ion mobility to Collisional Cross Section
+        bool IsWatersSonarData { get; } // Returns true if this ion mobility data is actually Waters SONAR data, which filters on precursor mz 
+        Tuple<int, int> SonarMzToBinRange(double mz, double tolerance); // Only useful for Waters SONAR data
     }
 
     public sealed class SpectrumFilter : IFilterInstrumentInfo
@@ -68,6 +70,7 @@ namespace pwiz.Skyline.Model.Results
         private readonly ChromKey[] _productChromKeys;
         private int _retentionTimeIndex;
         private readonly bool _isWatersFile;
+        private readonly bool _isWatersSonar;
         private readonly bool _isWatersMse;
         private readonly bool _isAgilentMse;
         private readonly bool _isIonMobilityFiltered;
@@ -96,6 +99,7 @@ namespace pwiz.Skyline.Model.Results
             if (instrumentInfo != null)
             {
                 _isWatersFile = instrumentInfo.IsWatersFile;
+                _isWatersSonar = instrumentInfo.IsWatersSonarData;
                 _configInfoList = instrumentInfo.ConfigInfoList;
             }
             IsFirstPass = firstPass;
@@ -109,14 +113,14 @@ namespace pwiz.Skyline.Model.Results
             
             // If we're using bare measured ion mobility values from spectral libraries, go get those now
             // TODO(bspratt): Should be queried out of the libraries as needed, as with RT not bulk copied all at once
-            var libraryIonMobilityInfo = document.Settings.GetIonMobilities(moleculesThisPass.SelectMany(
+            var libraryIonMobilityInfo = _isWatersSonar ? null : document.Settings.GetIonMobilities(moleculesThisPass.SelectMany(
                     node => node.TransitionGroups.Select(nodeGroup => nodeGroup.GetLibKey(document.Settings, node))).ToArray(), msDataFileUri);
             var ionMobilityMax = maxObservedIonMobilityValue ?? 0;
 
             // TIC and Base peak are meaningless with FAIMS, where we can't know the actual overall ion counts -also can't reliably share times with any ion mobility scheme
             if (instrumentInfo != null && instrumentInfo.IonMobilityUnits != eIonMobilityUnits.none)
             {
-                if (libraryIonMobilityInfo != null && !libraryIonMobilityInfo.IsEmpty)
+                if ((libraryIonMobilityInfo != null && !libraryIonMobilityInfo.IsEmpty) || _isWatersSonar)
                 {
                     _isIonMobilityFiltered = true;
                 }
@@ -200,7 +204,6 @@ namespace pwiz.Skyline.Model.Results
                         double? minTime = _minTime, maxTime = _maxTime;
                         var ionMobilityFilter = document.Settings.GetIonMobilityFilter(
                             nodePep, nodeGroup, null, libraryIonMobilityInfo, _ionMobilityFunctionsProvider, ionMobilityMax);
-                        var ionMobility = ionMobilityFilter.IonMobility;
 
                         ExplicitPeakBounds peakBoundaries = null;
                         if (_fullScan.RetentionTimeFilterType != RetentionTimeFilterType.none)
@@ -389,6 +392,21 @@ namespace pwiz.Skyline.Model.Results
             }
             Assume.IsNotNull(_ionMobilityFunctionsProvider, @"No ion mobility to CCS translation is possible for this data set");
             return 0;
+        }
+
+        public bool IsWatersSonarData
+        {
+            get { return _isWatersSonar; }
+        }
+
+        public Tuple<int, int> SonarMzToBinRange(double mz, double tolerance)
+        {
+            if (_ionMobilityFunctionsProvider?.IsWatersSonarData ?? false)
+            {
+                return _ionMobilityFunctionsProvider.SonarMzToBinRange(mz, tolerance);
+            }
+            Assume.Fail(@"This is not Waters SONAR data");
+            return new Tuple<int, int>(-1, -1);
         }
 
         private bool CanSchedule(SrmDocument document, IRetentionTimePredictor retentionTimePredictor)

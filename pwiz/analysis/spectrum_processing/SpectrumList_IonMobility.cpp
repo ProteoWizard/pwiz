@@ -46,6 +46,7 @@ SpectrumList_IonMobility::SpectrumList_IonMobility(const msdata::SpectrumListPtr
 :   SpectrumListWrapper(inner), equipment_(SpectrumList_IonMobility::IonMobilityEquipment::None)
 {
     units_ = IonMobilityUnits::none;
+    has_mzML_combined_ion_mobility_ = false;
     if (dynamic_cast<detail::SpectrumList_Agilent*>(&*innermost()) != NULL)
     {
         equipment_ = IonMobilityEquipment::AgilentDrift;
@@ -53,10 +54,10 @@ SpectrumList_IonMobility::SpectrumList_IonMobility(const msdata::SpectrumListPtr
     }
     else if (dynamic_cast<detail::SpectrumList_Waters*>(&*innermost()) != NULL)
     {
-        units_ = IonMobilityUnits::drift_time_msec;
-
         auto waters = dynamic_cast<detail::SpectrumList_Waters*>(&*innermost());
-        equipment_ = waters->hasSonarFunctions() ? IonMobilityEquipment::WatersSonar : IonMobilityEquipment::WatersDrift;
+        bool isSONAR = waters->hasSonarFunctions();
+        equipment_ = isSONAR ? IonMobilityEquipment::WatersSonar : IonMobilityEquipment::WatersDrift;
+        units_ = isSONAR ? IonMobilityUnits::waters_sonar : IonMobilityUnits::drift_time_msec;
     }
     else if (dynamic_cast<detail::SpectrumList_Bruker*>(&*innermost()) != NULL)
     {
@@ -79,13 +80,13 @@ SpectrumList_IonMobility::SpectrumList_IonMobility(const msdata::SpectrumListPtr
         equipment_ = IonMobilityEquipment::UIMFDrift;
         units_ = IonMobilityUnits::drift_time_msec;
     }
-    else // reading an mzML conversion?
+    else // reading an mzML conversion
     {
         if (inner->size() == 0)
             return;
 
         // See if first scan has any ion mobility data
-        SpectrumPtr spectrum = inner->spectrum(0, false);
+        SpectrumPtr spectrum = inner->spectrum(0, true);
         if (spectrum)
         {
             Scan dummy;
@@ -98,6 +99,14 @@ SpectrumList_IonMobility::SpectrumList_IonMobility(const msdata::SpectrumListPtr
                 units_ = IonMobilityUnits::compensation_V;
             else if (!scan.userParam("drift time").empty()) // Oldest known mzML drift time style
                 units_ = IonMobilityUnits::drift_time_msec;
+            for (int b = 0; b < spectrum->binaryDataArrayPtrs.size(); b++)
+            {
+                if (spectrum->binaryDataArrayPtrs[b]->hasCVParam(CVID::MS_raw_ion_mobility_array))
+                {
+                    has_mzML_combined_ion_mobility_ = true;
+                    break;
+                }
+            }
         }
         sl_ = nullptr;
         return;
@@ -134,7 +143,10 @@ PWIZ_API_DECL bool SpectrumList_IonMobility::canConvertIonMobilityAndCCS(IonMobi
 PWIZ_API_DECL bool SpectrumList_IonMobility::hasCombinedIonMobility() const
 {
     if (sl_ == nullptr)
-        return false;
+    {
+        // Not a native reader, but mzML may have 3-array representation
+        return has_mzML_combined_ion_mobility_;
+    }
 
     return sl_->hasCombinedIonMobility();
 }
@@ -170,15 +182,31 @@ PWIZ_API_DECL double SpectrumList_IonMobility::ccsToIonMobility(double ccs, doub
     }
 }
 
-PWIZ_API_DECL std::pair<int, int> SpectrumList_IonMobility::sonarMzToDriftBinRange(int function, float precursorMz, float precursorTolerance) const
+///
+/// Deal with Waters SONAR equipment, which filters an m/z range using its ion mobility hardware and reports the data as if it were ion mobility
+///
+PWIZ_API_DECL bool SpectrumList_IonMobility::isWatersSonarData() const
 {
-    if (equipment_ != IonMobilityEquipment::WatersSonar)
-        throw runtime_error("SpectrumList_IonMobility::sonarMzToDriftBinRange] function only works on Waters SONAR data");
-
-    auto waters = dynamic_cast<detail::SpectrumList_Waters*>(&*innermost());
-    return waters->sonarMzToDriftBinRange(function, precursorMz, precursorTolerance);
+    return equipment_ == IonMobilityEquipment::WatersSonar;
 }
 
+PWIZ_API_DECL std::pair<int, int> SpectrumList_IonMobility::sonarMzToBinRange(double precursorMz, double tolerance) const
+{
+    if (!isWatersSonarData())
+        throw runtime_error("SpectrumList_IonMobility::sonarMzToBinRange] function only works on Waters SONAR data");
+
+    auto waters = dynamic_cast<detail::SpectrumList_Waters*>(&*innermost());
+    return waters->sonarMzToBinRange(precursorMz, tolerance);
+}
+
+PWIZ_API_DECL double SpectrumList_IonMobility::sonarBinToPrecursorMz(int bin) const
+{
+    if (!isWatersSonarData())
+        throw runtime_error("SpectrumList_IonMobility::sonarBinToPrecursorMz] function only works on Waters SONAR data");
+
+    auto waters = dynamic_cast<detail::SpectrumList_Waters*>(&*innermost());
+    return waters->sonarBinToPrecursorMz(bin);
+}
 
 } // namespace analysis 
 } // namespace pwiz
