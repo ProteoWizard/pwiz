@@ -92,7 +92,7 @@
     <None Include="Resources\downtriangle.png" />
     <None Include="Resources\download.png" />
     <None Include="Resources\downloadSelected.png" />
-    <Content Include="..\..\SharedBatch\LaunchBatch\bin\$(Configuration)\LaunchBatch.exe">
+    <Content Include="..\..\SharedBatch\LaunchBatch\obj\$(Configuration)\LaunchBatch.exe">
       <Link>LaunchBatch.exe</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
