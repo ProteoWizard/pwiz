@@ -221,8 +221,8 @@ namespace SkylineBatch
             postData += "&t=event"; // Event hit type
             postData += "&tid=UA-9194399-1"; // Tracking Id 
             postData += "&cid=" + SharedBatch.Properties.Settings.Default.InstallationId; // Anonymous Client Id
-            postData += "&ec=Instance"; // Event Category
-            postData += "&ea=" + Uri.EscapeDataString(_version.Length > 0 ? _version : ADMIN_VERSION);
+            postData += "&ec=InstanceBatch"; // Event Category
+            postData += "&ea=" + Uri.EscapeDataString((_version.Length > 0 ? _version : ADMIN_VERSION) + "batch");
             var dailyRegex = new Regex(@"[0-9]+\.[0-9]+\.[19]\.[0-9]+");
             postData += "&el=" + (dailyRegex.IsMatch(_version) ? "batch-daily" : "batch-release");
             postData += "&p=" + "Instance"; // Page
