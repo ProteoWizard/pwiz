@@ -7637,9 +7637,6 @@
   <data name="ResultsGrid_ResultsGrid_Isotope_Dot_Product" xml:space="preserve">
     <value>同位体内積</value>
   </data>
-  <data name="PanoramaPublishHelper_PublishDocToPanorama_An_error_occurred_on_the_Panorama_server___0___importing_the_file_" xml:space="preserve">
-    <value>Panoramaサーバー（{0}）のファイルインポート中にエラーが発生しました。</value>
-  </data>
   <data name="CommandLine_ImportTool_Error__If__0__is_and_argument_the_tool_must_have_a_Report_Title__Use_the___tool_report_parameter_to_specify_a_report_" xml:space="preserve">
     <value>エラー： {0}があり、かつ引数の場合、ツールにはレポートタイトルが必要です。レポートを指定するには、--tool-reportパラメータを使用します。</value>
   </data>
@@ -10579,9 +10576,6 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
   </data>
   <data name="SkylineWindow_HasFileToOpen_Opening_a_document_inside_a_ZIP_file_is_not_supported_" xml:space="preserve">
     <value>ZIPファイル内のドキュメントを開くことはサポートされていません。</value>
-  </data>
-  <data name="PanoramaPublishHelper_PublishDocToPanorama_Document_import_was_cancelled_on_the_Panorama_server__0__" xml:space="preserve">
-    <value>Panoramaサーバー{0}でドキュメントのインポートがキャンセルされました。</value>
   </data>
   <data name="PanoramaPublishHelper_PublishDocToPanorama_Job_details_can_be_found_at__0__" xml:space="preserve">
     <value>ジョブの詳細は{0}で見ることができます。</value>

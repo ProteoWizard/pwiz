@@ -7637,9 +7637,6 @@
   <data name="ResultsGrid_ResultsGrid_Isotope_Dot_Product" xml:space="preserve">
     <value>同位素点积值</value>
   </data>
-  <data name="PanoramaPublishHelper_PublishDocToPanorama_An_error_occurred_on_the_Panorama_server___0___importing_the_file_" xml:space="preserve">
-    <value>导入文件时 Panorama 服务器 ({0}) 出现错误。</value>
-  </data>
   <data name="CommandLine_ImportTool_Error__If__0__is_and_argument_the_tool_must_have_a_Report_Title__Use_the___tool_report_parameter_to_specify_a_report_" xml:space="preserve">
     <value>错误：如果 {0} 是参数，则工具必须具有报告标题。使用“--工具-报告”参数来指定报告。</value>
   </data>
@@ -10589,9 +10586,6 @@
   </data>
   <data name="SkylineWindow_HasFileToOpen_Opening_a_document_inside_a_ZIP_file_is_not_supported_" xml:space="preserve">
     <value>不支持在 ZIP 文件中的文档。</value>
-  </data>
-  <data name="PanoramaPublishHelper_PublishDocToPanorama_Document_import_was_cancelled_on_the_Panorama_server__0__" xml:space="preserve">
-    <value>Panorama 服务器中取消了文档导入{0}。</value>
   </data>
   <data name="PanoramaPublishHelper_PublishDocToPanorama_Job_details_can_be_found_at__0__" xml:space="preserve">
     <value>工作细节可见于 {0}。</value>

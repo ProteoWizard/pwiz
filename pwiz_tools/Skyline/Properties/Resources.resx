@@ -7637,9 +7637,6 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="ResultsGrid_ResultsGrid_Isotope_Dot_Product" xml:space="preserve">
     <value>Isotope Dot Product</value>
   </data>
-  <data name="PanoramaPublishHelper_PublishDocToPanorama_An_error_occurred_on_the_Panorama_server___0___importing_the_file_" xml:space="preserve">
-    <value>An error occurred on the Panorama server ({0}) importing the file.</value>
-  </data>
   <data name="CommandLine_ImportTool_Error__If__0__is_and_argument_the_tool_must_have_a_Report_Title__Use_the___tool_report_parameter_to_specify_a_report_" xml:space="preserve">
     <value>Error: If {0} is and argument the tool must have a Report Title. Use the --tool-report parameter to specify a report.</value>
   </data>
@@ -10590,9 +10587,6 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="SkylineWindow_HasFileToOpen_Opening_a_document_inside_a_ZIP_file_is_not_supported_" xml:space="preserve">
     <value>Opening a document inside a ZIP file is not supported.</value>
   </data>
-  <data name="PanoramaPublishHelper_PublishDocToPanorama_Document_import_was_cancelled_on_the_Panorama_server__0__" xml:space="preserve">
-    <value>Document import was cancelled on the Panorama server {0}.</value>
-  </data>
   <data name="PanoramaPublishHelper_PublishDocToPanorama_Job_details_can_be_found_at__0__" xml:space="preserve">
     <value>Job details can be found at {0}.</value>
   </data>
@@ -11455,5 +11449,11 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
   </data>
   <data name="CommandLine_RunInner_Error__Could_not_open_Skyline_document__Exiting___" xml:space="preserve">
     <value>Error: Could not open Skyline document. Exiting...</value>
+  </data>
+  <data name="PanoramaPublishHelper_PublishDocToPanorama_Error__Document_import_was_cancelled_on_the_Panorama_server__0__" xml:space="preserve">
+    <value>Error: Document import was cancelled on the Panorama server {0}.</value>
+  </data>
+  <data name="PanoramaPublishHelper_PublishDocToPanorama_Error__An_import_error_occurred_on_the_Panorama_server__0__" xml:space="preserve">
+    <value>Error: An import error occurred on the Panorama server {0}.</value>
   </data>
 </root>

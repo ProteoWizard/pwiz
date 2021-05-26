@@ -762,12 +762,16 @@ namespace pwiz.Skyline
                 {
                     // Publish document to the given folder on the Panorama Server
                     var panoramaHelper = new PanoramaPublishHelper(_out);
-                    panoramaHelper.PublishToPanorama(commandArgs.PanoramaServer, _doc, _skylineFile,
+                    return panoramaHelper.PublishToPanorama(commandArgs.PanoramaServer, _doc, _skylineFile,
                         commandArgs.PanoramaFolder);
                 }
                 else
                 {
-                    _out.WriteLine(Resources.CommandLine_Run_No_new_results_added__Skipping_Panorama_import_);
+                    // If we are here it means that ImportingResults was true AND nothing was imported.
+                    // This should have already triggered an error message earlier in the process but 
+                    // in case it didn't we will report an error and return false
+                    _out.WriteLine(Resources.CommandLine_GeneralException_Error___0_,  Resources.CommandLine_Run_No_new_results_added__Skipping_Panorama_import_);
+                    return false;
                 }
             }
 
@@ -3646,7 +3650,7 @@ namespace pwiz.Skyline
                 _statusWriter = statusWriter;
             }
 
-            public void PublishToPanorama(Server panoramaServer, SrmDocument document, string documentPath, string panoramaFolder)
+            public bool PublishToPanorama(Server panoramaServer, SrmDocument document, string documentPath, string panoramaFolder)
             {
                 ShareType shareType;
                 try
@@ -3657,19 +3661,22 @@ namespace pwiz.Skyline
                 }
                 catch (PanoramaServerException panoramaServerException)
                 {
-                    _statusWriter.WriteLine(panoramaServerException.Message);
-                    return;
+                    _statusWriter.WriteLine(Resources.CommandLine_GeneralException_Error___0_, panoramaServerException.Message);
+                    return false;
                 }
                 var zipFilePath = FileEx.GetTimeStampedFileName(documentPath);
+                var published = false;
                 if (ShareDocument(document, documentPath, zipFilePath, shareType, _statusWriter))
                 {
-                    PublishDocToPanorama(panoramaServer, zipFilePath, panoramaFolder);
+                    published = PublishDocToPanorama(panoramaServer, zipFilePath, panoramaFolder);
                 }
                 // Delete the zip file after it has been published to Panorama.
                 FileEx.SafeDelete(zipFilePath, true);
+
+                return published;
             }
 
-            private void PublishDocToPanorama(Server panoramaServer, string zipFilePath, string panoramaFolder)
+            private bool PublishDocToPanorama(Server panoramaServer, string zipFilePath, string panoramaFolder)
             {
                 var waitBroker = new CommandProgressMonitor(_statusWriter,
                     new ProgressStatus(Resources.PanoramaPublishHelper_PublishDocToPanorama_Uploading_document_to_Panorama));
@@ -3677,6 +3684,7 @@ namespace pwiz.Skyline
                 try
                 {
                     publishClient.SendZipFile(panoramaServer, panoramaFolder, zipFilePath, waitBroker);
+                    return true;
                 }
                 catch (Exception x)
                 {
@@ -3689,14 +3697,13 @@ namespace pwiz.Skyline
                     {
                         if (panoramaEx.JobCancelled)
                         {
-                            _statusWriter.WriteLine(Resources.PanoramaPublishHelper_PublishDocToPanorama_Document_import_was_cancelled_on_the_Panorama_server__0__, panoramaEx.ServerUrl);
+                            _statusWriter.WriteLine(Resources.PanoramaPublishHelper_PublishDocToPanorama_Error__Document_import_was_cancelled_on_the_Panorama_server__0__, panoramaEx.ServerUrl);
                             _statusWriter.WriteLine(Resources.PanoramaPublishHelper_PublishDocToPanorama_Job_details_can_be_found_at__0__, panoramaEx.JobUrl);
                         }
                         else
                         {
                             _statusWriter.WriteLine(
-                                Resources
-                                    .PanoramaPublishHelper_PublishDocToPanorama_An_error_occurred_on_the_Panorama_server___0___importing_the_file_,
+                                Resources.PanoramaPublishHelper_PublishDocToPanorama_Error__An_import_error_occurred_on_the_Panorama_server__0__,
                                 panoramaEx.ServerUrl);
                             _statusWriter.WriteLine(
                                 Resources.PanoramaPublishHelper_PublishDocToPanorama_Error_details_can_be_found_at__0_,
@@ -3704,6 +3711,7 @@ namespace pwiz.Skyline
                         }
                     }
                 }
+                return false;
             }
         }
     }

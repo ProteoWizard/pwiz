@@ -20651,22 +20651,22 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to An error occurred on the Panorama server ({0}) importing the file..
+        ///   Looks up a localized string similar to Error: An import error occurred on the Panorama server {0}..
         /// </summary>
-        public static string PanoramaPublishHelper_PublishDocToPanorama_An_error_occurred_on_the_Panorama_server___0___importing_the_file_ {
+        public static string PanoramaPublishHelper_PublishDocToPanorama_Error__An_import_error_occurred_on_the_Panorama_server__0__ {
             get {
-                return ResourceManager.GetString("PanoramaPublishHelper_PublishDocToPanorama_An_error_occurred_on_the_Panorama_serv" +
-                        "er___0___importing_the_file_", resourceCulture);
+                return ResourceManager.GetString("PanoramaPublishHelper_PublishDocToPanorama_Error__An_import_error_occurred_on_the" +
+                        "_Panorama_server__0__", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Document import was cancelled on the Panorama server {0}..
+        ///   Looks up a localized string similar to Error: Document import was cancelled on the Panorama server {0}..
         /// </summary>
-        public static string PanoramaPublishHelper_PublishDocToPanorama_Document_import_was_cancelled_on_the_Panorama_server__0__ {
+        public static string PanoramaPublishHelper_PublishDocToPanorama_Error__Document_import_was_cancelled_on_the_Panorama_server__0__ {
             get {
-                return ResourceManager.GetString("PanoramaPublishHelper_PublishDocToPanorama_Document_import_was_cancelled_on_the_P" +
-                        "anorama_server__0__", resourceCulture);
+                return ResourceManager.GetString("PanoramaPublishHelper_PublishDocToPanorama_Error__Document_import_was_cancelled_o" +
+                        "n_the_Panorama_server__0__", resourceCulture);
             }
         }
         
