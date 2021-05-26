@@ -130,7 +130,7 @@ namespace TestPerf
                 IrtSlope = 3.005,
                 IrtIntercept = -67.215,
 
-                TargetCounts = new[] { 13, 202, 266, 1596 },
+                TargetCounts = new[] { 14, 213, 277, 1661 },
                 FinalTargetCounts = new[] { 9, 202, 266, 1596 },
                 ScoringModelCoefficients = "0.3350|-0.4802|5.7227|-1.0901|-0.4986|1.0273|0.0885|-0.0186",
                 MassErrorStats = new[]
