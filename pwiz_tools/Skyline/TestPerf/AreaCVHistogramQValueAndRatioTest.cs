@@ -57,7 +57,7 @@ namespace TestPerf
         {
             // RunPerfTests = true;
             TestFilesPersistent = new[] { "." };  // All persistent. No saving
-            TestFilesZip = @"http://proteome.gs.washington.edu/software/test/skyline-perf/AreaCVHistogramQValueAndRatioTest.zip";
+            TestFilesZip = @"https://panoramaweb.org/_webdav/MacCoss/software/%40files/perftests/AreaCVHistogramQValueAndRatioTest.zip";
             RunFunctionalTest();
         }
 
