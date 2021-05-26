@@ -112,12 +112,15 @@ namespace pwiz.Skyline
 
             if(!commandArgs.ParseArgs(args))
             {
-                if (!commandArgs.UsageShown)
-                    _out.WriteLine(Resources.CommandLine_Run_Exiting___);
-                else if (!_out.IsErrorReported)
+                if (commandArgs.UsageShown)
                 {
+                    // Assume that the UsageShown flag is set while parsing arguments only if the --help argument is seen.
+                    // ParseArgs will return false because ProcessArgument for --help returns false so that argument  
+                    // processing does not go any further.
+                    // We want to return an exit code of 0 here.
                     return Program.EXIT_CODE_SUCCESS;
                 }
+                _out.WriteLine(Resources.CommandLine_Run_Exiting___);
                 return Program.EXIT_CODE_FAILURE_TO_START;
             }
 
