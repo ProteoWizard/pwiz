@@ -473,17 +473,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     return false;
                 }
 
-                // Add iRT standards if not present
-                var docWithStandards = ImportPeptideSearch.AddStandardsToDocument(docNew, irtStandard);
-                if (!ReferenceEquals(docWithStandards, docNew))
-                {
-                    // iRT standards were added
-                    docNew = docWithStandards;
-                    newPeptideGroups.Insert(0, docWithStandards.PeptideGroups.First());
-                }
-
                 // Filter proteins based on number of peptides and add decoys
-                using (var dlg = new PeptidesPerProteinDlg(docNew, newPeptideGroups, DecoyGenerationMethod, NumDecoys ?? 0))
+                using (var dlg = new PeptidesPerProteinDlg(docNew, newPeptideGroups, irtStandard, DecoyGenerationMethod, NumDecoys ?? 0))
                 {
                     docNew = dlg.ShowDialog(WizardForm) == DialogResult.OK ? dlg.DocumentFinal : null;
                 }
