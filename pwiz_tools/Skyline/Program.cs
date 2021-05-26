@@ -107,7 +107,7 @@ namespace pwiz.Skyline
             // don't allow 64-bit Skyline to run in a 32-bit process
             if (Install.Is64Bit && !Environment.Is64BitProcess)
             {
-                string installUrl = Install.Url;
+                string installUrl = Install.Url32;
                 string installLabel = (installUrl == string.Empty) ? string.Empty : string.Format(Resources.Program_Main_Install_32_bit__0__, Name);
                 AlertLinkDlg.Show(null,
                     string.Format(Resources.Program_Main_You_are_attempting_to_run_a_64_bit_version_of__0__on_a_32_bit_OS_Please_install_the_32_bit_version, Name),
