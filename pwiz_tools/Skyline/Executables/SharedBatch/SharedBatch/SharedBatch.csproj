@@ -35,6 +35,10 @@
       <HintPath>..\..\..\..\Shared\Lib\log4net.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Collections.Immutable, Version=5.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\Shared\Lib\System.Collections.Immutable.dll</HintPath>
+    </Reference>
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Management" />
@@ -75,7 +79,15 @@
       <DependentUpon>FindSkylineForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Interfaces.cs" />
+    <Compile Include="OldLogger.cs" />
     <Compile Include="Logger.cs" />
+    <Compile Include="LongWaitDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="LongWaitDlg.Designer.cs">
+      <DependentUpon>LongWaitDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="LongWaitOperation.cs" />
     <Compile Include="MainFormUtils.cs" />
     <Compile Include="ProcessRunner.cs" />
     <Compile Include="ProgramLog.cs" />
@@ -122,6 +134,9 @@
     <EmbeddedResource Include="FindSkylineForm.resx">
       <DependentUpon>FindSkylineForm.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="LongWaitDlg.resx">
+      <DependentUpon>LongWaitDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
@@ -143,7 +158,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PreBuildEvent>cd "C:\Branches\Skylinework20210223_SkylineBatch_functionality_for_NEU_configs\ProteoWizard\pwiz\pwiz_tools\Skyline\Executables\SharedBatch\SharedBatch\bin\Debug"
-del "SharedBatch.dll" "SharedBatch.dll.config" "SharedBatch.pdb"</PreBuildEvent>
+    <PreBuildEvent>
+    </PreBuildEvent>
   </PropertyGroup>
 </Project>

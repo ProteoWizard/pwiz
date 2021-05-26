@@ -22,6 +22,7 @@ namespace SkylineBatchTest
         {
             var mainWindow = MainFormWindow();
             var mainForm = mainWindow as MainForm;
+            WaitForShownForm(mainForm);
             Assert.IsNotNull(mainForm, "Main program window is not an instance of MainForm.");
             Assert.AreEqual(0, mainForm.ConfigCount());
 
@@ -50,7 +51,7 @@ namespace SkylineBatchTest
             RunUI(() =>
             {
                 FunctionalTestUtil.PopulateConfigForm(newConfigForm, @"TestConfig", TestFilesDirs[0].FullPath, this);
-                newConfigForm.textTemplateFile.Text = nonexistentTemplate;
+                newConfigForm.templateFileControl.Text = nonexistentTemplate;
             });
 
             RunDlg<AlertDlg>(() => newConfigForm.btnSaveConfig.PerformClick(),

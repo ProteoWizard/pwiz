@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using Microsoft.Win32;
 using SharedBatch.Properties;
@@ -11,6 +12,7 @@ namespace SharedBatch
     {
 
         public const string DOWNLOADS_FOLDER = "\\Downloads";
+        public const int ONE_GB = 1000000000;
 
 
         public static void ValidateNotEmptyPath(string input, string name)
@@ -52,6 +54,20 @@ namespace SharedBatch
             return Path.GetDirectoryName(path);
         }
 
+        public static bool DirectoryExists(string path)
+        {
+            var exists = false;
+            try
+            {
+                exists = Directory.Exists(Path.GetDirectoryName(path));
+            }
+            catch (Exception)
+            {
+                // pass incorrectly formatted paths
+            }
+            return exists;
+        }
+
         // Find an existing initial directory to use in a file/folder browser dialog, can be null (dialog will use a default)
         public static string GetInitialDirectory(string directory, string lastEnteredPath = "")
         {
@@ -76,6 +92,19 @@ namespace SharedBatch
             return GetInitialDirectory(directoryName);
         }
 
+        public static List<string> GetFilesInFolder(string folder, string fileType)
+        {
+            var filesWithType = new List<string>();
+            var allFiles = new DirectoryInfo(folder).GetFiles();
+            foreach (var file in allFiles)
+            {
+                if (file.Name.EndsWith(fileType))
+                    filesWithType.Add(file.FullName);
+            }
+
+            return filesWithType;
+        }
+
         public static string GetSafeName(string name)
         {
             var invalidChars = new List<char>();
@@ -85,24 +114,31 @@ namespace SharedBatch
             return safeName; // .TrimStart('.').TrimEnd('.');
         }
 
-        public static string GetTestPath(bool isTest, string testFolder, string path)
+        public static void AddFileTypeClickOnce(string extension, string id, string description, string applicationReference, string iconPath)
         {
-            if (path != null && isTest && path.StartsWith("\\"))
-                path = testFolder + path;
-            return path;
+            // Register ClickOnce exe/icon/description associations.
+            var launchExe = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "LaunchBatch.exe");
+            Registry.SetValue($@"HKEY_CURRENT_USER\Software\Classes\{id}\shell\open\command", null,
+                $"\"{launchExe}\" \"{applicationReference}\" \"\\\"%1\\\"\"");
+            AddFileType(extension, id, description, iconPath);
         }
 
-        public static void AddFileType(string extension, string id, string description, string exePath, string iconPath)
+        public static void AddFileTypeAdminInstall(string extension, string id, string description, string applicationExe, string iconPath)
         {
-            // Register file/exe/icon associations.
-            
+            // Register admin installation exe/icon/description associations.
+
+            Registry.SetValue($@"HKEY_CURRENT_USER\Software\Classes\{id}\shell\open\command", null,
+                $"\"{applicationExe}\" \"%1\"");
+            AddFileType(extension, id, description, iconPath);
+        }
+
+        private static void AddFileType(string extension, string id, string description, string iconPath)
+        {
             Registry.SetValue($@"HKEY_CURRENT_USER\Software\Classes\{id}", null, description);
 
             Registry.SetValue($@"HKEY_CURRENT_USER\Software\Classes\{id}\DefaultIcon", null,
                 $"\"{iconPath}\"");
 
-            Registry.SetValue($@"HKEY_CURRENT_USER\Software\Classes\{id}\shell\open\command", null,
-                $"\"{exePath}\" \"%1\"");
             Registry.SetValue($@"HKEY_CURRENT_USER\Software\Classes\{extension}", null, id);
             SHChangeNotify(0x08000000, 0x0000, IntPtr.Zero, IntPtr.Zero);
 
@@ -110,6 +146,18 @@ namespace SharedBatch
 
         [DllImport("shell32.dll", CharSet = CharSet.Auto, SetLastError = true)]
         public static extern void SHChangeNotify(uint wEventId, uint uFlags, IntPtr dwItem1, IntPtr dwItem2);
+
+        public static long GetTotalFreeSpace(string driveName)
+        {
+            foreach (DriveInfo drive in DriveInfo.GetDrives())
+            {
+                if (drive.IsReady && drive.Name == driveName)
+                {
+                    return drive.TotalFreeSpace;
+                }
+            }
+            return -1;
+        }
 
     }
 }

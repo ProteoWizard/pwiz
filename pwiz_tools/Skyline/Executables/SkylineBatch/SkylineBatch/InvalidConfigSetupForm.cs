@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -27,6 +28,7 @@ namespace SkylineBatch
         public InvalidConfigSetupForm(IMainUiControl mainControl, SkylineBatchConfig invalidConfig, SkylineBatchConfigManager configManager, RDirectorySelector rDirectorySelector)
         {
             InitializeComponent();
+            Icon = Program.Icon();
             _invalidConfig = invalidConfig;
             _configManager = configManager;
             _rDirectorySelector = rDirectorySelector;
@@ -75,25 +77,27 @@ namespace SkylineBatch
 
         private async Task<MainSettings> FixInvalidMainSettings()
         {
-            var validTemplateFilePath = mainSettings.TemplateFilePath;
+            string validTemplateFilePath = null;
             if (mainSettings.DependentConfigName == null)
                 validTemplateFilePath = await GetValidPath(Resources.InvalidConfigSetupForm_FixInvalidMainSettings_Skyline_template_file, 
                 mainSettings.TemplateFilePath, MainSettings.ValidateTemplateFile, PathDialogOptions.File, PathDialogOptions.ExistingOptional);
             var validAnalysisFolderPath = await GetValidPath(Resources.InvalidConfigSetupForm_FixInvalidMainSettings_analysis_folder, 
                 mainSettings.AnalysisFolderPath, MainSettings.ValidateAnalysisFolder, PathDialogOptions.Folder);
+            var dataValidator = mainSettings.Server != null ? (Validator)MainSettings.ValidateDataFolderWithServer : (Validator)MainSettings.ValidateDataFolderWithoutServer;
             var validDataFolderPath = await GetValidPath(Resources.InvalidConfigSetupForm_FixInvalidMainSettings_data_folder, 
-                mainSettings.DataFolderPath, MainSettings.ValidateDataFolder, PathDialogOptions.Folder);
+                mainSettings.DataFolderPath, dataValidator, PathDialogOptions.Folder);
             var validAnnotationsFilePath = await GetValidPath(Resources.InvalidConfigSetupForm_FixInvalidMainSettings_annotations_file, mainSettings.AnnotationsFilePath,
                 MainSettings.ValidateAnnotationsFile, PathDialogOptions.File);
 
-            return new MainSettings(validTemplateFilePath, validAnalysisFolderPath, validDataFolderPath, validAnnotationsFilePath, mainSettings.ReplicateNamingPattern, mainSettings.DependentConfigName);
+            return new MainSettings(validTemplateFilePath ?? mainSettings.TemplateFilePath, validAnalysisFolderPath, validDataFolderPath, mainSettings.Server, 
+                validAnnotationsFilePath, mainSettings.ReplicateNamingPattern, mainSettings.DependentConfigName);
         }
 
         private async Task<RefineSettings> FixInvalidRefineSettings()
         {
             var validOutputPath = await GetValidPath(Resources.InvalidConfigSetupForm_FixInvalidRefineSettings_path_to_the_refined_output_file,
                 refineSettings.OutputFilePath, RefineSettings.ValidateOutputFile, PathDialogOptions.File, PathDialogOptions.Save);
-            return new RefineSettings(refineSettings.CommandValues, refineSettings.RemoveDecoys, refineSettings.RemoveResults, validOutputPath);
+            return RefineSettings.GetPathChanged(refineSettings, validOutputPath);
         }
 
         private async Task<ReportSettings> FixInvalidReportSettings()
@@ -116,13 +120,15 @@ namespace SkylineBatch
                     
                     validScripts.Add(new Tuple<string, string>(validRScript, validVersion));
                 }
-                validReports.Add(new ReportInfo(report.Name, validReportPath, validScripts, report.UseRefineFile));
+                validReports.Add(new ReportInfo(report.Name, report.CultureSpecific, validReportPath, validScripts, report.UseRefineFile));
             }
             return new ReportSettings(validReports);
         }
         
         private async Task<SkylineSettings> FixInvalidSkylineSettings()
         {
+            if (!string.IsNullOrEmpty(SharedBatch.Properties.Settings.Default.SkylineLocalCommandPath))
+                return new SkylineSettings(SkylineType.Local, SharedBatch.Properties.Settings.Default.SkylineLocalCommandPath);
             var skylineTypeControl = new SkylineTypeControl(_mainControl, _invalidConfig.UsesSkyline, _invalidConfig.UsesSkylineDaily, _invalidConfig.UsesCustomSkylinePath, _invalidConfig.SkylineSettings.CmdPath);
             return (SkylineSettings)await GetValidVariable(skylineTypeControl);
         }
@@ -194,6 +200,9 @@ namespace SkylineBatch
         
         private void AddControl(UserControl control)
         {
+            var newHeight = Height - panel1.Height + control.Height;
+            var newWidth = Width - panel1.Width + control.Width;
+            Size = new Size(newWidth, newHeight);
             control.Dock = DockStyle.Fill;
             control.Show();
             panel1.Controls.Add(control);
