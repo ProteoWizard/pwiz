@@ -10315,12 +10315,6 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="CommandLine_ApplySampleNameRegex_File___0___does_not_have_a_sample__Cannot_apply_sample_name_pattern__Ignoring_" xml:space="preserve">
     <value>File '{0}' does not have a sample. Cannot apply sample name pattern. Ignoring.</value>
   </data>
-  <data name="CommandLine_ApplyFileAndSampleNameRegex_No_files_match_the_file_name_pattern___0___" xml:space="preserve">
-    <value>No files match the file name pattern '{0}'.</value>
-  </data>
-  <data name="CommandLine_ApplyFileAndSampleNameRegex_No_files_match_the_sample_name_pattern___0___" xml:space="preserve">
-    <value>No files match the sample name pattern '{0}'.</value>
-  </data>
   <data name="CommandLine_MakeReplicateNamesUnique_Replicate___0___already_exists_in_the_document__using___1___instead_" xml:space="preserve">
     <value>Replicate '{0}' already exists in the document, using '{1}' instead.</value>
   </data>
@@ -11452,5 +11446,11 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
   </data>
   <data name="CommandLine_ImportToolsFromZip_Error__Canceled_installing_tools_from__0__" xml:space="preserve">
     <value>Error: Canceled installing tools from {0}.</value>
+  </data>
+  <data name="CommandLine_ApplyFileAndSampleNameRegex_Error__No_files_match_the_file_name_pattern___0___" xml:space="preserve">
+    <value>Error: No files match the file name pattern '{0}'.</value>
+  </data>
+  <data name="CommandLine_ApplyFileAndSampleNameRegex_Error__No_files_match_the_sample_name_pattern___0___" xml:space="preserve">
+    <value>Error: No files match the sample name pattern '{0}'.</value>
   </data>
 </root>

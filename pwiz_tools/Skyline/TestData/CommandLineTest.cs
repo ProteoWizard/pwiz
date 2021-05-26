@@ -1600,22 +1600,28 @@ namespace pwiz.SkylineTestData
                     Resources.CommandArgs_ParseRegexArgument_Error__Regular_expression___0___for__1__cannot_be_parsed_,
                     "*", "--import-filename-pattern"), msg);
 
+            // Regex 1 - given raw file does not match the pattern
+            // Call RunCommand instead of just testing the ApplyFileAndSampleNameRegex method so that we test 
+            // that the error reporting and returned exit status are in sync.
+            var pattern = "QC.*";
+            msg = RunCommand("--in=" + docPath,
+                "--import-file=" + rawPath.GetFilePath(),
+                "--import-filename-pattern=" + pattern,
+                "--out=" + outPath);
+            CheckRunCommandOutputContains(
+                string.Format(
+                    Resources.CommandLine_ApplyFileNameRegex_File_name___0___does_not_match_the_pattern___1____Ignoring__2_,
+                    rawPath.GetFileName(), pattern, rawPath), msg);
+            CheckRunCommandOutputContains(
+                string.Format(Resources.CommandLine_ApplyFileAndSampleNameRegex_Error__No_files_match_the_file_name_pattern___0___, pattern), msg);
+
+
+
             var log = new StringBuilder();
             var commandLine = new CommandLine(new CommandStatusWriter(new StringWriter(log)));
 
             IList<KeyValuePair<string, MsDataFileUri[]>> dataSourceList = DataSourceUtil.GetDataSources(testFilesDir.FullPath).ToArray();
             IList<KeyValuePair<string, MsDataFileUri[]>> listNamedPaths = new List<KeyValuePair<string, MsDataFileUri[]>>(dataSourceList);
-
-            // Regex 1 - nothing should match
-            var pattern = "QC.*";
-            commandLine.ApplyFileAndSampleNameRegex(new Regex(pattern), null, ref listNamedPaths);
-            Assert.AreEqual(0, listNamedPaths.Count);
-            CheckRunCommandOutputContains(
-                string.Format(
-                    Resources.CommandLine_ApplyFileNameRegex_File_name___0___does_not_match_the_pattern___1____Ignoring__2_,
-                    rawPath.GetFileName(), pattern, rawPath), log.ToString());
-            CheckRunCommandOutputContains(
-                   string.Format(Resources.CommandLine_ApplyFileAndSampleNameRegex_No_files_match_the_file_name_pattern___0___, pattern), log.ToString());
 
             // Regex 2
             log.Clear();
@@ -1671,7 +1677,7 @@ namespace pwiz.SkylineTestData
                 string.Format(
                     Resources.CommandLine_ApplySampleNameRegex_File___0___does_not_have_a_sample__Cannot_apply_sample_name_pattern__Ignoring_,
                     rawPath), log.ToString());
-            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ApplyFileAndSampleNameRegex_No_files_match_the_sample_name_pattern___0___, pattern), log.ToString());
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ApplyFileAndSampleNameRegex_Error__No_files_match_the_sample_name_pattern___0___, pattern), log.ToString());
         }
 
         [TestMethod]
@@ -1700,6 +1706,20 @@ namespace pwiz.SkylineTestData
                 string.Format(
                     Resources.CommandArgs_ParseRegexArgument_Error__Regular_expression___0___for__1__cannot_be_parsed_,
                     "*", "--import-samplename-pattern"), msg);
+
+            // Test: No match found for given sample name regex.  This will also test that the error reporting and 
+            // returned exit status are in sync.
+            var pattern = "QC.*";
+            msg = RunCommand("--in=" + docPath,
+                "--import-file=" + rawPath.GetFilePath(),
+                "--import-samplename-pattern=" + pattern,
+                "--out=" + outPath);
+            CheckRunCommandOutputContains(
+                string.Format(
+                    Resources
+                        .CommandLine_ApplyFileAndSampleNameRegex_Error__No_files_match_the_sample_name_pattern___0___,
+                    pattern), msg);
+
 
             var log = new StringBuilder();
             var commandLine = new CommandLine(new CommandStatusWriter(new StringWriter(log)));

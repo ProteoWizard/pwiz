@@ -1278,14 +1278,14 @@ namespace pwiz.Skyline
             listNamedPaths = ApplyNameRegex(listNamedPaths, ApplyFileNameRegex, fileNameRegex);
             if (listNamedPaths.Count == 0)
             {
-                _out.WriteLine(Resources.CommandLine_ApplyFileAndSampleNameRegex_No_files_match_the_file_name_pattern___0___, fileNameRegex);
+                _out.WriteLine(Resources.CommandLine_ApplyFileAndSampleNameRegex_Error__No_files_match_the_file_name_pattern___0___, fileNameRegex);
                 return false;
             }
 
             listNamedPaths = ApplyNameRegex(listNamedPaths, ApplySampleNameRegex, sampleNameRegex);
             if (listNamedPaths.Count == 0)
             {
-                _out.WriteLine(Resources.CommandLine_ApplyFileAndSampleNameRegex_No_files_match_the_sample_name_pattern___0___, sampleNameRegex);
+                _out.WriteLine(Resources.CommandLine_ApplyFileAndSampleNameRegex_Error__No_files_match_the_sample_name_pattern___0___, sampleNameRegex);
                 return false;
             }
 

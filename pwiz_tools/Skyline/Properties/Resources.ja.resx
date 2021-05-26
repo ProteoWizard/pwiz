@@ -10305,12 +10305,6 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
   <data name="CommandLine_ApplySampleNameRegex_File___0___does_not_have_a_sample__Cannot_apply_sample_name_pattern__Ignoring_" xml:space="preserve">
     <value>ファイル「{0}」に試料が含まれていません。試料名のパターンを適用できません。無視します。</value>
   </data>
-  <data name="CommandLine_ApplyFileAndSampleNameRegex_No_files_match_the_file_name_pattern___0___" xml:space="preserve">
-    <value>ファイル名のパターン「{0}」に一致するファイルがありません。</value>
-  </data>
-  <data name="CommandLine_ApplyFileAndSampleNameRegex_No_files_match_the_sample_name_pattern___0___" xml:space="preserve">
-    <value>試料名のパターン「{0}」に一致するファイルがありません。</value>
-  </data>
   <data name="CommandLine_MakeReplicateNamesUnique_Replicate___0___already_exists_in_the_document__using___1___instead_" xml:space="preserve">
     <value>繰り返し測定「{0}」は既にドキュメントに存在します。代わりに「{1}」を使用します。</value>
   </data>

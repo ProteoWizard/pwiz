@@ -4908,22 +4908,22 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to No files match the file name pattern &apos;{0}&apos;..
+        ///   Looks up a localized string similar to Error: No files match the file name pattern &apos;{0}&apos;..
         /// </summary>
-        public static string CommandLine_ApplyFileAndSampleNameRegex_No_files_match_the_file_name_pattern___0___ {
+        public static string CommandLine_ApplyFileAndSampleNameRegex_Error__No_files_match_the_file_name_pattern___0___ {
             get {
-                return ResourceManager.GetString("CommandLine_ApplyFileAndSampleNameRegex_No_files_match_the_file_name_pattern___0_" +
-                        "__", resourceCulture);
+                return ResourceManager.GetString("CommandLine_ApplyFileAndSampleNameRegex_Error__No_files_match_the_file_name_patte" +
+                        "rn___0___", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to No files match the sample name pattern &apos;{0}&apos;..
+        ///   Looks up a localized string similar to Error: No files match the sample name pattern &apos;{0}&apos;..
         /// </summary>
-        public static string CommandLine_ApplyFileAndSampleNameRegex_No_files_match_the_sample_name_pattern___0___ {
+        public static string CommandLine_ApplyFileAndSampleNameRegex_Error__No_files_match_the_sample_name_pattern___0___ {
             get {
-                return ResourceManager.GetString("CommandLine_ApplyFileAndSampleNameRegex_No_files_match_the_sample_name_pattern___" +
-                        "0___", resourceCulture);
+                return ResourceManager.GetString("CommandLine_ApplyFileAndSampleNameRegex_Error__No_files_match_the_sample_name_pat" +
+                        "tern___0___", resourceCulture);
             }
         }
         

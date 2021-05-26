@@ -10315,12 +10315,6 @@
   <data name="CommandLine_ApplySampleNameRegex_File___0___does_not_have_a_sample__Cannot_apply_sample_name_pattern__Ignoring_" xml:space="preserve">
     <value>文件“{0}” 无样品。无法应用样品名称模式。忽视。</value>
   </data>
-  <data name="CommandLine_ApplyFileAndSampleNameRegex_No_files_match_the_file_name_pattern___0___" xml:space="preserve">
-    <value>无任何文件符合这一文件名称模式“ {0}”。</value>
-  </data>
-  <data name="CommandLine_ApplyFileAndSampleNameRegex_No_files_match_the_sample_name_pattern___0___" xml:space="preserve">
-    <value>无任何文件符合这一样品名称模式“ {0}”。</value>
-  </data>
   <data name="CommandLine_MakeReplicateNamesUnique_Replicate___0___already_exists_in_the_document__using___1___instead_" xml:space="preserve">
     <value>本文档中已经存在重复测定”{0}“，使用”{1}“代替。</value>
   </data>
