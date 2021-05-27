@@ -709,9 +709,6 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   <data name="&gt;&gt;checkBoxRemoveDecoys.Type" xml:space="preserve">
     <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;checkBoxRemoveDecoys.Parent" xml:space="preserve">
-    <value>splitContainer2.Panel2</value>
-  </data>
   <data name="&gt;&gt;checkBoxRemoveDecoys.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
@@ -744,9 +741,6 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   </data>
   <data name="&gt;&gt;checkBoxRemoveData.Type" xml:space="preserve">
     <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;checkBoxRemoveData.Parent" xml:space="preserve">
-    <value>splitContainer2.Panel1</value>
   </data>
   <data name="&gt;&gt;checkBoxRemoveData.ZOrder" xml:space="preserve">
     <value>0</value>
