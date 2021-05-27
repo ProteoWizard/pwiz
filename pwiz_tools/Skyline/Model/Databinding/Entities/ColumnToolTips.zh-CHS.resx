@@ -103,6 +103,9 @@
   <data name="AbsLog2FoldChange">
     <value>倍数变化的以 2 为底的对数的绝对值</value>
   </data>
+  <data name="Abundance">
+    <value>用于计算文件夹更改的此重复测定的值。此数值取决于归一化方法以及是在蛋白质还是肽段级别计算倍数变化。</value>
+  </data>
   <data name="AdjustedPValue">
     <value>在多组肽段或蛋白质的该组比较中，针对多重比较调整 P 值。使用 Benjamini-Hochberg 程序完成调整。</value>
   </data>
@@ -220,6 +223,9 @@
   <data name="ChromatogramSource">
     <value>提取色谱图所用的扫描类型：“片段”、“sim”、“ms1”或“未知”之一</value>
     <comment>Keep the english form of "fragment", "sim", "ms1", or "unknown" because that is what users see in the Document Grid. However, maybe put the localized translation in parentheses: "fragment" (translation of fragment), "sim" (translation of selected ion monitoring), etc. </comment>
+  </data>
+  <data name="CollisionCrossSection">
+    <value>母离子的碰撞横截面</value>
   </data>
   <data name="Coeluting">
     <value>如果此离子对的峰具有与峰群组内的其他离子对类似的顶点和范围，则为真。</value>
@@ -444,6 +450,12 @@
   <data name="IonFormula">
     <value>在质谱仪中待测量的全充（且可能是同位素标记）离子的原子化学式。</value>
   </data>
+  <data name="IonMobilityHighEnergyOffset">
+    <value>离子迁移库中母离子的高能偏置</value>
+  </data>
+  <data name="IonMobilityValue">
+    <value>母离子的离子迁移</value>
+  </data>
   <data name="IonName">
     <value>母离子的名称。</value>
   </data>
@@ -476,6 +488,21 @@
   </data>
   <data name="Key">
     <value>关键</value>
+  </data>
+  <data name="LibraryCollisionCrossSection">
+    <value>离子迁移库中母离子的碰撞横截面</value>
+  </data>
+  <data name="LibraryIonMobility">
+    <value>离子迁移库中母离子的离子迁移信息</value>
+  </data>
+  <data name="LibraryIonMobilityHighEnergyOffset">
+    <value>离子迁移库中母离子的高能偏置</value>
+  </data>
+  <data name="LibraryIonMobilityUnits">
+    <value>库离子迁移值的单位</value>
+  </data>
+  <data name="LibraryIonMobilityValue">
+    <value>离子迁移库中母离子的离子迁移</value>
   </data>
   <data name="LibraryDotProduct">
     <value>母离子的单个离子对峰面积与匹配的串联质谱谱图库谱图
@@ -833,6 +860,9 @@
   <data name="PointsAcrossPeak">
     <value>合并峰启动时间和结束时间之间的色谱图点数。</value>
   </data>
+  <data name="CycleTimeAcrossPeak">
+    <value>整合峰间的周期时间（秒）。</value>
+  </data>
   <data name="Precursor">
     <value>母离子</value>
   </data>
@@ -994,6 +1024,9 @@
 可以存取全部蛋白质序列。若将光标悬浮在
 肽段树视图中的蛋白质名称，也会看到蛋白质描述。</value>
   </data>
+  <data name="ProteinSequenceCoverage">
+    <value>蛋白质序列中氨基酸的部分可能是子肽段的一个或多个序列的一部分。</value>
+  </data>
   <data name="ProteinSpecies">
     <value>蛋白质物种</value>
   </data>
@@ -1057,12 +1090,24 @@
   <data name="Replicate">
     <value>重复测定</value>
   </data>
+  <data name="ReplicateAbundance">
+    <value>关于计算倍数变化所使用的重复测定值的信息</value>
+  </data>
+  <data name="ReplicateAbundances">
+    <value>用于计算倍数变化的各个重复测定的值的集合</value>
+  </data>
   <data name="ReplicateCalibrationCurve">
     <value>使用与此重复测定具有相同批次名称的重复测定生成的校准曲线。
 若母离子浓度在任一此肽段内母离子中指定，则校准曲线将为同位素响应曲线。</value>
   </data>
   <data name="ReplicateCount">
     <value>具有有效强度并对结果有作用的重复测定次数。</value>
+  </data>
+  <data name="ReplicateGroup">
+    <value>重复测定丰度所属的群体</value>
+  </data>
+  <data name="ReplicateSampleIdentity">
+    <value>重复测定丰度的生物重复测定</value>
   </data>
   <data name="ReplicateErrorMessage">
     <value>在尝试拟合重复测定校准曲线时出现的错误消息正文（如有）</value>
@@ -1254,6 +1299,12 @@
   </data>
   <data name="TransitionResult">
     <value>离子对结果（单个）</value>
+  </data>
+  <data name="TransitionResultIsMs1">
+    <value>此结果是否从 MS1 扫描获取。</value>
+  </data>
+  <data name="TransitionResultIsQuantitative">
+    <value>该结果是否作为定量处理，是基于离子对的可由用户修改的定量性质；以及 MS/MS 全扫描采集方法是否为将所有碎片离子作为非定量的 DDA。</value>
   </data>
   <data name="TransitionResultLocator">
     <value>文档内的离子对结果特殊标识符。这以“TransitionResult:”开头，并通常以重复测定名称结束，但可能包含最优步和结果文件的额外属性。</value>
