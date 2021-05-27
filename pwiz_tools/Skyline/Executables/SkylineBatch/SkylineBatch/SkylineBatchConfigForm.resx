@@ -1588,9 +1588,6 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   <data name="&gt;&gt;tabsConfig.Type" xml:space="preserve">
     <value>System.Windows.Forms.TabControl, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;tabsConfig.Parent" xml:space="preserve">
-    <value>splitContainer1.Panel1</value>
-  </data>
   <data name="&gt;&gt;tabsConfig.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
@@ -1630,9 +1627,6 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   <data name="&gt;&gt;btnCancelConfig.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnCancelConfig.Parent" xml:space="preserve">
-    <value>splitContainer1.Panel2</value>
-  </data>
   <data name="&gt;&gt;btnCancelConfig.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
@@ -1664,9 +1658,6 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   <data name="&gt;&gt;lblConfigRunning.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;lblConfigRunning.Parent" xml:space="preserve">
-    <value>splitContainer1.Panel2</value>
-  </data>
   <data name="&gt;&gt;lblConfigRunning.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
@@ -1696,9 +1687,6 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   </data>
   <data name="&gt;&gt;btnSaveConfig.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnSaveConfig.Parent" xml:space="preserve">
-    <value>splitContainer1.Panel2</value>
   </data>
   <data name="&gt;&gt;btnSaveConfig.ZOrder" xml:space="preserve">
     <value>2</value>
@@ -1732,9 +1720,6 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   </data>
   <data name="&gt;&gt;btnOkConfig.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnOkConfig.Parent" xml:space="preserve">
-    <value>splitContainer1.Panel2</value>
   </data>
   <data name="&gt;&gt;btnOkConfig.ZOrder" xml:space="preserve">
     <value>3</value>

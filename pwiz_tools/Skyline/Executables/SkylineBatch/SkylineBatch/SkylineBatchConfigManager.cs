@@ -665,7 +665,7 @@ namespace SkylineBatch
             var longWaitOperation = new LongWaitOperation(longWaitDlg);
 
 
-            longWaitOperation.Start(downloadingConfigs.Count > 0, async (OnProgress) =>
+            longWaitOperation.Start(downloadingConfigs.Count > 0, (OnProgress) =>
             {
                 _runServerConnector.Connect(OnProgress);
             }, (success) =>
