@@ -21,7 +21,7 @@ ArrangeGraphsGroupedDlg,TestManageResults
 AssociateProteinsDlg,TestAssociateProteins
 AuditLogForm,*
 AuditLogExtraInfoForm,TestAuditLogSaving
-LongOperationRunner.BackgroundThreadLongWaitDlg,TODO (NickSh)
+LongOperationRunner.BackgroundThreadLongWaitDlg,*
 BuildBackgroundProteomeDlg,TestBackgroundProteome
 BuildLibraryDlg,TestFullScanId
 BuildLibraryNotification,*
@@ -100,7 +100,7 @@ GraphRegression,TestOptimization
 GraphSpectrum,TestMs1Tutorial
 GraphSummary.AreaGraphView,*
 GraphSummary.RTGraphView,*
-GraphSummary.DetectionsGraphView,TODO (RitaCh)
+GraphSummary.DetectionsGraphView,*
 HeatMapGraph,TestClusteredHeatMap
 ImmediateWindow,ImmediateWindowTestMethod
 ImportDocResultsDlg,TestImportDoc
@@ -183,7 +183,7 @@ RTDetails,IrtFunctionalTest
 SaveSettingsDlg,TestShareSettings
 SchedulingGraphPropertyDlg,TestIrtTutorial
 SchedulingOptionsDlg,TestExportIsolationList
-SelectIrtStandardDlg,TODO (KaipoT)
+SelectIrtStandardDlg,TestLibraryBuild
 SequenceTreeForm,*
 ShareListDlg`2,TestShareSettings
 ShareTypeDlg,TestDocumentSharing
@@ -214,11 +214,11 @@ UndoRedoList,*
 UniquePeptidesDlg,TestMethodEditTutorial
 UpgradeDlg,UpgradeBasicFunctionalTest
 UpgradeLicenseDlg,TestMiscForms
-UseCurrentCalculatorDlg,TODO (KaipoT)
+UseCurrentCalculatorDlg,IrtFunctionalTest
 ViewEditor.ChooseColumnsView,TestLiveReportsFilter
 ViewEditor.FilterView,TestLiveReportsFilter
 ViewLibraryDlg,TestFullScanId
 VolcanoPlotPropertiesDlg,TestGroupComparisonVolcanoPlot
 VolcanoPlotFormattingDlg,TestVolcanoPlotFormatting
 DetectionToolbarProperties, TestDetectionsPlot
-ImportTransitionListColumnSelectDlg,ExistingExperimentsTutorialTest
+ImportTransitionListColumnSelectDlg,TestExistingExperimentsTutorial

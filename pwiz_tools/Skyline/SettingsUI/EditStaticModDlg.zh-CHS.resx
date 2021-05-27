@@ -259,7 +259,7 @@
     <value>9, 89</value>
   </data>
   <data name="comboAA.Size" type="System.Drawing.Size, System.Drawing">
-    <value>59,20</value>
+    <value>59, 21</value>
   </data>
   <data name="comboAA.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -283,7 +283,7 @@
     <value>95, 89</value>
   </data>
   <data name="comboTerm.Size" type="System.Drawing.Size, System.Drawing">
-    <value>61,20</value>
+    <value>61, 21</value>
   </data>
   <data name="comboTerm.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -574,7 +574,7 @@
     <value>222, 277</value>
   </data>
   <data name="comboRelativeRT.Size" type="System.Drawing.Size, System.Drawing">
-    <value>98,20</value>
+    <value>98, 21</value>
   </data>
   <data name="comboRelativeRT.TabIndex" type="System.Int32, mscorlib">
     <value>16</value>
@@ -652,7 +652,7 @@
     <value>0, 0</value>
   </data>
   <data name="listLosses.Size" type="System.Drawing.Size, System.Drawing">
-    <value>214,64</value>
+    <value>214, 70</value>
   </data>
   <data name="listLosses.TabIndex" type="System.Int32, mscorlib">
     <value>25</value>
@@ -787,7 +787,7 @@
     <value>15</value>
   </data>
   <data name="comboMod.Size" type="System.Drawing.Size, System.Drawing">
-    <value>238,20</value>
+    <value>238, 21</value>
   </data>
   <data name="comboMod.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -803,9 +803,6 @@
   </data>
   <data name="&gt;&gt;comboMod.ZOrder" xml:space="preserve">
     <value>2</value>
-  </data>
-  <data name="cbCrosslinker.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Right</value>
   </data>
   <data name="cbCrosslinker.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>

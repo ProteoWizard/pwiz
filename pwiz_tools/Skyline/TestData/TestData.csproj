@@ -230,10 +230,13 @@
     <None Include="CommandLineImportTest.zip" />
     <None Include="CommandLineNoJoinTest.zip" />
     <None Include="CommandLineRefine.zip" />
+    <None Include="CommandLineRefineGroupComparisonTest.zip" />
     <None Include="CommandLineTest.zip" />
     <None Include="CommandLineWiffTest.zip" />
     <None Include="ImportAllCmdLineTest.zip" />
+    <None Include="ImportAllCmdLineTestMzml.zip" />
     <None Include="ImportCommandLineSameName.zip" />
+    <None Include="PressureTracesTest.zip" />
     <None Include="PwizFileInfoTest.zip" />
     <None Include="Refine.zip" />
     <None Include="Results\AgilentCEOpt.zip" />

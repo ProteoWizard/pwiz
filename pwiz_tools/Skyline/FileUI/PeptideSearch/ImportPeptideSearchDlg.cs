@@ -566,8 +566,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         }
 
                         bool hasMatchedMods = MatchModificationsControl.Initialize(Document);
-                        if (!hasMatchedMods && !BuildPepSearchLibControl.PerformDDASearch)
-                            _pagesToSkip.Add(Pages.match_modifications_page);
                         if (BuildPepSearchLibControl.FilterForDocumentPeptides && !BuildPepSearchLibControl.PerformDDASearch)
                             _pagesToSkip.Add(Pages.import_fasta_page);
                         if (!BuildPepSearchLibControl.PerformDDASearch)
