@@ -62,7 +62,6 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             var doc1 = WaitForDocumentChangeLoaded(doc);
             FindNode("425"); // This precursor's mz is withing sonar range
             WaitForGraphs();
-PauseTest();
             CloseSpectrumGraph();
             float tolerance = (float)doc1.Settings.TransitionSettings.Instrument.MzMatchTolerance;
             double maxHeight = 0;

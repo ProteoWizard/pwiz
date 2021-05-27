@@ -998,6 +998,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     return Resources.IonMobilityFilter_IonMobilityUnitsString_Drift_Time__ms_;
                 case eIonMobilityUnits.compensation_V:
                     return Resources.IonMobilityFilter_IonMobilityUnitsString_Compensation_Voltage__V_;
+                case eIonMobilityUnits.waters_sonar: // Not really ion mobility, but uses IMS hardware and our IMS filtering code
                 case eIonMobilityUnits.none:
                     return Resources.IonMobilityFilter_IonMobilityUnitsL10NString_None;
                 default:

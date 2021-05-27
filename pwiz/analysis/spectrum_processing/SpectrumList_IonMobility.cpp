@@ -85,26 +85,43 @@ SpectrumList_IonMobility::SpectrumList_IonMobility(const msdata::SpectrumListPtr
         if (inner->size() == 0)
             return;
 
-        // See if first scan has any ion mobility data
-        SpectrumPtr spectrum = inner->spectrum(0, true);
-        if (spectrum)
+        // See if first few scans have any ion mobility data
+        int probeLimit = min(5, (int)inner->size());
+        for (int probe = 0; probe < probeLimit; probe++)
         {
-            Scan dummy;
-            Scan& scan = spectrum->scanList.scans.empty() ? dummy : spectrum->scanList.scans[0];
-            if (scan.hasCVParam(CVID::MS_ion_mobility_drift_time))
-                units_ = IonMobilityUnits::drift_time_msec;
-            else if (scan.hasCVParam(CVID::MS_inverse_reduced_ion_mobility))
-                units_ = IonMobilityUnits::inverse_reduced_ion_mobility_Vsec_per_cm2;
-            else if (scan.hasCVParam(CVID::MS_FAIMS_compensation_voltage))
-                units_ = IonMobilityUnits::compensation_V;
-            else if (!scan.userParam("drift time").empty()) // Oldest known mzML drift time style
-                units_ = IonMobilityUnits::drift_time_msec;
-            for (int b = 0; b < spectrum->binaryDataArrayPtrs.size(); b++)
+            SpectrumPtr spectrum = inner->spectrum(probe, true);
+            if (spectrum)
             {
-                if (spectrum->binaryDataArrayPtrs[b]->hasCVParam(CVID::MS_raw_ion_mobility_array))
+                Scan dummy;
+                Scan& scan = spectrum->scanList.scans.empty() ? dummy : spectrum->scanList.scans[0];
+                if (scan.hasCVParam(CVID::MS_ion_mobility_drift_time))
+                    units_ = IonMobilityUnits::drift_time_msec;
+                else if (scan.hasCVParam(CVID::MS_inverse_reduced_ion_mobility))
+                    units_ = IonMobilityUnits::inverse_reduced_ion_mobility_Vsec_per_cm2;
+                else if (scan.hasCVParam(CVID::MS_FAIMS_compensation_voltage))
+                    units_ = IonMobilityUnits::compensation_V;
+                else if (!scan.userParam("drift time").empty()) // Oldest known mzML drift time style
+                    units_ = IonMobilityUnits::drift_time_msec;
+                for (const auto& binaryArray : spectrum->binaryDataArrayPtrs)
                 {
-                    has_mzML_combined_ion_mobility_ = true;
-                    break;
+                    CVID ionMobilityArrayType = binaryArray->cvParamChild(MS_ion_mobility_array).cvid;
+                    if (ionMobilityArrayType == CVID_Unknown)
+                        continue;
+
+                    if (ionMobilityArrayType == MS_raw_ion_mobility_array || ionMobilityArrayType == MS_mean_ion_mobility_array)
+                    {
+                        has_mzML_combined_ion_mobility_ = true;
+                        units_ = IonMobilityUnits::drift_time_msec;
+                        probe = probeLimit; // No need to look further
+                        break;
+                    }
+                    else if (ionMobilityArrayType == MS_raw_inverse_reduced_ion_mobility_array || ionMobilityArrayType == MS_mean_inverse_reduced_ion_mobility_array)
+                    {
+                        has_mzML_combined_ion_mobility_ = true;
+                        units_ = IonMobilityUnits::inverse_reduced_ion_mobility_Vsec_per_cm2;
+                        probe = probeLimit; // No need to look further
+                        break;
+                    }
                 }
             }
         }
