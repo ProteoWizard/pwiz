@@ -412,6 +412,15 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Try Reconnecting to Server.
+        /// </summary>
+        public static string DataServerControl_SuccessfulConnect_Try_Reconnecting_to_Server {
+            get {
+                return ResourceManager.GetString("DataServerControl_SuccessfulConnect_Try_Reconnecting_to_Server", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to None of the file names on the server matched the regular expression: {0}.
         /// </summary>
         public static string DataServerInfo_Validate_None_of_the_file_names_on_the_server_matched_the_regular_expression___0_ {
@@ -692,6 +701,15 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to R&amp;un: {0}.
+        /// </summary>
+        public static string MainForm_CheckDropDownOption_R_un___0_ {
+            get {
+                return ResourceManager.GetString("MainForm_CheckDropDownOption_R_un___0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Importing configurations from {0}....
         /// </summary>
         public static string MainForm_DoImport_Importing_configurations_from__0____ {
@@ -747,6 +765,15 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Checking servers for files to download....
+        /// </summary>
+        public static string MainForm_RunBatch_Checking_servers_for_files_to_download___ {
+            get {
+                return ResourceManager.GetString("MainForm_RunBatch_Checking_servers_for_files_to_download___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to ... Log truncated ....
         /// </summary>
         public static string MainForm_TrimDisplayedLog_____Log_truncated____ {
@@ -775,74 +802,56 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to All.
+        /// </summary>
+        public static string MainForm_UpdateRunBatchSteps_All {
+            get {
+                return ResourceManager.GetString("MainForm_UpdateRunBatchSteps_All", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Download files only.
         /// </summary>
-        public static string MainForm_UpdateRunBatchSteps_Download_data_only {
+        public static string MainForm_UpdateRunBatchSteps_Download_files_only {
             get {
-                return ResourceManager.GetString("MainForm_UpdateRunBatchSteps_Download_data_only", resourceCulture);
+                return ResourceManager.GetString("MainForm_UpdateRunBatchSteps_Download_files_only", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Run All Steps.
+        ///   Looks up a localized string similar to R scripts only.
         /// </summary>
-        public static string MainForm_UpdateRunBatchSteps_Run_All_Steps {
+        public static string MainForm_UpdateRunBatchSteps_R_scripts_only {
             get {
-                return ResourceManager.GetString("MainForm_UpdateRunBatchSteps_Run_All_Steps", resourceCulture);
+                return ResourceManager.GetString("MainForm_UpdateRunBatchSteps_R_scripts_only", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Run from step 1: create results file.
+        ///   Looks up a localized string similar to Start from refinement.
         /// </summary>
-        public static string MainForm_UpdateRunBatchSteps_Run_from_step_1__create_results_file {
+        public static string MainForm_UpdateRunBatchSteps_Start_from_refinement {
             get {
-                return ResourceManager.GetString("MainForm_UpdateRunBatchSteps_Run_from_step_1__create_results_file", resourceCulture);
+                return ResourceManager.GetString("MainForm_UpdateRunBatchSteps_Start_from_refinement", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Run from step 2: export reports.
+        ///   Looks up a localized string similar to Start from report export.
         /// </summary>
-        public static string MainForm_UpdateRunBatchSteps_Run_from_step_2__export_reports {
+        public static string MainForm_UpdateRunBatchSteps_Start_from_report_export {
             get {
-                return ResourceManager.GetString("MainForm_UpdateRunBatchSteps_Run_from_step_2__export_reports", resourceCulture);
+                return ResourceManager.GetString("MainForm_UpdateRunBatchSteps_Start_from_report_export", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Run from step 2: refine file.
+        ///   Looks up a localized string similar to Start from template copy.
         /// </summary>
-        public static string MainForm_UpdateRunBatchSteps_Run_from_step_2__refine_file {
+        public static string MainForm_UpdateRunBatchSteps_Start_from_template_copy {
             get {
-                return ResourceManager.GetString("MainForm_UpdateRunBatchSteps_Run_from_step_2__refine_file", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Run from step 3: export reports.
-        /// </summary>
-        public static string MainForm_UpdateRunBatchSteps_Run_from_step_3__export_reports {
-            get {
-                return ResourceManager.GetString("MainForm_UpdateRunBatchSteps_Run_from_step_3__export_reports", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Run from step 3: run R scripts.
-        /// </summary>
-        public static string MainForm_UpdateRunBatchSteps_Run_from_step_3__run_R_scripts {
-            get {
-                return ResourceManager.GetString("MainForm_UpdateRunBatchSteps_Run_from_step_3__run_R_scripts", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Run from step 4: run R scripts.
-        /// </summary>
-        public static string MainForm_UpdateRunBatchSteps_Run_from_step_4__run_R_scripts {
-            get {
-                return ResourceManager.GetString("MainForm_UpdateRunBatchSteps_Run_from_step_4__run_R_scripts", resourceCulture);
+                return ResourceManager.GetString("MainForm_UpdateRunBatchSteps_Start_from_template_copy", resourceCulture);
             }
         }
         
@@ -1080,12 +1089,12 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to There was an error reading the saved configurations from an earlier version of {0}. Please restart the program and try again..
+        ///   Looks up a localized string similar to There was an error reading the saved configurations from an earlier version of {0}..
         /// </summary>
-        public static string Program_Main_There_was_an_error_reading_the_saved_configurations_from_an_earlier_version_of__0___Please_restart_the_program_and_try_again_ {
+        public static string Program_Main_There_was_an_error_reading_the_saved_configurations_from_an_earlier_version_of__0___ {
             get {
                 return ResourceManager.GetString("Program_Main_There_was_an_error_reading_the_saved_configurations_from_an_earlier_" +
-                        "version_of__0___Please_restart_the_program_and_try_again_", resourceCulture);
+                        "version_of__0___", resourceCulture);
             }
         }
         
@@ -1096,6 +1105,16 @@ namespace SkylineBatch.Properties {
             get {
                 return ResourceManager.GetString("Program_Main_To_help_improve__0__in_future_versions__please_post_the_configuratio" +
                         "n_file_to_the_Skyline_Support_board_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There was an error connecting to {0}. Skipping sending analytics..
+        /// </summary>
+        public static string Program_SendAnalyticsHit_There_was_an_error_connecting_to__0___Skipping_sending_analytics_ {
+            get {
+                return ResourceManager.GetString("Program_SendAnalyticsHit_There_was_an_error_connecting_to__0___Skipping_sending_a" +
+                        "nalytics_", resourceCulture);
             }
         }
         
@@ -1476,26 +1495,6 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
-        /// </summary>
-        public static System.Drawing.Icon SkylineBatch_daily {
-            get {
-                object obj = ResourceManager.GetObject("SkylineBatch_daily", resourceCulture);
-                return ((System.Drawing.Icon)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
-        /// </summary>
-        public static System.Drawing.Icon SkylineBatch_release {
-            get {
-                object obj = ResourceManager.GetObject("SkylineBatch_release", resourceCulture);
-                return ((System.Drawing.Icon)(obj));
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to &quot;{0}&quot; is not a valid name for the configuration..
         /// </summary>
         public static string SkylineBatchConfig_SkylineBatchConfig___0___is_not_a_valid_name_for_the_configuration_ {
@@ -1610,15 +1609,6 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to chromatagram files.
-        /// </summary>
-        public static string SkylineBatchConfigManager_StartBatchRun_chromatagram_files {
-            get {
-                return ResourceManager.GetString("SkylineBatchConfigManager_StartBatchRun_chromatagram_files", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Configuration &quot;{0}&quot;.
         /// </summary>
         public static string SkylineBatchConfigManager_StartBatchRun_Configuration___0___ {
@@ -1652,6 +1642,15 @@ namespace SkylineBatch.Properties {
         public static string SkylineBatchConfigManager_StartBatchRun_exported_reports {
             get {
                 return ResourceManager.GetString("SkylineBatchConfigManager_StartBatchRun_exported_reports", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to files.
+        /// </summary>
+        public static string SkylineBatchConfigManager_StartBatchRun_files {
+            get {
+                return ResourceManager.GetString("SkylineBatchConfigManager_StartBatchRun_files", resourceCulture);
             }
         }
         
@@ -1734,7 +1733,7 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Running the enabled configurations from &quot;{0}&quot; would overwrite the {1}:.
+        ///   Looks up a localized string similar to Running &quot;{0}&quot; on the enabled configurations would overwrite the {1}:.
         /// </summary>
         public static string SkylineBatchConfigManager_StartBatchRun_Running_the_enabled_configurations_from___0___would_overwrite_the__1__ {
             get {

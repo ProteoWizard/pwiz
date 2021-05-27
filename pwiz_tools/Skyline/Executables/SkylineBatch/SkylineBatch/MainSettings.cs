@@ -39,7 +39,8 @@ namespace SkylineBatch
         // IMMUTABLE - all fields are readonly strings/objects
 
         public MainSettings(string templateFilePath, string analysisFolderPath, string dataFolderPath,
-            DataServerInfo server, string annotationsFilePath, string replicateNamingPattern, string dependentConfigName)
+            DataServerInfo server, string annotationsFilePath, string replicateNamingPattern,
+            string dependentConfigName)
         {
             TemplateFilePath = templateFilePath;
             DependentConfigName = !string.IsNullOrEmpty(dependentConfigName) ? dependentConfigName : null;
@@ -74,7 +75,7 @@ namespace SkylineBatch
 
         public MainSettings WithoutDependency()
         {
-            return new MainSettings(TemplateFilePath, AnalysisFolderPath, DataFolderPath, Server, 
+            return new MainSettings(TemplateFilePath, AnalysisFolderPath, DataFolderPath, Server,
                 AnnotationsFilePath, ReplicateNamingPattern, string.Empty);
         }
 
@@ -101,18 +102,6 @@ namespace SkylineBatch
         }
 
         public void Validate()
-        {
-            Server?.Validate();
-            ValidateAllButServer();
-        }
-
-        public void QuickValidate()
-        {
-            ValidateAllButServer();
-            Server?.QuickValidate();
-        }
-
-        private void ValidateAllButServer()
         {
             if (DependentConfigName == null)
                 ValidateTemplateFile(TemplateFilePath);
@@ -196,14 +185,20 @@ namespace SkylineBatch
             var replacedTemplatePath = TemplateFilePath;
             var preferReplace = Program.FunctionalTest;
             if (DependentConfigName == null)
-                templateReplaced = TextUtil.SuccessfulReplace(ValidateTemplateFile, oldRoot, newRoot, TemplateFilePath, Program.FunctionalTest, out replacedTemplatePath);
+                templateReplaced = TextUtil.SuccessfulReplace(ValidateTemplateFile, oldRoot, newRoot, TemplateFilePath,
+                    Program.FunctionalTest, out replacedTemplatePath);
             var analysisReplaced =
-                TextUtil.SuccessfulReplace(ValidateAnalysisFolder, oldRoot, newRoot, AnalysisFolderPath, preferReplace, out string replacedAnalysisPath);
-            var dataValidator = Server != null ? (Validator)ValidateDataFolderWithServer : (Validator)ValidateDataFolderWithoutServer;
+                TextUtil.SuccessfulReplace(ValidateAnalysisFolder, oldRoot, newRoot, AnalysisFolderPath, preferReplace,
+                    out string replacedAnalysisPath);
+            var dataValidator = Server != null
+                ? ValidateDataFolderWithServer
+                : (Validator) ValidateDataFolderWithoutServer;
             var dataReplaced =
-                TextUtil.SuccessfulReplace(dataValidator, oldRoot, newRoot, DataFolderPath, Server != null || preferReplace, out string replacedDataPath);
+                TextUtil.SuccessfulReplace(dataValidator, oldRoot, newRoot, DataFolderPath,
+                    Server != null || preferReplace, out string replacedDataPath);
             var annotationsReplaced =
-                TextUtil.SuccessfulReplace(ValidateAnnotationsFile, oldRoot, newRoot, AnnotationsFilePath, preferReplace, out string replacedAnnotationsPath);
+                TextUtil.SuccessfulReplace(ValidateAnnotationsFile, oldRoot, newRoot, AnnotationsFilePath,
+                    preferReplace, out string replacedAnnotationsPath);
 
             pathReplacedMainSettings = new MainSettings(replacedTemplatePath, replacedAnalysisPath, replacedDataPath,
                 Server, replacedAnnotationsPath, ReplicateNamingPattern, DependentConfigName);
@@ -211,20 +206,20 @@ namespace SkylineBatch
             return templateReplaced || analysisReplaced || dataReplaced || annotationsReplaced;
         }
 
-        public long SpaceNeeded(List<string> otherDataFolders)
+        public long SpaceNeeded(List<string> otherDataFolders, ServerConnector serverConnector)
         {
             if (Server == null || otherDataFolders.Contains(DataFolderPath)) return 0;
-            var filesToDownload = Server.FilesToDownload(DataFolderPath);
+            var filesToDownload = Server.FilesToDownload(DataFolderPath, serverConnector);
             long spaceNeeded = 0;
             foreach (var file in filesToDownload.Values)
                 spaceNeeded += file.Size;
             return spaceNeeded;
         }
 
-        public Dictionary<string, FtpListItem> FilesToDownload()
+        public Dictionary<string, FtpListItem> FilesToDownload(ServerConnector serverConnector)
         {
             if (Server == null) return new Dictionary<string, FtpListItem>();
-            return Server.FilesToDownload(DataFolderPath);
+            return Server.FilesToDownload(DataFolderPath, serverConnector);
         }
 
         public bool RunWillOverwrite(RunBatchOptions runOption, string configHeader, out StringBuilder message)
@@ -234,30 +229,20 @@ namespace SkylineBatch
             CreateAnalysisFolderIfNonexistent();
             var analysisFolderName = Path.GetFileName(AnalysisFolderPath);
 
-            if (runOption == RunBatchOptions.RUN_ALL_STEPS || runOption == RunBatchOptions.FROM_CREATE_RESULTS)
+            if (runOption == RunBatchOptions.ALL || runOption == RunBatchOptions.FROM_TEMPLATE_COPY)
             {
-                // TODO (Ali): ask if you should check .sky file or .skyd file here
-                /*var resultsFile = GetResultsFilePath();
-                var resultsFileIdentifyer = Path.Combine(analysisFolderName, Path.GetFileName(resultsFile));
-                if (File.Exists(resultsFile) && new FileInfo(TemplateFilePath).Length != new FileInfo(resultsFile).Length)
+                var overwriteFiles = FileUtil.GetFilesInFolder(AnalysisFolderPath, TextUtil.EXT_SKY);
+                overwriteFiles.AddRange(FileUtil.GetFilesInFolder(AnalysisFolderPath, TextUtil.EXT_SKYD));
+                if (overwriteFiles.Count == 0)
+                    return false;
+                foreach (var file in overwriteFiles)
                 {
                     message.Append(tab + tab)
-                        .Append(resultsFileIdentifyer)
+                        .Append(string.Format(Path.Combine(analysisFolderName, Path.GetFileName(file))))
                         .AppendLine();
-                    return true;
-                }*/
-
-                var templateSkyds = FileUtil.GetFilesInFolder(Path.GetDirectoryName(TemplateFilePath), TextUtil.EXT_SKYD);
-                var resultsSkyds = FileUtil.GetFilesInFolder(AnalysisFolderPath, TextUtil.EXT_SKYD);
-                var templateSkydSize = templateSkyds.Count == 0 ? 0 : new FileInfo(templateSkyds[0]).Length;
-                var resultsSkydSize = resultsSkyds.Count == 0 ? 0 : new FileInfo(resultsSkyds[0]).Length;
-                if (templateSkydSize < resultsSkydSize)
-                {
-                    message.Append(tab + tab)
-                        .Append(string.Format(Path.Combine(analysisFolderName, Path.GetFileName(resultsSkyds[0]))))
-                        .AppendLine();
-                    return true;
                 }
+
+                return true;
             }
             return false;
         }
@@ -373,11 +358,8 @@ namespace SkylineBatch
         }
     }
 
-    public class DataServerInfo
+    public class DataServerInfo : ServerInfo
     {
-        private Dictionary<string, FtpListItem> _serverFiles;
-        private bool _validated;
-        private Exception _validationError;
 
         public static DataServerInfo ServerFromUi(string url, string userName, string password, string namingPattern)
         {
@@ -392,29 +374,22 @@ namespace SkylineBatch
             {
                 throw new ArgumentException("Error parsing the URL. Please correct the URL and try again.");
             }
+            ValidateNamingPattern(namingPattern);
+
             return new DataServerInfo(uri, userName, password, namingPattern);
         }
 
-        private DataServerInfo(Uri server, string userName, string password, string namingPattern)
+        private DataServerInfo(Uri server, string userName, string password, string namingPattern) : base(server, userName, password)
         {
-            Server = server;
-            UserName = userName ?? string.Empty;
-            Password = password ?? string.Empty;
             DataNamingPattern = namingPattern ?? string.Empty;
         }
         
-        public readonly Uri Server;
-        public readonly string UserName;
-        public readonly string Password;
         public readonly string DataNamingPattern;
 
         public string GetUrl() => Server.AbsoluteUri;
-        
 
         public string FilePath(string fileName) =>
             string.IsNullOrEmpty(Server.AbsolutePath) ? fileName : Path.Combine(Server.AbsolutePath, fileName);
-
-        public Dictionary<string, FtpListItem> GetServerFiles => new Dictionary<string, FtpListItem>(_serverFiles);
 
         public FtpClient GetFtpClient()
         {
@@ -432,103 +407,38 @@ namespace SkylineBatch
         }
 
         // The list of matching files that have not been fully downloaded to folderPath
-        public Dictionary<string, FtpListItem> FilesToDownload(string folderPath)
+        public Dictionary<string, FtpListItem> FilesToDownload(string folderPath, ServerConnector serverConnector)
         {
             var downloadingFiles = new Dictionary<string, FtpListItem>();
-            foreach (var fileName in _serverFiles.Keys)
+            var ftpFiles = GetDataFiles(serverConnector);
+            foreach (var fileName in ftpFiles.Keys)
             {
                 var filePath = Path.Combine(folderPath, fileName);
-                if (!File.Exists(filePath) || _serverFiles[fileName].Size != new FileInfo(filePath).Length)
+                if (!File.Exists(filePath) || ftpFiles[fileName].Size != new FileInfo(filePath).Length)
                 {
                     if (File.Exists(filePath)) File.Delete(filePath);
-                    downloadingFiles.Add(filePath, _serverFiles[fileName]);
+                    downloadingFiles.Add(filePath, ftpFiles[fileName]);
                 }
             }
             return downloadingFiles;
         }
 
-
-        public void QuickValidate()
+        public Dictionary<string, FtpListItem> GetDataFiles(ServerConnector serverConnector)
         {
-            if (_validated) 
-                return;
-            throw _validationError;
+            var dataFiles = new Dictionary<string, FtpListItem>();
+            var ftpFiles = serverConnector.GetFiles(this, out Exception connectionException);
+            if (connectionException != null) throw connectionException;
+            foreach (var ftpFile in ftpFiles)
+            {
+                dataFiles.Add(ftpFile.Name, ftpFile);
+            }
+            return dataFiles;
         }
-
-        public void Validate()
-        {
-            if (_validated) return;
-            ValidateNamingPattern(DataNamingPattern);
-            _serverFiles = new Dictionary<string, FtpListItem>();
-            bool foundServerFiles;
-            try
-            {
-                // Try connecting to server twice if it fails the first time
-                if (!ConnectToServer(out foundServerFiles))
-                    ConnectToServer(out foundServerFiles, true);
-                
-            }
-            catch (Exception e)
-            {
-                _validationError = new ArgumentException(
-                    string.Format(Resources.DataServerInfo_Validate_There_was_an_error_connecting_to__0____1_, GetUrl(), e.Message));
-                throw _validationError;
-            }
-
-            if (!foundServerFiles)
-            {
-                _validationError = new ArgumentException(string.Format(
-                    Resources.DataServerInfo_Validate_There_were_no_files_found_at__0___Make_sure_the_URL__username__and_password_are_correct_and_try_again_,
-                    GetUrl()));
-                throw _validationError;
-            }
-            
-            if (_serverFiles.Count == 0)
-            {
-                _validationError = new ArgumentException(
-                    string.Format(Resources.DataServerInfo_Validate_None_of_the_file_names_on_the_server_matched_the_regular_expression___0_,
-                        DataNamingPattern) + Environment.NewLine +
-                    Resources.DataServerInfo_Validate_Please_make_sure_your_regular_expression_is_correct_);
-                throw _validationError;
-            }
-            _validated = true;
-        }
+        
 
         public DataServerInfo Copy()
         {
-            return new DataServerInfo(Server, UserName, Password, DataNamingPattern)
-            {
-                _serverFiles = _serverFiles,
-                _validated = _validated,
-                _validationError = _validationError
-            };
-        }
-
-        private bool ConnectToServer(out bool foundServerFiles, bool throwError = false)
-        {
-            foundServerFiles = false;
-            var namingRegex = new Regex(DataNamingPattern);
-            var client = GetFtpClient();
-            try
-            {
-                client.Connect();
-                foreach (FtpListItem item in client.GetListing(Server.AbsolutePath))
-                {
-                    if (item.Type == FtpFileSystemObjectType.File)
-                    {
-                        foundServerFiles = true;
-                        if (namingRegex.IsMatch(item.Name)) _serverFiles.Add(item.Name, item);
-                    }
-                }
-            }
-            catch (Exception)
-            {
-                client.Disconnect();
-                if (throwError) throw;
-                return false;
-            }
-            client.Disconnect();
-            return true;
+            return new DataServerInfo(Server, UserName, Password, DataNamingPattern);
         }
 
         public static void ValidateNamingPattern(string dataNamingPattern)
@@ -573,4 +483,43 @@ namespace SkylineBatch
 
 
 
+    public class ServerInfo
+    {
+        public ServerInfo(Uri server, string userName, string password)
+        {
+            Server = server;
+            UserName = userName ?? string.Empty;
+            Password = password ?? string.Empty;
+        }
+
+        public readonly Uri Server;
+        public readonly string UserName;
+        public readonly string Password;
+
+
+        protected bool Equals(ServerInfo other)
+        {
+            // checks if annotation paths are both empty or equal
+
+            return other.Server.Equals(Server) &&
+                    other.UserName.Equals(UserName) &&
+                    other.Password.Equals(Password);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((ServerInfo)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return Server.GetHashCode() +
+                   UserName.GetHashCode() +
+                   Password.GetHashCode();
+        }
+
+    }
 }

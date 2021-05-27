@@ -232,7 +232,7 @@
     <value>2, 2, 2, 2</value>
   </data>
   <data name="btnRunBatch.Size" type="System.Drawing.Size, System.Drawing">
-    <value>234, 23</value>
+    <value>175, 23</value>
   </data>
   <data name="btnRunBatch.TabIndex" type="System.Int32, mscorlib">
     <value>11</value>
@@ -262,7 +262,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnStop.Location" type="System.Drawing.Point, System.Drawing">
-    <value>238, 22</value>
+    <value>179, 22</value>
   </data>
   <data name="btnStop.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -1023,7 +1023,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnRunOptions.Location" type="System.Drawing.Point, System.Drawing">
-    <value>215, 22</value>
+    <value>156, 22</value>
   </data>
   <data name="btnRunOptions.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>

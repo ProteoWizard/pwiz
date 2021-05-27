@@ -136,8 +136,11 @@ namespace SkylineBatchTest
         {
             RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
             var validConfigFile = Path.Combine(TEST_FOLDER, "SevenConfigurations.bcfg");
-            FunctionalTestUtil.WaitForShortImport(mainForm, validConfigFile, this);
-            RunUI(() => { FunctionalTestUtil.CheckConfigs(7, 0, mainForm); });
+            RunUI(() =>
+            {
+                mainForm.DoImport(validConfigFile);
+                FunctionalTestUtil.CheckConfigs(7, 0, mainForm);
+            });
             var checkState = new[] {false, false, false, false, false, false, false};
             var random = new Random();
             for (int i = 0; i < 100; i++)

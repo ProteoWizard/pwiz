@@ -48,8 +48,7 @@ namespace SkylineBatchTest
         public void TestCreateDependency(MainForm mainForm)
         {
             var baseConfigFile = Path.Combine(BCFG_FOLDER, "BaseConfiguration.bcfg");
-            var longWaitOperation = mainForm.DoImport(baseConfigFile);
-            WaitForConditionUI(1000, () => longWaitOperation.Completed, () => "Import timed out");
+            mainForm.DoImport(baseConfigFile);
             RunUI(() => { FunctionalTestUtil.CheckConfigs(1, 0, mainForm); });
 
             RunUI(() => { mainForm.ClickConfig(0); });
@@ -95,12 +94,18 @@ namespace SkylineBatchTest
         {
             RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
             var baseConfigFile = Path.Combine(BCFG_FOLDER, "BaseConfiguration.bcfg");
-            FunctionalTestUtil.WaitForShortImport(mainForm, baseConfigFile, this);
-            RunUI(() => { FunctionalTestUtil.CheckConfigs(1, 0, mainForm); });
+            RunUI(() =>
+            {
+                mainForm.DoImport(baseConfigFile);
+                FunctionalTestUtil.CheckConfigs(1, 0, mainForm);
+            });
 
             var validDependentConfigFile = Path.Combine(BCFG_FOLDER, "ValidDependentConfiguration.bcfg");
-            FunctionalTestUtil.WaitForShortImport(mainForm, validDependentConfigFile, this);
-            RunUI(() => { FunctionalTestUtil.CheckConfigs(2, 0, mainForm); });
+            RunUI(() =>
+            {
+                mainForm.DoImport(validDependentConfigFile);
+                FunctionalTestUtil.CheckConfigs(2, 0, mainForm);
+            });
             AssertDependentMatches(mainForm, Path.Combine(CONFIG_FOLDER, "RefinedOutput.sky"), 1);
 
             RunUI(() => { mainForm.ClickConfig(0); });
@@ -115,9 +120,12 @@ namespace SkylineBatchTest
                 });
             RunUI(() => { FunctionalTestUtil.CheckConfigs(1, 1, mainForm); });
 
-            RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
-            FunctionalTestUtil.WaitForShortImport(mainForm, baseConfigFile, this);
-            RunUI(() => { FunctionalTestUtil.CheckConfigs(1, 0, mainForm); });
+            RunUI(() =>
+            {
+                FunctionalTestUtil.ClearConfigs(mainForm);
+                mainForm.DoImport(baseConfigFile);
+                FunctionalTestUtil.CheckConfigs(1, 0, mainForm);
+            });
             var invalidDependentConfigsFile = Path.Combine(BCFG_FOLDER, "InvalidDependentConfigurations.bcfg");
             RunDlg<AlertDlg>(() => { mainForm.DoImport(invalidDependentConfigsFile);},
                 dlg =>
@@ -146,12 +154,18 @@ namespace SkylineBatchTest
         {
             RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
             var baseConfigFile = Path.Combine(BCFG_FOLDER, "BaseConfiguration.bcfg");
-            FunctionalTestUtil.WaitForShortImport(mainForm, baseConfigFile, this);
-            RunUI(() => { FunctionalTestUtil.CheckConfigs(1, 0, mainForm); });
+            RunUI(() =>
+            {
+                mainForm.DoImport(baseConfigFile);
+                FunctionalTestUtil.CheckConfigs(1, 0, mainForm);
+            });
 
             var validDependentConfigFile = Path.Combine(BCFG_FOLDER, "ValidDependentConfiguration.bcfg");
-            FunctionalTestUtil.WaitForShortImport(mainForm, validDependentConfigFile, this);
-            RunUI(() => { FunctionalTestUtil.CheckConfigs(2, 0, mainForm); });
+            RunUI(() =>
+            {
+                mainForm.DoImport(validDependentConfigFile);
+                FunctionalTestUtil.CheckConfigs(2, 0, mainForm);
+            });
 
             var newTemplate = Path.Combine(CONFIG_FOLDER, "NewRefinedOutput.sky");
             ChangePath(mainForm, 0, newTemplate, false, false);
@@ -168,13 +182,16 @@ namespace SkylineBatchTest
         {
             RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
             var baseConfigFile = Path.Combine(BCFG_FOLDER, "BaseConfiguration.bcfg");
-            FunctionalTestUtil.WaitForShortImport(mainForm, baseConfigFile, this);
-            RunUI(() => { FunctionalTestUtil.CheckConfigs(1, 0, mainForm); });
-
-            var validDependentConfigFile = Path.Combine(BCFG_FOLDER, "ValidDependentConfiguration.bcfg");
-            FunctionalTestUtil.WaitForShortImport(mainForm, validDependentConfigFile, this);
             RunUI(() =>
             {
+                mainForm.DoImport(baseConfigFile);
+                FunctionalTestUtil.CheckConfigs(1, 0, mainForm);
+            });
+
+            var validDependentConfigFile = Path.Combine(BCFG_FOLDER, "ValidDependentConfiguration.bcfg");
+            RunUI(() =>
+            {
+                mainForm.DoImport(validDependentConfigFile);
                 FunctionalTestUtil.CheckConfigs(2, 0, mainForm);
                 mainForm.SetConfigEnabled(1, true);
             });

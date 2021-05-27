@@ -54,7 +54,7 @@ namespace SkylineBatch
         public bool RunWillOverwrite(RunBatchOptions runOption, string configHeader, string analysisFolder, out StringBuilder message)
         {
             message = new StringBuilder();
-            if (runOption < RunBatchOptions.FROM_EXPORT_REPORT)
+            if (runOption < RunBatchOptions.FROM_REPORT_EXPORT)
                 return false;
             var tab = "      ";
             var analysisFolderName = Path.GetFileName(analysisFolder);
@@ -68,7 +68,7 @@ namespace SkylineBatch
             }
 
 
-            if (runOption == RunBatchOptions.FROM_EXPORT_REPORT)
+            if (runOption == RunBatchOptions.FROM_REPORT_EXPORT)
             {
                 if (existingReports.Count > 0)
                 {

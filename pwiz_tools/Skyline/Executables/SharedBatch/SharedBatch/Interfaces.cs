@@ -120,6 +120,8 @@ namespace SharedBatch
         void DisplayErrorWithException(string message, Exception exception);
         DialogResult DisplayQuestion(string message);
         DialogResult DisplayLargeOkCancel(string message);
+
+        void DisplayForm(Form form);
     }
 
     public delegate void OnPercentProgress(int percent, int maxPercent);

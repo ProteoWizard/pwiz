@@ -90,7 +90,18 @@ namespace SkylineBatchTest
             // Run and cancel three times creates two old logs
             for (int i = 0; i < 3; i++)
             {
-                Assert.IsTrue(testConfigManager.StartBatchRun(RunBatchOptions.FROM_R_SCRIPTS, false), "Failed to start config");
+                Assert.IsTrue(testConfigManager.CanRun(RunBatchOptions.R_SCRIPTS, false));
+                bool completed = false;
+                testConfigManager.StartCheckingServers(new LongWaitDlg(), (success) =>
+                {
+                    Assert.IsTrue(success);
+                    completed = true;
+                });
+                TestUtils.WaitForCondition(() =>
+                {
+                    return completed;
+                }, new TimeSpan(0, 0, 10), 100, "Could not start run");
+                testConfigManager.StartBatchRun();
                 TestUtils.WaitForCondition(ConfigRunnersStarted, timeout, timestep, startErrorMessage);
                 Thread.Sleep(1000);
                 testConfigManager.CancelRunners();

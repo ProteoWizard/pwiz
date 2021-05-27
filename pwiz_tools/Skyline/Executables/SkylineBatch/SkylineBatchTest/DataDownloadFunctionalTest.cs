@@ -53,14 +53,13 @@ namespace SkylineBatchTest
             var dataDirectory = Path.Combine(CONFIG_FOLDER, "emptyData");
             var configFile = Path.Combine(TEST_FOLDER, "DownloadingConfiguration.bcfg");
             
-            var longImportDlg = ShowDialog<LongWaitDlg>(() => mainForm.DoImport(configFile));
-            WaitForClosedForm(longImportDlg);
-
             RunUI(() =>
             {
+                mainForm.DoImport(configFile);
                 FunctionalTestUtil.CheckConfigs(1, 0, mainForm, "Config was not imported!", "Config was imported but invalid");
-                mainForm.ClickRun(1);
             });
+            var longWaitDialog = ShowDialog<LongWaitDlg>(() => mainForm.ClickRun(1));
+            WaitForClosedForm(longWaitDialog);
             var tenSeconds = new TimeSpan(0,0,10);
             FunctionalTestUtil.WaitForCondition(ConfigStopped, mainForm, true, tenSeconds, 200,
                 "Config did not start");
@@ -80,22 +79,20 @@ namespace SkylineBatchTest
             Assert.AreEqual(false, Directory.Exists(dataDirectory));
             var configFile = Path.Combine(TEST_FOLDER, "DownloadingConfigurationBigData.bcfg");
 
-            var longImportDlg = ShowDialog<LongWaitDlg>(() => mainForm.DoImport(configFile));
-            WaitForClosedForm(longImportDlg);
+            RunUI(() => mainForm.DoImport(configFile));
             Assert.AreEqual(false, Directory.Exists(dataDirectory));
 
             RunUI(() =>
             {
                 FunctionalTestUtil.CheckConfigs(1, 0, mainForm, "Config was not imported!", "Config was imported but invalid");
             });
-            RunDlg<AlertDlg>(() => mainForm.ClickRun(1),
-                dlg =>
-                {
-                    Assert.IsTrue(dlg.Message.StartsWith(SkylineBatch.Properties.Resources.SkylineBatchConfigManager_StartBatchRun_There_is_not_enough_space_on_this_computer_to_download_the_data_for_these_configurations__You_need_an_additional_));
-                                  dlg.ClickOk();
-                });
+            var longWaitDialog = ShowDialog<LongWaitDlg>(() => mainForm.ClickRun(1));
+            WaitForClosedForm(longWaitDialog);
+            var spaceErrorDlg = WaitForOpenForm<AlertDlg>();
             RunUI(() =>
             {
+                Assert.IsTrue(spaceErrorDlg.Message.StartsWith(SkylineBatch.Properties.Resources.SkylineBatchConfigManager_StartBatchRun_There_is_not_enough_space_on_this_computer_to_download_the_data_for_these_configurations__You_need_an_additional_));
+                spaceErrorDlg.ClickOk();
                 Assert.AreEqual(false, mainForm.ConfigRunning("EmptyTemplate"));
                 Assert.AreEqual(0, mainForm.tabMain.SelectedIndex);
             });

@@ -14,13 +14,11 @@ namespace SharedBatch
 
         private  bool _showLongWaitDlg;
         private readonly LongWaitDlg _longWaitDlg;
-        private readonly Form _parentForm;
         public CancellationTokenSource CancelToken { get; private set; }
 
-        public LongWaitOperation(Form parentForm, LongWaitDlg longWaitDlg)
+        public LongWaitOperation(LongWaitDlg longWaitDlg)
         {
             _longWaitDlg = longWaitDlg;
-            _parentForm = parentForm;
             CancelToken = _longWaitDlg.CancelToken;
         }
 
@@ -33,12 +31,12 @@ namespace SharedBatch
         public bool Cancelled => CancelToken.IsCancellationRequested;
         public bool Completed { get; private set; }
 
-        public void Start(bool willBeLong, LongOperation operation, Callback callback)
+        public void Start(bool showLongWaitDlg, LongOperation operation, Callback callback)
         {
-            if (willBeLong && _parentForm != null)
+            if (showLongWaitDlg && _longWaitDlg != null)
             {
                 _showLongWaitDlg = true;
-                _longWaitDlg.Show(_parentForm);
+                _longWaitDlg.Show(_longWaitDlg.ParentForm);
             }
             new Task( () =>
             {

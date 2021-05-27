@@ -58,11 +58,5 @@ namespace SkylineBatchTest
             CheckConfigs(0, 0, mainForm);
         }
 
-        public static void WaitForShortImport(MainForm mainForm, string filePath, AbstractSkylineBatchFunctionalTest batchFunctionalTest)
-        {
-            var importOperation = mainForm.DoImport(filePath);
-            batchFunctionalTest.WaitForConditionUI(1000, () => importOperation.Completed, () => "Import timed out");
-        }
-
     }
 }

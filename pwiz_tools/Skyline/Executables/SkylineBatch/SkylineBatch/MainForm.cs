@@ -37,7 +37,6 @@ namespace SkylineBatch
         private readonly ColumnWidthCalculator _listViewColumnWidths;
         private bool _showRefineStep;
         private Timer _outputLog;
-        private bool _loadingConfigs;
 
         public MainForm(string openFile)
         {
@@ -53,7 +52,6 @@ namespace SkylineBatch
             listViewConfigs.ColumnWidthChanged += listViewConfigs_ColumnWidthChanged;
             ProgramLog.Info(Resources.MainForm_MainForm_Loading_configurations_from_saved_settings_);
             
-            _rDirectorySelector = new RDirectorySelector(this, _configManager);
             _outputLog = new Timer { Interval = 500 };
             _outputLog.Tick += OutputLog;
             _outputLog.Start();
@@ -62,33 +60,16 @@ namespace SkylineBatch
             Shown += ((sender, args) =>
             {
                 _configManager = new SkylineBatchConfigManager(_skylineBatchLogger, this);
-                var loadConfigsLongWaitDlg = new LongWaitDlg(this, Program.AppName(),
-                    Resources.MainForm_MainForm_Loading_configurations_from_saved_settings___);
-                _loadingConfigs = true;
-                _configManager.StartLoadingConfigList(new LongWaitOperation(this, loadConfigsLongWaitDlg), (success) =>
-                {
-                    ImportFinishedCallback(success);
-                    if (!string.IsNullOrEmpty(openFile))
-                        FileOpened(openFile);
-                });
+                _configManager.LoadConfigList();
+                _rDirectorySelector = new RDirectorySelector(this, _configManager);
+                if (!string.IsNullOrEmpty(openFile))
+                    FileOpened(openFile);
                 _rDirectorySelector = new RDirectorySelector(this, _configManager);
                 ListViewSizeChanged();
                 UpdateUiLogFiles();
                 UpdateRunBatchSteps();
                 _loaded = true;
             });
-        }
-        
-
-        private void ImportFinishedCallback(bool success)
-        {
-            if (success)
-            {
-                UpdateUiConfigurations();
-                if (!_rDirectorySelector.ShownDialog)
-                    _rDirectorySelector.AddIfNecassary();
-            }
-            _loadingConfigs = false;
         }
 
         private void RunUi(Action action)
@@ -121,11 +102,6 @@ namespace SkylineBatch
         
         private void btnNewConfig_Click(object sender, EventArgs e)
         {
-            if (IsLoadingConfigs(string.Format(
-                Resources
-                    .MainForm_btnImport_Click_Cannot_add_configurations_while__0__is_loading__Please_wait_and_try_again_,
-                Program.AppName())))
-                return;
             ProgramLog.Info(Resources.MainForm_btnNewConfig_Click_Creating_a_new_configuration_);
             var initialConfigValues = (SkylineBatchConfig)_configManager.GetLastModified();
             var configForm = new SkylineBatchConfigForm(this, _rDirectorySelector, initialConfigValues, ConfigAction.Add, false, _configManager);
@@ -283,15 +259,7 @@ namespace SkylineBatch
             UpdateUiConfigurations();
             ListViewSizeChanged();
         }
-
-        private bool IsLoadingConfigs(string errorMessage)
-        {
-            bool loadingConfigs = _loadingConfigs;
-            if (loadingConfigs)
-                DisplayError(errorMessage);
-            return loadingConfigs;
-        }
-
+        
         #endregion
 
         #region Open File/Folder
@@ -361,10 +329,7 @@ namespace SkylineBatch
             }
             ((ToolStripMenuItem)batchRunDropDown.Items[index]).Checked = true;
             btnRunBatch.TextAlign = index == 0 ? ContentAlignment.MiddleCenter : ContentAlignment.MiddleLeft;
-            if (index == 1)
-                btnRunBatch.Text = batchRunDropDown.Items[index].Text.Insert(2, "&");
-            else
-                btnRunBatch.Text = batchRunDropDown.Items[index].Text.Insert(1, "&");
+            btnRunBatch.Text = string.Format(Resources.MainForm_CheckDropDownOption_R_un___0_, batchRunDropDown.Items[index].Text);
         }
 
         private void btnRunBatch_Click(object sender, EventArgs e)
@@ -376,16 +341,25 @@ namespace SkylineBatch
         {
             var stepIndex = GetCheckedRunOptionIndex();
             if (!_showRefineStep && stepIndex >= (int)RunBatchOptions.FROM_REFINE)
-                stepIndex += 1; // step 3 and 4 become step 4 and 5 when refine step is hidden
+                stepIndex += 1; // step 2 and 3 become step 3 and 4 when refine step is hidden
 
             var runOption = (RunBatchOptions)stepIndex;
-            var running = _configManager.StartBatchRun(runOption);
-            // update ui log and switch to log tab
-            if (running)
+            var checkServersLongWaitDlg = new LongWaitDlg(this, Program.AppName(),
+                Resources.MainForm_RunBatch_Checking_servers_for_files_to_download___);
+
+            if (!_configManager.CanRun(runOption)) return;
+            _configManager.StartCheckingServers(checkServersLongWaitDlg, StartRun);
+        }
+
+        private void StartRun(bool success)
+        {
+            if (!success) return;
+            _configManager.StartBatchRun();
+            RunUi(() =>
             {
                 comboLogList.SelectedIndex = 0;
                 tabMain.SelectTab(tabLog);
-            }
+            });
         }
 
         private void btnCancel_Click(object sender, EventArgs e)
@@ -477,19 +451,19 @@ namespace SkylineBatch
                 _showRefineStep = _configManager.WillRefine();
                 var oldChecked = GetCheckedRunOptionIndex();
                 batchRunDropDown.Items.Clear();
-                batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Run_All_Steps);
-                batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Download_data_only);
-                batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Run_from_step_1__create_results_file);
+                batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_All);
+                batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Download_files_only);
+                batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Start_from_template_copy);
                 if (_showRefineStep)
                 {
-                    batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Run_from_step_2__refine_file);
-                    batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Run_from_step_3__export_reports);
-                    batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Run_from_step_4__run_R_scripts);
+                    batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Start_from_refinement);
+                    batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Start_from_report_export);
+                    batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_R_scripts_only);
                 }
                 else
                 {
-                    batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Run_from_step_2__export_reports);
-                    batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Run_from_step_3__run_R_scripts);
+                    batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_Start_from_report_export);
+                    batchRunDropDown.Items.Add(Resources.MainForm_UpdateRunBatchSteps_R_scripts_only);
                 }
 
                 var newChecked = oldChecked;
@@ -508,11 +482,6 @@ namespace SkylineBatch
 
         private void btnImport_Click(object sender, EventArgs e)
         {
-            if (IsLoadingConfigs(string.Format(
-                Resources
-                    .MainForm_btnImport_Click_Cannot_add_configurations_while__0__is_loading__Please_wait_and_try_again_,
-                Program.AppName())))
-                return;
             var dialog = new OpenFileDialog();
             dialog.Filter = TextUtil.FILTER_BCFG;
             if (dialog.ShowDialog(this) != DialogResult.OK) return;
@@ -547,14 +516,12 @@ namespace SkylineBatch
             return dialogResult;
         }
 
-        public LongWaitOperation DoImport(string filePath)
+        public void DoImport(string filePath)
         {
-            var importLongWaitDlg = new LongWaitDlg(this, Program.AppName(),
-                string.Format(Resources.MainForm_DoImport_Importing_configurations_from__0____, Path.GetFileName(filePath)));
-            var longWaitOperation = new LongWaitOperation(this, importLongWaitDlg);
-            _loadingConfigs = true;
-            _configManager.StartImport(filePath, longWaitOperation, ImportFinishedCallback, ShowDownloadedFileForm);
-            return longWaitOperation;
+            _configManager.Import(filePath, ShowDownloadedFileForm);
+            UpdateUiConfigurations();
+            if (!_rDirectorySelector.ShownDialog)
+                _rDirectorySelector.AddIfNecassary();
         }
 
         private void btnExport_Click(object sender, EventArgs e)
@@ -568,13 +535,12 @@ namespace SkylineBatch
         #region Logging
 
         private bool _scrolling = true;
-        private bool _forceScroll = true;
 
         private void OutputLog(object sender, EventArgs e)
         {
             if (textBoxLog.IsDisposed) return;
             _outputLog.Tick -= OutputLog;
-            if (WindowState != FormWindowState.Minimized && tabMain.SelectedIndex == 1 && textBoxLog.TextLength > 0)
+            if (WindowState != FormWindowState.Minimized && tabLog.Visible && textBoxLog.TextLength > 0)
             {
                 _scrolling = textBoxLog.GetPositionFromCharIndex(textBoxLog.Text.Length - 1).Y <=
                              textBoxLog.Height;
@@ -588,13 +554,8 @@ namespace SkylineBatch
             var logChanged = logger.OutputLog(LogToUi, LogErrorToUi);
             if (logChanged)
                 TrimDisplayedLog();
-            if (_forceScroll || (logChanged && _scrolling))
-            {
-                _forceScroll = false;
-                _scrolling = true;
-                textBoxLog.SelectionStart = textBoxLog.TextLength;
-                textBoxLog.ScrollToCaret();
-            }
+            if (logChanged && _scrolling)
+                ScrollToLogEnd();
             _outputLog.Tick += OutputLog;
         }
 
@@ -606,8 +567,15 @@ namespace SkylineBatch
             {
                 textBoxLog.Text = string.Empty;
                 _configManager.GetSelectedLogger().DisplayLogFromFile();
-                _forceScroll = true;
+                ScrollToLogEnd();
             }
+        }
+
+        private void ScrollToLogEnd()
+        {
+            _scrolling = true;
+            textBoxLog.SelectionStart = textBoxLog.TextLength;
+            textBoxLog.ScrollToCaret();
         }
 
         private void LogToUi(string text)
@@ -645,14 +613,8 @@ namespace SkylineBatch
                 DisplayError(ex.Message);
             }
 
-            _scrolling = false;
-            _forceScroll = _configManager.SelectedLog == 0;
+            _scrolling = _configManager.SelectedLog == 0;
             _outputLog.Tick += OutputLog;
-        }
-
-        private void tabLog_Enter(object sender, EventArgs e)
-        {
-            _forceScroll = _configManager.SelectedLog == 0 && !_scrolling;
         }
 
         private void tabLog_Leave(object sender, EventArgs e)
@@ -753,6 +715,14 @@ namespace SkylineBatch
         public DialogResult DisplayLargeOkCancel(string message)
         {
             return AlertDlg.ShowLargeOkCancel(this, Program.AppName(), message);
+        }
+
+        public void DisplayForm(Form form)
+        {
+            RunUi(() =>
+            {
+                form.ShowDialog(this);
+            });
         }
 
         #endregion
