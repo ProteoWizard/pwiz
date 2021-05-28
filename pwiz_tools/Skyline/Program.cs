@@ -674,9 +674,7 @@ namespace pwiz.Skyline
         {
             using (CommandLine cmd = new CommandLine(consoleOut))
             {
-                return cmd.Run(inputArgs, 
-                    false, // withoutUsage
-                              test); // set to true when we are running a test
+                return cmd.Run(inputArgs,false, /* withoutUsage */ test); // test set to true when we are running a test
             }
         }
 

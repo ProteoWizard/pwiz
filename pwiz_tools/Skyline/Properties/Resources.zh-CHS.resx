@@ -5263,9 +5263,6 @@
   <data name="EditMeasuredIonDlg_EditMeasuredIonDlg_A_verage_mass_" xml:space="preserve">
     <value>平均质量(&amp;V)：</value>
   </data>
-  <data name="CommandLine_ImportResultsFile_Warning__Cannot_read_file__0____Ignoring___" xml:space="preserve">
-    <value>警告：无法读取文件{0}。 忽视...</value>
-  </data>
   <data name="PythonInstaller_DownloadPython_Download_failed_" xml:space="preserve">
     <value>下载失败。</value>
   </data>

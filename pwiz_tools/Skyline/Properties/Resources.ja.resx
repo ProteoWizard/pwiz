@@ -5263,9 +5263,6 @@
   <data name="EditMeasuredIonDlg_EditMeasuredIonDlg_A_verage_mass_" xml:space="preserve">
     <value>平均質量(&amp;V)：</value>
   </data>
-  <data name="CommandLine_ImportResultsFile_Warning__Cannot_read_file__0____Ignoring___" xml:space="preserve">
-    <value>警告： ファイル{0}を読み取ることができません。 無視...</value>
-  </data>
   <data name="PythonInstaller_DownloadPython_Download_failed_" xml:space="preserve">
     <value>ダウンロードに失敗しました。</value>
   </data>

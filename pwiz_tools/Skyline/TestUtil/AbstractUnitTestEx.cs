@@ -42,17 +42,14 @@ namespace pwiz.SkylineTestUtil
             var consoleOutput = new CommandStatusWriter(new StringWriter(consoleBuffer));
             var exitStatus = CommandLineRunner.RunCommand(inputArgs, consoleOutput, true);
 
-            if (exitStatus == Program.EXIT_CODE_SUCCESS && consoleOutput.IsErrorReported)
+            var fail = exitStatus == Program.EXIT_CODE_SUCCESS && consoleOutput.IsErrorReported ||
+                       exitStatus != Program.EXIT_CODE_SUCCESS && !consoleOutput.IsErrorReported;
+            if (fail)
             {
                 var message =
-                    TextUtil.LineSeparate(string.Format("Error reported but exit status was {0}.", exitStatus),
-                        "Output: ", consoleBuffer.ToString());
-                Assert.Fail(message);
-            }
-            else if (exitStatus != Program.EXIT_CODE_SUCCESS && !consoleOutput.IsErrorReported)
-            {
-                var message =
-                    TextUtil.LineSeparate(string.Format("No error reported but exit status was {0}.", exitStatus),
+                    TextUtil.LineSeparate(
+                        string.Format("{0} reported but exit status was {1}.",
+                            consoleOutput.IsErrorReported ? "Error" : "No error", exitStatus),
                         "Output: ", consoleBuffer.ToString());
                 Assert.Fail(message);
             }

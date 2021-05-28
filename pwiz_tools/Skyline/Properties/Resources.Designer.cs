@@ -5615,11 +5615,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error: No replicates left to import..
+        ///   Looks up a localized string similar to Error: No files left to import..
         /// </summary>
-        public static string CommandLine_ImportResults_Error__No_replicates_left_to_import_ {
+        public static string CommandLine_ImportResults_Error__No_files_left_to_import_ {
             get {
-                return ResourceManager.GetString("CommandLine_ImportResults_Error__No_replicates_left_to_import_", resourceCulture);
+                return ResourceManager.GetString("CommandLine_ImportResults_Error__No_files_left_to_import_", resourceCulture);
             }
         }
         
@@ -5681,21 +5681,21 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Warning: Cannot read file {0}.  Ignoring....
-        /// </summary>
-        public static string CommandLine_ImportResultsFile_Warning__Cannot_read_file__0____Ignoring___ {
-            get {
-                return ResourceManager.GetString("CommandLine_ImportResultsFile_Warning__Cannot_read_file__0____Ignoring___", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Warning: Failed importing the results file {0}.  Ignoring....
         /// </summary>
         public static string CommandLine_ImportResultsFile_Warning__Failed_importing_the_results_file__0____Ignoring___ {
             get {
                 return ResourceManager.GetString("CommandLine_ImportResultsFile_Warning__Failed_importing_the_results_file__0____Ig" +
                         "noring___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Warning: Unreadable Thermo file {0}.  Ignoring....
+        /// </summary>
+        public static string CommandLine_ImportResultsFile_Warning__Unreadable_Thermo_file__0____Ignoring___ {
+            get {
+                return ResourceManager.GetString("CommandLine_ImportResultsFile_Warning__Unreadable_Thermo_file__0____Ignoring___", resourceCulture);
             }
         }
         
@@ -6400,15 +6400,6 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("CommandLine_RunBatchCommands_Error__failed_to_open_file__0____batch_commands_comm" +
                         "and_failed_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Error: Could not open Skyline document. Exiting....
-        /// </summary>
-        public static string CommandLine_RunInner_Error__Could_not_open_Skyline_document__Exiting___ {
-            get {
-                return ResourceManager.GetString("CommandLine_RunInner_Error__Could_not_open_Skyline_document__Exiting___", resourceCulture);
             }
         }
         

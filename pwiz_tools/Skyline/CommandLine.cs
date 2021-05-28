@@ -88,10 +88,11 @@ namespace pwiz.Skyline
             // TODO: Add testing that fails when these happen and fix the causes
             if (exitStatus == Program.EXIT_CODE_SUCCESS)
             {
-                if (_out.IsErrorReported)
+                if (_out.IsErrorReported && !test)
                 {
-                    return test ? exitStatus // Return the original exit code when we are running a test so that the test fails
-                        : Program.EXIT_CODE_RAN_WITH_ERRORS;
+                    // Return the error status only if we are not running tests. We want the test to fail if errors were reported 
+                    // but the exit code is 0.
+                    exitStatus = Program.EXIT_CODE_RAN_WITH_ERRORS; 
                 }
             }
             else if (!_out.IsErrorReported && !test)
@@ -196,7 +197,7 @@ namespace pwiz.Skyline
             if ((skylineFile != null && !OpenSkyFile(skylineFile)) ||
                 (skylineFile == null && _doc == null))
             {
-                _out.WriteLine(Resources.CommandLine_RunInner_Error__Could_not_open_Skyline_document__Exiting___);
+               _out.WriteLine(Resources.CommandLine_Run_Exiting___);
                 return Program.EXIT_CODE_RAN_WITH_ERRORS;
             }
 
@@ -403,7 +404,7 @@ namespace pwiz.Skyline
             {
                 _out.WriteLine(Resources.CommandLine_Run_Error__Failed_to_get_optimization_function__0____1_,
                     commandArgs.ImportOptimizeType, x.Message);
-                // TODO: Return false here?
+                return false;
             }
 
             if (commandArgs.ImportingReplicateFile)
@@ -446,10 +447,10 @@ namespace pwiz.Skyline
                     // A named path will be removed if the document contains a replicate with this file path.
                     RemoveImportedFiles(listNamedPaths, out var listNewPaths,
                         true /*Remove files paths that have already been imported into any replicate.*/);
-                   
+
                     if (listNewPaths.Count == 0)
                     {
-                        _out.WriteLine(Resources.CommandLine_ImportResults_Error__No_replicates_left_to_import_);
+                        _out.WriteLine(Resources.CommandLine_ImportResults_Error__No_files_left_to_import_);
                         return false;
                     }
 
@@ -548,7 +549,14 @@ namespace pwiz.Skyline
             }
             catch (Exception x)
             {
-                _out.WriteLine(Resources.CommandLine_GeneralException_Error___0_, x.Message);
+                if (!_out.IsErrorReported)
+                {
+                    _out.WriteLine(Resources.CommandLine_GeneralException_Error___0_, x.Message);
+                }
+                else
+                {
+                    _out.WriteLine(x.Message);
+                }
                 return false;
             }
         }
@@ -1252,7 +1260,7 @@ namespace pwiz.Skyline
                 string.IsNullOrEmpty(replicateName) /*If a replicate name is not given, remove file paths imported into any replicate.*/);
             if (listNewPaths.Count == 0)
             {
-                _out.WriteLine(Resources.CommandLine_ImportResults_Error__No_replicates_left_to_import_);
+                _out.WriteLine(Resources.CommandLine_ImportResults_Error__No_files_left_to_import_);
                 return false;
             }
 
@@ -1684,8 +1692,10 @@ namespace pwiz.Skyline
                         // CONSIDER: Error? Check if the replicate contains the file?
                         //           It does not seem right to just continue on to export a report
                         //           or new method without the results added.
-                        _out.WriteLine(Resources.CommandLine_ImportDataFilesWithAppend_Error__The_replicate__0__already_exists_in_the_given_document_and_the___import_append_option_is_not_specified___The_replicate_will_not_be_added_to_the_document_, replicateName);
-                        return false; // TODO: Is this OK? 
+                        _out.WriteLine(
+                            Resources.CommandLine_ImportDataFilesWithAppend_Error__The_replicate__0__already_exists_in_the_given_document_and_the___import_append_option_is_not_specified___The_replicate_will_not_be_added_to_the_document_,
+                            replicateName);
+                        return false;
                     }
 
                     var replicateFiles = namedPath.Value;
@@ -1710,7 +1720,7 @@ namespace pwiz.Skyline
                     }
                     if (newFiles.Count == 0)
                     {
-                        _out.WriteLine(Resources.CommandLine_ImportResults_Error__No_replicates_left_to_import_);
+                        _out.WriteLine(Resources.CommandLine_ImportResults_Error__No_files_left_to_import_);
                         return false; // TODO: Is this OK?
                     }
 
@@ -1752,15 +1762,10 @@ namespace pwiz.Skyline
             var targetSkyd = ChromatogramCache.PartPathForName(_skylineFile, replicateFile);
             if (!File.Exists(targetSkyd))
             {
-                if (!PathExists(replicateFile))
-                {
-                    // _out.WriteLine(Resources.CommandLine_ImportResultsFile_Warning__Cannot_read_file__0____Ignoring___, replicateFile);
-                    return false;
-                }
-
+                // Hack for un-readable RAW files from Thermo instruments.
                 if (IsBadThermoFile(replicateFile))
                 {
-                    _out.WriteLine(Resources.CommandLine_ImportResultsFile_Warning__Cannot_read_file__0____Ignoring___, replicateFile);
+                    _out.WriteLine(Resources.CommandLine_ImportResultsFile_Warning__Unreadable_Thermo_file__0____Ignoring___, replicateFile);
                     return true;
                 }
             } 
@@ -2639,37 +2644,20 @@ namespace pwiz.Skyline
             return true;
         }
 
-        private bool PathExists(MsDataFileUri msDataFileUri)
-        {
-            MsDataFilePath msDataFilePath = msDataFileUri as MsDataFilePath;
-            if (null == msDataFilePath)
-            {
-                _out.WriteLine("Error: Cannot convert to MsDataFilePath {0}.", msDataFileUri.GetFileName());
-                return false;
-            }
-            string replicatePath = msDataFilePath.FilePath;
-            if (!File.Exists(replicatePath) && !Directory.Exists(replicatePath))
-            {
-                _out.WriteLine(Resources.CommandLine_CanReadFile_Error__File_does_not_exist___0__,replicatePath);
-                return false;
-            }
-
-            return true;
-        }
-
+        
         // This is a hack for un-readable RAW files from Thermo instruments.
         // These files are usually 78KB.  Presumably they are
         // temporary files that, for some reason, do not get deleted.
         private bool IsBadThermoFile(MsDataFileUri msDataFileUri)
         {
-            MsDataFilePath msDataFilePath = msDataFileUri as MsDataFilePath;
+            var msDataFilePath = msDataFileUri as MsDataFilePath;
             if (null != msDataFilePath)
             {
-                string replicatePath = msDataFilePath.FilePath;
+                var replicatePath = msDataFilePath.FilePath;
                 if (File.Exists(replicatePath))
                 {
                     // Make sure this is a Thermo RAW file
-                    FileInfo fileInfo = new FileInfo(replicatePath);
+                    var fileInfo = new FileInfo(replicatePath);
                     // We will not do this check for a directory source
                     if (fileInfo.Exists && DataSourceUtil.GetSourceType(fileInfo) == DataSourceUtil.TYPE_THERMO_RAW)
                     {
@@ -2715,7 +2703,7 @@ namespace pwiz.Skyline
         public bool ExportReport(string reportName, string reportFile, char reportColSeparator, bool reportInvariant)
         {
 
-            if (String.IsNullOrEmpty(reportFile))
+            if (string.IsNullOrEmpty(reportFile))
             {
                 _out.WriteLine(Resources.CommandLine_ExportReport_);
                 return false;
@@ -2763,7 +2751,6 @@ namespace pwiz.Skyline
                     broker.UpdateProgress(status.Complete());
                     saver.Commit();
                     _out.WriteLine(Resources.CommandLine_ExportLiveReport_Report__0__exported_successfully_to__1__, reportName, reportFile);
-                    return true;
                 }
             }
             catch (Exception x)
@@ -2772,6 +2759,7 @@ namespace pwiz.Skyline
                 _out.WriteLine(x.Message);
                 return false;
             }
+            return true;
         }
 
         public bool ExportChromatograms(string chromatogramsFile, bool precursors, bool products, bool basePeaks, bool tics)
@@ -2864,8 +2852,8 @@ namespace pwiz.Skyline
             }
             catch (ToolExecutionException x)
             {
-                _out.WriteLine(x.Message);
-            }
+                    _out.WriteLine(x.Message);
+                }
             if (result != null)
             {
                 foreach (var message in result.MessagesThrown)
@@ -2878,14 +2866,13 @@ namespace pwiz.Skyline
                 }
 
                 SaveSettings();
+                return true;
             }
             else
             {
                 _out.WriteLine(Resources.CommandLine_ImportToolsFromZip_Error__Canceled_installing_tools_from__0__, filename);
                 return false;
             }
-
-            return true;
         }
 
         private bool SaveSettings()
@@ -3135,7 +3122,14 @@ namespace pwiz.Skyline
                         return false;
                     _out.WriteLine(Resources.CommandLine_ImportSkyr_Success__Imported_Reports_from__0_, Path.GetFileNameWithoutExtension(path));
                 }
-                // TODO: Return an error if the report was not imported?
+                // else // TODO: Return an error if the report was not imported?
+                // {
+                //     if (!_out.IsErrorReported)
+                //     {
+                //         _out.WriteLine("Reports could not be imported from {0}", path);
+                //     }
+                //     return false;
+                // }
             }
             return true;
         }

@@ -855,11 +855,12 @@ namespace pwiz.SkylineTestData
             var output = RunCommand("--in=" + bogusPath);
             Assert.IsTrue(output.Contains(string.Format(Resources.CommandLine_OpenSkyFile_Error__The_Skyline_file__0__does_not_exist_, bogusPath)));
 
-            //Error: no raw file
+            //Error: raw file does not exist
+            var pathNotExists = rawPath + "x";
             output = RunCommand("--in=" + docPath,
-                                "--import-file=" + rawPath + "x",
+                                "--import-file=" + pathNotExists,
                                 "--import-replicate-name=Single");
-            Assert.IsTrue(output.Contains(string.Format(Resources.CommandLine_CanReadFile_Error__File_does_not_exist___0__,rawPath+"x")));
+            Assert.IsTrue(output.Contains(string.Format("{0} does not exist.", pathNotExists)));
 
             //Error: no reportfile
             output = RunCommand("--in=" + docPath,
@@ -1207,7 +1208,7 @@ namespace pwiz.SkylineTestData
                                      "--import-file=" + rawPath,
                                      "--save");
 
-                AssertEx.Contains(msg, string.Format(Resources.CommandLine_ImportResultsFile_Warning__Cannot_read_file__0____Ignoring___, rawPath));
+                AssertEx.Contains(msg, string.Format(Resources.CommandLine_ImportResultsFile_Warning__Unreadable_Thermo_file__0____Ignoring___, rawPath));
 
                 // the document should not have changed
                 SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
@@ -1218,7 +1219,7 @@ namespace pwiz.SkylineTestData
                                  "--import-warn-on-failure",
                                  "--save");
 
-                string expected = string.Format(Resources.CommandLine_ImportResultsFile_Warning__Cannot_read_file__0____Ignoring___, rawPath);
+                string expected = string.Format(Resources.CommandLine_ImportResultsFile_Warning__Unreadable_Thermo_file__0____Ignoring___, rawPath);
                 AssertEx.Contains(msg, expected);
                 doc = ResultsUtil.DeserializeDocument(docPath);
                 Assert.IsTrue(doc.Settings.HasResults, TextUtil.LineSeparate("No results found.", "Output:", msg));
@@ -2027,6 +2028,8 @@ namespace pwiz.SkylineTestData
                     Resources
                         .CommandLine_RemoveImportedFiles__0______1___Note__The_file_has_already_been_imported__Ignoring___,
                     replicateName, mzml1.FilePath)), msg);
+            Assert.IsTrue(
+                msg.Contains(Resources.CommandLine_ImportResults_Error__No_files_left_to_import_), msg);
 
 
             if (useRaw)
