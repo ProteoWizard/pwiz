@@ -864,16 +864,21 @@ namespace TestPerf
             WaitForGraphs();
             PauseForScreenShot("Snip just one chromatogram pane", 21);
 
-            if (!IsRecordMode)
+            try
             {
                 ClickChromatogram(SkylineWindow.Document.MeasuredResults.Chromatograms[0].Name,
                     _analysisValues.ChromatogramClickPoint.X,
                     _analysisValues.ChromatogramClickPoint.Y);
-                PauseForScreenShot<GraphFullScan>("Full-Scan graph window - zoomed", 21);
             }
-            else
-                PauseTest("Click on and record appropriate ChromatogramClickPoint");
-            
+            catch (AssertFailedException)
+            {
+                if (!IsRecordMode)
+                    throw;
+                PauseAndContinueForm.Show($"Clicking the left-side chromatogram at ({_analysisValues.ChromatogramClickPoint.X}, {_analysisValues.ChromatogramClickPoint.Y}) failed.\r\n" +
+                                          "Click on and record a new ChromatogramClickPoint at the peak of that chromatogram.");
+            }
+            PauseForScreenShot<GraphFullScan>("Full-Scan graph window - zoomed", 21);
+
             RunUI(() => SkylineWindow.GraphFullScan.ZoomToSelection(false));
             WaitForGraphs();
             PauseForScreenShot<GraphFullScan>("Full-Scan graph window - unzoomed", 22);
