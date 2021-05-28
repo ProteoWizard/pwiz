@@ -17,7 +17,7 @@ REM Remove Skyline test artifacts
 rmdir /s /q pwiz_tools\Skyline\TestResults
 
 REM Show free space
-wmic /node:"%COMPUTERNAME%" LogicalDisk Where DriveType="3" Get DeviceID,FreeSpace
+dir z:
 
 pwiz_tools\Skyline\bin\x64\Release\TestRunner.exe test=%%I loop=1 language=en perftests=on teamcitytestdecoration=on
 
