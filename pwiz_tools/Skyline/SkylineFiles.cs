@@ -3074,7 +3074,7 @@ namespace pwiz.Skyline
                 if (buttonPress == DialogResult.Yes)
                 {
                     // person intends to register                   
-                    WebHelpers.OpenLink(this, @"http://proteome.gs.washington.edu/software/Skyline/panoramaweb-signup.html"); 
+                    WebHelpers.OpenLink(this, @"https://panoramaweb.org/signup.url"); 
                     tag = true;
                 }
 

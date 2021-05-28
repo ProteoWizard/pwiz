@@ -31,7 +31,7 @@ namespace SkylineTester
 
         private void linkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            Process.Start(@"http://proteome.gs.washington.edu/software/Skyline/funding.html");
+            Process.Start(@"https://skyline.ms/funding.url");
         }
     }
 }
