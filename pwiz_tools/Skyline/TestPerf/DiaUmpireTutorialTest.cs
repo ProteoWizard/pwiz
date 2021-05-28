@@ -130,8 +130,8 @@ namespace TestPerf
                 IrtSlope = 3.005,
                 IrtIntercept = -67.215,
 
-                TargetCounts = new[] { 13, 202, 266, 1596 },
-                FinalTargetCounts = new[] { 9, 202, 266, 1596 },
+                TargetCounts = new[] { 14, 213, 277, 1661 },
+                FinalTargetCounts = new[] { 10, 213, 277, 1661 },
                 ScoringModelCoefficients = "0.3350|-0.4802|5.7227|-1.0901|-0.4986|1.0273|0.0885|-0.0186",
                 MassErrorStats = new[]
                 {
@@ -222,8 +222,8 @@ namespace TestPerf
                 IrtSlope = 2.606,
                 IrtIntercept = -45.948,
 
-                TargetCounts = new[] { 13, 174, 204, 1224 },
-                FinalTargetCounts = new[] { 9, 174, 204, 1224 },
+                TargetCounts = new[] { 14, 185, 215, 1289 },
+                FinalTargetCounts = new[] { 10, 185, 215, 1289 },
                 ScoringModelCoefficients = "0.2778|-0.7533|4.2037|1.0772|-0.0866|0.6578|0.1913|-0.0693",
                 MassErrorStats = new[]
                 {
