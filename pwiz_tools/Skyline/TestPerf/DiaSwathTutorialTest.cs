@@ -63,7 +63,7 @@ namespace TestPerf
         private class InstrumentSpecificValues
         {
             public string InstrumentTypeName;
-            public string ZipFileName = null;
+            public string ZipFileName; // if set will override name calculated from InstrumentTypeName
             public string DiaFilesExtension;
             public string[] DiaFiles;
             public string[] SearchFiles;
@@ -555,8 +555,8 @@ namespace TestPerf
                 if (IsRecordMode)
                 {
                     Console.WriteLine();
-                    Console.WriteLine($"LibraryPeptideCount = {addIrtPeptidesDlg.PeptidesCount},");
-                    Console.WriteLine($"ExpectedIrtPeptideCount = {row.Cells[1].Value},");
+                    Console.WriteLine($@"LibraryPeptideCount = {addIrtPeptidesDlg.PeptidesCount},");
+                    Console.WriteLine($@"ExpectedIrtPeptideCount = {row.Cells[1].Value},");
                     Console.WriteLine(ParseIrtProperties(row.Cells[2].Value.ToString()));
                 }
                 else

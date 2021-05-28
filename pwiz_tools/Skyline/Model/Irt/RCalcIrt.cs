@@ -856,7 +856,7 @@ namespace pwiz.Skyline.Model.Irt
 
         public IncompleteStandardException(RetentionScoreCalculatorSpec calc, int standardPeptideCount, ICollection<Target> missingPeptides)
             : base(String.Format(ERROR, calc.Name, standardPeptideCount, missingPeptides.Count,
-                string.Join("\n", missingPeptides.Select(o => o.Sequence))))
+                string.Join(Environment.NewLine, missingPeptides.Select(o => o.Sequence))))
         {
             Calculator = calc;
         }
