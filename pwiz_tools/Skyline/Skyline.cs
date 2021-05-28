@@ -2175,7 +2175,7 @@ namespace pwiz.Skyline
         private void HandleStandardsChanged(ICollection<Target> oldStandard)
         {
             var calc = RCalcIrt.Calculator(Document);
-            if (calc == null)
+            if (calc == null || !File.Exists(calc.DatabasePath))
                 return;
             calc = calc.Initialize(null) as RCalcIrt;
             if (calc == null)
