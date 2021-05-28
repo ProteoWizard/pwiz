@@ -20,7 +20,7 @@
     <GenerateManifests>true</GenerateManifests>
     <TargetZone>LocalIntranet</TargetZone>
     <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
-    <SignManifests>false</SignManifests>
+    <SignManifests>true</SignManifests>
     <SignAssembly>false</SignAssembly>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
@@ -47,8 +47,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>286</ApplicationRevision>
-    <ApplicationVersion>20.2.0.286</ApplicationVersion>
+    <ApplicationRevision>343</ApplicationRevision>
+    <ApplicationVersion>20.2.0.343</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -5344,7 +5344,7 @@
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="AfterPublish">
-    <Exec Command="SignAfterPublish.bat &quot;$(ProjectDir)University of Washington (MacCoss Lab).pfx&quot; password &quot;$(ProjectDir)bin\$(Platform)\$(ConfigurationName)\app.publish&quot; $(TargetName)" />
+    <Exec Command="SignAfterPublish.bat &quot;$(ProjectDir)University of Washington (MacCoss Lab).pfx&quot; Skyline! &quot;$(ProjectDir)bin\$(Platform)\$(ConfigurationName)\app.publish&quot; $(TargetName)" />
   </Target>
   <PropertyGroup>
     <PreBuildEvent>$(ProjectDir)ProtocolBuffers\generatecode.bat &amp;&amp; $(ProjectDir)Model\Prosit\Config\UpdatePrositConfiguration.bat</PreBuildEvent>

@@ -136,7 +136,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             ImportPeptideSearch.InitializeModifications(document);
             FillLists(document);
-            return modificationsListBox.Items.Count > 1 || unmatchedListBox.Items.Count > 1;
+            return modificationsListBox.Items.Count > 0 || unmatchedListBox.Items.Count > 0;
         }
 
         public SrmSettings AddCheckedModifications(SrmDocument document)
