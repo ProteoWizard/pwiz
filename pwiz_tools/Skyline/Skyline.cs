@@ -76,6 +76,7 @@ using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using DatabaseOpeningException = pwiz.Skyline.Model.Irt.DatabaseOpeningException;
 using Peptide = pwiz.Skyline.Model.Peptide;
 using Timer = System.Windows.Forms.Timer;
 using Transition = pwiz.Skyline.Model.Transition;
@@ -2175,9 +2176,17 @@ namespace pwiz.Skyline
         private void HandleStandardsChanged(ICollection<Target> oldStandard)
         {
             var calc = RCalcIrt.Calculator(Document);
-            if (calc == null || !File.Exists(calc.DatabasePath))
+            if (calc == null)
                 return;
-            calc = calc.Initialize(null) as RCalcIrt;
+            try
+            {
+                calc = calc.Initialize(null) as RCalcIrt;
+            }
+            catch (Exception)
+            {
+                // Some error reading the irtdb file
+                return;
+            }
             if (calc == null)
                 return;
             var newStandard = calc.GetStandardPeptides().ToArray();
