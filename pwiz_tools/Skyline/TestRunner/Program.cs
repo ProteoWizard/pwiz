@@ -82,6 +82,9 @@ namespace TestRunner
             {"TestInstrumentInfo", new ExpandedLeakCheck(LeakCheckIterations * 2, true)}
         };
 
+        //  These tests only need to be run once, regardless of language, so they get turned off in pass 0 after a single invocation
+        public static string[] RunOnceTestNames = { "AaantivirusTestExclusion", "CodeInspection" };
+
         // These tests are allowed to fail the total memory leak threshold, and extra iterations are not done to stabilize a spiky total memory distribution
         public static string[] MutedTotalMemoryLeakTestNames = { "TestMs1Tutorial", "TestGroupedStudiesTutorialDraft" };
 
@@ -580,8 +583,11 @@ namespace TestRunner
                             }
                             continue;
                         }
-                        if (!runTests.Run(test, 0, testNumber, dmpDir, false))
+                        if (!runTests.Run(test, 0, testNumber, dmpDir, false) || // No point in re-running a failed test
+                            RunOnceTestNames.Contains(test.TestMethod.Name)) // No point in running certain tests more than once
+                        {
                             removeList.Add(test);
+                        }
                     }
                     runTests.Skyline.Set("NoVendorReaders", false);
                     runTests.AccessInternet = internet;
