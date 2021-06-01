@@ -469,10 +469,11 @@ PWIZ_API_DECL void SpectrumList_Waters::getCombinedSpectrumData(int function, in
     driftTime.resize(totalPoints);
     int currentPoints = 0;
     auto mzItr = &mz[0], intensityItr = &intensity[0], driftTimeItr = &driftTime[0];
+    bool wantBins = config_.reportSonarBins && hasSonarFunctions();
     for (int scan = 0; scan < numScansInBlock; ++scan)
     {
         double dt;
-        if (config_.reportSonarBins)
+        if (wantBins)
         {
             dt = scan;
         }
