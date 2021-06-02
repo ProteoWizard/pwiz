@@ -356,6 +356,7 @@ namespace AutoQC
 
         public void RunEnabled()
         {
+            IList<string> failedToStart = new List<string>();
             lock (_lock)
             {
                 foreach (var config in _configList)
@@ -363,8 +364,18 @@ namespace AutoQC
                     var autoQcConfig = (AutoQcConfig) config;
                     if (!autoQcConfig.IsEnabled)
                         continue;
-                    TryStartConfig(autoQcConfig);
+                    if (!TryStartConfig(autoQcConfig))
+                    {
+                        failedToStart.Add(autoQcConfig.Name);
+                    }
                 }
+            }
+
+            if (failedToStart.Count > 0)
+            {
+                var msg = "Failed to start the following configurations:";
+                var configs = TextUtil.LineSeparate(failedToStart);
+                _uiControl.DisplayError(TextUtil.LineSeparate(msg, configs));
             }
         }
 
@@ -489,16 +500,19 @@ namespace AutoQC
         }
 
         // Starts a configuration.  If there are any errors or exceptions they are logged to the program log
-        private void TryStartConfig(AutoQcConfig config)
+        private bool TryStartConfig(AutoQcConfig config)
         {
             try
             {
                 StartConfig(config);
+                return true;
             }
             catch (Exception e)
             {
                 ProgramLog.Error(string.Format(Resources.AutoQcConfigManager_StartConfiguration_There_was_an_error_running_the_configuration___0___, config.Name), e);
             }
+
+            return false;
         }
 
         private void StartConfig(AutoQcConfig config)
