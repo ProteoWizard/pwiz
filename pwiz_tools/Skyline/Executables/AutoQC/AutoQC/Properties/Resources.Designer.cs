@@ -166,6 +166,16 @@ namespace AutoQC.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to stop the configuration &quot;{0}&quot;?.
+        /// </summary>
+        internal static string AutoQcConfigManager_StopConfiguration_Are_you_sure_you_want_to_stop_the_configuration___0___ {
+            get {
+                return ResourceManager.GetString("AutoQcConfigManager_StopConfiguration_Are_you_sure_you_want_to_stop_the_configura" +
+                        "tion___0___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cannot stop a configuration that is {0}. Please wait for the action to complete..
         /// </summary>
         internal static string AutoQcConfigManager_StopConfiguration_Cannot_stop_a_configuration_that_is__0___Please_wait_for_the_action_to_complete_ {
@@ -494,16 +504,6 @@ namespace AutoQC.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Are you sure you want to stop configuration {0}?.
-        /// </summary>
-        internal static string ConfigManager_UpdateSelectedEnabled_Are_you_sure_you_want_to_stop_configuration__0__ {
-            get {
-                return ResourceManager.GetString("ConfigManager_UpdateSelectedEnabled_Are_you_sure_you_want_to_stop_configuration__" +
-                        "0__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to starting.
         /// </summary>
         internal static string ConfigManager_UpdateSelectedEnabled_starting {
@@ -817,11 +817,12 @@ namespace AutoQC.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Are you sure you want to delete configuration &quot;{0}&quot;?.
+        ///   Looks up a localized string similar to Are you sure you want to delete the configuration &quot;{0}&quot;?.
         /// </summary>
-        internal static string MainForm_btnDelete_Click_Are_you_sure_you_want_to_delete_configuration___0___ {
+        internal static string MainForm_btnDelete_Click_Are_you_sure_you_want_to_delete_the_configuration___0___ {
             get {
-                return ResourceManager.GetString("MainForm_btnDelete_Click_Are_you_sure_you_want_to_delete_configuration___0___", resourceCulture);
+                return ResourceManager.GetString("MainForm_btnDelete_Click_Are_you_sure_you_want_to_delete_the_configuration___0___" +
+                        "", resourceCulture);
             }
         }
         

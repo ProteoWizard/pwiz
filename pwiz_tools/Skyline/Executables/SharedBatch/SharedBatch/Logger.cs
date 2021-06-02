@@ -33,8 +33,6 @@ using SharedBatch.Properties;
 
         private static HashSet<Regex> _errorFormats;
 
-        //public static string LOG_FOLDER;
-
         public const long MaxLogSize = 10 * 1024 * 1024; // 10MB
         private const int MaxBackups = 5;
         public const int MaxLogLines = 10000;
@@ -92,7 +90,12 @@ using SharedBatch.Properties;
         {
             _logBuffer = new StringBuilder();
             _memLogMessages = new Queue<string>(MemLogSize);
-            
+
+            OpenLogFile();
+        }
+
+        private void OpenLogFile()
+        {
             // Initialize - create blank log file if doesn't exist
             if (!File.Exists(_filePath))
             {
@@ -104,7 +107,7 @@ using SharedBatch.Properties;
             var logFileRead = File.Open(_filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
             var logFileWrite = File.Open(_filePath, FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
             // these need to be kept open while the program is running so log files can't be deleted outside of Skyline Batch
-            _streamReader = new StreamReader(logFileRead, Encoding.Default, false, 
+            _streamReader = new StreamReader(logFileRead, Encoding.Default, false,
                 StreamReaderDefaultBufferSize, true);
             _streamWriter = new StreamWriter(logFileWrite, Encoding.Default, StreamReaderDefaultBufferSize, true);
         }
@@ -213,7 +216,9 @@ using SharedBatch.Properties;
             var size = new FileInfo(_filePath).Length;
             if (size >= MaxLogSize)
             {
+                Close(); // First close the open file handle
                 BackupLog(_filePath, 1);
+                OpenLogFile();
             }
         }
 

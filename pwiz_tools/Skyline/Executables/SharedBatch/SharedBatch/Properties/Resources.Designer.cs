@@ -253,6 +253,16 @@ namespace SharedBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The following configurations are running and cannot be overwritten:.
+        /// </summary>
+        public static string ConfigManager_ImportFrom_The_following_configurations_are_running_and_cannot_be_overwritten_ {
+            get {
+                return ResourceManager.GetString("ConfigManager_ImportFrom_The_following_configurations_are_running_and_cannot_be_o" +
+                        "verwritten_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Adding configuration &quot;{0}&quot;..
         /// </summary>
         public static string ConfigManager_InsertConfiguration_Adding_configuration___0___ {

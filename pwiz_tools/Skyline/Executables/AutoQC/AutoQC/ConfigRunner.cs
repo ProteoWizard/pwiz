@@ -638,13 +638,14 @@ namespace AutoQC
                 else if(_runnerStatus != RunnerStatus.Error)
                 {
                     ChangeStatus(RunnerStatus.Stopped);
+                    _logger?.Close();
                 }
 
                 if (_runnerStatus == RunnerStatus.Stopped && _panoramaUploadError)
                 {
                     ChangeStatus(RunnerStatus.Error);
                 }
-
+                
                 _panoramaPinger?.Stop();
             });
         }

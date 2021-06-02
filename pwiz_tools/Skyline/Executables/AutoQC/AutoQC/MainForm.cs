@@ -173,11 +173,21 @@ namespace AutoQC
 
         private void btnDelete_Click(object sender, EventArgs e)
         {
-            _configManager.UserRemoveSelected();
-            UpdateUiConfigurations();
-            ListViewSizeChanged();
-            UpdateUiLogFiles();
-            _configManager.SaveConfigList();
+            var selectedConfig = _configManager.GetSelectedConfig();
+            if (selectedConfig == null)
+            {
+                return;
+            }
+            if (DialogResult.Yes == DisplayQuestion(string.Format(
+                Resources.MainForm_btnDelete_Click_Are_you_sure_you_want_to_delete_the_configuration___0___,
+                selectedConfig.Name)))
+            {
+                _configManager.UserRemoveSelected();
+                UpdateUiConfigurations();
+                ListViewSizeChanged();
+                UpdateUiLogFiles();
+                _configManager.SaveConfigList();
+            }
         }
 
         public void FileOpened(string filePath)

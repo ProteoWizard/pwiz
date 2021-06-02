@@ -157,9 +157,6 @@
   <data name="Program_Main_Unable_to_update__0__shortcut___Error_was___1_" xml:space="preserve">
     <value>Unable to update {0} shortcut.  Error was: {1}</value>
   </data>
-  <data name="MainForm_btnDelete_Click_Are_you_sure_you_want_to_delete_configuration___0___" xml:space="preserve">
-    <value>Are you sure you want to delete configuration "{0}"?</value>
-  </data>
   <data name="Program_Main_AutoQC_Loader_encountered_an_unexpected_error__Error_details_may_be_found_in_the__0__file_in_this_directory___" xml:space="preserve">
     <value>AutoQC Loader encountered an unexpected error. Error details may be found in the {0} file in this directory : </value>
   </data>
@@ -216,9 +213,6 @@
   </data>
   <data name="ConfigManager_UpdateSelectedEnabled_stopping" xml:space="preserve">
     <value>stopping</value>
-  </data>
-  <data name="ConfigManager_UpdateSelectedEnabled_Are_you_sure_you_want_to_stop_configuration__0__" xml:space="preserve">
-    <value>Are you sure you want to stop configuration {0}?</value>
   </data>
   <data name="ConfigManager_Import_Number_of_configurations_imported__" xml:space="preserve">
     <value>Number of configurations imported: </value>
@@ -609,5 +603,11 @@ with:
   </data>
   <data name="ConfigRunner_RunConfiguration_There_was_an_error_looking_for_files_for_configuration___0___" xml:space="preserve">
     <value>There was an error looking for files for configuration "{0}".</value>
+  </data>
+  <data name="AutoQcConfigManager_StopConfiguration_Are_you_sure_you_want_to_stop_the_configuration___0___" xml:space="preserve">
+    <value>Are you sure you want to stop the configuration "{0}"?</value>
+  </data>
+  <data name="MainForm_btnDelete_Click_Are_you_sure_you_want_to_delete_the_configuration___0___" xml:space="preserve">
+    <value>Are you sure you want to delete the configuration "{0}"?</value>
   </data>
 </root>

@@ -527,8 +527,23 @@ namespace SharedBatch
                 duplicateMessage.Append(Resources.ConfigManager_ImportFrom_Do_you_want_to_overwrite_these_configurations_);
                 if (DialogResult.Yes == DisplayQuestion(duplicateMessage.ToString()))
                 {
-                    message.Append(Resources.ConfigManager_ImportFrom_Overwriting_).Append(Environment.NewLine); 
-                    duplicateConfigNames.Clear();
+                    var runningConfigs = GetRunningConfigs();
+                    var runningDuplicates = runningConfigs.Where(c => duplicateConfigNames.Contains(c)).ToList();
+                    if (runningDuplicates.Count > 0)
+                    {
+                        var runningConfigsMsg =
+                            TextUtil.LineSeparate(Resources.ConfigManager_ImportFrom_The_following_configurations_are_running_and_cannot_be_overwritten_,
+                                TextUtil.LineSeparate(runningDuplicates));
+                        _uiControl.DisplayError(runningConfigsMsg);
+
+                        duplicateConfigNames = runningDuplicates;
+                    }
+                    else
+                    {
+                        duplicateConfigNames.Clear();
+                    }
+
+                    message.Append(Resources.ConfigManager_ImportFrom_Overwriting_).Append(Environment.NewLine);
                 }
             }
             
@@ -558,7 +573,12 @@ namespace SharedBatch
             ProgramLog.Info(message.ToString());
             return addedConfigs;
         }
-        
+
+        public virtual List<string> GetRunningConfigs()
+        {
+            return new List<string>();
+        }
+
         public object[] ConfigNamesAsObjectArray()
         {
             var names = new object[_configList.Count];

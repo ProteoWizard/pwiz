@@ -210,7 +210,7 @@ namespace AutoQC
 
         public void ReplaceSkylineSettings(SkylineSettings skylineSettings)
         {
-            var runningConfigs = ConfigsRunning();
+            var runningConfigs = GetRunningConfigs();
             var replacedConfigs = GetReplacedSkylineSettings(skylineSettings, runningConfigs);
             foreach (var indexAndConfig in replacedConfigs)
             {
@@ -435,7 +435,7 @@ namespace AutoQC
                 }
 
                 var doChange = DisplayQuestion(string.Format(
-                    Resources.ConfigManager_UpdateSelectedEnabled_Are_you_sure_you_want_to_stop_configuration__0__,
+                    Resources.AutoQcConfigManager_StopConfiguration_Are_you_sure_you_want_to_stop_the_configuration___0___,
                     configRunner.GetConfigName()));
 
                 if (doChange == DialogResult.Yes)
@@ -533,7 +533,7 @@ namespace AutoQC
             }
         }
 
-        public List<string> ConfigsRunning()
+        public override List<string> GetRunningConfigs()
         {
             var runningConfigs = new List<string>();
             foreach (var configRunner in _configRunners.Values)
