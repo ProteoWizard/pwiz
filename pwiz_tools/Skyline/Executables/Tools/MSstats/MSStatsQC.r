@@ -111,7 +111,6 @@ runQC <- function() {
 	quantData <- try(dataProcess(raw, 
 	                             normalization=inputnormalize, 
 	                             nameStandards=standardpepname,  
-	                             fillIncompleteRows=(inputmissingpeaks=="TRUE"), 
 	                             featureSubset=input_feature_selection, 
 	                             summaryMethod = "TMP", 
 	                             censoredInt="0"))
