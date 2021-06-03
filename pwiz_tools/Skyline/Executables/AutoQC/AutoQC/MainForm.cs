@@ -389,13 +389,16 @@ namespace AutoQC
 
         private void btnViewLog_Click(object sender, EventArgs e)
         {
+            tabMain.SelectTab(tabLog); // Select the log tab first
+            // Set the focus on the combobox.
+            // If the focus is on the textbox we will see a lot of scrolling for big log files.
+            comboConfigs.Focus();
             if (_configManager.HasSelectedConfig())
             {
                 _configManager.SelectLogOfSelectedConfig();
                 UpdateUiLogFiles();
                 // SwitchLogger(); // We don't need this. UpdateUiLogFiles will change the selected index in the log combobox which will end up calling SwitchLogger.
             }
-            tabMain.SelectTab(tabLog);
         }
 
         private void tabLog_Enter(object sender, EventArgs e)
@@ -414,7 +417,7 @@ namespace AutoQC
         private async void SwitchLogger()
         {
             textBoxLog.Clear();
-
+            
             var logger = _configManager.GetSelectedLogger();
             try
             {
@@ -523,11 +526,8 @@ namespace AutoQC
             {
                 if (!_configManager.LoggerIsDisplayed(name))
                     return;
-                foreach (var line in lines)
-                {
-                    textBoxLog.AppendText(line);
-                    textBoxLog.AppendText(Environment.NewLine);
-                }
+                var text = TextUtil.LineSeparate(lines);
+                textBoxLog.AppendText(text + Environment.NewLine);
             });
         }
 
@@ -538,11 +538,8 @@ namespace AutoQC
                 if (!_configManager.LoggerIsDisplayed(name))
                     return;
                 var selectionStart = textBoxLog.SelectionStart;
-                foreach (var line in lines)
-                {
-                    textBoxLog.AppendText(line);
-                    textBoxLog.AppendText(Environment.NewLine);
-                }
+                var text = TextUtil.LineSeparate(lines);
+                textBoxLog.AppendText(text + Environment.NewLine);
                 textBoxLog.Select(selectionStart, textBoxLog.TextLength);
                 textBoxLog.SelectionColor = Color.Red;
             });
