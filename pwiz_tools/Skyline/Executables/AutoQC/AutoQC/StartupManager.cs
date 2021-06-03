@@ -33,6 +33,10 @@ namespace AutoQC
             {
                 shortcut = GetShortcut();
             }
+            catch (StartupManagerException)
+            {
+                throw;
+            }
             catch (Exception e)
             {
                 throw new StartupManagerException($"Unable to get shortcut path for {AUTOQCSTARTEREXE}", e);
@@ -158,6 +162,11 @@ namespace AutoQC
             }
            
             var exeDirInfo = Directory.GetParent(exeLocation);
+            if (exeDirInfo == null)
+            {
+                throw new StartupManagerException($"Could not get directory path for executable '{exeLocation}'");
+            }
+            
             var targetPath = Path.Combine(exeDirInfo.FullName, $"{AUTOQCSTARTEREXE}");
             return new ShortCutInfo(GetShortcutPath(), targetPath);
         }

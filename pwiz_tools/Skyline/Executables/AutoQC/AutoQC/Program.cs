@@ -186,10 +186,11 @@ namespace AutoQC
                     ProgramLog.Info($"Found {list.Count} configurations to migrate.");
                     SharedBatch.Properties.Settings.Default.ConfigList = list;
                     SharedBatch.Properties.Settings.Default.Save();
+                    ProgramLog.Info($"Migrated {list.Count} configurations.");
                 }
                 else
                 {
-                    ProgramLog.Info("No configurations were found.");
+                    ProgramLog.Info("No configurations found to migrate.");
                 }
             }
         }
@@ -389,25 +390,38 @@ namespace AutoQC
 
         private static void AddFileTypesToRegistry()
         {
-            var appReference = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) +
-                               "\\Microsoft\\Windows\\Start Menu\\Programs\\MacCoss Lab, UW\\" +
-                               AppName.Substring(0, AppName.IndexOf(" ")) + TextUtil.EXT_APPREF;
-            var appExe = Application.ExecutablePath;
-
-            var baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
-            var configFileIconPath = Path.Combine(baseDirectory, "AutoQC_configs.ico");
-
-            if (ApplicationDeployment.IsNetworkDeployed)
+            var allProgramsPath = Environment.GetFolderPath(Environment.SpecialFolder.Programs);
+            var appName = "AutoQC";
+            var apprefName = appName + TextUtil.EXT_APPREF;
+            var publisherName = "University of Washington";
+            var paths = new[]
             {
-                FileUtil.AddFileTypeClickOnce(TextUtil.EXT_QCFG, "AutoQC.Configuration.0",
-                    Resources.Program_AddFileTypesToRegistry_AutoQC_Configuration_File,
-                    appReference, configFileIconPath);
-            }
-            else
+                //e.g. %APPDATA%\Microsoft\Windows\Start Menu\Programs\University of Washington\AutoQC.appref-ms
+                Path.Combine(Path.Combine(allProgramsPath, publisherName), apprefName),
+                //e.g. %APPDATA%\Microsoft\Windows\Start Menu\Programs\AutoQC\AutoQC.appref-ms
+                Path.Combine(Path.Combine(allProgramsPath, appName), apprefName)
+            };
+            var appRefPath = paths.FirstOrDefault(File.Exists);
+
+            if (appRefPath != null)
             {
-                FileUtil.AddFileTypeAdminInstall(TextUtil.EXT_QCFG, "AutoQC.Configuration.0",
-                    Resources.Program_AddFileTypesToRegistry_AutoQC_Configuration_File,
-                    appExe, configFileIconPath);
+                var appExe = Application.ExecutablePath;
+
+                var baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
+                var configFileIconPath = Path.Combine(baseDirectory, "AutoQC_configs.ico");
+
+                if (ApplicationDeployment.IsNetworkDeployed)
+                {
+                    FileUtil.AddFileTypeClickOnce(TextUtil.EXT_QCFG, "AutoQC.Configuration.0",
+                        Resources.Program_AddFileTypesToRegistry_AutoQC_Configuration_File,
+                        appRefPath, configFileIconPath);
+                }
+                else
+                {
+                    FileUtil.AddFileTypeAdminInstall(TextUtil.EXT_QCFG, "AutoQC.Configuration.0",
+                        Resources.Program_AddFileTypesToRegistry_AutoQC_Configuration_File,
+                        appExe, configFileIconPath);
+                }
             }
         }
 
