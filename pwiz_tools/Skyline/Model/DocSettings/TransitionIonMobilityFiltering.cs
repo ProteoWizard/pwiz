@@ -915,7 +915,6 @@ namespace pwiz.Skyline.Model.DocSettings
             IonMobilityExtractionWindowWidth = ionMobilityExtractionWindowWidth;
             // Sanity check for SONAR filters - bounds should evaluate as integers since they're bins
             Assume.IsTrue(IonMobilityUnits != eIonMobilityUnits.waters_sonar || 
-                          (IonMobility.Mobility??0) > 0 &&
                           !IonMobilityAndCCS.HasCollisionalCrossSection &&
                           !IonMobilityAndCCS.HighEnergyIonMobilityValueOffset.HasValue &&
                           Math.Abs(IonMobilityAndCCS.IonMobility.Mobility.Value - 0.5 * IonMobilityExtractionWindowWidth.Value - 
