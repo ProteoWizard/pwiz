@@ -97,7 +97,13 @@ namespace SharedBatch
             invalidChars.AddRange(Path.GetInvalidFileNameChars());
             invalidChars.AddRange(Path.GetInvalidPathChars());
             var safeName = string.Join("_", name.Split(invalidChars.ToArray()));
-            return safeName; // .TrimStart('.').TrimEnd('.');
+            return safeName;
+        }
+
+        public static string GetSafeNameForDir(string name)
+        {
+            // Trailing periods and spaces are ignored when creating a directory
+            return GetSafeName(name).TrimStart('.', ' ').TrimEnd('.', ' ');
         }
 
         public static string GetTestPath(bool isTest, string testFolder, string path)

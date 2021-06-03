@@ -493,8 +493,16 @@ namespace SkylineBatch
 
         private void btnExport_Click(object sender, EventArgs e)
         {
-            var shareForm = new ShareConfigsForm(this, _configManager, TextUtil.FILTER_BCFG, Program.Icon());
-            shareForm.ShowDialog();
+            // TODO: This was updated to match the new code Ali added in AutoQC Loader's MainForm. 
+            // Needs testing. ShareConfigsForm constructor no longer takes the file extension (.qcfg, .bcfg) as argument
+            // so the checks were failing on TeamCity.
+            var shareForm = new ShareConfigsForm(this, _configManager, Program.Icon());
+            if (shareForm.ShowDialog(this) != DialogResult.OK)
+                return;
+            var dialog = new SaveFileDialog { Filter = TextUtil.FILTER_BCFG };
+            if (dialog.ShowDialog(this) != DialogResult.OK)
+                return;
+            _configManager.ExportConfigs(dialog.FileName, shareForm.IndiciesToSave);
         }
         
         #endregion
@@ -671,6 +679,12 @@ namespace SkylineBatch
                 textBoxLog.Select(selectionStart, textBoxLog.TextLength);
                 textBoxLog.SelectionColor = Color.Red;
             });
+        }
+
+        public void ClearLog()
+        {
+            // TODO: ClearLog() was added for AutoQC Loader.  This will have to be implemented here, if needed. 
+            throw new NotImplementedException();
         }
 
         #endregion

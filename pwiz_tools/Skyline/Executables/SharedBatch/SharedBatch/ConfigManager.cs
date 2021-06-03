@@ -84,7 +84,7 @@ namespace SharedBatch
             return _runningUi ? Settings.Default.ConfigList.ToList() : new List<IConfig>();
         }
 
-        protected void ProgramaticallyInsertConfig(IConfig config, int index)
+        protected virtual void ProgramaticallyInsertConfig(IConfig config, int index)
         {
             _configList.Insert(index, config);
             try
@@ -104,7 +104,7 @@ namespace SharedBatch
             SaveConfigList();
         }
 
-        private void SaveConfigList()
+        public void SaveConfigList()
         {
             var updatedConfigs = new ConfigList();
             foreach (var config in _configList)
@@ -229,6 +229,12 @@ namespace SharedBatch
             return _configValidation[_configList[index].GetName()];
         }
 
+        public bool IsConfigValid(IConfig config)
+        {
+            _configValidation.TryGetValue(config.GetName(), out var isValid);
+            return isValid;
+        }
+
         public void UpdateConfigValidation()
         {
             lock (_lock)
@@ -245,6 +251,30 @@ namespace SharedBatch
                     {
                         _configValidation.Add(config.GetName(), false);
                     }
+                }
+            }
+            _uiControl.UpdateUiConfigurations();
+        }
+
+        public void SetConfigValid(IConfig config)
+        {
+            lock (_lock)
+            {
+                if (config != null && _configValidation.ContainsKey(config.GetName()))
+                {
+                    _configValidation[config.GetName()] = true;
+                }
+            }
+            _uiControl.UpdateUiConfigurations();
+        }
+
+        public void SetConfigInvalid(IConfig config)
+        {
+            lock (_lock)
+            {
+                if (config != null && _configValidation.ContainsKey(config.GetName()))
+                {
+                    _configValidation[config.GetName()] = false;
                 }
             }
             _uiControl.UpdateUiConfigurations();
@@ -276,7 +306,7 @@ namespace SharedBatch
             }
         }
 
-        protected void UserInsertConfig(IConfig config, int index)
+        protected virtual void UserInsertConfig(IConfig config, int index)
         {
             lock (_lock)
             {
@@ -414,45 +444,51 @@ namespace SharedBatch
                 {
                     using (var reader = XmlReader.Create(stream))
                     {
-                        while (!reader.Name.Equals("ConfigList"))
-                            reader.Read();
-                        var oldConfigFile = reader.GetAttribute(Attr.SavedConfigsFilePath);
-                        var oldFolder = reader.GetAttribute(Attr.SavedPathRoot);
-                        if (!string.IsNullOrEmpty(oldConfigFile) && string.IsNullOrEmpty(oldFolder))
-                            oldFolder = Path.GetDirectoryName(oldConfigFile);
-                        if (!string.IsNullOrEmpty(oldFolder))
+                        while (reader.Read())
                         {
-                            var newFolder = string.IsNullOrEmpty(copiedDestination)
-                                ? Path.GetDirectoryName(filePath)
-                                : Path.GetDirectoryName(copiedConfigFile);
-                            AddRootReplacement(oldFolder, newFolder, false, out _, out _);
-                        }
-
-                        while (!reader.Name.EndsWith("_config"))
-                        {
-                            if (reader.Name == "userSettings" && !reader.IsStartElement())
-                                break; // there are no configurations in the file
-                            reader.Read();
-                        }
-                        while (reader.IsStartElement())
-                        {
-                            if (reader.Name.EndsWith("_config"))
+                            if (reader.Name.Equals("ConfigList"))
                             {
-                                IConfig config = null;
-                                try
+                                var oldConfigFile = reader.GetAttribute(Attr.SavedConfigsFilePath);
+                                var oldFolder = reader.GetAttribute(Attr.SavedPathRoot);
+                                if (!string.IsNullOrEmpty(oldConfigFile) && string.IsNullOrEmpty(oldFolder))
+                                    oldFolder = Path.GetDirectoryName(oldConfigFile);
+                                if (!string.IsNullOrEmpty(oldFolder))
                                 {
-                                    config = importer(reader);
+                                    var newFolder = string.IsNullOrEmpty(copiedDestination)
+                                        ? Path.GetDirectoryName(filePath)
+                                        : Path.GetDirectoryName(copiedConfigFile);
+                                    AddRootReplacement(oldFolder, newFolder, false, out _, out _);
                                 }
-                                catch (Exception ex)
+
+                                while (!reader.Name.EndsWith("_config"))
                                 {
-                                    readXmlErrors.Add(ex.Message);
+                                    if (reader.Name == "userSettings" && !reader.IsStartElement())
+                                        break; // there are no configurations in the file
+                                    reader.Read();
                                 }
-                                
-                                if (config != null)
-                                    readConfigs.Add(config);
+                                while (reader.IsStartElement())
+                                {
+                                    if (reader.Name.EndsWith("_config"))
+                                    {
+                                        IConfig config = null;
+                                        try
+                                        {
+                                            config = importer(reader);
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            readXmlErrors.Add(ex.Message);
+                                        }
+
+                                        if (config != null)
+                                            readConfigs.Add(config);
+                                    }
+                                    reader.Read();
+                                    reader.Read();
+                                }
+
+                                break; // We are done reading the ConfigList
                             }
-                            reader.Read();
-                            reader.Read();
                         }
                     }
                 }
@@ -491,8 +527,23 @@ namespace SharedBatch
                 duplicateMessage.Append(Resources.ConfigManager_ImportFrom_Do_you_want_to_overwrite_these_configurations_);
                 if (DialogResult.Yes == DisplayQuestion(duplicateMessage.ToString()))
                 {
-                    message.Append(Resources.ConfigManager_ImportFrom_Overwriting_).Append(Environment.NewLine); 
-                    duplicateConfigNames.Clear();
+                    var runningConfigs = GetRunningConfigs();
+                    var runningDuplicates = runningConfigs.Where(c => duplicateConfigNames.Contains(c)).ToList();
+                    if (runningDuplicates.Count > 0)
+                    {
+                        var runningConfigsMsg =
+                            TextUtil.LineSeparate(Resources.ConfigManager_ImportFrom_The_following_configurations_are_running_and_cannot_be_overwritten_,
+                                TextUtil.LineSeparate(runningDuplicates));
+                        _uiControl.DisplayError(runningConfigsMsg);
+
+                        duplicateConfigNames = runningDuplicates;
+                    }
+                    else
+                    {
+                        duplicateConfigNames.Clear();
+                    }
+
+                    message.Append(Resources.ConfigManager_ImportFrom_Overwriting_).Append(Environment.NewLine);
                 }
             }
             
@@ -522,7 +573,12 @@ namespace SharedBatch
             ProgramLog.Info(message.ToString());
             return addedConfigs;
         }
-        
+
+        public virtual List<string> GetRunningConfigs()
+        {
+            return new List<string>();
+        }
+
         public object[] ConfigNamesAsObjectArray()
         {
             var names = new object[_configList.Count];
@@ -534,12 +590,6 @@ namespace SharedBatch
         public void ExportConfigs(string filePath, int[] indiciesToSave)
         {
             var directory = string.Empty;
-            // Exception if no configurations are selected to export
-            if (indiciesToSave.Length == 0)
-            {
-                throw new ArgumentException(Resources.ConfigManager_ExportConfigs_There_is_no_configuration_selected_ + Environment.NewLine +
-                                           Resources.ConfigManager_ExportConfigs_Please_select_a_configuration_to_share_);
-            }
             try
             {
                 directory = Path.GetDirectoryName(filePath);
@@ -625,7 +675,7 @@ namespace SharedBatch
 
         public Logger GetSelectedLogger()
         {
-            return _logList[SelectedLog];
+            return SelectedLog < 0 || SelectedLog >= _logList.Count ? null : _logList[SelectedLog];
         }
 
         public bool LoggerIsDisplayed(string name)

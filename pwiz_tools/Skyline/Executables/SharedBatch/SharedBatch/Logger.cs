@@ -20,11 +20,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Threading.Tasks;
 using SharedBatch.Properties;
 
  namespace SharedBatch
@@ -34,8 +32,6 @@ using SharedBatch.Properties;
     {
 
         private static HashSet<Regex> _errorFormats;
-
-        //public static string LOG_FOLDER;
 
         public const long MaxLogSize = 10 * 1024 * 1024; // 10MB
         private const int MaxBackups = 5;
@@ -61,14 +57,12 @@ using SharedBatch.Properties;
         private const int LogBufferSize = 10240;
         private const int StreamReaderDefaultBufferSize = 4096;
         
-        public Logger(string logFilePath, string logName, IMainUiControl mainUi = null)
+        public Logger(string logFilePath, string logName, IMainUiControl mainUi = null):this(logFilePath, logName, true, mainUi)
         {
-            var logFolder = FileUtil.GetDirectory(logFilePath);
-            if (!Directory.Exists(logFolder))
-            {
-                Directory.CreateDirectory(logFolder);
-            }
+        }
 
+        public Logger(string logFilePath, string logName, bool init, IMainUiControl mainUi = null)
+        {
             if (_errorFormats == null)
             {
                 _errorFormats = new HashSet<Regex>();
@@ -78,14 +72,30 @@ using SharedBatch.Properties;
             _filePath = logFilePath;
             _mainUi = mainUi;
             Name = logName;
-            Init();
+
+            if (init)
+            {
+                var logFolder = FileUtil.GetDirectory(logFilePath);
+                if (!Directory.Exists(logFolder))
+                {
+                    Directory.CreateDirectory(logFolder);
+                }
+
+                Init();
+            }
         }
-        
+
+
         public void Init()
         {
             _logBuffer = new StringBuilder();
             _memLogMessages = new Queue<string>(MemLogSize);
-            
+
+            OpenLogFile();
+        }
+
+        private void OpenLogFile()
+        {
             // Initialize - create blank log file if doesn't exist
             if (!File.Exists(_filePath))
             {
@@ -97,7 +107,7 @@ using SharedBatch.Properties;
             var logFileRead = File.Open(_filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
             var logFileWrite = File.Open(_filePath, FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
             // these need to be kept open while the program is running so log files can't be deleted outside of Skyline Batch
-            _streamReader = new StreamReader(logFileRead, Encoding.Default, false, 
+            _streamReader = new StreamReader(logFileRead, Encoding.Default, false,
                 StreamReaderDefaultBufferSize, true);
             _streamWriter = new StreamWriter(logFileWrite, Encoding.Default, StreamReaderDefaultBufferSize, true);
         }
@@ -206,7 +216,9 @@ using SharedBatch.Properties;
             var size = new FileInfo(_filePath).Length;
             if (size >= MaxLogSize)
             {
+                Close(); // First close the open file handle
                 BackupLog(_filePath, 1);
+                OpenLogFile();
             }
         }
 
@@ -442,8 +454,12 @@ using SharedBatch.Properties;
                 }
 
                 // Reset the stream reader to start from the beginning of the file
-                _streamReader.Close();
-                _streamReader.BaseStream.Dispose();
+                if (_streamReader != null)
+                {
+                    _streamReader.Close();
+                    _streamReader.BaseStream.Dispose();
+                }
+
                 var logFileRead = File.Open(_filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
                 _streamReader = new StreamReader(logFileRead, Encoding.Default, false, 
                     StreamReaderDefaultBufferSize, true);

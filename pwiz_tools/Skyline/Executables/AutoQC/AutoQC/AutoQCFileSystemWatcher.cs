@@ -283,8 +283,8 @@ namespace AutoQC
 
                 if (fileStatus.Equals(FileStatus.ExceedMaximumAcquiTime))
                 {
-                    throw new FileStatusException("Data acquistion has exceeded the expected acquistion time." +
-                                        "The instument probably encountered an error.");
+                    throw new FileStatusException("Data acquisition has exceeded the expected acquisition time." +
+                                        "The instrument probably encountered an error.");
                 }
 
                 if (counter % 10 == 0)

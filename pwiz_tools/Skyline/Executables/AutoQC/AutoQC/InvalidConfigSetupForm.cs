@@ -42,7 +42,7 @@ namespace AutoQC
         {
             // get valid settings
             var validMainSettings = await FixInvalidMainSettings();
-            var validPanoramaSettings = FixInvalidPanoramaSettings();
+            var validPanoramaSettings = await FixInvalidPanoramaSettings();
             var validSkylineSettings = await FixInvalidSkylineSettings();
             // create valid configuration
             Config = new AutoQcConfig(_invalidConfig.Name, _invalidConfig.IsEnabled, _invalidConfig.Created, DateTime.Now,
@@ -66,19 +66,11 @@ namespace AutoQC
                 mainSettings.ResultsWindow.ToString(), mainSettings.InstrumentType, mainSettings.AcquisitionTime.ToString());
         }
 
-        private PanoramaSettings FixInvalidPanoramaSettings()
+        private async Task <PanoramaSettings> FixInvalidPanoramaSettings()
         {
             var panoramaSettings = _invalidConfig.PanoramaSettings;
-            try
-            {
-                panoramaSettings.ValidateSettings();
-                return panoramaSettings;
-            }
-            catch (ArgumentException)
-            {
-                return new PanoramaSettings(false, panoramaSettings.PanoramaServerUrl, panoramaSettings.PanoramaUserEmail, 
-                    panoramaSettings.PanoramaPassword, panoramaSettings.PanoramaFolder, panoramaSettings.PanoramaServerUri);
-            }
+            var validPanoramaSettings = await GetValidVariable(new PanoramaControl(panoramaSettings));
+            return (PanoramaSettings)validPanoramaSettings;
         }
 
 
