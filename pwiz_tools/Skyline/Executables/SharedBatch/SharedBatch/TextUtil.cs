@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using SharedBatch.Properties;
 
@@ -21,6 +22,8 @@ namespace SharedBatch
         public const string EXT_LOG = ".log";
         public const string EXT_TMP = ".tmp";
         public const string EXT_APPREF = ".appref-ms";
+        public const string EXT_SKYP = ".skyp";
+        public const string EXT_ZIP = ".zip";
 
         public const char SEPARATOR_CSV = ',';
 
@@ -220,20 +223,50 @@ namespace SharedBatch
             return ((int)optionalInt).ToString(CultureInfo.CurrentCulture);
         }
 
-        /*public static List<T> Copy<T>(List<T> toCopy)
+        
+        // Changed DataProtectionScope from LocalMachine to CurrentUser
+        // https://stackoverflow.com/questions/19164926/data-protection-api-scope-localmachine-currentuser
+        public static string EncryptPassword(string password)
         {
-            var newList = new List<T>();
-            foreach (var config in toCopy) newList.Add(config);
-            return newList;
+            if (string.IsNullOrEmpty(password))
+            {
+                return string.Empty;
+            }
+
+            try
+            {
+                var encrypted = ProtectedData.Protect(
+                    Encoding.UTF8.GetBytes(password), null,
+                    DataProtectionScope.CurrentUser);
+                return Convert.ToBase64String(encrypted);
+            }
+            catch (Exception e)
+            {
+                ProgramLog.Error("Error encrypting password. ", e);
+
+            }
+            return string.Empty;
         }
 
-        public static Dictionary<T, R> CopyDict<T, R>(Dictionary<T, R> toCopy)
+        public static string DecryptPassword(string encryptedPassword)
         {
-            var newDict = new Dictionary<T, R>();
-            foreach (var entry in toCopy) newDict.Add(entry.Key, entry.Value);
-            return newDict;
+            if (string.IsNullOrEmpty(encryptedPassword))
+            {
+                return string.Empty;
+            }
+            try
+            {
+                byte[] decrypted = ProtectedData.Unprotect(
+                    Convert.FromBase64String(encryptedPassword), null,
+                    DataProtectionScope.CurrentUser);
+                return Encoding.UTF8.GetString(decrypted);
+            }
+            catch (Exception e)
+            {
+                ProgramLog.Error("Error decrypting password. ", e);
+            }
+            return string.Empty;
         }
-*/
         #endregion
     }
 }

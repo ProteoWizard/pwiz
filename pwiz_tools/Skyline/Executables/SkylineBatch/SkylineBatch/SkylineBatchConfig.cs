@@ -177,9 +177,9 @@ namespace SkylineBatch
                 {
                     refineSettings = RefineSettings.ReadXml(reader);
                 }
-                if (!XmlUtil.ReadNextElement(reader, "report_settings")) throw new Exception("Configuration does not have report settings");
-                reportSettings = ReportSettings.ReadXml(reader);
-                if(!XmlUtil.ReadNextElement(reader, "config_skyline_settings")) throw new Exception("Configuration does not have report settings");
+                if (XmlUtil.ReadNextElement(reader, "report_settings"))
+                    reportSettings = ReportSettings.ReadXml(reader);
+                if(!XmlUtil.ReadNextElement(reader, "config_skyline_settings")) throw new Exception("Configuration does not have Skyline settings");
                 skylineSettings = SkylineSettings.ReadXml(reader);
             }
             catch (ArgumentException e)

@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading;
+using Ionic.Zip;
 using Microsoft.Win32;
 using SharedBatch.Properties;
 
@@ -158,5 +161,379 @@ namespace SharedBatch
             return -1;
         }
 
+        /// <summary>
+        /// Determines whether the file name in the given path has a
+        /// specific extension.  Because this is Windows, the comparison
+        /// is case insensitive.  Note that ToLowerInvariant() is used to make
+        /// sure it works for Turkish with extensions containing the letter i
+        /// (e.g. .wiff).  This does, however, make this function only work
+        /// for extenstions with only lower ASCII characters, which all of
+        /// ours are.
+        /// </summary>
+        /// <param name="path">Path to check</param>
+        /// <param name="ext">Extension to check for (only lower ASCII)</param>
+        /// <returns>True if the path has the extension</returns>
+        public static bool HasExtension(string path, string ext)
+        {
+            return path.ToLowerInvariant().EndsWith(ext.ToLowerInvariant());
+        }
+
+
+        public static string ExtractDir(string sharedPath)
+        {
+            string extractDir = Path.GetFileName(sharedPath) ?? string.Empty;
+            if (HasExtension(extractDir, TextUtil.EXT_SKY_ZIP))
+                extractDir = extractDir.Substring(0, extractDir.Length - TextUtil.EXT_SKY_ZIP.Length);
+            else if (HasExtension(extractDir, TextUtil.EXT_SKYP))
+                extractDir = extractDir.Substring(0, extractDir.Length - TextUtil.EXT_SKYP.Length);
+            return extractDir;
+        }
+
     }
+
+
+
+    public class SrmDocumentSharing
+    {
+        public const string EXT = ".zip";
+        public const string EXT_SKY_ZIP = ".sky.zip";
+        private TemporaryDirectory _tempDir;
+        public static string FILTER_SHARING
+        {
+            get { return TextUtil.FileDialogFilter("SrmDocumentSharing_FILTER_SHARING_Shared_Files", EXT); }
+        }
+
+        public SrmDocumentSharing(string sharedPath)
+        {
+            SharedPath = sharedPath;
+            ShareType = ShareType.DEFAULT;
+        }
+
+        private Update _progressHandler;
+
+        private CancellationToken _cancellationToken;
+        public string DocumentPath { get; private set; }
+        public string ViewFilePath { get; set; }
+
+        public string SharedPath { get; private set; }
+
+        public ShareType ShareType { get; set; }
+        //private IProgressMonitor ProgressMonitor { get; set; }
+        //private IProgressStatus _progressStatus;
+        private int CountEntries { get; set; }
+        private int EntriesSaved { get; set; }
+        private string CurrentEntry { get; set; }
+        private long ExpectedSize { get; set; }
+        private long ExtractedSize { get; set; }
+
+        private string DefaultMessage
+        {
+            get
+            {
+                return string.Format("Extracting_files_from_sharing_archive {0}.",
+                    Path.GetFileName(SharedPath));
+            }
+        }
+
+        public string Extract(Update progressHandler, CancellationToken token)
+        {
+            _progressHandler = progressHandler;
+            _cancellationToken = token;
+
+            var extractDir = Path.GetDirectoryName(SharedPath);
+
+            using (ZipFile zip = ZipFile.Read(SharedPath))
+            {
+                CountEntries = zip.Entries.Count;
+                ExpectedSize = zip.Entries.Select(entry => entry.UncompressedSize).Sum();
+
+                zip.ExtractProgress += SrmDocumentSharing_ExtractProgress;
+
+                string documentName = FindSharedSkylineFile(zip);
+
+                DocumentPath = Path.Combine(extractDir, documentName);
+
+                foreach (var entry in zip.Entries)
+                {
+                    if (_cancellationToken.IsCancellationRequested)
+                        break;
+                    var filePath = Path.Combine(extractDir, entry.FileName);
+                    if (File.Exists(filePath))
+                    {
+                        if (Math.Abs(entry.UncompressedSize - new FileInfo(filePath).Length) < 0.0001)
+                            continue;
+                        File.Delete(Path.Combine(extractDir, entry.FileName));
+                    }
+                    try
+                    {
+                        entry.Extract(extractDir);
+
+                        ExtractedSize += entry.UncompressedSize;
+                    }
+                    catch (Exception)
+                    {
+                        if (!_cancellationToken.IsCancellationRequested)
+                            throw;
+                    }
+                }
+                if (_cancellationToken.IsCancellationRequested)
+                {
+                    foreach (var entry in zip.Entries)
+                    {
+                        var file = Path.Combine(extractDir, entry.FileName);
+                        if (File.Exists(file)) File.Delete(file);
+                    }
+                }
+            }
+
+            if (!_cancellationToken.IsCancellationRequested)
+            {
+                File.Delete(SharedPath);
+            }
+            return DocumentPath;
+        }
+
+        public static string ExtractDir(string sharedPath)
+        {
+            string extractDir = Path.GetFileName(sharedPath) ?? string.Empty;
+            if (FileUtil.HasExtension(extractDir, EXT_SKY_ZIP))
+                extractDir = extractDir.Substring(0, extractDir.Length - EXT_SKY_ZIP.Length);
+            else if (FileUtil.HasExtension(extractDir, EXT))
+                extractDir = extractDir.Substring(0, extractDir.Length - EXT.Length);
+            return extractDir;
+        }
+
+        private static string GetNonExistentDir(string dirPath)
+        {
+            int count = 1;
+            string dirResult = dirPath;
+
+            while (Directory.Exists(dirResult))
+            {
+                // If a directory with the given name already exists, add
+                // a suffix to create a unique folder name.
+                dirResult = dirPath + @"(" + count + @")";
+                count++;
+            }
+            return dirResult;
+        }
+
+        private static string FindSharedSkylineFile(ZipFile zip)
+        {
+            string skylineFile = null;
+
+            foreach (var file in zip.EntryFileNames)
+            {
+                if (file == null) continue; // ReSharper
+
+                // Shared files should not have subfolders.
+                if (Path.GetFileName(file) != file)
+                    throw new IOException("SrmDocumentSharing_FindSharedSkylineFile_The_zip_file_is_not_a_shared_file");
+
+                // Shared files must have exactly one Skyline Document(.sky).
+                if (!file.EndsWith(TextUtil.EXT_SKY)) continue;
+
+                if (!string.IsNullOrEmpty(skylineFile))
+                    throw new IOException("SrmDocumentSharing_FindSharedSkylineFile_The_zip_file_is_not_a_shared_file_The_file_contains_multiple_Skyline_documents");
+
+                skylineFile = file;
+            }
+
+            if (string.IsNullOrEmpty(skylineFile))
+            {
+                throw new IOException("SrmDocumentSharing_FindSharedSkylineFile_The_zip_file_is_not_a_shared_file_The_file_does_not_contain_any_Skyline_documents");
+            }
+            return skylineFile;
+        }
+
+
+        public string GetDocumentFileName()
+        {
+            if (!string.IsNullOrEmpty(DocumentPath))
+            {
+                return Path.GetFileName(DocumentPath);
+            }
+
+            return Path.ChangeExtension(Path.GetFileNameWithoutExtension(SharedPath), TextUtil.EXT_SKY);
+        }
+
+
+        private void DeleteTempDir()
+        {
+            if (_tempDir != null)
+            {
+                try
+                {
+                    _tempDir.Dispose();
+                }
+                catch (IOException x)
+                {
+                    var message = TextUtil.LineSeparate(string.Format(
+                            "SrmDocumentSharing_ShareMinimal_Failure_removing_temporary_directory {0}",
+                            _tempDir.DirPath),
+                        x.Message);
+                    throw new IOException(message);
+                }
+
+                _tempDir = null;
+            }
+        }
+
+        public TemporaryDirectory EnsureTempDir()
+        {
+            if (_tempDir == null)
+            {
+                _tempDir = new TemporaryDirectory();
+            }
+
+            return _tempDir;
+        }
+
+
+        private void SrmDocumentSharing_ExtractProgress(object sender, ExtractProgressEventArgs e)
+        {
+            if (_progressHandler != null)
+            {
+                if (_cancellationToken.IsCancellationRequested)
+                {
+                    e.Cancel = true;
+                    return;
+                }
+
+                int progressValue = (int)Math.Round((ExtractedSize + e.BytesTransferred) * 100.0 / ExpectedSize);
+
+                _progressHandler(progressValue, null);
+            }
+        }
+
+
+
+        private class ZipFileShare : IDisposable
+        {
+            private readonly ZipFile _zip;
+            private readonly IDictionary<string, string> _dictNameToPath;
+
+            public ZipFileShare()
+            {
+                // Make sure large files don't cause this to fail.
+                _zip = new ZipFile { UseZip64WhenSaving = Zip64Option.AsNecessary };
+
+                _dictNameToPath = new Dictionary<string, string>();
+            }
+
+            public int CountEntries { get { return _zip.Entries.Count; } }
+
+            public void AddFile(string path)
+            {
+                string existingPath;
+                string fileName = Path.GetFileName(path) ?? string.Empty;
+                if (_dictNameToPath.TryGetValue(fileName, out existingPath))
+                {
+                    if (path != existingPath)
+                    {
+                        throw new IOException(TextUtil.LineSeparate(string.Format("ZipFileShare_AddFile_Failed_attempting_to_add_the_file__0_", path),
+                            string.Format("ZipFileShare_AddFile_The_name___0___is_already_in_use_from_the_path__1_", fileName, existingPath)));
+                    }
+
+                    // No need to add exactly the same path twice
+                    return;
+                }
+                _dictNameToPath.Add(fileName, path);
+                _zip.AddFile(path, string.Empty);
+            }
+
+            public void Save(string path, EventHandler<SaveProgressEventArgs> progressEvent)
+            {
+                _zip.SaveProgress += progressEvent;
+                _zip.Save(path);
+            }
+
+            public void Dispose()
+            {
+                if (_zip != null) _zip.Dispose();
+            }
+        }
+
+
+        #region Functional testing support
+
+        public IEnumerable<string> ListEntries()
+        {
+            _progressHandler = null;
+            var entries = new List<string>();
+
+            using (ZipFile zip = ZipFile.Read(SharedPath))
+            {
+                foreach (var entry in zip.Entries)
+                {
+                    entries.Add(entry.FileName);
+                }
+            }
+
+            return entries;
+        }
+
+        #endregion
+    }
+
+    public class ShareType //: Immutable
+    {
+        public static readonly ShareType COMPLETE = new ShareType(true);
+        public static readonly ShareType MINIMAL = new ShareType(false);
+        public static readonly ShareType DEFAULT = COMPLETE;
+        public ShareType(bool complete)
+        {
+            Complete = complete;
+            //SkylineVersion = skylineVersion;
+        }
+        public bool Complete { get; private set; }
+
+        public ShareType ChangeComplete(bool complete)
+        {
+            return new ShareType(complete);
+        }
+
+        protected bool Equals(ShareType other)
+        {
+            return Complete == other.Complete;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != GetType()) return false;
+            return Equals((ShareType)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return (Complete.GetHashCode() * 397);
+            }
+        }
+    }
+
+    public class TemporaryDirectory : IDisposable
+    {
+        public const string TEMP_PREFIX = "~SK";
+
+        public TemporaryDirectory(string dirPath = null, string tempPrefix = TEMP_PREFIX)
+        {
+            if (string.IsNullOrEmpty(dirPath))
+                DirPath = Path.Combine(Path.GetTempPath(), tempPrefix + Path.GetRandomFileName());
+            else
+                DirPath = dirPath;
+            Directory.CreateDirectory(DirPath);
+        }
+
+        public string DirPath { get; private set; }
+
+        public void Dispose()
+        {
+            Directory.Delete(DirPath);
+        }
+    }
+
 }
