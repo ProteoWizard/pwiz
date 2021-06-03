@@ -421,6 +421,25 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error parsing the URL. Please correct the URL and try again..
+        /// </summary>
+        public static string DataServerInfo_ServerFromUi_Error_parsing_the_URL__Please_correct_the_URL_and_try_again_ {
+            get {
+                return ResourceManager.GetString("DataServerInfo_ServerFromUi_Error_parsing_the_URL__Please_correct_the_URL_and_try" +
+                        "_again_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The URL cannot be empty. Please enter a URL..
+        /// </summary>
+        public static string DataServerInfo_ServerFromUi_The_URL_cannot_be_empty__Please_enter_a_URL_ {
+            get {
+                return ResourceManager.GetString("DataServerInfo_ServerFromUi_The_URL_cannot_be_empty__Please_enter_a_URL_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to None of the file names on the server matched the regular expression: {0}.
         /// </summary>
         public static string DataServerInfo_Validate_None_of_the_file_names_on_the_server_matched_the_regular_expression___0_ {
@@ -697,6 +716,16 @@ namespace SkylineBatch.Properties {
         public static string MainForm_btnOpenTemplate_Click_Skyline_template_file {
             get {
                 return ResourceManager.GetString("MainForm_btnOpenTemplate_Click_Skyline_template_file", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The template file for &quot;{0}&quot; has not been downloaded. Please run &quot;{0}&quot; and try again..
+        /// </summary>
+        public static string MainForm_btnOpenTemplate_Click_The_template_file_for___0___has_not_been_downloaded__Please_run___0___and_try_again_ {
+            get {
+                return ResourceManager.GetString("MainForm_btnOpenTemplate_Click_The_template_file_for___0___has_not_been_downloade" +
+                        "d__Please_run___0___and_try_again_", resourceCulture);
             }
         }
         
@@ -1002,6 +1031,54 @@ namespace SkylineBatch.Properties {
         public static System.Drawing.Bitmap OpenFolder {
             get {
                 object obj = ResourceManager.GetObject("OpenFolder", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap Panorama {
+            get {
+                object obj = ResourceManager.GetObject("Panorama", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The template file was not downloaded.
+        /// </summary>
+        public static string PanoramaFile_Download_The_template_file_was_not_downloaded {
+            get {
+                return ResourceManager.GetString("PanoramaFile_Download_The_template_file_was_not_downloaded", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to template download folder.
+        /// </summary>
+        public static string PanoramaFile_ValidateDownloadFolder_template_download_folder {
+            get {
+                return ResourceManager.GetString("PanoramaFile_ValidateDownloadFolder_template_download_folder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The folder for the Skyline template file does not exist. Please enter a valid folder..
+        /// </summary>
+        public static string PanoramaFile_ValidateDownloadFolder_The_folder_for_the_Skyline_template_file_does_not_exist__Please_enter_a_valid_folder_ {
+            get {
+                return ResourceManager.GetString("PanoramaFile_ValidateDownloadFolder_The_folder_for_the_Skyline_template_file_does" +
+                        "_not_exist__Please_enter_a_valid_folder_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap PanoramaSelected {
+            get {
+                object obj = ResourceManager.GetObject("PanoramaSelected", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -1495,6 +1572,33 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to A Panorama server must be specified..
+        /// </summary>
+        public static string Server_ReadXml_A_Panorama_server_must_be_specified_ {
+            get {
+                return ResourceManager.GetString("Server_ReadXml_A_Panorama_server_must_be_specified_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Server URL is corrupt..
+        /// </summary>
+        public static string Server_ReadXml_Server_URL_is_corrupt_ {
+            get {
+                return ResourceManager.GetString("Server_ReadXml_Server_URL_is_corrupt_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Two different files are both being saved to {0}.
+        /// </summary>
+        public static string ServerFilesManager_GetSize_Two_different_files_are_both_being_saved_to__0_ {
+            get {
+                return ResourceManager.GetString("ServerFilesManager_GetSize_Two_different_files_are_both_being_saved_to__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &quot;{0}&quot; is not a valid name for the configuration..
         /// </summary>
         public static string SkylineBatchConfig_SkylineBatchConfig___0___is_not_a_valid_name_for_the_configuration_ {
@@ -1556,6 +1660,17 @@ namespace SkylineBatch.Properties {
         public static string SkylineBatchConfigForm_SkylineBatchConfigForm_Viewing_configuration___0__ {
             get {
                 return ResourceManager.GetString("SkylineBatchConfigForm_SkylineBatchConfigForm_Viewing_configuration___0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Changing the template file path will stop the template from being downloaded through Panorama. Are you sure you want to continue?.
+        /// </summary>
+        public static string SkylineBatchConfigForm_templateFileControl_TextChanged_Changing_the_template_file_path_will_stop_the_template_from_being_downloaded_through_Panorama__Are_you_sure_you_want_to_continue_ {
+            get {
+                return ResourceManager.GetString("SkylineBatchConfigForm_templateFileControl_TextChanged_Changing_the_template_file" +
+                        "_path_will_stop_the_template_from_being_downloaded_through_Panorama__Are_you_sur" +
+                        "e_you_want_to_continue_", resourceCulture);
             }
         }
         
@@ -1859,6 +1974,74 @@ namespace SkylineBatch.Properties {
             get {
                 object obj = ResourceManager.GetObject("SkylineDoc", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Name of shared Skyline archive cannot be null or empty..
+        /// </summary>
+        public static string SkypFile_GetNonExistentPath_Name_of_shared_Skyline_archive_cannot_be_null_or_empty_ {
+            get {
+                return ResourceManager.GetString("SkypFile_GetNonExistentPath_Name_of_shared_Skyline_archive_cannot_be_null_or_empt" +
+                        "y_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} is not a valid URL on a Panorama server..
+        /// </summary>
+        public static string SkypFile_GetSkyFileUrl__0__is_not_a_valid_URL_on_a_Panorama_server_ {
+            get {
+                return ResourceManager.GetString("SkypFile_GetSkyFileUrl__0__is_not_a_valid_URL_on_a_Panorama_server_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Expected the URL of a shared Skyline document archive {0} in the skyp file. Found {1} instead..
+        /// </summary>
+        public static string SkypFile_GetSkyFileUrl_Expected_the_URL_of_a_shared_Skyline_document_archive__0__in_the_skyp_file__Found__1__instead_ {
+            get {
+                return ResourceManager.GetString("SkypFile_GetSkyFileUrl_Expected_the_URL_of_a_shared_Skyline_document_archive__0__" +
+                        "in_the_skyp_file__Found__1__instead_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to File does not contain the URL of a shared Skyline archive file {0} on a Panorama server..
+        /// </summary>
+        public static string SkypFile_GetSkyFileUrl_File_does_not_contain_the_URL_of_a_shared_Skyline_archive_file__0__on_a_Panorama_server_ {
+            get {
+                return ResourceManager.GetString("SkypFile_GetSkyFileUrl_File_does_not_contain_the_URL_of_a_shared_Skyline_archive_" +
+                        "file__0__on_a_Panorama_server_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You may have to add {0} as a Panorama server from the Tools &gt; Options menu in Skyline..
+        /// </summary>
+        public static string SkypSupport_AddPanoramaServerMessage_You_may_have_to_add__0__as_a_Panorama_server_from_the_Tools___Options_menu_in_Skyline_ {
+            get {
+                return ResourceManager.GetString("SkypSupport_AddPanoramaServerMessage_You_may_have_to_add__0__as_a_Panorama_server" +
+                        "_from_the_Tools___Options_menu_in_Skyline_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There was an error downloading the Skyline document specified in the skyp file {0}..
+        /// </summary>
+        public static string SkypSupport_Download_There_was_an_error_downloading_the_Skyline_document_specified_in_the_skyp_file__0__ {
+            get {
+                return ResourceManager.GetString("SkypSupport_Download_There_was_an_error_downloading_the_Skyline_document_specifie" +
+                        "d_in_the_skyp_file__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You do not have permissions to download this file from {0}..
+        /// </summary>
+        public static string SkypSupport_Download_You_do_not_have_permissions_to_download_this_file_from__0__ {
+            get {
+                return ResourceManager.GetString("SkypSupport_Download_You_do_not_have_permissions_to_download_this_file_from__0__", resourceCulture);
             }
         }
         

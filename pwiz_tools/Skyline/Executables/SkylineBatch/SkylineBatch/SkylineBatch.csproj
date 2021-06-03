@@ -96,6 +96,8 @@
       <Link>LaunchBatch.exe</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Include="Resources\Panorama.png" />
+    <None Include="Resources\PanoramaSelected.png" />
     <Content Include="SkylineBatch.ico" />
     <Content Include="SkylineDailyRunner.exe">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -109,6 +111,9 @@
     <Content Include="SkylineBatch_configs.ico">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <EmbeddedResource Include="AddPanoramaTemplate.resx">
+      <DependentUpon>AddPanoramaTemplate.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="AddServerForm.resx">
       <DependentUpon>AddServerForm.cs</DependentUpon>
     </EmbeddedResource>
@@ -161,6 +166,12 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AddPanoramaTemplate.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="AddPanoramaTemplate.Designer.cs">
+      <DependentUpon>AddPanoramaTemplate.cs</DependentUpon>
+    </Compile>
     <Compile Include="AddServerForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -173,6 +184,7 @@
     <Compile Include="ConnectionErrorForm.Designer.cs">
       <DependentUpon>ConnectionErrorForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="DataServerInfo.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -194,7 +206,9 @@
     <Compile Include="RefineInputLocalization.cs" />
     <Compile Include="RefineInputObject.cs" />
     <Compile Include="RefineSettings.cs" />
+    <Compile Include="PanoramaServerConnector.cs" />
     <Compile Include="ServerConnector.cs" />
+    <Compile Include="ServerFilesManager.cs" />
     <Compile Include="SkylineBatchConfigManager.cs" />
     <Compile Include="FileSettings.cs" />
     <Compile Include="InvalidConfigSetupForm.cs">
@@ -246,6 +260,8 @@
     <Compile Include="LogForm.Designer.cs">
       <DependentUpon>LogForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="SkylineTemplate.cs" />
+    <Compile Include="SkypFile.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FluentFTP">

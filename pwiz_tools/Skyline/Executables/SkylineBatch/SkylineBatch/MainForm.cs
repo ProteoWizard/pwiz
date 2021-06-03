@@ -275,10 +275,14 @@ namespace SkylineBatch
         private void btnOpenTemplate_Click(object sender, EventArgs e)
         {
             var config = _configManager.GetSelectedConfig();
-            if (MainFormUtils.CanOpen(config.Name, _configManager.IsSelectedConfigValid(), config.MainSettings.TemplateFilePath,
+            if (!config.MainSettings.Template.Downloaded())
+            {
+                DisplayError(string.Format(Resources.MainForm_btnOpenTemplate_Click_The_template_file_for___0___has_not_been_downloaded__Please_run___0___and_try_again_, config.Name));
+            }
+            if (MainFormUtils.CanOpen(config.Name, _configManager.IsSelectedConfigValid(), config.MainSettings.Template.FilePath,
                 Resources.MainForm_btnOpenTemplate_Click_Skyline_template_file, this))
             {
-                SkylineInstallations.OpenSkylineFile(config.MainSettings.TemplateFilePath, config.SkylineSettings);
+                SkylineInstallations.OpenSkylineFile(config.MainSettings.Template.FilePath, config.SkylineSettings);
             }
         }
 
@@ -492,18 +496,14 @@ namespace SkylineBatch
         {
             var importConfigs = false;
             var inDownloadsFolder = filePath.Contains(FileUtil.DOWNLOADS_FOLDER);
-            if (!inDownloadsFolder) // Only show dialog if configs are not in downloads folder
-            {
-                RunUi(() =>
-                {
-                    importConfigs = DialogResult.Yes == DisplayQuestion(string.Format(
-                        Resources.MainForm_FileOpenedImport_Do_you_want_to_import_configurations_from__0__,
-                        Path.GetFileName(filePath)));
-                });
-            }
+
             RunUi(() =>
             {
-                if (importConfigs || inDownloadsFolder)
+                // Only show dialog if configs are not in downloads folder
+                importConfigs = inDownloadsFolder || DialogResult.Yes == DisplayQuestion(string.Format(
+                    Resources.MainForm_FileOpenedImport_Do_you_want_to_import_configurations_from__0__,
+                    Path.GetFileName(filePath)));
+                if (importConfigs)
                     DoImport(filePath);
             });
         }

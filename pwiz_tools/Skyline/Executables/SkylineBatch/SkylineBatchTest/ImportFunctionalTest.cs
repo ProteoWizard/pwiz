@@ -90,7 +90,7 @@ namespace SkylineBatchTest
                         dlg.Message);
                     dlg.ClickNo();
                 });
-            Thread.SpinWait(1000000000);
+
             RunUI(() => { FunctionalTestUtil.CheckConfigs(3, 0, mainForm); });
 
         }
@@ -144,7 +144,6 @@ namespace SkylineBatchTest
                         dlg.Message);
                     dlg.ClickNo();
                 });
-            Thread.SpinWait(1000000000);
             RunUI(() => { FunctionalTestUtil.CheckConfigs(3, 3, mainForm); });
 
 
@@ -169,7 +168,7 @@ namespace SkylineBatchTest
                         dlg.Message);
                     dlg.ClickOk();
                 });
-            Thread.SpinWait(1000000000);
+
             RunUI(() => { FunctionalTestUtil.CheckConfigs(3, 1, mainForm); });
 
         }

@@ -85,7 +85,7 @@ namespace SkylineBatch
                         Application.Exit();
                     }
                 });
-                SendAnalyticsHit();
+                //SendAnalyticsHit();
             }
 
             using (var mutex = new Mutex(false, $"University of Washington {AppName()}"))

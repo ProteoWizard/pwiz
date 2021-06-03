@@ -15,6 +15,7 @@ namespace SkylineBatch
 
         private CancellationTokenSource _cancelValidate;
         private readonly bool _serverRequired;
+        private readonly string _dataFolder;
 
         public AddServerForm(DataServerInfo editingServerInfo, bool serverRequired = false)
         {
@@ -22,6 +23,7 @@ namespace SkylineBatch
             Icon = Program.Icon();
 
             Server = editingServerInfo;
+            _dataFolder = Server.Folder;
             _serverRequired = serverRequired;
             UpdateUiServer();
 
@@ -133,7 +135,7 @@ namespace SkylineBatch
                     throw new ArgumentException("The server cannot be empty. Please enter the server information.");
                 return null;
             }
-            return DataServerInfo.ServerFromUi(textUrl.Text, textUserName.Text, textPassword.Text, textNamingPattern.Text);
+            return DataServerInfo.ServerFromUi(textUrl.Text, textUserName.Text, textPassword.Text, textNamingPattern.Text, _dataFolder);
         }
 
         private void btnRemoveServer_Click(object sender, EventArgs e)
@@ -146,7 +148,7 @@ namespace SkylineBatch
         private void UpdateUiServer()
         {
             textUrl.Text = Server != null ? Server.GetUrl() : string.Empty;
-            textUserName.Text = Server != null ? Server.UserName : string.Empty;
+            textUserName.Text = Server != null ? Server.Username : string.Empty;
             textPassword.Text = Server != null ? Server.Password : string.Empty;
             textNamingPattern.Text = Server != null ? Server.DataNamingPattern : string.Empty;
         }

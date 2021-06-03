@@ -77,10 +77,30 @@ namespace SkylineBatch
 
         private async Task<MainSettings> FixInvalidMainSettings()
         {
-            string validTemplateFilePath = null;
-            if (mainSettings.DependentConfigName == null)
-                validTemplateFilePath = await GetValidPath(Resources.InvalidConfigSetupForm_FixInvalidMainSettings_Skyline_template_file, 
-                mainSettings.TemplateFilePath, MainSettings.ValidateTemplateFile, PathDialogOptions.File, PathDialogOptions.ExistingOptional);
+            var validTemplate = mainSettings.Template;
+            if (mainSettings.Template.IsIndependent())
+            {
+                if (mainSettings.Template.Downloaded())
+                {
+                    var validTemplateFile = await GetValidPath(
+                        Resources.InvalidConfigSetupForm_FixInvalidMainSettings_Skyline_template_file,
+                        mainSettings.Template.FilePath, SkylineTemplate.ValidateTemplateFile, PathDialogOptions.File);
+                    validTemplate = new SkylineTemplate(validTemplateFile, mainSettings.Template.DependentConfigName,
+                        mainSettings.Template.PanoramaFile);
+                }
+                else
+                {
+                    var invalidPanoramaFile = mainSettings.Template.PanoramaFile;
+                    var validDownloadFolder = await GetValidPath(
+                        "folder to download the Skyline template into",
+                        mainSettings.Template.FilePath, PanoramaFile.ValidateDownloadFolder, PathDialogOptions.Folder);
+                    validTemplate = new SkylineTemplate(null, mainSettings.Template.DependentConfigName,
+                        new PanoramaFile(invalidPanoramaFile, validDownloadFolder, invalidPanoramaFile.FileName));
+                }
+
+                
+            }
+
             var validAnalysisFolderPath = await GetValidPath(Resources.InvalidConfigSetupForm_FixInvalidMainSettings_analysis_folder, 
                 mainSettings.AnalysisFolderPath, MainSettings.ValidateAnalysisFolder, PathDialogOptions.Folder);
             var dataValidator = mainSettings.Server != null ? MainSettings.ValidateDataFolderWithServer : (Validator)MainSettings.ValidateDataFolderWithoutServer;
@@ -89,8 +109,8 @@ namespace SkylineBatch
             var validAnnotationsFilePath = await GetValidPath(Resources.InvalidConfigSetupForm_FixInvalidMainSettings_annotations_file, mainSettings.AnnotationsFilePath,
                 MainSettings.ValidateAnnotationsFile, PathDialogOptions.File);
 
-            return new MainSettings(validTemplateFilePath ?? mainSettings.TemplateFilePath, validAnalysisFolderPath, validDataFolderPath, mainSettings.Server, 
-                validAnnotationsFilePath, mainSettings.ReplicateNamingPattern, mainSettings.DependentConfigName);
+            return new MainSettings(validTemplate, validAnalysisFolderPath, validDataFolderPath, mainSettings.Server, 
+                validAnnotationsFilePath, mainSettings.ReplicateNamingPattern);
         }
 
         private async Task<RefineSettings> FixInvalidRefineSettings()

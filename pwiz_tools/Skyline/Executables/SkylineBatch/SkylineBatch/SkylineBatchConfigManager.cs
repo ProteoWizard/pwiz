@@ -43,7 +43,7 @@ namespace SkylineBatch
 
         private SkylineBatchConfigManagerState _checkedRunState;
         private RunBatchOptions? _checkedRunOption;
-        private ServerConnector _runServerConnector;
+        private ServerFilesManager _runServerFiles;
 
         // Shared variables with ConfigManager:
         //  Protected -
@@ -121,7 +121,7 @@ namespace SkylineBatch
             foreach (var iconfig in newConfigs)
             {
                 var config = (SkylineBatchConfig) iconfig;
-                var dependentName = config.MainSettings.DependentConfigName;
+                var dependentName = config.MainSettings.Template.DependentConfigName;
                 if (!string.IsNullOrEmpty(dependentName))
                 {
                     SkylineBatchConfig dependentConfig;
@@ -247,7 +247,7 @@ namespace SkylineBatch
             foreach (var iconfig in state.baseState.configList)
             {
                 var config = (SkylineBatchConfig) iconfig;
-                var dependentConfigName = config.MainSettings.DependentConfigName;
+                var dependentConfigName = config.MainSettings.Template.DependentConfigName;
                 if (!string.IsNullOrEmpty(dependentConfigName))
                 {
                     if (!dependencies.ContainsKey(dependentConfigName))
@@ -573,7 +573,7 @@ namespace SkylineBatch
                         {
                             if ((runOption == RunBatchOptions.FROM_TEMPLATE_COPY ||
                                  runOption == RunBatchOptions.ALL) &&
-                                !File.Exists(ConfigFromName(configToRun).MainSettings.TemplateFilePath))
+                                !File.Exists(ConfigFromName(configToRun).MainSettings.Template.FilePath))
                             {
                                 DisplayError(
                                     string.Format(
@@ -642,36 +642,32 @@ namespace SkylineBatch
             if (_checkedRunState == null)
                 throw new Exception("Run state was never checked, should never get here.");
 
-            var downloadingConfigs = new List<SkylineBatchConfig>();
-
+            _runServerFiles = new ServerFilesManager();
             // Servers don't need to connect for steps after refine
             if (_checkedRunOption >= RunBatchOptions.FROM_REFINE)
             {
-                _runServerConnector = new ServerConnector();
-                FinishCheckingServers(true, downloadingConfigs, callback);
+                FinishCheckingServers(true, new List<SkylineBatchConfig>(), callback);
                 return;
             }
-
-
+            
             var enabledConfigs = GetEnabledConfigs(_checkedRunState);
+            var downloadingConfigs = new List<SkylineBatchConfig>();
             // Try connecting to all necessary servers
-            var servers = new List<ServerInfo>();
             foreach (var config in enabledConfigs)
             {
                 if (config.MainSettings.WillDownloadData)
                 {
                     downloadingConfigs.Add(config);
-                    servers.Add(config.MainSettings.Server);
+                    config.MainSettings.AddDownloadingFiles(_runServerFiles);
                 }
             }
-            _runServerConnector = new ServerConnector(servers.ToArray());
-            
+
             var longWaitOperation = new LongWaitOperation(longWaitDlg);
 
 
             longWaitOperation.Start(downloadingConfigs.Count > 0, (OnProgress) =>
             {
-                _runServerConnector.Connect(OnProgress);
+                _runServerFiles.Connect(OnProgress);
             }, (success) =>
             {
                 FinishCheckingServers(success, downloadingConfigs, callback);
@@ -686,20 +682,9 @@ namespace SkylineBatch
                 return;
             }
 
-            var showConnectionForm = false;
-            foreach (var config in downloadingConfigs)
+            if (_runServerFiles.HadConnectionExceptions)
             {
-                _runServerConnector.GetFiles(config.MainSettings.Server, out Exception connectionException);
-                if (connectionException != null)
-                {
-                    showConnectionForm = true;
-                    break;
-                }
-            }
-
-            if (showConnectionForm)
-            {
-                var connectionForm = new ConnectionErrorForm(downloadingConfigs, _runServerConnector);
+                var connectionForm = new ConnectionErrorForm(downloadingConfigs, _runServerFiles);
                 _uiControl.DisplayForm(connectionForm);
                 if (connectionForm.DialogResult != DialogResult.OK)
                 {
@@ -721,27 +706,17 @@ namespace SkylineBatch
                 SetState(_checkedRunState);
             }
 
-            var filesToDownload = new Dictionary<string, FtpListItem>();
             var configsWillDownload = new List<string>();
             foreach (var config in downloadingConfigs)
             {
-                var newFiles = config.MainSettings.FilesToDownload(_runServerConnector);
-                foreach (var file in newFiles)
-                    if (!filesToDownload.ContainsKey(file.Key)) filesToDownload.Add(file.Key, file.Value);
+                var newFiles = _runServerFiles.GetFilesToDownload(config.MainSettings.Server, config.MainSettings.DataFolderPath);
                 if (newFiles.Count > 0) configsWillDownload.Add(config.GetName());
             }
 
+            var driveSpaceNeeded = _runServerFiles.GetSize();
             if (_checkedRunOption == RunBatchOptions.ALL ||
                 _checkedRunOption == RunBatchOptions.DOWNLOAD_DATA)
             {
-                var driveSpaceNeeded = new Dictionary<string, long>();
-                foreach (var filePath in filesToDownload.Keys)
-                {
-                    var driveName = filePath.Substring(0, 3);
-                    if (!driveSpaceNeeded.ContainsKey(driveName))
-                        driveSpaceNeeded.Add(driveName, 0);
-                    driveSpaceNeeded[driveName] += filesToDownload[filePath].Size;
-                }
                 var spaceError = false;
                 var errorMessage =
                     Resources.SkylineBatchConfigManager_StartBatchRun_There_is_not_enough_space_on_this_computer_to_download_the_data_for_these_configurations__You_need_an_additional_ +
@@ -764,7 +739,7 @@ namespace SkylineBatch
                     return;
                 }
             }
-            else if (_checkedRunOption == RunBatchOptions.FROM_TEMPLATE_COPY && configsWillDownload.Count > 0)
+            else if (_checkedRunOption == RunBatchOptions.FROM_TEMPLATE_COPY && driveSpaceNeeded.Keys.Count > 0)
             {
                 // data files need to be downloaded but user did not start from a download step
                 var errorMessage = Resources.SkylineBatchConfigManager_StartBatchRun_The_data_for_the_following_configurations_has_not_fully_downloaded_ + Environment.NewLine + Environment.NewLine;
@@ -783,7 +758,7 @@ namespace SkylineBatch
         {
             _checkedRunOption = null;
             _checkedRunState = null;
-            _runServerConnector = null;
+            _runServerFiles = null;
             callback(false);
         }
 
@@ -806,15 +781,15 @@ namespace SkylineBatch
 
             if (_checkedRunOption == null) throw new Exception("Run option cannot be null");
             var runOption = (RunBatchOptions)_checkedRunOption;
-            var serverConnector = _runServerConnector;
+            var serverFiles = _runServerFiles;
             _checkedRunOption = null;
             _checkedRunState = null;
-            _runServerConnector = null;
-            new Thread(() => _ = RunAsync(runOption, serverConnector)).Start();
+            _runServerFiles = null;
+            new Thread(() => _ = RunAsync(runOption, serverFiles)).Start();
         }
 
 
-        public async Task RunAsync(RunBatchOptions runOption, ServerConnector serverConnector)
+        public async Task RunAsync(RunBatchOptions runOption, ServerFilesManager serverFiles)
         {
             UpdateUiLogs();
             UpdateIsRunning(false, true);
@@ -829,7 +804,7 @@ namespace SkylineBatch
 
                 try
                 {
-                    await startingConfigRunner.Run(runOption, serverConnector);
+                    await startingConfigRunner.Run(runOption, serverFiles);
                 }
                 catch (Exception e)
                 {
@@ -1022,13 +997,14 @@ namespace SkylineBatch
                     state = ProgramaticallyRemoveAt(GetConfigIndex(config.GetName(), state.baseState), state);
             }
             importedConfigs = AssignDependencies(importedConfigs, true, state, out string warningMessage);
-            if (warningMessage != null)
-                DisplayWarning(warningMessage);
 
             foreach (var config in importedConfigs)
                 state = ProgramaticallyAddConfig(config, state);
             state = DisableInvalidConfigs(state);
             SetState(state);
+            if (warningMessage != null)
+                DisplayWarning(warningMessage);
+            
         }
 
         private SkylineBatchConfigManagerState DisableInvalidConfigs(SkylineBatchConfigManagerState state)

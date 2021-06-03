@@ -103,7 +103,7 @@ namespace SkylineBatch
                 _logger.Log(line);
         }
 
-        public async Task Run(RunBatchOptions runOption, ServerConnector serverConnector)
+        public async Task Run(RunBatchOptions runOption, ServerFilesManager serverFiles)
         {
             LogToUi(string.Format(Resources.ConfigRunner_Run________________________________Starting_Configuration___0_________________________________, Config.Name));
             try
@@ -125,7 +125,24 @@ namespace SkylineBatch
             if ((runOption == RunBatchOptions.ALL || runOption == RunBatchOptions.DOWNLOAD_DATA) 
                 && Config.MainSettings.WillDownloadData)
             {
-                await DownloadData(serverConnector);
+                if (!Config.MainSettings.Template.Downloaded())
+                {
+                    _logger.Log("Downloading the Skyline template file...");
+                    var downloadCancellation = new CancellationTokenSource();
+                    _runningCancellationToken = downloadCancellation;
+                    Config.MainSettings.Template.PanoramaFile.Download((percent, error) =>
+                    {
+                        _logger.LogPercent(percent);
+                        if (error != null)
+                        {
+                            _logger.LogError("An error occurred while downloading the template file from Panorama", error.Message);
+                            ChangeStatus(RunnerStatus.Error);
+                        }
+                    }, downloadCancellation.Token);
+                    _runningCancellationToken = null;
+                    _logger.Log(string.Format("{0} downloaded.", Config.MainSettings.Template.FileName()));
+                }
+                await DownloadData(serverFiles);
             }
             
             if ((runOption == RunBatchOptions.ALL ||
@@ -243,20 +260,20 @@ namespace SkylineBatch
             }
         }
 
-        private async Task DownloadData(ServerConnector serverConnector)
+        private async Task DownloadData(ServerFilesManager serverFiles)
         {
             var mainSettings = Config.MainSettings;
             var server = mainSettings.Server;
             Directory.CreateDirectory(mainSettings.DataFolderPath);
 
-            var matchingFiles = server.GetDataFiles(serverConnector);
-            var downloadingFiles = server.FilesToDownload(mainSettings.DataFolderPath, serverConnector);
+            var matchingFiles = serverFiles.GetFiles(mainSettings.Server);
+            var downloadingFiles = serverFiles.GetFilesToDownload(mainSettings.Server, mainSettings.DataFolderPath);
 
             if (downloadingFiles.Count == 0) return;
 
             _logger.Log(string.Format(Resources.ConfigRunner_DownloadData_Found__0__matching_data_files_on__1__, matchingFiles.Count, server.GetUrl()));
-            foreach (var file in matchingFiles.Keys)
-                _logger.Log(file);
+            foreach (var file in matchingFiles)
+                _logger.Log(file.Name);
             _logger.Log(Resources.ConfigRunner_DownloadData_Starting_download___);
 
             var dataDriveName = mainSettings.DataFolderPath.Substring(0, 3);
@@ -265,25 +282,25 @@ namespace SkylineBatch
             CancellationToken token = source.Token;
             _runningCancellationToken = source;
             var currentFileNumber = 0;
-            foreach (var fileName in matchingFiles.Keys)
+            foreach (var file in matchingFiles)
             {
                 currentFileNumber++;
-                _logger.Log(string.Format(Resources.ConfigRunner_DownloadData__0____1__of__2__, fileName, currentFileNumber, matchingFiles.Count));
+                _logger.Log(string.Format(Resources.ConfigRunner_DownloadData__0____1__of__2__, file.Name, currentFileNumber, matchingFiles.Count));
                 // 3 tries to download file
                 int i;
                 Exception exception = null;
                 for (i = 0; i < 3; i++)
                 {
                     if (!IsRunning()) return;
-                    var filePath = Path.Combine(mainSettings.DataFolderPath, fileName);
-                    if (!downloadingFiles.ContainsKey(filePath))
+                    var filePath = Path.Combine(mainSettings.DataFolderPath, file.Name);
+                    if (!downloadingFiles.Contains(file))
                     {
                         _logger.Log(Resources.ConfigRunner_DownloadData_Already_downloaded__Skipping_);
                         break;
                     }
-                    if (downloadingFiles[filePath].Size + FileUtil.ONE_GB > FileUtil.GetTotalFreeSpace(dataDriveName))
+                    if (file.Size + FileUtil.ONE_GB > FileUtil.GetTotalFreeSpace(dataDriveName))
                     {
-                        _logger.LogError(string.Format(Resources.ConfigRunner_DownloadData_There_is_not_enough_remaining_disk_space_to_download__0___Free_up_some_disk_space_and_try_again_, fileName));
+                        _logger.LogError(string.Format(Resources.ConfigRunner_DownloadData_There_is_not_enough_remaining_disk_space_to_download__0___Free_up_some_disk_space_and_try_again_, file.Name));
                         ChangeStatus(RunnerStatus.Error);
                         return;
                     }
@@ -299,7 +316,7 @@ namespace SkylineBatch
                     {
                         await ftpClient.ConnectAsync(token);
                         var status = await ftpClient.DownloadFileAsync(filePath,
-                            server.FilePath(fileName), token: token, existsMode: FtpLocalExists.Overwrite, progress: progress);
+                            server.FilePath(file.Name), token: token, existsMode: FtpLocalExists.Overwrite, progress: progress);
                         await ftpClient.DisconnectAsync(token);
                         if (status != FtpStatus.Success)
                             throw new Exception(Resources.ConfigRunner_DownloadData_File_download_failed_);

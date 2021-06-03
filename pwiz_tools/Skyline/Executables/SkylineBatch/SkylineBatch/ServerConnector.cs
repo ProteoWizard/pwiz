@@ -11,20 +11,21 @@ namespace SkylineBatch
 {
     public class ServerConnector
     {
-        private Dictionary<ServerInfo, List<FtpListItem>> _serverMap;
-        private Dictionary<ServerInfo, Exception> _serverExceptions;
+        private Dictionary<Server, List<FtpListItem>> _serverMap;
+        private Dictionary<Server, Exception> _serverExceptions;
         private object _lock = new object();
 
-        public ServerConnector(params ServerInfo[] serverInfos)
+        public ServerConnector(params Server[] serverInfos)
         {
             lock (_lock)
             {
-                _serverMap = new Dictionary<ServerInfo, List<FtpListItem>>();
-                _serverExceptions = new Dictionary<ServerInfo, Exception>();
+                _serverMap = new Dictionary<Server, List<FtpListItem>>();
+                _serverExceptions = new Dictionary<Server, Exception>();
                 foreach (var serverInfo in serverInfos)
                 {
                     if (!_serverMap.ContainsKey(serverInfo))
                     {
+                        //_servers.Add(serverInfo.URI.AbsoluteUri, serverInfo);
                         _serverMap.Add(serverInfo, null);
                         _serverExceptions.Add(serverInfo, null);
                     }
@@ -36,6 +37,7 @@ namespace SkylineBatch
         {
             if (!_serverMap.ContainsKey(serverInfo) )
                 throw new Exception("ServerConnector was not initialized with this server. No information for the server.");
+
             if (_serverMap[serverInfo] == null && _serverExceptions[serverInfo] == null)
                 throw new Exception("ServerConnector was never started. No information for the server.");
             connectionException = _serverExceptions[serverInfo];
@@ -64,7 +66,21 @@ namespace SkylineBatch
             return matchingFiles;
         }
 
-        public void Connect(OnPercentProgress doOnProgress, List<ServerInfo> servers = null)
+        public void Add(Server server)
+        {
+            lock (_lock)
+            {
+                var serverUri = server.URI.AbsoluteUri;
+                if (!_serverMap.ContainsKey(server))
+                {
+                    //_servers.Add(serverUri, server);
+                    _serverMap.Add(server, null);
+                    _serverExceptions.Add(server, null);
+                }
+            }
+        }
+
+        public void Connect(OnPercentProgress doOnProgress, List<Server> servers = null)
         {
             if (servers == null)
                 servers = _serverMap.Keys.ToList();
@@ -73,16 +89,17 @@ namespace SkylineBatch
             var downloadFinished = 0;
             doOnProgress(0,
                 (int)(1.0 / serverCount * 100));
-            foreach (var serverInfo in servers)
+            foreach (var server in servers)
             {
-                if (_serverMap[serverInfo] != null || _serverExceptions[serverInfo] != null)
+                if (_serverMap[server] != null || _serverExceptions[server] != null)
                     continue;
                 var serverFiles = new List<FtpListItem>();
-                var client = GetFtpClient(serverInfo);
+                var client = GetFtpClient(server);
                 try
                 {
                     client.Connect();
-                    foreach (FtpListItem item in client.GetListing(serverInfo.Server.AbsolutePath))
+                    //throw new Exception("Test");
+                    foreach (FtpListItem item in client.GetListing(server.URI.LocalPath))
                     {
                         if (item.Type == FtpFileSystemObjectType.File)
                         {
@@ -94,19 +111,19 @@ namespace SkylineBatch
                 {
                     client.Disconnect();
                     lock (_lock)
-                        _serverExceptions[serverInfo] = e;
+                        _serverExceptions[server] = e;
                 }
-                if (_serverExceptions[serverInfo] == null && serverFiles.Count == 0)
+                if (_serverExceptions[server] == null && serverFiles.Count == 0)
                 {
-                    _serverExceptions[serverInfo] = new ArgumentException(string.Format(
+                    _serverExceptions[server] = new ArgumentException(string.Format(
                         Resources
                             .DataServerInfo_Validate_There_were_no_files_found_at__0___Make_sure_the_URL__username__and_password_are_correct_and_try_again_,
-                        serverInfo.Server.AbsoluteUri));
+                        server));
                 }
                 else
                 {
                     lock (_lock)
-                        _serverMap[serverInfo] = serverFiles;
+                        _serverMap[server] = serverFiles;
                 }
                 client.Disconnect();
                 downloadFinished++;
@@ -115,8 +132,9 @@ namespace SkylineBatch
             }
         }
 
-        public void Reconnect(List<ServerInfo> servers, OnPercentProgress doOnProgress)
+        public void Reconnect(List<Server> servers, OnPercentProgress doOnProgress)
         {
+            var serverUris = new List<string>();
             foreach (var serverInfo in servers)
             {
                 _serverMap[serverInfo] = null;
@@ -125,14 +143,14 @@ namespace SkylineBatch
             Connect(doOnProgress, servers);
         }
 
-        public FtpClient GetFtpClient(ServerInfo serverInfo)
+        public FtpClient GetFtpClient(Server serverInfo)
         {
-            var client = new FtpClient(serverInfo.Server.Host);
+            var client = new FtpClient(serverInfo.URI.Host);
 
             if (!string.IsNullOrEmpty(serverInfo.Password))
             {
-                if (!string.IsNullOrEmpty(serverInfo.UserName))
-                    client.Credentials = new NetworkCredential(serverInfo.UserName, serverInfo.Password);
+                if (!string.IsNullOrEmpty(serverInfo.Username))
+                    client.Credentials = new NetworkCredential(serverInfo.Username, serverInfo.Password);
                 else
                     client.Credentials = new NetworkCredential("anonymous", serverInfo.Password);
             }
@@ -152,6 +170,11 @@ namespace SkylineBatch
                 _serverMap[server] = other._serverMap[server];
                 _serverExceptions[server] = other._serverExceptions[server];
             }
+        }
+
+        public bool Contains(Server server)
+        {
+            return _serverMap.ContainsKey(server);
         }
     }
 }

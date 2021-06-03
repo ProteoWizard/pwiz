@@ -39,8 +39,6 @@ namespace SkylineBatchTest
 
             TestFileAutomaticReplace(mainForm);
 
-            //await TestDownloadedConfiguration(mainForm);
-
         }
 
         public void TestFileExistingPaths(MainForm mainForm)
@@ -62,8 +60,6 @@ namespace SkylineBatchTest
                         dlg.Message);
                     dlg.ClickYes();
                 });
-            Thread.SpinWait(100000000); // wait for short import to finish
-
             RunUI(() => { FunctionalTestUtil.CheckConfigs(3, 0, mainForm); });
         }
 
@@ -77,7 +73,6 @@ namespace SkylineBatchTest
                         dlg.Message);
                     dlg.ClickYes();
                 });
-            Thread.SpinWait(100000000); // wait for short import to finish
 
             RunUI(() => { FunctionalTestUtil.CheckConfigs(1, 0, mainForm); });
 
@@ -89,8 +84,7 @@ namespace SkylineBatchTest
                         dlg.Message);
                     dlg.ClickYes();
                 });
-            Thread.SpinWait(100000000); // wait for short import to finish
-
+            
             RunUI(() => { FunctionalTestUtil.CheckConfigs(1, 0, mainForm); });
 
         }

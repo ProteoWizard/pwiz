@@ -37,12 +37,10 @@ namespace SkylineBatch
 
         // IMMUTABLE - all fields are readonly strings/objects
 
-        public MainSettings(string templateFilePath, string analysisFolderPath, string dataFolderPath,
-            DataServerInfo server, string annotationsFilePath, string replicateNamingPattern,
-            string dependentConfigName)
+        public MainSettings(SkylineTemplate skylineTemplate, string analysisFolderPath, string dataFolderPath,
+            DataServerInfo server, string annotationsFilePath, string replicateNamingPattern)
         {
-            TemplateFilePath = templateFilePath;
-            DependentConfigName = !string.IsNullOrEmpty(dependentConfigName) ? dependentConfigName : null;
+            Template = skylineTemplate;
             AnalysisFolderPath = analysisFolderPath;
             DataFolderPath = dataFolderPath;
             Server = server;
@@ -51,9 +49,7 @@ namespace SkylineBatch
         }
 
 
-        public readonly string TemplateFilePath;
-
-        public readonly string DependentConfigName;
+        public readonly SkylineTemplate Template;
 
         public readonly string AnalysisFolderPath;
 
@@ -65,24 +61,34 @@ namespace SkylineBatch
 
         public readonly string ReplicateNamingPattern;
 
-        public bool WillDownloadData => Server != null;
+        public bool WillDownloadData => Template.PanoramaFile != null || Server != null;
+
+        public void AddDownloadingFiles(ServerFilesManager serverFiles)
+        {
+            if (Template.PanoramaFile != null)
+                Template.PanoramaFile.AddDownloadingFile(serverFiles);
+            if (Server != null)
+                Server.AddDownloadingFiles(serverFiles, DataFolderPath);
+        }
 
         public string GetResultsFilePath()
         {
-            return Path.Combine(AnalysisFolderPath, Path.GetFileName(TemplateFilePath));
+            return Path.Combine(AnalysisFolderPath, Template.FileName());
         }
 
         public MainSettings WithoutDependency()
         {
-            return new MainSettings(TemplateFilePath, AnalysisFolderPath, DataFolderPath, Server,
-                AnnotationsFilePath, ReplicateNamingPattern, string.Empty);
+            var independentTemplate = SkylineTemplate.ExistingTemplate(Template.FilePath);
+            return new MainSettings(independentTemplate, AnalysisFolderPath, DataFolderPath, Server,
+                AnnotationsFilePath, ReplicateNamingPattern);
         }
 
-        public MainSettings UpdateDependent(string newName, string newTemplate)
+        public MainSettings UpdateDependent(string newName, string newFilePath)
         {
-            if (string.IsNullOrEmpty(newTemplate)) return WithoutDependency();
-            return new MainSettings(newTemplate, AnalysisFolderPath, DataFolderPath, Server, 
-                 AnnotationsFilePath, ReplicateNamingPattern, newName);
+            if (string.IsNullOrEmpty(newFilePath)) return WithoutDependency();
+            var newTemplate = SkylineTemplate.DependentTemplate(newFilePath, newName);
+            return new MainSettings(newTemplate, AnalysisFolderPath, DataFolderPath, Server,
+                 AnnotationsFilePath, ReplicateNamingPattern);
         }
 
         public void CreateAnalysisFolderIfNonexistent()
@@ -93,7 +99,7 @@ namespace SkylineBatch
         public override string ToString()
         {
             var sb = new StringBuilder();
-            sb.Append("Template file: ").AppendLine(TemplateFilePath);
+            sb.Append("Template file: ").AppendLine(Template.FilePath);
             sb.Append("Analysis folder: ").AppendLine(AnalysisFolderPath);
             sb.Append("Data folder: ").AppendLine(DataFolderPath);
             sb.Append("Replicate naming pattern: ").AppendLine(ReplicateNamingPattern);
@@ -102,22 +108,10 @@ namespace SkylineBatch
 
         public void Validate()
         {
-            if (DependentConfigName == null)
-                ValidateTemplateFile(TemplateFilePath);
+            Template.Validate();
             ValidateDataFolder(DataFolderPath, Server != null);
             ValidateAnalysisFolder(AnalysisFolderPath);
             ValidateAnnotationsFile(AnnotationsFilePath);
-        }
-
-        public static void ValidateTemplateFile(string templateFile)
-        {
-
-            FileUtil.ValidateNotEmptyPath(templateFile, Resources.MainSettings_ValidateSkylineFile_Skyline_file);
-            if (!File.Exists(templateFile))
-            
-                throw new ArgumentException(string.Format(Resources.MainSettings_ValidateSkylineFile_The_Skyline_template_file__0__does_not_exist_, templateFile) + Environment.NewLine +
-                                            Resources.MainSettings_ValidateSkylineFile_Please_provide_a_valid_file_);
-            FileUtil.ValidateNotInDownloads(templateFile, Resources.MainSettings_ValidateSkylineFile_Skyline_file);
         }
 
         public static void ValidateAnalysisFolder(string analysisFolder)
@@ -180,15 +174,10 @@ namespace SkylineBatch
 
         public bool TryPathReplace(string oldRoot, string newRoot, out MainSettings pathReplacedMainSettings)
         {
-            var templateReplaced = false;
-            var replacedTemplatePath = TemplateFilePath;
             var preferReplace = Program.FunctionalTest;
-            if (DependentConfigName == null)
-                templateReplaced = TextUtil.SuccessfulReplace(ValidateTemplateFile, oldRoot, newRoot, TemplateFilePath,
-                    Program.FunctionalTest, out replacedTemplatePath);
+            var templateReplaced = Template.TryPathReplace(oldRoot, newRoot, out SkylineTemplate replacedTemplate);
             var analysisReplaced =
-                TextUtil.SuccessfulReplace(ValidateAnalysisFolder, oldRoot, newRoot, AnalysisFolderPath, preferReplace,
-                    out string replacedAnalysisPath);
+                TextUtil.SuccessfulReplace(ValidateAnalysisFolder, oldRoot, newRoot, AnalysisFolderPath, preferReplace, out string replacedAnalysisPath);
             var dataValidator = Server != null
                 ? ValidateDataFolderWithServer
                 : (Validator) ValidateDataFolderWithoutServer;
@@ -196,29 +185,12 @@ namespace SkylineBatch
                 TextUtil.SuccessfulReplace(dataValidator, oldRoot, newRoot, DataFolderPath,
                     Server != null || preferReplace, out string replacedDataPath);
             var annotationsReplaced =
-                TextUtil.SuccessfulReplace(ValidateAnnotationsFile, oldRoot, newRoot, AnnotationsFilePath,
-                    preferReplace, out string replacedAnnotationsPath);
+                TextUtil.SuccessfulReplace(ValidateAnnotationsFile, oldRoot, newRoot, AnnotationsFilePath, preferReplace, out string replacedAnnotationsPath);
 
-            pathReplacedMainSettings = new MainSettings(replacedTemplatePath, replacedAnalysisPath, replacedDataPath,
-                Server, replacedAnnotationsPath, ReplicateNamingPattern, DependentConfigName);
+            pathReplacedMainSettings = new MainSettings(replacedTemplate, replacedAnalysisPath, replacedDataPath,
+                Server, replacedAnnotationsPath, ReplicateNamingPattern);
 
             return templateReplaced || analysisReplaced || dataReplaced || annotationsReplaced;
-        }
-
-        public long SpaceNeeded(List<string> otherDataFolders, ServerConnector serverConnector)
-        {
-            if (Server == null || otherDataFolders.Contains(DataFolderPath)) return 0;
-            var filesToDownload = Server.FilesToDownload(DataFolderPath, serverConnector);
-            long spaceNeeded = 0;
-            foreach (var file in filesToDownload.Values)
-                spaceNeeded += file.Size;
-            return spaceNeeded;
-        }
-
-        public Dictionary<string, FtpListItem> FilesToDownload(ServerConnector serverConnector)
-        {
-            if (Server == null) return new Dictionary<string, FtpListItem>();
-            return Server.FilesToDownload(DataFolderPath, serverConnector);
         }
 
         public bool RunWillOverwrite(RunBatchOptions runOption, string configHeader, out StringBuilder message)
@@ -262,25 +234,29 @@ namespace SkylineBatch
         {
             var templateFilePath = reader.GetAttribute(Attr.TemplateFilePath);
             var dependentConfigName = reader.GetAttribute(Attr.DependentConfigName);
+            var oldTemplate = templateFilePath != null
+                ? new SkylineTemplate(templateFilePath, dependentConfigName, null)
+                : null;
             var analysisFolderPath = reader.GetAttribute(Attr.AnalysisFolderPath);
             var dataFolderPath = reader.GetAttribute(Attr.DataFolderPath);
             var annotationsFilePath = reader.GetAttribute(Attr.AnnotationsFilePath);
             var replicateNamingPattern = reader.GetAttribute(Attr.ReplicateNamingPattern);
-            var server = DataServerInfo.ReadXml(reader);
-            return new MainSettings(templateFilePath, analysisFolderPath, dataFolderPath, server, 
-                annotationsFilePath, replicateNamingPattern, dependentConfigName);
+            var oldServer = DataServerInfo.ReadOldXml(reader, dataFolderPath);
+            var template = oldTemplate ?? SkylineTemplate.ReadXml(reader);
+            var server = oldServer ?? DataServerInfo.ReadXml(reader, dataFolderPath);
+            return new MainSettings(template, analysisFolderPath, dataFolderPath, server, 
+                annotationsFilePath, replicateNamingPattern);
         }
 
         public void WriteXml(XmlWriter writer)
         {
             writer.WriteStartElement("main_settings");
-            writer.WriteAttributeIfString(Attr.TemplateFilePath, TemplateFilePath);
-            writer.WriteAttributeIfString(Attr.DependentConfigName, DependentConfigName);
             writer.WriteAttributeIfString(Attr.AnalysisFolderPath, AnalysisFolderPath);
             writer.WriteAttributeIfString(Attr.DataFolderPath, DataFolderPath);
             
             writer.WriteAttributeIfString(Attr.AnnotationsFilePath, AnnotationsFilePath);
             writer.WriteAttributeIfString(Attr.ReplicateNamingPattern, ReplicateNamingPattern);
+            Template.WriteXml(writer);
             if (Server != null) Server.WriteXml(writer);
             writer.WriteEndElement();
         }
@@ -294,7 +270,7 @@ namespace SkylineBatch
 
         public void WriteOpenSkylineTemplateCommand(CommandWriter commandWriter)
         {
-            commandWriter.Write(SkylineBatchConfig.OPEN_SKYLINE_FILE_COMMAND, TemplateFilePath);
+            commandWriter.Write(SkylineBatchConfig.OPEN_SKYLINE_FILE_COMMAND, Template.FilePath);
         }
 
         public void WriteSaveToResultsFile(CommandWriter commandWriter)
@@ -328,16 +304,18 @@ namespace SkylineBatch
 
         protected bool Equals(MainSettings other)
         {
-            // checks if annotation paths are both empty or equal
-            if (!(string.IsNullOrWhiteSpace(AnnotationsFilePath) && string.IsNullOrWhiteSpace(other.AnnotationsFilePath)))
-            {
-                if (!other.AnnotationsFilePath.Equals(AnnotationsFilePath)) return false;
-            }
+            var a = Equals(Template, other.Template);
+            a = Equals(AnalysisFolderPath, other.AnalysisFolderPath);
+            a = Equals(DataFolderPath, other.DataFolderPath);
+            a = Equals(ReplicateNamingPattern, other.ReplicateNamingPattern);
+            a = Equals(AnnotationsFilePath, other.AnnotationsFilePath);
 
-            return (other.TemplateFilePath.Equals(TemplateFilePath) &&
-                    other.AnalysisFolderPath.Equals(AnalysisFolderPath) &&
-                    other.DataFolderPath.Equals(DataFolderPath) &&
-                    other.ReplicateNamingPattern.Equals(ReplicateNamingPattern));
+
+            return Equals(Template, other.Template)
+                   && Equals(AnalysisFolderPath, other.AnalysisFolderPath)
+                   && Equals(DataFolderPath, other.DataFolderPath)
+                   && Equals(ReplicateNamingPattern, other.ReplicateNamingPattern)
+                   && Equals(AnnotationsFilePath, other.AnnotationsFilePath);
         }
 
         public override bool Equals(object obj)
@@ -350,175 +328,10 @@ namespace SkylineBatch
 
         public override int GetHashCode()
         {
-            return TemplateFilePath.GetHashCode() +
+            return Template.GetHashCode() +
                    AnalysisFolderPath.GetHashCode() +
                    DataFolderPath.GetHashCode() +
                    ReplicateNamingPattern.GetHashCode();
         }
-    }
-
-    public class DataServerInfo : ServerInfo
-    {
-
-        public static DataServerInfo ServerFromUi(string url, string userName, string password, string namingPattern)
-        {
-            if (string.IsNullOrWhiteSpace(url))
-                throw new ArgumentException("The URL cannot be empty. Please enter a URL.");
-            Uri uri;
-            try
-            {
-                uri = new Uri(url);
-            }
-            catch (Exception)
-            {
-                throw new ArgumentException("Error parsing the URL. Please correct the URL and try again.");
-            }
-            ValidateNamingPattern(namingPattern);
-
-            return new DataServerInfo(uri, userName, password, namingPattern);
-        }
-
-        private DataServerInfo(Uri server, string userName, string password, string namingPattern) : base(server, userName, password)
-        {
-            DataNamingPattern = namingPattern ?? string.Empty;
-        }
-        
-        public readonly string DataNamingPattern;
-
-        public string GetUrl() => Server.AbsoluteUri;
-
-        public string FilePath(string fileName) =>
-            string.IsNullOrEmpty(Server.AbsolutePath) ? fileName : Path.Combine(Server.AbsolutePath, fileName);
-
-        public FtpClient GetFtpClient()
-        {
-            var client = new FtpClient(Server.Host);
-
-            if (!string.IsNullOrEmpty(Password))
-            {
-                if (!string.IsNullOrEmpty(UserName))
-                    client.Credentials = new NetworkCredential(UserName, Password);
-                else
-                    client.Credentials = new NetworkCredential("anonymous", Password);
-            }
-
-            return client;
-        }
-
-        // The list of matching files that have not been fully downloaded to folderPath
-        public Dictionary<string, FtpListItem> FilesToDownload(string folderPath, ServerConnector serverConnector)
-        {
-            var downloadingFiles = new Dictionary<string, FtpListItem>();
-            var ftpFiles = GetDataFiles(serverConnector);
-            foreach (var fileName in ftpFiles.Keys)
-            {
-                var filePath = Path.Combine(folderPath, fileName);
-                if (!File.Exists(filePath) || ftpFiles[fileName].Size != new FileInfo(filePath).Length)
-                {
-                    if (File.Exists(filePath)) File.Delete(filePath);
-                    downloadingFiles.Add(filePath, ftpFiles[fileName]);
-                }
-            }
-            return downloadingFiles;
-        }
-
-        public Dictionary<string, FtpListItem> GetDataFiles(ServerConnector serverConnector)
-        {
-            var dataFiles = new Dictionary<string, FtpListItem>();
-            var ftpFiles = serverConnector.GetFiles(this, out Exception connectionException);
-            if (connectionException != null) throw connectionException;
-            foreach (var ftpFile in ftpFiles)
-            {
-                dataFiles.Add(ftpFile.Name, ftpFile);
-            }
-            return dataFiles;
-        }
-        
-
-        public DataServerInfo Copy()
-        {
-            return new DataServerInfo(Server, UserName, Password, DataNamingPattern);
-        }
-
-        public static void ValidateNamingPattern(string dataNamingPattern)
-        {
-            if (string.IsNullOrEmpty(dataNamingPattern))
-                throw new ArgumentException(Resources.DataServerInfo_ValidateNamingPattern_A_data_naming_pattern_is_required_for_downloaded_data__Please_add_a_data_naming_pattern_);
-        }
-
-        private enum Attr
-        {
-            ServerUri,
-            ServerUrl, // deprecated
-            ServerFolder, // deprecated
-            ServerUserName,
-            ServerPassword,
-            DataNamingPattern
-        };
-
-        public void WriteXml(XmlWriter writer)
-        {
-            writer.WriteAttributeIfString(Attr.ServerUri, Server.AbsoluteUri);
-            writer.WriteAttributeIfString(Attr.ServerUserName, UserName);
-            writer.WriteAttributeIfString(Attr.ServerPassword, Password);
-            writer.WriteAttributeIfString(Attr.DataNamingPattern, DataNamingPattern);
-        }
-
-        public static DataServerInfo ReadXml(XmlReader reader)
-        {
-            var serverName = reader.GetAttribute(Attr.ServerUrl);
-            var uriString = reader.GetAttribute(Attr.ServerUri);
-            if (string.IsNullOrEmpty(serverName) && string.IsNullOrEmpty(uriString))
-                return null;
-            var folder = reader.GetAttribute(Attr.ServerFolder);
-            var uri = !string.IsNullOrEmpty(uriString) ? new Uri(uriString) : new Uri($@"ftp://{serverName}/{folder}");
-            var username = reader.GetAttribute(Attr.ServerUserName);
-            var password = reader.GetAttribute(Attr.ServerPassword);
-            var dataNamingPattern = reader.GetAttribute(Attr.DataNamingPattern);
-            return new DataServerInfo(uri, username, password, dataNamingPattern);
-        }
-
-    }
-
-
-
-    public class ServerInfo
-    {
-        public ServerInfo(Uri server, string userName, string password)
-        {
-            Server = server;
-            UserName = userName ?? string.Empty;
-            Password = password ?? string.Empty;
-        }
-
-        public readonly Uri Server;
-        public readonly string UserName;
-        public readonly string Password;
-
-
-        protected bool Equals(ServerInfo other)
-        {
-            // checks if annotation paths are both empty or equal
-
-            return other.Server.Equals(Server) &&
-                    other.UserName.Equals(UserName) &&
-                    other.Password.Equals(Password);
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
-            return Equals((ServerInfo)obj);
-        }
-
-        public override int GetHashCode()
-        {
-            return Server.GetHashCode() +
-                   UserName.GetHashCode() +
-                   Password.GetHashCode();
-        }
-
     }
 }
