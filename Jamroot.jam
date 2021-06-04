@@ -103,7 +103,7 @@ local default_libraries_path = "./libraries" ;
 local libraries_path = [ MATCH --libraries-path=(.*) : [ modules.peek : ARGV ] ] ;
 libraries_path ?= $(default_libraries_path) ; # set default path in absence of command-line path
 
-local default_boost_src = "$(libraries_path)/boost_1_67_0" ;
+local default_boost_src = "$(libraries_path)/boost_1_76_0" ;
 local boost_src = [ MATCH --boost-src=(.*) : [ modules.peek : ARGV ] ] ;
 boost_src ?= $(default_boost_src) ; # set default path in absence of command-line path
 
@@ -279,7 +279,7 @@ project pwiz
 
         # avoid deprecation warnings
         <define>BOOST_NO_AUTO_PTR
-        <define>_SILENCE_FPOS_SEEKPOS_DEPRECATION_WARNING # TODO: remove this next time Boost is updated
+        <define>BOOST_BIND_GLOBAL_PLACEHOLDERS
 
         # special msvc hacks
         <toolset>msvc:<define>WIN32                     # windows
