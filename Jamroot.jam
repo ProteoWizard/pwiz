@@ -281,6 +281,8 @@ project pwiz
         <define>BOOST_NO_AUTO_PTR
         <define>BOOST_BIND_GLOBAL_PLACEHOLDERS
 
+        <define>BOOST_REGEX_MATCH_EXTRA                 # enable access to all captures
+
         # special msvc hacks
         <toolset>msvc:<define>WIN32                     # windows
         <toolset>msvc:<define>_CRT_SECURE_NO_DEPRECATE  # don't deprecate the standard library 

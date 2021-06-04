@@ -595,6 +595,14 @@ rule init ( version : location : options * )
             :   $(requirements)
                 <location-prefix>atomic-$(version-tokens:J=_)
                 <use>boost
+                <define>BOOST_ATOMIC_SOURCE
+                <link>shared:<define>BOOST_ATOMIC_DYN_LINK=1
+                <link>static:<define>BOOST_ATOMIC_STATIC_LINK=1
+                <include>$(location)/libs/atomic/src
+            :
+            :
+                <link>shared:<define>BOOST_ATOMIC_DYN_LINK=1
+                <link>static:<define>BOOST_ATOMIC_STATIC_LINK=1
             ;
             
         lib psapi ;
