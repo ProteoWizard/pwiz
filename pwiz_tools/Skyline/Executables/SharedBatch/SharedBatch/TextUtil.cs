@@ -20,6 +20,7 @@ namespace SharedBatch
         public const string EXT_R = ".R";
         public const string EXT_CSV = ".csv";
         public const string EXT_LOG = ".log";
+        public const string EXT_TMP = ".tmp";
         public const string EXT_APPREF = ".appref-ms";
 
         public const char SEPARATOR_CSV = ',';
@@ -65,32 +66,42 @@ namespace SharedBatch
         }
 
 
-        public static bool SuccessfulReplace(Validator validate, string oldText, string newText, string originalString, out string replacedString)
+        public static bool SuccessfulReplace(Validator validate, string oldText, string newText, string originalString, bool preferReplace, out string replacedString)
         {
             var oldPath = originalString;
             var newPath = TryReplaceStart(oldText, newText, originalString);
             replacedString = oldPath;
-
+            if (string.IsNullOrEmpty(originalString))
+                return false;
+            var initialValidated = false;
+            var replacedValidated = false;
             try
             {
                 validate(oldPath);
-                return false;
+                initialValidated = true;
             }
             catch (ArgumentException)
             {
                 // Pass - expect oldPath to be invalid
             }
 
-            replacedString = newPath;
             try
             {
                 validate(newPath);
+                replacedValidated = true;
             }
             catch (ArgumentException)
             {
-                return false;
+                // Pass
             }
-            return true;
+
+            if (replacedValidated && (!initialValidated || preferReplace))
+            {
+                replacedString = newPath;
+                return true;
+            }
+
+            return false;
         }
 
         public static string TryReplaceStart(string oldText, string newText, string originalString)
@@ -210,6 +221,20 @@ namespace SharedBatch
             return ((int)optionalInt).ToString(CultureInfo.CurrentCulture);
         }
 
+        /*public static List<T> Copy<T>(List<T> toCopy)
+        {
+            var newList = new List<T>();
+            foreach (var config in toCopy) newList.Add(config);
+            return newList;
+        }
+
+        public static Dictionary<T, R> CopyDict<T, R>(Dictionary<T, R> toCopy)
+        {
+            var newDict = new Dictionary<T, R>();
+            foreach (var entry in toCopy) newDict.Add(entry.Key, entry.Value);
+            return newDict;
+        }
+*/
         #endregion
     }
 }
