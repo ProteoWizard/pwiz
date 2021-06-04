@@ -459,6 +459,10 @@ namespace pwiz.Skyline.EditUI
             return document;
         }
 
+        /// <summary>
+        /// Returns a list of tuples with the peptide sequences and optional charges.
+        /// The returned list may contain nulls, and will have exactly the same number of rows as gridViewPeptides.
+        /// </summary>
         private List<Tuple<string, Adduct>> ListPeptideSequences()
         {
             List<Tuple<string, Adduct>> listSequences = new List<Tuple<string, Adduct>>();

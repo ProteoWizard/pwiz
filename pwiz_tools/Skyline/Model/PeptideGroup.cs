@@ -455,6 +455,13 @@ namespace pwiz.Skyline.Model
             return seq;
         }
 
+        /// <summary>
+        /// Parses a peptides sequence which may optionally be followed by a charge indicator.
+        /// Returns a tuple containing the peptide sequence and parsed adduct (or Adduct.Empty if there was no charge indicator).
+        /// The peptide sequence will have N-terminal mods normalized so that they appear after the first amino acid.
+        ///
+        /// If the peptide sequence is invalid, then <paramref name="errorMessage "/> will be set.
+        /// </summary>
         public static Tuple<string, Adduct> ParsePeptideSequenceAndAdduct(string peptideSequence, out string errorMessage)
         {
             peptideSequence = (peptideSequence ?? string.Empty).Trim();
@@ -475,7 +482,7 @@ namespace pwiz.Skyline.Model
                         .PasteDlg_ListPeptideSequences_This_peptide_sequence_contains_invalid_characters;
                     return null;
                 }
-                peptideSequence = FastaSequence.NormalizeNTerminalMod(peptideSequence);
+                peptideSequence = NormalizeNTerminalMod(peptideSequence);
             }
             else if (!crosslinkLibraryKey.IsSupportedBySkyline())
             {

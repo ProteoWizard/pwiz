@@ -186,6 +186,7 @@
     <Compile Include="NeutralLossModificationDisplayTest.cs" />
     <Compile Include="NoQuantitativeTransitionsTest.cs" />
     <Compile Include="NormalizeToCalibrationCurveTest.cs" />
+    <Compile Include="PastePeptidesWithChargesTest.cs" />
     <Compile Include="PeptideSettingsTooltipTest.cs" />
     <Compile Include="ProxlTest.cs" />
     <Compile Include="QualitativeIonRatioTest.cs" />
