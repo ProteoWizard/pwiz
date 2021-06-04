@@ -137,7 +137,6 @@ namespace SkylineBatchTest
                         dlg.Message);
                     dlg.ClickOk();
                 });
-            Thread.SpinWait(100000000); // wait for short import to finish
             RunUI(() =>
             {
                 FunctionalTestUtil.CheckConfigs(3, 1, mainForm);

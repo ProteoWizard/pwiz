@@ -1017,13 +1017,13 @@ namespace SkylineBatch
                     state = ProgramaticallyRemoveAt(GetConfigIndex(config.GetName(), state.baseState), state);
             }
             importedConfigs = AssignDependencies(importedConfigs, true, state, out string warningMessage);
-            if (warningMessage != null)
-                DisplayWarning(warningMessage);
 
             foreach (var config in importedConfigs)
                 state = ProgramaticallyAddConfig(config, state);
             state = DisableInvalidConfigs(state);
             SetState(state);
+            if (warningMessage != null)
+                DisplayWarning(warningMessage);
         }
 
         private SkylineBatchConfigManagerState DisableInvalidConfigs(SkylineBatchConfigManagerState state)

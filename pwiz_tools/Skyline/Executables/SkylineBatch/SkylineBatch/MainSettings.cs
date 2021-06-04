@@ -181,12 +181,9 @@ namespace SkylineBatch
 
         public bool TryPathReplace(string oldRoot, string newRoot, out MainSettings pathReplacedMainSettings)
         {
-            var templateReplaced = false;
-            var replacedTemplatePath = TemplateFilePath;
             var preferReplace = Program.FunctionalTest;
-            if (DependentConfigName == null)
-                templateReplaced = TextUtil.SuccessfulReplace(ValidateTemplateFile, oldRoot, newRoot, TemplateFilePath,
-                    Program.FunctionalTest, out replacedTemplatePath);
+            var templateReplaced = TextUtil.SuccessfulReplace(ValidateTemplateFile, oldRoot, newRoot, TemplateFilePath,
+                    Program.FunctionalTest, out string replacedTemplatePath);
             var analysisReplaced =
                 TextUtil.SuccessfulReplace(ValidateAnalysisFolder, oldRoot, newRoot, AnalysisFolderPath, preferReplace,
                     out string replacedAnalysisPath);
