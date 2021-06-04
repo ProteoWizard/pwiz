@@ -1,14 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Runtime.Remoting.Messaging;
 using System.Threading;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SkylineBatch;
-using SharedBatchTest;
-using SkylineBatch.Properties;
 
 namespace SkylineBatchTest
 {
@@ -23,7 +17,6 @@ namespace SkylineBatchTest
 
         public static void WaitForCondition(ConditionDelegate condition, MainForm mainForm, bool expectedValue, TimeSpan timeout, int timestep, string errorMessage)
         {
-            var ticksPerMillisecond = 10000;
             var startTime = DateTime.Now;
             while (DateTime.Now - startTime < timeout)
             {

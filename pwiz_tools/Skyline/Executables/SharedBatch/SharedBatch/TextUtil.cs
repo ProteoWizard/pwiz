@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
 using System.Linq;
 using System.Text;
 using SharedBatch.Properties;
@@ -221,20 +220,6 @@ namespace SharedBatch
             return ((int)optionalInt).ToString(CultureInfo.CurrentCulture);
         }
 
-        /*public static List<T> Copy<T>(List<T> toCopy)
-        {
-            var newList = new List<T>();
-            foreach (var config in toCopy) newList.Add(config);
-            return newList;
-        }
-
-        public static Dictionary<T, R> CopyDict<T, R>(Dictionary<T, R> toCopy)
-        {
-            var newDict = new Dictionary<T, R>();
-            foreach (var entry in toCopy) newDict.Add(entry.Key, entry.Value);
-            return newDict;
-        }
-*/
         #endregion
     }
 }

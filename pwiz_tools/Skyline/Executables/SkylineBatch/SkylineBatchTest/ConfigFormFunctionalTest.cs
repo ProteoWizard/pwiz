@@ -2,9 +2,7 @@
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SharedBatch;
-using SharedBatchTest;
 using SkylineBatch;
-using SkylineBatchTest;
 
 namespace SkylineBatchTest
 {

@@ -24,7 +24,6 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using SharedBatch;
 using SkylineBatch;
 
 

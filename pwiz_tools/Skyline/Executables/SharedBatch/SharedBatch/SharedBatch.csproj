@@ -79,7 +79,6 @@
       <DependentUpon>FindSkylineForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Interfaces.cs" />
-    <Compile Include="OldLogger.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="LongWaitDlg.cs">
       <SubType>Form</SubType>
