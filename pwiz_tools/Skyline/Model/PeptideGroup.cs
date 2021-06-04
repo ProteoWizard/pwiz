@@ -455,6 +455,39 @@ namespace pwiz.Skyline.Model
             return seq;
         }
 
+        public static Tuple<string, Adduct> ParsePeptideSequenceAndAdduct(string peptideSequence, out string errorMessage)
+        {
+            peptideSequence = (peptideSequence ?? string.Empty).Trim();
+            if (string.IsNullOrEmpty(peptideSequence))
+            {
+                errorMessage = null;
+                return Tuple.Create(string.Empty, Adduct.EMPTY);
+            }
+            var adduct = Transition.GetChargeFromIndicator(peptideSequence, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE);
+            peptideSequence = Transition.StripChargeIndicators(peptideSequence, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE);
+            CrosslinkLibraryKey crosslinkLibraryKey =
+                CrosslinkSequenceParser.TryParseCrosslinkLibraryKey(peptideSequence, 0);
+            if (crosslinkLibraryKey == null)
+            {
+                if (!IsExSequence(peptideSequence))
+                {
+                    errorMessage = Resources
+                        .PasteDlg_ListPeptideSequences_This_peptide_sequence_contains_invalid_characters;
+                    return null;
+                }
+                peptideSequence = FastaSequence.NormalizeNTerminalMod(peptideSequence);
+            }
+            else if (!crosslinkLibraryKey.IsSupportedBySkyline())
+            {
+                errorMessage = Resources
+                    .PasteDlg_ListPeptideSequences_The_structure_of_this_crosslinked_peptide_is_not_supported_by_Skyline;
+                return null;
+            }
+
+            errorMessage = null;
+            return Tuple.Create(peptideSequence, adduct);
+        }
+
         public FastaSequence AddAlternative(ProteinMetadata proteinMetadata)
         {
             var alternativesNew = new List<ProteinMetadata>(Alternatives) {proteinMetadata};

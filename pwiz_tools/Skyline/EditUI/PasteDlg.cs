@@ -31,7 +31,6 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
-using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Lib;
@@ -303,8 +302,10 @@ namespace pwiz.Skyline.EditUI
                 return null;
             try
             {
-                matcher.CreateMatches(document.Settings, listPeptideSequences, Settings.Default.StaticModList,
-                                      Settings.Default.HeavyModList);
+                matcher.CreateMatches(document.Settings,
+                    listPeptideSequences.Where(tuple => tuple != null).Select(tuple => tuple.Item1),
+                    Settings.Default.StaticModList,
+                    Settings.Default.HeavyModList);
             }
             catch (FormatException e)
             {
@@ -332,13 +333,19 @@ namespace pwiz.Skyline.EditUI
             int lastGroupGlobalIndex = 0, lastPeptideIndex = -1;
             for (int i = gridViewPeptides.Rows.Count - 1; i >= 0; i--)
             {
+                var tuple = listPeptideSequences[i];
+                if (tuple == null)
+                {
+                    continue;
+                }
+
+                var pepModSequence = tuple.Item1;
+                Assume.IsFalse(string.IsNullOrEmpty(pepModSequence));
+                var adduct = tuple.Item2;
                 PeptideGroupDocNode peptideGroupDocNode;
                 var row = gridViewPeptides.Rows[i];
-                var pepModSequence = Convert.ToString(row.Cells[colPeptideSequence.Index].Value);
-                pepModSequence = FastaSequence.NormalizeNTerminalMod(pepModSequence);
                 var proteinName = Convert.ToString(row.Cells[colPeptideProtein.Index].Value);
-                if (string.IsNullOrEmpty(pepModSequence) && string.IsNullOrEmpty(proteinName))
-                    continue;
+                
                 if (string.IsNullOrEmpty(proteinName))
                 {
                     peptideGroupDocNode = GetSelectedPeptideGroupDocNode(document, selectedPath);
@@ -407,8 +414,16 @@ namespace pwiz.Skyline.EditUI
                     }
                 }
                 // Create node using ModificationMatcher.
-                nodePepNew = matcher.GetModifiedNode(pepModSequence, fastaSequence).ChangeSettings(document.Settings,
-                                                                                                  SrmSettingsDiff.ALL);
+                {
+                    nodePepNew = matcher.GetModifiedNode(pepModSequence, fastaSequence);
+                    var settings = document.Settings;
+                    if (!adduct.IsEmpty)
+                    {
+                        settings = settings.ChangeTransitionFilter(f =>
+                            f.ChangePeptidePrecursorCharges(new[] {adduct}));
+                    }
+                    nodePepNew = nodePepNew.ChangeSettings(settings, SrmSettingsDiff.ALL);
+                }
                 // Avoid adding an existing peptide a second time.
                 if (!peptides.Contains(nodePep => Equals(nodePep.Key, nodePepNew.Key)))
                 {
@@ -444,16 +459,31 @@ namespace pwiz.Skyline.EditUI
             return document;
         }
 
-        private List<string> ListPeptideSequences()
+        private List<Tuple<string, Adduct>> ListPeptideSequences()
         {
-            List<string> listSequences = new List<string>();
-            for (int i = gridViewPeptides.Rows.Count - 1; i >= 0; i--)
+            List<Tuple<string, Adduct>> listSequences = new List<Tuple<string, Adduct>>();
+            for (int i = 0; i < gridViewPeptides.Rows.Count; i++)
             {
                 var row = gridViewPeptides.Rows[i];
-                var peptideSequence = Convert.ToString(row.Cells[colPeptideSequence.Index].Value);
+                var sequenceAdductTuple = FastaSequence.ParsePeptideSequenceAndAdduct(
+                    Convert.ToString(row.Cells[colPeptideSequence.Index].Value), out string errorMessage);
+                if (errorMessage != null)
+                {
+                    ShowPeptideError(new PasteError
+                    {
+                        Column = colPeptideSequence.Index,
+                        Line = i,
+                        Message = errorMessage
+                    });
+                    return null;
+                }
+
+                var peptideSequence = sequenceAdductTuple.Item1;
+                var adduct = sequenceAdductTuple.Item2;
                 var proteinName = Convert.ToString(row.Cells[colPeptideProtein.Index].Value);
                 if (string.IsNullOrEmpty(peptideSequence) && string.IsNullOrEmpty(proteinName))
                 {
+                    listSequences.Add(null);
                     continue;
                 }
                 if (string.IsNullOrEmpty(peptideSequence))
@@ -466,35 +496,7 @@ namespace pwiz.Skyline.EditUI
                     });
                     return null;
                 }
-
-                CrosslinkLibraryKey crosslinkLibraryKey =
-                    CrosslinkSequenceParser.TryParseCrosslinkLibraryKey(peptideSequence, 0);
-                if (crosslinkLibraryKey == null)
-                {
-                    if (!FastaSequence.IsExSequence(peptideSequence))
-                    {
-                        ShowPeptideError(new PasteError
-                        {
-                            Column = colPeptideSequence.Index,
-                            Line = i,
-                            Message = Resources.PasteDlg_ListPeptideSequences_This_peptide_sequence_contains_invalid_characters
-                        });
-                        return null;
-                    }
-                    peptideSequence = FastaSequence.NormalizeNTerminalMod(peptideSequence);
-                }
-                else if (!crosslinkLibraryKey.IsSupportedBySkyline())
-                {
-                    ShowPeptideError(new PasteError
-                    {
-                        Column = colPeptideSequence.Index,
-                        Line = i,
-                        Message = Resources.PasteDlg_ListPeptideSequences_The_structure_of_this_crosslinked_peptide_is_not_supported_by_Skyline
-                    });
-                    return null;
-                }
-
-                listSequences.Add(peptideSequence);
+                listSequences.Add(Tuple.Create(peptideSequence, adduct));
             }
             return listSequences;
         }
