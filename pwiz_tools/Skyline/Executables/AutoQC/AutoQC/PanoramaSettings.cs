@@ -309,7 +309,7 @@ namespace AutoQC
             {
                 if (_status != 2 || !string.Equals(ex.Message, _exceptionMessage))
                 {
-                    _logger.LogException(ex, Resources.PanoramaPinger_PingPanoramaServer_Error_pinging_Panorama_server_ + panoramaServerUri);
+                    _logger.LogError(Resources.PanoramaPinger_PingPanoramaServer_Error_pinging_Panorama_server_ + panoramaServerUri, ex.ToString());
                     _status = 2;
                     _exceptionMessage = ex.Message;
                 }

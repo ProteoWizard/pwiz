@@ -252,7 +252,7 @@ namespace AutoQC
         private void OnFileWatcherError(ErrorEventArgs e)
         {
             var folder = _fileWatcher != null ? _fileWatcher.Path : "UNKNOWN";
-            _logger.LogException(e.GetException(), string.Format(Resources.AutoQCFileSystemWatcher_OnFileWatcherError_There_was_an_error_watching_the_folder__0__, folder));
+            _logger.LogError(string.Format(Resources.AutoQCFileSystemWatcher_OnFileWatcherError_There_was_an_error_watching_the_folder__0__, folder), e.GetException().ToString());
             _fileWatcherError = e;
         }
 

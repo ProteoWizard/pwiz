@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -36,6 +37,8 @@ namespace AutoQC
         }
 
         public AutoQcConfig Config { get; private set; }
+
+        public IValidatorControl CurrentControl { get; private set; } // for functional testing
 
 
         private async void CreateValidConfig()
@@ -164,15 +167,20 @@ namespace AutoQC
 
         private void AddControl(UserControl control)
         {
+            var newHeight = Height - panel1.Height + control.Height;
+            var newWidth = Width - panel1.Width + control.Width;
+            Size = new Size(newWidth, newHeight);
             control.Dock = DockStyle.Fill;
             control.Show();
             panel1.Controls.Add(control);
+            CurrentControl = (IValidatorControl)control;
         }
 
         private void RemoveControl(UserControl control)
         {
             control.Hide();
             panel1.Controls.Remove(control);
+            CurrentControl = null;
         }
 
         private void btnSkip_Click(object sender, EventArgs e)

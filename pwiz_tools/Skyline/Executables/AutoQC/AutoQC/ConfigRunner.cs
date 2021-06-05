@@ -148,7 +148,7 @@ namespace AutoQC
 
         public string GetLogDirectory()
         {
-            return Path.GetDirectoryName(_logger.GetFile());
+            return Path.GetDirectoryName(_logger.LogFile);
         }
 
         public void Start()
@@ -493,7 +493,7 @@ namespace AutoQC
                 }
                 else
                 {
-                    _logger.LogException(fse, Resources.ConfigRunner_ImportFile_Error_getting_status_of_file__0__, GetFilePathForLog(filePath));
+                    LogException(fse, Resources.ConfigRunner_ImportFile_Error_getting_status_of_file__0__, GetFilePathForLog(filePath));
                 }
                 // Put the file in the re-import queue
                 if (addToReimportQueueOnFailure)
@@ -690,7 +690,7 @@ namespace AutoQC
             }
             catch (Exception e)
             {
-                logger.LogException(e, Resources.ConfigRunner_IsIntegrateAllChecked_Error_reading_file__0__, mainSettings.SkylineFilePath);
+                LogException(logger, e, Resources.ConfigRunner_IsIntegrateAllChecked_Error_reading_file__0__, mainSettings.SkylineFilePath);
                 return false;
             }
             logger.LogError(Resources.ConfigRunner_IsIntegrateAllChecked__Integrate_all__is_not_checked_for_the_Skyline_document__This_setting_is_under_the__Settings__menu_in_Skyline__and_should_be_checked_for__documents_with_QC_results_);
@@ -735,7 +735,7 @@ namespace AutoQC
                 LastAcquiredFileDate = lastAcquiredFileDate;
                 if (!lastAcquiredFileDate.Equals(DateTime.MinValue))
                 {
-                    logger.Log(Resources.ConfigRunner_ReadLastAcquiredFileDate_The_most_recent_acquisition_date_in_the_Skyline_document_is__0_, lastAcquiredFileDate);
+                    logger.Log(string.Format(Resources.ConfigRunner_ReadLastAcquiredFileDate_The_most_recent_acquisition_date_in_the_Skyline_document_is__0_, lastAcquiredFileDate));
                 }
                 else
                 {
@@ -744,7 +744,7 @@ namespace AutoQC
             }
             catch (IOException e)
             {
-                logger.LogException(e, Resources.ConfigRunner_IsIntegrateAllChecked_Error_reading_file__0__, reportFile);
+                LogException(logger, e, Resources.ConfigRunner_IsIntegrateAllChecked_Error_reading_file__0__, reportFile);
                 return false;
             }
             return true;
@@ -777,7 +777,7 @@ namespace AutoQC
                         }
                         catch (Exception e)
                         {
-                            logger.LogException(e, Resources.ConfigRunner_GetLastAcquiredFileDate_Error_parsing_acquired_time_from_Skyline_report___0_, reportFile);
+                            LogException(logger, e, Resources.ConfigRunner_GetLastAcquiredFileDate_Error_parsing_acquired_time_from_Skyline_report___0_, reportFile);
                         }
                         if (acqDate.CompareTo(lastAcq) == 1)
                         {
@@ -853,7 +853,7 @@ namespace AutoQC
         {
             _logger.Log(string.Format(message, args));    
         }
-        
+
         private void LogError(string message, params object[] args)
         {
             _logger.LogError(string.Format(message, args));
@@ -861,7 +861,12 @@ namespace AutoQC
 
         private void LogException(Exception e, string message, params object[] args)
         {
-            _logger.LogException(e, string.Format(message, args));
+            _logger.LogError(string.Format(message, args), e.ToString());
+        }
+
+        private static void LogException(Logger logger, Exception e, string message, params object[] args)
+        {
+            logger.LogError(string.Format(message, args), e.ToString());
         }
 
         private void CancelAsync()
@@ -918,6 +923,16 @@ namespace AutoQC
         public bool IsDisconnected()
         {
             return _runnerStatus == RunnerStatus.Disconnected;
+        }
+
+        public bool IsCanceling()
+        {
+            return _runnerStatus == RunnerStatus.Canceling;
+        }
+
+        public bool IsWaiting()
+        {
+            return _runnerStatus == RunnerStatus.Waiting;
         }
 
         public bool CanStart()

@@ -47,9 +47,13 @@ namespace AutoQC
         }
 
         // For testing only
-        public void SetText(string text)
+        public void SetInput(object panoramaObject)
         {
-            throw new NotImplementedException("The set text method used in testing cannot be applied to the Panorama settings input, since it has multiple text fields.");
+            var panoramaSettings = (PanoramaSettings) panoramaObject;
+            textPanoramaUrl.Text = panoramaSettings.PanoramaServerUrl;
+            textPanoramaEmail.Text = panoramaSettings.PanoramaUserEmail;
+            textPanoramaPasswd.Text = panoramaSettings.PanoramaPassword;
+            textPanoramaFolder.Text = panoramaSettings.PanoramaFolder;
         }
     }
 }

@@ -18,6 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using AutoQC;
 using SharedBatch;
 
@@ -100,7 +101,7 @@ namespace AutoQCTest
         public static Logger GetTestLogger(AutoQcConfig config)
         {
             var logFile = GetTestFilePath("TestLogs\\AutoQC.log");
-            return new Logger(logFile, config.Name);
+            return new Logger(logFile, config.Name, false);
         }
 
         public static List<AutoQcConfig> ConfigListFromNames(string[] names)
@@ -131,6 +132,17 @@ namespace AutoQCTest
                 testConfigManager.UserAddConfig(config);
             
             return testConfigManager;
+        }
+
+        public static void WaitForCondition(Func<bool> condition, TimeSpan timeout, int timestep, string errorMessage)
+        {
+            var startTime = DateTime.Now;
+            while (DateTime.Now - startTime < timeout)
+            {
+                if (condition()) return;
+                Thread.Sleep(timestep);
+            }
+            throw new Exception(errorMessage);
         }
 
     }

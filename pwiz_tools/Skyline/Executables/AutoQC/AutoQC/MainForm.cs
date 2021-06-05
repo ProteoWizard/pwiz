@@ -37,6 +37,7 @@ namespace AutoQC
         // ItemCheck and ItemChecked events on the listview are ignored until then.
         private bool _loaded;
         private readonly ColumnWidthCalculator _listViewColumnWidths;
+        private Timer _outputLog;
 
         public MainForm(string openFile)
         {
@@ -54,9 +55,14 @@ namespace AutoQC
             UpdateUiLogFiles();
             UpdateSettingsTab();
 
+            _outputLog = new Timer { Interval = 500 };
+            _outputLog.Tick += OutputLog;
+            _outputLog.Start();
+
             Shown += ((sender, args) =>
             {
                 _loaded = true;
+                UpdateUiConfigurations();
                 if (Settings.Default.KeepAutoQcRunning)
                     _configManager.RunEnabled();
                 _configManager.DoServerValidation();
@@ -145,7 +151,7 @@ namespace AutoQC
             _configManager.SetConfigInvalid(config);
         }
 
-        public void ReplaceAllSkylineVersions(SkylineSettings skylineSettings)
+        public bool? ReplaceAllSkylineVersions(SkylineSettings skylineSettings)
         {
             try
             {
@@ -154,7 +160,7 @@ namespace AutoQC
             catch (ArgumentException)
             {
                 // Only ask to replace Skyline settings if new settings are valid
-                return;
+                return null;
             }
             if (DialogResult.Yes ==
                 DisplayQuestion(Resources.MainForm_ReplaceAllSkylineVersions_Do_you_want_to_use_this_Skyline_version_for_all_configurations_))
@@ -168,7 +174,10 @@ namespace AutoQC
                     DisplayError(e.Message);
                 }
                 UpdateUiConfigurations();
+                return true;
             }
+
+            return false;
         }
 
         private void btnDelete_Click(object sender, EventArgs e)
@@ -321,7 +330,7 @@ namespace AutoQC
             var config = _configManager.GetSelectedConfig();
             var logger = _configManager.GetLogger(config.Name);
             MainFormUtils.OpenFileExplorer(config.Name, _configManager.IsSelectedConfigValid(),
-                logger.GetDirectory(), 
+                logger.LogDirectory, 
                 Resources.MainForm_toolStripLogFolder_Click_log_folder, this);
         }
 
@@ -333,6 +342,7 @@ namespace AutoQC
         {
             RunUi(() =>
             {
+                if (!_loaded) return;
                 var topItemIndex = listViewConfigs.TopItem != null ? listViewConfigs.TopItem.Index : -1;
                 var listViewItems = _configManager.ConfigsListViewItems(listViewConfigs.CreateGraphics());
                 listViewConfigs.Items.Clear();
@@ -384,8 +394,154 @@ namespace AutoQC
         }
 
         #endregion
-        
+
         #region Logging
+
+        private bool _scrolling = true;
+
+        private void OutputLog(object sender, EventArgs e)
+        {
+            if (textBoxLog.IsDisposed) return;
+            _outputLog.Tick -= OutputLog;
+            if (WindowState != FormWindowState.Minimized && tabLog.Visible && textBoxLog.TextLength > 0)
+            {
+                _scrolling = textBoxLog.GetPositionFromCharIndex(textBoxLog.Text.Length - 1).Y <=
+                             textBoxLog.Height;
+            }
+
+            if (_configManager.SelectedLog < 0)
+            {
+                textBoxLog.Clear();
+            }
+            else
+            {
+                var logger = _configManager.GetSelectedLogger();
+                if (textBoxLog.TextLength == 0)
+                {
+                    if (logger.WillTruncate)
+                        LogErrorToUi(string.Format(Resources.AutoQcLogger_LogTruncatedMessage_____Log_truncated__Full_log_is_in__0_, _configManager.GetSelectedLogger().LogFile));
+                }
+                var logChanged = logger.OutputLog(LogToUi, LogErrorToUi);
+                if (logChanged)
+                    TrimDisplayedLog();
+                if (logChanged && _scrolling)
+                    ScrollToLogEnd();
+            }
+            _outputLog.Tick += OutputLog;
+        }
+
+        private void TrimDisplayedLog()
+        {
+            var numLines = textBoxLog.Lines.Length;
+            const int buffer = Logger.MaxLogLines / 10;
+            if (numLines > Logger.MaxLogLines + buffer)
+            {
+                textBoxLog.Text = string.Empty;
+                _configManager.GetSelectedLogger().DisplayLogFromFile();
+                ScrollToLogEnd();
+            }
+        }
+
+        private void ScrollToLogEnd()
+        {
+            _scrolling = true;
+            textBoxLog.SelectionStart = textBoxLog.TextLength;
+            textBoxLog.ScrollToCaret();
+        }
+
+        private void LogToUi(string text)
+        {
+            textBoxLog.AppendText(text);
+            textBoxLog.AppendText(Environment.NewLine);
+        }
+
+        private void LogErrorToUi(string text)
+        {
+            textBoxLog.SelectionStart = textBoxLog.TextLength;
+            textBoxLog.SelectionLength = 0;
+            textBoxLog.SelectionColor = Color.Red;
+            textBoxLog.AppendText(text);
+            textBoxLog.AppendText(Environment.NewLine);
+            textBoxLog.SelectionColor = textBoxLog.ForeColor;
+        }
+
+        private async void SwitchLogger()
+        {
+            _outputLog.Tick -= OutputLog;
+            textBoxLog.Clear();
+
+            var logger = _configManager.GetSelectedLogger();
+            try
+            {
+                await Task.Run(() =>
+                {
+                    // Read the log contents and display in the log tab.
+                    logger.DisplayLogFromFile();
+                });
+            }
+            catch (Exception ex)
+            {
+                DisplayError(ex.Message);
+            }
+
+            _scrolling = true;
+            _outputLog.Tick += OutputLog;
+        }
+
+        private void tabLog_Leave(object sender, EventArgs e)
+        {
+            _scrolling = _configManager.SelectedLog == 0;
+        }
+        
+        private void comboConfigs_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            _configManager.SelectLog(comboConfigs.SelectedIndex);
+            if (_configManager.SelectedLog >= 0)
+                btnOpenLogFolder.Enabled = true;
+            SwitchLogger();
+        }
+        
+        private void btnOpenLogFolder_Click(object sender, EventArgs e)
+        {
+            var logger = _configManager.GetSelectedLogger();
+            if (!File.Exists(logger.LogFile))
+            {
+                var logFolder = Path.GetDirectoryName(logger.LogFile);
+                if (!Directory.Exists(logFolder))
+                {
+                    DisplayError(string.Format(Resources.MainForm_btnOpenFolder_Click_File_location_does_not_exist___0_, logger.LogFile));
+                    return;
+                }
+                Process.Start(logFolder);
+                return;
+            }
+
+            var arg = "/select, \"" + logger.LogFile + "\"";
+            Process.Start("explorer.exe", arg);
+        }
+
+        private void btnViewLog_Click(object sender, EventArgs e)
+        {
+            tabMain.SelectTab(tabLog); // Select the log tab first
+            // Set the focus on the combobox.
+            // If the focus is on the textbox we will see a lot of scrolling for big log files.
+            comboConfigs.Focus();
+            if (_configManager.HasSelectedConfig())
+            {
+                _configManager.SelectLogOfSelectedConfig();
+                UpdateUiLogFiles();
+                // SwitchLogger(); // We don't need this. UpdateUiLogFiles will change the selected index in the log combobox which will end up calling SwitchLogger.
+            }
+        }
+
+        private void tabLog_Enter(object sender, EventArgs e)
+        {
+            ScrollToLogEnd();
+        }
+
+
+
+        /*
 
         private void btnViewLog_Click(object sender, EventArgs e)
         {
@@ -548,7 +704,7 @@ namespace AutoQC
         public void ClearLog()
         {
             textBoxLog.Clear();
-        }
+        }*/
 
         #endregion
 
@@ -695,6 +851,14 @@ namespace AutoQC
         public void UpdateRunningButtons(bool canStart, bool canStop)
         {
             // Implements interface member, AutoQC does not use running buttons
+        }
+
+        public void DisplayForm(Form form)
+        {
+            RunUi(() =>
+            {
+                form.ShowDialog(this);
+            });
         }
 
         #endregion

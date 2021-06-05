@@ -348,7 +348,4 @@ with:
   <data name="TextUtil_GetOptionalIntegerFromInvariantString_Cound_not_parse___0___as_type___1__" xml:space="preserve">
     <value>Cound not parse "{0}" as type "{1}"</value>
   </data>
-  <data name="ConfigManager_ImportFrom_The_following_configurations_are_running_and_cannot_be_overwritten_" xml:space="preserve">
-    <value>The following configurations are running and cannot be overwritten:</value>
-  </data>
 </root>

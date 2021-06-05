@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 using SharedBatch.Properties;
@@ -171,6 +170,8 @@ namespace SharedBatch
 
         protected bool Equals(SkylineSettings other)
         {
+            if (Type == SkylineType.Custom && other.Type == SkylineType.Custom)
+                return CmdPath.Equals(other.CmdPath);
             return Type == other.Type;
         }
 
@@ -185,14 +186,6 @@ namespace SharedBatch
         public override int GetHashCode()
         {
             return Type.GetHashCode();
-        }
-
-        public override string ToString()
-        {
-            var sb = new StringBuilder();
-            sb.Append("Type: ").AppendLine(Type.ToString());
-            sb.AppendLine("Path: ").AppendLine(CmdPath);
-            return sb.ToString();
         }
     }
 }

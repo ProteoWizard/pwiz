@@ -200,7 +200,7 @@ namespace AutoQC
 
         private void LogException(Exception e, string message)
         {
-            _logger.LogException(e, message);
+            _logger.LogError(message, e.ToString());
         }
 
         protected ProcessInfo GetProcessInfo()
