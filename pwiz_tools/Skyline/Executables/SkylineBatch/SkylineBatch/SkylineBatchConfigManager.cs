@@ -779,7 +779,8 @@ namespace SkylineBatch
                     _logList.Insert(1, oldLogger);
             }
 
-            if (_checkedRunOption == null) throw new Exception("Run option cannot be null");
+            if (_checkedRunOption == null)
+                throw new Exception("No run option selected.");
             var runOption = (RunBatchOptions)_checkedRunOption;
             var serverFiles = _runServerFiles;
             _checkedRunOption = null;
@@ -1004,7 +1005,6 @@ namespace SkylineBatch
             SetState(state);
             if (warningMessage != null)
                 DisplayWarning(warningMessage);
-            
         }
 
         private SkylineBatchConfigManagerState DisableInvalidConfigs(SkylineBatchConfigManagerState state)

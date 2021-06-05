@@ -65,7 +65,7 @@ namespace SkylineBatch
             serverConnector = new ServerConnector(Server);
             List<FtpListItem> serverFiles = null;
             Exception connectionException = null;
-            connectToServer.Start(false,
+            connectToServer.Start(false, 
                 (OnProgress) =>
                 {
                     serverConnector.Connect(OnProgress);

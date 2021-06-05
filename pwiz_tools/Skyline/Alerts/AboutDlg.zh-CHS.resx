@@ -247,14 +247,9 @@
     <value>5</value>
   </data>
   <data name="textBox1.Text" xml:space="preserve">
-    <value>Sciex
-WIFF文件阅读器库
-© 2010 年 AB Sciex LLC 版权所有。
-保留所有权利。
-https://sciex.com/
-
-Agilent Technologies
+    <value>Agilent Technologies
 Mass Hunter 数据访问组件
+© 2017 年 Agilent Technologies 版权所有
 https://www.agilent.com
 
 BiblioSpec
@@ -263,7 +258,7 @@ https://skyline.ms/build-blib.url
 
 Bruker
 CompassXtract 数据阅读器库
-© 2011 年 Bruker Daltonik GmbH 版权所有。
+© 2020 年 Bruker Daltonik GmbH 版权所有。
 保留所有权利。
 https://www.bruker.com/
 
@@ -295,9 +290,15 @@ ProteoWizard
 质谱数据导入
 https://github.com/ProteoWizard
 
+SCIEX
+WIFF文件阅读器库
+© 2020 年 AB Sciex LLC 版权所有。
+保留所有权利。
+https://sciex.com/
+
 Shimadzu Corporation
 Shimadzu 的文件转换器软件
-© 2014 年 Shimadzu Corporation 版权所有
+© 2020 年 Shimadzu Corporation 版权所有
 保留所有权利。
 https://www.shimadzu.com
 
@@ -311,14 +312,14 @@ https://system.data.sqlite.org/
 
 Thermo Fisher Scientific
 MSFileReader 文件读取工具
-© 2009 年 Thermo Fisher Scientific, Inc. 版权所有。
+© 2019 年 Thermo Fisher Scientific, Inc. 版权所有。
 保留所有权利。
 https://www.thermofisher.com/
 
 Waters Technologies Corporation
 方法导出库
 Waters Raw Data Access Component
-© 2010 年 Waters Corporation 版权所有。
+© 2021 年 Waters Corporation 版权所有。
 保留所有权利。
 https://www.waters.com/
 
