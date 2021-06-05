@@ -17,12 +17,9 @@
  */
 
 using System;
-using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
-using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentFTP;
@@ -323,7 +320,7 @@ namespace SkylineBatch
                 if (i == 3)
                 {
                     _logger.LogError(
-                        Resources.ConfigRunner_DownloadData_An_error_occurred_while_downloading_the_data_files_, exception.Message);
+                        Resources.ConfigRunner_DownloadData_An_error_occurred_while_downloading_the_data_files_, exception?.Message);
                     ChangeStatus(RunnerStatus.Error);
                 }
             }

@@ -33,7 +33,7 @@ namespace SkylineBatch
         // or replace an existing configuration.
         // Running configurations cannot be replaced, and will be opened in a read only mode.
 
-        private static int _selectedTab = 0;
+        private static int _selectedTab;
 
         private readonly IMainUiControl _mainControl;
         private readonly RDirectorySelector _rDirectorySelector;
@@ -43,7 +43,6 @@ namespace SkylineBatch
         private readonly RefineInputObject _refineInput;
         private readonly List<ReportInfo> _newReportList;
         private readonly Dictionary<string, string> _possibleTemplates;
-        private readonly SkylineBatchConfigManager _configManager;
         private SkylineSettings _currentSkylineSettings;
         private readonly Image _downloadImage;
         private readonly Image _downloadSelectedImage;
@@ -65,7 +64,6 @@ namespace SkylineBatch
             _newReportList = new List<ReportInfo>();
             _rDirectorySelector = rDirectorySelector;
             _mainControl = mainControl;
-            _configManager = configManager;
             _possibleTemplates = configManager.GetRefinedTemplates();
             var numConfigs = configManager.ConfigNamesAsObjectArray().Length;
             _showChangeAllSkylineSettings = (numConfigs == 1 && _action != ConfigAction.Edit) || numConfigs > 1;
