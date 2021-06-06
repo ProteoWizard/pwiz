@@ -152,14 +152,14 @@ namespace AutoQC
 
         #region Remove Configs
 
-        public void UserRemoveSelected()
+        public bool UserRemoveSelected()
         {
             var state = new AutoQcConfigManagerState(this);
             AssertConfigSelected(state.baseState);
-            UserRemoveAt(SelectedConfig);
+            return UserRemoveAt(SelectedConfig);
         }
 
-        public void UserRemoveAt(int index)
+        public new bool UserRemoveAt(int index)
         {
             lock (_lock)
             {
@@ -180,12 +180,13 @@ namespace AutoQC
                             (string.Format(Resources.AutoQcConfigManager_UserRemoveAt_The_configuration___0___is_running__Please_stop_the_configuration_and_try_again_, configRunner.GetConfigName()));
                     }
                     DisplayWarning(message);
-                    return;
+                    return false;
                 }
                 // remove config
                 state.baseState = base.UserRemoveAt(index, state.baseState);
                 state = RemoveConfig(configRunner.Config, state);
                 SetState(state);
+                return true;
             }
         }
         
@@ -407,9 +408,14 @@ namespace AutoQC
 
         public void DoServerValidation()
         {
+            DoServerValidation(_configList);
+        }
+
+        public void DoServerValidation(ImmutableList<IConfig> configs)
+        {
             lock (_lock)
             {
-                foreach (var config in _configList)
+                foreach (var config in configs)
                 {
                     var autoQcConfig = (AutoQcConfig)config;
                     if (autoQcConfig.IsEnabled || !IsConfigValid(GetConfigIndex(autoQcConfig.Name)))
@@ -636,6 +642,8 @@ namespace AutoQC
                 state = ProgramaticallyAddConfig(config, state);
             }
             SetState(state);
+            // Do server validation
+            DoServerValidation(addedConfigs.ToImmutableList());
         }
 
         #endregion

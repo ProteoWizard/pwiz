@@ -396,24 +396,27 @@ namespace AutoQC
 
         private void ProcessFilesCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            if (e.Error != null)
+            Task.Run(() =>
             {
+                if (e.Error != null)
+                {
                 LogException(e.Error, Resources.ConfigRunner_ProcessFilesCompleted_An_error_occurred_while_running_configuration_);  
-            }
-            else if (e.Result == null)
-            {
-                LogError(Resources.ConfigRunner_ProcessFilesCompleted_An_error_occurred__Stopping_configuration_);
-            }
-            else if (CANCELED.Equals(e.Result))
-            {
-                Log(Resources.ConfigRunner_ProcessFilesCompleted_Canceled_configuration_);
-            }
-            else
-            {
-                Log(Resources.ConfigRunner_ProcessFilesCompleted_Finished_running_configuration_);
-            }
+                }
+                else if (e.Result == null)
+                {
+                    LogError(Resources.ConfigRunner_ProcessFilesCompleted_An_error_occurred__Stopping_configuration_);
+                }
+                else if (CANCELED.Equals(e.Result))
+                {
+                    Log(Resources.ConfigRunner_ProcessFilesCompleted_Canceled_configuration_);
+                }
+                else
+                {
+                    Log(Resources.ConfigRunner_ProcessFilesCompleted_Finished_running_configuration_);
+                }
 
-            Stop();
+                Stop();
+            });
         }
 
         private bool ProcessExistingFiles(DoWorkEventArgs e)
@@ -638,14 +641,17 @@ namespace AutoQC
                 else if(_runnerStatus != RunnerStatus.Error)
                 {
                     ChangeStatus(RunnerStatus.Stopped);
-                    _logger?.Close();
                 }
 
                 if (_runnerStatus == RunnerStatus.Stopped && _panoramaUploadError)
                 {
                     ChangeStatus(RunnerStatus.Error);
                 }
-                
+
+                if (IsStopped())
+                {
+                    _logger?.Close();
+                }
                 _panoramaPinger?.Stop();
             });
         }
@@ -951,7 +957,7 @@ namespace AutoQC
             args.Append(string.Format(" --in=\"{0}\"", Config.MainSettings.SkylineFilePath));
 
             string importOnOrAfter = string.Empty;
-            if (importContext.ImportExisting)
+            if (importContext.ImportExisting || !Config.MainSettings.RemoveResults)
             {
                 // We are importing existing files in the folder.  The import-on-or-after is determined
                 // by the last acquisition date on the files already imported in the Skyline document.
