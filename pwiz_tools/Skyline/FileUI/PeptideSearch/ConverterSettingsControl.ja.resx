@@ -223,7 +223,7 @@
     <value>12</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>DIA-UmpireはDIAスペクトルを擬似DDAスペクトルに変換します。Skylineは、DDAスペクトルを検索してライブラリを構築しますが、定量は元のDDAスペクトルで実施します。</value>
+    <value>DIA-UmpireはDIAスペクトルを擬似DDAスペクトルに変換します。Skylineは、DDAスペクトルを検索してライブラリを構築しますが、定量は元のDIAスペクトルで実施します。</value>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>

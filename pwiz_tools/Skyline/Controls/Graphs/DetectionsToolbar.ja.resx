@@ -165,7 +165,7 @@
     <value>63, 27</value>
   </data>
   <data name="toolStripLabel2.Text" xml:space="preserve">
-    <value>最低</value>
+    <value></value>
   </data>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="toolStripAtLeastN.AutoSize" type="System.Boolean, mscorlib">
@@ -181,7 +181,7 @@
     <value>77, 27</value>
   </data>
   <data name="toolStripLabel3.Text" xml:space="preserve">
-    <value>個の繰り返し測定</value>
+    <value>個以上の繰り返し測定</value>
   </data>
   <data name="toolStrip1.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 0</value>
