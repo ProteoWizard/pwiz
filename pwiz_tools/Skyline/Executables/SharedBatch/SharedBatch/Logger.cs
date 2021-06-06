@@ -42,7 +42,6 @@ using SharedBatch.Properties;
         private const int MemLogSize = 100; // Keep the last 100 log messages in memory
         private StringBuilder _logBuffer; // To be used when the log file is unavailable for writing
         private const int LogBufferSize = 10240;
-        private const int StreamReaderDefaultBufferSize = 4096;
 
         private int _lines;
 
