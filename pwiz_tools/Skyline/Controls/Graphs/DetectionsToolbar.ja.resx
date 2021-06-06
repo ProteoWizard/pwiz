@@ -164,6 +164,7 @@
   <data name="toolStripLabel2.Size" type="System.Drawing.Size, System.Drawing">
     <value>63, 27</value>
   </data>
+  <!-- ReSharper disable once OverriddenWithEmptyValue -->
   <data name="toolStripLabel2.Text" xml:space="preserve">
     <value></value>
   </data>
