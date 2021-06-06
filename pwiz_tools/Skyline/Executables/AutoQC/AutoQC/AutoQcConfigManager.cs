@@ -137,13 +137,13 @@ namespace AutoQC
 
         #region Remove Configs
 
-        public void UserRemoveSelected()
+        public bool UserRemoveSelected()
         {
             AssertConfigSelected();
-            UserRemoveAt(SelectedConfig);
+            return UserRemoveAt(SelectedConfig);
         }
 
-        public new void UserRemoveAt(int index)
+        public new bool UserRemoveAt(int index)
         {
             lock (_lock)
             {
@@ -163,11 +163,12 @@ namespace AutoQC
                             (string.Format(Resources.AutoQcConfigManager_UserRemoveAt_The_configuration___0___is_running__Please_stop_the_configuration_and_try_again_, configRunner.GetConfigName()));
                     }
                     DisplayWarning(message);
-                    return;
+                    return false;
                 }
                 // remove config
                 base.UserRemoveAt(index);
                 RemoveConfig(configRunner.Config);
+                return true;
             }
         }
         
@@ -381,9 +382,14 @@ namespace AutoQC
 
         public void DoServerValidation()
         {
+            DoServerValidation(_configList);
+        }
+
+        public void DoServerValidation(List<IConfig> configs)
+        {
             lock (_lock)
             {
-                foreach (var config in _configList)
+                foreach (var config in configs)
                 {
                     var autoQcConfig = (AutoQcConfig)config;
                     if (autoQcConfig.IsEnabled || !IsConfigValid(autoQcConfig))
@@ -608,6 +614,8 @@ namespace AutoQC
                     ProgramaticallyRemoveAt(GetConfigIndex(config.GetName()));
                 ProgramaticallyAddConfig(config);
             }
+            // Do server validation
+            DoServerValidation(addedConfigs);
         }
 
         #endregion

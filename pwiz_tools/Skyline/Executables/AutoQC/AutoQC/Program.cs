@@ -79,6 +79,7 @@ namespace AutoQC
                 }
             });
 
+            var doRestart = false;
             using (var mutex = new Mutex(false, $"University of Washington {AppName}"))
             {
                 if (!mutex.WaitOne(TimeSpan.Zero))
@@ -100,60 +101,101 @@ namespace AutoQC
                 string configFile = null;
                 try
                 {
-                    if (!InitSkylineSettings()) return;
-                    var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal);
+                    var config =
+                        ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal);
                     configFile = config.FilePath;
                     ProgramLog.Info(string.Format("user.config path: {0}", configFile));
+                    if (!InitSkylineSettings()) return;
                 }
                 catch (Exception e)
                 {
                     ProgramLog.Error(e.Message, e);
+
+                    if (configFile == null && e is ConfigurationException ce)
+                    {
+                        configFile = ce.Filename; // Get the user.config file path from the exception
+                    }
+                    if (configFile == null)
+                    {
+                        MessageBox.Show(
+                            $"There was an error loading the saved configurations and settings. The error was {e.Message}");
+                        return;
+
+                    }
+
+                    var msg1 = TextUtil.LineSeparate(
+                        $"There was an error loading the saved configurations and settings in {configFile}.",
+                        $"The error was {e.Message}");
+                    var msg2 = "Please provide this file to the developers to help debug the problem.";
+                    // Try to move the offending file to where the program exe is located
                     var folderToCopy = Path.GetDirectoryName(ProgramLog.GetProgramLogFilePath()) ?? string.Empty;
                     var newFileName = Path.Combine(folderToCopy, "error-user.config");
-                    var message = "There was an error loading the saved configurations.";
-                    if (configFile != null)
+                    ProgramLog.Error($"Moving '{configFile}' to '{newFileName}'.");
+                    try
                     {
                         File.Copy(configFile, newFileName, true);
                         File.Delete(configFile);
-                        message += Environment.NewLine + Environment.NewLine +
-                                   string.Format(
-                                       "To help improve {0} in future versions, please post the configuration file to the support board:",
-                                       AppName) +
-                                   Environment.NewLine +
-                                   newFileName;
                     }
+                    catch (Exception exception)
+                    {
+                        var err = $"Attempting to move the configuration file failed with the error: {exception.Message}.";
+                        ProgramLog.Error(err, exception);
+                        MessageBox.Show(TextUtil.LineSeparate(msg1, Environment.NewLine, err, msg2));
+                        return;
+                    }
+                    
+                    var message = TextUtil.LineSeparate(msg1,
+                        Environment.NewLine,
+                        $"The settings file has been moved to {newFileName}.",
+                        msg2,
+                        Environment.NewLine,
+                        $"{AppName} will now start with default settings.");
 
                     MessageBox.Show(message);
-                    return;
+                    ProgramLog.Error("Starting with default settings.");
+                    // Restart the application with a default user.settings after releasing the mutex.
+                    // If we restart here we will get an error message about an already running instance of AutoQC Loader.
+                    doRestart = true;  
                 }
 
-                UpgradeSettingsIfRequired(configFile);
-
-                var openFile = GetFirstArg(args);
-                if (!string.IsNullOrEmpty(openFile))
+                if (!doRestart)
                 {
-                    ProgramLog.Info($"Reading configurations from file {openFile}");
-                }
+                    UpgradeSettingsIfRequired(configFile);
 
-                var form = new MainForm(openFile) {Text = Version()};
-
-                var worker = new BackgroundWorker {WorkerSupportsCancellation = false, WorkerReportsProgress = false};
-                worker.DoWork += UpdateAutoQcStarter;
-                worker.RunWorkerCompleted += (o, eventArgs) =>
-                {
-                    if (eventArgs.Error != null)
+                    var openFile = GetFirstArg(args);
+                    if (!string.IsNullOrEmpty(openFile))
                     {
-                        ProgramLog.Error($"Unable to update {AUTO_QC_STARTER} shortcut.", eventArgs.Error);
-                        form.DisplayError(string.Format(Resources.Program_Main_Unable_to_update__0__shortcut___Error_was___1_,
-                                AUTO_QC_STARTER, eventArgs.Error));
+                        ProgramLog.Info($"Reading configurations from file {openFile}");
                     }
-                };
 
-                worker.RunWorkerAsync();
+                    var form = new MainForm(openFile) {Text = Version()};
 
-                Application.Run(form);
+                    var worker = new BackgroundWorker
+                        {WorkerSupportsCancellation = false, WorkerReportsProgress = false};
+                    worker.DoWork += UpdateAutoQcStarter;
+                    worker.RunWorkerCompleted += (o, eventArgs) =>
+                    {
+                        if (eventArgs.Error != null)
+                        {
+                            ProgramLog.Error($"Unable to update {AUTO_QC_STARTER} shortcut.", eventArgs.Error);
+                            form.DisplayError(string.Format(
+                                Resources.Program_Main_Unable_to_update__0__shortcut___Error_was___1_,
+                                AUTO_QC_STARTER, eventArgs.Error));
+                        }
+                    };
+
+                    worker.RunWorkerAsync();
+
+                    Application.Run(form);
+                }
 
                 mutex.ReleaseMutex();
+            }
+
+            if (doRestart)
+            {
+                // user.config somehow got corrupted. We will restart with a fresh user.config.
+                Application.Restart();
             }
         }
 

@@ -280,6 +280,7 @@ using SharedBatch.Properties;
                 line = string.Format(line, args);
             }
             line = string.Format(Resources.Logger_LogErrorToFile_ERROR___0_, line);
+            _lastMessage = line;
 
             var exStr = ex != null ? ex.ToString() : string.Empty;
             if (_mainUi != null)

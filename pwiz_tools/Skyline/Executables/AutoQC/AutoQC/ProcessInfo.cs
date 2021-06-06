@@ -163,7 +163,8 @@ namespace AutoQC
                 return false;
             }
 
-            if (message.Contains("The file has already been imported. Ignoring..."))
+            if (message.Contains("The file has already been imported. Ignoring...") ||
+                message.Contains("No files left to import"))
             {
                 _fileImportIgnored = true; // SkylineRunner will return an exit code of 2 which will cause the file to be put 
                                            // on the reimport queue. We don't want that.
@@ -175,7 +176,8 @@ namespace AutoQC
                 _documentImportFailed = true;
                 return true;
             }
-            if(message.StartsWith("Warning: Cannot read file") && message.EndsWith("Ignoring..."))
+            if(message.StartsWith("Warning: Cannot read file") && message.EndsWith("Ignoring...") ||
+               message.Contains("Unreadable Thermo file"))
             {
                 // This is the message for un-readable RAW files from Thermo instruments.
                 _documentImportFailed = true;

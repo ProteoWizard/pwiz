@@ -462,7 +462,7 @@ namespace SharedBatch
 
                                 while (!reader.Name.EndsWith("_config"))
                                 {
-                                    if (reader.Name == "userSettings" && !reader.IsStartElement())
+                                    if (reader.EOF || (reader.Name == "userSettings" && !reader.IsStartElement()))
                                         break; // there are no configurations in the file
                                     reader.Read();
                                 }

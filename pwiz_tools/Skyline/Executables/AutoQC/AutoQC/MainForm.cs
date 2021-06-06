@@ -182,11 +182,13 @@ namespace AutoQC
                 Resources.MainForm_btnDelete_Click_Are_you_sure_you_want_to_delete_the_configuration___0___,
                 selectedConfig.Name)))
             {
-                _configManager.UserRemoveSelected();
-                UpdateUiConfigurations();
-                ListViewSizeChanged();
-                UpdateUiLogFiles();
-                _configManager.SaveConfigList();
+                if (_configManager.UserRemoveSelected())
+                {
+                    UpdateUiConfigurations();
+                    ListViewSizeChanged();
+                    UpdateUiLogFiles();
+                    _configManager.SaveConfigList();
+                }
             }
         }
 
@@ -285,10 +287,14 @@ namespace AutoQC
         private void btnOpenResults_Click(object sender, EventArgs e)
         {
             var config = _configManager.GetSelectedConfig();
-            if (MainFormUtils.CanOpen(config.Name, _configManager.IsSelectedConfigValid(),
-                config.MainSettings.SkylineFilePath, Resources.MainForm_btnOpenResults_Click_Skyline_file, this))
+            if (config != null && File.Exists(config.MainSettings.SkylineFilePath))
             {
                 SkylineInstallations.OpenSkylineFile(config.MainSettings.SkylineFilePath, config.SkylineSettings);
+            }
+            else
+            {
+                DisplayError(config == null ? "No configuration is selected." : 
+                    $"Skyline file \"{config.MainSettings.SkylineFilePath}\" for configuration \"{config.Name}\" does not exist. Please fix the configuration.");
             }
         }
 
@@ -393,7 +399,8 @@ namespace AutoQC
             // Set the focus on the combobox.
             // If the focus is on the textbox we will see a lot of scrolling for big log files.
             comboConfigs.Focus();
-            if (_configManager.HasSelectedConfig())
+            var config = _configManager.GetSelectedConfig();
+            if (config != null && !string.Equals(config.Name, _configManager.GetSelectedLogger()?.Name))
             {
                 _configManager.SelectLogOfSelectedConfig();
                 UpdateUiLogFiles();
