@@ -54,7 +54,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(()=>documentGrid.ChooseView("PeptideResultValues"));
             WaitForCondition(() => documentGrid.IsComplete);
             RunUI(()=> documentGrid.DataboundGridControl.ShowHeatMap());
-            var heatMap = FindOpenForm<HeatMapGraph>();
+            var heatMap = WaitForOpenForm<HeatMapGraph>();
             WaitForConditionUI(() => null != heatMap.GraphResults);
             var heatMapResults = heatMap.GraphResults;
             Assert.IsNotNull(heatMap);
@@ -94,13 +94,11 @@ namespace pwiz.SkylineTestFunctional
                 dlg.TextBoxName.Text = PER_PROTEIN_NAME;
                 dlg.OkDialog();
             });
-            RunUI(()=>SkylineWindow.ShowGroupComparisonWindow(PER_PROTEIN_NAME));
-            FoldChangeGrid grid = FindOpenForm<FoldChangeGrid>();
+            var grid = ShowDialog<FoldChangeGrid>(() => SkylineWindow.ShowGroupComparisonWindow(PER_PROTEIN_NAME));
             WaitForCondition(() => grid.DataboundGridControl.IsComplete);
             RunUI(()=>grid.DataboundGridControl.ChooseView("Clustered"));
             WaitForCondition(() => grid.DataboundGridControl.IsComplete && 0 != grid.DataboundGridControl.RowCount);
-            RunUI(()=>grid.DataboundGridControl.ShowHeatMap());
-            var heatMap = FindOpenForm<HeatMapGraph>();
+            var heatMap = ShowDialog<HeatMapGraph>(() => grid.DataboundGridControl.ShowHeatMap());
             WaitForConditionUI(() => heatMap.IsComplete);
             string expectedHeatMapTitle = DataboundGraph.MakeTitle(Resources.HeatMapGraph_RefreshData_Heat_Map,
                 new DataGridId(DataGridType.GROUP_COMPARISON, PER_PROTEIN_NAME),
@@ -115,7 +113,7 @@ namespace pwiz.SkylineTestFunctional
                 heatMap.Close();
             });
             Assert.IsNull(FindOpenForm<HeatMapGraph>());
-            RunUI(()=>SkylineWindow.OpenFile(filePath));
+            RunUI(() => SkylineWindow.OpenFile(filePath));
             heatMap = FindOpenForm<HeatMapGraph>();
             Assert.IsNotNull(heatMap);
             WaitForConditionUI(() => heatMap.IsComplete && heatMap.TabText == expectedHeatMapTitle);
@@ -124,8 +122,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(expectedPointCount, pointCount);
             grid = FindOpenForm<FoldChangeGrid>();
             Assert.IsNotNull(grid);
-            RunUI(()=>grid.DataboundGridControl.ShowPcaPlot());
-            var pcaPlot = FindOpenForm<PcaPlot>();
+            var pcaPlot = ShowDialog<PcaPlot>(() => grid.DataboundGridControl.ShowPcaPlot());
             Assert.IsNotNull(pcaPlot);
             var pcaChoice = new PcaPlot.PcaChoice(2, 3, 1);
             RunUI(()=>pcaPlot.PcaChoiceValue = pcaChoice);
@@ -145,7 +142,7 @@ namespace pwiz.SkylineTestFunctional
                 pcaPlot.Close();
             });
             Assert.IsNull(FindOpenForm<PcaPlot>());
-            RunUI(()=>SkylineWindow.OpenFile(filePath));
+            RunUI(() => SkylineWindow.OpenFile(filePath));
             pcaPlot = FindOpenForm<PcaPlot>();
             WaitForConditionUI(() => pcaPlot.IsComplete && pcaPlot.TabText == expectedPcaPlotTitle);
             Assert.AreEqual(curveCount, pcaPlot.GraphControl.GraphPane.CurveList.Count);

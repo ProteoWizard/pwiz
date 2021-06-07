@@ -29,6 +29,7 @@
 #endif
 
 //#define DIAUMPIRE_DEBUG_CURVES 1
+//#define DIAUMPIRE_TIMING 1
 
 #include <boost/range/iterator_range_core.hpp>
 #include <boost/asio/thread_pool.hpp>
@@ -166,6 +167,7 @@ namespace DiaUmpire {
             Timing() {}
             ~Timing()
             {
+#ifdef DIAUMPIRE_TIMING
                 cout << endl << "Times in seconds" << endl
                     << "  Read spectra: " << readSpectra << endl
                     << "  Build peak curves: " << buildPeakCurves << endl
@@ -174,12 +176,14 @@ namespace DiaUmpire {
                     << "  Precursor/fragment pairs from MS1: " << precursorFragmentPairBuildingMs1 << endl
                     << "  Precursor/fragment pairs from unfragmented: " << precursorFragmentPairBuildingUnfragmented << endl
                     << endl;
+#endif
             }
         };
         Timing timing_;
 
         struct Timer
         {
+#ifdef DIAUMPIRE_TIMING
             boost::chrono::time_point<boost::chrono::system_clock> start;
             double& timerToIncrement;
 
@@ -189,6 +193,9 @@ namespace DiaUmpire {
             {
                 timerToIncrement += boost::chrono::duration<double>(boost::chrono::system_clock::now() - start).count();
             }
+#else
+            Timer(double& timerToIncrement) {}
+#endif
         };
 
         friend struct DiaWindow;

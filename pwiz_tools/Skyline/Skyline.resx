@@ -1507,7 +1507,7 @@
     <value>170, 22</value>
   </data>
   <data name="importAnnotationsMenuItem.Text" xml:space="preserve">
-    <value>Annotations...</value>
+    <value>A&amp;nnotations...</value>
   </data>
   <data name="exportToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>197, 22</value>
@@ -1564,7 +1564,7 @@
     <value>183, 22</value>
   </data>
   <data name="chromatogramsToolStripMenuItem.Text" xml:space="preserve">
-    <value>Chromatograms...</value>
+    <value>&amp;Chromatograms...</value>
   </data>
   <data name="mProphetFeaturesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>183, 22</value>
@@ -1576,7 +1576,7 @@
     <value>183, 22</value>
   </data>
   <data name="exportAnnotationsMenuItem.Text" xml:space="preserve">
-    <value>Annotations...</value>
+    <value>&amp;Annotations...</value>
   </data>
   <data name="mruBeforeToolStripSeparator.Size" type="System.Drawing.Size, System.Drawing">
     <value>194, 6</value>

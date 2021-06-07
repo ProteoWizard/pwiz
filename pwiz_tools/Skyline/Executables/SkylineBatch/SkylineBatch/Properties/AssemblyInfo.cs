@@ -25,11 +25,11 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("SkylineBatch")]
-[assembly: AssemblyDescription("SkylineBatch")]
+[assembly: AssemblyDescription("Batch Processing with Skyline")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("University of Washington")]
 [assembly: AssemblyProduct("SkylineBatch")]
-[assembly: AssemblyCopyright("Copyright © University of Washington 2015")]
+[assembly: AssemblyCopyright("Copyright © University of Washington 2021")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

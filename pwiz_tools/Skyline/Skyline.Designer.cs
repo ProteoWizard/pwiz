@@ -1691,6 +1691,7 @@ namespace pwiz.Skyline
             this.helpToolStripMenuItem});
             resources.ApplyResources(this.menuMain, "menuMain");
             this.menuMain.Name = "menuMain";
+            this.menuMain.ShowItemToolTips = true;
             // 
             // fileToolStripMenuItem
             // 

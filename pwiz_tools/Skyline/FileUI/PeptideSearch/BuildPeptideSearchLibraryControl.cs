@@ -32,11 +32,14 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Data.SQLite;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.Database;
 using pwiz.Skyline.Model.Results;
+using BiblioSpecLiteLibrary = pwiz.Skyline.Model.Lib.BiblioSpecLiteLibrary;
 
 namespace pwiz.Skyline.FileUI.PeptideSearch
 {
@@ -465,7 +468,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             if (!LoadPeptideSearchLibrary(docLibSpec))
                 return false;
 
-            var addedIrts = LibraryBuildNotificationHandler.AddIrts(IrtRegressionType.DEFAULT, ImportPeptideSearch.DocLib, docLibSpec, _driverStandards.SelectedItem, WizardForm, false);
+            var addedIrts = LibraryBuildNotificationHandler.AddIrts(IrtRegressionType.DEFAULT,
+                ImportPeptideSearch.DocLib, docLibSpec, _driverStandards.SelectedItem, WizardForm, false, out var outStandard);
 
             var docNew = ImportPeptideSearch.AddDocumentSpectralLibrary(DocumentContainer.Document, docLibSpec);
             if (docNew == null)
@@ -480,7 +484,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
                 MessageDlg.Show(WizardForm, builder.AmbiguousMatchesMessage);
             }
-            ImportPeptideSearch.IrtStandard = _driverStandards.SelectedItem;
+            ImportPeptideSearch.IrtStandard = outStandard;
             return true;
         }
 
@@ -519,7 +523,26 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
                 return false;
             }
-            DocumentContainer.ModifyDocumentNoUndo(doc => ImportPeptideSearch.AddDocumentSpectralLibrary(doc, docLibSpec));
+
+            var docNew = ImportPeptideSearch.AddDocumentSpectralLibrary(DocumentContainer.Document, docLibSpec);
+            if (docNew == null)
+                return false;
+
+            var blib = ImportPeptideSearch.DocLib as BiblioSpecLiteLibrary;
+            if (blib?.ReadStream is ConnectionId<SQLiteConnection> connection && SqliteOperations.TableExists(connection.Connection, @"IrtLibrary"))
+            {
+                using (var dlg = new MultiButtonMsgDlg(
+                    Resources.BuildPeptideSearchLibraryControl_AddExistingLibrary_This_library_contains_iRT_values__Do_you_want_to_create_a_retention_time_predictor_with_these_values_,
+                    MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false))
+                {
+                    if (dlg.ShowDialog(WizardForm) == DialogResult.Yes)
+                    {
+                        docNew = ImportPeptideSearch.AddRetentionTimePredictor(docNew, docLibSpec);
+                    }
+                }
+            }
+
+            DocumentContainer.ModifyDocumentNoUndo(doc => docNew);
             return true;
         }
 
