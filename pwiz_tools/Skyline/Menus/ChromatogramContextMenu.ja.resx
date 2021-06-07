@@ -251,7 +251,7 @@
     <value>212, 22</value>
   </data>
   <data name="peptideIDTimesContextMenuItem.Text" xml:space="preserve">
-    <value>ペプチドが同定された回数</value>
+    <value>ペプチドID時間</value>
   </data>
   <data name="toolStripSeparator16.Size" type="System.Drawing.Size, System.Drawing">
     <value>209, 6</value>

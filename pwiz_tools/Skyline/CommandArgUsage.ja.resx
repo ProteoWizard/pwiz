@@ -820,6 +820,6 @@ Waters</value>
     <value>使用しないクロマトグラムをドキュメントからすべて破棄します。</value>
   </data>
   <data name="_chromatograms_limit_noise" xml:space="preserve">
-    <value>クロマトグラムの長さを±分などクロマトグラムピーク周囲の分数に制限します。</value>
+    <value>クロマトグラムの長さを±分などクロマトグラムピーク周囲の長さに制限します。</value>
   </data>
 </root>
