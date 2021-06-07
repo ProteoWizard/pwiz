@@ -19,11 +19,15 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Net;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
+using FluentFTP;
 using SharedBatch;
 using SkylineBatch.Properties;
+using File = System.IO.File;
 
 namespace SkylineBatch
 {
@@ -31,17 +35,17 @@ namespace SkylineBatch
     public class MainSettings
     {
 
-        // IMMUTABLE - all fields are readonly strings
-        // Holds file locations and naming pattern to use when running the configuration
-
+        // IMMUTABLE - all fields are readonly strings/objects
 
         public MainSettings(string templateFilePath, string analysisFolderPath, string dataFolderPath,
-            string annotationsFilePath, string replicateNamingPattern, string dependentConfigName)
+            DataServerInfo server, string annotationsFilePath, string replicateNamingPattern,
+            string dependentConfigName)
         {
             TemplateFilePath = templateFilePath;
             DependentConfigName = !string.IsNullOrEmpty(dependentConfigName) ? dependentConfigName : null;
             AnalysisFolderPath = analysisFolderPath;
             DataFolderPath = dataFolderPath;
+            Server = server;
             AnnotationsFilePath = annotationsFilePath ?? string.Empty;
             ReplicateNamingPattern = replicateNamingPattern ?? string.Empty;
         }
@@ -55,9 +59,13 @@ namespace SkylineBatch
 
         public readonly string DataFolderPath;
 
+        public readonly DataServerInfo Server;
+
         public readonly string AnnotationsFilePath;
 
         public readonly string ReplicateNamingPattern;
+
+        public bool WillDownloadData => Server != null;
 
         public string GetResultsFilePath()
         {
@@ -66,15 +74,15 @@ namespace SkylineBatch
 
         public MainSettings WithoutDependency()
         {
-            return new MainSettings(TemplateFilePath, AnalysisFolderPath, DataFolderPath, AnnotationsFilePath,
-                ReplicateNamingPattern, string.Empty);
+            return new MainSettings(TemplateFilePath, AnalysisFolderPath, DataFolderPath, Server,
+                AnnotationsFilePath, ReplicateNamingPattern, string.Empty);
         }
 
         public MainSettings UpdateDependent(string newName, string newTemplate)
         {
             if (string.IsNullOrEmpty(newTemplate)) return WithoutDependency();
-            return new MainSettings(newTemplate, AnalysisFolderPath, DataFolderPath, AnnotationsFilePath,
-                ReplicateNamingPattern, newName);
+            return new MainSettings(newTemplate, AnalysisFolderPath, DataFolderPath, Server, 
+                 AnnotationsFilePath, ReplicateNamingPattern, newName);
         }
 
         public void CreateAnalysisFolderIfNonexistent()
@@ -92,11 +100,11 @@ namespace SkylineBatch
             return sb.ToString();
         }
 
-        public void Validate(List<string> generatedSkylineFiles = null)
+        public void Validate()
         {
             if (DependentConfigName == null)
                 ValidateTemplateFile(TemplateFilePath);
-            ValidateDataFolder(DataFolderPath);
+            ValidateDataFolder(DataFolderPath, Server != null);
             ValidateAnalysisFolder(AnalysisFolderPath);
             ValidateAnnotationsFile(AnnotationsFilePath);
         }
@@ -104,134 +112,135 @@ namespace SkylineBatch
         public static void ValidateTemplateFile(string templateFile)
         {
 
-            CheckIfEmptyPath(templateFile, Resources.MainSettings_ValidateSkylineFile_Skyline_file);
+            FileUtil.ValidateNotEmptyPath(templateFile, Resources.MainSettings_ValidateSkylineFile_Skyline_file);
             if (!File.Exists(templateFile))
             
                 throw new ArgumentException(string.Format(Resources.MainSettings_ValidateSkylineFile_The_Skyline_template_file__0__does_not_exist_, templateFile) + Environment.NewLine +
                                             Resources.MainSettings_ValidateSkylineFile_Please_provide_a_valid_file_);
-            
+            FileUtil.ValidateNotInDownloads(templateFile, Resources.MainSettings_ValidateSkylineFile_Skyline_file);
         }
 
         public static void ValidateAnalysisFolder(string analysisFolder)
         {
-            CheckIfEmptyPath(analysisFolder, Resources.MainSettings_ValidateAnalysisFolder_analysis_folder);
+            FileUtil.ValidateNotEmptyPath(analysisFolder, Resources.MainSettings_ValidateAnalysisFolder_analysis_folder);
             var analysisFolderDirectory = Path.GetDirectoryName(analysisFolder);
             if (!Directory.Exists(analysisFolderDirectory))
             {
-                throw new ArgumentException(string.Format(Resources.MainSettings_ValidateAnalysisFolder_The_analysis_folder__0__does_not_exist_, analysisFolderDirectory) + Environment.NewLine +
+                throw new ArgumentException(string.Format(Resources.MainSettings_ValidateAnalysisFolder_The__parent_directory_of_the_analysis_folder__0__does_not_exist_, analysisFolderDirectory) + Environment.NewLine +
                                             Resources.MainSettings_ValidateAnalysisFolder_Please_provide_a_valid_folder_);
             }
+            FileUtil.ValidateNotInDownloads(analysisFolder, Resources.MainSettings_ValidateAnalysisFolder_analysis_folder);
         }
 
-        public static void ValidateDataFolder(string dataFolder)
+        public static void ValidateDataFolderWithoutServer(string dataFolder)
         {
-            CheckIfEmptyPath(dataFolder, Resources.MainSettings_ValidateDataFolder_data_folder);
-            if (!Directory.Exists(dataFolder))
+            ValidateDataFolder(dataFolder, false);
+        }
+
+        public static void ValidateDataFolderWithServer(string dataFolder)
+        {
+            ValidateDataFolder(dataFolder, true);
+        }
+
+        private static void ValidateDataFolder(string dataFolder, bool hasServer)
+        {
+            FileUtil.ValidateNotEmptyPath(dataFolder, Resources.MainSettings_ValidateDataFolder_data_folder);
+            if (!hasServer && !Directory.Exists(dataFolder))
             {
                 throw new ArgumentException(string.Format(Resources.MainSettings_ValidateDataFolder_The_data_folder__0__does_not_exist_, dataFolder) + Environment.NewLine +
                                             Resources.MainSettings_ValidateAnalysisFolder_Please_provide_a_valid_folder_);
             }
+
+            if (hasServer)
+            {
+                try
+                {
+                    Directory.Exists(Path.GetDirectoryName(dataFolder));
+                }
+                catch (Exception)
+                {
+                    throw new ArgumentException(string.Format(Resources.MainSettings_ValidateAnalysisFolder_The__parent_directory_of_the_data_folder__0__does_not_exist_1, dataFolder));
+                }
+            }
+            FileUtil.ValidateNotInDownloads(dataFolder, Resources.MainSettings_ValidateDataFolder_data_folder);
+            if (!hasServer && !Directory.GetFiles(dataFolder).Any())
+                throw new ArgumentException(Resources.MainSettings_ValidateAllButServer_The_data_folder_cannot_be_empty__Please_choose_a_folder_with_at_least_one_data_file_);
         }
 
         public static void ValidateAnnotationsFile(string annotationsFilePath)
         {
-            if (!string.IsNullOrWhiteSpace(annotationsFilePath) && !File.Exists(annotationsFilePath))
+            if (!string.IsNullOrWhiteSpace(annotationsFilePath))
             {
-                throw new ArgumentException(string.Format(Resources.MainSettings_ValidateAnnotationsFolder_The_annotations_file__0__does_not_exist_, annotationsFilePath) + Environment.NewLine +
+                if (!File.Exists(annotationsFilePath))
+                    throw new ArgumentException(string.Format(Resources.MainSettings_ValidateAnnotationsFolder_The_annotations_file__0__does_not_exist_, annotationsFilePath) + Environment.NewLine +
                                             Resources.MainSettings_ValidateAnnotationsFolder_Please_enter_a_valid_file_path__or_no_text_if_you_do_not_wish_to_include_annotations_);
-            }
-        }
-
-        public static void CheckIfEmptyPath(string input, string name)
-        {
-            if (string.IsNullOrWhiteSpace(input))
-            {
-                throw new ArgumentException(string.Format(Resources.MainSettings_CheckIfEmptyPath_Please_specify_a_path_to__0_, name));
+                FileUtil.ValidateNotInDownloads(annotationsFilePath, Resources.MainSettings_ValidateAnnotationsFile_annotations_file);
             }
         }
 
         public bool TryPathReplace(string oldRoot, string newRoot, out MainSettings pathReplacedMainSettings)
         {
-            var templateReplaced = false;
-            var replacedTemplatePath = TemplateFilePath;
-            if (DependentConfigName == null)
-                templateReplaced = TextUtil.TryReplaceStart(oldRoot, newRoot, TemplateFilePath, out replacedTemplatePath);
+            var preferReplace = Program.FunctionalTest;
+            var templateReplaced = TextUtil.SuccessfulReplace(ValidateTemplateFile, oldRoot, newRoot, TemplateFilePath,
+                    Program.FunctionalTest, out string replacedTemplatePath);
             var analysisReplaced =
-                TextUtil.TryReplaceStart(oldRoot, newRoot, AnalysisFolderPath, out string replacedAnalysisPath);
+                TextUtil.SuccessfulReplace(ValidateAnalysisFolder, oldRoot, newRoot, AnalysisFolderPath, preferReplace,
+                    out string replacedAnalysisPath);
+            var dataValidator = Server != null
+                ? ValidateDataFolderWithServer
+                : (Validator) ValidateDataFolderWithoutServer;
             var dataReplaced =
-                TextUtil.TryReplaceStart(oldRoot, newRoot, DataFolderPath, out string replacedDataPath);
-            // annotations replaced
-            TextUtil.TryReplaceStart(oldRoot, newRoot, AnnotationsFilePath, out string replacedAnnotationsPath);
+                TextUtil.SuccessfulReplace(dataValidator, oldRoot, newRoot, DataFolderPath,
+                    Server != null || preferReplace, out string replacedDataPath);
+            var annotationsReplaced =
+                TextUtil.SuccessfulReplace(ValidateAnnotationsFile, oldRoot, newRoot, AnnotationsFilePath,
+                    preferReplace, out string replacedAnnotationsPath);
 
             pathReplacedMainSettings = new MainSettings(replacedTemplatePath, replacedAnalysisPath, replacedDataPath,
-                    replacedAnnotationsPath, ReplicateNamingPattern, DependentConfigName);
+                Server, replacedAnnotationsPath, ReplicateNamingPattern, DependentConfigName);
 
-            return templateReplaced || analysisReplaced || dataReplaced;
+            return templateReplaced || analysisReplaced || dataReplaced || annotationsReplaced;
         }
 
-        public bool RunWillOverwrite(int startStep, string configHeader, out StringBuilder message)
+        public long SpaceNeeded(List<string> otherDataFolders, ServerConnector serverConnector)
+        {
+            if (Server == null || otherDataFolders.Contains(DataFolderPath)) return 0;
+            var filesToDownload = Server.FilesToDownload(DataFolderPath, serverConnector);
+            long spaceNeeded = 0;
+            foreach (var file in filesToDownload.Values)
+                spaceNeeded += file.Size;
+            return spaceNeeded;
+        }
+
+        public Dictionary<string, FtpListItem> FilesToDownload(ServerConnector serverConnector)
+        {
+            if (Server == null) return new Dictionary<string, FtpListItem>();
+            return Server.FilesToDownload(DataFolderPath, serverConnector);
+        }
+
+        public bool RunWillOverwrite(RunBatchOptions runOption, string configHeader, out StringBuilder message)
         {
             var tab = "      ";
             message = new StringBuilder(configHeader);
+            CreateAnalysisFolderIfNonexistent();
             var analysisFolderName = Path.GetFileName(AnalysisFolderPath);
-            switch (startStep)
+
+            if (runOption == RunBatchOptions.ALL || runOption == RunBatchOptions.FROM_TEMPLATE_COPY)
             {
-                case 1:
-                    var resultsFile = GetResultsFilePath();
-                    var resultsFileIdentifyer = Path.Combine(analysisFolderName, Path.GetFileName(resultsFile));
-                    if (File.Exists(resultsFile) && new FileInfo(TemplateFilePath).Length != new FileInfo(resultsFile).Length)
-                    {
-                        message.Append(tab + tab)
-                            .Append(resultsFileIdentifyer)
-                            .AppendLine();
-                        return true;
-                    }
-                    break;
-                case 2:
-                    var templateSkyds = GetFilesInFolder(Path.GetDirectoryName(TemplateFilePath), TextUtil.EXT_SKYD);
-                    var resultsSkyds = GetFilesInFolder(AnalysisFolderPath, TextUtil.EXT_SKYD);
-                    var templateSkydSize = templateSkyds.Count == 0 ? 0 : new FileInfo(templateSkyds[0]).Length;
-                    var resultsSkydSize = resultsSkyds.Count == 0 ? 0 : new FileInfo(resultsSkyds[0]).Length;
-                    if (templateSkydSize < resultsSkydSize)
-                    {
-                        message.Append(tab + tab)
-                            .Append(string.Format(Path.Combine(analysisFolderName, Path.GetFileName(resultsSkyds[0]))))
-                            .AppendLine();
-                        return true;
-                    }
-                    break;
-                case 4:
-                    var reportFiles = GetFilesInFolder(AnalysisFolderPath, TextUtil.EXT_CSV);
-                    if (reportFiles.Count > 0)
-                    {
-                        foreach (var reportCsv in reportFiles)
-                        {
-                            message.Append(tab + tab).Append(Path.GetFileName(reportCsv)).AppendLine();
-                        }
-                        return true;
-                    }
-                    break;
-                case 5:
-                    // pass
-                    break;
-                default:
-                    throw new Exception(startStep + " is not a valid start step.");
+                var overwriteFiles = FileUtil.GetFilesInFolder(AnalysisFolderPath, TextUtil.EXT_SKY);
+                overwriteFiles.AddRange(FileUtil.GetFilesInFolder(AnalysisFolderPath, TextUtil.EXT_SKYD));
+                if (overwriteFiles.Count == 0)
+                    return false;
+                foreach (var file in overwriteFiles)
+                {
+                    message.Append(tab + tab)
+                        .Append(string.Format(Path.Combine(analysisFolderName, Path.GetFileName(file))))
+                        .AppendLine();
+                }
+
+                return true;
             }
             return false;
-        }
-
-
-        private List<string> GetFilesInFolder(string folder, string fileType)
-        {
-            var filesWithType = new List<string>();
-            var allFiles = new DirectoryInfo(folder).GetFiles();
-            foreach (var file in allFiles)
-            {
-                if (file.Name.EndsWith(fileType))
-                    filesWithType.Add(file.FullName);
-            }
-
-            return filesWithType;
         }
 
         #region Read/Write XML
@@ -254,7 +263,9 @@ namespace SkylineBatch
             var dataFolderPath = reader.GetAttribute(Attr.DataFolderPath);
             var annotationsFilePath = reader.GetAttribute(Attr.AnnotationsFilePath);
             var replicateNamingPattern = reader.GetAttribute(Attr.ReplicateNamingPattern);
-            return new MainSettings(templateFilePath, analysisFolderPath, dataFolderPath, annotationsFilePath, replicateNamingPattern, dependentConfigName);
+            var server = DataServerInfo.ReadXml(reader);
+            return new MainSettings(templateFilePath, analysisFolderPath, dataFolderPath, server, 
+                annotationsFilePath, replicateNamingPattern, dependentConfigName);
         }
 
         public void WriteXml(XmlWriter writer)
@@ -264,8 +275,10 @@ namespace SkylineBatch
             writer.WriteAttributeIfString(Attr.DependentConfigName, DependentConfigName);
             writer.WriteAttributeIfString(Attr.AnalysisFolderPath, AnalysisFolderPath);
             writer.WriteAttributeIfString(Attr.DataFolderPath, DataFolderPath);
+            
             writer.WriteAttributeIfString(Attr.AnnotationsFilePath, AnnotationsFilePath);
             writer.WriteAttributeIfString(Attr.ReplicateNamingPattern, ReplicateNamingPattern);
+            if (Server != null) Server.WriteXml(writer);
             writer.WriteEndElement();
         }
         #endregion
@@ -339,5 +352,170 @@ namespace SkylineBatch
                    DataFolderPath.GetHashCode() +
                    ReplicateNamingPattern.GetHashCode();
         }
+    }
+
+    public class DataServerInfo : ServerInfo
+    {
+
+        public static DataServerInfo ServerFromUi(string url, string userName, string password, string namingPattern)
+        {
+            if (string.IsNullOrWhiteSpace(url))
+                throw new ArgumentException("The URL cannot be empty. Please enter a URL.");
+            Uri uri;
+            try
+            {
+                uri = new Uri(url);
+            }
+            catch (Exception)
+            {
+                throw new ArgumentException("Error parsing the URL. Please correct the URL and try again.");
+            }
+            ValidateNamingPattern(namingPattern);
+
+            return new DataServerInfo(uri, userName, password, namingPattern);
+        }
+
+        private DataServerInfo(Uri server, string userName, string password, string namingPattern) : base(server, userName, password)
+        {
+            DataNamingPattern = namingPattern ?? string.Empty;
+        }
+        
+        public readonly string DataNamingPattern;
+
+        public string GetUrl() => Server.AbsoluteUri;
+
+        public string FilePath(string fileName) =>
+            string.IsNullOrEmpty(Server.AbsolutePath) ? fileName : Path.Combine(Server.AbsolutePath, fileName);
+
+        public FtpClient GetFtpClient()
+        {
+            var client = new FtpClient(Server.Host);
+
+            if (!string.IsNullOrEmpty(Password))
+            {
+                if (!string.IsNullOrEmpty(UserName))
+                    client.Credentials = new NetworkCredential(UserName, Password);
+                else
+                    client.Credentials = new NetworkCredential("anonymous", Password);
+            }
+
+            return client;
+        }
+
+        // The list of matching files that have not been fully downloaded to folderPath
+        public Dictionary<string, FtpListItem> FilesToDownload(string folderPath, ServerConnector serverConnector)
+        {
+            var downloadingFiles = new Dictionary<string, FtpListItem>();
+            var ftpFiles = GetDataFiles(serverConnector);
+            foreach (var fileName in ftpFiles.Keys)
+            {
+                var filePath = Path.Combine(folderPath, fileName);
+                if (!File.Exists(filePath) || ftpFiles[fileName].Size != new FileInfo(filePath).Length)
+                {
+                    if (File.Exists(filePath)) File.Delete(filePath);
+                    downloadingFiles.Add(filePath, ftpFiles[fileName]);
+                }
+            }
+            return downloadingFiles;
+        }
+
+        public Dictionary<string, FtpListItem> GetDataFiles(ServerConnector serverConnector)
+        {
+            var dataFiles = new Dictionary<string, FtpListItem>();
+            var ftpFiles = serverConnector.GetFiles(this, out Exception connectionException);
+            if (connectionException != null) throw connectionException;
+            foreach (var ftpFile in ftpFiles)
+            {
+                dataFiles.Add(ftpFile.Name, ftpFile);
+            }
+            return dataFiles;
+        }
+        
+
+        public DataServerInfo Copy()
+        {
+            return new DataServerInfo(Server, UserName, Password, DataNamingPattern);
+        }
+
+        public static void ValidateNamingPattern(string dataNamingPattern)
+        {
+            if (string.IsNullOrEmpty(dataNamingPattern))
+                throw new ArgumentException(Resources.DataServerInfo_ValidateNamingPattern_A_data_naming_pattern_is_required_for_downloaded_data__Please_add_a_data_naming_pattern_);
+        }
+
+        private enum Attr
+        {
+            ServerUri,
+            ServerUrl, // deprecated
+            ServerFolder, // deprecated
+            ServerUserName,
+            ServerPassword,
+            DataNamingPattern
+        };
+
+        public void WriteXml(XmlWriter writer)
+        {
+            writer.WriteAttributeIfString(Attr.ServerUri, Server.AbsoluteUri);
+            writer.WriteAttributeIfString(Attr.ServerUserName, UserName);
+            writer.WriteAttributeIfString(Attr.ServerPassword, Password);
+            writer.WriteAttributeIfString(Attr.DataNamingPattern, DataNamingPattern);
+        }
+
+        public static DataServerInfo ReadXml(XmlReader reader)
+        {
+            var serverName = reader.GetAttribute(Attr.ServerUrl);
+            var uriString = reader.GetAttribute(Attr.ServerUri);
+            if (string.IsNullOrEmpty(serverName) && string.IsNullOrEmpty(uriString))
+                return null;
+            var folder = reader.GetAttribute(Attr.ServerFolder);
+            var uri = !string.IsNullOrEmpty(uriString) ? new Uri(uriString) : new Uri($@"ftp://{serverName}/{folder}");
+            var username = reader.GetAttribute(Attr.ServerUserName);
+            var password = reader.GetAttribute(Attr.ServerPassword);
+            var dataNamingPattern = reader.GetAttribute(Attr.DataNamingPattern);
+            return new DataServerInfo(uri, username, password, dataNamingPattern);
+        }
+
+    }
+
+
+
+    public class ServerInfo
+    {
+        public ServerInfo(Uri server, string userName, string password)
+        {
+            Server = server;
+            UserName = userName ?? string.Empty;
+            Password = password ?? string.Empty;
+        }
+
+        public readonly Uri Server;
+        public readonly string UserName;
+        public readonly string Password;
+
+
+        protected bool Equals(ServerInfo other)
+        {
+            // checks if annotation paths are both empty or equal
+
+            return other.Server.Equals(Server) &&
+                    other.UserName.Equals(UserName) &&
+                    other.Password.Equals(Password);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((ServerInfo)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return Server.GetHashCode() +
+                   UserName.GetHashCode() +
+                   Password.GetHashCode();
+        }
+
     }
 }

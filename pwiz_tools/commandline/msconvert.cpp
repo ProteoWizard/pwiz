@@ -734,6 +734,8 @@ class UserFeedbackIterationListener : public IterationListener
     std::streamoff longestMessage;
     std::hash<string> hasher;
     size_t lastMessageHash;
+    size_t lastIterationIndex;
+    size_t lastIterationCount;
 
     bool updateHashIfNewMessage(const string& newMessage)
     {
@@ -750,11 +752,21 @@ class UserFeedbackIterationListener : public IterationListener
     {
         longestMessage = 0;
         lastMessageHash = 0;
+        lastIterationIndex = 0;
+        lastIterationCount = 0;
     }
 
     virtual Status update(const UpdateMessage& updateMessage)
     {
-        
+        bool messageIsChanged = updateHashIfNewMessage(updateMessage.message);
+
+        // skip update if nothing has changed (update was purely to allow for cancellation)
+        if (!messageIsChanged && updateMessage.iterationIndex == lastIterationIndex && updateMessage.iterationCount == lastIterationCount)
+            return Status_Ok;
+
+        lastIterationIndex = updateMessage.iterationIndex;
+        lastIterationCount = updateMessage.iterationCount;
+
         stringstream updateString;
         if (updateMessage.message.empty())
             updateString << updateMessage.iterationIndex + 1 << "/" << updateMessage.iterationCount;
@@ -766,7 +778,7 @@ class UserFeedbackIterationListener : public IterationListener
         *os_ << updateString.str() << "\r" << flush;
 
         // spectrum and chromatogram lists both iterate; put them on different lines
-        if (updateMessage.iterationIndex+1 == updateMessage.iterationCount && updateHashIfNewMessage(updateMessage.message))
+        if (messageIsChanged || (updateMessage.message.empty() && updateMessage.iterationIndex+1 >= updateMessage.iterationCount))
             *os_ << endl;
         return Status_Ok;
     }
@@ -841,7 +853,7 @@ int mergeFiles(const vector<string>& filenames, const Config& config, const Read
         Config configCopy(config);
         if (boost::indeterminate(config.singleThreaded) && boost::dynamic_pointer_cast<SpectrumListWrapper>(msd.run.spectrumListPtr) != nullptr)
             configCopy.singleThreaded = !boost::dynamic_pointer_cast<SpectrumListWrapper>(msd.run.spectrumListPtr)->benefitsFromWorkerThreads();
-        configCopy.writeConfig.useWorkerThreads = !config.singleThreaded;
+        configCopy.writeConfig.useWorkerThreads = !bool(config.singleThreaded);
 
         string outputFilename = config.outputFilename("merged-spectra", msd);
         *os_ << "writing output file: " << outputFilename << endl;
@@ -922,7 +934,7 @@ void processFile(const string& filename, const Config& config, const ReaderList&
             Config configCopy(config);
             if (boost::indeterminate(config.singleThreaded) && boost::dynamic_pointer_cast<SpectrumListWrapper>(msd.run.spectrumListPtr) != nullptr)
                 configCopy.singleThreaded = !boost::dynamic_pointer_cast<SpectrumListWrapper>(msd.run.spectrumListPtr)->benefitsFromWorkerThreads();
-            configCopy.writeConfig.useWorkerThreads = !configCopy.singleThreaded;
+            configCopy.writeConfig.useWorkerThreads = !bool(configCopy.singleThreaded);
 
             // write out the new data file
             string outputFilename = config.outputFilename(filename, msd);

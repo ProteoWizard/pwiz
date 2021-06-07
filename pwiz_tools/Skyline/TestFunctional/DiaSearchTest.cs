@@ -66,10 +66,6 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void TestDiaSearchVariableWindows()
         {
-            // TODO(matt.chambers): Fix "Cannot pass a GCHandle across AppDomains" error with MSTest
-            if (IsMsTestRun)
-                return;
-
             TestFilesZip = @"TestFunctional\DiaSearchTest.zip";
 
             _testDetails = new TestDetails
@@ -103,23 +99,21 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void TestDiaSearchFixedWindows()
         {
-            // TODO(matt.chambers): Fix "Cannot pass a GCHandle across AppDomains" error with MSTest
-            if (IsMsTestRun)
-                return;
-
             TestFilesZip = @"TestFunctional\DiaSearchTest.zip";
 
             string diaUmpireTestDataPath = TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.DiaUmpire);
+
             _testDetails = new TestDetails
             {
                 DocumentPath = "TestFixedWindowDiaUmpire.sky",
                 SearchFiles = new[]
                 {
                     // CONSIDER: test automatic fixed window as well as manually calculated?
-                    // Path.Combine(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.ABI), "swath.api.wiff2")
+                    //Path.Combine(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.ABI), "swath.api.wiff2")
 
-                    Path.Combine(diaUmpireTestDataPath, "Hoofnagle_10xDil_SWATH_01-20130327_Hoofnagle_10xDil_SWATH_1_01.mzXML")
+                    "Hoofnagle_10xDil_SWATH_01-20130327_Hoofnagle_10xDil_SWATH_1_01.mzXML"
                 },
+
                 FastaPath = Path.Combine(diaUmpireTestDataPath, "Hoofnagle_10xDil_SWATH.fasta"),
 
                 Initial = new TestDetails.DocumentCounts { ProteinCount = 268, PeptideCount = 93, PrecursorCount = 94, TransitionCount = 846 },
@@ -184,8 +178,14 @@ namespace pwiz.SkylineTestFunctional
         {
             PrepareDocument(testDetails.DocumentPath);
 
+            // copy files from core to test location (otherwise Skyline's DiaUmpire output will overwrite core test reference files)
+            string diaUmpireTestDataPath = TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.DiaUmpire);
+            foreach (var sourceName in testDetails.SearchFiles)
+                if (File.Exists(Path.Combine(diaUmpireTestDataPath, sourceName)))
+                    File.Copy(Path.Combine(diaUmpireTestDataPath, sourceName), Path.Combine(TestFilesDir.FullPath, sourceName), true);
+
             // delete -diaumpire files so they get regenerated instead of reused
-            foreach(var file in Directory.GetFiles(TestFilesDir.FullPath, "*-diaumpire.*"))
+            foreach (var file in Directory.GetFiles(TestFilesDir.FullPath, "*-diaumpire.*"))
                 FileEx.SafeDelete(file);
 
             // Launch the wizard
@@ -287,6 +287,7 @@ namespace pwiz.SkylineTestFunctional
             });
 
             // We're on the Converter settings page.
+            TryWaitForOpenForm(typeof(ImportPeptideSearchDlg.ConverterSettingsPage));   // Stop to show this form during form testing
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.converter_settings_page);
@@ -304,6 +305,7 @@ namespace pwiz.SkylineTestFunctional
                         {"RTOverlap", new AbstractDdaSearchEngine.Setting("RTOverlap", 0.05, 0, 10)},
                         {"CorrThreshold", new AbstractDdaSearchEngine.Setting("CorrThreshold", 0.1, 0, 10)},
                         {"DeltaApex", new AbstractDdaSearchEngine.Setting("DeltaApex", 0.6, 0, 10)},
+                        {"Thread", new AbstractDdaSearchEngine.Setting("Thread", 1, 0, 64)},
                     };
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
@@ -327,7 +329,8 @@ namespace pwiz.SkylineTestFunctional
                 importPeptideSearchDlg.SearchControl.Cancel();
             });
 
-            WaitForConditionUI(60000, () => searchSucceeded.HasValue);
+            WaitForConditionUI(60000, () => searchSucceeded.HasValue, 
+                () => importPeptideSearchDlg.SearchControl.LogText);
             RunUI(() => Assert.IsFalse(searchSucceeded.Value, importPeptideSearchDlg.SearchControl.LogText));
             searchSucceeded = null;
 
@@ -381,7 +384,8 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // now on search progress
             });
 
-            WaitForConditionUI(60000, () => searchSucceeded.HasValue);
+            WaitForConditionUI(120000, () => searchSucceeded.HasValue, () => importPeptideSearchDlg.SearchControl.LogText);
+
             RunUI(() => Assert.IsTrue(searchSucceeded.Value, importPeptideSearchDlg.SearchControl.LogText));
 
             RunDlg<PeptidesPerProteinDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck, emptyProteinsDlg =>

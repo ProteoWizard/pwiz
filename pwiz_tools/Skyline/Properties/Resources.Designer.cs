@@ -2884,6 +2884,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to This library contains iRT values. Do you want to create a retention time predictor with these values?.
+        /// </summary>
+        public static string BuildPeptideSearchLibraryControl_AddExistingLibrary_This_library_contains_iRT_values__Do_you_want_to_create_a_retention_time_predictor_with_these_values_ {
+            get {
+                return ResourceManager.GetString("BuildPeptideSearchLibraryControl_AddExistingLibrary_This_library_contains_iRT_val" +
+                        "ues__Do_you_want_to_create_a_retention_time_predictor_with_these_values_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to An error occurred while processing retention times..
         /// </summary>
         public static string BuildPeptideSearchLibraryControl_AddIrtLibraryTable_An_error_occurred_while_processing_retention_times_ {
@@ -2943,7 +2953,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Files to search:.
+        ///   Looks up a localized string similar to &amp;Files to search:.
         /// </summary>
         public static string BuildPeptideSearchLibraryControl_Files_to_search_ {
             get {
@@ -2971,7 +2981,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Result files:.
+        ///   Looks up a localized string similar to &amp;Result files:.
         /// </summary>
         public static string BuildPeptideSearchLibraryControl_Result_files_ {
             get {
@@ -4562,7 +4572,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Please specify a value for the following argument required to upload the document to Panorma:
+        ///   Looks up a localized string similar to Error: A value is required for the following argument to upload the document to Panorama:
         ///{0}.
         /// </summary>
         public static string CommandArgs_PanoramaArgsComplete_ {
@@ -4572,7 +4582,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Please specify a value for the following arguments required to upload the document to Panorma:
+        ///   Looks up a localized string similar to Error: A value is required for the following arguments to upload the document to Panorama:
         ///{0}.
         /// </summary>
         public static string CommandArgs_PanoramaArgsComplete_plural_ {
@@ -6319,6 +6329,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error: Failure occurred. Exiting....
+        /// </summary>
+        public static string CommandLine_Run_Error__Failure_occurred__Exiting___ {
+            get {
+                return ResourceManager.GetString("CommandLine_Run_Error__Failure_occurred__Exiting___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error: You cannot simultaneously export a transition list and a method.  Neither will be exported. Please change the command line parameters..
         /// </summary>
         public static string CommandLine_Run_Error__You_cannot_simultaneously_export_a_transition_list_and_a_method___Neither_will_be_exported__ {
@@ -6668,6 +6687,15 @@ namespace pwiz.Skyline.Properties {
         public static string CommandProgressMonitor_UpdateProgressInternal_Message__ {
             get {
                 return ResourceManager.GetString("CommandProgressMonitor_UpdateProgressInternal_Message__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error:.
+        /// </summary>
+        public static string CommandStatusWriter_WriteLine_Error_ {
+            get {
+                return ResourceManager.GetString("CommandStatusWriter_WriteLine_Error_", resourceCulture);
             }
         }
         
@@ -15183,6 +15211,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to iRT standards.
+        /// </summary>
+        public static string ImportFastaControl_ImportFasta_iRT_standards {
+            get {
+                return ResourceManager.GetString("ImportFastaControl_ImportFasta_iRT_standards", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Please enter a valid number of decoys per target greater than 0..
         /// </summary>
         public static string ImportFastaControl_ImportFasta_Please_enter_a_valid_number_of_decoys_per_target_greater_than_0_ {
@@ -20544,22 +20581,42 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to An unknown error occurred trying to verify access to Panorama folder {0} on the server {1}.
+        ///   Looks up a localized string similar to Error: An unknown error occurred trying to verify access to Panorama folder &apos;{0}&apos; on the server {1}.
         ///{2}.
         /// </summary>
-        public static string PanoramaHelper_ValidateFolder_ {
+        public static string PanoramaHelper_ValidateFolder_Exception_ {
             get {
-                return ResourceManager.GetString("PanoramaHelper_ValidateFolder_", resourceCulture);
+                return ResourceManager.GetString("PanoramaHelper_ValidateFolder_Exception_", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to An unknown error occurred trying to verify Panorama server information.
+        ///   Looks up a localized string similar to Error: Unable to verify access to Panorama folder.
         ///{0}.
         /// </summary>
-        public static string PanoramaHelper_ValidateServer_ {
+        public static string PanoramaHelper_ValidateFolder_PanoramaServerException_ {
             get {
-                return ResourceManager.GetString("PanoramaHelper_ValidateServer_", resourceCulture);
+                return ResourceManager.GetString("PanoramaHelper_ValidateFolder_PanoramaServerException_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: An unknown error occurred trying to verify Panorama server information.
+        ///{0}.
+        /// </summary>
+        public static string PanoramaHelper_ValidateServer_Exception_ {
+            get {
+                return ResourceManager.GetString("PanoramaHelper_ValidateServer_Exception_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: Unable to verify Panorama server information.
+        ///{0}.
+        /// </summary>
+        public static string PanoramaHelper_ValidateServer_PanoramaServerException_ {
+            get {
+                return ResourceManager.GetString("PanoramaHelper_ValidateServer_PanoramaServerException_", resourceCulture);
             }
         }
         

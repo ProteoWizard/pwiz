@@ -64,7 +64,7 @@ namespace SharedBatch
                     return SkylineType.SkylineDaily;
                 if (radioButtonSpecifySkylinePath.Checked)
                     return SkylineType.Custom;
-                throw new ArgumentException("No valid skyline type selected.");
+                throw new ArgumentException(Resources.SkylineTypeControl_Type_No_existing_Skyline_type_selected__Please_select_a_Skyline_installation_that_exists_on_this_computer_);
             }
         }
 
@@ -95,7 +95,7 @@ namespace SharedBatch
             using (var folderBrowserDlg = new FolderBrowserDialog())
             {
                 folderBrowserDlg.ShowNewFolderButton = false;
-                folderBrowserDlg.SelectedPath = TextUtil.GetInitialDirectory(textSkylineInstallationPath.Text, Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles));
+                folderBrowserDlg.SelectedPath = FileUtil.GetInitialDirectory(textSkylineInstallationPath.Text, Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles));
                 if (folderBrowserDlg.ShowDialog() == DialogResult.OK)
                 {
                     textSkylineInstallationPath.Text = folderBrowserDlg.SelectedPath;
@@ -107,6 +107,12 @@ namespace SharedBatch
         {
             textSkylineInstallationPath.Enabled = radioButtonSpecifySkylinePath.Checked;
             btnBrowse.Enabled = radioButtonSpecifySkylinePath.Checked;
+        }
+
+        public void SetInput(object variable)
+        {
+            radioButtonSpecifySkylinePath.Checked = true;
+            textSkylineInstallationPath.Text = (string)variable;
         }
     }
 }

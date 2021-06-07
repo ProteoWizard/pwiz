@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 using System.Xml;
@@ -35,7 +34,7 @@ namespace SharedBatch
         void WriteXml(XmlWriter writer);
 
         // Returns a listViewItem displaying information about the configuration for the UI
-        ListViewItem AsListViewItem(IConfigRunner runner);
+        ListViewItem AsListViewItem(IConfigRunner runner, Graphics graphics);
     }
 
     // Possible status' the ConfigRunner may have. A ConfigRunner does not need to use every status, 
@@ -68,6 +67,8 @@ namespace SharedBatch
 
         bool IsBusy();
         bool IsRunning();
+        bool IsWaiting();
+        bool IsCanceling();
         void Cancel();
     }
 
@@ -81,6 +82,9 @@ namespace SharedBatch
 
         // Uses Validator to determine if variable is valid
         bool IsValid(out string errorMessage);
+
+        // For testing, sets the text in a control
+        void SetInput(object variable);
     }
 
     // Possible actions a user is taking when opening a configuration in the edit configuration form 
@@ -106,18 +110,22 @@ namespace SharedBatch
 
         void AddConfiguration(IConfig config);
         void ReplaceSelectedConfig(IConfig config);
-        void ReplaceAllSkylineVersions(SkylineSettings skylineSettings);
-
-        void LogToUi(string filePath, string text, bool trim = true);
-        void LogErrorToUi(string filePath, string text, bool trim = true);
-        void LogLinesToUi(string filePath, List<string> lines);
-        void LogErrorLinesToUi(string filePath, List<string> lines);
+        bool? ReplaceAllSkylineVersions(SkylineSettings skylineSettings);
 
         void DisplayError(string message);
         void DisplayWarning(string message);
         void DisplayInfo(string message);
         void DisplayErrorWithException(string message, Exception exception);
         DialogResult DisplayQuestion(string message);
-        DialogResult DisplayLargeQuestion(string message);
+        DialogResult DisplayLargeOkCancel(string message);
+
+        void DisplayForm(Form form);
     }
+
+    public delegate void OnPercentProgress(int percent, int maxPercent);
+
+    public delegate  void LongOperation(OnPercentProgress progress);
+
+    public delegate void Callback(bool completed);
+
 }

@@ -58,6 +58,17 @@
     </Compile>
     <Compile Include="ProteinTurnoverUtil.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="Properties\Resources.ja.resx">
+      <DependentUpon>Resources.resx</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.zh-CHS.resx">
+      <DependentUpon>Resources.resx</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ProteinTurnoverUI.ja.resx">
+      <DependentUpon>ProteinTurnoverUI.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="ProteinTurnoverUI.resx">
       <DependentUpon>ProteinTurnoverUI.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -72,6 +83,9 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
+    <EmbeddedResource Include="ProteinTurnoverUI.zh-CHS.resx">
+      <DependentUpon>ProteinTurnoverUI.cs</DependentUpon>
+    </EmbeddedResource>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>

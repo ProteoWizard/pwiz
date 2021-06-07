@@ -18,6 +18,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Globalization;
 using System.Text;
 using System.Windows.Forms;
 using System.Xml;
@@ -82,12 +84,39 @@ namespace SkylineBatch
 
         public DateTime GetModified()  { return Modified; }
 
-        public ListViewItem AsListViewItem(IConfigRunner runner)
+        private string hoursWhitespace; // spaces added to the front of runtime strings to align the
+
+        public ListViewItem AsListViewItem(IConfigRunner runner, Graphics graphics)
         {
+            var configRunner = (ConfigRunner) runner;
             var lvi = new ListViewItem(Name);
             lvi.Checked = Enabled;
             lvi.SubItems.Add(Modified.ToShortDateString());
-            lvi.SubItems.Add(((ConfigRunner)runner).GetDisplayStatus());//_configRunners[config.Name].GetDisplayStatus());
+            lvi.SubItems.Add(configRunner.GetDisplayStatus());
+            lvi.SubItems.Add(configRunner.StartTime != null
+                ? ((DateTime)configRunner.StartTime).ToString("T")
+                : string.Empty);
+
+            // calculate space needed for hours in runtime column
+            if (hoursWhitespace == null)
+            {
+                var hoursSize = graphics.MeasureString("00:", lvi.Font).Width;
+                hoursWhitespace = "          .";
+                while (hoursSize < graphics.MeasureString(hoursWhitespace, lvi.Font).Width)
+                    hoursWhitespace = hoursWhitespace.Substring(1);
+                hoursWhitespace = hoursWhitespace.Replace('.', ' ');
+            }
+            if (configRunner.RunTime != null)
+            {
+                TimeSpan runTime = (TimeSpan)configRunner.RunTime;
+                var runTimeString = runTime.Hours > 0
+                    ? runTime.ToString(@"hh\:mm\:ss")
+                    : hoursWhitespace + runTime.ToString(@"mm\:ss");
+                lvi.SubItems.Add(runTimeString);
+            }
+            else
+                lvi.SubItems.Add(string.Empty);
+
             return lvi;
         }
 
@@ -128,9 +157,9 @@ namespace SkylineBatch
             var name = reader.GetAttribute(Attr.Name);
             var enabled = reader.GetBoolAttribute(Attr.Enabled);
             DateTime modified;
-            DateTime.TryParse(reader.GetAttribute(Attr.Modified), out modified);
+            DateTime.TryParse(reader.GetAttribute(Attr.Modified), CultureInfo.InvariantCulture, DateTimeStyles.None, out modified);
 
-                ReadUntilElement(reader);
+            ReadUntilElement(reader);
             MainSettings mainSettings = null;
             RefineSettings refineSettings = null;
             FileSettings fileSettings = null;
@@ -179,7 +208,7 @@ namespace SkylineBatch
             writer.WriteStartElement("skylinebatch_config");
             writer.WriteAttribute(Attr.Name, Name);
             writer.WriteAttribute(Attr.Enabled, Enabled);
-            writer.WriteAttributeIfString(Attr.Modified, Modified.ToShortDateString() + " " + Modified.ToShortTimeString());
+            writer.WriteAttributeIfString(Attr.Modified, Modified.ToString(CultureInfo.InvariantCulture));
             MainSettings.WriteXml(writer);
             FileSettings.WriteXml(writer);
             RefineSettings.WriteXml(writer);
@@ -199,11 +228,14 @@ namespace SkylineBatch
             SkylineSettings.Validate();
         }
 
-        public bool RunWillOverwrite(int startStep, string configurationHeader, out StringBuilder message)
+        public bool RunWillOverwrite(RunBatchOptions runOption, string configurationHeader, out StringBuilder message)
         {
-            if (startStep != 3)
-                return MainSettings.RunWillOverwrite(startStep, configurationHeader, out message);
-            return RefineSettings.RunWillOverwrite(startStep, configurationHeader, out message);
+            message = new StringBuilder();
+            if (runOption == RunBatchOptions.DOWNLOAD_DATA) return false;
+            
+            return MainSettings.RunWillOverwrite(runOption, configurationHeader, out message)
+                || RefineSettings.RunWillOverwrite(runOption, configurationHeader, out message)
+                || ReportSettings.RunWillOverwrite(runOption, configurationHeader, MainSettings.AnalysisFolderPath, out message);
         }
 
         public bool TryPathReplace(string oldRoot, string newRoot, out IConfig replacedPathConfig)

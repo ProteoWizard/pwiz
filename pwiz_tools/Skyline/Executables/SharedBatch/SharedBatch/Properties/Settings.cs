@@ -29,7 +29,7 @@ using System.Xml.Serialization;
 
 namespace SharedBatch.Properties
 {
-    internal sealed partial class Settings
+    public sealed partial class Settings
     {
 
         [UserScopedSetting]
@@ -47,7 +47,24 @@ namespace SharedBatch.Properties
             }
             set => this["ConfigList"] = value; // Not L10N
         }
-        
+
+        [UserScopedSetting]
+        public string InstallationId
+        {
+            get
+            {
+                var cid = (string)this["InstallationId"];
+                if (cid == null)
+                {
+                    cid = Guid.NewGuid().ToString();
+                    InstallationId = cid;
+                    Save();
+                }
+                return cid;
+            }
+            private set => this["InstallationId"] = value;
+        }
+
         [ApplicationScopedSetting]
         public Dictionary<string,string> RVersions
         {

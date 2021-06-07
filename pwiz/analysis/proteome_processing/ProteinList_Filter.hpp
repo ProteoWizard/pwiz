@@ -27,7 +27,7 @@
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/data/proteome/ProteinListWrapper.hpp"
 #include "pwiz/utility/misc/IntegerSet.hpp"
-#include "boost/logic/tribool.hpp"
+#include "boost/logic/tribool_io.hpp"
 
 #include <set>
 

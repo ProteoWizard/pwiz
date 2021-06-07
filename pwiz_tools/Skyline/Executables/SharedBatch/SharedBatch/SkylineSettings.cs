@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Diagnostics;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using System.Xml;
@@ -19,9 +19,14 @@ namespace SharedBatch
     {
         // The skyline installation to use when a configuration is run
 
+        private int[] _version;
+
+        private List<string> _versionOutput;
+
         public SkylineSettings(SkylineType type, string folderPath = "")
         {
             Type = type;
+            _versionOutput = new List<string>();
 
             bool skylineAdminInstallation = !string.IsNullOrEmpty(Settings.Default.SkylineAdminCmdPath);
             bool skylineWebInstallation = !string.IsNullOrEmpty(Settings.Default.SkylineRunnerPath);
@@ -109,13 +114,18 @@ namespace SharedBatch
             {
                 OnDataReceived = (data) =>
                 {
-                    if (baseProcessRunner.OnDataReceived != null) baseProcessRunner.OnDataReceived(data);
+                    if (baseProcessRunner.OnDataReceived != null)
+                    {
+                        baseProcessRunner.OnDataReceived(data);
+                        _versionOutput.Add(data);
+                    }
                     if (data != null && !data.Contains(versionCommand) && string.IsNullOrEmpty(output))
                         output += data;
                 },
                 OnError = () =>
                 {
                     if (baseProcessRunner.OnError != null) baseProcessRunner.OnError();
+                    _versionOutput.Clear();
                     error = true;
                 },
                 OnException = baseProcessRunner.OnException
@@ -145,17 +155,23 @@ namespace SharedBatch
         {
             baseProcessRunner = baseProcessRunner ?? new ProcessRunner();
             var cutoff = ParseVersionFromString(versionCutoff);
-            var version = await GetVersion(baseProcessRunner);
-            if (version == null) return false; // could not parse version
+            if (_version == null)
+                _version = await GetVersion(baseProcessRunner);
+            // log version output if it's already loaded
+            else if (baseProcessRunner.OnDataReceived != null)
+                foreach (var data in _versionOutput) baseProcessRunner.OnDataReceived(data);
+            if (_version == null) return false; // could not parse version
             for (int i = 0; i < cutoff.Length; i++)
             {
-                if (version[i] != cutoff[i]) return version[i] > cutoff[i];
+                if (_version[i] != cutoff[i]) return _version[i] > cutoff[i];
             }
             return true; // version is equal to cutoff
         }
 
         protected bool Equals(SkylineSettings other)
         {
+            if (Type == SkylineType.Custom && other.Type == SkylineType.Custom)
+                return CmdPath.Equals(other.CmdPath);
             return Type == other.Type;
         }
 

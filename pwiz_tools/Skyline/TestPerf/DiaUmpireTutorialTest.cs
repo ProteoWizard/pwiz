@@ -130,8 +130,8 @@ namespace TestPerf
                 IrtSlope = 3.005,
                 IrtIntercept = -67.215,
 
-                TargetCounts = new[] { 13, 202, 266, 1596 },
-                FinalTargetCounts = new[] { 9, 202, 266, 1596 },
+                TargetCounts = new[] { 14, 213, 277, 1661 },
+                FinalTargetCounts = new[] { 10, 213, 277, 1661 },
                 ScoringModelCoefficients = "0.3350|-0.4802|5.7227|-1.0901|-0.4986|1.0273|0.0885|-0.0186",
                 MassErrorStats = new[]
                 {
@@ -222,8 +222,8 @@ namespace TestPerf
                 IrtSlope = 2.606,
                 IrtIntercept = -45.948,
 
-                TargetCounts = new[] { 13, 174, 204, 1224 },
-                FinalTargetCounts = new[] { 9, 174, 204, 1224 },
+                TargetCounts = new[] { 14, 185, 215, 1289 },
+                FinalTargetCounts = new[] { 10, 185, 215, 1289 },
                 ScoringModelCoefficients = "0.2778|-0.7533|4.2037|1.0772|-0.0866|0.6578|0.1913|-0.0693",
                 MassErrorStats = new[]
                 {
@@ -385,6 +385,11 @@ namespace TestPerf
             // Add the test xml file to the search files list and try to 
             // build the document library.
             string diaDir = GetTestPath("DIA");
+
+            // delete -diaumpire files so they get regenerated instead of reused
+            foreach (var file in Directory.GetFiles(diaDir, "*-diaumpire.*"))
+                FileEx.SafeDelete(file);
+
             string[] searchFiles = DiaFiles.Select(p => Path.Combine(diaDir, p)).Take(_analysisValues.IsWholeProteome ? DiaFiles.Length : 2).ToArray();
             foreach (var searchFile in searchFiles)
                 Assert.IsTrue(File.Exists(searchFile), string.Format("File {0} does not exist.", searchFile));
@@ -545,7 +550,7 @@ namespace TestPerf
                 importPeptideSearchDlg.ConverterSettingsControl.EstimateBackground = true;
                 //importPeptideSearchDlg.ConverterSettingsControl.AdditionalSettings = _instrumentValues.AdditionalSettings;
             });
-            PauseForScreenShot("Import Peptide Search - DiaUmpire settings page", 14);
+            PauseForScreenShot<ImportPeptideSearchDlg.ConverterSettingsPage>("Import Peptide Search - DiaUmpire settings page", 14);
 
             bool? searchSucceeded = null;
             RunUI(() =>

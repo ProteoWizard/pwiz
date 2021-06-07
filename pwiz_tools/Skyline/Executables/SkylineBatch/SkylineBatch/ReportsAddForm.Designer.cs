@@ -35,7 +35,7 @@
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle6 = new System.Windows.Forms.DataGridViewCellStyle();
             this.textReportName = new System.Windows.Forms.TextBox();
             this.labelConfigName = new System.Windows.Forms.Label();
-            this.label1 = new System.Windows.Forms.Label();
+            this.labelReportPath = new System.Windows.Forms.Label();
             this.textReportPath = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
             this.btnOk = new System.Windows.Forms.Button();
@@ -52,6 +52,9 @@
             this.btnAdd = new System.Windows.Forms.ToolStripButton();
             this.btnDelete = new System.Windows.Forms.ToolStripButton();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+            this.checkBoxImport = new System.Windows.Forms.CheckBox();
+            this.checkBoxCultureInvariant = new System.Windows.Forms.CheckBox();
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridScripts)).BeginInit();
             this.toolStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -70,10 +73,10 @@
             resources.ApplyResources(this.labelConfigName, "labelConfigName");
             this.labelConfigName.Name = "labelConfigName";
             // 
-            // label1
+            // labelReportPath
             // 
-            resources.ApplyResources(this.label1, "label1");
-            this.label1.Name = "label1";
+            resources.ApplyResources(this.labelReportPath, "labelReportPath");
+            this.labelReportPath.Name = "labelReportPath";
             // 
             // textReportPath
             // 
@@ -224,12 +227,33 @@
             // 
             this.splitContainer1.Panel2.Controls.Add(this.toolStrip1);
             // 
+            // checkBoxImport
+            // 
+            resources.ApplyResources(this.checkBoxImport, "checkBoxImport");
+            this.checkBoxImport.Checked = true;
+            this.checkBoxImport.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkBoxImport.Name = "checkBoxImport";
+            this.toolTip1.SetToolTip(this.checkBoxImport, resources.GetString("checkBoxImport.ToolTip"));
+            this.checkBoxImport.UseVisualStyleBackColor = true;
+            this.checkBoxImport.CheckedChanged += new System.EventHandler(this.checkBoxImport_CheckedChanged);
+            // 
+            // checkBoxCultureInvariant
+            // 
+            resources.ApplyResources(this.checkBoxCultureInvariant, "checkBoxCultureInvariant");
+            this.checkBoxCultureInvariant.Checked = true;
+            this.checkBoxCultureInvariant.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkBoxCultureInvariant.Name = "checkBoxCultureInvariant";
+            this.toolTip1.SetToolTip(this.checkBoxCultureInvariant, resources.GetString("checkBoxCultureInvariant.ToolTip"));
+            this.checkBoxCultureInvariant.UseVisualStyleBackColor = true;
+            // 
             // ReportsAddForm
             // 
             this.AcceptButton = this.btnOk;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.checkBoxCultureInvariant);
+            this.Controls.Add(this.checkBoxImport);
             this.Controls.Add(this.splitContainer1);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.radioRefinedFile);
@@ -237,7 +261,7 @@
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnReportPath);
             this.Controls.Add(this.btnOk);
-            this.Controls.Add(this.label1);
+            this.Controls.Add(this.labelReportPath);
             this.Controls.Add(this.textReportPath);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.textReportName);
@@ -246,6 +270,7 @@
             this.MinimizeBox = false;
             this.Name = "ReportsAddForm";
             this.ShowInTaskbar = false;
+            this.Load += new System.EventHandler(this.ReportsAddForm_Load);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridScripts)).EndInit();
             this.toolStrip1.ResumeLayout(false);
             this.toolStrip1.PerformLayout();
@@ -262,7 +287,7 @@
 
         private System.Windows.Forms.TextBox textReportName;
         private System.Windows.Forms.Label labelConfigName;
-        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Label labelReportPath;
         private System.Windows.Forms.TextBox textReportPath;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Button btnOk;
@@ -279,5 +304,8 @@
         private System.Windows.Forms.ToolStripButton btnAdd;
         private System.Windows.Forms.ToolStripButton btnDelete;
         private System.Windows.Forms.SplitContainer splitContainer1;
+        private System.Windows.Forms.CheckBox checkBoxImport;
+        private System.Windows.Forms.ToolTip toolTip1;
+        private System.Windows.Forms.CheckBox checkBoxCultureInvariant;
     }
 }

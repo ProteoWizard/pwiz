@@ -23,6 +23,7 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -132,7 +133,11 @@ namespace pwiz.SkylineTestFunctional
                         Assert.IsFalse(exportMethodDlg.IsRunLengthVisible);
                         Assert.IsFalse(exportMethodDlg.IsDwellTimeVisible);
                     });
-
+                var exportMethodScheduleGraph =
+                    ShowDialog<ExportMethodScheduleGraph>(exportMethodDlg.ShowSchedulingGraph);
+                WaitForConditionUI(() => exportMethodScheduleGraph.GraphControl.GraphPane.CurveList.Count > 0);
+                OkDialog(exportMethodScheduleGraph, exportMethodScheduleGraph.Close);
+                
                 RunDlg<MessageDlg>(() => exportMethodDlg.MethodType = ExportMethodType.Triggered,
                     dlg =>
                     {

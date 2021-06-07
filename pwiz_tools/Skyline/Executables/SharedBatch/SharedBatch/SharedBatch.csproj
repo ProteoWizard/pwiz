@@ -35,6 +35,10 @@
       <HintPath>..\..\..\..\Shared\Lib\log4net.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Collections.Immutable, Version=5.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\Shared\Lib\System.Collections.Immutable.dll</HintPath>
+    </Reference>
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Management" />
@@ -55,12 +59,19 @@
     </Compile>
     <Compile Include="ChildProcessTracker.cs" />
     <Compile Include="ConfigManager.cs" />
+    <Compile Include="FileOpenedForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FileOpenedForm.Designer.cs">
+      <DependentUpon>FileOpenedForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="FilePathControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="FilePathControl.Designer.cs">
       <DependentUpon>FilePathControl.cs</DependentUpon>
     </Compile>
+    <Compile Include="FileUtil.cs" />
     <Compile Include="FindSkylineForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -69,6 +80,13 @@
     </Compile>
     <Compile Include="Interfaces.cs" />
     <Compile Include="Logger.cs" />
+    <Compile Include="LongWaitDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="LongWaitDlg.Designer.cs">
+      <DependentUpon>LongWaitDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="LongWaitOperation.cs" />
     <Compile Include="MainFormUtils.cs" />
     <Compile Include="ProcessRunner.cs" />
     <Compile Include="ProgramLog.cs" />
@@ -106,11 +124,17 @@
       <DependentUpon>AlertDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="FileOpenedForm.resx">
+      <DependentUpon>FileOpenedForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FilePathControl.resx">
       <DependentUpon>FilePathControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FindSkylineForm.resx">
       <DependentUpon>FindSkylineForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="LongWaitDlg.resx">
+      <DependentUpon>LongWaitDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
@@ -133,7 +157,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PreBuildEvent>cd "C:\Branches\Skylinework20210223_SkylineBatch_functionality_for_NEU_configs\ProteoWizard\pwiz\pwiz_tools\Skyline\Executables\SharedBatch\SharedBatch\bin\Debug"
-del "SharedBatch.dll" "SharedBatch.dll.config" "SharedBatch.pdb"</PreBuildEvent>
+    <PreBuildEvent>
+    </PreBuildEvent>
   </PropertyGroup>
 </Project>
