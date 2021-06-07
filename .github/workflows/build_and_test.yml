@@ -16,7 +16,7 @@ on:
     - 'pwiz_tools/Skyline/*'
     - 'pwiz_tools/Topograph/*'
   pull_request:
-    branches: [ master ]
+    branches: [ feature/siwtch-to-github-actions ]
     paths-ignore:
     - 'pwiz_tools/BiblioSpec/*'
     - 'pwiz_tools/MSConvertGUI/*'
