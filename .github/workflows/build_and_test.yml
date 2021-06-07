@@ -98,12 +98,12 @@ jobs:
           gcc --version
       - name: Install dependencies on macos
         if: startsWith(matrix.config.os, 'macos')
-        env:
-          JAVA_HOME:
         run: |
           clang --version
           gcc --version
 
       - name: Build
         shell: bash
-        run: ./quickbuild.sh --abbreviate-paths -j${{ steps.cpu-count.outputs.count }} address-model=64 pwiz executables ${{ matrix.config.toolset }}
+        run: |
+          unset JAVA_HOME
+          ./quickbuild.sh --abbreviate-paths -j${{ steps.cpu-count.outputs.count }} address-model=64 pwiz executables ${{ matrix.config.toolset }}
