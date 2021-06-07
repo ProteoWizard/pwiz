@@ -217,6 +217,9 @@
   <data name="HiResMetabolomics_Caption" xml:space="preserve">
     <value>高分辨率代谢组学</value>
   </data>
+  <data name="SmallMolLibraries_Caption" xml:space="preserve">
+    <value>小分子 IMS 库</value>
+  </data>
   <data name="Section_Advanced_Topics" xml:space="preserve">
     <value>高级主题</value>
   </data>
@@ -228,5 +231,8 @@
   </data>
   <data name="HiResMetabolomics_Description" xml:space="preserve">
     <value>针对指定为母离子化学式和加合物的分子，了解如何创建以此类分子为靶向的 Skyline 文档。导入在 Q Exactive Orbitrap 质谱仪上为一组血浆样品收集的多个重复测定的数据集，查看最初为靶向蛋白质组学用途而创建的现有 Skyline 特性中，有多少可以应用于非蛋白质组学分子数据。</value>
+  </data>
+  <data name="SmallMolLibraries_Description" xml:space="preserve">
+    <value>了解如何使用谱图库和离子迁移过滤来分析复杂的离子迁移谱图-质谱 (IMS-MS) 小分子数据。探索包含质荷比、保留时间、片段和离子迁移信息的谱图库，了解如何使用每个分子的 CCS 值来提高母离子和碎片提取离子色谱图的选择性。</value>
   </data>
 </root>

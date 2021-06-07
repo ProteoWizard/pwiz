@@ -423,6 +423,9 @@
   <data name="ViewSpecList_Views" xml:space="preserve">
     <value>报告</value>
   </data>
+  <data name="ViewSpecList_ViewLayouts" xml:space="preserve">
+    <value>布局</value>
+  </data>
   <data name="PivotSpec_ColumnHeaders" xml:space="preserve">
     <value>列标题</value>
   </data>
@@ -1574,7 +1577,67 @@
   <data name="MetadataRuleSet_Rules" xml:space="preserve">
     <value>规则</value>
   </data>
-  <data name="QuantificationSettings_QualitativeIonRatioThreshold">
+  <data name="QuantificationSettings_QualitativeIonRatioThreshold" xml:space="preserve">
     <value>定性离子比阈值</value>
+  </data>
+  <data name="QuantificationSettings_SimpleRatios" xml:space="preserve">
+    <value>样本比率</value>
+  </data>
+  <data name="ViewLayout_ClusterSpec">
+    <value>去簇规格</value>
+  </data>
+  <data name="ClusteringSpec_Values">
+    <value>值</value>
+  </data>
+  <data name="ClusteringSpec_DistanceMetric">
+    <value>距离度量</value>
+  </data>
+  <data name="ValueSpec_ColumnRef">
+    <value>列参考</value>
+  </data>
+  <data name="ExplicitMods_CrosslinkStructure">
+    <value>交联结构</value>
+  </data>
+  <data name="CrosslinkStructure_LinkedPeptides">
+    <value>关联的肽段</value>
+  </data>
+  <data name="CrosslinkStructure_LinkedExplicitMods">
+    <value>关联的明确修饰</value>
+  </data>
+  <data name="CrosslinkStructure_Crosslinks">
+    <value>交联</value>
+  </data>
+  <data name="BuildPeptideSearchLibrarySettings_InputFileType" xml:space="preserve">
+    <value>输入文件类型</value>
+  </data>
+  <data name="ImportFastaSettings_FastaImportTargetsFile" xml:space="preserve">
+    <value>用于导入目标的 FASTA 文件</value>
+  </data>
+  <data name="DdaConverterSettings_InstrumentPreset" xml:space="preserve">
+    <value>仪器预设</value>
+  </data>
+  <data name="DdaSearchSettings_FragmentIons" xml:space="preserve">
+    <value>碎片离子类型</value>
+  </data>
+  <data name="DdaSearchSettings_FragmentTolerance" xml:space="preserve">
+    <value>片段耐受性</value>
+  </data>
+  <data name="DdaSearchSettings_MaxVariableMods" xml:space="preserve">
+    <value>每个肽段的最大可变修饰数</value>
+  </data>
+  <data name="DdaSearchSettings_PrecursorTolerance" xml:space="preserve">
+    <value>母离子耐受性</value>
+  </data>
+  <data name="ImportPeptideSearchSettings_DdaConverterSettings" xml:space="preserve">
+    <value>DDA 转换器设置</value>
+  </data>
+  <data name="ImportPeptideSearchSettings_DdaSearchSettings" xml:space="preserve">
+    <value>DDA 搜索设置</value>
+  </data>
+  <data name="DdaConverterSettings_NonDefaultAdditionalSettings" xml:space="preserve">
+    <value>DDA 转换非默认设置</value>
+  </data>
+  <data name="DdaConverterSettings_Protocol" xml:space="preserve">
+    <value>DDA 转换协议</value>
   </data>
 </root>

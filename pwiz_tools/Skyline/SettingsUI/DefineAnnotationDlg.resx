@@ -436,7 +436,7 @@
     <value>3</value>
   </data>
   <data name="lblAggregateOperation.Text" xml:space="preserve">
-    <value>Aggregate operation:</value>
+    <value>Aggregate &amp;operation:</value>
   </data>
   <data name="&gt;&gt;lblAggregateOperation.Name" xml:space="preserve">
     <value>lblAggregateOperation</value>

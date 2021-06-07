@@ -18,7 +18,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Xml;
@@ -34,29 +34,31 @@ namespace SkylineBatch
 
         // IMMUTABLE - all fields are readonly literals or in an immutable list
         // Holds information for refining the skyline file after data import
-        
-        public RefineSettings(List<Tuple<RefineVariable, string>> commandValues, bool removeDecoys, bool removeResults,
-            string outputFilePath) : this(ImmutableList.Create<Tuple<RefineVariable, string>>().AddRange(commandValues), 
-            removeDecoys, removeResults, outputFilePath)
+
+        private readonly RefineInputObject _commandValues;
+
+        public static RefineSettings GetPathChanged(RefineSettings baseRefineSettings, string outputFilePath)
         {
+            return new RefineSettings(baseRefineSettings._commandValues, baseRefineSettings.RemoveDecoys, 
+                baseRefineSettings.RemoveResults, outputFilePath);
         }
 
-        public RefineSettings(ImmutableList<Tuple<RefineVariable, string>> commandValues, bool removeDecoys, bool removeResults,
+        public RefineSettings(RefineInputObject commandValues, bool removeDecoys, bool removeResults,
             string outputFilePath)
         {
             RemoveDecoys = removeDecoys;
             RemoveResults = removeResults;
             OutputFilePath = outputFilePath ?? string.Empty;
-            CommandValues = commandValues;
+            _commandValues = commandValues.Copy();
         }
-
-        public readonly ImmutableList<Tuple<RefineVariable, string>> CommandValues;
 
         public readonly bool RemoveDecoys;
 
         public readonly bool RemoveResults;
 
         public readonly string OutputFilePath;
+
+        public RefineInputObject CommandValuesCopy => _commandValues.Copy();
 
         public bool WillRefine()
         {
@@ -65,7 +67,7 @@ namespace SkylineBatch
 
         public void Validate()
         {
-            if (!string.IsNullOrEmpty(OutputFilePath) && !RemoveResults && !RemoveDecoys && CommandValues.IsEmpty)
+            if (!string.IsNullOrEmpty(OutputFilePath) && !RemoveResults && !RemoveDecoys && _commandValues.NoCommands())
             {
                 throw new ArgumentException(Resources.RefineSettings_Validate_No_refine_commands_have_been_selected_ + Environment.NewLine +
                                             Resources.RefineSettings_Validate_Please_enter_values_for_the_refine_commands_you_wish_to_use__or_skip_the_refinement_step_by_removing_the_file_path_on_the_refine_tab_);
@@ -93,11 +95,11 @@ namespace SkylineBatch
             }
         }
 
-        public bool RunWillOverwrite(int startStep, string configHeader, out StringBuilder message)
+        public bool RunWillOverwrite(RunBatchOptions runOption, string configHeader, out StringBuilder message)
         {
             var tab = "      ";
             message = new StringBuilder(configHeader);
-            if (startStep != 3)
+            if (runOption != RunBatchOptions.FROM_REFINE)
                 return false;
             if (File.Exists(OutputFilePath))
             {
@@ -111,9 +113,9 @@ namespace SkylineBatch
 
         public bool TryPathReplace(string oldRoot, string newRoot, out RefineSettings pathReplacedRefineSettings)
         {
-            var didReplace = TextUtil.SuccessfulReplace(ValidateOutputFile, oldRoot, newRoot, OutputFilePath, out string replacedOutputPath);
+            var didReplace = TextUtil.SuccessfulReplace(ValidateOutputFile, oldRoot, newRoot, OutputFilePath, Program.FunctionalTest, out string replacedOutputPath);
             pathReplacedRefineSettings =
-                new RefineSettings(CommandValues, RemoveDecoys, RemoveResults, replacedOutputPath);
+                new RefineSettings(_commandValues, RemoveDecoys, RemoveResults, replacedOutputPath);
             return didReplace;
         }
 
@@ -131,12 +133,12 @@ namespace SkylineBatch
             if (!reader.Name.Equals("refine_settings"))
             {
                 // This is an old configuration with no refine settings
-                return new RefineSettings(ImmutableList<Tuple<RefineVariable, string>>.Empty, false, false,
+                return new RefineSettings(new RefineInputObject(), false, false,
                     string.Empty);
             }
             var removeDecoys = reader.GetBoolAttribute(Attr.RemoveDecoys);
             var removeResults = reader.GetBoolAttribute(Attr.RemoveResults);
-            var outputFilePath = FileUtil.GetTestPath(Program.FunctionalTest, Program.TestDirectory, reader.GetAttribute(Attr.OutputFilePath));
+            var outputFilePath = reader.GetAttribute(Attr.OutputFilePath);
             var commandList = new List<Tuple<RefineVariable, string>>();
             while (reader.IsStartElement() && !reader.IsEmptyElement)
             {
@@ -152,7 +154,8 @@ namespace SkylineBatch
                     reader.Read();
                 }
             }
-            return new RefineSettings(commandList, removeDecoys, removeResults, outputFilePath);
+            var commandValues = RefineInputObject.FromInvariantCommandList(commandList);
+            return new RefineSettings(commandValues, removeDecoys, removeResults, outputFilePath);
         }
 
         public void WriteXml(XmlWriter writer)
@@ -161,10 +164,9 @@ namespace SkylineBatch
             writer.WriteAttribute(Attr.RemoveDecoys, RemoveDecoys);
             writer.WriteAttribute(Attr.RemoveResults, RemoveResults);
             writer.WriteAttributeIfString(Attr.OutputFilePath, OutputFilePath);
-            foreach (var commandValue in CommandValues)
-            {
+            var commandList = _commandValues.AsCommandList(CultureInfo.InvariantCulture);
+            foreach (var commandValue in commandList)
                 writer.WriteElementString("command_value", commandValue);
-            }
             writer.WriteEndElement();
         }
         #endregion
@@ -178,7 +180,8 @@ namespace SkylineBatch
         {
             if (WillRefine())
             {
-                foreach (var commandValue in CommandValues)
+                var commandList = _commandValues.AsCommandList(CultureInfo.CurrentCulture);
+                foreach (var commandValue in commandList)
                 {
                     var variableName = Enum.GetName(typeof(RefineVariable), commandValue.Item1);
                     var command = "-" + (RefineInputObject.REFINE_RESOURCE_KEY_PREFIX + variableName).Replace('_', '-');
@@ -215,13 +218,8 @@ namespace SkylineBatch
 
         protected bool Equals(RefineSettings other)
         {
-            if (CommandValues.Count != other.CommandValues.Count) return false;
-            for (int i = 0; i < CommandValues.Count; i++)
-            {
-                if (!CommandValues[i].Item1.Equals(other.CommandValues[i].Item1) || !CommandValues[i].Item2.Equals(other.CommandValues[i].Item2))
-                    return false;
-            }
-            return other.RemoveResults == RemoveResults &&
+            return  other._commandValues.Equals(_commandValues) &&
+                    other.RemoveResults == RemoveResults &&
                     other.RemoveDecoys == RemoveDecoys &&
                     other.OutputFilePath.Equals(OutputFilePath);
         }

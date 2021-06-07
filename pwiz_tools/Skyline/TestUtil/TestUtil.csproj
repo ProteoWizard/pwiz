@@ -418,6 +418,15 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Schemas\Skyline_1.2.xsd">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Schemas\Skyline_1.4.xsd">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Schemas\Skyline_1.5.xsd">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <None Include="Schemas\Skyline_20.14.xsd">
       <SubType>Designer</SubType>
     </None>
@@ -425,6 +434,9 @@
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Schemas\Skyline_20.21.xsd">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Schemas\Skyline_21_1.xsd">
       <SubType>Designer</SubType>
     </EmbeddedResource>
   </ItemGroup>

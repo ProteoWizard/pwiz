@@ -163,7 +163,7 @@
     <value>0, 0</value>
   </data>
   <data name="listViewColumns.Size" type="System.Drawing.Size, System.Drawing">
-    <value>411, 301</value>
+    <value>403, 301</value>
   </data>
   <data name="listViewColumns.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -190,7 +190,7 @@
     <value>Magenta</value>
   </data>
   <data name="btnRemove.Size" type="System.Drawing.Size, System.Drawing">
-    <value>21, 20</value>
+    <value>29, 20</value>
   </data>
   <data name="btnRemove.Text" xml:space="preserve">
     <value>删除</value>
@@ -199,7 +199,7 @@
     <value>Magenta</value>
   </data>
   <data name="btnUp.Size" type="System.Drawing.Size, System.Drawing">
-    <value>21, 20</value>
+    <value>29, 20</value>
   </data>
   <data name="btnUp.Text" xml:space="preserve">
     <value>向上</value>
@@ -208,16 +208,16 @@
     <value>Magenta</value>
   </data>
   <data name="btnDown.Size" type="System.Drawing.Size, System.Drawing">
-    <value>21, 20</value>
+    <value>29, 20</value>
   </data>
   <data name="btnDown.Text" xml:space="preserve">
     <value>向下</value>
   </data>
   <data name="toolStripColumns.Location" type="System.Drawing.Point, System.Drawing">
-    <value>411, 0</value>
+    <value>403, 0</value>
   </data>
   <data name="toolStripColumns.Size" type="System.Drawing.Size, System.Drawing">
-    <value>24, 301</value>
+    <value>32, 301</value>
   </data>
   <data name="toolStripColumns.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
