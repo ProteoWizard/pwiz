@@ -555,6 +555,7 @@ namespace AutoQC
         public void ClearLog()
         {
             textBoxLog.Clear();
+            comboConfigs.SelectedIndex = -1;
         }
 
         #endregion
