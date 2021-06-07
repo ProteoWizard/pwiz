@@ -1009,7 +1009,7 @@
     <value>タンパク質シークエンス</value>
   </data>
   <data name="ProteinSequenceCoverage">
-    <value>タンパク質シークエンス対象</value>
+    <value>タンパク質シーケンスカバー率</value>
   </data>
   <data name="ProteinSpecies">
     <value>タンパク質種</value>

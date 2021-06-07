@@ -232,7 +232,7 @@
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>面积 CV 图属性</value>
+    <value>面积 CV 图的属性</value>
   </data>
   <data name="checkBoxDecimalCvs.Text" xml:space="preserve">
     <value>显示十进位 CV 值(&amp;D)</value>
