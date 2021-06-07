@@ -98,6 +98,8 @@ jobs:
           gcc --version
       - name: Install dependencies on macos
         if: startsWith(matrix.config.os, 'macos')
+        env:
+          JAVA_HOME:
         run: |
           clang --version
           gcc --version
