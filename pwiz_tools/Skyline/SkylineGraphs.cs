@@ -911,11 +911,11 @@ namespace pwiz.Skyline
         private void synchMzScaleToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (_graphFullScan == null || !_graphFullScan.Visible || _graphSpectrum == null || !_graphSpectrum.Visible) return;
-            IMzScaleCopyable source = (IMzScaleCopyable)(synchMzScaleToolStripMenuItem.Owner as ContextMenuStrip)?.SourceControl.Parent.Parent;
+            IMzScaleCopyable source = (IMzScaleCopyable)(synchMzScaleToolStripMenuItem.Owner as ContextMenuStrip)?.SourceControl?.Parent?.Parent;
 
             if (sender is IMzScaleCopyable)         //testing support
                 source = (IMzScaleCopyable) sender;
-
+            if (source == null) return;
             IMzScaleCopyable target = _graphSpectrum;
             if (source is GraphSpectrum)
                 target = _graphFullScan;
@@ -1231,7 +1231,7 @@ namespace pwiz.Skyline
         {
             if (_graphSpectrum != null)
                 _graphSpectrum.UpdateUI(selectionChanged);
-            _graphFullScan?.UpdateUI(selectionChanged);
+            _graphFullScan?.UpdateUI(true);
         }
 
 //        private static bool SameChargeGroups(PeptideTreeNode nodeTree)

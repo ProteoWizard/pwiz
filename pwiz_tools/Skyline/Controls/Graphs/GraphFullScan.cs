@@ -937,12 +937,14 @@ namespace pwiz.Skyline.Controls.Graphs
             if (!Visible || IsDisposed || _msDataFileScanHelper.ScanProvider == null)
                 return;
             GraphHelper.FormatGraphPane(graphControl.GraphPane);
+            if (_msDataFileScanHelper.MsDataSpectra != null)
+                toolBar.Visible = true;
 
-            CreateGraph();
+            if (selectionChanged)
+                CreateGraph();
 
             if (_msDataFileScanHelper.MsDataSpectra != null)
             {
-                toolBar.Visible = true;
                 leftButton.Enabled = (_msDataFileScanHelper.ScanIndex > 0);
                 rightButton.Enabled = (_msDataFileScanHelper.ScanIndex < _msDataFileScanHelper.ScanProvider.Times.Count-1);
                 lblScanId.Text = _msDataFileScanHelper.GetScanIndex().ToString(@"D");
