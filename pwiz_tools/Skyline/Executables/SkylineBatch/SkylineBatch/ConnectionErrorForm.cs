@@ -99,7 +99,7 @@ namespace SkylineBatch
             {
                 foreach (var config in _configDict.Values)
                 {
-                    if (((ServerInfo)config.MainSettings.Server).Equals(server) &&
+                    if ((config.MainSettings.Server).Equals(server) &&
                         _disconnectedConfigs[config.Name] != null)
                     {
                         RunUi(() => { AlertDlg.ShowError(this, Program.AppName(), _disconnectedConfigs[config.Name].Message); });

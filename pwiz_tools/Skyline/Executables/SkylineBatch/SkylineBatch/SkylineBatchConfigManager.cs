@@ -225,8 +225,12 @@ namespace SkylineBatch
             var config = (SkylineBatchConfig)iconfig;
             if (state.configRunners.ContainsKey(config.GetName()))
                 throw new Exception("Config runner already exists.");
-            var runner = new ConfigRunner(config, _logList[0], _uiControl);
-            var configRunners = state.configRunners.Add(config.GetName(), runner);
+            ImmutableDictionary<string, IConfigRunner> configRunners;
+            lock (_loggerLock)
+            {
+                var runner = new ConfigRunner(config, _logList[0], _uiControl);
+                configRunners = state.configRunners.Add(config.GetName(), runner);
+            }
             var refinedTemplates = state.templates;
             if (config.RefineSettings.WillRefine())
                 refinedTemplates = refinedTemplates.Add(config.Name, config.RefineSettings.OutputFilePath);
@@ -665,7 +669,7 @@ namespace SkylineBatch
             var longWaitOperation = new LongWaitOperation(longWaitDlg);
 
 
-            longWaitOperation.Start(downloadingConfigs.Count > 0, async (OnProgress) =>
+            longWaitOperation.Start(downloadingConfigs.Count > 0, (OnProgress) =>
             {
                 _runServerConnector.Connect(OnProgress);
             }, (success) =>
@@ -800,6 +804,8 @@ namespace SkylineBatch
                     _logList.Insert(1, oldLogger);
             }
 
+            if (_checkedRunOption == null)
+                throw new Exception("No run option selected.");
             var runOption = (RunBatchOptions)_checkedRunOption;
             var serverConnector = _runServerConnector;
             _checkedRunOption = null;

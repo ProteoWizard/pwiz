@@ -104,7 +104,7 @@
     <value>倍数变化的以 2 为底的对数的绝对值</value>
   </data>
   <data name="Abundance">
-    <value>用于计算文件夹更改的此重复测定的值。此数值取决于归一化方法以及是在蛋白质还是肽段级别计算倍数变化。</value>
+    <value>重复测定的值是用于计算倍数的变化。此数值取决于归一化方法以及是基于蛋白质还是肽段级别来计算倍数的变化。</value>
   </data>
   <data name="AdjustedPValue">
     <value>在多组肽段或蛋白质的该组比较中，针对多重比较调整 P 值。使用 Benjamini-Hochberg 程序完成调整。</value>
