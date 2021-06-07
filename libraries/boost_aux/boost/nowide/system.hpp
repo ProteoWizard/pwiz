@@ -34,7 +34,7 @@ inline int system(char const *cmd)
         errno = EINVAL;
         return -1;
     }
-    return _wsystem(wcmd.c_str());
+    return _wsystem(wcmd.get());
 }
 
 #endif

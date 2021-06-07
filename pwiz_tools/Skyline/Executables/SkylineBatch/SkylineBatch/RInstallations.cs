@@ -66,7 +66,7 @@ namespace SkylineBatch
                                             Resources.RInstallations_AddRDirectory_Please_enter_a_valid_directory_);
             var RDirectoryFound = false;
             var input = newRDir;
-            while (!RDirectoryFound)
+            while (true) // breaks when R directory is found
             {
                 var childFolderNames = Directory.GetDirectories(newRDir);
                 foreach (var folderName in childFolderNames)
