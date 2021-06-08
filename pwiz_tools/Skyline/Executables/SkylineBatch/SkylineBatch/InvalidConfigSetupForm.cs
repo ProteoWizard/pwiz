@@ -85,7 +85,7 @@ namespace SkylineBatch
                     var validTemplateFile = await GetValidPath(
                         Resources.InvalidConfigSetupForm_FixInvalidMainSettings_Skyline_template_file,
                         mainSettings.Template.FilePath, SkylineTemplate.ValidateTemplateFile, PathDialogOptions.File);
-                    validTemplate = new SkylineTemplate(validTemplateFile, mainSettings.Template.DependentConfigName,
+                    validTemplate = SkylineTemplate.FromUi(validTemplateFile, mainSettings.Template.DependentConfigName,
                         mainSettings.Template.PanoramaFile);
                 }
                 else
@@ -94,7 +94,7 @@ namespace SkylineBatch
                     var validDownloadFolder = await GetValidPath(
                         "folder to download the Skyline template into",
                         mainSettings.Template.FilePath, PanoramaFile.ValidateDownloadFolder, PathDialogOptions.Folder);
-                    validTemplate = new SkylineTemplate(null, mainSettings.Template.DependentConfigName,
+                    validTemplate = SkylineTemplate.FromUi(null, mainSettings.Template.DependentConfigName,
                         new PanoramaFile(invalidPanoramaFile, validDownloadFolder, invalidPanoramaFile.FileName));
                 }
 

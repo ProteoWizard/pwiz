@@ -17,14 +17,11 @@
  */
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
-using FluentFTP;
 using SharedBatch;
 using SkylineBatch.Properties;
 using File = System.IO.File;
@@ -235,7 +232,7 @@ namespace SkylineBatch
             var templateFilePath = reader.GetAttribute(Attr.TemplateFilePath);
             var dependentConfigName = reader.GetAttribute(Attr.DependentConfigName);
             var oldTemplate = templateFilePath != null
-                ? new SkylineTemplate(templateFilePath, dependentConfigName, null)
+                ? SkylineTemplate.FromUi(templateFilePath, dependentConfigName, null)
                 : null;
             var analysisFolderPath = reader.GetAttribute(Attr.AnalysisFolderPath);
             var dataFolderPath = reader.GetAttribute(Attr.DataFolderPath);
@@ -304,13 +301,6 @@ namespace SkylineBatch
 
         protected bool Equals(MainSettings other)
         {
-            var a = Equals(Template, other.Template);
-            a = Equals(AnalysisFolderPath, other.AnalysisFolderPath);
-            a = Equals(DataFolderPath, other.DataFolderPath);
-            a = Equals(ReplicateNamingPattern, other.ReplicateNamingPattern);
-            a = Equals(AnnotationsFilePath, other.AnnotationsFilePath);
-
-
             return Equals(Template, other.Template)
                    && Equals(AnalysisFolderPath, other.AnalysisFolderPath)
                    && Equals(DataFolderPath, other.DataFolderPath)

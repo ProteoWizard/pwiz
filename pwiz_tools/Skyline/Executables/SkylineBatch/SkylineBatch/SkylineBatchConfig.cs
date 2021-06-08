@@ -294,15 +294,6 @@ namespace SkylineBatch
 
         protected bool Equals(SkylineBatchConfig other)
         {
-            var a = string.Equals(Name, other.Name);
-            var b = Equals(MainSettings, other.MainSettings);
-            var c = Equals(ReportSettings, other.ReportSettings);
-            var d = Equals(FileSettings, other.FileSettings);
-             var e = Equals(SkylineSettings, other.SkylineSettings);
-
-
-
-
             return string.Equals(Name, other.Name)
                    && Equals(MainSettings, other.MainSettings)
                    && Equals(ReportSettings, other.ReportSettings)

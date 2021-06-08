@@ -194,7 +194,7 @@ namespace SkylineBatch
                 if (_possibleTemplates[configName].Equals(templateFilePath))
                     dependentConfig = configName;
             }
-            var template = new SkylineTemplate(templateFilePath, dependentConfig, _panoramaTemplate);
+            var template = SkylineTemplate.FromUi(templateFilePath, dependentConfig, _panoramaTemplate);
 
             var analysisFolderPath = textAnalysisPath.Text;
             var dataFolderPath = textDataPath.Text;

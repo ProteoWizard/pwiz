@@ -213,6 +213,7 @@ namespace SkylineBatch
             }
         }
 
+        // ReSharper disable once UnusedMember.Local
         private static void SendAnalyticsHit()
         {
             // ReSharper disable LocalizableElement

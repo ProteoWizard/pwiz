@@ -70,7 +70,6 @@ namespace SkylineBatch
         {
             lock (_lock)
             {
-                var serverUri = server.URI.AbsoluteUri;
                 if (!_serverMap.ContainsKey(server))
                 {
                     //_servers.Add(serverUri, server);
@@ -134,7 +133,6 @@ namespace SkylineBatch
 
         public void Reconnect(List<Server> servers, OnPercentProgress doOnProgress)
         {
-            var serverUris = new List<string>();
             foreach (var serverInfo in servers)
             {
                 _serverMap[serverInfo] = null;

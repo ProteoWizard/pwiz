@@ -27,7 +27,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using FluentFTP;
 using SharedBatch;
 using Resources = SkylineBatch.Properties.Resources;
 

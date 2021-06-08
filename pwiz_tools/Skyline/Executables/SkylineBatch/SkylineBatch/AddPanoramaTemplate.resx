@@ -125,6 +125,9 @@
   <data name="splitContainer1.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 55</value>
   </data>
+  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="label2.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -144,9 +147,6 @@
   <data name="label2.Text" xml:space="preserve">
     <value>Username (optional):</value>
   </data>
-  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
-  </metadata>
   <data name="label2.ToolTip" xml:space="preserve">
     <value>Username is required for private Skyline files</value>
   </data>
@@ -155,9 +155,6 @@
   </data>
   <data name="&gt;&gt;label2.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label2.Parent" xml:space="preserve">
-    <value>splitContainer1.Panel1</value>
   </data>
   <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
     <value>0</value>
@@ -179,9 +176,6 @@
   </data>
   <data name="&gt;&gt;textUserName.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textUserName.Parent" xml:space="preserve">
-    <value>splitContainer1.Panel1</value>
   </data>
   <data name="&gt;&gt;textUserName.ZOrder" xml:space="preserve">
     <value>1</value>
@@ -225,9 +219,6 @@
   <data name="&gt;&gt;label3.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;label3.Parent" xml:space="preserve">
-    <value>splitContainer1.Panel2</value>
-  </data>
   <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
@@ -251,9 +242,6 @@
   </data>
   <data name="&gt;&gt;textPassword.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textPassword.Parent" xml:space="preserve">
-    <value>splitContainer1.Panel2</value>
   </data>
   <data name="&gt;&gt;textPassword.ZOrder" xml:space="preserve">
     <value>1</value>
@@ -291,37 +279,37 @@
   <data name="&gt;&gt;splitContainer1.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
-  <data name="btnAdd.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+  <data name="btnSave.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
   </data>
-  <data name="btnAdd.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+  <data name="btnSave.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
-  <data name="btnAdd.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="btnSave.Location" type="System.Drawing.Point, System.Drawing">
     <value>238, 104</value>
   </data>
-  <data name="btnAdd.MinimumSize" type="System.Drawing.Size, System.Drawing">
+  <data name="btnSave.MinimumSize" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
-  <data name="btnAdd.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="btnSave.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
-  <data name="btnAdd.TabIndex" type="System.Int32, mscorlib">
+  <data name="btnSave.TabIndex" type="System.Int32, mscorlib">
     <value>14</value>
   </data>
-  <data name="btnAdd.Text" xml:space="preserve">
-    <value>Add</value>
+  <data name="btnSave.Text" xml:space="preserve">
+    <value>Save</value>
   </data>
-  <data name="&gt;&gt;btnAdd.Name" xml:space="preserve">
-    <value>btnAdd</value>
+  <data name="&gt;&gt;btnSave.Name" xml:space="preserve">
+    <value>btnSave</value>
   </data>
-  <data name="&gt;&gt;btnAdd.Type" xml:space="preserve">
+  <data name="&gt;&gt;btnSave.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnAdd.Parent" xml:space="preserve">
+  <data name="&gt;&gt;btnSave.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;btnAdd.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;btnSave.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -388,14 +376,17 @@
     <value>9, 12</value>
   </data>
   <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>128, 13</value>
+    <value>32, 13</value>
   </data>
   <data name="label1.TabIndex" type="System.Int32, mscorlib">
     <value>11</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>Skyline template file URL:</value>
+    <value>URL:</value>
   </data>
+  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
   <data name="label1.ToolTip" xml:space="preserve">
     <value>The URL to the Skyline file on Panorama</value>
   </data>
@@ -460,7 +451,7 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>Add Template From Panorama</value>
+    <value>Download Template From Panorama</value>
   </data>
   <data name="&gt;&gt;toolTip1.Name" xml:space="preserve">
     <value>toolTip1</value>

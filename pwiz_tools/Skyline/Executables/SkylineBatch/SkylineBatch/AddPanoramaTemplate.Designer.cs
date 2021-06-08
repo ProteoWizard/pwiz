@@ -35,7 +35,7 @@
             this.textUserName = new System.Windows.Forms.TextBox();
             this.label3 = new System.Windows.Forms.Label();
             this.textPassword = new System.Windows.Forms.TextBox();
-            this.btnAdd = new System.Windows.Forms.Button();
+            this.btnSave = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
             this.textUrl = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
@@ -84,12 +84,12 @@
             resources.ApplyResources(this.textPassword, "textPassword");
             this.textPassword.Name = "textPassword";
             // 
-            // btnAdd
+            // btnSave
             // 
-            resources.ApplyResources(this.btnAdd, "btnAdd");
-            this.btnAdd.Name = "btnAdd";
-            this.btnAdd.UseVisualStyleBackColor = true;
-            this.btnAdd.Click += new System.EventHandler(this.btnAdd_Click);
+            resources.ApplyResources(this.btnSave, "btnSave");
+            this.btnSave.Name = "btnSave";
+            this.btnSave.UseVisualStyleBackColor = true;
+            this.btnSave.Click += new System.EventHandler(this.btnAdd_Click);
             // 
             // btnCancel
             // 
@@ -122,7 +122,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.btnClear);
             this.Controls.Add(this.splitContainer1);
-            this.Controls.Add(this.btnAdd);
+            this.Controls.Add(this.btnSave);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.textUrl);
             this.Controls.Add(this.label1);
@@ -149,7 +149,7 @@
         private System.Windows.Forms.TextBox textUserName;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.TextBox textPassword;
-        private System.Windows.Forms.Button btnAdd;
+        private System.Windows.Forms.Button btnSave;
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.TextBox textUrl;
         private System.Windows.Forms.Label label1;

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 using System.Windows.Forms;
 using SharedBatch;
 using SkylineBatch.Properties;
@@ -25,16 +24,7 @@ namespace SkylineBatch
                 textUrl.Text = editingServer.URI.AbsoluteUri;
                 textUserName.Text = editingServer.Username;
                 textPassword.Text = editingServer.Password;
-                //initialPath = editingTemplate.PanoramaFile.DownloadFolder;
             }
-
-            /*_folderControl = new FilePathControl("template file directory", initialPath, lastInputPath,
-                SkylineTemplate.ValidateTemplateFile, PathDialogOptions.Folder);
-            _folderControl.label2.Text = string.Empty;
-            _folderControl.label2.Text = "Directory to download into:";
-            _folderControl.Dock = DockStyle.Bottom;
-            _folderControl.Show();
-            panel1.Controls.Add(_folderControl);*/
 
         }
 
@@ -42,15 +32,12 @@ namespace SkylineBatch
 
         private void btnAdd_Click(object sender, EventArgs e)
         {
-            var addText = btnAdd.Text;
-            btnAdd.Text = Resources.AddServerForm_btnAdd_Click_Verifying;
-            btnAdd.Enabled = false;
+            var addText = btnSave.Text;
+            btnSave.Text = Resources.AddServerForm_btnAdd_Click_Verifying;
+            btnSave.Enabled = false;
             var valid = true;
             try
             {
-                //var uri = new Uri(textUrl.Text);
-                //var server = PanoramaFile.ParseServer(new Server(textUrl.Text, textUserName.Text, textPassword.Text));
-                //PanoramaFile.ValidatePanoramaServer(server);
                 PanoramaServer = PanoramaFileFromUI();
             }
             catch (Exception ex)
@@ -65,8 +52,8 @@ namespace SkylineBatch
             }
             else
             {
-                btnAdd.Enabled = true;
-                btnAdd.Text = addText;
+                btnSave.Enabled = true;
+                btnSave.Text = addText;
             }
         }
 

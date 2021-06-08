@@ -197,7 +197,6 @@ namespace SharedBatch
     {
         public const string EXT = ".zip";
         public const string EXT_SKY_ZIP = ".sky.zip";
-        private TemporaryDirectory _tempDir;
         public static string FILTER_SHARING
         {
             get { return TextUtil.FileDialogFilter("SrmDocumentSharing_FILTER_SHARING_Shared_Files", EXT); }
@@ -220,31 +219,19 @@ namespace SharedBatch
         public ShareType ShareType { get; set; }
         //private IProgressMonitor ProgressMonitor { get; set; }
         //private IProgressStatus _progressStatus;
-        private int CountEntries { get; set; }
-        private int EntriesSaved { get; set; }
-        private string CurrentEntry { get; set; }
         private long ExpectedSize { get; set; }
         private long ExtractedSize { get; set; }
 
-        private string DefaultMessage
-        {
-            get
-            {
-                return string.Format("Extracting_files_from_sharing_archive {0}.",
-                    Path.GetFileName(SharedPath));
-            }
-        }
 
         public string Extract(Update progressHandler, CancellationToken token)
         {
             _progressHandler = progressHandler;
             _cancellationToken = token;
 
-            var extractDir = Path.GetDirectoryName(SharedPath);
+            var extractDir = Path.GetDirectoryName(SharedPath) ?? string.Empty;
 
             using (ZipFile zip = ZipFile.Read(SharedPath))
             {
-                CountEntries = zip.Entries.Count;
                 ExpectedSize = zip.Entries.Select(entry => entry.UncompressedSize).Sum();
 
                 zip.ExtractProgress += SrmDocumentSharing_ExtractProgress;
@@ -299,21 +286,6 @@ namespace SharedBatch
             return extractDir;
         }
 
-        private static string GetNonExistentDir(string dirPath)
-        {
-            int count = 1;
-            string dirResult = dirPath;
-
-            while (Directory.Exists(dirResult))
-            {
-                // If a directory with the given name already exists, add
-                // a suffix to create a unique folder name.
-                dirResult = dirPath + @"(" + count + @")";
-                count++;
-            }
-            return dirResult;
-        }
-
         private static string FindSharedSkylineFile(ZipFile zip)
         {
             string skylineFile = null;
@@ -343,49 +315,6 @@ namespace SharedBatch
         }
 
 
-        public string GetDocumentFileName()
-        {
-            if (!string.IsNullOrEmpty(DocumentPath))
-            {
-                return Path.GetFileName(DocumentPath);
-            }
-
-            return Path.ChangeExtension(Path.GetFileNameWithoutExtension(SharedPath), TextUtil.EXT_SKY);
-        }
-
-
-        private void DeleteTempDir()
-        {
-            if (_tempDir != null)
-            {
-                try
-                {
-                    _tempDir.Dispose();
-                }
-                catch (IOException x)
-                {
-                    var message = TextUtil.LineSeparate(string.Format(
-                            "SrmDocumentSharing_ShareMinimal_Failure_removing_temporary_directory {0}",
-                            _tempDir.DirPath),
-                        x.Message);
-                    throw new IOException(message);
-                }
-
-                _tempDir = null;
-            }
-        }
-
-        public TemporaryDirectory EnsureTempDir()
-        {
-            if (_tempDir == null)
-            {
-                _tempDir = new TemporaryDirectory();
-            }
-
-            return _tempDir;
-        }
-
-
         private void SrmDocumentSharing_ExtractProgress(object sender, ExtractProgressEventArgs e)
         {
             if (_progressHandler != null)
@@ -399,54 +328,6 @@ namespace SharedBatch
                 int progressValue = (int)Math.Round((ExtractedSize + e.BytesTransferred) * 100.0 / ExpectedSize);
 
                 _progressHandler(progressValue, null);
-            }
-        }
-
-
-
-        private class ZipFileShare : IDisposable
-        {
-            private readonly ZipFile _zip;
-            private readonly IDictionary<string, string> _dictNameToPath;
-
-            public ZipFileShare()
-            {
-                // Make sure large files don't cause this to fail.
-                _zip = new ZipFile { UseZip64WhenSaving = Zip64Option.AsNecessary };
-
-                _dictNameToPath = new Dictionary<string, string>();
-            }
-
-            public int CountEntries { get { return _zip.Entries.Count; } }
-
-            public void AddFile(string path)
-            {
-                string existingPath;
-                string fileName = Path.GetFileName(path) ?? string.Empty;
-                if (_dictNameToPath.TryGetValue(fileName, out existingPath))
-                {
-                    if (path != existingPath)
-                    {
-                        throw new IOException(TextUtil.LineSeparate(string.Format("ZipFileShare_AddFile_Failed_attempting_to_add_the_file__0_", path),
-                            string.Format("ZipFileShare_AddFile_The_name___0___is_already_in_use_from_the_path__1_", fileName, existingPath)));
-                    }
-
-                    // No need to add exactly the same path twice
-                    return;
-                }
-                _dictNameToPath.Add(fileName, path);
-                _zip.AddFile(path, string.Empty);
-            }
-
-            public void Save(string path, EventHandler<SaveProgressEventArgs> progressEvent)
-            {
-                _zip.SaveProgress += progressEvent;
-                _zip.Save(path);
-            }
-
-            public void Dispose()
-            {
-                if (_zip != null) _zip.Dispose();
             }
         }
 

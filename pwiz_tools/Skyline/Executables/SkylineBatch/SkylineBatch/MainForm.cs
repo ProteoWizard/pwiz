@@ -494,7 +494,7 @@ namespace SkylineBatch
 
         public void FileOpened(string filePath)
         {
-            var importConfigs = false;
+            bool importConfigs;
             var inDownloadsFolder = filePath.Contains(FileUtil.DOWNLOADS_FOLDER);
 
             RunUi(() =>

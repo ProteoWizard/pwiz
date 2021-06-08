@@ -3,9 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Web;
 using Newtonsoft.Json;
 using SharedBatch;
@@ -76,13 +73,6 @@ namespace SkylineBatch
             return new ConnectedFileInfo(fileInfo.FileName,fileInfo.ServerInfo, fileInfo.Size, folder);
         }
 
-
-        public static SkypFile DownloadSkyp(string filePath, Server server)
-        {
-            var skypDownloader = new WebDownloadClient((percent, error) => { }, new CancellationToken());
-            skypDownloader.Download(server.URI, filePath, server.Username, server.Password);
-            return SkypFile.Create(filePath, server);
-        }
 
         public ConnectedFileInfo GetFileInfo(Server server)
         {

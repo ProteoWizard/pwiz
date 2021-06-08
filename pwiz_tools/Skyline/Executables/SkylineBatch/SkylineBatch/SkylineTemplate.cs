@@ -16,23 +16,32 @@ namespace SkylineBatch
 
         public static SkylineTemplate ExistingTemplate(string templateFilePath)
         {
-            return new SkylineTemplate(templateFilePath, string.Empty, null);
+            return FromUi(templateFilePath, string.Empty, null);
         }
 
         public static SkylineTemplate DependentTemplate(string dependentTemplatePath, string dependentConfigName)
         {
-            return new SkylineTemplate(dependentTemplatePath, dependentConfigName, null);
+            return new SkylineTemplate(dependentTemplatePath, null, dependentConfigName, null);
         }
 
-        public SkylineTemplate(string filePath, string dependentConfigName, PanoramaFile panoramaFile)
+        public static SkylineTemplate FromUi(string filePath, string dependentConfigName, PanoramaFile panoramaFile)
         {
+            string path = null;
+            string zippedFilePath = null;
+
             if (filePath != null && filePath.EndsWith(TextUtil.EXT_ZIP))
-                _zippedPath = filePath;
+                zippedFilePath = filePath;
             else
-                _path = filePath ?? string.Empty;
-            if (PanoramaFile != null) _path = null;
-            DependentConfigName = dependentConfigName ?? string.Empty;
+                path = filePath;
+            return new SkylineTemplate(path, zippedFilePath, dependentConfigName, panoramaFile);
+        }
+
+        private SkylineTemplate(string path, string zipFilePath, string dependentConfigName, PanoramaFile panoramaFile)
+        {
             PanoramaFile = panoramaFile;
+            _path = !string.IsNullOrEmpty(path) ? path : null;
+            _zippedPath = zipFilePath ?? string.Empty;
+            DependentConfigName = dependentConfigName ?? string.Empty;
         }
         
         public readonly PanoramaFile PanoramaFile;
@@ -68,7 +77,25 @@ namespace SkylineBatch
             }
             else if (string.IsNullOrEmpty(DependentConfigName))
             {
-                ValidateTemplateFile(FilePath);
+                Exception validationError;
+                try
+                {
+                    ValidateTemplateFile(FilePath);
+                    return;
+                }
+                catch (ArgumentException e)
+                {
+                    if (string.IsNullOrEmpty(_zippedPath)) throw;
+                    validationError = e;
+                }
+                try
+                {
+                    ValidateTemplateFile(_zippedPath);
+                }
+                catch (ArgumentException)
+                {
+                    throw validationError;
+                }
             }
         }
 
@@ -87,16 +114,18 @@ namespace SkylineBatch
         {
             var preferReplace = Program.FunctionalTest;
             pathReplacedTemplate = this;
-            var filePathReplaced = TextUtil.SuccessfulReplace(ValidateTemplateFile, oldRoot, newRoot, FilePath,
+            var pathReplaced = TextUtil.SuccessfulReplace(ValidateTemplateFile, oldRoot, newRoot, _path,
                 preferReplace, out string replacedFilePath);
+            var zipPathReplaced = TextUtil.SuccessfulReplace(ValidateTemplateFile, oldRoot, newRoot, _zippedPath,
+                preferReplace, out string replacedZippedFilePath);
 
             PanoramaFile replacedPanoramaFile = null;
             var panoramaReplaced = false;
             if (PanoramaFile != null)
                 panoramaReplaced = PanoramaFile.TryPathReplace(oldRoot, newRoot, out replacedPanoramaFile);
             
-            pathReplacedTemplate = new SkylineTemplate(replacedFilePath, DependentConfigName, replacedPanoramaFile);
-            return filePathReplaced || panoramaReplaced;
+            pathReplacedTemplate = new SkylineTemplate(replacedFilePath, replacedZippedFilePath, DependentConfigName, replacedPanoramaFile);
+            return pathReplaced || zipPathReplaced || panoramaReplaced;
         }
 
         public void ExtractTemplate(Update progressHandler, CancellationToken cancelToken)
@@ -110,13 +139,15 @@ namespace SkylineBatch
         private enum Attr
         {
             FilePath,
+            ZipFilePath,
             DependentConfigName,
         };
 
         public void WriteXml(XmlWriter writer)
         {
             writer.WriteStartElement("template_file");
-            writer.WriteAttributeIfString(Attr.FilePath, FilePath);
+            writer.WriteAttributeIfString(Attr.FilePath, _path);
+            writer.WriteAttributeIfString(Attr.ZipFilePath, _zippedPath);
             writer.WriteAttributeIfString(Attr.DependentConfigName, DependentConfigName);
             if (PanoramaFile != null) PanoramaFile.WriteXml(writer);
             writer.WriteEndElement();
@@ -126,11 +157,12 @@ namespace SkylineBatch
         {
             if (!XmlUtil.ReadNextElement(reader, "template_file"))
                 throw new Exception("Mishandled config file from earlier version");
-            var filePath = reader.GetAttribute(Attr.FilePath);
+            var path = reader.GetAttribute(Attr.FilePath);
+            var zippedPath = reader.GetAttribute(Attr.ZipFilePath);
             var dependentConfigName = reader.GetAttribute(Attr.DependentConfigName);
             var panoramaFile = PanoramaFile.ReadXml(reader);
 
-            return new SkylineTemplate(filePath, dependentConfigName, panoramaFile);
+            return new SkylineTemplate(path, zippedPath, dependentConfigName, panoramaFile);
         }
 
         protected bool Equals(SkylineTemplate other)
@@ -224,9 +256,10 @@ namespace SkylineBatch
             try
             {
                 serverConnector.Connect((a, b) => { });
-                fileName = serverConnector.GetFile(server, string.Empty, out Exception connectionException).FileName;
+                var fileInfo = serverConnector.GetFile(server, string.Empty, out Exception connectionException);
                 if (connectionException != null)
                     throw connectionException;
+                fileName = fileInfo.FileName;
             }
             catch (Exception e)
             {
@@ -241,13 +274,6 @@ namespace SkylineBatch
             FileUtil.ValidateNotEmptyPath(folderPath, Resources.PanoramaFile_ValidateDownloadFolder_template_download_folder);
             if (!Directory.Exists(folderPath))
                 throw new ArgumentException(Resources.PanoramaFile_ValidateDownloadFolder_The_folder_for_the_Skyline_template_file_does_not_exist__Please_enter_a_valid_folder_);
-        }
-
-        public static SkypFile DownloadSkyp(string filePath, Server server)
-        {
-            var skypDownloader = new WebDownloadClient((percent, error) => { }, new CancellationToken());
-            skypDownloader.Download(server.URI, filePath, server.Username, server.Password);
-            return SkypFile.Create(filePath, server);
         }
 
         public bool TryPathReplace(string oldRoot, string newRoot, out PanoramaFile replacedPanoramaFile)

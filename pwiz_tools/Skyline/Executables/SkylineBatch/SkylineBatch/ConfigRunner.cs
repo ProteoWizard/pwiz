@@ -148,11 +148,13 @@ namespace SkylineBatch
                         try
                         {
                             wc.DownloadAsync(serverFile.ServerInfo.URI, panoramaFile.FilePath, serverFile.ServerInfo.Username, serverFile.ServerInfo.Password, serverFile.Size);
+                            _logger.LogPercent(100);
                             break;
                         }
                         catch (Exception e)
                         {
                             _logger.Log(e.Message);
+                            _logger.LogPercent(-1);
                             tries++;
                         }
                     }
@@ -241,6 +243,7 @@ namespace SkylineBatch
                     _logger.Log(string.Format("Extracting Skyline template from {0}", Config.MainSettings.Template.ZippedFileName));
                     var cancellationSource = new CancellationTokenSource();
                     _runningCancellationToken = cancellationSource;
+                    _logger.LogPercent(-1);
                     Config.MainSettings.Template.ExtractTemplate((percent, error) =>
                     {
                         if (error == null)

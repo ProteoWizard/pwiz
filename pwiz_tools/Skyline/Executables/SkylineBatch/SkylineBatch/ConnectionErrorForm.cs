@@ -139,7 +139,7 @@ namespace SkylineBatch
         {
             var config = _configDict[(string) (listConfigs.SelectedItem)];
             var ftpConnectionException = _serverFiles.ConnectionException(config.MainSettings.Server);
-            var panoramaConnectionException = config.MainSettings.Template.PanoramaFile != null ? _serverFiles.ConnectionException(config.MainSettings.Template.PanoramaFile) : null;
+            //var panoramaConnectionException = config.MainSettings.Template.PanoramaFile != null ? _serverFiles.ConnectionException(config.MainSettings.Template.PanoramaFile) : null;
             var servers = new List<DataServerInfo>();
             //if (panoramaConnectionException != null) servers.Add(config.MainSettings.Template.PanoramaFile.Server);
             if (ftpConnectionException != null) servers.Add(config.MainSettings.Server);
