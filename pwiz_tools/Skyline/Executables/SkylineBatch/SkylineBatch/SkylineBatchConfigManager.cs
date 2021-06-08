@@ -52,7 +52,7 @@ namespace SkylineBatch
         //    Dictionary<string, bool> _configValidation; <- dictionary mapping from config name to if that config is valid
         //    List<Logger>  _logList; <- list of all loggers displayed in the dropDown list on the log tab, _logList[0] is always "Skyline Batch.log"
         //
-        //    _runningUi; <- if the UI is displayed (false when testing)
+        //    _runningUi; <- if the UI is displayed (false when unit testing)
         //    IMainUiControl _uiControl; <- null if no UI displayed
         //
         //    object _lock = new object(); <- lock required for any mutator or getter method on _configList, _configRunners, or SelectedConfig
@@ -709,8 +709,9 @@ namespace SkylineBatch
             var configsWillDownload = new List<string>();
             foreach (var config in downloadingConfigs)
             {
-                var newFiles = _runServerFiles.GetFilesToDownload(config.MainSettings.Server, config.MainSettings.DataFolderPath);
-                if (newFiles.Count > 0) configsWillDownload.Add(config.GetName());
+                if ((config.MainSettings.Server != null && _runServerFiles.GetDataFilesToDownload(config.MainSettings.Server, config.MainSettings.DataFolderPath).Count > 0) ||
+                    config.MainSettings.Template.PanoramaFile != null && _runServerFiles.GetPanoramaFilesToDownload(config.MainSettings.Template.PanoramaFile).Count > 0)
+                    configsWillDownload.Add(config.GetName());
             }
 
             var driveSpaceNeeded = _runServerFiles.GetSize();

@@ -286,10 +286,6 @@ namespace SharedBatch
                 }
             }
 
-            if (!_cancellationToken.IsCancellationRequested)
-            {
-                File.Delete(SharedPath);
-            }
             return DocumentPath;
         }
 

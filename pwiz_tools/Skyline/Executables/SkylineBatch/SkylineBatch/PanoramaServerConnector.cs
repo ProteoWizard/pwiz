@@ -2,7 +2,12 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
+using System.Web;
+using Newtonsoft.Json;
 using SharedBatch;
 
 namespace SkylineBatch
@@ -68,7 +73,7 @@ namespace SkylineBatch
             connectionException = _fileExceptions[server];
             if (connectionException != null) return null;
             var fileInfo = _fileList[server];
-            return new ConnectedFileInfo(fileInfo.FileName, server, fileInfo.Size, folder);
+            return new ConnectedFileInfo(fileInfo.FileName,fileInfo.ServerInfo, fileInfo.Size, folder);
         }
 
 
@@ -81,12 +86,64 @@ namespace SkylineBatch
 
         public ConnectedFileInfo GetFileInfo(Server server)
         {
-            var temporarySkypFile = Path.Combine(Path.GetTempPath(), FileUtil.GetSafeName(server.URI.AbsoluteUri));
-            var skypFile = DownloadSkyp(temporarySkypFile, server);
-            var fileName = skypFile.GetSkylineDocName().Replace(TextUtil.EXT_ZIP, string.Empty);
-            var size = WebDownloadClient.GetSize(skypFile.SkylineDocUri, server.Username, server.Password);
-            File.Delete(temporarySkypFile);
-            return new ConnectedFileInfo(fileName, server, size, string.Empty);
+            var zipFileName = HttpUtility.ParseQueryString(server.URI.Query)["fileName"];
+            var panoramaFolder = (Path.GetDirectoryName(server.URI.LocalPath) ?? string.Empty).Replace(@"\", "/");
+            var panoramaServerUri =  new Uri(PanoramaUtil.ServerNameToUrl("https://panoramaweb.org/"));
+
+            var idQuery = PanoramaUtil.CallNewInterface(panoramaServerUri, "query", panoramaFolder,
+                "selectRows", "schemaName=targetedms&query.queryName=runs&query.Deleted~eq=false&query.Status~isblank&query.columns=Id,FileName", true);
+
+
+
+            var webClient = new WebPanoramaClient(panoramaServerUri);
+            var jsonAsString = webClient.DownloadString(idQuery, server.Username, server.Password);
+
+
+            var id = -1;
+            var panoramaJsonObject = JsonConvert.DeserializeObject<PanoramaJsonObject>(jsonAsString);
+            var rows = panoramaJsonObject.rows;
+            foreach (var row in rows)
+            {
+                if (row.FileName.Equals(zipFileName))
+                    id = row.Id;
+            }
+
+            var downloadSkypUri =
+                PanoramaUtil.CallNewInterface(panoramaServerUri, "targetedms", panoramaFolder, "downloadDocument", $"id={id}&view=skyp");
+
+            var tmpFile = Path.GetTempFileName();
+
+            using (var wc = new UTF8WebClient())
+            {
+                if (!string.IsNullOrEmpty(server.Username) && !string.IsNullOrEmpty(server.Password))
+                {
+                    wc.Headers.Add(HttpRequestHeader.Authorization, Server.GetBasicAuthHeader(server.Username, server.Password));
+                }
+                
+                wc.DownloadFile(downloadSkypUri, tmpFile);
+            }
+
+            Uri webdavUri = null;
+            using (var fileStream = new FileStream(tmpFile, FileMode.Open, FileAccess.Read))
+            {
+                using (var streamReader = new StreamReader(fileStream))
+                {
+                    while (!streamReader.EndOfStream)
+                    {
+                        var line = streamReader.ReadLine();
+                        if (!string.IsNullOrEmpty(line))
+                            webdavUri = new Uri(line);
+                    }
+                }
+            }
+            File.Delete(tmpFile);
+
+            if (webdavUri == null)
+                throw new Exception("Could not parse skyp file.");
+            var downloadServer = new Server(webdavUri, server.Username, server.Password);
+            var fileName = zipFileName;
+            var size = WebDownloadClient.GetSize(downloadServer.URI, server.Username, server.Password);
+            return new ConnectedFileInfo(fileName, downloadServer, size, string.Empty);
         }
 
         public void Combine(PanoramaServerConnector other)

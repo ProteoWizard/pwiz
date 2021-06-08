@@ -46,7 +46,7 @@ namespace SkylineBatch
         private void btnEdit_Click(object sender, EventArgs e)
         {
             var config = _configDict[(string) listConfigs.SelectedItem];
-            var addServerForm = new AddServerForm(config.MainSettings.Server, true);
+            var addServerForm = new AddServerForm(config.MainSettings.Server, config.MainSettings.Server.Folder, true);
             if (DialogResult.OK == addServerForm.ShowDialog(this))
             {
                 var mainSettings = config.MainSettings;

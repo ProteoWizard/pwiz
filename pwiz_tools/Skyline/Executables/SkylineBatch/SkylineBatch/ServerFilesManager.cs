@@ -149,7 +149,12 @@ namespace SkylineBatch
             return _serverConnector.GetFiles(serverInfo, out _);
         }
 
-        public List<FtpListItem> GetFilesToDownload(DataServerInfo serverInfo, string folder)
+        public ConnectedFileInfo GetFile(PanoramaFile serverInfo)
+        {
+            return _connectedServerFiles[serverInfo][0];
+        }
+
+        public List<FtpListItem> GetDataFilesToDownload(DataServerInfo serverInfo, string folder)
         {
             var files = GetFiles(serverInfo);
             var downloadingFiles = new List<FtpListItem>();
@@ -163,6 +168,16 @@ namespace SkylineBatch
             return downloadingFiles;
         }
 
+        public List<ConnectedFileInfo> GetPanoramaFilesToDownload(PanoramaFile serverInfo)
+        {
+            var file = _connectedServerFiles[serverInfo][0];
+            var filePath = Path.Combine(file.DownloadFolder, file.FileName);
+            var files = new List<ConnectedFileInfo>();
+            if (File.Exists(filePath) && new FileInfo(filePath).Length == file.Size)
+                return files;
+            files.Add(file);
+            return files;
+        }
 
 
         public Dictionary<string, long> GetSize()

@@ -1036,16 +1036,6 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        public static System.Drawing.Bitmap Panorama {
-            get {
-                object obj = ResourceManager.GetObject("Panorama", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to The template file was not downloaded.
         /// </summary>
         public static string PanoramaFile_Download_The_template_file_was_not_downloaded {
@@ -1070,16 +1060,6 @@ namespace SkylineBatch.Properties {
             get {
                 return ResourceManager.GetString("PanoramaFile_ValidateDownloadFolder_The_folder_for_the_Skyline_template_file_does" +
                         "_not_exist__Please_enter_a_valid_folder_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        public static System.Drawing.Bitmap PanoramaSelected {
-            get {
-                object obj = ResourceManager.GetObject("PanoramaSelected", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
             }
         }
         
@@ -2052,6 +2032,15 @@ namespace SkylineBatch.Properties {
             get {
                 object obj = ResourceManager.GetObject("uparrow", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Operation timed out..
+        /// </summary>
+        public static string WebDownloadClient_DownloadAsync_Operation_timed_out_ {
+            get {
+                return ResourceManager.GetString("WebDownloadClient_DownloadAsync_Operation_timed_out_", resourceCulture);
             }
         }
     }

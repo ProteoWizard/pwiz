@@ -17,13 +17,13 @@ namespace SkylineBatch
         private readonly bool _serverRequired;
         private readonly string _dataFolder;
 
-        public AddServerForm(DataServerInfo editingServerInfo, bool serverRequired = false)
+        public AddServerForm(DataServerInfo editingServerInfo, string folder, bool serverRequired = false)
         {
             InitializeComponent();
             Icon = Program.Icon();
 
             Server = editingServerInfo;
-            _dataFolder = Server.Folder;
+            _dataFolder = folder;
             _serverRequired = serverRequired;
             UpdateUiServer();
 

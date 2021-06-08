@@ -3,14 +3,18 @@ using System;
 using System.ComponentModel;
 using System.IO;
 using System.Net;
+using System.Runtime.Remoting.Channels;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
+using System.Web;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using Newtonsoft.Json.Linq;
 using SkylineBatch.Properties;
 using Path = System.IO.Path;
+using Timer = System.Windows.Forms.Timer;
 
 namespace SkylineBatch
 {
@@ -126,13 +130,13 @@ namespace SkylineBatch
             DownloadClientCreator = new DownloadClientCreator();
         }
 
-        public string Open(string skypPath, Server server, Update progressHandler, CancellationToken cancellationToken)
+        public string Open(string skypPath, Server server, Update progressHandler, CancellationToken cancellationToken, long size)
         {
             SkypFile skyp;
             try
             {
                 skyp = SkypFile.Create(skypPath, server);
-                Download(skyp, progressHandler, cancellationToken);
+                Download(skyp, progressHandler, cancellationToken, size);
                 return Path.Combine(Path.GetDirectoryName(skyp.DownloadPath) ?? string.Empty, skyp.GetSkylineDocName());
             }
             catch (Exception e)
@@ -142,11 +146,11 @@ namespace SkylineBatch
             }
         }
         
-        private void Download(SkypFile skyp, Update progressHandler, CancellationToken cancellationToken)
+        private void Download(SkypFile skyp, Update progressHandler, CancellationToken cancellationToken, long size)
         {
             var downloadClient = DownloadClientCreator.Create(progressHandler, cancellationToken);
 
-            downloadClient.Download(skyp.SkylineDocUri, skyp.DownloadPath, skyp.Server?.Username, skyp.Server?.Password);
+            downloadClient.Download(skyp.SkylineDocUri, skyp.DownloadPath, skyp.Server?.Username, skyp.Server?.Password, size);
 
             if (cancellationToken.IsCancellationRequested || downloadClient.IsError)
             {
@@ -204,11 +208,8 @@ namespace SkylineBatch
             CancelToken = cancellationToken;
         }
 
-        public void Download(Uri remoteUri, string downloadPath, string username, string password)
+        public void Download(Uri remoteUri, string downloadPath, string username, string password, long? expectedSize = null)
         {
-            // CONSIDER: checking size of existing file
-            if (File.Exists(downloadPath))
-                return;
             using (var wc = new UTF8WebClient())
             {
                 if (!string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password))
@@ -220,7 +221,52 @@ namespace SkylineBatch
                 wc.DownloadFileCompleted += wc_DownloadFileCompleted;
                 wc.DownloadStringCompleted += wc_DownloadFileCompleted;
 
-                wc.DownloadFile(remoteUri, downloadPath);
+                if (expectedSize != null)
+                {
+                    new Thread(() =>
+                    {
+                        long fileSize = 0;
+                        while ((fileSize < expectedSize))
+                        {
+                            ProgressHandler((int)((double)fileSize / expectedSize * 100),
+                                null);
+                            fileSize = new FileInfo(downloadPath).Length;
+                            Thread.Sleep(1000);
+                        }
+                    }).Start();
+                }
+                wc.DownloadFileAsync(remoteUri, downloadPath, new CancellationTokenSource().Token);
+
+            }
+        }
+
+
+        public void DownloadAsync(Uri remoteUri, string downloadPath, string username, string password, long expectedSize)
+        {
+            using (var wc = new UTF8WebClient())
+            {
+                if (!string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password))
+                {
+                    wc.Headers.Add(HttpRequestHeader.Authorization, Server.GetBasicAuthHeader(username, password));
+                }
+                wc.DownloadFileAsync(remoteUri, downloadPath, CancelToken);
+                
+                
+                long fileSize = 0;
+                long lastFileSize = -1;
+                while (fileSize < expectedSize)
+                {
+                    if (CancelToken.IsCancellationRequested)
+                    {
+                        wc.CancelAsync();
+                        break;
+                    }
+                    ProgressHandler((int)((double)fileSize / expectedSize * 100),
+                        lastFileSize == fileSize ? new Exception(Resources.WebDownloadClient_DownloadAsync_Operation_timed_out_) : null);
+                    lastFileSize = fileSize;
+                    fileSize = new FileInfo(downloadPath).Length;
+                    Thread.Sleep(2000);
+                }
 
             }
         }
@@ -259,7 +305,7 @@ namespace SkylineBatch
 
     public interface IDownloadClient
     {
-        void Download(Uri remoteUri, string downloadPath, string username, string password);
+        void Download(Uri remoteUri, string downloadPath, string username, string password, long? expectedSize = null);
 
         bool IsCancelled { get; }
         bool IsError { get; }

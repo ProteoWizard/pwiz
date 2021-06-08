@@ -159,7 +159,7 @@ namespace SkylineBatch
                 {
                     textAnalysisPath.Text = mainSettings.AnalysisFolderPath;
                     textReplicateNamingPattern.Text = mainSettings.ReplicateNamingPattern;
-                    if (mainSettings.WillDownloadData)
+                    if (mainSettings.Server != null)
                     {
                         _dataServer = mainSettings.Server;
                         ToggleDownloadData(true);
@@ -209,7 +209,7 @@ namespace SkylineBatch
 
         private void btnDownloadData_Click(object sender, EventArgs e)
         {
-            var addServerForm = new AddServerForm(_dataServer);
+            var addServerForm = new AddServerForm(_dataServer, textDataPath.Text);
             if (DialogResult.OK == addServerForm.ShowDialog(this))
             {
                 _dataServer = addServerForm.Server;
@@ -231,7 +231,7 @@ namespace SkylineBatch
         {
             _panoramaTemplate = downloading ? _panoramaTemplate : null;
             btnDownloadTemplate.BackColor = downloading ? Color.SteelBlue : Color.Transparent;
-            btnDownloadTemplate.Image = downloading ? Resources.PanoramaSelected : Resources.Panorama;
+            btnDownloadTemplate.Image = downloading ? Resources.downloadSelected : Resources.download;
             if (_panoramaTemplate != null)
                 templateFileControl.Text = _panoramaTemplate.FilePath;
         }
@@ -310,7 +310,7 @@ namespace SkylineBatch
                 templateFileControl.TextChanged += templateFileControl_TextChanged;
                 return;
             }
-            OpenFile(templateFileControl, TextUtil.FILTER_SKY);
+            OpenFile(templateFileControl, TextUtil.FILTER_SKY + "|" + TextUtil.FILTER_SKY_ZIP);
         }
 
         private void btnAnnotationsFile_Click(object sender, EventArgs e)

@@ -125,22 +125,43 @@ namespace SkylineBatch
             if ((runOption == RunBatchOptions.ALL || runOption == RunBatchOptions.DOWNLOAD_DATA) 
                 && Config.MainSettings.WillDownloadData)
             {
-                if (!Config.MainSettings.Template.Downloaded())
+                if (!Config.MainSettings.Template.Downloaded(serverFiles))
                 {
-                    _logger.Log("Downloading the Skyline template file...");
+                    _logger.Log(string.Format("Downloading {0}...", Config.MainSettings.Template.FileName()));
                     var downloadCancellation = new CancellationTokenSource();
                     _runningCancellationToken = downloadCancellation;
-                    Config.MainSettings.Template.PanoramaFile.Download((percent, error) =>
+                    var serverFile = serverFiles.GetFile(Config.MainSettings.Template.PanoramaFile);
+
+
+                    var wc = new WebDownloadClient((percent, error) =>
                     {
                         _logger.LogPercent(percent);
                         if (error != null)
-                        {
-                            _logger.LogError("An error occurred while downloading the template file from Panorama", error.Message);
-                            ChangeStatus(RunnerStatus.Error);
-                        }
+                            throw error;
                     }, downloadCancellation.Token);
-                    _runningCancellationToken = null;
-                    _logger.Log(string.Format("{0} downloaded.", Config.MainSettings.Template.FileName()));
+
+                    var panoramaFile = Config.MainSettings.Template.PanoramaFile;
+                    var tries = 0;
+                    while (tries < 3)
+                    {
+                        if (tries > 0) _logger.Log("Trying again...");
+                        try
+                        {
+                            wc.DownloadAsync(serverFile.ServerInfo.URI, panoramaFile.FilePath, serverFile.ServerInfo.Username, serverFile.ServerInfo.Password, serverFile.Size);
+                            break;
+                        }
+                        catch (Exception e)
+                        {
+                            _logger.Log(e.Message);
+                            tries++;
+                        }
+                    }
+
+                    if (tries == 3)
+                    {
+                        _logger.LogError("Error downloading Panorama template file.");
+                        ChangeStatus(RunnerStatus.Error);
+                    }
                 }
                 await DownloadData(serverFiles);
             }
@@ -214,6 +235,22 @@ namespace SkylineBatch
             // STEP 1: create results document and import data
             if (runOption <= RunBatchOptions.FROM_TEMPLATE_COPY)
             {
+                // Unzip zipped template
+                if (Config.MainSettings.Template.Zipped)
+                {
+                    _logger.Log(string.Format("Extracting Skyline template from {0}", Config.MainSettings.Template.ZippedFileName));
+                    var cancellationSource = new CancellationTokenSource();
+                    _runningCancellationToken = cancellationSource;
+                    Config.MainSettings.Template.ExtractTemplate((percent, error) =>
+                    {
+                        if (error == null)
+                            _logger.LogPercent(percent);
+                        else
+                            _logger.LogPercent(-1);
+                    }, cancellationSource.Token);
+                    _logger.Log(string.Format("{0} extracted.", Config.MainSettings.Template.FileName()));
+                }
+                
                 // Delete existing .sky and .skyd results files
                 var filesToDelete = FileUtil.GetFilesInFolder(Config.MainSettings.AnalysisFolderPath, TextUtil.EXT_SKY);
                 filesToDelete.AddRange(FileUtil.GetFilesInFolder(Config.MainSettings.AnalysisFolderPath,
@@ -264,10 +301,11 @@ namespace SkylineBatch
         {
             var mainSettings = Config.MainSettings;
             var server = mainSettings.Server;
+            if (server == null) return;
             Directory.CreateDirectory(mainSettings.DataFolderPath);
 
             var matchingFiles = serverFiles.GetFiles(mainSettings.Server);
-            var downloadingFiles = serverFiles.GetFilesToDownload(mainSettings.Server, mainSettings.DataFolderPath);
+            var downloadingFiles = serverFiles.GetDataFilesToDownload(mainSettings.Server, mainSettings.DataFolderPath);
 
             if (downloadingFiles.Count == 0) return;
 

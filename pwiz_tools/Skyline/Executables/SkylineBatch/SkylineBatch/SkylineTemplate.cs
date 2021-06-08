@@ -1,10 +1,7 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Xml;
-using FluentFTP;
 using SharedBatch;
 using SkylineBatch.Properties;
 
@@ -14,6 +11,8 @@ namespace SkylineBatch
     {
 
         private string _path;
+
+        private string _zippedPath;
 
         public static SkylineTemplate ExistingTemplate(string templateFilePath)
         {
@@ -27,7 +26,10 @@ namespace SkylineBatch
 
         public SkylineTemplate(string filePath, string dependentConfigName, PanoramaFile panoramaFile)
         {
-            _path = filePath ?? string.Empty;
+            if (filePath != null && filePath.EndsWith(TextUtil.EXT_ZIP))
+                _zippedPath = filePath;
+            else
+                _path = filePath ?? string.Empty;
             if (PanoramaFile != null) _path = null;
             DependentConfigName = dependentConfigName ?? string.Empty;
             PanoramaFile = panoramaFile;
@@ -36,18 +38,27 @@ namespace SkylineBatch
         public readonly PanoramaFile PanoramaFile;
         public readonly string DependentConfigName;
 
-        public string FilePath => PanoramaFile == null ? _path : PanoramaFile.FilePath;
+        public string FilePath => _path ?? (PanoramaFile == null ? _zippedPath : PanoramaFile.FilePath);
 
-        public bool Downloaded()
+        public bool Downloaded(ServerFilesManager serverFiles)
         {
             if (PanoramaFile == null) return true;
-            return !string.IsNullOrEmpty(FilePath) && File.Exists(FilePath);
+            return serverFiles.GetPanoramaFilesToDownload(PanoramaFile).Count == 0;
+        }
+
+        public bool Exists()
+        {
+            return File.Exists(FilePath);
         }
 
         public string DisplayPath => !string.IsNullOrEmpty(FilePath) ? FilePath : PanoramaFile?.DownloadFolder;
         
         public bool IsIndependent() => string.IsNullOrEmpty(DependentConfigName);
         public string FileName() => Path.GetFileName(FilePath);
+
+        public bool Zipped => FilePath.EndsWith(TextUtil.EXT_ZIP) || !File.Exists(FilePath);
+
+        public string ZippedFileName => Path.GetFileName(_zippedPath ?? PanoramaFile.FilePath);
 
         public void Validate()
         {
@@ -86,6 +97,14 @@ namespace SkylineBatch
             
             pathReplacedTemplate = new SkylineTemplate(replacedFilePath, DependentConfigName, replacedPanoramaFile);
             return filePathReplaced || panoramaReplaced;
+        }
+
+        public void ExtractTemplate(Update progressHandler, CancellationToken cancelToken)
+        {
+            if (!Zipped) return;
+            var documentExtractor = new SrmDocumentSharing(_zippedPath ?? PanoramaFile.FilePath);
+            var skyFile = documentExtractor.Extract(progressHandler, cancelToken);
+            _path = skyFile;
         }
 
         private enum Attr
@@ -140,22 +159,30 @@ namespace SkylineBatch
 
     public class PanoramaFile : Server
     {
+
+        private string _inputUrl;
+
+
         public static PanoramaFile PanoramaFileFromUI(Server server, string path)
         {
-            server = ParseServer(server);
             var fileName = ValidatePanoramaServer(server);
             return new PanoramaFile(server, path, fileName);
         }
 
         public PanoramaFile(Server server, string downloadFolder, string fileName) : base (server.URI, server.Username, server.Password)
         {
+            _inputUrl = server.URI.AbsoluteUri;
+
             DownloadFolder = downloadFolder;
             FileName = fileName;
+            ExpectedSize = -1;
         }
         
         public readonly string DownloadFolder;
 
-        public string FileName;
+        public readonly string FileName;
+
+        public long ExpectedSize;
 
         public string FilePath =>
             !string.IsNullOrEmpty(DownloadFolder) ? Path.Combine(DownloadFolder, FileName?? string.Empty) : string.Empty;
@@ -165,37 +192,8 @@ namespace SkylineBatch
         public string UserName => Username?? string.Empty;
 
         public new string Password => base.Password ?? string.Empty;
-
-        // TODO (Ali): Use URI for this - improve
-        public static Server ParseServer(Server server)
-        {
-            var url = server.URI.AbsoluteUri;
-            var idRegex = new Regex("id=[0-9]+");
-            var splitUrl = url.Split('/').ToList();
-            int i = 0;
-            var length = splitUrl.Count;
-            while (i < length && !splitUrl[i].Equals("panoramaweb.org")) i++;
-            if (i == length) throw new ArgumentException("Url must be on Panorama.");
-            i++;
-            if (!splitUrl[i].Contains("Public") && (string.IsNullOrEmpty(server.Username) || string.IsNullOrEmpty(server.Password)))
-                throw new ArgumentException("This is not a Panorama Public URL and requires a username and password.");
-            while (i < length && !idRegex.IsMatch(splitUrl[i])) i++;
-            if (i == length) throw new ArgumentException("Could not find a Skyline document at the URL. Make sure the URL provided links to a Skyline document and contains an id (ie: id=1000).");
-
-
-            var queryString = splitUrl[i];
-            var viewRegex = new Regex("-[a-z]+\\.view", RegexOptions.IgnoreCase);
-            if (!viewRegex.IsMatch(queryString))
-                throw new ArgumentException("The Panorama URL is not formatted correctly. Try copying the URL again.");
-            queryString = viewRegex.Replace(queryString, "-downloadDocument.view");
-            var fileType = new Regex("&.*$");
-            queryString = fileType.Replace(queryString, "");
-            queryString += "&view=skyp";
-            splitUrl[i] = queryString;
-
-            return new Server(splitUrl.Join("/"), server.Username, server.Password);
-        }
         
+
         public PanoramaFile ReplacedFolder(string newFolder)
         {
             return new PanoramaFile(new Server(URI, UserName, Password), newFolder, FileName);
@@ -206,22 +204,6 @@ namespace SkylineBatch
             serverFiles.AddServer(this);
         }
 
-        public void Download(Update progressHandler, CancellationToken cancelToken)
-        {
-            var skypFilePath = Path.Combine(DownloadFolder, "DownloadingFileReference" + TextUtil.EXT_SKYP);
-            var skypFile = PanoramaFile.DownloadSkyp(skypFilePath, this);
-            var skylineFileZip = new SkypSupport().Open(skypFilePath, skypFile.Server, progressHandler, cancelToken);
-            var documentExtractor = new SrmDocumentSharing(skylineFileZip);
-            var skyFile = documentExtractor.Extract(progressHandler, cancelToken);
-            if (cancelToken.IsCancellationRequested) return;
-            File.Delete(skypFilePath);
-            if (!File.Exists(skyFile))
-            {
-                progressHandler(-1, new Exception(Resources.PanoramaFile_Download_The_template_file_was_not_downloaded));
-                return;
-            }
-            FileName = Path.GetFileName(skyFile);
-        }
 
         private enum Attr
         {
@@ -236,18 +218,22 @@ namespace SkylineBatch
 
         public static string ValidatePanoramaServer(Server server)
         {
+            var serverConnector = new PanoramaServerConnector();
+            serverConnector.Add(server);
+            string fileName;
             try
             {
-                var temporarySkypFile = Path.Combine(Path.GetTempPath(), FileUtil.GetSafeName(server.URI.AbsoluteUri));
-                var skypFile = DownloadSkyp(temporarySkypFile, server);
-                var fileName = skypFile.GetSkylineDocName().Replace(TextUtil.EXT_ZIP, string.Empty);
-                File.Delete(temporarySkypFile);
-                return fileName;
+                serverConnector.Connect((a, b) => { });
+                fileName = serverConnector.GetFile(server, string.Empty, out Exception connectionException).FileName;
+                if (connectionException != null)
+                    throw connectionException;
             }
             catch (Exception e)
             {
                 throw new ArgumentException(e.Message);
             }
+
+            return fileName;
         }
 
         public static void ValidateDownloadFolder(string folderPath)

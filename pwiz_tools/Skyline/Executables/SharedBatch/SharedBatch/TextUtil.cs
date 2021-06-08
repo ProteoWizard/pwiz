@@ -37,6 +37,11 @@ namespace SharedBatch
             get { return FileDialogFilter(Resources.TextUtil_FILTER_SKY_Skyline_Files, EXT_SKY); }
         }
 
+        public static string FILTER_SKY_ZIP
+        {
+            get { return FileDialogFilter(Resources.TextUtil_FILTER_SKY_ZIP_Shared_Files, EXT_SKY_ZIP); }
+        }
+
         public static string FILTER_SKYR
         {
             get { return FileDialogFilter(Resources.TextUtil_FILTER_SKYR_Skyline_Reports, EXT_SKYR); }

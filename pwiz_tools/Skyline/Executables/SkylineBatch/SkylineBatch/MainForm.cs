@@ -55,12 +55,13 @@ namespace SkylineBatch
             _outputLog = new Timer { Interval = 500 };
             _outputLog.Tick += OutputLog;
             _outputLog.Start();
-            UpdateButtonsEnabled();
 
             Shown += ((sender, args) =>
             {
                 _configManager = new SkylineBatchConfigManager(_skylineBatchLogger, this);
                 _configManager.LoadConfigList();
+                _loaded = true;
+                UpdateButtonsEnabled();
                 _rDirectorySelector = new RDirectorySelector(this, _configManager);
                 if (!string.IsNullOrEmpty(openFile))
                     FileOpened(openFile);
@@ -68,7 +69,6 @@ namespace SkylineBatch
                 ListViewSizeChanged();
                 UpdateUiLogFiles();
                 UpdateRunBatchSteps();
-                _loaded = true;
             });
         }
 
@@ -275,7 +275,7 @@ namespace SkylineBatch
         private void btnOpenTemplate_Click(object sender, EventArgs e)
         {
             var config = _configManager.GetSelectedConfig();
-            if (!config.MainSettings.Template.Downloaded())
+            if (!config.MainSettings.Template.Exists())
             {
                 DisplayError(string.Format(Resources.MainForm_btnOpenTemplate_Click_The_template_file_for___0___has_not_been_downloaded__Please_run___0___and_try_again_, config.Name));
             }

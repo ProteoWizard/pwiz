@@ -80,7 +80,7 @@ namespace SkylineBatch
             var validTemplate = mainSettings.Template;
             if (mainSettings.Template.IsIndependent())
             {
-                if (mainSettings.Template.Downloaded())
+                if (mainSettings.Template.Downloaded(new ServerFilesManager()))
                 {
                     var validTemplateFile = await GetValidPath(
                         Resources.InvalidConfigSetupForm_FixInvalidMainSettings_Skyline_template_file,
