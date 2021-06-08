@@ -128,7 +128,7 @@ namespace AutoQCTest
             while (x < startTime + TIMEOUT_80SEC)
             {
                 var jsonAsString = webClient.DownloadString(labKeyQuery, PANORAMA_USER_NAME, PANORAMA_PASSWORD);
-                var json = JsonConvert.DeserializeObject<RootObject>(jsonAsString);
+                var json = JsonConvert.DeserializeObject<PanoramaJsonObject>(jsonAsString);
                 if (json.rowCount > 0) return true;
                 await Task.Delay(WAIT_3SEC);
                 x = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;

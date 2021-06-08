@@ -157,7 +157,6 @@
     <Compile Include="ResultFileStatus.cs" />
     <Compile Include="Properties\Settings.cs" />
     <Compile Include="MainSettings.cs" />
-    <Compile Include="PanoramaUtil.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>

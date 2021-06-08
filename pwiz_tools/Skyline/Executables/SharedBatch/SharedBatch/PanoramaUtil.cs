@@ -20,11 +20,12 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Net;
 using System.Text;
-using AutoQC.Properties;
+using System.Threading;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using SharedBatch.Properties;
 
-namespace AutoQC
+namespace SharedBatch
 {
 
     public enum FolderOperationStatus { OK, notpanorama, nopermission, notfound, alreadyexists, error }
@@ -576,6 +577,28 @@ namespace AutoQC
             using (var webClient = new WebClientWithCredentials(ServerUri, username, password))
             {
                 data = webClient.DownloadString(queryUri);
+            }
+            return data;
+        }
+
+        public string DownloadStringAsync(Uri queryUri, string username, string password, CancellationToken cancelToken)
+        {
+            string data = null;
+
+            using (var webClient = new WebClientWithCredentials(ServerUri, username, password))
+            {
+                bool finishedDownloading = false;
+                webClient.DownloadStringAsync(queryUri);
+                webClient.DownloadStringCompleted += (sender, e) =>
+                {
+                    data = e.Result;
+                    finishedDownloading = true;
+                };
+                while (!finishedDownloading)
+                {
+                    if (cancelToken.IsCancellationRequested)
+                        webClient.CancelAsync();
+                }
             }
             return data;
         }
