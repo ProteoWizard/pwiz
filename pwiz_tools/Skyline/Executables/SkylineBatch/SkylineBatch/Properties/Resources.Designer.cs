@@ -71,6 +71,15 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Save.
+        /// </summary>
+        public static string AddPanoramaTemplate_DoneValidatingServer_Save {
+            get {
+                return ResourceManager.GetString("AddPanoramaTemplate_DoneValidatingServer_Save", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Verifying.
         /// </summary>
         public static string AddServerForm_btnAdd_Click_Verifying {

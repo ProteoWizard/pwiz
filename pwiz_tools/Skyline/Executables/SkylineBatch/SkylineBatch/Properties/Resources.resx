@@ -754,4 +754,7 @@
   <data name="WebDownloadClient_DownloadAsync_Operation_timed_out_" xml:space="preserve">
     <value>Operation timed out.</value>
   </data>
+  <data name="AddPanoramaTemplate_DoneValidatingServer_Save" xml:space="preserve">
+    <value>Save</value>
+  </data>
 </root>

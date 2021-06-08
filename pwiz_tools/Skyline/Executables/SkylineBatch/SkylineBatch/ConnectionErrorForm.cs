@@ -93,9 +93,9 @@ namespace SkylineBatch
             var longWaitOperation = new LongWaitOperation(longWaitDlg);
             var servers = new List<Server>();
             foreach (var server in ftpServers) servers.Add(server);
-            longWaitOperation.Start(true, (onProgress) =>
+            longWaitOperation.Start(true, (onProgress, cancelToken) =>
             {
-                _serverFiles.Reconnect(servers, onProgress);
+                _serverFiles.Reconnect(servers, onProgress, cancelToken);
             }, (completed) => { DoneReconnecting(completed, servers); });
         }
 
@@ -105,9 +105,9 @@ namespace SkylineBatch
             var longWaitOperation = new LongWaitOperation(longWaitDlg);
             var servers = new List<Server>();
             foreach (var server in ftpServers) servers.Add(server);
-            longWaitOperation.Start(true, (onProgress) =>
+            longWaitOperation.Start(true, (onProgress, cancelToken) =>
             {
-                _serverFiles.Reconnect(servers, onProgress);
+                _serverFiles.Reconnect(servers, onProgress, cancelToken);
             }, (completed) => { DoneReconnecting(completed, servers); });
         }
 

@@ -195,9 +195,10 @@ namespace SkylineBatch
         private string _inputUrl;
 
 
-        public static PanoramaFile PanoramaFileFromUI(Server server, string path)
+        public static PanoramaFile PanoramaFileFromUI(Server server, string path, CancellationToken cancelToken)
         {
-            var fileName = ValidatePanoramaServer(server);
+            var fileName = ValidatePanoramaServer(server, cancelToken);
+            if (cancelToken.IsCancellationRequested) return null;
             return new PanoramaFile(server, path, fileName);
         }
 
@@ -248,14 +249,15 @@ namespace SkylineBatch
              ValidateDownloadFolder(DownloadFolder);
         }
 
-        public static string ValidatePanoramaServer(Server server)
+        public static string ValidatePanoramaServer(Server server, CancellationToken cancelToken)
         {
             var serverConnector = new PanoramaServerConnector();
             serverConnector.Add(server);
             string fileName;
             try
             {
-                serverConnector.Connect((a, b) => { });
+                serverConnector.Connect((a, b) => { }, cancelToken);
+                if (cancelToken.IsCancellationRequested) return null;
                 var fileInfo = serverConnector.GetFile(server, string.Empty, out Exception connectionException);
                 if (connectionException != null)
                     throw connectionException;

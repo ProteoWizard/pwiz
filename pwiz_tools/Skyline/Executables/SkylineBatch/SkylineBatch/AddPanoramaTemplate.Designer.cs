@@ -130,6 +130,7 @@
             this.MinimizeBox = false;
             this.Name = "AddPanoramaTemplate";
             this.ShowInTaskbar = false;
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.AddPanoramaTemplate_FormClosing);
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.Panel1.PerformLayout();
             this.splitContainer1.Panel2.ResumeLayout(false);

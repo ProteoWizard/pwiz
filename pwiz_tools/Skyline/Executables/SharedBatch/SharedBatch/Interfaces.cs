@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using System.Threading;
 using System.Windows.Forms;
 using System.Xml;
 
@@ -124,7 +125,7 @@ namespace SharedBatch
 
     public delegate void OnPercentProgress(int percent, int maxPercent);
 
-    public delegate  void LongOperation(OnPercentProgress progress);
+    public delegate  void LongOperation(OnPercentProgress progress, CancellationToken cancelToken);
 
     public delegate void Callback(bool completed);
 

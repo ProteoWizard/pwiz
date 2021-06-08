@@ -4,6 +4,7 @@ using System.IO;
 using System.Net;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
@@ -58,9 +59,9 @@ namespace SkylineBatch
             }
         }
 
-        public static long GetSize(Uri remoteUri, string username, string password)
+        public static long GetSize(Uri remoteUri, string username, string password, CancellationToken cancelToken)
         {
-            long result;
+            long result = -1;
             using (var wc = new UTF8WebClient())
             {
                 if (!string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password))
@@ -68,11 +69,21 @@ namespace SkylineBatch
                     wc.Headers.Add(HttpRequestHeader.Authorization, Server.GetBasicAuthHeader(username, password));
                 }
 
-                Stream stream = wc.OpenRead(remoteUri);
-                result = Convert.ToInt64(wc.ResponseHeaders["Content-Length"]);
-                stream.Dispose();
+                var completed = false;
+                Stream stream = null;
+                var sizeThread = new Thread(() =>
+                {
+                    stream = wc.OpenRead(remoteUri);
+                    result = Convert.ToInt64(wc.ResponseHeaders["Content-Length"]);
+                });
+                sizeThread.Start();
+                while (sizeThread.IsAlive)
+                {
+                    if (cancelToken.IsCancellationRequested)
+                        sizeThread.Abort();
+                }
+                if (stream != null) stream.Dispose();
                 wc.Dispose();
-
             }
             return result;
         }

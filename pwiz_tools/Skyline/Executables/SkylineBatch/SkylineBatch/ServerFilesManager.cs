@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using FluentFTP;
 using SharedBatch;
 using SkylineBatch.Properties;
@@ -80,7 +81,7 @@ namespace SkylineBatch
         }
 
 
-        public void Connect(OnPercentProgress doOnProgress, HashSet<Server> servers = null)
+        public void Connect(OnPercentProgress doOnProgress, CancellationToken cancelToken, HashSet<Server> servers = null)
         {
             if (servers == null)
                 servers = _servers;
@@ -92,8 +93,8 @@ namespace SkylineBatch
                 if (server is DataServerInfo) dataServers.Add(server);
                 else panoramaServers.Add(server);
             }
-            _serverConnector.Reconnect(dataServers, doOnProgress);
-            _panoramaServerConnecter.Reconnect(panoramaServers, doOnProgress);
+            _serverConnector.Reconnect(dataServers, doOnProgress, cancelToken);
+            _panoramaServerConnecter.Reconnect(panoramaServers, doOnProgress, cancelToken);
             foreach (var server in servers)
             {
                 if (server is DataServerInfo)
@@ -123,7 +124,7 @@ namespace SkylineBatch
             }
         }
 
-        public void Reconnect(List<Server> servers, OnPercentProgress doOnProgress)
+        public void Reconnect(List<Server> servers, OnPercentProgress doOnProgress, CancellationToken cancelToken)
         {
             var serverSet = new HashSet<Server>(servers);
             foreach (var server in serverSet)
@@ -131,7 +132,7 @@ namespace SkylineBatch
                 _connectedServerFiles[server] = new List<ConnectedFileInfo>();
                 _connectionExceptions.Remove(server);
             }
-            Connect(doOnProgress, serverSet);
+            Connect(doOnProgress, cancelToken, serverSet);
         }
 
         private void AddConnectedFtpFile(FtpListItem file, DataServerInfo serverInfo)

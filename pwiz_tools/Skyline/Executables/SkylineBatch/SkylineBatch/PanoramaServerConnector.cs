@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Threading;
 using System.Web;
 using Newtonsoft.Json;
 using SharedBatch;
@@ -30,7 +31,7 @@ namespace SkylineBatch
             }
         }
 
-        public void Connect(OnPercentProgress doOnProgress, List<Server> servers = null)
+        public void Connect(OnPercentProgress doOnProgress, CancellationToken cancelToken, List<Server> servers = null)
         {
             if (servers == null)
                 servers = _fileList.Keys.ToList();
@@ -40,9 +41,10 @@ namespace SkylineBatch
                 (int)(1.0 / servers.Count * 100));
             foreach (var server in servers)
             {
+                if (cancelToken.IsCancellationRequested) break;
                 try
                 {
-                    _fileList[server] = GetFileInfo(server);
+                    _fileList[server] = GetFileInfo(server, cancelToken);
                 }
                 catch (Exception e)
                 {
@@ -55,14 +57,14 @@ namespace SkylineBatch
             }
         }
 
-        public void Reconnect(List<Server> servers, OnPercentProgress doOnProgress)
+        public void Reconnect(List<Server> servers, OnPercentProgress doOnProgress, CancellationToken cancelToken)
         {
             foreach (var serverInfo in servers)
             {
                 _fileList[serverInfo] = null;
                 _fileExceptions[serverInfo] = null;
             }
-            Connect(doOnProgress, servers);
+            Connect(doOnProgress, cancelToken, servers);
         }
 
         public ConnectedFileInfo GetFile(Server server, string folder, out Exception connectionException)
@@ -74,7 +76,7 @@ namespace SkylineBatch
         }
 
 
-        public ConnectedFileInfo GetFileInfo(Server server)
+        public ConnectedFileInfo GetFileInfo(Server server, CancellationToken cancelToken)
         {
             var zipFileName = HttpUtility.ParseQueryString(server.URI.Query)["fileName"];
             var panoramaFolder = (Path.GetDirectoryName(server.URI.LocalPath) ?? string.Empty).Replace(@"\", "/");
@@ -86,8 +88,8 @@ namespace SkylineBatch
 
 
             var webClient = new WebPanoramaClient(panoramaServerUri);
-            var jsonAsString = webClient.DownloadString(idQuery, server.Username, server.Password);
-
+            var jsonAsString = webClient.DownloadStringAsync(idQuery, server.Username, server.Password, cancelToken);
+            if (cancelToken.IsCancellationRequested) return null;
 
             var id = -1;
             var panoramaJsonObject = JsonConvert.DeserializeObject<PanoramaJsonObject>(jsonAsString);
@@ -132,7 +134,7 @@ namespace SkylineBatch
                 throw new Exception("Could not parse skyp file.");
             var downloadServer = new Server(webdavUri, server.Username, server.Password);
             var fileName = zipFileName;
-            var size = WebDownloadClient.GetSize(downloadServer.URI, server.Username, server.Password);
+            var size = WebDownloadClient.GetSize(downloadServer.URI, server.Username, server.Password, cancelToken);
             return new ConnectedFileInfo(fileName, downloadServer, size, string.Empty);
         }
 

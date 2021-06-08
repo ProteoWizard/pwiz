@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Windows.Forms;
 using SharedBatch;
 using SkylineBatch.Properties;
@@ -9,6 +10,7 @@ namespace SkylineBatch
     {
         //private FilePathControl _folderControl;
         private string _folderPath;
+        private CancellationTokenSource _cancelSource;
 
         public AddPanoramaTemplate(Server editingServer, string path)
         {
@@ -32,29 +34,50 @@ namespace SkylineBatch
 
         private void btnAdd_Click(object sender, EventArgs e)
         {
-            var addText = btnSave.Text;
+           _cancelSource = new CancellationTokenSource();
             btnSave.Text = Resources.AddServerForm_btnAdd_Click_Verifying;
             btnSave.Enabled = false;
-            var valid = true;
-            try
+
+            new Thread(() =>
             {
-                PanoramaServer = PanoramaFileFromUI();
-            }
-            catch (Exception ex)
+                try
+                {
+                    var panoramaServer = PanoramaFileFromUI(_cancelSource.Token);
+                    DoneValidatingServer(panoramaServer, null);
+                }
+                catch (Exception ex)
+                {
+                    DoneValidatingServer(null, ex);
+                }
+
+            }).Start();
+        }
+
+        private void DoneValidatingServer(PanoramaFile panoramaFile, Exception error)
+        {
+            var cancelled = _cancelSource.IsCancellationRequested;
+            _cancelSource = null;
+            if (cancelled || error != null)
             {
-                valid = false;
-                AlertDlg.ShowError(this, Program.AppName(), ex.Message);
+                if (error != null)
+                    RunUi(() => { AlertDlg.ShowError(this, Program.AppName(), error.Message); });
+                RunUi(() =>
+                {
+                    btnSave.Enabled = true;
+                    btnSave.Text = Resources.AddPanoramaTemplate_DoneValidatingServer_Save;
+                });
+                return;
             }
-            if (valid)
-            {
-                DialogResult = DialogResult.OK;
-                Close();
-            }
-            else
-            {
-                btnSave.Enabled = true;
-                btnSave.Text = addText;
-            }
+
+            PanoramaServer = panoramaFile;
+            DialogResult = DialogResult.OK;
+            RunUi(Close);
+        }
+
+        private void CancelValidate()
+        {
+            if (_cancelSource != null)
+                _cancelSource.Cancel();
         }
 
         private void btnClear_Click(object sender, EventArgs e)
@@ -64,13 +87,33 @@ namespace SkylineBatch
             textUserName.Text = string.Empty;
         }
 
-        private PanoramaFile PanoramaFileFromUI()
+        private PanoramaFile PanoramaFileFromUI(CancellationToken cancelToken)
         {
             if (textUrl.Text == string.Empty &&
                 textUserName.Text == string.Empty &&
                 textPassword.Text == string.Empty)
                 return null;
-            return PanoramaFile.PanoramaFileFromUI(new Server(textUrl.Text, textUserName.Text, textPassword.Text), _folderPath);
+            return PanoramaFile.PanoramaFileFromUI(new Server(textUrl.Text, textUserName.Text, textPassword.Text), _folderPath, cancelToken);
+        }
+
+        private void AddPanoramaTemplate_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            CancelValidate();
+        }
+
+
+        private void RunUi(Action action)
+        {
+            try
+            {
+                Invoke(action);
+            }
+            catch (ObjectDisposedException)
+            {
+            }
+            catch (InvalidOperationException)
+            {
+            }
         }
     }
 }

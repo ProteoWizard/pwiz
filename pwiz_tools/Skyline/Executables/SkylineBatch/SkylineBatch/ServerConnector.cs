@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Text.RegularExpressions;
+using System.Threading;
 using FluentFTP;
 using SharedBatch;
 using SkylineBatch.Properties;
@@ -79,7 +80,7 @@ namespace SkylineBatch
             }
         }
 
-        public void Connect(OnPercentProgress doOnProgress, List<Server> servers = null)
+        public void Connect(OnPercentProgress doOnProgress, CancellationToken cancelToken, List<Server> servers = null)
         {
             if (servers == null)
                 servers = _serverMap.Keys.ToList();
@@ -90,13 +91,15 @@ namespace SkylineBatch
                 (int)(1.0 / serverCount * 100));
             foreach (var server in servers)
             {
+                if (cancelToken.IsCancellationRequested)
+                    break;
                 if (_serverMap[server] != null || _serverExceptions[server] != null)
                     continue;
                 var serverFiles = new List<FtpListItem>();
                 var client = GetFtpClient(server);
                 try
                 {
-                    client.Connect();
+                    client.ConnectAsync(cancelToken);
                     //throw new Exception("Test");
                     foreach (FtpListItem item in client.GetListing(server.URI.LocalPath))
                     {
@@ -131,14 +134,14 @@ namespace SkylineBatch
             }
         }
 
-        public void Reconnect(List<Server> servers, OnPercentProgress doOnProgress)
+        public void Reconnect(List<Server> servers, OnPercentProgress doOnProgress, CancellationToken cancelToken)
         {
             foreach (var serverInfo in servers)
             {
                 _serverMap[serverInfo] = null;
                 _serverExceptions[serverInfo] = null;
             }
-            Connect(doOnProgress, servers);
+            Connect(doOnProgress, cancelToken, servers);
         }
 
         public FtpClient GetFtpClient(Server serverInfo)

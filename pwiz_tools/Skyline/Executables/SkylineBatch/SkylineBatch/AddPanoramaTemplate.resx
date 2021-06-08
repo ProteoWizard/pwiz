@@ -125,9 +125,6 @@
   <data name="splitContainer1.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 55</value>
   </data>
-  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
-  </metadata>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="label2.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -147,6 +144,9 @@
   <data name="label2.Text" xml:space="preserve">
     <value>Username (optional):</value>
   </data>
+  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
   <data name="label2.ToolTip" xml:space="preserve">
     <value>Username is required for private Skyline files</value>
   </data>
@@ -155,6 +155,9 @@
   </data>
   <data name="&gt;&gt;label2.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label2.Parent" xml:space="preserve">
+    <value>splitContainer1.Panel1</value>
   </data>
   <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
     <value>0</value>
@@ -176,6 +179,9 @@
   </data>
   <data name="&gt;&gt;textUserName.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textUserName.Parent" xml:space="preserve">
+    <value>splitContainer1.Panel1</value>
   </data>
   <data name="&gt;&gt;textUserName.ZOrder" xml:space="preserve">
     <value>1</value>
@@ -219,6 +225,9 @@
   <data name="&gt;&gt;label3.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;label3.Parent" xml:space="preserve">
+    <value>splitContainer1.Panel2</value>
+  </data>
   <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
@@ -242,6 +251,9 @@
   </data>
   <data name="&gt;&gt;textPassword.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textPassword.Parent" xml:space="preserve">
+    <value>splitContainer1.Panel2</value>
   </data>
   <data name="&gt;&gt;textPassword.ZOrder" xml:space="preserve">
     <value>1</value>
@@ -384,9 +396,6 @@
   <data name="label1.Text" xml:space="preserve">
     <value>URL:</value>
   </data>
-  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
-  </metadata>
   <data name="label1.ToolTip" xml:space="preserve">
     <value>The URL to the Skyline file on Panorama</value>
   </data>
