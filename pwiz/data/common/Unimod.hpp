@@ -29,7 +29,7 @@
 #include "pwiz/utility/chemistry/MZTolerance.hpp"
 #include "cv.hpp"
 #include <boost/enum.hpp>
-#include <boost/logic/tribool.hpp>
+#include <boost/logic/tribool_io.hpp>
 
 
 namespace pwiz {
