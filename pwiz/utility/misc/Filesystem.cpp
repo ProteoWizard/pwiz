@@ -53,6 +53,7 @@
 #include "pwiz/utility/misc/random_access_compressed_ifstream.hpp"
 #include <boost/filesystem/detail/utf8_codecvt_facet.hpp>
 #include <boost/locale/conversion.hpp>
+#include <boost/locale/encoding_utf.hpp>
 #include <boost/spirit/include/karma.hpp>
 //#include <boost/xpressive/xpressive.hpp>
 #include <iostream>

@@ -22,10 +22,8 @@ using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SkylineBatch;
 using SharedBatch;
-using System.Configuration;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace SkylineBatchTest
 {

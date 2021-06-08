@@ -247,14 +247,9 @@
     <value>5</value>
   </data>
   <data name="textBox1.Text" xml:space="preserve">
-    <value>Sciex
-WIFF File Reader Library
-Copyright © 2010 by AB Sciex LLC.
-All rights reserved.
-https://sciex.com/
-
-Agilent Technologies
+    <value>Agilent Technologies
 Mass Hunter Data Access Component
+Copyright © 2017 by Agilent Technologies
 https://www.agilent.com
 
 BiblioSpec
@@ -263,7 +258,7 @@ https://skyline.ms/build-blib.url
 
 Bruker
 CompassXtract Data Reader Library
-Copyright © 2011 by Bruker Daltonik GmbH.
+Copyright © 2020 by Bruker Daltonik GmbH.
 All rights reserved.
 https://www.bruker.com/
 
@@ -295,9 +290,15 @@ ProteoWizard
 Mass Spectrometry Data Import
 https://github.com/ProteoWizard
 
+SCIEX
+WIFF File Reader Library
+Copyright © 2020 by AB Sciex LLC.
+All rights reserved.
+https://sciex.com/
+
 Shimadzu Corporation
 Shimadzu's file converter software
-Copyright © 2014 by Shimadzu Coporation
+Copyright © 2020 by Shimadzu Coporation
 All rights reserved.
 https://www.shimadzu.com
 
@@ -311,14 +312,14 @@ https://system.data.sqlite.org/
 
 Thermo Fisher Scientific
 MSFileReader file reading tool
-Copyright © 2009 by Thermo Fisher Scientific, Inc.
+Copyright © 2019 by Thermo Fisher Scientific, Inc.
 All rights reserved.
 https://www.thermofisher.com/
 
 Waters Technologies Corporation
 Method export library
 Waters Raw Data Access Component
-Copyright © 2010 by Waters Corporation.
+Copyright © 2021 by Waters Corporation.
 All rights reserved.
 https://www.waters.com/
 
