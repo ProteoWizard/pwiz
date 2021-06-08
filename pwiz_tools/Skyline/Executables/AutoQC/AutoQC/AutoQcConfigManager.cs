@@ -574,7 +574,7 @@ namespace AutoQC
                 throw new IndexOutOfRangeException("No log at index: " + selected);
             GetSelectedLogger()?.DisableUiLogging();
             SelectedLog = selected;
-            GetSelectedLogger().LogToUi(_uiControl);
+            GetSelectedLogger()?.LogToUi(_uiControl);
         }
 
         public void SelectLogOfSelectedConfig()
@@ -609,6 +609,10 @@ namespace AutoQC
             var addedConfigs = ImportFrom(filePath, showDownloadedFileForm);
             foreach (var config in addedConfigs)
             {
+                if (config is AutoQcConfig qcConfig)
+                {
+                    qcConfig.IsEnabled = false;
+                }
                 // Handle overwritten duplicate configs
                 if (_configRunners.ContainsKey(config.GetName()))
                     ProgramaticallyRemoveAt(GetConfigIndex(config.GetName()));

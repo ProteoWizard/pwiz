@@ -431,7 +431,7 @@ namespace AutoQC
                 await Task.Run(() =>
                 {
                     // Read the log contents and display in the log tab.
-                    logger.DisplayLog();
+                    logger?.DisplayLog();
                 });
             }
             catch (Exception ex)
@@ -555,7 +555,7 @@ namespace AutoQC
         public void ClearLog()
         {
             textBoxLog.Clear();
-            comboConfigs.SelectedIndex = -1;
+            // comboConfigs.SelectedIndex = -1;
         }
 
         #endregion
