@@ -115,6 +115,7 @@ namespace SkylineBatch
         {
             if (IsDisposed || !completed) return;
             UpdateConfigList();
+            if (_disconnectedConfigs.Count == 0) return;
             foreach (var server in servers)
             {
                 foreach (var config in _configDict.Values)
@@ -135,9 +136,9 @@ namespace SkylineBatch
             _disconnectedConfigs.Clear();
             foreach (var config in _configDict.Values)
             {
-                var ftpConnectionException = _serverFiles.ConnectionException(config.MainSettings.Server);
+                var ftpConnectionException = config.MainSettings.Server != null ? _serverFiles.ConnectionException(config.MainSettings.Server) : null;
                 var panoramaConnectionException = config.MainSettings.Template.PanoramaFile != null ? _serverFiles.ConnectionException(config.MainSettings.Template.PanoramaFile) : null;
-                if (ftpConnectionException != null || panoramaConnectionException != null) {}
+                if (ftpConnectionException != null || panoramaConnectionException != null)
                     _disconnectedConfigs.Add(config.Name, panoramaConnectionException != null ? panoramaConnectionException : ftpConnectionException);
             }
             RunUi(() =>

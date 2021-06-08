@@ -27,35 +27,34 @@ namespace SkylineBatch
         public void DownloadAsync(Uri remoteUri, string downloadPath, string username, string password,
             long expectedSize)
         {
-            using (var wc = new UTF8WebClient())
+            using (var wc = new WebClient())
             {
                 if (!string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password))
                 {
                     wc.Headers.Add(HttpRequestHeader.Authorization, Server.GetBasicAuthHeader(username, password));
                 }
 
-                wc.DownloadFileAsync(remoteUri, downloadPath, CancelToken);
-
-
-                long fileSize = 0;
-                long lastFileSize = -1;
-                while (fileSize < expectedSize)
+                var completed = false;
+                Exception error = null;
+                wc.DownloadFileAsync(remoteUri, downloadPath);
+                wc.DownloadFileCompleted += ((sender, e) =>
+                {
+                    error = e.Error;
+                    completed = true;
+                });
+                wc.DownloadProgressChanged
+                    += (sender, e) => { ProgressHandler(e.ProgressPercentage, null); };
+                while (!completed)
                 {
                     if (CancelToken.IsCancellationRequested)
                     {
                         wc.CancelAsync();
-                        break;
                     }
 
-                    ProgressHandler((int) ((double) fileSize / expectedSize * 100),
-                        lastFileSize == fileSize
-                            ? new Exception(Resources.WebDownloadClient_DownloadAsync_Operation_timed_out_)
-                            : null);
-                    lastFileSize = fileSize;
-                    fileSize = new FileInfo(downloadPath).Length;
-                    Thread.Sleep(2000);
+                    if (error != null)
+                        ProgressHandler(-1, error);
+                    Thread.Sleep(100);
                 }
-
             }
         }
 
@@ -69,12 +68,12 @@ namespace SkylineBatch
                     wc.Headers.Add(HttpRequestHeader.Authorization, Server.GetBasicAuthHeader(username, password));
                 }
 
-                wc.OpenRead(remoteUri);
+                Stream stream = wc.OpenRead(remoteUri);
                 result = Convert.ToInt64(wc.ResponseHeaders["Content-Length"]);
+                stream.Dispose();
                 wc.Dispose();
 
             }
-
             return result;
         }
     }

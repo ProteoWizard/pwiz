@@ -148,11 +148,12 @@ namespace SkylineBatch
                         try
                         {
                             wc.DownloadAsync(serverFile.ServerInfo.URI, panoramaFile.FilePath, serverFile.ServerInfo.Username, serverFile.ServerInfo.Password, serverFile.Size);
-                            _logger.LogPercent(100);
                             break;
                         }
                         catch (Exception e)
                         {
+                            if (!IsRunning())
+                                break;
                             _logger.Log(e.Message);
                             _logger.LogPercent(-1);
                             tries++;
@@ -304,7 +305,7 @@ namespace SkylineBatch
         {
             var mainSettings = Config.MainSettings;
             var server = mainSettings.Server;
-            if (server == null) return;
+            if (server == null || !IsRunning()) return;
             Directory.CreateDirectory(mainSettings.DataFolderPath);
 
             var matchingFiles = serverFiles.GetFiles(mainSettings.Server);
