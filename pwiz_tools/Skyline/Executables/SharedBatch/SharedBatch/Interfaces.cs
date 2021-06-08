@@ -51,7 +51,8 @@ namespace SharedBatch
         Stopped,
         Completed,
         Disconnected,
-        Error
+        Error,
+        Loading
     }
 
     public interface IConfigRunner
