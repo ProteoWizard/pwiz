@@ -48,7 +48,7 @@ All Info  :
 导入肽段搜索 > DDA 搜索设置 > 片段耐受性 是 20ppm
 导入肽段搜索 > DDA 搜索设置 > 每个肽段的最大可变修饰数 是 "3"
 导入肽段搜索 > DDA 搜索设置 > 碎片离子类型 是 "b, y"
-导入肽段搜索 > DDA 转换器设置 > DDA 转换协议 是 "DIA-Umpire"
+导入肽段搜索 > DDA 转换器设置 > DDA 转换程序 是 "DIA-Umpire"
 导入肽段搜索 > DDA 转换器设置 > 仪器预设 是 "Q Exactive"
 导入肽段搜索 > DDA 转换器设置 > DDA 转换非默认设置 : 包含 EstimateBG = True
 Extra Info: 提取色谱图 = 
@@ -87,7 +87,7 @@ DDA 搜索设置 =
 },
 DDA 转换器设置 = 
 {
-    DDA 转换协议 = "DIA-Umpire",
+    DDA 转换程序 = "DIA-Umpire",
     仪器预设 = "Q Exactive",
     DDA 转换非默认设置 = 
     [

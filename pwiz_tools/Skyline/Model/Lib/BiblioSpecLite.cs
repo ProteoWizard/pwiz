@@ -1743,6 +1743,10 @@ namespace pwiz.Skyline.Model.Lib
 
         private int FindSource(MsDataFileUri filePath)
         {
+            if (filePath == null)
+            {
+                return -1;
+            }
             string filePathToString = filePath.ToString();
             // First look for an exact path match
             int i = _librarySourceFiles.IndexOf(info => Equals(filePathToString, info.FilePath));
