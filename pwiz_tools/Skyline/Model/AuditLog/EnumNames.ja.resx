@@ -577,10 +577,10 @@
     <value>なし</value>
   </data>
   <data name="ClusterMetricType_chebyshev" xml:space="preserve">
-    <value>Chebyshev</value>
+    <value>チェビシェフ</value>
   </data>
   <data name="ClusterMetricType_manhattan" xml:space="preserve">
-    <value>街区</value>
+    <value>シティブロック</value>
   </data>
   <data name="ClusterMetricType_pearson" xml:space="preserve">
     <value>ピアソン</value>
