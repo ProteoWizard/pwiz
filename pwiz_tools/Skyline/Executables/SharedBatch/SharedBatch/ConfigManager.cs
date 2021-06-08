@@ -534,7 +534,7 @@ namespace SharedBatch
                         var runningConfigsMsg =
                             TextUtil.LineSeparate(Resources.ConfigManager_ImportFrom_The_following_configurations_are_running_and_cannot_be_overwritten_,
                                 TextUtil.LineSeparate(runningDuplicates));
-                        _uiControl.DisplayError(runningConfigsMsg);
+                        DisplayError(runningConfigsMsg);
 
                         duplicateConfigNames = runningDuplicates;
                     }
