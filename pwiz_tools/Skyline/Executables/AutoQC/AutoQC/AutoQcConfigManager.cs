@@ -636,6 +636,10 @@ namespace AutoQC
             var state = new AutoQcConfigManagerState(this);
             foreach (var config in addedConfigs)
             {
+                if (config is AutoQcConfig qcConfig)
+                {
+                    qcConfig.IsEnabled = false;
+                }
                 // Handle overwritten duplicate configs
                 if (state.configRunners.ContainsKey(config.GetName()))
                     state = ProgramaticallyRemoveAt(GetConfigIndex(config.GetName(), state.baseState), state);
