@@ -606,12 +606,7 @@ PWIZ_API_DECL void SpectrumList_Waters::createIndex()
             ie.index = index_.size() - 1;
 
             std::back_insert_iterator<std::string> sink(ie.id);
-            if (config_.combineIonMobilitySpectra) // Caller is going to expect function as the middle value, even if scan isn't actually combined IMS (probably lockmass)
-                generate(sink,
-                    "process=" << int_ << " function=" << int_ << " scan=" << int_,
-                    ie.process, (ie.function + 1), (ie.scan + 1));
-            else
-                generate(sink,
+            generate(sink,
                      "function=" << int_ << " process=" << int_ << " scan=" << int_,
                      (ie.function + 1), ie.process, (ie.scan + 1));
             idToIndexMap_[ie.id] = ie.index;
