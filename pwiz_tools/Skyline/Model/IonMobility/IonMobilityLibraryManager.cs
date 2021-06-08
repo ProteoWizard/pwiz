@@ -50,7 +50,12 @@ namespace pwiz.Skyline.Model.IonMobility
 
         protected override bool StateChanged(SrmDocument document, SrmDocument previous)
         {
-            return !ReferenceEquals(GetIonMobilityLibrary(document), GetIonMobilityLibrary(previous));
+            var libPrevious = GetIonMobilityLibrary(previous);
+            if (!libPrevious.IsNone && !libPrevious.IsUsable)
+            {
+                return true; // Still not loaded
+            }
+            return !ReferenceEquals(GetIonMobilityLibrary(document), libPrevious);
         }
 
         protected override string IsNotLoadedExplained(SrmDocument document)
