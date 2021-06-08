@@ -7,7 +7,6 @@ namespace SkylineBatch
 {
     public partial class ConnectionErrorForm : Form
     {
-        //private List<string> _disconnectedNames;
         private Dictionary<string, Exception> _disconnectedConfigs;
         private Dictionary<string, SkylineBatchConfig> _configDict;
         private ServerFilesManager _serverFiles;
@@ -60,7 +59,6 @@ namespace SkylineBatch
                 _disconnectedConfigs.Remove(config.Name);
                 listConfigs.Items.Remove(config.Name);
                 _serverFiles.Replace(config.MainSettings.Server, addServerForm.Server, addServerForm.serverConnector, new PanoramaServerConnector());
-                //_serverConnector.Combine(addServerForm.serverConnector);
                 CheckIfAllConnected();
             }
         }
@@ -76,10 +74,29 @@ namespace SkylineBatch
 
         private void btnReconnectAll_Click(object sender, EventArgs e)
         {
-            var servers = new List<DataServerInfo>();
+            var servers = new List<Server>();
             foreach (var configName in _disconnectedConfigs.Keys)
-                servers.Add(_configDict[configName].MainSettings.Server);
+            {
+                var config = _configDict[configName];
+                if (config.MainSettings.Server != null)
+                    servers.Add(config.MainSettings.Server);
+                if (config.MainSettings.Template.PanoramaFile != null)
+                    servers.Add(config.MainSettings.Template.PanoramaFile);
+            }
+
             Reconnect(servers);
+        }
+
+        private void Reconnect(List<Server> ftpServers)
+        {
+            var longWaitDlg = new LongWaitDlg(this, Program.AppName(), "Reconnecting...");
+            var longWaitOperation = new LongWaitOperation(longWaitDlg);
+            var servers = new List<Server>();
+            foreach (var server in ftpServers) servers.Add(server);
+            longWaitOperation.Start(true, (onProgress) =>
+            {
+                _serverFiles.Reconnect(servers, onProgress);
+            }, (completed) => { DoneReconnecting(completed, servers); });
         }
 
         private void Reconnect(List<DataServerInfo> ftpServers)
@@ -102,7 +119,7 @@ namespace SkylineBatch
             {
                 foreach (var config in _configDict.Values)
                 {
-                    if ((config.MainSettings.Server).Equals(server) &&
+                    if (((config.MainSettings.Server).Equals(server) || config.MainSettings.Template.PanoramaFile.Equals(server)) &&
                         _disconnectedConfigs[config.Name] != null)
                     {
                         RunUi(() => { AlertDlg.ShowError(this, Program.AppName(), _disconnectedConfigs[config.Name].Message); });
@@ -139,9 +156,9 @@ namespace SkylineBatch
         {
             var config = _configDict[(string) (listConfigs.SelectedItem)];
             var ftpConnectionException = _serverFiles.ConnectionException(config.MainSettings.Server);
-            //var panoramaConnectionException = config.MainSettings.Template.PanoramaFile != null ? _serverFiles.ConnectionException(config.MainSettings.Template.PanoramaFile) : null;
-            var servers = new List<DataServerInfo>();
-            //if (panoramaConnectionException != null) servers.Add(config.MainSettings.Template.PanoramaFile.Server);
+            var panoramaConnectionException = config.MainSettings.Template.PanoramaFile != null ? _serverFiles.ConnectionException(config.MainSettings.Template.PanoramaFile) : null;
+            var servers = new List<Server>();
+            if (panoramaConnectionException != null) servers.Add(config.MainSettings.Template.PanoramaFile);
             if (ftpConnectionException != null) servers.Add(config.MainSettings.Server);
             Reconnect(servers);
         }
