@@ -409,7 +409,7 @@ struct EnzymePtr_minDistance
 void write_sample_enzyme(XMLWriter& xmlWriter, const IdentData& mzid)
 {
     const SpectrumIdentificationProtocol& sip = *mzid.analysisProtocolCollection.spectrumIdentificationProtocol[0];
-    bool independent = sip.enzymes.independent;
+    bool independent = bool(sip.enzymes.independent);
 
     // create a cumulative enzyme name for multiple enzymes like "Trypsin + AspN + Chymotrypsin"
     string enzymeName = bal::join(sip.enzymes.enzymes | boost::adaptors::transformed(EnzymePtr_name()), " + ");
