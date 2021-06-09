@@ -3,7 +3,6 @@ using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SharedBatch;
 using SkylineBatch;
-using SkylineBatchTest;
 
 namespace SkylineBatchTest
 {
@@ -28,6 +27,7 @@ namespace SkylineBatchTest
             CONFIG_FOLDER = TestFilesDirs[1].FullPath;
             var mainWindow = MainFormWindow();
             var mainForm = mainWindow as MainForm;
+            WaitForShownForm(mainForm);
             Assert.IsNotNull(mainForm, "Main program window is not an instance of MainForm.");
             RunUI(() => { FunctionalTestUtil.CheckConfigs(0, 0, mainForm); });
 
@@ -47,7 +47,6 @@ namespace SkylineBatchTest
         {
             var baseConfigFile = Path.Combine(BCFG_FOLDER, "BaseConfiguration.bcfg");
             mainForm.DoImport(baseConfigFile);
-
             RunUI(() => { FunctionalTestUtil.CheckConfigs(1, 0, mainForm); });
 
             RunUI(() => { mainForm.ClickConfig(0); });
@@ -93,12 +92,18 @@ namespace SkylineBatchTest
         {
             RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
             var baseConfigFile = Path.Combine(BCFG_FOLDER, "BaseConfiguration.bcfg");
-            mainForm.DoImport(baseConfigFile);
-            RunUI(() => { FunctionalTestUtil.CheckConfigs(1, 0, mainForm); });
+            RunUI(() =>
+            {
+                mainForm.DoImport(baseConfigFile);
+                FunctionalTestUtil.CheckConfigs(1, 0, mainForm);
+            });
 
             var validDependentConfigFile = Path.Combine(BCFG_FOLDER, "ValidDependentConfiguration.bcfg");
-            mainForm.DoImport(validDependentConfigFile);
-            RunUI(() => { FunctionalTestUtil.CheckConfigs(2, 0, mainForm); });
+            RunUI(() =>
+            {
+                mainForm.DoImport(validDependentConfigFile);
+                FunctionalTestUtil.CheckConfigs(2, 0, mainForm);
+            });
             AssertDependentMatches(mainForm, Path.Combine(CONFIG_FOLDER, "RefinedOutput.sky"), 1);
 
             RunUI(() => { mainForm.ClickConfig(0); });
@@ -113,11 +118,14 @@ namespace SkylineBatchTest
                 });
             RunUI(() => { FunctionalTestUtil.CheckConfigs(1, 1, mainForm); });
 
-            RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
-            mainForm.DoImport(baseConfigFile);
-            RunUI(() => { FunctionalTestUtil.CheckConfigs(1, 0, mainForm); });
+            RunUI(() =>
+            {
+                FunctionalTestUtil.ClearConfigs(mainForm);
+                mainForm.DoImport(baseConfigFile);
+                FunctionalTestUtil.CheckConfigs(1, 0, mainForm);
+            });
             var invalidDependentConfigsFile = Path.Combine(BCFG_FOLDER, "InvalidDependentConfigurations.bcfg");
-            RunDlg<AlertDlg>(() => mainForm.DoImport(invalidDependentConfigsFile),
+            RunDlg<AlertDlg>(() => { mainForm.DoImport(invalidDependentConfigsFile);},
                 dlg =>
                 {
                     Assert.AreEqual(string.Format(SkylineBatch.Properties.Resources.SkylineBatchConfigManager_AssignDependencies_The_following_configurations_use_refined_template_files_from_other_configurations_that_do_not_exist_, "BaseConfiguration") + Environment.NewLine +
@@ -143,12 +151,18 @@ namespace SkylineBatchTest
         {
             RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
             var baseConfigFile = Path.Combine(BCFG_FOLDER, "BaseConfiguration.bcfg");
-            mainForm.DoImport(baseConfigFile);
-            RunUI(() => { FunctionalTestUtil.CheckConfigs(1, 0, mainForm); });
+            RunUI(() =>
+            {
+                mainForm.DoImport(baseConfigFile);
+                FunctionalTestUtil.CheckConfigs(1, 0, mainForm);
+            });
 
             var validDependentConfigFile = Path.Combine(BCFG_FOLDER, "ValidDependentConfiguration.bcfg");
-            mainForm.DoImport(validDependentConfigFile);
-            RunUI(() => { FunctionalTestUtil.CheckConfigs(2, 0, mainForm); });
+            RunUI(() =>
+            {
+                mainForm.DoImport(validDependentConfigFile);
+                FunctionalTestUtil.CheckConfigs(2, 0, mainForm);
+            });
 
             var newTemplate = Path.Combine(CONFIG_FOLDER, "NewRefinedOutput.sky");
             ChangePath(mainForm, 0, newTemplate, false, false);
@@ -165,15 +179,18 @@ namespace SkylineBatchTest
         {
             RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
             var baseConfigFile = Path.Combine(BCFG_FOLDER, "BaseConfiguration.bcfg");
-            mainForm.DoImport(baseConfigFile);
-            RunUI(() => { FunctionalTestUtil.CheckConfigs(1, 0, mainForm); });
-
-            var validDependentConfigFile = Path.Combine(BCFG_FOLDER, "ValidDependentConfiguration.bcfg");
-            mainForm.DoImport(validDependentConfigFile);
             RunUI(() =>
             {
+                mainForm.DoImport(baseConfigFile);
+                FunctionalTestUtil.CheckConfigs(1, 0, mainForm);
+            });
+
+            var validDependentConfigFile = Path.Combine(BCFG_FOLDER, "ValidDependentConfiguration.bcfg");
+            RunUI(() =>
+            {
+                mainForm.DoImport(validDependentConfigFile);
                 FunctionalTestUtil.CheckConfigs(2, 0, mainForm);
-                mainForm.ConfigEnabled(1, true);
+                mainForm.SetConfigEnabled(1, true);
             });
             RunDlg<AlertDlg>(() => mainForm.ClickRun(),
                 dlg =>
@@ -186,7 +203,7 @@ namespace SkylineBatchTest
             RunUI(() =>
             {
                 mainForm.ClickConfig(0);
-                mainForm.ConfigEnabled(0, true);
+                mainForm.SetConfigEnabled(0, true);
                 mainForm.ClickDown();
             });
             RunDlg<AlertDlg>(() => mainForm.ClickRun(),
@@ -239,6 +256,5 @@ namespace SkylineBatchTest
             });
             WaitForClosedForm(editConfigForm);
         }
-
     }
 }

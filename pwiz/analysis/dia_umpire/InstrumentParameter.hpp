@@ -3,6 +3,8 @@
 
 #include "pwiz/utility/misc/Export.hpp"
 #include <cmath>
+#include <string>
+
 
 namespace DiaUmpire {
 

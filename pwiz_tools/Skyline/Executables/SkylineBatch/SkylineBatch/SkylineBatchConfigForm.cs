@@ -33,7 +33,7 @@ namespace SkylineBatch
         // or replace an existing configuration.
         // Running configurations cannot be replaced, and will be opened in a read only mode.
 
-        private static int _selectedTab = 0;
+        private static int _selectedTab;
 
         private readonly IMainUiControl _mainControl;
         private readonly RDirectorySelector _rDirectorySelector;
@@ -43,11 +43,11 @@ namespace SkylineBatch
         private readonly RefineInputObject _refineInput;
         private readonly List<ReportInfo> _newReportList;
         private readonly Dictionary<string, string> _possibleTemplates;
-        private readonly SkylineBatchConfigManager _configManager;
         private SkylineSettings _currentSkylineSettings;
         private readonly Image _downloadImage;
         private readonly Image _downloadSelectedImage;
         private DataServerInfo _dataServer;
+        private bool _showChangeAllSkylineSettings;
         public Control templateFileControl;
 
         private string _lastEnteredPath;
@@ -64,8 +64,9 @@ namespace SkylineBatch
             _newReportList = new List<ReportInfo>();
             _rDirectorySelector = rDirectorySelector;
             _mainControl = mainControl;
-            _configManager = configManager;
             _possibleTemplates = configManager.GetRefinedTemplates();
+            var numConfigs = configManager.ConfigNamesAsObjectArray().Length;
+            _showChangeAllSkylineSettings = (numConfigs == 1 && _action != ConfigAction.Edit) || numConfigs > 1;
             if (_action == ConfigAction.Edit && config != null && _possibleTemplates.ContainsKey(config.Name))
                 _possibleTemplates.Remove(config.Name);
             if (config != null)
@@ -501,7 +502,7 @@ namespace SkylineBatch
 
         private void CheckIfSkylineChanged()
         {
-            if (_isBusy) return; // can't change Skyline settings if config is running
+            if (_isBusy || !_showChangeAllSkylineSettings) return; // can't change Skyline settings if config is running
             SkylineSettings changedSkylineSettings;
             try
             {
@@ -514,7 +515,9 @@ namespace SkylineBatch
             if (changedSkylineSettings != null && !changedSkylineSettings.Equals(_currentSkylineSettings))
             {
                 _currentSkylineSettings = changedSkylineSettings;
-                _mainControl.ReplaceAllSkylineVersions(_currentSkylineSettings);
+                var replaced = _mainControl.ReplaceAllSkylineVersions(_currentSkylineSettings);
+                // only set this to false if user did not want to change all settings
+                _showChangeAllSkylineSettings = replaced ?? true;
             }
         }
 
