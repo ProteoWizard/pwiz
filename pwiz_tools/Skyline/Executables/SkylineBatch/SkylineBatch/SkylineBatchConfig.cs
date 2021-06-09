@@ -159,23 +159,27 @@ namespace SkylineBatch
             DateTime modified;
             DateTime.TryParse(reader.GetAttribute(Attr.Modified), CultureInfo.InvariantCulture, DateTimeStyles.None, out modified);
 
-            ReadUntilElement(reader);
+            XmlUtil.ReadUntilElement(reader);
             MainSettings mainSettings = null;
-            RefineSettings refineSettings = null;
-            FileSettings fileSettings = null;
-            ReportSettings reportSettings = null;
+            RefineSettings refineSettings = RefineSettings.Empty();
+            FileSettings fileSettings = FileSettings.Empty();
+            ReportSettings reportSettings = new ReportSettings(new List<ReportInfo>());
             SkylineSettings skylineSettings = null;
             string exceptionMessage = null;
             try
             {
                 mainSettings = MainSettings.ReadXml(reader);
-                ReadUntilElement(reader);
-                fileSettings = FileSettings.ReadXml(reader);
-                ReadUntilElement(reader);
-                refineSettings = RefineSettings.ReadXml(reader);
-                ReadUntilElement(reader);
-                reportSettings = ReportSettings.ReadXml(reader);
-                ReadUntilElement(reader);
+                if (XmlUtil.ReadNextElement(reader, "file_settings"))
+                {
+                    fileSettings = FileSettings.ReadXml(reader);
+                }
+                if (XmlUtil.ReadNextElement(reader, "refine_settings"))
+                {
+                    refineSettings = RefineSettings.ReadXml(reader);
+                }
+                if (XmlUtil.ReadNextElement(reader, "report_settings"))
+                    reportSettings = ReportSettings.ReadXml(reader);
+                if(!XmlUtil.ReadNextElement(reader, "config_skyline_settings")) throw new Exception("Configuration does not have Skyline settings");
                 skylineSettings = SkylineSettings.ReadXml(reader);
             }
             catch (ArgumentException e)
@@ -193,14 +197,6 @@ namespace SkylineBatch
 
             return new SkylineBatchConfig(name, enabled, modified, mainSettings, fileSettings,
                 refineSettings, reportSettings, skylineSettings);
-        }
-
-        private static void ReadUntilElement(XmlReader reader)
-        {
-            do
-            {
-                reader.Read();
-            } while (reader.NodeType != XmlNodeType.Element);
         }
 
         public void WriteXml(XmlWriter writer)

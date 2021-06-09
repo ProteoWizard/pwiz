@@ -37,7 +37,7 @@ namespace SkylineBatchTest
            var testRunner = new ConfigRunner(TestUtils.GetTestConfig(), logger);
            var config = testRunner.Config;
            Assert.IsTrue(testRunner.IsStopped());
-           var singleCommand = string.Format("--in=\"{0}\" --out=\"{1}\"", config.MainSettings.TemplateFilePath,
+           var singleCommand = string.Format("--in=\"{0}\" --out=\"{1}\"", config.MainSettings.Template.FilePath,
                TestUtils.GetTestFilePath("Copy.sky"));
             testRunner.ChangeStatus(RunnerStatus.Running);
            await new ProcessRunner().Run(config.SkylineSettings.CmdPath, singleCommand);
@@ -54,7 +54,7 @@ namespace SkylineBatchTest
             var logger = TestUtils.GetTestLogger();
             var testRunner = new ConfigRunner(TestUtils.GetTestConfig(), logger);
             Assert.IsTrue(testRunner.IsStopped());
-            await testRunner.Run(RunBatchOptions.R_SCRIPTS, new ServerConnector());
+            await testRunner.Run(RunBatchOptions.R_SCRIPTS, new ServerFilesManager());
             logger.Delete();
             Assert.IsTrue(testRunner.IsCompleted(), "Expected runner to have status \"Completed\" but was: " + testRunner.GetStatus());
         }
