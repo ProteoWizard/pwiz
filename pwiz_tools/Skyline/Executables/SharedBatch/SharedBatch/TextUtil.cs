@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using SharedBatch.Properties;
 
@@ -21,6 +22,8 @@ namespace SharedBatch
         public const string EXT_LOG = ".log";
         public const string EXT_TMP = ".tmp";
         public const string EXT_APPREF = ".appref-ms";
+        public const string EXT_SKYP = ".skyp";
+        public const string EXT_ZIP = ".zip";
 
         public const char SEPARATOR_CSV = ',';
 
@@ -32,6 +35,11 @@ namespace SharedBatch
         public static string FILTER_SKY
         {
             get { return FileDialogFilter(Resources.TextUtil_FILTER_SKY_Skyline_Files, EXT_SKY); }
+        }
+
+        public static string FILTER_SKY_ZIP
+        {
+            get { return FileDialogFilter(Resources.TextUtil_FILTER_SKY_ZIP_Shared_Files, EXT_SKY_ZIP); }
         }
 
         public static string FILTER_SKYR
@@ -220,6 +228,50 @@ namespace SharedBatch
             return ((int)optionalInt).ToString(CultureInfo.CurrentCulture);
         }
 
+        
+        // Changed DataProtectionScope from LocalMachine to CurrentUser
+        // https://stackoverflow.com/questions/19164926/data-protection-api-scope-localmachine-currentuser
+        public static string EncryptPassword(string password)
+        {
+            if (string.IsNullOrEmpty(password))
+            {
+                return string.Empty;
+            }
+
+            try
+            {
+                var encrypted = ProtectedData.Protect(
+                    Encoding.UTF8.GetBytes(password), null,
+                    DataProtectionScope.CurrentUser);
+                return Convert.ToBase64String(encrypted);
+            }
+            catch (Exception e)
+            {
+                ProgramLog.Error("Error encrypting password. ", e);
+
+            }
+            return string.Empty;
+        }
+
+        public static string DecryptPassword(string encryptedPassword)
+        {
+            if (string.IsNullOrEmpty(encryptedPassword))
+            {
+                return string.Empty;
+            }
+            try
+            {
+                byte[] decrypted = ProtectedData.Unprotect(
+                    Convert.FromBase64String(encryptedPassword), null,
+                    DataProtectionScope.CurrentUser);
+                return Encoding.UTF8.GetString(decrypted);
+            }
+            catch (Exception e)
+            {
+                ProgramLog.Error("Error decrypting password. ", e);
+            }
+            return string.Empty;
+        }
         #endregion
     }
 }

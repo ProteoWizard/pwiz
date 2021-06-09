@@ -43,6 +43,11 @@ namespace SkylineBatch
                 baseRefineSettings.RemoveResults, outputFilePath);
         }
 
+        public static RefineSettings Empty()
+        {
+            return new RefineSettings(new RefineInputObject(), false, false, null);
+        }
+
         public RefineSettings(RefineInputObject commandValues, bool removeDecoys, bool removeResults,
             string outputFilePath)
         {
