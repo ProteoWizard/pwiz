@@ -78,7 +78,7 @@ class XYPointCollection
 {
     public:
 
-    float MaxY;
+    float MaxY = 0;
     std::vector<XYData> Data;
 
     XYPointCollection() {
@@ -630,6 +630,12 @@ class ScanCollection
         NumScanLevel1 = 0;
         NumScanLevel2 = 0;
         NumPeaks = 0;
+    }
+
+    void sortIndices()
+    {
+        sort(ms1ScanIndex.begin(), ms1ScanIndex.end());
+        sort(ms2ScanIndex.begin(), ms2ScanIndex.end());
     }
 
     int size() const { return ScanHashMap.size(); }
