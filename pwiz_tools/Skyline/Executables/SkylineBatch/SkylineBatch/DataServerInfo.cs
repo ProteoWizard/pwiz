@@ -29,6 +29,11 @@ namespace SkylineBatch
             return new DataServerInfo(uri, userName, password, namingPattern, folder);
         }
 
+        public static DataServerInfo ReplaceFolder(DataServerInfo other, string newFolder)
+        {
+            return new DataServerInfo(other.URI, other.Username, other.Password, other.DataNamingPattern, newFolder);
+        }
+
         private DataServerInfo(Uri server, string userName, string password, string namingPattern, string folder) : base(server, userName, password)
         {
             //_server = new Server(server, userName, password);

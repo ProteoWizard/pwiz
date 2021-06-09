@@ -198,7 +198,7 @@ namespace SkylineBatch
 
             var analysisFolderPath = textAnalysisPath.Text;
             var dataFolderPath = textDataPath.Text;
-            var server = _dataServer; // null if none specified
+            var server = (_dataServer != null) ? DataServerInfo.ReplaceFolder(_dataServer, textDataPath.Text) : null; // null if none specified
             var annotationsFilePath = textAnnotationsFile.Text;
             var replicateNamingPattern = textReplicateNamingPattern.Text;
             

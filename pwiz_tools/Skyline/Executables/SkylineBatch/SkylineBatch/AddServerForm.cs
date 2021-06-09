@@ -63,7 +63,7 @@ namespace SkylineBatch
             _cancelValidate = new CancellationTokenSource();
             var connectToServer = new LongWaitOperation(_cancelValidate);
             serverConnector = new ServerConnector(Server);
-            List<FtpListItem> serverFiles = null;
+            List<ConnectedFileInfo> serverFiles = null;
             Exception connectionException = null;
             connectToServer.Start(false, 
                 (OnProgress, cancelToken) =>
@@ -79,37 +79,8 @@ namespace SkylineBatch
                 });
         }
 
-        private void SuccessfulConnect(List<FtpListItem> ftpFiles)
+        private void SuccessfulConnect(List<ConnectedFileInfo> ftpFiles)
         {
-            if (Server != null)
-            {
-                if (ftpFiles.Count == 0)
-                {
-                    UnsuccessfulConnect(new ArgumentException(string.Format(
-                        Resources
-                            .DataServerInfo_Validate_There_were_no_files_found_at__0___Make_sure_the_URL__username__and_password_are_correct_and_try_again_,
-                        Server.GetUrl())));
-                    return;
-                }
-                var nameRegex = new Regex(Server.DataNamingPattern);
-                var filesMatchRegex = false;
-                foreach (var ftpFile in ftpFiles)
-                {
-                    if (nameRegex.IsMatch(ftpFile.Name))
-                        filesMatchRegex = true;
-                }
-
-                if (!filesMatchRegex)
-                {
-                    UnsuccessfulConnect(new ArgumentException(
-                        string.Format(
-                            Resources
-                                .DataServerInfo_Validate_None_of_the_file_names_on_the_server_matched_the_regular_expression___0_,
-                            Server.DataNamingPattern) + Environment.NewLine +
-                        Resources.DataServerInfo_Validate_Please_make_sure_your_regular_expression_is_correct_));
-                    return;
-                }
-            }
             DialogResult = DialogResult.OK;
         }
 

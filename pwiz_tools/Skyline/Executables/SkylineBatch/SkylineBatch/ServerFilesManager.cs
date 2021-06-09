@@ -135,17 +135,17 @@ namespace SkylineBatch
             Connect(doOnProgress, cancelToken, serverSet);
         }
 
-        private void AddConnectedFtpFile(FtpListItem file, DataServerInfo serverInfo)
+        private void AddConnectedFtpFile(ConnectedFileInfo file, DataServerInfo serverInfo)
         {
             foreach (var server in _serverReferences[serverInfo])
             {
                 if (!_connectedServerFiles.ContainsKey(server))
                     _connectedServerFiles.Add(server, new List<ConnectedFileInfo>());
-                _connectedServerFiles[server].Add(new ConnectedFileInfo(file.Name, server, file.Size, ((DataServerInfo)server).Folder));
+                _connectedServerFiles[server].Add(file);
             }
         }
 
-        public List<FtpListItem> GetFiles(DataServerInfo serverInfo)
+        public List<ConnectedFileInfo> GetFiles(DataServerInfo serverInfo)
         {
             return _serverConnector.GetFiles(serverInfo, out _);
         }
@@ -155,13 +155,13 @@ namespace SkylineBatch
             return _connectedServerFiles[serverInfo][0];
         }
 
-        public List<FtpListItem> GetDataFilesToDownload(DataServerInfo serverInfo, string folder)
+        public List<ConnectedFileInfo> GetDataFilesToDownload(DataServerInfo serverInfo, string folder)
         {
             var files = GetFiles(serverInfo);
-            var downloadingFiles = new List<FtpListItem>();
+            var downloadingFiles = new List<ConnectedFileInfo>();
             foreach (var file in files)
             {
-                var filePath = Path.Combine(folder, file.Name);
+                var filePath = Path.Combine(folder, file.FileName);
                 if (!File.Exists(filePath) || new FileInfo(filePath).Length < file.Size)
                     downloadingFiles.Add(file);
             }

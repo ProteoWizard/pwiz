@@ -315,7 +315,7 @@ namespace SkylineBatch
 
             _logger.Log(string.Format(Resources.ConfigRunner_DownloadData_Found__0__matching_data_files_on__1__, matchingFiles.Count, server.GetUrl()));
             foreach (var file in matchingFiles)
-                _logger.Log(file.Name);
+                _logger.Log(file.FileName);
             _logger.Log(Resources.ConfigRunner_DownloadData_Starting_download___);
 
             var dataDriveName = mainSettings.DataFolderPath.Substring(0, 3);
@@ -326,15 +326,16 @@ namespace SkylineBatch
             var currentFileNumber = 0;
             foreach (var file in matchingFiles)
             {
+                if (!IsRunning()) return;
                 currentFileNumber++;
-                _logger.Log(string.Format(Resources.ConfigRunner_DownloadData__0____1__of__2__, file.Name, currentFileNumber, matchingFiles.Count));
+                _logger.Log(string.Format(Resources.ConfigRunner_DownloadData__0____1__of__2__, file.FileName, currentFileNumber, matchingFiles.Count));
                 // 3 tries to download file
                 int i;
                 Exception exception = null;
                 for (i = 0; i < 3; i++)
                 {
                     if (!IsRunning()) return;
-                    var filePath = Path.Combine(mainSettings.DataFolderPath, file.Name);
+                    var filePath = Path.Combine(mainSettings.DataFolderPath, file.FileName);
                     if (!downloadingFiles.Contains(file))
                     {
                         _logger.Log(Resources.ConfigRunner_DownloadData_Already_downloaded__Skipping_);
@@ -342,7 +343,7 @@ namespace SkylineBatch
                     }
                     if (file.Size + FileUtil.ONE_GB > FileUtil.GetTotalFreeSpace(dataDriveName))
                     {
-                        _logger.LogError(string.Format(Resources.ConfigRunner_DownloadData_There_is_not_enough_remaining_disk_space_to_download__0___Free_up_some_disk_space_and_try_again_, file.Name));
+                        _logger.LogError(string.Format(Resources.ConfigRunner_DownloadData_There_is_not_enough_remaining_disk_space_to_download__0___Free_up_some_disk_space_and_try_again_, file.FileName));
                         ChangeStatus(RunnerStatus.Error);
                         return;
                     }
@@ -354,25 +355,52 @@ namespace SkylineBatch
                     {
                         _logger.LogPercent((int)Math.Floor(p.Progress));
                     });
-                    try
+
+                    if (server.URI.Host.Equals("panoramaweb.org"))
                     {
-                        await ftpClient.ConnectAsync(token);
-                        var status = await ftpClient.DownloadFileAsync(filePath,
-                            server.FilePath(file.Name), token: token, existsMode: FtpLocalExists.Overwrite, progress: progress);
-                        await ftpClient.DisconnectAsync(token);
-                        if (status != FtpStatus.Success)
-                            throw new Exception(Resources.ConfigRunner_DownloadData_File_download_failed_);
-                        break;
+                       
+                        var wc = new WebDownloadClient((percent, error) =>
+                        {
+                            _logger.LogPercent(percent);
+                            if (error != null)
+                                throw error;
+                        }, token);
+                        try
+                        {
+                            wc.DownloadAsync(file.ServerInfo.URI, filePath, file.ServerInfo.Username, file.ServerInfo.Password, file.Size);
+                            break;
+                        }
+                        catch (Exception e)
+                        {
+                            if (!IsRunning())
+                                break;
+                            _logger.Log(e.Message);
+                            _logger.LogPercent(-1);
+                            exception = e;
+                        }
                     }
-                    catch (OperationCanceledException)
+                    else
                     {
-                        _logger.LogPercent(-1); // Stop logging percent
-                    }
-                    catch (Exception e)
-                    {
-                        _logger.LogPercent(-1);
-                        _logger.Log(e.Message);
-                        exception = e;
+                        try
+                        {
+                            await ftpClient.ConnectAsync(token);
+                            var status = await ftpClient.DownloadFileAsync(filePath,
+                                server.FilePath(file.FileName), token: token, existsMode: FtpLocalExists.Overwrite, progress: progress);
+                            await ftpClient.DisconnectAsync();
+                            if (status != FtpStatus.Success)
+                                throw new Exception(Resources.ConfigRunner_DownloadData_File_download_failed_);
+                            break;
+                        }
+                        catch (OperationCanceledException)
+                        {
+                            _logger.LogPercent(-1); // Stop logging percent
+                        }
+                        catch (Exception e)
+                        {
+                            _logger.LogPercent(-1);
+                            _logger.Log(e.Message);
+                            exception = e;
+                        }
                     }
                 }
 

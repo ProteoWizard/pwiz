@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Threading.Tasks;
 using FluentFTP;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using SharedBatch;
 using SkylineBatch.Properties;
 
@@ -13,7 +15,7 @@ namespace SkylineBatch
 {
     public class ServerConnector
     {
-        private Dictionary<Server, List<FtpListItem>> _serverMap;
+        private Dictionary<Server, List<ConnectedFileInfo>> _serverMap;
         private Dictionary<Server, Exception> _serverExceptions;
         private object _lock = new object();
 
@@ -21,13 +23,12 @@ namespace SkylineBatch
         {
             lock (_lock)
             {
-                _serverMap = new Dictionary<Server, List<FtpListItem>>();
+                _serverMap = new Dictionary<Server, List<ConnectedFileInfo>>();
                 _serverExceptions = new Dictionary<Server, Exception>();
                 foreach (var serverInfo in serverInfos)
                 {
                     if (!_serverMap.ContainsKey(serverInfo))
                     {
-                        //_servers.Add(serverInfo.URI.AbsoluteUri, serverInfo);
                         _serverMap.Add(serverInfo, null);
                         _serverExceptions.Add(serverInfo, null);
                     }
@@ -35,7 +36,7 @@ namespace SkylineBatch
             }
         }
 
-        public List<FtpListItem> GetFiles(DataServerInfo serverInfo, out Exception connectionException)
+        public List<ConnectedFileInfo> GetFiles(DataServerInfo serverInfo, out Exception connectionException)
         {
             if (!_serverMap.ContainsKey(serverInfo) )
                 throw new Exception("ServerConnector was not initialized with this server. No information for the server.");
@@ -43,13 +44,13 @@ namespace SkylineBatch
             if (_serverMap[serverInfo] == null && _serverExceptions[serverInfo] == null)
                 throw new Exception("ServerConnector was never started. No information for the server.");
             connectionException = _serverExceptions[serverInfo];
-            var matchingFiles = new List<FtpListItem>();
+            var matchingFiles = new List<ConnectedFileInfo>();
             if (connectionException == null)
             {
                 var namingRegex = new Regex(serverInfo.DataNamingPattern);
                 foreach (var ftpFile in _serverMap[serverInfo])
                 {
-                    if (namingRegex.IsMatch(ftpFile.Name))
+                    if (namingRegex.IsMatch(ftpFile.FileName))
                         matchingFiles.Add(ftpFile);
                 }
                 if (matchingFiles.Count == 0)
@@ -88,54 +89,98 @@ namespace SkylineBatch
 
             var serverCount = servers.Count;
             var downloadFinished = 0;
-            doOnProgress(0,
-                (int)(1.0 / serverCount * 100));
             foreach (var server in servers)
             {
                 if (cancelToken.IsCancellationRequested)
                     break;
                 if (_serverMap[server] != null || _serverExceptions[server] != null)
                     continue;
-                var serverFiles = new List<FtpListItem>();
-                var client = GetFtpClient(server);
-                var connectThread = new Thread(() =>
+                var folder = ((DataServerInfo) server).Folder;
+                var percentScale = 1.0 / serverCount * 100;
+                int i = 0;
+                if (server.URI.Host.Equals("panoramaweb.org"))
                 {
+
+                    var panoramaFolder = "_webdav" + (Path.GetDirectoryName(server.URI.LocalPath) ?? string.Empty).Replace(@"\", "/");
+                    var webdavUri = new Uri("https://panoramaweb.org/" + panoramaFolder + "/%40files/?method=json");
+                    var fileInfos = new List<ConnectedFileInfo>();
                     try
                     {
-                        client.Connect();
-                        foreach (FtpListItem item in client.GetListing(server.URI.LocalPath))
+                        var webClient = new WebPanoramaClient(new Uri("https://panoramaweb.org/"));
+                        var jsonAsString =
+                            webClient.DownloadStringAsync(webdavUri, server.Username, server.Password, cancelToken);
+                        if (cancelToken.IsCancellationRequested) return;
+                        var panoramaJsonObject = JsonConvert.DeserializeObject<JObject>(jsonAsString);
+                        var files = panoramaJsonObject["files"];
+                        var count = (double) (panoramaJsonObject["files"].AsEnumerable().Count());
+                        foreach (var file in files)
                         {
-                            if (item.Type == FtpFileSystemObjectType.File)
-                            {
-                                serverFiles.Add(item);
-                            }
+                            doOnProgress((int) (i / count * percentScale),
+                                (int) ((i + 1) / count * percentScale));
+                            var pathOnServer = (string) file["id"];
+                            var downloadUri = new Uri("https://panoramaweb.org" + pathOnServer);
+                            var size = WebDownloadClient.GetSize(downloadUri, server.Username, server.Password,
+                                cancelToken);
+                            fileInfos.Add(new ConnectedFileInfo(Path.GetFileName(pathOnServer),
+                                new Server(downloadUri, server.Username, server.Password), size,
+                                folder));
+                            i++;
                         }
                     }
                     catch (Exception e)
                     {
                         _serverExceptions[server] = e;
                     }
-                    
-                });
-                connectThread.Start();
-                while (connectThread.IsAlive)
-                {
-                    if (cancelToken.IsCancellationRequested)
-                        connectThread.Abort();
-                }
-                client.Disconnect();
 
-                if (_serverExceptions[server] == null && serverFiles.Count == 0)
-                {
-                    _serverExceptions[server] = new ArgumentException(string.Format(
-                        Resources
-                            .DataServerInfo_Validate_There_were_no_files_found_at__0___Make_sure_the_URL__username__and_password_are_correct_and_try_again_,
-                        server));
+                    if (_serverExceptions[server] == null)
+                        lock (_lock)
+                            _serverMap[server] = fileInfos;
                 }
                 else
                 {
-                    lock (_lock)
-                        _serverMap[server] = serverFiles;
+                    doOnProgress(0,
+                        (int)(1.0 / serverCount * 100));
+                    var serverFiles = new List<ConnectedFileInfo>();
+                    var client = GetFtpClient(server);
+                    var connectThread = new Thread(() =>
+                    {
+                        try
+                        {
+                            client.Connect();
+                            foreach (FtpListItem item in client.GetListing(server.URI.LocalPath))
+                            {
+                                if (item.Type == FtpFileSystemObjectType.File)
+                                {
+                                    serverFiles.Add(new ConnectedFileInfo(item.Name, server, item.Size, folder));
+                                }
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            _serverExceptions[server] = e;
+                        }
+
+                    });
+                    connectThread.Start();
+                    while (connectThread.IsAlive)
+                    {
+                        if (cancelToken.IsCancellationRequested)
+                            connectThread.Abort();
+                    }
+                    client.Disconnect();
+
+                    if (_serverExceptions[server] == null && serverFiles.Count == 0)
+                    {
+                        _serverExceptions[server] = new ArgumentException(string.Format(
+                            Resources
+                                .DataServerInfo_Validate_There_were_no_files_found_at__0___Make_sure_the_URL__username__and_password_are_correct_and_try_again_,
+                            server));
+                    }
+                    else
+                    {
+                        lock (_lock)
+                            _serverMap[server] = serverFiles;
+                    }
                 }
                 downloadFinished++;
                 doOnProgress((int)((double)downloadFinished / serverCount * 100),
