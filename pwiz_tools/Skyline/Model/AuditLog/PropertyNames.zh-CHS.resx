@@ -1638,6 +1638,6 @@
     <value>DDA 转换非默认设置</value>
   </data>
   <data name="DdaConverterSettings_Protocol" xml:space="preserve">
-    <value>DDA 转换协议</value>
+    <value>DDA 转换程序</value>
   </data>
 </root>
