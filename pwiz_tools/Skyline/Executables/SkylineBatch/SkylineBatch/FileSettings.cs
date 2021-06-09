@@ -43,6 +43,10 @@ namespace SkylineBatch
             return new FileSettings(msOneResolvingPower, msMsResolvingPower, retentionTime, addDecoys, shuffleDecoys, trainMProphet);
         }
 
+        public static FileSettings Empty()
+        {
+            return new FileSettings(null, null, null, false, false, false);
+        }
 
         public FileSettings(int? msOneResolvingPower, int? msMsResolvingPower, int? retentionTime, bool addDecoys, bool shuffleDecoys, bool trainMProphet)
         {

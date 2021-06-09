@@ -41,7 +41,7 @@ namespace SharedBatch
         private void StartAsync(LongOperation operation, Callback callback)
         {
             // method that takes in update progress arg
-            operation(UpdateProgress);
+            operation(UpdateProgress, CancelToken.Token);
             if (!Cancelled && _showLongWaitDlg) _longWaitDlg?.Finish();
             callback(!Cancelled);
             Completed = !Cancelled;

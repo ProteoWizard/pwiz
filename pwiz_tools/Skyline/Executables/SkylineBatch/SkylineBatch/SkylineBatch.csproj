@@ -29,8 +29,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>154</ApplicationRevision>
-    <ApplicationVersion>21.0.9.154</ApplicationVersion>
+    <ApplicationRevision>153</ApplicationRevision>
+    <ApplicationVersion>21.1.1.153</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -96,6 +96,8 @@
       <Link>LaunchBatch.exe</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Include="Resources\Panorama.png" />
+    <None Include="Resources\PanoramaSelected.png" />
     <Content Include="SkylineBatch.ico" />
     <Content Include="SkylineDailyRunner.exe">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -109,8 +111,13 @@
     <Content Include="SkylineBatch_configs.ico">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <EmbeddedResource Include="AddPanoramaTemplate.resx">
+      <DependentUpon>AddPanoramaTemplate.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="AddServerForm.resx">
       <DependentUpon>AddServerForm.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="CommandArgNames.resx">
       <Generator>ResXFileCodeGenerator</Generator>
@@ -161,6 +168,12 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AddPanoramaTemplate.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="AddPanoramaTemplate.Designer.cs">
+      <DependentUpon>AddPanoramaTemplate.cs</DependentUpon>
+    </Compile>
     <Compile Include="AddServerForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -173,6 +186,7 @@
     <Compile Include="ConnectionErrorForm.Designer.cs">
       <DependentUpon>ConnectionErrorForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="DataServerInfo.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -194,7 +208,9 @@
     <Compile Include="RefineInputLocalization.cs" />
     <Compile Include="RefineInputObject.cs" />
     <Compile Include="RefineSettings.cs" />
+    <Compile Include="PanoramaServerConnector.cs" />
     <Compile Include="ServerConnector.cs" />
+    <Compile Include="ServerFilesManager.cs" />
     <Compile Include="SkylineBatchConfigManager.cs" />
     <Compile Include="FileSettings.cs" />
     <Compile Include="InvalidConfigSetupForm.cs">
@@ -246,6 +262,8 @@
     <Compile Include="LogForm.Designer.cs">
       <DependentUpon>LogForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="SkylineTemplate.cs" />
+    <Compile Include="Server.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FluentFTP">

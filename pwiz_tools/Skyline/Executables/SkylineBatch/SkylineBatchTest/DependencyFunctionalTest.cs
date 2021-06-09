@@ -117,7 +117,7 @@ namespace SkylineBatchTest
                     dlg.ClickYes();
                 });
             RunUI(() => { FunctionalTestUtil.CheckConfigs(1, 1, mainForm); });
-
+            
             RunUI(() =>
             {
                 FunctionalTestUtil.ClearConfigs(mainForm);
@@ -135,6 +135,7 @@ namespace SkylineBatchTest
                         dlg.Message);
                     dlg.ClickOk();
                 });
+            //Thread.SpinWait(100000);
             RunUI(() =>
             {
                 FunctionalTestUtil.CheckConfigs(3, 1, mainForm);
