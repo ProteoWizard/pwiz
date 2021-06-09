@@ -47,14 +47,6 @@ namespace SharedBatch
             Completed = !Cancelled;
         }
 
-        /*public async Task Start()
-        {
-            await Task.Run(() =>
-            {
-                _operation(UpdateProgress);
-            }, _cancelToken.Token);
-        }*/
-
         public void Cancel()
         {
             CancelToken.Cancel();
