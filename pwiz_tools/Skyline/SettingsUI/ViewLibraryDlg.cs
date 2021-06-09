@@ -98,6 +98,8 @@ namespace pwiz.Skyline.SettingsUI
         private ViewLibraryPepInfo _lastTipNode;
         private ITipProvider _lastTipProvider;
         private bool _showChromatograms;
+        private bool _hasChromatograms;
+        private bool _hasScores;
         private readonly GraphHelper _graphHelper;
 
         private ModFontHolder ModFonts { get; set; }
@@ -170,6 +172,7 @@ namespace pwiz.Skyline.SettingsUI
 
             _matcher = new LibKeyModificationMatcher();
             _showChromatograms = Settings.Default.ShowLibraryChromatograms;
+            _hasChromatograms = false; // We'll set this true if the user opens a chromatogram library
         }
 
         private void SpectralLibraryList_ListChanged(object sender, EventArgs e)
@@ -717,6 +720,9 @@ namespace pwiz.Skyline.SettingsUI
                         {
                             libraryChromGroup = _selectedLibrary.LoadChromatogramData(spectrumInfo.SpectrumKey);
                         }
+                        _hasChromatograms = libraryChromGroup != null;
+                        _hasScores = (spectrumInfo?.SpectrumHeaderInfo as BiblioSpecSpectrumHeaderInfo) != null;
+
                         GraphItem = new ViewLibSpectrumGraphItem(spectrumInfoR, transitionGroupDocNode.TransitionGroup, _selectedLibrary, pepInfo.Key)
                         {
                             ShowTypes = types,
@@ -755,15 +761,15 @@ namespace pwiz.Skyline.SettingsUI
                                 var imText = string.Empty;
                                 var ccs = libraryChromGroup?.CCS ?? dt.CollisionalCrossSectionSqA;
                                 if (ccs.HasValue)
-                                    ccsText = Resources.ViewLibraryDlg_UpdateUI_CCS__ + string.Format(@"{0:F4} ", ccs.Value);
+                                    ccsText = Resources.ViewLibraryDlg_UpdateUI_CCS__ + string.Format(@"{0:F2}", ccs.Value);
                                 if (dt.HasIonMobilityValue)
-                                    imText = Resources.ViewLibraryDlg_UpdateUI_IM__ + string.Format(@"{0:F4}{1}", dt.IonMobility.Mobility, dt.IonMobility.UnitsString);
+                                    imText = Resources.ViewLibraryDlg_UpdateUI_IM__ + string.Format(@"{0:F2} {1}", dt.IonMobility.Mobility, dt.IonMobility.UnitsString);
                                 if (dt.HighEnergyIonMobilityValueOffset != 0) // Show the high energy value (as in Waters MSe) if different
-                                    imText += String.Format(@"({0:F4})", dt.HighEnergyIonMobilityValueOffset);
+                                    imText += String.Format(@"({0:F2})", dt.HighEnergyIonMobilityValueOffset);
                                 labelRT.Text = TextUtil.TextSeparate(@"  ", labelRT.Text, ccsText, imText);
                             }
                         }
-                        if (!_showChromatograms || null == libraryChromGroup)
+                        if (!_showChromatograms || !_hasChromatograms)
                         {
                             _graphHelper.ResetForSpectrum(null);
                             _graphHelper.AddSpectrum(GraphItem);
@@ -771,7 +777,7 @@ namespace pwiz.Skyline.SettingsUI
                         }
                         else
                         {
-                            _graphHelper.ResetForChromatograms(new[]{transitionGroupDocNode.TransitionGroup});
+                            _graphHelper.ResetForChromatograms(new[]{transitionGroupDocNode.TransitionGroup}, forceLegendDisplay:true);
                             double maxHeight = libraryChromGroup.ChromDatas.Max(chromData => chromData.Height);
                             int iChromDataPrimary = libraryChromGroup.ChromDatas.IndexOf(chromData => maxHeight == chromData.Height);
                             for (int iChromData = 0; iChromData < libraryChromGroup.ChromDatas.Count; iChromData++)
@@ -931,8 +937,11 @@ namespace pwiz.Skyline.SettingsUI
             menuStrip.Items.Insert(iInsert++, toolStripSeparator12);
             ranksContextMenuItem.Checked = set.ShowRanks;
             menuStrip.Items.Insert(iInsert++, ranksContextMenuItem);
-            scoreContextMenuItem.Checked = set.ShowLibraryScores;
-            menuStrip.Items.Insert(iInsert++, scoreContextMenuItem);
+            if (_hasScores)
+            {
+                scoreContextMenuItem.Checked = set.ShowLibraryScores;
+                menuStrip.Items.Insert(iInsert++, scoreContextMenuItem);
+            }
             ionMzValuesContextMenuItem.Checked = set.ShowIonMz;
             menuStrip.Items.Insert(iInsert++, ionMzValuesContextMenuItem);
             observedMzValuesContextMenuItem.Checked = set.ShowObservedMz;
@@ -944,8 +953,11 @@ namespace pwiz.Skyline.SettingsUI
             menuStrip.Items.Insert(iInsert++, lockYaxisContextMenuItem);
             menuStrip.Items.Insert(iInsert++, toolStripSeparator14);
             menuStrip.Items.Insert(iInsert++, spectrumPropsContextMenuItem);
-            showChromatogramsContextMenuItem.Checked = _showChromatograms;
-            menuStrip.Items.Insert(iInsert++, showChromatogramsContextMenuItem);
+            if (_hasChromatograms)
+            {
+                showChromatogramsContextMenuItem.Checked = _showChromatograms;
+                menuStrip.Items.Insert(iInsert++, showChromatogramsContextMenuItem);
+            }
             menuStrip.Items.Insert(iInsert, toolStripSeparator15);
 
             // Remove some ZedGraph menu items not of interest
