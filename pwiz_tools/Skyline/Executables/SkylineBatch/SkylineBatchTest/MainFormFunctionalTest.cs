@@ -59,7 +59,7 @@ namespace SkylineBatchTest
             RunUI(() =>
             {
                 WaitForShownForm(newConfigForm);
-                newConfigForm.textConfigName.Text = @"Two";
+                newConfigForm.textConfigName.Text = "Two";
                 newConfigForm.btnSaveConfig.PerformClick();
             });
             WaitForClosedForm(newConfigForm);
@@ -73,7 +73,7 @@ namespace SkylineBatchTest
             RunUI(() =>
             {
                 WaitForShownForm(newConfigForm);
-                newConfigForm.textConfigName.Text = @"Three";
+                newConfigForm.textConfigName.Text = "Three";
                 newConfigForm.btnSaveConfig.PerformClick();
             });
             WaitForClosedForm(newConfigForm);
