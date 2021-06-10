@@ -4,7 +4,6 @@ using System.IO;
 using System.Net;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
@@ -69,7 +68,6 @@ namespace SkylineBatch
                     wc.Headers.Add(HttpRequestHeader.Authorization, Server.GetBasicAuthHeader(username, password));
                 }
 
-                var completed = false;
                 Stream stream = null;
                 var sizeThread = new Thread(() =>
                 {

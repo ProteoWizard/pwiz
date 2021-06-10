@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
-using FluentFTP;
 using SharedBatch;
 using SkylineBatch.Properties;
 using File = System.IO.File;

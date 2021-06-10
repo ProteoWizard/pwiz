@@ -26,7 +26,7 @@ namespace SharedBatch
             Shown += ((sender, args) => { Text = programName; });
         }
 
-        public Form ParentForm { get; private set; }
+        public new Form ParentForm { get; private set; }
 
         // for testing only
         public LongWaitDlg()

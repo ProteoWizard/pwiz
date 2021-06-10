@@ -487,12 +487,22 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to A data naming pattern is required for downloaded data. Please add a data naming pattern..
+        ///   Looks up a localized string similar to Password cannot be empty if the server has a username. Please enter a password..
         /// </summary>
-        public static string DataServerInfo_ValidateNamingPattern_A_data_naming_pattern_is_required_for_downloaded_data__Please_add_a_data_naming_pattern_ {
+        public static string DataServerInfo_ValidateUsernamePassword_Password_cannot_be_empty_if_the_server_has_a_username__Please_enter_a_password_ {
             get {
-                return ResourceManager.GetString("DataServerInfo_ValidateNamingPattern_A_data_naming_pattern_is_required_for_downlo" +
-                        "aded_data__Please_add_a_data_naming_pattern_", resourceCulture);
+                return ResourceManager.GetString("DataServerInfo_ValidateUsernamePassword_Password_cannot_be_empty_if_the_server_ha" +
+                        "s_a_username__Please_enter_a_password_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Username cannot be empty if the server has a password. Please enter a username..
+        /// </summary>
+        public static string DataServerInfo_ValidateUsernamePassword_Username_cannot_be_empty_if_the_server_has_a_password__Please_enter_a_username_ {
+            get {
+                return ResourceManager.GetString("DataServerInfo_ValidateUsernamePassword_Username_cannot_be_empty_if_the_server_ha" +
+                        "s_a_password__Please_enter_a_username_", resourceCulture);
             }
         }
         
