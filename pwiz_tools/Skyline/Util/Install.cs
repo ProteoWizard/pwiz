@@ -53,6 +53,11 @@ namespace pwiz.Skyline.Util
             }
         }
 
+        public static string BitsText
+        {
+            get { return Is64Bit ? @"64" : @"32"; }
+        }
+
         public static int MajorVersion
         {
             get { return VersionPart(0); }
@@ -138,16 +143,15 @@ namespace pwiz.Skyline.Util
             return (versionParts.Length > index ? Convert.ToInt32(versionParts[index]) : 0);
         }
 
-        public static string Url
+        public static string Url32
         {
             get
             {
-                return
-                    (Type == InstallType.release)
-                        ? string.Format(@"http://proteome.gs.washington.edu/software/Skyline/install.html?majorVer={0}&minorVer={1}", MajorVersion, MinorVersion)
-                        : (Type == InstallType.daily)
-                              ? @"http://proteome.gs.washington.edu/software/Skyline/install-daily.html"
-                              : string.Empty;
+                return Type == InstallType.release
+                    ? @"https://skyline.ms/skyline32.url"
+                    : Type == InstallType.daily
+                        ? @"https://skyline.ms/skyline-daily32.url"
+                        : string.Empty;
             }
         }
 
@@ -156,7 +160,7 @@ namespace pwiz.Skyline.Util
             get
             {
                 return string.Format(@"{0} ({1}-bit{2}{3}) {4}",
-                                     Program.Name, (Is64Bit ? @"64" : @"32"),
+                                     Program.Name, BitsText,
                                     (IsDeveloperInstall ? @" : developer build" : string.Empty),
                                     (IsAutomatedBuild ? @" : automated build" : string.Empty),
                                      Regex.Replace(Version, @"(\d+\.\d+\.\d+\.\d+)-(\S+)", "$1 ($2)"));

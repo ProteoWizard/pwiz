@@ -59,8 +59,10 @@
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.tabsConfig = new System.Windows.Forms.TabControl();
             this.tabFiles = new System.Windows.Forms.TabPage();
-            this.toolStrip1 = new System.Windows.Forms.ToolStrip();
+            this.toolStrip2 = new System.Windows.Forms.ToolStrip();
             this.btnDownloadData = new System.Windows.Forms.ToolStripButton();
+            this.toolStrip1 = new System.Windows.Forms.ToolStrip();
+            this.btnDownloadTemplate = new System.Windows.Forms.ToolStripButton();
             this.comboTemplateFile = new System.Windows.Forms.ComboBox();
             this.btnAnnotationsFile = new System.Windows.Forms.Button();
             this.textAnnotationsFile = new System.Windows.Forms.TextBox();
@@ -98,6 +100,7 @@
             this.splitContainer1.SuspendLayout();
             this.tabsConfig.SuspendLayout();
             this.tabFiles.SuspendLayout();
+            this.toolStrip2.SuspendLayout();
             this.toolStrip1.SuspendLayout();
             this.tabSettings.SuspendLayout();
             this.tabRefine.SuspendLayout();
@@ -283,6 +286,7 @@
             // tabFiles
             // 
             this.tabFiles.BackColor = System.Drawing.Color.WhiteSmoke;
+            this.tabFiles.Controls.Add(this.toolStrip2);
             this.tabFiles.Controls.Add(this.toolStrip1);
             this.tabFiles.Controls.Add(this.comboTemplateFile);
             this.tabFiles.Controls.Add(this.label7);
@@ -305,14 +309,14 @@
             this.tabFiles.Name = "tabFiles";
             this.tabFiles.Enter += new System.EventHandler(this.TabEnter);
             // 
-            // toolStrip1
+            // toolStrip2
             // 
-            resources.ApplyResources(this.toolStrip1, "toolStrip1");
-            this.toolStrip1.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
-            this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            resources.ApplyResources(this.toolStrip2, "toolStrip2");
+            this.toolStrip2.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
+            this.toolStrip2.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.btnDownloadData});
-            this.toolStrip1.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.VerticalStackWithOverflow;
-            this.toolStrip1.Name = "toolStrip1";
+            this.toolStrip2.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.VerticalStackWithOverflow;
+            this.toolStrip2.Name = "toolStrip2";
             // 
             // btnDownloadData
             // 
@@ -323,11 +327,30 @@
             this.btnDownloadData.Name = "btnDownloadData";
             this.btnDownloadData.Click += new System.EventHandler(this.btnDownloadData_Click);
             // 
+            // toolStrip1
+            // 
+            resources.ApplyResources(this.toolStrip1, "toolStrip1");
+            this.toolStrip1.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
+            this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.btnDownloadTemplate});
+            this.toolStrip1.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.VerticalStackWithOverflow;
+            this.toolStrip1.Name = "toolStrip1";
+            // 
+            // btnDownloadTemplate
+            // 
+            this.btnDownloadTemplate.BackColor = System.Drawing.Color.Transparent;
+            this.btnDownloadTemplate.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.btnDownloadTemplate.Image = global::SkylineBatch.Properties.Resources.download;
+            resources.ApplyResources(this.btnDownloadTemplate, "btnDownloadTemplate");
+            this.btnDownloadTemplate.Name = "btnDownloadTemplate";
+            this.btnDownloadTemplate.Click += new System.EventHandler(this.btnDownloadTemplate_Click);
+            // 
             // comboTemplateFile
             // 
             resources.ApplyResources(this.comboTemplateFile, "comboTemplateFile");
             this.comboTemplateFile.FormattingEnabled = true;
             this.comboTemplateFile.Name = "comboTemplateFile";
+            this.comboTemplateFile.SelectedIndexChanged += new System.EventHandler(this.comboTemplateFile_SelectedIndexChanged);
             // 
             // btnAnnotationsFile
             // 
@@ -612,6 +635,8 @@
             this.tabsConfig.ResumeLayout(false);
             this.tabFiles.ResumeLayout(false);
             this.tabFiles.PerformLayout();
+            this.toolStrip2.ResumeLayout(false);
+            this.toolStrip2.PerformLayout();
             this.toolStrip1.ResumeLayout(false);
             this.toolStrip1.PerformLayout();
             this.tabSettings.ResumeLayout(false);
@@ -694,6 +719,8 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn columnScripts;
         private System.Windows.Forms.DataGridViewTextBoxColumn columnFile;
         private System.Windows.Forms.ToolStrip toolStrip1;
+        private System.Windows.Forms.ToolStripButton btnDownloadTemplate;
+        private System.Windows.Forms.ToolStrip toolStrip2;
         private System.Windows.Forms.ToolStripButton btnDownloadData;
     }
 }

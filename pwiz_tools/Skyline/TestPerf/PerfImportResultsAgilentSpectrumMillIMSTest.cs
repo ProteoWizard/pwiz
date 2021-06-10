@@ -119,7 +119,12 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 importResultsNameDlg.NoDialog();
             });
             WaitForClosedForm(importResultsNameDlg);
-            // Modifications are already set up, so that page should get skipped.
+            // Skip Match Modifications page.
+            RunUI(() =>
+            {
+                AssertEx.AreEqual(ImportPeptideSearchDlg.Pages.match_modifications_page, importPeptideSearchDlg.CurrentPage);
+                AssertEx.IsTrue(importPeptideSearchDlg.ClickNextButton());
+            });
             RunUI(() => importPeptideSearchDlg.FullScanSettingsControl.PrecursorCharges = new []{2,3,4,5});
             RunUI(() => importPeptideSearchDlg.FullScanSettingsControl.PrecursorMassAnalyzer = FullScanMassAnalyzerType.tof);
             // Enable use of drift times in spectral library

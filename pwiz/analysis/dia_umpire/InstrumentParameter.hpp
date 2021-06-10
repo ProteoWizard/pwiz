@@ -3,26 +3,28 @@
 
 #include "pwiz/utility/misc/Export.hpp"
 #include <cmath>
+#include <string>
+
 
 namespace DiaUmpire {
 
 struct InstrumentParameter
 {
-    int Resolution;
-    float MS1PPM;
-    float MS2PPM;
-    float SN;
-    float MinMSIntensity;
-    float MinMSMSIntensity;
+    int Resolution = 0;
+    float MS1PPM = 0;
+    float MS2PPM = 0;
+    float SN = 0;
+    float MinMSIntensity = 0;
+    float MinMSMSIntensity = 0;
     int NoPeakPerMin = 150;
-    float MinRTRange;
+    float MinRTRange = 0;
     int StartCharge = 2;
     int EndCharge = 5;
     int MS2StartCharge = 2;
     int MS2EndCharge = 4;
     float MaxCurveRTRange = 2;
-    float RTtol;
-    float MS2SN;
+    float RTtol = 0;
+    float MS2SN = 0;
     int MaxNoPeakCluster = 4;
     int MinNoPeakCluster = 2;
     int MaxMS2NoPeakCluster = 3;

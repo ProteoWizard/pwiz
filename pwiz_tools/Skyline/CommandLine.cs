@@ -1866,14 +1866,15 @@ namespace pwiz.Skyline
                     }
                 }
 
-                var standardPeptides = import.IrtStandard.Peptides.ToArray();
                 ProcessedIrtAverages processed;
                 try
                 {
-                    processed = ImportPeptideSearch.ProcessRetentionTimes(numCirt, irtProviders, standardPeptides,
+                    processed = ImportPeptideSearch.ProcessRetentionTimes(numCirt, irtProviders, import.IrtStandard.Peptides.ToArray(),
                         cirtPeptides, IrtRegressionType.DEFAULT, progressMonitor, out var newStandardPeptides);
                     if (newStandardPeptides != null)
-                        standardPeptides = newStandardPeptides;
+                    {
+                        import.IrtStandard = new IrtStandard(XmlNamedElement.NAME_INTERNAL, null, null, newStandardPeptides);
+                    }
                 }
                 catch (Exception x)
                 {
@@ -1886,8 +1887,8 @@ namespace pwiz.Skyline
                 var processedDbIrtPeptides = processed.DbIrtPeptides.ToArray();
                 if (processedDbIrtPeptides.Any())
                 {
-                    ImportPeptideSearch.CreateIrtDb(docLibSpec.FilePath, processed, standardPeptides,
-                        processed.CanRecalibrateStandards(standardPeptides) && commandArgs.RecalibrateIrts, IrtRegressionType.DEFAULT, progressMonitor);
+                    ImportPeptideSearch.CreateIrtDb(docLibSpec.FilePath, processed, import.IrtStandard.Peptides.ToArray(),
+                        processed.CanRecalibrateStandards(import.IrtStandard.Peptides) && commandArgs.RecalibrateIrts, IrtRegressionType.DEFAULT, progressMonitor);
                 }
                 doc = ImportPeptideSearch.AddRetentionTimePredictor(doc, docLibSpec);
             }
@@ -1958,6 +1959,8 @@ namespace pwiz.Skyline
                 {
                     doc = ImportPeptideSearch.RemoveProteinsByPeptideCount(doc, 1);
                 }
+
+                doc = ImportPeptideSearch.AddStandardsToDocument(doc, import.IrtStandard);
             }
 
             // Import results
