@@ -119,7 +119,7 @@
             // 
             resources.ApplyResources(this.textNamingPattern, "textNamingPattern");
             this.textNamingPattern.Name = "textNamingPattern";
-            this.textNamingPattern.TextChanged += new System.EventHandler(this.text_TextChanged);
+            this.textNamingPattern.TextChanged += new System.EventHandler(this.textNamingPattern_TextChanged);
             // 
             // btnRemoveServer
             // 

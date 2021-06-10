@@ -11,6 +11,7 @@ namespace SharedBatch
 
         private int _maxPercent;
         private Timer _timer;
+        private bool _loaded;
 
         public LongWaitDlg(Form parent, string programName, string labelText)
         {
@@ -23,7 +24,11 @@ namespace SharedBatch
             Location = new Point(parent.Location.X + parent.Size.Width / 2 - Width / 2,
                 parent.Location.Y + parent.Size.Height / 2 - Height / 2);
 
-            Shown += ((sender, args) => { Text = programName; });
+            Shown += ((sender, args) =>
+            {
+                Text = programName;
+                _loaded = true;
+            });
         }
 
         public new Form ParentForm { get; private set; }
@@ -67,7 +72,7 @@ namespace SharedBatch
             }
             catch (InvalidOperationException)
             {
-                if (!Cancelled) throw;
+                if (!Cancelled && _loaded) throw;
             }
         }
 

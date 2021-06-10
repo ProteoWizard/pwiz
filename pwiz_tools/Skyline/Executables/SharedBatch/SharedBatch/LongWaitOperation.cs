@@ -27,15 +27,15 @@ namespace SharedBatch
 
         public void Start(bool showLongWaitDlg, LongOperation operation, Callback callback)
         {
-            if (showLongWaitDlg && _longWaitDlg != null)
-            {
-                _showLongWaitDlg = true;
-                _longWaitDlg.Show(_longWaitDlg.ParentForm);
-            }
-            new Task( () =>
+            new Task(() =>
             {
                 StartAsync(operation, callback);
             }).Start();
+            if (showLongWaitDlg && _longWaitDlg != null)
+            {
+                _showLongWaitDlg = true;
+                _longWaitDlg.ShowDialog(_longWaitDlg.ParentForm);
+            }
         }
 
         private void StartAsync(LongOperation operation, Callback callback)

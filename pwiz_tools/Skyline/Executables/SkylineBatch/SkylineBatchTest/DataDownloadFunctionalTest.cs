@@ -73,8 +73,11 @@ namespace SkylineBatchTest
 
         public void TestNoSpaceDataDownload(MainForm mainForm)
         {
-            RunUI(() => { mainForm.tabMain.SelectedIndex = 0; });
-            FunctionalTestUtil.ClearConfigs(mainForm);
+            RunUI(() =>
+            {
+                mainForm.tabMain.SelectedIndex = 0;
+                FunctionalTestUtil.ClearConfigs(mainForm);
+            });
             var dataDirectory = Path.Combine(CONFIG_FOLDER, "bigData");
             Assert.AreEqual(false, Directory.Exists(dataDirectory));
             var configFile = Path.Combine(TEST_FOLDER, "DownloadingConfigurationBigData.bcfg");

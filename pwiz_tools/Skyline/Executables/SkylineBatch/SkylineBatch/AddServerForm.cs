@@ -39,7 +39,14 @@ namespace SkylineBatch
             if (!_updated)
                 CheckServer(true);
             else
-                DialogResult = DialogResult.OK;
+            {
+                Server = GetServerFromUi();
+                serverConnector.GetFiles(Server, out Exception error);
+                if (error != null)
+                    AlertDlg.ShowError(this, Program.AppName(), error.Message);
+                else
+                    DialogResult = DialogResult.OK;
+            }
         }
 
         private void btnUpdate_Click(object sender, EventArgs e)
@@ -82,11 +89,12 @@ namespace SkylineBatch
                     files = serverConnector.GetFiles(Server, out connectionException);
                 }, completed =>
                 {
+                    if (!completed)
+                        return;
                     _updated = true;
                     Invoke(new Action(() =>
                     {
                         listBoxFileNames.Items.Clear();
-                        UpdateLabel();
                     }));
 
                     if (connectionException == null)
@@ -102,8 +110,10 @@ namespace SkylineBatch
                 DialogResult = DialogResult.OK;
             else
             {
+                _updated = true;
                 Invoke(new Action(() =>
                 {
+                    UpdateLabel();
                     foreach (var file in files)
                         listBoxFileNames.Items.Add(file.FileName);
                 }));
@@ -137,8 +147,11 @@ namespace SkylineBatch
         private void btnRemoveServer_Click(object sender, EventArgs e)
         {
             _cancelValidate?.Cancel();
+            listBoxFileNames.Items.Clear();
             Server = null;
             UpdateUiServer();
+            _updated = true;
+            UpdateLabel();
         }
 
         private void UpdateUiServer()
@@ -146,7 +159,9 @@ namespace SkylineBatch
             textUrl.Text = Server != null ? Server.GetUrl() : string.Empty;
             textUserName.Text = Server != null ? Server.Username : string.Empty;
             textPassword.Text = Server != null ? Server.Password : string.Empty;
-            textNamingPattern.Text = Server != null ? Server.DataNamingPattern : string.Empty;
+            textNamingPattern.Text = Server == null || Server.DataNamingPattern.Equals(".*")
+                ? string.Empty
+                : Server.DataNamingPattern;
         }
 
         private void linkLabelRegex_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
@@ -169,7 +184,19 @@ namespace SkylineBatch
         private void text_TextChanged(object sender, EventArgs e)
         {
             _updated = false;
+            serverConnector = null;
             UpdateLabel();
+        }
+
+        private void textNamingPattern_TextChanged(object sender, EventArgs e)
+        {
+            if (_updated)
+            {
+                var files = serverConnector.GetFiles(GetServerFromUi(), out _)?? new List<ConnectedFileInfo>();
+                listBoxFileNames.Items.Clear();
+                foreach (var file in files)
+                    listBoxFileNames.Items.Add(file.FileName);
+            }
         }
     }
 }

@@ -133,7 +133,7 @@ namespace SkylineBatch
             return new DataServerInfo(uri, username, password, dataNamingPattern, folder);
         }
 
-        protected bool Equals(DataServerInfo other)
+        /*protected bool Equals(DataServerInfo other)
         {
             return string.Equals(Username, other.Username) &&
                    string.Equals(Password, other.Password) &&
@@ -151,8 +151,8 @@ namespace SkylineBatch
 
         public override int GetHashCode()
         {
-            return DataNamingPattern.GetHashCode();
-        }
+            return base.GetHashCode();
+        }*/
 
     }
 }
