@@ -282,8 +282,12 @@ namespace pwiz.Skyline.Controls.Graphs
                 xMin = instrument.GetMinMz(_nodeGroup.PrecursorMz);
 
             var requestedRange = new MzRange(xMin, instrument.MaxMz);
-            if (Settings.Default.SyncMZScale && (_documentContainer as SkylineWindow)?.GraphFullScan != null)
-                requestedRange = (_documentContainer as SkylineWindow)?.GraphFullScan?.Range ?? requestedRange;
+            if (Settings.Default.SyncMZScale)
+            {
+                var graphFullScan = (_documentContainer as SkylineWindow)?.GraphFullScan;
+                if (graphFullScan != null && graphFullScan.IsLoaded)
+                    requestedRange = (_documentContainer as SkylineWindow)?.GraphFullScan.Range ?? requestedRange;
+            } 
 
             ZoomXAxis(axis, requestedRange.Min, requestedRange.Max);
         }

@@ -28,7 +28,6 @@ using DigitalRune.Windows.Docking;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
-using pwiz.MSGraph;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs;
@@ -1047,7 +1046,7 @@ namespace pwiz.Skyline
             menuStrip.Items.Insert(iInsert++, toolStripSeparator12);
             ranksContextMenuItem.Checked = set.ShowRanks;
             menuStrip.Items.Insert(iInsert++, ranksContextMenuItem);
-            var control = (menuStrip as ContextMenuStrip)?.SourceControl.Parent.Parent;
+            var control = menuStrip.SourceControl.Parent.Parent;
             if (control is GraphSpectrum)
             {
                 scoreContextMenuItem.Checked = set.ShowLibraryScores;
@@ -1237,7 +1236,7 @@ namespace pwiz.Skyline
         {
             if (_graphSpectrum != null)
                 _graphSpectrum.UpdateUI(selectionChanged);
-            _graphFullScan?.UpdateUI(true);
+            _graphFullScan?.UpdateUI();
         }
 
 //        private static bool SameChargeGroups(PeptideTreeNode nodeTree)

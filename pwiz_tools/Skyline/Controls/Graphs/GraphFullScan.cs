@@ -123,8 +123,12 @@ namespace pwiz.Skyline.Controls.Graphs
             GetMaxMobility(out _maxIonMobility);
             
             _requestedRange = new MzRange(0, _maxMz * 1.1);
-            if (Settings.Default.SyncMZScale && (_documentContainer as SkylineWindow)?.GraphSpectrum != null)
-                _requestedRange = (_documentContainer as SkylineWindow)?.GraphSpectrum?.Range;
+            if (Settings.Default.SyncMZScale)
+            {
+                var graphSpectrum = (_documentContainer as SkylineWindow)?.GraphSpectrum;
+                if (graphSpectrum != null && graphSpectrum.HasSpectrum)
+                    _requestedRange = graphSpectrum.Range;
+            } 
 
             if (_zoomXAxis)
             {
@@ -139,6 +143,8 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             UpdateUI();
+            if (ZoomEvent != null)
+                ZoomEvent.Invoke(this, new ZoomEventArgs(new ZoomState(GraphPane, ZoomState.StateType.Zoom)));
         }
 
         private void HandleLoadScanException(Exception ex)
@@ -890,6 +896,8 @@ namespace pwiz.Skyline.Controls.Graphs
         public void ApplyMZZoomState(ZoomState newState)
         {
             newState.XAxis.ApplyScale(GraphPane.XAxis);
+            using (var g = graphControl.CreateGraphics())
+                GraphPane.SetScale(g);
             graphControl.Refresh();
         }
 
