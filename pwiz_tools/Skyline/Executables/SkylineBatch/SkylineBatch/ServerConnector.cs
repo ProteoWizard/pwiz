@@ -86,35 +86,37 @@ namespace SkylineBatch
         {
             if (servers == null)
                 servers = _serverMap.Keys.ToList();
+            if (servers.Count == 0) return;
 
             var serverCount = servers.Count;
             var downloadFinished = 0;
+            var percentScale = 1.0 / serverCount * 100;
             foreach (var server in servers)
             {
+                var percentDone = (int)(downloadFinished * percentScale);
                 if (cancelToken.IsCancellationRequested)
                     break;
                 if (_serverMap[server] != null || _serverExceptions[server] != null)
                     continue;
                 var folder = ((DataServerInfo) server).Folder;
-                var percentScale = 1.0 / serverCount * 100;
-                int i = 0;
                 if (server.URI.Host.Equals("panoramaweb.org"))
                 {
                     var webdavUri = server.URI;
                     var panoramaFolder = (Path.GetDirectoryName(server.URI.LocalPath) ?? string.Empty).Replace(@"\", "/");
                     JToken files = null;
-                    if (folder.StartsWith("/_webdav/"))
+                    if (panoramaFolder.StartsWith("/_webdav/"))
                     {
+                        webdavUri = new Uri("https://panoramaweb.org" + panoramaFolder + "?method=json");
                         files = TryUri(webdavUri, server.Username, server.Password, cancelToken);
                     }
                     else
                     {
                         panoramaFolder = "/_webdav" + panoramaFolder;
-                        webdavUri = new Uri("https://panoramaweb.org/" + panoramaFolder + "/%40files/RawFiles?method=json");
+                        webdavUri = new Uri("https://panoramaweb.org" + panoramaFolder + "/%40files/RawFiles?method=json");
                         files = TryUri(webdavUri, server.Username, server.Password, cancelToken);
                         if (files == null)
                         {
-                            webdavUri = new Uri("https://panoramaweb.org/" + panoramaFolder + "/%40files?method=json");
+                            webdavUri = new Uri("https://panoramaweb.org" + panoramaFolder + "/%40files?method=json");
                             files = TryUri(webdavUri, server.Username, server.Password, cancelToken);
                         }
                     }
@@ -122,17 +124,12 @@ namespace SkylineBatch
                     var fileInfos = new List<ConnectedFileInfo>();
                     try
                     {
-                        /*var webClient = new WebPanoramaClient(new Uri("https://panoramaweb.org/"));
-                        var jsonAsString =
-                            webClient.DownloadStringAsync(webdavUri, server.Username, server.Password, cancelToken);
-                        if (cancelToken.IsCancellationRequested) return;
-                        var panoramaJsonObject = JsonConvert.DeserializeObject<JObject>(jsonAsString);
-                        var files = panoramaJsonObject["files"];*/
                         var count = (double) (files.AsEnumerable().Count());
+                        int i = 0;
                         foreach (var file in files)
                         {
-                            doOnProgress((int) (i / count * percentScale),
-                                (int) ((i + 1) / count * percentScale));
+                            doOnProgress((int) (i / count * percentScale) + percentDone,
+                                (int) ((i + 1) / count * percentScale) + percentDone);
                             var pathOnServer = (string) file["id"];
                             var downloadUri = new Uri("https://panoramaweb.org" + pathOnServer);
                             var size = WebDownloadClient.GetSize(downloadUri, server.Username, server.Password,
@@ -154,8 +151,8 @@ namespace SkylineBatch
                 }
                 else
                 {
-                    doOnProgress(0,
-                        (int)(1.0 / serverCount * 100));
+                    doOnProgress(percentDone,
+                        percentDone + (int)percentScale);
                     var serverFiles = new List<ConnectedFileInfo>();
                     var client = GetFtpClient(server);
                     var connectThread = new Thread(() =>
@@ -199,9 +196,8 @@ namespace SkylineBatch
                     }
                 }
                 downloadFinished++;
-                doOnProgress((int)((double)downloadFinished / serverCount * 100),
-                    (int)((double)(downloadFinished + 1) / serverCount * 100));
             }
+            doOnProgress(100, 100);
         }
 
         private JToken TryUri(Uri uri, string username, string password, CancellationToken cancelToken)
