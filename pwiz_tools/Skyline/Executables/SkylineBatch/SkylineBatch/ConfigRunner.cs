@@ -31,7 +31,7 @@ namespace SkylineBatch
     public class ConfigRunner : IConfigRunner
     {
         public static readonly string ALLOW_NEWLINE_SAVE_VERSION = "20.2.1.454";
-        public static readonly string REPORT_INVARIANT_VERSION = "21.1.0.146";
+        public static readonly string REPORT_INVARIANT_VERSION = "21.0.9.118";
 
 
         private readonly IMainUiControl _uiControl;
