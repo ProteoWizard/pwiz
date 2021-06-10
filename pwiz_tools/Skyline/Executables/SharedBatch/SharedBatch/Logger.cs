@@ -426,12 +426,7 @@ using SharedBatch.Properties;
             }
 
             var startFile = GetLogFilePath(filePath, bkupIndex - 1);
-            Close();
             File.Move(startFile, backupFile);
-            using (File.Create(_filePath))
-            {
-            }
-            _fileStream = new FileStream(_filePath, FileMode.OpenOrCreate, FileAccess.Read, FileShare.ReadWrite);
         }
         private static string GetLogFilePath(string filePath, int index)
         {
