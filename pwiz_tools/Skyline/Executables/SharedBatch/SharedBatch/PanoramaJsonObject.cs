@@ -1,6 +1,7 @@
-﻿namespace AutoQCTest
+﻿
+namespace SharedBatch
 {
-    public class RootObject
+    public class PanoramaJsonObject
     {
         public string schemaName { get; set; }
         public string queryName { get; set; }

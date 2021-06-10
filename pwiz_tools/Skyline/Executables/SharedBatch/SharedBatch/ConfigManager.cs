@@ -114,7 +114,7 @@ namespace SharedBatch
             SaveConfigList();
         }
 
-        protected void SaveConfigList()
+        public void SaveConfigList()
         {
             lock (_lock)
             {
@@ -166,6 +166,11 @@ namespace SharedBatch
         public bool HasSelectedConfig()
         {
             return SelectedConfig >= 0;
+        }
+
+        protected bool HasSelectedConfig(ConfigManagerState state)
+        {
+            return state.selected >= 0;
         }
 
         public void SelectConfig(int newIndex)
@@ -266,6 +271,26 @@ namespace SharedBatch
 
             state.configValidation = ImmutableDictionary<string, bool>.Empty.AddRange(configValidationMutable);
             SetState(state);
+            _uiControl.UpdateUiConfigurations();
+        }
+
+        public void SetConfigInvalid(IConfig invalidConfig)
+        {
+            lock (_lock)
+            {
+                var state = new ConfigManagerState(this);
+                var configValidationMutable = new Dictionary<string, bool>();
+                foreach (var config in state.configList)
+                {
+                    if (invalidConfig.GetName().Equals(config.GetName()))
+                        configValidationMutable.Add(config.GetName(), false);
+                    else
+                        configValidationMutable.Add(config.GetName(), state.configValidation[config.GetName()]);
+                }
+
+                state.configValidation = ImmutableDictionary<string, bool>.Empty.AddRange(configValidationMutable);
+                SetState(state);
+            }
             _uiControl.UpdateUiConfigurations();
         }
 
