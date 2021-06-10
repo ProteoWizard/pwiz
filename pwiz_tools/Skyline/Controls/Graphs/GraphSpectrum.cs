@@ -61,6 +61,8 @@ namespace pwiz.Skyline.Controls.Graphs
     {
         void SetMzScale(MzRange range);
         MzRange Range { get; }
+        void ApplyMZZoomState(ZoomState scaleState);
+        event EventHandler<ZoomEventArgs> ZoomEvent;
     }
     
     public partial class GraphSpectrum : DockableFormEx, IGraphContainer, IMzScaleCopyable
@@ -278,7 +280,12 @@ namespace pwiz.Skyline.Controls.Graphs
                 xMin = instrument.MinMz;
             else
                 xMin = instrument.GetMinMz(_nodeGroup.PrecursorMz);
-            ZoomXAxis(axis, xMin, instrument.MaxMz);
+
+            var requestedRange = new MzRange(xMin, instrument.MaxMz);
+            if (Settings.Default.SyncMZScale && (_documentContainer as SkylineWindow)?.GraphFullScan != null)
+                requestedRange = (_documentContainer as SkylineWindow)?.GraphFullScan?.Range ?? requestedRange;
+
+            ZoomXAxis(axis, requestedRange.Min, requestedRange.Max);
         }
 
         private void ZoomXAxis(Axis axis, double xMin, double xMax)
@@ -1259,6 +1266,19 @@ namespace pwiz.Skyline.Controls.Graphs
         public MzRange Range
         {
             get {return new MzRange(GraphPane.XAxis.Scale.Min, GraphPane.XAxis.Scale.Max);}
+        }
+
+        public void ApplyMZZoomState(ZoomState newState)
+        {
+            newState.XAxis.ApplyScale(GraphPane.XAxis);
+            graphControl.Refresh();
+        }
+
+        public event EventHandler<ZoomEventArgs> ZoomEvent;
+        private void graphControl_ZoomEvent(ZedGraphControl sender, ZoomState oldState, ZoomState newState, PointF mousePosition)
+        {
+            if (ZoomEvent != null && Settings.Default.SyncMZScale)
+                ZoomEvent.Invoke(this, new ZoomEventArgs(newState));
         }
 
         public double MzMax

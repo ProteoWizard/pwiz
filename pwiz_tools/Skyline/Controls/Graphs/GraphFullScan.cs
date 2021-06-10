@@ -121,7 +121,10 @@ namespace pwiz.Skyline.Controls.Graphs
             _maxIntensity = 0;
             GetMaxMzIntensity(out _maxMz, out _maxIntensity);
             GetMaxMobility(out _maxIonMobility);
+            
             _requestedRange = new MzRange(0, _maxMz * 1.1);
+            if (Settings.Default.SyncMZScale && (_documentContainer as SkylineWindow)?.GraphSpectrum != null)
+                _requestedRange = (_documentContainer as SkylineWindow)?.GraphSpectrum?.Range;
 
             if (_zoomXAxis)
             {
@@ -884,6 +887,21 @@ namespace pwiz.Skyline.Controls.Graphs
             get { return new MzRange(GraphPane.XAxis.Scale.Min, GraphPane.XAxis.Scale.Max); }
         }
 
+        public void ApplyMZZoomState(ZoomState newState)
+        {
+            newState.XAxis.ApplyScale(GraphPane.XAxis);
+            graphControl.Refresh();
+        }
+
+        public event EventHandler<ZoomEventArgs> ZoomEvent;
+
+        private void graphControl_ZoomEvent(ZedGraphControl sender, ZoomState oldState, ZoomState newState, PointF mousePosition)
+        {
+            if(ZoomEvent != null && Settings.Default.SyncMZScale)
+                ZoomEvent.Invoke(this, new ZoomEventArgs(newState));
+        }
+
+
         private void ZoomYAxis()
         {
             if (_msDataFileScanHelper.ScanProvider == null || _msDataFileScanHelper.ScanProvider.Transitions.Length == 0)
@@ -1046,6 +1064,8 @@ namespace pwiz.Skyline.Controls.Graphs
             ZoomXAxis();
             ZoomYAxis();
             UpdateUI();
+            if(ZoomEvent != null)
+                ZoomEvent.Invoke(this, new ZoomEventArgs(new ZoomState(GraphPane, ZoomState.StateType.Zoom)));
         }
 
         private void spectrumBtn_CheckedChanged(object sender, EventArgs e)

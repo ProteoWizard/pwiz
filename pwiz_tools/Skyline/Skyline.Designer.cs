@@ -790,6 +790,7 @@ namespace pwiz.Skyline
             // 
             // synchMzScaleToolStripMenuItem
             // 
+            this.synchMzScaleToolStripMenuItem.CheckOnClick = true;
             this.synchMzScaleToolStripMenuItem.Name = "synchMzScaleToolStripMenuItem";
             resources.ApplyResources(this.synchMzScaleToolStripMenuItem, "synchMzScaleToolStripMenuItem");
             this.synchMzScaleToolStripMenuItem.Click += new System.EventHandler(this.synchMzScaleToolStripMenuItem_Click);

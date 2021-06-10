@@ -911,6 +911,7 @@ namespace pwiz.Skyline
         private void synchMzScaleToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (_graphFullScan == null || !_graphFullScan.Visible || _graphSpectrum == null || !_graphSpectrum.Visible) return;
+            Settings.Default.SyncMZScale = synchMzScaleToolStripMenuItem.Checked;
             IMzScaleCopyable source = (IMzScaleCopyable)(synchMzScaleToolStripMenuItem.Owner as ContextMenuStrip)?.SourceControl?.Parent?.Parent;
 
             if (sender is IMzScaleCopyable)         //testing support
@@ -1081,7 +1082,10 @@ namespace pwiz.Skyline
             }
 
             if(_graphFullScan != null && _graphFullScan.Visible && _graphSpectrum != null && _graphSpectrum.Visible)
+            {
                 menuStrip.Items.Insert(iInsert++, synchMzScaleToolStripMenuItem);
+                synchMzScaleToolStripMenuItem.Checked = Settings.Default.SyncMZScale;
+            }
             menuStrip.Items.Insert(iInsert, toolStripSeparator15);
 
             // Remove some ZedGraph menu items not of interest
@@ -1173,6 +1177,7 @@ namespace pwiz.Skyline
             _graphSpectrum.FormClosed += graphSpectrum_FormClosed;
             _graphSpectrum.VisibleChanged += graphSpectrum_VisibleChanged;
             _graphSpectrum.SelectedSpectrumChanged += graphSpectrum_SelectedSpectrumChanged;
+            _graphSpectrum.ZoomEvent += mzGraph_ZoomAllMz;
             return _graphSpectrum;
         }
 
@@ -1183,6 +1188,7 @@ namespace pwiz.Skyline
                 _graphSpectrum.FormClosed -= graphSpectrum_FormClosed;
                 _graphSpectrum.VisibleChanged -= graphSpectrum_VisibleChanged;
                 _graphSpectrum.SelectedSpectrumChanged -= graphSpectrum_SelectedSpectrumChanged;
+                _graphSpectrum.ZoomEvent -= mzGraph_ZoomAllMz;
                 _graphSpectrum.HideOnClose = false;
                 _graphSpectrum.Close();
                 _graphSpectrum = null;
@@ -1323,6 +1329,7 @@ namespace pwiz.Skyline
             _graphFullScan.FormClosed += graphFullScan_FormClosed;
             _graphFullScan.VisibleChanged += graphFullScan_VisibleChanged;
             _graphFullScan.SelectedScanChanged += graphFullScan_SelectedScanChanged;
+            _graphFullScan.ZoomEvent += mzGraph_ZoomAllMz;
             return _graphFullScan;
         }
 
@@ -1333,6 +1340,7 @@ namespace pwiz.Skyline
                 _graphFullScan.FormClosed -= graphFullScan_FormClosed;
                 _graphFullScan.VisibleChanged -= graphFullScan_VisibleChanged;
                 _graphFullScan.SelectedScanChanged -= graphFullScan_SelectedScanChanged;
+                _graphFullScan.ZoomEvent -= mzGraph_ZoomAllMz;
                 _graphFullScan.HideOnClose = false;
                 _graphFullScan.Close();
                 _graphFullScan = null;
@@ -1360,6 +1368,14 @@ namespace pwiz.Skyline
             UpdateChromGraphs();
         }
 
+
+        private void mzGraph_ZoomAllMz(object sender, ZoomEventArgs newState)
+        {
+                if (ReferenceEquals(sender, _graphFullScan))
+                    _graphSpectrum?.ApplyMZZoomState(newState.ZoomState);
+                if (ReferenceEquals(sender, _graphSpectrum))
+                    _graphFullScan?.ApplyMZZoomState(newState.ZoomState);
+        }
         #endregion
 
         #region Chromatogram graphs
