@@ -216,7 +216,6 @@ namespace pwiz.Skyline.Model
                 THERMO_QUANTIVA,
                 THERMO_ALTIS,
                 THERMO_FUSION,
-                THERMO_QUANTIVA,
                 THERMO_EXPLORIS,
                 THERMO_FUSION_LUMOS,
                 WATERS_XEVO_TQ,
@@ -390,6 +389,8 @@ namespace pwiz.Skyline.Model
 
         public virtual bool ExportMultiQuant { get; set; }
         public virtual bool ExportSureQuant { get; set; }
+
+        public virtual double IntensityThresholdPercent { get; set; }
 
         public virtual bool RetentionStartAndEnd { get; set; }
 
@@ -781,6 +782,7 @@ namespace pwiz.Skyline.Model
             if (MethodType == ExportMethodType.Standard)
                 exporter.RunLength = RunLength;
             exporter.RetentionStartAndEnd = RetentionStartAndEnd;
+            exporter.IntensityThresholdPercent = IntensityThresholdPercent;
             PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
 
             return exporter;
@@ -793,6 +795,7 @@ namespace pwiz.Skyline.Model
             if (MethodType == ExportMethodType.Standard)
                 exporter.RunLength = RunLength;
             exporter.RetentionStartAndEnd = RetentionStartAndEnd;
+            exporter.IntensityThresholdPercent = IntensityThresholdPercent;
             PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
 
             return exporter;
@@ -1924,6 +1927,10 @@ namespace pwiz.Skyline.Model
         private readonly string _instrumentType;
         private readonly bool _surequantMethod;
 
+        private const double DEFAULT_INTENSITY_THRESHOLD_PERCENT = 1;
+
+        public double? IntensityThresholdPercent { get; set; }
+
         protected override string InstrumentType => _instrumentType;
 
         public override bool HasHeaders => true;
@@ -1963,6 +1970,8 @@ namespace pwiz.Skyline.Model
                 writer.Write(FieldSeparator);
                 writer.Write(@"S-lens");
             }
+            writer.Write(FieldSeparator);
+            writer.Write(@"Intensity Threshold");
             writer.WriteLine();
         }
 
@@ -1977,9 +1986,12 @@ namespace pwiz.Skyline.Model
         {
             if (_surequantMethod)
             {
+                // <precursor charge><H|L><target>;<transition name>
                 var surequantInfo = nodeTranGroup.PrecursorCharge.ToString(CultureInfo);
                 surequantInfo += Equals(nodeTranGroup.LabelType, IsotopeLabelType.heavy) ? 'H' : 'L';
                 surequantInfo += nodePep.Target;
+                surequantInfo += ';';
+                surequantInfo += nodeTran.FragmentIonName;
                 writer.WriteDsvField(surequantInfo, FieldSeparator);
                 writer.Write(FieldSeparator);
             }
@@ -2054,13 +2066,22 @@ namespace pwiz.Skyline.Model
             writer.Write(FieldSeparator);
             writer.Write(GetProductMz(SequenceMassCalc.PersistentMZ(nodeTran.Mz), step).ToString(CultureInfo));
             writer.Write(FieldSeparator);
-            writer.Write(
-                Math.Round(GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step), 1).ToString(CultureInfo));
+            writer.Write(Math.Round(GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step), 1).ToString(CultureInfo));
             if (UseSlens)
             {
                 writer.Write(FieldSeparator);
                 writer.Write((ExplicitTransitionValues.Get(nodeTran).SLens ?? DEFAULT_SLENS).ToString(CultureInfo));
             }
+            var maxHeight = (double?) null;
+            if (nodeTranGroup.HasResults)
+            {
+                var heights = nodeTranGroup.Results.SelectMany(chromInfoList => chromInfoList.AsList())
+                    .Select(ci => ci.Height).Where(h => h.HasValue).ToArray();
+                if (heights.Any())
+                    maxHeight = heights.Max().Value * ((IntensityThresholdPercent ?? DEFAULT_INTENSITY_THRESHOLD_PERCENT) / 100);
+            }
+            writer.Write(FieldSeparator);
+            writer.Write(maxHeight);
 
             writer.WriteLine();
         }

@@ -3105,5 +3105,17 @@ namespace pwiz.Skyline.Properties {
                 this["ExportSureQuant"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("1")]
+        public double IntensityThresholdPercent {
+            get {
+                return ((double)(this["IntensityThresholdPercent"]));
+            }
+            set {
+                this["IntensityThresholdPercent"] = value;
+            }
+        }
     }
 }

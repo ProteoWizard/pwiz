@@ -122,6 +122,7 @@ namespace BuildThermoMethod
         public double? ProductMz { get; set; }
         public double? CollisionEnergy { get; set; }
         public SureQuantInfo SureQuantInfo { get; set; }
+        public double? IntensityThreshold { get; set; }
 
         public ListItem()
         {
@@ -134,6 +135,7 @@ namespace BuildThermoMethod
             ProductMz = null;
             CollisionEnergy = 0.0;
             SureQuantInfo = null;
+            IntensityThreshold = null;
         }
 
         public static ListItem FromLine(int lineNum, string[] fields, Dictionary<int, string> columnMap)
@@ -229,6 +231,12 @@ namespace BuildThermoMethod
                     if (!parseFail)
                         item.SureQuantInfo = info;
                 }
+                else if (curHeader.Equals("intensity threshold", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    parseFail = !double.TryParse(curValue, out var thresholdParse);
+                    if (!parseFail)
+                        item.IntensityThreshold = thresholdParse;
+                }
 
                 if (parseFail)
                 {
@@ -252,6 +260,7 @@ namespace BuildThermoMethod
         public int Charge { get; private set; }
         public bool Heavy { get; private set; }
         public string Sequence { get; private set; }
+        public string FragmentName { get; private set; }
 
         private char LastChar => Sequence.Length > 0 ? Sequence.Last() : 'X';
 
@@ -259,16 +268,31 @@ namespace BuildThermoMethod
         {
             get
             {
-                var lastChar = LastChar;
-                return Tuple.Create(Charge, lastChar == 'K' || lastChar == 'R' ? lastChar : 'X');
+                var c = LastChar;
+                switch (c)
+                {
+                    case 'K':
+                        if (Heavy)
+                            c = 'k';
+                        break;
+                    case 'R':
+                        if (Heavy)
+                            c = 'r';
+                        break;
+                    default:
+                        c = 'X';
+                        break;
+                }
+                return Tuple.Create(Charge, c);
             }
         }
 
-        public SureQuantInfo(int charge, bool heavy, string seq)
+        public SureQuantInfo(int charge, bool heavy, string seq, string fragmentName)
         {
             Charge = charge;
             Heavy = heavy;
             Sequence = seq;
+            FragmentName = fragmentName;
         }
 
         public static bool TryParse(string info, out SureQuantInfo obj)
@@ -279,7 +303,12 @@ namespace BuildThermoMethod
                 return false;
             if (!int.TryParse(info.Substring(0, labelIdx), out var charge))
                 return false;
-            obj = new SureQuantInfo(charge, info[labelIdx] == 'H', info.Substring(labelIdx + 1));
+            var heavy = info[labelIdx] == 'H';
+            info = info.Substring(labelIdx + 1);
+            var splitIdx = info.IndexOf(';');
+            if (splitIdx == -1)
+                return false;
+            obj = new SureQuantInfo(charge, heavy, info.Substring(0, splitIdx), info.Substring(splitIdx + 1));
             return true;
         }
     }
@@ -658,29 +687,126 @@ namespace BuildThermoMethod
         {
             var surequant = items.Count > 0 && items[0].SureQuantInfo != null;
 
-            var records = new Dictionary<Tuple<int, char>, List<XmlExploris.MassListRecord>>();
+            var records = new Dictionary<Tuple<int, char>, List<ListItem>>();
             foreach (var item in items)
             {
                 var key = surequant ? item.SureQuantInfo.Key : Tuple.Create(0, '\0');
                 if (!records.TryGetValue(key, out var list))
                 {
-                    records[key] = new List<XmlExploris.MassListRecord>();
+                    records[key] = new List<ListItem>();
                     list = records[key];
                 }
-                list.Add(new XmlExploris.MassListRecord
+                list.Add(item);
+            }
+
+            const int experimentIndex = 0; // Assume that we should modify the 1st experiment
+
+            var modifications = new List<XmlExploris.Modification>();
+            var recordIndex = 0;
+            foreach (var record in records)
+            {
+                var mass = new List<XmlExploris.MassListRecord>();
+                var massTrigger = new List<XmlExploris.MassListRecord>();
+
+                double? groupMz = null;
+
+                foreach (var item in record.Value)
                 {
-                    MOverZ = item.PrecursorMz.GetValueOrDefault(),
-                    MOverZSpecified = item.PrecursorMz.HasValue,
-                    Z = item.Charge.GetValueOrDefault(),
-                    ZSpecified = item.Charge.HasValue,
-                    StartTime = item.RetentionStart.GetValueOrDefault(),
-                    StartTimeSpecified = item.RetentionStart.HasValue,
-                    EndTime = item.RetentionEnd.GetValueOrDefault(),
-                    EndTimeSpecified = item.RetentionEnd.HasValue,
-                    CollisionEnergy = item.CollisionEnergy.GetValueOrDefault(),
-                    CollisionEnergySpecified = item.CollisionEnergy.HasValue,
-                    CompoundName = item.Compound,
+                    if (surequant && groupMz != item.PrecursorMz)
+                    {
+                        groupMz = item.PrecursorMz;
+                        mass.Add(new XmlExploris.MassListRecord
+                        {
+                            MOverZ = item.PrecursorMz.GetValueOrDefault(),
+                            MOverZSpecified = item.PrecursorMz.HasValue,
+                            Z = item.SureQuantInfo.Charge,
+                            ZSpecified = true,
+                            StartTime = item.RetentionStart.GetValueOrDefault(),
+                            StartTimeSpecified = item.RetentionStart.HasValue,
+                            EndTime = item.RetentionEnd.GetValueOrDefault(),
+                            EndTimeSpecified = item.RetentionEnd.HasValue,
+                            CompoundName = item.Compound,
+                            IntensityThreshold = item.IntensityThreshold.GetValueOrDefault(),
+                            IntensityThresholdSpecified = item.IntensityThreshold.HasValue
+                        });
+                    }
+
+                    if (surequant)
+                    {
+                        massTrigger.Add(new XmlExploris.MassListRecord
+                        {
+                            CollisionEnergy = item.CollisionEnergy.GetValueOrDefault(),
+                            CollisionEnergySpecified = item.CollisionEnergy.HasValue,
+                            MOverZ = item.ProductMz.GetValueOrDefault(),
+                            MOverZSpecified = item.ProductMz.HasValue,
+                            CompoundName = item.SureQuantInfo.FragmentName,
+                            GroupID = item.PrecursorMz.GetValueOrDefault().ToString(CultureInfo.InvariantCulture),
+                            GroupIDSpecified = true,
+                        });
+                    }
+                    else
+                    {
+                        mass.Add(new XmlExploris.MassListRecord
+                        {
+                            MOverZ = item.ProductMz.GetValueOrDefault(),
+                            MOverZSpecified = item.ProductMz.HasValue,
+                            StartTime = item.RetentionStart.GetValueOrDefault(),
+                            StartTimeSpecified = item.RetentionStart.HasValue,
+                            EndTime = item.RetentionEnd.GetValueOrDefault(),
+                            EndTimeSpecified = item.RetentionEnd.HasValue,
+                            CollisionEnergy = item.CollisionEnergy.GetValueOrDefault(),
+                            CollisionEnergySpecified = item.CollisionEnergy.HasValue,
+                            CompoundName = item.Compound,
+                            IntensityThreshold = item.IntensityThreshold.GetValueOrDefault(),
+                            IntensityThresholdSpecified = item.IntensityThreshold.HasValue
+                        });
+                    }
+                }
+
+                modifications.Add(new XmlExploris.Modification
+                {
+                    Order = surequant ? 2 * recordIndex + 1 : recordIndex + 1, // 1, 3, 5, ...
+                    Experiment = new[]
+                    {
+                        new XmlExploris.Experiment
+                        {
+                            ExperimentIndex = experimentIndex,
+                            ExperimentIndexSpecified = true,
+                            MassListFilter = new XmlExploris.MassListFilter
+                            {
+                                MassListType = XmlExploris.MassListType.TargetedMassInclusion,
+                                Above = true,
+                                SourceNodePosition = new [] {recordIndex},
+                                MassList = new XmlExploris.MassList {IntensityThreshold = true, MassListRecord = mass.ToArray()}
+                            }
+                        }
+                    }
                 });
+
+                if (surequant)
+                {
+                    modifications.Add(new XmlExploris.Modification
+                    {
+                        Order = 2 * recordIndex + 2, // 2, 4, 6, ...
+                        Experiment = new[]
+                        {
+                            new XmlExploris.Experiment
+                            {
+                                ExperimentIndex = experimentIndex,
+                                ExperimentIndexSpecified = true,
+                                MassListFilter = new XmlExploris.MassListFilter
+                                {
+                                    MassListType = XmlExploris.MassListType.TargetedMassTrigger,
+                                    Above = false,
+                                    SourceNodePosition = new[] {recordIndex},
+                                    MassList = new XmlExploris.MassList {MassListRecord = massTrigger.ToArray()}
+                                }
+                            }
+                        }
+                    });
+                }
+
+                recordIndex++;
             }
 
             var methodModifications = new XmlExploris.MethodModifications
@@ -689,25 +815,7 @@ namespace BuildThermoMethod
                 Model = InstrumentExploris,
                 Family = XmlExploris.Family.Merkur,
                 Type = XmlExploris.Type.SL,
-                Modification = records.Select((record, i) => new XmlExploris.Modification
-                {
-                    Order = i + 1,
-                    Experiment = new[]
-                    {
-                        new XmlExploris.Experiment
-                        {
-                            ExperimentIndex = 0, // Assume that we should modify the 1st experiment
-                            ExperimentIndexSpecified = true,
-                            MassListFilter = new XmlExploris.MassListFilter
-                            {
-                                MassListType = XmlExploris.MassListType.TargetedMassInclusion,
-                                Above = true,
-                                SourceNodePosition = new[] {i},
-                                MassList = new XmlExploris.MassList {IntensityThreshold = true, MassListRecord = record.Value.ToArray()}
-                            }
-                        }
-                    }
-                }).ToArray()
+                Modification = modifications.ToArray()
             };
 
             return Serialize(methodModifications, outMethod);
@@ -718,29 +826,122 @@ namespace BuildThermoMethod
         {
             var surequant = items.Count > 0 && items[0].SureQuantInfo != null;
 
-            var records = new Dictionary<Tuple<int, char>, List<XmlCalcium.MassListRecord>>();
+            var records = new Dictionary<Tuple<int, char>, List<ListItem>>();
             foreach (var item in items)
             {
                 var key = surequant ? item.SureQuantInfo.Key : Tuple.Create(0, '\0');
                 if (!records.TryGetValue(key, out var list))
                 {
-                    records[key] = new List<XmlCalcium.MassListRecord>();
+                    records[key] = new List<ListItem>();
                     list = records[key];
                 }
-                list.Add(new XmlCalcium.MassListRecord
+                list.Add(item);
+            }
+
+            const int experimentIndex = 0; // Assume that we should modify the 1st experiment
+
+            var modifications = new List<XmlCalcium.Modification>();
+            var recordIndex = 0;
+            foreach (var record in records)
+            {
+                var mass = new List<XmlCalcium.MassListRecord>();
+                var massTrigger = new List<XmlCalcium.MassListRecord>();
+
+                double? groupMz = null;
+
+                foreach (var item in record.Value)
                 {
-                    MOverZ = item.PrecursorMz.GetValueOrDefault(),
-                    MOverZSpecified = item.PrecursorMz.HasValue,
-                    Z = item.Charge.GetValueOrDefault(),
-                    ZSpecified = item.Charge.HasValue,
-                    StartTime = item.RetentionStart.GetValueOrDefault(),
-                    StartTimeSpecified = item.RetentionStart.HasValue,
-                    EndTime = item.RetentionEnd.GetValueOrDefault(),
-                    EndTimeSpecified = item.RetentionEnd.HasValue,
-                    CollisionEnergyCID = item.CollisionEnergy.GetValueOrDefault(), // TODO
-                    CollisionEnergyCIDSpecified = item.CollisionEnergy.HasValue, // TODO
-                    CompoundName = item.Compound,
+                    if (surequant && groupMz != item.PrecursorMz)
+                    {
+                        groupMz = item.PrecursorMz;
+                        mass.Add(new XmlCalcium.MassListRecord
+                        {
+                            MOverZ = item.PrecursorMz.GetValueOrDefault(),
+                            MOverZSpecified = item.PrecursorMz.HasValue,
+                            Z = item.SureQuantInfo.Charge,
+                            ZSpecified = true,
+                            StartTime = item.RetentionStart.GetValueOrDefault(),
+                            StartTimeSpecified = item.RetentionStart.HasValue,
+                            EndTime = item.RetentionEnd.GetValueOrDefault(),
+                            EndTimeSpecified = item.RetentionEnd.HasValue,
+                            CompoundName = item.Compound,
+                            IntensityThreshold = item.IntensityThreshold.GetValueOrDefault(),
+                            IntensityThresholdSpecified = item.IntensityThreshold.HasValue
+                        });
+                    }
+
+                    if (surequant)
+                    {
+                        massTrigger.Add(new XmlCalcium.MassListRecord
+                        {
+                            MOverZ = item.ProductMz.GetValueOrDefault(),
+                            MOverZSpecified = item.ProductMz.HasValue,
+                            CompoundName = item.SureQuantInfo.FragmentName,
+                            GroupID = item.PrecursorMz.GetValueOrDefault().ToString(CultureInfo.InvariantCulture),
+                            GroupIDSpecified = true,
+                        });
+                    }
+                    else
+                    {
+                        mass.Add(new XmlCalcium.MassListRecord
+                        {
+                            MOverZ = item.ProductMz.GetValueOrDefault(),
+                            MOverZSpecified = item.ProductMz.HasValue,
+                            StartTime = item.RetentionStart.GetValueOrDefault(),
+                            StartTimeSpecified = item.RetentionStart.HasValue,
+                            EndTime = item.RetentionEnd.GetValueOrDefault(),
+                            EndTimeSpecified = item.RetentionEnd.HasValue,
+                            CompoundName = item.Compound,
+                            IntensityThreshold = item.IntensityThreshold.GetValueOrDefault(),
+                            IntensityThresholdSpecified = item.IntensityThreshold.HasValue
+                        });
+                    }
+                }
+
+                modifications.Add(new XmlCalcium.Modification
+                {
+                    Order = surequant ? 2 * recordIndex + 1 : recordIndex + 1, // 1, 3, 5, ...
+                    Experiment = new[]
+                    {
+                        new XmlCalcium.Experiment
+                        {
+                            ExperimentIndex = experimentIndex,
+                            ExperimentIndexSpecified = true,
+                            MassListFilter = new XmlCalcium.MassListFilter
+                            {
+                                MassListType = XmlCalcium.MassListType.TargetedMassInclusion,
+                                Above = true,
+                                SourceNodePosition = new [] {recordIndex},
+                                MassList = new XmlCalcium.MassList {IntensityThreshold = true, MassListRecord = mass.ToArray()}
+                            }
+                        }
+                    }
                 });
+
+                if (surequant)
+                {
+                    modifications.Add(new XmlCalcium.Modification
+                    {
+                        Order = 2 * recordIndex + 2, // 2, 4, 6, ...
+                        Experiment = new[]
+                        {
+                            new XmlCalcium.Experiment
+                            {
+                                ExperimentIndex = experimentIndex,
+                                ExperimentIndexSpecified = true,
+                                MassListFilter = new XmlCalcium.MassListFilter
+                                {
+                                    MassListType = XmlCalcium.MassListType.TargetedMassTrigger,
+                                    Above = false,
+                                    SourceNodePosition = new[] {recordIndex},
+                                    MassList = new XmlCalcium.MassList {MassListRecord = massTrigger.ToArray()}
+                                }
+                            }
+                        }
+                    });
+                }
+
+                recordIndex++;
             }
 
             var methodModifications = new XmlCalcium.MethodModifications
@@ -749,25 +950,7 @@ namespace BuildThermoMethod
                 Model = InstrumentFusionLumos,
                 Family = XmlCalcium.Family.Calcium,
                 Type = XmlCalcium.Type.SL,
-                Modification = records.Select((record, i) => new XmlCalcium.Modification
-                {
-                    Order = i + 1,
-                    Experiment = new[]
-                    {
-                        new XmlCalcium.Experiment
-                        {
-                            ExperimentIndex = 0, // Assume that we should modify the 1st experiment
-                            ExperimentIndexSpecified = true,
-                            MassListFilter = new XmlCalcium.MassListFilter
-                            {
-                                MassListType = XmlCalcium.MassListType.TargetedMassInclusion,
-                                Above = true,
-                                SourceNodePosition = new[] {i},
-                                MassList = new XmlCalcium.MassList {IntensityThreshold = true, MassListRecord = record.Value.ToArray()}
-                            }
-                        }
-                    }
-                }).ToArray()
+                Modification = modifications.ToArray()
             };
 
             return Serialize(methodModifications, outMethod);

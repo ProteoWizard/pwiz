@@ -201,13 +201,14 @@ namespace pwiz.Skyline.FileUI
             cbTriggerRefColumns.Checked = Settings.Default.ExportThermoTriggerRef;
             cbExportMultiQuant.Checked = Settings.Default.ExportMultiQuant;
             cbSureQuant.Checked = Settings.Default.ExportSureQuant;
+            textIntensityThreshold.Text = Settings.Default.IntensityThresholdPercent.ToString(LocalizationHelper.CurrentCulture);
             cbExportEdcMass.Checked = Settings.Default.ExportEdcMass;
             textPrimaryCount.Text = Settings.Default.PrimaryTransitionCount.ToString(LocalizationHelper.CurrentCulture);
             textMs1RepetitionTime.Text = Settings.Default.ExportMs1RepetitionTime.ToString(LocalizationHelper.CurrentCulture);
             // Reposition from design layout
             cbSlens.Top = textMaxTransitions.Bottom;
             cbWriteCoV.Top = cbSlens.Bottom;
-            cbSureQuant.Top = comboOptimizing.Top;
+            panelSureQuant.Top = labelMethods.Top;
             panelThermoColumns.Top = labelDwellTime.Top;
             var panelOffset = panelThermoColumns.Controls.Cast<Control>().Min(c => c.Left);
             foreach (var control in panelThermoColumns.Controls.Cast<Control>())
@@ -519,6 +520,12 @@ namespace pwiz.Skyline.FileUI
             set { _exportProperties.ExportSureQuant = cbSureQuant.Checked = value; }
         }
 
+        public double IntensityThresholdPercent
+        {
+            get { return _exportProperties.IntensityThresholdPercent; }
+            set { _exportProperties.IntensityThresholdPercent = value; }
+        }
+
         public bool ExportEdcMass
         {
             get { return _exportProperties.ExportEdcMass; }
@@ -630,7 +637,7 @@ namespace pwiz.Skyline.FileUI
 
         private void UpdateThermoSureQuantControls()
         {
-            cbSureQuant.Visible =
+            panelSureQuant.Visible =
                 InstrumentType == ExportInstrumentType.THERMO_EXPLORIS ||
                 InstrumentType == ExportInstrumentType.THERMO_FUSION_LUMOS;
         }
@@ -1073,6 +1080,8 @@ namespace pwiz.Skyline.FileUI
                 Settings.Default.ExportMultiQuant = ExportMultiQuant;
             if (cbSureQuant.Visible)
                 Settings.Default.ExportSureQuant = ExportSureQuant;
+            if (textIntensityThreshold.Visible)
+                Settings.Default.IntensityThresholdPercent = IntensityThresholdPercent;
             if (cbExportEdcMass.Visible)
                 Settings.Default.ExportEdcMass = ExportEdcMass;
             if (comboPolarityFilter.Enabled)
@@ -1255,6 +1264,13 @@ namespace pwiz.Skyline.FileUI
                     return false;
 
                 _exportProperties.DwellTime = dwellTime;
+            }
+            if (textIntensityThreshold.Visible)
+            {
+                if (!helper.ValidateDecimalTextBox(textIntensityThreshold, 0, 100, out var intensityThreshold))
+                    return false;
+
+                _exportProperties.IntensityThresholdPercent = intensityThreshold;
             }
             if (textRunLength.Visible)
             {

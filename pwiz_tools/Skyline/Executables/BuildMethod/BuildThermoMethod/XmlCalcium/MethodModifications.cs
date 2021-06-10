@@ -83,6 +83,10 @@ namespace XmlCalcium {
         private double intensityThresholdField;
         
         private bool intensityThresholdFieldSpecified;
+
+        private string groupIDField;
+
+        private bool groupIDFieldSpecified;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlElementAttribute(Form=System.Xml.Schema.XmlSchemaForm.Unqualified)]
@@ -411,6 +415,28 @@ namespace XmlCalcium {
             }
             set {
                 this.intensityThresholdFieldSpecified = value;
+            }
+        }
+
+        /// <remarks/>
+        [System.Xml.Serialization.XmlElementAttribute(Form = System.Xml.Schema.XmlSchemaForm.Unqualified)]
+        public string GroupID {
+            get {
+                return this.groupIDField;
+            }
+            set {
+                this.groupIDField = value;
+            }
+        }
+
+        /// <remarks/>
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        public bool GroupIDSpecified {
+            get {
+                return this.groupIDFieldSpecified;
+            }
+            set {
+                this.groupIDFieldSpecified = value;
             }
         }
     }

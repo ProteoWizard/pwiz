@@ -61,6 +61,8 @@
             this.cbExportEdcMass = new System.Windows.Forms.CheckBox();
             this.cbWriteCoV = new System.Windows.Forms.CheckBox();
             this.textPrimaryCount = new System.Windows.Forms.TextBox();
+            this.textMs1RepetitionTime = new System.Windows.Forms.TextBox();
+            this.textIntensityThreshold = new System.Windows.Forms.TextBox();
             this.comboOptimizing = new System.Windows.Forms.ComboBox();
             this.labelOptimizing = new System.Windows.Forms.Label();
             this.labelMethods = new System.Windows.Forms.Label();
@@ -78,9 +80,11 @@
             this.panelTuneColumns = new System.Windows.Forms.Panel();
             this.btnGraph = new System.Windows.Forms.Button();
             this.panelBrukerTimsTof = new System.Windows.Forms.Panel();
-            this.textMs1RepetitionTime = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
             this.cbSureQuant = new System.Windows.Forms.CheckBox();
+            this.panelSureQuant = new System.Windows.Forms.Panel();
+            this.label8 = new System.Windows.Forms.Label();
+            this.label7 = new System.Windows.Forms.Label();
             this.panelThermoColumns.SuspendLayout();
             this.panelAbSciexTOF.SuspendLayout();
             this.panelTriggered.SuspendLayout();
@@ -89,6 +93,7 @@
             this.panelWaters.SuspendLayout();
             this.panelTuneColumns.SuspendLayout();
             this.panelBrukerTimsTof.SuspendLayout();
+            this.panelSureQuant.SuspendLayout();
             this.SuspendLayout();
             // 
             // radioSingle
@@ -318,6 +323,18 @@
             this.helpTip.SetToolTip(this.textPrimaryCount, resources.GetString("textPrimaryCount.ToolTip"));
             this.textPrimaryCount.TextChanged += new System.EventHandler(this.textPrimaryCount_TextChanged);
             // 
+            // textMs1RepetitionTime
+            // 
+            resources.ApplyResources(this.textMs1RepetitionTime, "textMs1RepetitionTime");
+            this.textMs1RepetitionTime.Name = "textMs1RepetitionTime";
+            this.helpTip.SetToolTip(this.textMs1RepetitionTime, resources.GetString("textMs1RepetitionTime.ToolTip"));
+            // 
+            // textIntensityThreshold
+            // 
+            resources.ApplyResources(this.textIntensityThreshold, "textIntensityThreshold");
+            this.textIntensityThreshold.Name = "textIntensityThreshold";
+            this.helpTip.SetToolTip(this.textIntensityThreshold, resources.GetString("textIntensityThreshold.ToolTip"));
+            // 
             // comboOptimizing
             // 
             this.comboOptimizing.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
@@ -421,12 +438,6 @@
             resources.ApplyResources(this.panelBrukerTimsTof, "panelBrukerTimsTof");
             this.panelBrukerTimsTof.Name = "panelBrukerTimsTof";
             // 
-            // textMs1RepetitionTime
-            // 
-            resources.ApplyResources(this.textMs1RepetitionTime, "textMs1RepetitionTime");
-            this.textMs1RepetitionTime.Name = "textMs1RepetitionTime";
-            this.helpTip.SetToolTip(this.textMs1RepetitionTime, resources.GetString("textMs1RepetitionTime.ToolTip"));
-            // 
             // label1
             // 
             resources.ApplyResources(this.label1, "label1");
@@ -438,13 +449,32 @@
             this.cbSureQuant.Name = "cbSureQuant";
             this.cbSureQuant.UseVisualStyleBackColor = true;
             // 
+            // panelSureQuant
+            // 
+            this.panelSureQuant.Controls.Add(this.label8);
+            this.panelSureQuant.Controls.Add(this.textIntensityThreshold);
+            this.panelSureQuant.Controls.Add(this.label7);
+            this.panelSureQuant.Controls.Add(this.cbSureQuant);
+            resources.ApplyResources(this.panelSureQuant, "panelSureQuant");
+            this.panelSureQuant.Name = "panelSureQuant";
+            // 
+            // label8
+            // 
+            resources.ApplyResources(this.label8, "label8");
+            this.label8.Name = "label8";
+            // 
+            // label7
+            // 
+            resources.ApplyResources(this.label7, "label7");
+            this.label7.Name = "label7";
+            // 
             // ExportMethodDlg
             // 
             this.AcceptButton = this.btnOk;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.Controls.Add(this.cbSureQuant);
+            this.Controls.Add(this.panelSureQuant);
             this.Controls.Add(this.panelBrukerTimsTof);
             this.Controls.Add(this.btnGraph);
             this.Controls.Add(this.cbSortByMz);
@@ -503,6 +533,8 @@
             this.panelTuneColumns.PerformLayout();
             this.panelBrukerTimsTof.ResumeLayout(false);
             this.panelBrukerTimsTof.PerformLayout();
+            this.panelSureQuant.ResumeLayout(false);
+            this.panelSureQuant.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -561,5 +593,9 @@
         private System.Windows.Forms.TextBox textMs1RepetitionTime;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.CheckBox cbSureQuant;
+        private System.Windows.Forms.Panel panelSureQuant;
+        private System.Windows.Forms.Label label8;
+        private System.Windows.Forms.TextBox textIntensityThreshold;
+        private System.Windows.Forms.Label label7;
     }
 }

@@ -1030,6 +1030,30 @@ If unchecked, zeros will be written in their place.</value>
   <data name="&gt;&gt;textMs1RepetitionTime.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <data name="textIntensityThreshold.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 47</value>
+  </data>
+  <data name="textIntensityThreshold.Size" type="System.Drawing.Size, System.Drawing">
+    <value>31, 20</value>
+  </data>
+  <data name="textIntensityThreshold.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="textIntensityThreshold.ToolTip" xml:space="preserve">
+    <value>Percentage of peak max height to use as intensity threshold</value>
+  </data>
+  <data name="&gt;&gt;textIntensityThreshold.Name" xml:space="preserve">
+    <value>textIntensityThreshold</value>
+  </data>
+  <data name="&gt;&gt;textIntensityThreshold.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textIntensityThreshold.Parent" xml:space="preserve">
+    <value>panelSureQuant</value>
+  </data>
+  <data name="&gt;&gt;textIntensityThreshold.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
   <data name="comboOptimizing.Location" type="System.Drawing.Point, System.Drawing">
     <value>16, 250</value>
   </data>
@@ -1180,6 +1204,54 @@ If unchecked, zeros will be written in their place.</value>
   <data name="&gt;&gt;panelAbSciexTOF.ZOrder" xml:space="preserve">
     <value>33</value>
   </data>
+  <data name="&gt;&gt;label5.Name" xml:space="preserve">
+    <value>label5</value>
+  </data>
+  <data name="&gt;&gt;label5.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label5.Parent" xml:space="preserve">
+    <value>panelTriggered</value>
+  </data>
+  <data name="&gt;&gt;label5.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;label3.Name" xml:space="preserve">
+    <value>label3</value>
+  </data>
+  <data name="&gt;&gt;label3.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label3.Parent" xml:space="preserve">
+    <value>panelTriggered</value>
+  </data>
+  <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="panelTriggered.Location" type="System.Drawing.Point, System.Drawing">
+    <value>180, 261</value>
+  </data>
+  <data name="panelTriggered.Size" type="System.Drawing.Size, System.Drawing">
+    <value>138, 27</value>
+  </data>
+  <data name="panelTriggered.TabIndex" type="System.Int32, mscorlib">
+    <value>21</value>
+  </data>
+  <data name="panelTriggered.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="&gt;&gt;panelTriggered.Name" xml:space="preserve">
+    <value>panelTriggered</value>
+  </data>
+  <data name="&gt;&gt;panelTriggered.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;panelTriggered.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;panelTriggered.ZOrder" xml:space="preserve">
+    <value>11</value>
+  </data>
   <data name="label5.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -1234,30 +1306,6 @@ If unchecked, zeros will be written in their place.</value>
   <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
-  <data name="panelTriggered.Location" type="System.Drawing.Point, System.Drawing">
-    <value>180, 261</value>
-  </data>
-  <data name="panelTriggered.Size" type="System.Drawing.Size, System.Drawing">
-    <value>138, 27</value>
-  </data>
-  <data name="panelTriggered.TabIndex" type="System.Int32, mscorlib">
-    <value>21</value>
-  </data>
-  <data name="panelTriggered.Visible" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
-  <data name="&gt;&gt;panelTriggered.Name" xml:space="preserve">
-    <value>panelTriggered</value>
-  </data>
-  <data name="&gt;&gt;panelTriggered.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;panelTriggered.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;panelTriggered.ZOrder" xml:space="preserve">
-    <value>11</value>
-  </data>
   <data name="panelThermoRt.Location" type="System.Drawing.Point, System.Drawing">
     <value>347, 226</value>
   </data>
@@ -1281,21 +1329,6 @@ If unchecked, zeros will be written in their place.</value>
   </data>
   <data name="&gt;&gt;panelThermoRt.ZOrder" xml:space="preserve">
     <value>35</value>
-  </data>
-  <data name="label6.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label6.Location" type="System.Drawing.Point, System.Drawing">
-    <value>-3, 0</value>
-  </data>
-  <data name="label6.Size" type="System.Drawing.Size, System.Drawing">
-    <value>35, 13</value>
-  </data>
-  <data name="label6.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="label6.Text" xml:space="preserve">
-    <value>Tune:</value>
   </data>
   <data name="&gt;&gt;label6.Name" xml:space="preserve">
     <value>label6</value>
@@ -1332,6 +1365,33 @@ If unchecked, zeros will be written in their place.</value>
   </data>
   <data name="&gt;&gt;panelSciexTune.ZOrder" xml:space="preserve">
     <value>10</value>
+  </data>
+  <data name="label6.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label6.Location" type="System.Drawing.Point, System.Drawing">
+    <value>-3, 0</value>
+  </data>
+  <data name="label6.Size" type="System.Drawing.Size, System.Drawing">
+    <value>35, 13</value>
+  </data>
+  <data name="label6.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="label6.Text" xml:space="preserve">
+    <value>Tune:</value>
+  </data>
+  <data name="&gt;&gt;label6.Name" xml:space="preserve">
+    <value>label6</value>
+  </data>
+  <data name="&gt;&gt;label6.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label6.Parent" xml:space="preserve">
+    <value>panelSciexTune</value>
+  </data>
+  <data name="&gt;&gt;label6.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
   <data name="panelWaters.Location" type="System.Drawing.Point, System.Drawing">
     <value>358, 163</value>
@@ -1438,21 +1498,6 @@ If unchecked, zeros will be written in their place.</value>
   <data name="&gt;&gt;btnGraph.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
-  <data name="label1.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>-3, 1</value>
-  </data>
-  <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>100, 13</value>
-  </data>
-  <data name="label1.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="label1.Text" xml:space="preserve">
-    <value>MS1 repetition time:</value>
-  </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
   </data>
@@ -1489,17 +1534,44 @@ If unchecked, zeros will be written in their place.</value>
   <data name="&gt;&gt;panelBrukerTimsTof.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
+  <data name="label1.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>-3, 1</value>
+  </data>
+  <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>100, 13</value>
+  </data>
+  <data name="label1.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="label1.Text" xml:space="preserve">
+    <value>MS1 repetition time:</value>
+  </data>
+  <data name="&gt;&gt;label1.Name" xml:space="preserve">
+    <value>label1</value>
+  </data>
+  <data name="&gt;&gt;label1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
+    <value>panelBrukerTimsTof</value>
+  </data>
+  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
   <data name="cbSureQuant.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="cbSureQuant.Location" type="System.Drawing.Point, System.Drawing">
-    <value>538, 226</value>
+    <value>3, 3</value>
   </data>
   <data name="cbSureQuant.Size" type="System.Drawing.Size, System.Drawing">
     <value>149, 17</value>
   </data>
   <data name="cbSureQuant.TabIndex" type="System.Int32, mscorlib">
-    <value>15</value>
+    <value>0</value>
   </data>
   <data name="cbSureQuant.Text" xml:space="preserve">
     <value>Create Sure&amp;Quant method</value>
@@ -1511,9 +1583,84 @@ If unchecked, zeros will be written in their place.</value>
     <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;cbSureQuant.Parent" xml:space="preserve">
-    <value>$this</value>
+    <value>panelSureQuant</value>
   </data>
   <data name="&gt;&gt;cbSureQuant.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="label8.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label8.Location" type="System.Drawing.Point, System.Drawing">
+    <value>37, 50</value>
+  </data>
+  <data name="label8.Size" type="System.Drawing.Size, System.Drawing">
+    <value>15, 13</value>
+  </data>
+  <data name="label8.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="label8.Text" xml:space="preserve">
+    <value>%</value>
+  </data>
+  <data name="&gt;&gt;label8.Name" xml:space="preserve">
+    <value>label8</value>
+  </data>
+  <data name="&gt;&gt;label8.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label8.Parent" xml:space="preserve">
+    <value>panelSureQuant</value>
+  </data>
+  <data name="&gt;&gt;label8.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="label7.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label7.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 31</value>
+  </data>
+  <data name="label7.Size" type="System.Drawing.Size, System.Drawing">
+    <value>92, 13</value>
+  </data>
+  <data name="label7.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="label7.Text" xml:space="preserve">
+    <value>Intensity threshold</value>
+  </data>
+  <data name="&gt;&gt;label7.Name" xml:space="preserve">
+    <value>label7</value>
+  </data>
+  <data name="&gt;&gt;label7.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label7.Parent" xml:space="preserve">
+    <value>panelSureQuant</value>
+  </data>
+  <data name="&gt;&gt;label7.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="panelSureQuant.Location" type="System.Drawing.Point, System.Drawing">
+    <value>652, 59</value>
+  </data>
+  <data name="panelSureQuant.Size" type="System.Drawing.Size, System.Drawing">
+    <value>163, 75</value>
+  </data>
+  <data name="panelSureQuant.TabIndex" type="System.Int32, mscorlib">
+    <value>27</value>
+  </data>
+  <data name="&gt;&gt;panelSureQuant.Name" xml:space="preserve">
+    <value>panelSureQuant</value>
+  </data>
+  <data name="&gt;&gt;panelSureQuant.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;panelSureQuant.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;panelSureQuant.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
