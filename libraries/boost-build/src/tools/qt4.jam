@@ -498,7 +498,7 @@ rule initialized ( )
 # This custom generator is needed because in QT4, UI files are translated only
 # into H files, and no C++ files are created. Further, the H files need not be
 # passed via MOC. The header is used only via inclusion. If we define a standard
-# UI -> H generator, Boost.Build will run MOC on H, and then compile the
+# UI -> H generator, B2 will run MOC on H, and then compile the
 # resulting cpp. It will give a warning, since output from moc will be empty.
 #
 # This generator is declared with a UI -> OBJ signature, so it gets invoked when

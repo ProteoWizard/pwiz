@@ -24,6 +24,8 @@
 #include "pathsys.h"
 #include "timestamp.h"
 
+#include <string>
+
 
 typedef struct file_info_t
 {
@@ -78,6 +80,18 @@ void file_remove_atexit( OBJECT * const path );
 void file_supported_fmt_resolution( timestamp * const );
 int file_time( OBJECT * const path, timestamp * const );
 
+namespace b2 { namespace filesys {
+
+    inline bool is_file(const std::string &path)
+    {
+        OBJECT * path_o = object_new(path.c_str());
+        bool result = file_is_file(path_o) == 1;
+        object_free(path_o);
+        return result;
+    }
+
+}}
+
 
 /*  Archive/library file support */
 file_archive_info_t * file_archive_info( OBJECT * const path, int * found );
@@ -105,9 +119,6 @@ int filelist_empty( FILELIST * list );
 
 /* Internal utility worker functions. */
 void file_query_posix_( file_info_t * const );
-
-/* Frees cached information for all files. */
-void file_free_all();
 
 void file_done();
 

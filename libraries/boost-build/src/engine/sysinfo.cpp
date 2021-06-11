@@ -18,7 +18,7 @@
 #include <unistd.h>
 #endif
 
-#if defined(OS_LINUX)
+#if defined(OS_LINUX) || defined(__GLIBC__)
 // Need to define this in case it's not as that's the only way to get the
 // sched_* APIs.
 #ifndef _GNU_SOURCE

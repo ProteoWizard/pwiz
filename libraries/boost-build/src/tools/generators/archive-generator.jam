@@ -52,7 +52,7 @@ class archive-generator : generator
         {
             for local t in $(sources)
             {
-                if [ type.is-derived [ $(t).type ] LIB ]
+                if [ $(t).type ] && [ type.is-derived [ $(t).type ] LIB ]
                 {
                     usage-requirements += <library>$(t) ;
                 }

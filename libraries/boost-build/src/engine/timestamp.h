@@ -15,7 +15,6 @@
 #include "object.h"
 
 #ifdef OS_NT
-# define WIN32_LEAN_AND_MEAN
 # include <windows.h>
 #endif
 
@@ -44,7 +43,6 @@ void timestamp_from_filetime( timestamp * const, FILETIME const * const );
 #endif
 
 void timestamp_done();
-void time_free_all();
 double timestamp_delta_seconds( timestamp const * const, timestamp const * const );
 
 #endif
