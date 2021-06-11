@@ -46,7 +46,7 @@ namespace SkylineBatch
             var localFolder = Path.Combine(Path.GetDirectoryName(roamingFolder) ?? throw new InvalidOperationException(), "local");
             var logPath= Path.Combine(localFolder, Program.AppName(), Program.AppName() + TextUtil.EXT_LOG);
             Logger.AddErrorMatch(string.Format(Resources.ConfigRunner_Run_________________________________0____1_________________________________, ".*", RunnerStatus.Error));
-            _skylineBatchLogger = new Logger(logPath, Program.AppName() + TextUtil.EXT_LOG);
+            _skylineBatchLogger = new Logger(logPath, Program.AppName() + TextUtil.EXT_LOG, true);
             toolStrip1.Items.Insert(3,new ToolStripSeparator());
             _listViewColumnWidths = new ColumnWidthCalculator(listViewConfigs);
             listViewConfigs.ColumnWidthChanged += listViewConfigs_ColumnWidthChanged;
@@ -526,8 +526,13 @@ namespace SkylineBatch
 
         private void btnExport_Click(object sender, EventArgs e)
         {
-            var shareForm = new ShareConfigsForm(this, _configManager, TextUtil.FILTER_BCFG, Program.Icon());
-            shareForm.ShowDialog();
+            var shareForm = new ShareConfigsForm(this, _configManager, Program.Icon());
+            if (shareForm.ShowDialog(this) != DialogResult.OK)
+                return;
+            var dialog = new SaveFileDialog { Filter = TextUtil.FILTER_BCFG };
+            if (dialog.ShowDialog(this) != DialogResult.OK)
+                return;
+            _configManager.ExportConfigs(dialog.FileName, shareForm.IndiciesToSave);
         }
         
         #endregion

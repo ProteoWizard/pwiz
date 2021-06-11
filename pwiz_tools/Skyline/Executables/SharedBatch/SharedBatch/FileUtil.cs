@@ -116,6 +116,12 @@ namespace SharedBatch
             return safeName; // .TrimStart('.').TrimEnd('.');
         }
 
+        public static string GetSafeNameForDir(string name)
+        {
+            // Trailing periods and spaces are ignored when creating a directory
+            return GetSafeName(name).TrimStart('.', ' ').TrimEnd('.', ' ');
+        }
+
         public static void AddFileTypeClickOnce(string extension, string id, string description, string applicationReference, string iconPath)
         {
             // Register ClickOnce exe/icon/description associations.

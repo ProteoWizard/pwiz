@@ -79,7 +79,6 @@ namespace SkylineBatch
                 }
             }
         }
-
         public void Connect(OnPercentProgress doOnProgress, CancellationToken cancelToken, List<Server> servers = null)
         {
             if (servers == null)
@@ -97,24 +96,33 @@ namespace SkylineBatch
                     continue;
                 var serverFiles = new List<FtpListItem>();
                 var client = GetFtpClient(server);
-                try
+                var connectThread = new Thread(() =>
                 {
-                    client.ConnectAsync(cancelToken);
-                    //throw new Exception("Test");
-                    foreach (FtpListItem item in client.GetListing(server.URI.LocalPath))
+                    try
                     {
-                        if (item.Type == FtpFileSystemObjectType.File)
+                        client.Connect();
+                        foreach (FtpListItem item in client.GetListing(server.URI.LocalPath))
                         {
-                            serverFiles.Add(item);
+                            if (item.Type == FtpFileSystemObjectType.File)
+                            {
+                                serverFiles.Add(item);
+                            }
                         }
                     }
-                }
-                catch (Exception e)
-                {
-                    client.Disconnect();
-                    lock (_lock)
+                    catch (Exception e)
+                    {
                         _serverExceptions[server] = e;
+                    }
+
+                });
+                connectThread.Start();
+                while (connectThread.IsAlive)
+                {
+                    if (cancelToken.IsCancellationRequested)
+                        connectThread.Abort();
                 }
+                client.Disconnect();
+
                 if (_serverExceptions[server] == null && serverFiles.Count == 0)
                 {
                     _serverExceptions[server] = new ArgumentException(string.Format(
@@ -127,7 +135,6 @@ namespace SkylineBatch
                     lock (_lock)
                         _serverMap[server] = serverFiles;
                 }
-                client.Disconnect();
                 downloadFinished++;
                 doOnProgress((int)((double)downloadFinished / serverCount * 100),
                     (int)((double)(downloadFinished + 1) / serverCount * 100));
