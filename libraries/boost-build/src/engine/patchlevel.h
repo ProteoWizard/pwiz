@@ -12,5 +12,5 @@ Distributed under the Boost Software License, Version 1.0.
 
 
 #define VERSION_MAJOR 4
-#define VERSION_MINOR 0
-#define VERSION_PATCH 0
+#define VERSION_MINOR 4
+#define VERSION_PATCH 1

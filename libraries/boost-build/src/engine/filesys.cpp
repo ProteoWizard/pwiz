@@ -33,7 +33,7 @@
 #include "lists.h"
 #include "object.h"
 #include "pathsys.h"
-#include "strings.h"
+#include "jam_strings.h"
 #include "output.h"
 
 #include <assert.h>
@@ -179,21 +179,6 @@ void file_dirscan( OBJECT * dir, scanback func, void * closure )
     PROFILE_ENTER( FILE_DIRSCAN );
     file_dirscan_impl( dir, func, closure );
     PROFILE_EXIT( FILE_DIRSCAN );
-}
-
-
-/*
- * file_free_all() - frees cached information for all files
- */
-
-void file_free_all()
-{
-    if ( filecache_hash )
-    {
-        hashenumerate( filecache_hash, free_file_info, (void *)0 );
-        hashdone( filecache_hash );
-        filecache_hash = hashinit( sizeof( file_info_t ), "file_info" );
-    }
 }
 
 
@@ -649,8 +634,6 @@ int filelist_length( FILELIST * list )
 
 void filelist_free( FILELIST * list )
 {
-    FILELISTITER iter;
-
     if ( filelist_empty( list ) ) return;
 
     while ( filelist_length( list ) ) filelist_pop_front( list );

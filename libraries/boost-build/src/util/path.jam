@@ -165,7 +165,7 @@ rule join ( elements + )
             if [ is-rooted $(e) ]
             {
                 import errors ;
-                errors.error only the first element may be rooted in set $(elements:J=" ") ;
+                errors.error only the first element may be rooted ;
             }
         }
         return [ NORMALIZE_PATH "$(elements)" ] ;
@@ -502,7 +502,6 @@ rule makedirs ( path )
             }
         }
     }
-    RESCAN ;
     return $(result) ;
 }
 
