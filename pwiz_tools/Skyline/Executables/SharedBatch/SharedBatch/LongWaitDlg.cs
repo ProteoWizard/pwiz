@@ -16,6 +16,7 @@ namespace SharedBatch
         {
             InitializeComponent();
             Icon = parent.Icon;
+            ParentForm = parent;
             progressBar.Style = ProgressBarStyle.Continuous;
             label1.Text = labelText;
             CancelToken = new CancellationTokenSource();
@@ -25,6 +26,7 @@ namespace SharedBatch
             Shown += ((sender, args) => { Text = programName; });
         }
 
+        public Form ParentForm { get; private set; }
 
         // for testing only
         public LongWaitDlg()
