@@ -286,7 +286,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 var graphFullScan = (_documentContainer as SkylineWindow)?.GraphFullScan;
                 if (graphFullScan != null && graphFullScan.IsLoaded)
-                    requestedRange = (_documentContainer as SkylineWindow)?.GraphFullScan.Range ?? requestedRange;
+                    requestedRange = graphFullScan.Range;
             } 
 
             ZoomXAxis(axis, requestedRange.Min, requestedRange.Max);
