@@ -36,6 +36,8 @@ namespace SkylineBatchTest
 
             TestNoSpaceDataDownload(mainForm);
 
+            TestPanoramaDataDownload(mainForm);
+
         }
 
         private bool ConfigStopped(MainForm mainForm, bool expectedAnswer)
@@ -51,7 +53,7 @@ namespace SkylineBatchTest
         public void TestSmallDataDownload(MainForm mainForm)
         {
             var dataDirectory = Path.Combine(CONFIG_FOLDER, "emptyData");
-            var configFile = Path.Combine(TEST_FOLDER, "DownloadingConfiguration.bcfg");
+            var configFile = Path.Combine(TEST_FOLDER, "DownloadingConfigurationFTP.bcfg");
             
             RunUI(() =>
             {
@@ -100,6 +102,30 @@ namespace SkylineBatchTest
                 Assert.AreEqual(0, mainForm.tabMain.SelectedIndex);
             });
             
+        }
+
+        public void TestPanoramaDataDownload(MainForm mainForm)
+        {
+            var dataDirectory = Path.Combine(CONFIG_FOLDER, "emptyData");
+            var configFile = Path.Combine(TEST_FOLDER, "DownloadingConfigurationPanorama.bcfg");
+
+            RunUI(() =>
+            {
+                mainForm.tabMain.SelectedIndex = 0;
+                FunctionalTestUtil.ClearConfigs(mainForm);
+                mainForm.DoImport(configFile);
+                FunctionalTestUtil.CheckConfigs(1, 0, mainForm, "Config was not imported!", "Config was imported but invalid");
+            });
+            var longWaitDialog = ShowDialog<LongWaitDlg>(() => mainForm.ClickRun(1));
+            WaitForClosedForm(longWaitDialog);
+            var tenSeconds = new TimeSpan(0, 0, 10);
+            FunctionalTestUtil.WaitForCondition(ConfigStopped, mainForm, true, tenSeconds, 200,
+                "Config did not start");
+            var oneMinute = new TimeSpan(0, 1, 0);
+            FunctionalTestUtil.WaitForCondition(ConfigStopped, mainForm, false, oneMinute, 1000,
+                "Config ran past timeout");
+            Assert.AreEqual(true, File.Exists(Path.Combine(dataDirectory, "nselevse_L120412_002_SW.wiff")));
+            Assert.AreEqual(12427264, new FileInfo(Path.Combine(dataDirectory, "nselevse_L120412_002_SW.wiff")).Length);
         }
 
     }

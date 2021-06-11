@@ -144,14 +144,16 @@ namespace SkylineBatch
 
             if (hasServer)
             {
+                var directoryExists = false;
                 try
                 {
-                    Directory.Exists(Path.GetDirectoryName(dataFolder));
+                    directoryExists = Directory.Exists(Path.GetDirectoryName(dataFolder));
                 }
                 catch (Exception)
                 {
-                    throw new ArgumentException(string.Format(Resources.MainSettings_ValidateAnalysisFolder_The__parent_directory_of_the_data_folder__0__does_not_exist_1, dataFolder));
                 }
+                if (!directoryExists)
+                    throw new ArgumentException(string.Format(Resources.MainSettings_ValidateAnalysisFolder_The__parent_directory_of_the_data_folder__0__does_not_exist_1, dataFolder));
             }
             FileUtil.ValidateNotInDownloads(dataFolder, Resources.MainSettings_ValidateDataFolder_data_folder);
             if (!hasServer && !Directory.GetFiles(dataFolder).Any())
