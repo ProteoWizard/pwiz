@@ -31,6 +31,7 @@ using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.DocSettings.MetadataExtraction;
+using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Results.RemoteApi;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Model.Serialization;
@@ -161,6 +162,10 @@ namespace pwiz.Skyline.Model.Results
                 if (DocumentRetentionTimes.IsNotLoadedExplained(document) != null)
                 {
                     return false;
+                }
+                if (IonMobilityLibraryManager.IsNotLoadedDocumentExplained(document) != null)
+                {
+                    return false; // Need to wait for imsdb file to load into memory
                 }
             }
             // Make sure any iRT calculater gets loaded before starting to import
