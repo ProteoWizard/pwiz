@@ -11453,4 +11453,7 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
   <data name="BuildPeptideSearchLibraryControl_AddExistingLibrary_This_library_contains_iRT_values__Do_you_want_to_create_a_retention_time_predictor_with_these_values_" xml:space="preserve">
     <value>This library contains iRT values. Do you want to create a retention time predictor with these values?</value>
   </data>
+  <data name="SkylineWindow_HandleStandardsChanged_An_error_occurred_while_attempting_to_load_the_iRT_database__0___iRT_standards_cannot_be_automatically_added_to_the_document_" xml:space="preserve">
+    <value>An error occurred while attempting to load the iRT database {0}. iRT standards cannot be automatically added to the document.</value>
+  </data>
 </root>
