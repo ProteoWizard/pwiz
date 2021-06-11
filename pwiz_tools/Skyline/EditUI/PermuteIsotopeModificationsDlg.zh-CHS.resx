@@ -135,7 +135,7 @@
     <value>0</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>要置换的同位素修饰(&amp;M)：</value>
+    <value>要置换的同位素和修饰(&amp;M)：</value>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
