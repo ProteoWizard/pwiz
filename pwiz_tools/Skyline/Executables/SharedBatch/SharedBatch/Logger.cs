@@ -58,7 +58,7 @@ using SharedBatch.Properties;
 
 
 
-        public Logger(string logFilePath, string logName)
+        public Logger(string logFilePath, string logName, bool initialize)
         {
             var logFolder = FileUtil.GetDirectory(logFilePath);
             Directory.CreateDirectory(logFolder);
@@ -68,7 +68,8 @@ using SharedBatch.Properties;
             _filePath = logFilePath;
             _uiBuffer = new List<string>();
             Name = logName;
-            Init();
+            if (initialize)
+                Init();
         }
 
         public string Name;
@@ -78,6 +79,8 @@ using SharedBatch.Properties;
         public delegate void UiLogError(string text);
 
         public string LogFile => _filePath;
+
+        public string LogDirectory => Path.GetDirectoryName(_filePath);
 
         public string LogFileName => Path.GetFileName(_filePath);
 
@@ -194,6 +197,7 @@ using SharedBatch.Properties;
 
         public void DisplayLogFromFile()
         {
+            if (!File.Exists(_filePath)) return;
             var startBlockRegex = new Regex(DATE_PATTERN);
             lock (_uiBufferLock)
             {
@@ -277,7 +281,7 @@ using SharedBatch.Properties;
                     File.Delete(_filePath);
                     Init();
                     var newFilePath = Path.Combine(FileUtil.GetDirectory(_filePath), timestampFileName);
-                    return new Logger(newFilePath, timestampFileName);
+                    return new Logger(newFilePath, timestampFileName, true);
                 }
 
                 return null;
@@ -399,7 +403,12 @@ using SharedBatch.Properties;
             var size = new FileInfo(_filePath).Length;
             if (size >= MaxLogSize)
             {
+                Close();  // First close the open file handle
                 BackupLog(_filePath, 1);
+                using (File.Create(_filePath))
+                {
+                }
+                _fileStream = new FileStream(_filePath, FileMode.OpenOrCreate, FileAccess.Read, FileShare.ReadWrite);
             }
         }
 
