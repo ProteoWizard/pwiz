@@ -923,7 +923,7 @@ namespace SkylineBatch
                 {
                     if (file.Name.EndsWith(TextUtil.EXT_LOG) && !file.Name.Equals(_logList[0].LogFileName))
                     {
-                        _logList.Insert(1, new Logger(file.FullName, file.Name));
+                        _logList.Insert(1, new Logger(file.FullName, file.Name, true));
                     }
                 }
             }
