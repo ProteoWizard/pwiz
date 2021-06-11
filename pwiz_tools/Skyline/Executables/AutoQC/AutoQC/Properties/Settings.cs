@@ -1,5 +1,4 @@
-﻿
-using System.Configuration;
+﻿using System.Configuration;
 
 namespace AutoQC.Properties
 {
@@ -30,20 +29,6 @@ namespace AutoQC.Properties
             set
             {
                 this["KeepAutoQcRunning"] = value;
-            }
-        }
-
-        [UserScopedSetting]
-        [DefaultSettingValue("")]
-        public string InstalledVersion
-        {
-            get
-            {
-                return (string)this["InstalledVersion"];
-            }
-            set
-            {
-                this["InstalledVersion"] = value;
             }
         }
     }
