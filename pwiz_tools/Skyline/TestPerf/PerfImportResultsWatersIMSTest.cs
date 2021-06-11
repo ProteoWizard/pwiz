@@ -47,7 +47,9 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         public void WatersIMSImportTest()
         {
             Log.AddMemoryAppender();
-            TestFilesZip = GetPerfTestDataURL(@"PerfImportResultsWatersIMSv2.zip"); // v2 has _func003.cdt file removed, to test our former assumption that lockmass would have IMS data if other functions did and vice verse
+            TestFilesZip = GetPerfTestDataURL(DateTime.Now.DayOfYear % 2 == 0
+                ? @"PerfImportResultsWatersIMSv2.zip" // v2 has _func003.cdt file removed, to test our former assumption that lockmass would have IMS data if other functions did and vice verse
+                : @"PerfImportResultsWatersIMS.zip");
             TestFilesPersistent = new[] { "ID12692_01_UCA168_3727_040714.raw", "ID12692_01_UCA168_3727_040714_IA_final_fragment.csv" }; // List of files that we'd like to unzip alongside parent zipFile, and (re)use in place
 
             MsDataFileImpl.PerfUtilFactory.IssueDummyPerfUtils = false; // Turn on performance measurement
