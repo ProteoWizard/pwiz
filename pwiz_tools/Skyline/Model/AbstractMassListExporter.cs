@@ -334,18 +334,9 @@ namespace pwiz.Skyline.Model
                         if (DocNode is TransitionGroupDocNode && !ReferenceEquals(group, DocNode))
                             continue;
 
-                        if (IsolationList)
-                        {
-                            fileIterator.WriteTransition(this, seq, peptide, group, null, null, 0, SortByMz);
-                        }
-                        else
-                        {
-                            var groupPrimary = PrimaryTransitionCount > 0
-                                                       ? peptide.GetPrimaryResultsGroup(group)
-                                                       : null;
-
-                            WriteTransitions(fileIterator, seq, peptide, group, groupPrimary);
-                        }
+                        WriteTransitions(fileIterator, seq, peptide, group, !IsolationList && PrimaryTransitionCount > 0
+                            ? peptide.GetPrimaryResultsGroup(group)
+                            : null);
                     }
                 }
             }
@@ -552,7 +543,7 @@ namespace pwiz.Skyline.Model
                 var nodePepGroup = schedule.PeptideGroup;
                 var nodePep = schedule.Peptide;
                 var nodeGroup = schedule.TransitionGroup;
-                var nodeGroupPrimary = schedule.TransitionGroupPrimary;
+                var nodeGroupPrimary = !IsolationList ? schedule.TransitionGroupPrimary : null;
                 // Write required peptides at the end, like unscheduled methods
                 if (RequiredPeptides.IsRequired(nodePep))
                     continue;
@@ -562,42 +553,52 @@ namespace pwiz.Skyline.Model
                 if (groupTransitions < MinTransitions)
                     continue;
 
-                if (IsolationList)
-                    fileIterator.WriteTransition(this, nodePepGroup, nodePep, nodeGroup, null, null, 0, SortByMz);
-                else
-                    WriteTransitions(fileIterator, nodePepGroup, nodePep, nodeGroup, nodeGroupPrimary);
+                WriteTransitions(fileIterator, nodePepGroup, nodePep, nodeGroup, nodeGroupPrimary);
             }
             fileIterator.WriteRequiredTransitions(this, RequiredPeptides, SortByMz);
         }
 
         private void WriteTransitions(FileIterator fileIterator, PeptideGroupDocNode nodePepGroup, PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup, TransitionGroupDocNode nodeGroupPrimary)
         {
-            // Allow derived classes a chance to reorder the transitions.  Currently only used by AB SCIEX.
-            var reorderedTransitions = GetTransitionsInBestOrder(nodeGroup, nodeGroupPrimary);
-            foreach (TransitionDocNode nodeTran in reorderedTransitions.Where(PassesPolarityFilter))
+            if (!IsolationList)
             {
-                if (OptimizeType == null)
+                // Allow derived classes a chance to reorder the transitions.  Currently only used by AB SCIEX.
+                foreach (var nodeTran in GetTransitionsInBestOrder(nodeGroup, nodeGroupPrimary).Where(PassesPolarityFilter))
                 {
-                    fileIterator.WriteTransition(this, nodePepGroup, nodePep, nodeGroup, nodeGroupPrimary, nodeTran, 0, SortByMz);
+                    WriteOptimizeTransition(fileIterator, nodePepGroup, nodePep, nodeGroup, nodeGroupPrimary, nodeTran);
                 }
-                else if (!SkipTransition(nodePepGroup, nodePep, nodeGroup, nodeGroupPrimary, nodeTran))
+            }
+            else
+            {
+                WriteOptimizeTransition(fileIterator, nodePepGroup, nodePep, nodeGroup, null, null);
+            }
+        }
+
+        private void WriteOptimizeTransition(FileIterator fileIterator, PeptideGroupDocNode nodePepGroup, PeptideDocNode nodePep,
+            TransitionGroupDocNode nodeGroup, TransitionGroupDocNode nodeGroupPrimary, TransitionDocNode nodeTran)
+        {
+            if (OptimizeType == null)
+            {
+                fileIterator.WriteTransition(this, nodePepGroup, nodePep, nodeGroup, nodeGroupPrimary, nodeTran, 0, SortByMz);
+            }
+            else if (!SkipTransition(nodePepGroup, nodePep, nodeGroup, nodeGroupPrimary, nodeTran))
+            {
+                // -step through step
+                var transitionWritten = false;
+                for (int i = -OptimizeStepCount; i <= OptimizeStepCount; i++)
                 {
-                    // -step through step
-                    bool transitionWritten = false;
-                    for (int i = -OptimizeStepCount; i <= OptimizeStepCount; i++)
+                    // But avoid writing zero or negative CE values, which will just mess up actuisition
+                    // Always write the highest CE if no other transition has been written, even if it is
+                    // negative, since not doing so makes it a lot harder to understand why a particular
+                    // transition did not get written at all.
+                    if (Equals(OptimizeType, ExportOptimize.CE) && GetCollisionEnergy(nodePep, nodeGroup, nodeTran, i) <= 0 &&
+                        (transitionWritten || i < OptimizeStepCount))
                     {
-                        // But avoid writing zero or negative CE values, which will just mess up actuisition
-                        // Always write the highest CE if no other transition has been written, even if it is
-                        // negative, since not doing so makes it a lot harder to understand why a particular
-                        // transition did not get written at all.
-                        if (Equals(OptimizeType, ExportOptimize.CE) && GetCollisionEnergy(nodePep, nodeGroup, nodeTran, i) <= 0)
-                        {
-                            if (transitionWritten || i < OptimizeStepCount)
-                                continue;
-                        }
-                        fileIterator.WriteTransition(this, nodePepGroup, nodePep, nodeGroup, nodeGroupPrimary, nodeTran, i, SortByMz);
-                        transitionWritten = true;
+                        continue;
                     }
+
+                    fileIterator.WriteTransition(this, nodePepGroup, nodePep, nodeGroup, nodeGroupPrimary, nodeTran, i, SortByMz);
+                    transitionWritten = true;
                 }
             }
         }
@@ -762,9 +763,14 @@ namespace pwiz.Skyline.Model
                                                 TransitionDocNode nodeTran,
                                                 int step);
 
+        protected double GetPrecursorMz(double precursorMz, int step)
+        {
+            return !IsolationList ? precursorMz : precursorMz + ChromatogramInfo.OPTIMIZE_PRECURSOR_SHIFT_SIZE * step;
+        }
+
         protected double GetProductMz(double productMz, int step)
         {
-            return productMz + ChromatogramInfo.OPTIMIZE_SHIFT_SIZE * step;
+            return productMz + ChromatogramInfo.OPTIMIZE_PRODUCT_SHIFT_SIZE * step;
         }
 
         protected double GetCollisionEnergy(PeptideDocNode nodePep,

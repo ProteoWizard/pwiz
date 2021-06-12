@@ -953,7 +953,7 @@ namespace pwiz.SkylineTestFunctional
                 double productMz = double.Parse(row[COL_PROD_MZ], cultureInfo);
                 double ce = double.Parse(row[COL_CE], cultureInfo);
                 if (precursorMz != lastPrecursorMz ||
-                    Math.Abs((productMz - lastProductMz) - ChromatogramInfo.OPTIMIZE_SHIFT_SIZE) > 0.0001)
+                    Math.Abs((productMz - lastProductMz) - ChromatogramInfo.OPTIMIZE_PRODUCT_SHIFT_SIZE) > 0.0001)
                 {
                     if (stepsSeen > 0)
                         Assert.AreEqual(stepCount, stepsSeen);

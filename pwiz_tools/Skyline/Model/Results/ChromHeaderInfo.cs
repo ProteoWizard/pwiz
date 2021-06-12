@@ -1926,7 +1926,7 @@ namespace pwiz.Skyline.Model.Results
         {
             return ChangeProp(ImClone(this), im =>
             {
-                im.Product = Product + step * ChromatogramInfo.OPTIMIZE_SHIFT_SIZE;
+                im.Product = Product + step * ChromatogramInfo.OPTIMIZE_PRODUCT_SHIFT_SIZE;
                 im.CollisionEnergy = 0;
             });
         }
@@ -2445,14 +2445,14 @@ namespace pwiz.Skyline.Model.Results
 
             // First back up to find the beginning
             while (i > startTran &&
-                   ChromatogramInfo.IsOptimizationSpacing(GetProductGlobal(i - 1), productMzCurrent))
+                   ChromatogramInfo.IsOptimizationSpacingProduct(GetProductGlobal(i - 1), productMzCurrent))
             {
                 productMzCurrent = GetProductGlobal(--i);
             }
             startOptTran = i;
             // Walk forward until the end
             while (i < endTran - 1 &&
-                ChromatogramInfo.IsOptimizationSpacing(productMzCurrent, GetProductGlobal(i + 1)))
+                ChromatogramInfo.IsOptimizationSpacingProduct(productMzCurrent, GetProductGlobal(i + 1)))
             {
                 productMzCurrent = GetProductGlobal(++i);
             }
@@ -2609,17 +2609,20 @@ namespace pwiz.Skyline.Model.Results
 
     public class ChromatogramInfo
     {
-        public const double OPTIMIZE_SHIFT_SIZE = 0.01;
-        private const double OPTIMIZE_SHIFT_THRESHOLD = 0.001;
+        public const double OPTIMIZE_PRECURSOR_SHIFT_SIZE = 0.01;
+        private const double OPTIMIZE_PRECURSOR_SHIFT_THRESHOLD = 0.001;
+        public const double OPTIMIZE_PRODUCT_SHIFT_SIZE = 0.01;
+        private const double OPTIMIZE_PRODUCT_SHIFT_THRESHOLD = 0.001;
 
-        public static bool IsOptimizationSpacing(double mz1, double mz2)
+        public static bool IsOptimizationSpacingPrecursor(double mz1, double mz2)
+        {
+            return mz1 <= mz2 && Math.Abs(mz2 - mz1 - OPTIMIZE_PRECURSOR_SHIFT_SIZE) <= OPTIMIZE_PRECURSOR_SHIFT_THRESHOLD;
+        }
+
+        public static bool IsOptimizationSpacingProduct(double mz1, double mz2)
         {
             // Must be ordered correctly to be optimization spacing
-            if (mz1 > mz2)
-                return false;
-
-            double delta = Math.Abs(Math.Abs(mz2 - mz1) - OPTIMIZE_SHIFT_SIZE);
-            return delta <= OPTIMIZE_SHIFT_THRESHOLD;
+            return mz1 <= mz2 && Math.Abs(mz2 - mz1 - OPTIMIZE_PRODUCT_SHIFT_SIZE) <= OPTIMIZE_PRODUCT_SHIFT_THRESHOLD;
         }
 
         private readonly ChromatogramGroupInfo _groupInfo;
