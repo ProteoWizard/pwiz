@@ -664,6 +664,7 @@ SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLevel detailLevel,
 pwiz::analysis::Spectrum3DPtr SpectrumList_Waters::spectrum3d(double scanStartTime, const boost::icl::interval_set<double>& driftTimeRanges) const { return pwiz::analysis::Spectrum3DPtr(); }
 bool SpectrumList_Waters::hasSonarFunctions() const { return false; }
 pair<int, int> SpectrumList_Waters::sonarMzToBinRange(double precursorMz, double tolerance) const { return pair<int, int>(); }
+double SpectrumList_Waters::sonarBinToPrecursorMz(int bin) const {return 0;}
 
 } // detail
 } // msdata
