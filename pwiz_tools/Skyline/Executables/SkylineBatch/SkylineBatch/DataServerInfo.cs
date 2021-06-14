@@ -115,7 +115,12 @@ namespace SkylineBatch
         public static DataServerInfo ReadXml(XmlReader reader, string folder)
         {
             if (XmlUtil.ReadNextElement(reader, "data_server"))
-                return ReadXmlFields(reader, folder);
+            {
+                var server = ReadXmlFields(reader, folder);
+                reader.Read();
+                return server;
+            }
+
             return null;
         }
 

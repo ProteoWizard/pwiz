@@ -302,7 +302,7 @@ namespace SkylineBatch
 
         public new static PanoramaFile ReadXml(XmlReader reader)
         {
-            if (reader.NodeType != XmlNodeType.Element || !XmlUtil.ReadUntilElement(reader)) return null;
+            if (reader.NodeType != XmlNodeType.Element && !XmlUtil.ReadUntilElement(reader)) return null;
             var templateReader = reader.ReadSubtree();
             if (!XmlUtil.ReadNextElement(templateReader, "panorama_file")) return null;
             var downloadFolder = templateReader.GetAttribute(Attr.DownloadFolder);
