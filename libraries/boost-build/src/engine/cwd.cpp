@@ -33,6 +33,10 @@
 
 
 static OBJECT * cwd_;
+namespace
+{
+    std::string cwd_s;
+}
 
 
 void cwd_init( void )
@@ -59,6 +63,7 @@ void cwd_init( void )
             OBJECT * const cwd = object_new( cwd_buffer );
             cwd_ = path_as_key( cwd );
             object_free( cwd );
+            cwd_s = cwd_buffer;
         }
         buffer_size *= 2;
         BJAM_FREE_RAW( buffer );
@@ -85,4 +90,10 @@ void cwd_done( void )
     assert( cwd_ );
     object_free( cwd_ );
     cwd_ = NULL;
+}
+
+
+const std::string & b2::cwd_str()
+{
+    return cwd_s;
 }

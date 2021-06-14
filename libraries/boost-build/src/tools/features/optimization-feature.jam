@@ -3,17 +3,43 @@
 # (See accompanying file LICENSE_1_0.txt or copy at
 # http://www.boost.org/LICENSE_1_0.txt)
 
-# TODO: Documentation.
-
 import feature ;
+
+#| tag::doc[]
+
+[[bbv2.builtin.features.optimization]]`optimization`::
+*Allowed values:* `off`, `speed`, `space`.
++
+Enables optimization. `speed` optimizes for faster code, `space` optimizes for
+smaller binary.
+
+|# # end::doc[]
 
 feature.feature optimization
     : off speed space
     : propagated ;
 
+#| tag::inline-doc[]
+
+[[bbv2.builtin.features.inlining]]`inlining`::
+*Allowed values:* `off`, `on`, `full`.
++
+Enables inlining.
+
+|# # end::inline-doc[]
+
 feature.feature inlining
     : off on full
     : propagated ;
+
+#| tag::vector-doc[]
+
+[[bbv2.builtin.features.vectorize]]`vectorize`::
+*Allowed values:* `off`, `on`, `full`.
++
+Enables vectorization.
+
+|# # end::vector-doc[]
 
 feature.feature vectorize
     : off on full

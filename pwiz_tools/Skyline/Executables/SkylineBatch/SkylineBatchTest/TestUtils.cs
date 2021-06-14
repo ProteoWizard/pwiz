@@ -22,10 +22,8 @@ using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SkylineBatch;
 using SharedBatch;
-using System.Configuration;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace SkylineBatchTest
 {
@@ -68,17 +66,16 @@ namespace SkylineBatchTest
 
         public static MainSettings GetChangedMainSettings(MainSettings baseSettings, Dictionary<string, object> changedVariables)
         {
-            var template = baseSettings.TemplateFilePath;
+            var template = baseSettings.Template;
             var analysisFolder = baseSettings.AnalysisFolderPath;
             var dataFolder = baseSettings.DataFolderPath;
             var annotationsFile = baseSettings.AnnotationsFilePath;
             var namingPattern = baseSettings.ReplicateNamingPattern;
-            var dependentConfig = baseSettings.DependentConfigName;
 
             foreach (var variable in changedVariables.Keys)
             {
-                if ("TemplateFilePath".Equals(variable))
-                    template = (string)changedVariables[variable];
+                if ("Template".Equals(variable))
+                    template = (SkylineTemplate)changedVariables[variable];
                 else if ("AnalysisFolderPath".Equals(variable))
                     analysisFolder = (string)changedVariables[variable];
                 else if ("DataFolderPath".Equals(variable))
@@ -87,10 +84,8 @@ namespace SkylineBatchTest
                     annotationsFile = (string)changedVariables[variable];
                 else if ("ReplicateNamingPattern".Equals(variable))
                     namingPattern = (string)changedVariables[variable];
-                else if ("DependentConfigName".Equals(variable))
-                    dependentConfig = (string)changedVariables[variable];
             }
-            return new MainSettings(template, analysisFolder, dataFolder, null,  annotationsFile, namingPattern, dependentConfig);
+            return new MainSettings(template, analysisFolder, dataFolder, null, annotationsFile, namingPattern);
         }
 
         public static FileSettings GetChangedFileSettings(FileSettings baseSettings,
@@ -175,7 +170,7 @@ namespace SkylineBatchTest
 
         public static MainSettings GetTestMainSettings()
         {
-            return new MainSettings(GetTestFilePath("emptyTemplate.sky"), GetTestFilePath("analysis"), GetTestFilePath("emptyData"), null, string.Empty,  string.Empty, string.Empty);
+            return new MainSettings(SkylineTemplate.ExistingTemplate(GetTestFilePath("emptyTemplate.sky")), GetTestFilePath("analysis"), GetTestFilePath("emptyData"), null, string.Empty, string.Empty);
         }
 
         public static FileSettings GetTestFileSettings()
@@ -225,8 +220,8 @@ namespace SkylineBatchTest
 
         public static SkylineBatchConfig GetFullyPopulatedConfig(string name = "TestConfig")
         {
-            var main = new MainSettings(GetTestFilePath("emptyTemplate.sky"), GetTestFilePath("analysis"),
-                GetTestFilePath("emptyData"), null,  GetTestFilePath("fakeAnnotations.csv"), "testNamingPattern", string.Empty);
+            var main = new MainSettings(SkylineTemplate.ExistingTemplate(GetTestFilePath("emptyTemplate.sky")), GetTestFilePath("analysis"),
+                GetTestFilePath("emptyData"), null, GetTestFilePath("fakeAnnotations.csv"), "testNamingPattern");
             var file = FileSettings.FromUi("5", "4", "3", true, true, true);
             var refine = new RefineSettings(new RefineInputObject() 
                 {
@@ -292,7 +287,7 @@ namespace SkylineBatchTest
         {
             logFolder = string.IsNullOrEmpty(logFolder) ? GetTestFilePath("OldLogs") : logFolder;
             var logName = "TestLog" + DateTime.Now.ToString("_HHmmssfff") + ".log";
-            return new Logger(Path.Combine(logFolder, logName), logName);
+            return new Logger(Path.Combine(logFolder, logName), logName, true);
         }
 
         public static void InitializeRInstallation()

@@ -2172,7 +2172,7 @@
     <value>グリッドに貼り付け可能なペプチドシークエンス、プリカーサーm/z値、プロダクトm/z値のある完全なトランジションリストから新しいSkylineドキュメントを開始します。</value>
   </data>
   <data name="MeasuredIon_Validate_Special_fragment_ions_must_have_at_least_one_fragmentation_residue" xml:space="preserve">
-    <value>特殊断片イオンでは、断片化の残留物が最低1つ以上必要です。</value>
+    <value>特殊断片イオンでは、断片化の残基が最低1つ以上必要です。</value>
   </data>
   <data name="PasteDlg_GetMoleculeTransitionGroup_The_precursor_m_z__0__is_not_measureable_with_your_current_instrument_settings_" xml:space="preserve">
     <value>現在の装置設定では、プリカーサーm/z{0}を測定することができません。</value>
@@ -6467,7 +6467,7 @@
     <value>「.group」ファイルを互換性のある「.group.xml」ファイルに変換するには、ProteinPilotソフトウェア（試用版または完全版）をインストールする必要があります。</value>
   </data>
   <data name="MeasuredIon_Validate_Special_fragment_ions_must_specify_the_terminal_side_of_the_amino_acid_residue_on_which_fragmentation_occurs" xml:space="preserve">
-    <value>特別断片イオンは、断片化が発生したアミノ酸残留物の末端側を指定する必要があります。</value>
+    <value>特別断片イオンは、断片化が発生したアミノ酸残基の末端側を指定する必要があります。</value>
   </data>
   <data name="HtmlFragment_HtmlFragment_No_data_specified" xml:space="preserve">
     <value>データが指定されていません</value>
@@ -10786,7 +10786,7 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
     <value>デコイが破棄されました</value>
   </data>
   <data name="ExportMethodDlg_OkDialog_All_targets_must_have_an_ion_mobility_value__These_can_be_set_explicitly_or_contained_in_an_ion_mobility_library_or_spectral_library__The_following_ion_mobility_values_are_missing_" xml:space="preserve">
-    <value>すべてのターゲットにはイオン移動度値が必要です。これらは明示的に設定することも、イオン移動度ライブラリやスペクトルライブラリに含むこともできます。以下のイオン移動度値が欠損しています。</value>
+    <value>すべてのターゲットにはイオン移動度値が必要です。これらは数値を入力して設定することも、イオン移動度ライブラリやスペクトルライブラリに含まれている場合もあります。以下のイオン移動度値が欠損しています。</value>
   </data>
   <data name="SchedulingGraphPropertyDlg_OkDialog_Template_file_is_not_valid_" xml:space="preserve">
     <value>テンプレートファイルが有効ではありません。</value>
@@ -11223,7 +11223,7 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
     <comment>This should match one of the options presented in EditPepModsDlg_EnsureLinkedPeptide_Discard_or_edit_disconnected_crosslinks</comment>
   </data>
   <data name="EditLinkedPeptidesDlg_OkDialog_Some_crosslinked_peptides_are_not_connected_" xml:space="preserve">
-    <value>クロスリンクされているペプチドの一部が結合しなくなっています。</value>
+    <value>クロスリンクされているペプチドの一部が結合していません。</value>
   </data>
   <data name="EditLinkedPeptidesDlg_MakeCrosslink_Invalid_crosslinker" xml:space="preserve">
     <value>無効なクロスリンカー</value>

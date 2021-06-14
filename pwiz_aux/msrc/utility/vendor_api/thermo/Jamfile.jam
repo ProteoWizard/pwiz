@@ -77,6 +77,8 @@ else if "x86" in $(PLATFORM)
         echo [ SHELL "copy \"$(MSFILEREADER_INSTALL_DIR)\\fregistry$(MSFILEREADER_SUFFIX).dll\" \"$(destination)\\$(PLATFORM)\"" ] ;
         RESCAN ;
     }
+
+    obj ScanFilter : ScanFilter.cpp ;
 }
 else
 {
@@ -95,7 +97,7 @@ rule vendor-api-requirements ( properties * )
         if ! <address-model>64 in $(properties)
         {
             result += <source>RawFileValues.cpp ;
-            result += <source>ScanFilter.cpp ;
+            result += <source>ScanFilter ;
         }
     }
     return $(result) [ vendor-api-usage-requirements $(properties) ] ;
@@ -119,7 +121,7 @@ rule vendor-api-usage-requirements ( properties * )
                 result += <assembly-dependency>$(API_PATH)/$(PLATFORM)/fregistry$(MSFILEREADER_SUFFIX).dll ;
                 result += <assembly-dependency>$(API_PATH)/$(PLATFORM)/fileio$(MSFILEREADER_SUFFIX).dll ;
                 result += <assembly-dependency>$(API_PATH)/EULA.MSFileReader ;
-                result += <library>/ext/boost//regex ;
+                #result += <library>/ext/boost//regex ;
                 #result += <library>shlwapi ;
             }
             else
