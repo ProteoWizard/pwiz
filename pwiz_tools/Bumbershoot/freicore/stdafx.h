@@ -42,7 +42,6 @@
     // use std min/max instead of Win32 macros
     #define NOMINMAX
 
-    #define _WIN32_WINNT    0x0400
     #ifndef _WINDOWS_
         #if defined(_AFXDLL) || defined(_ATL_STATIC_REGISTRY)
         #include <afx.h>
@@ -150,7 +149,7 @@
 #include <boost/foreach.hpp>
 #include <boost/range.hpp>
 #include <boost/format.hpp>
-#include <boost/logic/tribool.hpp>
+#include <boost/logic/tribool_io.hpp>
 
 
 #include "pwiz/utility/misc/Std.hpp"

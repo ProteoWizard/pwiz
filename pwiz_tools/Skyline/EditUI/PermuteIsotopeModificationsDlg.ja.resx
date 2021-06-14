@@ -193,8 +193,8 @@
     <value>終了しました</value>
   </data>
   <data name="radioButtonComplexPermutation.ToolTip" xml:space="preserve">
-    <value>標識残留物および非標識残留物の考えられる組み合わせそれぞれに対してプリカーサーを1個追加します。
-プリカーサー数は、考えられる標識残留物数の2の累乗となります。</value>
+    <value>標識残基および非標識残基の考えられる組み合わせそれぞれに対してプリカーサーを1個追加します。
+プリカーサー数は、考えられる標識残基の2の累乗となります。</value>
   </data>
   <data name="&gt;&gt;radioButtonComplexPermutation.Name" xml:space="preserve">
     <value>radioButtonComplexPermutation</value>
@@ -224,7 +224,7 @@
     <value>シンプル</value>
   </data>
   <data name="radioButtonSimplePermutation.ToolTip" xml:space="preserve">
-    <value>考えられる標識残留物数それぞれに対してプリカーサーを追加します。
+    <value>考えられる標識残基それぞれに対してプリカーサーを追加します。
 これはMS1を使用した標識形態の分析に適しています。</value>
   </data>
   <data name="&gt;&gt;radioButtonSimplePermutation.Name" xml:space="preserve">

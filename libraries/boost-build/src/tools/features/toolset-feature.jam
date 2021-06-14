@@ -3,9 +3,17 @@
 # (See accompanying file LICENSE_1_0.txt or copy at
 # http://www.boost.org/LICENSE_1_0.txt)
 
-# TODO: Documentation.
-
 import feature ;
+
+#| tag::doc[]
+
+[[bbv2.builtin.features.toolset]]`toolset`::
+*Allowed values:* any of the toolset modules.
++
+Selects the toolset that will be used to build binary targets. The full list of
+toolset modules is in the <<Builtin tools>> section.
+
+|# # end::doc[]
 
 feature.feature toolset
     :

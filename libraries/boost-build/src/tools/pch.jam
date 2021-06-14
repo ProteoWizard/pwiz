@@ -61,7 +61,7 @@ class pch-generator : generator
         {
             # Unless this generator is invoked as the top-most generator for a
             # main target, fail. This allows using 'H' type as input type for
-            # this generator, while preventing Boost.Build to try this generator
+            # this generator, while preventing B2 to try this generator
             # when not explicitly asked for.
             #
             # One bad example is msvc, where pch generator produces both PCH

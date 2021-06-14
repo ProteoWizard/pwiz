@@ -101,7 +101,6 @@ namespace SharedBatch
                 _message = value;
                 labelMessage.Text = TruncateMessage(_message);
                 int formGrowth = Math.Max(labelMessage.Height - _originalMessageHeight * 3, 0);
-                formGrowth = Math.Max(formGrowth, 0);
                 formGrowth = Math.Min(formGrowth, MaxHeight);
                 Height = _originalFormHeight + formGrowth;
             }

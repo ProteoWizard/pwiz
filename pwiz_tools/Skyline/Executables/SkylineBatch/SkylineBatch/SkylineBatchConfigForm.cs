@@ -33,7 +33,7 @@ namespace SkylineBatch
         // or replace an existing configuration.
         // Running configurations cannot be replaced, and will be opened in a read only mode.
 
-        private static int _selectedTab = 0;
+        private static int _selectedTab;
 
         private readonly IMainUiControl _mainControl;
         private readonly RDirectorySelector _rDirectorySelector;
@@ -43,11 +43,10 @@ namespace SkylineBatch
         private readonly RefineInputObject _refineInput;
         private readonly List<ReportInfo> _newReportList;
         private readonly Dictionary<string, string> _possibleTemplates;
-        private readonly SkylineBatchConfigManager _configManager;
         private SkylineSettings _currentSkylineSettings;
-        private readonly Image _downloadImage;
-        private readonly Image _downloadSelectedImage;
         private DataServerInfo _dataServer;
+        private PanoramaFile _panoramaTemplate;
+        private bool _showChangeAllSkylineSettings;
         public Control templateFileControl;
 
         private string _lastEnteredPath;
@@ -56,26 +55,20 @@ namespace SkylineBatch
         {
             InitializeComponent();
             Icon = Program.Icon();
-            _downloadImage = (Image)Resources.ResourceManager.GetObject("download");
-            _downloadSelectedImage = (Image)Resources.ResourceManager.GetObject("downloadSelected");
 
             _action = action;
             _refineInput = config != null ? config.RefineSettings.CommandValuesCopy : new RefineInputObject();
             _newReportList = new List<ReportInfo>();
             _rDirectorySelector = rDirectorySelector;
             _mainControl = mainControl;
-            _configManager = configManager;
             _possibleTemplates = configManager.GetRefinedTemplates();
+            var numConfigs = configManager.ConfigNamesAsObjectArray().Length;
+            _showChangeAllSkylineSettings = (numConfigs == 1 && _action != ConfigAction.Edit) || numConfigs > 1;
             if (_action == ConfigAction.Edit && config != null && _possibleTemplates.ContainsKey(config.Name))
                 _possibleTemplates.Remove(config.Name);
             if (config != null)
                 _configEnabled = config.Enabled;
             _isBusy = isBusy;
-
-            /*var dataServers = configManager.GetServerNames;
-            foreach (var serverName in dataServers)
-                comboDataServer.Items.Add(serverName);
-            comboDataServer.Items.Add("<Add>");*/
 
             InitInputFieldsFromConfig(config);
 
@@ -104,7 +97,7 @@ namespace SkylineBatch
         {
             textConfigName.Text = _action == ConfigAction.Add ? string.Empty : config.Name;
             textConfigName.TextChanged += textConfigName_TextChanged;
-            _lastEnteredPath = config != null ? config.MainSettings.TemplateFilePath : null;
+            _lastEnteredPath = config != null ? config.MainSettings.Template.DisplayPath : null;
 
             SetInitialMainSettings(config);
             SetInitialFileSettings(config);
@@ -166,15 +159,21 @@ namespace SkylineBatch
                 {
                     textAnalysisPath.Text = mainSettings.AnalysisFolderPath;
                     textReplicateNamingPattern.Text = mainSettings.ReplicateNamingPattern;
-                    if (mainSettings.WillDownloadData)
+                    if (mainSettings.Server != null)
                     {
                         _dataServer = mainSettings.Server;
                         ToggleDownloadData(true);
-                        /*comboDataServer.SelectedIndex = comboDataServer.Items.IndexOf(mainSettings.Server.Name);
-                        textDataNamingPatten.Text = mainSettings.DataNamingPattern;*/
+                    }
+
+                    var panoramaFile = mainSettings.Template.PanoramaFile;
+                    if (panoramaFile != null)
+                    {
+                        _panoramaTemplate = mainSettings.Template.PanoramaFile;
+                        ToggleDownloadTemplate(true);
                     }
                 }
-                templateFileControl.Text = mainSettings.TemplateFilePath;
+                templateFileControl.Text = mainSettings.Template.DisplayPath;
+                templateFileControl.TextChanged += templateFileControl_TextChanged;
                 textDataPath.Text = mainSettings.DataFolderPath;
                 textAnnotationsFile.Text = mainSettings.AnnotationsFilePath;
             }
@@ -183,7 +182,7 @@ namespace SkylineBatch
         private void ToggleDownloadData(bool downloading)
         {
             btnDownloadData.BackColor = downloading ? Color.SteelBlue : Color.Transparent;
-            btnDownloadData.Image = downloading ? _downloadSelectedImage : _downloadImage;
+            btnDownloadData.Image = downloading ? Resources.downloadSelected : Resources.download;
         }
 
         private MainSettings GetMainSettingsFromUi()
@@ -193,29 +192,48 @@ namespace SkylineBatch
             foreach (var configName in _possibleTemplates.Keys)
             {
                 if (_possibleTemplates[configName].Equals(templateFilePath))
-                {
                     dependentConfig = configName;
-                    break;
-                }
             }
+            var template = SkylineTemplate.FromUi(templateFilePath, dependentConfig, _panoramaTemplate);
 
             var analysisFolderPath = textAnalysisPath.Text;
             var dataFolderPath = textDataPath.Text;
             var server = _dataServer; // null if none specified
             var annotationsFilePath = textAnnotationsFile.Text;
             var replicateNamingPattern = textReplicateNamingPattern.Text;
-
-            return new MainSettings(templateFilePath, analysisFolderPath, dataFolderPath, server, annotationsFilePath, replicateNamingPattern, dependentConfig);
+            
+            return new MainSettings(template, analysisFolderPath, dataFolderPath, server, annotationsFilePath, replicateNamingPattern);
         }
+
+    
 
         private void btnDownloadData_Click(object sender, EventArgs e)
         {
-            var addServerForm = new AddServerForm(_dataServer);
+            var addServerForm = new AddServerForm(_dataServer, textDataPath.Text);
             if (DialogResult.OK == addServerForm.ShowDialog(this))
             {
                 _dataServer = addServerForm.Server;
                 ToggleDownloadData(_dataServer != null);
             }
+        }
+
+        private void btnDownloadTemplate_Click(object sender, EventArgs e)
+        {
+            var addPanoramaTemplate = new AddPanoramaTemplate(_panoramaTemplate != null ? _panoramaTemplate : null, templateFileControl.Text);
+            if (DialogResult.OK == addPanoramaTemplate.ShowDialog(this))
+            {
+                _panoramaTemplate = addPanoramaTemplate.PanoramaServer;
+                ToggleDownloadTemplate(_panoramaTemplate != null);
+            }
+        }
+
+        private void ToggleDownloadTemplate(bool downloading)
+        {
+            _panoramaTemplate = downloading ? _panoramaTemplate : null;
+            btnDownloadTemplate.BackColor = downloading ? Color.SteelBlue : Color.Transparent;
+            btnDownloadTemplate.Image = downloading ? Resources.downloadSelected : Resources.download;
+            if (_panoramaTemplate != null)
+                templateFileControl.Text = _panoramaTemplate.FilePath;
         }
 
         private void textConfigName_TextChanged(object sender, EventArgs e)
@@ -228,10 +246,71 @@ namespace SkylineBatch
 
         }
 
+        private void templateFileControl_TextChanged(object sender, EventArgs e)
+        {
+            // Check if combo box index was changed (handled by comboTemplateFile_SelectedIndexChanged)
+            if (templateFileControl is ComboBox && ((ComboBox)templateFileControl).SelectedIndex != -1)
+                return;
+            if (_panoramaTemplate != null && !templateFileControl.Text.Equals(_panoramaTemplate.FilePath))
+            {
+                var newText = templateFileControl.Text;
+                templateFileControl.Text = _panoramaTemplate.FilePath;
+                if (DialogResult.OK == AlertDlg.ShowOkCancel(this, Program.AppName(),
+                    Resources.SkylineBatchConfigForm_templateFileControl_TextChanged_Changing_the_template_file_path_will_stop_the_template_from_being_downloaded_through_Panorama__Are_you_sure_you_want_to_continue_)
+                )
+                {
+                    ToggleDownloadTemplate(false);
+                    templateFileControl.Text = newText;
+                }
+            }
+        }
+
+
+        private Timer _setComboTextTimer;
+
+        private void comboTemplateFile_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (_panoramaTemplate != null && comboTemplateFile.SelectedIndex != -1)
+            {
+                var newSelectedIndex = comboTemplateFile.SelectedIndex;
+                comboTemplateFile.Text = _panoramaTemplate.FilePath;
+                if (DialogResult.OK == AlertDlg.ShowOkCancel(this, Program.AppName(),
+                    Resources.SkylineBatchConfigForm_templateFileControl_TextChanged_Changing_the_template_file_path_will_stop_the_template_from_being_downloaded_through_Panorama__Are_you_sure_you_want_to_continue_)
+                )
+                {
+                    ToggleDownloadTemplate(false);
+                    comboTemplateFile.SelectedIndex = newSelectedIndex;
+                }
+                else
+                {
+                    templateFileControl.TextChanged -= templateFileControl_TextChanged;
+                    comboTemplateFile.SelectedIndex = -1;
+                    templateFileControl.TextChanged += templateFileControl_TextChanged;
+                    _setComboTextTimer = new Timer { Interval = 1 };
+                    _setComboTextTimer.Tick += (senderObj, eventArgs) =>
+                    {
+                        comboTemplateFile.Text = _panoramaTemplate.FilePath;
+                        _setComboTextTimer.Stop();
+                    };
+                    _setComboTextTimer.Start();
+                }
+            }
+        }
+
         private void btnSkylineFilePath_Click(object sender, EventArgs e)
         {
-            Control templatePathControl = ShowTemplateComboBox ? (Control)comboTemplateFile : textTemplateFile;
-            OpenFile(templatePathControl, TextUtil.FILTER_SKY);
+            if (_panoramaTemplate != null)
+            {
+                templateFileControl.TextChanged -= templateFileControl_TextChanged;
+                if (OpenFolder(templateFileControl))
+                {
+                    _panoramaTemplate = _panoramaTemplate.ReplacedFolder(templateFileControl.Text);
+                    templateFileControl.Text = _panoramaTemplate.FilePath;
+                }
+                templateFileControl.TextChanged += templateFileControl_TextChanged;
+                return;
+            }
+            OpenFile(templateFileControl, TextUtil.FILTER_SKY + "|" + TextUtil.FILTER_SKY_ZIP);
         }
 
         private void btnAnnotationsFile_Click(object sender, EventArgs e)
@@ -249,27 +328,6 @@ namespace SkylineBatch
             OpenFolder(textDataPath);
         }
 
-        /*private void comboDataServer_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            if (comboDataServer.SelectedIndex == comboDataServer.Items.Count - 1)
-            {
-                comboDataServer.SelectedIndexChanged -= comboDataServer_SelectedIndexChanged;
-                var addServerForm = new AddServerForm();
-                if (DialogResult.OK == addServerForm.ShowDialog(this))
-                {
-                    var server = (ServerInfo)addServerForm.Server;
-                    _configManager.AddValidServer(server);
-                    comboDataServer.Items.Insert(comboDataServer.Items.Count - 1, server.Name);
-                    comboDataServer.SelectedItem = server.Name;
-                }
-                else
-                {
-                    comboDataServer.SelectedIndex = -1;
-                }
-                comboDataServer.SelectedIndexChanged += comboDataServer_SelectedIndexChanged;
-            }
-        }*/
-
         private void OpenFile(Control textBox, string filter, bool save = false)
         {
             FileDialog dialog = save ? (FileDialog)new SaveFileDialog() : new OpenFileDialog();
@@ -284,7 +342,7 @@ namespace SkylineBatch
             }
         }
 
-        private void OpenFolder(Control textBox)
+        private bool OpenFolder(Control textBox)
         {
             var dialog = new FolderBrowserDialog();
             var initialPath = FileUtil.GetInitialDirectory(textBox.Text, _lastEnteredPath);
@@ -295,6 +353,7 @@ namespace SkylineBatch
                 textBox.Text = dialog.SelectedPath;
                 _lastEnteredPath = dialog.SelectedPath;
             }
+            return result == DialogResult.OK;
         }
 
         private void linkLabelRegex_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
@@ -501,7 +560,7 @@ namespace SkylineBatch
 
         private void CheckIfSkylineChanged()
         {
-            if (_isBusy) return; // can't change Skyline settings if config is running
+            if (_isBusy || !_showChangeAllSkylineSettings) return; // can't change Skyline settings if config is running
             SkylineSettings changedSkylineSettings;
             try
             {
@@ -514,7 +573,9 @@ namespace SkylineBatch
             if (changedSkylineSettings != null && !changedSkylineSettings.Equals(_currentSkylineSettings))
             {
                 _currentSkylineSettings = changedSkylineSettings;
-                _mainControl.ReplaceAllSkylineVersions(_currentSkylineSettings);
+                var replaced = _mainControl.ReplaceAllSkylineVersions(_currentSkylineSettings);
+                // only set this to false if user did not want to change all settings
+                _showChangeAllSkylineSettings = replaced ?? true;
             }
         }
 
