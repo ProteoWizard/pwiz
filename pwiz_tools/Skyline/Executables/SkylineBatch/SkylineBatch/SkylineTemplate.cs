@@ -160,7 +160,7 @@ namespace SkylineBatch
             var path = reader.GetAttribute(Attr.FilePath);
             var zippedPath = reader.GetAttribute(Attr.ZipFilePath);
             var dependentConfigName = reader.GetAttribute(Attr.DependentConfigName);
-            var panoramaFile = PanoramaFile.ReadXml(reader);
+            var panoramaFile = reader.ReadToDescendant("panorama_file") ? PanoramaFile.ReadXml(reader) : null;
 
             return new SkylineTemplate(path, zippedPath, dependentConfigName, panoramaFile);
         }
@@ -237,6 +237,11 @@ namespace SkylineBatch
             serverFiles.AddServer(this);
         }
 
+        public PanoramaFile ReplaceFolder(string newFolder)
+        {
+            return new PanoramaFile(this, newFolder, FileName);
+        }
+
 
         private enum Attr
         {
@@ -297,10 +302,12 @@ namespace SkylineBatch
 
         public new static PanoramaFile ReadXml(XmlReader reader)
         {
-            if (!reader.ReadToDescendant("panorama_file")) return null;
-            var downloadFolder = reader.GetAttribute(Attr.DownloadFolder);
-            var fileName = reader.GetAttribute(Attr.FileName);
-            var server = Server.ReadXml(reader);
+            if (reader.NodeType != XmlNodeType.Element || !XmlUtil.ReadUntilElement(reader)) return null;
+            var templateReader = reader.ReadSubtree();
+            if (!XmlUtil.ReadNextElement(templateReader, "panorama_file")) return null;
+            var downloadFolder = templateReader.GetAttribute(Attr.DownloadFolder);
+            var fileName = templateReader.GetAttribute(Attr.FileName);
+            var server = Server.ReadXml(templateReader);
 
             return new PanoramaFile(server, downloadFolder, fileName);
         }

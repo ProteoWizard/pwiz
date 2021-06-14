@@ -125,48 +125,11 @@ namespace SkylineBatch
             if ((runOption == RunBatchOptions.ALL || runOption == RunBatchOptions.DOWNLOAD_DATA) 
                 && Config.MainSettings.WillDownloadData)
             {
-                if (!Config.MainSettings.Template.Downloaded(serverFiles))
-                {
-                    _logger.Log(string.Format("Downloading {0}...", Config.MainSettings.Template.FileName()));
-                    var downloadCancellation = new CancellationTokenSource();
-                    _runningCancellationToken = downloadCancellation;
-                    var serverFile = serverFiles.GetFile(Config.MainSettings.Template.PanoramaFile);
-
-
-                    var wc = new WebDownloadClient((percent, error) =>
-                    {
-                        _logger.LogPercent(percent);
-                        if (error != null)
-                            throw error;
-                    }, downloadCancellation.Token);
-
-                    var panoramaFile = Config.MainSettings.Template.PanoramaFile;
-                    var tries = 0;
-                    while (tries < 3)
-                    {
-                        if (tries > 0) _logger.Log("Trying again...");
-                        try
-                        {
-                            wc.DownloadAsync(serverFile.ServerInfo.URI, panoramaFile.FilePath, serverFile.ServerInfo.Username, serverFile.ServerInfo.Password, serverFile.Size);
-                            break;
-                        }
-                        catch (Exception e)
-                        {
-                            if (!IsRunning())
-                                break;
-                            _logger.Log(e.Message);
-                            _logger.LogPercent(-1);
-                            tries++;
-                        }
-                    }
-
-                    if (tries == 3)
-                    {
-                        _logger.LogError("Error downloading Panorama template file.");
-                        ChangeStatus(RunnerStatus.Error);
-                    }
-                }
+                if (Config.MainSettings.Template.PanoramaFile != null)
+                    DownloadPanoramaFile(serverFiles, Config.MainSettings.Template.PanoramaFile);
                 await DownloadData(serverFiles);
+                if(Config.MainSettings.AnnotationsDownload != null)
+                    DownloadPanoramaFile(serverFiles, Config.MainSettings.AnnotationsDownload);
             }
             
             if ((runOption == RunBatchOptions.ALL ||
@@ -298,6 +261,51 @@ namespace SkylineBatch
                 if (!commandWriter.CurrentSkylineFile.Equals(Config.MainSettings.GetResultsFilePath()))
                     Config.WriteOpenSkylineResultsCommand(commandWriter);
                 Config.WriteResultsFileReportCommands(commandWriter);
+            }
+        }
+
+        private void DownloadPanoramaFile(ServerFilesManager serverFiles, PanoramaFile panoramaFile)
+        {
+            if (!IsRunning()) return;
+            var serverFile = serverFiles.GetFile(panoramaFile);
+            var filePath = Path.Combine(serverFile.DownloadFolder, serverFile.FileName);
+            if (File.Exists(filePath) && new FileInfo(filePath).Length == serverFile.Size) return;
+
+            _logger.Log(string.Format("Downloading {0}...", panoramaFile.FileName));
+            var downloadCancellation = new CancellationTokenSource();
+            _runningCancellationToken = downloadCancellation;
+
+
+            var wc = new WebDownloadClient((percent, error) =>
+            {
+                _logger.LogPercent(percent);
+                if (error != null)
+                    throw error;
+            }, downloadCancellation.Token);
+            
+            var tries = 0;
+            while (tries < 3)
+            {
+                if (tries > 0) _logger.Log("Trying again...");
+                try
+                {
+                    wc.DownloadAsync(serverFile.ServerInfo.URI, panoramaFile.FilePath, serverFile.ServerInfo.Username, serverFile.ServerInfo.Password, serverFile.Size);
+                    break;
+                }
+                catch (Exception e)
+                {
+                    if (!IsRunning())
+                        break;
+                    _logger.Log(e.Message);
+                    _logger.LogPercent(-1);
+                    tries++;
+                }
+            }
+
+            if (tries == 3)
+            {
+                _logger.LogError("Error downloading Panorama template file.");
+                ChangeStatus(RunnerStatus.Error);
             }
         }
 

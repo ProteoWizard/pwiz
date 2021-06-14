@@ -952,6 +952,16 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to A file path for a downloaded annotations file is required. Please add an annotations file path..
+        /// </summary>
+        public static string MainSettings_ValidateAnnotationsFile_A_file_path_for_a_downloaded_annotations_file_is_required__Please_add_an_annotations_file_path_ {
+            get {
+                return ResourceManager.GetString("MainSettings_ValidateAnnotationsFile_A_file_path_for_a_downloaded_annotations_fil" +
+                        "e_is_required__Please_add_an_annotations_file_path_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to annotations file.
         /// </summary>
         public static string MainSettings_ValidateAnnotationsFile_annotations_file {
@@ -1689,6 +1699,17 @@ namespace SkylineBatch.Properties {
                 return ResourceManager.GetString("SkylineBatchConfigForm_templateFileControl_TextChanged_Changing_the_template_file" +
                         "_path_will_stop_the_template_from_being_downloaded_through_Panorama__Are_you_sur" +
                         "e_you_want_to_continue_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Changing the annotations file path with prevent it from being downloaded through Panorama. Are you sure you want to continue?.
+        /// </summary>
+        public static string SkylineBatchConfigForm_textAnnotationsFile_TextChanged_Changing_the_annotations_file_path_with_prevent_it_from_being_downloaded_through_Panorama__Are_you_sure_you_want_to_continue_ {
+            get {
+                return ResourceManager.GetString("SkylineBatchConfigForm_textAnnotationsFile_TextChanged_Changing_the_annotations_f" +
+                        "ile_path_with_prevent_it_from_being_downloaded_through_Panorama__Are_you_sure_yo" +
+                        "u_want_to_continue_", resourceCulture);
             }
         }
         

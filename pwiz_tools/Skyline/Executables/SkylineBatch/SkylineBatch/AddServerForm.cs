@@ -41,6 +41,11 @@ namespace SkylineBatch
             else
             {
                 Server = GetServerFromUi();
+                if (Server == null)
+                {
+                    DialogResult = DialogResult.OK;
+                    return;
+                }
                 serverConnector.GetFiles(Server, out Exception error);
                 if (error != null)
                     AlertDlg.ShowError(this, Program.AppName(), error.Message);

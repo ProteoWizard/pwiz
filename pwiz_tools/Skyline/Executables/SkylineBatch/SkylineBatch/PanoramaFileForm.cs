@@ -72,7 +72,6 @@ namespace SkylineBatch
 
             PanoramaServer = panoramaFile;
             DialogResult = DialogResult.OK;
-            RunUi(Close);
         }
 
         private void CancelValidate()

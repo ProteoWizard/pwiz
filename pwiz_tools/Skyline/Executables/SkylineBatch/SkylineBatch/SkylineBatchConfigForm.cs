@@ -165,12 +165,17 @@ namespace SkylineBatch
                         _dataServer = mainSettings.Server;
                         ToggleDownloadData(true);
                     }
-
-                    var panoramaFile = mainSettings.Template.PanoramaFile;
-                    if (panoramaFile != null)
+                    
+                    if (mainSettings.Template.PanoramaFile != null)
                     {
                         _panoramaTemplate = mainSettings.Template.PanoramaFile;
                         ToggleDownloadTemplate(true);
+                    }
+                    
+                    if (mainSettings.AnnotationsDownload != null)
+                    {
+                        _panoramaAnnotations = mainSettings.AnnotationsDownload;
+                        ToggleDownloadAnnotations(true);
                     }
                 }
                 templateFileControl.Text = mainSettings.Template.DisplayPath;
@@ -201,7 +206,7 @@ namespace SkylineBatch
             var dataFolderPath = textDataPath.Text;
             var server = (_dataServer != null) ? DataServerInfo.ReplaceFolder(_dataServer, textDataPath.Text) : null; // null if none specified
             var annotationsFilePath = textAnnotationsFile.Text;
-            var annotationsDownload = (_panoramaAnnotations != null) ? new PanoramaFile(_panoramaAnnotations, Path.GetDirectoryName(annotationsFilePath), _panoramaAnnotations.FileName) : null; // null if none specified
+            var annotationsDownload = _panoramaAnnotations != null ? new PanoramaFile(_panoramaAnnotations, !string.IsNullOrEmpty(annotationsFilePath) ? Path.GetDirectoryName(annotationsFilePath) : string.Empty, _panoramaAnnotations.FileName) : null; // null if none specified
             var replicateNamingPattern = textReplicateNamingPattern.Text;
             
             return new MainSettings(template, analysisFolderPath, dataFolderPath, server, annotationsFilePath, annotationsDownload, replicateNamingPattern);
@@ -286,6 +291,22 @@ namespace SkylineBatch
             }
         }
 
+        private void textAnnotationsFile_TextChanged(object sender, EventArgs e)
+        {
+            if (_panoramaAnnotations != null && !textAnnotationsFile.Text.Equals(_panoramaAnnotations.FilePath))
+            {
+                var newText = textAnnotationsFile.Text;
+                textAnnotationsFile.Text = _panoramaAnnotations.FilePath;
+                if (DialogResult.OK == AlertDlg.ShowOkCancel(this, Program.AppName(),
+                    Resources.SkylineBatchConfigForm_textAnnotationsFile_TextChanged_Changing_the_annotations_file_path_with_prevent_it_from_being_downloaded_through_Panorama__Are_you_sure_you_want_to_continue_)
+                )
+                {
+                    ToggleDownloadAnnotations(false);
+                    textAnnotationsFile.Text = newText;
+                }
+            }
+        }
+
 
         private Timer _setComboTextTimer;
 
@@ -336,6 +357,17 @@ namespace SkylineBatch
 
         private void btnAnnotationsFile_Click(object sender, EventArgs e)
         {
+            if (_panoramaAnnotations != null)
+            {
+                textAnnotationsFile.TextChanged -= textAnnotationsFile_TextChanged;
+                if (OpenFolder(textAnnotationsFile))
+                {
+                    _panoramaAnnotations = _panoramaAnnotations.ReplacedFolder(textAnnotationsFile.Text);
+                    textAnnotationsFile.Text = _panoramaAnnotations.FilePath;
+                }
+                textAnnotationsFile.TextChanged += textAnnotationsFile_TextChanged;
+                return;
+            }
             OpenFile(textAnnotationsFile, TextUtil.FILTER_CSV);
         }
 

@@ -106,8 +106,9 @@ namespace SkylineBatch
             var dataValidator = mainSettings.Server != null ? MainSettings.ValidateDataFolderWithServer : (Validator)MainSettings.ValidateDataFolderWithoutServer;
             var validDataFolderPath = await GetValidPath(Resources.InvalidConfigSetupForm_FixInvalidMainSettings_data_folder, 
                 mainSettings.DataFolderPath, dataValidator, null, PathDialogOptions.Folder);
+            var annotationsValidator = mainSettings.AnnotationsDownload != null ? MainSettings.ValidateAnnotationsWithServer : (Validator)MainSettings.ValidateAnnotationsWithoutServer;
             var validAnnotationsFilePath = await GetValidPath(Resources.InvalidConfigSetupForm_FixInvalidMainSettings_annotations_file, mainSettings.AnnotationsFilePath,
-                MainSettings.ValidateAnnotationsFile, TextUtil.FILTER_CSV, PathDialogOptions.File);
+                annotationsValidator, TextUtil.FILTER_CSV, PathDialogOptions.File);
             var validAnnotationsDownload =
                 !string.IsNullOrEmpty(validAnnotationsFilePath) && mainSettings.AnnotationsDownload != null
                     ? new PanoramaFile(mainSettings.AnnotationsDownload,
