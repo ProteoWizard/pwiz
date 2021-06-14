@@ -445,7 +445,7 @@ namespace TestPerf
                 importPeptideSearchDlg.TransitionSettingsControl.MinIonMz = 50;
                 importPeptideSearchDlg.TransitionSettingsControl.MaxIonMz = 1500;
                 importPeptideSearchDlg.TransitionSettingsControl.IonRangeFrom = TransitionFilter.StartFragmentFinder.MZ_PRECURSOR.Label;
-                importPeptideSearchDlg.TransitionSettingsControl.IonRangeTo = TransitionFilter.EndFragmentFinder.IONS_3.Label;
+                importPeptideSearchDlg.TransitionSettingsControl.IonRangeTo = TransitionFilter.EndFragmentFinder.IONS_6.Label;
                 importPeptideSearchDlg.TransitionSettingsControl.ExclusionUseDIAWindow = true;
                 importPeptideSearchDlg.TransitionSettingsControl.PeptidePrecursorCharges = new[]
                 {
@@ -464,6 +464,8 @@ namespace TestPerf
                         IonType.y, IonType.b    // Removes precursor
                     };
                 }
+                importPeptideSearchDlg.TransitionSettingsControl.IonCount = 6;
+                importPeptideSearchDlg.TransitionSettingsControl.MinIonCount = 6;
                 // Verify other values shown in the tutorial
                 Assert.AreEqual(6, importPeptideSearchDlg.TransitionSettingsControl.IonCount);
                 Assert.AreEqual(6, importPeptideSearchDlg.TransitionSettingsControl.MinIonCount);
@@ -1037,7 +1039,7 @@ namespace TestPerf
             }
             else
             {
-                WaitForConditionUI(() => lowerBoundCount.Value < GetBarCount(barGraph) && GetBarCount(barGraph) < barCount,
+                WaitForConditionUI(() => lowerBoundCount.Value < GetBarCount(barGraph) && GetBarCount(barGraph) <= barCount,
                     () => string.Format("Expecting < {0} bars, actual {1} bars", barCount, GetBarCount(barGraph)));
             }
         }

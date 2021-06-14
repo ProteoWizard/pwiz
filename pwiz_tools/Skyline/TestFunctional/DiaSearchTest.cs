@@ -116,8 +116,8 @@ namespace pwiz.SkylineTestFunctional
 
                 FastaPath = Path.Combine(diaUmpireTestDataPath, "Hoofnagle_10xDil_SWATH.fasta"),
 
-                Initial = new TestDetails.DocumentCounts { ProteinCount = 268, PeptideCount = 93, PrecursorCount = 94, TransitionCount = 846 },
-                Final = new TestDetails.DocumentCounts { ProteinCount = 90, PeptideCount = 93, PrecursorCount = 94, TransitionCount = 846 },
+                Initial = new TestDetails.DocumentCounts { ProteinCount = 268, PeptideCount = 42, PrecursorCount = 43, TransitionCount = 387 },
+                Final = new TestDetails.DocumentCounts { ProteinCount = 39, PeptideCount = 42, PrecursorCount = 43, TransitionCount = 387 },
 
                 EditIsolationSchemeAction = (importPeptideSearchDlg, isolationScheme) =>
                 {
@@ -245,6 +245,8 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.transition_settings_page);
+                Assert.AreEqual(TransitionFilter.StartFragmentFinder.ION_3.Label, importPeptideSearchDlg.TransitionSettingsControl.IonRangeFrom);
+                Assert.AreEqual(TransitionFilter.EndFragmentFinder.LAST_ION.Label, importPeptideSearchDlg.TransitionSettingsControl.IonRangeTo);
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
 
