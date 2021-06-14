@@ -21,7 +21,7 @@ using hp_cxx : [version] : [c++-compile-command] : [compiler options] ;
 This statement may be repeated several times, if you want to configure
 several versions of the compiler.
 
-If the command is not specified, Boost.Build will search for a binary
+If the command is not specified, B2 will search for a binary
 named `hp_cxx` in PATH.
 
 The following options can be provided, using
@@ -86,9 +86,9 @@ generators.override hp_cxx.searched-lib-generator : searched-lib-generator ;
 rule init ( version ? : command * : options * )
 {
     local condition = [ common.check-init-parameters hp_cxx : version $(version) ] ;
-    
+
     local command = [ common.get-invocation-command hp_cxx : cxx : $(command) ] ;
-    
+
     if $(command)
     {
         local root = [ common.get-absolute-tool-path $(command[-1]) ] ;
@@ -96,12 +96,12 @@ rule init ( version ? : command * : options * )
         if $(root)
         {
             flags hp_cxx .root $(condition) : "\"$(root)\"/" ;
-        }        
-    }      
+        }
+    }
     # If we can't find 'cxx' anyway, at least show 'cxx' in the commands
     command ?= cxx ;
-        
-    common.handle-options hp_cxx : $(condition) : $(command) : $(options) ;               
+
+    common.handle-options hp_cxx : $(condition) : $(command) : $(options) ;
 }
 
 generators.register-c-compiler hp_cxx.compile.c++ : CPP : OBJ : <toolset>hp_cxx ;
