@@ -108,9 +108,14 @@ namespace SkylineBatch
                 mainSettings.DataFolderPath, dataValidator, null, PathDialogOptions.Folder);
             var validAnnotationsFilePath = await GetValidPath(Resources.InvalidConfigSetupForm_FixInvalidMainSettings_annotations_file, mainSettings.AnnotationsFilePath,
                 MainSettings.ValidateAnnotationsFile, TextUtil.FILTER_CSV, PathDialogOptions.File);
+            var validAnnotationsDownload =
+                !string.IsNullOrEmpty(validAnnotationsFilePath) && mainSettings.AnnotationsDownload != null
+                    ? new PanoramaFile(mainSettings.AnnotationsDownload,
+                        Path.GetDirectoryName(validAnnotationsFilePath), mainSettings.AnnotationsDownload.FileName)
+                    : null;
 
-            return new MainSettings(validTemplate, validAnalysisFolderPath, validDataFolderPath, mainSettings.Server, 
-                validAnnotationsFilePath, mainSettings.ReplicateNamingPattern);
+            return new MainSettings(validTemplate, validAnalysisFolderPath, validDataFolderPath, mainSettings.Server,
+                validAnnotationsFilePath, validAnnotationsDownload, mainSettings.ReplicateNamingPattern);
         }
 
         private async Task<RefineSettings> FixInvalidRefineSettings()

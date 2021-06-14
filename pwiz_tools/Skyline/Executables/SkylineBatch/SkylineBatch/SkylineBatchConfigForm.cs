@@ -46,6 +46,7 @@ namespace SkylineBatch
         private SkylineSettings _currentSkylineSettings;
         private DataServerInfo _dataServer;
         private PanoramaFile _panoramaTemplate;
+        private PanoramaFile _panoramaAnnotations;
         private bool _showChangeAllSkylineSettings;
         public Control templateFileControl;
 
@@ -200,9 +201,10 @@ namespace SkylineBatch
             var dataFolderPath = textDataPath.Text;
             var server = (_dataServer != null) ? DataServerInfo.ReplaceFolder(_dataServer, textDataPath.Text) : null; // null if none specified
             var annotationsFilePath = textAnnotationsFile.Text;
+            var annotationsDownload = (_panoramaAnnotations != null) ? new PanoramaFile(_panoramaAnnotations, Path.GetDirectoryName(annotationsFilePath), _panoramaAnnotations.FileName) : null; // null if none specified
             var replicateNamingPattern = textReplicateNamingPattern.Text;
             
-            return new MainSettings(template, analysisFolderPath, dataFolderPath, server, annotationsFilePath, replicateNamingPattern);
+            return new MainSettings(template, analysisFolderPath, dataFolderPath, server, annotationsFilePath, annotationsDownload, replicateNamingPattern);
         }
 
     
@@ -219,12 +221,31 @@ namespace SkylineBatch
 
         private void btnDownloadTemplate_Click(object sender, EventArgs e)
         {
-            var addPanoramaTemplate = new AddPanoramaTemplate(_panoramaTemplate != null ? _panoramaTemplate : null, templateFileControl.Text);
+            var addPanoramaTemplate = new PanoramaFileForm(_panoramaTemplate != null ? _panoramaTemplate : null, templateFileControl.Text, Resources.SkylineBatchConfigForm_btnDownloadTemplate_Click_Download_Template_From_Panorama);
             if (DialogResult.OK == addPanoramaTemplate.ShowDialog(this))
             {
                 _panoramaTemplate = addPanoramaTemplate.PanoramaServer;
                 ToggleDownloadTemplate(_panoramaTemplate != null);
             }
+        }
+
+        private void btnDownloadAnnotations_Click(object sender, EventArgs e)
+        {
+            var addPanoramaAnnotations = new PanoramaFileForm(_panoramaAnnotations != null ? _panoramaAnnotations : null, textAnnotationsFile.Text, Resources.SkylineBatchConfigForm_btnDownloadAnnotations_Click_Download_Annotations_From_Panorama);
+            if (DialogResult.OK == addPanoramaAnnotations.ShowDialog(this))
+            {
+                _panoramaAnnotations = addPanoramaAnnotations.PanoramaServer;
+                ToggleDownloadAnnotations(_panoramaAnnotations != null);
+            }
+        }
+
+        private void ToggleDownloadAnnotations(bool downloading)
+        {
+            _panoramaAnnotations = downloading ? _panoramaAnnotations : null;
+            btnDownloadAnnotations.BackColor = downloading ? Color.SteelBlue : Color.Transparent;
+            btnDownloadAnnotations.Image = downloading ? Resources.downloadSelected : Resources.download;
+            if (_panoramaAnnotations != null)
+                textAnnotationsFile.Text = _panoramaAnnotations.FilePath;
         }
 
         private void ToggleDownloadTemplate(bool downloading)

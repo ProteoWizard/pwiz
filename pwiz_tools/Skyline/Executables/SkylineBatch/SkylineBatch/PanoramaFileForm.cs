@@ -6,16 +6,17 @@ using SkylineBatch.Properties;
 
 namespace SkylineBatch
 {
-    public partial class AddPanoramaTemplate : Form
+    public partial class PanoramaFileForm : Form
     {
         //private FilePathControl _folderControl;
         private string _folderPath;
         private CancellationTokenSource _cancelSource;
 
-        public AddPanoramaTemplate(Server editingServer, string path)
+        public PanoramaFileForm(Server editingServer, string path, string title)
         {
             InitializeComponent();
             Icon = Program.Icon();
+            Text = title;
 
             path = path ?? string.Empty;
             _folderPath = FileUtil.GetInitialDirectory(path);

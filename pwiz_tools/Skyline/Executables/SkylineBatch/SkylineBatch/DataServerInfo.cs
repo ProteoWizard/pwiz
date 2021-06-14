@@ -24,7 +24,7 @@ namespace SkylineBatch
             {
                 throw new ArgumentException(Resources.DataServerInfo_ServerFromUi_Error_parsing_the_URL__Please_correct_the_URL_and_try_again_);
             }
-            ValidateNamingPattern(namingPattern);
+            ValidateUsernamePassword(userName, password);
 
             return new DataServerInfo(uri, userName, password, namingPattern, folder);
         }
@@ -36,8 +36,7 @@ namespace SkylineBatch
 
         private DataServerInfo(Uri server, string userName, string password, string namingPattern, string folder) : base(server, userName, password)
         {
-            //_server = new Server(server, userName, password);
-            DataNamingPattern = namingPattern ?? string.Empty;
+            DataNamingPattern = namingPattern ?? ".*";
             Folder = folder;
         }
 
@@ -76,10 +75,14 @@ namespace SkylineBatch
             return new DataServerInfo(URI, Username, Password, DataNamingPattern, Folder);
         }
 
-        public static void ValidateNamingPattern(string dataNamingPattern)
+        public static void ValidateUsernamePassword(string username, string password)
         {
-            if (string.IsNullOrEmpty(dataNamingPattern))
-                throw new ArgumentException(Resources.DataServerInfo_ValidateNamingPattern_A_data_naming_pattern_is_required_for_downloaded_data__Please_add_a_data_naming_pattern_);
+            if (string.IsNullOrEmpty(username) && string.IsNullOrEmpty(password))
+                return;
+            if (string.IsNullOrEmpty(username))
+                throw new ArgumentException(Resources.DataServerInfo_ValidateUsernamePassword_Username_cannot_be_empty_if_the_server_has_a_password__Please_enter_a_username_);
+            if (string.IsNullOrEmpty(password))
+                throw new ArgumentException(Resources.DataServerInfo_ValidateUsernamePassword_Password_cannot_be_empty_if_the_server_has_a_username__Please_enter_a_password_);
         }
 
         private enum Attr
@@ -130,7 +133,7 @@ namespace SkylineBatch
             return new DataServerInfo(uri, username, password, dataNamingPattern, folder);
         }
 
-        protected bool Equals(DataServerInfo other)
+        /*protected bool Equals(DataServerInfo other)
         {
             return string.Equals(Username, other.Username) &&
                    string.Equals(Password, other.Password) &&
@@ -148,8 +151,8 @@ namespace SkylineBatch
 
         public override int GetHashCode()
         {
-            return DataNamingPattern.GetHashCode();
-        }
+            return base.GetHashCode();
+        }*/
 
     }
 }

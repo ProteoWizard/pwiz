@@ -29,8 +29,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>153</ApplicationRevision>
-    <ApplicationVersion>21.1.1.153</ApplicationVersion>
+    <ApplicationRevision>162</ApplicationRevision>
+    <ApplicationVersion>21.1.1.162</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -111,8 +111,8 @@
     <Content Include="SkylineBatch_configs.ico">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <EmbeddedResource Include="AddPanoramaTemplate.resx">
-      <DependentUpon>AddPanoramaTemplate.cs</DependentUpon>
+    <EmbeddedResource Include="PanoramaFileForm.resx">
+      <DependentUpon>PanoramaFileForm.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="AddServerForm.resx">
@@ -168,11 +168,11 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AddPanoramaTemplate.cs">
+    <Compile Include="PanoramaFileForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="AddPanoramaTemplate.Designer.cs">
-      <DependentUpon>AddPanoramaTemplate.cs</DependentUpon>
+    <Compile Include="PanoramaFileForm.Designer.cs">
+      <DependentUpon>PanoramaFileForm.cs</DependentUpon>
     </Compile>
     <Compile Include="AddServerForm.cs">
       <SubType>Form</SubType>

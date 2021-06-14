@@ -35,12 +35,13 @@ namespace SkylineBatch
         {
             if (servers == null)
                 servers = _fileList.Keys.ToList();
+            if (servers.Count == 0) return;
 
             var serverNum = 0.0;
-            doOnProgress(0,
-                (int)(1.0 / servers.Count * 100));
             foreach (var server in servers)
             {
+                doOnProgress((int)serverNum / servers.Count * 100,
+                    (int)(serverNum + 1.0) / servers.Count * 100);
                 if (cancelToken.IsCancellationRequested) break;
                 try
                 {
@@ -52,8 +53,6 @@ namespace SkylineBatch
                 }
 
                 serverNum++;
-                doOnProgress((int)serverNum / servers.Count * 100,
-                    (int)(serverNum + 1.0) / servers.Count * 100);
             }
         }
 

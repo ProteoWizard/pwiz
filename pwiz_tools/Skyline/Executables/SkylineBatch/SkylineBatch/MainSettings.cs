@@ -35,13 +35,14 @@ namespace SkylineBatch
         // IMMUTABLE - all fields are readonly strings/objects
 
         public MainSettings(SkylineTemplate skylineTemplate, string analysisFolderPath, string dataFolderPath,
-            DataServerInfo server, string annotationsFilePath, string replicateNamingPattern)
+            DataServerInfo server, string annotationsFilePath, PanoramaFile annotationsDownload, string replicateNamingPattern)
         {
             Template = skylineTemplate;
             AnalysisFolderPath = analysisFolderPath;
             DataFolderPath = dataFolderPath;
             Server = server;
             AnnotationsFilePath = annotationsFilePath ?? string.Empty;
+            AnnotationsDownload = annotationsDownload;
             ReplicateNamingPattern = replicateNamingPattern ?? string.Empty;
         }
 
@@ -55,6 +56,8 @@ namespace SkylineBatch
         public readonly DataServerInfo Server;
 
         public readonly string AnnotationsFilePath;
+
+        public readonly PanoramaFile AnnotationsDownload;
 
         public readonly string ReplicateNamingPattern;
 
@@ -77,7 +80,7 @@ namespace SkylineBatch
         {
             var independentTemplate = SkylineTemplate.ExistingTemplate(Template.FilePath);
             return new MainSettings(independentTemplate, AnalysisFolderPath, DataFolderPath, Server,
-                AnnotationsFilePath, ReplicateNamingPattern);
+                AnnotationsFilePath, AnnotationsDownload, ReplicateNamingPattern);
         }
 
         public MainSettings UpdateDependent(string newName, string newFilePath)
@@ -85,7 +88,7 @@ namespace SkylineBatch
             if (string.IsNullOrEmpty(newFilePath)) return WithoutDependency();
             var newTemplate = SkylineTemplate.DependentTemplate(newFilePath, newName);
             return new MainSettings(newTemplate, AnalysisFolderPath, DataFolderPath, Server,
-                 AnnotationsFilePath, ReplicateNamingPattern);
+                 AnnotationsFilePath, AnnotationsDownload, ReplicateNamingPattern);
         }
 
         public void CreateAnalysisFolderIfNonexistent()
@@ -144,14 +147,16 @@ namespace SkylineBatch
 
             if (hasServer)
             {
+                var directoryExists = false;
                 try
                 {
-                    Directory.Exists(Path.GetDirectoryName(dataFolder));
+                    directoryExists = Directory.Exists(Path.GetDirectoryName(dataFolder));
                 }
                 catch (Exception)
                 {
-                    throw new ArgumentException(string.Format(Resources.MainSettings_ValidateAnalysisFolder_The__parent_directory_of_the_data_folder__0__does_not_exist_1, dataFolder));
                 }
+                if (!directoryExists)
+                    throw new ArgumentException(string.Format(Resources.MainSettings_ValidateAnalysisFolder_The__parent_directory_of_the_data_folder__0__does_not_exist_1, dataFolder));
             }
             FileUtil.ValidateNotInDownloads(dataFolder, Resources.MainSettings_ValidateDataFolder_data_folder);
             if (!hasServer && !Directory.GetFiles(dataFolder).Any())
@@ -183,9 +188,10 @@ namespace SkylineBatch
                     Server != null || preferReplace, out string replacedDataPath);
             var annotationsReplaced =
                 TextUtil.SuccessfulReplace(ValidateAnnotationsFile, oldRoot, newRoot, AnnotationsFilePath, preferReplace, out string replacedAnnotationsPath);
+            var annotationsDownload = AnnotationsDownload != null && !string.IsNullOrEmpty(replacedAnnotationsPath) ? new PanoramaFile(AnnotationsDownload, Path.GetDirectoryName(replacedAnnotationsPath), AnnotationsDownload.FileName) : null;
 
             pathReplacedMainSettings = new MainSettings(replacedTemplate, replacedAnalysisPath, replacedDataPath,
-                Server, replacedAnnotationsPath, ReplicateNamingPattern);
+                Server, replacedAnnotationsPath, annotationsDownload, ReplicateNamingPattern);
 
             return templateReplaced || analysisReplaced || dataReplaced || annotationsReplaced;
         }
@@ -241,8 +247,9 @@ namespace SkylineBatch
             var oldServer = DataServerInfo.ReadOldXml(reader, dataFolderPath);
             var template = oldTemplate ?? SkylineTemplate.ReadXml(reader);
             var server = oldServer ?? DataServerInfo.ReadXml(reader, dataFolderPath);
-            return new MainSettings(template, analysisFolderPath, dataFolderPath, server, 
-                annotationsFilePath, replicateNamingPattern);
+            var annotationsDownload = PanoramaFile.ReadXml(reader);
+            return new MainSettings(template, analysisFolderPath, dataFolderPath, server,
+                annotationsFilePath, annotationsDownload, replicateNamingPattern);
         }
 
         public void WriteXml(XmlWriter writer)
@@ -255,6 +262,7 @@ namespace SkylineBatch
             writer.WriteAttributeIfString(Attr.ReplicateNamingPattern, ReplicateNamingPattern);
             Template.WriteXml(writer);
             if (Server != null) Server.WriteXml(writer);
+            if (AnnotationsDownload != null) AnnotationsDownload.WriteXml(writer);
             writer.WriteEndElement();
         }
         #endregion

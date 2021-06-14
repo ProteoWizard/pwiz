@@ -616,9 +616,6 @@
   <data name="MainForm_UpdateRunBatchSteps_Start_from_report_export" xml:space="preserve">
     <value>Start from report export</value>
   </data>
-  <data name="DataServerInfo_ValidateNamingPattern_A_data_naming_pattern_is_required_for_downloaded_data__Please_add_a_data_naming_pattern_" xml:space="preserve">
-    <value>A data naming pattern is required for downloaded data. Please add a data naming pattern.</value>
-  </data>
   <data name="ReportInfo_Validate_Report__0__" xml:space="preserve">
     <value>Report {0}:</value>
   </data>
@@ -756,5 +753,17 @@
   </data>
   <data name="AddPanoramaTemplate_DoneValidatingServer_Save" xml:space="preserve">
     <value>Save</value>
+  </data>
+  <data name="DataServerInfo_ValidateUsernamePassword_Username_cannot_be_empty_if_the_server_has_a_password__Please_enter_a_username_" xml:space="preserve">
+    <value>Username cannot be empty if the server has a password. Please enter a username.</value>
+  </data>
+  <data name="DataServerInfo_ValidateUsernamePassword_Password_cannot_be_empty_if_the_server_has_a_username__Please_enter_a_password_" xml:space="preserve">
+    <value>Password cannot be empty if the server has a username. Please enter a password.</value>
+  </data>
+  <data name="SkylineBatchConfigForm_btnDownloadTemplate_Click_Download_Template_From_Panorama" xml:space="preserve">
+    <value>Download Template From Panorama</value>
+  </data>
+  <data name="SkylineBatchConfigForm_btnDownloadAnnotations_Click_Download_Annotations_From_Panorama" xml:space="preserve">
+    <value>Download Annotations From Panorama</value>
   </data>
 </root>

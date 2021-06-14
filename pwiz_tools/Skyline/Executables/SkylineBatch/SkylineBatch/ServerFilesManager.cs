@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
-using FluentFTP;
 using SharedBatch;
 using SkylineBatch.Properties;
 using File = System.IO.File;
@@ -93,8 +92,8 @@ namespace SkylineBatch
                 if (server is DataServerInfo) dataServers.Add(server);
                 else panoramaServers.Add(server);
             }
-            _serverConnector.Reconnect(dataServers, doOnProgress, cancelToken);
             _panoramaServerConnecter.Reconnect(panoramaServers, doOnProgress, cancelToken);
+            _serverConnector.Reconnect(dataServers, doOnProgress, cancelToken);
             foreach (var server in servers)
             {
                 if (server is DataServerInfo)

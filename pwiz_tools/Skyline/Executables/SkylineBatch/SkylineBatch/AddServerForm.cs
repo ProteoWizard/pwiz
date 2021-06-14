@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Text.RegularExpressions;
+using System.Drawing;
 using System.Threading;
 using System.Windows.Forms;
-using FluentFTP;
 using SharedBatch;
 using SkylineBatch.Properties;
 
@@ -16,6 +15,7 @@ namespace SkylineBatch
         private CancellationTokenSource _cancelValidate;
         private readonly bool _serverRequired;
         private readonly string _dataFolder;
+        private bool _updated;
 
         public AddServerForm(DataServerInfo editingServerInfo, string folder, bool serverRequired = false)
         {
@@ -36,9 +36,26 @@ namespace SkylineBatch
 
         private void btnAdd_Click(object sender, EventArgs e)
         {
-            btnSave.Text = Resources.AddServerForm_btnAdd_Click_Verifying;
-            btnSave.Enabled = false;
+            if (!_updated)
+                CheckServer(true);
+            else
+            {
+                Server = GetServerFromUi();
+                serverConnector.GetFiles(Server, out Exception error);
+                if (error != null)
+                    AlertDlg.ShowError(this, Program.AppName(), error.Message);
+                else
+                    DialogResult = DialogResult.OK;
+            }
+        }
 
+        private void btnUpdate_Click(object sender, EventArgs e)
+        {
+            CheckServer(false);
+        }
+
+        private void CheckServer(bool closeWhenDone)
+        {
             Exception validationException = null;
             try
             {
@@ -54,34 +71,53 @@ namespace SkylineBatch
             {
                 if (validationException != null)
                     UnsuccessfulConnect(validationException);
-                else 
-                    SuccessfulConnect(null);
+                else
+                    SuccessfulConnect(new List<ConnectedFileInfo>(), closeWhenDone);
                 return;
             }
 
 
             _cancelValidate = new CancellationTokenSource();
-            var connectToServer = new LongWaitOperation(_cancelValidate);
+            var connectToServer = new LongWaitOperation(new LongWaitDlg(this, Program.AppName(), "Connecting to server..."));
             serverConnector = new ServerConnector(Server);
-            List<ConnectedFileInfo> serverFiles = null;
             Exception connectionException = null;
-            connectToServer.Start(false, 
+            List<ConnectedFileInfo> files = null;
+            connectToServer.Start(true,
                 (OnProgress, cancelToken) =>
                 {
                     serverConnector.Connect(OnProgress, cancelToken);
-                    serverFiles = serverConnector.GetFiles(Server, out connectionException);
+                    files = serverConnector.GetFiles(Server, out connectionException);
                 }, completed =>
                 {
+                    if (!completed)
+                        return;
+                    _updated = true;
+                    Invoke(new Action(() =>
+                    {
+                        listBoxFileNames.Items.Clear();
+                    }));
+
                     if (connectionException == null)
-                        SuccessfulConnect(serverFiles);
+                        SuccessfulConnect(files, closeWhenDone);
                     else
                         UnsuccessfulConnect(connectionException);
                 });
         }
 
-        private void SuccessfulConnect(List<ConnectedFileInfo> ftpFiles)
+        private void SuccessfulConnect(List<ConnectedFileInfo> files, bool closeWhenDone)
         {
-            DialogResult = DialogResult.OK;
+            if (closeWhenDone)
+                DialogResult = DialogResult.OK;
+            else
+            {
+                _updated = true;
+                Invoke(new Action(() =>
+                {
+                    UpdateLabel();
+                    foreach (var file in files)
+                        listBoxFileNames.Items.Add(file.FileName);
+                }));
+            }
         }
 
         private void UnsuccessfulConnect(Exception e)
@@ -89,8 +125,7 @@ namespace SkylineBatch
             Invoke(new Action(() =>
             {
                 if (e != null) AlertDlg.ShowError(this, Program.AppName(), e.Message);
-                btnSave.Enabled = true;
-                btnSave.Text = Resources.AddServerForm_FinishConnectToServer_Save;
+
             }));
             _cancelValidate = null;
         }
@@ -112,8 +147,11 @@ namespace SkylineBatch
         private void btnRemoveServer_Click(object sender, EventArgs e)
         {
             _cancelValidate?.Cancel();
+            listBoxFileNames.Items.Clear();
             Server = null;
             UpdateUiServer();
+            _updated = true;
+            UpdateLabel();
         }
 
         private void UpdateUiServer()
@@ -121,7 +159,9 @@ namespace SkylineBatch
             textUrl.Text = Server != null ? Server.GetUrl() : string.Empty;
             textUserName.Text = Server != null ? Server.Username : string.Empty;
             textPassword.Text = Server != null ? Server.Password : string.Empty;
-            textNamingPattern.Text = Server != null ? Server.DataNamingPattern : string.Empty;
+            textNamingPattern.Text = Server == null || Server.DataNamingPattern.Equals(".*")
+                ? string.Empty
+                : Server.DataNamingPattern;
         }
 
         private void linkLabelRegex_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
@@ -132,6 +172,31 @@ namespace SkylineBatch
         private void AddServerForm_FormClosing(object sender, FormClosingEventArgs e)
         {
             _cancelValidate?.Cancel();
+        }
+
+        private void UpdateLabel()
+        {
+            listBoxFileNames.Enabled = _updated;
+            listBoxFileNames.BackColor = _updated ? Color.White : Color.WhiteSmoke;
+            btnUpdate.Enabled = !_updated;
+        }
+
+        private void text_TextChanged(object sender, EventArgs e)
+        {
+            _updated = false;
+            serverConnector = null;
+            UpdateLabel();
+        }
+
+        private void textNamingPattern_TextChanged(object sender, EventArgs e)
+        {
+            if (_updated)
+            {
+                var files = serverConnector.GetFiles(GetServerFromUi(), out _)?? new List<ConnectedFileInfo>();
+                listBoxFileNames.Items.Clear();
+                foreach (var file in files)
+                    listBoxFileNames.Items.Add(file.FileName);
+            }
         }
     }
 }
