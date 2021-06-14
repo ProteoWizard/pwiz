@@ -48,7 +48,7 @@ Specifies additional command line options that will be passed to the linker.
 |# # end::doc[]
 
 #
-# Boost.Build V2 toolset for the HP aC++ compiler.
+# B2 V2 toolset for the HP aC++ compiler.
 #
 
 import toolset : flags ;

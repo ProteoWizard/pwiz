@@ -287,7 +287,7 @@ namespace SkylineBatchTest
         {
             logFolder = string.IsNullOrEmpty(logFolder) ? GetTestFilePath("OldLogs") : logFolder;
             var logName = "TestLog" + DateTime.Now.ToString("_HHmmssfff") + ".log";
-            return new Logger(Path.Combine(logFolder, logName), logName);
+            return new Logger(Path.Combine(logFolder, logName), logName, true);
         }
 
         public static void InitializeRInstallation()

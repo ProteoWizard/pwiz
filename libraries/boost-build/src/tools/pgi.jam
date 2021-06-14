@@ -57,6 +57,7 @@ flags pgi.compile.c++ OPTIONS <cxxstd>14 : -std=c++14 ;
 flags pgi.compile.c++ OPTIONS <cxxstd>1z : -std=c++17 ;
 flags pgi.compile.c++ OPTIONS <cxxstd>17 : -std=c++17 ;
 flags pgi.compile.c++ OPTIONS <cxxstd>2a : -std=c++17 ;
+flags pgi.compile.c++ OPTIONS <cxxstd>20 : -std=c++17 ;
 flags pgi.compile.c++ OPTIONS <cxxstd>latest : -std=c++17 ;
 
 flags pgi.compile OPTIONS <link>shared : -fpic ;
@@ -68,6 +69,8 @@ flags pgi.compile OPTIONS <optimization>space : -fast ;
 flags pgi.compile OPTIONS <warnings>off : -Minform=severe ;
 flags pgi.compile OPTIONS <warnings>on : -Minform=warn ;
 flags pgi.compile OPTIONS <warnings>all : -Minform=warn ;
+flags pgi.compile OPTIONS <warnings>extra : -Minform=inform ;
+flags pgi.compile OPTIONS <warnings>pedantic : -Minform=inform ;
 flags pgi.compile OPTIONS <warnings-as-errors>on : -Werror ;
 
 flags pgi.compile.c++ OPTIONS <rtti>off : --no_rtti ;
