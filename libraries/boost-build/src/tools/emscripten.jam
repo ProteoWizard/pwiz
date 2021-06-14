@@ -46,9 +46,6 @@ toolset.inherit-flags emscripten : gcc
         :
         <optimization>off <optimization>speed <optimization>space
         <profiling>off <profiling>on
-        <inlining>off <inlining>on <inlining>full
-        <warnings>off <warnings>all <warnings>on
-        <warnings-as-errors>off <warnings-as-errors>on
         <debug-symbols>off <debug-symbols>on
         <rtti>off <rtti>on
         ;
@@ -74,11 +71,6 @@ toolset.flags emscripten.compile OPTIONS <inlining>off : -fno-inline ;
 toolset.flags emscripten.compile OPTIONS <inlining>on : -Wno-inline ;
 toolset.flags emscripten.compile OPTIONS <inlining>full : -Wno-inline ;
 
-toolset.flags emscripten.compile OPTIONS <warnings>off : -w ;
-toolset.flags emscripten.compile OPTIONS <warnings>on : -Wall ;
-toolset.flags emscripten.compile OPTIONS <warnings>all : -Wall -pedantic ;
-toolset.flags emscripten.compile OPTIONS <warnings-as-errors>on : -Werror ;
-
 toolset.flags emscripten OPTIONS <debug-symbols>off : -g0 ;
 toolset.flags emscripten OPTIONS <debug-symbols>on : -g4 -s DEMANGLE_SUPPORT=1 ;
 toolset.flags emscripten OPTIONS <rtti>off : -fno-rtti ;
@@ -102,7 +94,7 @@ actions compile.c++
 
 actions archive
 {
-    "$(CONFIG_COMMAND)" $(AROPTIONS) -o "$(<)" "$(>)"
+    "$(CONFIG_COMMAND)" $(AROPTIONS) -r -o "$(<)" "$(>)"
 }
 
 toolset.flags emscripten.link USER_OPTIONS <linkflags> ;

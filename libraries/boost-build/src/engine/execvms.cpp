@@ -75,8 +75,8 @@ int exec_check
 (
     string const * command,
     LIST * * pShell,
-    int * error_length,
-    int * error_max_length
+    int32_t * error_length,
+    int32_t * error_max_length
 )
 {
     int const is_raw_cmd = 1;
@@ -89,7 +89,7 @@ int exec_check
 
     return is_raw_cmd
         ? EXEC_CHECK_OK
-        : check_cmd_for_too_long_lines( command->value, MAXLINE, error_length,
+        : check_cmd_for_too_long_lines( command->value, shell_maxline(), error_length,
             error_max_length );
 }
 
@@ -169,7 +169,8 @@ void exec_cmd
         /* Open tempfile. */
         if ( !( f = fopen( commandbuf + 1, "w" ) ) )
         {
-            printf( "can't open cmd_string file\n" );
+            err_printf( "[errno %d] failed to wite cmd_string file '%s': %s",
+                errno, commandbuf + 1, strerror(errno) );
             rstat = EXEC_CMD_FAIL;
             exit_reason = EXIT_FAIL;
 
@@ -412,6 +413,11 @@ clock_t get_cpu_time()
     result = ( cputime / 100 ) * CLOCKS_PER_SEC;
 
     return result;
+}
+
+int32_t shell_maxline()
+{
+    return MAXLINE;
 }
 
 

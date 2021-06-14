@@ -6,11 +6,14 @@
  */
 
 #include "jam.h"
+
+#ifdef USE_EXECUNIX
+
 #include "execcmd.h"
 
 #include "lists.h"
 #include "output.h"
-#include "strings.h"
+#include "jam_strings.h"
 
 #include <errno.h>
 #include <signal.h>
@@ -25,8 +28,6 @@
 #if defined(sun) || defined(__sun)
     #include <wait.h>
 #endif
-
-#ifdef USE_EXECUNIX
 
 #include <sys/times.h>
 
@@ -140,8 +141,8 @@ int exec_check
 (
     string const * command,
     LIST * * pShell,
-    int * error_length,
-    int * error_max_length
+    int32_t * error_length,
+    int32_t * error_max_length
 )
 {
     int const is_raw_cmd = is_raw_command_request( *pShell );
@@ -154,7 +155,7 @@ int exec_check
 
     return is_raw_cmd
         ? EXEC_CHECK_OK
-        : check_cmd_for_too_long_lines( command->value, MAXLINE, error_length,
+        : check_cmd_for_too_long_lines( command->value, shell_maxline(), error_length,
             error_max_length );
 }
 
@@ -184,7 +185,6 @@ void exec_cmd
     int const slot = get_free_cmdtab_slot();
     int out[ 2 ];
     int err[ 2 ];
-    int len;
     char const * argv[ MAXARGC + 1 ];  /* +1 for NULL */
 
     /* Initialize default shell. */
@@ -460,8 +460,6 @@ void exec_wait()
     while ( !finished )
     {
         int i;
-        struct timeval tv;
-        struct timeval * ptv = NULL;
         int select_timeout = globs.timeout;
 
         /* Check for timeouts:
@@ -485,14 +483,6 @@ void exec_wait()
                     else if ( globs.timeout - consumed < select_timeout )
                         select_timeout = globs.timeout - consumed;
                 }
-
-            /* If nothing else causes our select() call to exit, force it after
-             * however long it takes for the next one of our child processes to
-             * crossed its allotted processing time so we can terminate it.
-             */
-            tv.tv_sec = select_timeout;
-            tv.tv_usec = 0;
-            ptv = &tv;
         }
 
         /* select() will wait for I/O on a descriptor, a signal, or timeout. */
@@ -612,6 +602,11 @@ static int get_free_cmdtab_slot()
             return slot;
     err_printf( "no slots for child!\n" );
     exit( EXITBAD );
+}
+
+int32_t shell_maxline()
+{
+    return MAXLINE;
 }
 
 # endif /* USE_EXECUNIX */

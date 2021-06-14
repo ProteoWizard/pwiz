@@ -3,9 +3,14 @@
 # (See accompanying file LICENSE_1_0.txt or copy at
 # http://www.boost.org/LICENSE_1_0.txt)
 
-# TODO: Documentation.
-
 import feature ;
+
+#| tag::doc[]
+
+[[bbv2.builtin.features.cxxflags]]`cxxflags`::
+See <<bbv2.builtin.features.cflags,`<cflags>`>>.
+
+|# # end::doc[]
 
 feature.feature cxxflags
     :

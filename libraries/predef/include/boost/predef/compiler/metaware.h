@@ -1,5 +1,5 @@
 /*
-Copyright Rene Rivera 2008-2014
+Copyright Rene Rivera 2008-2015
 Distributed under the Boost Software License, Version 1.0.
 (See accompanying file LICENSE_1_0.txt or copy at
 http://www.boost.org/LICENSE_1_0.txt)
@@ -11,17 +11,18 @@ http://www.boost.org/LICENSE_1_0.txt)
 #include <boost/predef/version_number.h>
 #include <boost/predef/make.h>
 
-/*`
-[heading `BOOST_COMP_HIGHC`]
+/* tag::reference[]
+= `BOOST_COMP_HIGHC`
 
-MetaWare High C/C++ compiler.
+MetaWare High C/{CPP} compiler.
 
-[table
-    [[__predef_symbol__] [__predef_version__]]
+[options="header"]
+|===
+| {predef_symbol} | {predef_version}
 
-    [[`__HIGHC__`] [__predef_detection__]]
-    ]
- */
+| `+__HIGHC__+` | {predef_detection}
+|===
+*/ // end::reference[]
 
 #define BOOST_COMP_HIGHC BOOST_VERSION_NUMBER_NOT_AVAILABLE
 
@@ -42,13 +43,12 @@ MetaWare High C/C++ compiler.
 
 #define BOOST_COMP_HIGHC_NAME "MetaWare High C/C++"
 
+#endif
+
 #include <boost/predef/detail/test.h>
 BOOST_PREDEF_DECLARE_TEST(BOOST_COMP_HIGHC,BOOST_COMP_HIGHC_NAME)
 
 #ifdef BOOST_COMP_HIGHC_EMULATED
 #include <boost/predef/detail/test.h>
 BOOST_PREDEF_DECLARE_TEST(BOOST_COMP_HIGHC_EMULATED,BOOST_COMP_HIGHC_NAME)
-#endif
-
-
 #endif
