@@ -14,7 +14,7 @@
 #include "object.h"
 #include "parse.h"
 #include "rules.h"
-#include "strings.h"
+#include "jam_strings.h"
 #include "variable.h"
 
 #include <assert.h>

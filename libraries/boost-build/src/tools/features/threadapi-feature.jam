@@ -3,12 +3,20 @@
 # (See accompanying file LICENSE_1_0.txt or copy at
 # http://www.boost.org/LICENSE_1_0.txt)
 
-# TODO: Documentation.
-
 import property-set ;
 import feature : feature ;
 import toolset ;
 import features/os-feature ;
+
+#| tag::doc[]
+
+[[bbv2.builtin.features.threadapi]]`threadapi`::
+*Allowed values:* `pthread`, `win32`.
++
+Selects threading implementation. The default is `win32` if `<target-os>` is
+`windows` and `pthread` otherwise.
+
+|# # end::doc[]
 
 feature threadapi : pthread win32 : symmetric propagated ;
 toolset.add-defaults <target-os>windows:<threadapi>win32 ;

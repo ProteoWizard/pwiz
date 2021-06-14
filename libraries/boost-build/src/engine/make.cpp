@@ -56,7 +56,7 @@
 static TARGETS * make0sort( TARGETS * c );
 
 #ifdef OPT_GRAPH_DEBUG_EXT
-    static void dependGraphOutput( TARGET * t, int depth );
+    static void dependGraphOutput( TARGET * t, int32_t depth );
 #endif
 
 static char const * target_fate[] =
@@ -91,10 +91,10 @@ static char const * target_bind[] =
  * make() - make a target, given its name.
  */
 
-int make( LIST * targets, int anyhow )
+int32_t make( LIST * targets, int32_t anyhow )
 {
     COUNTS counts[ 1 ];
-    int status = 0;  /* 1 if anything fails */
+    int32_t status = 0;  /* 1 if anything fails */
 
 #ifdef OPT_HEADER_CACHE_EXT
     hcache_init();
@@ -188,7 +188,7 @@ static void update_dependants( TARGET * t )
             if ( DEBUG_FATE )
             {
                 out_printf( "fate change  %s from %s to %s (as dependent of %s)\n",
-                        object_str( p->name ), target_fate[ (int) fate0 ], target_fate[ (int) p->fate ], object_str( t->name ) );
+                        object_str( p->name ), target_fate[ (int32_t) fate0 ], target_fate[ (int32_t) p->fate ], object_str( t->name ) );
             }
 
             /* If we are done visiting it, go back and make sure its dependants
@@ -219,7 +219,7 @@ static void force_rebuilds( TARGET * t )
         {
             if ( DEBUG_FATE )
                 out_printf( "fate change  %s from %s to %s (by rebuild)\n",
-                        object_str( r->name ), target_fate[ (int) r->fate ], target_fate[ T_FATE_REBUILD ] );
+                        object_str( r->name ), target_fate[ (int32_t) r->fate ], target_fate[ T_FATE_REBUILD ] );
 
             /* Force rebuild it. */
             r->fate = T_FATE_REBUILD;
@@ -231,9 +231,9 @@ static void force_rebuilds( TARGET * t )
 }
 
 
-int make0rescan( TARGET * t, TARGET * rescanning )
+int32_t make0rescan( TARGET * t, TARGET * rescanning )
 {
-    int result = 0;
+    int32_t result = 0;
     TARGETS * c;
 
     /* Check whether we have already found a cycle. */
@@ -281,9 +281,9 @@ void make0
 (
     TARGET * t,
     TARGET * p,       /* parent */
-    int      depth,   /* for display purposes */
+    int32_t      depth,   /* for display purposes */
     COUNTS * counts,  /* for reporting */
-    int      anyhow,
+    int32_t      anyhow,
     TARGET * rescanning
 )  /* forcibly touch all (real) targets */
 {
@@ -293,13 +293,13 @@ void make0
     timestamp    last;
     timestamp    leaf;
     timestamp    hlast;
-    int          fate;
+    int32_t          fate;
     char const * flag = "";
     SETTINGS   * s;
 
 #ifdef OPT_GRAPH_DEBUG_EXT
-    int savedFate;
-    int oldTimeStamp;
+    int32_t savedFate;
+    int32_t oldTimeStamp;
 #endif
 
     if ( DEBUG_MAKEPROG )
@@ -392,7 +392,7 @@ void make0
         case T_BIND_MISSING:
         case T_BIND_PARENTS:
             out_printf( "time\t--\t%s%s: %s\n", spaces( depth ),
-                object_str( t->name ), target_bind[ (int)t->binding ] );
+                object_str( t->name ), target_bind[ (int32_t)t->binding ] );
             break;
 
         case T_BIND_EXISTS:
@@ -409,7 +409,7 @@ void make0
     /* Step 3a: Recursively make0() dependencies. */
     for ( c = t->depends; c; c = c->next )
     {
-        int const internal = t->flags & T_FLAG_INTERNAL;
+        int32_t const internal = t->flags & T_FLAG_INTERNAL;
 
         /* Warn about circular deps, except for includes, which include each
          * other alot.
@@ -453,7 +453,7 @@ void make0
 
     /* Step 3d: Detect cycles. */
     {
-        int cycle_depth = depth;
+        int32_t cycle_depth = depth;
         for ( c = t->depends; c; c = c->next )
         {
             TARGET * scc_root = target_scc( c->target );
@@ -512,8 +512,8 @@ void make0
         if ( DEBUG_FATE )
             if ( fate < c->target->fate )
                 out_printf( "fate change %s from %s to %s by dependency %s\n",
-                    object_str( t->name ), target_fate[ (int)fate ],
-                    target_fate[ (int)c->target->fate ], object_str(
+                    object_str( t->name ), target_fate[ (int32_t)fate ],
+                    target_fate[ (int32_t)c->target->fate ], object_str(
                     c->target->name ) );
 #endif
     }
@@ -760,7 +760,7 @@ void make0
         flag = "*";
 
     if ( DEBUG_MAKEPROG )
-        out_printf( "made%s\t%s\t%s%s\n", flag, target_fate[ (int)t->fate ],
+        out_printf( "made%s\t%s\t%s%s\n", flag, target_fate[ (int32_t)t->fate ],
             spaces( depth ), object_str( t->name ) );
 }
 
@@ -783,7 +783,7 @@ static char const * target_name( TARGET * t )
  * dependGraphOutput() - output the DG after make0 has run.
  */
 
-static void dependGraphOutput( TARGET * t, int depth )
+static void dependGraphOutput( TARGET * t, int32_t depth )
 {
     TARGETS * c;
 
@@ -864,7 +864,7 @@ static void dependGraphOutput( TARGET * t, int depth )
     for ( c = t->depends; c; c = c->next )
     {
         out_printf( "  %s       : Depends on %s (%s)", spaces( depth ),
-           target_name( c->target ), target_fate[ (int)c->target->fate ] );
+           target_name( c->target ), target_fate[ (int32_t)c->target->fate ] );
         if ( !timestamp_cmp( &c->target->time, &t->time ) )
             out_printf( " (max time)");
         out_printf( "\n" );

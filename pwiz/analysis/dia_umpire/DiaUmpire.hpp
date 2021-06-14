@@ -65,7 +65,7 @@ struct PWIZ_API_DECL Config
     bool exportMs2ClusterTable = false;
     bool exportSeparateQualityMGFs = false;
 
-    int maxThreads = 0; // 0 = # of cores
+    int maxThreads = 0; // 0 = # of cores, which will be set to the actual count in the ctor
     bool multithreadOverWindows = true;
 
     pwiz::msdata::MSDataFile::Format spillFileFormat = pwiz::msdata::MSDataFile::Format_MZ5;
@@ -77,6 +77,7 @@ struct DiaWindow;
 
 struct PWIZ_API_DECL PseudoMsMsKey : public pwiz::msdata::SpectrumIdentity
 {
+    PseudoMsMsKey() {}
     PseudoMsMsKey(float scanTime, float targetMz, int charge, pwiz::util::TemporaryFile* spillFilePtr, size_t spillFileIndex);
 
     float scanTime;

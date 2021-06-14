@@ -1340,12 +1340,12 @@ namespace pwiz.Skyline.Model.DocSettings
                         }
                     }
                 }
-                var map = LibKeyMap<IonMobilityAndCCS[]>.FromDictionary(dict);
-                if (dict.Count < targetIons.Length && imFiltering.UseSpectralLibraryIonMobilityValues)
+                if (dict.Count < targetIons.Length && imFiltering.UseSpectralLibraryIonMobilityValues && filePath != null)
                 {
                     var libraries = PeptideSettings.Libraries;
                     if (libraries.TryGetSpectralLibraryIonMobilities(targetIons, filePath, out var ionMobilities) && ionMobilities != null)
                     {
+                        var map = LibKeyMap<IonMobilityAndCCS[]>.FromDictionary(dict);
                         foreach (var im in ionMobilities.GetIonMobilityDict().Where(item => 
                             !map.TryGetValue(item.Key, out _)))
                         {

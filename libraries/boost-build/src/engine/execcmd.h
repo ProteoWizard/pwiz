@@ -17,7 +17,7 @@
 
 #include "config.h"
 #include "lists.h"
-#include "strings.h"
+#include "jam_strings.h"
 #include "timestamp.h"
 
 
@@ -54,8 +54,8 @@ int exec_check
 (
     string const * command,
     LIST * * pShell,
-    int * error_length,
-    int * error_max_length
+    int32_t * error_length,
+    int32_t * error_max_length
 );
 
 /* exec_check() return codes. */
@@ -91,7 +91,7 @@ void exec_wait();
  * given shell list.
  */
 void argv_from_shell( char const * * argv, LIST * shell, char const * command,
-    int const slot );
+    int32_t const slot );
 
 /* Interrupt routine bumping the internal interrupt counter. Needs to be
  * registered by platform specific exec*.c modules.
@@ -109,7 +109,11 @@ int is_raw_command_request( LIST * shell );
 /* Utility worker for exec_check() checking whether all the given command lines
  * are under the specified length limit.
  */
-int check_cmd_for_too_long_lines( char const * command, int const max,
-    int * const error_length, int * const error_max_length );
+int check_cmd_for_too_long_lines( char const * command, int32_t max,
+    int32_t * const error_length, int32_t * const error_max_length );
+
+/* Maximum shell command line length.
+ */
+int32_t shell_maxline();
 
 #endif

@@ -1,5 +1,5 @@
 /*
-Copyright Rene Rivera 2008-2014
+Copyright Rene Rivera 2008-2015
 Distributed under the Boost Software License, Version 1.0.
 (See accompanying file LICENSE_1_0.txt or copy at
 http://www.boost.org/LICENSE_1_0.txt)
@@ -11,17 +11,18 @@ http://www.boost.org/LICENSE_1_0.txt)
 #include <boost/predef/version_number.h>
 #include <boost/predef/make.h>
 
-/*`
-[heading `BOOST_COMP_MRI`]
+/* tag::reference[]
+= `BOOST_COMP_MRI`
 
-[@http://www.mentor.com/microtec/ Microtec C/C++] compiler.
+http://www.mentor.com/microtec/[Microtec C/{CPP}] compiler.
 
-[table
-    [[__predef_symbol__] [__predef_version__]]
+[options="header"]
+|===
+| {predef_symbol} | {predef_version}
 
-    [[`_MRI`] [__predef_detection__]]
-    ]
- */
+| `+_MRI+` | {predef_detection}
+|===
+*/ // end::reference[]
 
 #define BOOST_COMP_MRI BOOST_VERSION_NUMBER_NOT_AVAILABLE
 
@@ -42,13 +43,12 @@ http://www.boost.org/LICENSE_1_0.txt)
 
 #define BOOST_COMP_MRI_NAME "Microtec C/C++"
 
+#endif
+
 #include <boost/predef/detail/test.h>
 BOOST_PREDEF_DECLARE_TEST(BOOST_COMP_MRI,BOOST_COMP_MRI_NAME)
 
 #ifdef BOOST_COMP_MRI_EMULATED
 #include <boost/predef/detail/test.h>
 BOOST_PREDEF_DECLARE_TEST(BOOST_COMP_MRI_EMULATED,BOOST_COMP_MRI_NAME)
-#endif
-
-
 #endif
