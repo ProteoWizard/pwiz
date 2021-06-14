@@ -95,7 +95,6 @@ namespace pwiz.Skyline.Controls.Graphs
             spectrumBtn.Visible = false;
             filterBtn.Visible = false;
             lblScanId.Visible = false; // you might want to show the scan index for debugging
-            toolBar.Visible = false;
         }
 
         public ZedGraphControl ZedGraphControl
@@ -908,6 +907,10 @@ namespace pwiz.Skyline.Controls.Graphs
             if(ZoomEvent != null && Settings.Default.SyncMZScale)
                 ZoomEvent.Invoke(this, new ZoomEventArgs(newState));
         }
+        public SpectrumControlType ControlType
+        {
+            get { return SpectrumControlType.FullScanViewer; }
+        }
 
 
         private void ZoomYAxis()
@@ -963,8 +966,6 @@ namespace pwiz.Skyline.Controls.Graphs
             if (!Visible || IsDisposed || _msDataFileScanHelper.ScanProvider == null)
                 return;
             GraphHelper.FormatGraphPane(graphControl.GraphPane);
-            if (_msDataFileScanHelper.MsDataSpectra != null)
-                toolBar.Visible = true;
 
             if (selectionChanged)
                 CreateGraph();

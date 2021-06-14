@@ -158,12 +158,18 @@ namespace pwiz.SkylineTestFunctional
             ClickChromatogram(33.06, 68.8, PaneKey.PRECURSORS);
             TestScale(452, 456, 0, 300);
 
+            //test sync m/z scale
             RunUI(() => SkylineWindow.ShowGraphSpectrum(true));
             WaitForGraphs();
-            RunUI(() => SkylineWindow.SynchMzScale());
+            RunUI(() => SkylineWindow.SynchMzScale());  //sync from the full scan viewer to the library match
             WaitForGraphs();
-            RunUI(() => SkylineWindow.SynchMzScale(true));
+            Assert.AreEqual(SkylineWindow.GraphFullScan.Range, SkylineWindow.GraphSpectrum.Range);
+            var testRange = new MzRange(100, 200);
+            RunUI(() => SkylineWindow.GraphSpectrum.SetMzScale(testRange));
+            RunUI(() => SkylineWindow.SynchMzScale(true)); //sync from the library match to the full scan viewer
             WaitForGraphs();
+            Assert.AreEqual(SkylineWindow.GraphSpectrum.Range, SkylineWindow.GraphFullScan.Range);
+            Assert.AreEqual(testRange, SkylineWindow.GraphFullScan.Range);
         }
 
         private static void ClickFullScan(double x, double y)

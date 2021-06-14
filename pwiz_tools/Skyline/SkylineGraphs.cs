@@ -907,27 +907,34 @@ namespace pwiz.Skyline
         {
             _graphSpectrumSettings.ShowCharge4 = !_graphSpectrumSettings.ShowCharge4;
         }
-        private void synchMzScaleToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            if (_graphFullScan == null || !_graphFullScan.Visible || _graphSpectrum == null || !_graphSpectrum.Visible) return;
-            Settings.Default.SyncMZScale = synchMzScaleToolStripMenuItem.Checked;
-            IMzScaleCopyable source = (IMzScaleCopyable)(synchMzScaleToolStripMenuItem.Owner as ContextMenuStrip)?.SourceControl?.Parent?.Parent;
 
-            if (sender is IMzScaleCopyable)         //testing support
-                source = (IMzScaleCopyable) sender;
-            if (source == null) return;
+        private void SynchMzScaleToolStripMenuItemClick(object sender)
+        {
+            if (_graphFullScan == null || !_graphFullScan.Visible
+                                       || _graphSpectrum == null || !_graphSpectrum.Visible)
+                return;
+            Settings.Default.SyncMZScale = synchMzScaleToolStripMenuItem.Checked;
+            //testing support
+            var source = sender as IMzScaleCopyable ??
+                         (IMzScaleCopyable)(synchMzScaleToolStripMenuItem.Owner as ContextMenuStrip)?.SourceControl?.Parent?.Parent;
+            if (source == null)
+                return;
             IMzScaleCopyable target = _graphSpectrum;
             if (source is GraphSpectrum)
                 target = _graphFullScan;
             target?.SetMzScale(source.Range);
         }
+        private void synchMzScaleToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SynchMzScaleToolStripMenuItemClick(sender);
+        }
 
         public void SynchMzScale(bool direction = false)
         {
-            if(direction)
-                synchMzScaleToolStripMenuItem_Click(_graphSpectrum, EventArgs.Empty);
+            if (direction)
+                SynchMzScaleToolStripMenuItemClick(_graphSpectrum);
             else
-                synchMzScaleToolStripMenuItem_Click(_graphFullScan, EventArgs.Empty);
+                SynchMzScaleToolStripMenuItemClick(_graphFullScan);
         }
 
         public void chargesMenuItem_DropDownOpening(object sender, EventArgs e)
@@ -1046,8 +1053,8 @@ namespace pwiz.Skyline
             menuStrip.Items.Insert(iInsert++, toolStripSeparator12);
             ranksContextMenuItem.Checked = set.ShowRanks;
             menuStrip.Items.Insert(iInsert++, ranksContextMenuItem);
-            var control = menuStrip.SourceControl.Parent.Parent;
-            if (control is GraphSpectrum)
+            var control = menuStrip.SourceControl.Parent.Parent as IMzScaleCopyable;
+            if (control?.ControlType == SpectrumControlType.LibraryMatch)
             {
                 scoreContextMenuItem.Checked = set.ShowLibraryScores;
                 menuStrip.Items.Insert(iInsert++, scoreContextMenuItem);
@@ -1064,7 +1071,7 @@ namespace pwiz.Skyline
             menuStrip.Items.Insert(iInsert++, toolStripSeparator14);
 
             // Need to test small mol
-            if (isProteomic && control is GraphSpectrum)
+            if (isProteomic && control?.ControlType == SpectrumControlType.LibraryMatch)
             {
                 prositLibMatchItem.Checked = Settings.Default.Prosit;
                 menuStrip.Items.Insert(iInsert++, prositLibMatchItem);
@@ -1074,7 +1081,7 @@ namespace pwiz.Skyline
             }
 
             menuStrip.Items.Insert(iInsert++, spectrumPropsContextMenuItem);
-            if (control is GraphSpectrum)
+            if (control?.ControlType == SpectrumControlType.LibraryMatch)
             {
                 showLibraryChromatogramsSpectrumContextMenuItem.Checked = set.ShowLibraryChromatograms;
                 menuStrip.Items.Insert(iInsert++, showLibraryChromatogramsSpectrumContextMenuItem);

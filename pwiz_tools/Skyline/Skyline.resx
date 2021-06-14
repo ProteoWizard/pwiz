@@ -3919,7 +3919,7 @@
     <value>193, 22</value>
   </data>
   <data name="synchMzScaleToolStripMenuItem.Text" xml:space="preserve">
-    <value>Sync m/z scale</value>
+    <value>Synchronize m/z Scale</value>
   </data>
   <data name="&gt;&gt;synchMzScaleToolStripMenuItem.Name" xml:space="preserve">
     <value>synchMzScaleToolStripMenuItem</value>

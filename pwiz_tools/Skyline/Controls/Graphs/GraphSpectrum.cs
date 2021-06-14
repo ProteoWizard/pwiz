@@ -57,12 +57,14 @@ namespace pwiz.Skyline.Controls.Graphs
         void LockYAxis(bool lockY);
     }
 
+    public enum SpectrumControlType { LibraryMatch, FullScanViewer }
     public interface IMzScaleCopyable
     {
         void SetMzScale(MzRange range);
         MzRange Range { get; }
         void ApplyMZZoomState(ZoomState scaleState);
         event EventHandler<ZoomEventArgs> ZoomEvent;
+        SpectrumControlType ControlType { get; }
     }
     
     public partial class GraphSpectrum : DockableFormEx, IGraphContainer, IMzScaleCopyable
@@ -1285,6 +1287,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 ZoomEvent.Invoke(this, new ZoomEventArgs(newState));
         }
 
+        public SpectrumControlType ControlType { get { return SpectrumControlType.LibraryMatch;} }
+
         public double MzMax
         {
             get { return GraphPane.XAxis.Scale.Max; }
@@ -1657,5 +1661,17 @@ namespace pwiz.Skyline.Controls.Graphs
         }
         public double Min { get; private set; }
         public double Max { get; private set; }
+        public override bool Equals(object obj)
+        {
+            if (obj is MzRange other)
+                return Min == other.Min && Max == other.Max;
+            else
+                return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return Min.GetHashCode() * 397 ^ Max.GetHashCode();
+        }
     }
 }
