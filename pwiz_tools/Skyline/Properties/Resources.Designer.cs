@@ -16047,22 +16047,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The calculator {0} requires all of its standard peptides in order to determine a regression..
+        ///   Looks up a localized string similar to The calculator {0} requires all {1} of its standard peptides to be in the targets list in order to determine a regression. The following {2} peptides are missing:
+        ///
+        ///{3}.
         /// </summary>
-        public static string IncompleteStandardException_ERROR_The_calculator__0__requires_all_of_its_standard_peptides_in_order_to_determine_a_regression_ {
+        public static string IncompleteStandardException_The_calculator__0__requires_all__1__of_its_standard_peptides_to_be_in_the_targets_list_in_order_to_determine_a_regression_The_following__2__peptides_are_missing___3__ {
             get {
-                return ResourceManager.GetString("IncompleteStandardException_ERROR_The_calculator__0__requires_all_of_its_standard" +
-                        "_peptides_in_order_to_determine_a_regression_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The calculator {0} requires all of its standard peptides in order to determine a regression..
-        /// </summary>
-        public static string IncompleteStandardException_IncompleteStandardException_The_calculator__0__requires_all_of_its_standard_peptides_in_order_to_determine_a_regression {
-            get {
-                return ResourceManager.GetString("IncompleteStandardException_IncompleteStandardException_The_calculator__0__requir" +
-                        "es_all_of_its_standard_peptides_in_order_to_determine_a_regression", resourceCulture);
+                return ResourceManager.GetString("IncompleteStandardException_The_calculator__0__requires_all__1__of_its_standard_p" +
+                        "eptides_to_be_in_the_targets_list_in_order_to_determine_a_regression_The_followi" +
+                        "ng__2__peptides_are_missing___3__", resourceCulture);
             }
         }
         
