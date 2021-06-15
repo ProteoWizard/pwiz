@@ -345,10 +345,10 @@ namespace SkylineBatch
         public void WriteXml(XmlWriter writer)
         {
             writer.WriteStartElement(XMLElements.REPORT_INFO);
-            writer.WriteAttribute(XML_TAGS.culture_specific, CultureSpecific);
             writer.WriteAttributeIfString(XML_TAGS.name, Name);
             writer.WriteAttributeIfString(XML_TAGS.path, ReportPath);
             writer.WriteAttribute(XML_TAGS.use_refined_file, UseRefineFile);
+            writer.WriteAttribute(XML_TAGS.culture_specific, CultureSpecific);
             foreach (var script in RScripts)
             {
                 writer.WriteStartElement(XMLElements.R_SCRIPT);
