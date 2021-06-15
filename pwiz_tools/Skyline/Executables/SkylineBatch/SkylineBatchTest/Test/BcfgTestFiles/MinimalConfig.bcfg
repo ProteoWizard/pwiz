@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ConfigList saved_path_root="C:\Branches\new_dev_2\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\bin\Debug\..\..\Test\BcfgTestFiles" version="21.1.1.166">
+<config_list saved_path_root="C:\Branches\new_dev_2\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\bin\Debug\..\..\Test\BcfgTestFiles" version="21.1.1.166">
   <skylinebatch_config name="Minimal" modified="01/01/0001 00:00:00">
     <file_settings analysis_folder_path="C:\Branches\new_dev_2\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\bin\Debug\..\..\Test\BcfgTestFiles\Minimal">
       <template_file path="C:\Branches\new_dev_2\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\bin\Debug\..\..\Test\emptyTemplate.sky" />
@@ -11,4 +11,4 @@
     <report_settings />
     <config_skyline_settings type="Custom" path="C:\Branches\new_dev_2\pwiz_tools\Skyline\bin\x64\Release\SkylineCmd.exe" />
   </skylinebatch_config>
-</ConfigList>
+</config_list>

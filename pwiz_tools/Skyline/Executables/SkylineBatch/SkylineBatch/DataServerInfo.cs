@@ -34,7 +34,7 @@ namespace SkylineBatch
             return new DataServerInfo(other.URI, other.Username, other.Password, other.Encrypt, other.DataNamingPattern, newFolder);
         }
 
-        private DataServerInfo(Uri server, string userName, string password, bool encrypt, string namingPattern, string folder) : base(server, userName, password, encrypt)
+        public DataServerInfo(Uri server, string userName, string password, bool encrypt, string namingPattern, string folder) : base(server, userName, password, encrypt)
         {
             DataNamingPattern = namingPattern ?? ".*";
             Folder = folder;
@@ -98,8 +98,8 @@ namespace SkylineBatch
         {
             if (!reader.ReadToDescendant(XMLElements.REMOTE_FILE_SET))
                 return null;
-            var server = Server.ReadXml(reader);
             var dataNamingPattern = reader.GetAttribute(XML_TAGS.data_naming_pattern);
+            var server = Server.ReadXml(reader);
             return new DataServerInfo(server.URI, server.Username, server.Password, server.Encrypt, dataNamingPattern, folder);
         }
 

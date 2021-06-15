@@ -138,8 +138,14 @@ namespace SharedBatch.Properties
                 MessageBox.Show(message.ToString(), Resources.ConfigList_ReadXml_Load_Configurations_Error, MessageBoxButtons.OK);
         }
 
+        enum Attr
+        {
+            version
+        }
+
         public void WriteXml(XmlWriter writer)
         {
+            writer.WriteAttributeString(Attr.version, Settings.Default.ProgramVersion);
             foreach (var config in this)
             {
                 config.WriteXml(writer);

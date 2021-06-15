@@ -66,6 +66,7 @@ namespace SkylineBatch
         public SkylineBatchConfigManager(Logger logger, IMainUiControl mainForm = null)
         {
             importer = SkylineBatchConfig.ReadXml;
+            getUpdatedXml = XmlUpdater.GetUpdatedXml;
             SelectedLog = 0;
             _logList.Add(logger);
             _configRunners = ImmutableDictionary<string, IConfigRunner>.Empty;

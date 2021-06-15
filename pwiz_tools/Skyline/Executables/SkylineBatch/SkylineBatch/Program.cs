@@ -21,9 +21,11 @@ using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Deployment.Application;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Net;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -150,9 +152,42 @@ namespace SkylineBatch
 
         private static void InitializeVersion()
         {
-            _version = ApplicationDeployment.IsNetworkDeployed
-                ? ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString()
-                : string.Empty;
+            if (ApplicationDeployment.IsNetworkDeployed)
+                _version = ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString();
+            else
+            {
+                // copied from Skyline Install.cs GetVersion()
+                try
+                {
+                    string productVersion = null;
+
+                    Assembly entryAssembly = Assembly.GetEntryAssembly();
+                    if (entryAssembly != null)
+                    {
+                        // custom attribute
+                        object[] attrs = entryAssembly.GetCustomAttributes(typeof(AssemblyInformationalVersionAttribute), false);
+                        // Play it safe with a null check no matter what ReSharper thinks
+                        // ReSharper disable once ConditionIsAlwaysTrueOrFalse
+                        if (attrs != null && attrs.Length > 0)
+                        {
+                            productVersion = ((AssemblyInformationalVersionAttribute)attrs[0]).InformationalVersion;
+                        }
+                        else
+                        {
+                            // win32 version info
+                            productVersion = FileVersionInfo.GetVersionInfo(entryAssembly.Location).ProductVersion?.Trim();
+                        }
+                    }
+
+                    _version = productVersion ?? string.Empty;
+                }
+                catch (Exception)
+                {
+                    _version = string.Empty;
+                }
+            }
+
+            SharedBatch.Properties.Settings.Default.ProgramVersion = _version;
         }
 
         private static string GetFirstArg(string[] args)

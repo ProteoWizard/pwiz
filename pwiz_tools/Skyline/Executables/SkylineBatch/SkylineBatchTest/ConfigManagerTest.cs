@@ -192,7 +192,7 @@ namespace SkylineBatchTest
             TestUtils.InitializeRInstallation();
             var configsXmlPath = TestUtils.GetTestFilePath("configs.xml");
             var configManager = TestUtils.GetTestConfigManager();
-            configManager.ExportConfigs(configsXmlPath, new [] {0,1,2}, Program.Version());
+            configManager.ExportConfigs(configsXmlPath, new [] {0,1,2});
             int i = 0;
             while (configManager.HasConfigs() && i < 4)
             {

@@ -847,6 +847,9 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   <metadata name="toolStrip3.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
   </metadata>
+  <data name="toolStrip3.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
   <data name="toolStrip3.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>None</value>
   </data>
@@ -1331,7 +1334,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>10, 73</value>
   </data>
   <data name="gridRefineInputs.Size" type="System.Drawing.Size, System.Drawing">
-    <value>427, 328</value>
+    <value>427, 329</value>
   </data>
   <data name="gridRefineInputs.TabIndex" type="System.Int32, mscorlib">
     <value>10</value>
@@ -1544,7 +1547,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>2, 2, 2, 2</value>
   </data>
   <data name="gridReportSettings.Size" type="System.Drawing.Size, System.Drawing">
-    <value>415, 393</value>
+    <value>415, 394</value>
   </data>
   <data name="gridReportSettings.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1598,7 +1601,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>8, 6</value>
   </data>
   <data name="panelSkylineSettings.Size" type="System.Drawing.Size, System.Drawing">
-    <value>429, 396</value>
+    <value>429, 397</value>
   </data>
   <data name="panelSkylineSettings.TabIndex" type="System.Int32, mscorlib">
     <value>24</value>
@@ -1858,7 +1861,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
         AAEAAAD/////AQAAAAAAAAAMAgAAAFdTeXN0ZW0uV2luZG93cy5Gb3JtcywgVmVyc2lvbj00LjAuMC4w
         LCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODkFAQAAACZTeXN0
         ZW0uV2luZG93cy5Gb3Jtcy5JbWFnZUxpc3RTdHJlYW1lcgEAAAAERGF0YQcCAgAAAAkDAAAADwMAAACw
-        CgAAAk1TRnQBSQFMAgEBAgEAAWgBAwFoAQMBHgEAAR4BAAT/AQkBAAj/AUIBTQE2AQQGAAE2AQQCAAEo
+        CgAAAk1TRnQBSQFMAgEBAgEAAXABAwFwAQMBHgEAAR4BAAT/AQkBAAj/AUIBTQE2AQQGAAE2AQQCAAEo
         AwABeAMAAR4DAAEBAQABCAUAARABDhgAAYACAAGAAwACgAEAAYADAAGAAQABgAEAAoACAAPAAQABwAHc
         AcABAAHwAcoBpgEAATMFAAEzAQABMwEAATMBAAIzAgADFgEAAxwBAAMiAQADKQEAA1UBAANNAQADQgEA
         AzkBAAGAAXwB/wEAAlAB/wEAAZMBAAHWAQAB/wHsAcwBAAHGAdYB7wEAAdYC5wEAAZABqQGtAgAB/wEz

@@ -36,7 +36,7 @@ namespace SkylineBatch
             return new SkylineTemplate(path, zippedFilePath, dependentConfigName, panoramaFile);
         }
 
-        private SkylineTemplate(string path, string zipFilePath, string dependentConfigName, PanoramaFile panoramaFile)
+        public SkylineTemplate(string path, string zipFilePath, string dependentConfigName, PanoramaFile panoramaFile)
         {
             PanoramaFile = panoramaFile;
             _path = !string.IsNullOrEmpty(path) ? path : null;

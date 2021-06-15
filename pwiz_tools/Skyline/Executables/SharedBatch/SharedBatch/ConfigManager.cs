@@ -32,12 +32,16 @@ namespace SharedBatch
 {
     public delegate IConfig Importer(XmlReader reader);
 
+    public delegate string XmlUpdater(string oldXmlFile);
+
     public class ConfigManager
     {
         // Handles all modification to configs, the config list, configRunners, and log files
         // The UI should reflect the configs, runners, and log files from this class
 
         protected Importer importer; // a ReadXml method to import the configurations
+
+        protected XmlUpdater getUpdatedXml; // a ReadXml method to import the configurations
 
         protected ImmutableList<IConfig> _configList { get; private set; } // the list of configurations. Every config must have a validation status in _configValidation
 
@@ -70,7 +74,7 @@ namespace SharedBatch
 
         protected void AssertAllInitialized()
         {
-            if (importer == null || _configList == null || _configValidation == null || 
+            if (importer == null || getUpdatedXml == null || _configList == null || _configValidation == null || 
                 _logList == null || _lock == null || _loggerLock == null || RootReplacement == null)
                 throw new NullReferenceException("Not all Config Manager variables have been initialized.");
         }
@@ -479,51 +483,58 @@ namespace SharedBatch
             // read configs from file
             try
             {
-                using (var stream = new FileStream(filePath, FileMode.Open))
+                var stream = new FileStream(filePath, FileMode.Open);
+                var reader = XmlReader.Create(stream);
+                while (!reader.Name.Equals("config_list") && !reader.Name.Equals("ConfigList"))
+                    reader.Read();
+
+                var version = reader.GetAttribute(Attr.version);
+                if (version == null)
                 {
-                    using (var reader = XmlReader.Create(stream))
-                    {
-                        while (!reader.Name.Equals("ConfigList"))
-                            reader.Read();
-                        var oldFolder = reader.GetAttribute(Attr.saved_path_root);
-                        if (!string.IsNullOrEmpty(oldFolder))
-                        {
-                            var newFolder = string.IsNullOrEmpty(copiedDestination)
-                                ? Path.GetDirectoryName(filePath)
-                                : Path.GetDirectoryName(copiedConfigFile);
-                            AddRootReplacement(oldFolder, newFolder, false, out _, out _);
-                        }
-
-                        while (!reader.Name.EndsWith("_config"))
-                        {
-                            if (reader.Name == "userSettings" && !reader.IsStartElement())
-                                break; // there are no configurations in the file
-                            reader.Read();
-                        }
-
-                        while (reader.IsStartElement())
-                        {
-                            if (reader.Name.EndsWith("_config"))
-                            {
-                                IConfig config = null;
-                                try
-                                {
-                                    config = importer(reader);
-                                }
-                                catch (Exception ex)
-                                {
-                                    readXmlErrors.Add(ex.Message);
-                                }
-                                
-                                if (config != null)
-                                    readConfigs.Add(config);
-                            }
-
-                            reader.Read();
-                            reader.Read();
-                        }
-                    }
+                    reader.Dispose();
+                    stream.Dispose();
+                    return ImportFrom(getUpdatedXml(filePath), showDownloadedFileForm);
                 }
+
+                var oldFolder = reader.GetAttribute(Attr.saved_path_root);
+                if (!string.IsNullOrEmpty(oldFolder))
+                {
+                    var newFolder = string.IsNullOrEmpty(copiedDestination)
+                        ? Path.GetDirectoryName(filePath)
+                        : Path.GetDirectoryName(copiedConfigFile);
+                    AddRootReplacement(oldFolder, newFolder, false, out _, out _);
+                }
+
+                while (!reader.Name.EndsWith("_config"))
+                {
+                    if (reader.Name == "userSettings" && !reader.IsStartElement())
+                        break; // there are no configurations in the file
+                    reader.Read();
+                }
+
+                while (reader.IsStartElement())
+                {
+                    if (reader.Name.EndsWith("_config"))
+                    {
+                        IConfig config = null;
+                        try
+                        {
+                            config = importer(reader);
+                        }
+                        catch (Exception ex)
+                        {
+                            readXmlErrors.Add(ex.Message);
+                        }
+                        
+                        if (config != null)
+                            readConfigs.Add(config);
+                    }
+
+                    reader.Read();
+                    reader.Read();
+                }
+                reader.Dispose();
+                stream.Dispose();
             }
             catch (Exception e)
             {
@@ -535,6 +546,10 @@ namespace SharedBatch
                     e.Message);
                 return addedConfigs;
             }
+
+            // delete temporary file used to rewrite XML
+            if (filePath.EndsWith(TextUtil.EXT_TMP))
+                File.Delete(filePath);
 
             if (readConfigs.Count == 0 && readXmlErrors.Count == 0)
             {
@@ -614,7 +629,7 @@ namespace SharedBatch
             return names;
         }
 
-        public void ExportConfigs(string filePath, int[] indiciesToSave, string version)
+        public void ExportConfigs(string filePath, int[] indiciesToSave)
         {
             var state = new ConfigManagerState(this);
             var directory = string.Empty;
@@ -651,9 +666,9 @@ namespace SharedBatch
                     settings.NewLineChars = Environment.NewLine;
                     using (XmlWriter writer = XmlWriter.Create(streamWriter, settings))
                     {
-                        writer.WriteStartElement("ConfigList");
+                        writer.WriteStartElement("config_list");
                         writer.WriteAttributeString(Attr.saved_path_root, directory);
-                        writer.WriteAttributeString(Attr.version, version);
+                        writer.WriteAttributeString(Attr.version, Settings.Default.ProgramVersion);
                         foreach (int index in indiciesToSave)
                             state.configList[index].WriteXml(writer);
                         writer.WriteEndElement();
