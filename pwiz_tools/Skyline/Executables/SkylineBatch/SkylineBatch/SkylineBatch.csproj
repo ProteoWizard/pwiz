@@ -209,6 +209,12 @@
     <Compile Include="RefineInputObject.cs" />
     <Compile Include="RefineSettings.cs" />
     <Compile Include="PanoramaServerConnector.cs" />
+    <Compile Include="RScriptForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="RScriptForm.Designer.cs">
+      <DependentUpon>RScriptForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="ServerConnector.cs" />
     <Compile Include="ServerFilesManager.cs" />
     <Compile Include="SkylineBatchConfigManager.cs" />
@@ -264,6 +270,8 @@
     </Compile>
     <Compile Include="SkylineTemplate.cs" />
     <Compile Include="Server.cs" />
+    <Compile Include="XMLTags.cs" />
+    <Compile Include="XmlUpdater.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FluentFTP">
@@ -298,6 +306,9 @@
     <EmbeddedResource Include="MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="RScriptForm.resx">
+      <DependentUpon>RScriptForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="RVersionControl.resx">
       <DependentUpon>RVersionControl.cs</DependentUpon>

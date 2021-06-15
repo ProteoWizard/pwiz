@@ -146,7 +146,7 @@ namespace SkylineBatch
                     throw new ArgumentException("The server cannot be empty. Please enter the server information.");
                 return null;
             }
-            return DataServerInfo.ServerFromUi(textUrl.Text, textUserName.Text, textPassword.Text, textNamingPattern.Text, _dataFolder);
+            return DataServerInfo.ServerFromUi(textUrl.Text, textUserName.Text, textPassword.Text, !checkBoxNoEncryption.Checked, textNamingPattern.Text, _dataFolder);
         }
 
         private void btnRemoveServer_Click(object sender, EventArgs e)
@@ -191,6 +191,10 @@ namespace SkylineBatch
             _updated = false;
             serverConnector = null;
             UpdateLabel();
+
+            checkBoxNoEncryption.Enabled = textPassword.Text.Length > 0;
+            if (textPassword.Text.Length == 0)
+                checkBoxNoEncryption.Checked = false;
         }
 
         private void textNamingPattern_TextChanged(object sender, EventArgs e)
@@ -202,6 +206,11 @@ namespace SkylineBatch
                 foreach (var file in files)
                     listBoxFileNames.Items.Add(file.FileName);
             }
+        }
+
+        private void checkBoxNoEncryption_CheckedChanged(object sender, EventArgs e)
+        {
+            textPassword.PasswordChar = checkBoxNoEncryption.Checked ? '\0' : '*';
         }
     }
 }

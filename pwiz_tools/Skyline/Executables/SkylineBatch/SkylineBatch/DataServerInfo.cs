@@ -11,7 +11,7 @@ namespace SkylineBatch
     public class DataServerInfo : Server, IEquatable<Object>
     {
         
-        public static DataServerInfo ServerFromUi(string url, string userName, string password, string namingPattern, string folder)
+        public static DataServerInfo ServerFromUi(string url, string userName, string password, bool encrypt, string namingPattern, string folder)
         {
             if (string.IsNullOrWhiteSpace(url))
                 throw new ArgumentException(Resources.DataServerInfo_ServerFromUi_The_URL_cannot_be_empty__Please_enter_a_URL_);
@@ -26,15 +26,15 @@ namespace SkylineBatch
             }
             ValidateUsernamePassword(userName, password);
 
-            return new DataServerInfo(uri, userName, password, namingPattern, folder);
+            return new DataServerInfo(uri, userName, password, encrypt, namingPattern, folder);
         }
 
         public static DataServerInfo ReplaceFolder(DataServerInfo other, string newFolder)
         {
-            return new DataServerInfo(other.URI, other.Username, other.Password, other.DataNamingPattern, newFolder);
+            return new DataServerInfo(other.URI, other.Username, other.Password, other.Encrypt, other.DataNamingPattern, newFolder);
         }
 
-        private DataServerInfo(Uri server, string userName, string password, string namingPattern, string folder) : base(server, userName, password)
+        private DataServerInfo(Uri server, string userName, string password, bool encrypt, string namingPattern, string folder) : base(server, userName, password, encrypt)
         {
             DataNamingPattern = namingPattern ?? ".*";
             Folder = folder;
@@ -72,7 +72,7 @@ namespace SkylineBatch
 
         public DataServerInfo Copy()
         {
-            return new DataServerInfo(URI, Username, Password, DataNamingPattern, Folder);
+            return new DataServerInfo(URI, Username, Password, Encrypt, DataNamingPattern, Folder);
         }
 
         public static void ValidateUsernamePassword(string username, string password)
@@ -85,57 +85,22 @@ namespace SkylineBatch
                 throw new ArgumentException(Resources.DataServerInfo_ValidateUsernamePassword_Password_cannot_be_empty_if_the_server_has_a_username__Please_enter_a_password_);
         }
 
-        private enum Attr
-        {
-            ServerUri,
-            ServerUrl, // deprecated
-            ServerFolder, // deprecated
-            ServerUserName,
-            ServerPassword,
-            DataNamingPattern
-        };
-
         public new void WriteXml(XmlWriter writer)
         {
-            writer.WriteStartElement("data_server");
-            writer.WriteAttributeIfString(Attr.ServerUri, URI.AbsoluteUri);
-            writer.WriteAttributeIfString(Attr.ServerUserName, Username);
-            writer.WriteAttributeIfString(Attr.ServerPassword, Password);
-            writer.WriteAttributeIfString(Attr.DataNamingPattern, DataNamingPattern);
+            writer.WriteStartElement(XMLElements.REMOTE_FILE_SET);
+            base.WriteXml(writer);
+            if (!DataNamingPattern.Equals(".*"))
+                writer.WriteAttributeIfString(XML_TAGS.data_naming_pattern, DataNamingPattern);
             writer.WriteEndElement();
-        }
-
-        public static DataServerInfo ReadOldXml(XmlReader reader, string folder)
-        {
-            var serverName = reader.GetAttribute(Attr.ServerUrl);
-            if (serverName == null) return null;
-            return ReadXmlFields(reader, folder);
         }
 
         public static DataServerInfo ReadXml(XmlReader reader, string folder)
         {
-            if (XmlUtil.ReadNextElement(reader, "data_server"))
-            {
-                var server = ReadXmlFields(reader, folder);
-                reader.Read();
-                return server;
-            }
-
-            return null;
-        }
-
-        private static DataServerInfo ReadXmlFields(XmlReader reader, string folder)
-        {
-            var serverName = reader.GetAttribute(Attr.ServerUrl);
-            var uriString = reader.GetAttribute(Attr.ServerUri);
-            if (string.IsNullOrEmpty(serverName) && string.IsNullOrEmpty(uriString))
+            if (!reader.ReadToDescendant(XMLElements.REMOTE_FILE_SET))
                 return null;
-            var serverFolder = reader.GetAttribute(Attr.ServerFolder);
-            var uri = !string.IsNullOrEmpty(uriString) ? new Uri(uriString) : new Uri($@"ftp://{serverName}/{serverFolder}");
-            var username = reader.GetAttribute(Attr.ServerUserName);
-            var password = reader.GetAttribute(Attr.ServerPassword);
-            var dataNamingPattern = reader.GetAttribute(Attr.DataNamingPattern);
-            return new DataServerInfo(uri, username, password, dataNamingPattern, folder);
+            var server = Server.ReadXml(reader);
+            var dataNamingPattern = reader.GetAttribute(XML_TAGS.data_naming_pattern);
+            return new DataServerInfo(server.URI, server.Username, server.Password, server.Encrypt, dataNamingPattern, folder);
         }
 
         /*protected bool Equals(DataServerInfo other)

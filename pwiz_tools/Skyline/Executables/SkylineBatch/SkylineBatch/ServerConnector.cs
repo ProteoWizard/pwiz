@@ -135,7 +135,7 @@ namespace SkylineBatch
                             var size = WebDownloadClient.GetSize(downloadUri, server.Username, server.Password,
                                 cancelToken);
                             fileInfos.Add(new ConnectedFileInfo(Path.GetFileName(pathOnServer),
-                                new Server(downloadUri, server.Username, server.Password), size,
+                                new Server(downloadUri, server.Username, server.Password, server.Encrypt), size,
                                 folder));
                             i++;
                         }

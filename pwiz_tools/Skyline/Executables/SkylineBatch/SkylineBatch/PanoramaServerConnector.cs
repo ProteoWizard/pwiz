@@ -139,7 +139,7 @@ namespace SkylineBatch
                     throw new Exception("Could not parse skyp file.");
             }
 
-            var downloadServer = new Server(webdavUri, server.Username, server.Password);
+            var downloadServer = new Server(webdavUri, server.Username, server.Password, server.Encrypt);
             var fileName = downloadingFileName;
             var size = WebDownloadClient.GetSize(downloadServer.URI, server.Username, server.Password, cancelToken);
             return new ConnectedFileInfo(fileName, downloadServer, size, string.Empty);

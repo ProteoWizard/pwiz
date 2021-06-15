@@ -136,31 +136,22 @@ namespace SkylineBatch
             _path = skyFile;
         }
 
-        private enum Attr
-        {
-            FilePath,
-            ZipFilePath,
-            DependentConfigName,
-        };
-
         public void WriteXml(XmlWriter writer)
         {
-            writer.WriteStartElement("template_file");
-            writer.WriteAttributeIfString(Attr.FilePath, _path);
-            writer.WriteAttributeIfString(Attr.ZipFilePath, _zippedPath);
-            writer.WriteAttributeIfString(Attr.DependentConfigName, DependentConfigName);
+            writer.WriteStartElement(XMLElements.TEMPLATE_FILE);
+            writer.WriteAttributeIfString(XML_TAGS.path, _path);
+            writer.WriteAttributeIfString(XML_TAGS.zip_path, _zippedPath);
+            writer.WriteAttributeIfString(XML_TAGS.dependent_configuration, DependentConfigName);
             if (PanoramaFile != null) PanoramaFile.WriteXml(writer);
             writer.WriteEndElement();
         }
 
         public static SkylineTemplate ReadXml(XmlReader reader)
         {
-            if (!XmlUtil.ReadNextElement(reader, "template_file"))
-                throw new Exception("Mishandled config file from earlier version");
-            var path = reader.GetAttribute(Attr.FilePath);
-            var zippedPath = reader.GetAttribute(Attr.ZipFilePath);
-            var dependentConfigName = reader.GetAttribute(Attr.DependentConfigName);
-            var panoramaFile = reader.ReadToDescendant("panorama_file") ? PanoramaFile.ReadXml(reader) : null;
+            var path = reader.GetAttribute(XML_TAGS.path);
+            var zippedPath = reader.GetAttribute(XML_TAGS.zip_path);
+            var dependentConfigName = reader.GetAttribute(XML_TAGS.dependent_configuration);
+            var panoramaFile = PanoramaFile.ReadXml(reader, string.IsNullOrEmpty(path) ? zippedPath : path);
 
             return new SkylineTemplate(path, zippedPath, dependentConfigName, panoramaFile);
         }
@@ -202,7 +193,7 @@ namespace SkylineBatch
             return new PanoramaFile(server, path, fileName);
         }
 
-        public PanoramaFile(Server server, string downloadFolder, string fileName) : base (server.URI, server.Username, server.Password)
+        public PanoramaFile(Server server, string downloadFolder, string fileName) : base (server.URI, server.Username, server.Password, server.Encrypt)
         {
             _inputUrl = server.URI.AbsoluteUri;
 
@@ -229,7 +220,7 @@ namespace SkylineBatch
 
         public PanoramaFile ReplacedFolder(string newFolder)
         {
-            return new PanoramaFile(new Server(URI, UserName, Password), newFolder, FileName);
+            return new PanoramaFile(new Server(URI, UserName, Password, Encrypt), newFolder, FileName);
         }
 
         public void AddDownloadingFile(ServerFilesManager serverFiles)
@@ -241,13 +232,7 @@ namespace SkylineBatch
         {
             return new PanoramaFile(this, newFolder, FileName);
         }
-
-
-        private enum Attr
-        {
-            DownloadFolder,
-            FileName
-        };
+        
 
         public void Validate()
         {
@@ -287,27 +272,24 @@ namespace SkylineBatch
         {
             var replaced = TextUtil.SuccessfulReplace(ValidateDownloadFolder, oldRoot, newRoot, DownloadFolder,
                 Program.FunctionalTest, out string replacedFolderPath);
-            replacedPanoramaFile = new PanoramaFile(new Server(URI, UserName, Password), replacedFolderPath, FileName);
+            replacedPanoramaFile = new PanoramaFile(new Server(URI, UserName, Password, Encrypt), replacedFolderPath, FileName);
             return replaced;
         }
 
         public new void WriteXml(XmlWriter writer)
         {
-            writer.WriteStartElement("panorama_file");
-            writer.WriteAttributeIfString(Attr.DownloadFolder, DownloadFolder);
-            writer.WriteAttributeIfString(Attr.FileName, FileName);
+            writer.WriteStartElement(XMLElements.REMOTE_FILE);
             base.WriteXml(writer);
             writer.WriteEndElement();
         }
 
-        public new static PanoramaFile ReadXml(XmlReader reader)
+        public static PanoramaFile ReadXml(XmlReader reader, string filePath)
         {
-            if (reader.NodeType != XmlNodeType.Element && !XmlUtil.ReadUntilElement(reader)) return null;
-            var templateReader = reader.ReadSubtree();
-            if (!XmlUtil.ReadNextElement(templateReader, "panorama_file")) return null;
-            var downloadFolder = templateReader.GetAttribute(Attr.DownloadFolder);
-            var fileName = templateReader.GetAttribute(Attr.FileName);
-            var server = Server.ReadXml(templateReader);
+            if (!reader.ReadToDescendant(XMLElements.REMOTE_FILE))
+                return null;
+            var downloadFolder = Path.GetDirectoryName(filePath);
+            var fileName = Path.GetFileName(filePath);
+            var server = Server.ReadXml(reader);
 
             return new PanoramaFile(server, downloadFolder, fileName);
         }

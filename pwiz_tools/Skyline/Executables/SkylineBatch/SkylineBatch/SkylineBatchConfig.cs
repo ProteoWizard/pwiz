@@ -138,12 +138,6 @@ namespace SkylineBatch
                 FileSettings, RefineSettings, ReportSettings, newSettings);
         }
 
-        private enum Attr
-        {
-            Name,
-            Enabled,
-            Modified
-        }
         
         #region XML
 
@@ -154,32 +148,28 @@ namespace SkylineBatch
 
         public static SkylineBatchConfig ReadXml(XmlReader reader)
         {
-            var name = reader.GetAttribute(Attr.Name);
-            var enabled = reader.GetBoolAttribute(Attr.Enabled);
+            var name = reader.GetAttribute(XML_TAGS.name);
+            var enabled = reader.GetBoolAttribute(XML_TAGS.enabled);
             DateTime modified;
-            DateTime.TryParse(reader.GetAttribute(Attr.Modified), CultureInfo.InvariantCulture, DateTimeStyles.None, out modified);
+            DateTime.TryParse(reader.GetAttribute(XML_TAGS.modified), CultureInfo.InvariantCulture, DateTimeStyles.None, out modified);
 
             XmlUtil.ReadUntilElement(reader);
             MainSettings mainSettings = null;
-            RefineSettings refineSettings = RefineSettings.Empty();
-            FileSettings fileSettings = FileSettings.Empty();
-            ReportSettings reportSettings = new ReportSettings(new List<ReportInfo>());
+            RefineSettings refineSettings = null;
+            FileSettings fileSettings = null;
+            ReportSettings reportSettings = null;
             SkylineSettings skylineSettings = null;
             string exceptionMessage = null;
             try
             {
                 mainSettings = MainSettings.ReadXml(reader);
-                if (XmlUtil.ReadNextElement(reader, "file_settings"))
-                {
-                    fileSettings = FileSettings.ReadXml(reader);
-                }
-                if (XmlUtil.ReadNextElement(reader, "refine_settings"))
-                {
-                    refineSettings = RefineSettings.ReadXml(reader);
-                }
-                if (XmlUtil.ReadNextElement(reader, "report_settings"))
-                    reportSettings = ReportSettings.ReadXml(reader);
-                if(!XmlUtil.ReadNextElement(reader, "config_skyline_settings")) throw new Exception("Configuration does not have Skyline settings");
+                XmlUtil.ReadUntilElement(reader);
+                fileSettings = FileSettings.ReadXml(reader);
+                XmlUtil.ReadUntilElement(reader);
+                refineSettings = RefineSettings.ReadXml(reader);
+                XmlUtil.ReadUntilElement(reader);
+                reportSettings = ReportSettings.ReadXml(reader);
+                XmlUtil.ReadUntilElement(reader);
                 skylineSettings = SkylineSettings.ReadXml(reader);
             }
             catch (ArgumentException e)
@@ -190,7 +180,7 @@ namespace SkylineBatch
             do
             {
                 reader.Read();
-            } while (!(reader.Name == "skylinebatch_config" && reader.NodeType == XmlNodeType.EndElement));
+            } while (!(reader.Name == XMLElements.BATCH_CONFIG && reader.NodeType == XmlNodeType.EndElement));
 
             if (exceptionMessage != null)
                 throw new ArgumentException(exceptionMessage);
@@ -201,10 +191,10 @@ namespace SkylineBatch
 
         public void WriteXml(XmlWriter writer)
         {
-            writer.WriteStartElement("skylinebatch_config");
-            writer.WriteAttribute(Attr.Name, Name);
-            writer.WriteAttribute(Attr.Enabled, Enabled);
-            writer.WriteAttributeIfString(Attr.Modified, Modified.ToString(CultureInfo.InvariantCulture));
+            writer.WriteStartElement(XMLElements.BATCH_CONFIG);
+            writer.WriteAttribute(XML_TAGS.name, Name);
+            writer.WriteAttribute(XML_TAGS.enabled, Enabled);
+            writer.WriteAttributeIfString(XML_TAGS.modified, Modified.ToString(CultureInfo.InvariantCulture));
             MainSettings.WriteXml(writer);
             FileSettings.WriteXml(writer);
             RefineSettings.WriteXml(writer);

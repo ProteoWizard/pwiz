@@ -485,10 +485,7 @@ namespace SharedBatch
                     {
                         while (!reader.Name.Equals("ConfigList"))
                             reader.Read();
-                        var oldConfigFile = reader.GetAttribute(Attr.SavedConfigsFilePath);
-                        var oldFolder = reader.GetAttribute(Attr.SavedPathRoot);
-                        if (!string.IsNullOrEmpty(oldConfigFile) && string.IsNullOrEmpty(oldFolder))
-                            oldFolder = Path.GetDirectoryName(oldConfigFile);
+                        var oldFolder = reader.GetAttribute(Attr.saved_path_root);
                         if (!string.IsNullOrEmpty(oldFolder))
                         {
                             var newFolder = string.IsNullOrEmpty(copiedDestination)
@@ -617,7 +614,7 @@ namespace SharedBatch
             return names;
         }
 
-        public void ExportConfigs(string filePath, int[] indiciesToSave)
+        public void ExportConfigs(string filePath, int[] indiciesToSave, string version)
         {
             var state = new ConfigManagerState(this);
             var directory = string.Empty;
@@ -655,7 +652,8 @@ namespace SharedBatch
                     using (XmlWriter writer = XmlWriter.Create(streamWriter, settings))
                     {
                         writer.WriteStartElement("ConfigList");
-                        writer.WriteAttributeString(Attr.SavedPathRoot, directory);
+                        writer.WriteAttributeString(Attr.saved_path_root, directory);
+                        writer.WriteAttributeString(Attr.version, version);
                         foreach (int index in indiciesToSave)
                             state.configList[index].WriteXml(writer);
                         writer.WriteEndElement();
@@ -664,10 +662,11 @@ namespace SharedBatch
             }
         }
 
+        // TODO (Ali): fix autoQC SavedFilePath
         enum Attr
         {
-            SavedConfigsFilePath, // deprecated since SkylineBatch release 20.2.0.475
-            SavedPathRoot
+            saved_path_root,
+            version
         }
 
         #endregion

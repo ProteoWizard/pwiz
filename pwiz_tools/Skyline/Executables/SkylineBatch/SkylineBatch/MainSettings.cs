@@ -241,49 +241,39 @@ namespace SkylineBatch
 
         #region Read/Write XML
 
-        private enum Attr
-        {
-            TemplateFilePath,
-            DependentConfigName,
-            AnalysisFolderPath,
-            DataFolderPath,
-            AnnotationsFilePath,
-            ReplicateNamingPattern,
-        };
-
         public static MainSettings ReadXml(XmlReader reader)
         {
-
-            var mainSettingsReader = reader.ReadSubtree();
-            mainSettingsReader.Read();
-            var templateFilePath = mainSettingsReader.GetAttribute(Attr.TemplateFilePath);
-            var dependentConfigName = mainSettingsReader.GetAttribute(Attr.DependentConfigName);
-            var oldTemplate = templateFilePath != null
-                ? SkylineTemplate.FromUi(templateFilePath, dependentConfigName, null)
-                : null;
-            var analysisFolderPath = mainSettingsReader.GetAttribute(Attr.AnalysisFolderPath);
-            var dataFolderPath = mainSettingsReader.GetAttribute(Attr.DataFolderPath);
-            var annotationsFilePath = mainSettingsReader.GetAttribute(Attr.AnnotationsFilePath);
-            var replicateNamingPattern = mainSettingsReader.GetAttribute(Attr.ReplicateNamingPattern);
-            var oldServer = DataServerInfo.ReadOldXml(mainSettingsReader, dataFolderPath);
-            var template = oldTemplate ?? SkylineTemplate.ReadXml(mainSettingsReader);
-            var server = oldServer ?? DataServerInfo.ReadXml(mainSettingsReader, dataFolderPath);
-            var annotationsDownload = PanoramaFile.ReadXml(mainSettingsReader);
+            var analysisFolderPath = reader.GetAttribute(XML_TAGS.analysis_folder_path);
+            var replicateNamingPattern = reader.GetAttribute(XML_TAGS.replicate_naming_pattern);
+            reader.ReadToDescendant(XMLElements.TEMPLATE_FILE);
+            var template = SkylineTemplate.ReadXml(reader);
+            reader.ReadToFollowing(XMLElements.DATA_FOLDER);
+            var dataFolderPath = reader.GetAttribute(XML_TAGS.path);
+            var server = DataServerInfo.ReadXml(reader, dataFolderPath);
+            reader.ReadToFollowing(XMLElements.ANNOTATIONS_FILE);
+            var annotationsFilePath = reader.GetAttribute(XML_TAGS.path);
+            var annotationsDownload = PanoramaFile.ReadXml(reader, annotationsFilePath);
             return new MainSettings(template, analysisFolderPath, dataFolderPath, server,
                 annotationsFilePath, annotationsDownload, replicateNamingPattern);
         }
 
         public void WriteXml(XmlWriter writer)
         {
-            writer.WriteStartElement("main_settings");
-            writer.WriteAttributeIfString(Attr.AnalysisFolderPath, AnalysisFolderPath);
-            writer.WriteAttributeIfString(Attr.DataFolderPath, DataFolderPath);
-            
-            writer.WriteAttributeIfString(Attr.AnnotationsFilePath, AnnotationsFilePath);
-            writer.WriteAttributeIfString(Attr.ReplicateNamingPattern, ReplicateNamingPattern);
+            writer.WriteStartElement(XMLElements.MAIN_SETTINGS);
+            writer.WriteAttributeIfString(XML_TAGS.analysis_folder_path, AnalysisFolderPath);
+            writer.WriteAttributeIfString(XML_TAGS.replicate_naming_pattern, ReplicateNamingPattern);
             Template.WriteXml(writer);
+
+            writer.WriteStartElement(XMLElements.DATA_FOLDER);
+            writer.WriteAttributeIfString(XML_TAGS.path, DataFolderPath);
             if (Server != null) Server.WriteXml(writer);
+            writer.WriteEndElement();
+
+            writer.WriteStartElement(XMLElements.ANNOTATIONS_FILE);
+            writer.WriteAttributeIfString(XML_TAGS.path, AnnotationsFilePath);
             if (AnnotationsDownload != null) AnnotationsDownload.WriteXml(writer);
+            writer.WriteEndElement();
+            
             writer.WriteEndElement();
         }
         #endregion

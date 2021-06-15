@@ -41,6 +41,7 @@
             this.label1 = new System.Windows.Forms.Label();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.btnClear = new System.Windows.Forms.Button();
+            this.checkBoxNoEncryption = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -83,6 +84,7 @@
             // 
             resources.ApplyResources(this.textPassword, "textPassword");
             this.textPassword.Name = "textPassword";
+            this.textPassword.TextChanged += new System.EventHandler(this.textPassword_TextChanged);
             // 
             // btnSave
             // 
@@ -116,10 +118,18 @@
             this.btnClear.UseVisualStyleBackColor = true;
             this.btnClear.Click += new System.EventHandler(this.btnClear_Click);
             // 
+            // checkBoxNoEncryption
+            // 
+            resources.ApplyResources(this.checkBoxNoEncryption, "checkBoxNoEncryption");
+            this.checkBoxNoEncryption.Name = "checkBoxNoEncryption";
+            this.checkBoxNoEncryption.UseVisualStyleBackColor = true;
+            this.checkBoxNoEncryption.CheckedChanged += new System.EventHandler(this.checkBoxNoEncryption_CheckedChanged);
+            // 
             // PanoramaFileForm
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.checkBoxNoEncryption);
             this.Controls.Add(this.btnClear);
             this.Controls.Add(this.splitContainer1);
             this.Controls.Add(this.btnSave);
@@ -155,5 +165,6 @@
         private System.Windows.Forms.TextBox textUrl;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Button btnClear;
+        private System.Windows.Forms.CheckBox checkBoxNoEncryption;
     }
 }

@@ -27,6 +27,8 @@ namespace SkylineBatch
                 textUrl.Text = editingServer.URI.AbsoluteUri;
                 textUserName.Text = editingServer.Username;
                 textPassword.Text = editingServer.Password;
+                checkBoxNoEncryption.Enabled = !string.IsNullOrEmpty(editingServer.Password);
+                checkBoxNoEncryption.Checked = !editingServer.Encrypt;
             }
 
         }
@@ -93,7 +95,7 @@ namespace SkylineBatch
                 textUserName.Text == string.Empty &&
                 textPassword.Text == string.Empty)
                 return null;
-            return PanoramaFile.PanoramaFileFromUI(new Server(textUrl.Text, textUserName.Text, textPassword.Text), _folderPath, cancelToken);
+            return PanoramaFile.PanoramaFileFromUI(new Server(textUrl.Text, textUserName.Text, textPassword.Text, !checkBoxNoEncryption.Checked), _folderPath, cancelToken);
         }
 
         private void AddPanoramaTemplate_FormClosing(object sender, FormClosingEventArgs e)
@@ -114,6 +116,18 @@ namespace SkylineBatch
             catch (InvalidOperationException)
             {
             }
+        }
+
+        private void textPassword_TextChanged(object sender, EventArgs e)
+        {
+            checkBoxNoEncryption.Enabled = textPassword.Text.Length > 0;
+            if (textPassword.Text.Length == 0)
+                checkBoxNoEncryption.Checked = false;
+        }
+
+        private void checkBoxNoEncryption_CheckedChanged(object sender, EventArgs e)
+        {
+            textPassword.PasswordChar = checkBoxNoEncryption.Checked ? '\0' : '*';
         }
     }
 }

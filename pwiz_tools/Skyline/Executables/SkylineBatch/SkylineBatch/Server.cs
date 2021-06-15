@@ -90,21 +90,24 @@ namespace SkylineBatch
     [XmlRoot("server")]
     public class Server
     {
-        public Server(string uriText, string username, string password)
-            : this(new Uri(uriText), username, password)
+        public Server(string uriText, string username, string password, bool encrypt)
+            : this(new Uri(uriText), username, password, encrypt)
         {
         }
 
-        public Server(Uri uri, string username, string password)
+        public Server(Uri uri, string username, string password, bool encrypt)
         {
             Username = username;
             Password = password;
             URI = uri;
+            Encrypt = encrypt;
         }
 
         internal string Username { get; set; }
         internal string Password { get; set; }
         internal Uri URI { get; set; }
+
+        internal bool Encrypt { get; set; }
 
         public string GetKey()
         {
@@ -135,14 +138,6 @@ namespace SkylineBatch
         {
         }
 
-        private enum ATTR
-        {
-            username,
-            password,
-            password_encrypted,
-            uri
-        }
-
         private void Validate()
         {
         }
@@ -155,8 +150,8 @@ namespace SkylineBatch
         public static Server ReadXml(XmlReader reader)
         {
             // Read tag attributes
-            var username = reader.GetAttribute(ATTR.username) ?? string.Empty;
-            string encryptedPassword = reader.GetAttribute(ATTR.password_encrypted);
+            var username = reader.GetAttribute(XML_TAGS.username) ?? string.Empty;
+            string encryptedPassword = reader.GetAttribute(XML_TAGS.encrypted_password);
             string password;
             if (encryptedPassword != null)
             {
@@ -171,9 +166,9 @@ namespace SkylineBatch
             }
             else
             {
-                password = reader.GetAttribute(ATTR.password) ?? string.Empty;
+                password = reader.GetAttribute(XML_TAGS.password) ?? string.Empty;
             }
-            string uriText = reader.GetAttribute(ATTR.uri);
+            string uriText = reader.GetAttribute(XML_TAGS.url);
             if (string.IsNullOrEmpty(uriText))
             {
                 throw new InvalidDataException(Resources.Server_ReadXml_A_Panorama_server_must_be_specified_);
@@ -190,21 +185,20 @@ namespace SkylineBatch
             }
             // Consume tag
             reader.Read();
-            
-            var server = new Server(uri, username, password);
+            var encrypt = encryptedPassword != null || string.IsNullOrEmpty(password);
+            var server = new Server(uri, username, password, encrypt);
             server.Validate();
             return server;
         }
 
         public void WriteXml(XmlWriter writer)
         {
-            // Write tag attributes
-            writer.WriteAttributeString(ATTR.username, Username);
-            if (!string.IsNullOrEmpty(Password))
-            {
-                writer.WriteAttributeString(ATTR.password_encrypted, TextUtil.EncryptPassword(Password));
-            }
-            writer.WriteAttribute(ATTR.uri, URI);
+            writer.WriteAttribute(XML_TAGS.url, URI);
+            writer.WriteAttributeIfString(XML_TAGS.username, Username);
+            if (Encrypt && !string.IsNullOrEmpty(Password))
+                writer.WriteAttributeIfString(XML_TAGS.encrypted_password, TextUtil.EncryptPassword(Password));
+            else
+                writer.WriteAttributeIfString(XML_TAGS.password, Password);
         }
         #endregion
 
