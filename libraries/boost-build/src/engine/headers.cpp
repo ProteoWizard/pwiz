@@ -41,6 +41,9 @@
 # include "hcache.h"
 #endif
 
+#include <errno.h>
+#include <string.h>
+
 #ifndef OPT_HEADER_CACHE_EXT
 static LIST * headers1( LIST *, OBJECT * file, int rec, regexp * re[] );
 #endif
@@ -145,7 +148,13 @@ LIST * headers1( LIST * l, OBJECT * file, int rec, regexp * re[] )
     }
 
     if ( !( f = fopen( object_str( file ), "r" ) ) )
+    {
+        /* No source files will be generated when -n flag is passed */
+        if ( !globs.noexec || errno != ENOENT )
+            err_printf( "[errno %d] failed to scan file '%s': %s",
+                errno, object_str( file ), strerror(errno) );
         return l;
+    }
 
     while ( fgets( buf, sizeof( buf ), f ) )
     {

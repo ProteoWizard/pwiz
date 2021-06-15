@@ -48,7 +48,7 @@ rule process (
     {
         case --help-internal :
         local path-to-modules = [ modules.peek : BOOST_BUILD_PATH ] ;
-        path-to-modules ?= . ;
+        path-to-modules += . ;
         local possible-modules = [ GLOB $(path-to-modules) : *\\.jam ] ;
         local not-modules = [ GLOB $(path-to-modules) : *$(.not-modules)\\.jam ] ;
         local modules-to-list =
@@ -177,7 +177,7 @@ local rule split-symbol (
     )
 {
     local path-to-modules = [ modules.peek : BOOST_BUILD_PATH ] ;
-    path-to-modules ?= . ;
+    path-to-modules += . ;
     local module-name = $(symbol) ;
     local symbol-name = ;
     local result = ;

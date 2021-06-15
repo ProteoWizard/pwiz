@@ -1087,7 +1087,7 @@ namespace pwiz.Skyline.Model.Results
                             if (_filter.IsWatersMse)
                             {
                                 // looking for the 3 in 3.0.1 (or the 10 in 10.0.1) or the 2 in 1.2.3 if it's combined ion mobility'
-                                if (MsDataSpectrum.WatersFunctionNumberFromId(nextSpectrum.Id, _dataFile.HasCombinedIonMobilitySpectra) > 2)
+                                if (MsDataSpectrum.WatersFunctionNumberFromId(nextSpectrum.Id, _dataFile.HasCombinedIonMobilitySpectra && nextSpectrum.IonMobilities != null) > 2)
                                     continue;
                             }
                             else if (_filter.IsWatersFile)

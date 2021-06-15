@@ -677,9 +677,6 @@ void write_alternative_proteins(XMLWriter& xmlWriter, const SpectrumIdentificati
     }
 }
 
-// we only write search_scores for numeric CVParams and UserParams;
-// examples of valid numbers: 1 1.234 1.234e5 1.234E-5 (also 123.456e5, not a big deal)
-boost::xpressive::sregex numericRegex = boost::xpressive::sregex::compile("[+-]?\\d+(?:\\.\\d*)?(?:[eE][+-]?\\d+)?");
 
 void write_search_hit(XMLWriter& xmlWriter,
                       CVID analysisSoftwareCVID,
@@ -687,6 +684,10 @@ void write_search_hit(XMLWriter& xmlWriter,
                       const SpectrumIdentificationResult& sir,
                       const SpectrumIdentificationItem& sii)
 {
+    // we only write search_scores for numeric CVParams and UserParams;
+    // examples of valid numbers: 1 1.234 1.234e5 1.234E-5 (also 123.456e5, not a big deal)
+    static boost::xpressive::sregex numericRegex = boost::xpressive::sregex::compile("[+-]?\\d+(?:\\.\\d*)?(?:[eE][+-]?\\d+)?");
+
     if (!sii.peptidePtr.get())
         throw runtime_error("[write_search_hit] PepXML requires SpectrumIdentificationItem elements to refer to Peptides.");
     if (sii.peptideEvidencePtr.empty())
@@ -2019,16 +2020,16 @@ string& invertResidueSet(string& residues)
     return residues;
 }
 
-// match zero or one regex term like (?<=[KR]) or (?<=K) or (?<![KR]) or (?<!K)
-// followed by zero or one term like (?=[KR]) or (?=K) or (?![KR]) or (?!K)
-// 4 capture groups: [!=] [A-Z] for each look: 0                1                        2                3
-const bxp::sregex cutNoCutRegex = bxp::sregex::compile("(?:\\(+\\?<([=!])(\\[[A-Z]+\\]|[A-Z])\\)+)?(?:\\(+\\?([=!])(\\[[A-Z]+\\]|[A-Z])\\)+)?");
-
 } // namespace
 
 
 PWIZ_API_DECL PepXMLSpecificity pepXMLSpecificity(const Enzyme& ez)
 {
+    // match zero or one regex term like (?<=[KR]) or (?<=K) or (?<![KR]) or (?<!K)
+    // followed by zero or one term like (?=[KR]) or (?=K) or (?![KR]) or (?!K)
+    // 4 capture groups: [!=] [A-Z] for each look: 0                1                        2                3
+    static bxp::sregex cutNoCutRegex = bxp::sregex::compile("(?:\\(+\\?<([=!])(\\[[A-Z]+\\]|[A-Z])\\)+)?(?:\\(+\\?([=!])(\\[[A-Z]+\\]|[A-Z])\\)+)?");
+
     PepXMLSpecificity result;
     string &cut = result.cut, &nocut = result.no_cut, &sense = result.sense;
 

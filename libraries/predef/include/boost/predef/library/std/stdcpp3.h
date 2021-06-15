@@ -1,5 +1,5 @@
 /*
-Copyright Rene Rivera 2008-2013
+Copyright Rene Rivera 2008-2015
 Distributed under the Boost Software License, Version 1.0.
 (See accompanying file LICENSE_1_0.txt or copy at
 http://www.boost.org/LICENSE_1_0.txt)
@@ -13,22 +13,23 @@ http://www.boost.org/LICENSE_1_0.txt)
 #include <boost/predef/version_number.h>
 #include <boost/predef/make.h>
 
-/*`
-[heading `BOOST_LIB_STD_GNU`]
+/* tag::reference[]
+= `BOOST_LIB_STD_GNU`
 
-[@http://gcc.gnu.org/libstdc++/ GNU libstdc++] Standard C++ library.
+https://gcc.gnu.org/onlinedocs/libstdc%2b%2b/[GNU libstdc++] Standard {CPP} library.
 Version number available as year (from 1970), month, and day.
 
-[table
-    [[__predef_symbol__] [__predef_version__]]
+[options="header"]
+|===
+| {predef_symbol} | {predef_version}
 
-    [[`__GLIBCXX__`] [__predef_detection__]]
-    [[`__GLIBCPP__`] [__predef_detection__]]
+| `+__GLIBCXX__+` | {predef_detection}
+| `+__GLIBCPP__+` | {predef_detection}
 
-    [[`__GLIBCXX__`] [V.R.P]]
-    [[`__GLIBCPP__`] [V.R.P]]
-    ]
- */
+| `+__GLIBCXX__+` | V.R.P
+| `+__GLIBCPP__+` | V.R.P
+|===
+*/ // end::reference[]
 
 #define BOOST_LIB_STD_GNU BOOST_VERSION_NUMBER_NOT_AVAILABLE
 
@@ -47,8 +48,7 @@ Version number available as year (from 1970), month, and day.
 
 #define BOOST_LIB_STD_GNU_NAME "GNU"
 
+#endif
+
 #include <boost/predef/detail/test.h>
 BOOST_PREDEF_DECLARE_TEST(BOOST_LIB_STD_GNU,BOOST_LIB_STD_GNU_NAME)
-
-
-#endif
