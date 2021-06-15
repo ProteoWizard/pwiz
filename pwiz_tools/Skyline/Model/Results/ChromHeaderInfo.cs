@@ -1249,6 +1249,10 @@ namespace pwiz.Skyline.Model.Results
             : this()
         {
             var times = timeIntensities.Times;
+            if (times.Count == 0)
+            {
+                return;
+            }
             var intensities = timeIntensities.Intensities;
             var massErrors = timeIntensities.MassErrors;
             // Get the interval being used to convert from Crawdad index based numbers

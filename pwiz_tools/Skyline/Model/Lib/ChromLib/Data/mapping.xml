@@ -26,7 +26,7 @@
     <property name="Label2H" />
     <property name="UnimodId" />
   </class>
-  <class name="Peptide">
+  <class name="Peptide" polymorphism="explicit">
     <id name="Id">
       <generator class="native"/>
     </id>
@@ -39,7 +39,27 @@
     <property name="CalcNeutralMass" />
     <property name="NumMissedCleavages" />
   </class>
-  <class name="Protein">
+  <!-- Schema format 1.3 added small molecule info to Peptide table-->
+  <class name="Peptide+Format1Dot3" table="Peptide">
+    <id name="Id">
+      <generator class="native"/>
+    </id>
+    <many-to-one class="Protein" name="Protein" column="ProteinId"/>
+    <property name="Sequence" />
+    <property name="StartIndex" />
+    <property name="EndIndex" />
+    <property name="PreviousAa" />
+    <property name="NextAa" />
+    <property name="CalcNeutralMass" />
+    <property name="NumMissedCleavages" />
+
+    <property name="ChemicalFormula" />
+    <property name="MoleculeName" />
+    <property name="MassMonoisotopic" />
+    <property name="MassAverage" />
+    <property name="MoleculeAccession" />
+   </class>
+   <class name="Protein">
     <id name="Id">
       <generator class="native"/>
     </id>
@@ -52,6 +72,7 @@
       <generator class="native"/>
     </id>
     <many-to-one class="Peptide" name="Peptide" column="PeptideId"/>
+    <property name="PeptideId" />
     <property name="IsotopeLabel" />
     <property name="Mz" />
     <property name="Charge" />
@@ -64,6 +85,7 @@
     <property name="NumPoints" />
     <property name="AverageMassErrorPPM"/>
     <property name="Chromatogram" />
+    <property name="SampleFileId" />
     <many-to-one class="SampleFile" name="SampleFile" column="SampleFileId"/>
     <bag name="Transitions">
       <key column="PrecursorId"/>
@@ -71,7 +93,7 @@
     </bag>
   </class>
   <!-- Schema format 1.2 added "ChromatogramFormat" and "UncompressedSize" to Precursor table-->
-  <class name="Precursor+Format1Dot2" table="Precursor">
+  <class name="Precursor+Format1Dot2" polymorphism="explicit" table="Precursor">
     <id name="Id">
       <generator class="native"/>
     </id>
@@ -96,7 +118,45 @@
       <one-to-many class="Transition"/>
     </bag>
   </class>
-  <class name="Transition">
+  <!-- Schema format 1.3 added ion mobility, precursor concentration and small molecule info to Precursor table-->
+  <class name="Precursor+Format1Dot3" table="Precursor">
+    <id name="Id">
+      <generator class="native"/>
+    </id>
+    <many-to-one class="Peptide" name="Peptide" column="PeptideId"/>
+    <property name="IsotopeLabel" />
+    <property name="Mz" />
+    <property name="Charge" />
+    <property name="NeutralMass" />
+    <property name="ModifiedSequence" />
+    <property name="CollisionEnergy" />
+    <property name="DeclusteringPotential" />
+    <property name="TotalArea" />
+    <property name="NumTransitions" />
+    <property name="NumPoints" />
+    <property name="AverageMassErrorPPM"/>
+    <property name="Chromatogram" />
+    <property name="ChromatogramFormat"/>
+    <property name="UncompressedSize" />
+
+    <property name="ExplicitIonMobility" />
+    <property name="CCS" />
+    <property name="IonMobilityMS1" />
+    <property name="IonMobilityFragment" />
+    <property name="IonMobilityWindow" />
+    <property name="IonMobilityType" />
+    <property name="ExplicitIonMobilityUnits" />
+    <property name="ExplicitCcsSqa" />
+    <property name="ExplicitCompensationVoltage" />
+    <property name="Adduct" />
+
+    <many-to-one class="SampleFile" name="SampleFile" column="SampleFileId"/>
+    <bag name="Transitions">
+      <key column="PrecursorId"/>
+      <one-to-many class="Transition"/>
+    </bag>
+  </class>
+  <class name="Transition" polymorphism="explicit">
     <id name="Id">
       <generator class="native"/>
     </id>
@@ -112,6 +172,28 @@
     <property name="Height"/>
     <property name="Fwhm"/>
     <property name="ChromatogramIndex" />
+  </class>
+  <!-- Schema format 1.3 added small molecule info to Transition table-->
+  <class name="Transition+Format1Dot3" table="Transition">
+    <id name="Id">
+      <generator class="native"/>
+    </id>
+    <many-to-one class="Precursor" name="Precursor" column="PrecursorId" />
+    <property name="Mz" />
+    <property name="Charge"/>
+    <property name="NeutralMass" />
+    <property name="NeutralLossMass" />
+    <property name="FragmentType" />
+    <property name="FragmentOrdinal" />
+    <property name="MassIndex" />
+    <property name="Area" />
+    <property name="Height"/>
+    <property name="Fwhm"/>
+    <property name="ChromatogramIndex" />
+
+    <property name="FragmentName" />
+    <property name="ChemicalFormula" />
+    <property name="Adduct" />
   </class>
   <class name="SampleFile">
     <id name="Id">
