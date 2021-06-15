@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Lib.ChromLib.Data
 {
@@ -25,6 +26,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib.Data
         public virtual Precursor Precursor { get; set; }
         public virtual double Mz { get; set; }
         public virtual int Charge { get; set; }
+        public virtual Adduct GetAdduct() {  return Adduct.FromChargeProtonated(Charge); }  // N.B. see Format1Dot3.GetAdduct() override for newer format versions
         public virtual double NeutralMass { get; set; }
         public virtual double NeutralLossMass { get; set; }
         public virtual string FragmentType { get; set; }
@@ -49,6 +51,14 @@ namespace pwiz.Skyline.Model.Lib.ChromLib.Data
                 return default(T);
             }
             return array[index];
+        }
+
+        public class Format1Dot3 : Transition
+        {
+            public virtual string Adduct { get; set; } // For small molecule use
+            public override Adduct GetAdduct() { return string.IsNullOrEmpty(Adduct) ? base.GetAdduct() : Util.Adduct.FromStringAssumeChargeOnly(Adduct); }
+            public virtual string ChemicalFormula { get; set; } // For small molecule use
+            public virtual string FragmentName { get; set; } // For small molecule use
         }
     }
 }

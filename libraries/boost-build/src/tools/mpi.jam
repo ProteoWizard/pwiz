@@ -118,7 +118,7 @@ rule strip-eol ( string )
 
 # Split a command-line into a set of features. Certain kinds of
 # compiler flags are recognized (e.g., -I, -D, -L, -l) and replaced
-# with their Boost.Build equivalents (e.g., <include>, <define>,
+# with their B2 equivalents (e.g., <include>, <define>,
 # <library-path>, <find-library>). All other arguments are introduced
 # using the features in the unknown-features parameter, because we
 # don't know how to deal with them. For instance, if your compile and
