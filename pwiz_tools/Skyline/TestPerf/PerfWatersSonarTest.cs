@@ -61,7 +61,22 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
             var doc1 = WaitForDocumentChangeLoaded(doc);
             FindNode("425"); // This precursor's mz is withing sonar range
+
+            // Verify UI changes in "drift time" viewer that acknowledge SONAR data 
             WaitForGraphs();
+            ClickChromatogram(9.5715, 65.5E+3);
+            WaitForGraphs();
+            // Click the Show 2D Spectrum button  to change the plot to a three-dimensional spectrum with SONAR.
+            RunUI(() => SkylineWindow.GraphFullScan.SetSpectrum(false));
+            WaitForGraphs();
+            // PauseTest(); // Uncomment for a quick manual demo
+            string yTitle = null;
+            RunUI(()=>
+            {
+                yTitle = SkylineWindow.GraphFullScan.ZedGraphControl.GraphPane.YAxis.Title.Text;
+            });
+            var expectedTitle = Resources.GraphFullScan_CreateIonMobilityHeatmap_Quadrupole_Scan_Range__m_z_;
+            AssertEx.AreEqual(expectedTitle, yTitle, "expected fullscan graph y axis title to be " + expectedTitle);
             CloseSpectrumGraph();
             float tolerance = (float)doc1.Settings.TransitionSettings.Instrument.MzMatchTolerance;
             double maxHeight = 0;
@@ -89,7 +104,6 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             }
             Assert.IsTrue(errmsg.Length == 0, errmsg);
             Assert.AreEqual(66631.82, maxHeight, 1);
-
         }
     }
 }
