@@ -539,6 +539,25 @@ namespace pwiz.Skyline.Properties
         }
 
         [UserScopedSettingAttribute]
+        // Used to make sure that last seen document settings match the current settings before using 
+        // saved column locations
+        public SrmSettings CustomImportTransitionListSettings
+        {
+            get
+            {
+                if (this[@"CustomImportTransitionListSettings"] == null)
+                {
+                    var settings = SrmSettingsList.GetDefault();
+                    CustomImportTransitionListSettings = settings;
+                }
+                return (SrmSettings)this[@"CustomImportTransitionListSettings"];
+            }
+            set
+            {
+                this[@"CustomImportTransitionListSettings"] = value;
+            }
+        }
+        [UserScopedSettingAttribute]
         // Saves column positions between transition lists. This way when a user tell us the correct column positions they are carried
         // on to the next transition list
         public List<Tuple<int, string>> CustomImportTransitionListColumnsList

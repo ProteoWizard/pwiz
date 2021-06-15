@@ -169,7 +169,9 @@ namespace pwiz.Skyline.FileUI
             }
             // If there are items on our saved column list and the file does not contain headers (or the headers are the same as the previous file),
             // and the number of columns matches the saved column count then the combo box text is set using that list
-            if ((Settings.Default.CustomImportTransitionListColumnsList.Count != 0) && ((headers == null) || (sameHeaders)) && Importer.RowReader.Lines[0].ParseDsvFields(Importer.Separator).Length == Settings.Default.CustomImportTransitionListColumnCount)
+            if ((Settings.Default.CustomImportTransitionListColumnsList.Count != 0) && ((headers == null) || (sameHeaders)) && 
+                Importer.RowReader.Lines[0].ParseDsvFields(Importer.Separator).Length == Settings.Default.CustomImportTransitionListColumnCount &&
+                Settings.Default.CustomImportTransitionListSettings.Equals(_docCurrent.Settings))
             {
                 for (int i = 0; i < Settings.Default.CustomImportTransitionListColumnsList.Count; i++)
                 {
@@ -365,6 +367,13 @@ namespace pwiz.Skyline.FileUI
             Settings.Default.CustomImportTransitionListColumnCount = numColumns;
         }
 
+        // Saves document settings so that they can be compared to the next document before using saved column
+        // locations
+        private void UpdateSettings()
+        {
+            var settings = _docCurrent.Settings;
+            Settings.Default.CustomImportTransitionListSettings = settings;
+        }
         // Saves a list of the current document's headers, if any exist, so that they can be compared to those of the next document
         private void UpdateHeadersList()
         {
@@ -400,6 +409,7 @@ namespace pwiz.Skyline.FileUI
             {
                 UpdateColumnsList();
                 UpdateHeadersList();
+                UpdateSettings();
             }
 
             if (CheckForErrors(true)) // Look for errors, be silent on success
