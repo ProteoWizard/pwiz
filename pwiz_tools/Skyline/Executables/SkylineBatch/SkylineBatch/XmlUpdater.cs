@@ -89,7 +89,7 @@ namespace SkylineBatch
 
             writer.WriteStartElement("config_list");
             writer.WriteAttributeIfString(Attr.saved_path_root, oldFolder);
-            writer.WriteAttributeString(Attr.version, Program.Version());
+            writer.WriteAttributeString(Attr.version, SharedBatch.Properties.Settings.Default.ProgramVersion);
 
 
             while (!reader.Name.EndsWith("_config"))

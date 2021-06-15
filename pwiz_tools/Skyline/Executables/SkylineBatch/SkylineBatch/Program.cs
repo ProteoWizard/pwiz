@@ -195,7 +195,6 @@ namespace SkylineBatch
             string arg;
             if (ApplicationDeployment.IsNetworkDeployed)
             {
-                _version = ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString();
                 var activationData = AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData;
                 arg = activationData != null && activationData.Length > 0
                     ? activationData[0]
@@ -203,7 +202,6 @@ namespace SkylineBatch
             }
             else
             {
-                _version = string.Empty;
                 arg = args.Length > 0 ? args[0] : string.Empty;
             }
 

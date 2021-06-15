@@ -39,6 +39,7 @@ namespace AutoQC
         public AutoQcConfigManager(IMainUiControl uiControl = null)
         {
             importer = AutoQcConfig.ReadXml;
+            getUpdatedXml = XmlUpdater.GetUpdatedXml;
             SelectedLog = -1;
             _sortedColumn = -1;
             _configRunners = ImmutableDictionary.Create<string, IConfigRunner>();

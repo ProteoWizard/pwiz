@@ -19,10 +19,12 @@ using System;
 using System.ComponentModel;
 using System.Configuration;
 using System.Deployment.Application;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Reflection;
 using System.Threading;
 using System.Windows.Forms;
 using System.Xml;
@@ -211,6 +213,8 @@ namespace AutoQC
 
             GetCurrentAndLastInstalledVersions();
 
+            new AutoQcConfigManager(); // initialize importer and xml updater
+
             if (ConfigMigrationRequired())
             {
                 if (SharedBatch.Properties.Settings.Default.ConfigList.Count > 0)
@@ -259,6 +263,41 @@ namespace AutoQC
 
             var _currentVerStr = _version != null ? _version.ToString() : string.Empty;
             ProgramLog.Info($"Current version: '{_currentVerStr}' is the same as last installed version: '{_lastInstalledVersion}'.");
+
+            if (_version == null) // developer build
+            {
+                // copied from Skyline Install.cs GetVersion()
+                try
+                {
+                    string productVersion = null;
+
+                    Assembly entryAssembly = Assembly.GetEntryAssembly();
+                    if (entryAssembly != null)
+                    {
+                        // custom attribute
+                        object[] attrs = entryAssembly.GetCustomAttributes(typeof(AssemblyInformationalVersionAttribute), false);
+                        // Play it safe with a null check no matter what ReSharper thinks
+                        // ReSharper disable once ConditionIsAlwaysTrueOrFalse
+                        if (attrs != null && attrs.Length > 0)
+                        {
+                            productVersion = ((AssemblyInformationalVersionAttribute)attrs[0]).InformationalVersion;
+                        }
+                        else
+                        {
+                            // win32 version info
+                            productVersion = FileVersionInfo.GetVersionInfo(entryAssembly.Location).ProductVersion?.Trim();
+                        }
+                    }
+
+                    _version = productVersion != null ? new Version(productVersion) : null;
+                }
+                catch (Exception)
+                {
+                    _version = null;
+                }
+            }
+
+            SharedBatch.Properties.Settings.Default.ProgramVersion = _version != null ? _version.ToString() : string.Empty;
         }
 
         private static bool ConfigMigrationRequired()
