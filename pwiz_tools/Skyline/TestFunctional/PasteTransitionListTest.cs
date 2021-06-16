@@ -21,7 +21,9 @@ using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.SettingsUI;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -146,11 +148,49 @@ namespace pwiz.SkylineTestFunctional
             RunDlg<MessageDlg>(dlg.buttonOk.PerformClick, messageDlg => { messageDlg.OkDialog(); });   // Dismiss it
             // Only way out without fixing the columns is to cancel
             OkDialog(dlg, dlg.CancelDialog);
+            
+            // Next test if changing settings prevents saved column positions from being used
+            // Open the modifications tab of peptide settings
+            var peptideSettingsDlg = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+            var modsListDlg1 = ShowDialog<EditListDlg<SettingsListBase<StaticMod>, StaticMod>>(peptideSettingsDlg.EditStaticMods);
+            
+            // Open the static mods and change settings to include non-variable mod that will prevent proper header selection
+            var editModDlg = ShowDialog<EditStaticModDlg>(modsListDlg1.AddItem);
+            RunUI(() => editModDlg.SetModification("Acetyl (N-term)", false));
+            OkDialog(editModDlg, editModDlg.OkDialog);
+            OkDialog(modsListDlg1, modsListDlg1.OkDialog);
+            
+            RunUI(() => peptideSettingsDlg.SetStructuralModifications(1, true));
+            OkDialog(peptideSettingsDlg, peptideSettingsDlg.OkDialog);
+            
+            // Paste in a transition list, change a column, and click OK before closing to save column positions
+            SetClipboardText(File.ReadAllText(TestFilesDir.GetTestPath("ThermoTransitionList.csv")));
+            var transitions = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
+            var transitionsBoxes = transitions.ComboBoxes;
+            transitionsBoxes[4].SelectedIndex = 2;
+            RunDlg<ImportTransitionListErrorDlg>(transitions.OkDialog, errDlg => errDlg.Close());
+            OkDialog(transitions, transitions.CancelDialog);
+
+            // Reset static mods
+            var peptideSettingsDlg1 = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+            var modsListDlg2 = ShowDialog<EditListDlg<SettingsListBase<StaticMod>, StaticMod>>(peptideSettingsDlg1.EditStaticMods);
+            RunUI(modsListDlg2.ResetList);
+
+            // Close all the dialogs
+            OkDialog(modsListDlg2, modsListDlg2.OkDialog);
+            OkDialog(peptideSettingsDlg1, peptideSettingsDlg1.OkDialog);
+
+            // Paste in the transition list again. It should not use saved column positions because the settings are different
+            var transitions1 = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
+            var transitionsBoxes1 = transitions1.ComboBoxes;
+            Assert.AreNotEqual(2, transitionsBoxes1[4].SelectedIndex);
+
+            RunUI(() => transitions1.CancelDialog());
 
             // Now check UI interactions with a bad import file whose headers we correct in the dialog
             using (new CheckDocumentState(1,2,2,9))
             {
-                RunUI(() => SkylineWindow.NewDocument());
+                RunUI(() => SkylineWindow.NewDocument(true));
                 WaitForDocumentLoaded();
 
                 SetClipboardText(File.ReadAllText(TestFilesDir.GetTestPath("PeptideTransitionList.csv")));
