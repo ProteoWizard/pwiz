@@ -215,14 +215,14 @@ namespace SkylineBatch
                     _logger.Log(string.Format("Extracting Skyline template from {0}", Config.MainSettings.Template.ZippedFileName));
                     var cancellationSource = new CancellationTokenSource();
                     _runningCancellationToken = cancellationSource;
-                    _logger.LogPercent(-1);
                     Config.MainSettings.Template.ExtractTemplate((percent, error) =>
                     {
                         if (error == null)
                             _logger.LogPercent(percent);
                         else
-                            _logger.LogPercent(-1);
+                            _logger.StopLogPercent(false);
                     }, cancellationSource.Token);
+                    _logger.StopLogPercent(true);
                     _logger.Log(string.Format("{0} extracted.", Config.MainSettings.Template.FileName()));
                 }
                 
@@ -298,6 +298,7 @@ namespace SkylineBatch
                 try
                 {
                     wc.DownloadAsync(serverFile.ServerInfo.URI, panoramaFile.FilePath, serverFile.ServerInfo.Username, serverFile.ServerInfo.Password, serverFile.Size);
+                    _logger.StopLogPercent(true);
                     break;
                 }
                 catch (Exception e)
@@ -305,7 +306,7 @@ namespace SkylineBatch
                     if (!IsRunning())
                         break;
                     _logger.Log(e.Message);
-                    _logger.LogPercent(-1);
+                    _logger.StopLogPercent(false);
                     tries++;
                 }
             }
@@ -384,6 +385,7 @@ namespace SkylineBatch
                         try
                         {
                             wc.DownloadAsync(file.ServerInfo.URI, filePath, file.ServerInfo.Username, file.ServerInfo.Password, file.Size);
+                            _logger.StopLogPercent(true);
                             break;
                         }
                         catch (Exception e)
@@ -391,7 +393,7 @@ namespace SkylineBatch
                             if (!IsRunning())
                                 break;
                             _logger.Log(e.Message);
-                            _logger.LogPercent(-1);
+                            _logger.StopLogPercent(false);
                             exception = e;
                         }
                     }
@@ -405,15 +407,16 @@ namespace SkylineBatch
                             await ftpClient.DisconnectAsync();
                             if (status != FtpStatus.Success)
                                 throw new Exception(Resources.ConfigRunner_DownloadData_File_download_failed_);
+                            _logger.StopLogPercent(true);
                             break;
                         }
                         catch (OperationCanceledException)
                         {
-                            _logger.LogPercent(-1); // Stop logging percent
+                            _logger.StopLogPercent(false); // Stop logging percent
                         }
                         catch (Exception e)
                         {
-                            _logger.LogPercent(-1);
+                            _logger.StopLogPercent(false);
                             _logger.Log(e.Message);
                             exception = e;
                         }

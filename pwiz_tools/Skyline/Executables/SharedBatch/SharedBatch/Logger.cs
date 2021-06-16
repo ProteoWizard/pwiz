@@ -164,30 +164,35 @@ using SharedBatch.Properties;
         public void LogPercent(int percent)
         {
             if (percent < 0)
-            {
-                LastPercent = percent;
-            }
+                return;
             if ((DateTime.Now - LastLogTime) > new TimeSpan(0, 0, MIN_SECONDS_BETWEEN_LOGS) &&
                 percent != LastPercent)
             {
-                if (percent == 0 && LastPercent < 0)
+                // do not log 0%, gives fast operations a chance to skip percent logging
+                if (percent == 0)
                 {
-                    LastLogTime = DateTime.Now;
-                    LastPercent = 0;
-                }
-                else if (percent == 100)
-                {
-                    if (LastPercent != 0) Log(string.Format(Resources.Logger_LogPercent__0__, percent));
-                    LastPercent = -1;
-                }
-                else
-                {
-                    LastPercent = percent;
-                    LastLogTime = DateTime.Now;
-                    Log(string.Format(Resources.Logger_LogPercent__0__, percent));
+                    if (LastPercent == -2)
+                    {
+                        LastPercent = -1;
+                        LastLogTime = DateTime.Now;
+                    }
+
+                    return;
                 }
 
+                Log(string.Format(Resources.Logger_LogPercent__0__, percent));
+                LastPercent = percent;
+                LastLogTime = DateTime.Now;
+
             }
+        }
+
+        public void StopLogPercent(bool completed)
+        {
+            if (completed && LastPercent >= 0)
+                Log(string.Format(Resources.Logger_LogPercent__0__, 100));
+            LastPercent = -2;
+            LastLogTime = DateTime.MinValue;
         }
 
         private static string GetDate()
