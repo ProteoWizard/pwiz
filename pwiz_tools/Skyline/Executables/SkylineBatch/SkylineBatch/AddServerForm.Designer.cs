@@ -47,6 +47,7 @@
             this.btnUpdate = new System.Windows.Forms.Button();
             this.listBoxFileNames = new System.Windows.Forms.ListBox();
             this.checkBoxNoEncryption = new System.Windows.Forms.CheckBox();
+            this.labelFileInfo = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -167,12 +168,19 @@
             this.checkBoxNoEncryption.UseVisualStyleBackColor = true;
             this.checkBoxNoEncryption.CheckedChanged += new System.EventHandler(this.checkBoxNoEncryption_CheckedChanged);
             // 
+            // labelFileInfo
+            // 
+            resources.ApplyResources(this.labelFileInfo, "labelFileInfo");
+            this.labelFileInfo.Name = "labelFileInfo";
+            this.toolTip1.SetToolTip(this.labelFileInfo, resources.GetString("labelFileInfo.ToolTip"));
+            // 
             // AddServerForm
             // 
             this.AcceptButton = this.btnSave;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.labelFileInfo);
             this.Controls.Add(this.checkBoxNoEncryption);
             this.Controls.Add(this.listBoxFileNames);
             this.Controls.Add(this.btnUpdate);
@@ -220,5 +228,6 @@
         private System.Windows.Forms.Button btnUpdate;
         private System.Windows.Forms.ListBox listBoxFileNames;
         private System.Windows.Forms.CheckBox checkBoxNoEncryption;
+        private System.Windows.Forms.Label labelFileInfo;
     }
 }

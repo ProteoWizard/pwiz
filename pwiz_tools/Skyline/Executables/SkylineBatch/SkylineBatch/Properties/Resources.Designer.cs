@@ -29,7 +29,7 @@ namespace SkylineBatch.Properties {
         private static global::System.Globalization.CultureInfo resourceCulture;
         
         [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        public Resources() {
+        internal Resources() {
         }
         
         /// <summary>
@@ -94,6 +94,42 @@ namespace SkylineBatch.Properties {
         public static string AddServerForm_FinishConnectToServer_Save {
             get {
                 return ResourceManager.GetString("AddServerForm_FinishConnectToServer_Save", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} files, {1}.
+        /// </summary>
+        public static string AddServerForm_UpdateFileList__0__files___1_ {
+            get {
+                return ResourceManager.GetString("AddServerForm_UpdateFileList__0__files___1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} GB.
+        /// </summary>
+        public static string AddServerForm_UpdateFileList__0__GB {
+            get {
+                return ResourceManager.GetString("AddServerForm_UpdateFileList__0__GB", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} KB.
+        /// </summary>
+        public static string AddServerForm_UpdateFileList__0__KB {
+            get {
+                return ResourceManager.GetString("AddServerForm_UpdateFileList__0__KB", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to 1 file, {0}.
+        /// </summary>
+        public static string AddServerForm_UpdateFileList__1_file___0_ {
+            get {
+                return ResourceManager.GetString("AddServerForm_UpdateFileList__1_file___0_", resourceCulture);
             }
         }
         

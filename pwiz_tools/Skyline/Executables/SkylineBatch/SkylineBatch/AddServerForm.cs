@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Threading;
 using System.Windows.Forms;
 using SharedBatch;
+using SkylineBatch.Properties;
 
 namespace SkylineBatch
 {
@@ -118,8 +119,7 @@ namespace SkylineBatch
                 Invoke(new Action(() =>
                 {
                     UpdateLabel();
-                    foreach (var file in files)
-                        listBoxFileNames.Items.Add(file.FileName);
+                    UpdateFileList(files);
                 }));
             }
         }
@@ -183,6 +183,7 @@ namespace SkylineBatch
             listBoxFileNames.Enabled = _updated;
             listBoxFileNames.BackColor = _updated ? Color.White : Color.WhiteSmoke;
             btnUpdate.Enabled = !_updated;
+            labelFileInfo.Visible = _updated;
         }
 
         private void text_TextChanged(object sender, EventArgs e)
@@ -201,10 +202,33 @@ namespace SkylineBatch
             if (_updated)
             {
                 var files = serverConnector.GetFiles(GetServerFromUi(), out _)?? new List<ConnectedFileInfo>();
-                listBoxFileNames.Items.Clear();
-                foreach (var file in files)
-                    listBoxFileNames.Items.Add(file.FileName);
+                UpdateFileList(files);
             }
+        }
+
+        private void UpdateFileList(List<ConnectedFileInfo> files)
+        {
+            listBoxFileNames.Items.Clear();
+            long totalSize = 0;
+            foreach (var file in files)
+            {
+                listBoxFileNames.Items.Add(file.FileName);
+                totalSize += file.Size;
+            }
+
+            var sizeInGB = Math.Round(totalSize / 1000000000.0, 2);
+            var sizeInKB = -1.0;
+            if (sizeInGB < 1)
+            {
+                sizeInGB = -1;
+                sizeInKB = Math.Round(totalSize / 1000.0);
+            }
+
+            var sizeString = sizeInGB > 0 ? string.Format(Resources.AddServerForm_UpdateFileList__0__GB, sizeInGB) : string.Format(Resources.AddServerForm_UpdateFileList__0__KB, sizeInKB);
+            if (files.Count > 1)
+                labelFileInfo.Text = string.Format(Resources.AddServerForm_UpdateFileList__0__files___1_, listBoxFileNames.Items.Count, sizeString);
+            else
+                labelFileInfo.Text = string.Format(Resources.AddServerForm_UpdateFileList__1_file___0_, sizeString);
         }
 
         private void checkBoxNoEncryption_CheckedChanged(object sender, EventArgs e)

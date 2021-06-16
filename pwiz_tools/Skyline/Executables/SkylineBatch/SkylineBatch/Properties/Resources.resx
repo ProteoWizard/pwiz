@@ -802,4 +802,16 @@
   <data name="ReportInfo_ValidateRVersion_An_R_version_is_required_to_use_this_R_script__Please_select_an_R_version_" xml:space="preserve">
     <value>An R version is required to use this R script. Please select an R version.</value>
   </data>
+  <data name="AddServerForm_UpdateFileList__0__files___1_" xml:space="preserve">
+    <value>{0} files, {1}</value>
+  </data>
+  <data name="AddServerForm_UpdateFileList__1_file___0_" xml:space="preserve">
+    <value>1 file, {0}</value>
+  </data>
+  <data name="AddServerForm_UpdateFileList__0__GB" xml:space="preserve">
+    <value>{0} GB</value>
+  </data>
+  <data name="AddServerForm_UpdateFileList__0__KB" xml:space="preserve">
+    <value>{0} KB</value>
+  </data>
 </root>

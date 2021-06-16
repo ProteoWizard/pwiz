@@ -150,7 +150,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
-    <value>10</value>
+    <value>11</value>
   </data>
   <data name="label2.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -176,6 +176,9 @@
   </data>
   <data name="&gt;&gt;label2.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label2.Parent" xml:space="preserve">
+    <value>splitContainer1.Panel1</value>
   </data>
   <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
     <value>0</value>
@@ -204,6 +207,9 @@
   <data name="&gt;&gt;label3.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;label3.Parent" xml:space="preserve">
+    <value>splitContainer1.Panel2</value>
+  </data>
   <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
@@ -229,7 +235,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;textUrl.ZOrder" xml:space="preserve">
-    <value>9</value>
+    <value>10</value>
   </data>
   <data name="textPassword.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -252,6 +258,9 @@
   <data name="&gt;&gt;textPassword.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;textPassword.Parent" xml:space="preserve">
+    <value>splitContainer1.Panel2</value>
+  </data>
   <data name="&gt;&gt;textPassword.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
@@ -273,6 +282,9 @@
   <data name="&gt;&gt;textUserName.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;textUserName.Parent" xml:space="preserve">
+    <value>splitContainer1.Panel1</value>
+  </data>
   <data name="&gt;&gt;textUserName.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
@@ -280,7 +292,7 @@
     <value>Bottom, Right</value>
   </data>
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>325, 342</value>
+    <value>325, 343</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -301,7 +313,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
-    <value>8</value>
+    <value>9</value>
   </data>
   <data name="btnSave.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
@@ -310,7 +322,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnSave.Location" type="System.Drawing.Point, System.Drawing">
-    <value>244, 342</value>
+    <value>244, 343</value>
   </data>
   <data name="btnSave.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -331,7 +343,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnSave.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>8</value>
   </data>
   <data name="splitContainer1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -382,7 +394,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;splitContainer1.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>7</value>
   </data>
   <data name="textNamingPattern.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -406,7 +418,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;textNamingPattern.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>6</value>
   </data>
   <data name="btnRemoveServer.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
@@ -415,7 +427,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnRemoveServer.Location" type="System.Drawing.Point, System.Drawing">
-    <value>15, 342</value>
+    <value>15, 343</value>
   </data>
   <data name="btnRemoveServer.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -439,7 +451,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnRemoveServer.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>5</value>
   </data>
   <data name="linkLabelRegex.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -478,7 +490,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;linkLabelRegex.ZOrder" xml:space="preserve">
-    <value>11</value>
+    <value>12</value>
   </data>
   <data name="linkLabel1.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -517,7 +529,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;linkLabel1.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>4</value>
   </data>
   <data name="btnUpdate.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -547,7 +559,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnUpdate.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="listBoxFileNames.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
@@ -556,7 +568,7 @@
     <value>16, 182</value>
   </data>
   <data name="listBoxFileNames.Size" type="System.Drawing.Size, System.Drawing">
-    <value>303, 147</value>
+    <value>303, 134</value>
   </data>
   <data name="listBoxFileNames.TabIndex" type="System.Int32, mscorlib">
     <value>16</value>
@@ -571,7 +583,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;listBoxFileNames.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>2</value>
   </data>
   <data name="checkBoxNoEncryption.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -598,6 +610,36 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;checkBoxNoEncryption.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="labelFileInfo.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelFileInfo.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelFileInfo.Location" type="System.Drawing.Point, System.Drawing">
+    <value>13, 319</value>
+  </data>
+  <data name="labelFileInfo.Size" type="System.Drawing.Size, System.Drawing">
+    <value>0, 13</value>
+  </data>
+  <data name="labelFileInfo.TabIndex" type="System.Int32, mscorlib">
+    <value>19</value>
+  </data>
+  <data name="labelFileInfo.ToolTip" xml:space="preserve">
+    <value>The path to an FTP server containing the data.</value>
+  </data>
+  <data name="&gt;&gt;labelFileInfo.Name" xml:space="preserve">
+    <value>labelFileInfo</value>
+  </data>
+  <data name="&gt;&gt;labelFileInfo.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelFileInfo.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;labelFileInfo.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
@@ -607,7 +649,7 @@
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>412, 377</value>
+    <value>412, 378</value>
   </data>
   <data name="$this.Icon" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
