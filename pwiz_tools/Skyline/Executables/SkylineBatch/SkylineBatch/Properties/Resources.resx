@@ -773,16 +773,16 @@
     <value>{0}:</value>
   </data>
   <data name="SkylineBatchConfigForm_InitMainSettingsTab_Skyline_template_file_path" xml:space="preserve">
-    <value>Skyline template file path</value>
+    <value>&amp;Skyline template file path</value>
   </data>
   <data name="SkylineBatchConfigForm_InitMainSettingsTab_Template_File" xml:space="preserve">
     <value>Template File</value>
   </data>
   <data name="SkylineBatchConfigForm_InitMainSettingsTab_Data_directory" xml:space="preserve">
-    <value>Data directory</value>
+    <value>&amp;Data directory</value>
   </data>
   <data name="SkylineBatchConfigForm_InitMainSettingsTab_Annotations_file__optional_" xml:space="preserve">
-    <value>Annotations file (optional)</value>
+    <value>A&amp;nnotations file (optional)</value>
   </data>
   <data name="SkylineBatchConfigForm_InitMainSettingsTab_Annotations_File" xml:space="preserve">
     <value>Annotations File</value>
@@ -791,7 +791,7 @@
     <value>An R version is required for this R script. Please select an R version.</value>
   </data>
   <data name="RScriptForm_RScriptForm_R_script_file_path" xml:space="preserve">
-    <value>R script file path</value>
+    <value>&amp;R script file path</value>
   </data>
   <data name="RScriptForm_RScriptForm_R_Script" xml:space="preserve">
     <value>R Script</value>

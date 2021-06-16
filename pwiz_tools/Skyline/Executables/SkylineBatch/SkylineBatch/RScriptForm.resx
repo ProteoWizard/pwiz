@@ -271,7 +271,7 @@
     <value>37</value>
   </data>
   <data name="btnAddRLocation.Text" xml:space="preserve">
-    <value>Add R Location</value>
+    <value>&amp;Add R Location</value>
   </data>
   <data name="&gt;&gt;btnAddRLocation.Name" xml:space="preserve">
     <value>btnAddRLocation</value>

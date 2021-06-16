@@ -1593,7 +1593,7 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to R script file path.
+        ///   Looks up a localized string similar to &amp;R script file path.
         /// </summary>
         public static string RScriptForm_RScriptForm_R_script_file_path {
             get {
@@ -1740,7 +1740,7 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Annotations file (optional).
+        ///   Looks up a localized string similar to A&amp;nnotations file (optional).
         /// </summary>
         public static string SkylineBatchConfigForm_InitMainSettingsTab_Annotations_file__optional_ {
             get {
@@ -1749,7 +1749,7 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Data directory.
+        ///   Looks up a localized string similar to &amp;Data directory.
         /// </summary>
         public static string SkylineBatchConfigForm_InitMainSettingsTab_Data_directory {
             get {
@@ -1758,7 +1758,7 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Skyline template file path.
+        ///   Looks up a localized string similar to &amp;Skyline template file path.
         /// </summary>
         public static string SkylineBatchConfigForm_InitMainSettingsTab_Skyline_template_file_path {
             get {
