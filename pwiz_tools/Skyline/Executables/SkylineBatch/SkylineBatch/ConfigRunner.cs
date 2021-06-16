@@ -279,7 +279,7 @@ namespace SkylineBatch
             var filePath = Path.Combine(serverFile.DownloadFolder, serverFile.FileName);
             if (File.Exists(filePath) && new FileInfo(filePath).Length == serverFile.Size) return;
 
-            _logger.Log(string.Format("Downloading {0}...", panoramaFile.FileName));
+            _logger.Log(string.Format(Resources.ConfigRunner_DownloadPanoramaFile_Downloading__0____, panoramaFile.FileName));
             var downloadCancellation = new CancellationTokenSource();
             _runningCancellationToken = downloadCancellation;
 
@@ -294,7 +294,7 @@ namespace SkylineBatch
             var tries = 0;
             while (tries < 3)
             {
-                if (tries > 0) _logger.Log("Trying again...");
+                if (tries > 0) _logger.Log(Resources.ConfigRunner_DownloadPanoramaFile_Trying_again___);
                 try
                 {
                     wc.DownloadAsync(serverFile.ServerInfo.URI, panoramaFile.FilePath, serverFile.ServerInfo.Username, serverFile.ServerInfo.Password, serverFile.Size);
@@ -313,7 +313,7 @@ namespace SkylineBatch
 
             if (tries == 3)
             {
-                _logger.LogError("Error downloading Panorama template file.");
+                _logger.LogError(Resources.ConfigRunner_DownloadPanoramaFile_Error_downloading_file_from_Panorama_);
                 ChangeStatus(RunnerStatus.Error);
             }
         }

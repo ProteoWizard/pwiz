@@ -327,6 +327,33 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Downloading {0}....
+        /// </summary>
+        public static string ConfigRunner_DownloadPanoramaFile_Downloading__0____ {
+            get {
+                return ResourceManager.GetString("ConfigRunner_DownloadPanoramaFile_Downloading__0____", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error downloading file from Panorama..
+        /// </summary>
+        public static string ConfigRunner_DownloadPanoramaFile_Error_downloading_file_from_Panorama_ {
+            get {
+                return ResourceManager.GetString("ConfigRunner_DownloadPanoramaFile_Error_downloading_file_from_Panorama_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Trying again....
+        /// </summary>
+        public static string ConfigRunner_DownloadPanoramaFile_Trying_again___ {
+            get {
+                return ResourceManager.GetString("ConfigRunner_DownloadPanoramaFile_Trying_again___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Process terminated..
         /// </summary>
         public static string ConfigRunner_ExecuteCommandLine_Process_terminated_ {
@@ -435,6 +462,15 @@ namespace SkylineBatch.Properties {
         public static string ConfigRunner_Run_Updating__0_ {
             get {
                 return ResourceManager.GetString("ConfigRunner_Run_Updating__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Extracting Skyline template from {0}.
+        /// </summary>
+        public static string ConfigRunner_WriteBatchCommandsToFile_Extracting_Skyline_template_from__0_ {
+            get {
+                return ResourceManager.GetString("ConfigRunner_WriteBatchCommandsToFile_Extracting_Skyline_template_from__0_", resourceCulture);
             }
         }
         

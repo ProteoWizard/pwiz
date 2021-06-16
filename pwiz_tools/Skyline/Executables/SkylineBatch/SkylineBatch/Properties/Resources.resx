@@ -814,4 +814,16 @@
   <data name="AddServerForm_UpdateFileList__0__KB" xml:space="preserve">
     <value>{0} KB</value>
   </data>
+  <data name="ConfigRunner_DownloadPanoramaFile_Downloading__0____" xml:space="preserve">
+    <value>Downloading {0}...</value>
+  </data>
+  <data name="ConfigRunner_DownloadPanoramaFile_Trying_again___" xml:space="preserve">
+    <value>Trying again...</value>
+  </data>
+  <data name="ConfigRunner_DownloadPanoramaFile_Error_downloading_file_from_Panorama_" xml:space="preserve">
+    <value>Error downloading file from Panorama.</value>
+  </data>
+  <data name="ConfigRunner_WriteBatchCommandsToFile_Extracting_Skyline_template_from__0_" xml:space="preserve">
+    <value>Extracting Skyline template from {0}</value>
+  </data>
 </root>
