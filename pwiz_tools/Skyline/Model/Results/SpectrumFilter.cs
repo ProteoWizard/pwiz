@@ -205,6 +205,12 @@ namespace pwiz.Skyline.Model.Results
                         var ionMobilityFilter = document.Settings.GetIonMobilityFilter(
                             nodePep, nodeGroup, null, libraryIonMobilityInfo, _ionMobilityFunctionsProvider, ionMobilityMax);
 
+                        if (ionMobilityFilter.IonMobilityUnits == eIonMobilityUnits.waters_sonar &&
+                            (ionMobilityFilter.IonMobility.Mobility??0) + .5*(ionMobilityFilter?.IonMobilityExtractionWindowWidth??0) < 0)
+                        {
+                            continue; // This precursor is outside the SONAR quadrupole range
+                        }
+
                         ExplicitPeakBounds peakBoundaries = null;
                         if (_fullScan.RetentionTimeFilterType != RetentionTimeFilterType.none)
                         {

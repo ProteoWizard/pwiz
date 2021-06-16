@@ -359,7 +359,7 @@ PWIZ_API_DECL bool SpectrumList_Waters::hasCombinedIonMobility() const
 
 PWIZ_API_DECL bool SpectrumList_Waters::canConvertIonMobilityAndCCS() const
 {
-    return rawdata_->HasCcsCalibration();
+    return rawdata_->HasCcsCalibration() && !rawdata_->HasSONAR(); // SONAR uses IMS hardware but doesn't involve CCS
 }
 
 PWIZ_API_DECL double SpectrumList_Waters::ionMobilityToCCS(double ionMobility, double mz, int charge) const

@@ -213,7 +213,17 @@ struct PWIZ_API_DECL RawData
         // We don't know what the acceptable SONAR mz range is, so try/catch and return false if we wind up outside the range
         try
         {
-            Info.GetSonarRange(workingSonarFunctionIndex_, (float)precursorMz, (float)tolerance, driftBinStart, driftBinStop);
+            float massLowerLimit, massUpperLimit;
+            Info.GetPrecursorMassRange(workingSonarFunctionIndex_, massLowerLimit, massUpperLimit);
+            // API doesn't seem to do actual bin range checking in m/z to bin conversion, so do it here
+            if ((precursorMz - tolerance) > massUpperLimit || (precursorMz + tolerance) < massLowerLimit)
+            {
+                driftBinStart = driftBinStop = -1;  // Out of range, presumably
+            }
+            else
+            {
+                Info.GetSonarRange(workingSonarFunctionIndex_, (float)precursorMz, (float)tolerance, driftBinStart, driftBinStop);
+            }
         }
         catch (...)
         {
