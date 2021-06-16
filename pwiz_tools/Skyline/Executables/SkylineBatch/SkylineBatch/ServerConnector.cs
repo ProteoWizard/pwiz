@@ -101,9 +101,9 @@ namespace SkylineBatch
                 var folder = ((DataServerInfo) server).Folder;
                 if (server.URI.Host.Equals("panoramaweb.org"))
                 {
-                    var webdavUri = server.URI;
+                    Uri webdavUri;
                     var panoramaFolder = (Path.GetDirectoryName(server.URI.LocalPath) ?? string.Empty).Replace(@"\", "/");
-                    JToken files = null;
+                    JToken files;
                     if (panoramaFolder.StartsWith("/_webdav/"))
                     {
                         webdavUri = new Uri("https://panoramaweb.org" + panoramaFolder + "?method=json");
@@ -215,6 +215,7 @@ namespace SkylineBatch
             }
             catch (Exception)
             {
+                // pass
             }
             return files;
         }

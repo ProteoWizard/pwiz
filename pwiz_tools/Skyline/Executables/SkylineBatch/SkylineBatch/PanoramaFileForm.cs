@@ -16,7 +16,6 @@ namespace SkylineBatch
         {
             InitializeComponent();
             Icon = Program.Icon();
-            Text = title;
 
             path = path ?? string.Empty;
             _folderPath = FileUtil.GetInitialDirectory(path);
@@ -30,6 +29,8 @@ namespace SkylineBatch
                 checkBoxNoEncryption.Enabled = !string.IsNullOrEmpty(editingServer.Password);
                 checkBoxNoEncryption.Checked = !editingServer.Encrypt;
             }
+
+            Shown += (sender, args) => Text = title;
 
         }
 

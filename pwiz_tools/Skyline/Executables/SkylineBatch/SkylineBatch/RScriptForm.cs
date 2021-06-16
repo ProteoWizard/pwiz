@@ -8,11 +8,9 @@ namespace SkylineBatch
 {
     public partial class RScriptForm : Form
     {
-        private static string _lastChosenVersion = null;
-        private static string _lastUsedPath = null;
+        private static string _lastChosenVersion;
 
         private readonly RDirectorySelector _rDirectorySelector;
-        private string _version;
         private DownloadingFileControl _fileControl;
 
 

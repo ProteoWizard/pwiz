@@ -1,14 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
-using System.Data;
 using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using FluentFTP;
 using SharedBatch;
 using SkylineBatch.Properties;
 
@@ -16,7 +9,7 @@ namespace SkylineBatch
 {
     public partial class DownloadingFileControl : UserControl
     {
-        private static string _lastEnteredPath = null;
+        private static string _lastEnteredPath;
 
         private readonly bool _isDataServer;
         private readonly string _variableDescription;

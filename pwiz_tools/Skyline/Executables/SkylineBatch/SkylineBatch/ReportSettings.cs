@@ -329,6 +329,7 @@ namespace SkylineBatch
                 }
                 catch (Exception)
                 {
+                    // pass
                 }
                 if (!directoryExists)
                     throw new ArgumentException(string.Format(Resources.ReportInfo_ValidateRScript_The_folder_location_for_the_downloaded_R_script__0__does_not_exist_, rScriptPath));

@@ -71,7 +71,9 @@ namespace SkylineBatch
                 Stream stream = null;
                 var sizeThread = new Thread(() =>
                 {
+                    // ReSharper disable once AccessToDisposedClosure - must dispose wc after cancellation or close
                     stream = wc.OpenRead(remoteUri);
+                    // ReSharper disable once AccessToDisposedClosure
                     result = Convert.ToInt64(wc.ResponseHeaders["Content-Length"]);
                 });
                 sizeThread.Start();

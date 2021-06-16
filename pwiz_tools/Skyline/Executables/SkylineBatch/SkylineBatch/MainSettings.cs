@@ -156,6 +156,7 @@ namespace SkylineBatch
                 }
                 catch (Exception)
                 {
+                    // pass - throws exception if directory was not found
                 }
                 if (!directoryExists)
                     throw new ArgumentException(string.Format(Resources.MainSettings_ValidateAnalysisFolder_The__parent_directory_of_the_data_folder__0__does_not_exist_1, dataFolder));
