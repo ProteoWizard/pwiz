@@ -11460,4 +11460,19 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
   <data name="BuildPeptideSearchLibraryControl_AddExistingLibrary_This_library_contains_iRT_values__Do_you_want_to_create_a_retention_time_predictor_with_these_values_" xml:space="preserve">
     <value>This library contains iRT values. Do you want to create a retention time predictor with these values?</value>
   </data>
+  <data name="PeptideTipProvider_RenderTip_Ion_Mobility" xml:space="preserve">
+    <value>Ion Mobility</value>
+  </data>
+  <data name="PeptideTipProvider_RenderTip_CCS" xml:space="preserve">
+    <value>CCS</value>
+    <comment>compact form of Collision Cross Section</comment>
+  </data>
+  <data name="ViewLibraryDlg_UpdateUI_IM__" xml:space="preserve">
+    <value>IM: </value>
+    <comment>>IM is abbreviation for Ion Mobility</comment>
+  </data>
+  <data name="ViewLibraryDlg_UpdateUI_CCS__" xml:space="preserve">
+    <value>CCS: </value>
+    <comment>CCS is abbreviation for Collision Cross Section</comment>
+  </data>
 </root>
