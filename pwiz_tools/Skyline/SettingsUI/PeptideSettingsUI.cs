@@ -712,11 +712,6 @@ namespace pwiz.Skyline.SettingsUI
             btnExplore.Enabled = listLibraries.Items.Count > 0;
         }
 
-        public void SetStructuralModifications(int index, bool check)
-        {
-            listStaticMods.SetItemChecked(index, check);
-        }
-        
         public void SetIsotopeModifications(int index, bool check)
         {
             listHeavyMods.SetItemChecked(index, check);
