@@ -30,9 +30,9 @@
         {
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(SkylineBatchConfigForm));
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle5 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle6 = new System.Windows.Forms.DataGridViewCellStyle();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.linkLabelRegex = new System.Windows.Forms.LinkLabel();
             this.label5 = new System.Windows.Forms.Label();
@@ -46,33 +46,21 @@
             this.textMsMsResolvingPower = new System.Windows.Forms.TextBox();
             this.checkBoxMProphet = new System.Windows.Forms.CheckBox();
             this.labelConfigName = new System.Windows.Forms.Label();
-            this.label3 = new System.Windows.Forms.Label();
-            this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
-            this.label7 = new System.Windows.Forms.Label();
             this.label8 = new System.Windows.Forms.Label();
             this.checkBoxRemoveDecoys = new System.Windows.Forms.CheckBox();
             this.checkBoxRemoveData = new System.Windows.Forms.CheckBox();
             this.textAnalysisPath = new System.Windows.Forms.TextBox();
-            this.textTemplateFile = new System.Windows.Forms.TextBox();
-            this.textDataPath = new System.Windows.Forms.TextBox();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.tabsConfig = new System.Windows.Forms.TabControl();
             this.tabFiles = new System.Windows.Forms.TabPage();
-            this.toolStrip3 = new System.Windows.Forms.ToolStrip();
-            this.btnDownloadAnnotations = new System.Windows.Forms.ToolStripButton();
-            this.toolStrip2 = new System.Windows.Forms.ToolStrip();
-            this.btnDownloadData = new System.Windows.Forms.ToolStripButton();
-            this.toolStrip1 = new System.Windows.Forms.ToolStrip();
-            this.btnDownloadTemplate = new System.Windows.Forms.ToolStripButton();
             this.comboTemplateFile = new System.Windows.Forms.ComboBox();
-            this.btnAnnotationsFile = new System.Windows.Forms.Button();
-            this.textAnnotationsFile = new System.Windows.Forms.TextBox();
             this.textReplicateNamingPattern = new System.Windows.Forms.TextBox();
             this.textConfigName = new System.Windows.Forms.TextBox();
-            this.btnDataPath = new System.Windows.Forms.Button();
             this.btnAnalysisPath = new System.Windows.Forms.Button();
-            this.btnSkylineFilePath = new System.Windows.Forms.Button();
+            this.panelAnnotations = new System.Windows.Forms.Panel();
+            this.panelTemplate = new System.Windows.Forms.Panel();
+            this.panelData = new System.Windows.Forms.Panel();
             this.tabSettings = new System.Windows.Forms.TabPage();
             this.label6 = new System.Windows.Forms.Label();
             this.tabRefine = new System.Windows.Forms.TabPage();
@@ -102,9 +90,6 @@
             this.splitContainer1.SuspendLayout();
             this.tabsConfig.SuspendLayout();
             this.tabFiles.SuspendLayout();
-            this.toolStrip3.SuspendLayout();
-            this.toolStrip2.SuspendLayout();
-            this.toolStrip1.SuspendLayout();
             this.tabSettings.SuspendLayout();
             this.tabRefine.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer2)).BeginInit();
@@ -199,29 +184,11 @@
             this.labelConfigName.Name = "labelConfigName";
             this.toolTip1.SetToolTip(this.labelConfigName, resources.GetString("labelConfigName.ToolTip"));
             // 
-            // label3
-            // 
-            resources.ApplyResources(this.label3, "label3");
-            this.label3.Name = "label3";
-            this.toolTip1.SetToolTip(this.label3, resources.GetString("label3.ToolTip"));
-            // 
-            // label1
-            // 
-            resources.ApplyResources(this.label1, "label1");
-            this.label1.Name = "label1";
-            this.toolTip1.SetToolTip(this.label1, resources.GetString("label1.ToolTip"));
-            // 
             // label2
             // 
             resources.ApplyResources(this.label2, "label2");
             this.label2.Name = "label2";
             this.toolTip1.SetToolTip(this.label2, resources.GetString("label2.ToolTip"));
-            // 
-            // label7
-            // 
-            resources.ApplyResources(this.label7, "label7");
-            this.label7.Name = "label7";
-            this.toolTip1.SetToolTip(this.label7, resources.GetString("label7.ToolTip"));
             // 
             // label8
             // 
@@ -247,16 +214,6 @@
             // 
             resources.ApplyResources(this.textAnalysisPath, "textAnalysisPath");
             this.textAnalysisPath.Name = "textAnalysisPath";
-            // 
-            // textTemplateFile
-            // 
-            resources.ApplyResources(this.textTemplateFile, "textTemplateFile");
-            this.textTemplateFile.Name = "textTemplateFile";
-            // 
-            // textDataPath
-            // 
-            resources.ApplyResources(this.textDataPath, "textDataPath");
-            this.textDataPath.Name = "textDataPath";
             // 
             // splitContainer1
             // 
@@ -289,102 +246,26 @@
             // tabFiles
             // 
             this.tabFiles.BackColor = System.Drawing.Color.WhiteSmoke;
-            this.tabFiles.Controls.Add(this.toolStrip3);
-            this.tabFiles.Controls.Add(this.toolStrip2);
-            this.tabFiles.Controls.Add(this.toolStrip1);
             this.tabFiles.Controls.Add(this.comboTemplateFile);
-            this.tabFiles.Controls.Add(this.label7);
-            this.tabFiles.Controls.Add(this.btnAnnotationsFile);
-            this.tabFiles.Controls.Add(this.textAnnotationsFile);
             this.tabFiles.Controls.Add(this.textReplicateNamingPattern);
             this.tabFiles.Controls.Add(this.linkLabelRegex);
             this.tabFiles.Controls.Add(this.textConfigName);
             this.tabFiles.Controls.Add(this.labelConfigName);
-            this.tabFiles.Controls.Add(this.label3);
-            this.tabFiles.Controls.Add(this.btnDataPath);
-            this.tabFiles.Controls.Add(this.textDataPath);
             this.tabFiles.Controls.Add(this.textAnalysisPath);
-            this.tabFiles.Controls.Add(this.label1);
             this.tabFiles.Controls.Add(this.btnAnalysisPath);
-            this.tabFiles.Controls.Add(this.btnSkylineFilePath);
             this.tabFiles.Controls.Add(this.label2);
-            this.tabFiles.Controls.Add(this.textTemplateFile);
+            this.tabFiles.Controls.Add(this.panelAnnotations);
+            this.tabFiles.Controls.Add(this.panelTemplate);
+            this.tabFiles.Controls.Add(this.panelData);
             resources.ApplyResources(this.tabFiles, "tabFiles");
             this.tabFiles.Name = "tabFiles";
             this.tabFiles.Enter += new System.EventHandler(this.TabEnter);
-            // 
-            // toolStrip3
-            // 
-            resources.ApplyResources(this.toolStrip3, "toolStrip3");
-            this.toolStrip3.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
-            this.toolStrip3.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.btnDownloadAnnotations});
-            this.toolStrip3.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.VerticalStackWithOverflow;
-            this.toolStrip3.Name = "toolStrip3";
-            // 
-            // btnDownloadAnnotations
-            // 
-            this.btnDownloadAnnotations.BackColor = System.Drawing.Color.Transparent;
-            this.btnDownloadAnnotations.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.btnDownloadAnnotations.Image = global::SkylineBatch.Properties.Resources.download;
-            this.btnDownloadAnnotations.Name = "btnDownloadAnnotations";
-            resources.ApplyResources(this.btnDownloadAnnotations, "btnDownloadAnnotations");
-            this.btnDownloadAnnotations.Click += new System.EventHandler(this.btnDownloadAnnotations_Click);
-            // 
-            // toolStrip2
-            // 
-            resources.ApplyResources(this.toolStrip2, "toolStrip2");
-            this.toolStrip2.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
-            this.toolStrip2.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.btnDownloadData});
-            this.toolStrip2.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.VerticalStackWithOverflow;
-            this.toolStrip2.Name = "toolStrip2";
-            // 
-            // btnDownloadData
-            // 
-            this.btnDownloadData.BackColor = System.Drawing.Color.Transparent;
-            this.btnDownloadData.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.btnDownloadData.Image = global::SkylineBatch.Properties.Resources.download;
-            resources.ApplyResources(this.btnDownloadData, "btnDownloadData");
-            this.btnDownloadData.Name = "btnDownloadData";
-            this.btnDownloadData.Click += new System.EventHandler(this.btnDownloadData_Click);
-            // 
-            // toolStrip1
-            // 
-            resources.ApplyResources(this.toolStrip1, "toolStrip1");
-            this.toolStrip1.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
-            this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.btnDownloadTemplate});
-            this.toolStrip1.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.VerticalStackWithOverflow;
-            this.toolStrip1.Name = "toolStrip1";
-            // 
-            // btnDownloadTemplate
-            // 
-            this.btnDownloadTemplate.BackColor = System.Drawing.Color.Transparent;
-            this.btnDownloadTemplate.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.btnDownloadTemplate.Image = global::SkylineBatch.Properties.Resources.download;
-            resources.ApplyResources(this.btnDownloadTemplate, "btnDownloadTemplate");
-            this.btnDownloadTemplate.Name = "btnDownloadTemplate";
-            this.btnDownloadTemplate.Click += new System.EventHandler(this.btnDownloadTemplate_Click);
             // 
             // comboTemplateFile
             // 
             resources.ApplyResources(this.comboTemplateFile, "comboTemplateFile");
             this.comboTemplateFile.FormattingEnabled = true;
             this.comboTemplateFile.Name = "comboTemplateFile";
-            this.comboTemplateFile.SelectedIndexChanged += new System.EventHandler(this.comboTemplateFile_SelectedIndexChanged);
-            // 
-            // btnAnnotationsFile
-            // 
-            resources.ApplyResources(this.btnAnnotationsFile, "btnAnnotationsFile");
-            this.btnAnnotationsFile.Name = "btnAnnotationsFile";
-            this.btnAnnotationsFile.UseVisualStyleBackColor = true;
-            this.btnAnnotationsFile.Click += new System.EventHandler(this.btnAnnotationsFile_Click);
-            // 
-            // textAnnotationsFile
-            // 
-            resources.ApplyResources(this.textAnnotationsFile, "textAnnotationsFile");
-            this.textAnnotationsFile.Name = "textAnnotationsFile";
             // 
             // textReplicateNamingPattern
             // 
@@ -396,13 +277,6 @@
             resources.ApplyResources(this.textConfigName, "textConfigName");
             this.textConfigName.Name = "textConfigName";
             // 
-            // btnDataPath
-            // 
-            resources.ApplyResources(this.btnDataPath, "btnDataPath");
-            this.btnDataPath.Name = "btnDataPath";
-            this.btnDataPath.UseVisualStyleBackColor = true;
-            this.btnDataPath.Click += new System.EventHandler(this.btnDataPath_Click);
-            // 
             // btnAnalysisPath
             // 
             resources.ApplyResources(this.btnAnalysisPath, "btnAnalysisPath");
@@ -410,12 +284,20 @@
             this.btnAnalysisPath.UseVisualStyleBackColor = true;
             this.btnAnalysisPath.Click += new System.EventHandler(this.btnAnalysisFilePath_Click);
             // 
-            // btnSkylineFilePath
+            // panelAnnotations
             // 
-            resources.ApplyResources(this.btnSkylineFilePath, "btnSkylineFilePath");
-            this.btnSkylineFilePath.Name = "btnSkylineFilePath";
-            this.btnSkylineFilePath.UseVisualStyleBackColor = true;
-            this.btnSkylineFilePath.Click += new System.EventHandler(this.btnSkylineFilePath_Click);
+            resources.ApplyResources(this.panelAnnotations, "panelAnnotations");
+            this.panelAnnotations.Name = "panelAnnotations";
+            // 
+            // panelTemplate
+            // 
+            resources.ApplyResources(this.panelTemplate, "panelTemplate");
+            this.panelTemplate.Name = "panelTemplate";
+            // 
+            // panelData
+            // 
+            resources.ApplyResources(this.panelData, "panelData");
+            this.panelData.Name = "panelData";
             // 
             // tabSettings
             // 
@@ -537,37 +419,37 @@
             this.gridReportSettings.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
             this.gridReportSettings.AutoSizeRowsMode = System.Windows.Forms.DataGridViewAutoSizeRowsMode.DisplayedCells;
             this.gridReportSettings.CellBorderStyle = System.Windows.Forms.DataGridViewCellBorderStyle.Raised;
-            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.gridReportSettings.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
+            dataGridViewCellStyle4.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle4.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle4.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle4.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle4.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle4.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle4.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.gridReportSettings.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle4;
             this.gridReportSettings.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.gridReportSettings.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.columnName,
             this.columnScripts,
             this.columnFile});
-            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Window;
-            dataGridViewCellStyle2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.gridReportSettings.DefaultCellStyle = dataGridViewCellStyle2;
+            dataGridViewCellStyle5.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle5.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle5.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle5.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle5.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle5.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle5.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.gridReportSettings.DefaultCellStyle = dataGridViewCellStyle5;
             this.gridReportSettings.EditMode = System.Windows.Forms.DataGridViewEditMode.EditProgrammatically;
             this.gridReportSettings.Name = "gridReportSettings";
-            dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle3.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle3.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle3.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle3.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.gridReportSettings.RowHeadersDefaultCellStyle = dataGridViewCellStyle3;
+            dataGridViewCellStyle6.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle6.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle6.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle6.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle6.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle6.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle6.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.gridReportSettings.RowHeadersDefaultCellStyle = dataGridViewCellStyle6;
             this.gridReportSettings.RowHeadersVisible = false;
             this.gridReportSettings.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.gridReportSettings.TabStop = false;
@@ -657,12 +539,6 @@
             this.tabsConfig.ResumeLayout(false);
             this.tabFiles.ResumeLayout(false);
             this.tabFiles.PerformLayout();
-            this.toolStrip3.ResumeLayout(false);
-            this.toolStrip3.PerformLayout();
-            this.toolStrip2.ResumeLayout(false);
-            this.toolStrip2.PerformLayout();
-            this.toolStrip1.ResumeLayout(false);
-            this.toolStrip1.PerformLayout();
             this.tabSettings.ResumeLayout(false);
             this.tabSettings.PerformLayout();
             this.tabRefine.ResumeLayout(false);
@@ -694,15 +570,9 @@
         private System.Windows.Forms.TabPage tabFiles;
         public System.Windows.Forms.TextBox textConfigName;
         private System.Windows.Forms.Label labelConfigName;
-        private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.Button btnSkylineFilePath;
-        public System.Windows.Forms.TextBox textTemplateFile;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Button btnAnalysisPath;
         public System.Windows.Forms.TextBox textAnalysisPath;
-        private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.Button btnDataPath;
-        public System.Windows.Forms.TextBox textDataPath;
         private System.Windows.Forms.LinkLabel linkLabelRegex;
         private System.Windows.Forms.TabPage tabReports;
         private System.Windows.Forms.DataGridView gridReportSettings;
@@ -727,9 +597,6 @@
         private System.Windows.Forms.Label label9;
         private System.Windows.Forms.TextBox textMsMsResolvingPower;
         private System.Windows.Forms.CheckBox checkBoxMProphet;
-        private System.Windows.Forms.Label label7;
-        private System.Windows.Forms.Button btnAnnotationsFile;
-        private System.Windows.Forms.TextBox textAnnotationsFile;
         private System.Windows.Forms.TabPage tabRefine;
         private System.Windows.Forms.PropertyGrid gridRefineInputs;
         public System.Windows.Forms.CheckBox checkBoxRemoveData;
@@ -742,11 +609,8 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn columnName;
         private System.Windows.Forms.DataGridViewTextBoxColumn columnScripts;
         private System.Windows.Forms.DataGridViewTextBoxColumn columnFile;
-        private System.Windows.Forms.ToolStrip toolStrip1;
-        private System.Windows.Forms.ToolStripButton btnDownloadTemplate;
-        private System.Windows.Forms.ToolStrip toolStrip2;
-        private System.Windows.Forms.ToolStripButton btnDownloadData;
-        private System.Windows.Forms.ToolStrip toolStrip3;
-        private System.Windows.Forms.ToolStripButton btnDownloadAnnotations;
+        private System.Windows.Forms.Panel panelAnnotations;
+        private System.Windows.Forms.Panel panelTemplate;
+        private System.Windows.Forms.Panel panelData;
     }
 }

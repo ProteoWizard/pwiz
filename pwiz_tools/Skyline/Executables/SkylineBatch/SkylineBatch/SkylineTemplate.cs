@@ -114,8 +114,9 @@ namespace SkylineBatch
         {
             var preferReplace = Program.FunctionalTest;
             pathReplacedTemplate = this;
-            var pathReplaced = TextUtil.SuccessfulReplace(ValidateTemplateFile, oldRoot, newRoot, _path,
-                preferReplace, out string replacedFilePath);
+            string replacedFilePath = null;
+            var pathReplaced = _path != null && TextUtil.SuccessfulReplace(ValidateTemplateFile, oldRoot, newRoot, _path,
+                preferReplace, out replacedFilePath);
             var zipPathReplaced = TextUtil.SuccessfulReplace(ValidateTemplateFile, oldRoot, newRoot, _zippedPath,
                 preferReplace, out string replacedZippedFilePath);
 

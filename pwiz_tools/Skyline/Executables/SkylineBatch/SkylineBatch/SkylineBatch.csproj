@@ -111,6 +111,9 @@
     <Content Include="SkylineBatch_configs.ico">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <EmbeddedResource Include="DownloadingFileControl.resx">
+      <DependentUpon>DownloadingFileControl.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="PanoramaFileForm.resx">
       <DependentUpon>PanoramaFileForm.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -168,6 +171,12 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DownloadingFileControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="DownloadingFileControl.Designer.cs">
+      <DependentUpon>DownloadingFileControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="PanoramaFileForm.cs">
       <SubType>Form</SubType>
     </Compile>

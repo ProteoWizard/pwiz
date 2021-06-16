@@ -537,6 +537,25 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0}:.
+        /// </summary>
+        public static string DownloadingFileControl_DownloadingFileControl__0__ {
+            get {
+                return ResourceManager.GetString("DownloadingFileControl_DownloadingFileControl__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Changing the {0} will prevent it from being downloaded through Panorama. Are you sure you want to continue?.
+        /// </summary>
+        public static string DownloadingFileControl_textPath_TextChanged_Changing_the__0__will_prevent_it_from_being_downloaded_through_Panorama__Are_you_sure_you_want_to_continue_ {
+            get {
+                return ResourceManager.GetString("DownloadingFileControl_textPath_TextChanged_Changing_the__0__will_prevent_it_from" +
+                        "_being_downloaded_through_Panorama__Are_you_sure_you_want_to_continue_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         public static System.Drawing.Bitmap downloadSelected {
@@ -1664,6 +1683,51 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Annotations File.
+        /// </summary>
+        public static string SkylineBatchConfigForm_InitMainSettingsTab_Annotations_File {
+            get {
+                return ResourceManager.GetString("SkylineBatchConfigForm_InitMainSettingsTab_Annotations_File", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Annotations file (optional).
+        /// </summary>
+        public static string SkylineBatchConfigForm_InitMainSettingsTab_Annotations_file__optional_ {
+            get {
+                return ResourceManager.GetString("SkylineBatchConfigForm_InitMainSettingsTab_Annotations_file__optional_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Data directory.
+        /// </summary>
+        public static string SkylineBatchConfigForm_InitMainSettingsTab_Data_directory {
+            get {
+                return ResourceManager.GetString("SkylineBatchConfigForm_InitMainSettingsTab_Data_directory", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Skyline template file path.
+        /// </summary>
+        public static string SkylineBatchConfigForm_InitMainSettingsTab_Skyline_template_file_path {
+            get {
+                return ResourceManager.GetString("SkylineBatchConfigForm_InitMainSettingsTab_Skyline_template_file_path", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Template File.
+        /// </summary>
+        public static string SkylineBatchConfigForm_InitMainSettingsTab_Template_File {
+            get {
+                return ResourceManager.GetString("SkylineBatchConfigForm_InitMainSettingsTab_Template_File", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to A server is required to download data. Please select a server, or uncheck the download data checkbox..
         /// </summary>
         public static string SkylineBatchConfigForm_Save_A_server_is_required_to_download_data__Please_select_a_server__or_uncheck_the_download_data_checkbox_ {
@@ -1688,28 +1752,6 @@ namespace SkylineBatch.Properties {
         public static string SkylineBatchConfigForm_SkylineBatchConfigForm_Viewing_configuration___0__ {
             get {
                 return ResourceManager.GetString("SkylineBatchConfigForm_SkylineBatchConfigForm_Viewing_configuration___0__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Changing the template file path will stop the template from being downloaded through Panorama. Are you sure you want to continue?.
-        /// </summary>
-        public static string SkylineBatchConfigForm_templateFileControl_TextChanged_Changing_the_template_file_path_will_stop_the_template_from_being_downloaded_through_Panorama__Are_you_sure_you_want_to_continue_ {
-            get {
-                return ResourceManager.GetString("SkylineBatchConfigForm_templateFileControl_TextChanged_Changing_the_template_file" +
-                        "_path_will_stop_the_template_from_being_downloaded_through_Panorama__Are_you_sur" +
-                        "e_you_want_to_continue_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Changing the annotations file path with prevent it from being downloaded through Panorama. Are you sure you want to continue?.
-        /// </summary>
-        public static string SkylineBatchConfigForm_textAnnotationsFile_TextChanged_Changing_the_annotations_file_path_with_prevent_it_from_being_downloaded_through_Panorama__Are_you_sure_you_want_to_continue_ {
-            get {
-                return ResourceManager.GetString("SkylineBatchConfigForm_textAnnotationsFile_TextChanged_Changing_the_annotations_f" +
-                        "ile_path_with_prevent_it_from_being_downloaded_through_Panorama__Are_you_sure_yo" +
-                        "u_want_to_continue_", resourceCulture);
             }
         }
         

@@ -216,18 +216,6 @@ namespace SkylineBatch
             dataNamingPattern = reader.GetAttribute(OLD_XML_TAGS.DataNamingPattern);
         }
 
-        public static SkylineTemplate ReadOldSkylineTemplate(XmlReader reader)
-        {
-            if (!XmlUtil.ReadNextElement(reader, "template_file"))
-                throw new Exception("Mishandled config file from earlier version");
-            var path = reader.GetAttribute(OLD_XML_TAGS.FilePath);
-            var zippedPath = reader.GetAttribute(OLD_XML_TAGS.ZipFilePath);
-            var dependentConfigName = reader.GetAttribute(OLD_XML_TAGS.DependentConfigName);
-            var panoramaFile = ReadOldPanoramaFile(reader);
-
-            return new SkylineTemplate(path, zippedPath, dependentConfigName, panoramaFile);
-        }
-
         public static PanoramaFile ReadOldPanoramaFile(XmlReader reader)
         {
             if (!reader.ReadToDescendant("panorama_file")) return null;
