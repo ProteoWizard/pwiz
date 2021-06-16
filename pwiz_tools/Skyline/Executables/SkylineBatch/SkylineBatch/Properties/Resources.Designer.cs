@@ -1425,6 +1425,16 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The folder location for the downloaded R script {0} does not exist..
+        /// </summary>
+        public static string ReportInfo_ValidateRScript_The_folder_location_for_the_downloaded_R_script__0__does_not_exist_ {
+            get {
+                return ResourceManager.GetString("ReportInfo_ValidateRScript_The_folder_location_for_the_downloaded_R_script__0__do" +
+                        "es_not_exist_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to R script.
         /// </summary>
         public static string ReportInfo_ValidateRScriptPath_R_script {
@@ -1439,6 +1449,16 @@ namespace SkylineBatch.Properties {
         public static string ReportInfo_ValidateRScriptPath_R_script_path__0__is_not_a_valid_path_ {
             get {
                 return ResourceManager.GetString("ReportInfo_ValidateRScriptPath_R_script_path__0__is_not_a_valid_path_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An R version is required to use this R script. Please select an R version..
+        /// </summary>
+        public static string ReportInfo_ValidateRVersion_An_R_version_is_required_to_use_this_R_script__Please_select_an_R_version_ {
+            get {
+                return ResourceManager.GetString("ReportInfo_ValidateRVersion_An_R_version_is_required_to_use_this_R_script__Please" +
+                        "_select_an_R_version_", resourceCulture);
             }
         }
         
@@ -1550,6 +1570,34 @@ namespace SkylineBatch.Properties {
             get {
                 return ResourceManager.GetString("RInstallations_AddRDirectory_The_R_directory_is_already_used_to_find_R_installati" +
                         "ons___0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An R version is required for this R script. Please select an R version..
+        /// </summary>
+        public static string RScriptForm_btnOk_Click_An_R_version_is_required_for_this_R_script__Please_select_an_R_version_ {
+            get {
+                return ResourceManager.GetString("RScriptForm_btnOk_Click_An_R_version_is_required_for_this_R_script__Please_select" +
+                        "_an_R_version_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to R Script.
+        /// </summary>
+        public static string RScriptForm_RScriptForm_R_Script {
+            get {
+                return ResourceManager.GetString("RScriptForm_RScriptForm_R_Script", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to R script file path.
+        /// </summary>
+        public static string RScriptForm_RScriptForm_R_script_file_path {
+            get {
+                return ResourceManager.GetString("RScriptForm_RScriptForm_R_script_file_path", resourceCulture);
             }
         }
         

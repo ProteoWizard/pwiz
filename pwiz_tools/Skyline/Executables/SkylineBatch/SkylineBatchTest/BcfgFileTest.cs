@@ -97,11 +97,11 @@ namespace SkylineBatchTest
                     {
                         new Tuple<string, string>(TestUtils.GetTestFilePath("testScript.R"), "4.0.3"),
                         new Tuple<string, string>(TestUtils.GetTestFilePath("testScript.R"), "4.0.3"),
-                    }, true),
+                    }, new Dictionary<string, PanoramaFile>(), true),
                     new ReportInfo("test2", false, TestUtils.GetTestFilePath("UniqueReport.skyr"), new List<Tuple<string, string>>
                     {
                         new Tuple<string, string>(TestUtils.GetTestFilePath("testScript.R"), "4.0.3"),
-                    }, false)
+                    }, new Dictionary<string, PanoramaFile>(), false)
                 }), expectedMinimalConfig.SkylineSettings);
             CheckValues(configManager, fullConfigPath, new List<IConfig> { expectedFullConfig});
 

@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using FluentFTP;
 using SharedBatch;
 using SkylineBatch.Properties;
 
@@ -69,7 +70,12 @@ namespace SkylineBatch
             if (Server != null || _isDataServer)
             {
                 textPath.TextChanged -= textPath_TextChanged;
-                OpenFolder(textPath);
+                if (OpenFolder(textPath, out string newPath))
+                {
+                    textPath.Text = Server != null && !_isDataServer
+                        ? System.IO.Path.Combine(newPath, ((PanoramaFile) Server).FileName)
+                        : newPath;
+                }
                 textPath.TextChanged += textPath_TextChanged;
                 return;
             }
@@ -108,9 +114,14 @@ namespace SkylineBatch
                 if (Server != null)
                 {
                     if (_isDataServer)
-                        Server = new DataServerInfo(Server.URI, Server.Username, Server.Password, Server.Encrypt, ((DataServerInfo)Server).DataNamingPattern, textPath.Text);
+                    {
+                        Server = new DataServerInfo(Server.URI, Server.Username, Server.Password, Server.Encrypt,
+                            ((DataServerInfo) Server).DataNamingPattern, textPath.Text);
+                    }
                     else
-                        Server = ((PanoramaFile)Server).ReplacedFolder(textPath.Text);
+                    {
+                        Server = ((PanoramaFile) Server).ReplacedFolder(System.IO.Path.GetDirectoryName(textPath.Text));
+                    }
                 }
                 Path = textPath.Text;
             }
@@ -131,8 +142,9 @@ namespace SkylineBatch
             }
         }
 
-        private bool OpenFolder(Control textBox)
+        private bool OpenFolder(Control textBox, out string path)
         {
+            path = null;
             var dialog = new FolderBrowserDialog();
             var initialPath = FileUtil.GetInitialDirectory(textBox.Text, _lastEnteredPath);
             dialog.SelectedPath = initialPath;
@@ -140,7 +152,7 @@ namespace SkylineBatch
             if (result == DialogResult.OK)
             {
                 textBox.Text = dialog.SelectedPath;
-                _lastEnteredPath = dialog.SelectedPath;
+                path = dialog.SelectedPath;
             }
             return result == DialogResult.OK;
         }

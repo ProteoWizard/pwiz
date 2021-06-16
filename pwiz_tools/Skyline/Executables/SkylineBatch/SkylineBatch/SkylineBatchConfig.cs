@@ -80,6 +80,8 @@ namespace SkylineBatch
 
         public bool UsesCustomSkylinePath => SkylineSettings.Type == SkylineType.Custom;
 
+        public bool WillDownloadData => MainSettings.WillDownloadData || ReportSettings.WillDownloadData;
+
         public string GetName() { return Name; }
 
         public DateTime GetModified()  { return Modified; }
@@ -138,7 +140,13 @@ namespace SkylineBatch
                 FileSettings, RefineSettings, ReportSettings, newSettings);
         }
 
-        
+        public void AddDownloadingFiles(ServerFilesManager serverFiles)
+        {
+            MainSettings.AddDownloadingFiles(serverFiles);
+            ReportSettings.AddDownloadingFiles(serverFiles);
+        }
+
+
         #region XML
 
         public XmlSchema GetSchema()

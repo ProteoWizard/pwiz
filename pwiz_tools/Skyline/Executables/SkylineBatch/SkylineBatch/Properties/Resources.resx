@@ -787,4 +787,19 @@
   <data name="SkylineBatchConfigForm_InitMainSettingsTab_Annotations_File" xml:space="preserve">
     <value>Annotations File</value>
   </data>
+  <data name="RScriptForm_btnOk_Click_An_R_version_is_required_for_this_R_script__Please_select_an_R_version_" xml:space="preserve">
+    <value>An R version is required for this R script. Please select an R version.</value>
+  </data>
+  <data name="RScriptForm_RScriptForm_R_script_file_path" xml:space="preserve">
+    <value>R script file path</value>
+  </data>
+  <data name="RScriptForm_RScriptForm_R_Script" xml:space="preserve">
+    <value>R Script</value>
+  </data>
+  <data name="ReportInfo_ValidateRScript_The_folder_location_for_the_downloaded_R_script__0__does_not_exist_" xml:space="preserve">
+    <value>The folder location for the downloaded R script {0} does not exist.</value>
+  </data>
+  <data name="ReportInfo_ValidateRVersion_An_R_version_is_required_to_use_this_R_script__Please_select_an_R_version_" xml:space="preserve">
+    <value>An R version is required to use this R script. Please select an R version.</value>
+  </data>
 </root>

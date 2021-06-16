@@ -137,16 +137,22 @@ namespace SkylineBatch
                         report.Name), report.ReportPath, 
                     ReportInfo.ValidateReportPath, TextUtil.FILTER_SKYR, PathDialogOptions.File);
                 var validScripts = new List<Tuple<string, string>>();
+                var validRemoteFiles = new Dictionary<string, PanoramaFile>();
                 foreach (var scriptAndVersion in report.RScripts)
                 {
                     var validVersion = await GetValidRVersion(scriptAndVersion.Item1, scriptAndVersion.Item2);
+                    var rScriptValidator = report.RScriptServers.ContainsKey(scriptAndVersion.Item1)
+                        ? ReportInfo.ValidateRScriptWithServer
+                        : (Validator)ReportInfo.ValidateRScriptWithoutServer;
                     var validRScript = await GetValidPath(string.Format(Resources.InvalidConfigSetupForm_FixInvalidReportSettings__0__R_script, Path.GetFileNameWithoutExtension(scriptAndVersion.Item1)),
-                        scriptAndVersion.Item1, 
-                        ReportInfo.ValidateRScriptPath, TextUtil.FILTER_R, PathDialogOptions.File);
+                        scriptAndVersion.Item1,
+                        rScriptValidator, TextUtil.FILTER_R, PathDialogOptions.File);
                     
                     validScripts.Add(new Tuple<string, string>(validRScript, validVersion));
+                    if (report.RScriptServers.ContainsKey(scriptAndVersion.Item1))
+                        validRemoteFiles.Add(validRScript, report.RScriptServers[scriptAndVersion.Item1].ReplaceFolder(Path.GetDirectoryName(validRScript)));
                 }
-                validReports.Add(new ReportInfo(report.Name, report.CultureSpecific, validReportPath, validScripts, report.UseRefineFile));
+                validReports.Add(new ReportInfo(report.Name, report.CultureSpecific, validReportPath, validScripts, validRemoteFiles, report.UseRefineFile));
             }
             return new ReportSettings(validReports);
         }

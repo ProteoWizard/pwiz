@@ -306,7 +306,7 @@ namespace SkylineBatch
                             }
                         }
 
-                        reports.Add(new ReportInfo(name, cultureSpecific, reportPath, rScripts, resultsFile ?? false));
+                        reports.Add(new ReportInfo(name, cultureSpecific, reportPath, rScripts, new Dictionary<string, PanoramaFile>(), resultsFile ?? false));
                     }
                     else
                     {

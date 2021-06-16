@@ -130,6 +130,14 @@ namespace SkylineBatch
                 await DownloadData(serverFiles);
                 if(Config.MainSettings.AnnotationsDownload != null)
                     DownloadPanoramaFile(serverFiles, Config.MainSettings.AnnotationsDownload);
+                if (Config.ReportSettings.WillDownloadData)
+                {
+                    foreach (var report in Config.ReportSettings.Reports)
+                    {
+                        foreach (var remoteRScript in report.RScriptServers.Values)
+                            DownloadPanoramaFile(serverFiles, remoteRScript);
+                    }
+                }
             }
             
             if ((runOption == RunBatchOptions.ALL ||

@@ -42,7 +42,9 @@
             this.btnReportPath = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
             this.dataGridScripts = new System.Windows.Forms.DataGridView();
-            this.rVersionsDropDown = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.columnPath = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.columnUrl = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.columnVersion = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.radioResultsFile = new System.Windows.Forms.RadioButton();
             this.radioRefinedFile = new System.Windows.Forms.RadioButton();
             this.label3 = new System.Windows.Forms.Label();
@@ -53,9 +55,7 @@
             this.checkBoxImport = new System.Windows.Forms.CheckBox();
             this.checkBoxCultureInvariant = new System.Windows.Forms.CheckBox();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-            this.columnPath = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.columnUrl = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.columnVersion = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.btnEdit = new System.Windows.Forms.ToolStripButton();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridScripts)).BeginInit();
             this.toolStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -147,15 +147,26 @@
             dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
             this.dataGridScripts.RowHeadersDefaultCellStyle = dataGridViewCellStyle3;
             this.dataGridScripts.RowHeadersVisible = false;
-            this.dataGridScripts.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridScripts_CellClick);
+            this.dataGridScripts.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.dataGridScripts.CellContentDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridScripts_CellContentDoubleClick);
             this.dataGridScripts.SelectionChanged += new System.EventHandler(this.dataGridScripts_SelectionChanged);
             // 
-            // rVersionsDropDown
+            // columnPath
             // 
-            this.rVersionsDropDown.Name = "rVersionsDropDown";
-            resources.ApplyResources(this.rVersionsDropDown, "rVersionsDropDown");
-            this.rVersionsDropDown.ItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.rVersionsDropDown_ItemClicked);
+            this.columnPath.FillWeight = 149.2386F;
+            resources.ApplyResources(this.columnPath, "columnPath");
+            this.columnPath.Name = "columnPath";
+            // 
+            // columnUrl
+            // 
+            resources.ApplyResources(this.columnUrl, "columnUrl");
+            this.columnUrl.Name = "columnUrl";
+            // 
+            // columnVersion
+            // 
+            this.columnVersion.FillWeight = 50.76142F;
+            resources.ApplyResources(this.columnVersion, "columnVersion");
+            this.columnVersion.Name = "columnVersion";
             // 
             // radioResultsFile
             // 
@@ -183,7 +194,8 @@
             this.toolStrip1.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
             this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.btnAdd,
-            this.btnDelete});
+            this.btnDelete,
+            this.btnEdit});
             this.toolStrip1.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.VerticalStackWithOverflow;
             this.toolStrip1.Name = "toolStrip1";
             // 
@@ -236,22 +248,13 @@
             this.toolTip1.SetToolTip(this.checkBoxCultureInvariant, resources.GetString("checkBoxCultureInvariant.ToolTip"));
             this.checkBoxCultureInvariant.UseVisualStyleBackColor = true;
             // 
-            // columnPath
+            // btnEdit
             // 
-            this.columnPath.FillWeight = 149.2386F;
-            resources.ApplyResources(this.columnPath, "columnPath");
-            this.columnPath.Name = "columnPath";
-            // 
-            // columnUrl
-            // 
-            resources.ApplyResources(this.columnUrl, "columnUrl");
-            this.columnUrl.Name = "columnUrl";
-            // 
-            // columnVersion
-            // 
-            this.columnVersion.FillWeight = 50.76142F;
-            resources.ApplyResources(this.columnVersion, "columnVersion");
-            this.columnVersion.Name = "columnVersion";
+            this.btnEdit.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.btnEdit.Image = global::SkylineBatch.Properties.Resources.Comment;
+            resources.ApplyResources(this.btnEdit, "btnEdit");
+            this.btnEdit.Name = "btnEdit";
+            this.btnEdit.Click += new System.EventHandler(this.btnEdit_Click);
             // 
             // ReportsAddForm
             // 
@@ -301,7 +304,6 @@
         private System.Windows.Forms.Button btnReportPath;
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.DataGridView dataGridScripts;
-        private System.Windows.Forms.ContextMenuStrip rVersionsDropDown;
         private System.Windows.Forms.RadioButton radioResultsFile;
         private System.Windows.Forms.RadioButton radioRefinedFile;
         private System.Windows.Forms.Label label3;
@@ -315,5 +317,6 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn columnPath;
         private System.Windows.Forms.DataGridViewTextBoxColumn columnUrl;
         private System.Windows.Forms.DataGridViewTextBoxColumn columnVersion;
+        private System.Windows.Forms.ToolStripButton btnEdit;
     }
 }

@@ -46,7 +46,7 @@ namespace SkylineBatchTest
             TestValidateReportSettings(invalidName, validSkyr, validRScripts, "Report must have name.");
             try
             {
-                var validReport = new ReportInfo(validName, false, validSkyr, validRScripts, false);
+                var validReport = new ReportInfo(validName, false, validSkyr, validRScripts, new Dictionary<string, PanoramaFile>(), false);
                 validReport.Validate();
             }
             catch (Exception e)
@@ -116,7 +116,7 @@ namespace SkylineBatchTest
             var validatedInvalidReportInfo = false;
             try
             {
-                var invalidReport = new ReportInfo(name, false, path, scripts, false);
+                var invalidReport = new ReportInfo(name, false, path, scripts, new Dictionary<string, PanoramaFile>(), false);
                 invalidReport.Validate();
                 validatedInvalidReportInfo = true;
             }
@@ -158,10 +158,10 @@ namespace SkylineBatchTest
         public void TestReportSettingsEquals()
         {
             TestUtils.InitializeRInstallation();
-            var testReportInfoNoScript = new ReportInfo("Name", false, TestUtils.GetTestFilePath("UniqueReport.skyr"), new List<Tuple<string, string>>(), false);
+            var testReportInfoNoScript = new ReportInfo("Name", false, TestUtils.GetTestFilePath("UniqueReport.skyr"), new List<Tuple<string, string>>(), new Dictionary<string, PanoramaFile>(), false);
             var testReportInfoWithScript = TestUtils.GetTestReportInfo();
             Assert.IsTrue(Equals(testReportInfoNoScript,
-                new ReportInfo("Name", false, TestUtils.GetTestFilePath("UniqueReport.skyr"), new List<Tuple<string, string>>(), false)));
+                new ReportInfo("Name", false, TestUtils.GetTestFilePath("UniqueReport.skyr"), new List<Tuple<string, string>>(), new Dictionary<string, PanoramaFile>(), false)));
             Assert.IsFalse(Equals(testReportInfoNoScript, testReportInfoWithScript));
             //TestUtils.GetTestReportSettings();
             var emptyReportSettings = new ReportSettings(new List<ReportInfo>());

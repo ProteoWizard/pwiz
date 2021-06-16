@@ -29,45 +29,13 @@
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(RScriptForm));
-            this.toolStrip1 = new System.Windows.Forms.ToolStrip();
-            this.btnDownloadTemplate = new System.Windows.Forms.ToolStripButton();
-            this.label1 = new System.Windows.Forms.Label();
-            this.btnSkylineFilePath = new System.Windows.Forms.Button();
             this.comboRVersions = new System.Windows.Forms.ComboBox();
             this.label2 = new System.Windows.Forms.Label();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOk = new System.Windows.Forms.Button();
-            this.textBox1 = new System.Windows.Forms.TextBox();
-            this.toolStrip1.SuspendLayout();
+            this.btnAddRLocation = new System.Windows.Forms.Button();
+            this.panelPath = new System.Windows.Forms.Panel();
             this.SuspendLayout();
-            // 
-            // toolStrip1
-            // 
-            resources.ApplyResources(this.toolStrip1, "toolStrip1");
-            this.toolStrip1.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
-            this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.btnDownloadTemplate});
-            this.toolStrip1.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.VerticalStackWithOverflow;
-            this.toolStrip1.Name = "toolStrip1";
-            // 
-            // btnDownloadTemplate
-            // 
-            this.btnDownloadTemplate.BackColor = System.Drawing.Color.Transparent;
-            this.btnDownloadTemplate.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.btnDownloadTemplate.Image = global::SkylineBatch.Properties.Resources.download;
-            resources.ApplyResources(this.btnDownloadTemplate, "btnDownloadTemplate");
-            this.btnDownloadTemplate.Name = "btnDownloadTemplate";
-            // 
-            // label1
-            // 
-            resources.ApplyResources(this.label1, "label1");
-            this.label1.Name = "label1";
-            // 
-            // btnSkylineFilePath
-            // 
-            resources.ApplyResources(this.btnSkylineFilePath, "btnSkylineFilePath");
-            this.btnSkylineFilePath.Name = "btnSkylineFilePath";
-            this.btnSkylineFilePath.UseVisualStyleBackColor = true;
             // 
             // comboRVersions
             // 
@@ -93,45 +61,47 @@
             resources.ApplyResources(this.btnOk, "btnOk");
             this.btnOk.Name = "btnOk";
             this.btnOk.UseVisualStyleBackColor = true;
+            this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
             // 
-            // textBox1
+            // btnAddRLocation
             // 
-            resources.ApplyResources(this.textBox1, "textBox1");
-            this.textBox1.Name = "textBox1";
+            resources.ApplyResources(this.btnAddRLocation, "btnAddRLocation");
+            this.btnAddRLocation.Name = "btnAddRLocation";
+            this.btnAddRLocation.UseVisualStyleBackColor = true;
+            this.btnAddRLocation.Click += new System.EventHandler(this.btnAddRLocation_Click);
+            // 
+            // panelPath
+            // 
+            resources.ApplyResources(this.panelPath, "panelPath");
+            this.panelPath.Name = "panelPath";
             // 
             // RScriptForm
             // 
+            this.AcceptButton = this.btnOk;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Controls.Add(this.textBox1);
+            this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.btnAddRLocation);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnOk);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.comboRVersions);
-            this.Controls.Add(this.toolStrip1);
-            this.Controls.Add(this.label1);
-            this.Controls.Add(this.btnSkylineFilePath);
+            this.Controls.Add(this.panelPath);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "RScriptForm";
             this.ShowInTaskbar = false;
-            this.toolStrip1.ResumeLayout(false);
-            this.toolStrip1.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
         }
 
         #endregion
-
-        private System.Windows.Forms.ToolStrip toolStrip1;
-        private System.Windows.Forms.ToolStripButton btnDownloadTemplate;
-        private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.Button btnSkylineFilePath;
         private System.Windows.Forms.ComboBox comboRVersions;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Button btnOk;
-        private System.Windows.Forms.TextBox textBox1;
+        private System.Windows.Forms.Button btnAddRLocation;
+        private System.Windows.Forms.Panel panelPath;
     }
 }

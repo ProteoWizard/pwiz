@@ -42,6 +42,22 @@ namespace SkylineBatch
 
         public readonly ImmutableList<ReportInfo> Reports;
 
+        public bool WillDownloadData => DownloadDataHelper();
+
+        private bool DownloadDataHelper()
+        {
+            foreach (var report in Reports)
+                if (report.WillDownloadData)
+                    return true;
+            return false;
+        }
+
+        public void AddDownloadingFiles(ServerFilesManager serverFiles)
+        {
+            foreach (var report in Reports)
+                report.AddDownloadingFiles(serverFiles);
+        }
+
         public void Validate()
         {
             foreach (var reportInfo in Reports)
@@ -208,13 +224,13 @@ namespace SkylineBatch
         // IMMUTABLE
         // Represents a report and associated r scripts to run using that report.
         
-        public ReportInfo(string name, bool cultureSpecific, string path, List<Tuple<string, string>> rScripts, /*Dictionary<string, PanoramaFile> rScriptServers,*/ bool useRefineFile)
+        public ReportInfo(string name, bool cultureSpecific, string path, List<Tuple<string, string>> rScripts, Dictionary<string, PanoramaFile> rScriptServers, bool useRefineFile)
         {
             Name = name;
             CultureSpecific = cultureSpecific;
             ReportPath = path ?? string.Empty;
             RScripts = ImmutableList.Create<Tuple<string,string>>().AddRange(rScripts);
-            RScriptServers = ImmutableDictionary<string, PanoramaFile>.Empty; // TODO (Ali): use argument for this
+            RScriptServers = ImmutableDictionary<string, PanoramaFile>.Empty.AddRange(rScriptServers); // TODO (Ali): use argument for this
             UseRefineFile = useRefineFile;
 
             if (string.IsNullOrWhiteSpace(Name))
@@ -234,6 +250,8 @@ namespace SkylineBatch
         public readonly ImmutableDictionary<string, PanoramaFile> RScriptServers;
 
         public readonly bool UseRefineFile;
+
+        public bool WillDownloadData => RScriptServers.Count > 0;
 
         public object[] AsObjectArray()
         {
@@ -266,7 +284,7 @@ namespace SkylineBatch
             ValidateReportPath(ReportPath);
             foreach (var pathAndVersion in RScripts)
             {
-                ValidateRScriptPath(pathAndVersion.Item1);
+                ValidateRScript(pathAndVersion.Item1, RScriptServers.ContainsKey(pathAndVersion.Item1));
                 ValidateRVersion(pathAndVersion.Item2);
             }
         }
@@ -282,18 +300,46 @@ namespace SkylineBatch
             }
         }
 
-        public static void ValidateRScriptPath(string rScriptPath)
+        public static void ValidateRScriptWithoutServer(string rScriptPath)
         {
-            FileUtil.ValidateNotEmptyPath(rScriptPath, Resources.ReportInfo_ValidateRScriptPath_R_script);
-            if (!File.Exists(rScriptPath))
+            ValidateRScript(rScriptPath, false);
+        }
+
+        public static void ValidateRScriptWithServer(string rScriptPath)
+        {
+            ValidateRScript(rScriptPath, true);
+        }
+
+        public static void ValidateRScript(string rScriptPath, bool hasServer)
+        {
+            FileUtil.ValidateNotEmptyPath(rScriptPath, Resources.MainSettings_ValidateDataFolder_data_folder);
+            if (!hasServer && !File.Exists(rScriptPath))
+            {
                 throw new ArgumentException(string.Format(Resources.ReportInfo_ValidateRScriptPath_R_script_path__0__is_not_a_valid_path_,
                                                 rScriptPath) + Environment.NewLine +
                                             Resources.ReportInfo_Validate_Please_enter_a_path_to_an_existing_file_);
+            }
+
+            if (hasServer)
+            {
+                var directoryExists = false;
+                try
+                {
+                    directoryExists = Directory.Exists(Path.GetDirectoryName(rScriptPath));
+                }
+                catch (Exception)
+                {
+                }
+                if (!directoryExists)
+                    throw new ArgumentException(string.Format(Resources.ReportInfo_ValidateRScript_The_folder_location_for_the_downloaded_R_script__0__does_not_exist_, rScriptPath));
+            }
             FileUtil.ValidateNotInDownloads(rScriptPath, Resources.ReportInfo_ValidateRScriptPath_R_script);
         }
 
         public static void ValidateRVersion(string rVersion)
         {
+            if (string.IsNullOrEmpty(rVersion))
+                throw new ArgumentException(Resources.ReportInfo_ValidateRVersion_An_R_version_is_required_to_use_this_R_script__Please_select_an_R_version_);
             if (!Settings.Default.RVersions.ContainsKey(rVersion))
                 throw new ArgumentException(string.Format(Resources.ReportInfo_ValidateRVersion_R_version__0__is_not_installed_on_this_computer_, rVersion) + Environment.NewLine +
                                             Resources.ReportInfo_ValidateRVersion_Please_choose_a_different_version_of_R_);
@@ -308,13 +354,22 @@ namespace SkylineBatch
             var rScriptServers = new Dictionary<string, PanoramaFile>();
             foreach (var rScriptAndVersion in RScripts)
             {
-                anyScriptReplaced = TextUtil.SuccessfulReplace(ValidateRScriptPath, oldRoot, newRoot, rScriptAndVersion.Item1, preferReplace, out string replacedRScript) || anyScriptReplaced;
+                var rScriptValidator = RScriptServers.ContainsKey(rScriptAndVersion.Item1)
+                    ? ValidateRScriptWithServer
+                    : (Validator)ValidateRScriptWithoutServer;
+                anyScriptReplaced = TextUtil.SuccessfulReplace(rScriptValidator, oldRoot, newRoot, rScriptAndVersion.Item1, preferReplace, out string replacedRScript) || anyScriptReplaced;
                 replacedRScripts.Add(new Tuple<string, string>(replacedRScript, rScriptAndVersion.Item2));
                 if (RScriptServers.ContainsKey(rScriptAndVersion.Item1))
                     rScriptServers.Add(replacedRScript, RScriptServers[rScriptAndVersion.Item1].ReplaceFolder(Path.GetDirectoryName(rScriptAndVersion.Item1)));
             }
-            pathReplacedReportInfo = new ReportInfo(Name, CultureSpecific, replacedReportPath, replacedRScripts, /*rScriptServers, */UseRefineFile);
+            pathReplacedReportInfo = new ReportInfo(Name, CultureSpecific, replacedReportPath, replacedRScripts, rScriptServers, UseRefineFile);
             return reportReplaced || anyScriptReplaced;
+        }
+
+        public void AddDownloadingFiles(ServerFilesManager serverFiles)
+        {
+            foreach (var server in RScriptServers.Values)
+                serverFiles.AddServer(server);
         }
 
         public static ReportInfo ReadXml(XmlReader reader)
@@ -332,14 +387,13 @@ namespace SkylineBatch
                     var path = reader.GetAttribute(XML_TAGS.path);
                     var version = reader.GetAttribute(XML_TAGS.version);
                     rScripts.Add(new Tuple<string, string>(path, version));
-                    if (reader.ReadToDescendant(XMLElements.REMOTE_FILE))
-                    {
-                        rScriptServers.Add(path, PanoramaFile.ReadXml(reader, path));
-                    }
+                    var remoteFile = PanoramaFile.ReadXml(reader, path);
+                    if (remoteFile != null)
+                        rScriptServers.Add(path, remoteFile);
                 } while (reader.ReadToNextSibling(XMLElements.R_SCRIPT));
             }
             
-            return new ReportInfo(name, cultureSpecific, reportPath, rScripts, /*rScriptServers,*/ resultsFile?? false);
+            return new ReportInfo(name, cultureSpecific, reportPath, rScripts, rScriptServers, resultsFile?? false);
         }
 
         public void WriteXml(XmlWriter writer)

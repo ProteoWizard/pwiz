@@ -655,10 +655,10 @@ namespace SkylineBatch
             // Try connecting to all necessary servers
             foreach (var config in enabledConfigs)
             {
-                if (config.MainSettings.WillDownloadData)
+                if (config.WillDownloadData)
                 {
                     downloadingConfigs.Add(config);
-                    config.MainSettings.AddDownloadingFiles(_runServerFiles);
+                    config.AddDownloadingFiles(_runServerFiles);
                 }
             }
 
