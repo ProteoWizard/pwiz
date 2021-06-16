@@ -147,6 +147,37 @@ namespace pwiz.SkylineTestFunctional
             // Only way out without fixing the columns is to cancel
             OkDialog(dlg, dlg.CancelDialog);
 
+            // Now verify that we do not save invalid sets of headers
+            RunUI(() => SkylineWindow.NewDocument());
+
+            WaitForDocumentLoaded();
+
+            SetClipboardText(File.ReadAllText(TestFilesDir.GetTestPath("ThermoTransitionList.csv")));
+            var transitions = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
+
+            // Change headers of the key columns so that our document will not import
+            var transitionBoxes = transitions.ComboBoxes;
+            transitionBoxes[1].SelectedIndex = 0; // Set peptide modified sequence column to 'ignore column'
+            transitionBoxes[2].SelectedIndex = 0; // Set precursor m/z column to 'ignore column'
+            transitionBoxes[5].SelectedIndex = 0; // Set product m/z column to 'ignore column'
+
+            // Click Ok and when it doesn't import due to missing columns close the document
+            RunDlg<MessageDlg>(transitions.buttonOk.PerformClick, messageDlg => { messageDlg.OkDialog(); });   // Dismiss it
+            OkDialog(transitions, transitions.CancelDialog);
+
+            // Paste in the same list and verify that the invalid column positions were not saved
+            RunUI(() => SkylineWindow.NewDocument(true));
+            WaitForDocumentLoaded();
+
+            var transitions1 = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
+            var transitions1Boxes = transitions1.ComboBoxes;
+            Assert.AreNotEqual(transitions1Boxes[1].SelectedIndex, 0);
+            Assert.AreNotEqual(transitions1Boxes[2].SelectedIndex, 0);
+            Assert.AreNotEqual(transitions1Boxes[5].SelectedIndex, 0);
+
+            // Close the document
+            OkDialog(transitions, transitions.CancelDialog);
+
             // Now check UI interactions with a bad import file whose headers we correct in the dialog
             using (new CheckDocumentState(1,2,2,9))
             {
