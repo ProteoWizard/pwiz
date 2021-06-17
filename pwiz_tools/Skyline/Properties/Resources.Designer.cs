@@ -27732,6 +27732,17 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to An error occurred while attempting to load the iRT database {0}. iRT standards cannot be automatically added to the document..
+        /// </summary>
+        public static string SkylineWindow_HandleStandardsChanged_An_error_occurred_while_attempting_to_load_the_iRT_database__0___iRT_standards_cannot_be_automatically_added_to_the_document_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_HandleStandardsChanged_An_error_occurred_while_attempting_to_load_t" +
+                        "he_iRT_database__0___iRT_standards_cannot_be_automatically_added_to_the_document" +
+                        "_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Opening a document inside a ZIP file is not supported..
         /// </summary>
         public static string SkylineWindow_HasFileToOpen_Opening_a_document_inside_a_ZIP_file_is_not_supported_ {

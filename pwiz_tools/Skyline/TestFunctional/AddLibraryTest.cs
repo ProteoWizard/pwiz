@@ -16,8 +16,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
@@ -115,6 +118,17 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(addStandardsSigmaDlg, addStandardsSigmaDlg.BtnYesClick);
             WaitForDocumentChange(docChange);
             VerifyAdd(1, 2);
+
+            // Test exception that occurs when trying to check if iRT standards changed
+            var fakePath = TestFilesDir.GetTestPath("fake.irtdb");
+            var errorDlg = ShowDialog<MessageDlg>(() => RunUI(() =>
+            {
+                SkylineWindow.HandleStandardsChanged(new List<Target>(), new RCalcIrt("fake", fakePath));
+            }));
+            Assert.AreEqual(
+                string.Format(Resources.SkylineWindow_HandleStandardsChanged_An_error_occurred_while_attempting_to_load_the_iRT_database__0___iRT_standards_cannot_be_automatically_added_to_the_document_,
+                    fakePath), errorDlg.Message);
+            OkDialog(errorDlg, errorDlg.OkDialog);
         }
 
         private void ResetModsAndSetStandards(string name, string libName)
