@@ -106,7 +106,6 @@ namespace SkylineBatch
                 string configFile = null;
                 try
                 {
-                    Settings.Default.Upgrade();
                     var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal);
                     configFile = config.FilePath;
                     ProgramLog.Info(string.Format(Resources.Program_Main_Saved_configurations_were_found_in___0_, config.FilePath));
@@ -188,7 +187,12 @@ namespace SkylineBatch
                 }
             }
 
+            // upgrade settings from old version
+            if (!_version.Equals(SharedBatch.Properties.Settings.Default.ProgramVersion))
+                Settings.Default.Upgrade();
+
             SharedBatch.Properties.Settings.Default.ProgramVersion = _version;
+            SharedBatch.Properties.Settings.Default.Save();
         }
 
         private static string GetFirstArg(string[] args)
