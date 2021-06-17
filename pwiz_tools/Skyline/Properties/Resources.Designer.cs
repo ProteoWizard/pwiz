@@ -22909,6 +22909,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to CCS.
+        /// </summary>
+        public static string PeptideTipProvider_RenderTip_CCS {
+            get {
+                return ResourceManager.GetString("PeptideTipProvider_RenderTip_CCS", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ion Mobility.
+        /// </summary>
+        public static string PeptideTipProvider_RenderTip_Ion_Mobility {
+            get {
+                return ResourceManager.GetString("PeptideTipProvider_RenderTip_Ion_Mobility", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Precursor m/z.
         /// </summary>
         public static string PeptideTipProvider_RenderTip_Precursor_m_z {
@@ -34450,6 +34468,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to CCS: .
+        /// </summary>
+        public static string ViewLibraryDlg_UpdateUI_CCS__ {
+            get {
+                return ResourceManager.GetString("ViewLibraryDlg_UpdateUI_CCS__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failure loading spectrum. Library may be corrupted..
         /// </summary>
         public static string ViewLibraryDlg_UpdateUI_Failure_loading_spectrum_Library_may_be_corrupted {
@@ -34464,6 +34491,15 @@ namespace pwiz.Skyline.Properties {
         public static string ViewLibraryDlg_UpdateUI_File {
             get {
                 return ResourceManager.GetString("ViewLibraryDlg_UpdateUI_File", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to IM: .
+        /// </summary>
+        public static string ViewLibraryDlg_UpdateUI_IM__ {
+            get {
+                return ResourceManager.GetString("ViewLibraryDlg_UpdateUI_IM__", resourceCulture);
             }
         }
         
