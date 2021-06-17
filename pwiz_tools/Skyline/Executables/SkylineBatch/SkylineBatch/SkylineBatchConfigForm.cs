@@ -359,6 +359,13 @@ namespace SkylineBatch
                 checkBoxRemoveDecoys.Checked = true;
                 checkBoxRemoveData.Checked = true;
             }
+
+            if (!enabled)
+            {
+                checkBoxRemoveDecoys.Checked = false;
+                checkBoxRemoveData.Checked = false;
+            }
+
         }
 
         private RefineSettings GetRefineSettingsFromUi()
