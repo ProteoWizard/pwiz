@@ -163,9 +163,10 @@ using SharedBatch.Properties;
 
         public void LogPercent(int percent)
         {
-            if (percent < 0)
+            var logTimeCandidate = DateTime.Now;
+            if (percent < 0 || percent < LastPercent)
                 return;
-            if ((DateTime.Now - LastLogTime) > new TimeSpan(0, 0, MIN_SECONDS_BETWEEN_LOGS) &&
+            if ((logTimeCandidate - LastLogTime) > new TimeSpan(0, 0, MIN_SECONDS_BETWEEN_LOGS) &&
                 percent != LastPercent)
             {
                 // do not log 0%, gives fast operations a chance to skip percent logging
@@ -179,10 +180,9 @@ using SharedBatch.Properties;
 
                     return;
                 }
-
+                LastLogTime = logTimeCandidate;
                 Log(string.Format(Resources.Logger_LogPercent__0__, percent));
-                LastPercent = percent;
-                LastLogTime = DateTime.Now;
+                LastPercent = Math.Max(LastPercent, percent);
 
             }
         }

@@ -378,8 +378,9 @@ namespace SkylineBatch
                        
                         var wc = new WebDownloadClient((percent, error) =>
                         {
-                            _logger.LogPercent(percent);
-                            if (error != null)
+                            if (error == null)
+                                _logger.LogPercent(percent);
+                            else
                                 throw error;
                         }, token);
                         try

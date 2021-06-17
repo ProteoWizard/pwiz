@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using System.Net;
+using System.Reflection.Emit;
 using System.Text;
 using System.Threading;
 using System.Xml;
@@ -42,8 +43,8 @@ namespace SkylineBatch
                     error = e.Error;
                     completed = true;
                 });
-                wc.DownloadProgressChanged
-                    += (sender, e) => { ProgressHandler(e.ProgressPercentage, null); };
+                var progressChanged = new DownloadProgressChangedEventHandler((sender, e) => { ProgressHandler(e.ProgressPercentage, null); });
+                wc.DownloadProgressChanged += progressChanged;
                 while (!completed)
                 {
                     if (CancelToken.IsCancellationRequested)
@@ -55,6 +56,7 @@ namespace SkylineBatch
                         ProgressHandler(-1, error);
                     Thread.Sleep(100);
                 }
+                wc.DownloadProgressChanged -= progressChanged;
             }
         }
 
