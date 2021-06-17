@@ -640,10 +640,12 @@ namespace pwiz.Skyline.Controls.Graphs
             if (_showIonSeriesAnnotations && _msDataFileScanHelper.Source == ChromSource.fragment)
             {
                 var nodePath = DocNodePath.GetNodePath(currentTransition.Id, _documentContainer.DocumentUI);
-
-                var graphItem = RankScan(mzs, intensities, _documentContainer.DocumentUI.Settings, nodePath.Precursor,
-                    selectionMatch ? selection.Transition : null);
-                _graphHelper.AddSpectrum(graphItem, false);
+                if (nodePath != null) // Make sure user hasn't removed node since last update
+                {
+                    var graphItem = RankScan(mzs, intensities, _documentContainer.DocumentUI.Settings, nodePath.Precursor,
+                        selectionMatch ? selection.Transition : null);
+                    _graphHelper.AddSpectrum(graphItem, false);
+                }
             }
             else
             {
