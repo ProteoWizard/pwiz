@@ -104,26 +104,28 @@ namespace SkylineBatch
                     Uri webdavUri;
                     var panoramaFolder = (Path.GetDirectoryName(server.URI.LocalPath) ?? string.Empty).Replace(@"\", "/");
                     JToken files;
+                    Exception error;
                     if (panoramaFolder.StartsWith("/_webdav/"))
                     {
                         webdavUri = new Uri("https://panoramaweb.org" + panoramaFolder + "?method=json");
-                        files = TryUri(webdavUri, server.Username, server.Password, cancelToken);
+                        files = TryUri(webdavUri, server.Username, server.Password, cancelToken, out error);
                     }
                     else
                     {
                         panoramaFolder = "/_webdav" + panoramaFolder;
                         webdavUri = new Uri("https://panoramaweb.org" + panoramaFolder + "/%40files/RawFiles?method=json");
-                        files = TryUri(webdavUri, server.Username, server.Password, cancelToken);
+                        files = TryUri(webdavUri, server.Username, server.Password, cancelToken, out error);
                         if (files == null)
                         {
                             webdavUri = new Uri("https://panoramaweb.org" + panoramaFolder + "/%40files?method=json");
-                            files = TryUri(webdavUri, server.Username, server.Password, cancelToken);
+                            files = TryUri(webdavUri, server.Username, server.Password, cancelToken, out error);
                         }
                     }
 
                     var fileInfos = new List<ConnectedFileInfo>();
                     try
                     {
+                        if (error != null) throw error;
                         var count = (double) (files.AsEnumerable().Count());
                         int i = 0;
                         foreach (var file in files)
@@ -200,8 +202,9 @@ namespace SkylineBatch
             doOnProgress(100, 100);
         }
 
-        private JToken TryUri(Uri uri, string username, string password, CancellationToken cancelToken)
+        private JToken TryUri(Uri uri, string username, string password, CancellationToken cancelToken, out Exception error)
         {
+            error = null;
             if (cancelToken.IsCancellationRequested) return null;
             JToken files = null;
             try
@@ -213,9 +216,9 @@ namespace SkylineBatch
                 var panoramaJsonObject = JsonConvert.DeserializeObject<JObject>(jsonAsString);
                 files = panoramaJsonObject["files"];
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                // pass
+                error = e;
             }
             return files;
         }
