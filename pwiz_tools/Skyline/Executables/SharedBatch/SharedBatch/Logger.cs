@@ -159,40 +159,46 @@ using SharedBatch.Properties;
         private int LastPercent;
         private DateTime LastLogTime;
         private const int MIN_SECONDS_BETWEEN_LOGS = 4;
+        private object _percentLock = new object();
 
 
         public void LogPercent(int percent)
         {
-            var logTimeCandidate = DateTime.Now;
-            if (percent < 0 || percent < LastPercent)
-                return;
-            if ((logTimeCandidate - LastLogTime) > new TimeSpan(0, 0, MIN_SECONDS_BETWEEN_LOGS) &&
-                percent != LastPercent)
+            lock (_percentLock)
             {
-                // do not log 0%, gives fast operations a chance to skip percent logging
-                if (percent == 0)
+                if (percent < 0 || percent < LastPercent || percent == 100)
+                    return;
+                if ((DateTime.Now - LastLogTime) > new TimeSpan(0, 0, MIN_SECONDS_BETWEEN_LOGS) &&
+                    percent != LastPercent)
                 {
-                    if (LastPercent == -2)
+                    // do not log 0%, gives fast operations a chance to skip percent logging
+                    if (percent == 0)
                     {
-                        LastPercent = -1;
-                        LastLogTime = DateTime.Now;
+                        if (LastPercent == -2)
+                        {
+                            LastPercent = -1;
+                            LastLogTime = DateTime.Now;
+                        }
+
+                        return;
                     }
 
-                    return;
+                    LastLogTime = DateTime.Now;
+                    Log(string.Format(Resources.Logger_LogPercent__0__, percent));
+                    LastPercent = Math.Max(LastPercent, percent);
                 }
-                LastLogTime = logTimeCandidate;
-                Log(string.Format(Resources.Logger_LogPercent__0__, percent));
-                LastPercent = Math.Max(LastPercent, percent);
-
             }
         }
 
         public void StopLogPercent(bool completed)
         {
-            if (completed && LastPercent >= 0)
-                Log(string.Format(Resources.Logger_LogPercent__0__, 100));
-            LastPercent = -2;
-            LastLogTime = DateTime.MinValue;
+            lock (_percentLock)
+            {
+                if (completed && LastPercent >= 0)
+                    Log(string.Format(Resources.Logger_LogPercent__0__, 100));
+                LastPercent = -2;
+                LastLogTime = DateTime.MinValue;
+            }
         }
 
         private static string GetDate()
