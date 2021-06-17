@@ -163,6 +163,8 @@ namespace SkylineBatch
             textUrl.Text = Server != null ? Server.GetUrl() : string.Empty;
             textUserName.Text = Server != null ? Server.Username : string.Empty;
             textPassword.Text = Server != null ? Server.Password : string.Empty;
+            checkBoxNoEncryption.Enabled = Server != null && !string.IsNullOrEmpty(Server.Password);
+            checkBoxNoEncryption.Checked = checkBoxNoEncryption.Enabled && Server != null && !Server.Encrypt;
             textNamingPattern.Text = Server == null || Server.DataNamingPattern.Equals(".*")
                 ? string.Empty
                 : Server.DataNamingPattern;
@@ -225,7 +227,7 @@ namespace SkylineBatch
             }
 
             var sizeString = sizeInGB > 0 ? string.Format(Resources.AddServerForm_UpdateFileList__0__GB, sizeInGB) : string.Format(Resources.AddServerForm_UpdateFileList__0__KB, sizeInKB);
-            if (files.Count > 1)
+            if (files.Count != 1)
                 labelFileInfo.Text = string.Format(Resources.AddServerForm_UpdateFileList__0__files___1_, listBoxFileNames.Items.Count, sizeString);
             else
                 labelFileInfo.Text = string.Format(Resources.AddServerForm_UpdateFileList__1_file___0_, sizeString);

@@ -51,11 +51,11 @@
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.btnAdd = new System.Windows.Forms.ToolStripButton();
             this.btnDelete = new System.Windows.Forms.ToolStripButton();
+            this.btnEdit = new System.Windows.Forms.ToolStripButton();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.checkBoxImport = new System.Windows.Forms.CheckBox();
             this.checkBoxCultureInvariant = new System.Windows.Forms.CheckBox();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-            this.btnEdit = new System.Windows.Forms.ToolStripButton();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridScripts)).BeginInit();
             this.toolStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -215,6 +215,14 @@
             this.btnDelete.Name = "btnDelete";
             this.btnDelete.Click += new System.EventHandler(this.btnDelete_Click);
             // 
+            // btnEdit
+            // 
+            this.btnEdit.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            resources.ApplyResources(this.btnEdit, "btnEdit");
+            this.btnEdit.Image = global::SkylineBatch.Properties.Resources.Comment;
+            this.btnEdit.Name = "btnEdit";
+            this.btnEdit.Click += new System.EventHandler(this.btnEdit_Click);
+            // 
             // splitContainer1
             // 
             resources.ApplyResources(this.splitContainer1, "splitContainer1");
@@ -247,14 +255,6 @@
             this.checkBoxCultureInvariant.Name = "checkBoxCultureInvariant";
             this.toolTip1.SetToolTip(this.checkBoxCultureInvariant, resources.GetString("checkBoxCultureInvariant.ToolTip"));
             this.checkBoxCultureInvariant.UseVisualStyleBackColor = true;
-            // 
-            // btnEdit
-            // 
-            this.btnEdit.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.btnEdit.Image = global::SkylineBatch.Properties.Resources.Comment;
-            resources.ApplyResources(this.btnEdit, "btnEdit");
-            this.btnEdit.Name = "btnEdit";
-            this.btnEdit.Click += new System.EventHandler(this.btnEdit_Click);
             // 
             // ReportsAddForm
             // 
