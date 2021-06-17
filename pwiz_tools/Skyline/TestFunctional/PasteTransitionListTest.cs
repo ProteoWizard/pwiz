@@ -64,26 +64,10 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(protName, thermBoxes[4].Text);
                 Assert.AreEqual(fragName, thermBoxes[5].Text);
                 Assert.AreEqual(label, thermBoxes[7].Text);
-                // Modifies the selected index of one box so later we can test if it saved 
-                thermBoxes[4].SelectedIndex = 2;
             });
             RunDlg<ImportTransitionListErrorDlg>(therm.OkDialog, errDlg => errDlg.Close());
             OkDialog(therm, therm.CancelDialog);
-            RunUI(() => SkylineWindow.NewDocument());
 
-            WaitForDocumentLoaded();
-
-            // This will paste in the ThermoTransitionList a second time
-            var secondtherm = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
-
-            RunUI(() => {
-                var secondBoxes = secondtherm.ComboBoxes;
-                // Checks that the modified index was saved 
-                Assert.AreEqual(2, secondBoxes[4].SelectedIndex);
-                // Checks that the the text in the combo box reflects the change
-                Assert.AreNotEqual(protName, secondBoxes[4].Text);
-                secondtherm.CancelDialog();
-            });
 
             SetClipboardText(File.ReadAllText(TestFilesDir.GetTestPath("PeptideTransitionList.csv")));
             // This will paste in a transition list with headers
@@ -95,19 +79,29 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 var peptideBoxes = peptideTransitionList.ComboBoxes;
+                peptideBoxes[14].SelectedIndex = 0;
                 // Changes the contents of a combo box
                 peptideBoxes[4].SelectedIndex = 1;
             });
-            // Clicking the Ok button will the change
-            RunDlg<ImportTransitionListErrorDlg>(peptideTransitionList.OkDialog, errDlg => errDlg.Close());
-            OkDialog(peptideTransitionList, peptideTransitionList.CancelDialog);
+            // Clicking the OK button should save the column locations
+            OkDialog(peptideTransitionList, peptideTransitionList.OkDialog);
+
+            // Paste in the same transition list and verify that the earlier modification was saved
+            var peptideTransitionList1 = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
+            WaitForDocumentLoaded();
+            RunUI(() => 
+            {
+                var peptideTransitionListBoxes1 = peptideTransitionList1.ComboBoxes;
+                Assert.AreEqual(1, peptideTransitionListBoxes1[4].SelectedIndex);
+                peptideTransitionList1.CancelDialog();
+            });
 
             // This will paste in the same transition list, but with different headers. The program should realize it has
             // different headers and not use the saved list of column names
             SetClipboardText(File.ReadAllText(TestFilesDir.GetTestPath("PeptideTransitionListdiffheaders.csv")));
 
             var peptideTransitionListDiffHeaders = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
-            RunUI(() => SkylineWindow.NewDocument());
+            RunUI(() => SkylineWindow.NewDocument(true));
 
             WaitForDocumentLoaded();
             RunUI(() =>
@@ -115,6 +109,7 @@ namespace pwiz.SkylineTestFunctional
                 var diffPeptideBoxes = peptideTransitionListDiffHeaders.ComboBoxes;
                 // Checks that the program did not use the saved indices
                 Assert.AreNotEqual(diffPeptideBoxes[4].SelectedIndex, 1);
+
                 peptideTransitionListDiffHeaders.CancelDialog();
             });
 
@@ -176,7 +171,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreNotEqual(transitions1Boxes[3].SelectedIndex, 0);
 
             // Close the document
-            OkDialog(transitions, transitions.CancelDialog);
+            OkDialog(transitions1, transitions1.CancelDialog);
 
             // Now check UI interactions with a bad import file whose headers we correct in the dialog
             using (new CheckDocumentState(1,2,2,9))
