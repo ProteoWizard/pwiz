@@ -405,4 +405,7 @@ with:
   <data name="PanoramaUtil_VerifyServerInformation_Username_and_password_cannot_be_null__Please_enter_a_username_and_password_" xml:space="preserve">
     <value>Username and password cannot be null. Please enter a username and password.</value>
   </data>
+  <data name="ConfigManager_ImportFrom_The_imported_configurations_are_from_an_old_file_format_and_could_not_be_copied_to__0_" xml:space="preserve">
+    <value>The imported configurations are from an old file format and could not be copied to {0}</value>
+  </data>
 </root>

@@ -22,21 +22,21 @@ namespace SharedBatch.Properties {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    public class Resources {
+    internal class Resources {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
         private static global::System.Globalization.CultureInfo resourceCulture;
         
         [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        public Resources() {
+        internal Resources() {
         }
         
         /// <summary>
         ///   Returns the cached ResourceManager instance used by this class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        public static global::System.Resources.ResourceManager ResourceManager {
+        internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
                     global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("SharedBatch.Properties.Resources", typeof(Resources).Assembly);
@@ -51,7 +51,7 @@ namespace SharedBatch.Properties {
         ///   resource lookups using this strongly typed resource class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        public static global::System.Globalization.CultureInfo Culture {
+        internal static global::System.Globalization.CultureInfo Culture {
             get {
                 return resourceCulture;
             }
@@ -63,7 +63,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Abort.
         /// </summary>
-        public static string AlertDlg_GetDefaultButtonText_Abort {
+        internal static string AlertDlg_GetDefaultButtonText_Abort {
             get {
                 return ResourceManager.GetString("AlertDlg_GetDefaultButtonText_Abort", resourceCulture);
             }
@@ -72,7 +72,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Cancel.
         /// </summary>
-        public static string AlertDlg_GetDefaultButtonText_Cancel {
+        internal static string AlertDlg_GetDefaultButtonText_Cancel {
             get {
                 return ResourceManager.GetString("AlertDlg_GetDefaultButtonText_Cancel", resourceCulture);
             }
@@ -81,7 +81,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Ignore.
         /// </summary>
-        public static string AlertDlg_GetDefaultButtonText_Ignore {
+        internal static string AlertDlg_GetDefaultButtonText_Ignore {
             get {
                 return ResourceManager.GetString("AlertDlg_GetDefaultButtonText_Ignore", resourceCulture);
             }
@@ -90,7 +90,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to No.
         /// </summary>
-        public static string AlertDlg_GetDefaultButtonText_No {
+        internal static string AlertDlg_GetDefaultButtonText_No {
             get {
                 return ResourceManager.GetString("AlertDlg_GetDefaultButtonText_No", resourceCulture);
             }
@@ -99,7 +99,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to OK.
         /// </summary>
-        public static string AlertDlg_GetDefaultButtonText_OK {
+        internal static string AlertDlg_GetDefaultButtonText_OK {
             get {
                 return ResourceManager.GetString("AlertDlg_GetDefaultButtonText_OK", resourceCulture);
             }
@@ -108,7 +108,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Retry.
         /// </summary>
-        public static string AlertDlg_GetDefaultButtonText_Retry {
+        internal static string AlertDlg_GetDefaultButtonText_Retry {
             get {
                 return ResourceManager.GetString("AlertDlg_GetDefaultButtonText_Retry", resourceCulture);
             }
@@ -117,7 +117,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Yes.
         /// </summary>
-        public static string AlertDlg_GetDefaultButtonText_Yes {
+        internal static string AlertDlg_GetDefaultButtonText_Yes {
             get {
                 return ResourceManager.GetString("AlertDlg_GetDefaultButtonText_Yes", resourceCulture);
             }
@@ -126,7 +126,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Message truncated. Press Ctrl+C to copy entire message to the clipboard..
         /// </summary>
-        public static string AlertDlg_TruncateMessage_Message_truncated__Press_Ctrl_C_to_copy_entire_message_to_the_clipboard_ {
+        internal static string AlertDlg_TruncateMessage_Message_truncated__Press_Ctrl_C_to_copy_entire_message_to_the_clipboard_ {
             get {
                 return ResourceManager.GetString("AlertDlg_TruncateMessage_Message_truncated__Press_Ctrl_C_to_copy_entire_message_t" +
                         "o_the_clipboard_", resourceCulture);
@@ -136,7 +136,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Load Configurations Error.
         /// </summary>
-        public static string ConfigList_ReadXml_Load_Configurations_Error {
+        internal static string ConfigList_ReadXml_Load_Configurations_Error {
             get {
                 return ResourceManager.GetString("ConfigList_ReadXml_Load_Configurations_Error", resourceCulture);
             }
@@ -145,7 +145,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to There is no configuration selected..
         /// </summary>
-        public static string ConfigManager_CheckConfigSelected_There_is_no_configuration_selected_ {
+        internal static string ConfigManager_CheckConfigSelected_There_is_no_configuration_selected_ {
             get {
                 return ResourceManager.GetString("ConfigManager_CheckConfigSelected_There_is_no_configuration_selected_", resourceCulture);
             }
@@ -154,7 +154,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Could not save configurations to:.
         /// </summary>
-        public static string ConfigManager_ExportConfigs_Could_not_save_configurations_to_ {
+        internal static string ConfigManager_ExportConfigs_Could_not_save_configurations_to_ {
             get {
                 return ResourceManager.GetString("ConfigManager_ExportConfigs_Could_not_save_configurations_to_", resourceCulture);
             }
@@ -163,7 +163,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Please provide a path to a file inside an existing folder..
         /// </summary>
-        public static string ConfigManager_ExportConfigs_Please_provide_a_path_to_a_file_inside_an_existing_folder_ {
+        internal static string ConfigManager_ExportConfigs_Please_provide_a_path_to_a_file_inside_an_existing_folder_ {
             get {
                 return ResourceManager.GetString("ConfigManager_ExportConfigs_Please_provide_a_path_to_a_file_inside_an_existing_fo" +
                         "lder_", resourceCulture);
@@ -173,7 +173,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Please select a configuration to share..
         /// </summary>
-        public static string ConfigManager_ExportConfigs_Please_select_a_configuration_to_share_ {
+        internal static string ConfigManager_ExportConfigs_Please_select_a_configuration_to_share_ {
             get {
                 return ResourceManager.GetString("ConfigManager_ExportConfigs_Please_select_a_configuration_to_share_", resourceCulture);
             }
@@ -182,7 +182,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to There is no configuration selected..
         /// </summary>
-        public static string ConfigManager_ExportConfigs_There_is_no_configuration_selected_ {
+        internal static string ConfigManager_ExportConfigs_There_is_no_configuration_selected_ {
             get {
                 return ResourceManager.GetString("ConfigManager_ExportConfigs_There_is_no_configuration_selected_", resourceCulture);
             }
@@ -191,7 +191,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to An error occurred while importing configurations from {0}:.
         /// </summary>
-        public static string ConfigManager_Import_An_error_occurred_while_importing_configurations_from__0__ {
+        internal static string ConfigManager_Import_An_error_occurred_while_importing_configurations_from__0__ {
             get {
                 return ResourceManager.GetString("ConfigManager_Import_An_error_occurred_while_importing_configurations_from__0__", resourceCulture);
             }
@@ -200,7 +200,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to No configurations were found in {0}..
         /// </summary>
-        public static string ConfigManager_Import_No_configurations_were_found_in__0__ {
+        internal static string ConfigManager_Import_No_configurations_were_found_in__0__ {
             get {
                 return ResourceManager.GetString("ConfigManager_Import_No_configurations_were_found_in__0__", resourceCulture);
             }
@@ -209,7 +209,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Number of configurations imported:.
         /// </summary>
-        public static string ConfigManager_Import_Number_of_configurations_imported_ {
+        internal static string ConfigManager_Import_Number_of_configurations_imported_ {
             get {
                 return ResourceManager.GetString("ConfigManager_Import_Number_of_configurations_imported_", resourceCulture);
             }
@@ -218,7 +218,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Number of configurations with errors that could not be imported:.
         /// </summary>
-        public static string ConfigManager_Import_Number_of_configurations_with_errors_that_could_not_be_imported_ {
+        internal static string ConfigManager_Import_Number_of_configurations_with_errors_that_could_not_be_imported_ {
             get {
                 return ResourceManager.GetString("ConfigManager_Import_Number_of_configurations_with_errors_that_could_not_be_impor" +
                         "ted_", resourceCulture);
@@ -228,7 +228,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Do you want to overwrite these configurations?.
         /// </summary>
-        public static string ConfigManager_ImportFrom_Do_you_want_to_overwrite_these_configurations_ {
+        internal static string ConfigManager_ImportFrom_Do_you_want_to_overwrite_these_configurations_ {
             get {
                 return ResourceManager.GetString("ConfigManager_ImportFrom_Do_you_want_to_overwrite_these_configurations_", resourceCulture);
             }
@@ -237,7 +237,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Overwriting....
         /// </summary>
-        public static string ConfigManager_ImportFrom_Overwriting_ {
+        internal static string ConfigManager_ImportFrom_Overwriting_ {
             get {
                 return ResourceManager.GetString("ConfigManager_ImportFrom_Overwriting_", resourceCulture);
             }
@@ -246,16 +246,26 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to The following configurations already exist:.
         /// </summary>
-        public static string ConfigManager_ImportFrom_The_following_configurations_already_exist_ {
+        internal static string ConfigManager_ImportFrom_The_following_configurations_already_exist_ {
             get {
                 return ResourceManager.GetString("ConfigManager_ImportFrom_The_following_configurations_already_exist_", resourceCulture);
             }
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The imported configurations are from an old file format and could not be copied to {0}.
+        /// </summary>
+        internal static string ConfigManager_ImportFrom_The_imported_configurations_are_from_an_old_file_format_and_could_not_be_copied_to__0_ {
+            get {
+                return ResourceManager.GetString("ConfigManager_ImportFrom_The_imported_configurations_are_from_an_old_file_format_" +
+                        "and_could_not_be_copied_to__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Adding configuration &quot;{0}&quot;..
         /// </summary>
-        public static string ConfigManager_InsertConfiguration_Adding_configuration___0___ {
+        internal static string ConfigManager_InsertConfiguration_Adding_configuration___0___ {
             get {
                 return ResourceManager.GetString("ConfigManager_InsertConfiguration_Adding_configuration___0___", resourceCulture);
             }
@@ -264,7 +274,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Configuration &quot;{0}&quot; already exists..
         /// </summary>
-        public static string ConfigManager_InsertConfiguration_Configuration___0___already_exists_ {
+        internal static string ConfigManager_InsertConfiguration_Configuration___0___already_exists_ {
             get {
                 return ResourceManager.GetString("ConfigManager_InsertConfiguration_Configuration___0___already_exists_", resourceCulture);
             }
@@ -273,7 +283,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Please enter a unique name for the configuration..
         /// </summary>
-        public static string ConfigManager_InsertConfiguration_Please_enter_a_unique_name_for_the_configuration_ {
+        internal static string ConfigManager_InsertConfiguration_Please_enter_a_unique_name_for_the_configuration_ {
             get {
                 return ResourceManager.GetString("ConfigManager_InsertConfiguration_Please_enter_a_unique_name_for_the_configuratio" +
                         "n_", resourceCulture);
@@ -283,7 +293,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Cannot delete &quot;{0}&quot;: configuration does not exist..
         /// </summary>
-        public static string ConfigManager_RemoveConfig_Cannot_delete___0____configuration_does_not_exist_ {
+        internal static string ConfigManager_RemoveConfig_Cannot_delete___0____configuration_does_not_exist_ {
             get {
                 return ResourceManager.GetString("ConfigManager_RemoveConfig_Cannot_delete___0____configuration_does_not_exist_", resourceCulture);
             }
@@ -292,7 +302,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Are you sure you want to delete &quot;{0}&quot;?.
         /// </summary>
-        public static string ConfigManager_RemoveSelected_Are_you_sure_you_want_to_delete___0___ {
+        internal static string ConfigManager_RemoveSelected_Are_you_sure_you_want_to_delete___0___ {
             get {
                 return ResourceManager.GetString("ConfigManager_RemoveSelected_Are_you_sure_you_want_to_delete___0___", resourceCulture);
             }
@@ -301,7 +311,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Removing configuration: &quot;{0}&quot;.
         /// </summary>
-        public static string ConfigManager_RemoveSelected_Removing_configuration____0__ {
+        internal static string ConfigManager_RemoveSelected_Removing_configuration____0__ {
             get {
                 return ResourceManager.GetString("ConfigManager_RemoveSelected_Removing_configuration____0__", resourceCulture);
             }
@@ -310,7 +320,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to There is no configuration at index: {0}.
         /// </summary>
-        public static string ConfigManager_SelectConfig_There_is_no_configuration_at_index___0_ {
+        internal static string ConfigManager_SelectConfig_There_is_no_configuration_at_index___0_ {
             get {
                 return ResourceManager.GetString("ConfigManager_SelectConfig_There_is_no_configuration_at_index___0_", resourceCulture);
             }
@@ -319,7 +329,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Cannot add &quot;{0}&quot; because there is another configuration with the same name..
         /// </summary>
-        public static string ConfigManager_TryOperation_Cannot_add___0___because_there_is_another_configuration_with_the_same_name_ {
+        internal static string ConfigManager_TryOperation_Cannot_add___0___because_there_is_another_configuration_with_the_same_name_ {
             get {
                 return ResourceManager.GetString("ConfigManager_TryOperation_Cannot_add___0___because_there_is_another_configuratio" +
                         "n_with_the_same_name_", resourceCulture);
@@ -329,7 +339,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Please choose a unique name..
         /// </summary>
-        public static string ConfigManager_TryOperation_Please_choose_a_unique_name_ {
+        internal static string ConfigManager_TryOperation_Please_choose_a_unique_name_ {
             get {
                 return ResourceManager.GetString("ConfigManager_TryOperation_Please_choose_a_unique_name_", resourceCulture);
             }
@@ -338,7 +348,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Please specify a root folder for the configurations:.
         /// </summary>
-        public static string FileOpenedForm_FileOpenedForm_Please_specify_a_root_folder_for_the_configurations_ {
+        internal static string FileOpenedForm_FileOpenedForm_Please_specify_a_root_folder_for_the_configurations_ {
             get {
                 return ResourceManager.GetString("FileOpenedForm_FileOpenedForm_Please_specify_a_root_folder_for_the_configurations" +
                         "_", resourceCulture);
@@ -348,7 +358,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Preparing to import configurations from {0}.
         /// </summary>
-        public static string FileOpenedForm_FileOpenedForm_Preparing_to_import_configurations_from__0_ {
+        internal static string FileOpenedForm_FileOpenedForm_Preparing_to_import_configurations_from__0_ {
             get {
                 return ResourceManager.GetString("FileOpenedForm_FileOpenedForm_Preparing_to_import_configurations_from__0_", resourceCulture);
             }
@@ -357,7 +367,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to root folder.
         /// </summary>
-        public static string FileOpenedForm_FileOpenedForm_root_folder {
+        internal static string FileOpenedForm_FileOpenedForm_root_folder {
             get {
                 return ResourceManager.GetString("FileOpenedForm_FileOpenedForm_root_folder", resourceCulture);
             }
@@ -366,7 +376,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Please enter an existing directory..
         /// </summary>
-        public static string FileOpenedForm_RootFolderValidator_Please_enter_an_existing_directory_ {
+        internal static string FileOpenedForm_RootFolderValidator_Please_enter_an_existing_directory_ {
             get {
                 return ResourceManager.GetString("FileOpenedForm_RootFolderValidator_Please_enter_an_existing_directory_", resourceCulture);
             }
@@ -375,7 +385,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to root folder.
         /// </summary>
-        public static string FileOpenedForm_RootFolderValidator_root_folder {
+        internal static string FileOpenedForm_RootFolderValidator_root_folder {
             get {
                 return ResourceManager.GetString("FileOpenedForm_RootFolderValidator_root_folder", resourceCulture);
             }
@@ -384,7 +394,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to The directory {0} does not exist..
         /// </summary>
-        public static string FileOpenedForm_RootFolderValidator_The_directory__0__does_not_exist_ {
+        internal static string FileOpenedForm_RootFolderValidator_The_directory__0__does_not_exist_ {
             get {
                 return ResourceManager.GetString("FileOpenedForm_RootFolderValidator_The_directory__0__does_not_exist_", resourceCulture);
             }
@@ -393,7 +403,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Could not find the {0}..
         /// </summary>
-        public static string FilePathControl_FilePathControl_Could_not_find_the__0__ {
+        internal static string FilePathControl_FilePathControl_Could_not_find_the__0__ {
             get {
                 return ResourceManager.GetString("FilePathControl_FilePathControl_Could_not_find_the__0__", resourceCulture);
             }
@@ -402,7 +412,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Please correct the {0} to continue:.
         /// </summary>
-        public static string FilePathControl_FilePathControl_Please_correct_the__0__to_continue_ {
+        internal static string FilePathControl_FilePathControl_Please_correct_the__0__to_continue_ {
             get {
                 return ResourceManager.GetString("FilePathControl_FilePathControl_Please_correct_the__0__to_continue_", resourceCulture);
             }
@@ -411,7 +421,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to {0} requires Skyline to run, but did not find an administrative or web-based installation..
         /// </summary>
-        public static string FindSkylineForm_FindSkylineForm__0__requires_Skyline_to_run__but_did_not_find_an_administrative_or_web_based_installation_ {
+        internal static string FindSkylineForm_FindSkylineForm__0__requires_Skyline_to_run__but_did_not_find_an_administrative_or_web_based_installation_ {
             get {
                 return ResourceManager.GetString("FindSkylineForm_FindSkylineForm__0__requires_Skyline_to_run__but_did_not_find_an_" +
                         "administrative_or_web_based_installation_", resourceCulture);
@@ -424,7 +434,7 @@ namespace SharedBatch.Properties {
         ///with:
         ///{1}?.
         /// </summary>
-        public static string InvalidConfigSetupForm_GetValidPath_Would_you_like_to_replace__0__with__1___ {
+        internal static string InvalidConfigSetupForm_GetValidPath_Would_you_like_to_replace__0__with__1___ {
             get {
                 return ResourceManager.GetString("InvalidConfigSetupForm_GetValidPath_Would_you_like_to_replace__0__with__1___", resourceCulture);
             }
@@ -433,7 +443,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to ... Log truncated ... Full log is in {0}.
         /// </summary>
-        public static string Logger_DisplayLog_____Log_truncated_____Full_log_is_in__0_ {
+        internal static string Logger_DisplayLog_____Log_truncated_____Full_log_is_in__0_ {
             get {
                 return ResourceManager.GetString("Logger_DisplayLog_____Log_truncated_____Full_log_is_in__0_", resourceCulture);
             }
@@ -442,7 +452,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Could not read the log file: {0}. File does not exist..
         /// </summary>
-        public static string Logger_DisplayLog_Could_not_read_the_log_file___0___File_does_not_exist_ {
+        internal static string Logger_DisplayLog_Could_not_read_the_log_file___0___File_does_not_exist_ {
             get {
                 return ResourceManager.GetString("Logger_DisplayLog_Could_not_read_the_log_file___0___File_does_not_exist_", resourceCulture);
             }
@@ -451,7 +461,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Displaying last {0} saved log messages..
         /// </summary>
-        public static string Logger_DisplayLog_Displaying_last__0__saved_log_messages_ {
+        internal static string Logger_DisplayLog_Displaying_last__0__saved_log_messages_ {
             get {
                 return ResourceManager.GetString("Logger_DisplayLog_Displaying_last__0__saved_log_messages_", resourceCulture);
             }
@@ -460,7 +470,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Displaying messages since log file became unavailable..
         /// </summary>
-        public static string Logger_DisplayLog_Displaying_messages_since_log_file_became_unavailable_ {
+        internal static string Logger_DisplayLog_Displaying_messages_since_log_file_became_unavailable_ {
             get {
                 return ResourceManager.GetString("Logger_DisplayLog_Displaying_messages_since_log_file_became_unavailable_", resourceCulture);
             }
@@ -469,7 +479,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Error:.
         /// </summary>
-        public static string Logger_LogError_Error_ {
+        internal static string Logger_LogError_Error_ {
             get {
                 return ResourceManager.GetString("Logger_LogError_Error_", resourceCulture);
             }
@@ -478,7 +488,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to ERROR: {0}.
         /// </summary>
-        public static string Logger_LogErrorToFile_ERROR___0_ {
+        internal static string Logger_LogErrorToFile_ERROR___0_ {
             get {
                 return ResourceManager.GetString("Logger_LogErrorToFile_ERROR___0_", resourceCulture);
             }
@@ -487,7 +497,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to {0}%.
         /// </summary>
-        public static string Logger_LogPercent__0__ {
+        internal static string Logger_LogPercent__0__ {
             get {
                 return ResourceManager.GetString("Logger_LogPercent__0__", resourceCulture);
             }
@@ -496,7 +506,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to !!! LOG BUFFER IS FULL !!!.
         /// </summary>
-        public static string Logger_WriteToBuffer_____LOG_BUFFER_IS_FULL____ {
+        internal static string Logger_WriteToBuffer_____LOG_BUFFER_IS_FULL____ {
             get {
                 return ResourceManager.GetString("Logger_WriteToBuffer_____LOG_BUFFER_IS_FULL____", resourceCulture);
             }
@@ -505,7 +515,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Error message was {0}..
         /// </summary>
-        public static string Logger_WriteToFile_Error_message_was__0__ {
+        internal static string Logger_WriteToFile_Error_message_was__0__ {
             get {
                 return ResourceManager.GetString("Logger_WriteToFile_Error_message_was__0__", resourceCulture);
             }
@@ -514,7 +524,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Error occurred while trying to backup log file:.
         /// </summary>
-        public static string Logger_WriteToFile_Error_occurred_while_trying_to_backup_log_file__ {
+        internal static string Logger_WriteToFile_Error_occurred_while_trying_to_backup_log_file__ {
             get {
                 return ResourceManager.GetString("Logger_WriteToFile_Error_occurred_while_trying_to_backup_log_file__", resourceCulture);
             }
@@ -523,7 +533,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Error occurred writing to log file: {0}. Attempted to write:.
         /// </summary>
-        public static string Logger_WriteToFile_Error_occurred_writing_to_log_file___0___Attempted_to_write_ {
+        internal static string Logger_WriteToFile_Error_occurred_writing_to_log_file___0___Attempted_to_write_ {
             get {
                 return ResourceManager.GetString("Logger_WriteToFile_Error_occurred_writing_to_log_file___0___Attempted_to_write_", resourceCulture);
             }
@@ -532,7 +542,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to ERROR writing to the log file: {0}. Check program log for details: {1}.
         /// </summary>
-        public static string Logger_WriteToFile_ERROR_writing_to_the_log_file___0___Check_program_log_for_details___1_ {
+        internal static string Logger_WriteToFile_ERROR_writing_to_the_log_file___0___Check_program_log_for_details___1_ {
             get {
                 return ResourceManager.GetString("Logger_WriteToFile_ERROR_writing_to_the_log_file___0___Check_program_log_for_deta" +
                         "ils___1_", resourceCulture);
@@ -542,7 +552,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Exception stack trace:.
         /// </summary>
-        public static string Logger_WriteToFile_Exception_stack_trace_ {
+        internal static string Logger_WriteToFile_Exception_stack_trace_ {
             get {
                 return ResourceManager.GetString("Logger_WriteToFile_Exception_stack_trace_", resourceCulture);
             }
@@ -551,7 +561,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Exception stack trace: .
         /// </summary>
-        public static string Logger_WriteToFile_Exception_stack_trace__ {
+        internal static string Logger_WriteToFile_Exception_stack_trace__ {
             get {
                 return ResourceManager.GetString("Logger_WriteToFile_Exception_stack_trace__", resourceCulture);
             }
@@ -560,7 +570,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to The {0} is not valid for {1}..
         /// </summary>
-        public static string MainFormUtils_CanOpen_The__0__is_not_valid_for__1__ {
+        internal static string MainFormUtils_CanOpen_The__0__is_not_valid_for__1__ {
             get {
                 return ResourceManager.GetString("MainFormUtils_CanOpen_The__0__is_not_valid_for__1__", resourceCulture);
             }
@@ -569,7 +579,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Please fix {0} and try again..
         /// </summary>
-        public static string MainFormUtils_OpenFileExplorer_Please_fix__0__and_try_again_ {
+        internal static string MainFormUtils_OpenFileExplorer_Please_fix__0__and_try_again_ {
             get {
                 return ResourceManager.GetString("MainFormUtils_OpenFileExplorer_Please_fix__0__and_try_again_", resourceCulture);
             }
@@ -578,7 +588,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to &quot;{0}&quot; is not a Panorama folder..
         /// </summary>
-        public static string PanoramaServerException_FolderValidationError___0___is_not_a_Panorama_folder_ {
+        internal static string PanoramaServerException_FolderValidationError___0___is_not_a_Panorama_folder_ {
             get {
                 return ResourceManager.GetString("PanoramaServerException_FolderValidationError___0___is_not_a_Panorama_folder_", resourceCulture);
             }
@@ -587,7 +597,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Encountered unknown folder validation state {0}..
         /// </summary>
-        public static string PanoramaServerException_FolderValidationError_Encountered_unknown_folder_validation_state__0__ {
+        internal static string PanoramaServerException_FolderValidationError_Encountered_unknown_folder_validation_state__0__ {
             get {
                 return ResourceManager.GetString("PanoramaServerException_FolderValidationError_Encountered_unknown_folder_validati" +
                         "on_state__0__", resourceCulture);
@@ -597,7 +607,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Folder &quot;{0}&quot; does not exist on the Panorama server {1}..
         /// </summary>
-        public static string PanoramaServerException_FolderValidationError_Folder___0___does_not_exist_on_the_Panorama_server__1__ {
+        internal static string PanoramaServerException_FolderValidationError_Folder___0___does_not_exist_on_the_Panorama_server__1__ {
             get {
                 return ResourceManager.GetString("PanoramaServerException_FolderValidationError_Folder___0___does_not_exist_on_the_" +
                         "Panorama_server__1__", resourceCulture);
@@ -607,7 +617,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Folder validation passed without errors!.
         /// </summary>
-        public static string PanoramaServerException_FolderValidationError_Folder_validation_passed_without_errors_ {
+        internal static string PanoramaServerException_FolderValidationError_Folder_validation_passed_without_errors_ {
             get {
                 return ResourceManager.GetString("PanoramaServerException_FolderValidationError_Folder_validation_passed_without_er" +
                         "rors_", resourceCulture);
@@ -617,7 +627,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to User {0} does not have permissions to upload to the Panorama folder &quot;{1}&quot;..
         /// </summary>
-        public static string PanoramaServerException_FolderValidationError_User__0__does_not_have_permissions_to_upload_to_the_Panorama_folder___1___ {
+        internal static string PanoramaServerException_FolderValidationError_User__0__does_not_have_permissions_to_upload_to_the_Panorama_folder___1___ {
             get {
                 return ResourceManager.GetString("PanoramaServerException_FolderValidationError_User__0__does_not_have_permissions_" +
                         "to_upload_to_the_Panorama_folder___1___", resourceCulture);
@@ -627,7 +637,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Encountered unknown Panorama server validation state {0}..
         /// </summary>
-        public static string PanoramaServerException_PanoramaStateError_Encountered_unknown_Panorama_server_validation_state__0__ {
+        internal static string PanoramaServerException_PanoramaStateError_Encountered_unknown_Panorama_server_validation_state__0__ {
             get {
                 return ResourceManager.GetString("PanoramaServerException_PanoramaStateError_Encountered_unknown_Panorama_server_va" +
                         "lidation_state__0__", resourceCulture);
@@ -637,7 +647,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Panorama server validation passed without errors!.
         /// </summary>
-        public static string PanoramaServerException_PanoramaStateError_Panorama_server_validation_passed_without_errors_ {
+        internal static string PanoramaServerException_PanoramaStateError_Panorama_server_validation_passed_without_errors_ {
             get {
                 return ResourceManager.GetString("PanoramaServerException_PanoramaStateError_Panorama_server_validation_passed_with" +
                         "out_errors_", resourceCulture);
@@ -647,7 +657,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Encountered unknown server validation state {0}..
         /// </summary>
-        public static string PanoramaServerException_ServerError_Encountered_unknown_server_validation_state__0__ {
+        internal static string PanoramaServerException_ServerError_Encountered_unknown_server_validation_state__0__ {
             get {
                 return ResourceManager.GetString("PanoramaServerException_ServerError_Encountered_unknown_server_validation_state__" +
                         "0__", resourceCulture);
@@ -657,7 +667,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Server validation passed without errors!.
         /// </summary>
-        public static string PanoramaServerException_ServerError_Server_validation_passed_without_errors_ {
+        internal static string PanoramaServerException_ServerError_Server_validation_passed_without_errors_ {
             get {
                 return ResourceManager.GetString("PanoramaServerException_ServerError_Server_validation_passed_without_errors_", resourceCulture);
             }
@@ -666,7 +676,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Encountered unknown user validation state {0}..
         /// </summary>
-        public static string PanoramaServerException_UserValidationError_Encountered_unknown_user_validation_state__0__ {
+        internal static string PanoramaServerException_UserValidationError_Encountered_unknown_user_validation_state__0__ {
             get {
                 return ResourceManager.GetString("PanoramaServerException_UserValidationError_Encountered_unknown_user_validation_s" +
                         "tate__0__", resourceCulture);
@@ -676,7 +686,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to The username and password could not be authenticated with the Panorama server..
         /// </summary>
-        public static string PanoramaServerException_UserValidationError_The_username_and_password_could_not_be_authenticated_with_the_Panorama_server_ {
+        internal static string PanoramaServerException_UserValidationError_The_username_and_password_could_not_be_authenticated_with_the_Panorama_server_ {
             get {
                 return ResourceManager.GetString("PanoramaServerException_UserValidationError_The_username_and_password_could_not_b" +
                         "e_authenticated_with_the_Panorama_server_", resourceCulture);
@@ -686,7 +696,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Unknown error validating user permissions on the Panorama server..
         /// </summary>
-        public static string PanoramaServerException_UserValidationError_Unknown_error_validating_user_permissions_on_the_Panorama_server_ {
+        internal static string PanoramaServerException_UserValidationError_Unknown_error_validating_user_permissions_on_the_Panorama_server_ {
             get {
                 return ResourceManager.GetString("PanoramaServerException_UserValidationError_Unknown_error_validating_user_permiss" +
                         "ions_on_the_Panorama_server_", resourceCulture);
@@ -696,7 +706,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to User validation passed without errors!.
         /// </summary>
-        public static string PanoramaServerException_UserValidationError_User_validation_passed_without_errors_ {
+        internal static string PanoramaServerException_UserValidationError_User_validation_passed_without_errors_ {
             get {
                 return ResourceManager.GetString("PanoramaServerException_UserValidationError_User_validation_passed_without_errors" +
                         "_", resourceCulture);
@@ -706,7 +716,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to The server {0} does not exist..
         /// </summary>
-        public static string PanoramaUtil_VerifyServerInformation_The_server__0__does_not_exist_ {
+        internal static string PanoramaUtil_VerifyServerInformation_The_server__0__does_not_exist_ {
             get {
                 return ResourceManager.GetString("PanoramaUtil_VerifyServerInformation_The_server__0__does_not_exist_", resourceCulture);
             }
@@ -715,7 +725,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to The server {0} is not a Panorama server..
         /// </summary>
-        public static string PanoramaUtil_VerifyServerInformation_The_server__0__is_not_a_Panorama_server_ {
+        internal static string PanoramaUtil_VerifyServerInformation_The_server__0__is_not_a_Panorama_server_ {
             get {
                 return ResourceManager.GetString("PanoramaUtil_VerifyServerInformation_The_server__0__is_not_a_Panorama_server_", resourceCulture);
             }
@@ -724,7 +734,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Unknown error connecting to the server {0}..
         /// </summary>
-        public static string PanoramaUtil_VerifyServerInformation_Unknown_error_connecting_to_the_server__0__ {
+        internal static string PanoramaUtil_VerifyServerInformation_Unknown_error_connecting_to_the_server__0__ {
             get {
                 return ResourceManager.GetString("PanoramaUtil_VerifyServerInformation_Unknown_error_connecting_to_the_server__0__", resourceCulture);
             }
@@ -733,7 +743,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Unknown error while checking if server {0} is a Panorama server..
         /// </summary>
-        public static string PanoramaUtil_VerifyServerInformation_Unknown_error_while_checking_if_server__0__is_a_Panorama_server_ {
+        internal static string PanoramaUtil_VerifyServerInformation_Unknown_error_while_checking_if_server__0__is_a_Panorama_server_ {
             get {
                 return ResourceManager.GetString("PanoramaUtil_VerifyServerInformation_Unknown_error_while_checking_if_server__0__i" +
                         "s_a_Panorama_server_", resourceCulture);
@@ -743,7 +753,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Username and password cannot be null. Please enter a username and password..
         /// </summary>
-        public static string PanoramaUtil_VerifyServerInformation_Username_and_password_cannot_be_null__Please_enter_a_username_and_password_ {
+        internal static string PanoramaUtil_VerifyServerInformation_Username_and_password_cannot_be_null__Please_enter_a_username_and_password_ {
             get {
                 return ResourceManager.GetString("PanoramaUtil_VerifyServerInformation_Username_and_password_cannot_be_null__Please" +
                         "_enter_a_username_and_password_", resourceCulture);
@@ -753,7 +763,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Unable to start {0}..
         /// </summary>
-        public static string ProcessRunner_StartException_Unable_to_start__0__ {
+        internal static string ProcessRunner_StartException_Unable_to_start__0__ {
             get {
                 return ResourceManager.GetString("ProcessRunner_StartException_Unable_to_start__0__", resourceCulture);
             }
@@ -762,7 +772,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Could not find {0} at this location: {1}.
         /// </summary>
-        public static string SkylineSettings_Validate_Could_not_find__0__at_this_location___1_ {
+        internal static string SkylineSettings_Validate_Could_not_find__0__at_this_location___1_ {
             get {
                 return ResourceManager.GetString("SkylineSettings_Validate_Could_not_find__0__at_this_location___1_", resourceCulture);
             }
@@ -771,7 +781,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Could not find a Skyline-daily installation on this computer..
         /// </summary>
-        public static string SkylineSettings_Validate_Could_not_find_a_Skyline_daily_installation_on_this_computer_ {
+        internal static string SkylineSettings_Validate_Could_not_find_a_Skyline_daily_installation_on_this_computer_ {
             get {
                 return ResourceManager.GetString("SkylineSettings_Validate_Could_not_find_a_Skyline_daily_installation_on_this_comp" +
                         "uter_", resourceCulture);
@@ -781,7 +791,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Could not find a Skyline installation at this location: {0}.
         /// </summary>
-        public static string SkylineSettings_Validate_Could_not_find_a_Skyline_installation_at_this_location___0_ {
+        internal static string SkylineSettings_Validate_Could_not_find_a_Skyline_installation_at_this_location___0_ {
             get {
                 return ResourceManager.GetString("SkylineSettings_Validate_Could_not_find_a_Skyline_installation_at_this_location__" +
                         "_0_", resourceCulture);
@@ -791,7 +801,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Could not find a Skyline installation on this computer..
         /// </summary>
-        public static string SkylineSettings_Validate_Could_not_find_a_Skyline_installation_on_this_computer_ {
+        internal static string SkylineSettings_Validate_Could_not_find_a_Skyline_installation_on_this_computer_ {
             get {
                 return ResourceManager.GetString("SkylineSettings_Validate_Could_not_find_a_Skyline_installation_on_this_computer_", resourceCulture);
             }
@@ -800,7 +810,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Please select a folder containing {0}..
         /// </summary>
-        public static string SkylineSettings_Validate_Please_select_a_folder_containing__0__ {
+        internal static string SkylineSettings_Validate_Please_select_a_folder_containing__0__ {
             get {
                 return ResourceManager.GetString("SkylineSettings_Validate_Please_select_a_folder_containing__0__", resourceCulture);
             }
@@ -809,7 +819,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Please try a different Skyline option..
         /// </summary>
-        public static string SkylineSettings_Validate_Please_try_a_different_Skyline_option_ {
+        internal static string SkylineSettings_Validate_Please_try_a_different_Skyline_option_ {
             get {
                 return ResourceManager.GetString("SkylineSettings_Validate_Please_try_a_different_Skyline_option_", resourceCulture);
             }
@@ -818,7 +828,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to No existing Skyline type selected. Please select a Skyline installation that exists on this computer..
         /// </summary>
-        public static string SkylineTypeControl_Type_No_existing_Skyline_type_selected__Please_select_a_Skyline_installation_that_exists_on_this_computer_ {
+        internal static string SkylineTypeControl_Type_No_existing_Skyline_type_selected__Please_select_a_Skyline_installation_that_exists_on_this_computer_ {
             get {
                 return ResourceManager.GetString("SkylineTypeControl_Type_No_existing_Skyline_type_selected__Please_select_a_Skylin" +
                         "e_installation_that_exists_on_this_computer_", resourceCulture);
@@ -828,7 +838,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to All Files.
         /// </summary>
-        public static string TextUtil_FILTER_ALL_All_Files {
+        internal static string TextUtil_FILTER_ALL_All_Files {
             get {
                 return ResourceManager.GetString("TextUtil_FILTER_ALL_All_Files", resourceCulture);
             }
@@ -837,7 +847,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Skyline Batch Configuration Files.
         /// </summary>
-        public static string TextUtil_FILTER_BCFG_Skyline_Batch_Configuration_Files {
+        internal static string TextUtil_FILTER_BCFG_Skyline_Batch_Configuration_Files {
             get {
                 return ResourceManager.GetString("TextUtil_FILTER_BCFG_Skyline_Batch_Configuration_Files", resourceCulture);
             }
@@ -846,7 +856,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to CSV Files.
         /// </summary>
-        public static string TextUtil_FILTER_CSV_CSV_Files {
+        internal static string TextUtil_FILTER_CSV_CSV_Files {
             get {
                 return ResourceManager.GetString("TextUtil_FILTER_CSV_CSV_Files", resourceCulture);
             }
@@ -855,7 +865,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to AutoQC Configuration Files.
         /// </summary>
-        public static string TextUtil_FILTER_QCFG_AutoQC_Configuration_Files {
+        internal static string TextUtil_FILTER_QCFG_AutoQC_Configuration_Files {
             get {
                 return ResourceManager.GetString("TextUtil_FILTER_QCFG_AutoQC_Configuration_Files", resourceCulture);
             }
@@ -864,7 +874,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to R Files.
         /// </summary>
-        public static string TextUtil_FILTER_R_R_Files {
+        internal static string TextUtil_FILTER_R_R_Files {
             get {
                 return ResourceManager.GetString("TextUtil_FILTER_R_R_Files", resourceCulture);
             }
@@ -873,7 +883,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Skyline Files.
         /// </summary>
-        public static string TextUtil_FILTER_SKY_Skyline_Files {
+        internal static string TextUtil_FILTER_SKY_Skyline_Files {
             get {
                 return ResourceManager.GetString("TextUtil_FILTER_SKY_Skyline_Files", resourceCulture);
             }
@@ -882,7 +892,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Shared Files.
         /// </summary>
-        public static string TextUtil_FILTER_SKY_ZIP_Shared_Files {
+        internal static string TextUtil_FILTER_SKY_ZIP_Shared_Files {
             get {
                 return ResourceManager.GetString("TextUtil_FILTER_SKY_ZIP_Shared_Files", resourceCulture);
             }
@@ -891,7 +901,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Skyline Configuration Files.
         /// </summary>
-        public static string TextUtil_FILTER_SKYC_Skyline_Configuration_Files {
+        internal static string TextUtil_FILTER_SKYC_Skyline_Configuration_Files {
             get {
                 return ResourceManager.GetString("TextUtil_FILTER_SKYC_Skyline_Configuration_Files", resourceCulture);
             }
@@ -900,7 +910,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Skyline Reports.
         /// </summary>
-        public static string TextUtil_FILTER_SKYR_Skyline_Reports {
+        internal static string TextUtil_FILTER_SKYR_Skyline_Reports {
             get {
                 return ResourceManager.GetString("TextUtil_FILTER_SKYR_Skyline_Reports", resourceCulture);
             }
@@ -909,7 +919,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to XML Files.
         /// </summary>
-        public static string TextUtil_FILTER_XML_XML_Files {
+        internal static string TextUtil_FILTER_XML_XML_Files {
             get {
                 return ResourceManager.GetString("TextUtil_FILTER_XML_XML_Files", resourceCulture);
             }
@@ -918,7 +928,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Could not get the directory of a null file path..
         /// </summary>
-        public static string TextUtil_GetDirectory_Could_not_get_the_directory_of_a_null_file_path_ {
+        internal static string TextUtil_GetDirectory_Could_not_get_the_directory_of_a_null_file_path_ {
             get {
                 return ResourceManager.GetString("TextUtil_GetDirectory_Could_not_get_the_directory_of_a_null_file_path_", resourceCulture);
             }
@@ -927,7 +937,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Cound not parse &quot;{0}&quot; as type &quot;{1}&quot;.
         /// </summary>
-        public static string TextUtil_GetOptionalIntegerFromInvariantString_Cound_not_parse___0___as_type___1__ {
+        internal static string TextUtil_GetOptionalIntegerFromInvariantString_Cound_not_parse___0___as_type___1__ {
             get {
                 return ResourceManager.GetString("TextUtil_GetOptionalIntegerFromInvariantString_Cound_not_parse___0___as_type___1_" +
                         "_", resourceCulture);
@@ -937,7 +947,7 @@ namespace SharedBatch.Properties {
         /// <summary>
         ///   Looks up a localized string similar to {0} is not a valid value for {1}. Please enter an integer..
         /// </summary>
-        public static string TextUtil_GetOptionalIntegerFromString__0__is_not_a_valid_value_for__1___Please_enter_an_integer_ {
+        internal static string TextUtil_GetOptionalIntegerFromString__0__is_not_a_valid_value_for__1___Please_enter_an_integer_ {
             get {
                 return ResourceManager.GetString("TextUtil_GetOptionalIntegerFromString__0__is_not_a_valid_value_for__1___Please_en" +
                         "ter_an_integer_", resourceCulture);

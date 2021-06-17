@@ -244,6 +244,15 @@ namespace SkylineBatch
             return mainSettingsReplaced || reportSettingsReplaced || refineSettingsReplaced;
         }
 
+        public IConfig ForcePathReplace(string oldRoot, string newRoot)
+        {
+            var mainSettings = MainSettings.ForcePathReplace(oldRoot, newRoot);
+            var refineSettings = RefineSettings.ForcePathReplace(oldRoot, newRoot);
+            var reportSettings = ReportSettings.ForcePathReplace(oldRoot, newRoot);
+            return new SkylineBatchConfig(Name, Enabled, DateTime.Now, mainSettings,
+                FileSettings, refineSettings, reportSettings, SkylineSettings);
+        }
+
         public override string ToString()
         {
             var sb = new StringBuilder();

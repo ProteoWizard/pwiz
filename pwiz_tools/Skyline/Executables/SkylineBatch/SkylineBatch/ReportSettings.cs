@@ -138,6 +138,14 @@ namespace SkylineBatch
             return anyReplaced;
         }
 
+        public ReportSettings ForcePathReplace(string oldRoot, string newRoot)
+        {
+            var newReports = new List<ReportInfo>();
+            foreach (var report in Reports)
+                newReports.Add(report.ForcePathReplace(oldRoot, newRoot));
+            return new ReportSettings(newReports);
+        }
+
         public static ReportSettings ReadXml(XmlReader reader)
         {
             var reports = new List<ReportInfo>();
@@ -361,10 +369,27 @@ namespace SkylineBatch
                 anyScriptReplaced = TextUtil.SuccessfulReplace(rScriptValidator, oldRoot, newRoot, rScriptAndVersion.Item1, preferReplace, out string replacedRScript) || anyScriptReplaced;
                 replacedRScripts.Add(new Tuple<string, string>(replacedRScript, rScriptAndVersion.Item2));
                 if (RScriptServers.ContainsKey(rScriptAndVersion.Item1))
-                    rScriptServers.Add(replacedRScript, RScriptServers[rScriptAndVersion.Item1].ReplaceFolder(Path.GetDirectoryName(rScriptAndVersion.Item1)));
+                    rScriptServers.Add(replacedRScript, RScriptServers[rScriptAndVersion.Item1].ReplaceFolder(Path.GetDirectoryName(replacedRScript)));
             }
             pathReplacedReportInfo = new ReportInfo(Name, CultureSpecific, replacedReportPath, replacedRScripts, rScriptServers, UseRefineFile);
             return reportReplaced || anyScriptReplaced;
+        }
+
+        public ReportInfo ForcePathReplace(string oldRoot, string newRoot)
+        {
+            var reportPath = !string.IsNullOrEmpty(ReportPath)
+                ? FileUtil.ForceReplaceRoot(oldRoot, newRoot, ReportPath)
+                : string.Empty;
+            var rScripts = new List<Tuple<string, string>>();
+            var rScriptServers = new Dictionary<string, PanoramaFile>();
+            foreach (var rScriptAndVersion in RScripts)
+            {
+                var scriptPath = FileUtil.ForceReplaceRoot(oldRoot, newRoot, rScriptAndVersion.Item1);
+                rScripts.Add(new Tuple<string, string>(scriptPath, rScriptAndVersion.Item2));
+                if (RScriptServers.ContainsKey(rScriptAndVersion.Item1))
+                    rScriptServers.Add(scriptPath, RScriptServers[rScriptAndVersion.Item1].ReplaceFolder(Path.GetDirectoryName(scriptPath)));
+            }
+            return new ReportInfo(Name, CultureSpecific, reportPath, rScripts, rScriptServers, UseRefineFile);
         }
 
         public void AddDownloadingFiles(ServerFilesManager serverFiles)

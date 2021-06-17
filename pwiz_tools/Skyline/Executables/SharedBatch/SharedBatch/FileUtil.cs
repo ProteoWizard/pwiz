@@ -94,6 +94,33 @@ namespace SharedBatch
             return GetInitialDirectory(directoryName);
         }
 
+        public static void CreateDirectory(string path)
+        {
+            string directory = null;
+            try
+            {
+                directory = GetDirectory(path);
+            }
+            catch (Exception)
+            {
+                // pass
+            }
+            if (!string.IsNullOrEmpty(directory))
+                Directory.CreateDirectory(directory);
+        }
+
+        public static string ForceReplaceRoot(string oldText, string newText, string originalString)
+        {
+            if (!originalString.StartsWith(oldText))
+                throw new ArgumentException(string.Format("The path to be replaced {0} did not start with the expected root {1}", originalString, oldText));
+            if (!Directory.Exists(newText))
+                throw new ArgumentException(string.Format("The folder {0} does not exist.", newText));
+
+            var newPath = newText + originalString.Substring(oldText.Length);
+            CreateDirectory(newPath);
+            return newPath;
+        }
+
         public static List<string> GetFilesInFolder(string folder, string fileType)
         {
             var filesWithType = new List<string>();

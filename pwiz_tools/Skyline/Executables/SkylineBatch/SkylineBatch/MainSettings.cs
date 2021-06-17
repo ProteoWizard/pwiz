@@ -202,6 +202,7 @@ namespace SkylineBatch
             var dataReplaced =
                 TextUtil.SuccessfulReplace(dataValidator, oldRoot, newRoot, DataFolderPath,
                     Server != null || preferReplace, out string replacedDataPath);
+            var dataServer = Server != null ? new DataServerInfo(Server.URI, Server.Username, Server.Password, Server.Encrypt, Server.DataNamingPattern, replacedDataPath) : null;
             var annotationsValidator = AnnotationsDownload != null
                 ? ValidateAnnotationsWithServer
                 : (Validator)ValidateAnnotationsWithoutServer;
@@ -210,9 +211,23 @@ namespace SkylineBatch
             var annotationsDownload = AnnotationsDownload != null && !string.IsNullOrEmpty(replacedAnnotationsPath) ? new PanoramaFile(AnnotationsDownload, Path.GetDirectoryName(replacedAnnotationsPath), AnnotationsDownload.FileName) : null;
 
             pathReplacedMainSettings = new MainSettings(replacedTemplate, replacedAnalysisPath, replacedDataPath,
-                Server, replacedAnnotationsPath, annotationsDownload, ReplicateNamingPattern);
-
+                dataServer, replacedAnnotationsPath, annotationsDownload, ReplicateNamingPattern);
             return templateReplaced || analysisReplaced || dataReplaced || annotationsReplaced;
+        }
+
+        public MainSettings ForcePathReplace(string oldRoot, string newRoot)
+        {
+            var skylineTemplate = Template.ForcePathReplace(oldRoot, newRoot);
+            var analysisFolderPath = FileUtil.ForceReplaceRoot(oldRoot, newRoot, AnalysisFolderPath);
+            var dataPath = FileUtil.ForceReplaceRoot(oldRoot, newRoot, DataFolderPath);
+            var dataServer = new DataServerInfo(Server.URI, Server.Username, Server.Password, Server.Encrypt, Server.DataNamingPattern, dataPath);
+            var annotationsPath = !string.IsNullOrEmpty(AnnotationsFilePath) ? FileUtil.ForceReplaceRoot(oldRoot, newRoot, AnnotationsFilePath) : string.Empty;
+
+           var annotationsDownload = AnnotationsDownload != null
+               ? AnnotationsDownload.ReplaceFolder(Path.GetDirectoryName(annotationsPath)) : null;
+
+            return new MainSettings(skylineTemplate, analysisFolderPath, dataPath,
+                dataServer, annotationsPath, annotationsDownload, ReplicateNamingPattern);
         }
 
         public bool RunWillOverwrite(RunBatchOptions runOption, string configHeader, out StringBuilder message)

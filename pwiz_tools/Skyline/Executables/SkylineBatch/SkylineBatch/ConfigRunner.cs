@@ -212,7 +212,7 @@ namespace SkylineBatch
                 // Unzip zipped template
                 if (Config.MainSettings.Template.Zipped)
                 {
-                    _logger.Log(string.Format("Extracting Skyline template from {0}", Config.MainSettings.Template.ZippedFileName));
+                    _logger.Log(string.Format(Resources.ConfigRunner_WriteBatchCommandsToFile_Extracting_Skyline_template_from__0_, Config.MainSettings.Template.ZippedFileName));
                     var cancellationSource = new CancellationTokenSource();
                     _runningCancellationToken = cancellationSource;
                     Config.MainSettings.Template.ExtractTemplate((percent, error) =>

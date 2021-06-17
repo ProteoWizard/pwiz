@@ -124,6 +124,12 @@ namespace SkylineBatch
             return didReplace;
         }
 
+        public RefineSettings ForcePathReplace(string oldRoot, string newRoot)
+        {
+            var path = !string.IsNullOrEmpty(OutputFilePath) ? FileUtil.ForceReplaceRoot(oldRoot, newRoot, OutputFilePath) : string.Empty;
+            return new RefineSettings(_commandValues, RemoveDecoys, RemoveResults, path);
+        }
+
         #region Read/Write XML
 
         public static RefineSettings ReadXml(XmlReader reader)

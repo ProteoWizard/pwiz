@@ -129,6 +129,15 @@ namespace SkylineBatch
             return pathReplaced || zipPathReplaced || panoramaReplaced;
         }
 
+        public SkylineTemplate ForcePathReplace(string oldRoot, string newRoot)
+        {
+            var path = !string.IsNullOrEmpty(_path) ? FileUtil.ForceReplaceRoot(oldRoot, newRoot, _path) : null;
+            var zipPath = !string.IsNullOrEmpty(_zippedPath) ? FileUtil.ForceReplaceRoot(oldRoot, newRoot, _zippedPath) : null;
+            var panoramaFile = PanoramaFile?.ForcePathReplace(oldRoot, newRoot);
+
+            return new SkylineTemplate(path, zipPath, DependentConfigName, panoramaFile);
+        }
+
         public void ExtractTemplate(Update progressHandler, CancellationToken cancelToken)
         {
             if (!Zipped) return;
@@ -275,6 +284,12 @@ namespace SkylineBatch
                 Program.FunctionalTest, out string replacedFolderPath);
             replacedPanoramaFile = new PanoramaFile(new Server(URI, UserName, Password, Encrypt), replacedFolderPath, FileName);
             return replaced;
+        }
+
+        public PanoramaFile ForcePathReplace(string oldRoot, string newRoot)
+        {
+            var replacedFolder = FileUtil.ForceReplaceRoot(oldRoot, newRoot, DownloadFolder);
+            return ReplaceFolder(replacedFolder);
         }
 
         public new void WriteXml(XmlWriter writer)

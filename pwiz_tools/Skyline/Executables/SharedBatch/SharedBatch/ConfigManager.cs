@@ -464,8 +464,8 @@ namespace SharedBatch
         {
             var copiedDestination = string.Empty;
             var copiedConfigFile = string.Empty;
-            // TODO (Ali) uncomment this when data and templates can be downloaded
-            /*
+            var forceReplaceRoot = string.Empty;
+            
             if (filePath.Contains(FileUtil.DOWNLOADS_FOLDER))
             {
                 var dialogResult = showDownloadedFileForm(filePath, out copiedDestination);
@@ -475,7 +475,7 @@ namespace SharedBatch
                 var file = new FileInfo(filePath);
                 if (!File.Exists(copiedConfigFile))
                     file.CopyTo(copiedConfigFile, false);
-            }*/
+            }
 
             var readConfigs = new List<IConfig>();
             var addedConfigs = new List<IConfig>();
@@ -502,7 +502,12 @@ namespace SharedBatch
                     var newFolder = string.IsNullOrEmpty(copiedDestination)
                         ? Path.GetDirectoryName(filePath)
                         : Path.GetDirectoryName(copiedConfigFile);
-                    AddRootReplacement(oldFolder, newFolder, false, out _, out _);
+                    AddRootReplacement(oldFolder, newFolder, false, out string oldRoot, out _);
+                    if (!string.IsNullOrEmpty(copiedDestination))
+                        forceReplaceRoot = oldRoot;
+                } else if (!string.IsNullOrEmpty(copiedConfigFile))
+                {
+                    DisplayWarning(string.Format("The imported configurations are from an old file format and could not be copied to {0}", copiedDestination));
                 }
 
                 while (!reader.Name.EndsWith("_config"))
@@ -594,7 +599,13 @@ namespace SharedBatch
             foreach (IConfig config in readConfigs)
             {
                 if (duplicateConfigNames.Contains(config.GetName())) continue;
-                var addingConfig = RunRootReplacement(config);
+
+
+                IConfig addingConfig;
+                if (string.IsNullOrEmpty(forceReplaceRoot))
+                    addingConfig = RunRootReplacement(config);
+                else
+                    addingConfig = ForceRootReplacement(config, forceReplaceRoot);
                 addedConfigs.Add(addingConfig);
                 numAdded++;
             }
@@ -846,6 +857,12 @@ namespace SharedBatch
                 if (success) return pathReplacedConfig;
             }
             return config;
+        }
+
+        // replaces all roots and creates the folders of the new paths. Throws exception if path replacement fails
+        private IConfig ForceRootReplacement(IConfig config, string oldRoot)
+        {
+            return config.ForcePathReplace(oldRoot, RootReplacement[oldRoot]);
         }
 
         #endregion
