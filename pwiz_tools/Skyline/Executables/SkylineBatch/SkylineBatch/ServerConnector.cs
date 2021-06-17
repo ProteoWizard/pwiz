@@ -17,21 +17,17 @@ namespace SkylineBatch
     {
         private Dictionary<Server, List<ConnectedFileInfo>> _serverMap;
         private Dictionary<Server, Exception> _serverExceptions;
-        private object _lock = new object();
 
         public ServerConnector(params Server[] serverInfos)
         {
-            lock (_lock)
+            _serverMap = new Dictionary<Server, List<ConnectedFileInfo>>();
+            _serverExceptions = new Dictionary<Server, Exception>();
+            foreach (var serverInfo in serverInfos)
             {
-                _serverMap = new Dictionary<Server, List<ConnectedFileInfo>>();
-                _serverExceptions = new Dictionary<Server, Exception>();
-                foreach (var serverInfo in serverInfos)
+                if (!_serverMap.ContainsKey(serverInfo))
                 {
-                    if (!_serverMap.ContainsKey(serverInfo))
-                    {
-                        _serverMap.Add(serverInfo, null);
-                        _serverExceptions.Add(serverInfo, null);
-                    }
+                    _serverMap.Add(serverInfo, null);
+                    _serverExceptions.Add(serverInfo, null);
                 }
             }
         }
@@ -71,14 +67,10 @@ namespace SkylineBatch
 
         public void Add(Server server)
         {
-            lock (_lock)
+            if (!_serverMap.ContainsKey(server))
             {
-                if (!_serverMap.ContainsKey(server))
-                {
-                    //_servers.Add(serverUri, server);
-                    _serverMap.Add(server, null);
-                    _serverExceptions.Add(server, null);
-                }
+                _serverMap.Add(server, null);
+                _serverExceptions.Add(server, null);
             }
         }
 
@@ -148,8 +140,7 @@ namespace SkylineBatch
                     }
 
                     if (_serverExceptions[server] == null)
-                        lock (_lock)
-                            _serverMap[server] = fileInfos;
+                        _serverMap[server] = fileInfos;
                 }
                 else
                 {
@@ -193,8 +184,7 @@ namespace SkylineBatch
                     }
                     else
                     {
-                        lock (_lock)
-                            _serverMap[server] = serverFiles;
+                        _serverMap[server] = serverFiles;
                     }
                 }
                 downloadFinished++;
