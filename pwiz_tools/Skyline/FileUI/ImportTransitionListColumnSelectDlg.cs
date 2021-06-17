@@ -396,11 +396,6 @@ namespace pwiz.Skyline.FileUI
 
         public void OkDialog()
         {
-            if (comboBoxChanged)
-            {
-                UpdateColumnsList();
-                UpdateHeadersList();
-            }
 
             if (CheckForErrors(true)) // Look for errors, be silent on success
                 return;
@@ -474,6 +469,15 @@ namespace pwiz.Skyline.FileUI
                     errorCheckCanceled = progressMonitor.IsCanceled;
                 });
             }
+            var isErrorAll = ReferenceEquals(insertionParams.Document, _docCurrent);
+
+            // If there is at least one valid transition, the document is being imported, and a combo box has been changed,
+            // then save the column positions for the next transition list
+            if (!isErrorAll && comboBoxChanged && silentSuccess)
+            {
+                UpdateHeadersList();
+                UpdateColumnsList();
+            }
 
             if (errorCheckCanceled)
             {
@@ -483,7 +487,6 @@ namespace pwiz.Skyline.FileUI
             if (testErrorList != null && testErrorList.Any())
             {
                 // There are errors, show them to user
-                var isErrorAll = ReferenceEquals(insertionParams.Document, _docCurrent);
                 if (MissingEssentialColumns.Count != 0)
                 {
                     // If the transition list is missing essential columns, tell the user in a 
