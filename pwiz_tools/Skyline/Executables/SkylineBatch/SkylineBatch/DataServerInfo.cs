@@ -13,18 +13,7 @@ namespace SkylineBatch
         
         public static DataServerInfo ServerFromUi(string url, string userName, string password, bool encrypt, string namingPattern, string folder)
         {
-            if (string.IsNullOrWhiteSpace(url))
-                throw new ArgumentException(Resources.DataServerInfo_ServerFromUi_The_URL_cannot_be_empty__Please_enter_a_URL_);
-            Uri uri;
-            try
-            {
-                uri = new Uri(url);
-            }
-            catch (Exception)
-            {
-                throw new ArgumentException(Resources.DataServerInfo_ServerFromUi_Error_parsing_the_URL__Please_correct_the_URL_and_try_again_);
-            }
-            ValidateUsernamePassword(userName, password);
+            ValidateInputs(url, userName, password, out Uri uri);
 
             return new DataServerInfo(uri, userName, password, encrypt, namingPattern, folder);
         }
@@ -73,16 +62,6 @@ namespace SkylineBatch
         public DataServerInfo Copy()
         {
             return new DataServerInfo(URI, Username, Password, Encrypt, DataNamingPattern, Folder);
-        }
-
-        public static void ValidateUsernamePassword(string username, string password)
-        {
-            if (string.IsNullOrEmpty(username) && string.IsNullOrEmpty(password))
-                return;
-            if (string.IsNullOrEmpty(username))
-                throw new ArgumentException(Resources.DataServerInfo_ValidateUsernamePassword_Username_cannot_be_empty_if_the_server_has_a_password__Please_enter_a_username_);
-            if (string.IsNullOrEmpty(password))
-                throw new ArgumentException(Resources.DataServerInfo_ValidateUsernamePassword_Password_cannot_be_empty_if_the_server_has_a_username__Please_enter_a_password_);
         }
 
         public new void WriteXml(XmlWriter writer)

@@ -198,6 +198,7 @@ namespace SkylineBatch
 
         public static PanoramaFile PanoramaFileFromUI(Server server, string path, CancellationToken cancelToken)
         {
+            ValidateInputs(server.URI.AbsoluteUri, server.Username, server.Password, out _);
             var fileName = ValidatePanoramaServer(server, cancelToken);
             if (cancelToken.IsCancellationRequested) return null;
             return new PanoramaFile(server, path, fileName);

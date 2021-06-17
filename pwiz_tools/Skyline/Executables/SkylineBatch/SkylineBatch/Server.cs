@@ -71,12 +71,21 @@ namespace SkylineBatch
                 }
 
                 Stream stream = null;
+                Exception serverException = null;
                 var sizeThread = new Thread(() =>
                 {
-                    // ReSharper disable once AccessToDisposedClosure - must dispose wc after cancellation or close
-                    stream = wc.OpenRead(remoteUri);
-                    // ReSharper disable once AccessToDisposedClosure
-                    result = Convert.ToInt64(wc.ResponseHeaders["Content-Length"]);
+                    try
+                    {
+
+                        // ReSharper disable once AccessToDisposedClosure - must dispose wc after cancellation or close
+                        stream = wc.OpenRead(remoteUri);
+                        // ReSharper disable once AccessToDisposedClosure
+                        result = Convert.ToInt64(wc.ResponseHeaders["Content-Length"]);
+                    }
+                    catch (Exception e)
+                    {
+                        serverException = e;
+                    }
                 });
                 sizeThread.Start();
                 while (sizeThread.IsAlive)
@@ -86,6 +95,8 @@ namespace SkylineBatch
                 }
                 if (stream != null) stream.Dispose();
                 wc.Dispose();
+                if (serverException != null)
+                    throw serverException;
             }
             return result;
         }
@@ -149,6 +160,26 @@ namespace SkylineBatch
         public XmlSchema GetSchema()
         {
             return null;
+        }
+
+        public static void ValidateInputs(string url, string username, string password, out Uri uri)
+        {
+            if (string.IsNullOrWhiteSpace(url))
+                throw new ArgumentException(Resources.DataServerInfo_ServerFromUi_The_URL_cannot_be_empty__Please_enter_a_URL_);
+            try
+            {
+                uri = new Uri(url);
+            }
+            catch (Exception)
+            {
+                throw new ArgumentException(Resources.DataServerInfo_ServerFromUi_Error_parsing_the_URL__Please_correct_the_URL_and_try_again_);
+            }
+            if (string.IsNullOrEmpty(username) && string.IsNullOrEmpty(password))
+                return;
+            if (string.IsNullOrEmpty(username))
+                throw new ArgumentException(Resources.DataServerInfo_ValidateUsernamePassword_Username_cannot_be_empty_if_the_server_has_a_password__Please_enter_a_username_);
+            if (string.IsNullOrEmpty(password))
+                throw new ArgumentException(Resources.DataServerInfo_ValidateUsernamePassword_Password_cannot_be_empty_if_the_server_has_a_username__Please_enter_a_password_);
         }
 
         public static Server ReadXml(XmlReader reader)
