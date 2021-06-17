@@ -26,9 +26,10 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
     [XmlRoot("chromatogram_library_spectrum_header_info")]
     public class ChromLibSpectrumHeaderInfo : SpectrumHeaderInfo
     {
-        public ChromLibSpectrumHeaderInfo(string libraryName, double peakArea) : base(libraryName)
+        public ChromLibSpectrumHeaderInfo(string libraryName, double peakArea, string proteinName) : base(libraryName)
         {
             PeakArea = peakArea;
+            Protein = proteinName;
         }
 
         public double PeakArea { get; private set; }
@@ -54,8 +55,6 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
                     };
             }
         }
-
-        public override string Protein => null; // CONSIDER(bspratt) .clib files may (or may not) contain protein/peptide associations. Skyline currently takes no notice of this.
 
         #region Implementation of IXmlSerializable
 

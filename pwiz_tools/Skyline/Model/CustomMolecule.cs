@@ -317,6 +317,19 @@ namespace pwiz.Skyline.Model
             Validate();
         }
 
+        public static CustomMolecule EMPTY = new CustomMolecule
+        {
+            Formula = string.Empty,
+            MonoisotopicMass =  TypedMass.ZERO_MONO_MASSH,
+            AverageMass = TypedMass.ZERO_AVERAGE_MASSNEUTRAL,
+            Name = string.Empty
+        };
+
+        public static bool IsNullOrEmpty(CustomMolecule mol)
+        {
+            return mol == null || mol.IsEmpty;
+        }
+
         /// <summary>
         /// For serialization
         /// </summary>
@@ -534,11 +547,12 @@ namespace pwiz.Skyline.Model
         {
             get
             {
-                return string.IsNullOrEmpty(Name) &&
-                        string.IsNullOrEmpty(Formula) &&
-                        MonoisotopicMass.Value == 0 &&
-                        AverageMass.Value == 0 &&
-                        AccessionNumbers.IsEmpty;
+                return ReferenceEquals(this, EMPTY) ||
+                       string.IsNullOrEmpty(Name) &&
+                       string.IsNullOrEmpty(Formula) &&
+                       MonoisotopicMass.Value == 0 &&
+                       AverageMass.Value == 0 &&
+                       AccessionNumbers.IsEmpty;
             }
         }
 

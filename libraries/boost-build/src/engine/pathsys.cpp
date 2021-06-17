@@ -35,6 +35,8 @@
 #include <stdlib.h>
 #include <time.h>
 
+#include <algorithm>
+
 
 /* Internal OS specific implementation details - have names ending with an
  * underscore and are expected to be implemented in an OS specific pathXXX.c
@@ -62,7 +64,7 @@ void path_parse( char const * file, PATHNAME * f )
     if ( ( file[ 0 ] == '<' ) && ( p = strchr( file, '>' ) ) )
     {
         f->f_grist.ptr = file;
-        f->f_grist.len = p - file;
+        f->f_grist.len = int32_t(p - file);
         file = p + 1;
     }
 
@@ -81,7 +83,7 @@ void path_parse( char const * file, PATHNAME * f )
     if ( p )
     {
         f->f_dir.ptr = file;
-        f->f_dir.len = p - file;
+        f->f_dir.len = int32_t(p - file);
 
         /* Special case for / - dirname is /, not "" */
         if ( !f->f_dir.len )
@@ -102,7 +104,7 @@ void path_parse( char const * file, PATHNAME * f )
     if ( ( p = strchr( file, '(' ) ) && ( end[ -1 ] == ')' ) )
     {
         f->f_member.ptr = p + 1;
-        f->f_member.len = end - p - 2;
+        f->f_member.len = int32_t(end - p - 2);
         end = p;
     }
 
@@ -113,13 +115,13 @@ void path_parse( char const * file, PATHNAME * f )
     if ( p )
     {
         f->f_suffix.ptr = p;
-        f->f_suffix.len = end - p;
+        f->f_suffix.len = int32_t(end - p);
         end = p;
     }
 
     /* Leaves base. */
     f->f_base.ptr = file;
-    f->f_base.len = end - file;
+    f->f_base.len = int32_t(end - file);
 }
 
 
@@ -299,4 +301,66 @@ OBJECT * path_tmpfile( void )
 int path_translate_to_os( char const * f, string * file )
 {
   return path_translate_to_os_( f, file );
+}
+
+
+std::string b2::paths::normalize(const std::string &p)
+{
+    // We root the path as a sentinel. But we need to remember that we did so
+    // to un-root afterwards.
+    std::string result{"/"};
+    bool is_rooted = p[0] == '/' || p[0] == '\\';
+    result += p;
+
+    // Convert \ into /. On Windows, paths using / and \ are equivalent, and we
+    // want this function to obtain a canonic representation.
+    std::replace(result.begin(), result.end(), '\\', '/');
+
+    int32_t ellipsis = 0;
+    for (auto end_pos = result.length(); end_pos > 0; )
+    {
+        auto path_pos = result.rfind('/', end_pos-1);
+        if (path_pos == std::string::npos) break;
+        if (path_pos == end_pos-1)
+        {
+            /* Found a trailing or duplicate '/'. Remove it. */
+            result.erase(path_pos, 1);
+        }
+        else if ((end_pos-path_pos == 2) && result[path_pos+1] == '.')
+        {
+            /* Found '/.'. Remove them all. */
+            result.erase(path_pos, 2);
+        }
+        else if ((end_pos-path_pos == 3) && result[path_pos+1] == '.' && result[path_pos+2] == '.')
+        {
+            /* Found '/..'. Remove them all. */
+            result.erase(path_pos, 3);
+            ellipsis += 1;
+        }
+        else if (ellipsis > 0)
+        {
+            /* An elided parent path. Remove it. */
+            result.erase(path_pos, end_pos-path_pos);
+            ellipsis -= 1;
+        }
+        end_pos = path_pos;
+    }
+
+    // Now we know that we need to add exactly ellipsis '..' path elements to the
+    // front and that our string is either empty or has a '/' as its first
+    // significant character. If we have any ellipsis remaining then the passed
+    // path must not have been rooted or else it is invalid we return empty.
+    if (ellipsis > 0)
+    {
+        if (is_rooted) return "";
+        do result.insert(0, "/.."); while (--ellipsis > 0);
+    }
+
+    // If we reduced to nothing we return a valid path depending on wether
+    // the input was rooted or not.
+    if (result.empty()) return is_rooted ? "/" : ".";
+    // Return the result without the sentinel if it's not rooted.
+    if (!is_rooted) return result.substr(1);
+
+    return result;
 }

@@ -3,9 +3,16 @@
 # (See accompanying file LICENSE_1_0.txt or copy at
 # http://www.boost.org/LICENSE_1_0.txt)
 
-# TODO: Documentation.
-
 import feature ;
+
+#| tag::doc[]
+
+[[bbv2.builtin.features.version]]`version`::
+This feature isn't used by any of the builtin tools, but can be used, for
+example, to adjust target's name via <<bbv2.builtin.features.tag,`<tag>`>>
+feature.
+
+|# # end::doc[]
 
 feature.feature version
     :

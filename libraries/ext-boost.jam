@@ -39,9 +39,7 @@ import errors ;
 
 extension.declare boost ;
 
-local boost_build_path = [ modules.peek : search-path ] ;
-boost_build_path = $(boost_build_path[1]) ;
-path-constant THIS_PATH : [ path.join $(boost_build_path) .. ] ;
+path-constant THIS_PATH : ../../libraries ;
 
 .boost-version = ;
 .boost-src-location = ;
@@ -295,7 +293,6 @@ rule init ( version : location : options * )
             xml_archive_exception
             codecvt_null
             xml_oarchive
-            utf8_codecvt_facet
         ;
 
         local wserialization_sources = 
@@ -451,25 +448,32 @@ rule init ( version : location : options * )
                 <library>date_time
                 <library>chrono
             ;
+            
+        if $(version-tokens[2]) < 73
+        {
+            local date_time_sources =
+                greg_month
+              ;
 
-        local date_time_sources =
-            greg_month
-          ;
-
-        lib date_time
-            :   $(location)/libs/date_time/src/gregorian/$(date_time_sources).cpp
-            :   $(requirements)
-                <location-prefix>date_time-$(version-tokens:J=_)
-                <use>boost
-                <link>shared:<define>BOOST_DATE_TIME_DYN_LINK=1
-                <link>static:<define>BOOST_DATE_TIME_STATIC_LINK
-                #<define>NO_BOOST_DATE_TIME_INLINE
-                <define>BOOST_DATE_TIME_NO_LIB=1
-            :
-            :   <link>shared:<define>BOOST_DATE_TIME_DYN_LINK=1
-                #<define>NO_BOOST_DATE_TIME_INLINE
-                <define>BOOST_DATE_TIME_NO_LIB=1
-            ;
+            lib date_time
+                :   $(location)/libs/date_time/src/gregorian/$(date_time_sources).cpp
+                :   $(requirements)
+                    <location-prefix>date_time-$(version-tokens:J=_)
+                    <use>boost
+                    <link>shared:<define>BOOST_DATE_TIME_DYN_LINK=1
+                    <link>static:<define>BOOST_DATE_TIME_STATIC_LINK
+                    #<define>NO_BOOST_DATE_TIME_INLINE
+                    <define>BOOST_DATE_TIME_NO_LIB=1
+                :
+                :   <link>shared:<define>BOOST_DATE_TIME_DYN_LINK=1
+                    #<define>NO_BOOST_DATE_TIME_INLINE
+                    <define>BOOST_DATE_TIME_NO_LIB=1
+                ;
+        }
+        else
+        {
+            alias date_time ;
+        }
 
         if $(version-tokens[2]) < 47
         {

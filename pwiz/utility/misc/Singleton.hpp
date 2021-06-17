@@ -27,7 +27,7 @@
 
 namespace
 {
-    struct Destroyer {~Destroyer() {boost::destroy_singletons();}};
+    struct Destroyer {~Destroyer() {/*boost::destroy_singletons();*/}};
     Destroyer destroyer;
 }
 

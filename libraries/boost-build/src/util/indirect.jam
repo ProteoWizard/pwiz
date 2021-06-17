@@ -105,6 +105,49 @@ rule call ( [indirect-rule] r args * : * )
         $(12) : $(13) : $(14) : $(15) : $(16) : $(17) : $(18) : $(19) ] ;
 }
 
+.parts_regex = "^([^@]*)@" "([^%]*)%" "([^%]+)$" ;
+.parts_regex = $(.parts_regex:J=) ;
+
+# Get the three parts of an indirect reference in a feature.
+#
+rule parts ( x )
+{
+    return [ MATCH "$(.parts_regex)" : $(x) ] ;
+}
+
+# Compute teh difference between two lists containing indirect references.
+# The context of the references are not considered for equality comparisons.
+#
+rule difference ( s1 * : s2 * )
+{
+    local result ;
+    local s2-min ;
+    for local s2i in $(s2)
+    {
+        local m = [ parts $(s2i) ] ;
+        if $(m)
+        {
+            s2-min += "$(m[1])@%$(m[3])" ;
+        }
+    }
+    for local s1i in $(s1)
+    {
+        local m = [ parts $(s1i) ] ;
+        if $(m)
+        {
+            if ! ( $(m[1])@%$(m[3]) in $(s2-min) )
+            {
+                result += $(s1i) ;
+            }
+        }
+        else
+        {
+            result += $(s1i) ;
+        }
+    }
+    return $(result) ;
+}
+
 
 rule __test__
 {
