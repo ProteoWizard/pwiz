@@ -507,7 +507,7 @@ namespace SharedBatch
                         forceReplaceRoot = oldRoot;
                 } else if (!string.IsNullOrEmpty(copiedConfigFile))
                 {
-                    DisplayWarning(string.Format("The imported configurations are from an old file format and could not be copied to {0}", copiedDestination));
+                    DisplayWarning(string.Format(Resources.ConfigManager_ImportFrom_The_imported_configurations_are_from_an_old_file_format_and_could_not_be_copied_to__0_, copiedDestination));
                 }
 
                 while (!reader.Name.EndsWith("_config"))

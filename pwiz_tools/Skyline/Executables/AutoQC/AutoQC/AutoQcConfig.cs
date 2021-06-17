@@ -56,6 +56,12 @@ namespace AutoQC
             return false;
         }
 
+        public IConfig ForcePathReplace(string oldRoot, string newRoot)
+        {
+            // method used in SkylineBatch to create valid configurations with no files on disk (all downloaded later)
+            throw new NotImplementedException();
+        }
+
         public IConfig ReplaceSkylineVersion(SkylineSettings newSettings)
         {
             return new AutoQcConfig(Name, IsEnabled, Created, Modified, MainSettings, PanoramaSettings, newSettings);
