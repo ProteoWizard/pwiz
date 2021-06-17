@@ -87,7 +87,7 @@ namespace SkylineBatch
                         Application.Exit();
                     }
                 });
-                //SendAnalyticsHit();
+                SendAnalyticsHit();
             }
 
             using (var mutex = new Mutex(false, $"University of Washington {AppName()}"))
@@ -106,6 +106,7 @@ namespace SkylineBatch
                 string configFile = null;
                 try
                 {
+                    Settings.Default.Upgrade();
                     var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal);
                     configFile = config.FilePath;
                     ProgramLog.Info(string.Format(Resources.Program_Main_Saved_configurations_were_found_in___0_, config.FilePath));

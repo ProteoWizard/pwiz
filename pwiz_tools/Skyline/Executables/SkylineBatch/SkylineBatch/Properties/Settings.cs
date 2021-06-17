@@ -49,6 +49,12 @@ namespace SkylineBatch.Properties
             SharedBatch.Properties.Settings.Default.Reset();
         }
 
+        public new void Upgrade()
+        {
+            base.Upgrade();
+            SharedBatch.Properties.Settings.Default.Upgrade();
+        }
+
     }
 
 }
