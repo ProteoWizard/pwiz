@@ -860,7 +860,7 @@ namespace pwiz.SkylineTestData
             output = RunCommand("--in=" + docPath,
                                 "--import-file=" + pathNotExists,
                                 "--import-replicate-name=Single");
-            Assert.IsTrue(output.Contains(string.Format("{0} does not exist.", pathNotExists)));
+            Assert.IsTrue(output.Contains(string.Format(Resources.ChromCacheBuilder_BuildNextFileInner_The_file__0__does_not_exist, pathNotExists)));
 
             //Error: no reportfile
             output = RunCommand("--in=" + docPath,
@@ -1208,7 +1208,7 @@ namespace pwiz.SkylineTestData
                                      "--import-file=" + rawPath,
                                      "--save");
 
-                AssertEx.Contains(msg, string.Format(Resources.CommandLine_ImportResultsFile_Warning__Unreadable_Thermo_file__0____Ignoring___, rawPath));
+                AssertEx.Contains(msg, string.Format(Resources.CommandLine_ImportResultsFile_Error__Failed_importing_the_results_file__0__, rawPath));
 
                 // the document should not have changed
                 SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
@@ -1219,7 +1219,7 @@ namespace pwiz.SkylineTestData
                                  "--import-warn-on-failure",
                                  "--save");
 
-                string expected = string.Format(Resources.CommandLine_ImportResultsFile_Warning__Unreadable_Thermo_file__0____Ignoring___, rawPath);
+                string expected = string.Format(Resources.CommandLine_ImportResultsFile_Warning__Failed_importing_the_results_file__0____Ignoring___, rawPath);
                 AssertEx.Contains(msg, expected);
                 doc = ResultsUtil.DeserializeDocument(docPath);
                 Assert.IsTrue(doc.Settings.HasResults, TextUtil.LineSeparate("No results found.", "Output:", msg));

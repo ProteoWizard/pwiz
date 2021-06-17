@@ -5691,15 +5691,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Warning: Unreadable Thermo file {0}.  Ignoring....
-        /// </summary>
-        public static string CommandLine_ImportResultsFile_Warning__Unreadable_Thermo_file__0____Ignoring___ {
-            get {
-                return ResourceManager.GetString("CommandLine_ImportResultsFile_Warning__Unreadable_Thermo_file__0____Ignoring___", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Error: Could not get last write time for file {0}..
         /// </summary>
         public static string CommandLine_ImportResultsInDir_Error__Could_not_get_last_write_time_for_file__0__ {
@@ -5784,8 +5775,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error: Failed to load {0}. 
-        /// {1}.
+        ///   Looks up a localized string similar to Error: Failed to load {0}.
         /// </summary>
         public static string CommandLine_ImportSkyr_ {
             get {
@@ -6200,6 +6190,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error: No new results added. Skipping Panorama import..
+        /// </summary>
+        public static string CommandLine_PerformExportOperations_Error__No_new_results_added__Skipping_Panorama_import_ {
+            get {
+                return ResourceManager.GetString("CommandLine_PerformExportOperations_Error__No_new_results_added__Skipping_Panoram" +
+                        "a_import_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Choose one of {0}.
         /// </summary>
         public static string CommandLine_RefineDocument_Choose_one_of__0_ {
@@ -6354,15 +6354,6 @@ namespace pwiz.Skyline.Properties {
         public static string CommandLine_Run_Exiting___ {
             get {
                 return ResourceManager.GetString("CommandLine_Run_Exiting___", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to No new results added. Skipping Panorama import..
-        /// </summary>
-        public static string CommandLine_Run_No_new_results_added__Skipping_Panorama_import_ {
-            get {
-                return ResourceManager.GetString("CommandLine_Run_No_new_results_added__Skipping_Panorama_import_", resourceCulture);
             }
         }
         

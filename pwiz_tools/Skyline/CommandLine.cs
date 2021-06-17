@@ -86,22 +86,25 @@ namespace pwiz.Skyline
 
             // Handle cases where the error reporting and exit code are out of synch
             // TODO: Add testing that fails when these happen and fix the causes
-            if (exitStatus == Program.EXIT_CODE_SUCCESS)
+            if (!test)
             {
-                if (_out.IsErrorReported && !test)
+                if (exitStatus == Program.EXIT_CODE_SUCCESS)
                 {
-                    // Return the error status only if we are not running tests. We want the test to fail if errors were reported 
-                    // but the exit code is 0.
-                    exitStatus = Program.EXIT_CODE_RAN_WITH_ERRORS; 
+                    if (_out.IsErrorReported)
+                    {
+                        // Return the error status only if we are not running tests. We want the test to fail if errors were reported 
+                        // but the exit code is 0.
+                        exitStatus = Program.EXIT_CODE_RAN_WITH_ERRORS;
+                    }
+                }
+                else if (!_out.IsErrorReported)
+                {
+                    // Output the catch-all error only if we are not running tests. We want the test to fail if no error is reported 
+                    // and the exit code is not 0.
+                    _out.WriteLine(Resources.CommandLine_Run_Error__Failure_occurred__Exiting___);
                 }
             }
-            else if (!_out.IsErrorReported && !test)
-            {
-                // Output the catch-all error only if we are not running tests. We want the test to fail if no error is reported 
-                // and the exit code is not 0.
-                _out.WriteLine(Resources.CommandLine_Run_Error__Failure_occurred__Exiting___);
-            }
-            
+
             return exitStatus;
         }
 
@@ -778,7 +781,7 @@ namespace pwiz.Skyline
                     // If we are here it means that ImportingResults was true AND nothing was imported.
                     // This should have already triggered an error message earlier in the process but 
                     // in case it didn't we will report an error and return false
-                    _out.WriteLine(Resources.CommandLine_GeneralException_Error___0_,  Resources.CommandLine_Run_No_new_results_added__Skipping_Panorama_import_);
+                    _out.WriteLine(Resources.CommandLine_PerformExportOperations_Error__No_new_results_added__Skipping_Panorama_import_);
                     return false;
                 }
             }
@@ -1689,9 +1692,6 @@ namespace pwiz.Skyline
                 {
                     if (!append)
                     {
-                        // CONSIDER: Error? Check if the replicate contains the file?
-                        //           It does not seem right to just continue on to export a report
-                        //           or new method without the results added.
                         _out.WriteLine(
                             Resources.CommandLine_ImportDataFilesWithAppend_Error__The_replicate__0__already_exists_in_the_given_document_and_the___import_append_option_is_not_specified___The_replicate_will_not_be_added_to_the_document_,
                             replicateName);
@@ -1721,7 +1721,7 @@ namespace pwiz.Skyline
                     if (newFiles.Count == 0)
                     {
                         _out.WriteLine(Resources.CommandLine_ImportResults_Error__No_files_left_to_import_);
-                        return false; // TODO: Is this OK?
+                        return false;
                     }
 
                     if (newFiles.Count != replicateFiles.Length)
@@ -1759,16 +1759,6 @@ namespace pwiz.Skyline
             }
 
             _out.WriteLine(Resources.CommandLine_ImportResultsFile_Adding_results___);
-            var targetSkyd = ChromatogramCache.PartPathForName(_skylineFile, replicateFile);
-            if (!File.Exists(targetSkyd))
-            {
-                // Hack for un-readable RAW files from Thermo instruments.
-                if (IsBadThermoFile(replicateFile))
-                {
-                    _out.WriteLine(Resources.CommandLine_ImportResultsFile_Warning__Unreadable_Thermo_file__0____Ignoring___, replicateFile);
-                    return true;
-                }
-            } 
 
             if (disableJoining)
                 ModifyDocument(d => d.ChangeSettingsNoDiff(d.Settings.ChangeIsResultsJoiningDisabled(true)));
@@ -2644,45 +2634,6 @@ namespace pwiz.Skyline
             return true;
         }
 
-        
-        // This is a hack for un-readable RAW files from Thermo instruments.
-        // These files are usually 78KB.  Presumably they are
-        // temporary files that, for some reason, do not get deleted.
-        private bool IsBadThermoFile(MsDataFileUri msDataFileUri)
-        {
-            var msDataFilePath = msDataFileUri as MsDataFilePath;
-            if (null != msDataFilePath)
-            {
-                var replicatePath = msDataFilePath.FilePath;
-                if (File.Exists(replicatePath))
-                {
-                    // Make sure this is a Thermo RAW file
-                    var fileInfo = new FileInfo(replicatePath);
-                    // We will not do this check for a directory source
-                    if (fileInfo.Exists && DataSourceUtil.GetSourceType(fileInfo) == DataSourceUtil.TYPE_THERMO_RAW)
-                    {
-                        // We will not do this check for files over 100KB
-                        if (fileInfo.Length <= (100 * 1024))
-                        {
-                            // Try to read the file
-                            try
-                            {
-                                using (new MsDataFileImpl(replicatePath))
-                                {
-                                }
-                            }
-                            catch (Exception e)
-                            {
-                                _out.WriteLine(e.Message);
-                                return true;
-                            }
-                        }
-                    }
-                }
-            }
-            return false;
-        }
-
         public bool SaveFile(string saveFile)
         {
             _out.WriteLine(Resources.CommandLine_SaveFile_Saving_file___);
@@ -3113,7 +3064,8 @@ namespace pwiz.Skyline
                 }
                 catch (Exception e)
                 {
-                    _out.WriteLine(Resources.CommandLine_ImportSkyr_, path, e);
+                    _out.WriteLine(Resources.CommandLine_ImportSkyr_, path);
+                    _out.WriteLine(e);
                     return false;
                 }
                 if (imported)
@@ -4136,7 +4088,7 @@ namespace pwiz.Skyline
                 var progressStatus = multiStatus.ProgressList[i];
                 if (progressStatus.IsError)
                 {
-                    var rawPath = progressStatus.Message;
+                    var rawPath = progressStatus.FilePath.GetFilePath();
                     var missingDataException = progressStatus.ErrorException as MissingDataException;
                     if (missingDataException != null)
                         rawPath = missingDataException.ImportPath.GetFilePath();

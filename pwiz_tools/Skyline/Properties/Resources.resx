@@ -3119,9 +3119,6 @@ Are you sure you want to continue?</value>
   <data name="SrmDocument_MergeMatchingPeptidesUserInfo_The_peptide__0__was_found_multiple_times_with_user_modifications" xml:space="preserve">
     <value>The peptide {0} was found multiple times with user modifications.</value>
   </data>
-  <data name="CommandLine_Run_No_new_results_added__Skipping_Panorama_import_" xml:space="preserve">
-    <value>No new results added. Skipping Panorama import.</value>
-  </data>
   <data name="PublishDocumentDlg_btnBrowse_Click_Shared_Files" xml:space="preserve">
     <value>Shared Files</value>
   </data>
@@ -11435,17 +11432,13 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
     <value>Error: No files match the sample name pattern '{0}'.</value>
   </data>
   <data name="CommandLine_ImportSkyr_" xml:space="preserve">
-    <value>Error: Failed to load {0}. 
- {1}</value>
+    <value>Error: Failed to load {0}.</value>
   </data>
   <data name="PanoramaPublishHelper_PublishDocToPanorama_Error__Document_import_was_cancelled_on_the_Panorama_server__0__" xml:space="preserve">
     <value>Error: Document import was cancelled on the Panorama server {0}.</value>
   </data>
   <data name="PanoramaPublishHelper_PublishDocToPanorama_Error__An_import_error_occurred_on_the_Panorama_server__0__" xml:space="preserve">
     <value>Error: An import error occurred on the Panorama server {0}.</value>
-  </data>
-  <data name="CommandLine_ImportResultsFile_Warning__Unreadable_Thermo_file__0____Ignoring___" xml:space="preserve">
-    <value>Warning: Unreadable Thermo file {0}.  Ignoring...</value>
   </data>
   <data name="CommandLine_ImportResults_Error__No_files_left_to_import_" xml:space="preserve">
     <value>Error: No files left to import.</value>
@@ -11467,5 +11460,8 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
   <data name="ViewLibraryDlg_UpdateUI_CCS__" xml:space="preserve">
     <value>CCS: </value>
     <comment>CCS is abbreviation for Collision Cross Section</comment>
+  </data>
+  <data name="CommandLine_PerformExportOperations_Error__No_new_results_added__Skipping_Panorama_import_" xml:space="preserve">
+    <value>Error: No new results added. Skipping Panorama import.</value>
   </data>
 </root>

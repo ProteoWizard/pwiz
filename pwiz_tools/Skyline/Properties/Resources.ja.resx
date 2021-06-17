@@ -3119,9 +3119,6 @@
   <data name="SrmDocument_MergeMatchingPeptidesUserInfo_The_peptide__0__was_found_multiple_times_with_user_modifications" xml:space="preserve">
     <value>ユーザー修飾のあるペプチド{0}が複数回見つかりました。</value>
   </data>
-  <data name="CommandLine_Run_No_new_results_added__Skipping_Panorama_import_" xml:space="preserve">
-    <value>新規結果が追加されていません。Panoramaインポートをスキップ中。</value>
-  </data>
   <data name="PublishDocumentDlg_btnBrowse_Click_Shared_Files" xml:space="preserve">
     <value>共有ファイル</value>
   </data>
