@@ -23,6 +23,7 @@
 #include "pwiz/data/msdata/SpectrumListWrapper.hpp"
 #include <boost/smart_ptr/scoped_ptr.hpp>
 #include "pwiz/utility/chemistry/MZTolerance.hpp"
+#include "boost/enum.hpp"
 
 namespace pwiz {
 namespace analysis {
@@ -40,11 +41,10 @@ namespace analysis {
         struct Params
         {
             /// Optimization methods available
-            enum class Optimization
-            {
-                NONE,
-                OVERLAP_ONLY
-            };
+            BOOST_ENUM(Optimization,
+                (NONE)
+                (OVERLAP_ONLY)
+            );
 
             /// Converts an optimization enum to a string
             static std::string optimizationToString(Optimization opt);

@@ -85,7 +85,7 @@ namespace SkylineBatch
                         Application.Exit();
                     }
                 });
-                SendAnalyticsHit();
+                //SendAnalyticsHit();
             }
 
             using (var mutex = new Mutex(false, $"University of Washington {AppName()}"))
@@ -213,6 +213,7 @@ namespace SkylineBatch
             }
         }
 
+        // ReSharper disable once UnusedMember.Local
         private static void SendAnalyticsHit()
         {
             // ReSharper disable LocalizableElement

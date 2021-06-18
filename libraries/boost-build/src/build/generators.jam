@@ -32,7 +32,7 @@
 #
 # Likewise, when generator tries to convert sources to consumable types, it can
 # get more targets that it was asked for. The question is what to do with extra
-# targets. Boost.Build attempts to convert them to requested types, and attempts
+# targets. B2 attempts to convert them to requested types, and attempts
 # that as early as possible. Specifically, this is done after invoking each
 # generator. TODO: An example is needed to document the rationale for trying
 # extra target conversion at that point.
@@ -40,7 +40,7 @@
 # In order for the system to be able to use a specific generator instance 'when
 # needed', the instance needs to be registered with the system using
 # generators.register() or one of its related rules. Unregistered generators may
-# only be run explicitly and will not be considered by Boost.Build when when
+# only be run explicitly and will not be considered by B2 when when
 # converting between given target types.
 
 import "class" : new ;
@@ -222,7 +222,7 @@ class generator
             self.name-prefix += $(m[3]:E="") ;
             self.name-postfix += $(m[4]:E="") ;
         }
-        
+
         for local r in [ requirements ]
         {
             if $(r:G=)

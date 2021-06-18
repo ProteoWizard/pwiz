@@ -4908,22 +4908,22 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to No files match the file name pattern &apos;{0}&apos;..
+        ///   Looks up a localized string similar to Error: No files match the file name pattern &apos;{0}&apos;..
         /// </summary>
-        public static string CommandLine_ApplyFileAndSampleNameRegex_No_files_match_the_file_name_pattern___0___ {
+        public static string CommandLine_ApplyFileAndSampleNameRegex_Error__No_files_match_the_file_name_pattern___0___ {
             get {
-                return ResourceManager.GetString("CommandLine_ApplyFileAndSampleNameRegex_No_files_match_the_file_name_pattern___0_" +
-                        "__", resourceCulture);
+                return ResourceManager.GetString("CommandLine_ApplyFileAndSampleNameRegex_Error__No_files_match_the_file_name_patte" +
+                        "rn___0___", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to No files match the sample name pattern &apos;{0}&apos;..
+        ///   Looks up a localized string similar to Error: No files match the sample name pattern &apos;{0}&apos;..
         /// </summary>
-        public static string CommandLine_ApplyFileAndSampleNameRegex_No_files_match_the_sample_name_pattern___0___ {
+        public static string CommandLine_ApplyFileAndSampleNameRegex_Error__No_files_match_the_sample_name_pattern___0___ {
             get {
-                return ResourceManager.GetString("CommandLine_ApplyFileAndSampleNameRegex_No_files_match_the_sample_name_pattern___" +
-                        "0___", resourceCulture);
+                return ResourceManager.GetString("CommandLine_ApplyFileAndSampleNameRegex_Error__No_files_match_the_sample_name_pat" +
+                        "tern___0___", resourceCulture);
             }
         }
         
@@ -5595,6 +5595,17 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error: The replicate {0} already exists in the given document and the --import-append option is not specified.  The replicate will not be added to the document..
+        /// </summary>
+        public static string CommandLine_ImportDataFilesWithAppend_Error__The_replicate__0__already_exists_in_the_given_document_and_the___import_append_option_is_not_specified___The_replicate_will_not_be_added_to_the_document_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ImportDataFilesWithAppend_Error__The_replicate__0__already_exists_in_" +
+                        "the_given_document_and_the___import_append_option_is_not_specified___The_replica" +
+                        "te_will_not_be_added_to_the_document_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Importing FASTA file {0}....
         /// </summary>
         public static string CommandLine_ImportFasta_Importing_FASTA_file__0____ {
@@ -5604,11 +5615,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to No replicates left to import..
+        ///   Looks up a localized string similar to Error: No files left to import..
         /// </summary>
-        public static string CommandLine_ImportResults_No_replicates_left_to_import_ {
+        public static string CommandLine_ImportResults_Error__No_files_left_to_import_ {
             get {
-                return ResourceManager.GetString("CommandLine_ImportResults_No_replicates_left_to_import_", resourceCulture);
+                return ResourceManager.GetString("CommandLine_ImportResults_Error__No_files_left_to_import_", resourceCulture);
             }
         }
         
@@ -5670,32 +5681,12 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Warning: Cannot read file {0}.  Ignoring....
-        /// </summary>
-        public static string CommandLine_ImportResultsFile_Warning__Cannot_read_file__0____Ignoring___ {
-            get {
-                return ResourceManager.GetString("CommandLine_ImportResultsFile_Warning__Cannot_read_file__0____Ignoring___", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Warning: Failed importing the results file {0}.  Ignoring....
         /// </summary>
         public static string CommandLine_ImportResultsFile_Warning__Failed_importing_the_results_file__0____Ignoring___ {
             get {
                 return ResourceManager.GetString("CommandLine_ImportResultsFile_Warning__Failed_importing_the_results_file__0____Ig" +
                         "noring___", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Warning: The replicate {0} already exists in the given document and the --import-append option is not specified.  The replicate will not be added to the document..
-        /// </summary>
-        public static string CommandLine_ImportResultsFile_Warning__The_replicate__0__already_exists_in_the_given_document_and_the___import_append_option_is_not_specified___The_replicate_will_not_be_added_to_the_document_ {
-            get {
-                return ResourceManager.GetString("CommandLine_ImportResultsFile_Warning__The_replicate__0__already_exists_in_the_gi" +
-                        "ven_document_and_the___import_append_option_is_not_specified___The_replicate_wil" +
-                        "l_not_be_added_to_the_document_", resourceCulture);
             }
         }
         
@@ -5755,11 +5746,12 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} must be set when using CiRT peptides..
+        ///   Looks up a localized string similar to Error: {0} must be set when using CiRT peptides..
         /// </summary>
-        public static string CommandLine_ImportSearchInternal__0__must_be_set_when_using_CiRT_peptides_ {
+        public static string CommandLine_ImportSearchInternal_Error___0__must_be_set_when_using_CiRT_peptides_ {
             get {
-                return ResourceManager.GetString("CommandLine_ImportSearchInternal__0__must_be_set_when_using_CiRT_peptides_", resourceCulture);
+                return ResourceManager.GetString("CommandLine_ImportSearchInternal_Error___0__must_be_set_when_using_CiRT_peptides_" +
+                        "", resourceCulture);
             }
         }
         
@@ -5783,8 +5775,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failure loading {0}. 
-        /// {1}.
+        ///   Looks up a localized string similar to Error: Failed to load {0}.
         /// </summary>
         public static string CommandLine_ImportSkyr_ {
             get {
@@ -5897,11 +5888,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Canceled installing tools from {0}..
+        ///   Looks up a localized string similar to Error: Canceled installing tools from {0}..
         /// </summary>
-        public static string CommandLine_ImportToolsFromZip_Canceled_installing_tools_from__0__ {
+        public static string CommandLine_ImportToolsFromZip_Error__Canceled_installing_tools_from__0__ {
             get {
-                return ResourceManager.GetString("CommandLine_ImportToolsFromZip_Canceled_installing_tools_from__0__", resourceCulture);
+                return ResourceManager.GetString("CommandLine_ImportToolsFromZip_Error__Canceled_installing_tools_from__0__", resourceCulture);
             }
         }
         
@@ -6199,6 +6190,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error: No new results added. Skipping Panorama import..
+        /// </summary>
+        public static string CommandLine_PerformExportOperations_Error__No_new_results_added__Skipping_Panorama_import_ {
+            get {
+                return ResourceManager.GetString("CommandLine_PerformExportOperations_Error__No_new_results_added__Skipping_Panoram" +
+                        "a_import_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Choose one of {0}.
         /// </summary>
         public static string CommandLine_RefineDocument_Choose_one_of__0_ {
@@ -6353,15 +6354,6 @@ namespace pwiz.Skyline.Properties {
         public static string CommandLine_Run_Exiting___ {
             get {
                 return ResourceManager.GetString("CommandLine_Run_Exiting___", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to No new results added. Skipping Panorama import..
-        /// </summary>
-        public static string CommandLine_Run_No_new_results_added__Skipping_Panorama_import_ {
-            get {
-                return ResourceManager.GetString("CommandLine_Run_No_new_results_added__Skipping_Panorama_import_", resourceCulture);
             }
         }
         
@@ -20641,22 +20633,22 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to An error occurred on the Panorama server ({0}) importing the file..
+        ///   Looks up a localized string similar to Error: An import error occurred on the Panorama server {0}..
         /// </summary>
-        public static string PanoramaPublishHelper_PublishDocToPanorama_An_error_occurred_on_the_Panorama_server___0___importing_the_file_ {
+        public static string PanoramaPublishHelper_PublishDocToPanorama_Error__An_import_error_occurred_on_the_Panorama_server__0__ {
             get {
-                return ResourceManager.GetString("PanoramaPublishHelper_PublishDocToPanorama_An_error_occurred_on_the_Panorama_serv" +
-                        "er___0___importing_the_file_", resourceCulture);
+                return ResourceManager.GetString("PanoramaPublishHelper_PublishDocToPanorama_Error__An_import_error_occurred_on_the" +
+                        "_Panorama_server__0__", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Document import was cancelled on the Panorama server {0}..
+        ///   Looks up a localized string similar to Error: Document import was cancelled on the Panorama server {0}..
         /// </summary>
-        public static string PanoramaPublishHelper_PublishDocToPanorama_Document_import_was_cancelled_on_the_Panorama_server__0__ {
+        public static string PanoramaPublishHelper_PublishDocToPanorama_Error__Document_import_was_cancelled_on_the_Panorama_server__0__ {
             get {
-                return ResourceManager.GetString("PanoramaPublishHelper_PublishDocToPanorama_Document_import_was_cancelled_on_the_P" +
-                        "anorama_server__0__", resourceCulture);
+                return ResourceManager.GetString("PanoramaPublishHelper_PublishDocToPanorama_Error__Document_import_was_cancelled_o" +
+                        "n_the_Panorama_server__0__", resourceCulture);
             }
         }
         
@@ -22904,6 +22896,24 @@ namespace pwiz.Skyline.Properties {
             get {
                 object obj = ResourceManager.GetObject("PeptideStandardLib", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to CCS.
+        /// </summary>
+        public static string PeptideTipProvider_RenderTip_CCS {
+            get {
+                return ResourceManager.GetString("PeptideTipProvider_RenderTip_CCS", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ion Mobility.
+        /// </summary>
+        public static string PeptideTipProvider_RenderTip_Ion_Mobility {
+            get {
+                return ResourceManager.GetString("PeptideTipProvider_RenderTip_Ion_Mobility", resourceCulture);
             }
         }
         
@@ -27718,6 +27728,17 @@ namespace pwiz.Skyline.Properties {
         public static string SkylineWindow_graphChromatogram_PickedPeak_Pick_peak__0_F01_ {
             get {
                 return ResourceManager.GetString("SkylineWindow_graphChromatogram_PickedPeak_Pick_peak__0_F01_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An error occurred while attempting to load the iRT database {0}. iRT standards cannot be automatically added to the document..
+        /// </summary>
+        public static string SkylineWindow_HandleStandardsChanged_An_error_occurred_while_attempting_to_load_the_iRT_database__0___iRT_standards_cannot_be_automatically_added_to_the_document_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_HandleStandardsChanged_An_error_occurred_while_attempting_to_load_t" +
+                        "he_iRT_database__0___iRT_standards_cannot_be_automatically_added_to_the_document" +
+                        "_", resourceCulture);
             }
         }
         
@@ -34449,6 +34470,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to CCS: .
+        /// </summary>
+        public static string ViewLibraryDlg_UpdateUI_CCS__ {
+            get {
+                return ResourceManager.GetString("ViewLibraryDlg_UpdateUI_CCS__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failure loading spectrum. Library may be corrupted..
         /// </summary>
         public static string ViewLibraryDlg_UpdateUI_Failure_loading_spectrum_Library_may_be_corrupted {
@@ -34463,6 +34493,15 @@ namespace pwiz.Skyline.Properties {
         public static string ViewLibraryDlg_UpdateUI_File {
             get {
                 return ResourceManager.GetString("ViewLibraryDlg_UpdateUI_File", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to IM: .
+        /// </summary>
+        public static string ViewLibraryDlg_UpdateUI_IM__ {
+            get {
+                return ResourceManager.GetString("ViewLibraryDlg_UpdateUI_IM__", resourceCulture);
             }
         }
         

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using System.Threading;
 using System.Windows.Forms;
 using System.Xml;
 
@@ -50,7 +51,8 @@ namespace SharedBatch
         Stopped,
         Completed,
         Disconnected,
-        Error
+        Error,
+        Loading
     }
 
     public interface IConfigRunner
@@ -124,8 +126,10 @@ namespace SharedBatch
 
     public delegate void OnPercentProgress(int percent, int maxPercent);
 
-    public delegate  void LongOperation(OnPercentProgress progress);
+    public delegate  void LongOperation(OnPercentProgress progress, CancellationToken cancelToken);
 
     public delegate void Callback(bool completed);
+
+    public delegate void Update(int percentComplete, Exception e);
 
 }

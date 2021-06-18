@@ -46,7 +46,7 @@ namespace SkylineBatch
             var localFolder = Path.Combine(Path.GetDirectoryName(roamingFolder) ?? throw new InvalidOperationException(), "local");
             var logPath= Path.Combine(localFolder, Program.AppName(), Program.AppName() + TextUtil.EXT_LOG);
             Logger.AddErrorMatch(string.Format(Resources.ConfigRunner_Run_________________________________0____1_________________________________, ".*", RunnerStatus.Error));
-            _skylineBatchLogger = new Logger(logPath, Program.AppName() + TextUtil.EXT_LOG);
+            _skylineBatchLogger = new Logger(logPath, Program.AppName() + TextUtil.EXT_LOG, true);
             toolStrip1.Items.Insert(3,new ToolStripSeparator());
             _listViewColumnWidths = new ColumnWidthCalculator(listViewConfigs);
             listViewConfigs.ColumnWidthChanged += listViewConfigs_ColumnWidthChanged;
@@ -55,12 +55,13 @@ namespace SkylineBatch
             _outputLog = new Timer { Interval = 500 };
             _outputLog.Tick += OutputLog;
             _outputLog.Start();
-            UpdateButtonsEnabled();
 
             Shown += ((sender, args) =>
             {
                 _configManager = new SkylineBatchConfigManager(_skylineBatchLogger, this);
                 _configManager.LoadConfigList();
+                _loaded = true;
+                UpdateButtonsEnabled();
                 _rDirectorySelector = new RDirectorySelector(this, _configManager);
                 if (!string.IsNullOrEmpty(openFile))
                     FileOpened(openFile);
@@ -68,7 +69,6 @@ namespace SkylineBatch
                 ListViewSizeChanged();
                 UpdateUiLogFiles();
                 UpdateRunBatchSteps();
-                _loaded = true;
             });
         }
 
@@ -275,10 +275,14 @@ namespace SkylineBatch
         private void btnOpenTemplate_Click(object sender, EventArgs e)
         {
             var config = _configManager.GetSelectedConfig();
-            if (MainFormUtils.CanOpen(config.Name, _configManager.IsSelectedConfigValid(), config.MainSettings.TemplateFilePath,
+            if (!config.MainSettings.Template.Exists())
+            {
+                DisplayError(string.Format(Resources.MainForm_btnOpenTemplate_Click_The_template_file_for___0___has_not_been_downloaded__Please_run___0___and_try_again_, config.Name));
+            }
+            if (MainFormUtils.CanOpen(config.Name, _configManager.IsSelectedConfigValid(), config.MainSettings.Template.FilePath,
                 Resources.MainForm_btnOpenTemplate_Click_Skyline_template_file, this))
             {
-                SkylineInstallations.OpenSkylineFile(config.MainSettings.TemplateFilePath, config.SkylineSettings);
+                SkylineInstallations.OpenSkylineFile(config.MainSettings.Template.FilePath, config.SkylineSettings);
             }
         }
 
@@ -490,20 +494,16 @@ namespace SkylineBatch
 
         public void FileOpened(string filePath)
         {
-            var importConfigs = false;
+            bool importConfigs;
             var inDownloadsFolder = filePath.Contains(FileUtil.DOWNLOADS_FOLDER);
-            if (!inDownloadsFolder) // Only show dialog if configs are not in downloads folder
-            {
-                RunUi(() =>
-                {
-                    importConfigs = DialogResult.Yes == DisplayQuestion(string.Format(
-                        Resources.MainForm_FileOpenedImport_Do_you_want_to_import_configurations_from__0__,
-                        Path.GetFileName(filePath)));
-                });
-            }
+
             RunUi(() =>
             {
-                if (importConfigs || inDownloadsFolder)
+                // Only show dialog if configs are not in downloads folder
+                importConfigs = inDownloadsFolder || DialogResult.Yes == DisplayQuestion(string.Format(
+                    Resources.MainForm_FileOpenedImport_Do_you_want_to_import_configurations_from__0__,
+                    Path.GetFileName(filePath)));
+                if (importConfigs)
                     DoImport(filePath);
             });
         }
@@ -526,8 +526,13 @@ namespace SkylineBatch
 
         private void btnExport_Click(object sender, EventArgs e)
         {
-            var shareForm = new ShareConfigsForm(this, _configManager, TextUtil.FILTER_BCFG, Program.Icon());
-            shareForm.ShowDialog();
+            var shareForm = new ShareConfigsForm(this, _configManager, Program.Icon());
+            if (shareForm.ShowDialog(this) != DialogResult.OK)
+                return;
+            var dialog = new SaveFileDialog { Filter = TextUtil.FILTER_BCFG };
+            if (dialog.ShowDialog(this) != DialogResult.OK)
+                return;
+            _configManager.ExportConfigs(dialog.FileName, shareForm.IndiciesToSave);
         }
         
         #endregion

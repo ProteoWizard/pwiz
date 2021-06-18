@@ -212,7 +212,6 @@ install install_cli
         Qonverter//gene2protein.db3 
     : # requirements
         <conditional>@install-requirements
-        <conditional>@gcc-install-dll-path
     ;
 
 install install
@@ -223,7 +222,6 @@ install install
     : # requirements
         <conditional>@dotNET-dependencies
         <conditional>@install-requirements
-        <conditional>@gcc-install-dll-path
     ;
 
 # TODO: figure out why this hangs on TeamCity 64-bit builds, but works fine with 32-bit builds

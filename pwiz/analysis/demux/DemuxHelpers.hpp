@@ -26,42 +26,14 @@
 #ifndef _DEMUXHELPERS_HPP
 #define _DEMUXHELPERS_HPP
 
-#include "EnumConstantNotPresentException.hpp"
 #include <boost/tokenizer.hpp>
+#include <boost/format.hpp>
 #include "pwiz/data/msdata/MSData.hpp"
 
 namespace pwiz
 {
 namespace analysis
 {
-    /**
-    * Converts an enum to it's corresponding string in a prebuilt map. Exception is thrown if map does not contain enum.
-    * @param[in] e The enum
-    * @param[out] m The map pairing each enum to a string
-    * @return Returns the string from the map
-    */
-    template <typename T>
-    std::string enumToString(T e, std::map<T, std::string> m)
-    {
-        return m.at(e);
-    }
-
-    /**
-    * Converts a string to it's corresponding enum in a prebuilt map. Exception is thrown if map does not contain string.
-    * @param[in] s The string
-    * @param[out] m The map pairing each enum to a string
-    * @return Returns the enum from the map
-    */
-    template<typename T>
-    T stringToEnum(const std::string& s, std::map<T, std::string> m)
-    {
-        for (auto it = m.begin(); it != m.end(); ++it) {
-            if (it->second.compare(s) == 0)
-                return it->first;
-        }
-        throw EnumConstantNotPresentException("Given string doesn't correspond to an enum");
-    }
-
     /// Tool for pulling each scan id attribute and its value from a scan id.
     /// Scan ids contain sets of attribute-value pairs. Each pair is separated from others by a space. Each attribute is separated from its
     /// value by an "=". E.g. "attribute1=value1 attribute2=value2 attribute3=value3"
