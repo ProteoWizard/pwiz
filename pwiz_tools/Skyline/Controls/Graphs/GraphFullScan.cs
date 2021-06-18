@@ -646,6 +646,13 @@ namespace pwiz.Skyline.Controls.Graphs
                         selectionMatch ? selection.Transition : null);
                     _graphHelper.AddSpectrum(graphItem, false);
                 }
+                else
+                {
+                    // No node to use for annotation so just show peaks in gray
+                    var item = new SpectrumItem(allPointList, Color.Gray, @"unmatched");
+                    var curveItem = _graphHelper.GraphControl.AddGraphItem(GraphPane, item, false);
+                    curveItem.Label.IsVisible = false;
+                }
             }
             else
             {
