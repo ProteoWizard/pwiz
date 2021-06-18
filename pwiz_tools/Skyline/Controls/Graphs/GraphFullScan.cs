@@ -637,15 +637,16 @@ namespace pwiz.Skyline.Controls.Graphs
             var currentTransition =
                 _msDataFileScanHelper.ScanProvider.Transitions[_msDataFileScanHelper.TransitionIndex];
 
-            var fragNodePath = _showIonSeriesAnnotations && _msDataFileScanHelper.Source == ChromSource.fragment
-                ? DocNodePath.GetNodePath(currentTransition.Id, _documentContainer.DocumentUI) // Make sure user hasn't removed node since last update
-                : null;
-            if (fragNodePath != null)
+            if (_showIonSeriesAnnotations && _msDataFileScanHelper.Source == ChromSource.fragment)
             {
-                var graphItem = RankScan(mzs, intensities, _documentContainer.DocumentUI.Settings, fragNodePath.Precursor,
+                var nodePath = DocNodePath.GetNodePath(currentTransition.Id, _documentContainer.DocumentUI);
+                if (nodePath != null) // Make sure user hasn't removed node since last update
+                {
+                    var graphItem = RankScan(mzs, intensities, _documentContainer.DocumentUI.Settings, nodePath.Precursor,
                         selectionMatch ? selection.Transition : null);
                     _graphHelper.AddSpectrum(graphItem, false);
                 }
+
                 else
                 {
                     // No node to use for annotation so just show peaks in gray
