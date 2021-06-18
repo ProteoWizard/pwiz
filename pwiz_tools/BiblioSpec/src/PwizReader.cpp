@@ -440,6 +440,7 @@ void PwizReader::transferSpectrum(BiblioSpec::Spectrum& returnSpectrum,
     returnSpectrum.setScanNumber(specInfo->scanNumber);
     returnSpectrum.setMz(specInfo->precursors[0].mz);
     addCharges(returnSpectrum, foundSpec);
+    returnSpectrum.setRetentionTime(specInfo->retentionTime/60);
     
     if( specInfo->data.size() > 0 ){
         vector<BiblioSpec::PEAK_T> peaks;
