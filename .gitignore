@@ -407,12 +407,6 @@ SkylineTester Results
 /bs32.bat
 /bso64.bat
 /bso32.bat
-/BrowseOnly/pwiz.tlog/unsuccessfulbuild
-/BrowseOnly/pwiz.tlog/pwiz.lastbuildstate
-/BrowseOnly/pwiz.tlog/metagen.write.1.tlog
-/BrowseOnly/pwiz.tlog/CL.write.1.tlog
-/BrowseOnly/pwiz.tlog/CL.read.1.tlog
-/BrowseOnly/pwiz.tlog/CL.command.1.tlog
 /OnyxTOFMS.试验.wiff.scan
 /160109_Mix1_calcurve_074_raw.skyl
 /160109_Mix1_calcurve_074_raw.skyd
@@ -446,3 +440,6 @@ SkylineTester Results
 /pwiz_tools/Skyline/TestRunner/Properties/AssemblyInfo.cs
 /pwiz_tools/Skyline/Executables/Installer/FileList64.txt
 /pwiz_tools/Skyline/TestSettings_x??.testsettings
+/BrowseOnly
+/x64/BrowseOnly
+/qb64.bat
