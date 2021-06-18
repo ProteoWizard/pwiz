@@ -24,7 +24,7 @@ using System.Deployment.Application;
 using System.Drawing;
 using System.IO;
 using System.Net;
-using System.Runtime.CompilerServices;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
@@ -36,6 +36,8 @@ namespace SkylineBatch
 {
     public class Program
     {
+        public const string ADMIN_VERSION = "21.1.0.146";
+
         private static string _version;
 
         #region For tests
@@ -53,6 +55,7 @@ namespace SkylineBatch
         {
             ProgramLog.Init("SkylineBatch");
             Application.EnableVisualStyles();
+            InitializeVersion();
 
             if (!FunctionalTest)
             {
@@ -82,6 +85,7 @@ namespace SkylineBatch
                         Application.Exit();
                     }
                 });
+                //SendAnalyticsHit();
             }
 
             using (var mutex = new Mutex(false, $"University of Washington {AppName()}"))
@@ -97,21 +101,43 @@ namespace SkylineBatch
                 // Initialize log4net -- global application logging
                 XmlConfigurator.Configure();
 
+                string configFile = null;
                 try
                 {
                     var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal);
+                    configFile = config.FilePath;
                     ProgramLog.Info(string.Format(Resources.Program_Main_Saved_configurations_were_found_in___0_, config.FilePath));
+                    if (!InitSkylineSettings()) return;
+                    RInstallations.FindRDirectory();
                 }
-                catch (Exception)
+                catch (ConfigurationException e)
                 {
-                    // ignored
+                    ProgramLog.Error(e.Message, e);
+                    var folderToCopy = Path.GetDirectoryName(ProgramLog.GetProgramLogFilePath()) ?? string.Empty;
+                    var newFileName = Path.Combine(folderToCopy, "error-user.config");
+                    var message = string.Format(
+                        Resources.Program_Main_There_was_an_error_reading_the_saved_configurations_from_an_earlier_version_of__0___,
+                        AppName());
+                    if (configFile != null)
+                    {
+                        File.Copy(configFile, newFileName, true);
+                        File.Delete(configFile);
+                        message += Environment.NewLine + Environment.NewLine +
+                                   string.Format(
+                                       Resources.Program_Main_To_help_improve__0__in_future_versions__please_post_the_configuration_file_to_the_Skyline_Support_board_,
+                                       AppName()) +
+                                   Environment.NewLine +
+                                   newFileName;
+                    }
+                    
+                    MessageBox.Show(message);
+                    Application.Restart();
+                    return;
                 }
                 
-                if (!InitSkylineSettings()) return;
-                RInstallations.FindRDirectory();
+
 
                 AddFileTypesToRegistry();
-                InitializeVersion();
                 var openFile = GetFirstArg(args);
 
                 MainWindow = new MainForm(openFile);
@@ -186,7 +212,49 @@ namespace SkylineBatch
                     appExe, configFileIconPath);
             }
         }
-        
+
+        // ReSharper disable once UnusedMember.Local
+        private static void SendAnalyticsHit()
+        {
+            // ReSharper disable LocalizableElement
+            var postData = "v=1"; // Version 
+            postData += "&t=event"; // Event hit type
+            postData += "&tid=UA-9194399-1"; // Tracking Id 
+            postData += "&cid=" + SharedBatch.Properties.Settings.Default.InstallationId; // Anonymous Client Id
+            postData += "&ec=InstanceBatch"; // Event Category
+            postData += "&ea=" + Uri.EscapeDataString((_version.Length > 0 ? _version : ADMIN_VERSION) + "batch");
+            var dailyRegex = new Regex(@"[0-9]+\.[0-9]+\.[19]\.[0-9]+");
+            postData += "&el=" + (dailyRegex.IsMatch(_version) ? "batch-daily" : "batch-release");
+            postData += "&p=" + "Instance"; // Page
+
+            var data = Encoding.UTF8.GetBytes(postData);
+            var analyticsUrl = "http://www.google-analytics.com/collect";
+            var request = (HttpWebRequest)WebRequest.Create(analyticsUrl);
+
+            request.Method = "POST";
+            request.ContentType = "application/x-www-form-urlencoded";
+            request.ContentLength = data.Length;
+            try
+            {
+                using (Stream stream = request.GetRequestStream())
+                {
+                    stream.Write(data, 0, data.Length);
+                }
+            } catch (Exception e)
+            {
+                ProgramLog.Error(string.Format(Resources.Program_SendAnalyticsHit_There_was_an_error_connecting_to__0___Skipping_sending_analytics_, analyticsUrl), e);
+                return;
+            }
+
+            var response = (HttpWebResponse)request.GetResponse();
+            var responseStream = response.GetResponseStream();
+            if (null != responseStream)
+            {
+                new StreamReader(responseStream).ReadToEnd();
+            }
+            // ReSharper restore LocalizableElement
+        }
+
         public static string Version()
         {
             return $"{AppName()} {_version}";

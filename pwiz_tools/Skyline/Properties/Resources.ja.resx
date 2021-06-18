@@ -1311,9 +1311,6 @@
   <data name="SkylineWindow_ShowExportEspFeaturesDialog_Export_ESP_Features" xml:space="preserve">
     <value>ESP機能をエクスポート</value>
   </data>
-  <data name="StaticMod_Validate_Loss_only_modifications_may_not_be_explicit" xml:space="preserve">
-    <value>ロスのみの調整は明示にはできません。</value>
-  </data>
   <data name="AddZipToolHelper_ShouldOverwrite_Error__There_is_a_conflicting_tool" xml:space="preserve">
     <value>エラー： 競合するツールがあります。</value>
   </data>
@@ -2175,7 +2172,7 @@
     <value>グリッドに貼り付け可能なペプチドシークエンス、プリカーサーm/z値、プロダクトm/z値のある完全なトランジションリストから新しいSkylineドキュメントを開始します。</value>
   </data>
   <data name="MeasuredIon_Validate_Special_fragment_ions_must_have_at_least_one_fragmentation_residue" xml:space="preserve">
-    <value>特殊断片イオンでは、断片化の残留物が最低1つ以上必要です。</value>
+    <value>特殊断片イオンでは、断片化の残基が最低1つ以上必要です。</value>
   </data>
   <data name="PasteDlg_GetMoleculeTransitionGroup_The_precursor_m_z__0__is_not_measureable_with_your_current_instrument_settings_" xml:space="preserve">
     <value>現在の装置設定では、プリカーサーm/z{0}を測定することができません。</value>
@@ -2376,10 +2373,6 @@
   <data name="ChromatogramDataProvider_GetChromatogram_This_import_appears_to_be_taking_longer_than_expected__If_importing_from_a_network_drive__consider_canceling_this_import__copying_to_local_disk_and_retrying_" xml:space="preserve">
     <value>このインポートは予測より長くかかっています。ネットワークドライブからインポート中である場合、このインポートをキャンセルしてローカルディスクをコピーし再試行することを検討してください。</value>
   </data>
-  <data name="CommandLine_ImportSkyr_" xml:space="preserve">
-    <value>{0}の読み込みに失敗しました。
- {1}</value>
-  </data>
   <data name="CommandLine_ImportTransitionList_Error__To_create_the_iRT_database___0___for_this_assay_library__you_must_specify_the_iRT_standards_using_either_of_the_arguments__1__or__2_" xml:space="preserve">
     <value>エラー：このアッセイライブラリのiRTデータベース「{0}」を作成するには、引数{1}または{2}のいずれかを用いてiRT標準を指定する必要があります。</value>
   </data>
@@ -2520,6 +2513,9 @@
   </data>
   <data name="SkylineWindow_ImportMassList__0__transitions_contained_errors__Skip_these__0__transitions_and_import_the_rest_" xml:space="preserve">
     <value>{0}トランジションにはエラーが含まれていました。これらの{0}トランジションをスキップし、残りをインポートしますか？</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList__0__transitions_contained_errors_" xml:space="preserve">
+    <value>{0}個のトランジションにエラーがあります。</value>
   </data>
   <data name="EditStaticModDlg_OkDialog_The_modification__0__already_exists" xml:space="preserve">
     <value>修飾「{0}」が既に存在しています。</value>
@@ -3123,9 +3119,6 @@
   <data name="SrmDocument_MergeMatchingPeptidesUserInfo_The_peptide__0__was_found_multiple_times_with_user_modifications" xml:space="preserve">
     <value>ユーザー修飾のあるペプチド{0}が複数回見つかりました。</value>
   </data>
-  <data name="CommandLine_Run_No_new_results_added__Skipping_Panorama_import_" xml:space="preserve">
-    <value>新規結果が追加されていません。Panoramaインポートをスキップ中。</value>
-  </data>
   <data name="PublishDocumentDlg_btnBrowse_Click_Shared_Files" xml:space="preserve">
     <value>共有ファイル</value>
   </data>
@@ -3366,6 +3359,9 @@
   </data>
   <data name="PopupBtn" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\popupbtn.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="ImportTransitionListErrorDlg_ImportTransitionListErrorDlg_A_transition_contained_an_error_" xml:space="preserve">
+    <value>トランジションにエラーがあります。</value>
   </data>
   <data name="ImportTransitionListErrorDlg_ImportTransitionListErrorDlg_A_transition_contained_an_error__Skip_this_transition_and_import_the_rest_" xml:space="preserve">
     <value>トランジションにはエラーが含まれていました。このトランジションをスキップし、残りをインポートしますか？</value>
@@ -5201,6 +5197,9 @@
   <data name="EditCustomMoleculeDlg_OkDialog_Custom_molecules_must_have_a_mass_greater_than_or_equal_to__0__" xml:space="preserve">
     <value>カスタム分子は、{0}以上の質量でなければなりません。</value>
   </data>
+  <data name="EditCustomMoleculeDlg_OkDialog_Please_specify_the_ion_mobility_units_" xml:space="preserve">
+    <value>イオン移動度単位を指定してください。</value>
+  </data>
   <data name="AddZipToolHelper_ShouldOverwrite_Overwriting_tool___0_" xml:space="preserve">
     <value>上書きツール：{0}</value>
   </data>
@@ -5260,9 +5259,6 @@
   </data>
   <data name="EditMeasuredIonDlg_EditMeasuredIonDlg_A_verage_mass_" xml:space="preserve">
     <value>平均質量(&amp;V)：</value>
-  </data>
-  <data name="CommandLine_ImportResultsFile_Warning__Cannot_read_file__0____Ignoring___" xml:space="preserve">
-    <value>警告： ファイル{0}を読み取ることができません。 無視...</value>
   </data>
   <data name="PythonInstaller_DownloadPython_Download_failed_" xml:space="preserve">
     <value>ダウンロードに失敗しました。</value>
@@ -5572,6 +5568,9 @@
   <data name="ExportMethodDlg_comboInstrument_SelectedIndexChanged_Export_of_DIA_isolation_lists_is_not_yet_supported_for__0__" xml:space="preserve">
     <value>DIA分離リストのエクスポートは{0}ではサポートされていません。</value>
   </data>
+  <data name="MassListRowReader_NextRow_No_peptide_sequence_column_specified">
+    <value>ペプチド修飾シークエンス列が指定されていません</value>
+  </data>
   <data name="MassListRowReader_NextRow_Invalid_peptide_sequence__0__found" xml:space="preserve">
     <value>無効なペプチドシークエンス{0}が見つかりました</value>
   </data>
@@ -5643,9 +5642,6 @@
   </data>
   <data name="StatementCompletionForm_AddDescription_List_view_item_already_has_a_description" xml:space="preserve">
     <value>リストビューアイテムには既に説明があります</value>
-  </data>
-  <data name="AreaReplicateGraphPane_UpdateGraph_Peak_Area_Ratio_To_Global_Standards" xml:space="preserve">
-    <value>グローバル標準に対するピーク領域比</value>
   </data>
   <data name="EditIsolationSchemeDlg_comboMargins_SelectedIndexChanged_Start_margin" xml:space="preserve">
     <value>マージンを開始</value>
@@ -5836,9 +5832,6 @@
   </data>
   <data name="OptimizationDb_GetOptimizationDb_Library_path_cannot_be_null_" xml:space="preserve">
     <value>ライブラリパスは空値にはできません。</value>
-  </data>
-  <data name="CommandLine_ImportToolsFromZip_Canceled_installing_tools_from__0__" xml:space="preserve">
-    <value>{0}からツールのインストールをキャンセルしました。</value>
   </data>
   <data name="AllChromatogramsGraph_btnCancelFile_Click_Cancel_file" xml:space="preserve">
     <value>ファイルをキャンセル</value>
@@ -6471,7 +6464,7 @@
     <value>「.group」ファイルを互換性のある「.group.xml」ファイルに変換するには、ProteinPilotソフトウェア（試用版または完全版）をインストールする必要があります。</value>
   </data>
   <data name="MeasuredIon_Validate_Special_fragment_ions_must_specify_the_terminal_side_of_the_amino_acid_residue_on_which_fragmentation_occurs" xml:space="preserve">
-    <value>特別断片イオンは、断片化が発生したアミノ酸残留物の末端側を指定する必要があります。</value>
+    <value>特別断片イオンは、断片化が発生したアミノ酸残基の末端側を指定する必要があります。</value>
   </data>
   <data name="HtmlFragment_HtmlFragment_No_data_specified" xml:space="preserve">
     <value>データが指定されていません</value>
@@ -6827,8 +6820,8 @@
   <data name="IonMobilityLibraryList_Title_Edit_Ion_Mobility_Libraries" xml:space="preserve">
     <value>イオン移動度ライブラリを編集</value>
   </data>
-  <data name="DatabaseNotConnectedException_DBERROR_The_database_for_the_calculator__0__could_not_be_opened__Check_that_the_file__1__was_not_moved_or_deleted_" xml:space="preserve">
-    <value>カルキュレータ{0}のデータベースが開けませんでした。ファイル{1}が移動または削除されていないことを確認します。</value>
+  <data name="GraphData_GraphData_The_database_for_the_calculator__0__could_not_be_opened__Check_that_the_file__1__was_not_moved_or_deleted_" xml:space="preserve">
+    <value>カルキュレータ{0}のデータベースを開けませんでした。ファイル{1}が移動または削除されていないことを確認してください。</value>
   </data>
   <data name="ExportStrategyExtension_LOCALIZED_VALUES_Protein" xml:space="preserve">
     <value>タンパク質</value>
@@ -7275,9 +7268,6 @@
   <data name="AbstractMassListExporter_ExportScheduledBuckets_Check_max_concurrent__0__count_and_optimization_step_count" xml:space="preserve">
     <value>最大共点数{0}と最適化ステップ数を確認します。</value>
   </data>
-  <data name="CommandLine_ImportResultsFile_Warning__The_replicate__0__already_exists_in_the_given_document_and_the___import_append_option_is_not_specified___The_replicate_will_not_be_added_to_the_document_" xml:space="preserve">
-    <value>警告： 繰り返し測定{0}が指定したドキュメント内に既に存在しており、import-appendオプションが指定されていません。 繰り返し測定はドキュメントに追加されません。</value>
-  </data>
   <data name="DoconvolutionMethod_OVERLAP_Overlap" xml:space="preserve">
     <value>重複</value>
   </data>
@@ -7640,9 +7630,6 @@
   </data>
   <data name="ResultsGrid_ResultsGrid_Isotope_Dot_Product" xml:space="preserve">
     <value>同位体内積</value>
-  </data>
-  <data name="PanoramaPublishHelper_PublishDocToPanorama_An_error_occurred_on_the_Panorama_server___0___importing_the_file_" xml:space="preserve">
-    <value>Panoramaサーバー（{0}）のファイルインポート中にエラーが発生しました。</value>
   </data>
   <data name="CommandLine_ImportTool_Error__If__0__is_and_argument_the_tool_must_have_a_Report_Title__Use_the___tool_report_parameter_to_specify_a_report_" xml:space="preserve">
     <value>エラー： {0}があり、かつ引数の場合、ツールにはレポートタイトルが必要です。レポートを指定するには、--tool-reportパラメータを使用します。</value>
@@ -8589,6 +8576,9 @@
   <data name="InsertSmallMoleculeTransitionList_InsertSmallMoleculeTransitionList_Error_on_line__0___column_1____2_" xml:space="preserve">
     <value>エラー：行{0}、列{1}：{2}</value>
   </data>
+  <data name="InsertSmallMoleculeTransitionList_InsertSmallMoleculeTransitionList_Error_on_line__0__1_" xml:space="preserve">
+    <value>{0}行のエラー：{1}</value>
+  </data>
   <data name="SmallMoleculeTransitionListReader_SmallMoleculeTransitionListReader_" xml:space="preserve">
     <value>分子列ヘッダーを読み取り中のエラー。次を認識しません：
  {0}
@@ -8922,8 +8912,8 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
   <data name="EditIsolationSchemeDlg_ReadIsolationRanges_No_repeating_isolation_scheme_found_in__0_" xml:space="preserve">
     <value>{0}に反復単離スキームがありません</value>
   </data>
-  <data name="SkylineVersion_GetCurrentVersionName_Current___0__" xml:space="preserve">
-    <value>電流（{0}）</value>
+  <data name="SkylineVersion_GetCurrentVersionName_Latest___0__" xml:space="preserve">
+    <value>最新 ({0})</value>
   </data>
   <data name="SkylineVersion_GetCurrentVersionName_Developer_Build" xml:space="preserve">
     <value>開発者ビルド</value>
@@ -9350,12 +9340,6 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
   <data name="AreaCVToolbar_UpdateUI_Global_standards" xml:space="preserve">
     <value>グローバル標準</value>
   </data>
-  <data name="AreaCVToolbar_UpdateUI_Medians" xml:space="preserve">
-    <value>中央値</value>
-  </data>
-  <data name="AreaCVToolbar_UpdateUI_None" xml:space="preserve">
-    <value>なし</value>
-  </data>
   <data name="AreaCVHistogramGraphPane_AddLabels_Median___0_" xml:space="preserve">
     <value>中央値：{0}</value>
   </data>
@@ -9657,6 +9641,33 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
   <data name="SmallMoleculeLibraryAttributes_KeyValuePairs_OtherIDs" xml:space="preserve">
     <value>OtherIDs</value>
   </data>
+  <data name="ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column">
+    <value>列を無視</value>
+  </data>
+  <data name="ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Decoy" xml:space="preserve">
+    <value>デコイ</value>
+  </data>
+  <data name="ImportTransitionListColumnSelectDlg_PopulateComboBoxes_iRT" xml:space="preserve">
+    <value>iRT</value>
+  </data>
+  <data name="ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type" xml:space="preserve">
+    <value>標識タイプ</value>
+  </data>
+  <data name="ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Library_Intensity" xml:space="preserve">
+    <value>ライブラリ強度</value>
+  </data>
+  <data name="ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence" xml:space="preserve">
+    <value>ペプチド修飾シークエンス</value>
+  </data>
+  <data name="ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z" xml:space="preserve">
+    <value>プリカーサーm/z</value>
+  </data>
+  <data name="ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z" xml:space="preserve">
+    <value>プロダクトm/z</value>
+  </data>
+  <data name="ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name" xml:space="preserve">
+    <value>タンパク質名</value>
+  </data>
   <data name="ToolOptionsUI_btnResetSettings_Click_Are_you_sure_you_want_to_clear_all_saved_settings__This_will_immediately_return__0__to_its_original_configuration_and_cannot_be_undone_" xml:space="preserve">
     <value>本当に保存されたすべての設定をクリアしてもよろしいですか？これで直ちに{0}が元の設定に戻り、それを元に戻すことはできません。</value>
   </data>
@@ -9725,9 +9736,6 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
   </data>
   <data name="Columns_Columns_Missing_column___0__" xml:space="preserve">
     <value>列「{0}」がありません</value>
-  </data>
-  <data name="EditIonMobilityLibraryDlg_OkDialog_An_ion_mobility_predictor_with_the_name__0__already_exists_" xml:space="preserve">
-    <value>{0}という名前のイオン移動度予測がすでに存在します。</value>
   </data>
   <data name="EditIonMobilityLibraryDlg_EditIonMobilityLibraryDlg_Molecule" xml:space="preserve">
     <value>分子</value>
@@ -10278,20 +10286,11 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
   <data name="DocumentAnnotationUpdater_UpdateAnnotations_Updating_calculated_annotations" xml:space="preserve">
     <value>計算された注釈を更新中</value>
   </data>
-  <data name="CommandLine_ImportResults_No_replicates_left_to_import_" xml:space="preserve">
-    <value>インポートする繰り返し測定が残されていません。</value>
-  </data>
   <data name="CommandArgs_ParseRegexArgument_Error__Regular_expression___0___for__1__cannot_be_parsed_" xml:space="preserve">
     <value>エラー：{1}の正規表現「{0}」が解析できません。</value>
   </data>
   <data name="CommandLine_ApplySampleNameRegex_File___0___does_not_have_a_sample__Cannot_apply_sample_name_pattern__Ignoring_" xml:space="preserve">
     <value>ファイル「{0}」に試料が含まれていません。試料名のパターンを適用できません。無視します。</value>
-  </data>
-  <data name="CommandLine_ApplyFileAndSampleNameRegex_No_files_match_the_file_name_pattern___0___" xml:space="preserve">
-    <value>ファイル名のパターン「{0}」に一致するファイルがありません。</value>
-  </data>
-  <data name="CommandLine_ApplyFileAndSampleNameRegex_No_files_match_the_sample_name_pattern___0___" xml:space="preserve">
-    <value>試料名のパターン「{0}」に一致するファイルがありません。</value>
   </data>
   <data name="CommandLine_MakeReplicateNamesUnique_Replicate___0___already_exists_in_the_document__using___1___instead_" xml:space="preserve">
     <value>繰り返し測定「{0}」は既にドキュメントに存在します。代わりに「{1}」を使用します。</value>
@@ -10316,15 +10315,6 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
   </data>
   <data name="RefinementSettings_GetLabelIndex_The_document_does_not_contain_the_given_reference_type_" xml:space="preserve">
     <value>ドキュメントに所定のリファレンスタイプが含まれていません。</value>
-  </data>
-  <data name="RefineDlg_NormalizationMethod_None" xml:space="preserve">
-    <value>なし</value>
-  </data>
-  <data name="RefineDlg_NormalizationMethod_Medians" xml:space="preserve">
-    <value>中央値</value>
-  </data>
-  <data name="RefineDlg_NormalizationMethod_Global_standards" xml:space="preserve">
-    <value>グローバル標準</value>
   </data>
   <data name="ExportMethodDlg_comboOptimizing_SelectedIndexChanged_Optimizing_for__0__will_produce_an_additional__1__transitions_per_transition_" xml:space="preserve">
     <value>{0}を最適化すると、トランジション毎に{1}個のトランジションが追加作成されます。</value>
@@ -10581,9 +10571,6 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
   <data name="SkylineWindow_HasFileToOpen_Opening_a_document_inside_a_ZIP_file_is_not_supported_" xml:space="preserve">
     <value>ZIPファイル内のドキュメントを開くことはサポートされていません。</value>
   </data>
-  <data name="PanoramaPublishHelper_PublishDocToPanorama_Document_import_was_cancelled_on_the_Panorama_server__0__" xml:space="preserve">
-    <value>Panoramaサーバー{0}でドキュメントのインポートがキャンセルされました。</value>
-  </data>
   <data name="PanoramaPublishHelper_PublishDocToPanorama_Job_details_can_be_found_at__0__" xml:space="preserve">
     <value>ジョブの詳細は{0}で見ることができます。</value>
   </data>
@@ -10795,14 +10782,11 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
   <data name="CommandLine_AddDecoys_Decoys_discarded" xml:space="preserve">
     <value>デコイが破棄されました</value>
   </data>
-  <data name="ExportMethodDlg_OkDialog_All_targets_must_have_an_ion_mobility_value__These_can_be_set_explicitly_or_contained_in_an_ion_mobility_predictor_or_spectral_library__The_following_ion_mobility_values_are_missing_" xml:space="preserve">
-    <value>すべてのターゲットにはイオン移動度値が必要です。これは直に設定したり、イオン移動度予測やスペクトルライブラリに含むことができます。以下のイオン移動度値が不足しています。</value>
+  <data name="ExportMethodDlg_OkDialog_All_targets_must_have_an_ion_mobility_value__These_can_be_set_explicitly_or_contained_in_an_ion_mobility_library_or_spectral_library__The_following_ion_mobility_values_are_missing_" xml:space="preserve">
+    <value>すべてのターゲットにはイオン移動度値が必要です。これらは数値を入力して設定することも、イオン移動度ライブラリやスペクトルライブラリに含まれている場合もあります。以下のイオン移動度値が欠損しています。</value>
   </data>
   <data name="SchedulingGraphPropertyDlg_OkDialog_Template_file_is_not_valid_" xml:space="preserve">
     <value>テンプレートファイルが有効ではありません。</value>
-  </data>
-  <data name="RTScheduleGraphPane_UpdateGraph_Concurrent_Accumulations" xml:space="preserve">
-    <value>同時蓄積</value>
   </data>
   <data name="BrukerTimsTofMethodExporter_ExportMethod_Error_copying_template_file_" xml:space="preserve">
     <value>テンプレートファイルをコピーできませんでした。</value>
@@ -10914,6 +10898,27 @@ Invalid peptide sequence at position 18
   <data name="DetectionPlotPane_EmptyPlotCanceled_Label" xml:space="preserve">
     <value>操作がキャンセルされました。</value>
   </data>
+  <data name="DetectionPlotData_NoDataLoaded_Label" xml:space="preserve">
+    <value>データがロードされていません。</value>
+  </data>
+  <data name="DetectionPlotData_InvalidQValue_Label" xml:space="preserve">
+    <value>無効なQ値です。この値は0または1にはできません。</value>
+  </data>
+  <data name="DetectionPlotData_NoResults_Label" xml:space="preserve">
+    <value>ドキュメントにペプチドまたはクロマトグラムがありません。</value>
+  </data>
+  <data name="DetectionPlotData_NoQValuesInDocument_Label" xml:space="preserve">
+    <value>ドキュメントにQ値がありません。mProphetモデルを学習してください。</value>
+  </data>
+  <data name="DetectionPlotData_UsePropertiesDialog_Label" xml:space="preserve">
+    <value>プロパティダイアログを使用するか、ドキュメントを変更してプロットを更新してください。</value>
+  </data>
+  <data name="DetectionPlotData_WaitingForDocumentLoad_Label" xml:space="preserve">
+    <value>「ドキュメントが読み込まれるのを待っています。」</value>
+  </data>
+  <data name="DetectionPlotData_DataRetrieved_Label" xml:space="preserve">
+    <value>「データが取得されました。」</value>
+  </data>
   <data name="DetectionHistogramPane_XAxis_Name" xml:space="preserve">
     <value>繰り返し測定数</value>
   </data>
@@ -10958,9 +10963,6 @@ Invalid peptide sequence at position 18
   </data>
   <data name="DdaSearch_MSAmandaSearchWrapper_unimod_file__0__not_found" xml:space="preserve">
     <value>Unimodファイル{0}が見つかりません</value>
-  </data>
-  <data name="DdaSearch_SearchSettingsControl_Fragmentions_not_found_in_combobox" xml:space="preserve">
-    <value>ComboBox項目に断片イオン値が見つかりません</value>
   </data>
   <data name="DdaSearch_SearchSettingsControl_Fragment_ions_must_be_selected" xml:space="preserve">
     <value>断片イオンを選択する必要があります</value>
@@ -11039,6 +11041,336 @@ Invalid peptide sequence at position 18
   </data>
   <data name="MetadataRuleSetList_Label_Rule_Set" xml:space="preserve">
     <value>ルールセット</value>
+  </data>
+  <data name="PermuteIsotopeModificationsDlg_OkDialog_Permuting_Isotope_Modifications" xml:space="preserve">
+    <value>同位体修飾を置換しています</value>
+  </data>
+  <data name="IsotopeModificationPermuter_PermuteIsotopeModifications_Permuting_isotope_modifications" xml:space="preserve">
+    <value>同位体修飾を置換しています</value>
+  </data>
+  <data name="PermuteIsotopeModificationsDlg_OkDialog_Updating_settings" xml:space="preserve">
+    <value>設定を更新しています</value>
+  </data>
+  <data name="PermuteIsotopeModificationsDlg_OkDialog_Permute_isotope_modifications" xml:space="preserve">
+    <value>同位体修飾の置換</value>
+  </data>
+  <data name="RefineDlg_NormalizationMethod_Total_ion_current" xml:space="preserve">
+    <value>総イオン電流</value>
+  </data>
+  <data name="ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Fragment_Name" xml:space="preserve">
+    <value>フラグメント名</value>
+  </data>
+  <data name="ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge" xml:space="preserve">
+    <value>プリカーサー電荷</value>
+  </data>
+  <data name="CommandLine_ImportSearchInternal_The_iRT_standard_name___0___is_invalid_" xml:space="preserve">
+    <value>iRT標準名「{0}」は無効です。</value>
+  </data>
+  <data name="CommandLine_ImportSearchInternal_iRT_standard_set_to__0___but_multiple_iRT_standards_were_found__iRT_standard_must_be_set_explicitly_" xml:space="preserve">
+    <value>iRT標準は{0}に設定されていますが、複数のiRT標準が見つかりました。iRT標準は明示的に設定される必要があります。</value>
+  </data>
+  <data name="BrukerTimsTofMethodExporter_ExportMethod_Scheduling_failure__no_targets__" xml:space="preserve">
+    <value>スケジュール失敗 (ターゲットがない可能性があります)</value>
+  </data>
+  <data name="SkylineVersion_V20_2_Skyline_20_2" xml:space="preserve">
+    <value>Skyline 20.2</value>
+  </data>
+  <data name="ExportMethodScheduleGraph_ExportMethodScheduleGraph_Concurrent_frames" xml:space="preserve">
+    <value>並列フレーム</value>
+  </data>
+  <data name="ExportMethodScheduleGraph_ExportMethodScheduleGraph_Max_sampling_times" xml:space="preserve">
+    <value>最大サンプリング時間</value>
+  </data>
+  <data name="ExportMethodScheduleGraph_ExportMethodScheduleGraph_Mean_sampling_times" xml:space="preserve">
+    <value>平均サンプリング時間</value>
+  </data>
+  <data name="ExportMethodScheduleGraph_ExportMethodScheduleGraph_Redundancy_of_targets" xml:space="preserve">
+    <value>ターゲットの冗長性</value>
+  </data>
+  <data name="ExportMethodScheduleGraph_ExportMethodScheduleGraph_Targets_per_frame" xml:space="preserve">
+    <value>フレーム当たりのターゲット数</value>
+  </data>
+  <data name="RTScheduleGraphPane_UpdateGraph_Target" xml:space="preserve">
+    <value>ターゲットのランク</value>
+  </data>
+  <data name="RTScheduleGraphPane_UpdateGraph_Concurrent_frames" xml:space="preserve">
+    <value>並列フレーム</value>
+  </data>
+  <data name="RTScheduleGraphPane_UpdateGraph_Max_sampling_times" xml:space="preserve">
+    <value>最大サンプリング時間 (秒)</value>
+  </data>
+  <data name="RTScheduleGraphPane_UpdateGraph_Mean_sampling_times" xml:space="preserve">
+    <value>平均サンプリング時間 (秒)</value>
+  </data>
+  <data name="RTScheduleGraphPane_UpdateGraph_Redundancy_of_targets" xml:space="preserve">
+    <value>ターゲットの冗長性</value>
+  </data>
+  <data name="RTScheduleGraphPane_UpdateGraph_Targets_per_frame" xml:space="preserve">
+    <value>フレーム当たりのターゲット数</value>
+  </data>
+  <data name="ExportMethodScheduleGraph_ExportMethodScheduleGraph_Target_table" xml:space="preserve">
+    <value>ターゲットテーブル</value>
+  </data>
+  <data name="Metrics_ColTarget_Target" xml:space="preserve">
+    <value>ターゲット</value>
+  </data>
+  <data name="Metrics_ColMeanSamplingTime_Mean_sampling_time__seconds_" xml:space="preserve">
+    <value>平均サンプリング時間 (秒)</value>
+  </data>
+  <data name="Metrics_ColMaxSamplingTime_Max_sampling_time__seconds_" xml:space="preserve">
+    <value>最大サンプリング時間 (秒)</value>
+  </data>
+  <data name="Metrics_ColMz_m_z" xml:space="preserve">
+    <value>m/z</value>
+  </data>
+  <data name="Metrics_Col1K0LowerLimit__1_K0_lower_limit" xml:space="preserve">
+    <value>1/K0下限</value>
+  </data>
+  <data name="Metrics_Col1K0UpperLimit__1_K0_upper_limit" xml:space="preserve">
+    <value>1/K0上限</value>
+  </data>
+  <data name="Metrics_ColRtBegin_RT_begin" xml:space="preserve">
+    <value>RT開始</value>
+  </data>
+  <data name="Metrics_ColRtEnd_RT_end" xml:space="preserve">
+    <value>RT終了</value>
+  </data>
+  <data name="RTScheduleGraphPane_UpdateGraph_Concurrent_Accumulations" xml:space="preserve">
+    <value>同時蓄積</value>
+  </data>
+  <data name="GraphFullScan_CreateGraph_IM__0_" xml:space="preserve">
+    <value>イオン移動度={0}</value>
+    <comment>"IM" stands for "Ion Mobility" - used for displaying ion mobility in raw scan view</comment>
+  </data>
+  <data name="PcaPlot_UpdateGraph_Principal_Component__0_" xml:space="preserve">
+    <value>主成分{0}</value>
+  </data>
+  <data name="PcaPlot_UpdateGraph_PCA_on_rows" xml:space="preserve">
+    <value>行のPCA</value>
+  </data>
+  <data name="PcaPlot_UpdateGraph__Across_" xml:space="preserve">
+    <value>全体</value>
+  </data>
+  <data name="HierarchicalClusterGraph_zedGraphControl1_ContextMenuBuilder_X_Axis_Labels" xml:space="preserve">
+    <value>X軸ラベル</value>
+  </data>
+  <data name="HierarchicalClusterGraph_zedGraphControl1_ContextMenuBuilder_Y_Axis_Labels" xml:space="preserve">
+    <value>Y軸ラベル</value>
+  </data>
+  <data name="DataboundGridControl_DataboundGridControl_Show_Heat_Map" xml:space="preserve">
+    <value>ヒートマップを表示</value>
+  </data>
+  <data name="DataboundGridControl_DataboundGridControl_Show_PCA_Plot" xml:space="preserve">
+    <value>PCAプロットを表示</value>
+  </data>
+  <data name="DataboundGridControl_GetClusteredResults_An_error_occured_while_performing_clustering_" xml:space="preserve">
+    <value>クラスタリング実行中にエラーが発生しました。</value>
+  </data>
+  <data name="DataboundGridControl_GetClusteredResults_Unable_to_choose_a_set_of_columns_to_use_for_hierarchical_clustering_" xml:space="preserve">
+    <value>階層クラスタリングに使用する列セットを選択できません。</value>
+  </data>
+  <data name="HierarchicalClusterGraph_zedGraphControl1_ContextMenuBuilder_Select" xml:space="preserve">
+    <value>選択</value>
+  </data>
+  <data name="CalibrateIrtDlg_OkDialog_Please_enter_at_least__0__standard_peptides_" xml:space="preserve">
+    <value>{0}個以上の標準ペプチドを入力してください。</value>
+  </data>
+  <data name="ImportTransitionListErrorDlg_ImportTransitionListErrorDlg_This_transition_list_cannot_be_imported_as_it_does_not_provide_values_for_" xml:space="preserve">
+    <value>以下の値がないため、トランジションリストをインポートできません。</value>
+  </data>
+  <data name="HierarchicalClusterGraph_zedGraphControl1_ContextMenuBuilder_Show_Selection" xml:space="preserve">
+    <value>選択を表示</value>
+  </data>
+  <data name="ChromatogramCache_LoadStructs_FileCorrupted" xml:space="preserve">
+    <value>ファイルが破損して読み取れないようです。
+Skylineがもう一度生データファイルからクロマトグラムを抽出して新しいファイルを作成できるよう、このファイルは削除することが推奨されます。</value>
+  </data>
+  <data name="ImportTransitionListColumnSelectDlg_DisplayData_This_column_is_labeled_with_the_header___0___in_the_input_text__Use_the_dropdown_control_to_assign_its_meaning_for_import_" xml:space="preserve">
+    <value>この列には入力テキストにヘッダ「{0}」というラベルが付いています。ドロップダウンを使用してその意味を割り当ててインポートできるようにしてください。</value>
+  </data>
+  <data name="ImportTransitionListColumnSelectDlg_DisplayData_The_input_text_did_not_appear_to_contain_column_headers__Use_the_dropdown_control_to_assign_column_meanings_for_import_" xml:space="preserve">
+    <value>入力テキストには列ヘッダが含まれていないようです。ドロップダウンを使用して列の意味を割り当ててインポートできるようにしてください。</value>
+  </data>
+  <data name="EditPepModsDlg_OkDialog_One_or_more_of_the_crosslinked_peptides_are_no_longer_attached_to_this_peptide__" xml:space="preserve">
+    <value>クロスリンクされているペプチドの1つ以上がこのペプチドに結合しなくなりました。</value>
+  </data>
+  <data name="EditPepModsDlg_GetTooltip_Invalid_crosslink___0_" xml:space="preserve">
+    <value>無効なクロスリンク：{0}</value>
+  </data>
+  <data name="EditPepModsDlg_GetTooltip_Looplink___0____1__" xml:space="preserve">
+    <value>ループリンク：{0} [{1}]</value>
+    <comment>{0} is a single amino acid letter and {1} is a number
+Example: Looplink: T [4]
+</comment>
+  </data>
+  <data name="EditPepModsDlg_GetTooltip_Crosslink_to__0____1____2__" xml:space="preserve">
+    <value>{0}へのクロスリンク：{1} [{2}]</value>
+    <comment>{0} is a peptide sequence, {1} is an amino acid letter and {2} is a number
+Example: Crosslink to PEPTIDE: T [4]</comment>
+  </data>
+  <data name="EditPepModsDlg_EnsureLinkedPeptide_Discard_or_edit_disconnected_crosslinks" xml:space="preserve">
+    <value>このアミノ酸のクロスリンクを削除すると、クロスリンクされているペプチドの結合がなくなります。今すぐクロスリンクを編集しますか、それとも結合しなくなったペプチドを破棄しますか？</value>
+  </data>
+  <data name="EditPepModsDlg_EnsureLinkedPeptide_ButtonText_Edit_Crosslinks" xml:space="preserve">
+    <value>クロスリンクの編集</value>
+    <comment>This should match one of the options presented in EditPepModsDlg_EnsureLinkedPeptide_Discard_or_edit_disconnected_crosslinks</comment>
+  </data>
+  <data name="EditPepModsDlg_EnsureLinkedPeptide_ButtonText_Discard" xml:space="preserve">
+    <value>破棄</value>
+    <comment>This should match one of the options presented in EditPepModsDlg_EnsureLinkedPeptide_Discard_or_edit_disconnected_crosslinks</comment>
+  </data>
+  <data name="EditLinkedPeptidesDlg_OkDialog_Some_crosslinked_peptides_are_not_connected_" xml:space="preserve">
+    <value>クロスリンクされているペプチドの一部が結合していません。</value>
+  </data>
+  <data name="EditLinkedPeptidesDlg_MakeCrosslink_Invalid_crosslinker" xml:space="preserve">
+    <value>無効なクロスリンカー</value>
+  </data>
+  <data name="EditLinkedPeptidesDlg_MakeCrosslink_This_peptide_is_not_valid_" xml:space="preserve">
+    <value>このペプチドは無効です。</value>
+  </data>
+  <data name="EditLinkedPeptidesDlg_MakeCrosslink_This_amino_acid_position_cannot_be_blank_" xml:space="preserve">
+    <value>このアミノ酸の位置はブランクにできません。</value>
+  </data>
+  <data name="EditLinkedPeptidesDlg_MakeCrosslink_This_is_not_a_valid_amino_acid_position_in_this_peptide_" xml:space="preserve">
+    <value>このペプチドではこのアミノ酸位置は無効です。</value>
+  </data>
+  <data name="EditLinkedPeptidesDlg_MakeCrosslink_The_crosslinker___0___cannot_attach_to_this_amino_acid_position_" xml:space="preserve">
+    <value>クロスリンカー「{0}」はこのアミノ酸位置に結合できません。</value>
+  </data>
+  <data name="EditLinkedPeptidesDlg_MakeCrosslink_Both_ends_of_this_crosslink_cannot_be_the_same_" xml:space="preserve">
+    <value>このクロスリンクの両端を同じにすることはできません。</value>
+  </data>
+  <data name="EditLinkedPeptidesDlg_MakeCrosslink_This_amino_acid_position_in_this_peptide_is_already_being_used_by_another_crosslink_" xml:space="preserve">
+    <value>このペプチドでは、このアミノ酸位置はすでに他のクロスリンクが使用しています。</value>
+  </data>
+  <data name="DocumentWriter_WritePeptideXml_Unable_to_convert_crosslinks_in__0__to_document_format__1__" xml:space="preserve">
+    <value>{0}のクロスリンクをドキュメントフォーマット{1}に変換できません。</value>
+    <comment>{0} is a peptide sequence, and {1} is a version number (e.g. 20.2)</comment>
+  </data>
+  <data name="EditLinkedPeptidesDlg_dataGridViewLinkedPeptides_CellToolTipTextNeeded_Edit_Modifications" xml:space="preserve">
+    <value>修飾を編集</value>
+  </data>
+  <data name="SmallMoleculeTransitionListReader_GetMoleculeTransitionGroup_Inconsistent_molecule_description" xml:space="preserve">
+    <value>分子の説明が一貫していません</value>
+  </data>
+  <data name="ImportPeptideSearchDlg_NextPage_No_results_files_were_specified__Are_you_sure_you_want_to_continue__Continuing_will_create_a_template_document_with_no_imported_results_" xml:space="preserve">
+    <value>結果ファイルが指定されていません。このまま続けますか？このまま続けると、インポートされた結果のないテンプレートドキュメントが作成されます。</value>
+  </data>
+  <data name="ImportFastaControl_cbAutoTrain_CheckedChanged_Cannot_automatically_train_mProphet_model_since_no_results_files_are_being_imported__Continue_without_automatically_training_an_mProphet_model__or_go_back_and_add_at_least_one_results_file_" xml:space="preserve">
+    <value>結果ファイルがインポートされていないため、mProphetモデルを自動的に学習できません。mProphetモデルを自動学習しないで続けるか、戻って結果ファイルを1つ以上追加してください。</value>
+  </data>
+  <data name="SkylineWindow_HasFileToOpen_The_path_to_the_file_to_open_is_too_long_" xml:space="preserve">
+    <value>開くファイルへのパスが長すぎます。</value>
+  </data>
+  <data name="ChromatogramContextMenu_Collision_Cross_Section" xml:space="preserve">
+    <value>衝突断面積</value>
+  </data>
+  <data name="ChromatogramContextMenu_InsertIonMobilityMenuItems_Drift_Time" xml:space="preserve">
+    <value>ドリフト時間</value>
+  </data>
+  <data name="ChromatogramContextMenu_InsertIonMobilityMenuItems_Inverse_Ion_Mobility" xml:space="preserve">
+    <value>逆イオン移動度</value>
+  </data>
+  <data name="ChromatogramContextMenu_InsertIonMobilityMenuItems_Compensation_Voltage" xml:space="preserve">
+    <value>補償電圧</value>
+  </data>
+  <data name="ChromatogramContextMenu_InsertIonMobilityMenuItems_Ion_Mobility" xml:space="preserve">
+    <value>イオン移動度</value>
+  </data>
+  <data name="ShareTypeDlg_ShareTypeDlg_Current_saved_file___0__" xml:space="preserve">
+    <value>現在保存されているファイル({0})</value>
+  </data>
+  <data name="MissingFileDlg_ValidateFilePath_You_must_choose_a_file_with_the___0___filename_extension_" xml:space="preserve">
+    <value>ファイル拡張子が「{0}」のファイルを選択してください。</value>
+  </data>
+  <data name="BuildLibraryDlg_AddInputFiles_The_file__0__is_a_library_file_and_does_not_need_to_be_built__Would_you_like_to_add_this_library_to_the_document_" xml:space="preserve">
+    <value>ファイル{0}はライブラリファイルであり、構築の必要はありません。このライブラリをドキュメントに追加しますか？</value>
+  </data>
+  <data name="BuildLibraryDlg_AddInputFiles_These_files_are_library_files_and_do_not_need_to_be_built__Edit_the_list_of_libraries_to_add_them_directly_" xml:space="preserve">
+    <value>これらのファイルはライブラリファイルであり、構築の必要はありません。ライブラリのリストを編集して直接追加してください。</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_Analyzing_input__0_" xml:space="preserve">
+    <value>入力{0}を分析しています</value>
+  </data>
+  <data name="ImportTransitionListColumnSelectDlg_CheckForErrors_Checking_for_errors___" xml:space="preserve">
+    <value>エラーを確認しています...</value>
+  </data>
+  <data name="ModificationMatcher_CreateMatches_Matching_modifications" xml:space="preserve">
+    <value>一致する修飾</value>
+  </data>
+  <data name="HeatMapGraph_RefreshData_Heat_Map" xml:space="preserve">
+    <value>ヒートマップ</value>
+  </data>
+  <data name="PcaPlot_RefreshData_PCA_Plot" xml:space="preserve">
+    <value>PCAプロット</value>
+  </data>
+  <data name="HeatMapGraph_zedGraphControl1_ContextMenuBuilder_Refresh" xml:space="preserve">
+    <value>更新</value>
+  </data>
+  <data name="DataboundGraph_AttachToOwner_Disconnected" xml:space="preserve">
+    <value>接続なし</value>
+  </data>
+  <data name="DataboundGraph_AttachToOwner_Waiting_for_data" xml:space="preserve">
+    <value>データに書き込み中</value>
+  </data>
+  <data name="DataGridType_DOCUMENT_GRID_Document_Grid" xml:space="preserve">
+    <value>ドキュメントグリッド</value>
+  </data>
+  <data name="DataGridType_RESULTS_GRID_Results_Grid" xml:space="preserve">
+    <value>結果グリッド</value>
+  </data>
+  <data name="DataGridType_GROUP_COMPARISON_Group_Comparison" xml:space="preserve">
+    <value>グループ比較</value>
+  </data>
+  <data name="DataGridType_LIST_List" xml:space="preserve">
+    <value>リスト</value>
+  </data>
+  <data name="DataGridType_AUDIT_LOG_Audit_Log" xml:space="preserve">
+    <value>監査ログ</value>
+  </data>
+  <data name="DiaUmpireDdaConverter_Run_Starting_DIA_Umpire_conversion" xml:space="preserve">
+    <value>DIA-Umpire変換を開始しています</value>
+  </data>
+  <data name="Setting_Validate_The_value___0___is_not_valid_for_the_argument__1__which_must_be_either__True__or__False__" xml:space="preserve">
+    <value>引数{1}は「True」または「False」でなければならないため、値「{0}」は無効です。</value>
+  </data>
+  <data name="ImportPeptideSearchDlg_NextPage_No_isolation_windows_are_configured__" xml:space="preserve">
+    <value>単離ウィンドウは設定されていませんが、DDA検索の準備においてDIA-UmpireによるDIA生データファイルのデコンボリューションに必要です。フルスキャン設定に戻って単離スキームを設定してください。</value>
+  </data>
+  <data name="DDASearchControl_RunSearch_Conversion_cancelled_" xml:space="preserve">
+    <value>変換がキャンセルされました。</value>
+  </data>
+  <data name="DDASearchControl_RunSearch_Conversion_failed_" xml:space="preserve">
+    <value>変換に失敗しました。</value>
+  </data>
+  <data name="DDASearchControl_RunSearch_Conversion_finished_" xml:space="preserve">
+    <value>変換が終了しました。</value>
+  </data>
+  <data name="DiaUmpireDdaConverter_Run_Re_using_existing_DiaUmpire_file__with_equivalent_settings__for__0_" xml:space="preserve">
+    <value>同等の設定を使用して{0}の既存のDIA-Umpireファイルを再使用しています</value>
+  </data>
+  <data name="CommandArgs_WarnArgRequirementText_Use_of_the_argument__0__requires_one_of_the_following_arguments_" xml:space="preserve">
+    <value>引数{0}を使用するには、以下のいずれかの引数が必要です。</value>
+  </data>
+  <data name="CommandLine_MinimizeResults_Minimizing_results_to__0_" xml:space="preserve">
+    <value>結果を{0}に最小化</value>
+  </data>
+  <data name="CommandLine_MinimizeResults_Removing_unused_chromatograms___" xml:space="preserve">
+    <value>使用していないクロマトグラムを削除しています...</value>
+  </data>
+  <data name="CommandLine_MinimizeResults_Limiting_chromatogram_noise_to______0__minutes_around_peak___" xml:space="preserve">
+    <value>クロマトグラムノイズを:ピーク周り+/- {0}分に制限しています...</value>
+  </data>
+  <data name="AnnotatedSpectum" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\AnnotatedSpectum.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="IonMobilityObject_ToString_CCS_" xml:space="preserve">
+    <value>CCS：</value>
+    <comment>Compact representation of "Collision Cross Section"</comment>
+  </data>
+  <data name="IonMobilityObject_ToString_HEO_" xml:space="preserve">
+    <value>HEO：</value>
+    <comment>Compact representation of "High Energy Ion Mobility Offset Offset"</comment>
   </data>
   <data name="CommandStatusWriter_WriteLine_Error_" xml:space="preserve">
     <value>エラー：</value>

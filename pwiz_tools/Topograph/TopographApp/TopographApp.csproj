@@ -43,11 +43,11 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Platform)' == 'x64'">
     <PublishUrl>publish64\</PublishUrl>
-    <InstallUrl>http://proteome.gs.washington.edu/software/topograph/daily/x64/</InstallUrl>
+    <InstallUrl>https://skyline.ms/software/topograph/daily/x64/</InstallUrl>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Platform)' == 'x86'">
     <PublishUrl>publish\</PublishUrl>
-    <InstallUrl>http://proteome.gs.washington.edu/software/topograph/daily/</InstallUrl>
+    <InstallUrl>https://skyline.ms/software/topograph/daily/</InstallUrl>
   </PropertyGroup>
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -75,7 +75,6 @@
     <OldToolsVersion>3.5</OldToolsVersion>
     <UpgradeBackupLocation />
     <TargetFrameworkProfile />
-    <PublishUrl>publish64\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Web</InstallFrom>
     <UpdateEnabled>true</UpdateEnabled>
@@ -85,7 +84,6 @@
     <UpdatePeriodically>false</UpdatePeriodically>
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
-    <InstallUrl>http://proteome.gs.washington.edu/software/topograph/daily/x64/</InstallUrl>
     <ProductName>Topograph-daily</ProductName>
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
@@ -163,6 +161,12 @@
     <Compile Include="Controls\ExcludedMzsGrid.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Controls\FindBox.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Controls\FindBox.Designer.cs">
+      <DependentUpon>FindBox.cs</DependentUpon>
+    </Compile>
     <Compile Include="Controls\HalfLifeSettingsControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -171,6 +175,12 @@
     </Compile>
     <Compile Include="Controls\MsGraphControlEx.cs">
       <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Controls\RecordNavBar.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Controls\RecordNavBar.Designer.cs">
+      <DependentUpon>RecordNavBar.cs</DependentUpon>
     </Compile>
     <Compile Include="Controls\StatusBar.cs">
       <SubType>UserControl</SubType>
@@ -515,8 +525,29 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Content Include="TopographLogoSmall.png" />
+    <EmbeddedResource Include="Controls\FindBox.ja.resx">
+      <DependentUpon>FindBox.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\FindBox.resx">
+      <DependentUpon>FindBox.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\FindBox.zh-CHS.resx">
+      <DependentUpon>FindBox.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\HalfLifeSettingsControl.resx">
       <DependentUpon>HalfLifeSettingsControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\RecordNavBar.ja.resx">
+      <DependentUpon>RecordNavBar.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\RecordNavBar.resx">
+      <DependentUpon>RecordNavBar.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\RecordNavBar.zh-CHS.resx">
+      <DependentUpon>RecordNavBar.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\StatusBar.resx">
       <DependentUpon>StatusBar.cs</DependentUpon>

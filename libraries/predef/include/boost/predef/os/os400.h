@@ -1,5 +1,5 @@
 /*
-Copyright Rene Rivera 2011-2013
+Copyright Rene Rivera 2011-2015
 Distributed under the Boost Software License, Version 1.0.
 (See accompanying file LICENSE_1_0.txt or copy at
 http://www.boost.org/LICENSE_1_0.txt)
@@ -11,17 +11,18 @@ http://www.boost.org/LICENSE_1_0.txt)
 #include <boost/predef/version_number.h>
 #include <boost/predef/make.h>
 
-/*`
-[heading `BOOST_OS_OS400`]
+/* tag::reference[]
+= `BOOST_OS_OS400`
 
-[@http://en.wikipedia.org/wiki/IBM_i IBM OS/400] operating system.
+http://en.wikipedia.org/wiki/IBM_i[IBM OS/400] operating system.
 
-[table
-    [[__predef_symbol__] [__predef_version__]]
+[options="header"]
+|===
+| {predef_symbol} | {predef_version}
 
-    [[`__OS400__`] [__predef_detection__]]
-    ]
- */
+| `+__OS400__+` | {predef_detection}
+|===
+*/ // end::reference[]
 
 #define BOOST_OS_OS400 BOOST_VERSION_NUMBER_NOT_AVAILABLE
 
@@ -39,8 +40,7 @@ http://www.boost.org/LICENSE_1_0.txt)
 
 #define BOOST_OS_OS400_NAME "IBM OS/400"
 
+#endif
+
 #include <boost/predef/detail/test.h>
 BOOST_PREDEF_DECLARE_TEST(BOOST_OS_OS400,BOOST_OS_OS400_NAME)
-
-
-#endif

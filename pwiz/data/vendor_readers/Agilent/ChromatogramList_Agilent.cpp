@@ -274,6 +274,7 @@ size_t ChromatogramList_Agilent::size() const {return 0;}
 const ChromatogramIdentity& ChromatogramList_Agilent::chromatogramIdentity(size_t index) const {return emptyIdentity;}
 size_t ChromatogramList_Agilent::find(const string& id) const {return 0;}
 ChromatogramPtr ChromatogramList_Agilent::chromatogram(size_t index, bool getBinaryData) const {return ChromatogramPtr();}
+ChromatogramPtr ChromatogramList_Agilent::chromatogram(size_t index, DetailLevel detailLevel) const {return ChromatogramPtr();}
 
 } // detail
 } // msdata

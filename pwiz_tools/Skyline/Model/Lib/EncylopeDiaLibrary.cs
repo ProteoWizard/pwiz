@@ -523,7 +523,7 @@ namespace pwiz.Skyline.Model.Lib
 
         protected override SpectrumHeaderInfo CreateSpectrumHeaderInfo(ElibSpectrumInfo info)
         {
-            return new ChromLibSpectrumHeaderInfo(Name, 0);
+            return new ChromLibSpectrumHeaderInfo(Name, 0, null);
         }
 
         public override LibraryFiles LibraryFiles

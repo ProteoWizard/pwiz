@@ -421,7 +421,7 @@
     <value>175, 22</value>
   </data>
   <data name="surrogateStandardMenuItem.Text" xml:space="preserve">
-    <value>Surrogate Standard</value>
+    <value>&amp;Surrogate Standard</value>
   </data>
   <data name="qcStandardMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>175, 22</value>

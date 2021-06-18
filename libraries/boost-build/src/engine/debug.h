@@ -45,7 +45,7 @@ typedef struct profile_frame
 
 profile_frame * profile_init( OBJECT * rulename, profile_frame * );
 void profile_enter( OBJECT * rulename, profile_frame * );
-void profile_memory( long mem );
+void profile_memory( size_t mem );
 void profile_exit( profile_frame * );
 void profile_dump();
 double profile_clock();

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using System.IO;
 using System.Text;
 using System.Windows.Forms;
 using System.Xml;
@@ -13,14 +14,14 @@ namespace AutoQC
     [XmlRoot("autoqc_config")]
     public class AutoQcConfig : IConfig
     {
+        private const string AUTOQC_CONFIG = "autoqc_config";
 
         public AutoQcConfig(string name, bool isEnabled, DateTime created, DateTime modified,
             MainSettings mainSettings, PanoramaSettings panoramaSettings, SkylineSettings skylineSettings)
         {
             if (string.IsNullOrEmpty(name))
             {
-                throw new ArgumentException(string.Format(Resources.AutoQcConfig_AutoQcConfig___0___is_not_a_valid_name_for_the_configuration_, name) + Environment.NewLine +
-                                            Resources.AutoQcConfig_AutoQcConfig_Please_enter_a_name_);
+                throw new ArgumentException(Resources.AutoQcConfig_AutoQcConfig_Configuration_name_cannot_be_blank__Please_enter_a_name_for_the_configuration_);
             }
             Name = name;
             IsEnabled = isEnabled;
@@ -63,6 +64,7 @@ namespace AutoQC
         public ListViewItem AsListViewItem(IConfigRunner runner, Graphics graphics)
         {
             var lvi = new ListViewItem(Name);
+            lvi.Checked = IsEnabled;
             lvi.UseItemStyleForSubItems = false; // So that we can change the color for sub-items.
             lvi.SubItems.Add(User);
             lvi.SubItems.Add(Created.ToShortDateString());
@@ -80,6 +82,17 @@ namespace AutoQC
         public bool UsesSkylineDaily => SkylineSettings.Type == SkylineType.SkylineDaily;
 
         public bool UsesCustomSkylinePath => SkylineSettings.Type == SkylineType.Custom;
+
+        internal string GetConfigDir()
+        {
+            var skylineFileDir = Path.GetDirectoryName(MainSettings.SkylineFilePath);
+            return Path.Combine(skylineFileDir ?? string.Empty, FileUtil.GetSafeNameForDir(Name));
+        }
+
+        public string getConfigFilePath(string file)
+        {
+            return Path.Combine(GetConfigDir(), file);
+        }
 
         private enum Attr
         {
@@ -129,7 +142,7 @@ namespace AutoQC
                 {
                     reader.Read();
 
-                    if (reader.Name.Equals("autoqc_config")) // handles old configurations without skyline settings
+                    if (reader.Name.Equals(AUTOQC_CONFIG)) // handles old configurations without skyline settings
                     {
                         skylineSettings = new SkylineSettings(SkylineType.Skyline);
                         break;
@@ -143,7 +156,7 @@ namespace AutoQC
             }
 
             // finish reading config before exception is thrown so following configs aren't messed up
-            while (!(reader.Name == "autoqc_config" && reader.NodeType == XmlNodeType.EndElement))
+            while (!(AUTOQC_CONFIG.Equals(reader.Name) && reader.NodeType == XmlNodeType.EndElement))
             {
                 reader.Read();
             } 
@@ -156,7 +169,7 @@ namespace AutoQC
 
         public void WriteXml(XmlWriter writer)
         {
-            writer.WriteStartElement("autoqc_config");
+            writer.WriteStartElement(AUTOQC_CONFIG);
             writer.WriteAttribute(Attr.name, Name);
             writer.WriteAttribute(Attr.is_enabled, IsEnabled);
             writer.WriteAttributeIfString(Attr.created, Created.ToShortDateString() + " " + Created.ToShortTimeString());
@@ -171,52 +184,17 @@ namespace AutoQC
 
         public void Validate()
         {
+            Validate(false);
+        }
+
+        public void Validate(bool doServerCheck)
+        {
             if (string.IsNullOrEmpty(Name))
-                throw new ArgumentException("Please enter a name for the configuration.");
+                throw new ArgumentException(Resources.AutoQcConfig_Validate_Please_enter_a_name_for_the_configuration_);
 
             MainSettings.ValidateSettings();
             SkylineSettings.Validate();
-            PanoramaSettings.ValidateSettings();
-        }
-
-        public virtual ProcessInfo RunBefore(ImportContext importContext)
-        {
-            string archiveArgs = null;
-            if (!importContext.ImportExisting)
-            {
-                // If we are NOT importing existing results, create an archive (if required) of the 
-                // Skyline document BEFORE importing a results file.
-                archiveArgs = MainSettings.GetArchiveArgs(MainSettings.GetLastArchivalDate(), DateTime.Today);
-            }
-            if (string.IsNullOrEmpty(archiveArgs))
-            {
-                return null;
-            }
-            var args = string.Format("--in=\"{0}\" {1}", MainSettings.SkylineFilePath, archiveArgs);
-            return new ProcessInfo(SkylineSettings.CmdPath, args, args);
-        }
-
-        public virtual ProcessInfo RunAfter(ImportContext importContext)
-        {
-            string archiveArgs = null;
-            var currentDate = DateTime.Today;
-            if (importContext.ImportExisting && importContext.ImportingLast())
-            {
-                // If we are importing existing files in the folder, create an archive (if required) of the 
-                // Skyline document AFTER importing the last results file.
-                var oldestFileDate = importContext.GetOldestImportedFileDate(MainSettings.LastAcquiredFileDate);
-                var today = DateTime.Today;
-                if (oldestFileDate.Year < today.Year || oldestFileDate.Month < today.Month)
-                {
-                    archiveArgs = MainSettings.GetArchiveArgs(currentDate.AddMonths(-1), currentDate);
-                }
-            }
-            if (string.IsNullOrEmpty(archiveArgs))
-            {
-                return null;
-            }
-            var args = string.Format("--in=\"{0}\" {1}", MainSettings.SkylineFilePath, archiveArgs);
-            return new ProcessInfo(SkylineSettings.CmdPath, args, args);
+            PanoramaSettings.ValidateSettings(doServerCheck);
         }
 
         public override string ToString()

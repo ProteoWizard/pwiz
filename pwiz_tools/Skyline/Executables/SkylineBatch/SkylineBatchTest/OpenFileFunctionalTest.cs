@@ -28,6 +28,7 @@ namespace SkylineBatchTest
             CONFIG_FOLDER = TestFilesDirs[1].FullPath;
             var mainWindow = MainFormWindow();
             var mainForm = mainWindow as MainForm;
+            WaitForShownForm(mainForm);
             Assert.IsNotNull(mainForm, "Main program window is not an instance of MainForm.");
             Assert.AreEqual(0, mainForm.ConfigCount());
 
@@ -36,8 +37,6 @@ namespace SkylineBatchTest
             TestFileExistingPaths(mainForm);
 
             TestFileAutomaticReplace(mainForm);
-
-            //await TestDownloadedConfiguration(mainForm);
 
         }
 
@@ -60,7 +59,6 @@ namespace SkylineBatchTest
                         dlg.Message);
                     dlg.ClickYes();
                 });
-
             RunUI(() => { FunctionalTestUtil.CheckConfigs(3, 0, mainForm); });
         }
 

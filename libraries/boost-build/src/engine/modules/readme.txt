@@ -1,3 +1,3 @@
 
 This directory constains sources which declare native
-rules for Boost.Build modules.
+rules for B2 modules.
