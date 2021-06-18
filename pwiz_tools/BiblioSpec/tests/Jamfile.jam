@@ -396,7 +396,7 @@ blib-test-to-ms2 lms2 : : output/demo.lms2 : demo.lms2 lms2-skip-lines : output/
 
 blib-test-search search-demo : --unicode --preserve-order : $(TEST_INPUTS_PATH)/search-demo.report : demo.report demo.skip-lines : $(TEST_INPUTS_PATH)/demo.ms2 output/sqt-ms2.blib : <dependency>sqt-ms2 ;
 blib-test-search search-demo-negative : --unicode --preserve-order : $(TEST_INPUTS_PATH)/search-demo-negative.report : demo-negative.report demo.skip-lines : $(TEST_INPUTS_PATH)/demo-negative.mzML $(TEST_INPUTS_PATH)/sqt-ms2-negative.blib ;
-blib-test-search search-decoy : --unicode --preserve-order --decoys-per-target@1 : $(TEST_INPUTS_PATH)/search-demo-decoy.report : demo.decoy.report demo.skip-lines : $(TEST_INPUTS_PATH)/demo.ms2 output/sqt-ms2.blib : <dependency>sqt-ms2 <dependency>search-demo ;
+blib-test-search search-decoy : --unicode --preserve-order --decoys-per-target@1 : $(TEST_INPUTS_PATH)/search-demo.decoy.report : demo.decoy.report demo.skip-lines : $(TEST_INPUTS_PATH)/demo.ms2 output/sqt-ms2.blib : <dependency>sqt-ms2 <dependency>search-demo ;
 blib-test-search search-mzsorted : --unicode : $(TEST_INPUTS_PATH)/search-mzsorted.report : mzsorted.report mzsorted.skip-lines : $(TEST_INPUTS_PATH)/mzsorted.ms2 output/sqt-ms2.blib : <dependency>sqt-ms2 ;
 blib-test-search search-binning : --unicode --bin-size@1.1 --bin-offset@0.2 : $(TEST_INPUTS_PATH)/search-binning.report : binning.report demo.skip-lines : $(TEST_INPUTS_PATH)/binning.ms2 output/sqt-ms2.blib : <dependency>sqt-ms2 ;
 
