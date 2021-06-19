@@ -462,37 +462,38 @@ namespace pwiz.Skyline.Model
         ///
         /// If the peptide sequence is invalid, then <paramref name="errorMessage "/> will be set.
         /// </summary>
-        public static Tuple<string, Adduct> ParsePeptideSequenceAndAdduct(string peptideSequence, out string errorMessage)
+        public static LibraryKey ParsePeptideSequenceAndAdduct(string peptideSequence, out string errorMessage)
         {
+            errorMessage = null;
             peptideSequence = (peptideSequence ?? string.Empty).Trim();
             if (string.IsNullOrEmpty(peptideSequence))
             {
-                errorMessage = null;
-                return Tuple.Create(string.Empty, Adduct.EMPTY);
+                return null;
             }
             var adduct = Transition.GetChargeFromIndicator(peptideSequence, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE);
             peptideSequence = Transition.StripChargeIndicators(peptideSequence, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE);
             CrosslinkLibraryKey crosslinkLibraryKey =
                 CrosslinkSequenceParser.TryParseCrosslinkLibraryKey(peptideSequence, 0);
-            if (crosslinkLibraryKey == null)
+            if (crosslinkLibraryKey != null)
             {
-                if (!IsExSequence(peptideSequence))
+                if (!crosslinkLibraryKey.IsSupportedBySkyline())
                 {
                     errorMessage = Resources
-                        .PasteDlg_ListPeptideSequences_This_peptide_sequence_contains_invalid_characters;
+                        .PasteDlg_ListPeptideSequences_The_structure_of_this_crosslinked_peptide_is_not_supported_by_Skyline;
                     return null;
                 }
-                peptideSequence = NormalizeNTerminalMod(peptideSequence);
-            }
-            else if (!crosslinkLibraryKey.IsSupportedBySkyline())
-            {
-                errorMessage = Resources
-                    .PasteDlg_ListPeptideSequences_The_structure_of_this_crosslinked_peptide_is_not_supported_by_Skyline;
-                return null;
+
+                if (!adduct.IsEmpty)
+                {
+                    crosslinkLibraryKey = new CrosslinkLibraryKey(crosslinkLibraryKey.PeptideLibraryKeys,
+                        crosslinkLibraryKey.Crosslinks, adduct.AdductCharge);
+                }
+
+                return crosslinkLibraryKey;
             }
 
             errorMessage = null;
-            return Tuple.Create(peptideSequence, adduct);
+            return new PeptideLibraryKey(peptideSequence, adduct.AdductCharge);
         }
 
         public FastaSequence AddAlternative(ProteinMetadata proteinMetadata)

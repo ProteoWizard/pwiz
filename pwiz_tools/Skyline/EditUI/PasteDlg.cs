@@ -303,7 +303,7 @@ namespace pwiz.Skyline.EditUI
             try
             {
                 matcher.CreateMatches(document.Settings,
-                    listPeptideSequences.Where(tuple => tuple != null).Select(tuple => tuple.Item1),
+                    listPeptideSequences.Where(libraryKey => libraryKey != null).Select(libraryKey => libraryKey.Target.ToString()),
                     Settings.Default.StaticModList,
                     Settings.Default.HeavyModList);
             }
@@ -333,15 +333,12 @@ namespace pwiz.Skyline.EditUI
             int lastGroupGlobalIndex = 0, lastPeptideIndex = -1;
             for (int i = gridViewPeptides.Rows.Count - 1; i >= 0; i--)
             {
-                var tuple = listPeptideSequences[i];
-                if (tuple == null)
+                var libraryKey = listPeptideSequences[i];
+                if (libraryKey == null)
                 {
                     continue;
                 }
 
-                var pepModSequence = tuple.Item1;
-                Assume.IsFalse(string.IsNullOrEmpty(pepModSequence));
-                var adduct = tuple.Item2;
                 PeptideGroupDocNode peptideGroupDocNode;
                 var row = gridViewPeptides.Rows[i];
                 var proteinName = Convert.ToString(row.Cells[colPeptideProtein.Index].Value);
@@ -401,7 +398,7 @@ namespace pwiz.Skyline.EditUI
                 {
                     // Attempt to create node for error checking.
                     nodePepNew = fastaSequence.CreateFullPeptideDocNode(document.Settings,
-                                                                        new Target(FastaSequence.StripModifications(pepModSequence)));
+                                                                        new Target(FastaSequence.StripModifications(libraryKey.Target.ToString())));
                     if (nodePepNew == null)
                     {
                         ShowPeptideError(new PasteError
@@ -415,14 +412,19 @@ namespace pwiz.Skyline.EditUI
                 }
                 // Create node using ModificationMatcher.
                 {
-                    nodePepNew = matcher.GetModifiedNode(pepModSequence, fastaSequence);
+                    nodePepNew = matcher.GetModifiedNode(libraryKey.Target.ToString(), fastaSequence);
                     var settings = document.Settings;
+                    var adduct = libraryKey.Adduct;
                     if (!adduct.IsEmpty)
                     {
                         settings = settings.ChangeTransitionFilter(f =>
                             f.ChangePeptidePrecursorCharges(new[] {adduct}));
                     }
                     nodePepNew = nodePepNew.ChangeSettings(settings, SrmSettingsDiff.ALL);
+                    if (!adduct.IsEmpty)
+                    {
+                        nodePepNew = (PeptideDocNode) nodePepNew.ChangeAutoManageChildren(false);
+                    }
                 }
                 // Avoid adding an existing peptide a second time.
                 if (!peptides.Contains(nodePep => Equals(nodePep.Key, nodePepNew.Key)))
@@ -463,13 +465,13 @@ namespace pwiz.Skyline.EditUI
         /// Returns a list of tuples with the peptide sequences and optional charges.
         /// The returned list may contain nulls, and will have exactly the same number of rows as gridViewPeptides.
         /// </summary>
-        private List<Tuple<string, Adduct>> ListPeptideSequences()
+        private List<LibraryKey> ListPeptideSequences()
         {
-            List<Tuple<string, Adduct>> listSequences = new List<Tuple<string, Adduct>>();
+            List<LibraryKey> listSequences = new List<LibraryKey>();
             for (int i = 0; i < gridViewPeptides.Rows.Count; i++)
             {
                 var row = gridViewPeptides.Rows[i];
-                var sequenceAdductTuple = FastaSequence.ParsePeptideSequenceAndAdduct(
+                var libraryKey = FastaSequence.ParsePeptideSequenceAndAdduct(
                     Convert.ToString(row.Cells[colPeptideSequence.Index].Value), out string errorMessage);
                 if (errorMessage != null)
                 {
@@ -482,14 +484,13 @@ namespace pwiz.Skyline.EditUI
                     return null;
                 }
 
-                var peptideSequence = sequenceAdductTuple.Item1;
                 var proteinName = Convert.ToString(row.Cells[colPeptideProtein.Index].Value);
-                if (string.IsNullOrEmpty(peptideSequence) && string.IsNullOrEmpty(proteinName))
+                if (libraryKey == null && string.IsNullOrEmpty(proteinName))
                 {
                     listSequences.Add(null);
                     continue;
                 }
-                if (string.IsNullOrEmpty(peptideSequence))
+                if (libraryKey == null)
                 {
                     ShowPeptideError(new PasteError
                     {
@@ -499,7 +500,7 @@ namespace pwiz.Skyline.EditUI
                     });
                     return null;
                 }
-                listSequences.Add(sequenceAdductTuple);
+                listSequences.Add(libraryKey);
             }
             return listSequences;
         }
