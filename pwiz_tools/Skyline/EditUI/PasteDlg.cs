@@ -483,7 +483,6 @@ namespace pwiz.Skyline.EditUI
                 }
 
                 var peptideSequence = sequenceAdductTuple.Item1;
-                var adduct = sequenceAdductTuple.Item2;
                 var proteinName = Convert.ToString(row.Cells[colPeptideProtein.Index].Value);
                 if (string.IsNullOrEmpty(peptideSequence) && string.IsNullOrEmpty(proteinName))
                 {
@@ -500,7 +499,7 @@ namespace pwiz.Skyline.EditUI
                     });
                     return null;
                 }
-                listSequences.Add(Tuple.Create(peptideSequence, adduct));
+                listSequences.Add(sequenceAdductTuple);
             }
             return listSequences;
         }
