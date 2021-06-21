@@ -21,8 +21,13 @@ using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.Chemistry
 {
+    // N.B this order (starting with none=0) should agree with:
+    //    enum IONMOBILITY_TYPE in pwiz_tools\BiblioSpec\src\BlibUtils.h
+    // and
+    //    enum IonMobilityUnits in pwiz\analysis\spectrum_processing\SpectrumList_IonMobility.hpp
     public enum eIonMobilityUnits
     {
+        waters_sonar = -1, // Not really ion mobility, but SONAR uses IMS hardware for precursor isolation
         none,
         drift_time_msec,
         inverse_K0_Vsec_per_cm2,
@@ -140,6 +145,8 @@ namespace pwiz.Common.Chemistry
                     return @"Vs/cm^2";
                 case eIonMobilityUnits.compensation_V:
                     return @"V";
+                case eIonMobilityUnits.waters_sonar:
+                    return @"m/z";
             }
             return @"unknown ion mobility type";
         }

@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -465,7 +466,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
                     PanoramaServer = Convert.ToString(libInfo[0]);
                     LibraryRevision = Convert.ToInt32(libInfo[1]);
                     SchemaVersion = Convert.ToString(libInfo[2]);
-                    var hasSmallMoleculeAndIonMobilityColumns = Convert.ToDouble(libInfo[2]) >= 3;
+                    var hasSmallMoleculeAndIonMobilityColumns = Convert.ToDouble(libInfo[2], CultureInfo.InvariantCulture) >= 3;
                     var dictMolecules = new Dictionary<int, CustomMolecule>();
                     var dictMoleculeLists = new Dictionary<int, Protein>();
                     if (hasSmallMoleculeAndIonMobilityColumns)

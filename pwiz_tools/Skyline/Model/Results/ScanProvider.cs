@@ -51,6 +51,9 @@ namespace pwiz.Skyline.Model.Results
         TransitionFullScanInfo[] Transitions { get; }
         MsDataSpectrum[] GetMsDataFileSpectraWithCommonRetentionTime(int dataFileSpectrumStartIndex, bool ignoreZeroIntensityPoints); // Return a collection of consecutive scans with common retention time and changing ion mobility (or a single scan if no drift info in file)
         bool ProvidesCollisionalCrossSectionConverter { get; }
+        bool IsWatersSonarData { get; } // Returns true if data presents as ion mobility but is actually filtered on precursor m/z
+        Tuple<int, int> SonarMzToBinRange(double mz, double tolerance); // Maps an mz value into the Waters SONAR bin space
+        double? SonarBinToPrecursorMz(int bin); // Maps a Waters SONAR bin into precursor mz space - returns average of the m/z range for the bin
         double? CCSFromIonMobility(IonMobilityValue ionMobilityValue, double mz, int charge); // Return a collisional cross section for this ion mobility value at this mz and charge, if reader supports this
         eIonMobilityUnits IonMobilityUnits { get; } 
         bool Adopt(IScanProvider scanProvider);
@@ -79,6 +82,12 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public bool ProvidesCollisionalCrossSectionConverter { get { return _dataFile != null && _dataFile.ProvidesCollisionalCrossSectionConverter; } }
+
+        // Returns true if data presents as ion mobility but is actually filtered on precursor m/z
+        public bool IsWatersSonarData { get { return _dataFile?.IsWatersSonarData() ?? false; } }
+
+        public Tuple<int,int> SonarMzToBinRange(double mz, double tolerance) {  return _dataFile?.SonarMzToBinRange(mz, tolerance); }
+        public double? SonarBinToPrecursorMz(int bin) { return _dataFile?.SonarBinToPrecursorMz(bin); } // Maps a Waters SONAR bin into precursor mz space - returns average of the m/z range for the bin
 
         public double? CCSFromIonMobility(IonMobilityValue ionMobilityValue, double mz, int charge)
         {
@@ -201,9 +210,9 @@ namespace pwiz.Skyline.Model.Results
                     _dataFile = new MsDataFileImpl(dataFilePath, sampleIndex,
                         lockMassParameters,
                         simAsSpectra,
-                        combineIonMobilitySpectra: _cachedFile.HasCombinedIonMobility,
-                        requireVendorCentroidedMS1: _cachedFile.UsedMs1Centroids,
-                        requireVendorCentroidedMS2: _cachedFile.UsedMs2Centroids,
+                        combineIonMobilitySpectra: _cachedFile?.HasCombinedIonMobility ?? false,
+                        requireVendorCentroidedMS1: _cachedFile?.UsedMs1Centroids ?? false,
+                        requireVendorCentroidedMS2: _cachedFile?.UsedMs2Centroids ?? false,
                         ignoreZeroIntensityPoints: ignoreZeroIntensityPoints);
                 }
                 else
