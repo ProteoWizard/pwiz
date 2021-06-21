@@ -5775,7 +5775,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error: Failed to load {0}.
+        ///   Looks up a localized string similar to Error: Failed to load {0}..
         /// </summary>
         public static string CommandLine_ImportSkyr_ {
             get {
@@ -15862,6 +15862,15 @@ namespace pwiz.Skyline.Properties {
         public static string ImportTransitionListColumnSelectDlg_CheckForErrors_Checking_for_errors___ {
             get {
                 return ResourceManager.GetString("ImportTransitionListColumnSelectDlg_CheckForErrors_Checking_for_errors___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Column .
+        /// </summary>
+        public static string ImportTransitionListColumnSelectDlg_DisplayData_Column_ {
+            get {
+                return ResourceManager.GetString("ImportTransitionListColumnSelectDlg_DisplayData_Column_", resourceCulture);
             }
         }
         
