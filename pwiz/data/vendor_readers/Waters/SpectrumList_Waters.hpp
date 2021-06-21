@@ -66,7 +66,8 @@ class PWIZ_API_DECL SpectrumList_Waters : public SpectrumListIonMobilityBase
     
     /// returns true if any functions are SONAR-enabled
     virtual bool hasSonarFunctions() const;
-    virtual pair<int, int> sonarMzToDriftBinRange(int function, float precursorMz, float precursorTolerance) const;
+    virtual pair<int, int> sonarMzToBinRange(double precursorMz, double tolerance) const; // If precursor mz is outside SONAR range, returns pair <-1,-1>
+    virtual double sonarBinToPrecursorMz(int bin) const; // If bin is outside SONAR range, returns 0
 
     virtual bool hasIonMobility() const;
     virtual bool hasCombinedIonMobility() const;

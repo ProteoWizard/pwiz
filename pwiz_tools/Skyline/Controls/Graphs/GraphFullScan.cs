@@ -282,7 +282,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 // Is there actually any drift time filtering available?
                 double minIonMobility, maxIonMobility;
-                _msDataFileScanHelper.GetIonMobilityRange(out minIonMobility, out maxIonMobility, ChromSource.unknown); // Get range of IM values for all products and precursors
+                _msDataFileScanHelper.GetIonMobilityFilterRange(out minIonMobility, out maxIonMobility, ChromSource.unknown); // Get range of IM values for all products and precursors
                 if ((minIonMobility == double.MinValue) && (maxIonMobility == double.MaxValue))
                 {
                     filterBtn.Visible = false;
@@ -382,7 +382,10 @@ namespace pwiz.Skyline.Controls.Graphs
         /// </summary>
         private void CreateIonMobilityHeatmap()
         {
-            GraphPane.YAxis.Title.Text = IonMobilityFilter.IonMobilityUnitsL10NString(_msDataFileScanHelper.IonMobilityUnits);
+            var isWatersSonarData = _msDataFileScanHelper.IsWatersSonarData;
+            GraphPane.YAxis.Title.Text = isWatersSonarData ?
+                Resources.GraphFullScan_CreateIonMobilityHeatmap_Quadrupole_Scan_Range__m_z_ :
+                IonMobilityFilter.IonMobilityUnitsL10NString(_msDataFileScanHelper.IonMobilityUnits);
             graphControl.IsEnableVZoom = graphControl.IsEnableVPan = true;
 
             if (_heatMapData == null)
@@ -397,8 +400,13 @@ namespace pwiz.Skyline.Controls.Graphs
                         double mobilityValue = scan.IonMobilities != null
                             ? scan.IonMobilities[j]
                             : scan.IonMobility.Mobility.Value;
-
-                        points.Add(new Point3D(scan.Mzs[j], mobilityValue, scan.Intensities[j]));
+                        if (isWatersSonarData)
+                        {
+                            // "mobility" value is actually a bin number, convert to scanning quad m/z filter value
+                            mobilityValue = _msDataFileScanHelper.ScanProvider.SonarBinToPrecursorMz((int)mobilityValue) ?? 0;
+                            Assume.AreNotEqual(mobilityValue,0, @"unexpected bin number in SONAR data");
+                        }
+                        points.Add(new Point3D(scan.Mzs[j],  mobilityValue, scan.Intensities[j]));
                     }
                 }
                 _heatMapData = new HeatMapData(points);
@@ -406,8 +414,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
             double minDrift;
             double maxDrift;
-            _msDataFileScanHelper.GetIonMobilityRange(out minDrift, out maxDrift, _msDataFileScanHelper.Source);  // There may be a different drift time filter for products in Waters
 
+            _msDataFileScanHelper.GetIonMobilityFilterDisplayRange(out minDrift, out maxDrift, _msDataFileScanHelper.Source);  // There may be a different drift time filter for products in Waters
             if (minDrift > 0 && maxDrift < double.MaxValue)
             {
                 // Add gray shaded box behind heat points.
@@ -746,6 +754,14 @@ namespace pwiz.Skyline.Controls.Graphs
             foreach (var spectrum in _msDataFileScanHelper.MsDataSpectra)
             {
                 var spectrumMaxMobility = Math.Abs(spectrum.MaxIonMobility ?? spectrum.IonMobility.Mobility ?? 0);
+                if (_msDataFileScanHelper.IsWatersSonarData)
+                {
+                    // For Waters SONAR data we transform the fictitious drift dimension (reported as bin number) into what it really is, precursor m/z
+                    var bin = (int)spectrumMaxMobility;
+                    var sonarBinToPrecursorMz = _msDataFileScanHelper.ScanProvider.SonarBinToPrecursorMz(bin);
+                    Assume.IsTrue(sonarBinToPrecursorMz.HasValue, @"error determining m/z value for SONAR bin #" + bin);
+                    spectrumMaxMobility = sonarBinToPrecursorMz.Value;
+                }
                 maxIonMobility = Math.Max(_maxIonMobility, spectrumMaxMobility);
             }
         }
@@ -858,7 +874,7 @@ namespace pwiz.Skyline.Controls.Graphs
             else
             {
                 double minDriftTime, maxDriftTime;
-                _msDataFileScanHelper.GetIonMobilityRange(out minDriftTime, out maxDriftTime, _msDataFileScanHelper.Source);
+                _msDataFileScanHelper.GetIonMobilityFilterDisplayRange(out minDriftTime, out maxDriftTime, _msDataFileScanHelper.Source);
                 if (minDriftTime > double.MinValue && maxDriftTime < double.MaxValue)
                 {
                     double range = filterBtn.Checked
@@ -893,6 +909,10 @@ namespace pwiz.Skyline.Controls.Graphs
                 lblScanId.Text = _msDataFileScanHelper.GetScanIndex().ToString(@"D");
                 if (!spectrumBtn.Checked)
                     GraphPane.SetScale(CreateGraphics());
+                if (_msDataFileScanHelper.IsWatersSonarData)
+                {
+                    filterBtn.ToolTipText = Resources.GraphFullScan_Filter_Button_Tooltip_Filter_Quadrupole_Scan_Range;
+                }
             }
             else
             {

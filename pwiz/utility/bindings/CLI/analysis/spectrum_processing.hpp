@@ -488,7 +488,8 @@ public ref class SpectrumList_IonMobility : public msdata::SpectrumList
     /// </summary>
     static bool accept(msdata::SpectrumList^ inner);
 
-    enum class IonMobilityUnits { none, drift_time_msec, inverse_reduced_ion_mobility_Vsec_per_cm2, compensation_V };
+    // N.B. there are a number of places in the pwiz code that assume this order (especially none=0), if you change this look at the other IonMobilityUnits enums
+    enum class IonMobilityUnits { waters_sonar = -1, none, drift_time_msec, inverse_reduced_ion_mobility_Vsec_per_cm2, compensation_V };
 
     virtual IonMobilityUnits getIonMobilityUnits();
 
@@ -503,6 +504,12 @@ public ref class SpectrumList_IonMobility : public msdata::SpectrumList
 
     /// returns the ion mobility (units depend on equipment type) associated with the given collisional cross-section
     virtual double ccsToIonMobility(double ccs, double mz, int charge);
+
+    /// applicable only to Waters SONAR files
+    /// returns true if the file is Waters SONAR data, which filters precursors for an m/z range using its ion mobility hardware
+    virtual bool isWatersSonarData();
+    virtual void sonarMzToBinRange(double precursorMz, double tolerance, int% binRangeLow, int% binRangeHigh);
+    virtual void sonarBinToPrecursorMz(int bin, double% result);
 };
 
 /// <summary>
