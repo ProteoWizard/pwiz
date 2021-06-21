@@ -462,7 +462,7 @@ namespace pwiz.Skyline.EditUI
         }
 
         /// <summary>
-        /// Returns a list of tuples with the peptide sequences and optional charges.
+        /// Returns a list of peptide sequences and optional charges.
         /// The returned list may contain nulls, and will have exactly the same number of rows as gridViewPeptides.
         /// </summary>
         private List<ChargedSequence> ListPeptideSequences()
@@ -471,7 +471,7 @@ namespace pwiz.Skyline.EditUI
             for (int i = 0; i < gridViewPeptides.Rows.Count; i++)
             {
                 var row = gridViewPeptides.Rows[i];
-                var chargedSequence = ChargedSequence.Parse(Convert.ToString(row.Cells[colPeptideSequence.Index].Value), out string errorMessage);
+                var chargedSequence = ChargedSequence.ParsePeptideAndCharge(Convert.ToString(row.Cells[colPeptideSequence.Index].Value), out string errorMessage);
                 if (errorMessage != null)
                 {
                     ShowPeptideError(new PasteError
