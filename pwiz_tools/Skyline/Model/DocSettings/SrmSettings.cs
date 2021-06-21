@@ -955,9 +955,16 @@ namespace pwiz.Skyline.Model.DocSettings
             TransitionGroupDocNode nodeGroup,
             TransitionDocNode nodeTran,
             LibraryIonMobilityInfo libraryIonMobilityInfo,
-            IIonMobilityFunctionsProvider instrumentInfo, // For converting CCS to IM if needed
+            IIonMobilityFunctionsProvider instrumentInfo, // For converting CCS to IM if needed, or mz to IM for Waters SONAR
             double ionMobilityMax)
         {
+            if (instrumentInfo != null && instrumentInfo.IsWatersSonarData)
+            {
+                // Waters SONAR uses the ion mobility hardware to filter on precursor mz bands, and emits data that claims to be IM but is really bin numbers
+                // So here we map the mz filter to a fictional IM filter.
+                return GetSonarMzIonMobilityFilter(nodeGroup.PrecursorMz, TransitionSettings.FullScan.GetPrecursorFilterWindow(nodeGroup.PrecursorMz), 
+                    instrumentInfo);
+            }
             if (nodeGroup.ExplicitValues.CollisionalCrossSectionSqA.HasValue && instrumentInfo != null && instrumentInfo.ProvidesCollisionalCrossSectionConverter)
             {
                 // Use the explicitly specified CCS value if provided, and if we know how to convert to IM
@@ -989,6 +996,18 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         /// <summary>
+        /// Waters SONAR mode uses the ion mobility hardware to filter on precursor mz, and reports the data as if it was drift time information.
+        /// So for convenience map the mz extraction window to an ion mobility filter window.
+        /// </summary>
+        public static IonMobilityFilter GetSonarMzIonMobilityFilter(double mz, double windowMz, IIonMobilityFunctionsProvider instrumentInfo)
+        {
+            var binRange = instrumentInfo.SonarMzToBinRange(mz, windowMz / 2); // Convert to SONAR bin range
+            return IonMobilityFilter.GetIonMobilityFilter( IonMobilityAndCCS.GetIonMobilityAndCCS(0.5 * (binRange.Item1 + binRange.Item2),
+                    eIonMobilityUnits.waters_sonar, null, null),
+                (binRange.Item2 - binRange.Item1) + IonMobilityFilter.DoubleToIntEpsilon); // Add a tiny bit to window size to account for double->int rounding in center value
+        }
+
+        /// <summary>
         /// Made public for testing purposes only: exercises library but doesn't handle explicitly set drift times.
         /// Use GetIonMobility() instead.
         /// </summary>
@@ -999,12 +1018,14 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             foreach (var typedSequence in GetTypedSequences(nodePep.Target, nodePep.ExplicitMods, nodeGroup.PrecursorAdduct))
             {
-                var chargedPeptide = new LibKey(typedSequence.ModifiedSequence, typedSequence.Adduct);
+                var chargedPeptide = new LibKey(typedSequence.ModifiedSequence, typedSequence.Adduct); // N.B. this may actually be a small molecule
 
+                // Try for a ion mobility library value (.imsdb file)
                 var result = TransitionSettings.IonMobilityFiltering.GetIonMobilityFilter(chargedPeptide, nodeGroup.PrecursorMz,  ionMobilityFunctionsProvider, ionMobilityMax);
                 if (result != null && result.HasIonMobilityValue)
                     return result;
 
+                // Try other sources - BiblioSpec, Chromatogram libraries etc
                 if (libraryIonMobilityInfo != null)
                 {
                     var imAndCCS = libraryIonMobilityInfo.GetLibraryMeasuredIonMobilityAndCCS(chargedPeptide, nodeGroup.PrecursorMz, ionMobilityFunctionsProvider);

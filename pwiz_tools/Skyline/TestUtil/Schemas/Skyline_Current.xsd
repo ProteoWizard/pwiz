@@ -1115,6 +1115,7 @@
               <xs:complexContent>
                 <xs:extension base="spectrum_header_info_type">
                   <xs:attribute name="peak_area" type="xs:double" />
+                  <xs:attribute name="protein" type="xs:string" use="optional"/> <!-- Protein or molecule list name from .clib Protein table when available -->
                 </xs:extension>
               </xs:complexContent>
             </xs:complexType>

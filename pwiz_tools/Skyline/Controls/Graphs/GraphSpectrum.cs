@@ -1142,7 +1142,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private static bool IonMatches(Transition transition, LibraryChromGroup.ChromData chromData)
         {
-            if(transition.IonType.Equals(chromData.IonType) && transition.Charge == chromData.Charge)
+            if(transition.IonType.Equals(chromData.IonType) && Equals(transition.Adduct, chromData.Charge))
             {
                 if(transition.IsPrecursor())
                 {
@@ -1150,7 +1150,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 else
                 {
-                    return transition.Ordinal == chromData.Ordinal;
+                    return transition.IonType == IonType.custom ?
+                        Equals(transition.FragmentIonName, chromData.FragmentName) :
+                        transition.Ordinal == chromData.Ordinal;
                 }
             }
             return false;
@@ -1365,8 +1367,9 @@ namespace pwiz.Skyline.Controls.Graphs
                     FindNearestIndex(chromGroup.Times, (float) chromGroup.StartTime),
                     FindNearestIndex(chromGroup.Times, (float) chromGroup.EndTime));
             var chromPeak = new ChromPeak(crawPeakFinder, crawdadPeak, 0, timeIntensities, null);
+            var ionMobilityFilter = IonMobilityFilter.GetIonMobilityFilter(chromData.IonMobility,null, chromGroup.CCS);
             transitionChromInfo = new TransitionChromInfo(null, 0, chromPeak,
-                IonMobilityFilter.EMPTY, // CONSIDER(bspratt) IMS in chromatogram libraries?
+                ionMobilityFilter,
                 new float?[0], Annotations.EMPTY,
                                                             UserSet.FALSE);
             var peaks = new[] {chromPeak};
@@ -1382,13 +1385,12 @@ namespace pwiz.Skyline.Controls.Graphs
                 0, // compressedSize
                 0, // uncompressedsize
                 0,  //location
-                0, -1, -1, null, null, null, eIonMobilityUnits.none); // CONSIDER(bspratt) IMS in chromatogram libraries?
-            var driftTimeFilter = IonMobilityFilter.EMPTY; // CONSIDER(bspratt) IMS in chromatogram libraries?
+                0, -1, -1, null, null, chromGroup.CCS, ionMobilityFilter.IonMobilityUnits); 
             var groupInfo = new ChromatogramGroupInfo(header,
                     new Dictionary<Type, int>(),
                     new byte[0],
                     new ChromCachedFile[0],
-                    new[] { new ChromTransition(chromData.Mz, 0, (float)(driftTimeFilter.IonMobilityAndCCS.IonMobility.Mobility??0), (float)(driftTimeFilter.IonMobilityExtractionWindowWidth??0), ChromSource.unknown), },
+                    new[] { new ChromTransition(chromData.Mz, 0, (float)(ionMobilityFilter.IonMobilityAndCCS.IonMobility.Mobility??0), (float)(ionMobilityFilter.IonMobilityExtractionWindowWidth??0), ChromSource.unknown), },
                     peaks,
                     null) { TimeIntensitiesGroup = TimeIntensitiesGroup.Singleton(timeIntensities) };
 
