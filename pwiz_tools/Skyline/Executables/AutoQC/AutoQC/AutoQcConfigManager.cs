@@ -633,7 +633,7 @@ namespace AutoQC
 
         public void Import(string filePath, ShowDownloadedFileForm showDownloadedFileForm)
         {
-            var addedConfigs = ImportFrom(filePath, showDownloadedFileForm);
+            var addedConfigs = ImportFrom(filePath, Settings.Default.InstalledVersion, showDownloadedFileForm);
             var state = new AutoQcConfigManagerState(this);
             foreach (var config in addedConfigs)
             {

@@ -770,6 +770,26 @@ namespace SharedBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to There was an error reading the saved configurations from an earlier version of {0}..
+        /// </summary>
+        public static string Program_Main_There_was_an_error_reading_the_saved_configurations_from_an_earlier_version_of__0___ {
+            get {
+                return ResourceManager.GetString("Program_Main_There_was_an_error_reading_the_saved_configurations_from_an_earlier_" +
+                        "version_of__0___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to To help improve {0} in future versions, please post the configuration file to the Skyline Support board:.
+        /// </summary>
+        public static string Program_Main_To_help_improve__0__in_future_versions__please_post_the_configuration_file_to_the_Skyline_Support_board_ {
+            get {
+                return ResourceManager.GetString("Program_Main_To_help_improve__0__in_future_versions__please_post_the_configuratio" +
+                        "n_file_to_the_Skyline_Support_board_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Could not find {0} at this location: {1}.
         /// </summary>
         public static string SkylineSettings_Validate_Could_not_find__0__at_this_location___1_ {

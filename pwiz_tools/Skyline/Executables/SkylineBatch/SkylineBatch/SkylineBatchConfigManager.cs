@@ -28,6 +28,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using SharedBatch;
+using SkylineBatch.Properties;
 using Resources = SkylineBatch.Properties.Resources;
 
 namespace SkylineBatch
@@ -92,7 +93,7 @@ namespace SkylineBatch
 
         public new void LoadConfigList()
         {
-            var configs = base.LoadConfigList();
+            var configs = base.LoadConfigList(Settings.Default.InstalledVersion);
             var state = new SkylineBatchConfigManagerState(this);
             configs = AssignDependencies(configs, true, state, out _); // ignore warning
             foreach (var config in configs)
@@ -992,7 +993,7 @@ namespace SkylineBatch
         public void Import(string filePath, ShowDownloadedFileForm showDownloadedFileForm)
         {
             var state = new SkylineBatchConfigManagerState(this);
-            var importedConfigs = ImportFrom(filePath, showDownloadedFileForm);
+            var importedConfigs = ImportFrom(filePath, Settings.Default.InstalledVersion, showDownloadedFileForm);
             foreach (var config in importedConfigs)
             {
                 if (state.configRunners.ContainsKey(config.GetName()))

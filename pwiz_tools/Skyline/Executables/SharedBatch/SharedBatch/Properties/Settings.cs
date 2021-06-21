@@ -92,11 +92,56 @@ namespace SharedBatch.Properties
             set => this["RVersions"] = value; // Not L10N
         }
 
-        public new void Upgrade()
+        // Upgrades the settings from the previous version and rewrites the XML to the current version
+        public void Update(string newVersion, string appName, XmlUpdater updater)
         {
-            var oldVersion = Default.ProgramVersion;
             base.Upgrade();
-            Default.OpenedVersion = oldVersion ?? string.Empty;
+
+            var oldXmlPath = ConfigurationManager
+                    .OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath;
+            var newXmlPath = string.Empty;
+            try
+            {
+                newXmlPath = updater(oldXmlPath, newVersion);
+                var configList = new ConfigList();
+                using (var stream = new FileStream(newXmlPath, FileMode.Open))
+                {
+                    using (var reader = XmlReader.Create(stream))
+                    {
+                        while (!Equals(reader.Name, "config_list") && !reader.EOF)
+                            reader.Read();
+                        configList.ReadXml(reader);
+                    }
+                }
+                Default.ConfigList = configList;
+                Default.Save();
+            }
+            catch (Exception e)
+            {
+                ProgramLog.Error(e.Message, e);
+                var folderToCopy = Path.GetDirectoryName(ProgramLog.GetProgramLogFilePath()) ?? string.Empty;
+                var newFileName = Path.Combine(folderToCopy, "error-user.config");
+                var message = string.Format(
+                    Resources
+                        .Program_Main_There_was_an_error_reading_the_saved_configurations_from_an_earlier_version_of__0___,
+                    appName);
+                File.Copy(oldXmlPath, newFileName, true);
+                File.Delete(oldXmlPath);
+                message += Environment.NewLine + Environment.NewLine +
+                           string.Format(
+                               Resources
+                                   .Program_Main_To_help_improve__0__in_future_versions__please_post_the_configuration_file_to_the_Skyline_Support_board_,
+                               appName) +
+                           Environment.NewLine +
+                           newFileName;
+
+                MessageBox.Show(message);
+            }
+            finally
+            {
+                if (File.Exists(newXmlPath))
+                    File.Delete(newXmlPath);
+            }
         }
     }
 
@@ -106,7 +151,7 @@ namespace SharedBatch.Properties
 
         public static Importer Importer;
 
-        public static XmlUpdater GetUpdatedXml;
+        public static string Version;
 
         public XmlSchema GetSchema()
         {
@@ -115,20 +160,9 @@ namespace SharedBatch.Properties
 
         public void ReadXml(XmlReader reader)
         {
-            if (Importer == null || GetUpdatedXml == null)
+            if (Importer == null && string.IsNullOrEmpty(Version))
             {
-                throw new Exception("Must specify Importer and XML Updater before configurations are loaded.");
-            }
-
-            bool updateRequired = Settings.Default.OpenedVersion != null &&
-                                  !Equals(Settings.Default.OpenedVersion, Settings.Default.ProgramVersion);
-            if (updateRequired)
-            {
-                reader.Dispose();
-                var stream = new FileStream(GetUpdatedXml(ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath), FileMode.Open);
-                reader = XmlReader.Create(stream);
-                while (!Equals(reader.Name, "config_list") && !reader.EOF)
-                    reader.Read();
+                throw new Exception("Must specify Importer and version before configurations are loaded.");
             }
 
             var isEmpty = reader.IsEmptyElement;
@@ -168,12 +202,6 @@ namespace SharedBatch.Properties
             if (message.Length > 0)
                 MessageBox.Show(message.ToString(), Resources.ConfigList_ReadXml_Load_Configurations_Error, MessageBoxButtons.OK);
 
-            if (updateRequired)
-            {
-                Settings.Default.ConfigList = this;
-                Settings.Default.Save();
-            }
-
         }
 
         enum Attr
@@ -183,7 +211,7 @@ namespace SharedBatch.Properties
 
         public void WriteXml(XmlWriter writer)
         {
-            writer.WriteAttributeString(Attr.version, Settings.Default.ProgramVersion);
+            writer.WriteAttributeString(Attr.version, Version);
             foreach (var config in this)
             {
                 config.WriteXml(writer);

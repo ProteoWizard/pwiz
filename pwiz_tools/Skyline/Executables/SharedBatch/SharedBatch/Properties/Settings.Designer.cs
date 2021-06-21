@@ -106,17 +106,5 @@ namespace SharedBatch.Properties {
                 this["RDir"] = value;
             }
         }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string ProgramVersion {
-            get {
-                return ((string)(this["ProgramVersion"]));
-            }
-            set {
-                this["ProgramVersion"] = value;
-            }
-        }
     }
 }

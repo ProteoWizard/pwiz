@@ -32,7 +32,7 @@ namespace SharedBatch
 {
     public delegate IConfig Importer(XmlReader reader);
 
-    public delegate string XmlUpdater(string oldXmlFile);
+    public delegate string XmlUpdater(string oldXmlFile, string newVersion);
 
     public class ConfigManager
     {
@@ -82,10 +82,10 @@ namespace SharedBatch
         public int SelectedConfig { get; private set; } // index of the selected configuration
         public int SelectedLog { get; protected set; } // index of the selected log. index 0 corresponds to _logger, any index > 0 corresponds to oldLogs[index - 1]
         
-        protected List<IConfig> LoadConfigList()
+        protected List<IConfig> LoadConfigList(string version)
         {
             ConfigList.Importer = importer;
-            ConfigList.GetUpdatedXml = getUpdatedXml;
+            ConfigList.Version = version;
             // Do not load saved configurations in test mode
             return _runningUi ? Settings.Default.ConfigList.ToList() : new List<IConfig>();
         }
@@ -461,7 +461,7 @@ namespace SharedBatch
         public delegate DialogResult ShowDownloadedFileForm(string filePath, out string copiedDestination);
 
         // gets the list of importing configs
-        protected List<IConfig> ImportFrom(string filePath, ShowDownloadedFileForm showDownloadedFileForm)
+        protected List<IConfig> ImportFrom(string filePath, string installedVersion, ShowDownloadedFileForm showDownloadedFileForm)
         {
             var copiedDestination = string.Empty;
             var copiedConfigFile = string.Empty;
@@ -489,12 +489,12 @@ namespace SharedBatch
                 while (!reader.Name.Equals("config_list") && !reader.Name.Equals("ConfigList"))
                     reader.Read();
 
-                var version = reader.GetAttribute(Attr.version);
-                if (version == null)
+                var fileVersion = reader.GetAttribute(Attr.version);
+                if (fileVersion == null)
                 {
                     reader.Dispose();
                     stream.Dispose();
-                    return ImportFrom(getUpdatedXml(filePath), showDownloadedFileForm);
+                    return ImportFrom(getUpdatedXml(filePath, installedVersion), installedVersion, showDownloadedFileForm);
                 }
 
                 var oldFolder = reader.GetAttribute(Attr.saved_path_root);
@@ -641,7 +641,7 @@ namespace SharedBatch
             return names;
         }
 
-        public void ExportConfigs(string filePath, int[] indiciesToSave)
+        public void ExportConfigs(string filePath, string version, int[] indiciesToSave)
         {
             var state = new ConfigManagerState(this);
             var directory = string.Empty;
@@ -680,7 +680,7 @@ namespace SharedBatch
                     {
                         writer.WriteStartElement("config_list");
                         writer.WriteAttributeString(Attr.saved_path_root, directory);
-                        writer.WriteAttributeString(Attr.version, Settings.Default.ProgramVersion);
+                        writer.WriteAttributeString(Attr.version, version);
                         foreach (int index in indiciesToSave)
                             state.configList[index].WriteXml(writer);
                         writer.WriteEndElement();

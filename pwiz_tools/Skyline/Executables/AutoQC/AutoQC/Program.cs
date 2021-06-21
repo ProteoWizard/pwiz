@@ -213,7 +213,8 @@ namespace AutoQC
 
             GetCurrentAndLastInstalledVersions();
 
-            new AutoQcConfigManager(); // initialize importer and xml updater
+            // initialize importer and xml updater for config migration, update will not happen here since oldVersion == Settings.Default.InstalledVersion
+            Settings.Default.UpdateIfNecessary(Settings.Default.InstalledVersion);
 
             if (ConfigMigrationRequired())
             {
@@ -239,32 +240,18 @@ namespace AutoQC
                     ProgramLog.Info("No configurations found to migrate.");
                 }
             }
+
+            // update configs from old XML
+            Settings.Default.UpdateIfNecessary(_lastInstalledVersion);
         }
 
         private static void GetCurrentAndLastInstalledVersions()
         {
-            // CurrentDeployment is null if it isn't network deployed.
-            _version = ApplicationDeployment.IsNetworkDeployed
-                ? ApplicationDeployment.CurrentDeployment.CurrentVersion
-                : null;
-
-            _lastInstalledVersion = Settings.Default.InstalledVersion ?? string.Empty;
-
-            if (_version != null && !_version.ToString().Equals(_lastInstalledVersion))
+            if (ApplicationDeployment.IsNetworkDeployed) // clickOnce installation
             {
-                ProgramLog.Info(string.Empty.Equals(_lastInstalledVersion)
-                    ? $"This is a first install and run of version: {_version}."
-                    : $"Current version: {_version} is newer than the last installed version: {_lastInstalledVersion}.");
-
-                Settings.Default.InstalledVersion = _version.ToString();
-                Settings.Default.Save();
-                return;
+                _version = ApplicationDeployment.CurrentDeployment.CurrentVersion;
             }
-
-            var _currentVerStr = _version != null ? _version.ToString() : string.Empty;
-            ProgramLog.Info($"Current version: '{_currentVerStr}' is the same as last installed version: '{_lastInstalledVersion}'.");
-
-            if (_version == null) // developer build
+            else // developer build
             {
                 // copied from Skyline Install.cs GetVersion()
                 try
@@ -297,7 +284,22 @@ namespace AutoQC
                 }
             }
 
-            SharedBatch.Properties.Settings.Default.ProgramVersion = _version != null ? _version.ToString() : string.Empty;
+            _lastInstalledVersion = Settings.Default.InstalledVersion ?? string.Empty;
+
+            if (_version != null && !_version.ToString().Equals(_lastInstalledVersion))
+            {
+                ProgramLog.Info(string.Empty.Equals(_lastInstalledVersion)
+                    ? $"This is a first install and run of version: {_version}."
+                    : $"Current version: {_version} is newer than the last installed version: {_lastInstalledVersion}.");
+
+                Settings.Default.InstalledVersion = _version.ToString();
+                Settings.Default.Save();
+                return;
+            }
+
+            var _currentVerStr = _version != null ? _version.ToString() : string.Empty;
+            ProgramLog.Info($"Current version: '{_currentVerStr}' is the same as last installed version: '{_lastInstalledVersion}'.");
+            
         }
 
         private static bool ConfigMigrationRequired()

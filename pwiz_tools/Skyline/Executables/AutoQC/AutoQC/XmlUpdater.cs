@@ -23,7 +23,7 @@ namespace AutoQC
 
 
 
-        public static string GetUpdatedXml(string oldFile)
+        public static string GetUpdatedXml(string oldFile, string newVersion)
         {
             Guid guid = Guid.NewGuid();
             string uniqueFileName = guid + TextUtil.EXT_TMP;
@@ -47,7 +47,7 @@ namespace AutoQC
 
             writer.WriteStartElement("config_list");
             writer.WriteAttributeIfString(Attr.saved_path_root, oldFolder);
-            writer.WriteAttributeString(Attr.version, SharedBatch.Properties.Settings.Default.ProgramVersion);
+            writer.WriteAttributeString(Attr.version, newVersion);
 
 
             while (reader.IsStartElement())

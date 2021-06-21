@@ -580,9 +580,6 @@
   <data name="SkylineBatchConfigManager_UserReplaceSelected_Please_wait_until_the_dependent_configurations_have_stopped_to_change_these_values_" xml:space="preserve">
     <value>Please wait until the dependent configurations have stopped to change these values.</value>
   </data>
-  <data name="Program_Main_To_help_improve__0__in_future_versions__please_post_the_configuration_file_to_the_Skyline_Support_board_" xml:space="preserve">
-    <value>To help improve {0} in future versions, please post the configuration file to the Skyline Support board:</value>
-  </data>
   <data name="FileSettings_Validate_Ms_Ms_filtering_res_accuracy" xml:space="preserve">
     <value>Ms/Ms filtering res/accuracy</value>
   </data>
@@ -675,9 +672,6 @@
   </data>
   <data name="ReportInfo_AsObjectArray_Results" xml:space="preserve">
     <value>Results</value>
-  </data>
-  <data name="Program_Main_There_was_an_error_reading_the_saved_configurations_from_an_earlier_version_of__0___" xml:space="preserve">
-    <value>There was an error reading the saved configurations from an earlier version of {0}.</value>
   </data>
   <data name="SkylineBatchConfigManager_StartBatchRun_Configuration__0__must_be_run_before__1__to_generate_its_template_file_" xml:space="preserve">
     <value>Configuration {0} must be run before {1} to generate its template file.</value>

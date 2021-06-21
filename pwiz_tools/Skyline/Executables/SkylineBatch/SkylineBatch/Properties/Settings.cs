@@ -49,10 +49,29 @@ namespace SkylineBatch.Properties
             SharedBatch.Properties.Settings.Default.Reset();
         }
 
+        public new void Save()
+        {
+            base.Save();
+            SharedBatch.Properties.Settings.Default.Save();
+        }
+
         public new void Upgrade()
         {
             base.Upgrade();
             SharedBatch.Properties.Settings.Default.Upgrade();
+        }
+
+        public void UpdateIfNecessary(string version)
+        {
+            SharedBatch.Properties.ConfigList.Version = version;
+            SharedBatch.Properties.ConfigList.Importer = SkylineBatchConfig.ReadXml;
+            if (Equals(version, Default.InstalledVersion))
+                return;
+            Upgrade();
+            if (string.IsNullOrEmpty(Default.InstalledVersion))
+                SharedBatch.Properties.Settings.Default.Update(version, Program.AppName(), XmlUpdater.GetUpdatedXml);
+            Default.InstalledVersion = version;
+            Save();
         }
 
     }

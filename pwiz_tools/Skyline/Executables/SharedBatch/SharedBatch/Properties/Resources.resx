@@ -408,4 +408,10 @@ with:
   <data name="ConfigManager_ImportFrom_The_imported_configurations_are_from_an_old_file_format_and_could_not_be_copied_to__0_" xml:space="preserve">
     <value>The imported configurations are from an old file format and could not be copied to {0}</value>
   </data>
+  <data name="Program_Main_There_was_an_error_reading_the_saved_configurations_from_an_earlier_version_of__0___" xml:space="preserve">
+    <value>There was an error reading the saved configurations from an earlier version of {0}.</value>
+  </data>
+  <data name="Program_Main_To_help_improve__0__in_future_versions__please_post_the_configuration_file_to_the_Skyline_Support_board_" xml:space="preserve">
+    <value>To help improve {0} in future versions, please post the configuration file to the Skyline Support board:</value>
+  </data>
 </root>

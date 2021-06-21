@@ -118,7 +118,7 @@ namespace SkylineBatch
                     var folderToCopy = Path.GetDirectoryName(ProgramLog.GetProgramLogFilePath()) ?? string.Empty;
                     var newFileName = Path.Combine(folderToCopy, "error-user.config");
                     var message = string.Format(
-                        Resources.Program_Main_There_was_an_error_reading_the_saved_configurations_from_an_earlier_version_of__0___,
+                        SharedBatch.Properties.Resources.Program_Main_There_was_an_error_reading_the_saved_configurations_from_an_earlier_version_of__0___,
                         AppName());
                     if (configFile != null)
                     {
@@ -126,7 +126,7 @@ namespace SkylineBatch
                         File.Delete(configFile);
                         message += Environment.NewLine + Environment.NewLine +
                                    string.Format(
-                                       Resources.Program_Main_To_help_improve__0__in_future_versions__please_post_the_configuration_file_to_the_Skyline_Support_board_,
+                                       SharedBatch.Properties.Resources.Program_Main_To_help_improve__0__in_future_versions__please_post_the_configuration_file_to_the_Skyline_Support_board_,
                                        AppName()) +
                                    Environment.NewLine +
                                    newFileName;
@@ -187,12 +187,7 @@ namespace SkylineBatch
                 }
             }
 
-            // upgrade settings from old version
-            if (!_version.Equals(SharedBatch.Properties.Settings.Default.ProgramVersion))
-                Settings.Default.Upgrade();
-
-            SharedBatch.Properties.Settings.Default.ProgramVersion = _version;
-            SharedBatch.Properties.Settings.Default.Save();
+            Settings.Default.UpdateIfNecessary(_version);
         }
 
         private static string GetFirstArg(string[] args)
