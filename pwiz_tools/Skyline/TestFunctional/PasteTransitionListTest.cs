@@ -173,6 +173,33 @@ namespace pwiz.SkylineTestFunctional
             // Close the document
             OkDialog(transitions1, transitions1.CancelDialog);
 
+            // Now verify that we do not use saved column positions on newly pasted
+            // transition lists when they do not work
+            RunUI(() => SkylineWindow.NewDocument(true));
+            WaitForDocumentLoaded();
+
+            SetClipboardText(File.ReadAllText(TestFilesDir.GetTestPath("PeptideTransitionList_no_headers.csv")));
+            var pep = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
+            // Change a column and click OK so the column positions are saved
+            RunUI(() =>
+            {
+                var pepBoxes = pep.ComboBoxes;
+                // Changes the contents of a combo box
+                pepBoxes[7].SelectedIndex = 0;
+            });
+            OkDialog(pep, pep.OkDialog);
+
+            // Paste in a new transition list with the precursor m/z column in a new location
+            RunUI(() => SkylineWindow.NewDocument(true));
+            WaitForDocumentLoaded();
+            SetClipboardText(File.ReadAllText(TestFilesDir.GetTestPath("PeptideTransitionList_no_headers_new_order.csv")));
+            var pep1 = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
+            // We should realize our saved column positions are invalid and discard them
+            var pep1Boxes = pep1.ComboBoxes;
+            Assert.AreNotEqual(pep1Boxes[7].SelectedIndex, 0);
+            // Close the document
+            OkDialog(pep1, pep1.CancelDialog);
+
             // Now check UI interactions with a bad import file whose headers we correct in the dialog
             using (new CheckDocumentState(1,2,2,9))
             {
