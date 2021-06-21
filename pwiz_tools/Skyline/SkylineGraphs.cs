@@ -705,10 +705,10 @@ namespace pwiz.Skyline
 
             var listUpdateGraphs = new List<IUpdatable>(listVisibleChrom.ToArray());
             
-            if (_graphSpectrum != null && _graphSpectrum.Visible)
-                listUpdateGraphs.Add(_graphSpectrum);
-            if (_graphFullScan != null && _graphFullScan.Visible)
-                listUpdateGraphs.Add(_graphFullScan);
+            foreach(var spectrumGraph in ListMzScaleCopyables())
+                if(spectrumGraph is IUpdatable updatable)
+                    listUpdateGraphs.Add(updatable);
+
             listUpdateGraphs.AddRange(_listGraphRetentionTime.Where(g => g.Visible));
             listUpdateGraphs.AddRange(_listGraphPeakArea.Where(g => g.Visible));
             listUpdateGraphs.AddRange(_listGraphMassError.Where(g => g.Visible));
@@ -910,27 +910,32 @@ namespace pwiz.Skyline
 
         private void SynchMzScaleToolStripMenuItemClick(object sender)
         {
-            if (_graphFullScan == null || !_graphFullScan.Visible
-                                       || _graphSpectrum == null || !_graphSpectrum.Visible)
+            if(ListMzScaleCopyables().Count() < 2)
                 return;
             Settings.Default.SyncMZScale = synchMzScaleToolStripMenuItem.Checked;
-            //testing support
-            var source = sender as IMzScaleCopyable ??
-                         (IMzScaleCopyable)(synchMzScaleToolStripMenuItem.Owner as ContextMenuStrip)?.SourceControl?.Parent?.Parent;
+            if (!Settings.Default.SyncMZScale)
+                return;
+
+            var source = sender as IMzScaleCopyable ??      //testing support
+                         (IMzScaleCopyable)(synchMzScaleToolStripMenuItem.Owner as ContextMenuStrip)?.SourceControl?.FindForm();
             if (source == null)
                 return;
-            IMzScaleCopyable target = _graphSpectrum;
-            if (source is GraphSpectrum)
-                target = _graphFullScan;
-            target?.SetMzScale(source.Range);
+
+            foreach (var targetGraph in ListMzScaleCopyables())
+            {
+                if(!ReferenceEquals(targetGraph, source))
+                    targetGraph.SetMzScale(source.Range);
+            }
         }
         private void synchMzScaleToolStripMenuItem_Click(object sender, EventArgs e)
         {
             SynchMzScaleToolStripMenuItemClick(sender);
         }
 
+        //Testing support
         public void SynchMzScale(bool direction = false)
         {
+            synchMzScaleToolStripMenuItem.Checked = true;
             if (direction)
                 SynchMzScaleToolStripMenuItemClick(_graphSpectrum);
             else
@@ -1087,7 +1092,7 @@ namespace pwiz.Skyline
                 menuStrip.Items.Insert(iInsert++, showLibraryChromatogramsSpectrumContextMenuItem);
             }
 
-            if(_graphFullScan != null && _graphFullScan.Visible && _graphSpectrum != null && _graphSpectrum.Visible)
+            if(ListMzScaleCopyables().Count() >=2)
             {
                 menuStrip.Items.Insert(iInsert++, synchMzScaleToolStripMenuItem);
                 synchMzScaleToolStripMenuItem.Checked = Settings.Default.SyncMZScale;
@@ -1377,11 +1382,26 @@ namespace pwiz.Skyline
 
         private void mzGraph_ZoomAllMz(object sender, ZoomEventArgs newState)
         {
-                if (ReferenceEquals(sender, _graphFullScan))
-                    _graphSpectrum?.ApplyMZZoomState(newState.ZoomState);
-                if (ReferenceEquals(sender, _graphSpectrum))
-                    _graphFullScan?.ApplyMZZoomState(newState.ZoomState);
+            foreach (var target in ListMzScaleCopyables())
+            {
+                if (!ReferenceEquals(target, sender))
+                    target.ApplyMZZoomState(newState.ZoomState);
+            }
         }
+
+        private IEnumerable<IMzScaleCopyable> ListMzScaleCopyables()
+        {
+            if (_graphFullScan != null && _graphFullScan.Visible)
+            {
+                yield return _graphFullScan;
+            }
+
+            if (_graphSpectrum != null && _graphSpectrum.Visible)
+            {
+                yield return _graphSpectrum;
+            }
+        }
+
         #endregion
 
         #region Chromatogram graphs
