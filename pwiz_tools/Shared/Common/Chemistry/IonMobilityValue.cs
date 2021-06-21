@@ -34,7 +34,7 @@ namespace pwiz.Common.Chemistry
     {
         public static IonMobilityValue EMPTY = new IonMobilityValue(null, eIonMobilityUnits.none);
 
-        public static bool IsNullOrEmpty(IonMobilityValue val) { return ReferenceEquals(val, null) || Equals(val, EMPTY); }
+        public static bool IsNullOrEmpty(IonMobilityValue val) { return val == null || Equals(val, EMPTY); }
 
         // Private so we can issue EMPTY in the common case of no ion mobility info
         private IonMobilityValue(double? mobility, eIonMobilityUnits units)

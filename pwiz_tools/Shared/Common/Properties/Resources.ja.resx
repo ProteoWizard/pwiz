@@ -518,13 +518,13 @@
     <value>..\Resources\UnknownUiMode.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="ClusterMetricType_CHEBYSHEV_Chebyshev_distance__L_inf_norm_" xml:space="preserve">
-    <value>Chebyshev距離 (L-inf基準)</value>
+    <value>チェビシェフ距離(L-inf距離)</value>
   </data>
   <data name="ClusterMetricType_MANHATTAN_City_block_distance__L_1_norm_" xml:space="preserve">
-    <value>街区距離 (L-1基準)</value>
+    <value>シティブロック距離(L-1距離)</value>
   </data>
   <data name="ClusterMetricType_EUCLIDEAN_Euclidean_distance__L2_norm_" xml:space="preserve">
-    <value>ユークリッド距離 (L2基準)</value>
+    <value>ユークリッド距離 (L2距離)</value>
   </data>
   <data name="ClusterMetricType_PEARSON_Pearson_correlation" xml:space="preserve">
     <value>ピアソンの相関関係</value>

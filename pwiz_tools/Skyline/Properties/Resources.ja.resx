@@ -2172,7 +2172,7 @@
     <value>グリッドに貼り付け可能なペプチドシークエンス、プリカーサーm/z値、プロダクトm/z値のある完全なトランジションリストから新しいSkylineドキュメントを開始します。</value>
   </data>
   <data name="MeasuredIon_Validate_Special_fragment_ions_must_have_at_least_one_fragmentation_residue" xml:space="preserve">
-    <value>特殊断片イオンでは、断片化の残留物が最低1つ以上必要です。</value>
+    <value>特殊断片イオンでは、断片化の残基が最低1つ以上必要です。</value>
   </data>
   <data name="PasteDlg_GetMoleculeTransitionGroup_The_precursor_m_z__0__is_not_measureable_with_your_current_instrument_settings_" xml:space="preserve">
     <value>現在の装置設定では、プリカーサーm/z{0}を測定することができません。</value>
@@ -2372,10 +2372,6 @@
   </data>
   <data name="ChromatogramDataProvider_GetChromatogram_This_import_appears_to_be_taking_longer_than_expected__If_importing_from_a_network_drive__consider_canceling_this_import__copying_to_local_disk_and_retrying_" xml:space="preserve">
     <value>このインポートは予測より長くかかっています。ネットワークドライブからインポート中である場合、このインポートをキャンセルしてローカルディスクをコピーし再試行することを検討してください。</value>
-  </data>
-  <data name="CommandLine_ImportSkyr_" xml:space="preserve">
-    <value>{0}の読み込みに失敗しました。
- {1}</value>
   </data>
   <data name="CommandLine_ImportTransitionList_Error__To_create_the_iRT_database___0___for_this_assay_library__you_must_specify_the_iRT_standards_using_either_of_the_arguments__1__or__2_" xml:space="preserve">
     <value>エラー：このアッセイライブラリのiRTデータベース「{0}」を作成するには、引数{1}または{2}のいずれかを用いてiRT標準を指定する必要があります。</value>
@@ -3122,9 +3118,6 @@
   </data>
   <data name="SrmDocument_MergeMatchingPeptidesUserInfo_The_peptide__0__was_found_multiple_times_with_user_modifications" xml:space="preserve">
     <value>ユーザー修飾のあるペプチド{0}が複数回見つかりました。</value>
-  </data>
-  <data name="CommandLine_Run_No_new_results_added__Skipping_Panorama_import_" xml:space="preserve">
-    <value>新規結果が追加されていません。Panoramaインポートをスキップ中。</value>
   </data>
   <data name="PublishDocumentDlg_btnBrowse_Click_Shared_Files" xml:space="preserve">
     <value>共有ファイル</value>
@@ -5267,9 +5260,6 @@
   <data name="EditMeasuredIonDlg_EditMeasuredIonDlg_A_verage_mass_" xml:space="preserve">
     <value>平均質量(&amp;V)：</value>
   </data>
-  <data name="CommandLine_ImportResultsFile_Warning__Cannot_read_file__0____Ignoring___" xml:space="preserve">
-    <value>警告： ファイル{0}を読み取ることができません。 無視...</value>
-  </data>
   <data name="PythonInstaller_DownloadPython_Download_failed_" xml:space="preserve">
     <value>ダウンロードに失敗しました。</value>
   </data>
@@ -5842,9 +5832,6 @@
   </data>
   <data name="OptimizationDb_GetOptimizationDb_Library_path_cannot_be_null_" xml:space="preserve">
     <value>ライブラリパスは空値にはできません。</value>
-  </data>
-  <data name="CommandLine_ImportToolsFromZip_Canceled_installing_tools_from__0__" xml:space="preserve">
-    <value>{0}からツールのインストールをキャンセルしました。</value>
   </data>
   <data name="AllChromatogramsGraph_btnCancelFile_Click_Cancel_file" xml:space="preserve">
     <value>ファイルをキャンセル</value>
@@ -6477,7 +6464,7 @@
     <value>「.group」ファイルを互換性のある「.group.xml」ファイルに変換するには、ProteinPilotソフトウェア（試用版または完全版）をインストールする必要があります。</value>
   </data>
   <data name="MeasuredIon_Validate_Special_fragment_ions_must_specify_the_terminal_side_of_the_amino_acid_residue_on_which_fragmentation_occurs" xml:space="preserve">
-    <value>特別断片イオンは、断片化が発生したアミノ酸残留物の末端側を指定する必要があります。</value>
+    <value>特別断片イオンは、断片化が発生したアミノ酸残基の末端側を指定する必要があります。</value>
   </data>
   <data name="HtmlFragment_HtmlFragment_No_data_specified" xml:space="preserve">
     <value>データが指定されていません</value>
@@ -7281,9 +7268,6 @@
   <data name="AbstractMassListExporter_ExportScheduledBuckets_Check_max_concurrent__0__count_and_optimization_step_count" xml:space="preserve">
     <value>最大共点数{0}と最適化ステップ数を確認します。</value>
   </data>
-  <data name="CommandLine_ImportResultsFile_Warning__The_replicate__0__already_exists_in_the_given_document_and_the___import_append_option_is_not_specified___The_replicate_will_not_be_added_to_the_document_" xml:space="preserve">
-    <value>警告： 繰り返し測定{0}が指定したドキュメント内に既に存在しており、import-appendオプションが指定されていません。 繰り返し測定はドキュメントに追加されません。</value>
-  </data>
   <data name="DoconvolutionMethod_OVERLAP_Overlap" xml:space="preserve">
     <value>重複</value>
   </data>
@@ -7646,9 +7630,6 @@
   </data>
   <data name="ResultsGrid_ResultsGrid_Isotope_Dot_Product" xml:space="preserve">
     <value>同位体内積</value>
-  </data>
-  <data name="PanoramaPublishHelper_PublishDocToPanorama_An_error_occurred_on_the_Panorama_server___0___importing_the_file_" xml:space="preserve">
-    <value>Panoramaサーバー（{0}）のファイルインポート中にエラーが発生しました。</value>
   </data>
   <data name="CommandLine_ImportTool_Error__If__0__is_and_argument_the_tool_must_have_a_Report_Title__Use_the___tool_report_parameter_to_specify_a_report_" xml:space="preserve">
     <value>エラー： {0}があり、かつ引数の場合、ツールにはレポートタイトルが必要です。レポートを指定するには、--tool-reportパラメータを使用します。</value>
@@ -10305,20 +10286,11 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
   <data name="DocumentAnnotationUpdater_UpdateAnnotations_Updating_calculated_annotations" xml:space="preserve">
     <value>計算された注釈を更新中</value>
   </data>
-  <data name="CommandLine_ImportResults_No_replicates_left_to_import_" xml:space="preserve">
-    <value>インポートする繰り返し測定が残されていません。</value>
-  </data>
   <data name="CommandArgs_ParseRegexArgument_Error__Regular_expression___0___for__1__cannot_be_parsed_" xml:space="preserve">
     <value>エラー：{1}の正規表現「{0}」が解析できません。</value>
   </data>
   <data name="CommandLine_ApplySampleNameRegex_File___0___does_not_have_a_sample__Cannot_apply_sample_name_pattern__Ignoring_" xml:space="preserve">
     <value>ファイル「{0}」に試料が含まれていません。試料名のパターンを適用できません。無視します。</value>
-  </data>
-  <data name="CommandLine_ApplyFileAndSampleNameRegex_No_files_match_the_file_name_pattern___0___" xml:space="preserve">
-    <value>ファイル名のパターン「{0}」に一致するファイルがありません。</value>
-  </data>
-  <data name="CommandLine_ApplyFileAndSampleNameRegex_No_files_match_the_sample_name_pattern___0___" xml:space="preserve">
-    <value>試料名のパターン「{0}」に一致するファイルがありません。</value>
   </data>
   <data name="CommandLine_MakeReplicateNamesUnique_Replicate___0___already_exists_in_the_document__using___1___instead_" xml:space="preserve">
     <value>繰り返し測定「{0}」は既にドキュメントに存在します。代わりに「{1}」を使用します。</value>
@@ -10599,9 +10571,6 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
   <data name="SkylineWindow_HasFileToOpen_Opening_a_document_inside_a_ZIP_file_is_not_supported_" xml:space="preserve">
     <value>ZIPファイル内のドキュメントを開くことはサポートされていません。</value>
   </data>
-  <data name="PanoramaPublishHelper_PublishDocToPanorama_Document_import_was_cancelled_on_the_Panorama_server__0__" xml:space="preserve">
-    <value>Panoramaサーバー{0}でドキュメントのインポートがキャンセルされました。</value>
-  </data>
   <data name="PanoramaPublishHelper_PublishDocToPanorama_Job_details_can_be_found_at__0__" xml:space="preserve">
     <value>ジョブの詳細は{0}で見ることができます。</value>
   </data>
@@ -10814,7 +10783,7 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
     <value>デコイが破棄されました</value>
   </data>
   <data name="ExportMethodDlg_OkDialog_All_targets_must_have_an_ion_mobility_value__These_can_be_set_explicitly_or_contained_in_an_ion_mobility_library_or_spectral_library__The_following_ion_mobility_values_are_missing_" xml:space="preserve">
-    <value>すべてのターゲットにはイオン移動度値が必要です。これらは明示的に設定することも、イオン移動度ライブラリやスペクトルライブラリに含むこともできます。以下のイオン移動度値が欠損しています。</value>
+    <value>すべてのターゲットにはイオン移動度値が必要です。これらは数値を入力して設定することも、イオン移動度ライブラリやスペクトルライブラリに含まれている場合もあります。以下のイオン移動度値が欠損しています。</value>
   </data>
   <data name="SchedulingGraphPropertyDlg_OkDialog_Template_file_is_not_valid_" xml:space="preserve">
     <value>テンプレートファイルが有効ではありません。</value>
@@ -11097,9 +11066,6 @@ Invalid peptide sequence at position 18
   <data name="CommandLine_ImportSearchInternal_The_iRT_standard_name___0___is_invalid_" xml:space="preserve">
     <value>iRT標準名「{0}」は無効です。</value>
   </data>
-  <data name="CommandLine_ImportSearchInternal__0__must_be_set_when_using_CiRT_peptides_" xml:space="preserve">
-    <value>CiRTペプチド使用時には{0}を設定する必要があります。</value>
-  </data>
   <data name="CommandLine_ImportSearchInternal_iRT_standard_set_to__0___but_multiple_iRT_standards_were_found__iRT_standard_must_be_set_explicitly_" xml:space="preserve">
     <value>iRT標準は{0}に設定されていますが、複数のiRT標準が見つかりました。iRT標準は明示的に設定される必要があります。</value>
   </data>
@@ -11254,7 +11220,7 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
     <comment>This should match one of the options presented in EditPepModsDlg_EnsureLinkedPeptide_Discard_or_edit_disconnected_crosslinks</comment>
   </data>
   <data name="EditLinkedPeptidesDlg_OkDialog_Some_crosslinked_peptides_are_not_connected_" xml:space="preserve">
-    <value>クロスリンクされているペプチドの一部が結合しなくなっています。</value>
+    <value>クロスリンクされているペプチドの一部が結合していません。</value>
   </data>
   <data name="EditLinkedPeptidesDlg_MakeCrosslink_Invalid_crosslinker" xml:space="preserve">
     <value>無効なクロスリンカー</value>

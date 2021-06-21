@@ -7,19 +7,18 @@ namespace SkylineBatch
 {
     public partial class ConnectionErrorForm : Form
     {
-        //private List<string> _disconnectedNames;
         private Dictionary<string, Exception> _disconnectedConfigs;
         private Dictionary<string, SkylineBatchConfig> _configDict;
-        private ServerConnector _serverConnector;
+        private ServerFilesManager _serverFiles;
 
         private object _lastSelectedItem;
 
 
-        public ConnectionErrorForm(List<SkylineBatchConfig> downloadingConfigs, ServerConnector serverConnector)
+        public ConnectionErrorForm(List<SkylineBatchConfig> downloadingConfigs, ServerFilesManager serverFiles)
         {
             InitializeComponent();
             Icon = Program.Icon();
-            _serverConnector = serverConnector;
+            _serverFiles = serverFiles;
             _disconnectedConfigs = new Dictionary<string, Exception>();
             _configDict = new Dictionary<string, SkylineBatchConfig>();
             foreach (var config in downloadingConfigs) _configDict.Add(config.Name, config);
@@ -46,12 +45,12 @@ namespace SkylineBatch
         private void btnEdit_Click(object sender, EventArgs e)
         {
             var config = _configDict[(string) listConfigs.SelectedItem];
-            var addServerForm = new AddServerForm(config.MainSettings.Server, true);
+            var addServerForm = new AddServerForm(config.MainSettings.Server, config.MainSettings.Server.Folder, true);
             if (DialogResult.OK == addServerForm.ShowDialog(this))
             {
                 var mainSettings = config.MainSettings;
-                var newMainSettings = new MainSettings(mainSettings.TemplateFilePath, mainSettings.AnalysisFolderPath,mainSettings.DataFolderPath, 
-                    addServerForm.Server, mainSettings.AnnotationsFilePath, mainSettings.ReplicateNamingPattern, mainSettings.DependentConfigName);
+                var newMainSettings = new MainSettings(mainSettings.Template, mainSettings.AnalysisFolderPath,mainSettings.DataFolderPath, 
+                    addServerForm.Server, mainSettings.AnnotationsFilePath, mainSettings.ReplicateNamingPattern);
                 var newConfig = new SkylineBatchConfig(config.Name, config.Enabled, config.Modified, newMainSettings, config.FileSettings, 
                     config.RefineSettings, config.ReportSettings, config.SkylineSettings);
 
@@ -59,7 +58,7 @@ namespace SkylineBatch
                 _configDict.Remove(config.Name);
                 _disconnectedConfigs.Remove(config.Name);
                 listConfigs.Items.Remove(config.Name);
-                _serverConnector.Combine(addServerForm.serverConnector);
+                _serverFiles.Replace(config.MainSettings.Server, addServerForm.Server, addServerForm.serverConnector, new PanoramaServerConnector());
                 CheckIfAllConnected();
             }
         }
@@ -75,31 +74,53 @@ namespace SkylineBatch
 
         private void btnReconnectAll_Click(object sender, EventArgs e)
         {
-            var servers = new List<ServerInfo>();
+            var servers = new List<Server>();
             foreach (var configName in _disconnectedConfigs.Keys)
-                servers.Add(_configDict[configName].MainSettings.Server);
+            {
+                var config = _configDict[configName];
+                if (config.MainSettings.Server != null)
+                    servers.Add(config.MainSettings.Server);
+                if (config.MainSettings.Template.PanoramaFile != null)
+                    servers.Add(config.MainSettings.Template.PanoramaFile);
+            }
+
             Reconnect(servers);
         }
 
-        private void Reconnect(List<ServerInfo> servers)
+        private void Reconnect(List<Server> ftpServers)
         {
             var longWaitDlg = new LongWaitDlg(this, Program.AppName(), "Reconnecting...");
             var longWaitOperation = new LongWaitOperation(longWaitDlg);
-            longWaitOperation.Start(true, (onProgress) =>
+            var servers = new List<Server>();
+            foreach (var server in ftpServers) servers.Add(server);
+            longWaitOperation.Start(true, (onProgress, cancelToken) =>
             {
-                _serverConnector.Reconnect(servers, onProgress);
+                _serverFiles.Reconnect(servers, onProgress, cancelToken);
             }, (completed) => { DoneReconnecting(completed, servers); });
         }
 
-        private void DoneReconnecting(bool completed, List<ServerInfo> servers)
+        private void Reconnect(List<DataServerInfo> ftpServers)
+        {
+            var longWaitDlg = new LongWaitDlg(this, Program.AppName(), "Reconnecting...");
+            var longWaitOperation = new LongWaitOperation(longWaitDlg);
+            var servers = new List<Server>();
+            foreach (var server in ftpServers) servers.Add(server);
+            longWaitOperation.Start(true, (onProgress, cancelToken) =>
+            {
+                _serverFiles.Reconnect(servers, onProgress, cancelToken);
+            }, (completed) => { DoneReconnecting(completed, servers); });
+        }
+
+        private void DoneReconnecting(bool completed, List<Server> servers)
         {
             if (IsDisposed || !completed) return;
             UpdateConfigList();
+            if (_disconnectedConfigs.Count == 0) return;
             foreach (var server in servers)
             {
                 foreach (var config in _configDict.Values)
                 {
-                    if (((ServerInfo)config.MainSettings.Server).Equals(server) &&
+                    if (((config.MainSettings.Server).Equals(server) || config.MainSettings.Template.PanoramaFile.Equals(server)) &&
                         _disconnectedConfigs[config.Name] != null)
                     {
                         RunUi(() => { AlertDlg.ShowError(this, Program.AppName(), _disconnectedConfigs[config.Name].Message); });
@@ -115,9 +136,10 @@ namespace SkylineBatch
             _disconnectedConfigs.Clear();
             foreach (var config in _configDict.Values)
             {
-                _serverConnector.GetFiles(config.MainSettings.Server, out Exception connectionException);
-                if (connectionException != null)
-                    _disconnectedConfigs.Add(config.Name, connectionException);
+                var ftpConnectionException = config.MainSettings.Server != null ? _serverFiles.ConnectionException(config.MainSettings.Server) : null;
+                var panoramaConnectionException = config.MainSettings.Template.PanoramaFile != null ? _serverFiles.ConnectionException(config.MainSettings.Template.PanoramaFile) : null;
+                if (ftpConnectionException != null || panoramaConnectionException != null)
+                    _disconnectedConfigs.Add(config.Name, panoramaConnectionException != null ? panoramaConnectionException : ftpConnectionException);
             }
             RunUi(() =>
             {
@@ -133,11 +155,13 @@ namespace SkylineBatch
 
         private void btnReconnect_Click(object sender, EventArgs e)
         {
-            var server = new List<ServerInfo>()
-            {
-                _configDict[(string)(listConfigs.SelectedItem)].MainSettings.Server
-            };
-            Reconnect(server);
+            var config = _configDict[(string) (listConfigs.SelectedItem)];
+            var ftpConnectionException = _serverFiles.ConnectionException(config.MainSettings.Server);
+            var panoramaConnectionException = config.MainSettings.Template.PanoramaFile != null ? _serverFiles.ConnectionException(config.MainSettings.Template.PanoramaFile) : null;
+            var servers = new List<Server>();
+            if (panoramaConnectionException != null) servers.Add(config.MainSettings.Template.PanoramaFile);
+            if (ftpConnectionException != null) servers.Add(config.MainSettings.Server);
+            Reconnect(servers);
         }
 
         private void RunUi(Action action)

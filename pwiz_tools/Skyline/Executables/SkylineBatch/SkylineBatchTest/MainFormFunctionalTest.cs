@@ -1,9 +1,7 @@
 ﻿using System;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using SharedBatchTest;
 using SkylineBatch;
-using SkylineBatchTest;
 
 namespace SkylineBatchTest
 {
@@ -61,7 +59,7 @@ namespace SkylineBatchTest
             RunUI(() =>
             {
                 WaitForShownForm(newConfigForm);
-                newConfigForm.textConfigName.Text = @"Two";
+                newConfigForm.textConfigName.Text = "Two";
                 newConfigForm.btnSaveConfig.PerformClick();
             });
             WaitForClosedForm(newConfigForm);
@@ -75,7 +73,7 @@ namespace SkylineBatchTest
             RunUI(() =>
             {
                 WaitForShownForm(newConfigForm);
-                newConfigForm.textConfigName.Text = @"Three";
+                newConfigForm.textConfigName.Text = "Three";
                 newConfigForm.btnSaveConfig.PerformClick();
             });
             WaitForClosedForm(newConfigForm);

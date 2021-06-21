@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.Remoting.Messaging;
-using System.Text;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 
 namespace SharedBatch
 {
@@ -47,7 +41,7 @@ namespace SharedBatch
         private void StartAsync(LongOperation operation, Callback callback)
         {
             // method that takes in update progress arg
-            operation(UpdateProgress);
+            operation(UpdateProgress, CancelToken.Token);
             if (!Cancelled && _showLongWaitDlg) _longWaitDlg?.Finish();
             callback(!Cancelled);
             Completed = !Cancelled;

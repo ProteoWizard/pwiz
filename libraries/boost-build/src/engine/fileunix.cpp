@@ -33,7 +33,7 @@
 
 #include "object.h"
 #include "pathsys.h"
-#include "strings.h"
+#include "jam_strings.h"
 #include "output.h"
 
 #include <assert.h>
@@ -228,7 +228,6 @@ void file_archscan( char const * arch, scanback func, void * closure )
         for ( ; iter != end ; iter = filelist_next( iter ) )
         {
             file_info_t * member_file = filelist_item( iter );
-            LIST * symbols = member_file->files;
 
             /* Construct member path: 'archive-path(member-name)'
              */
@@ -308,7 +307,8 @@ int file_collect_archive_content_( file_archive_info_t * const archive )
         char * src;
         char * dest;
 
-        strncpy( lar_name, ar_hdr.ar_name, sizeof( ar_hdr.ar_name ) );
+        int32_t ar_hdr_name_size = sizeof( ar_hdr.ar_name ); // Workaround for sizeof strncpy warning.
+        strncpy( lar_name, ar_hdr.ar_name, ar_hdr_name_size );
 
         sscanf( ar_hdr.ar_date, "%ld", &lar_date );
         sscanf( ar_hdr.ar_size, "%ld", &lar_size );

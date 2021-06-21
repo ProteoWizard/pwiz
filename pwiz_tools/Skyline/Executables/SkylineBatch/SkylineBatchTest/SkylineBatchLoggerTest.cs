@@ -19,7 +19,6 @@
 using System;
 using System.IO;
 using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SharedBatch;
 using SkylineBatch;
@@ -75,7 +74,7 @@ namespace SkylineBatchTest
             }
             Directory.CreateDirectory(logFolder);
             
-            var testConfigManager = new SkylineBatchConfigManager(new Logger(Path.Combine(logFolder, "testLog.log"), "testLog.log"));
+            var testConfigManager = new SkylineBatchConfigManager(new Logger(Path.Combine(logFolder, "testLog.log"), "testLog.log", true));
             testConfigManager.UserAddConfig(TestUtils.GetTestConfig());
             Assert.IsTrue(testConfigManager.HasOldLogs() == false, "Expected no old logs.");
 

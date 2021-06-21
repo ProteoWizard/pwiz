@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using FluentFTP;
 using SharedBatch;
@@ -17,13 +15,15 @@ namespace SkylineBatch
 
         private CancellationTokenSource _cancelValidate;
         private readonly bool _serverRequired;
+        private readonly string _dataFolder;
 
-        public AddServerForm(DataServerInfo editingServerInfo, bool serverRequired = false)
+        public AddServerForm(DataServerInfo editingServerInfo, string folder, bool serverRequired = false)
         {
             InitializeComponent();
             Icon = Program.Icon();
 
             Server = editingServerInfo;
+            _dataFolder = folder;
             _serverRequired = serverRequired;
             UpdateUiServer();
 
@@ -65,10 +65,10 @@ namespace SkylineBatch
             serverConnector = new ServerConnector(Server);
             List<FtpListItem> serverFiles = null;
             Exception connectionException = null;
-            connectToServer.Start(false,
-                async (OnProgress) =>
+            connectToServer.Start(false, 
+                (OnProgress, cancelToken) =>
                 {
-                    serverConnector.Connect(OnProgress);
+                    serverConnector.Connect(OnProgress, cancelToken);
                     serverFiles = serverConnector.GetFiles(Server, out connectionException);
                 }, completed =>
                 {
@@ -135,7 +135,7 @@ namespace SkylineBatch
                     throw new ArgumentException("The server cannot be empty. Please enter the server information.");
                 return null;
             }
-            return DataServerInfo.ServerFromUi(textUrl.Text, textUserName.Text, textPassword.Text, textNamingPattern.Text);
+            return DataServerInfo.ServerFromUi(textUrl.Text, textUserName.Text, textPassword.Text, textNamingPattern.Text, _dataFolder);
         }
 
         private void btnRemoveServer_Click(object sender, EventArgs e)
@@ -148,7 +148,7 @@ namespace SkylineBatch
         private void UpdateUiServer()
         {
             textUrl.Text = Server != null ? Server.GetUrl() : string.Empty;
-            textUserName.Text = Server != null ? Server.UserName : string.Empty;
+            textUserName.Text = Server != null ? Server.Username : string.Empty;
             textPassword.Text = Server != null ? Server.Password : string.Empty;
             textNamingPattern.Text = Server != null ? Server.DataNamingPattern : string.Empty;
         }

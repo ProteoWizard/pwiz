@@ -42,6 +42,7 @@
 #include "pwiz/utility/misc/SHA1Calculator.hpp"
 #include "boost/thread/thread.hpp"
 #include "boost/thread/barrier.hpp"
+#include "boost/locale/encoding_utf.hpp"
 
 
 using namespace pwiz::util;

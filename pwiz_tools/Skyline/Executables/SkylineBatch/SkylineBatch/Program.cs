@@ -27,7 +27,6 @@ using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Web;
 using System.Windows.Forms;
 using log4net.Config;
 using SkylineBatch.Properties;
@@ -86,7 +85,7 @@ namespace SkylineBatch
                         Application.Exit();
                     }
                 });
-                SendAnalyticsHit();
+                //SendAnalyticsHit();
             }
 
             using (var mutex = new Mutex(false, $"University of Washington {AppName()}"))
@@ -214,6 +213,7 @@ namespace SkylineBatch
             }
         }
 
+        // ReSharper disable once UnusedMember.Local
         private static void SendAnalyticsHit()
         {
             // ReSharper disable LocalizableElement

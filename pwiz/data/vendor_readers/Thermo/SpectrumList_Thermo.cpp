@@ -26,11 +26,11 @@
 
 #include "SpectrumList_Thermo.hpp"
 
+#include <thread>
 #include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/utility/misc/unit.hpp"
 #include <boost/range/algorithm/count_if.hpp>
 #include <boost/range/adaptor/reversed.hpp>
-#include <thread>
 
 using namespace pwiz::cv;
 
