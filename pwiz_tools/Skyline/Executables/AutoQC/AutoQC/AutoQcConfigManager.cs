@@ -61,9 +61,9 @@ namespace AutoQC
             }
         }
 
-        private new void LoadConfigList()
+        private void LoadConfigList()
         {
-            var configs = base.LoadConfigList();
+            var configs = base.LoadConfigList(Settings.Default.InstalledVersion);
             foreach (var iconfig in configs)
             {
                 var config = (AutoQcConfig)iconfig;
