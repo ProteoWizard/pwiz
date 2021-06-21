@@ -56,6 +56,7 @@ namespace SkylineBatch
             ServerPassword,
             ServerFolder,
             DataNamingPattern,
+            uri,
         }
 
         enum Attr
@@ -221,9 +222,17 @@ namespace SkylineBatch
             if (!reader.ReadToDescendant("panorama_file")) return null;
             var downloadFolder = reader.GetAttribute(OLD_XML_TAGS.DownloadFolder);
             var fileName = reader.GetAttribute(OLD_XML_TAGS.FileName);
-            var server = Server.ReadXml(reader);
+            var server = ReadOldServer(reader);
 
             return new PanoramaFile(server, downloadFolder, fileName);
+        }
+
+        public static Server ReadOldServer(XmlReader reader)
+        {
+            var username = reader.GetAttribute(XML_TAGS.username) ?? string.Empty;
+            var password = reader.GetAttribute(XML_TAGS.password);
+            var url = reader.GetAttribute(OLD_XML_TAGS.uri);
+            return new Server(url, username, password, false);
         }
 
         private static void WriteNewFileSettings(XmlReader reader, XmlWriter writer)

@@ -188,7 +188,7 @@ namespace SkylineBatch
             do
             {
                 reader.Read();
-            } while (!(reader.Name == XMLElements.BATCH_CONFIG && reader.NodeType == XmlNodeType.EndElement));
+            } while (!(reader.Name == XMLElements.BATCH_CONFIG && reader.NodeType == XmlNodeType.EndElement) && !reader.EOF);
 
             if (exceptionMessage != null)
                 throw new ArgumentException(exceptionMessage);

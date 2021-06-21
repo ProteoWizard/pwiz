@@ -85,6 +85,7 @@ namespace SharedBatch
         protected List<IConfig> LoadConfigList()
         {
             ConfigList.Importer = importer;
+            ConfigList.GetUpdatedXml = getUpdatedXml;
             // Do not load saved configurations in test mode
             return _runningUi ? Settings.Default.ConfigList.ToList() : new List<IConfig>();
         }

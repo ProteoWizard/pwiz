@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Configuration;
+using System.IO;
 using System.Text;
 using System.Windows.Forms;
 using System.Xml;
@@ -31,6 +32,8 @@ namespace SharedBatch.Properties
 {
     public sealed partial class Settings
     {
+
+        public string OpenedVersion { get; private set; }
 
         [UserScopedSetting]
         public ConfigList ConfigList
@@ -46,6 +49,14 @@ namespace SharedBatch.Properties
                 return list;
             }
             set => this["ConfigList"] = value; // Not L10N
+        }
+
+        public void SetConfigList(List<IConfig> configs)
+        {
+            var settingsConfigList = new ConfigList();
+            foreach (var config in configs)
+                settingsConfigList.Add(config);
+            Default.ConfigList = settingsConfigList;
         }
 
         [UserScopedSetting]
@@ -80,6 +91,13 @@ namespace SharedBatch.Properties
             }
             set => this["RVersions"] = value; // Not L10N
         }
+
+        public new void Upgrade()
+        {
+            var oldVersion = Default.ProgramVersion;
+            base.Upgrade();
+            Default.OpenedVersion = oldVersion ?? string.Empty;
+        }
     }
 
     public class ConfigList : Collection<IConfig>, IXmlSerializable
@@ -88,6 +106,8 @@ namespace SharedBatch.Properties
 
         public static Importer Importer;
 
+        public static XmlUpdater GetUpdatedXml;
+
         public XmlSchema GetSchema()
         {
             return null;
@@ -95,9 +115,20 @@ namespace SharedBatch.Properties
 
         public void ReadXml(XmlReader reader)
         {
-            if (Importer == null)
+            if (Importer == null || GetUpdatedXml == null)
             {
-                throw new Exception("Must specify Importer before configurations are loaded.");
+                throw new Exception("Must specify Importer and XML Updater before configurations are loaded.");
+            }
+
+            bool updateRequired = Settings.Default.OpenedVersion != null &&
+                                  !Equals(Settings.Default.OpenedVersion, Settings.Default.ProgramVersion);
+            if (updateRequired)
+            {
+                reader.Dispose();
+                var stream = new FileStream(GetUpdatedXml(ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath), FileMode.Open);
+                reader = XmlReader.Create(stream);
+                while (!Equals(reader.Name, "config_list") && !reader.EOF)
+                    reader.Read();
             }
 
             var isEmpty = reader.IsEmptyElement;
@@ -136,6 +167,13 @@ namespace SharedBatch.Properties
 
             if (message.Length > 0)
                 MessageBox.Show(message.ToString(), Resources.ConfigList_ReadXml_Load_Configurations_Error, MessageBoxButtons.OK);
+
+            if (updateRequired)
+            {
+                Settings.Default.ConfigList = this;
+                Settings.Default.Save();
+            }
+
         }
 
         enum Attr
