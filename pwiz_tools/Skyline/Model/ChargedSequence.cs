@@ -24,6 +24,10 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model
 {
+    /// <summary>
+    /// Represents a proteomic sequence and a charge.
+    /// The sequence can either be a modified peptide sequence, or a crosslinked peptide sequence.
+    /// </summary>
     public class ChargedSequence : Immutable
     {
         public ChargedSequence(string sequence, Adduct adduct)
@@ -36,22 +40,18 @@ namespace pwiz.Skyline.Model
 
         public Adduct Adduct { get; private set; }
 
+        public ChargedSequence ChangeAdduct(Adduct adduct)
+        {
+            return ChangeProp(ImClone(this), im => im.Adduct = adduct);
+        }
+
         /// <summary>
-        /// Parses a peptides sequence which may optionally be followed by a charge indicator.
-        /// The peptide sequence will have N-terminal mods normalized so that they appear after the first amino acid.
-        ///
-        /// If the peptide sequence is invalid, then <paramref name="errorMessage "/> will be set.
+        /// Does some validation on a peptide sequence. The sequence can either be an ordinary modified sequence,
+        /// or a crosslinked peptide sequence.
         /// </summary>
-        public static ChargedSequence ParsePeptideAndCharge(string peptideSequence, out string errorMessage)
+        public static ChargedSequence ParsePeptideSequence(string peptideSequence, out string errorMessage)
         {
             errorMessage = null;
-            peptideSequence = (peptideSequence ?? string.Empty).Trim();
-            if (string.IsNullOrEmpty(peptideSequence))
-            {
-                return null;
-            }
-            var adduct = Transition.GetChargeFromIndicator(peptideSequence, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE);
-            peptideSequence = Transition.StripChargeIndicators(peptideSequence, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE);
             CrosslinkLibraryKey crosslinkLibraryKey =
                 CrosslinkSequenceParser.TryParseCrosslinkLibraryKey(peptideSequence, 0);
             if (crosslinkLibraryKey != null)
@@ -71,10 +71,35 @@ namespace pwiz.Skyline.Model
                         .PasteDlg_ListPeptideSequences_The_structure_of_this_crosslinked_peptide_is_not_supported_by_Skyline;
                     return null;
                 }
+                peptideSequence = FastaSequence.NormalizeNTerminalMod(peptideSequence);
             }
 
+            return new ChargedSequence(peptideSequence, Adduct.EMPTY);
+        }
+
+        /// <summary>
+        /// Parses a peptides sequence which may optionally be followed by a charge indicator.
+        /// The peptide sequence will have N-terminal mods normalized so that they appear after the first amino acid.
+        ///
+        /// If the peptide sequence is invalid, then <paramref name="errorMessage "/> will be set.
+        /// </summary>
+        public static ChargedSequence ParsePeptideAndCharge(string peptideSequence, out string errorMessage)
+        {
             errorMessage = null;
-            return new ChargedSequence(peptideSequence, adduct);
+            peptideSequence = (peptideSequence ?? string.Empty).Trim();
+            if (string.IsNullOrEmpty(peptideSequence))
+            {
+                return null;
+            }
+            var adduct = Transition.GetChargeFromIndicator(peptideSequence, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE);
+            peptideSequence = Transition.StripChargeIndicators(peptideSequence, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE);
+            var chargedSequence = ParsePeptideSequence(peptideSequence, out errorMessage);
+            if (chargedSequence == null)
+            {
+                return null;
+            }
+
+            return chargedSequence.ChangeAdduct(adduct);
         }
     }
 }
