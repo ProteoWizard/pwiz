@@ -65,7 +65,6 @@ namespace pwiz.SkylineTestFunctional
                 SetClipboardText(clipboardText);
                 pasteDlg.PastePeptides();
             });
-            PauseTest();
             OkDialog(pasteDlg, pasteDlg.OkDialog);
             Assert.AreEqual(SkylineWindow.Document.MoleculeCount, peptideChargeProteins.Length);
 

@@ -455,47 +455,6 @@ namespace pwiz.Skyline.Model
             return seq;
         }
 
-        /// <summary>
-        /// Parses a peptides sequence which may optionally be followed by a charge indicator.
-        /// Returns a tuple containing the peptide sequence and parsed adduct (or Adduct.Empty if there was no charge indicator).
-        /// The peptide sequence will have N-terminal mods normalized so that they appear after the first amino acid.
-        ///
-        /// If the peptide sequence is invalid, then <paramref name="errorMessage "/> will be set.
-        /// </summary>
-        public static LibraryKey ParsePeptideSequenceAndAdduct(string peptideSequence, out string errorMessage)
-        {
-            errorMessage = null;
-            peptideSequence = (peptideSequence ?? string.Empty).Trim();
-            if (string.IsNullOrEmpty(peptideSequence))
-            {
-                return null;
-            }
-            var adduct = Transition.GetChargeFromIndicator(peptideSequence, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE);
-            peptideSequence = Transition.StripChargeIndicators(peptideSequence, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE);
-            CrosslinkLibraryKey crosslinkLibraryKey =
-                CrosslinkSequenceParser.TryParseCrosslinkLibraryKey(peptideSequence, 0);
-            if (crosslinkLibraryKey != null)
-            {
-                if (!crosslinkLibraryKey.IsSupportedBySkyline())
-                {
-                    errorMessage = Resources
-                        .PasteDlg_ListPeptideSequences_The_structure_of_this_crosslinked_peptide_is_not_supported_by_Skyline;
-                    return null;
-                }
-
-                if (!adduct.IsEmpty)
-                {
-                    crosslinkLibraryKey = new CrosslinkLibraryKey(crosslinkLibraryKey.PeptideLibraryKeys,
-                        crosslinkLibraryKey.Crosslinks, adduct.AdductCharge);
-                }
-
-                return crosslinkLibraryKey;
-            }
-
-            errorMessage = null;
-            return new PeptideLibraryKey(peptideSequence, adduct.AdductCharge);
-        }
-
         public FastaSequence AddAlternative(ProteinMetadata proteinMetadata)
         {
             var alternativesNew = new List<ProteinMetadata>(Alternatives) {proteinMetadata};

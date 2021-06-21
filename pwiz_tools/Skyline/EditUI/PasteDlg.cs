@@ -303,7 +303,7 @@ namespace pwiz.Skyline.EditUI
             try
             {
                 matcher.CreateMatches(document.Settings,
-                    listPeptideSequences.Where(libraryKey => libraryKey != null).Select(libraryKey => libraryKey.Target.ToString()),
+                    listPeptideSequences.Where(chargedSequence => chargedSequence != null).Select(chargedSequence => chargedSequence.Sequence),
                     Settings.Default.StaticModList,
                     Settings.Default.HeavyModList);
             }
@@ -333,8 +333,8 @@ namespace pwiz.Skyline.EditUI
             int lastGroupGlobalIndex = 0, lastPeptideIndex = -1;
             for (int i = gridViewPeptides.Rows.Count - 1; i >= 0; i--)
             {
-                var libraryKey = listPeptideSequences[i];
-                if (libraryKey == null)
+                var chargedSequence = listPeptideSequences[i];
+                if (chargedSequence == null)
                 {
                     continue;
                 }
@@ -398,7 +398,7 @@ namespace pwiz.Skyline.EditUI
                 {
                     // Attempt to create node for error checking.
                     nodePepNew = fastaSequence.CreateFullPeptideDocNode(document.Settings,
-                                                                        new Target(FastaSequence.StripModifications(libraryKey.Target.ToString())));
+                        new Target(FastaSequence.StripModifications(chargedSequence.Sequence)));
                     if (nodePepNew == null)
                     {
                         ShowPeptideError(new PasteError
@@ -412,9 +412,9 @@ namespace pwiz.Skyline.EditUI
                 }
                 // Create node using ModificationMatcher.
                 {
-                    nodePepNew = matcher.GetModifiedNode(libraryKey.Target.ToString(), fastaSequence);
+                    nodePepNew = matcher.GetModifiedNode(chargedSequence.Sequence, fastaSequence);
                     var settings = document.Settings;
-                    var adduct = libraryKey.Adduct;
+                    var adduct = chargedSequence.Adduct;
                     if (!adduct.IsEmpty)
                     {
                         settings = settings.ChangeTransitionFilter(f =>
@@ -465,14 +465,13 @@ namespace pwiz.Skyline.EditUI
         /// Returns a list of tuples with the peptide sequences and optional charges.
         /// The returned list may contain nulls, and will have exactly the same number of rows as gridViewPeptides.
         /// </summary>
-        private List<LibraryKey> ListPeptideSequences()
+        private List<ChargedSequence> ListPeptideSequences()
         {
-            List<LibraryKey> listSequences = new List<LibraryKey>();
+            List<ChargedSequence> listSequences = new List<ChargedSequence>();
             for (int i = 0; i < gridViewPeptides.Rows.Count; i++)
             {
                 var row = gridViewPeptides.Rows[i];
-                var libraryKey = FastaSequence.ParsePeptideSequenceAndAdduct(
-                    Convert.ToString(row.Cells[colPeptideSequence.Index].Value), out string errorMessage);
+                var chargedSequence = ChargedSequence.Parse(Convert.ToString(row.Cells[colPeptideSequence.Index].Value), out string errorMessage);
                 if (errorMessage != null)
                 {
                     ShowPeptideError(new PasteError
@@ -485,12 +484,7 @@ namespace pwiz.Skyline.EditUI
                 }
 
                 var proteinName = Convert.ToString(row.Cells[colPeptideProtein.Index].Value);
-                if (libraryKey == null && string.IsNullOrEmpty(proteinName))
-                {
-                    listSequences.Add(null);
-                    continue;
-                }
-                if (libraryKey == null)
+                if (chargedSequence == null && !string.IsNullOrEmpty(proteinName))
                 {
                     ShowPeptideError(new PasteError
                     {
@@ -500,7 +494,7 @@ namespace pwiz.Skyline.EditUI
                     });
                     return null;
                 }
-                listSequences.Add(libraryKey);
+                listSequences.Add(chargedSequence);
             }
             return listSequences;
         }
