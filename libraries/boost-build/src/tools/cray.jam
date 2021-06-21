@@ -140,7 +140,7 @@ rule init ( : : options * : requirements * )
         build = [ MATCH "(.......)................................." : $(build) ] ;
     }
 
-    # IMPORTANT: 'set-cray-feature-defaults' causes the Boost.Build tests to
+    # IMPORTANT: 'set-cray-feature-defaults' causes the B2 tests to
     # fail. I tried using an 'init' argument called 'ignore-cray-defaults' and
     # setting up 'test-config.jam' to pass 'ignore-cray-defaults' during
     # testing, but I couldn't get the test to read my 'test-config.jam' file
@@ -153,7 +153,7 @@ rule init ( : : options * : requirements * )
 
         # 'check-init-parameters' ensures that each time a toolset is initialized,
         # it is initialized with a unique configuration. The return value is a
-        # Boost.Build property condition which uniquely identifies this
+        # B2 property condition which uniquely identifies this
         # configured instance of this toolset. Typically, toolsets use the
         # returned condition as the conditional in a 'toolset.flags' call to set
         # flags specific to this configuration of this toolset.
@@ -281,7 +281,7 @@ feature.extend toolset : cray ;
 feature.set-default toolset : cray ;
 
 # CCE is different from other compilers in that it optimizes, inlines, and
-# vectorizes by default. Boost.Build assumes that 'off' is the default for
+# vectorizes by default. B2 assumes that 'off' is the default for
 # all compilers. However, for CCE, 'off' and 'default' have different
 # meanings. For CCE, 'off' requires an additional command line argument to
 # turn the feature off. 'default' will not include an additional command
@@ -644,10 +644,6 @@ rule gcc-link-procedure ( targets * : sources * : properties * )
     # Copied from 'gcc.jam'.
 
     SPACE on $(targets) = " " ;
-    # Serialize execution of the 'link' action, since running N links in
-    # parallel is just slower. For now, serialize only gcc links, it might be a
-    # good idea to serialize all links.
-    JAM_SEMAPHORE on $(targets) = <s>gcc-link-semaphore ;
     gcc.quote-rpath $(targets) ;
 }
 
@@ -657,7 +653,6 @@ rule gcc-link-dll-procedure ( targets * : sources * : properties * )
     # Copied from 'gcc.jam'.
 
     SPACE on $(targets) = " " ;
-    JAM_SEMAPHORE on $(targets) = <s>gcc-link-semaphore ;
     gcc.quote-rpath $(targets) ;
 }
 
@@ -707,7 +702,7 @@ rule set-cxxstd-procedure ( targets * : sources * : properties * )
     local cxxstd = [ feature.get-values cxxstd : $(properties) ] ;
     local cray-cxxstd = ;
 
-    local unsupported-values = 2a ; # I don't know what '2a' means.
+    local unsupported-values = 2a 20 ; # I don't know what '2a' means.
     if $(cxxstd) && $(cxxstd) in $(unsupported-values)
     {
 
@@ -904,8 +899,8 @@ generators.register [ new cray-linking-generator
                         : SHARED_LIB
                         : <toolset>cray ] ;
 
-# Tell Boost.Build to prefer 'cray' generators over other valid
-# generators. This is used to resolve a tie when Boost.Build finds that
+# Tell B2 to prefer 'cray' generators over other valid
+# generators. This is used to resolve a tie when B2 finds that
 # there is more than one viable generator for a particular build request.
 
 generators.override cray.prebuilt : builtin.prebuilt ;

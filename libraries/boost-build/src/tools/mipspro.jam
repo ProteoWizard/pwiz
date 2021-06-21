@@ -69,6 +69,9 @@ flags mipspro.compile OPTIONS <debug-symbols>on : -g ;
 flags mipspro.compile OPTIONS <warnings>off : -w ;
 flags mipspro.compile OPTIONS <warnings>on : -ansiW -diag_suppress 1429 ; # suppress long long is nonstandard warning
 flags mipspro.compile OPTIONS <warnings>all : -fullwarn ;
+flags mipspro.compile OPTIONS <warnings>extra : -fullwarn ;
+flags mipspro.compile OPTIONS <warnings>pedantic : -fullwarn -ansiW -diag_suppress 1429 ; # suppress long long is nonstandard warning
+flags mipspro.compile OPTIONS <warnings-as-errors>on : -w2 ;
 flags mipspro.compile OPTIONS <optimization>speed : -Ofast ;
 flags mipspro.compile OPTIONS <optimization>space : -O2 ;
 flags mipspro.compile OPTIONS <cflags> : "-LANG:std" ;

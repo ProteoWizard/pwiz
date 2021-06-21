@@ -83,7 +83,9 @@ flags pathscale.compile OPTIONS <inlining>full : -inline ;
 
 flags pathscale.compile OPTIONS <warnings>off           : -woffall ;
 flags pathscale.compile OPTIONS <warnings>on            : -Wall ;
-flags pathscale.compile OPTIONS <warnings>all           : -Wall -pedantic ;
+flags pathscale.compile OPTIONS <warnings>all           : -Wall ;
+flags pathscale.compile OPTIONS <warnings>extra         : -Wall -Wextra ;
+flags pathscale.compile OPTIONS <warnings>pedantic      : -Wall -Wextra -pedantic ;
 flags pathscale.compile OPTIONS <warnings-as-errors>on  : -Werror ;
 
 flags pathscale.compile OPTIONS <debug-symbols>on : -ggdb ;
