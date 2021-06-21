@@ -14651,6 +14651,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Quadrupole Scan Range (m/z).
+        /// </summary>
+        public static string GraphFullScan_CreateIonMobilityHeatmap_Quadrupole_Scan_Range__m_z_ {
+            get {
+                return ResourceManager.GetString("GraphFullScan_CreateIonMobilityHeatmap_Quadrupole_Scan_Range__m_z_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Filter Quadrupole Scan Range.
+        /// </summary>
+        public static string GraphFullScan_Filter_Button_Tooltip_Filter_Quadrupole_Scan_Range {
+            get {
+                return ResourceManager.GetString("GraphFullScan_Filter_Button_Tooltip_Filter_Quadrupole_Scan_Range", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to MS/MS.
         /// </summary>
         public static string GraphFullScan_GraphFullScan_MS_MS {
