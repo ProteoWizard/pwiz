@@ -293,6 +293,7 @@ rule init ( version : location : options * )
             xml_archive_exception
             codecvt_null
             xml_oarchive
+            utf8_codecvt_facet
         ;
 
         local wserialization_sources = 
