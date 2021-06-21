@@ -1714,6 +1714,83 @@ namespace SkylineTester
             _tabNightly.UpdateGraph();
         }
 
+        private void ShowDiff(string path, string path2)
+        {
+            var tGitDiffFiles = "/command:diff /path:" + path + " /path2:" + path2;
+            Process.Start("TortoiseGitProc.exe", tGitDiffFiles);
+        }
+
+        private string GetPathForLanguage(string formName, string languageName)
+        {
+            string skylineDir = Path.GetFullPath(Path.Combine(ExeDir, @"..\..\.."));
+            string fileName = GetFileForLanguage(formName, languageName);
+            return Directory.GetFiles(skylineDir, fileName, SearchOption.AllDirectories)[0];
+        }
+
+        private string GetFileForLanguage(string formName, string languageName)
+        {
+            if (Equals(languageName, "English"))
+                return formName + ".resx";
+            if (Equals(languageName, "Chinese"))
+                return formName + ".zh-CHS.resx";
+            if (Equals(languageName, "Japanese"))
+                return formName + ".ja.resx";
+            return null;
+        }
+
+        private void diffButton_Click(object sender, EventArgs e)
+        {
+            string formName = formsGrid.CurrentRow?.Cells[0].Value.ToString();
+            if (formName != null)
+            {
+                ShowDiff(GetPathForLanguage(formName, formsLanguage.SelectedItem.ToString()),
+                    GetPathForLanguage(formName, formsLanguageDiff.SelectedItem.ToString()));
+            }
+        }
+
+        private void PopulateFormsLanguageDiff(string language)
+        {
+            var listLanguages = new List<string> { "English", "Chinese", "Japanese" };
+            listLanguages.Remove(language);
+            if (Equals(language, "English"))
+                listLanguages.Insert(0, string.Empty);
+            if (!formsLanguageDiff.Enabled)
+                formsLanguageDiff.Enabled = true;
+            formsLanguageDiff.Items.Clear();
+            formsLanguageDiff.Items.AddRange(listLanguages.ToArray());
+            if (Equals(language, "Chinese") || Equals(language, "Japanese"))
+            {
+                formsLanguageDiff.SelectedItem = "English";
+                diffButton.Enabled = true;
+            }
+            else
+            {
+                diffButton.Enabled = false;
+            }
+        }
+
+        private void formsLanguage_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (Equals(formsLanguage.SelectedItem.ToString(), "French") || Equals(formsLanguage.SelectedItem.ToString(), "Turkish"))
+            {
+                formsLanguageDiff.Items.Clear();
+                formsLanguageDiff.Enabled = false;
+                diffButton.Enabled = false;
+            }
+            else
+            {
+                PopulateFormsLanguageDiff(formsLanguage.SelectedItem.ToString());
+            }
+        }
+
+        private void formsLanguageDiff_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (formsLanguageDiff.SelectedItem.ToString() == "")
+                diffButton.Enabled = false;
+            else
+                diffButton.Enabled = true;
+        }
+        
         #endregion Control events
     }
 }
