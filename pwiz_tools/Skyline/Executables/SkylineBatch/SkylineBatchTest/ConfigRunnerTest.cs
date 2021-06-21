@@ -67,8 +67,8 @@ namespace SkylineBatchTest
             var testRunner = new ConfigRunner(TestUtils.GetFullyPopulatedConfig(), logger);
             Assert.IsTrue(testRunner.IsStopped());
 
-            // Skyline versions after 21.1.0.0
-            var expectedInvariantReportCommandFile = TestUtils.GetTestFilePath("CommandFile_Skyline_21_1_0_0.txt");
+            // Skyline versions after 21.0.9.118
+            var expectedInvariantReportCommandFile = TestUtils.GetTestFilePath("CommandFile_Skyline_21_0_9_118.txt");
             var invariantReportWriter = new CommandWriter(logger, true, true);
             testRunner.WriteBatchCommandsToFile(invariantReportWriter, RunBatchOptions.ALL, true);
             var actualInvariantReportCommandFile = invariantReportWriter.GetCommandFile();
