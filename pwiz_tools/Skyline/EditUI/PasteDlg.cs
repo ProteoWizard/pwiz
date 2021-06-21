@@ -31,7 +31,6 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
-using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Lib;
@@ -303,8 +302,10 @@ namespace pwiz.Skyline.EditUI
                 return null;
             try
             {
-                matcher.CreateMatches(document.Settings, listPeptideSequences, Settings.Default.StaticModList,
-                                      Settings.Default.HeavyModList);
+                matcher.CreateMatches(document.Settings,
+                    listPeptideSequences.Where(chargedSequence => chargedSequence != null).Select(chargedSequence => chargedSequence.Sequence),
+                    Settings.Default.StaticModList,
+                    Settings.Default.HeavyModList);
             }
             catch (FormatException e)
             {
@@ -332,13 +333,16 @@ namespace pwiz.Skyline.EditUI
             int lastGroupGlobalIndex = 0, lastPeptideIndex = -1;
             for (int i = gridViewPeptides.Rows.Count - 1; i >= 0; i--)
             {
+                var chargedSequence = listPeptideSequences[i];
+                if (chargedSequence == null)
+                {
+                    continue;
+                }
+
                 PeptideGroupDocNode peptideGroupDocNode;
                 var row = gridViewPeptides.Rows[i];
-                var pepModSequence = Convert.ToString(row.Cells[colPeptideSequence.Index].Value);
-                pepModSequence = FastaSequence.NormalizeNTerminalMod(pepModSequence);
                 var proteinName = Convert.ToString(row.Cells[colPeptideProtein.Index].Value);
-                if (string.IsNullOrEmpty(pepModSequence) && string.IsNullOrEmpty(proteinName))
-                    continue;
+                
                 if (string.IsNullOrEmpty(proteinName))
                 {
                     peptideGroupDocNode = GetSelectedPeptideGroupDocNode(document, selectedPath);
@@ -394,7 +398,7 @@ namespace pwiz.Skyline.EditUI
                 {
                     // Attempt to create node for error checking.
                     nodePepNew = fastaSequence.CreateFullPeptideDocNode(document.Settings,
-                                                                        new Target(FastaSequence.StripModifications(pepModSequence)));
+                        new Target(FastaSequence.StripModifications(chargedSequence.Sequence)));
                     if (nodePepNew == null)
                     {
                         ShowPeptideError(new PasteError
@@ -407,8 +411,21 @@ namespace pwiz.Skyline.EditUI
                     }
                 }
                 // Create node using ModificationMatcher.
-                nodePepNew = matcher.GetModifiedNode(pepModSequence, fastaSequence).ChangeSettings(document.Settings,
-                                                                                                  SrmSettingsDiff.ALL);
+                {
+                    nodePepNew = matcher.GetModifiedNode(chargedSequence.Sequence, fastaSequence);
+                    var settings = document.Settings;
+                    var adduct = chargedSequence.Adduct;
+                    if (!adduct.IsEmpty)
+                    {
+                        settings = settings.ChangeTransitionFilter(f =>
+                            f.ChangePeptidePrecursorCharges(new[] {adduct}));
+                    }
+                    nodePepNew = nodePepNew.ChangeSettings(settings, SrmSettingsDiff.ALL);
+                    if (!adduct.IsEmpty)
+                    {
+                        nodePepNew = (PeptideDocNode) nodePepNew.ChangeAutoManageChildren(false);
+                    }
+                }
                 // Avoid adding an existing peptide a second time.
                 if (!peptides.Contains(nodePep => Equals(nodePep.Key, nodePepNew.Key)))
                 {
@@ -444,19 +461,30 @@ namespace pwiz.Skyline.EditUI
             return document;
         }
 
-        private List<string> ListPeptideSequences()
+        /// <summary>
+        /// Returns a list of peptide sequences and optional charges.
+        /// The returned list may contain nulls, and will have exactly the same number of rows as gridViewPeptides.
+        /// </summary>
+        private List<ChargedSequence> ListPeptideSequences()
         {
-            List<string> listSequences = new List<string>();
-            for (int i = gridViewPeptides.Rows.Count - 1; i >= 0; i--)
+            List<ChargedSequence> listSequences = new List<ChargedSequence>();
+            for (int i = 0; i < gridViewPeptides.Rows.Count; i++)
             {
                 var row = gridViewPeptides.Rows[i];
-                var peptideSequence = Convert.ToString(row.Cells[colPeptideSequence.Index].Value);
-                var proteinName = Convert.ToString(row.Cells[colPeptideProtein.Index].Value);
-                if (string.IsNullOrEmpty(peptideSequence) && string.IsNullOrEmpty(proteinName))
+                var chargedSequence = ChargedSequence.ParsePeptideAndCharge(Convert.ToString(row.Cells[colPeptideSequence.Index].Value), out string errorMessage);
+                if (errorMessage != null)
                 {
-                    continue;
+                    ShowPeptideError(new PasteError
+                    {
+                        Column = colPeptideSequence.Index,
+                        Line = i,
+                        Message = errorMessage
+                    });
+                    return null;
                 }
-                if (string.IsNullOrEmpty(peptideSequence))
+
+                var proteinName = Convert.ToString(row.Cells[colPeptideProtein.Index].Value);
+                if (chargedSequence == null && !string.IsNullOrEmpty(proteinName))
                 {
                     ShowPeptideError(new PasteError
                     {
@@ -466,35 +494,7 @@ namespace pwiz.Skyline.EditUI
                     });
                     return null;
                 }
-
-                CrosslinkLibraryKey crosslinkLibraryKey =
-                    CrosslinkSequenceParser.TryParseCrosslinkLibraryKey(peptideSequence, 0);
-                if (crosslinkLibraryKey == null)
-                {
-                    if (!FastaSequence.IsExSequence(peptideSequence))
-                    {
-                        ShowPeptideError(new PasteError
-                        {
-                            Column = colPeptideSequence.Index,
-                            Line = i,
-                            Message = Resources.PasteDlg_ListPeptideSequences_This_peptide_sequence_contains_invalid_characters
-                        });
-                        return null;
-                    }
-                    peptideSequence = FastaSequence.NormalizeNTerminalMod(peptideSequence);
-                }
-                else if (!crosslinkLibraryKey.IsSupportedBySkyline())
-                {
-                    ShowPeptideError(new PasteError
-                    {
-                        Column = colPeptideSequence.Index,
-                        Line = i,
-                        Message = Resources.PasteDlg_ListPeptideSequences_The_structure_of_this_crosslinked_peptide_is_not_supported_by_Skyline
-                    });
-                    return null;
-                }
-
-                listSequences.Add(peptideSequence);
+                listSequences.Add(chargedSequence);
             }
             return listSequences;
         }

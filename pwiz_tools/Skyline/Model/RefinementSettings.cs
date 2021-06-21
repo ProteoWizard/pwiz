@@ -79,18 +79,6 @@ namespace pwiz.Skyline.Model
             get { return new MessageInfo(MessageType.refined_targets, SrmDocument.DOCUMENT_TYPE.none); }
         }
 
-        public struct PeptideCharge
-        {
-            public PeptideCharge(Target sequence, Adduct charge) : this()
-            {
-                Sequence = sequence;
-                Charge = charge;
-            }
-
-            public Target Sequence { get; private set; }
-            public Adduct Charge { get; private set; }
-        }
-
         public enum ProteinSpecType {  name, accession, preferred }
 
         public object GetDefaultObject(ObjectInfo<object> info)
