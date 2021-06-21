@@ -15866,7 +15866,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Column .
+        ///   Looks up a localized string similar to Column {0}.
         /// </summary>
         public static string ImportTransitionListColumnSelectDlg_DisplayData_Column_ {
             get {
