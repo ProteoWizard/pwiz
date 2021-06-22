@@ -378,7 +378,7 @@ namespace pwiz.Skyline.SettingsUI
             UpdatePeptideUniquenessEnabled();
 
             // Validate and hold prediction settings
-            string nameRT = comboRetentionTime.SelectedItem.ToString();
+            string nameRT = comboRetentionTime.SelectedItem?.ToString();
             RetentionTimeRegression retentionTime =
                 Settings.Default.GetRetentionTimeByName(nameRT);
             if (retentionTime != null && retentionTime.Calculator != null)

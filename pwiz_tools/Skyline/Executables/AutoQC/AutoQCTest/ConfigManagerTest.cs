@@ -23,6 +23,7 @@ using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
+using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using AutoQC;
 
@@ -194,10 +195,18 @@ namespace AutoQCTest
         public void TestEnableInvalid()
         {
             var configManager = TestUtils.GetTestConfigManager();
-            configManager.Import(TestUtils.GetTestFilePath("bad.xml"), null);
+            configManager.Import(TestUtils.GetTestFilePath("bad.qcfg"), null);
             configManager.SelectConfig(3);
             configManager.UpdateSelectedEnabled(true);
-            Assert.IsTrue(!configManager.GetSelectedConfig().IsEnabled);
+
+            new Thread(() =>
+            {
+                TestUtils.WaitForCondition(() =>
+                    {
+                        return !configManager.GetSelectedConfig().IsEnabled;
+                    }, new TimeSpan(0, 0, 1), 100,
+                    "Configuration started when it should have had an error because it was invalid");
+            });
         }
 
 

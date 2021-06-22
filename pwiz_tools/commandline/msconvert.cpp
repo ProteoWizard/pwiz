@@ -73,6 +73,7 @@ struct Config : public Reader::Config
         simAsSpectra = false;
         srmAsSpectra = false;
         combineIonMobilitySpectra = false;
+        reportSonarBins = false;
         unknownInstrumentIsError = true;
         stripLocationFromSourceFiles = false;
         stripVersionFromSoftware = false;

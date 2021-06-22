@@ -16,6 +16,9 @@
  * pathunix.c - UNIX specific path manipulation support
  */
 
+#include "jam.h"
+#ifdef USE_PATHUNIX
+
 #include "pathsys.h"
 
 #include <stdlib.h>
@@ -84,3 +87,5 @@ OBJECT * path_as_key( OBJECT * path )
 void path_done( void )
 {
 }
+
+#endif // USE_PATHUNIX

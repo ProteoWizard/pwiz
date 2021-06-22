@@ -328,7 +328,7 @@ local rule load-jamfile ( dir : jamfile-module : synthesize ? )
         errors.error "Multiple Jamfiles found at '$(dir)'" :
             "Filenames are: " $(jamfile-to-load:D=) ;
     }
-    
+
     if ! $(jamfile-to-load) && $(synthesize)
     {
         jamfile-to-load = $(dir)/@ ;
@@ -964,7 +964,7 @@ rule target ( project-module : allow-missing ? )
 }
 
 
-# Defines a Boost.Build extension project. Such extensions usually contain
+# Defines a B2 extension project. Such extensions usually contain
 # library targets and features that can be used by many people. Even though
 # extensions are really projects, they can be initialized as a module would be
 # with the "using" (project.project-rules.using) mechanism.
@@ -988,7 +988,7 @@ rule extension ( id space ? : options * : * )
         {
             root-project = [ project.attribute $(root-project) parent-module ] ;
         }
-        
+
         # Default to creating extensions in /ext/.. project space.
         local id = $(1[1]) ;
         local space = $(1[2]) ;

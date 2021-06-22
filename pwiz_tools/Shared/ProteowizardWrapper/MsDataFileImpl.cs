@@ -189,6 +189,7 @@ namespace pwiz.ProteowizardWrapper
                     preferOnlyMsLevel = !ForceUncombinedIonMobility && combineIonMobilitySpectra ? 0 : preferOnlyMsLevel,
                     allowMsMsWithoutPrecursor = false,
                     combineIonMobilitySpectra = !ForceUncombinedIonMobility && combineIonMobilitySpectra,
+                    reportSonarBins = true, // For Waters SONAR data, report bin number instead of false drift time
                     globalChromatogramsAreMs1Only = true
                 };
                 _lockmassParameters = lockmassParameters;
@@ -370,7 +371,7 @@ namespace pwiz.ProteowizardWrapper
         public bool IsWatersLockmassSpectrum(MsDataSpectrum s)
         {
             return _lockmassFunction.HasValue && 
-                   MsDataSpectrum.WatersFunctionNumberFromId(s.Id, HasIonMobilitySpectra) >= _lockmassFunction.Value;
+                   MsDataSpectrum.WatersFunctionNumberFromId(s.Id, s.IonMobilities != null) >= _lockmassFunction.Value;
         }
 
         /// <summary>
@@ -528,6 +529,8 @@ namespace pwiz.ProteowizardWrapper
                         return eIonMobilityUnits.inverse_K0_Vsec_per_cm2;
                     case SpectrumList_IonMobility.IonMobilityUnits.compensation_V:
                         return eIonMobilityUnits.compensation_V;
+                    case SpectrumList_IonMobility.IonMobilityUnits.waters_sonar: // Not really ion mobility, but uses IMS hardware to filter precursor m/z
+                        return eIonMobilityUnits.waters_sonar;
                     default:
                         throw new InvalidDataException(string.Format(@"unknown ion mobility type {0}", _ionMobilityUnits));
                 }
@@ -594,7 +597,8 @@ namespace pwiz.ProteowizardWrapper
                             {
                                 if (GetMsLevel(spectrum) == 1)
                                 {
-                                    var function = MsDataSpectrum.WatersFunctionNumberFromId(id.abbreviate(spectrum.id), HasCombinedIonMobilitySpectra);
+                                    var function = MsDataSpectrum.WatersFunctionNumberFromId(id.abbreviate(spectrum.id), 
+                                        HasCombinedIonMobilitySpectra && spectrum.id.Contains(MERGED_TAG));
                                     if (function > 1)
                                         _lockmassFunction = function; // Ignore all scans in this function for chromatogram extraction purposes
                                 }
@@ -739,6 +743,8 @@ namespace pwiz.ProteowizardWrapper
                 }
             }
         }
+
+        private const string MERGED_TAG = @"merged="; // Our cue that the scan in question represents 3-array IMS data
 
         public double[] GetTotalIonCurrent()
         {
@@ -915,10 +921,18 @@ namespace pwiz.ProteowizardWrapper
             {
                 switch (IonMobilityUnits)
                 {
+                    case eIonMobilityUnits.waters_sonar:
                     case eIonMobilityUnits.drift_time_msec:
                         data = TryGetIonMobilityData(s, CVID.MS_raw_ion_mobility_array, ref _cvidIonMobility);
                         if (data == null)
+                        {
                             data = TryGetIonMobilityData(s, CVID.MS_mean_drift_time_array, ref _cvidIonMobility);
+                            if (data == null && HasCombinedIonMobilitySpectra && !s.id.Contains(MERGED_TAG))
+                            {
+                                _cvidIonMobility = null; // We can't learn anything from a lockmass spectrum that has no IMS
+                                return null;
+                            }
+                        }
                         break;
                     case eIonMobilityUnits.inverse_K0_Vsec_per_cm2:
                         data = TryGetIonMobilityData(s, CVID.MS_mean_inverse_reduced_ion_mobility_array, ref _cvidIonMobility);
@@ -1093,6 +1107,31 @@ namespace pwiz.ProteowizardWrapper
             {
                 return GetIonMobility(spectrum).HasValue;
             }
+        }
+
+        public bool IsWatersSonarData()
+        {
+            if (IonMobilitySpectrumList == null || IonMobilitySpectrumList.size() == 0)
+                return false;
+            return IonMobilitySpectrumList.isWatersSonarData();
+        }
+
+        // Waters SONAR mode uses ion mobility hardware to filter on m/z and reports the results as bins
+        public Tuple<int, int> SonarMzToBinRange(double mz, double tolerance)
+        {
+            int low = -1, high = -1;
+            if (IonMobilitySpectrumList != null)
+            {
+                IonMobilitySpectrumList.sonarMzToBinRange(mz, tolerance, ref low, ref high);
+            }
+            return new Tuple<int, int>(low, high);
+        }
+
+        public double SonarBinToPrecursorMz(int bin)
+        {
+            double result = 0;
+            IonMobilitySpectrumList?.sonarBinToPrecursorMz(bin, ref result); // Returns average of m/z range associated with bin, really only useful for display
+            return result;
         }
 
         private double? GetMaxIonMobilityInList()
