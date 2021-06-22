@@ -5568,7 +5568,7 @@ If you prefer you can choose to report anonymously.</value>
   <data name="ExportMethodDlg_comboInstrument_SelectedIndexChanged_Export_of_DIA_isolation_lists_is_not_yet_supported_for__0__" xml:space="preserve">
     <value>Export of DIA isolation lists is not yet supported for {0}.</value>
   </data>
-  <data name="MassListRowReader_NextRow_No_peptide_sequence_column_specified">
+  <data name="MassListRowReader_NextRow_No_peptide_sequence_column_specified" xml:space="preserve">
     <value>No peptide modified sequence column specified</value>
   </data>
   <data name="MassListRowReader_NextRow_Invalid_peptide_sequence__0__found" xml:space="preserve">
@@ -9649,7 +9649,7 @@ Recognized isotopes include: {2}</value>
   <data name="SmallMoleculeLibraryAttributes_KeyValuePairs_OtherIDs" xml:space="preserve">
     <value>OtherIDs</value>
   </data>
-  <data name="ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column">
+  <data name="ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column" xml:space="preserve">
     <value>Ignore Column</value>
   </data>
   <data name="ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Decoy" xml:space="preserve">
@@ -11455,7 +11455,7 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
   </data>
   <data name="ViewLibraryDlg_UpdateUI_IM__" xml:space="preserve">
     <value>IM: </value>
-    <comment>IM is abbreviation for Ion Mobility</comment>
+    <comment>&gt;IM is abbreviation for Ion Mobility</comment>
   </data>
   <data name="ViewLibraryDlg_UpdateUI_CCS__" xml:space="preserve">
     <value>CCS: </value>
