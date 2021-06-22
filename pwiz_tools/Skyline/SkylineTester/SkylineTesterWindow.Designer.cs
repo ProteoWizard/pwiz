@@ -81,6 +81,9 @@ namespace SkylineTester
             this.showFormNames = new System.Windows.Forms.CheckBox();
             this.label15 = new System.Windows.Forms.Label();
             this.groupBox13 = new System.Windows.Forms.GroupBox();
+            this.diffButton = new System.Windows.Forms.Button();
+            this.formsLanguageDiff = new System.Windows.Forms.ComboBox();
+            this.label20 = new System.Windows.Forms.Label();
             this.formsLanguage = new System.Windows.Forms.ComboBox();
             this.runForms = new System.Windows.Forms.Button();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
@@ -451,7 +454,7 @@ namespace SkylineTester
             // 
             this.groupBox12.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(220)))), ((int)(((byte)(205)))));
             this.groupBox12.Controls.Add(this.showFormNames);
-            this.groupBox12.Location = new System.Drawing.Point(11, 115);
+            this.groupBox12.Location = new System.Drawing.Point(8, 190);
             this.groupBox12.Margin = new System.Windows.Forms.Padding(4);
             this.groupBox12.Name = "groupBox12";
             this.groupBox12.Padding = new System.Windows.Forms.Padding(4);
@@ -488,15 +491,52 @@ namespace SkylineTester
             // groupBox13
             // 
             this.groupBox13.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(220)))), ((int)(((byte)(205)))));
+            this.groupBox13.Controls.Add(this.diffButton);
+            this.groupBox13.Controls.Add(this.formsLanguageDiff);
+            this.groupBox13.Controls.Add(this.label20);
             this.groupBox13.Controls.Add(this.formsLanguage);
-            this.groupBox13.Location = new System.Drawing.Point(11, 50);
+            this.groupBox13.Location = new System.Drawing.Point(8, 50);
             this.groupBox13.Margin = new System.Windows.Forms.Padding(4);
             this.groupBox13.Name = "groupBox13";
             this.groupBox13.Padding = new System.Windows.Forms.Padding(4);
-            this.groupBox13.Size = new System.Drawing.Size(280, 57);
+            this.groupBox13.Size = new System.Drawing.Size(280, 97);
             this.groupBox13.TabIndex = 1;
             this.groupBox13.TabStop = false;
             this.groupBox13.Text = "Language";
+            // 
+            // diffButton
+            // 
+            this.diffButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.diffButton.Location = new System.Drawing.Point(201, 66);
+            this.diffButton.Margin = new System.Windows.Forms.Padding(4);
+            this.diffButton.Name = "diffButton";
+            this.diffButton.Size = new System.Drawing.Size(40, 21);
+            this.diffButton.TabIndex = 9;
+            this.diffButton.Text = "Diff";
+            this.diffButton.UseVisualStyleBackColor = true;
+            this.diffButton.Click += new System.EventHandler(this.diffButton_Click);
+            // 
+            // formsLanguageDiff
+            // 
+            this.formsLanguageDiff.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.formsLanguageDiff.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.formsLanguageDiff.FormattingEnabled = true;
+            this.formsLanguageDiff.Location = new System.Drawing.Point(8, 66);
+            this.formsLanguageDiff.Margin = new System.Windows.Forms.Padding(4);
+            this.formsLanguageDiff.Name = "formsLanguageDiff";
+            this.formsLanguageDiff.Size = new System.Drawing.Size(185, 21);
+            this.formsLanguageDiff.TabIndex = 1;
+            this.formsLanguageDiff.SelectedIndexChanged += new System.EventHandler(this.formsLanguageDiff_SelectedIndexChanged);
+            // 
+            // label20
+            // 
+            this.label20.AutoSize = true;
+            this.label20.Location = new System.Drawing.Point(5, 49);
+            this.label20.Name = "label20";
+            this.label20.Size = new System.Drawing.Size(46, 13);
+            this.label20.TabIndex = 1;
+            this.label20.Text = "Diff from";
             // 
             // formsLanguage
             // 
@@ -509,6 +549,7 @@ namespace SkylineTester
             this.formsLanguage.Name = "formsLanguage";
             this.formsLanguage.Size = new System.Drawing.Size(185, 21);
             this.formsLanguage.TabIndex = 0;
+            this.formsLanguage.SelectedIndexChanged += new System.EventHandler(this.formsLanguage_SelectedIndexChanged);
             // 
             // runForms
             // 
@@ -3138,6 +3179,7 @@ namespace SkylineTester
             this.groupBox12.ResumeLayout(false);
             this.groupBox12.PerformLayout();
             this.groupBox13.ResumeLayout(false);
+            this.groupBox13.PerformLayout();
             this.groupBox1.ResumeLayout(false);
             this.toolStrip1.ResumeLayout(false);
             this.toolStrip1.PerformLayout();
@@ -3445,5 +3487,8 @@ namespace SkylineTester
         private RadioButton modeTutorialsCoverShots;
         private TextBox pauseStartingPage;
         private Label labelPauseStartingPage;
+        private Button diffButton;
+        private ComboBox formsLanguageDiff;
+        private Label label20;
     }
 }

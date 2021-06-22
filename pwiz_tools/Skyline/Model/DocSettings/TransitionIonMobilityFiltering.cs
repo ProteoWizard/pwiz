@@ -872,6 +872,7 @@ namespace pwiz.Skyline.Model.DocSettings
     public class IonMobilityFilter : Immutable, IComparable, IEquatable<IonMobilityFilter>
     {
         public static readonly IonMobilityFilter EMPTY = new IonMobilityFilter(IonMobilityAndCCS.EMPTY, null);
+        public const double DoubleToIntEpsilon = 0.001; // Allow for a little rounding in double<->int conversion in SONAR use
 
         public static bool IsNullOrEmpty(IonMobilityFilter filter)
         {
@@ -932,6 +933,13 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             IonMobilityAndCCS = ionMobilityAndCCS;
             IonMobilityExtractionWindowWidth = ionMobilityExtractionWindowWidth;
+            // Sanity check for SONAR filters - bounds should evaluate as integers since they're bins
+            Assume.IsTrue(IonMobilityUnits != eIonMobilityUnits.waters_sonar || 
+                          !IonMobilityAndCCS.HasCollisionalCrossSection &&
+                          !IonMobilityAndCCS.HighEnergyIonMobilityValueOffset.HasValue &&
+                          Math.Abs(IonMobilityAndCCS.IonMobility.Mobility.Value - 0.5 * IonMobilityExtractionWindowWidth.Value - 
+                                   Math.Round(IonMobilityAndCCS.IonMobility.Mobility.Value - 0.5 * IonMobilityExtractionWindowWidth.Value)) <= DoubleToIntEpsilon,
+                @"unexpected values for Waters SONAR filtering");
         }
         public IonMobilityAndCCS IonMobilityAndCCS { get; private set; }
         public double? CollisionalCrossSectionSqA => IonMobilityAndCCS.CollisionalCrossSectionSqA; // The CCS value used to get the ion mobility, if known
@@ -1009,6 +1017,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     return Resources.IonMobilityFilter_IonMobilityUnitsString_Drift_Time__ms_;
                 case eIonMobilityUnits.compensation_V:
                     return Resources.IonMobilityFilter_IonMobilityUnitsString_Compensation_Voltage__V_;
+                case eIonMobilityUnits.waters_sonar: // Not really ion mobility, but uses IMS hardware and our IMS filtering code
                 case eIonMobilityUnits.none:
                     return Resources.IonMobilityFilter_IonMobilityUnitsL10NString_None;
                 default:

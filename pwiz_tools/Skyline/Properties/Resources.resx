@@ -11300,6 +11300,9 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
   <data name="BuildLibraryDlg_AddInputFiles_These_files_are_library_files_and_do_not_need_to_be_built__Edit_the_list_of_libraries_to_add_them_directly_" xml:space="preserve">
     <value>These files are library files and do not need to be built. Edit the list of libraries to add them directly.</value>
   </data>
+  <data name="GraphFullScan_CreateIonMobilityHeatmap_Quadrupole_Scan_Range__m_z_" xml:space="preserve">
+    <value>Quadrupole Scan Range (m/z)</value>
+  </data>
   <data name="SkylineWindow_ImportMassList_Analyzing_input__0_" xml:space="preserve">
     <value>Analyzing input {0}</value>
   </data>
@@ -11412,6 +11415,10 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
   <data name="PanoramaHelper_ValidateFolder_Exception_" xml:space="preserve">
     <value>Error: An unknown error occurred trying to verify access to Panorama folder '{0}' on the server {1}.
 {2}</value>
+  </data>
+  <data name="GraphFullScan_Filter_Button_Tooltip_Filter_Quadrupole_Scan_Range" xml:space="preserve">
+    <value>Filter Quadrupole Scan Range</value>
+    <comment>replaces 3D graph filter button's tooltip when "ion mobility" data is actually Waters SONAR</comment>
   </data>
   <data name="ImportFastaControl_ImportFasta_iRT_standards" xml:space="preserve">
     <value>iRT standards</value>
