@@ -108,6 +108,9 @@ namespace pwiz.Skyline.FileUI
             {
                 for (var i = 0; i < numColumns; i++)
                 {
+                    // In this case when we don't have user provided headers, we still want localized headers that can be translated,
+                    // this replaces the auto generated strings with a localized version
+                    dataGrid.Columns[i].HeaderText = string.Format(Resources.ImportTransitionListColumnSelectDlg_DisplayData_Column__0_, (i+1));
                     dataGrid.Columns[i].ToolTipText =
                         string.Format(Resources.ImportTransitionListColumnSelectDlg_DisplayData_The_input_text_did_not_appear_to_contain_column_headers__Use_the_dropdown_control_to_assign_column_meanings_for_import_);
                 }
