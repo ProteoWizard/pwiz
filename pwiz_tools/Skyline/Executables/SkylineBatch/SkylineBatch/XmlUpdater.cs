@@ -187,7 +187,7 @@ namespace SkylineBatch
             {
                 writer.WriteStartElement(XMLElements.REMOTE_FILE_SET);
                 dataServer.WriteXml(writer);
-                if (!dataNamingPattern.Equals(".*"))
+                if (dataNamingPattern != null && !dataNamingPattern.Equals(".*"))
                     writer.WriteAttributeIfString(XML_TAGS.data_naming_pattern, dataNamingPattern);
                 writer.WriteEndElement();
             }
@@ -335,7 +335,7 @@ namespace SkylineBatch
             if (!XmlUtil.ReadNextElement(reader, "config_skyline_settings"))
                 throw new Exception("The bcfg file is from an earlier version of Skyline Batch and could not be loaded.");
             var type = reader.GetAttribute(OLD_XML_TAGS.Type);
-            var cmdPath = Path.GetDirectoryName(reader.GetAttribute(OLD_XML_TAGS.CmdPath));
+            var cmdPath = reader.GetAttribute(OLD_XML_TAGS.CmdPath);
             reader.Read();
             writer.WriteStartElement("config_skyline_settings");
             writer.WriteAttributeIfString(XML_TAGS.type, type);

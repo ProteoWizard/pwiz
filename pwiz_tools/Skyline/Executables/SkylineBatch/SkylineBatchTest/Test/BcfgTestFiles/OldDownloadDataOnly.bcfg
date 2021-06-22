@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ConfigList SavedPathRoot="C:\Branches\new_dev_2\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\bin\Debug\..\..\Test\BcfgTestFiles">
+  <skylinebatch_config Name="OldDataOnly" Enabled="true" Modified="01/01/0001 00:00:00">
+    <main_settings AnalysisFolderPath="C:\Branches\new_dev_2\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\bin\Debug\..\..\Test\BcfgTestFiles\OldDataOnly" DataFolderPath="C:\Branches\new_dev_2\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\bin\Debug\..\..\Test\emptyData">
+      <template_file FilePath="C:\Branches\new_dev_2\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\bin\Debug\..\..\Test\emptyTemplate.sky" />
+      <data_server ServerUri="https://panoramaweb.org/_webdav/MacCoss/brendan/Instruction/2021-DIA-PUBS/2015-Selevsek/%40files/RawFiles/wiff-rep/" />
+    </main_settings>
+    <file_settings />
+    <refine_settings />
+    <report_settings />
+    <config_skyline_settings Type="Custom" CmdPath="C:\Branches\new_dev_2\pwiz_tools\Skyline\bin\x64\Release\SkylineCmd.exe" />
+  </skylinebatch_config>
+</ConfigList>

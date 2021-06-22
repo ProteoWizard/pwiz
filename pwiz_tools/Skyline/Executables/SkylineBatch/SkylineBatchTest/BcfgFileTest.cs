@@ -144,6 +144,110 @@ namespace SkylineBatchTest
             }
         }
 
-       
+
+        [TestMethod]
+        public void TestOldBcfgFiles()
+        {
+            var folderPath = TestUtils.GetTestFilePath("BcfgTestFiles");
+            var configManager = new SkylineBatchConfigManager(TestUtils.GetTestLogger());
+
+            var OldMinimalConfigPath = Path.Combine(folderPath, "OldMinimalConfig.bcfg");
+            var expectedMinimalConfig = new SkylineBatchConfig("Minimal", false, DateTime.MinValue,
+                new MainSettings(SkylineTemplate.FromUi(TestUtils.GetTestFilePath("emptyTemplate.sky"), null, null), Path.Combine(folderPath, "Minimal"), TestUtils.GetTestFilePath("emptyData"), null, string.Empty, null, string.Empty),
+                new FileSettings(null, null, null, false, false, false), RefineSettings.Empty(), new ReportSettings(new List<ReportInfo>()), TestUtils.GetTestSkylineSettings());
+            CheckValues(configManager, OldMinimalConfigPath, new List<IConfig> { expectedMinimalConfig });
+
+            var templateOnlyPath = Path.Combine(folderPath, "OldDownloadTemplateOnly.bcfg");
+            var expectedTemplateOnly = new SkylineBatchConfig("OldTemplateOnly", false, DateTime.MinValue,
+                new MainSettings(SkylineTemplate.FromUi(TestUtils.GetTestFilePath("Selevsek.sky.zip"), null,
+                    new PanoramaFile(new Server("https://panoramaweb.org/MacCoss/brendan/Instruction/2021-DIA-PUBS/2015-Selevsek/targetedms-showPrecursorList.view?fileName=Selevsek.sky.zip", string.Empty, string.Empty, true), Path.GetDirectoryName(folderPath), "Selevsek.sky.zip")), Path.Combine(folderPath, "OldTemplateOnly"), TestUtils.GetTestFilePath("emptyData"), null, string.Empty, null, string.Empty),
+                expectedMinimalConfig.FileSettings, expectedMinimalConfig.RefineSettings, expectedMinimalConfig.ReportSettings, expectedMinimalConfig.SkylineSettings);
+            CheckValues(configManager, templateOnlyPath, new List<IConfig> { expectedTemplateOnly });
+
+           var dataOnlyPath = Path.Combine(folderPath, "OldDownloadDataOnly.bcfg");
+            var expectedDataOnly = new SkylineBatchConfig("OldDataOnly", false, DateTime.MinValue,
+                new MainSettings(expectedMinimalConfig.MainSettings.Template, Path.Combine(folderPath, "OldDataOnly"), TestUtils.GetTestFilePath("emptyData"),
+                    DataServerInfo.ServerFromUi("https://panoramaweb.org/_webdav/MacCoss/brendan/Instruction/2021-DIA-PUBS/2015-Selevsek/%40files/RawFiles/wiff-rep/", string.Empty, string.Empty, true, string.Empty, TestUtils.GetTestFilePath("emptyData")), string.Empty, null, string.Empty),
+                expectedMinimalConfig.FileSettings, expectedMinimalConfig.RefineSettings, expectedMinimalConfig.ReportSettings, expectedMinimalConfig.SkylineSettings);
+            CheckValues(configManager, dataOnlyPath, new List<IConfig> { expectedDataOnly });
+
+            var annotationsOnlyPath = Path.Combine(folderPath, "OldDownloadAnnotationsOnly.bcfg");
+            var expectedAnnotationsOnly = new SkylineBatchConfig("OldAnnotationsOnly", false, DateTime.MinValue,
+                new MainSettings(expectedMinimalConfig.MainSettings.Template, Path.Combine(folderPath, "OldAnnotationsOnly"), TestUtils.GetTestFilePath("emptyData"),
+                    null, TestUtils.GetTestFilePath("fakeAnnotations.csv"), null, string.Empty),
+                expectedMinimalConfig.FileSettings, expectedMinimalConfig.RefineSettings, expectedMinimalConfig.ReportSettings, expectedMinimalConfig.SkylineSettings);
+            CheckValues(configManager, annotationsOnlyPath, new List<IConfig> { expectedAnnotationsOnly });
+
+            var downloadAllPath = Path.Combine(folderPath, "OldDownloadAll.bcfg");
+            var expectedDownloadAll = new SkylineBatchConfig("OldDownloadAll", false, DateTime.MinValue,
+                new MainSettings(expectedTemplateOnly.MainSettings.Template, Path.Combine(folderPath, "OldDownloadAll"), TestUtils.GetTestFilePath("emptyData"),
+                    expectedDataOnly.MainSettings.Server, expectedAnnotationsOnly.MainSettings.AnnotationsFilePath,
+                    expectedAnnotationsOnly.MainSettings.AnnotationsDownload, string.Empty),
+                expectedMinimalConfig.FileSettings, expectedMinimalConfig.RefineSettings, expectedMinimalConfig.ReportSettings, expectedMinimalConfig.SkylineSettings);
+            CheckValues(configManager, downloadAllPath, new List<IConfig> { expectedDownloadAll });
+
+            TestUtils.InitializeRInstallation();
+            var fullConfigPath = Path.Combine(folderPath, "OldFullConfig.bcfg");
+            var expectedFullConfig = new SkylineBatchConfig("OldFullConfig", false, DateTime.MinValue,
+                new MainSettings(expectedDownloadAll.MainSettings.Template, Path.Combine(folderPath, "OldFullConfig"), TestUtils.GetTestFilePath("emptyData"),
+                    expectedDownloadAll.MainSettings.Server, expectedAnnotationsOnly.MainSettings.AnnotationsFilePath,
+                    expectedDownloadAll.MainSettings.AnnotationsDownload, string.Empty),
+                new FileSettings(1, 2, 3, true, true, true),
+                new RefineSettings(RefineInputObject.FromInvariantCommandList(new List<Tuple<RefineVariable, string>>
+                {
+                    new Tuple<RefineVariable, string>(RefineVariable.min_peptides, "1"),
+                    new Tuple<RefineVariable, string>(RefineVariable.min_transitions, "5"),
+                    new Tuple<RefineVariable, string>(RefineVariable.add_label_type, "True"),
+                    new Tuple<RefineVariable, string>(RefineVariable.max_peptide_peak_rank, "4"),
+                    new Tuple<RefineVariable, string>(RefineVariable.cv_remove_above_cutoff, "0.01"),
+                    new Tuple<RefineVariable, string>(RefineVariable.cv_global_normalize, "equalize_medians"),
+                }), true, true, TestUtils.GetTestFilePath("RefinedOutput.sky")),
+                new ReportSettings(new List<ReportInfo>
+                {
+                    new ReportInfo("test", true, TestUtils.GetTestFilePath("UniqueReport.skyr"), new List<Tuple<string, string>>
+                    {
+                        new Tuple<string, string>(TestUtils.GetTestFilePath("testScript.R"), "4.0.3"),
+                        new Tuple<string, string>(TestUtils.GetTestFilePath("testScript.R"), "4.0.3"),
+                    }, new Dictionary<string, PanoramaFile>(), true),
+                    new ReportInfo("test2", false, TestUtils.GetTestFilePath("UniqueReport.skyr"), new List<Tuple<string, string>>
+                    {
+                        new Tuple<string, string>(TestUtils.GetTestFilePath("testScript.R"), "4.0.3"),
+                    }, new Dictionary<string, PanoramaFile>(), false)
+                }), expectedMinimalConfig.SkylineSettings);
+            CheckValues(configManager, fullConfigPath, new List<IConfig> { expectedFullConfig });
+            
+            var multipleConfigsPath = Path.Combine(folderPath, "OldMultipleConfigs.bcfg");
+            var expectedFirstConfig = new SkylineBatchConfig("FirstConfig", false, DateTime.MinValue,
+                new MainSettings(expectedDownloadAll.MainSettings.Template, Path.Combine(folderPath, "FirstConfig"),
+                    TestUtils.GetTestFilePath("emptyData"),
+                    expectedFullConfig.MainSettings.Server, expectedFullConfig.MainSettings.AnnotationsFilePath,
+                    expectedFullConfig.MainSettings.AnnotationsDownload, string.Empty),
+                expectedFullConfig.FileSettings, expectedFullConfig.RefineSettings, expectedFullConfig.ReportSettings,
+                expectedFullConfig.SkylineSettings);
+            var expectedSecondConfig = new SkylineBatchConfig("SecondConfig", false, DateTime.MinValue,
+                new MainSettings(expectedDownloadAll.MainSettings.Template, Path.Combine(folderPath, "SecondConfig"),
+                    TestUtils.GetTestFilePath("emptyData"),
+                    expectedFullConfig.MainSettings.Server, expectedFullConfig.MainSettings.AnnotationsFilePath,
+                    expectedFullConfig.MainSettings.AnnotationsDownload, string.Empty),
+                expectedFullConfig.FileSettings, expectedFullConfig.RefineSettings, expectedFullConfig.ReportSettings,
+                expectedFullConfig.SkylineSettings);
+
+            CheckValues(configManager, multipleConfigsPath, new List<IConfig> { expectedFirstConfig, expectedSecondConfig });
+        }
+
+
+
+        [TestMethod]
+        public void TestOldestBcfgFile()
+        {
+            var folderPath = TestUtils.GetTestFilePath("BcfgTestFiles");
+            var configManager = new SkylineBatchConfigManager(TestUtils.GetTestLogger());
+
+            var OldestConfigPath = Path.Combine(folderPath, "AncientBcfg.bcfg");
+            var expectedMinimalConfig = new SkylineBatchConfig("Oldest", false, DateTime.MinValue,
+                new MainSettings(SkylineTemplate.FromUi(TestUtils.GetTestFilePath("emptyTemplate.sky"), null, null), Path.Combine(folderPath, "Oldest"), TestUtils.GetTestFilePath("emptyData"), null, string.Empty, null, "Tester"),
+                new FileSettings(null, null, null, false, false, false), RefineSettings.Empty(), new ReportSettings(new List<ReportInfo>()), TestUtils.GetTestSkylineSettings());
+            CheckValues(configManager, OldestConfigPath, new List<IConfig> { expectedMinimalConfig });
+        }
     }
 }
