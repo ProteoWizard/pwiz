@@ -11467,7 +11467,4 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
   <data name="SkylineWindow_HandleStandardsChanged_An_error_occurred_while_attempting_to_load_the_iRT_database__0___iRT_standards_cannot_be_automatically_added_to_the_document_" xml:space="preserve">
     <value>An error occurred while attempting to load the iRT database {0}. iRT standards cannot be automatically added to the document.</value>
   </data>
-  <data name="ImportTransitionListColumnSelectDlg_DisplayData_Column_" xml:space="preserve">
-    <value>Column </value>
-  </data>
 </root>
