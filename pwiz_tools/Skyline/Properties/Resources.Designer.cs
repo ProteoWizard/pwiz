@@ -15866,6 +15866,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Column {0}.
+        /// </summary>
+        public static string ImportTransitionListColumnSelectDlg_DisplayData_Column__0_ {
+            get {
+                return ResourceManager.GetString("ImportTransitionListColumnSelectDlg_DisplayData_Column__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The input text did not appear to contain column headers. Use the dropdown control to assign column meanings for import..
         /// </summary>
         public static string ImportTransitionListColumnSelectDlg_DisplayData_The_input_text_did_not_appear_to_contain_column_headers__Use_the_dropdown_control_to_assign_column_meanings_for_import_ {
