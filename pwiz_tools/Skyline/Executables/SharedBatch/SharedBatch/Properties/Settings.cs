@@ -93,12 +93,9 @@ namespace SharedBatch.Properties
         }
 
         // Upgrades the settings from the previous version and rewrites the XML to the current version
-        public void Update(string newVersion, string appName, XmlUpdater updater)
+        public void Update(string oldXmlPath, string newVersion, string appName, XmlUpdater updater)
         {
-            base.Upgrade();
-
-            var oldXmlPath = ConfigurationManager
-                    .OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath;
+            Upgrade();
             var newXmlPath = string.Empty;
             try
             {
