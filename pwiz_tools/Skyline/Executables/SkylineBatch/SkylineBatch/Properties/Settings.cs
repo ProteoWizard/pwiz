@@ -68,8 +68,10 @@ namespace SkylineBatch.Properties
             if (Equals(version, Default.InstalledVersion))
                 return;
             Upgrade();
+            var xmlFile = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal)
+                .FilePath;
             if (string.IsNullOrEmpty(Default.InstalledVersion))
-                SharedBatch.Properties.Settings.Default.Update(version, Program.AppName(), XmlUpdater.GetUpdatedXml);
+                SharedBatch.Properties.Settings.Default.Update(xmlFile, version, Program.AppName(), XmlUpdater.GetUpdatedXml);
             Default.InstalledVersion = version;
             Save();
         }
