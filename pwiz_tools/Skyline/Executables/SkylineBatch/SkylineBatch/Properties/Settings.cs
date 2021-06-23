@@ -70,7 +70,7 @@ namespace SkylineBatch.Properties
             Upgrade();
             var xmlFile = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal)
                 .FilePath;
-            if (string.IsNullOrEmpty(Default.InstalledVersion))
+            if (System.IO.File.Exists(xmlFile) && string.IsNullOrEmpty(Default.InstalledVersion))
                 SharedBatch.Properties.Settings.Default.Update(xmlFile, version, Program.AppName(), XmlUpdater.GetUpdatedXml);
             Default.InstalledVersion = version;
             Save();
