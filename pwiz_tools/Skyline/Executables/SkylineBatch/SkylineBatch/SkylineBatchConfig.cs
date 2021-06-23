@@ -305,6 +305,7 @@ namespace SkylineBatch
                    && Equals(MainSettings, other.MainSettings)
                    && Equals(ReportSettings, other.ReportSettings)
                    && Equals(FileSettings, other.FileSettings)
+                   && Equals(RefineSettings, other.RefineSettings)
                    && Equals(SkylineSettings, other.SkylineSettings);
         }
 

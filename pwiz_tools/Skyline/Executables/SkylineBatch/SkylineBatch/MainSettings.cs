@@ -183,6 +183,9 @@ namespace SkylineBatch
                 if (!downloading && !File.Exists(annotationsFilePath))
                     throw new ArgumentException(string.Format(Resources.MainSettings_ValidateAnnotationsFolder_The_annotations_file__0__does_not_exist_, annotationsFilePath) + Environment.NewLine +
                                             Resources.MainSettings_ValidateAnnotationsFolder_Please_enter_a_valid_file_path__or_no_text_if_you_do_not_wish_to_include_annotations_);
+                if (downloading && !Directory.Exists(FileUtil.GetDirectorySafe(annotationsFilePath)))
+                    throw new ArgumentException(string.Format(Resources.MainSettings_ValidateAnnotationsFile_The_download_folder_for_the_annotations_file__0__does_not_exist_, annotationsFilePath) + Environment.NewLine +
+                                                Resources.MainSettings_ValidateAnnotationsFile_Please_anter_a_path_to_an_existing_folder_);
                 FileUtil.ValidateNotInDownloads(annotationsFilePath, Resources.MainSettings_ValidateAnnotationsFile_annotations_file);
             } else if (downloading)
             {
