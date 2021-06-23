@@ -108,7 +108,7 @@
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
     <Reference Include="DigitalRune.Windows.Docking, Version=1.3.5.0, Culture=neutral, processorArchitecture=MSIL" />
-    <Reference Include="Google.Protobuf, Version=3.5.1.0, Culture=neutral, PublicKeyToken=a7d26565bac4d604, processorArchitecture=MSIL">
+    <Reference Include="Google.Protobuf">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Shared\Lib\Google.Protobuf.dll</HintPath>
     </Reference>
