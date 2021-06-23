@@ -24,6 +24,7 @@ using SkylineBatch;
 using SharedBatch;
 using System.Linq;
 using System.Threading;
+using SharedBatch.Properties;
 
 namespace SkylineBatchTest
 {
@@ -293,6 +294,12 @@ namespace SkylineBatchTest
         public static void InitializeRInstallation()
         {
             Assert.IsTrue(RInstallations.FindRDirectory());
+        }
+
+        public static void InitializeSettingsImportExport()
+        {
+            ConfigList.Importer = SkylineBatchConfig.ReadXml;
+            ConfigList.Version = "21.1.1.171";
         }
 
         public static List<string> GetAllLogFiles(string directory = null)

@@ -220,6 +220,7 @@ namespace SkylineBatchTest
         public void TestCloseReopenConfigs()
         {
             TestUtils.InitializeRInstallation();
+            TestUtils.InitializeSettingsImportExport();
             var configManager = TestUtils.GetTestConfigManager();
             configManager.UserAddConfig(TestUtils.GetTestConfig("four"));
             var testingConfigs = TestUtils.ConfigListFromNames(new List<string> { "one", "two", "three", "four" });
