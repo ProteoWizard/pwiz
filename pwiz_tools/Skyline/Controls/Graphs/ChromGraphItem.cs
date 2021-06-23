@@ -836,6 +836,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             // Ion mobility values
             if (ionMobilityfilter.IonMobility.HasValue && !_isSummary && 
+                ionMobilityfilter.IonMobilityUnits != eIonMobilityUnits.waters_sonar && // SONAR data isn't really ion mobility, it just uses some of the same filter mechanisms
                 (Settings.Default.ShowCollisionCrossSection || Settings.Default.ShowIonMobility))
             {
                 if (Settings.Default.ShowCollisionCrossSection && 

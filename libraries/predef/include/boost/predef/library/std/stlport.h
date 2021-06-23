@@ -1,5 +1,5 @@
 /*
-Copyright Rene Rivera 2008-2013
+Copyright Rene Rivera 2008-2015
 Distributed under the Boost Software License, Version 1.0.
 (See accompanying file LICENSE_1_0.txt or copy at
 http://www.boost.org/LICENSE_1_0.txt)
@@ -13,23 +13,24 @@ http://www.boost.org/LICENSE_1_0.txt)
 #include <boost/predef/version_number.h>
 #include <boost/predef/make.h>
 
-/*`
-[heading `BOOST_LIB_STD_STLPORT`]
+/* tag::reference[]
+= `BOOST_LIB_STD_STLPORT`
 
-[@http://sourceforge.net/projects/stlport/ STLport Standard C++] library.
+http://sourceforge.net/projects/stlport/[STLport Standard {CPP}] library.
 Version number available as major, minor, and patch.
 
-[table
-    [[__predef_symbol__] [__predef_version__]]
+[options="header"]
+|===
+| {predef_symbol} | {predef_version}
 
-    [[`__SGI_STL_PORT`] [__predef_detection__]]
-    [[`_STLPORT_VERSION`] [__predef_detection__]]
+| `+__SGI_STL_PORT+` | {predef_detection}
+| `+_STLPORT_VERSION+` | {predef_detection}
 
-    [[`_STLPORT_MAJOR`, `_STLPORT_MINOR`, `_STLPORT_PATCHLEVEL`] [V.R.P]]
-    [[`_STLPORT_VERSION`] [V.R.P]]
-    [[`__SGI_STL_PORT`] [V.R.P]]
-    ]
- */
+| `+_STLPORT_MAJOR+`, `+_STLPORT_MINOR+`, `+_STLPORT_PATCHLEVEL+` | V.R.P
+| `+_STLPORT_VERSION+` | V.R.P
+| `+__SGI_STL_PORT+` | V.R.P
+|===
+*/ // end::reference[]
 
 #define BOOST_LIB_STD_STLPORT BOOST_VERSION_NUMBER_NOT_AVAILABLE
 
@@ -53,8 +54,7 @@ Version number available as major, minor, and patch.
 
 #define BOOST_LIB_STD_STLPORT_NAME "STLport"
 
+#endif
+
 #include <boost/predef/detail/test.h>
 BOOST_PREDEF_DECLARE_TEST(BOOST_LIB_STD_STLPORT,BOOST_LIB_STD_STLPORT_NAME)
-
-
-#endif

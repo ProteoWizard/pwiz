@@ -2,7 +2,7 @@
 # $Id$
 #
 
-import svnrev ;
+#import svnrev ;
 import sequence ;
 import common ;
 import path ;

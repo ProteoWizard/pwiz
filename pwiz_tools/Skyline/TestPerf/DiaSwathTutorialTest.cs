@@ -115,8 +115,8 @@ namespace TestPerf
                 KeepPrecursors = false,
                 IrtFilterText = "standard",
                 ChromatogramClickPoint = new PointF(34.18F, 108.0F),
-                TargetCounts = new[] { 13, 272, 292, 1752 },
-                FinalTargetCounts = new[] { 12, 272, 292, 1752 },
+                TargetCounts = new[] { 14, 283, 303, 1817 },
+                FinalTargetCounts = new[] { 13, 283, 303, 1817 },
                 ScoringModelCoefficients = "0.7882|-0.7943|4.1296|-1.5888|-0.6563|0.9829|-0.1724|-0.0530",
                 MassErrorStats = new[]
                 {
@@ -204,8 +204,8 @@ namespace TestPerf
                 KeepPrecursors = false,
                 IrtFilterText = "standard",
                 ChromatogramClickPoint = new PointF(31.98F, 285741.3F),
-                TargetCounts = new[] { 13, 274, 334, 2004 },
-                FinalTargetCounts = new[] { 12, 274, 334, 2004 },
+                TargetCounts = new[] { 14, 285, 345, 2069 },
+                FinalTargetCounts = new[] { 13, 285, 345, 2069 },
                 ScoringModelCoefficients = "0.2908|-0.7014|2.8523|0.9414|-0.0450|1.0464|0.1098|-0.1017",
                 MassErrorStats = new[]
                 {
@@ -435,6 +435,9 @@ namespace TestPerf
 
             var importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(() => importPeptideSearchDlg.ClickNextButton());
             OkDialog(importResultsNameDlg, importResultsNameDlg.YesDialog);
+
+            WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.match_modifications_page);
+            RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
 
             WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.transition_settings_page);
             RunUI(() =>

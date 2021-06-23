@@ -73,6 +73,7 @@ struct Config : public Reader::Config
         simAsSpectra = false;
         srmAsSpectra = false;
         combineIonMobilitySpectra = false;
+        reportSonarBins = false;
         unknownInstrumentIsError = true;
         stripLocationFromSourceFiles = false;
         stripVersionFromSoftware = false;
@@ -853,7 +854,7 @@ int mergeFiles(const vector<string>& filenames, const Config& config, const Read
         Config configCopy(config);
         if (boost::indeterminate(config.singleThreaded) && boost::dynamic_pointer_cast<SpectrumListWrapper>(msd.run.spectrumListPtr) != nullptr)
             configCopy.singleThreaded = !boost::dynamic_pointer_cast<SpectrumListWrapper>(msd.run.spectrumListPtr)->benefitsFromWorkerThreads();
-        configCopy.writeConfig.useWorkerThreads = !config.singleThreaded;
+        configCopy.writeConfig.useWorkerThreads = !bool(config.singleThreaded);
 
         string outputFilename = config.outputFilename("merged-spectra", msd);
         *os_ << "writing output file: " << outputFilename << endl;
@@ -934,7 +935,7 @@ void processFile(const string& filename, const Config& config, const ReaderList&
             Config configCopy(config);
             if (boost::indeterminate(config.singleThreaded) && boost::dynamic_pointer_cast<SpectrumListWrapper>(msd.run.spectrumListPtr) != nullptr)
                 configCopy.singleThreaded = !boost::dynamic_pointer_cast<SpectrumListWrapper>(msd.run.spectrumListPtr)->benefitsFromWorkerThreads();
-            configCopy.writeConfig.useWorkerThreads = !configCopy.singleThreaded;
+            configCopy.writeConfig.useWorkerThreads = !bool(configCopy.singleThreaded);
 
             // write out the new data file
             string outputFilename = config.outputFilename(filename, msd);

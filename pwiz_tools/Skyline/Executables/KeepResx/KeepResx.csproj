@@ -24,7 +24,7 @@
     <UpdatePeriodically>false</UpdatePeriodically>
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
-    <InstallUrl>http://proteome.gs.washington.edu/software/test/brendanx/KeepResx2/</InstallUrl>
+    <InstallUrl>https://skyline.ms/software/test/brendanx/KeepResx2/</InstallUrl>
     <ProductName>KeepResx</ProductName>
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>

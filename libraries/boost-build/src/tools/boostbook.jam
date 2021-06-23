@@ -287,7 +287,7 @@ rule find-tools ( docbook-xsl-dir ? : docbook-dtd-dir ? : boostbook-dir ? )
     docbook-dtd-dir ?= [ modules.peek : DOCBOOK_DTD_DIR ] ;
     boostbook-dir ?= [ modules.peek : BOOSTBOOK_DIR ] ;
 
-    # Look for the boostbook stylesheets relative to BOOST_ROOT and Boost.Build.
+    # Look for the boostbook stylesheets relative to BOOST_ROOT and B2.
     local boost-build-root = [ path.make [ build-system.location ] ] ;
     local boostbook-search-dirs = [ path.join $(boost-build-root) .. .. ] ;
 

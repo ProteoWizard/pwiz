@@ -1,5 +1,5 @@
 /*
-Copyright Rene Rivera 2008-2013
+Copyright Rene Rivera 2008-2015
 Distributed under the Boost Software License, Version 1.0.
 (See accompanying file LICENSE_1_0.txt or copy at
 http://www.boost.org/LICENSE_1_0.txt)
@@ -13,20 +13,21 @@ http://www.boost.org/LICENSE_1_0.txt)
 #include <boost/predef/version_number.h>
 #include <boost/predef/make.h>
 
-/*`
-[heading `BOOST_LIB_STD_SGI`]
+/* tag::reference[]
+= `BOOST_LIB_STD_SGI`
 
-[@http://www.sgi.com/tech/stl/ SGI] Standard C++ library.
+http://www.sgi.com/tech/stl/[SGI] Standard {CPP} library.
 If available version number as major, minor, and patch.
 
-[table
-    [[__predef_symbol__] [__predef_version__]]
+[options="header"]
+|===
+| {predef_symbol} | {predef_version}
 
-    [[`__STL_CONFIG_H`] [__predef_detection__]]
+| `+__STL_CONFIG_H+` | {predef_detection}
 
-    [[`__SGI_STL`] [V.R.P]]
-    ]
- */
+| `+__SGI_STL+` | V.R.P
+|===
+*/ // end::reference[]
 
 #define BOOST_LIB_STD_SGI BOOST_VERSION_NUMBER_NOT_AVAILABLE
 
@@ -45,8 +46,7 @@ If available version number as major, minor, and patch.
 
 #define BOOST_LIB_STD_SGI_NAME "SGI"
 
+#endif
+
 #include <boost/predef/detail/test.h>
 BOOST_PREDEF_DECLARE_TEST(BOOST_LIB_STD_SGI,BOOST_LIB_STD_SGI_NAME)
-
-
-#endif
