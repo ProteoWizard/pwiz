@@ -20,6 +20,7 @@
 
 using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -47,6 +48,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
         protected override void DoTest()
         {
+            Program.ExtraRawFileSearchFolder = TestFilesDir.PersistentFilesDir; // So we can reimport the raw file, which has moved relative to skyd file 
             Settings.Default.TransformTypeChromatogram = TransformChrom.interpolated.ToString();
             OpenDocument("SkylineSonarTiny.sky");
             var doc = WaitForDocumentLoaded();
@@ -85,22 +87,26 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             var numPeaks = new[] { 10, 0 }; // 2nd precursor is outside the Sonar selection range
             int npIndex = 0;
             var errmsg = "";
+            var expectLoaded = true;
             foreach (var pair in doc1.PeptidePrecursorPairs)
             {
                 ChromatogramGroupInfo[] chromGroupInfo;
-                Assert.IsTrue(results.TryLoadChromatogram(0, pair.NodePep, pair.NodeGroup,
+                AssertEx.AreEqual(expectLoaded, results.TryLoadChromatogram(0, pair.NodePep, pair.NodeGroup,
                     tolerance, true, out chromGroupInfo));
-
-                foreach (var chromGroup in chromGroupInfo)
+                if (expectLoaded)
                 {
-                    if (numPeaks[npIndex] != chromGroup.NumPeaks)
-                        errmsg += string.Format("unexpected peak count {0} instead of {1} in chromatogram {2}\r\n", chromGroup.NumPeaks, numPeaks[npIndex], npIndex);
-                    npIndex++;
-                    foreach (var tranInfo in chromGroup.TransitionPointSets)
+                    foreach (var chromGroup in chromGroupInfo)
                     {
-                        maxHeight = Math.Max(maxHeight, tranInfo.MaxIntensity);
+                        if (numPeaks[npIndex] != chromGroup.NumPeaks)
+                            errmsg += string.Format("unexpected peak count {0} instead of {1} in chromatogram {2}\r\n", chromGroup.NumPeaks, numPeaks[npIndex], npIndex);
+                        npIndex++;
+                        foreach (var tranInfo in chromGroup.TransitionPointSets)
+                        {
+                            maxHeight = Math.Max(maxHeight, tranInfo.MaxIntensity);
+                        }
                     }
                 }
+                expectLoaded = false; // The second peptide has no precursors in the quadrupole range
             }
             Assert.IsTrue(errmsg.Length == 0, errmsg);
             Assert.AreEqual(66631.82, maxHeight, 1);
