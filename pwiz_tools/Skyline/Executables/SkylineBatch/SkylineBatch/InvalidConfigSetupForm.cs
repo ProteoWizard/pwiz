@@ -80,7 +80,7 @@ namespace SkylineBatch
             var validTemplate = mainSettings.Template;
             if (mainSettings.Template.IsIndependent())
             {
-                if (mainSettings.Template.Downloaded(new ServerFilesManager()))
+                if (mainSettings.Template.PanoramaFile == null)
                 {
                     var validTemplateFile = await GetValidPath(
                         Resources.InvalidConfigSetupForm_FixInvalidMainSettings_Skyline_template_file,
@@ -92,13 +92,11 @@ namespace SkylineBatch
                 {
                     var invalidPanoramaFile = mainSettings.Template.PanoramaFile;
                     var validDownloadFolder = await GetValidPath(
-                        "folder to download the Skyline template into",
-                        mainSettings.Template.FilePath, PanoramaFile.ValidateDownloadFolder, null, PathDialogOptions.Folder);
+                        Resources.InvalidConfigSetupForm_FixInvalidMainSettings_folder_to_download_the_Skyline_template_into,
+                        invalidPanoramaFile.DownloadFolder, PanoramaFile.ValidateDownloadFolder, null, PathDialogOptions.Folder);
                     validTemplate = SkylineTemplate.FromUi(null, mainSettings.Template.DependentConfigName,
                         new PanoramaFile(invalidPanoramaFile, validDownloadFolder, invalidPanoramaFile.FileName));
                 }
-
-                
             }
 
             var validAnalysisFolderPath = await GetValidPath(Resources.InvalidConfigSetupForm_FixInvalidMainSettings_analysis_folder, 
@@ -141,13 +139,21 @@ namespace SkylineBatch
                 foreach (var scriptAndVersion in report.RScripts)
                 {
                     var validVersion = await GetValidRVersion(scriptAndVersion.Item1, scriptAndVersion.Item2);
-                    var rScriptValidator = report.RScriptServers.ContainsKey(scriptAndVersion.Item1)
-                        ? ReportInfo.ValidateRScriptWithServer
-                        : (Validator)ReportInfo.ValidateRScriptWithoutServer;
-                    var validRScript = await GetValidPath(string.Format(Resources.InvalidConfigSetupForm_FixInvalidReportSettings__0__R_script, Path.GetFileNameWithoutExtension(scriptAndVersion.Item1)),
-                        scriptAndVersion.Item1,
-                        rScriptValidator, TextUtil.FILTER_R, PathDialogOptions.File);
-                    
+                    string validRScript;
+                    if (report.RScriptServers.ContainsKey(scriptAndVersion.Item1))
+                    {
+                        var validFolder = await GetValidPath(string.Format(Resources.InvalidConfigSetupForm_FixInvalidReportSettings__0__R_script, Path.GetFileNameWithoutExtension(scriptAndVersion.Item1)),
+                            FileUtil.GetDirectorySafe(scriptAndVersion.Item1),
+                            ReportInfo.ValidateRScriptWithServer, null, PathDialogOptions.Folder);
+                        validRScript = Path.Combine(validFolder,
+                            report.RScriptServers[scriptAndVersion.Item1].FileName);
+                    }
+                    else
+                    {
+                        validRScript = await GetValidPath(string.Format(Resources.InvalidConfigSetupForm_FixInvalidReportSettings__0__R_script, Path.GetFileNameWithoutExtension(scriptAndVersion.Item1)),
+                            scriptAndVersion.Item1,
+                            ReportInfo.ValidateRScriptWithoutServer, TextUtil.FILTER_R, PathDialogOptions.File);
+                    }
                     validScripts.Add(new Tuple<string, string>(validRScript, validVersion));
                     if (report.RScriptServers.ContainsKey(scriptAndVersion.Item1))
                         validRemoteFiles.Add(validRScript, report.RScriptServers[scriptAndVersion.Item1].ReplaceFolder(Path.GetDirectoryName(validRScript)));

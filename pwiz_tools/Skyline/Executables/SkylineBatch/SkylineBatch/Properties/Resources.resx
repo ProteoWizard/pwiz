@@ -820,4 +820,7 @@
   <data name="ConfigRunner_WriteBatchCommandsToFile_Extracting_Skyline_template_from__0_" xml:space="preserve">
     <value>Extracting Skyline template from {0}</value>
   </data>
+  <data name="InvalidConfigSetupForm_FixInvalidMainSettings_folder_to_download_the_Skyline_template_into" xml:space="preserve">
+    <value>folder to download the Skyline template into</value>
+  </data>
 </root>

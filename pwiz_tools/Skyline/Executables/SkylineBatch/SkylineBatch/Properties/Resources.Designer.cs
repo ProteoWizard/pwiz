@@ -720,6 +720,16 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to folder to download the Skyline template into.
+        /// </summary>
+        public static string InvalidConfigSetupForm_FixInvalidMainSettings_folder_to_download_the_Skyline_template_into {
+            get {
+                return ResourceManager.GetString("InvalidConfigSetupForm_FixInvalidMainSettings_folder_to_download_the_Skyline_temp" +
+                        "late_into", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Skyline template file.
         /// </summary>
         public static string InvalidConfigSetupForm_FixInvalidMainSettings_Skyline_template_file {
