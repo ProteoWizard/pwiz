@@ -32,9 +32,7 @@ namespace SharedBatch.Properties
 {
     public sealed partial class Settings
     {
-
-        public string OpenedVersion { get; private set; }
-
+        
         [UserScopedSetting]
         public ConfigList ConfigList
         {
@@ -157,11 +155,6 @@ namespace SharedBatch.Properties
 
         public void ReadXml(XmlReader reader)
         {
-            if (Importer == null && string.IsNullOrEmpty(Version))
-            {
-                throw new Exception("Must specify Importer and version before configurations are loaded.");
-            }
-
             var isEmpty = reader.IsEmptyElement;
 
             // Read past the property element
@@ -178,15 +171,23 @@ namespace SharedBatch.Properties
             var message = new StringBuilder();
             while (reader.IsStartElement())
             {
-                try
+                if (Importer != null)
                 {
-                    list.Add(Importer(reader));
+                    try
+                    {
+                        list.Add(Importer(reader));
+                    }
+                    catch (ArgumentException e)
+                    {
+                        message.Append(e.Message + Environment.NewLine);
+                    }
                 }
-                catch (ArgumentException e)
+                else
                 {
-                    message.Append(e.Message + Environment.NewLine);
+                    // this should never happen
+                    throw new Exception("Must specify Importer before configurations are loaded.");
                 }
-                
+
                 reader.Read();
             }
 
@@ -208,6 +209,12 @@ namespace SharedBatch.Properties
 
         public void WriteXml(XmlWriter writer)
         {
+            if (string.IsNullOrEmpty(Version))
+            {
+                // this should never happen
+                throw new Exception("Must specify version before configurations are saved.");
+            }
+
             writer.WriteAttributeString(Attr.version, Version);
             foreach (var config in this)
             {
