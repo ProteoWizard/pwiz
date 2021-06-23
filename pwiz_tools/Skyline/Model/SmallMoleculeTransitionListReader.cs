@@ -1936,7 +1936,7 @@ namespace pwiz.Skyline.Model
             {
                 // Not a proper small molecule transition list, but was it trying to be one?
                 var header = csvText.First();
-                if (header.ToLowerInvariant().Contains(@"peptide"))
+                if (header.ToLowerInvariant().Contains(@"peptide") || header.ToLowerInvariant().Contains(@"sequence"))
                 {
                     return false;
                 }
