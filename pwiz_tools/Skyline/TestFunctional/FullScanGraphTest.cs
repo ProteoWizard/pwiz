@@ -161,12 +161,12 @@ namespace pwiz.SkylineTestFunctional
             //test sync m/z scale
             RunUI(() => SkylineWindow.ShowGraphSpectrum(true));
             WaitForGraphs();
-            RunUI(() => SkylineWindow.SynchMzScale());  //sync from the full scan viewer to the library match
+            RunUI(() => SkylineWindow.SynchMzScale(SkylineWindow.GraphFullScan));  // Sync from the full scan viewer to the library match
             WaitForGraphs();
             Assert.AreEqual(SkylineWindow.GraphFullScan.Range, SkylineWindow.GraphSpectrum.Range);
             var testRange = new MzRange(100, 200);
             RunUI(() => SkylineWindow.GraphSpectrum.SetMzScale(testRange));
-            RunUI(() => SkylineWindow.SynchMzScale(true)); //sync from the library match to the full scan viewer
+            RunUI(() => SkylineWindow.SynchMzScale(SkylineWindow.GraphSpectrum)); // Sync from the library match to the full scan viewer
             WaitForGraphs();
             Assert.AreEqual(SkylineWindow.GraphSpectrum.Range, SkylineWindow.GraphFullScan.Range);
             Assert.AreEqual(testRange, SkylineWindow.GraphFullScan.Range);

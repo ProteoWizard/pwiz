@@ -124,6 +124,7 @@ namespace pwiz.Skyline.Controls.Graphs
             _requestedRange = new MzRange(0, _maxMz * 1.1);
             if (Settings.Default.SyncMZScale)
             {
+                // TODO(ritach): Use GraphSpectrum.ISpectrumScaleProvider
                 var graphSpectrum = (_documentContainer as SkylineWindow)?.GraphSpectrum;
                 if (graphSpectrum != null && graphSpectrum.HasSpectrum)
                     _requestedRange = graphSpectrum.Range;
@@ -142,8 +143,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             UpdateUI();
-            if (ZoomEvent != null)
-                ZoomEvent.Invoke(this, new ZoomEventArgs(new ZoomState(GraphPane, ZoomState.StateType.Zoom)));
+            FireZoomEvent();
         }
 
         private void HandleLoadScanException(Exception ex)
@@ -930,9 +930,19 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void graphControl_ZoomEvent(ZedGraphControl sender, ZoomState oldState, ZoomState newState, PointF mousePosition)
         {
-            if(ZoomEvent != null && Settings.Default.SyncMZScale)
-                ZoomEvent.Invoke(this, new ZoomEventArgs(newState));
+            FireZoomEvent(newState);
         }
+
+        private void FireZoomEvent(ZoomState zoomState = null)
+        {
+            if (ZoomEvent != null && Settings.Default.SyncMZScale)
+            {
+                if (zoomState == null)
+                    zoomState = new ZoomState(GraphPane, ZoomState.StateType.Zoom);
+                ZoomEvent.Invoke(this, new ZoomEventArgs(zoomState));
+            }
+        }
+
         public SpectrumControlType ControlType
         {
             get { return SpectrumControlType.FullScanViewer; }
@@ -1103,8 +1113,7 @@ namespace pwiz.Skyline.Controls.Graphs
             ZoomXAxis();
             ZoomYAxis();
             UpdateUI();
-            if(ZoomEvent != null)
-                ZoomEvent.Invoke(this, new ZoomEventArgs(new ZoomState(GraphPane, ZoomState.StateType.Zoom)));
+            FireZoomEvent();
         }
 
         private void spectrumBtn_CheckedChanged(object sender, EventArgs e)

@@ -908,7 +908,7 @@ namespace pwiz.Skyline
             _graphSpectrumSettings.ShowCharge4 = !_graphSpectrumSettings.ShowCharge4;
         }
 
-        private void SynchMzScaleToolStripMenuItemClick(object sender)
+        public void SynchMzScaleToolStripMenuItemClick(IMzScaleCopyable source = null)
         {
             if(ListMzScaleCopyables().Count() < 2)
                 return;
@@ -916,10 +916,12 @@ namespace pwiz.Skyline
             if (!Settings.Default.SyncMZScale)
                 return;
 
-            var source = sender as IMzScaleCopyable ??      //testing support
-                         (IMzScaleCopyable)(synchMzScaleToolStripMenuItem.Owner as ContextMenuStrip)?.SourceControl?.FindForm();
             if (source == null)
-                return;
+            {
+                source = (synchMzScaleToolStripMenuItem.Owner as ContextMenuStrip)?.SourceControl?.FindForm() as IMzScaleCopyable;
+                if (source == null)
+                    return;
+            }
 
             foreach (var targetGraph in ListMzScaleCopyables())
             {
@@ -929,17 +931,14 @@ namespace pwiz.Skyline
         }
         private void synchMzScaleToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            SynchMzScaleToolStripMenuItemClick(sender);
+            SynchMzScaleToolStripMenuItemClick();
         }
 
         //Testing support
-        public void SynchMzScale(bool direction = false)
+        public void SynchMzScale(IMzScaleCopyable source)
         {
             synchMzScaleToolStripMenuItem.Checked = true;
-            if (direction)
-                SynchMzScaleToolStripMenuItemClick(_graphSpectrum);
-            else
-                SynchMzScaleToolStripMenuItemClick(_graphFullScan);
+            SynchMzScaleToolStripMenuItemClick(source);
         }
 
         public void chargesMenuItem_DropDownOpening(object sender, EventArgs e)

@@ -286,6 +286,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var requestedRange = new MzRange(xMin, instrument.MaxMz);
             if (Settings.Default.SyncMZScale)
             {
+                // TODO(ritach): Create ISpectrumScaleProvider make IStateProvider a subclass
                 var graphFullScan = (_documentContainer as SkylineWindow)?.GraphFullScan;
                 if (graphFullScan != null && graphFullScan.IsLoaded)
                     requestedRange = graphFullScan.Range;
@@ -1285,8 +1286,17 @@ namespace pwiz.Skyline.Controls.Graphs
         public event EventHandler<ZoomEventArgs> ZoomEvent;
         private void graphControl_ZoomEvent(ZedGraphControl sender, ZoomState oldState, ZoomState newState, PointF mousePosition)
         {
+            FireZoomEvent(newState);
+        }
+
+        private void FireZoomEvent(ZoomState zoomState = null)
+        {
             if (ZoomEvent != null && Settings.Default.SyncMZScale)
-                ZoomEvent.Invoke(this, new ZoomEventArgs(newState));
+            {
+                if (zoomState == null)
+                    zoomState = new ZoomState(GraphPane, ZoomState.StateType.Zoom);
+                ZoomEvent.Invoke(this, new ZoomEventArgs(zoomState));
+            }
         }
 
         public SpectrumControlType ControlType { get { return SpectrumControlType.LibraryMatch;} }
