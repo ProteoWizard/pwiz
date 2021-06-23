@@ -163,6 +163,7 @@ namespace pwiz.Skyline.FileUI
             // so that all three lay claim to a single column. In such cases, prioritize peptide.
             columns.PrioritizePeptideColumn();
 
+            // Set the combo boxes using the detected columns first. They will be changed if the saved column positions are determined to be correct
             SetComboBoxText(columns.DecoyColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Decoy);
             SetComboBoxText(columns.IrtColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_iRT);
             SetComboBoxText(columns.LabelTypeColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type);
@@ -183,7 +184,7 @@ namespace pwiz.Skyline.FileUI
                 sameHeaders = (headers.ToList().SequenceEqual(Settings.Default.CustomImportTransitionListHeaders));
             }
             // If there are items on our saved column list and the file does not contain headers (or the headers are the same as the previous file),
-            // and the number of columns matches the saved column count then the combo box text is set using that list
+            // and the number of columns matches the saved column count then we try using the saved columns and apply them if they work
             if ((Settings.Default.CustomImportTransitionListColumnsList.Count != 0) && ((headers == null) || (sameHeaders)) && Importer.RowReader.Lines[0].ParseDsvFields(Importer.Separator).Length == Settings.Default.CustomImportTransitionListColumnCount)
             {
                 UseSavedColumnsIfValid();
@@ -194,21 +195,11 @@ namespace pwiz.Skyline.FileUI
         private void UseSavedColumnsIfValid()
         {
             // Save the detected columns so if the saved columns are invalid we can revert back
-            var detectedColumns = new List<Tuple<int, string>>();
-            var numColumns = Importer.RowReader.Lines[0].ParseDsvFields(Importer.Separator).Length;
-            for (int i = 0; i < numColumns; i++)
-            {
-                detectedColumns.Add(new Tuple<int, string>(i, ComboBoxes[i].Text));
-            }
+            var detectedColumns = CurrentColumnPositions();
 
             // Change the column positions to the saved columns so we can check if they produce valid transitions
-            for (int i = 0; i < Settings.Default.CustomImportTransitionListColumnsList.Count; i++)
-            {
-                // The method is called for every tuplet on the list. Item 1 is the index position and item 2 is the name
-                SetComboBoxText(Settings.Default.CustomImportTransitionListColumnsList[i].Item1,
-                    Settings.Default.CustomImportTransitionListColumnsList[i].Item2);
-                ComboChanged(ComboBoxes[i], new EventArgs());
-            }
+            SetColumnPositions(Settings.Default.CustomImportTransitionListColumnsList);
+
             // Make a copy of the current transition list with 100 rows or the length of the current transition list (whichever is smaller)
             int length = Math.Min(Importer.RowReader.Lines.Count, 100);
             IList<string> lines = new List<string>();
@@ -228,13 +219,30 @@ namespace pwiz.Skyline.FileUI
             // If all transitions are errors, reset the columns to the detected columns
             if (allError)
             {
-                for (int i = 0; i < detectedColumns.Count; i++)
-                {
-                    // The method is called for every tuplet on the list. Item 1 is the index position and item 2 is the name
-                    SetComboBoxText(detectedColumns[i].Item1,
-                        detectedColumns[i].Item2);
-                    ComboChanged(ComboBoxes[i], new EventArgs());
-                }
+                SetColumnPositions(detectedColumns);
+            }
+        }
+        // Returns the current column positions as a list of tuples
+        private List<Tuple<int, string>> CurrentColumnPositions()
+        {
+            var columnPositions = new List<Tuple<int, string>>();
+            var numColumns = Importer.RowReader.Lines[0].ParseDsvFields(Importer.Separator).Length;
+            for (int i = 0; i < numColumns; i++)
+            {
+                columnPositions.Add(new Tuple<int, string>(i, ComboBoxes[i].Text));
+            }
+
+            return columnPositions;
+        }
+        // Set the combo boxes and column indices given a list of column positions
+        private void SetColumnPositions(List<Tuple<int, string>> columnPositions)
+        {
+            for (int i = 0; i < columnPositions.Count; i++)
+            {
+                // The method is called for every tuplet on the list. Item 1 is the index position and item 2 is the name
+                SetComboBoxText(columnPositions[i].Item1,
+                    columnPositions[i].Item2);
+                ComboChanged(ComboBoxes[i], new EventArgs());
             }
         }
         public void ResizeComboBoxes()
@@ -395,16 +403,9 @@ namespace pwiz.Skyline.FileUI
         // Saves column positions between transition lists
         private void UpdateColumnsList()
         {
-            var ColumnList = new List<Tuple<int, string>>();
             var numColumns = Importer.RowReader.Lines[0].ParseDsvFields(Importer.Separator).Length;
-            // Adds every column to the list as pairs: the index position and the name
-            for (int i = 0; i < numColumns; i++)
-            {
-                ColumnList.Add(new Tuple<int, string>(i, ComboBoxes[i].Text));
-            }
 
-            Settings.Default.CustomImportTransitionListColumnsList = ColumnList;
-
+            Settings.Default.CustomImportTransitionListColumnsList = CurrentColumnPositions();
             Settings.Default.CustomImportTransitionListColumnCount = numColumns;
         }
 

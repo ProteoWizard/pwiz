@@ -79,8 +79,9 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 var peptideBoxes = peptideTransitionList.ComboBoxes;
+                // Column positions are only saved if at least one combobox is changed, so
+                // change a couple in order to trigger column saving
                 peptideBoxes[14].SelectedIndex = 0;
-                // Changes the contents of a combo box
                 peptideBoxes[4].SelectedIndex = 1;
             });
             // Clicking the OK button should save the column locations
