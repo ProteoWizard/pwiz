@@ -107,14 +107,8 @@ namespace AutoQC
                         ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal);
                     configFile = config.FilePath;
                     ProgramLog.Info(string.Format("user.config path: {0}", configFile));
-                    if (Settings.Default.SettingsUpgradeRequired)
-                    {
-                        Settings.Default.Upgrade(); // This should copy all the settings from the previous version
-                        Settings.Default.SettingsUpgradeRequired = false;
-                        Settings.Default.Save();
-                    }
-                    Settings.Default.Reload();
                     if (!InitSkylineSettings()) return;
+                    UpgradeSettingsIfRequired();
                 }
                 catch (Exception e)
                 {
@@ -169,8 +163,6 @@ namespace AutoQC
 
                 if (!doRestart)
                 {
-                    UpgradeSettingsIfRequired();
-
                     var openFile = GetFirstArg(args);
                     if (!string.IsNullOrEmpty(openFile))
                     {
@@ -210,8 +202,15 @@ namespace AutoQC
 
         private static void UpgradeSettingsIfRequired()
         {
+            if (Settings.Default.SettingsUpgradeRequired)
+            {
+                Settings.Default.Upgrade(); // This should copy all the settings from the previous version
+                Settings.Default.SettingsUpgradeRequired = false;
+                Settings.Default.Save();
+                Settings.Default.Reload();
+            }
             GetCurrentAndLastInstalledVersions();
-            Settings.Default.UpdateIfNecessary(_lastInstalledVersion, _version.ToString(), ConfigMigrationRequired());
+            Settings.Default.UpdateIfNecessary(_version.ToString(), ConfigMigrationRequired());
         }
 
         private static void GetCurrentAndLastInstalledVersions()
@@ -261,8 +260,6 @@ namespace AutoQC
                     ? $"This is a first install and run of version: {_version}."
                     : $"Current version: {_version} is newer than the last installed version: {_lastInstalledVersion}.");
 
-                Settings.Default.InstalledVersion = _version.ToString();
-                Settings.Default.Save();
                 return;
             }
 

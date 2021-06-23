@@ -50,30 +50,33 @@ namespace AutoQC.Properties
             SharedBatch.Properties.Settings.Default.Save();
         }
 
-        public void UpdateIfNecessary(string oldVersion, string currentVersion, bool migrate)
+        public void UpdateIfNecessary(string currentVersion, bool migrate)
         {
+            // set ConfigList methods
             ConfigList.Version = currentVersion;
             ConfigList.Importer = AutoQcConfig.ReadXml;
-            if (Equals(oldVersion, Default.InstalledVersion))
+            // return if settings are already correct version
+            if (Equals(Default.InstalledVersion, currentVersion))
                 return;
-            var configFile = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal)
-                .FilePath;
-            var lastVersion = !string.IsNullOrEmpty(oldVersion)
+            // get file path of user.config file with old settings
+            var possibleOldSettingsVersion = !string.IsNullOrEmpty(Default.InstalledVersion)
                 ? Default.InstalledVersion
                 : "1.0.0.0";
-            var oldConfigFile = configFile.Replace(currentVersion, lastVersion);
-            if (!File.Exists(oldConfigFile))
+            var configFile = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal)
+                .FilePath;
+            var possibleOldConfigFile = configFile.Replace(currentVersion, possibleOldSettingsVersion);
+            // check if old user.config file exists (if it does not, this is a first installation of autoQC)
+            if (File.Exists(possibleOldConfigFile))
             {
-                throw new Exception("Old settings did not exist");
+                // update ConfigList using old user.config
+                var xmlVersion = !string.IsNullOrEmpty(Default.InstalledVersion) ? new Version(Default.InstalledVersion) : null;
+                if (xmlVersion == null || xmlVersion.Major < 21)
+                    SharedBatch.Properties.Settings.Default.Update(possibleOldConfigFile, currentVersion, Program.AppName, XmlUpdater.GetUpdatedXml);
+                // update skyline settings of all configuration if settings were very old and still in AutoQC.Properties.Settings
+                if (migrate)
+                    GetSettingsFromPreviousVersion(possibleOldConfigFile);
             }
-            var xmlVersion = !string.IsNullOrEmpty(oldVersion) ? new Version(oldVersion) : null;
-            if (xmlVersion == null || xmlVersion.Major < 21)
-                SharedBatch.Properties.Settings.Default.Update(oldConfigFile, Default.InstalledVersion, Program.AppName, XmlUpdater.GetUpdatedXml);
-            if (migrate)
-            {
-                GetSettingsFromPreviousVersion(oldConfigFile);
-            }
-
+            Default.InstalledVersion = currentVersion;
             Save();
         }
 
