@@ -91,7 +91,7 @@ namespace SkylineBatch
                 runner.Cancel();
         }
 
-        public new void LoadConfigList()
+        public void LoadConfigList()
         {
             var configs = base.LoadConfigList(Settings.Default.InstalledVersion);
             var state = new SkylineBatchConfigManagerState(this);

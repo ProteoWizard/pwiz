@@ -4,7 +4,6 @@ using System.Net;
 using System.Xml;
 using FluentFTP;
 using SharedBatch;
-using SkylineBatch.Properties;
 
 namespace SkylineBatch
 {
