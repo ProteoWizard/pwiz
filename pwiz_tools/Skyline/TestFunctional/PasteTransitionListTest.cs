@@ -184,7 +184,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 var pepBoxes = pep.ComboBoxes;
-                // Changes the contents of a combo box
+                // Changes the combo box currently labeled "fragment name" to "ignore column"
                 pepBoxes[7].SelectedIndex = 0;
             });
             OkDialog(pep, pep.OkDialog);
@@ -195,8 +195,9 @@ namespace pwiz.SkylineTestFunctional
             SetClipboardText(File.ReadAllText(TestFilesDir.GetTestPath("PeptideTransitionList_no_headers_new_order.csv")));
             var pep1 = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
             // We should realize our saved column positions are invalid and discard them
+            // Verify that we did not use the saved position of "precursor m/z"
             var pep1Boxes = pep1.ComboBoxes;
-            Assert.AreNotEqual(pep1Boxes[7].SelectedIndex, 0);
+            Assert.AreNotEqual(pep1Boxes[2].SelectedIndex, 6);
             // Close the document
             OkDialog(pep1, pep1.CancelDialog);
 

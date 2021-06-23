@@ -159,6 +159,18 @@ namespace pwiz.Skyline.FileUI
             // It's not unusual to see lines like "744.8 858.39 10 APR.AGLCQTFVYGGCR.y7.light 105 40" where protein, peptide, and label are all stuck together,
             // so that all three lay claim to a single column. In such cases, prioritize peptide.
             columns.PrioritizePeptideColumn();
+
+            SetComboBoxText(columns.DecoyColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Decoy);
+            SetComboBoxText(columns.IrtColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_iRT);
+            SetComboBoxText(columns.LabelTypeColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type);
+            SetComboBoxText(columns.LibraryColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Library_Intensity);
+            SetComboBoxText(columns.PeptideColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence);
+            SetComboBoxText(columns.PrecursorColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z);
+            SetComboBoxText(columns.ProductColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
+            SetComboBoxText(columns.ProteinColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name);
+            SetComboBoxText(columns.FragmentNameColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Fragment_Name);
+            // Commented out for consistency because there is no product charge column
+            // SetComboBoxText(columns.PrecursorChargeColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge);
             var headers = Importer.RowReader.Indices.Headers;
             // Checks if the headers of the current list are the same as the headers of the previous list,
             // because if they are then we want to prioritize user headers
@@ -171,29 +183,57 @@ namespace pwiz.Skyline.FileUI
             // and the number of columns matches the saved column count then the combo box text is set using that list
             if ((Settings.Default.CustomImportTransitionListColumnsList.Count != 0) && ((headers == null) || (sameHeaders)) && Importer.RowReader.Lines[0].ParseDsvFields(Importer.Separator).Length == Settings.Default.CustomImportTransitionListColumnCount)
             {
-                for (int i = 0; i < Settings.Default.CustomImportTransitionListColumnsList.Count; i++)
-                {
-                    // The method is called for every tuplet on the list. Item 1 is the index position and item 2 is the name
-                    SetComboBoxText(Settings.Default.CustomImportTransitionListColumnsList[i].Item1, Settings.Default.CustomImportTransitionListColumnsList[i].Item2);
-                    ComboChanged(ComboBoxes[i], new EventArgs());
-                }
-            }
-            else
-            {
-                SetComboBoxText(columns.DecoyColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Decoy);
-                SetComboBoxText(columns.IrtColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_iRT);
-                SetComboBoxText(columns.LabelTypeColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type);
-                SetComboBoxText(columns.LibraryColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Library_Intensity);
-                SetComboBoxText(columns.PeptideColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence);
-                SetComboBoxText(columns.PrecursorColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z);
-                SetComboBoxText(columns.ProductColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
-                SetComboBoxText(columns.ProteinColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name);
-                SetComboBoxText(columns.FragmentNameColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Fragment_Name);
-                // Commented out for consistency because there is no product charge column
-                // SetComboBoxText(columns.PrecursorChargeColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge);  
+                UseSavedColumnsIfValid();
             }
         }
 
+        // Applies the saved column positions if they seem to be correct
+        private void UseSavedColumnsIfValid()
+        {
+            // Save the detected columns so if the saved columns are invalid we can revert back
+            var detectedColumns = new List<Tuple<int, string>>();
+            var numColumns = Importer.RowReader.Lines[0].ParseDsvFields(Importer.Separator).Length;
+            for (int i = 0; i < numColumns; i++)
+            {
+                detectedColumns.Add(new Tuple<int, string>(i, ComboBoxes[i].Text));
+            }
+
+            // Change the column positions to the saved columns so we can check if they produce valid transitions
+            for (int i = 0; i < Settings.Default.CustomImportTransitionListColumnsList.Count; i++)
+            {
+                // The method is called for every tuplet on the list. Item 1 is the index position and item 2 is the name
+                SetComboBoxText(Settings.Default.CustomImportTransitionListColumnsList[i].Item1,
+                    Settings.Default.CustomImportTransitionListColumnsList[i].Item2);
+                ComboChanged(ComboBoxes[i], new EventArgs());
+            }
+            // Make a copy of the current transition list with 100 rows or the length of the current transition list (whichever is smaller)
+            int length = Math.Min(Importer.RowReader.Lines.Count, 100);
+            IList<string> lines = new List<string>();
+            for (int i = 0; i < length; i++)
+            {
+                lines.Add(Importer.RowReader.Lines[i]);
+            }
+            // Try importing that list to check for errors
+            MassListInputs input = new MassListInputs(lines);
+            var insertionParams = new DocumentChecked();
+            List<TransitionImportErrorInfo> testErrorList1 = null;
+            insertionParams.Document = _docCurrent.ImportMassList(input, Importer, null,
+                _insertPath, out insertionParams.SelectPath, out insertionParams.IrtPeptides,
+                out insertionParams.LibrarySpectra, out testErrorList1, out insertionParams.PeptideGroups);
+
+            var allError = ReferenceEquals(insertionParams.Document, _docCurrent);
+            // If all transitions are errors, reset the columns to the detected columns
+            if (allError)
+            {
+                for (int i = 0; i < detectedColumns.Count; i++)
+                {
+                    // The method is called for every tuplet on the list. Item 1 is the index position and item 2 is the name
+                    SetComboBoxText(detectedColumns[i].Item1,
+                        detectedColumns[i].Item2);
+                    ComboChanged(ComboBoxes[i], new EventArgs());
+                }
+            }
+        }
         public void ResizeComboBoxes()
         {
             const int gridBorderWidth = 1;
