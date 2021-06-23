@@ -105,6 +105,7 @@ namespace SkylineBatch
 
         public async Task Run(RunBatchOptions runOption, ServerFilesManager serverFiles)
         {
+            _logger.LogTestFormat = Config.LogTestFormat;
             LogToUi(string.Format(Resources.ConfigRunner_Run________________________________Starting_Configuration___0_________________________________, Config.Name));
             try
             {
@@ -206,6 +207,11 @@ namespace SkylineBatch
 
         public void WriteBatchCommandsToFile(CommandWriter commandWriter, RunBatchOptions runOption, bool invariantReport)
         {
+            if (Config.LogTestFormat)
+            {
+                commandWriter.Write("--memstamp");
+                commandWriter.EndCommandGroup();
+            }
             // STEP 1: create results document and import data
             if (runOption <= RunBatchOptions.FROM_TEMPLATE_COPY)
             {

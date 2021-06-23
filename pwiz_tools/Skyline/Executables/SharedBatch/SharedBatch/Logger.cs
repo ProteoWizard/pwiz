@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -85,6 +86,8 @@ using SharedBatch.Properties;
         public string LogFileName => Path.GetFileName(_filePath);
 
         public bool WillTruncate => _lines > MaxLogLines;
+
+        public bool LogTestFormat = false;
 
         private static void InitializeErrorFormats()
         {
@@ -201,8 +204,10 @@ using SharedBatch.Properties;
             }
         }
 
-        private static string GetDate()
+        private string GetDate()
         {
+            if (LogTestFormat)
+                return "[" + DateTime.Now.ToString("G", CultureInfo.InvariantCulture) + "]\t";
             return "[" + DateTime.Now.ToString("G") + "]    ";
         }
 
