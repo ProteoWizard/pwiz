@@ -2070,6 +2070,10 @@ namespace pwiz.Skyline.Model
 
         public int ExplicitIonMobilityUnitsColumn { get; set; }
 
+        public int ExplicitIonMobilityHighEnergyOffsetColumn { get; set; }
+
+        public int ExplicitCompenstaionVoltageColumn { get; set; }
+
         private ColumnIndices()
         {
             // TODO: ensure that all the newly added columns have their index set here
@@ -2092,6 +2096,8 @@ namespace pwiz.Skyline.Model
             ConeVoltageColumn = -1;
             ExplicitIonMobilityColumn = -1;
             ExplicitIonMobilityUnitsColumn = -1;
+            ExplicitIonMobilityHighEnergyOffsetColumn = -1;
+            ExplicitCompenstaionVoltageColumn = -1;
         }
 
         public static ColumnIndices FromLine(string line, char separator, Func<string, Type> getColumnType)
@@ -2162,6 +2168,10 @@ namespace pwiz.Skyline.Model
                 ExplicitIonMobilityColumn = -1;
             if (ExplicitIonMobilityUnitsColumn == index)
                 ExplicitIonMobilityUnitsColumn = -1;
+            if (ExplicitIonMobilityHighEnergyOffsetColumn == index)
+                ExplicitIonMobilityHighEnergyOffsetColumn = -1;
+            if (ExplicitCompenstaionVoltageColumn == index)
+                ExplicitCompenstaionVoltageColumn = -1;
         }
 
         /// <summary>
