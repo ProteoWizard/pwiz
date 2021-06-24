@@ -181,11 +181,12 @@ namespace pwiz.Skyline.FileUI
             bool sameHeaders = false;
             if (headers != null)
             {
-                sameHeaders = (headers.ToList().SequenceEqual(Settings.Default.CustomImportTransitionListHeaders));
+                sameHeaders = headers.ToList().SequenceEqual(Settings.Default.CustomImportTransitionListHeaders);
             }
             // If there are items on our saved column list and the file does not contain headers (or the headers are the same as the previous file),
             // and the number of columns matches the saved column count then we try using the saved columns and apply them if they work
-            if ((Settings.Default.CustomImportTransitionListColumnsList.Count != 0) && ((headers == null) || (sameHeaders)) && Importer.RowReader.Lines[0].ParseDsvFields(Importer.Separator).Length == Settings.Default.CustomImportTransitionListColumnCount)
+            int savedCount = Settings.Default.CustomImportTransitionListColumnTypesList.Count;
+            if (savedCount != 0 && (headers == null || sameHeaders) && savedCount == Importer.RowReader.Lines[0].ParseDsvFields(Importer.Separator).Length)
             {
                 UseSavedColumnsIfValid();
             }
@@ -198,17 +199,11 @@ namespace pwiz.Skyline.FileUI
             var detectedColumns = CurrentColumnPositions();
 
             // Change the column positions to the saved columns so we can check if they produce valid transitions
-            SetColumnPositions(Settings.Default.CustomImportTransitionListColumnsList);
+            SetColumnPositions(Settings.Default.CustomImportTransitionListColumnTypesList);
 
             // Make a copy of the current transition list with 100 rows or the length of the current transition list (whichever is smaller)
-            int length = Math.Min(Importer.RowReader.Lines.Count, 100);
-            IList<string> lines = new List<string>();
-            for (int i = 0; i < length; i++)
-            {
-                lines.Add(Importer.RowReader.Lines[i]);
-            }
+            var input = new MassListInputs(Importer.RowReader.Lines.Take(100).ToArray());
             // Try importing that list to check for errors
-            MassListInputs input = new MassListInputs(lines);
             var insertionParams = new DocumentChecked();
             List<TransitionImportErrorInfo> testErrorList1 = null;
             insertionParams.Document = _docCurrent.ImportMassList(input, Importer, null,
@@ -222,29 +217,25 @@ namespace pwiz.Skyline.FileUI
                 SetColumnPositions(detectedColumns);
             }
         }
-        // Returns the current column positions as a list of tuples
-        private List<Tuple<int, string>> CurrentColumnPositions()
+        /// <summary>
+        /// Returns the current column positions as a list of tuples
+        /// </summary>
+        private List<string> CurrentColumnPositions()
         {
-            var columnPositions = new List<Tuple<int, string>>();
-            var numColumns = Importer.RowReader.Lines[0].ParseDsvFields(Importer.Separator).Length;
-            for (int i = 0; i < numColumns; i++)
-            {
-                columnPositions.Add(new Tuple<int, string>(i, ComboBoxes[i].Text));
-            }
-
-            return columnPositions;
+            return ComboBoxes.Select(combo => combo.Text).ToList();
         }
-        // Set the combo boxes and column indices given a list of column positions
-        private void SetColumnPositions(List<Tuple<int, string>> columnPositions)
+
+        /// <summary>
+        /// Set the combo boxes and column indices given a list of column positions
+        /// </summary>
+        private void SetColumnPositions(IList<string> columnPositions)
         {
             for (int i = 0; i < columnPositions.Count; i++)
             {
-                // The method is called for every tuplet on the list. Item 1 is the index position and item 2 is the name
-                SetComboBoxText(columnPositions[i].Item1,
-                    columnPositions[i].Item2);
-                ComboChanged(ComboBoxes[i], new EventArgs());
+                SetComboBoxText(i, columnPositions[i]);
             }
         }
+
         public void ResizeComboBoxes()
         {
             const int gridBorderWidth = 1;
@@ -403,10 +394,7 @@ namespace pwiz.Skyline.FileUI
         // Saves column positions between transition lists
         private void UpdateColumnsList()
         {
-            var numColumns = Importer.RowReader.Lines[0].ParseDsvFields(Importer.Separator).Length;
-
-            Settings.Default.CustomImportTransitionListColumnsList = CurrentColumnPositions();
-            Settings.Default.CustomImportTransitionListColumnCount = numColumns;
+            Settings.Default.CustomImportTransitionListColumnTypesList = CurrentColumnPositions();
         }
 
         // Saves a list of the current document's headers, if any exist, so that they can be compared to those of the next document

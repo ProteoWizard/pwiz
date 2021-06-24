@@ -539,40 +539,22 @@ namespace pwiz.Skyline.Properties
         }
 
         [UserScopedSettingAttribute]
-        // Saves column positions between transition lists. This way when a user tell us the correct column positions they are carried
+        // Saves column type positions between transition lists. This way when a user tell us the correct column positions they are carried
         // on to the next transition list
-        public List<Tuple<int, string>> CustomImportTransitionListColumnsList
+        public List<string> CustomImportTransitionListColumnTypesList
         {
             get
             {
-                if (this[@"CustomImportTransitionListColumnsList"] == null)
+                if (this[@"CustomImportTransitionListColumnTypesList"] == null)
                 {
-                    var list = new List<Tuple<int, string>>();
-                    CustomImportTransitionListColumnsList = list;
+                    var list = new List<string>();
+                    CustomImportTransitionListColumnTypesList = list;
                 }
-                return (List < Tuple < int, string>>)this[@"CustomImportTransitionListColumnsList"];
+                return (List <string>)this[@"CustomImportTransitionListColumnTypesList"];
             }
             set
             {
-                this[@"CustomImportTransitionListColumnsList"] = value;
-            }
-        }
-
-        [UserScopedSettingAttribute]
-        public int CustomImportTransitionListColumnCount
-        {
-            get
-            {
-                if (this[@"CustomImportTransitionListColumnCount"] == null)
-                {
-                    var i = new int();
-                    CustomImportTransitionListColumnCount = i;
-                }
-                return (int)this[@"CustomImportTransitionListColumnCount"];
-            }
-            set
-            {
-                this[@"CustomImportTransitionListColumnCount"] = value;
+                this[@"CustomImportTransitionListTypesList"] = value;
             }
         }
 
