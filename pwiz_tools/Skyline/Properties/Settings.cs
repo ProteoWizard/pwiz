@@ -554,7 +554,7 @@ namespace pwiz.Skyline.Properties
             }
             set
             {
-                this[@"CustomImportTransitionListTypesList"] = value;
+                this[@"CustomImportTransitionListColumnTypesList"] = value;
             }
         }
 

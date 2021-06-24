@@ -435,6 +435,16 @@ namespace pwiz.SkylineTestUtil
             });
         }
 
+        /// <summary>
+        /// Create a new document and wait for it to load
+        /// </summary>
+        /// <param name="forced"></param>
+        public void LoadNewDocument(bool forced)
+        {
+            RunUI(() => SkylineWindow.NewDocument(forced));
+            WaitForDocumentLoaded();
+        }
+
         public class Tool : IDisposable
         {
             private readonly MovedDirectory _movedDirectory;
