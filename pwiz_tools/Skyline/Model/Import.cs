@@ -2062,6 +2062,10 @@ namespace pwiz.Skyline.Model
 
         public int NoteColumn { get; set; }
 
+        public int SLensColumn { get; set; }
+
+        public int ConeVoltageColumn { get; set; }
+
         private ColumnIndices()
         {
             // TODO: ensure that all the newly added columns have their index set here
@@ -2080,6 +2084,8 @@ namespace pwiz.Skyline.Model
             ExplicitRetentionTimeWindowColumn = -1;
             ExplicitCollisionEnergyColumn = -1;
             NoteColumn = -1;
+            SLensColumn = -1;
+            ConeVoltageColumn = -1;
         }
 
         public static ColumnIndices FromLine(string line, char separator, Func<string, Type> getColumnType)
@@ -2142,6 +2148,10 @@ namespace pwiz.Skyline.Model
                 ExplicitCollisionEnergyColumn = -1;
             if (NoteColumn == index)
                 NoteColumn = -1;
+            if (SLensColumn == index)
+                SLensColumn = -1;
+            if (ConeVoltageColumn == index)
+                ConeVoltageColumn = -1;
         }
 
         /// <summary>

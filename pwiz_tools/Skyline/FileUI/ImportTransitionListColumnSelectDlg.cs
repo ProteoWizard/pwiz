@@ -137,6 +137,7 @@ namespace pwiz.Skyline.FileUI
             foreach (var comboBox in ComboBoxes)
             {
                 comboBox.Text = string.Empty;
+                // TODO: add in all needed column types from small molecules
                 comboBox.Items.AddRange(new object[]
                 {
                     Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column,
@@ -152,7 +153,9 @@ namespace pwiz.Skyline.FileUI
                     Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time,
                     Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time_Window,
                     Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy,
-                    Resources.PasteDlg_UpdateMoleculeType_Note
+                    Resources.PasteDlg_UpdateMoleculeType_Note,
+                    Resources.PasteDlg_UpdateMoleculeType_S_Lens,
+                    Resources.PasteDlg_UpdateMoleculeType_Cone_Voltage
                     // Commented out for consistency because there is no product charge column
                     // Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge
                 });
@@ -201,6 +204,8 @@ namespace pwiz.Skyline.FileUI
                 SetComboBoxText(columns.ExplicitRetentionTimeWindowColumn, Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time_Window);
                 SetComboBoxText(columns.ExplicitCollisionEnergyColumn, Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy);
                 SetComboBoxText(columns.NoteColumn, Resources.PasteDlg_UpdateMoleculeType_Note);
+                SetComboBoxText(columns.SLensColumn, Resources.PasteDlg_UpdateMoleculeType_S_Lens);
+                SetComboBoxText(columns.ConeVoltageColumn, Resources.PasteDlg_UpdateMoleculeType_Cone_Voltage);
                 // Commented out for consistency because there is no product charge column
                 // SetComboBoxText(columns.PrecursorChargeColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge);  
             }
@@ -364,6 +369,18 @@ namespace pwiz.Skyline.FileUI
                 columns.ResetDuplicateColumns(comboBoxIndex);
                 columns.NoteColumn = comboBoxIndex;
             }
+            else if (comboBox.Text == Resources.PasteDlg_UpdateMoleculeType_S_Lens)
+            {
+                CheckForComboBoxOverlap(columns.SLensColumn, 0, comboBoxIndex);
+                columns.ResetDuplicateColumns(comboBoxIndex);
+                columns.SLensColumn = comboBoxIndex;
+            }
+            else if (comboBox.Text == Resources.PasteDlg_UpdateMoleculeType_Cone_Voltage)
+            {
+                CheckForComboBoxOverlap(columns.ConeVoltageColumn, 0, comboBoxIndex);
+                columns.ResetDuplicateColumns(comboBoxIndex);
+                columns.ConeVoltageColumn = comboBoxIndex;
+            }
             // Commented out for consistency because there is no product charge column
             /*else if (comboBox.Text == Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge)
             {
@@ -391,6 +408,8 @@ namespace pwiz.Skyline.FileUI
                 if (columns.ExplicitCollisionEnergyColumn == comboBoxIndex) columns.ExplicitCollisionEnergyColumn = -1;
                 if (columns.ExplicitRetentionTimeColumn == comboBoxIndex) columns.ExplicitRetentionTimeColumn = -1;
                 if (columns.NoteColumn == comboBoxIndex) columns.NoteColumn = -1;
+                if (columns.SLensColumn == comboBoxIndex) columns.SLensColumn = -1;
+                if (columns.ConeVoltageColumn == comboBoxIndex) columns.ConeVoltageColumn = -1;
             }
         }
 
