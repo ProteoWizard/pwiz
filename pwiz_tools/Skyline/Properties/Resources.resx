@@ -10040,19 +10040,12 @@ Recognized isotopes include: {2}</value>
   <data name="BiblioSpecLiteBuilder_Embedded" xml:space="preserve">
     <value>Embedded</value>
   </data>
-  <data name="VendorIssueHelper_ShowLibraryMissingExternalSpectraError_Could_not_find_an_external_spectrum_file_matching__0__in_the_same_directory_as_the_MaxQuant_input_file__1__" xml:space="preserve">
-    <value>Could not find an external spectrum file matching '{0}' in the same directory as the MaxQuant input file '{1}', or in its parent or grandparent directory.
-
-If you do not have the original file, you may build the library with embedded spectra from the input file. However, fragment ions in MaxQuant embedded spectra are charge state deconvoluted, and will contain only singly charged fragment ions which may not be representative of intensities measured by a mass spectrometer.
-
-</value>
-  </data>
-  <data name="VendorIssueHelper_ShowLibraryMissingExternalSpectraError_ButtonDescriptionsSupportsExtensions__0__" xml:space="preserve">
+  <data name="VendorIssueHelper_ShowLibraryMissingExternalSpectraError_ButtonDescriptions" xml:space="preserve">
     <value>Click 'Embedded' to use embedded spectra.
-Click 'Retry' to try building again with original spectrum files placed next to the input files (with a supported file extension: {0}).</value>
+Click 'Retry' to try building again after placing the original spectrum files in one of the directories listed above.</value>
   </data>
-  <data name="CommandLine_ShowLibraryMissingExternalSpectraError_DescriptionWithSupportedExtensions__0__" xml:space="preserve">
-    <value>Use the argument --import-search-prefer-embedded-spectra to force the library build to use embedded spectra, or place the original spectrum files next to the input files (with a supported file extension: {0}) and rerun.</value>
+  <data name="CommandLine_ShowLibraryMissingExternalSpectraError_Description" xml:space="preserve">
+    <value>Use the argument --import-search-prefer-embedded-spectra to force the library build to use embedded spectra, or place the original spectrum files in one of the directories listed above and rerun.</value>
   </data>
   <data name="RInstaller_InstallPackages_Error__Failed_to_connect_to_the_website__0_" xml:space="preserve">
     <value>Error: Failed to connect to the website {0}</value>
@@ -11476,5 +11469,27 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
   </data>
   <data name="ImportTransitionListColumnSelectDlg_DisplayData_Column__0_" xml:space="preserve">
     <value>Column {0}</value>
+  </data>
+  <data name="VendorIssueHelper_ShowLibraryMissingExternalSpectrumFilesError" xml:space="preserve">
+    <value>While searching for spectrum files for the MaxQuant input file '{0}', the following basenames could not be found with any of the supported file extensions ({3}):
+{1}
+
+In any of the following directories:
+{2}
+
+If you do not have the original files, you may build the library with embedded spectra from the input file. However, fragment ions in MaxQuant embedded spectra are charge state deconvoluted, and will contain only singly charged fragment ions which may not be representative of intensities measured by a mass spectrometer.
+
+</value>
+  </data>
+  <data name="VendorIssueHelper_ShowLibraryMissingExternalSpectrumFileError" xml:space="preserve">
+    <value>While searching for the spectrum file for the MaxQuant input file '{0}', the following basename could not be found with any of the supported file extensions ({3}):
+{1}
+
+In any of the following directories:
+{2}
+
+If you do not have the original file, you may build the library with embedded spectra from the input file. However, fragment ions in MaxQuant embedded spectra are charge state deconvoluted, and will contain only singly charged fragment ions which may not be representative of intensities measured by a mass spectrometer.
+
+</value>
   </data>
 </root>
