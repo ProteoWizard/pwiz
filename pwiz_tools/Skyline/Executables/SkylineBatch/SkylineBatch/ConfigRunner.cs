@@ -182,7 +182,7 @@ namespace SkylineBatch
             }
 
             // STEP 4: run r scripts using csv files
-            if (runOption != RunBatchOptions.DOWNLOAD_DATA)
+            if (runOption != RunBatchOptions.DOWNLOAD_DATA && IsRunning())
             {
                 var rScriptsRunInformation = Config.GetScriptArguments();
                 foreach (var rScript in rScriptsRunInformation)
@@ -279,7 +279,7 @@ namespace SkylineBatch
             var filePath = Path.Combine(serverFile.DownloadFolder, serverFile.FileName);
             if (File.Exists(filePath) && new FileInfo(filePath).Length == serverFile.Size) return;
 
-            _logger.Log(string.Format(Resources.ConfigRunner_DownloadPanoramaFile_Downloading__0____, panoramaFile.FileName));
+            _logger.Log(string.Format(Resources.ConfigRunner_DownloadPanoramaFile_Downloading__0____, filePath));
             var downloadCancellation = new CancellationTokenSource();
             _runningCancellationToken = downloadCancellation;
 
@@ -297,7 +297,7 @@ namespace SkylineBatch
                 if (tries > 0) _logger.Log(Resources.ConfigRunner_DownloadPanoramaFile_Trying_again___);
                 try
                 {
-                    wc.DownloadAsync(serverFile.ServerInfo.URI, panoramaFile.FilePath, serverFile.ServerInfo.Username, serverFile.ServerInfo.Password, serverFile.Size);
+                    wc.DownloadAsync(serverFile.ServerInfo.URI, filePath, serverFile.ServerInfo.Username, serverFile.ServerInfo.Password, serverFile.Size);
                     _logger.StopLogPercent(true);
                     break;
                 }
