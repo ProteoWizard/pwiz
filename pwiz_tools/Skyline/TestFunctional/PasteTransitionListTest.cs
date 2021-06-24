@@ -38,6 +38,7 @@ namespace pwiz.SkylineTestFunctional
         private string protName => Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name;
         private string fragName => Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Fragment_Name;
         private string label  => Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type;
+        private string ignoreColumn => Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column;
 
         [TestMethod]
         public void TestPasteTransitionList()
@@ -87,6 +88,13 @@ namespace pwiz.SkylineTestFunctional
             // Clicking the OK button should save the column locations
             OkDialog(peptideTransitionList, peptideTransitionList.OkDialog);
 
+            // Verify that the correct columns were saved in the settings
+            var expectedColumns = new [] {protName, peptide, precursor, ignoreColumn, ignoreColumn, product, ignoreColumn, fragName};
+            // expectedColumns is the same length as targetColumns for comparison
+            var actualColumns = 
+                Settings.Default.CustomImportTransitionListColumnTypesList.GetRange(0, expectedColumns.Length);
+            CollectionAssert.AreEqual(expectedColumns, actualColumns);
+            
             // Paste in the same transition list and verify that the earlier modification was saved
             var peptideTransitionList1 = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
             WaitForDocumentLoaded();
@@ -185,6 +193,9 @@ namespace pwiz.SkylineTestFunctional
                 pepBoxes[7].SelectedIndex = 0;
             });
             OkDialog(pep, pep.OkDialog);
+            
+            // Verify that the change was saved in the settings
+            Assert.AreEqual(ignoreColumn,Settings.Default.CustomImportTransitionListColumnTypesList[7]);
 
             // Paste in a new transition list with the precursor m/z column in a new location
             LoadNewDocument(true);
@@ -194,6 +205,9 @@ namespace pwiz.SkylineTestFunctional
             // Verify that we did not use the saved position of "precursor m/z"
             var pep1Boxes = pep1.ComboBoxes;
             Assert.AreNotEqual(pep1Boxes[2].SelectedIndex, 6);
+            // Verify that we did use the detected values instead
+            Assert.AreEqual(pep1Boxes[4].SelectedIndex, 6);
+            Assert.AreEqual(pep1Boxes[11].SelectedIndex, 7);
             // Close the document
             OkDialog(pep1, pep1.CancelDialog);
 
