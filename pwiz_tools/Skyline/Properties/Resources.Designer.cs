@@ -34060,12 +34060,14 @@ namespace pwiz.Skyline.Properties {
         
         /// <summary>
         ///   Looks up a localized string similar to While searching for the spectrum file for the MaxQuant input file &apos;{0}&apos;, the following basename could not be found with any of the supported file extensions ({3}):
+        ///
         ///{1}
         ///
         ///In any of the following directories:
+        ///
         ///{2}
         ///
-        ///If you do not have the original file, you may build the library with embedded spectra from the input file. However, fragment ions in MaxQuant embedded spectra are charge state deconvoluted, and will contain only singly charged fragment ions which may not be representative of intensities measured by a [rest of string was truncated]&quot;;.
+        ///If you do not have the original file, you may build the library with embedded spectra from the input file. However, fragment ions in MaxQuant embedded spectra are charge state deconvoluted, and will contain only singly charged fragment ions which may not be representative of intensities measured by [rest of string was truncated]&quot;;.
         /// </summary>
         public static string VendorIssueHelper_ShowLibraryMissingExternalSpectrumFileError {
             get {
@@ -34075,12 +34077,14 @@ namespace pwiz.Skyline.Properties {
         
         /// <summary>
         ///   Looks up a localized string similar to While searching for spectrum files for the MaxQuant input file &apos;{0}&apos;, the following basenames could not be found with any of the supported file extensions ({3}):
+        ///
         ///{1}
         ///
         ///In any of the following directories:
+        ///
         ///{2}
         ///
-        ///If you do not have the original files, you may build the library with embedded spectra from the input file. However, fragment ions in MaxQuant embedded spectra are charge state deconvoluted, and will contain only singly charged fragment ions which may not be representative of intensities measured by a  [rest of string was truncated]&quot;;.
+        ///If you do not have the original files, you may build the library with embedded spectra from the input file. However, fragment ions in MaxQuant embedded spectra are charge state deconvoluted, and will contain only singly charged fragment ions which may not be representative of intensities measured by  [rest of string was truncated]&quot;;.
         /// </summary>
         public static string VendorIssueHelper_ShowLibraryMissingExternalSpectrumFilesError {
             get {
