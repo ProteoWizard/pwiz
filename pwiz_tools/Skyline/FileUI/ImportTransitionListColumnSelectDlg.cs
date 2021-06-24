@@ -160,8 +160,7 @@ namespace pwiz.Skyline.FileUI
                     Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_Units,
                     Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_High_Energy_Offset,
                     Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage,
-                    Resources.PasteDlg_UpdateMoleculeType_Explicit_Declustering_Potential,
-                    Resources.PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_
+                    Resources.PasteDlg_UpdateMoleculeType_Explicit_Declustering_Potential
                     // Commented out for consistency because there is no product charge column
                     // Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge
                 });
@@ -217,7 +216,6 @@ namespace pwiz.Skyline.FileUI
                 SetComboBoxText(columns.ExplicitIonMobilityHighEnergyOffsetColumn, Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_High_Energy_Offset);
                 SetComboBoxText(columns.ExplicitCompensationVoltageColumn, Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage);
                 SetComboBoxText(columns.ExplicitDeclusteringPotentialColumn, Resources.PasteDlg_UpdateMoleculeType_Explicit_Declustering_Potential);
-                SetComboBoxText(columns.CollisionCrossSectionColumn, Resources.PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_);
                 // Commented out for consistency because there is no product charge column
                 // SetComboBoxText(columns.PrecursorChargeColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge);  
             }
@@ -423,12 +421,6 @@ namespace pwiz.Skyline.FileUI
                 columns.ResetDuplicateColumns(comboBoxIndex);
                 columns.ExplicitDeclusteringPotentialColumn = comboBoxIndex;
             }
-            else if (comboBox.Text == Resources.PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_)
-            {
-                CheckForComboBoxOverlap(columns.CollisionCrossSectionColumn, 0, comboBoxIndex);
-                columns.ResetDuplicateColumns(comboBoxIndex);
-                columns.CollisionCrossSectionColumn = comboBoxIndex;
-            }
             // Commented out for consistency because there is no product charge column
             /*else if (comboBox.Text == Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge)
             {
@@ -467,8 +459,6 @@ namespace pwiz.Skyline.FileUI
                     columns.ExplicitCompensationVoltageColumn = -1;
                 if (columns.ExplicitDeclusteringPotentialColumn == comboBoxIndex)
                     columns.ExplicitDeclusteringPotentialColumn = -1;
-                if (columns.CollisionCrossSectionColumn == comboBoxIndex)
-                    columns.CollisionCrossSectionColumn = -1;
             }
         }
 

@@ -1804,7 +1804,7 @@ namespace pwiz.Skyline.EditUI
                 AddColumn(SmallMoleculeTransitionListColumnHeaders.imPrecursor, Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility);
                 AddColumn(SmallMoleculeTransitionListColumnHeaders.imUnits, Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_Units);
                 AddColumn(SmallMoleculeTransitionListColumnHeaders.imHighEnergyOffset, Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_High_Energy_Offset);
-                AddColumn(SmallMoleculeTransitionListColumnHeaders.ccsPrecursor, Resources.PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_);
+                AddColumn(SmallMoleculeTransitionListColumnHeaders.ccsPrecursor, Resources.PasteDlg_UpdateMoleculeType_Collisional_Cross_Section__sq_A_);
                 AddColumn(SmallMoleculeTransitionListColumnHeaders.compensationVoltage, Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage);
                 AddColumn(SmallMoleculeTransitionListColumnHeaders.declusteringPotential, Resources.PasteDlg_UpdateMoleculeType_Explicit_Declustering_Potential);
 
