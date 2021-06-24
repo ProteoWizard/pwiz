@@ -142,7 +142,7 @@ namespace pwiz.SkylineTestFunctional
             BuildLibraryError("zero_charge.pep.XML", null);
             BuildLibraryError("truncated.pep.XML", null);
             BuildLibraryError("no_such_file.pep.XML", null, "Failed to open");
-            BuildLibraryError("missing_mzxml.pep.XML", null, "Could not find spectrum file");
+            BuildLibraryError("missing_mzxml.pep.XML", null, "could not find matches for the following");
 
             // Test trying to build using an existing library (e.g. msp/sptxt)
             EnsurePeptideSettings();
