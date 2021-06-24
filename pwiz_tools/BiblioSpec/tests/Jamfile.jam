@@ -257,7 +257,7 @@ blib-test-build pilot-mzid : --unicode -o : output/pilot-mzid.blib : pilot-mzid.
 blib-test-build maxquant : --unicode -o -E -p@$(TEST_DATA_PATH)/mqpar1.xml : output/maxquant.blib : maxquant.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/test.msms.txt ;
 
 # Test MaxQuant error when external file not found
-blib-test-build maxquant-spectrum-file-not-found : -o -e@~run_wdith_the_-E_flag~ : output/maxquant-spectrum-file-not-found.blib : maxquant-spectrum-file-not-found.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/test.msms.txt ;
+blib-test-build maxquant-spectrum-file-not-found : -o -p@$(TEST_DATA_PATH)/mqpar1.xml -e@~Run_with_the_-E_flag~ : output/maxquant-spectrum-file-not-found.blib : maxquant-spectrum-file-not-found.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/test.msms.txt ;
 
 # Test reading from stdin (filenames and target sequences)
 blib-test-build maxquant-targeted : -o -s -u -U -S@$(TEST_DATA_PATH)/maxquant-targeted-stdin.txt -E -p@$(TEST_DATA_PATH)/mqpar1.xml : output/maxquant-targeted.blib : maxquant-targeted.check zbuild.skip-lines : : <dependency>maxquant ;
