@@ -10032,18 +10032,6 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
   <data name="BiblioSpecLiteBuilder_Embedded" xml:space="preserve">
     <value>組み込み</value>
   </data>
-  <data name="VendorIssueHelper_ShowLibraryMissingExternalSpectraError_Could_not_find_an_external_spectrum_file_matching__0__in_the_same_directory_as_the_MaxQuant_input_file__1__" xml:space="preserve">
-    <value>「{0}」に一致する外部スペクトルファイルが、MaxQuant入力ファイル「{1}」と同じディレクトリ内か、親かそのまた親のディレクトリ内に見つかりませんでした。
-
-元のファイルがない場合、その入力ファイルからの組み込みスペクトルでライブラリを構築することができます。ただし、MaxQuantの組み込みスペクトルにあるフラグメントイオンは、荷電状態でデコンボリューションされており、1価のフラグメントイオンのみが含まれています。質量分析計で測定された強度を表していない可能性があります。</value>
-  </data>
-  <data name="VendorIssueHelper_ShowLibraryMissingExternalSpectraError_ButtonDescriptionsSupportsExtensions__0__" xml:space="preserve">
-    <value>組み込みスペクトルを使用するには、[組み込み]をクリックします。
-（対応するファイル拡張子{0}のある）入力ファイルの横に配置されている元のスペクトルファイルを用いて構築しようとするには、[再試行]をクリックします。</value>
-  </data>
-  <data name="CommandLine_ShowLibraryMissingExternalSpectraError_DescriptionWithSupportedExtensions__0__" xml:space="preserve">
-    <value>--import-search-prefer-embedded-spectraという引数を使用するには、組み込みスペクトルを使用するようライブラリを強制的に構築させます。あるいは（対応するファイル拡張子{0}のある）入力ファイルの横に元のスペクトルファイルを配置してから再実行します。</value>
-  </data>
   <data name="RInstaller_InstallPackages_Error__Failed_to_connect_to_the_website__0_" xml:space="preserve">
     <value>エラー：ウェブサイト{0}への接続が失敗しました</value>
   </data>
